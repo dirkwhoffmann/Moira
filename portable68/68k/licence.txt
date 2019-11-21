@@ -1,0 +1,5 @@
+portable 68000 emulator:
+	author: PiCiJi @2013
+	licence: GPLv2
+	https://sourceforge.net/projects/portable68000/
+
