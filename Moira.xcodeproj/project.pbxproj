@@ -92,6 +92,9 @@
 		50804F302386A72C004D3EC2 /* trap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804EDB2386A72C004D3EC2 /* trap.cpp */; };
 		50804F312386A72C004D3EC2 /* movep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804EDC2386A72C004D3EC2 /* movep.cpp */; };
 		50804F322386A72C004D3EC2 /* sub.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804EDD2386A72C004D3EC2 /* sub.cpp */; };
+		50804F352386A7DD004D3EC2 /* Moira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F332386A7DD004D3EC2 /* Moira.cpp */; };
+		50804F372386AA5C004D3EC2 /* MoiraExec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F362386AA5C004D3EC2 /* MoiraExec.cpp */; };
+		50804F3B2387B466004D3EC2 /* MoiraDasm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F392387B466004D3EC2 /* MoiraDasm.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -207,6 +210,12 @@
 		50804EDB2386A72C004D3EC2 /* trap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = trap.cpp; sourceTree = "<group>"; };
 		50804EDC2386A72C004D3EC2 /* movep.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = movep.cpp; sourceTree = "<group>"; };
 		50804EDD2386A72C004D3EC2 /* sub.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sub.cpp; sourceTree = "<group>"; };
+		50804F332386A7DD004D3EC2 /* Moira.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Moira.cpp; sourceTree = "<group>"; };
+		50804F342386A7DD004D3EC2 /* Moira.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Moira.h; sourceTree = "<group>"; };
+		50804F362386AA5C004D3EC2 /* MoiraExec.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraExec.cpp; sourceTree = "<group>"; };
+		50804F382386AB37004D3EC2 /* MoiraExec.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraExec.h; sourceTree = "<group>"; };
+		50804F392387B466004D3EC2 /* MoiraDasm.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraDasm.cpp; sourceTree = "<group>"; };
+		50804F3A2387B466004D3EC2 /* MoiraDasm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraDasm.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -241,6 +250,12 @@
 		50804E082386A4CE004D3EC2 /* Moira */ = {
 			isa = PBXGroup;
 			children = (
+				50804F342386A7DD004D3EC2 /* Moira.h */,
+				50804F332386A7DD004D3EC2 /* Moira.cpp */,
+				50804F382386AB37004D3EC2 /* MoiraExec.h */,
+				50804F362386AA5C004D3EC2 /* MoiraExec.cpp */,
+				50804F3A2387B466004D3EC2 /* MoiraDasm.h */,
+				50804F392387B466004D3EC2 /* MoiraDasm.cpp */,
 			);
 			path = Moira;
 			sourceTree = "<group>";
@@ -434,6 +449,7 @@
 				50804F322386A72C004D3EC2 /* sub.cpp in Sources */,
 				50804F082386A72C004D3EC2 /* movetosr.cpp in Sources */,
 				50804F072386A72C004D3EC2 /* ror.cpp in Sources */,
+				50804F3B2387B466004D3EC2 /* MoiraDasm.cpp in Sources */,
 				50804F032386A72C004D3EC2 /* cmp.cpp in Sources */,
 				50804F132386A72C004D3EC2 /* move.cpp in Sources */,
 				50804EDE2386A72C004D3EC2 /* tester.cpp in Sources */,
@@ -471,11 +487,13 @@
 				50804F022386A72C004D3EC2 /* eoriccr.cpp in Sources */,
 				50804EFB2386A72C004D3EC2 /* roxl.cpp in Sources */,
 				50804EE42386A72C004D3EC2 /* oriccr.cpp in Sources */,
+				50804F352386A7DD004D3EC2 /* Moira.cpp in Sources */,
 				50804EEB2386A72C004D3EC2 /* cmpi.cpp in Sources */,
 				50804EE52386A72C004D3EC2 /* movefromsr.cpp in Sources */,
 				50804F212386A72C004D3EC2 /* lsr.cpp in Sources */,
 				50804F0A2386A72C004D3EC2 /* ext.cpp in Sources */,
 				50804EDF2386A72C004D3EC2 /* exception.cpp in Sources */,
+				50804F372386AA5C004D3EC2 /* MoiraExec.cpp in Sources */,
 				50804EF52386A72C004D3EC2 /* bset.cpp in Sources */,
 				50804F152386A72C004D3EC2 /* nbcd.cpp in Sources */,
 				50804EF72386A72C004D3EC2 /* clr.cpp in Sources */,

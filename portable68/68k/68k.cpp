@@ -5,6 +5,9 @@
 #include "opcodes.t.h"
 #include <cstdlib>
 
+#include "Moira.h"
+extern Moira *moira;
+
 void Core_68k::process() { //execute next opcode
     if ( doubleFault ) {
         cpuHalted();
@@ -28,6 +31,8 @@ void Core_68k::process() { //execute next opcode
         //bus or address error, leave opcode or exception handler
         status_code.reset();
     }
+
+    moira->process(reg_ird);
 }
 
 void Core_68k::power() {
@@ -768,7 +773,7 @@ void Core_68k::updateRegAForIndirectAddressing(u8 size, u8 regPos) {
 	}
 }
 
-int Core_68k::CheckEA(u8 ea, char* valid) {  /* EA = MMMRRR (mode/reg) */
+int Core_68k::CheckEA(u8 ea, const char* valid) {  /* EA = MMMRRR (mode/reg) */
 	if (((ea >> 3) & 7) != 7) {
         if (valid[(ea >> 3) & 7] != '1')    return 0;
         else                                return 1;

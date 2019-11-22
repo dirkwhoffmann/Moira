@@ -254,7 +254,7 @@ private:
     template<u8 size, bool memToReg> void op_movem(u16 opcode);
     template<u8 opmode> void op_movep(u16 opcode);
 
-	int CheckEA(u8 ea, char* valid);
+	int CheckEA(u8 ea, const char* valid);
 	bool conditionalTest(u8 code);
     void setFlags(u8 type, u8 size, u64 result, u32 src = 0, u32 dest = 0);
 
