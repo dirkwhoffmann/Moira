@@ -9,7 +9,7 @@
 
 #include <stdio.h>
 #include "Moira.h"
-#include "MoiraDasm.h"
+#include "MoiraDasm.tpp"
 
 uint16_t parse(const char *s, uint16_t sum = 0)
 {

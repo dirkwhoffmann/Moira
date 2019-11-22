@@ -34,19 +34,15 @@ class Moira {
 
 
     // Instruction handlers
+#include "MoiraDasm.h"
 
     void execIllegal(uint16_t opcode);
-    void dasmIllegal(uint16_t opcode);
     int syncIllegal(uint16_t opcode, int i);
 
     template <class T, int size, int mode> void dasmRegShift(uint16_t opcode);
-
     template<int size, int mode> void execRegShift(uint16_t opcode);
-    template<int size, int mode> void dasmRegShift(uint16_t opcode);
     template<int size, int mode> int syncRegShift(uint16_t opcode, int i);
-
     template<int size, int mode> void execImmShift(uint16_t opcode);
-    template<int size, int mode> void dasmImmShift(uint16_t opcode);
     template<int size, int mode> int syncImmShift(uint16_t opcode, int i);
 
 
