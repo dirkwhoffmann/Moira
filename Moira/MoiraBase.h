@@ -7,7 +7,16 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-void execIllegal(uint16_t opcode);
+#pragma once
 
-template<int size, int mode> void execRegShift(uint16_t opcode);
-template<int size, int mode> void execImmShift(uint16_t opcode);
+#include "stdint.h"
+
+enum Size { Byte, Word, Long };
+
+template<Size> uint32_t clip(uint32_t data);
+template<Size> uint32_t mask();
+template<Size> bool msbit(uint32_t data);
+template<Size> uint32_t sign(uint32_t data);
+template<Size> uint8_t bytes();
+
+enum Instr { ASL, ASR, LSL, LSR, ROL, ROR, ROXL, ROXR };

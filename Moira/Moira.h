@@ -9,21 +9,16 @@
 
 #pragma once
 
-#include <stdio.h>
 #include <stdint.h>
-#include <assert.h>
-
-enum : uint8_t { Asl, Asr, Lsl, Lsr, Rol, Ror, Roxl, Roxr };
-enum : uint8_t {Byte, Word, Long };
+#include "MoiraBase.h"
 
 class Moira {
-
 
     // Jump table storing all instruction handlers
     void (Moira::*exec[65536])(uint16_t);
 
     // Jump table storing all disassebler handlers
-    void (Moira::*dasm[65536])(uint16_t);
+    void (Moira::*dasm[65536])(uint16_t, char *, bool);
 
     // Jump table storing all time information handlers
     int (Moira::*sync[65536])(uint16_t, int);
@@ -32,18 +27,13 @@ class Moira {
     bool hex = true;
     char str[256];
 
+    // Instruction logic
+#include "MoiraLogic.h"
 
     // Instruction handlers
+#include "MoiraExec.h"
 #include "MoiraDasm.h"
-
-    void execIllegal(uint16_t opcode);
-    int syncIllegal(uint16_t opcode, int i);
-
-    template <class T, int size, int mode> void dasmRegShift(uint16_t opcode);
-    template<int size, int mode> void execRegShift(uint16_t opcode);
-    template<int size, int mode> int syncRegShift(uint16_t opcode, int i);
-    template<int size, int mode> void execImmShift(uint16_t opcode);
-    template<int size, int mode> int syncImmShift(uint16_t opcode, int i);
+#include "MoiraSync.h"
 
 
 public:
@@ -52,4 +42,11 @@ public:
 
     void init();
     void process(uint16_t reg_ird);
+
+
+    //
+    // Running the disassembler
+    //
+
+    void disassemble(uint16_t addr, char *str);
 };

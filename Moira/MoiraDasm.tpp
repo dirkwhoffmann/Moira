@@ -53,10 +53,10 @@ public:
     HexWriter(char *p) : ptr(p) { }
 
     HexWriter& operator<<(const char *str)
-     {
-         char c = *str; while (c) { *ptr++ = c; c = *++str; }
-         return *this;
-     }
+    {
+        char c = *str; while (c) { *ptr++ = c; c = *++str; }
+        return *this;
+    }
 
     HexWriter& operator<<(uint8_t value)
     {
@@ -86,10 +86,10 @@ public:
     DecWriter(char *p) : ptr(p) { }
 
     DecWriter& operator<<(const char *str)
-      {
-          char c = *str; while (c) { *ptr++ = c; c = *++str; }
-          return *this;
-      }
+    {
+        char c = *str; while (c) { *ptr++ = c; c = *++str; }
+        return *this;
+    }
 
     DecWriter& operator<<(uint8_t value)
     {
@@ -114,11 +114,23 @@ public:
 // Disassembler handlers for all instructions
 //
 
-void Moira::dasmIllegal(uint16_t opcode) { }
+template <class T> void
+Moira::_dasmIllegal(uint16_t opcode, char *str)
+{
+    T(str) << "ILLEGAL\0";
+}
 
-template <class T, int size, int mode>
-void Moira::dasmRegShift(uint16_t opcode) {
+void
+Moira::dasmIllegal(uint16_t opcode, char *str, bool hex)
+{
+    hex ?
+    _dasmIllegal<HexWriter>(opcode, str) :
+    _dasmIllegal<DecWriter>(opcode, str) ;
+}
 
+template <class T, int size, int mode> void
+Moira::_dasmRegShift(uint16_t opcode, char *str)
+{
     T(str)
     << (const char *)"REG_SHIFT "
     << "size = " << (uint8_t)42
@@ -126,13 +138,38 @@ void Moira::dasmRegShift(uint16_t opcode) {
     << "\0";
 }
 
-template<int size, int mode> void Moira::dasmRegShift(uint16_t opcode) {
+template<int size, int mode>
+void Moira::dasmRegShift(uint16_t opcode, char *str, bool hex) {
 
     hex ?
-    dasmRegShift<HexWriter, size, mode>(opcode) :
-    dasmRegShift<DecWriter, size, mode>(opcode) ;
+    _dasmRegShift<HexWriter, size, mode>(opcode, str) :
+    _dasmRegShift<DecWriter, size, mode>(opcode, str) ;
 }
 
-template<int size, int mode> void Moira::dasmImmShift(uint16_t opcode) {
-    printf("***** dasmImmShift<%d,%d>(%d)\n", size, mode, opcode);
+template <class T, int size, int mode> void
+Moira::_dasmImmShift(uint16_t opcode, char *str)
+{
+    T(str)
+    << (const char *)"IMM_SHIFT "
+    << "size = " << (uint8_t)42
+    << "mode = " << (uint16_t)13
+    << "\0";
+}
+
+template<int size, int mode>
+void Moira::dasmImmShift(uint16_t opcode, char *str, bool hex) {
+
+    hex ?
+    _dasmImmShift<HexWriter, size, mode>(opcode, str) :
+    _dasmImmShift<DecWriter, size, mode>(opcode, str) ;
+}
+
+void
+Moira::disassemble(uint16_t addr, char *str)
+{
+    printf("disassemble %x\n", addr);
+
+    uint16_t opcode = 42; // read16()
+
+    (this->*dasm[opcode])(opcode, str, true);
 }

@@ -7,7 +7,15 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-void execIllegal(uint16_t opcode);
+template<int size, int mode> void
+Moira::execRegShift(uint16_t opcode)
+{
+    (void)shift<(Size)1,(Instr)2>(42,42);
+}
 
-template<int size, int mode> void execRegShift(uint16_t opcode);
-template<int size, int mode> void execImmShift(uint16_t opcode);
+template<int size, int mode> void
+Moira::execImmShift(uint16_t opcode)
+{
+
+}
+

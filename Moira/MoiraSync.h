@@ -7,7 +7,7 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-void execIllegal(uint16_t opcode);
+int syncIllegal(uint16_t opcode, int i);
 
-template<int size, int mode> void execRegShift(uint16_t opcode);
-template<int size, int mode> void execImmShift(uint16_t opcode);
+template<int size, int mode> int syncRegShift(uint16_t opcode, int i);
+template<int size, int mode> int syncImmShift(uint16_t opcode, int i);
