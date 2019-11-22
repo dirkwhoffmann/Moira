@@ -7,15 +7,48 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-template<int size, int mode> void
-Moira::execRegShift(uint16_t opcode)
+void
+Moira::execIllegal(uint16_t opcode)
 {
-    (void)shift<(Size)1,(Instr)2>(42,42);
+    
 }
 
-template<int size, int mode> void
+template<Instr I, Size S> void
+Moira::execRegShift(uint16_t opcode)
+{
+    // Dx,Dy
+    int x = (opcode >> 9) & 0b111; //  ---- xxx- ---- ----
+    int y = (opcode >> 0) & 0b111; //  ---- ---- ---- -xxx
+
+    uint32_t dx = reg.d[x].read<S>();
+    uint32_t dy = reg.d[y].read<S>();
+
+    reg.d[y].write<S>(shift<S,I>(dx, dy));
+}
+
+template<Instr I, Size S> void
 Moira::execImmShift(uint16_t opcode)
 {
+    // #<cnt>,Dy
+    int cnt = (opcode >> 9) & 0b111; //  ---- xxx- ---- ----
+    int y   = (opcode >> 0) & 0b111; //  ---- ---- ---- -xxx
 
+    uint32_t dy = reg.d[y].read<S>();
+
+    reg.d[y].write<S>(shift<S,I>(cnt ? cnt : 8, dy));
+}
+
+template<Instr I, Mode M> void
+Moira::execEaShift(uint16_t opcode)
+{
+    //
+    // TODO: Read from Ea
+    // value = ...
+
+    // TODO: Shift value by 1:
+    // shift<Word,I>(1, value);
+
+    // TODO: Write back value
+    // write(..., value)
 }
 

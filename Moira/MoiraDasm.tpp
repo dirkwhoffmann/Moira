@@ -128,7 +128,7 @@ Moira::dasmIllegal(uint16_t opcode, char *str, bool hex)
     _dasmIllegal<DecWriter>(opcode, str) ;
 }
 
-template <class T, int size, int mode> void
+template <class T, Instr I, Size S> void
 Moira::_dasmRegShift(uint16_t opcode, char *str)
 {
     T(str)
@@ -138,15 +138,15 @@ Moira::_dasmRegShift(uint16_t opcode, char *str)
     << "\0";
 }
 
-template<int size, int mode>
+template<Instr I, Size S>
 void Moira::dasmRegShift(uint16_t opcode, char *str, bool hex) {
 
     hex ?
-    _dasmRegShift<HexWriter, size, mode>(opcode, str) :
-    _dasmRegShift<DecWriter, size, mode>(opcode, str) ;
+    _dasmRegShift<HexWriter,I,S>(opcode, str) :
+    _dasmRegShift<DecWriter,I,S>(opcode, str) ;
 }
 
-template <class T, int size, int mode> void
+template <class T, Instr I, Size S> void
 Moira::_dasmImmShift(uint16_t opcode, char *str)
 {
     T(str)
@@ -156,12 +156,30 @@ Moira::_dasmImmShift(uint16_t opcode, char *str)
     << "\0";
 }
 
-template<int size, int mode>
+template<Instr I, Size S>
 void Moira::dasmImmShift(uint16_t opcode, char *str, bool hex) {
 
     hex ?
-    _dasmImmShift<HexWriter, size, mode>(opcode, str) :
-    _dasmImmShift<DecWriter, size, mode>(opcode, str) ;
+    _dasmImmShift<HexWriter,I,S>(opcode, str) :
+    _dasmImmShift<DecWriter,I,S>(opcode, str) ;
+}
+
+template <class T, Instr I, Mode M> void
+Moira::_dasmEaShift(uint16_t opcode, char *str)
+{
+    T(str)
+    << (const char *)"EA_SHIFT "
+    << "size = " << (uint8_t)42
+    << "mode = " << (uint16_t)13
+    << "\0";
+}
+
+template<Instr I, Mode M>
+void Moira::dasmEaShift(uint16_t opcode, char *str, bool hex) {
+
+    hex ?
+    _dasmEaShift<HexWriter,I,M>(opcode, str) :
+    _dasmEaShift<DecWriter,I,M>(opcode, str) ;
 }
 
 void

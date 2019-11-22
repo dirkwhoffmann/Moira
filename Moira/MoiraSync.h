@@ -9,5 +9,6 @@
 
 int syncIllegal(uint16_t opcode, int i);
 
-template<int size, int mode> int syncRegShift(uint16_t opcode, int i);
-template<int size, int mode> int syncImmShift(uint16_t opcode, int i);
+template<Instr I, Size S> int syncRegShift(uint16_t opcode, int i);
+template<Instr I, Size S> int syncImmShift(uint16_t opcode, int i);
+template<Instr I, Mode M> int syncEaShift(uint16_t opcode, int i);
