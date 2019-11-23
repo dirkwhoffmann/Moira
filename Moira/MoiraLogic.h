@@ -7,4 +7,8 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+
+// Compute effective address
+template<Size S, Mode M> uint32_t computeEA(uint32_t addr);
+
 template<Size size, Instr instr> uint32_t shift(uint32_t cnt, uint32_t data);
