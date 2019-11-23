@@ -4,7 +4,7 @@
 
 void Tester_68k::sampleMulu() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("MULU.W D1, D2");
     oObj->setRegD(1, 0x12345678);

@@ -5,7 +5,7 @@
 
 void Tester_68k::sampleUnlk() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("UNLK A6");
     oObj->setRegA(6, 0x4000);

@@ -91,7 +91,7 @@ void Tester_68k::sampleMovem() {
     oObj->setRegD(1, 0x11111111);
     oObj->setRegD(2, 0x22222222);
     oObj->setRegA(1, 0x4010);
-    oObj->setRegA(2, 0x333333333);
+    oObj->setRegA(2, 858993459); // 0x333333333);
     oObj->setCycleCount(44);
 
     oObj = new Results("MOVEM.W (A1)+, D1");

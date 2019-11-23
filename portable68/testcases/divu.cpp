@@ -5,7 +5,7 @@
 
 void Tester_68k::sampleDivu() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("DIVU.W #$1, D1");
     oObj->setX()->setN()->setV();

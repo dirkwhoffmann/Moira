@@ -5,7 +5,7 @@
 
 void Tester_68k::sampleChk() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("CHK D1, D2");
     oObj->setX();

@@ -5,7 +5,7 @@
 
 void Tester_68k::sampleMoveToCcr() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("MOVE #$1f, CCR");
     oObj->setC()->setN()->setZ()->setX()->setV();

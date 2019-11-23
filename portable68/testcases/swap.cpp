@@ -4,7 +4,7 @@
 
 void Tester_68k::sampleSwap() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("SWAP D1");
     oObj->setN();

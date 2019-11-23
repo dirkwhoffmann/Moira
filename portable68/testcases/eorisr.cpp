@@ -5,7 +5,7 @@
 
 void Tester_68k::sampleEoriSr() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("EORI.W #$700, SR");
     oObj->setRegA(7, 0x300);

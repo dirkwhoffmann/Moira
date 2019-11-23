@@ -27,12 +27,13 @@ void Core_68k::process() { //execute next opcode
         logInstruction(reg_ird, true);
 
         (this->*opcodes[ reg_ird ])(reg_ird);
+
+        moira->process(reg_ird);
+
     } catch(CpuException) {
         //bus or address error, leave opcode or exception handler
         status_code.reset();
     }
-
-    moira->process(reg_ird);
 }
 
 void Core_68k::power() {
@@ -41,6 +42,8 @@ void Core_68k::power() {
         reg_d[i] = reg_a[i] = 0;
     }
     reset();
+
+    moira->power();
 }
 
 void Core_68k::reset() {
@@ -58,6 +61,8 @@ void Core_68k::reset() {
     reg_a[7] = reg_ssp = readLong(0);
     reg_pc = readLong(4);
     fullprefetch();
+
+    moira->reset();
 }
 
 void Core_68k::switchToUser() {
@@ -593,25 +598,25 @@ void Core_68k::setFlags(u8 type, u8 size, u64 result, u32 src, u32 dest) {
 	switch(type) {
 		case flag_logical:
 			reg_s.v = reg_s.c = 0;
-            reg_s.z = maskVal_(result, size) == 0;
+            reg_s.z = maskVal_((u32)result, size) == 0;
 			reg_s.n = ResN; return;
         case flag_sub:
         case flag_cmp:
-            reg_s.z = maskVal_(result, size) == 0;
+            reg_s.z = maskVal_((u32)result, size) == 0;
             reg_s.n = ResN;
         case flag_subx:
             reg_s.c = (result >> bits_(size)) & 1;
             if (type != flag_cmp) reg_s.x = reg_s.c;
             reg_s.v = ( SrcN ^ DestN ) & ( ResN ^ DestN ); return;
 		case flag_add:
-            reg_s.z = maskVal_(result, size) == 0;
+            reg_s.z = maskVal_((u32)result, size) == 0;
 			reg_s.n = ResN;
         case flag_addx:
             reg_s.c = (result >> bits_(size)) & 1;
 			reg_s.x = reg_s.c;
 			reg_s.v = ( SrcN ^ ResN ) & ( DestN ^ ResN ); return;
 		case flag_zn:
-            reg_s.z = reg_s.z & ( maskVal_(result, size) == 0 );
+            reg_s.z = reg_s.z & ( maskVal_((u32)result, size) == 0 );
 			reg_s.n = ResN; return;
 	}
 }
@@ -634,7 +639,7 @@ void Core_68k::writeEA(u8 size, u32 value, bool lastBusCycle) {
 }
 
 u32 Core_68k::LoadEA(u8 size, u8 ea, bool noReadFromEA, bool fetchLastExtension, bool noSyncDec) {
-	u32 operand;
+	u32 operand = 0;
 	u8 displacement;
 	eaAddr = 0;
 	eaReg = 0;

@@ -98,6 +98,7 @@
 		50804F3E2387CC52004D3EC2 /* MoiraSync.tpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F3C2387CC52004D3EC2 /* MoiraSync.tpp */; };
 		50804F422387DF86004D3EC2 /* MoiraLogic.tpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F402387DF86004D3EC2 /* MoiraLogic.tpp */; };
 		50804F452387EF15004D3EC2 /* MoiraBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F442387EF15004D3EC2 /* MoiraBase.cpp */; };
+		50804F4823882EB8004D3EC2 /* MoiraDelegate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F4623882EB8004D3EC2 /* MoiraDelegate.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -226,6 +227,8 @@
 		50804F412387DF86004D3EC2 /* MoiraLogic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraLogic.h; sourceTree = "<group>"; };
 		50804F432387E46B004D3EC2 /* MoiraBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraBase.h; sourceTree = "<group>"; };
 		50804F442387EF15004D3EC2 /* MoiraBase.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraBase.cpp; sourceTree = "<group>"; };
+		50804F4623882EB8004D3EC2 /* MoiraDelegate.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraDelegate.cpp; sourceTree = "<group>"; };
+		50804F4723882EB8004D3EC2 /* MoiraDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraDelegate.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -261,9 +264,11 @@
 			isa = PBXGroup;
 			children = (
 				50804F342386A7DD004D3EC2 /* Moira.h */,
+				50804F332386A7DD004D3EC2 /* Moira.cpp */,
 				50804F432387E46B004D3EC2 /* MoiraBase.h */,
 				50804F442387EF15004D3EC2 /* MoiraBase.cpp */,
-				50804F332386A7DD004D3EC2 /* Moira.cpp */,
+				50804F4723882EB8004D3EC2 /* MoiraDelegate.h */,
+				50804F4623882EB8004D3EC2 /* MoiraDelegate.cpp */,
 				50804F382386AB37004D3EC2 /* MoiraExec.h */,
 				50804F362386AA5C004D3EC2 /* MoiraExec.tpp */,
 				50804F3A2387B466004D3EC2 /* MoiraDasm.h */,
@@ -500,6 +505,7 @@
 				50804EF82386A72C004D3EC2 /* divs.cpp in Sources */,
 				50804F012386A72C004D3EC2 /* bsr.cpp in Sources */,
 				50804EE02386A72C004D3EC2 /* 68k.cpp in Sources */,
+				50804F4823882EB8004D3EC2 /* MoiraDelegate.cpp in Sources */,
 				50804F092386A72C004D3EC2 /* movetoccr.cpp in Sources */,
 				50804EF32386A72C004D3EC2 /* not.cpp in Sources */,
 				50804F102386A72C004D3EC2 /* roxr.cpp in Sources */,

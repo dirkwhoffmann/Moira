@@ -4,7 +4,7 @@
 
 void Tester_68k::sampleMoveUsp() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("MOVE USP, A1");
     oObj->setRegA(1, 0);

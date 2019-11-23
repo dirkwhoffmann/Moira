@@ -30,6 +30,36 @@ Moira::Moira()
     init();
 }
 
+
+void
+Moira::power()
+{
+    for(int i = 0; i < 8; i++) reg.d[i] = 0;
+    reg.d[0] = reg.d[1];
+    reset();
+}
+
+void
+Moira::reset()
+{
+    /* portable68
+       status_code.reset();
+
+        irqPendingLevel = irqSamplingLevel = 0;
+
+        rmwCycle = false;
+        stop = false;
+        doubleFault = false;
+        trace = false;
+        illegalMode = NONE;
+        reg_s = 0x2700;
+        sync(16);
+        reg_a[7] = reg_ssp = readLong(0);
+        reg_pc = readLong(4);
+        fullprefetch();
+     */
+}
+
 #define __ ,
 #define bind(id, name) { \
 printf("id = %X\n", id); \
@@ -158,47 +188,36 @@ Moira::init()
     // (3)
     opcode = parse("1110 0001 11-- ----");
     for (int ax = 0; ax < 8; ax++) {
-        bind(opcode | 2 << 3 | ax, EaShift<ROXR __ 2>);
-        bind(opcode | 3 << 3 | ax, EaShift<ROXR __ 3>);
-        bind(opcode | 4 << 3 | ax, EaShift<ROXR __ 4>);
-        bind(opcode | 5 << 3 | ax, EaShift<ROXR __ 5>);
-        bind(opcode | 6 << 3 | ax, EaShift<ROXR __ 6>);
+        bind(opcode | 2 << 3 | ax, EaShift<ASL __ 2>);
+        bind(opcode | 3 << 3 | ax, EaShift<ASL __ 3>);
+        bind(opcode | 4 << 3 | ax, EaShift<ASL __ 4>);
+        bind(opcode | 5 << 3 | ax, EaShift<ASL __ 5>);
+        bind(opcode | 6 << 3 | ax, EaShift<ASL __ 6>);
     }
-    bind(opcode | 7 << 3 | 0, EaShift<ROXR __ 7>);
-    bind(opcode | 7 << 3 | 1, EaShift<ROXR __ 8>);
+    bind(opcode | 7 << 3 | 0, EaShift<ASL __ 7>);
+    bind(opcode | 7 << 3 | 1, EaShift<ASL __ 8>);
 
     opcode = parse("1110 0000 11-- ----");
      for (int ax = 0; ax < 8; ax++) {
-         bind(opcode | 2 << 3 | ax, EaShift<ASL __ 2>);
-         bind(opcode | 3 << 3 | ax, EaShift<ASL __ 3>);
-         bind(opcode | 4 << 3 | ax, EaShift<ASL __ 4>);
-         bind(opcode | 5 << 3 | ax, EaShift<ASL __ 5>);
-         bind(opcode | 6 << 3 | ax, EaShift<ASL __ 6>);
+         bind(opcode | 2 << 3 | ax, EaShift<ASR __ 2>);
+         bind(opcode | 3 << 3 | ax, EaShift<ASR __ 3>);
+         bind(opcode | 4 << 3 | ax, EaShift<ASR __ 4>);
+         bind(opcode | 5 << 3 | ax, EaShift<ASR __ 5>);
+         bind(opcode | 6 << 3 | ax, EaShift<ASR __ 6>);
      }
-     bind(opcode | 7 << 3 | 0, EaShift<ASL __ 7>);
-     bind(opcode | 7 << 3 | 1, EaShift<ASL __ 8>);
-
-    opcode = parse("1110 0000 11-- ----");
-      for (int ax = 0; ax < 8; ax++) {
-          bind(opcode | 2 << 3 | ax, EaShift<ASR __ 2>);
-          bind(opcode | 3 << 3 | ax, EaShift<ASR __ 3>);
-          bind(opcode | 4 << 3 | ax, EaShift<ASR __ 4>);
-          bind(opcode | 5 << 3 | ax, EaShift<ASR __ 5>);
-          bind(opcode | 6 << 3 | ax, EaShift<ASR __ 6>);
-      }
-      bind(opcode | 7 << 3 | 0, EaShift<ASR __ 7>);
-      bind(opcode | 7 << 3 | 1, EaShift<ASR __ 8>);
+     bind(opcode | 7 << 3 | 0, EaShift<ASR __ 7>);
+     bind(opcode | 7 << 3 | 1, EaShift<ASR __ 8>);
 
     opcode = parse("1110 0011 11-- ----");
-    for (int ax = 0; ax < 8; ax++) {
-        bind(opcode | 2 << 3 | ax, EaShift<LSL __ 2>);
-        bind(opcode | 3 << 3 | ax, EaShift<LSL __ 3>);
-        bind(opcode | 4 << 3 | ax, EaShift<LSL __ 4>);
-        bind(opcode | 5 << 3 | ax, EaShift<LSL __ 5>);
-        bind(opcode | 6 << 3 | ax, EaShift<LSL __ 6>);
-    }
-    bind(opcode | 7 << 3 | 0, EaShift<LSL __ 7>);
-    bind(opcode | 7 << 3 | 1, EaShift<LSL __ 8>);
+      for (int ax = 0; ax < 8; ax++) {
+          bind(opcode | 2 << 3 | ax, EaShift<LSL __ 2>);
+          bind(opcode | 3 << 3 | ax, EaShift<LSL __ 3>);
+          bind(opcode | 4 << 3 | ax, EaShift<LSL __ 4>);
+          bind(opcode | 5 << 3 | ax, EaShift<LSL __ 5>);
+          bind(opcode | 6 << 3 | ax, EaShift<LSL __ 6>);
+      }
+      bind(opcode | 7 << 3 | 0, EaShift<LSL __ 7>);
+      bind(opcode | 7 << 3 | 1, EaShift<LSL __ 8>);
 
     opcode = parse("1110 0010 11-- ----");
      for (int ax = 0; ax < 8; ax++) {

@@ -5,7 +5,7 @@
 
 void Tester_68k::sampleCmp() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("CMP.B D1, D2");
     oObj->setRegD(2, 0x12345680);

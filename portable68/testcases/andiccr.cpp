@@ -5,7 +5,7 @@
 
 void Tester_68k::sampleAndiCcr() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("ANDI.B #$1b, CCR");
     oObj->setN();

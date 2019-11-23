@@ -5,7 +5,7 @@
 
 void Tester_68k::sampleCmpm() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("CMPM.L (A1)+, (A1)+");
     oObj->setRegA(1, 0x3008);

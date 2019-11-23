@@ -5,7 +5,7 @@
 
 void Tester_68k::sampleMoveToSr() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("MOVE #$0, SR");
     oObj->setRegA(7, 0);

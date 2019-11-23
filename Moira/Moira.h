@@ -11,6 +11,8 @@
 
 #include <stdint.h>
 #include "MoiraBase.h"
+#include "MoiraDelegate.h"
+#include "assert.h"
 
 struct Reg {
 
@@ -18,6 +20,8 @@ struct Reg {
 
     template<Size S> uint32_t read() { return CLIP<S>(value); }
     template<Size S> void write(uint32_t v) { value = CLIP<S>(v); }
+
+    Reg & operator=(const uint32_t & rhs) { value = rhs; return *this; }
 };
 
 struct Registers {
@@ -50,8 +54,15 @@ struct Flags {
 
 class Moira {
 
+public:
+
     // The emulated CPU type
     // MoiraCpu type;
+
+    // The CPU delegate
+    MoiraDelegate *delegate = NULL;
+
+private:
 
     // The data and address registers
     Registers reg;
@@ -89,8 +100,14 @@ public:
     Moira();
 
     void init();
+    void power();
+    void reset();
     void process(uint16_t reg_ird);
 
+    uint32_t getD(unsigned n) { assert(n < 8); return reg.d[n].read<Long>(); }
+    void setD(unsigned n, uint32_t v) { assert(n < 8); reg.d[n].write<Long>(v); }
+    uint32_t getA(unsigned n) { assert(n < 8); return reg.a[n].read<Long>(); }
+    void setA(unsigned n, uint32_t v) { assert(n < 8); reg.a[n].write<Long>(v); }
 
     //
     // Running the disassembler

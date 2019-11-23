@@ -4,7 +4,7 @@
 
 void Tester_68k::sampleMovea() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("MOVEA.L A2, A2");
     oObj->setRegA(2, 0xffffffff);

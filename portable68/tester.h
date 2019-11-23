@@ -3,10 +3,11 @@
 
 #include "68k/68k.h"
 #include "memoryblock.h"
+#include "MoiraDelegate.h"
 
 class Results;
 
-class Tester_68k : public Core_68k
+class Tester_68k : public Core_68k, public MoiraDelegate
 {
 protected:
     MemoryBlock memoryblock;
@@ -293,6 +294,20 @@ public:
     void testRts();
     void sampleRts();
 
+    uint8_t moiraRead8(uint32_t addr) { return memRead(addr); }
+    virtual uint16_t moiraRead16(uint32_t addr) { return memWordRead(addr); }
+    virtual void moiraWrite8(uint32_t addr, uint8_t value) { memWrite(addr, value); }
+    virtual void moiraWrite16(uint32_t addr, uint16_t value) { memWordWrite(addr, value); }
+
+    void power();
+    void setRegA(u8 reg, u32 value);
+    void setRegD(u8 reg, u32 value);
+    void process();
+
+    void dump();
+    bool compare();
+    void comparePre();
+    void comparePost();
 };
 
 #endif // TESTER_H

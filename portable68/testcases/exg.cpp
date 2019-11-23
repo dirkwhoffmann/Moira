@@ -5,7 +5,7 @@
 
 void Tester_68k::sampleExg() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("EXG D1, D2");
     oObj->setRegD(2, 0x11111111);

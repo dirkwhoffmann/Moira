@@ -5,7 +5,7 @@
 
 void Tester_68k::sampleDivs() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("DIVS.W #$1, D1");
     oObj->setX()->setN()->setV();

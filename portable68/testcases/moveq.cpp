@@ -4,7 +4,7 @@
 
 void Tester_68k::sampleMoveq() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("MOVEQ #01, D1");
     oObj->setRegD(1, 0x01);

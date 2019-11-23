@@ -5,7 +5,7 @@
 
 void Tester_68k::sampleCmpi() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("CMPI.W #$ffff, D1");
     oObj->setRegD(1, 0xfff2ffff);

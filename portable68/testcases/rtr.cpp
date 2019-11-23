@@ -3,7 +3,7 @@
 
 void Tester_68k::sampleRtr() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("RTR");
     oObj->setV()->setN()->setC()->setZ()->setX();

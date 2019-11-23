@@ -12,8 +12,11 @@ int main()
 
     try {
         Tester_68k tester;
+        moira->delegate = &tester;
+
         tester.runTestCases();
         tester.printErrorCounter();
+
     } catch(Exception& exception) {
         exception.handle();
     }

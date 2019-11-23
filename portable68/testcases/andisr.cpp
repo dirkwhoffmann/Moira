@@ -5,7 +5,7 @@
 
 void Tester_68k::sampleAndiSr() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("ANDI.W #$700, SR");
     oObj->setRegA(7, 0);

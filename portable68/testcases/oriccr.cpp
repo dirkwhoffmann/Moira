@@ -5,7 +5,7 @@
 
 void Tester_68k::sampleOriCcr() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("ORI.B #$1b, CCR");
     oObj->setN()->setC()->setX()->setZ()->setV();

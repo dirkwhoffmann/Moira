@@ -3,7 +3,7 @@
 
 void Tester_68k::sampleRts() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("RTS");
     oObj->setRegA(7, 0x2004);

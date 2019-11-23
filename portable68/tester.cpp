@@ -4,6 +4,9 @@
 #include "helper.h"
 #include <stdlib.h>
 
+#include "Moira.h"
+extern Moira *moira;
+
 /*
 #include "testcases/add.cpp"
 #include "testcases/lea.cpp"
@@ -87,8 +90,7 @@
 #include "testcases/rts.cpp"
 */
 
-Tester_68k::Tester_68k()
-    : Core_68k()
+Tester_68k::Tester_68k() : Core_68k()
 {
     errorCounter = 0;
     testCounter = 0;
@@ -96,7 +98,7 @@ Tester_68k::Tester_68k()
     //samples were generated on amiga
     sampleAdd();
     sampleLea();
-    sampleAsl();
+    sampleAsl(); //
     sampleAsr();
     sampleLsr();
     sampleLsl();
@@ -179,7 +181,7 @@ Tester_68k::Tester_68k()
 void Tester_68k::runTestCases() {
     testLea();
     testAdd();
-    testAsl();
+    testAsl(); // 
     testAsr();
     testLsr();
     testLsl();
@@ -325,6 +327,9 @@ void Tester_68k::check(string ident) {
         cout << ident + " -> success " << endl;
     }
 
+    // Compare result with Moira
+    comparePost();
+
     if (testCounter++ > 100) {
         testCounter = 0;
         cout << endl;
@@ -378,4 +383,69 @@ void Tester_68k::group0exception(u8 type) {
 void Tester_68k::trapException(u8 vector) {
     group2exception = true;
     Core_68k::trapException(vector);
+}
+
+void Tester_68k::power()
+{
+    Core_68k::power();
+    moira->power();
+}
+
+void Tester_68k::setRegA(u8 reg, u32 value)
+{
+    Core_68k::setRegA(reg, value);
+    moira->setA(reg, value);
+}
+
+void Tester_68k::setRegD(u8 reg, u32 value)
+{
+    Core_68k::setRegD(reg, value);
+    moira->setD(reg, value);
+}
+
+void Tester_68k::process()
+{
+    comparePre();
+    Core_68k::process();
+}
+
+void Tester_68k::dump()
+{
+    for (int i = 0; i < 8; i++) {
+        printf("D%i: %08x / %08x %s\n", i, getRegD(i), moira->getD(i),
+               getRegD(i) != moira->getD(i) ? "<--" : "");
+    }
+    for (int i = 0; i < 8; i++) {
+        printf("A%i: %08x / %08x %s\n", i, getRegA(i), moira->getA(i),
+               getRegA(i) != moira->getA(i) ? "<--" : "");
+    }
+
+    exit(1);
+}
+
+bool Tester_68k::compare()
+{
+    for (int i = 0; i < 8; i++)
+        if (getRegD(i) != moira->getD(i)) return false;
+
+    for (int i = 0; i < 8; i++)
+        if (getRegA(i) != moira->getA(i)) return false;
+
+    return true;
+}
+
+void Tester_68k::comparePre()
+{
+    if (!compare()) {
+        printf("Mismatch before running command\n");
+        dump();
+    }
+}
+
+void Tester_68k::comparePost()
+{
+    if (!compare()) {
+        printf("Mismatch after running command\n");
+        dump();
+    }
 }

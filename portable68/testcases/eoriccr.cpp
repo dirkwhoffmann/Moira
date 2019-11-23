@@ -5,7 +5,7 @@
 
 void Tester_68k::sampleEoriCcr() {
     Results* oObj;
-    MemoryBlock* oSampleMem;
+    // MemoryBlock* oSampleMem;
 
     oObj = new Results("EORI.B #$1b, CCR");
     oObj->setX()->setZ()->setV()->setC();

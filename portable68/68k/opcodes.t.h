@@ -222,7 +222,7 @@ template<bool negx, u8 size> void Core_68k::op_neg(u16 opcode) {
 	}
     prefetch(isRegisterMode());
     if (adm == DR_DIRECT && size == SizeLong) sync(2);
-    writeEA(size, result, true);
+    writeEA(size, (u32)result, true);
 }
 
 template<u8 size> void Core_68k::op_not(u16 opcode) {
@@ -286,7 +286,7 @@ template<u8 size, bool writeEa> void Core_68k::op_add(u16 opcode) {
             if ( !isMemoryOperand() ) sync(2);
         }
     }
-    writeEA(size, result, true);
+    writeEA(size, (u32)result, true);
 }
 
 template<u8 size> void Core_68k::op_adda(u16 opcode) {
@@ -373,7 +373,7 @@ template<u8 size, bool writeEa> void Core_68k::op_sub(u16 opcode) {
             if (!isMemoryOperand()) sync(2);
         }
     }
-    writeEA(size, result, true);
+    writeEA(size, (u32)result, true);
 }
 
 template<u8 size> void Core_68k::op_suba(u16 opcode) {
@@ -393,7 +393,7 @@ template<u8 size> void Core_68k::op_suba(u16 opcode) {
     }
 
 	eaReg = &reg_a[aregPos];
-	writeEA(SizeLong, result);
+	writeEA(SizeLong, (u32)result);
 }
 
 template<u8 size, bool writeEa> void Core_68k::op_or(u16 opcode) {
@@ -495,7 +495,7 @@ void Core_68k::op_divs(u16 opcode) {
         trapException( 5 );
 		return;
 	}
-    i32 result = (i64)(i32)(reg_d[regPos]) / (i64)(i16)(data & 0xFFFF);
+    i32 result = (i32)((i64)(i32)(reg_d[regPos]) / (i64)(i16)(data & 0xFFFF));
     u16 remainder = (i64)(i32)(reg_d[regPos]) % (i64)(i16)(data & 0xFFFF);
 
     sync( getDivs68kCycles ((i32)(reg_d[regPos]), (i16)(data & 0xFFFF)) - 4); //subtract prefetch time
@@ -545,7 +545,7 @@ template<u8 size> void Core_68k::op_addi(u16 opcode) {
 
     prefetch(isRegisterMode());
     if ((size == SizeLong) && (adm == DR_DIRECT)) sync(4);
-    writeEA(size, result, true);
+    writeEA(size, (u32)result, true);
 }
 
 template<u8 size> void Core_68k::op_addq(u16 opcode) {
@@ -561,7 +561,7 @@ template<u8 size> void Core_68k::op_addq(u16 opcode) {
     if (adm == AR_DIRECT) sync(4);
     else if (size == SizeLong && adm == DR_DIRECT) sync(4);
 
-    writeEA(size, result, true);
+    writeEA(size, (u32)result, true);
 }
 
 template<u8 size> void Core_68k::op_subq(u16 opcode) {
@@ -577,7 +577,7 @@ template<u8 size> void Core_68k::op_subq(u16 opcode) {
     if (adm == AR_DIRECT) sync(4);
     else if (size == SizeLong && adm == DR_DIRECT) sync(4);
 
-    writeEA(size, result, true);
+    writeEA(size, (u32)result, true);
 }
 
 template<u8 size> void Core_68k::op_andi(u16 opcode) {
@@ -643,7 +643,7 @@ template<u8 size> void Core_68k::op_subi(u16 opcode) {
     prefetch(isRegisterMode());
     if ((size == SizeLong) && (adm == DR_DIRECT)) sync(4);
 
-    writeEA(size, result, true);
+    writeEA(size, (u32)result, true);
 }
 
 /* specificational instructions */
@@ -829,7 +829,7 @@ template<u8 size, bool memTomem> void Core_68k::op_addx(u16 opcode) {
     if (memTomem && (size == SizeLong) ) {
         writeWord(eaAddr, (result >> 16) & 0xFFFF, true);
     } else {
-        writeEA(size, result, true);
+        writeEA(size, (u32)result, true);
     }
 }
 
@@ -872,7 +872,7 @@ template<u8 size, bool memTomem> void Core_68k::op_subx(u16 opcode) {
     if (memTomem && (size == SizeLong) ) {
         writeWord(eaAddr, (result >> 16) & 0xFFFF, true);
     } else {
-        writeEA(size, result, true);
+        writeEA(size, (u32)result, true);
     }
 }
 
