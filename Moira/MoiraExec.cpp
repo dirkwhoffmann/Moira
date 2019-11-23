@@ -10,7 +10,7 @@
 void
 Moira::execIllegal(uint16_t opcode)
 {
-
+    printf("Moira::execIllegal\n");
 }
 
 template<Instr I, Size S> void
@@ -55,6 +55,12 @@ Moira::execEaShift(uint16_t opcode)
 template<Mode M> void
 Moira::execLea(uint16_t opcode)
 {
-    //
-    // TODO:
+    printf("execLea\n");
+
+    int src = (opcode >> 0) & 0b111; //  ---- ---- ---- -xxx
+    int dst = (opcode >> 9) & 0b111; //  ---- xxx- ---- ----
+
+    uint32_t addr = computeEA<Long, M>(src);
+
+    reg.a[dst] = addr;
 }

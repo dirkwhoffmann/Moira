@@ -296,6 +296,7 @@ public:
 
     uint8_t moiraRead8(uint32_t addr) { return memRead(addr); }
     virtual uint16_t moiraRead16(uint32_t addr) { return memWordRead(addr); }
+    virtual uint16_t moiraReadAfterReset16(uint32_t addr) { return memWordRead(addr); }
     virtual void moiraWrite8(uint32_t addr, uint8_t value) { memWrite(addr, value); }
     virtual void moiraWrite16(uint32_t addr, uint16_t value) { memWordWrite(addr, value); }
 

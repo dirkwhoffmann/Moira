@@ -39,6 +39,7 @@ Moira::init()
     }
 
     registerShiftCmds();
+    registerMoveCmds();
 }
 
 void
@@ -236,14 +237,6 @@ Moira::registerShiftCmds()
     }
     bind(opcode | 7 << 3 | 0, EaShift<ROXR __ 7>);
     bind(opcode | 7 << 3 | 1, EaShift<ROXR __ 8>);
-}
-
-void
-Moira::process(uint16_t reg_ird)
-{
-    printf("reg_ird: %d\n", reg_ird);
-
-    (this->*exec[reg_ird])(reg_ird);
 }
 
 void

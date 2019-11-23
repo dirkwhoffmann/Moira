@@ -52,3 +52,35 @@ Moira::reset()
      */
 }
 
+void
+Moira::process(uint16_t reg_ird)
+{
+    printf("Processing opcode: %X\n", reg_ird);
+
+    (this->*exec[reg_ird])(reg_ird);
+}
+
+void
+Moira::prefetch()
+{
+    ird = irc;
+    irc = delegate->moiraRead16(pc + 2);
+}
+
+void
+Moira::readExtensionWord()
+{
+    pc += 2;
+    irc = delegate->moiraRead16(pc);
+
+}
+
+void
+Moira::disassemble(uint16_t addr, char *str)
+{
+    printf("disassemble %x\n", addr);
+
+    uint16_t opcode = 42; // read16()
+
+    (this->*dasm[opcode])(opcode, str, true);
+}

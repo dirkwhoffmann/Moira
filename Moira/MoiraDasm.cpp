@@ -191,13 +191,3 @@ void Moira::dasmLea(uint16_t opcode, char *str, bool hex) {
     << "mode = " << (uint16_t)13
     << "\0";
 }
-
-void
-Moira::disassemble(uint16_t addr, char *str)
-{
-    printf("disassemble %x\n", addr);
-    
-    uint16_t opcode = 42; // read16()
-    
-    (this->*dasm[opcode])(opcode, str, true);
-}

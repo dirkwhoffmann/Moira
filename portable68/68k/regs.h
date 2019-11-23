@@ -31,7 +31,7 @@ struct reg_32 {
 	reg_32() : d(0) {}
 };
 
-u16 reg_irc, reg_ird, reg_ir;
+u16 reg_irc, reg_ird; // , reg_ir;
 u32 reg_pc, reg_usp, reg_ssp;
 
 reg_32 reg_d[8];

@@ -4,6 +4,7 @@
 #include "shift.t.h"
 #include "opcodes.t.h"
 #include <cstdlib>
+#include <stdio.h>
 
 #include "Moira.h"
 extern Moira *moira;
@@ -26,9 +27,11 @@ void Core_68k::process() { //execute next opcode
         incrementPc();
         logInstruction(reg_ird, true);
 
+        printf("reg_ird = %X\n", reg_ird);
+        uint32_t ird = reg_ird;
         (this->*opcodes[ reg_ird ])(reg_ird);
 
-        moira->process(reg_ird);
+        moira->process(ird);
 
     } catch(CpuException) {
         //bus or address error, leave opcode or exception handler

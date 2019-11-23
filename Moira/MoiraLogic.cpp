@@ -8,15 +8,58 @@
 // -----------------------------------------------------------------------------
 
 template<Size S, Mode M> uint32_t
-Moira::computeEA(uint32_t addr, int x) {
+Moira::computeEA(uint32_t n, uint32_t dis, uint32_t idx) {
     
-    assert(x < 8);
+    assert(n < 8);
     
     switch (M) {
             
-        case 0: // (Dx)
-            return reg.d[x].read<S>();
-            
+        case 0: // Dn
+            return reg.d[n].read<S>();
+
+        case 1: // An
+            return reg.a[n].read<S>();
+
+        case 2: // (An)
+            assert(false);
+            return 0;
+
+        case 3: // (An)+
+            assert(false);
+            return 0;
+
+        case 4: // -(An)
+            assert(false);
+            return 0;
+
+        case 5: // (d,An)
+            assert(false);
+            return 0;
+
+        case 6: // (d,An,Xi)
+            assert(false);
+            return 0;
+
+        case 7: // ABS.W
+            assert(false);
+            return 0;
+
+        case 8: // ABS.L
+            assert(false);
+            return 0;
+
+        case 9: // (d,PC)
+            assert(false);
+            return 0;
+
+        case 10: // (d,PC,Xi)
+            assert(false);
+            return 0;
+
+        case 11: // Imm
+            assert(false);
+            return 0;
+
         default:
             assert(false);
     }

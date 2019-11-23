@@ -68,8 +68,22 @@ private:
     // The data and address registers
     Registers reg;
 
-    // The program counter  MOVE TO reg
+    // The program counter
     uint32_t pc;
+
+    /* The prefetch queue
+     * http://pasti.fxatari.com/68kdocs/68kPrefetch.html
+     *
+     * Three registers are involved in prefetching:
+     *
+     *     IRC : Holds the most recent word prefetched from memory
+     *     IR  : Holds the instruction currently being decoded
+     *     IRD : Holds the instruction currently being executed
+     *
+     * For emulation, only IRC and IRD are needed.
+     */
+    uint16_t irc;
+    uint16_t ird;
 
     // Flags
     Flags flags;
@@ -114,6 +128,14 @@ private:
     #include "MoiraSync.h"
 
 
+    //
+    // Managing the instruction stream
+    //
+
+    void prefetch();
+    void readExtensionWord();
+
+    
     //
     // Running the disassembler
     //

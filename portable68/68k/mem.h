@@ -13,9 +13,10 @@ void fullprefetchFirstStep() {
 
 void prefetch(bool lastCycle = false) {
     status_code._program = true;
-    reg_ir = reg_irc;
+    reg_ird = reg_irc;
+    // reg_ir = reg_irc;
     reg_irc = readWord(reg_pc + 2, lastCycle);
-    reg_ird = reg_ir;
+    // reg_ird = reg_ir;
     status_code._program = false;
 }
 
