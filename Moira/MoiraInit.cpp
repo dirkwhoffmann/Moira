@@ -161,37 +161,37 @@ Moira::registerShiftCmds()
     bind(opcode | 7 << 3 | 1, EaShift<ASL __ 8>);
 
     opcode = parse("1110 0000 11-- ----");
-     for (int ax = 0; ax < 8; ax++) {
-         bind(opcode | 2 << 3 | ax, EaShift<ASR __ 2>);
-         bind(opcode | 3 << 3 | ax, EaShift<ASR __ 3>);
-         bind(opcode | 4 << 3 | ax, EaShift<ASR __ 4>);
-         bind(opcode | 5 << 3 | ax, EaShift<ASR __ 5>);
-         bind(opcode | 6 << 3 | ax, EaShift<ASR __ 6>);
-     }
-     bind(opcode | 7 << 3 | 0, EaShift<ASR __ 7>);
-     bind(opcode | 7 << 3 | 1, EaShift<ASR __ 8>);
+    for (int ax = 0; ax < 8; ax++) {
+        bind(opcode | 2 << 3 | ax, EaShift<ASR __ 2>);
+        bind(opcode | 3 << 3 | ax, EaShift<ASR __ 3>);
+        bind(opcode | 4 << 3 | ax, EaShift<ASR __ 4>);
+        bind(opcode | 5 << 3 | ax, EaShift<ASR __ 5>);
+        bind(opcode | 6 << 3 | ax, EaShift<ASR __ 6>);
+    }
+    bind(opcode | 7 << 3 | 0, EaShift<ASR __ 7>);
+    bind(opcode | 7 << 3 | 1, EaShift<ASR __ 8>);
 
     opcode = parse("1110 0011 11-- ----");
-      for (int ax = 0; ax < 8; ax++) {
-          bind(opcode | 2 << 3 | ax, EaShift<LSL __ 2>);
-          bind(opcode | 3 << 3 | ax, EaShift<LSL __ 3>);
-          bind(opcode | 4 << 3 | ax, EaShift<LSL __ 4>);
-          bind(opcode | 5 << 3 | ax, EaShift<LSL __ 5>);
-          bind(opcode | 6 << 3 | ax, EaShift<LSL __ 6>);
-      }
-      bind(opcode | 7 << 3 | 0, EaShift<LSL __ 7>);
-      bind(opcode | 7 << 3 | 1, EaShift<LSL __ 8>);
+    for (int ax = 0; ax < 8; ax++) {
+        bind(opcode | 2 << 3 | ax, EaShift<LSL __ 2>);
+        bind(opcode | 3 << 3 | ax, EaShift<LSL __ 3>);
+        bind(opcode | 4 << 3 | ax, EaShift<LSL __ 4>);
+        bind(opcode | 5 << 3 | ax, EaShift<LSL __ 5>);
+        bind(opcode | 6 << 3 | ax, EaShift<LSL __ 6>);
+    }
+    bind(opcode | 7 << 3 | 0, EaShift<LSL __ 7>);
+    bind(opcode | 7 << 3 | 1, EaShift<LSL __ 8>);
 
     opcode = parse("1110 0010 11-- ----");
-     for (int ax = 0; ax < 8; ax++) {
-         bind(opcode | 2 << 3 | ax, EaShift<LSR __ 2>);
-         bind(opcode | 3 << 3 | ax, EaShift<LSR __ 3>);
-         bind(opcode | 4 << 3 | ax, EaShift<LSR __ 4>);
-         bind(opcode | 5 << 3 | ax, EaShift<LSR __ 5>);
-         bind(opcode | 6 << 3 | ax, EaShift<LSR __ 6>);
-     }
-     bind(opcode | 7 << 3 | 0, EaShift<LSR __ 7>);
-     bind(opcode | 7 << 3 | 1, EaShift<LSR __ 8>);
+    for (int ax = 0; ax < 8; ax++) {
+        bind(opcode | 2 << 3 | ax, EaShift<LSR __ 2>);
+        bind(opcode | 3 << 3 | ax, EaShift<LSR __ 3>);
+        bind(opcode | 4 << 3 | ax, EaShift<LSR __ 4>);
+        bind(opcode | 5 << 3 | ax, EaShift<LSR __ 5>);
+        bind(opcode | 6 << 3 | ax, EaShift<LSR __ 6>);
+    }
+    bind(opcode | 7 << 3 | 0, EaShift<LSR __ 7>);
+    bind(opcode | 7 << 3 | 1, EaShift<LSR __ 8>);
 
     opcode = parse("1110 0111 11-- ----");
     for (int ax = 0; ax < 8; ax++) {
@@ -216,26 +216,26 @@ Moira::registerShiftCmds()
     bind(opcode | 7 << 3 | 1, EaShift<ROR __ 8>);
 
     opcode = parse("1110 0101 11-- ----");
-     for (int ax = 0; ax < 8; ax++) {
-         bind(opcode | 2 << 3 | ax, EaShift<ROXL __ 2>);
-         bind(opcode | 3 << 3 | ax, EaShift<ROXL __ 3>);
-         bind(opcode | 4 << 3 | ax, EaShift<ROXL __ 4>);
-         bind(opcode | 5 << 3 | ax, EaShift<ROXL __ 5>);
-         bind(opcode | 6 << 3 | ax, EaShift<ROXL __ 6>);
-     }
-     bind(opcode | 7 << 3 | 0, EaShift<ROXL __ 7>);
-     bind(opcode | 7 << 3 | 1, EaShift<ROXL __ 8>);
+    for (int ax = 0; ax < 8; ax++) {
+        bind(opcode | 2 << 3 | ax, EaShift<ROXL __ 2>);
+        bind(opcode | 3 << 3 | ax, EaShift<ROXL __ 3>);
+        bind(opcode | 4 << 3 | ax, EaShift<ROXL __ 4>);
+        bind(opcode | 5 << 3 | ax, EaShift<ROXL __ 5>);
+        bind(opcode | 6 << 3 | ax, EaShift<ROXL __ 6>);
+    }
+    bind(opcode | 7 << 3 | 0, EaShift<ROXL __ 7>);
+    bind(opcode | 7 << 3 | 1, EaShift<ROXL __ 8>);
 
     opcode = parse("1110 0100 11-- ----");
-     for (int ax = 0; ax < 8; ax++) {
-         bind(opcode | 2 << 3 | ax, EaShift<ROXR __ 2>);
-         bind(opcode | 3 << 3 | ax, EaShift<ROXR __ 3>);
-         bind(opcode | 4 << 3 | ax, EaShift<ROXR __ 4>);
-         bind(opcode | 5 << 3 | ax, EaShift<ROXR __ 5>);
-         bind(opcode | 6 << 3 | ax, EaShift<ROXR __ 6>);
-     }
-     bind(opcode | 7 << 3 | 0, EaShift<ROXR __ 7>);
-     bind(opcode | 7 << 3 | 1, EaShift<ROXR __ 8>);
+    for (int ax = 0; ax < 8; ax++) {
+        bind(opcode | 2 << 3 | ax, EaShift<ROXR __ 2>);
+        bind(opcode | 3 << 3 | ax, EaShift<ROXR __ 3>);
+        bind(opcode | 4 << 3 | ax, EaShift<ROXR __ 4>);
+        bind(opcode | 5 << 3 | ax, EaShift<ROXR __ 5>);
+        bind(opcode | 6 << 3 | ax, EaShift<ROXR __ 6>);
+    }
+    bind(opcode | 7 << 3 | 0, EaShift<ROXR __ 7>);
+    bind(opcode | 7 << 3 | 1, EaShift<ROXR __ 8>);
 }
 
 void
@@ -274,6 +274,5 @@ Moira::registerMoveCmds()
         bind(opcode | 7 << 3 | 3, Lea<10>);
     }
 }
-
 
 #undef __

@@ -47,29 +47,29 @@ template<int digits> static void sprintb(char *s, uint64_t value)
 class HexWriter
 {
 public:
-
+    
     char *ptr;
-
+    
     HexWriter(char *p) : ptr(p) { }
-
+    
     HexWriter& operator<<(const char *str)
     {
         char c = *str; while (c) { *ptr++ = c; c = *++str; }
         return *this;
     }
-
+    
     HexWriter& operator<<(uint8_t value)
     {
         sprintx<2>(ptr, value);
         return *this;
     }
-
+    
     HexWriter& operator<<(uint16_t value)
     {
         sprintx<4>(ptr, value);
         return *this;
     }
-
+    
     HexWriter& operator<<(uint32_t value)
     {
         sprintx<8>(ptr, value);
@@ -80,29 +80,29 @@ public:
 class DecWriter
 {
 public:
-
+    
     char *ptr;
-
+    
     DecWriter(char *p) : ptr(p) { }
-
+    
     DecWriter& operator<<(const char *str)
     {
         char c = *str; while (c) { *ptr++ = c; c = *++str; }
         return *this;
     }
-
+    
     DecWriter& operator<<(uint8_t value)
     {
         sprintd<3>(ptr, value);
         return *this;
     }
-
+    
     DecWriter& operator<<(uint16_t value)
     {
         sprintd<5>(ptr, value);
         return *this;
     }
-
+    
     DecWriter& operator<<(uint32_t value)
     {
         sprintd<10>(ptr, value);
@@ -140,7 +140,7 @@ Moira::_dasmRegShift(uint16_t opcode, char *str)
 
 template<Instr I, Size S>
 void Moira::dasmRegShift(uint16_t opcode, char *str, bool hex) {
-
+    
     hex ?
     _dasmRegShift<HexWriter,I,S>(opcode, str) :
     _dasmRegShift<DecWriter,I,S>(opcode, str) ;
@@ -158,7 +158,7 @@ Moira::_dasmImmShift(uint16_t opcode, char *str)
 
 template<Instr I, Size S>
 void Moira::dasmImmShift(uint16_t opcode, char *str, bool hex) {
-
+    
     hex ?
     _dasmImmShift<HexWriter,I,S>(opcode, str) :
     _dasmImmShift<DecWriter,I,S>(opcode, str) ;
@@ -176,7 +176,7 @@ Moira::_dasmEaShift(uint16_t opcode, char *str)
 
 template<Instr I, Mode M>
 void Moira::dasmEaShift(uint16_t opcode, char *str, bool hex) {
-
+    
     hex ?
     _dasmEaShift<HexWriter,I,M>(opcode, str) :
     _dasmEaShift<DecWriter,I,M>(opcode, str) ;
@@ -184,20 +184,20 @@ void Moira::dasmEaShift(uint16_t opcode, char *str, bool hex) {
 
 template<Mode M>
 void Moira::dasmLea(uint16_t opcode, char *str, bool hex) {
-
-HexWriter(str)
-<< (const char *)"EA_SHIFT "
-<< "size = " << (uint8_t)42
-<< "mode = " << (uint16_t)13
-<< "\0";
+    
+    HexWriter(str)
+    << (const char *)"EA_SHIFT "
+    << "size = " << (uint8_t)42
+    << "mode = " << (uint16_t)13
+    << "\0";
 }
 
 void
 Moira::disassemble(uint16_t addr, char *str)
 {
     printf("disassemble %x\n", addr);
-
+    
     uint16_t opcode = 42; // read16()
-
+    
     (this->*dasm[opcode])(opcode, str, true);
 }

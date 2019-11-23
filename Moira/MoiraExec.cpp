@@ -10,7 +10,7 @@
 void
 Moira::execIllegal(uint16_t opcode)
 {
-    
+
 }
 
 template<Instr I, Size S> void
@@ -56,5 +56,5 @@ template<Mode M> void
 Moira::execLea(uint16_t opcode)
 {
     //
-    // TODO: 
+    // TODO:
 }

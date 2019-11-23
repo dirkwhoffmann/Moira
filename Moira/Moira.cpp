@@ -11,11 +11,11 @@
 #include <assert.h>
 
 #include "Moira.h"
-#include "MoiraInit.tpp"
-#include "MoiraLogic.tpp"
-#include "MoiraExec.tpp"
-#include "MoiraDasm.tpp"
-#include "MoiraSync.tpp"
+#include "MoiraInit.cpp"
+#include "MoiraLogic.cpp"
+#include "MoiraExec.cpp"
+#include "MoiraDasm.cpp"
+#include "MoiraSync.cpp"
 
 Moira::Moira()
 {
