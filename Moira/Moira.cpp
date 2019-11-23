@@ -26,28 +26,40 @@ Moira::Moira()
 void
 Moira::power()
 {
-    for(int i = 0; i < 8; i++) reg.d[i] = 0;
-    reg.d[0] = reg.d[1];
+    // Initialize data and address registers
+    for(int i = 0; i < 8; i++) reg.d[i] = reg.a[i] = 0;
     reset();
 }
 
 void
 Moira::reset()
 {
+    // Reset status register flags
+    flags.c = 0;
+    flags.v = 0;
+    flags.z = 0;
+    flags.n = 0;
+    flags.x = 0;
+    flags.s = 1;
+
+    // Reset Interrupt Priority Level
+    ipl = 7;
+
+    // Read the initial stack pointers from memory0
+    reg.usp = reg.usp =
+    memory->moiraReadAfterReset16(0) << 16 | memory->moiraReadAfterReset16(2);
+
+    // Read the initial program counter from memory
+    pc =
+    memory->moiraReadAfterReset16(4) << 16 | memory->moiraReadAfterReset16(6);
+
+    // Perform a full prefetch cycle
+
+    // TODO
+
+    //
     /* portable68
-       status_code.reset();
 
-        irqPendingLevel = irqSamplingLevel = 0;
-
-        rmwCycle = false;
-        stop = false;
-        doubleFault = false;
-        trace = false;
-        illegalMode = NONE;
-        reg_s = 0x2700;
-        sync(16);
-        reg_a[7] = reg_ssp = readLong(0);
-        reg_pc = readLong(4);
         fullprefetch();
      */
 }
@@ -64,14 +76,14 @@ void
 Moira::prefetch()
 {
     ird = irc;
-    irc = delegate->moiraRead16(pc + 2);
+    irc = memory->moiraRead16(pc + 2);
 }
 
 void
 Moira::readExtensionWord()
 {
     pc += 2;
-    irc = delegate->moiraRead16(pc);
+    irc = memory->moiraRead16(pc);
 
 }
 

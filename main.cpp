@@ -12,7 +12,7 @@ int main()
 
     try {
         Tester_68k tester;
-        moira->delegate = &tester;
+        moira->memory = &tester;
 
         tester.runTestCases();
         tester.printErrorCounter();

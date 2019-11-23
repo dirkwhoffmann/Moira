@@ -27,13 +27,17 @@ struct Reg {
 
 struct Registers {
 
-    // Data and address registers
     union {
         struct {
-            Reg d[8]; // D0, D1 ... D7
-            Reg a[8]; // A0, A1 ... A7
+            Reg d[8];      // D0, D1 ... D7
+            Reg a[8];      // A0, A1 ... A7
         };
-        Reg r[16];
+        struct {
+            Reg _pad[14];
+            Reg usp;       // User Stack Pointer (equals a[7])
+            Reg ssp;       // Supervisor Stack Pointer
+        };
+        Reg r[17];
     };
 
     
@@ -60,8 +64,8 @@ public:
     // The emulated CPU type
     // MoiraCpu type;
 
-    // The CPU delegate
-    MoiraDelegate *delegate = NULL;
+    // The delegation object (connected memory)
+    MoiraDelegate *memory = NULL;
 
 private:
 
@@ -87,6 +91,9 @@ private:
 
     // Flags
     Flags flags;
+
+    // Interrupt Priority Level
+    uint8_t ipl;
 
     // Jump table storing all instruction handlers
     void (Moira::*exec[65536])(uint16_t);
