@@ -7,7 +7,8 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-template<Size S, Mode M> uint32_t computeEA(uint32_t addr, int x) {
+template<Size S, Mode M> uint32_t
+Moira::computeEA(uint32_t addr, int x) {
     
     assert(x < 8);
     
@@ -19,7 +20,7 @@ template<Size S, Mode M> uint32_t computeEA(uint32_t addr, int x) {
         default:
             assert(false);
     }
-}
+
 /*
  if (ea.calculated) return ea.address;
  uint32_t adr;
