@@ -31,8 +31,6 @@ parse(const char *s, uint16_t sum = 0)
 void
 Moira::init()
 {
-    uint16_t opcode;
-
     // Start with clean tables
     for (int i = 0; i < 65536; i++) {
         exec[i] = &Moira::execIllegal;
@@ -40,14 +38,22 @@ Moira::init()
         sync[i] = &Moira::syncIllegal;
     }
 
+    registerShiftCmds();
+}
+
+void
+Moira::registerShiftCmds()
+{
+    uint16_t opcode;
+
     // ASL, ASR, LSL, LSR, ROL, ROR, ROXL, ROXR
     //
     // Modes: (1)   Dx,Dy       8,16,32
     //        (2)   #<data>,Dy  8,16,32
     //        (3)   <ea>          16
-    //               ---------------------------------------------------
+    //               --------------------------------------------------
     //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
-    //               ---------------------------------------------------
+    //               --------------------------------------------------
     //                X       X   X   X   X   X   X   X
 
     // (1)
@@ -239,5 +245,35 @@ Moira::process(uint16_t reg_ird)
 
     (this->*exec[reg_ird])(reg_ird);
 }
+
+void
+Moira::registerMoveCmds()
+{
+    uint16_t opcode;
+
+    // LEA
+    //
+    // Modes:       LEA <ea>,An
+    //
+    //               --------------------------------------------------
+    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
+    //               --------------------------------------------------
+    //                        X           X   X   X   X   X   X
+
+    for (int an = 0; an < 8; an++) {
+
+        opcode = parse("0100 ---1 11-- ----") | an << 9;
+        for (int reg = 0; reg < 8; reg++) {
+            bind(opcode | 2 << 3 | reg, Lea<2>);
+            bind(opcode | 5 << 3 | reg, Lea<5>);
+            bind(opcode | 6 << 3 | reg, Lea<6>);
+        }
+        bind(opcode | 7 << 3 | 0, Lea<7>);
+        bind(opcode | 7 << 3 | 1, Lea<8>);
+        bind(opcode | 7 << 3 | 2, Lea<9>);
+        bind(opcode | 7 << 3 | 3, Lea<10>);
+    }
+}
+
 
 #undef __

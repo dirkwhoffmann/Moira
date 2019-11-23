@@ -7,10 +7,11 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#pragma once
+#ifndef MOIRA_H
+#define MOIRA_H
 
 #include <stdint.h>
-#include "MoiraBase.h"
+#include "MoiraUtils.h"
 #include "MoiraDelegate.h"
 #include "assert.h"
 
@@ -86,20 +87,10 @@ private:
     bool hex = true;
     char str[256];
 
-    // Instruction logic
-#include "MoiraLogic.h"
-
-    // Instruction handlers
-#include "MoiraExec.h"
-#include "MoiraDasm.h"
-#include "MoiraSync.h"
-
-
 public:
     
     Moira();
 
-    void init();
     void power();
     void reset();
     void process(uint16_t reg_ird);
@@ -109,9 +100,25 @@ public:
     uint32_t getA(unsigned n) { assert(n < 8); return reg.a[n].read<Long>(); }
     void setA(unsigned n, uint32_t v) { assert(n < 8); reg.a[n].write<Long>(v); }
 
+private:
+
+    // Initialization
+    #include "MoiraInit.h"
+
+    // Instruction logic
+    #include "MoiraLogic.h"
+
+    // Instruction handlers
+    #include "MoiraExec.h"
+    #include "MoiraDasm.h"
+    #include "MoiraSync.h"
+
+
     //
     // Running the disassembler
     //
 
     void disassemble(uint16_t addr, char *str);
 };
+
+#endif

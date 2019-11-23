@@ -11,7 +11,7 @@
 #include <assert.h>
 
 #include "Moira.h"
-#include "MoiraTable.tpp"
+#include "MoiraInit.tpp"
 #include "MoiraLogic.tpp"
 #include "MoiraExec.tpp"
 #include "MoiraDasm.tpp"

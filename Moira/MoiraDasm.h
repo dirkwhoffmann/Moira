@@ -18,3 +18,5 @@ template<Instr I, Size S> void dasmImmShift(uint16_t opcode, char *str, bool hex
 
 template <class T, Instr I, Mode M> void _dasmEaShift(uint16_t opcode, char *str);
 template<Instr I, Mode M> void dasmEaShift(uint16_t opcode, char *str, bool hex);
+
+template<Mode M> void dasmLea(uint16_t opcode, char *str, bool hex);

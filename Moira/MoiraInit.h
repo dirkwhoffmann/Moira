@@ -7,10 +7,11 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-int syncIllegal(uint16_t opcode, int i);
+#ifndef MOIRA_INIT_H
+#define MOIRA_INIT_H
 
-template<Instr I, Size S> int syncRegShift(uint16_t opcode, int i);
-template<Instr I, Size S> int syncImmShift(uint16_t opcode, int i);
-template<Instr I, Mode M> int syncEaShift(uint16_t opcode, int i);
+void init();
+void registerShiftCmds();
+void registerMoveCmds();
 
-template<Mode M> int syncLea(uint16_t opcode, int i);
+#endif

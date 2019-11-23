@@ -7,7 +7,7 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#include "MoiraBase.h"
+#include "MoiraUtils.h"
 
 template<> uint32_t CLIP<Byte>(uint32_t data) { return data & 0xff; }
 template<> uint32_t CLIP<Word>(uint32_t data) { return data & 0xffff; }

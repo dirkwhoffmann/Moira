@@ -28,3 +28,8 @@ template<Instr I, Mode M> int Moira::syncEaShift(uint16_t opcode, int i) {
     printf("***** syncEaShift<%d,%d>(%d,%d)\n", I, M, opcode, i);
     return i;
 }
+
+template<Mode M> int Moira::syncLea(uint16_t opcode, int i) {
+    printf("***** syncLea<%d>(%d,%d)\n", M, opcode, i);
+    return i;
+}

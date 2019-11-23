@@ -182,6 +182,16 @@ void Moira::dasmEaShift(uint16_t opcode, char *str, bool hex) {
     _dasmEaShift<DecWriter,I,M>(opcode, str) ;
 }
 
+template<Mode M>
+void Moira::dasmLea(uint16_t opcode, char *str, bool hex) {
+
+HexWriter(str)
+<< (const char *)"EA_SHIFT "
+<< "size = " << (uint8_t)42
+<< "mode = " << (uint16_t)13
+<< "\0";
+}
+
 void
 Moira::disassemble(uint16_t addr, char *str)
 {

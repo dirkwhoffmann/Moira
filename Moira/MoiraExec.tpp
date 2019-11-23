@@ -52,3 +52,9 @@ Moira::execEaShift(uint16_t opcode)
     // write(..., value)
 }
 
+template<Mode M> void
+Moira::execLea(uint16_t opcode)
+{
+    //
+    // TODO: 
+}

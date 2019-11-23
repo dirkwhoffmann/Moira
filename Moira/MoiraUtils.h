@@ -7,7 +7,8 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#pragma once
+#ifndef MOIRA_BASE_H
+#define MOIRA_BASE_H
 
 #include "stdint.h"
 
@@ -43,3 +44,5 @@ enum Instr { ASL, ASR, LSL, LSR, ROL, ROR, ROXL, ROXR };
 typedef uint8_t Mode;
 
 // enum Mode { DRD, ARD, ARIPI, ARIPD, ARID, ARIDI, ABS16, ABS32, PCID, PCII };
+
+#endif
