@@ -411,16 +411,41 @@ void Tester_68k::process()
 
 void Tester_68k::dump()
 {
+    uint16_t pc = reg_pc, mpc = moira->getPC();
+    uint16_t irc = reg_irc, mirc = moira->getIRC();
+    uint16_t ird = reg_ird, mird = moira->getIRD();
+
+    uint16_t sr = reg_s, msr = moira->getSR();
+    bool s = (sr >> 13) & 1, ms = (msr >> 13) & 1;
+    bool c = (sr >> 0) & 1, mc = (msr >> 0) & 1;
+    bool v = (sr >> 1) & 1, mv = (msr >> 1) & 1;
+    bool z = (sr >> 2) & 1, mz = (msr >> 2) & 1;
+    bool n = (sr >> 3) & 1, mn = (msr >> 3) & 1;
+    bool x = (sr >> 4) & 1, mx = (msr >> 4) & 1;
+    int ipl = (sr >> 8) & 7, mipl = (msr >> 8) & 7;
+
+    printf("PC: %x / %x %s\n", pc, mpc, pc != mpc ? "<--" : "");
+    printf("IRC: %x / %x %s\n", irc, mirc, irc != mirc ? "<--" : "");
+    printf("IRD: %x / %x %s\n", ird, mird, ird != mird ? "<--" : "");
+    printf("\n");
+
     for (int i = 0; i < 8; i++) {
-        printf("D%i: %08x / %08x %s\n", i, getRegD(i), moira->getD(i),
+        printf("D%i: %x / %x %s\n", i, getRegD(i), moira->getD(i),
                getRegD(i) != moira->getD(i) ? "<--" : "");
     }
     for (int i = 0; i < 8; i++) {
-        printf("A%i: %08x / %08x %s\n", i, getRegA(i), moira->getA(i),
+        printf("A%i: %x / %x %s\n", i, getRegA(i), moira->getA(i),
                getRegA(i) != moira->getA(i) ? "<--" : "");
     }
 
-    exit(1);
+    printf("\nStatus register:\n");
+    printf("S: %d / %d %s\n", s, ms, s != ms ? "<--" : "");
+    printf("C: %d / %d %s\n", c, mc, c != mc ? "<--" : "");
+    printf("V: %d / %d %s\n", v, mv, v != mv ? "<--" : "");
+    printf("Z: %d / %d %s\n", z, mz, z != mz ? "<--" : "");
+    printf("N: %d / %d %s\n", n, mn, n != mn ? "<--" : "");
+    printf("X: %d / %d %s\n", x, mx, x != mx ? "<--" : "");
+    printf("IPL: %d / %d %s\n", ipl, mipl, ipl != mipl ? "<--" : "");
 }
 
 bool Tester_68k::compare()
@@ -431,6 +456,8 @@ bool Tester_68k::compare()
     for (int i = 0; i < 8; i++)
         if (getRegA(i) != moira->getA(i)) return false;
 
+    if (getSR() != moira->getSR()) return false;
+    
     return true;
 }
 
@@ -439,6 +466,7 @@ void Tester_68k::comparePre()
     if (!compare()) {
         printf("Mismatch before running command\n");
         dump();
+        exit(1);
     }
 }
 
@@ -447,5 +475,6 @@ void Tester_68k::comparePost()
     if (!compare()) {
         printf("Mismatch after running command\n");
         dump();
+        exit(1);
     }
 }

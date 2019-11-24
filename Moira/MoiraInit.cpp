@@ -9,7 +9,6 @@
 
 #define __ ,
 #define bind(id, name) { \
-printf("id = %X\n", id); \
 assert(exec[id] == &Moira::execIllegal); \
 assert(dasm[id] == &Moira::dasmIllegal); \
 assert(sync[id] == &Moira::syncIllegal); \

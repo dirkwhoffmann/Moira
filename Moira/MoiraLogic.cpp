@@ -9,16 +9,20 @@
 
 template<Size S, Mode M> uint32_t
 Moira::computeEA(uint32_t n, uint32_t dis, uint32_t idx) {
-    
+
+    uint32_t result;
+
     assert(n < 8);
     
     switch (M) {
             
         case 0: // Dn
-            return reg.d[n].read<S>();
+            result = reg.d[n].read<S>();
+            break;
 
         case 1: // An
-            return reg.a[n].read<S>();
+            result = reg.a[n].read<S>();
+            break;
 
         case 2: // (An)
             assert(false);
@@ -41,12 +45,14 @@ Moira::computeEA(uint32_t n, uint32_t dis, uint32_t idx) {
             return 0;
 
         case 7: // ABS.W
-            assert(false);
-            return 0;
+            result = CLIP<Word>(irc);
+            readExtensionWord();
+            break;
 
         case 8: // ABS.L
-            assert(false);
-            return 0;
+            result = irc;
+            readExtensionWord();
+            break;
 
         case 9: // (d,PC)
             assert(false);
@@ -144,7 +150,7 @@ Moira::computeEA(uint32_t n, uint32_t dis, uint32_t idx) {
      }
      */
 
-    return 42;
+    return result;
 }
 
 
@@ -165,11 +171,11 @@ Moira::shift(uint32_t cnt, uint32_t data) {
                 v |= data ^ (data << 1);
                 data <<= 1;
             }
-            flags.c = c;
-            flags.v = NEG<size>(v);
-            flags.z = ZERO<size>(data);
-            flags.n = NEG<size>(data);
-            if (cnt) flags.x = c; // IF IS OBSOLETE???
+            sr.c = c;
+            sr.v = NEG<size>(v);
+            sr.z = ZERO<size>(data);
+            sr.n = NEG<size>(data);
+            if (cnt) sr.x = c; // IF IS OBSOLETE???
             
             return CLIP<size>(data);
             

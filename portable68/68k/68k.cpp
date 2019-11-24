@@ -27,7 +27,6 @@ void Core_68k::process() { //execute next opcode
         incrementPc();
         logInstruction(reg_ird, true);
 
-        printf("reg_ird = %X\n", reg_ird);
         uint32_t ird = reg_ird;
         (this->*opcodes[ reg_ird ])(reg_ird);
 
@@ -710,8 +709,14 @@ u32 Core_68k::LoadEA(u8 size, u8 ea, bool noReadFromEA, bool fetchLastExtension,
 				case 0:  //absolute Word
 					adm = ABS_SHORT;
                     eaAddr = (i32)(i16)reg_irc;
-                    if (fetchLastExtension) readExtensionWord();
-                    else { logInstruction(reg_irc, false); incrementPc(); }
+                    if (fetchLastExtension) {
+                        // printf("DIRK: fetchLastExtension = %d\n", fetchLastExtension);
+                        readExtensionWord();
+                    } else {
+                        // printf("DIRK: fetchLastExtension = %d\n", fetchLastExtension);
+                        logInstruction(reg_irc, false); incrementPc();
+                    }
+
 					break;
 
 				case 1: //absolute Long

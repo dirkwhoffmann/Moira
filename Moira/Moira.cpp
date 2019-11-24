@@ -34,18 +34,16 @@ Moira::power()
 void
 Moira::reset()
 {
-    // Reset status register flags
-    flags.c = 0;
-    flags.v = 0;
-    flags.z = 0;
-    flags.n = 0;
-    flags.x = 0;
-    flags.s = 1;
+    // Reset the status register
+    sr.c = 0;
+    sr.v = 0;
+    sr.z = 0;
+    sr.n = 0;
+    sr.x = 0;
+    sr.s = 1;
+    sr.ipl = 7;
 
-    // Reset Interrupt Priority Level
-    ipl = 7;
-
-    // Read the initial stack pointers from memory0
+    // Read the initial stack pointer from memory
     reg.usp = reg.usp =
     memory->moiraReadAfterReset16(0) << 16 | memory->moiraReadAfterReset16(2);
 
@@ -53,23 +51,52 @@ Moira::reset()
     pc =
     memory->moiraReadAfterReset16(4) << 16 | memory->moiraReadAfterReset16(6);
 
-    // Perform a full prefetch cycle
-
-    // TODO
-
-    //
-    /* portable68
-
-        fullprefetch();
-     */
+    // Fill the prefetch queue
+    irc = memory->moiraRead16(pc);
+    prefetch();
 }
 
 void
 Moira::process(uint16_t reg_ird)
 {
-    printf("Processing opcode: %X\n", reg_ird);
-
+    pc += 2;
     (this->*exec[reg_ird])(reg_ird);
+}
+
+uint16_t
+Moira::getSR()
+{
+    return (sr.s << 13) | (sr.ipl << 8) | getCCR();
+}
+
+void
+Moira::setSR(uint16_t value)
+{
+    bool s   = (value >> 13) & 1;
+    bool ipl = (value >>  8) & 7;
+
+    sr.s = s;
+    sr.ipl = ipl;
+
+    if (sr.s ^ s) {
+        // Supervisior flag has changed
+    }
+}
+
+uint8_t
+Moira::getCCR()
+{
+    return sr.c << 0 | sr.v << 1 | sr.z << 2 | sr.n << 3 | sr.x << 4;
+}
+
+void
+Moira::setCCR(uint8_t value)
+{
+    sr.c = (value >> 0) & 1;
+    sr.v = (value >> 1) & 1;
+    sr.z = (value >> 2) & 1;
+    sr.n = (value >> 3) & 1;
+    sr.x = (value >> 4) & 1;
 }
 
 void
@@ -84,7 +111,6 @@ Moira::readExtensionWord()
 {
     pc += 2;
     irc = memory->moiraRead16(pc);
-
 }
 
 void

@@ -15,16 +15,6 @@
 #include "MoiraDelegate.h"
 #include "assert.h"
 
-struct Reg {
-
-    uint32_t value;
-
-    template<Size S> uint32_t read() { return CLIP<S>(value); }
-    template<Size S> void write(uint32_t v) { value = CLIP<S>(v); }
-
-    Reg & operator=(const uint32_t & rhs) { value = rhs; return *this; }
-};
-
 struct Registers {
 
     union {
@@ -39,14 +29,9 @@ struct Registers {
         };
         Reg r[17];
     };
-
-    
-    // template<Size S> uint32_t readRn(unsigned n) { return CLIP<S>(r[n]); }
-    // template<Size S> uint32_t readDn(unsigned n) { return CLIP<S>(d[n]); }
-    // template<Size S> uint32_t readAn(unsigned n) { return CLIP<S>(a[n]); }
 };
 
-struct Flags {
+struct StatusRegister {
 
     bool s;       // Supervisor flag
     bool m;       // Master / Interrupt state
@@ -55,6 +40,8 @@ struct Flags {
     bool z;       // Zero flag
     bool v;       // Overflow flag
     bool c;       // Carry flag
+
+    uint8_t ipl;  // Interrupt Priority Level
 };
 
 class Moira {
@@ -90,10 +77,8 @@ private:
     uint16_t ird;
 
     // Flags
-    Flags flags;
+    StatusRegister sr;
 
-    // Interrupt Priority Level
-    uint8_t ipl;
 
     // Jump table storing all instruction handlers
     void (Moira::*exec[65536])(uint16_t);
@@ -121,6 +106,10 @@ public:
     uint32_t getA(unsigned n) { assert(n < 8); return reg.a[n].read<Long>(); }
     void setA(unsigned n, uint32_t v) { assert(n < 8); reg.a[n].write<Long>(v); }
 
+    uint32_t getPC() { return pc; }
+    uint32_t getIRC() { return irc; }
+    uint32_t getIRD() { return ird; }
+
 private:
 
     // Initialization
@@ -136,8 +125,25 @@ private:
 
 
     //
+    // Working with the instruction register
+    //
+
+public:
+
+    // Gets or sets the Status Register
+    uint16_t getSR();
+    void setSR(uint16_t value);
+
+    // Gets or sets the Condition Code Register (CCR, the lower byte of SR)
+    uint8_t getCCR();
+    void setCCR(uint8_t value);
+
+
+    //
     // Managing the instruction stream
     //
+
+private:
 
     void prefetch();
     void readExtensionWord();
@@ -147,6 +153,8 @@ private:
     // Running the disassembler
     //
 
+public:
+    
     void disassemble(uint16_t addr, char *str);
 };
 

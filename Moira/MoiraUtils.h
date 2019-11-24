@@ -45,4 +45,16 @@ typedef uint8_t Mode;
 
 // enum Mode { DRD, ARD, ARIPI, ARIPD, ARID, ARIDI, ABS16, ABS32, PCID, PCII };
 
+
+struct Reg {
+
+    uint32_t value;
+
+    template<Size S> uint32_t read() { return CLIP<S>(value); }
+    template<Size S> void write(uint32_t v) { value = CLIP<S>(v); }
+
+    Reg & operator=(const uint32_t & rhs) { value = rhs; return *this; }
+};
+
+
 #endif

@@ -115,7 +115,7 @@ protected:
         reg_s.l = val;
     }
 
-private:
+public:
     #include "regs.h"
     #include "mem.h"
 
