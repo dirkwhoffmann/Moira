@@ -17,16 +17,18 @@ CPU::computeEA(u32 n, u32 dis, u32 idx) {
     switch (M) {
             
         case 0: // Dn
-            result = reg.d[n].read<S>();
+            // result = reg.d[n].read<S>();
+            assert(false);
             break;
 
         case 1: // An
-            result = reg.a[n].read<S>();
+            // result = reg.a[n].read<S>();
+            assert(false);
             break;
 
         case 2: // (An)
-            assert(false);
-            return 0;
+            result = reg.a[n].read<Long>();
+            break;
 
         case 3: // (An)+
             assert(false);
@@ -50,7 +52,9 @@ CPU::computeEA(u32 n, u32 dis, u32 idx) {
             break;
 
         case 8: // ABS.L
-            result = irc;
+            result = irc << 16;
+            readExtensionWord();
+            result |= irc;
             readExtensionWord();
             break;
 
