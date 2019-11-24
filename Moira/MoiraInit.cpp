@@ -17,6 +17,7 @@ dasm[id] = &Moira::dasm##name; \
 sync[id] = &Moira::sync##name; \
 }
 
+
 static uint16_t
 parse(const char *s, uint16_t sum = 0)
 {

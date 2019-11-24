@@ -10,6 +10,9 @@
 extern Moira *moira;
 
 void Core_68k::process() { //execute next opcode
+
+    char instr[256];
+
     if ( doubleFault ) {
         cpuHalted();
         sync(4);
@@ -30,6 +33,8 @@ void Core_68k::process() { //execute next opcode
         uint32_t ird = reg_ird;
         (this->*opcodes[ reg_ird ])(reg_ird);
 
+        moira->disassemble(moira->getPC(), instr);
+        printf("Moira: %s\n", instr);
         moira->process(ird);
 
     } catch(CpuException) {

@@ -59,6 +59,8 @@ Moira::reset()
 void
 Moira::process(uint16_t reg_ird)
 {
+    printf("Processing opcode %x\n", reg_ird);
+
     pc += 2;
     (this->*exec[reg_ird])(reg_ird);
 }
@@ -114,11 +116,13 @@ Moira::readExtensionWord()
 }
 
 void
-Moira::disassemble(uint16_t addr, char *str)
+Moira::disassemble(uint32_t addr, char *str, bool hex)
 {
-    printf("disassemble %x\n", addr);
+    uint16_t opcode = memory->moiraSpyRead16(addr);
+    StrWriter writer{str, hex};
 
-    uint16_t opcode = 42; // read16()
+    printf("disassemble %x at %x\n", opcode, addr);
 
-    (this->*dasm[opcode])(opcode, str, true);
+    (this->*dasm[opcode])(writer, addr, opcode);
+    writer.finish();
 }

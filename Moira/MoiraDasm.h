@@ -7,16 +7,8 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-template <class T> void _dasmIllegal(uint16_t opcode, char *str);
-void dasmIllegal(uint16_t opcode, char *str, bool hex);
-
-template <class T, Instr I, Size S> void _dasmRegShift(uint16_t opcode, char *str);
-template<Instr I, Size S> void dasmRegShift(uint16_t opcode, char *str, bool hex);
-
-template <class T, Instr I, Size S> void _dasmImmShift(uint16_t opcode, char *str);
-template<Instr I, Size S> void dasmImmShift(uint16_t opcode, char *str, bool hex);
-
-template <class T, Instr I, Mode M> void _dasmEaShift(uint16_t opcode, char *str);
-template<Instr I, Mode M> void dasmEaShift(uint16_t opcode, char *str, bool hex);
-
-template<Mode M> void dasmLea(uint16_t opcode, char *str, bool hex);
+void dasmIllegal(StrWriter &str, uint32_t addr, uint16_t opcode);
+template<Instr I, Size S> void dasmRegShift(StrWriter &str, uint32_t addr, uint16_t opcode);
+template<Instr I, Size S> void dasmImmShift(StrWriter &str, uint32_t addr, uint16_t opcode);
+template<Instr I, Mode M> void dasmEaShift(StrWriter &str, uint32_t addr, uint16_t opcode);
+template<Mode M> void dasmLea(StrWriter &str, uint32_t addr, uint16_t opcode);

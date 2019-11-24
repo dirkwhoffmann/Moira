@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 #include "MoiraUtils.h"
+#include "StringWriter.h"
 #include "MoiraDelegate.h"
 #include "assert.h"
 
@@ -84,7 +85,7 @@ private:
     void (Moira::*exec[65536])(uint16_t);
 
     // Jump table storing all disassebler handlers
-    void (Moira::*dasm[65536])(uint16_t, char *, bool);
+    void (Moira::*dasm[65536])(StrWriter&, uint32_t, uint16_t);
 
     // Jump table storing all time information handlers
     int (Moira::*sync[65536])(uint16_t, int);
@@ -155,7 +156,7 @@ private:
 
 public:
     
-    void disassemble(uint16_t addr, char *str);
+    void disassemble(uint32_t addr, char *str, bool hex = true);
 };
 
 #endif
