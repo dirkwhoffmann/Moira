@@ -15,7 +15,7 @@
 
 struct Dn { int n; };
 struct An { int n; };
-struct Ea { Mode m; uint32_t addr; uint16_t opcode; };
+struct Ea { Mode m; uint16_t opcode; uint16_t ext1; uint16_t ext2; };
 
 class StrWriter
 {

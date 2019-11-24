@@ -85,7 +85,7 @@ private:
     void (Moira::*exec[65536])(uint16_t);
 
     // Jump table storing all disassebler handlers
-    void (Moira::*dasm[65536])(StrWriter&, uint32_t, uint16_t);
+    void (Moira::*dasm[65536])(StrWriter&, uint16_t, uint16_t, uint16_t);
 
     // Jump table storing all time information handlers
     int (Moira::*sync[65536])(uint16_t, int);

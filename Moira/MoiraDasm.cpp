@@ -19,13 +19,13 @@
 //
 
 void
-Moira::dasmIllegal(StrWriter &str, uint32_t addr, uint16_t opcode)
+Moira::dasmIllegal(StrWriter &str, uint16_t op, uint16_t ext1, uint16_t ext2)
 {
     str << "ILLEGAL";
 }
 
 template<Instr I, Size S> void 
-Moira::dasmRegShift(StrWriter &str,  uint32_t addr, uint16_t opcode)
+Moira::dasmRegShift(StrWriter &str, uint16_t op, uint16_t ext1, uint16_t ext2)
 {
     str
     << (const char *)"REG_SHIFT "
@@ -34,7 +34,7 @@ Moira::dasmRegShift(StrWriter &str,  uint32_t addr, uint16_t opcode)
 }
 
 template <Instr I, Size S> void
-Moira::dasmImmShift(StrWriter &str, uint32_t addr, uint16_t opcode)
+Moira::dasmImmShift(StrWriter &str, uint16_t op, uint16_t ext1, uint16_t ext2)
 {
     str
     << (const char *)"IMM_SHIFT "
@@ -43,7 +43,7 @@ Moira::dasmImmShift(StrWriter &str, uint32_t addr, uint16_t opcode)
 }
 
 template <Instr I, Mode M> void
-Moira::dasmEaShift(StrWriter &str, uint32_t addr, uint16_t opcode)
+Moira::dasmEaShift(StrWriter &str, uint16_t op, uint16_t ext1, uint16_t ext2)
 {
     str
     << (const char *)"EA_SHIFT "
@@ -52,10 +52,10 @@ Moira::dasmEaShift(StrWriter &str, uint32_t addr, uint16_t opcode)
 }
 
 template <Mode M> void
-Moira::dasmLea(StrWriter &str, uint32_t addr, uint16_t opcode)
+Moira::dasmLea(StrWriter &str, uint16_t op, uint16_t ext1, uint16_t ext2)
 {
-    Ea ea { M, addr, opcode };
-    An an { (opcode >> 9) & 7 };
+    Ea ea { M, op, ext1, ext2 };
+    An an { (op >> 9) & 7 };
 
     str << "lea     " << ea << ", " << an;
 }

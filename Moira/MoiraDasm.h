@@ -7,8 +7,13 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-void dasmIllegal(StrWriter &str, uint32_t addr, uint16_t opcode);
-template<Instr I, Size S> void dasmRegShift(StrWriter &str, uint32_t addr, uint16_t opcode);
-template<Instr I, Size S> void dasmImmShift(StrWriter &str, uint32_t addr, uint16_t opcode);
-template<Instr I, Mode M> void dasmEaShift(StrWriter &str, uint32_t addr, uint16_t opcode);
-template<Mode M> void dasmLea(StrWriter &str, uint32_t addr, uint16_t opcode);
+void
+dasmIllegal(StrWriter &str, uint16_t op, uint16_t ext1, uint16_t ext2);
+template<Instr I, Size S>
+void dasmRegShift(StrWriter &str, uint16_t op, uint16_t ext1, uint16_t ext2);
+template<Instr I, Size S>
+void dasmImmShift(StrWriter &str, uint16_t op, uint16_t ext1, uint16_t ext2);
+template<Instr I, Mode M>
+void dasmEaShift(StrWriter &str, uint16_t op, uint16_t ext1, uint16_t ext2);
+template<Mode M>
+void dasmLea(StrWriter &str, uint16_t op, uint16_t ext1, uint16_t ext2);

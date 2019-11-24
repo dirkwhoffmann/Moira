@@ -119,10 +119,13 @@ void
 Moira::disassemble(uint32_t addr, char *str, bool hex)
 {
     uint16_t opcode = memory->moiraSpyRead16(addr);
+    uint16_t ext1   = memory->moiraSpyRead16(addr + 2);
+    uint16_t ext2   = memory->moiraSpyRead16(addr + 4);
+
     StrWriter writer{str, hex};
 
-    printf("disassemble %x at %x\n", opcode, addr);
+    printf("disassemble [%x,%x,%x] at %x\n", opcode, ext1, ext2, addr);
 
-    (this->*dasm[opcode])(writer, addr, opcode);
+    (this->*dasm[opcode])(writer, opcode, ext1, ext2);
     writer.finish();
 }

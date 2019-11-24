@@ -10,6 +10,8 @@
 #include "StringWriter.h"
 #include "assert.h"
 #include <math.h>
+#include <stdio.h>
+
 
 static int decDigits(uint64_t value) { return value ? 1 + log10(value) : 1; }
 static int binDigits(uint64_t value) { return value ? 1 + log2(value) : 1; }
@@ -19,9 +21,10 @@ static void sprintd(char *&s, uint64_t value, int digits)
 {
     for (int i = digits - 1; i >= 0; i--) {
         uint8_t digit = value % 10;
-        *s++ = '0' + digit;
+        s[i] = '0' + digit;
         value /= 10;
     }
+    s += digits;
 }
 
 static void sprintd(char *&s, uint64_t value)
@@ -34,14 +37,15 @@ static void sprintx(char *&s, uint64_t value, int digits)
     *s++ = '$';
     for (int i = digits - 1; i >= 0; i--) {
         uint8_t digit = value % 16;
-        *s++ = (digit <= 9) ? ('0' + digit) : ('a' + digit - 10);
+        s[i] = (digit <= 9) ? ('0' + digit) : ('a' + digit - 10);
         value /= 16;
     }
+    s += digits;
 }
 
 static void sprintx(char *&s, uint64_t value)
 {
-      sprintx(s, value, hexDigits(value));
+    sprintx(s, value, hexDigits(value));
 }
 
 StrWriter&
@@ -98,8 +102,6 @@ StrWriter::operator<<(An an)
 StrWriter&
 StrWriter::operator<<(Ea ea)
 {
-    uint16_t extension1, extension2;
-
     switch (ea.m) {
 
         case 0: // Dn
@@ -131,15 +133,12 @@ StrWriter::operator<<(Ea ea)
             break;
 
         case 7: // ABS.W
-
-            extension1 = 42; // TODO
-            *this << extension1 << ".w";
+            *this << ea.ext1 << ".w";
             break;
 
         case 8: // ABS.L
-            extension1 = 33; // TODO
-            extension2 = 42; // TODO
-            *this << (uint32_t)(extension1 << 16 | extension2) << ".l";
+            printf("ext1 = %x ext2 = %x %x\n", ea.ext1, ea.ext2, (uint32_t)(ea.ext1 << 16 | ea.ext2));
+            *this << (uint32_t)(ea.ext1 << 16 | ea.ext2) << ".l";
             break;
 
         case 9: // (d,PC)
