@@ -15,6 +15,8 @@
 #include "MoiraDelegate.h"
 #include "assert.h"
 
+namespace Moira {
+
 struct Registers {
 
     union {
@@ -158,4 +160,5 @@ public:
     void disassemble(u32 addr, char *str, bool hex = true);
 };
 
+} 
 #endif

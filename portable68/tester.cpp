@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #include "Moira.h"
-extern CPU *moira;
+extern Moira::CPU *moira;
 
 /*
 #include "testcases/add.cpp"

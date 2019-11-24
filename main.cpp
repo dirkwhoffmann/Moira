@@ -4,11 +4,11 @@
 #include <time.h>
 #include "Moira.h"
 
-CPU *moira;
+Moira::CPU *moira;
 
 int main()
 {
-    moira = new CPU();
+    moira = new Moira::CPU();
 
     try {
         Tester_68k tester;

@@ -12,6 +12,8 @@
 
 #include "types.h"
 
+using namespace Moira;
+
 enum Size { Byte, Word, Long };
 
 template<Size> u32 CLIP(u32 data);

@@ -7,6 +7,8 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+using namespace Moira;
+
 #define __ ,
 #define bind(id, name) { \
 assert(exec[id] == &CPU::execIllegal); \
@@ -16,7 +18,6 @@ exec[id] = &CPU::exec##name; \
 dasm[id] = &CPU::dasm##name; \
 sync[id] = &CPU::sync##name; \
 }
-
 
 static u16
 parse(const char *s, u16 sum = 0)

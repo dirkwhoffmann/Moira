@@ -12,6 +12,8 @@
 
 #include "types.h"
 
+using namespace Moira;
+
 class MoiraDelegate {
 
 public:
