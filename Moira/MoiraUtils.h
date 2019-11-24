@@ -10,7 +10,7 @@
 #ifndef MOIRA_BASE_H
 #define MOIRA_BASE_H
 
-#include <stdint.h>
+#include "types.h"
 
 enum Size { Byte, Word, Long };
 

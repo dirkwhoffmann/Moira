@@ -10,7 +10,7 @@
 #ifndef MOIRA_DELEGATE_H
 #define MOIRA_DELEGATE_H
 
-#include <stdint.h>
+#include "types.h"
 
 class MoiraDelegate {
 

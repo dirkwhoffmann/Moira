@@ -10,7 +10,6 @@
 #ifndef MOIRA_H
 #define MOIRA_H
 
-#include <stdint.h>
 #include "MoiraUtils.h"
 #include "StringWriter.h"
 #include "MoiraDelegate.h"
