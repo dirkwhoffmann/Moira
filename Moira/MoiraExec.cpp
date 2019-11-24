@@ -8,13 +8,13 @@
 // -----------------------------------------------------------------------------
 
 void
-Moira::execIllegal(u16 opcode)
+CPU::execIllegal(u16 opcode)
 {
     printf("Moira::execIllegal\n");
 }
 
 template<Instr I, Size S> void
-Moira::execRegShift(u16 opcode)
+CPU::execRegShift(u16 opcode)
 {
     // Dx,Dy
     int x = (opcode >> 9) & 0b111; //  ---- xxx- ---- ----
@@ -27,7 +27,7 @@ Moira::execRegShift(u16 opcode)
 }
 
 template<Instr I, Size S> void
-Moira::execImmShift(u16 opcode)
+CPU::execImmShift(u16 opcode)
 {
     // #<cnt>,Dy
     int cnt = (opcode >> 9) & 0b111; //  ---- xxx- ---- ----
@@ -39,7 +39,7 @@ Moira::execImmShift(u16 opcode)
 }
 
 template<Instr I, Mode M> void
-Moira::execEaShift(u16 opcode)
+CPU::execEaShift(u16 opcode)
 {
     //
     // TODO: Read from Ea
@@ -53,7 +53,7 @@ Moira::execEaShift(u16 opcode)
 }
 
 template<Mode M> void
-Moira::execLea(u16 opcode)
+CPU::execLea(u16 opcode)
 {
     int src = (opcode >> 0) & 0b111; //  ---- ---- ---- -xxx
     int dst = (opcode >> 9) & 0b111; //  ---- xxx- ---- ----

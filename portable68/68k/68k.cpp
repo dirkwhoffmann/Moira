@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 #include "Moira.h"
-extern Moira *moira;
+extern CPU *moira;
 
 void Core_68k::process() { //execute next opcode
 

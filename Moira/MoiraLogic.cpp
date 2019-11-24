@@ -8,7 +8,7 @@
 // -----------------------------------------------------------------------------
 
 template<Size S, Mode M> u32
-Moira::computeEA(u32 n, u32 dis, u32 idx) {
+CPU::computeEA(u32 n, u32 dis, u32 idx) {
 
     u32 result;
 
@@ -155,7 +155,7 @@ Moira::computeEA(u32 n, u32 dis, u32 idx) {
 
 
 template<Size size, Instr instr> u32
-Moira::shift(u32 cnt, u32 data) {
+CPU::shift(u32 cnt, u32 data) {
     
     assert(cnt > 0);
     

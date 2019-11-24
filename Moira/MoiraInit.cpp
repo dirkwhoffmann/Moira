@@ -9,12 +9,12 @@
 
 #define __ ,
 #define bind(id, name) { \
-assert(exec[id] == &Moira::execIllegal); \
-assert(dasm[id] == &Moira::dasmIllegal); \
-assert(sync[id] == &Moira::syncIllegal); \
-exec[id] = &Moira::exec##name; \
-dasm[id] = &Moira::dasm##name; \
-sync[id] = &Moira::sync##name; \
+assert(exec[id] == &CPU::execIllegal); \
+assert(dasm[id] == &CPU::dasmIllegal); \
+assert(sync[id] == &CPU::syncIllegal); \
+exec[id] = &CPU::exec##name; \
+dasm[id] = &CPU::dasm##name; \
+sync[id] = &CPU::sync##name; \
 }
 
 
@@ -29,13 +29,13 @@ parse(const char *s, u16 sum = 0)
 }
 
 void
-Moira::init()
+CPU::init()
 {
     // Start with clean tables
     for (int i = 0; i < 65536; i++) {
-        exec[i] = &Moira::execIllegal;
-        dasm[i] = &Moira::dasmIllegal;
-        sync[i] = &Moira::syncIllegal;
+        exec[i] = &CPU::execIllegal;
+        dasm[i] = &CPU::dasmIllegal;
+        sync[i] = &CPU::syncIllegal;
     }
 
     registerShiftCmds();
@@ -43,7 +43,7 @@ Moira::init()
 }
 
 void
-Moira::registerShiftCmds()
+CPU::registerShiftCmds()
 {
     u16 opcode;
 
@@ -240,7 +240,7 @@ Moira::registerShiftCmds()
 }
 
 void
-Moira::registerMoveCmds()
+CPU::registerMoveCmds()
 {
     u16 opcode;
 

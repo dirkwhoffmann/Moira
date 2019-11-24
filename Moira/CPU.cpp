@@ -17,14 +17,14 @@
 #include "MoiraDasm.cpp"
 #include "MoiraSync.cpp"
 
-Moira::Moira()
+CPU::CPU()
 {
     init();
 }
 
 
 void
-Moira::power()
+CPU::power()
 {
     // Initialize data and address registers
     for(int i = 0; i < 8; i++) reg.d[i] = reg.a[i] = 0;
@@ -32,7 +32,7 @@ Moira::power()
 }
 
 void
-Moira::reset()
+CPU::reset()
 {
     // Reset the status register
     sr.c = 0;
@@ -57,7 +57,7 @@ Moira::reset()
 }
 
 void
-Moira::process(u16 reg_ird)
+CPU::process(u16 reg_ird)
 {
     printf("Processing opcode %x\n", reg_ird);
 
@@ -66,13 +66,13 @@ Moira::process(u16 reg_ird)
 }
 
 u16
-Moira::getSR()
+CPU::getSR()
 {
     return (sr.s << 13) | (sr.ipl << 8) | getCCR();
 }
 
 void
-Moira::setSR(u16 value)
+CPU::setSR(u16 value)
 {
     bool s   = (value >> 13) & 1;
     bool ipl = (value >>  8) & 7;
@@ -86,13 +86,13 @@ Moira::setSR(u16 value)
 }
 
 u8
-Moira::getCCR()
+CPU::getCCR()
 {
     return sr.c << 0 | sr.v << 1 | sr.z << 2 | sr.n << 3 | sr.x << 4;
 }
 
 void
-Moira::setCCR(u8 value)
+CPU::setCCR(u8 value)
 {
     sr.c = (value >> 0) & 1;
     sr.v = (value >> 1) & 1;
@@ -102,21 +102,21 @@ Moira::setCCR(u8 value)
 }
 
 void
-Moira::prefetch()
+CPU::prefetch()
 {
     ird = irc;
     irc = memory->moiraRead16(pc + 2);
 }
 
 void
-Moira::readExtensionWord()
+CPU::readExtensionWord()
 {
     pc += 2;
     irc = memory->moiraRead16(pc);
 }
 
 void
-Moira::disassemble(u32 addr, char *str, bool hex)
+CPU::disassemble(u32 addr, char *str, bool hex)
 {
     u16 opcode = memory->moiraSpyRead16(addr);
     u16 ext1   = memory->moiraSpyRead16(addr + 2);

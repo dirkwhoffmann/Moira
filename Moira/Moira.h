@@ -44,7 +44,7 @@ struct StatusRegister {
     u8 ipl;       // Interrupt Priority Level
 };
 
-class Moira {
+class CPU {
 
 public:
 
@@ -81,13 +81,13 @@ private:
 
 
     // Jump table storing all instruction handlers
-    void (Moira::*exec[65536])(u16);
+    void (CPU::*exec[65536])(u16);
 
     // Jump table storing all disassebler handlers
-    void (Moira::*dasm[65536])(StrWriter&, u16, u16, u16);
+    void (CPU::*dasm[65536])(StrWriter&, u16, u16, u16);
 
     // Jump table storing all time information handlers
-    int (Moira::*sync[65536])(u16, int);
+    int (CPU::*sync[65536])(u16, int);
 
     // Disassembler
     bool hex = true;
@@ -95,7 +95,7 @@ private:
 
 public:
     
-    Moira();
+    CPU();
 
     void power();
     void reset();
