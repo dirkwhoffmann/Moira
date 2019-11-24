@@ -57,7 +57,7 @@ Moira::reset()
 }
 
 void
-Moira::process(uint16_t reg_ird)
+Moira::process(u16 reg_ird)
 {
     printf("Processing opcode %x\n", reg_ird);
 
@@ -65,14 +65,14 @@ Moira::process(uint16_t reg_ird)
     (this->*exec[reg_ird])(reg_ird);
 }
 
-uint16_t
+u16
 Moira::getSR()
 {
     return (sr.s << 13) | (sr.ipl << 8) | getCCR();
 }
 
 void
-Moira::setSR(uint16_t value)
+Moira::setSR(u16 value)
 {
     bool s   = (value >> 13) & 1;
     bool ipl = (value >>  8) & 7;
@@ -85,14 +85,14 @@ Moira::setSR(uint16_t value)
     }
 }
 
-uint8_t
+u8
 Moira::getCCR()
 {
     return sr.c << 0 | sr.v << 1 | sr.z << 2 | sr.n << 3 | sr.x << 4;
 }
 
 void
-Moira::setCCR(uint8_t value)
+Moira::setCCR(u8 value)
 {
     sr.c = (value >> 0) & 1;
     sr.v = (value >> 1) & 1;
@@ -116,11 +116,11 @@ Moira::readExtensionWord()
 }
 
 void
-Moira::disassemble(uint32_t addr, char *str, bool hex)
+Moira::disassemble(u32 addr, char *str, bool hex)
 {
-    uint16_t opcode = memory->moiraSpyRead16(addr);
-    uint16_t ext1   = memory->moiraSpyRead16(addr + 2);
-    uint16_t ext2   = memory->moiraSpyRead16(addr + 4);
+    u16 opcode = memory->moiraSpyRead16(addr);
+    u16 ext1   = memory->moiraSpyRead16(addr + 2);
+    u16 ext2   = memory->moiraSpyRead16(addr + 4);
 
     StrWriter writer{str, hex};
 

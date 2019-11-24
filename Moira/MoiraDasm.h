@@ -8,12 +8,12 @@
 // -----------------------------------------------------------------------------
 
 void
-dasmIllegal(StrWriter &str, uint16_t op, uint16_t ext1, uint16_t ext2);
+dasmIllegal(StrWriter &str, u16 op, u16 ext1, u16 ext2);
 template<Instr I, Size S>
-void dasmRegShift(StrWriter &str, uint16_t op, uint16_t ext1, uint16_t ext2);
+void dasmRegShift(StrWriter &str, u16 op, u16 ext1, u16 ext2);
 template<Instr I, Size S>
-void dasmImmShift(StrWriter &str, uint16_t op, uint16_t ext1, uint16_t ext2);
+void dasmImmShift(StrWriter &str, u16 op, u16 ext1, u16 ext2);
 template<Instr I, Mode M>
-void dasmEaShift(StrWriter &str, uint16_t op, uint16_t ext1, uint16_t ext2);
+void dasmEaShift(StrWriter &str, u16 op, u16 ext1, u16 ext2);
 template<Mode M>
-void dasmLea(StrWriter &str, uint16_t op, uint16_t ext1, uint16_t ext2);
+void dasmLea(StrWriter &str, u16 op, u16 ext1, u16 ext2);

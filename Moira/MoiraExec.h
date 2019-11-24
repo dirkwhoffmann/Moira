@@ -7,10 +7,10 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-void execIllegal(uint16_t opcode);
+void execIllegal(u16 opcode);
 
-template<Instr I, Size S> void execRegShift(uint16_t opcode);
-template<Instr I, Size S> void execImmShift(uint16_t opcode);
-template<Instr I, Mode M> void execEaShift(uint16_t opcode);
+template<Instr I, Size S> void execRegShift(u16 opcode);
+template<Instr I, Size S> void execImmShift(u16 opcode);
+template<Instr I, Mode M> void execEaShift(u16 opcode);
 
-template<Mode M> void execLea(uint16_t opcode);
+template<Mode M> void execLea(u16 opcode);

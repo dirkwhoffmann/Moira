@@ -15,7 +15,7 @@
 
 struct Dn { int n; };
 struct An { int n; };
-struct Ea { Mode m; uint16_t opcode; uint16_t ext1; uint16_t ext2; };
+struct Ea { Mode m; u16 opcode; u16 ext1; u16 ext2; };
 
 class StrWriter
 {
@@ -28,9 +28,9 @@ public:
 
     StrWriter& operator<<(char c);
     StrWriter& operator<<(const char *str);
-    StrWriter& operator<<(uint8_t value);
-    StrWriter& operator<<(uint16_t value);
-    StrWriter& operator<<(uint32_t value);
+    StrWriter& operator<<(u8 value);
+    StrWriter& operator<<(u16 value);
+    StrWriter& operator<<(u32 value);
     StrWriter& operator<<(Dn dn);
     StrWriter& operator<<(An an);
     StrWriter& operator<<(Ea ea);

@@ -7,10 +7,10 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-template<Size S, Mode M> uint32_t
-Moira::computeEA(uint32_t n, uint32_t dis, uint32_t idx) {
+template<Size S, Mode M> u32
+Moira::computeEA(u32 n, u32 dis, u32 idx) {
 
-    uint32_t result;
+    u32 result;
 
     assert(n < 8);
     
@@ -72,7 +72,7 @@ Moira::computeEA(uint32_t n, uint32_t dis, uint32_t idx) {
 
     /*
      if (ea.calculated) return ea.address;
-     uint32_t adr;
+     u32 adr;
 
      switch(ea.mode) {
      case DataRegisterDirect:
@@ -95,7 +95,7 @@ Moira::computeEA(uint32_t n, uint32_t dis, uint32_t idx) {
      return adr;
 
      case AddressRegisterIndirectWithDisplacement:
-     adr = Base::read( AddressRegister{ea.reg} ) + (int16_t)ctx->irc;
+     adr = Base::read( AddressRegister{ea.reg} ) + (i16)ctx->irc;
      if (specialCase != NoLastPrefetch) readExtensionWord();
      return adr;
 
@@ -103,19 +103,19 @@ Moira::computeEA(uint32_t n, uint32_t dis, uint32_t idx) {
      adr = Base::read( AddressRegister{ea.reg} );
      d8Xn:
      if(specialCase != NoCyclesD8) ctx->sync(2);
-     uint8_t displacement = ctx->irc & 0xff;
-     uint8_t reg = (ctx->irc & 0x7000) >> 12;
-     uint32_t dispReg = ctx->irc & 0x8000
+     u8 displacement = ctx->irc & 0xff;
+     u8 reg = (ctx->irc & 0x7000) >> 12;
+     u32 dispReg = ctx->irc & 0x8000
      ? Base::read( AddressRegister{reg} )
      : Base::read( DataRegister{reg} );
-     if ( !(ctx->irc & 0x800) ) dispReg = (int16_t)dispReg;
-     adr += dispReg + (int8_t)displacement;
+     if ( !(ctx->irc & 0x800) ) dispReg = (i16)dispReg;
+     adr += dispReg + (i8)displacement;
 
      if (specialCase != NoLastPrefetch) readExtensionWord();
      return adr;
      }
      case AbsoluteShort:
-     adr = (int16_t)ctx->irc;
+     adr = (i16)ctx->irc;
      if (specialCase != NoLastPrefetch) readExtensionWord();
      return adr;
 
@@ -127,7 +127,7 @@ Moira::computeEA(uint32_t n, uint32_t dis, uint32_t idx) {
      return adr;
 
      case ProgramCounterIndirectWithDisplacement:
-     adr = ctx->prefetchCounterLast + (int16_t)ctx->irc;
+     adr = ctx->prefetchCounterLast + (i16)ctx->irc;
      if (specialCase != NoLastPrefetch) readExtensionWord();
      return adr;
 
@@ -154,8 +154,8 @@ Moira::computeEA(uint32_t n, uint32_t dis, uint32_t idx) {
 }
 
 
-template<Size size, Instr instr> uint32_t
-Moira::shift(uint32_t cnt, uint32_t data) {
+template<Size size, Instr instr> u32
+Moira::shift(u32 cnt, u32 data) {
     
     assert(cnt > 0);
     

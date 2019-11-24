@@ -18,8 +18,8 @@ sync[id] = &Moira::sync##name; \
 }
 
 
-static uint16_t
-parse(const char *s, uint16_t sum = 0)
+static u16
+parse(const char *s, u16 sum = 0)
 {
     return
     *s == ' ' ? parse(s + 1, sum) :
@@ -45,7 +45,7 @@ Moira::init()
 void
 Moira::registerShiftCmds()
 {
-    uint16_t opcode;
+    u16 opcode;
 
     // ASL, ASR, LSL, LSR, ROL, ROR, ROXL, ROXR
     //
@@ -242,7 +242,7 @@ Moira::registerShiftCmds()
 void
 Moira::registerMoveCmds()
 {
-    uint16_t opcode;
+    u16 opcode;
 
     // LEA
     //

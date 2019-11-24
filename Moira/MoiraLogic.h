@@ -10,7 +10,7 @@
 
 // Compute effective address
 template<Size S, Mode M>
-uint32_t computeEA(uint32_t n, uint32_t dis = 0, uint32_t idx = 0);
+u32 computeEA(u32 n, u32 dis = 0, u32 idx = 0);
 
 template<Size size, Instr instr>
-uint32_t shift(uint32_t cnt, uint32_t data);
+u32 shift(u32 cnt, u32 data);

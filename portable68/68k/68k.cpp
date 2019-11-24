@@ -30,7 +30,7 @@ void Core_68k::process() { //execute next opcode
         incrementPc();
         logInstruction(reg_ird, true);
 
-        uint32_t ird = reg_ird;
+        u32 ird = reg_ird;
         (this->*opcodes[ reg_ird ])(reg_ird);
 
         moira->disassemble(moira->getPC(), instr);

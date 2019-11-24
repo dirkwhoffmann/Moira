@@ -13,37 +13,37 @@
 #include <stdio.h>
 
 
-static int decDigits(uint64_t value) { return value ? 1 + log10(value) : 1; }
-static int binDigits(uint64_t value) { return value ? 1 + log2(value) : 1; }
-static int hexDigits(uint64_t value) { return (binDigits(value) + 3) / 4; }
+static int decDigits(u64 value) { return value ? 1 + log10(value) : 1; }
+static int binDigits(u64 value) { return value ? 1 + log2(value) : 1; }
+static int hexDigits(u64 value) { return (binDigits(value) + 3) / 4; }
 
-static void sprintd(char *&s, uint64_t value, int digits)
+static void sprintd(char *&s, u64 value, int digits)
 {
     for (int i = digits - 1; i >= 0; i--) {
-        uint8_t digit = value % 10;
+        u8 digit = value % 10;
         s[i] = '0' + digit;
         value /= 10;
     }
     s += digits;
 }
 
-static void sprintd(char *&s, uint64_t value)
+static void sprintd(char *&s, u64 value)
 {
     sprintd(s, value, decDigits(value));
 }
 
-static void sprintx(char *&s, uint64_t value, int digits)
+static void sprintx(char *&s, u64 value, int digits)
 {
     *s++ = '$';
     for (int i = digits - 1; i >= 0; i--) {
-        uint8_t digit = value % 16;
+        u8 digit = value % 16;
         s[i] = (digit <= 9) ? ('0' + digit) : ('a' + digit - 10);
         value /= 16;
     }
     s += digits;
 }
 
-static void sprintx(char *&s, uint64_t value)
+static void sprintx(char *&s, u64 value)
 {
     sprintx(s, value, hexDigits(value));
 }
@@ -63,21 +63,21 @@ StrWriter::operator<<(const char *str)
 }
 
 StrWriter&
-StrWriter::operator<<(uint8_t value)
+StrWriter::operator<<(u8 value)
 {
     hex ? sprintx(ptr, value) : sprintd(ptr, value);
     return *this;
 }
 
 StrWriter&
-StrWriter::operator<<(uint16_t value)
+StrWriter::operator<<(u16 value)
 {
     hex ? sprintx(ptr, value) : sprintd(ptr, value);
     return *this;
 }
 
 StrWriter&
-StrWriter::operator<<(uint32_t value)
+StrWriter::operator<<(u32 value)
 {
     hex ? sprintx(ptr, value) : sprintd(ptr, value);
     return *this;
@@ -137,8 +137,8 @@ StrWriter::operator<<(Ea ea)
             break;
 
         case 8: // ABS.L
-            printf("ext1 = %x ext2 = %x %x\n", ea.ext1, ea.ext2, (uint32_t)(ea.ext1 << 16 | ea.ext2));
-            *this << (uint32_t)(ea.ext1 << 16 | ea.ext2) << ".l";
+            printf("ext1 = %x ext2 = %x %x\n", ea.ext1, ea.ext2, (u32)(ea.ext1 << 16 | ea.ext2));
+            *this << (u32)(ea.ext1 << 16 | ea.ext2) << ".l";
             break;
 
         case 9: // (d,PC)

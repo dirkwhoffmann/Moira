@@ -411,11 +411,11 @@ void Tester_68k::process()
 
 void Tester_68k::dump()
 {
-    uint16_t pc = reg_pc, mpc = moira->getPC();
-    uint16_t irc = reg_irc, mirc = moira->getIRC();
-    uint16_t ird = reg_ird, mird = moira->getIRD();
+    u16 pc = reg_pc, mpc = moira->getPC();
+    u16 irc = reg_irc, mirc = moira->getIRC();
+    u16 ird = reg_ird, mird = moira->getIRD();
 
-    uint16_t sr = reg_s, msr = moira->getSR();
+    u16 sr = reg_s, msr = moira->getSR();
     bool s = (sr >> 13) & 1, ms = (msr >> 13) & 1;
     bool c = (sr >> 0) & 1, mc = (msr >> 0) & 1;
     bool v = (sr >> 1) & 1, mv = (msr >> 1) & 1;

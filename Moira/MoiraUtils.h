@@ -14,13 +14,13 @@
 
 enum Size { Byte, Word, Long };
 
-template<Size> uint32_t CLIP(uint32_t data);
-template<Size> uint32_t MASK();
-template<Size> bool     MSBIT(uint32_t data);
-template<Size> uint32_t SIGN(uint32_t data);
-template<Size> uint8_t  BYTES();
-template<Size S> bool   ZERO(uint32_t data) { return CLIP<S>(data) == 0; }
-template<Size S> bool   NEG(uint32_t data) { return SIGN<S>(data) < 0; }
+template<Size> u32 CLIP(u32 data);
+template<Size> u32 MASK();
+template<Size> bool     MSBIT(u32 data);
+template<Size> u32 SIGN(u32 data);
+template<Size> u8  BYTES();
+template<Size S> bool   ZERO(u32 data) { return CLIP<S>(data) == 0; }
+template<Size S> bool   NEG(u32 data) { return SIGN<S>(data) < 0; }
 
 
 enum Instr { ASL, ASR, LSL, LSR, ROL, ROR, ROXL, ROXR };
@@ -41,19 +41,19 @@ enum Instr { ASL, ASR, LSL, LSR, ROL, ROR, ROXL, ROXR };
  *  10: (d,PC,Xi) : Program counter indirect with displacement and indexing
  */
 
-typedef uint8_t Mode;
+typedef u8 Mode;
 
 // enum Mode { DRD, ARD, ARIPI, ARIPD, ARID, ARIDI, ABS16, ABS32, PCID, PCII };
 
 
 struct Reg {
 
-    uint32_t value;
+    u32 value;
 
-    template<Size S> uint32_t read() { return CLIP<S>(value); }
-    template<Size S> void write(uint32_t v) { value = CLIP<S>(v); }
+    template<Size S> u32 read() { return CLIP<S>(value); }
+    template<Size S> void write(u32 v) { value = CLIP<S>(v); }
 
-    Reg & operator=(const uint32_t & rhs) { value = rhs; return *this; }
+    Reg & operator=(const u32 & rhs) { value = rhs; return *this; }
 };
 
 

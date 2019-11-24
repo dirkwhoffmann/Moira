@@ -41,7 +41,7 @@ struct StatusRegister {
     bool v;       // Overflow flag
     bool c;       // Carry flag
 
-    uint8_t ipl;  // Interrupt Priority Level
+    u8 ipl;       // Interrupt Priority Level
 };
 
 class Moira {
@@ -60,7 +60,7 @@ private:
     Registers reg;
 
     // The program counter
-    uint32_t pc;
+    u32 pc;
 
     /* The prefetch queue
      * http://pasti.fxatari.com/68kdocs/68kPrefetch.html
@@ -73,21 +73,21 @@ private:
      *
      * For emulation, only IRC and IRD are needed.
      */
-    uint16_t irc;
-    uint16_t ird;
+    u16 irc;
+    u16 ird;
 
     // Flags
     StatusRegister sr;
 
 
     // Jump table storing all instruction handlers
-    void (Moira::*exec[65536])(uint16_t);
+    void (Moira::*exec[65536])(u16);
 
     // Jump table storing all disassebler handlers
-    void (Moira::*dasm[65536])(StrWriter&, uint16_t, uint16_t, uint16_t);
+    void (Moira::*dasm[65536])(StrWriter&, u16, u16, u16);
 
     // Jump table storing all time information handlers
-    int (Moira::*sync[65536])(uint16_t, int);
+    int (Moira::*sync[65536])(u16, int);
 
     // Disassembler
     bool hex = true;
@@ -99,16 +99,16 @@ public:
 
     void power();
     void reset();
-    void process(uint16_t reg_ird);
+    void process(u16 reg_ird);
 
-    uint32_t getD(unsigned n) { assert(n < 8); return reg.d[n].read<Long>(); }
-    void setD(unsigned n, uint32_t v) { assert(n < 8); reg.d[n].write<Long>(v); }
-    uint32_t getA(unsigned n) { assert(n < 8); return reg.a[n].read<Long>(); }
-    void setA(unsigned n, uint32_t v) { assert(n < 8); reg.a[n].write<Long>(v); }
+    u32 getD(unsigned n) { assert(n < 8); return reg.d[n].read<Long>(); }
+    void setD(unsigned n, u32 v) { assert(n < 8); reg.d[n].write<Long>(v); }
+    u32 getA(unsigned n) { assert(n < 8); return reg.a[n].read<Long>(); }
+    void setA(unsigned n, u32 v) { assert(n < 8); reg.a[n].write<Long>(v); }
 
-    uint32_t getPC() { return pc; }
-    uint32_t getIRC() { return irc; }
-    uint32_t getIRD() { return ird; }
+    u32 getPC() { return pc; }
+    u32 getIRC() { return irc; }
+    u32 getIRD() { return ird; }
 
 private:
 
@@ -131,12 +131,12 @@ private:
 public:
 
     // Gets or sets the Status Register
-    uint16_t getSR();
-    void setSR(uint16_t value);
+    u16 getSR();
+    void setSR(u16 value);
 
     // Gets or sets the Condition Code Register (CCR, the lower byte of SR)
-    uint8_t getCCR();
-    void setCCR(uint8_t value);
+    u8 getCCR();
+    void setCCR(u8 value);
 
 
     //
@@ -155,7 +155,7 @@ private:
 
 public:
     
-    void disassemble(uint32_t addr, char *str, bool hex = true);
+    void disassemble(u32 addr, char *str, bool hex = true);
 };
 
 #endif

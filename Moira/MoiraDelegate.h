@@ -16,13 +16,13 @@ class MoiraDelegate {
 
 public:
 
-    virtual uint8_t moiraRead8(uint32_t addr) = 0;
-    virtual uint16_t moiraRead16(uint32_t addr) = 0;
-    virtual void moiraWrite8(uint32_t addr, uint8_t value) = 0;
-    virtual void moiraWrite16(uint32_t addr, uint16_t value) = 0;
+    virtual u8 moiraRead8(u32 addr) = 0;
+    virtual u16 moiraRead16(u32 addr) = 0;
+    virtual void moiraWrite8(u32 addr, u8 value) = 0;
+    virtual void moiraWrite16(u32 addr, u16 value) = 0;
 
-    virtual uint16_t moiraSpyRead16(uint32_t addr) = 0;
-    virtual uint16_t moiraReadAfterReset16(uint32_t addr) = 0;
+    virtual u16 moiraSpyRead16(u32 addr) = 0;
+    virtual u16 moiraReadAfterReset16(u32 addr) = 0;
 };
 
 #endif
