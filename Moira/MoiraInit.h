@@ -11,14 +11,21 @@
 #define MOIRA_INIT_H
 
 void init();
-void registerShiftCmds();
-void registerMoveCmds();
+
+template<Instr I> void registerShiftCmd(const char *patternReg,
+                                        const char *patternImm,
+                                        const char *patternEa);
 
 void registerASL();
+void registerASR();
+void registerLEA();
+void registerLSL();
+void registerLSR();
+void registerROL();
+void registerROR();
+void registerROXL();
+void registerROXR();
 
 
-// void registerShiftCmd();
-
-// ASL, ASR, LSL, LSR, ROL, ROR, ROXL, ROXR
 
 #endif

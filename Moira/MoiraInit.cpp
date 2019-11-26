@@ -39,12 +39,21 @@ CPU::init()
         sync[i] = &CPU::syncIllegal;
     }
 
-    registerShiftCmds();
-    registerMoveCmds();
+    registerASL();
+    registerASR();
+    registerLEA();
+    registerLSL();
+    registerLSR();
+    registerROL();
+    registerROR();
+    registerROXL();
+    registerROXR();
 }
 
-void
-CPU::registerShiftCmds()
+template<Instr I> void
+CPU::registerShiftCmd(const char *patternReg,
+                      const char *patternImm,
+                      const char *patternEa)
 {
     u16 opcode;
 
@@ -62,45 +71,10 @@ CPU::registerShiftCmds()
     for (int dx = 0; dx < 8; dx++) {
         for (int dy = 0; dy < 8; dy++) {
 
-            opcode = parse("1110 ---1 --10 0---") | dx << 9 | dy;
-            bind(opcode | 0 << 6, RegShift<ASL __ Byte>);
-            bind(opcode | 1 << 6, RegShift<ASL __ Word>);
-            bind(opcode | 2 << 6, RegShift<ASL __ Long>);
-
-            opcode = parse("1110 ---0 --10 0---") | dx << 9 | dy;
-            bind(opcode | 0 << 6, RegShift<ASR __ Byte>);
-            bind(opcode | 1 << 6, RegShift<ASR __ Word>);
-            bind(opcode | 2 << 6, RegShift<ASR __ Long>);
-
-            opcode = parse("1110 ---1 --10 1---") | dx << 9 | dy;
-            bind(opcode | 0 << 6, RegShift<LSL __ Byte>);
-            bind(opcode | 1 << 6, RegShift<LSL __ Word>);
-            bind(opcode | 2 << 6, RegShift<LSL __ Long>);
-
-            opcode = parse("1110 ---0 --10 1---") | dx << 9 | dy;
-            bind(opcode | 0 << 6, RegShift<LSR __ Byte>);
-            bind(opcode | 1 << 6, RegShift<LSR __ Word>);
-            bind(opcode | 2 << 6, RegShift<LSR __ Long>);
-
-            opcode = parse("1110 ---1 --11 1---") | dx << 9 | dy;
-            bind(opcode | 0 << 6, RegShift<ROL __ Byte>);
-            bind(opcode | 1 << 6, RegShift<ROL __ Word>);
-            bind(opcode | 2 << 6, RegShift<ROL __ Long>);
-
-            opcode = parse("1110 ---0 --11 1---") | dx << 9 | dy;
-            bind(opcode | 0 << 6, RegShift<ROR __ Byte>);
-            bind(opcode | 1 << 6, RegShift<ROR __ Word>);
-            bind(opcode | 2 << 6, RegShift<ROR __ Long>);
-
-            opcode = parse("1110 ---1 --11 0---") | dx << 9 | dy;
-            bind(opcode | 0 << 6, RegShift<ROXL __ Byte>);
-            bind(opcode | 1 << 6, RegShift<ROXL __ Word>);
-            bind(opcode | 2 << 6, RegShift<ROXL __ Long>);
-
-            opcode = parse("1110 ---0 --11 0---") | dx << 9 | dy;
-            bind(opcode | 0 << 6, RegShift<ROXR __ Byte>);
-            bind(opcode | 1 << 6, RegShift<ROXR __ Word>);
-            bind(opcode | 2 << 6, RegShift<ROXR __ Long>);
+            opcode = parse(patternReg) | dx << 9 | dy;
+            bind(opcode | 0 << 6, RegShift<I __ Byte>);
+            bind(opcode | 1 << 6, RegShift<I __ Word>);
+            bind(opcode | 2 << 6, RegShift<I __ Long>);
         }
     }
 
@@ -108,140 +82,287 @@ CPU::registerShiftCmds()
     for (int data = 0; data < 8; data++) {
         for (int dy = 0; dy < 8; dy++) {
 
-            opcode = parse("1110 ---1 --00 0---") | data << 9 | dy;
-            bind(opcode | 0 << 6, ImmShift<ASL __ Byte>);
-            bind(opcode | 1 << 6, ImmShift<ASL __ Word>);
-            bind(opcode | 2 << 6, ImmShift<ASL __ Long>);
-
-            opcode = parse("1110 ---0 --00 0---") | data << 9 | dy;
-            bind(opcode | 0 << 6, ImmShift<ASR __ Byte>);
-            bind(opcode | 1 << 6, ImmShift<ASR __ Word>);
-            bind(opcode | 2 << 6, ImmShift<ASR __ Long>);
-
-            opcode = parse("1110 ---1 --00 1---") | data << 9 | dy;
-            bind(opcode | 0 << 6, ImmShift<LSL __ Byte>);
-            bind(opcode | 1 << 6, ImmShift<LSL __ Word>);
-            bind(opcode | 2 << 6, ImmShift<LSL __ Long>);
-
-            opcode = parse("1110 ---0 --00 1---") | data << 9 | dy;
-            bind(opcode | 0 << 6, ImmShift<LSR __ Byte>);
-            bind(opcode | 1 << 6, ImmShift<LSR __ Word>);
-            bind(opcode | 2 << 6, ImmShift<LSR __ Long>);
-
-            opcode = parse("1110 ---1 --01 1---") | data << 9 | dy;
-            bind(opcode | 0 << 6, ImmShift<ROL __ Byte>);
-            bind(opcode | 1 << 6, ImmShift<ROL __ Word>);
-            bind(opcode | 2 << 6, ImmShift<ROL __ Long>);
-
-            opcode = parse("1110 ---0 --01 1---") | data << 9 | dy;
-            bind(opcode | 0 << 6, ImmShift<ROR __ Byte>);
-            bind(opcode | 1 << 6, ImmShift<ROR __ Word>);
-            bind(opcode | 2 << 6, ImmShift<ROR __ Long>);
-
-            opcode = parse("1110 ---1 --01 0---") | data << 9 | dy;
-            bind(opcode | 0 << 6, ImmShift<ROXL __ Byte>);
-            bind(opcode | 1 << 6, ImmShift<ROXL __ Word>);
-            bind(opcode | 2 << 6, ImmShift<ROXL __ Long>);
-
-            opcode = parse("1110 ---0 --01 0---") | data << 9 | dy;
-            bind(opcode | 0 << 6, ImmShift<ROXR __ Byte>);
-            bind(opcode | 1 << 6, ImmShift<ROXR __ Word>);
-            bind(opcode | 2 << 6, ImmShift<ROXR __ Long>);
+            opcode = parse(patternImm) | data << 9 | dy;
+            bind(opcode | 0 << 6, ImmShift<I __ Byte>);
+            bind(opcode | 1 << 6, ImmShift<I __ Word>);
+            bind(opcode | 2 << 6, ImmShift<I __ Long>);
         }
     }
 
     // (3)
-    opcode = parse("1110 0001 11-- ----");
+    opcode = parse(patternEa);
     for (int ax = 0; ax < 8; ax++) {
-        bind(opcode | 2 << 3 | ax, EaShift<ASL __ 2>);
-        bind(opcode | 3 << 3 | ax, EaShift<ASL __ 3>);
-        bind(opcode | 4 << 3 | ax, EaShift<ASL __ 4>);
-        bind(opcode | 5 << 3 | ax, EaShift<ASL __ 5>);
-        bind(opcode | 6 << 3 | ax, EaShift<ASL __ 6>);
+        bind(opcode | 2 << 3 | ax, EaShift<I __ 2>);
+        bind(opcode | 3 << 3 | ax, EaShift<I __ 3>);
+        bind(opcode | 4 << 3 | ax, EaShift<I __ 4>);
+        bind(opcode | 5 << 3 | ax, EaShift<I __ 5>);
+        bind(opcode | 6 << 3 | ax, EaShift<I __ 6>);
     }
-    bind(opcode | 7 << 3 | 0, EaShift<ASL __ 7>);
-    bind(opcode | 7 << 3 | 1, EaShift<ASL __ 8>);
+    bind(opcode | 7 << 3 | 0, EaShift<I __ 7>);
+    bind(opcode | 7 << 3 | 1, EaShift<I __ 8>);
+}
 
-    opcode = parse("1110 0000 11-- ----");
-    for (int ax = 0; ax < 8; ax++) {
-        bind(opcode | 2 << 3 | ax, EaShift<ASR __ 2>);
-        bind(opcode | 3 << 3 | ax, EaShift<ASR __ 3>);
-        bind(opcode | 4 << 3 | ax, EaShift<ASR __ 4>);
-        bind(opcode | 5 << 3 | ax, EaShift<ASR __ 5>);
-        bind(opcode | 6 << 3 | ax, EaShift<ASR __ 6>);
-    }
-    bind(opcode | 7 << 3 | 0, EaShift<ASR __ 7>);
-    bind(opcode | 7 << 3 | 1, EaShift<ASR __ 8>);
+// DEPRECATED
+/*
+ void
+ CPU::registerShiftCmds()
+ {
+ u16 opcode;
 
-    opcode = parse("1110 0011 11-- ----");
-    for (int ax = 0; ax < 8; ax++) {
-        bind(opcode | 2 << 3 | ax, EaShift<LSL __ 2>);
-        bind(opcode | 3 << 3 | ax, EaShift<LSL __ 3>);
-        bind(opcode | 4 << 3 | ax, EaShift<LSL __ 4>);
-        bind(opcode | 5 << 3 | ax, EaShift<LSL __ 5>);
-        bind(opcode | 6 << 3 | ax, EaShift<LSL __ 6>);
-    }
-    bind(opcode | 7 << 3 | 0, EaShift<LSL __ 7>);
-    bind(opcode | 7 << 3 | 1, EaShift<LSL __ 8>);
+ // ASL, ASR, LSL, LSR, ROL, ROR, ROXL, ROXR
+ //
+ // Modes: (1)   Dx,Dy       8,16,32
+ //        (2)   #<data>,Dy  8,16,32
+ //        (3)   <ea>          16
+ //               --------------------------------------------------
+ //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
+ //               --------------------------------------------------
+ //                X       X   X   X   X   X   X   X
 
-    opcode = parse("1110 0010 11-- ----");
-    for (int ax = 0; ax < 8; ax++) {
-        bind(opcode | 2 << 3 | ax, EaShift<LSR __ 2>);
-        bind(opcode | 3 << 3 | ax, EaShift<LSR __ 3>);
-        bind(opcode | 4 << 3 | ax, EaShift<LSR __ 4>);
-        bind(opcode | 5 << 3 | ax, EaShift<LSR __ 5>);
-        bind(opcode | 6 << 3 | ax, EaShift<LSR __ 6>);
-    }
-    bind(opcode | 7 << 3 | 0, EaShift<LSR __ 7>);
-    bind(opcode | 7 << 3 | 1, EaShift<LSR __ 8>);
+ // (1)
+ for (int dx = 0; dx < 8; dx++) {
+ for (int dy = 0; dy < 8; dy++) {
 
-    opcode = parse("1110 0111 11-- ----");
-    for (int ax = 0; ax < 8; ax++) {
-        bind(opcode | 2 << 3 | ax, EaShift<ROL __ 2>);
-        bind(opcode | 3 << 3 | ax, EaShift<ROL __ 3>);
-        bind(opcode | 4 << 3 | ax, EaShift<ROL __ 4>);
-        bind(opcode | 5 << 3 | ax, EaShift<ROL __ 5>);
-        bind(opcode | 6 << 3 | ax, EaShift<ROL __ 6>);
-    }
-    bind(opcode | 7 << 3 | 0, EaShift<ROL __ 7>);
-    bind(opcode | 7 << 3 | 1, EaShift<ROL __ 8>);
+ opcode = parse("1110 ---1 --10 0---") | dx << 9 | dy;
+ bind(opcode | 0 << 6, RegShift<ASL __ Byte>);
+ bind(opcode | 1 << 6, RegShift<ASL __ Word>);
+ bind(opcode | 2 << 6, RegShift<ASL __ Long>);
 
-    opcode = parse("1110 0110 11-- ----");
-    for (int ax = 0; ax < 8; ax++) {
-        bind(opcode | 2 << 3 | ax, EaShift<ROR __ 2>);
-        bind(opcode | 3 << 3 | ax, EaShift<ROR __ 3>);
-        bind(opcode | 4 << 3 | ax, EaShift<ROR __ 4>);
-        bind(opcode | 5 << 3 | ax, EaShift<ROR __ 5>);
-        bind(opcode | 6 << 3 | ax, EaShift<ROR __ 6>);
-    }
-    bind(opcode | 7 << 3 | 0, EaShift<ROR __ 7>);
-    bind(opcode | 7 << 3 | 1, EaShift<ROR __ 8>);
+ opcode = parse("1110 ---0 --10 0---") | dx << 9 | dy;
+ bind(opcode | 0 << 6, RegShift<ASR __ Byte>);
+ bind(opcode | 1 << 6, RegShift<ASR __ Word>);
+ bind(opcode | 2 << 6, RegShift<ASR __ Long>);
 
-    opcode = parse("1110 0101 11-- ----");
-    for (int ax = 0; ax < 8; ax++) {
-        bind(opcode | 2 << 3 | ax, EaShift<ROXL __ 2>);
-        bind(opcode | 3 << 3 | ax, EaShift<ROXL __ 3>);
-        bind(opcode | 4 << 3 | ax, EaShift<ROXL __ 4>);
-        bind(opcode | 5 << 3 | ax, EaShift<ROXL __ 5>);
-        bind(opcode | 6 << 3 | ax, EaShift<ROXL __ 6>);
-    }
-    bind(opcode | 7 << 3 | 0, EaShift<ROXL __ 7>);
-    bind(opcode | 7 << 3 | 1, EaShift<ROXL __ 8>);
+ opcode = parse("1110 ---1 --10 1---") | dx << 9 | dy;
+ bind(opcode | 0 << 6, RegShift<LSL __ Byte>);
+ bind(opcode | 1 << 6, RegShift<LSL __ Word>);
+ bind(opcode | 2 << 6, RegShift<LSL __ Long>);
 
-    opcode = parse("1110 0100 11-- ----");
-    for (int ax = 0; ax < 8; ax++) {
-        bind(opcode | 2 << 3 | ax, EaShift<ROXR __ 2>);
-        bind(opcode | 3 << 3 | ax, EaShift<ROXR __ 3>);
-        bind(opcode | 4 << 3 | ax, EaShift<ROXR __ 4>);
-        bind(opcode | 5 << 3 | ax, EaShift<ROXR __ 5>);
-        bind(opcode | 6 << 3 | ax, EaShift<ROXR __ 6>);
-    }
-    bind(opcode | 7 << 3 | 0, EaShift<ROXR __ 7>);
-    bind(opcode | 7 << 3 | 1, EaShift<ROXR __ 8>);
+ opcode = parse("1110 ---0 --10 1---") | dx << 9 | dy;
+ bind(opcode | 0 << 6, RegShift<LSR __ Byte>);
+ bind(opcode | 1 << 6, RegShift<LSR __ Word>);
+ bind(opcode | 2 << 6, RegShift<LSR __ Long>);
+
+ opcode = parse("1110 ---1 --11 1---") | dx << 9 | dy;
+ bind(opcode | 0 << 6, RegShift<ROL __ Byte>);
+ bind(opcode | 1 << 6, RegShift<ROL __ Word>);
+ bind(opcode | 2 << 6, RegShift<ROL __ Long>);
+
+ opcode = parse("1110 ---0 --11 1---") | dx << 9 | dy;
+ bind(opcode | 0 << 6, RegShift<ROR __ Byte>);
+ bind(opcode | 1 << 6, RegShift<ROR __ Word>);
+ bind(opcode | 2 << 6, RegShift<ROR __ Long>);
+
+ opcode = parse("1110 ---1 --11 0---") | dx << 9 | dy;
+ bind(opcode | 0 << 6, RegShift<ROXL __ Byte>);
+ bind(opcode | 1 << 6, RegShift<ROXL __ Word>);
+ bind(opcode | 2 << 6, RegShift<ROXL __ Long>);
+
+ opcode = parse("1110 ---0 --11 0---") | dx << 9 | dy;
+ bind(opcode | 0 << 6, RegShift<ROXR __ Byte>);
+ bind(opcode | 1 << 6, RegShift<ROXR __ Word>);
+ bind(opcode | 2 << 6, RegShift<ROXR __ Long>);
+ }
+ }
+
+ // (2)
+ for (int data = 0; data < 8; data++) {
+ for (int dy = 0; dy < 8; dy++) {
+
+ opcode = parse("1110 ---1 --00 0---") | data << 9 | dy;
+ bind(opcode | 0 << 6, ImmShift<ASL __ Byte>);
+ bind(opcode | 1 << 6, ImmShift<ASL __ Word>);
+ bind(opcode | 2 << 6, ImmShift<ASL __ Long>);
+
+ opcode = parse("1110 ---0 --00 0---") | data << 9 | dy;
+ bind(opcode | 0 << 6, ImmShift<ASR __ Byte>);
+ bind(opcode | 1 << 6, ImmShift<ASR __ Word>);
+ bind(opcode | 2 << 6, ImmShift<ASR __ Long>);
+
+ opcode = parse("1110 ---1 --00 1---") | data << 9 | dy;
+ bind(opcode | 0 << 6, ImmShift<LSL __ Byte>);
+ bind(opcode | 1 << 6, ImmShift<LSL __ Word>);
+ bind(opcode | 2 << 6, ImmShift<LSL __ Long>);
+
+ opcode = parse("1110 ---0 --00 1---") | data << 9 | dy;
+ bind(opcode | 0 << 6, ImmShift<LSR __ Byte>);
+ bind(opcode | 1 << 6, ImmShift<LSR __ Word>);
+ bind(opcode | 2 << 6, ImmShift<LSR __ Long>);
+
+ opcode = parse("1110 ---1 --01 1---") | data << 9 | dy;
+ bind(opcode | 0 << 6, ImmShift<ROL __ Byte>);
+ bind(opcode | 1 << 6, ImmShift<ROL __ Word>);
+ bind(opcode | 2 << 6, ImmShift<ROL __ Long>);
+
+ opcode = parse("1110 ---0 --01 1---") | data << 9 | dy;
+ bind(opcode | 0 << 6, ImmShift<ROR __ Byte>);
+ bind(opcode | 1 << 6, ImmShift<ROR __ Word>);
+ bind(opcode | 2 << 6, ImmShift<ROR __ Long>);
+
+ opcode = parse("1110 ---1 --01 0---") | data << 9 | dy;
+ bind(opcode | 0 << 6, ImmShift<ROXL __ Byte>);
+ bind(opcode | 1 << 6, ImmShift<ROXL __ Word>);
+ bind(opcode | 2 << 6, ImmShift<ROXL __ Long>);
+
+ opcode = parse("1110 ---0 --01 0---") | data << 9 | dy;
+ bind(opcode | 0 << 6, ImmShift<ROXR __ Byte>);
+ bind(opcode | 1 << 6, ImmShift<ROXR __ Word>);
+ bind(opcode | 2 << 6, ImmShift<ROXR __ Long>);
+ }
+ }
+
+ // (3)
+ opcode = parse("1110 0001 11-- ----");
+ for (int ax = 0; ax < 8; ax++) {
+ bind(opcode | 2 << 3 | ax, EaShift<ASL __ 2>);
+ bind(opcode | 3 << 3 | ax, EaShift<ASL __ 3>);
+ bind(opcode | 4 << 3 | ax, EaShift<ASL __ 4>);
+ bind(opcode | 5 << 3 | ax, EaShift<ASL __ 5>);
+ bind(opcode | 6 << 3 | ax, EaShift<ASL __ 6>);
+ }
+ bind(opcode | 7 << 3 | 0, EaShift<ASL __ 7>);
+ bind(opcode | 7 << 3 | 1, EaShift<ASL __ 8>);
+
+ opcode = parse("1110 0000 11-- ----");
+ for (int ax = 0; ax < 8; ax++) {
+ bind(opcode | 2 << 3 | ax, EaShift<ASR __ 2>);
+ bind(opcode | 3 << 3 | ax, EaShift<ASR __ 3>);
+ bind(opcode | 4 << 3 | ax, EaShift<ASR __ 4>);
+ bind(opcode | 5 << 3 | ax, EaShift<ASR __ 5>);
+ bind(opcode | 6 << 3 | ax, EaShift<ASR __ 6>);
+ }
+ bind(opcode | 7 << 3 | 0, EaShift<ASR __ 7>);
+ bind(opcode | 7 << 3 | 1, EaShift<ASR __ 8>);
+
+ opcode = parse("1110 0011 11-- ----");
+ for (int ax = 0; ax < 8; ax++) {
+ bind(opcode | 2 << 3 | ax, EaShift<LSL __ 2>);
+ bind(opcode | 3 << 3 | ax, EaShift<LSL __ 3>);
+ bind(opcode | 4 << 3 | ax, EaShift<LSL __ 4>);
+ bind(opcode | 5 << 3 | ax, EaShift<LSL __ 5>);
+ bind(opcode | 6 << 3 | ax, EaShift<LSL __ 6>);
+ }
+ bind(opcode | 7 << 3 | 0, EaShift<LSL __ 7>);
+ bind(opcode | 7 << 3 | 1, EaShift<LSL __ 8>);
+
+ opcode = parse("1110 0010 11-- ----");
+ for (int ax = 0; ax < 8; ax++) {
+ bind(opcode | 2 << 3 | ax, EaShift<LSR __ 2>);
+ bind(opcode | 3 << 3 | ax, EaShift<LSR __ 3>);
+ bind(opcode | 4 << 3 | ax, EaShift<LSR __ 4>);
+ bind(opcode | 5 << 3 | ax, EaShift<LSR __ 5>);
+ bind(opcode | 6 << 3 | ax, EaShift<LSR __ 6>);
+ }
+ bind(opcode | 7 << 3 | 0, EaShift<LSR __ 7>);
+ bind(opcode | 7 << 3 | 1, EaShift<LSR __ 8>);
+
+ opcode = parse("1110 0111 11-- ----");
+ for (int ax = 0; ax < 8; ax++) {
+ bind(opcode | 2 << 3 | ax, EaShift<ROL __ 2>);
+ bind(opcode | 3 << 3 | ax, EaShift<ROL __ 3>);
+ bind(opcode | 4 << 3 | ax, EaShift<ROL __ 4>);
+ bind(opcode | 5 << 3 | ax, EaShift<ROL __ 5>);
+ bind(opcode | 6 << 3 | ax, EaShift<ROL __ 6>);
+ }
+ bind(opcode | 7 << 3 | 0, EaShift<ROL __ 7>);
+ bind(opcode | 7 << 3 | 1, EaShift<ROL __ 8>);
+
+ opcode = parse("1110 0110 11-- ----");
+ for (int ax = 0; ax < 8; ax++) {
+ bind(opcode | 2 << 3 | ax, EaShift<ROR __ 2>);
+ bind(opcode | 3 << 3 | ax, EaShift<ROR __ 3>);
+ bind(opcode | 4 << 3 | ax, EaShift<ROR __ 4>);
+ bind(opcode | 5 << 3 | ax, EaShift<ROR __ 5>);
+ bind(opcode | 6 << 3 | ax, EaShift<ROR __ 6>);
+ }
+ bind(opcode | 7 << 3 | 0, EaShift<ROR __ 7>);
+ bind(opcode | 7 << 3 | 1, EaShift<ROR __ 8>);
+
+ opcode = parse("1110 0101 11-- ----");
+ for (int ax = 0; ax < 8; ax++) {
+ bind(opcode | 2 << 3 | ax, EaShift<ROXL __ 2>);
+ bind(opcode | 3 << 3 | ax, EaShift<ROXL __ 3>);
+ bind(opcode | 4 << 3 | ax, EaShift<ROXL __ 4>);
+ bind(opcode | 5 << 3 | ax, EaShift<ROXL __ 5>);
+ bind(opcode | 6 << 3 | ax, EaShift<ROXL __ 6>);
+ }
+ bind(opcode | 7 << 3 | 0, EaShift<ROXL __ 7>);
+ bind(opcode | 7 << 3 | 1, EaShift<ROXL __ 8>);
+
+ opcode = parse("1110 0100 11-- ----");
+ for (int ax = 0; ax < 8; ax++) {
+ bind(opcode | 2 << 3 | ax, EaShift<ROXR __ 2>);
+ bind(opcode | 3 << 3 | ax, EaShift<ROXR __ 3>);
+ bind(opcode | 4 << 3 | ax, EaShift<ROXR __ 4>);
+ bind(opcode | 5 << 3 | ax, EaShift<ROXR __ 5>);
+ bind(opcode | 6 << 3 | ax, EaShift<ROXR __ 6>);
+ }
+ bind(opcode | 7 << 3 | 0, EaShift<ROXR __ 7>);
+ bind(opcode | 7 << 3 | 1, EaShift<ROXR __ 8>);
+ }
+ */
+
+void
+CPU::registerASL()
+{
+    registerShiftCmd<ASL>("1110 ---1 --10 0---",
+                          "1110 ---1 --00 0---",
+                          "1110 0001 11-- ----");
 }
 
 void
-CPU::registerMoveCmds()
+CPU::registerASR()
+{
+    registerShiftCmd<ASR>("1110 ---0 --10 0---",
+                          "1110 ---0 --00 0---",
+                          "1110 0000 11-- ----");
+}
+
+void
+CPU::registerLSL()
+{
+    registerShiftCmd<LSL>("1110 ---1 --10 1---",
+                          "1110 ---1 --00 1---",
+                          "1110 0011 11-- ----");
+}
+
+void CPU::registerLSR()
+{
+    registerShiftCmd<LSR>("1110 ---0 --10 1---",
+                          "1110 ---0 --00 1---",
+                          "1110 0010 11-- ----");
+}
+
+void CPU::registerROL()
+{
+    registerShiftCmd<ROL>("1110 ---1 --11 1---",
+                          "1110 ---1 --01 1---",
+                          "1110 0111 11-- ----");
+}
+
+void CPU::registerROR()
+{
+    registerShiftCmd<ROR>("1110 ---0 --11 1---",
+                          "1110 ---0 --01 1---",
+                          "1110 0110 11-- ----");
+}
+
+void CPU::registerROXL()
+{
+    registerShiftCmd<ROXL>("1110 ---1 --11 0---",
+                           "1110 ---1 --01 0---",
+                           "1110 0101 11-- ----");
+}
+
+void CPU::registerROXR()
+{
+    registerShiftCmd<ROXR>("1110 ---0 --11 0---",
+                           "1110 ---0 --01 0---",
+                           "1110 0100 11-- ----");
+}
+
+void
+CPU::registerLEA()
 {
     u16 opcode;
 
