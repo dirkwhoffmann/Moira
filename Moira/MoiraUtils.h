@@ -25,7 +25,12 @@ template<Size S> bool   ZERO(u32 data) { return CLIP<S>(data) == 0; }
 template<Size S> bool   NEG(u32 data) { return SIGN<S>(data) < 0; }
 
 
-enum Instr { ASL, ASR, LSL, LSR, ROL, ROR, ROXL, ROXR };
+enum Instr {
+    ADD, ASL, ASR,
+    LSL, LSR,
+    ROL, ROR, ROXL, ROXR,
+    SUB
+};
 
 
 /* Adressing modes

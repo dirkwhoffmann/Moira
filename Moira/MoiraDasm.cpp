@@ -51,6 +51,12 @@ CPU::dasmEaShift(StrWriter &str, u16 op, u16 ext1, u16 ext2)
     << "mode = " << (u16)13;
 }
 
+template<Instr I, Mode M, Size S> void
+CPU::dasmAdd(StrWriter &str, u16 op, u16 ext1, u16 ext2)
+{
+    str << "MISSING";
+}
+
 template <Mode M> void
 CPU::dasmLea(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 {

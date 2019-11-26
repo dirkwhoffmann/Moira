@@ -15,5 +15,7 @@ template<Instr I, Size S>
 void dasmImmShift(StrWriter &str, u16 op, u16 ext1, u16 ext2);
 template<Instr I, Mode M>
 void dasmEaShift(StrWriter &str, u16 op, u16 ext1, u16 ext2);
+template<Instr I, Mode M, Size S>
+void dasmAdd(StrWriter &str, u16 op, u16 ext1, u16 ext2);
 template<Mode M>
 void dasmLea(StrWriter &str, u16 op, u16 ext1, u16 ext2);

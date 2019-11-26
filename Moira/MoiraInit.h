@@ -12,10 +12,14 @@
 
 void init();
 
-template<Instr I> void registerShiftCmd(const char *patternReg,
-                                        const char *patternImm,
-                                        const char *patternEa);
+template<Instr I> void registerShift(const char *patternReg,
+                                     const char *patternImm,
+                                     const char *patternEa);
 
+template<Instr I> void registerAddSub(const char *pattern1,
+                                      const char *pattern2);
+
+void registerADD();
 void registerASL();
 void registerASR();
 void registerLEA();

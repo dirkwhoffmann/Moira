@@ -12,5 +12,5 @@ void execIllegal(u16 opcode);
 template<Instr I, Size S> void execRegShift(u16 opcode);
 template<Instr I, Size S> void execImmShift(u16 opcode);
 template<Instr I, Mode M> void execEaShift(u16 opcode);
-
+template<Instr I, Mode M, Size S> void execAdd(u16 opcode);
 template<Mode M> void execLea(u16 opcode);

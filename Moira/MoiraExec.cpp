@@ -52,6 +52,12 @@ CPU::execEaShift(u16 opcode)
     // write(..., value)
 }
 
+template<Instr I, Mode M, Size S> void
+CPU::execAdd(u16 opcode)
+{
+    assert(0);
+}
+
 template<Mode M> void
 CPU::execLea(u16 opcode)
 {
