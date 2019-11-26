@@ -54,7 +54,7 @@ CPU::dasmEaShift(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 template<Instr I, Mode M, Size S> void
 CPU::dasmAdd(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 {
-    str << "MISSING";
+    assert(0);
 }
 
 template <Mode M> void
