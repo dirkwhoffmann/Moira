@@ -179,7 +179,9 @@ Tester_68k::Tester_68k() : Core_68k()
 }
 
 void Tester_68k::runTestCases() {
+    printf("Testing LEA\n");
     testLea();
+    printf("Testing ADD\n");
     testAdd();
     testAsl(); // 
     testAsr();
@@ -394,13 +396,13 @@ void Tester_68k::power()
 void Tester_68k::setRegA(u8 reg, u32 value)
 {
     Core_68k::setRegA(reg, value);
-    moira->setA(reg, value);
+    moira->writeA(reg, value);
 }
 
 void Tester_68k::setRegD(u8 reg, u32 value)
 {
     Core_68k::setRegD(reg, value);
-    moira->setD(reg, value);
+    moira->writeD(reg, value);
 }
 
 void Tester_68k::process()
@@ -430,12 +432,12 @@ void Tester_68k::dump()
     printf("\n");
 
     for (int i = 0; i < 8; i++) {
-        printf("D%i: %x / %x %s\n", i, getRegD(i), moira->getD(i),
-               getRegD(i) != moira->getD(i) ? "<--" : "");
+        printf("D%i: %x / %x %s\n", i, getRegD(i), moira->readD(i),
+               getRegD(i) != moira->readD(i) ? "<--" : "");
     }
     for (int i = 0; i < 8; i++) {
-        printf("A%i: %x / %x %s\n", i, getRegA(i), moira->getA(i),
-               getRegA(i) != moira->getA(i) ? "<--" : "");
+        printf("A%i: %x / %x %s\n", i, getRegA(i), moira->readA(i),
+               getRegA(i) != moira->readA(i) ? "<--" : "");
     }
 
     printf("\nStatus register:\n");
@@ -451,10 +453,10 @@ void Tester_68k::dump()
 bool Tester_68k::compare()
 {
     for (int i = 0; i < 8; i++)
-        if (getRegD(i) != moira->getD(i)) return false;
+        if (getRegD(i) != moira->readD(i)) return false;
 
     for (int i = 0; i < 8; i++)
-        if (getRegA(i) != moira->getA(i)) return false;
+        if (getRegA(i) != moira->readA(i)) return false;
 
     if (getSR() != moira->getSR()) return false;
     

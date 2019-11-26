@@ -32,6 +32,12 @@ static void sprintd(char *&s, u64 value)
     sprintd(s, value, decDigits(value));
 }
 
+static void sprintd_signed(char *&s, i64 value)
+{
+    if (value < 0) { *s++ = '-'; value *= -1; }
+    sprintd(s, value, decDigits(value));
+}
+
 static void sprintx(char *&s, u64 value, int digits)
 {
     *s++ = '$';
@@ -48,11 +54,10 @@ static void sprintx(char *&s, u64 value)
     sprintx(s, value, hexDigits(value));
 }
 
-StrWriter&
-StrWriter::operator<<(char c)
+static void sprintx_signed(char *&s, i64 value)
 {
-    *ptr++ = c;
-    return *this;
+    if (value < 0) { *s++ = '-'; value *= -1; }
+    sprintx(s, value, hexDigits(value));
 }
 
 StrWriter&
@@ -86,16 +91,43 @@ StrWriter::operator<<(u32 value)
 StrWriter&
 StrWriter::operator<<(Dn dn)
 {
-    assert(dn.n < 8);
-    *ptr++ = 'D'; *ptr++ = '0' + dn.n;
+    // assert(dn.value < 8);
+
+    *ptr++ = 'D';
+    *ptr++ = '0' + dn.value;
     return *this;
 }
 
 StrWriter&
 StrWriter::operator<<(An an)
 {
-    assert(an.n < 8);
-    *ptr++ = 'A'; *ptr++ = '0' + an.n;
+    *ptr++ = 'A';
+    *ptr++ = '0' + an.value;
+    return *this;
+}
+
+StrWriter&
+StrWriter::operator<<(Disp8 d)
+{
+    hex ? sprintx_signed(ptr, d.value) : sprintd_signed(ptr, d.value);
+    return *this;
+}
+
+StrWriter&
+StrWriter::operator<<(Disp16 d)
+{
+    hex ? sprintx_signed(ptr, d.value) : sprintd_signed(ptr, d.value);
+    return *this;
+}
+
+StrWriter&
+StrWriter::operator<<(Index v)
+{
+    if (v.value < 8) {
+        *ptr++ = 'D'; *ptr++ = '0' + v.value;
+    } else {
+        *ptr++ = 'A'; *ptr++ = '0' + v.value - 8;
+    }
     return *this;
 }
 
@@ -105,31 +137,35 @@ StrWriter::operator<<(Ea ea)
     switch (ea.m) {
 
         case 0: // Dn
-            *this << Dn{ ea.opcode & 7 };
+            *this << Dn{ea.opcode & 7};
             break;
 
         case 1: // An
-            *this << An{ ea.opcode & 7 };
+            *this << An{ea.opcode & 7};
             break;
 
         case 2: // (An)
-            *this << "(" << An{ ea.opcode & 7 } << ")";
+            *this << "(" << An{ea.opcode & 7} << ")";
             break;
 
         case 3: // (An)+
-            *this << "(" << An{ ea.opcode & 7 } << ")+";
+            *this << "(" << An{ea.opcode & 7} << ")+";
             break;
 
         case 4: // -(An)
-            *this << "-(" << An{ ea.opcode & 7 } << ")";
+            *this << "-(" << An{ea.opcode & 7} << ")";
             break;
 
         case 5: // (d,An)
-            assert(false);
+            *this << "(" << Disp16{(i16)ea.ext1};
+            *this << "," << An{ea.opcode & 7} << ")";
             break;
 
         case 6: // (d,An,Xi)
-            assert(false);
+            *this << "(" << Disp8{(i8)ea.ext1};
+            *this << "," << An{ea.opcode & 7};
+            *this << "," << Index{ea.ext1 >> 12};
+            *this << ((ea.ext1 & 0x800) ? ".L)" : ".W)");
             break;
 
         case 7: // ABS.W
@@ -137,16 +173,17 @@ StrWriter::operator<<(Ea ea)
             break;
 
         case 8: // ABS.L
-            printf("ext1 = %x ext2 = %x %x\n", ea.ext1, ea.ext2, (u32)(ea.ext1 << 16 | ea.ext2));
             *this << (u32)(ea.ext1 << 16 | ea.ext2) << ".l";
             break;
 
         case 9: // (d,PC)
-            assert(false);
+            *this << "(" << Disp16{(i16)ea.ext1} << ",PC)";
             break;
 
         case 10: // (d,PC,Xi)
-            assert(false);
+            *this << "(" << Disp8{(i8)ea.ext1};
+            *this << ",PC," << Index{ea.ext1 >> 12};
+            *this << ((ea.ext1 & 0x800) ? ".L)" : ".W)");
             break;
 
         case 11: // Imm
@@ -155,7 +192,7 @@ StrWriter::operator<<(Ea ea)
 
         default:
             assert(false);
-    }
+            }
 
-    return *this;
-}
+            return *this;
+            }

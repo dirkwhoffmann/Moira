@@ -17,59 +17,85 @@ CPU::computeEA(u32 n, u32 dis, u32 idx) {
     switch (M) {
             
         case 0: // Dn
-            // result = reg.d[n].read<S>();
+        {
             assert(false);
             break;
-
+        }
         case 1: // An
-            // result = reg.a[n].read<S>();
+        {
             assert(false);
             break;
-
+        }
         case 2: // (An)
-            result = reg.a[n].read<Long>();
+        {
+            result = readA(n);
             break;
-
+        }
         case 3: // (An)+
+        {
             assert(false);
             return 0;
-
+        }
         case 4: // -(An)
+        {
             assert(false);
             return 0;
-
+        }
         case 5: // (d,An)
-            assert(false);
-            return 0;
+        {
+            i16  d = (i16)irc;
+            i32 an = readA(n);
 
-        case 6: // (d,An,Xi)
-            assert(false);
-            return 0;
-
-        case 7: // ABS.W
-            result = CLIP<Word>(irc);
+            result = d + an;
             readExtensionWord();
             break;
+        }
+        case 6: // (d,An,Xi)
+        {
+            i8   d = (i8)irc;
+            i32 an = readA(n);
+            i32 xi = readR((irc >> 12) & 0b1111);
 
+            result = d + an + ((irc & 0x800) ? xi : (i16)xi);
+            readExtensionWord();
+            break;
+        }
+        case 7: // ABS.W
+        {
+            result = irc;
+            readExtensionWord();
+            break;
+        }
         case 8: // ABS.L
+        {
             result = irc << 16;
             readExtensionWord();
             result |= irc;
             readExtensionWord();
             break;
-
+        }
         case 9: // (d,PC)
-            assert(false);
-            return 0;
+        {
+            i16  d = (i16)irc;
 
+            result = pc + d;
+            readExtensionWord();
+            break;
+        }
         case 10: // (d,PC,Xi)
-            assert(false);
-            return 0;
+        {
+            i8   d = (i8)irc;
+            i32 xi = readR((irc >> 12) & 0b1111);
 
+            result = d + pc + ((irc & 0x800) ? xi : (i16)xi);
+            readExtensionWord();
+            break;
+        }
         case 11: // Imm
+        {
             assert(false);
             return 0;
-
+        }
         default:
             assert(false);
     }

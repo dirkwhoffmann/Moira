@@ -14,4 +14,11 @@ void init();
 void registerShiftCmds();
 void registerMoveCmds();
 
+void registerASL();
+
+
+// void registerShiftCmd();
+
+// ASL, ASR, LSL, LSR, ROL, ROR, ROXL, ROXR
+
 #endif

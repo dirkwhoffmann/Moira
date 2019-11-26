@@ -20,10 +20,10 @@ CPU::execRegShift(u16 opcode)
     int x = (opcode >> 9) & 0b111; //  ---- xxx- ---- ----
     int y = (opcode >> 0) & 0b111; //  ---- ---- ---- -xxx
 
-    u32 dx = reg.d[x].read<S>();
-    u32 dy = reg.d[y].read<S>();
+    u32 dx = readD<S>(x);
+    u32 dy = readD<S>(y);
 
-    reg.d[y].write<S>(shift<S,I>(dx, dy));
+    writeD<S>(y, shift<S,I>(dx, dy));
 }
 
 template<Instr I, Size S> void
@@ -33,9 +33,9 @@ CPU::execImmShift(u16 opcode)
     int cnt = (opcode >> 9) & 0b111; //  ---- xxx- ---- ----
     int y   = (opcode >> 0) & 0b111; //  ---- ---- ---- -xxx
 
-    u32 dy = reg.d[y].read<S>();
+    u32 dy = readD<S>(y);
 
-    reg.d[y].write<S>(shift<S,I>(cnt ? cnt : 8, dy));
+    writeD<S>(y, shift<S,I>(cnt ? cnt : 8, dy));
 }
 
 template<Instr I, Mode M> void

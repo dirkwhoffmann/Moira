@@ -13,8 +13,11 @@
 #include "MoiraDelegate.h"
 #include "MoiraUtils.h"
 
-struct Dn { int n; };
-struct An { int n; };
+struct Dn { int value; };
+struct An { int value; };
+struct Disp8 { i8 value; };
+struct Disp16 { i16 value; };
+struct Index { int value; };
 struct Ea { Mode m; u16 opcode; u16 ext1; u16 ext2; };
 
 class StrWriter
@@ -26,13 +29,16 @@ public:
 
     StrWriter(char *p, bool h) : ptr(p), hex(h) { };
 
-    StrWriter& operator<<(char c);
+    // StrWriter& operator<<(char c);
     StrWriter& operator<<(const char *str);
     StrWriter& operator<<(u8 value);
     StrWriter& operator<<(u16 value);
     StrWriter& operator<<(u32 value);
     StrWriter& operator<<(Dn dn);
     StrWriter& operator<<(An an);
+    StrWriter& operator<<(Disp8 d);
+    StrWriter& operator<<(Disp16 d);
+    StrWriter& operator<<(Index i);
     StrWriter& operator<<(Ea ea);
 
     void finish() { *ptr = 0; }

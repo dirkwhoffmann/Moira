@@ -21,15 +21,15 @@ struct Registers {
 
     union {
         struct {
-            Reg d[8];      // D0, D1 ... D7
-            Reg a[8];      // A0, A1 ... A7
+            u32 d[8];      // D0, D1 ... D7
+            u32 a[8];      // A0, A1 ... A7
         };
         struct {
-            Reg _pad[14];
-            Reg usp;       // User Stack Pointer (equals a[7])
-            Reg ssp;       // Supervisor Stack Pointer
+            u32 _pad[14];
+            u32 usp;       // User Stack Pointer (equals a[7])
+            u32 ssp;       // Supervisor Stack Pointer
         };
-        Reg r[17];
+        u32 r[17];
     };
 };
 
@@ -103,10 +103,12 @@ public:
     void reset();
     void process(u16 reg_ird);
 
-    u32 getD(unsigned n) { assert(n < 8); return reg.d[n].read<Long>(); }
-    void setD(unsigned n, u32 v) { assert(n < 8); reg.d[n].write<Long>(v); }
-    u32 getA(unsigned n) { assert(n < 8); return reg.a[n].read<Long>(); }
-    void setA(unsigned n, u32 v) { assert(n < 8); reg.a[n].write<Long>(v); }
+    template<Size S = Long> u32 readD(int n) { return CLIP<S>(reg.d[n]); }
+    template<Size S = Long> u32 readA(int n) { return CLIP<S>(reg.a[n]); }
+    template<Size S = Long> u32 readR(int n) { return CLIP<S>(reg.r[n]); }
+    template<Size S = Long> void writeD(int n, u32 v) { reg.d[n] = CLIP<S>(v); }
+    template<Size S = Long> void writeA(int n, u32 v) { reg.a[n] = CLIP<S>(v); }
+    template<Size S = Long> void writeR(int n, u32 v) { reg.r[n] = CLIP<S>(v); }
 
     u32 getPC() { return pc; }
     u32 getIRC() { return irc; }
