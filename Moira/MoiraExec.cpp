@@ -53,6 +53,31 @@ CPU::execEaShift(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+execAdd(u16 opcode)
+{
+    assert(0);
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execAddRg(u16 opcode)
+{
+    assert(0);
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execAddEa(u16 opcode)
+{
+    assert(0);
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execAddIm(u16 opcode)
+{
+    readImm<S>();
+    
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::execAdd(u16 opcode)
 {
     assert(0);

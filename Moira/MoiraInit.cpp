@@ -167,19 +167,19 @@ CPU::registerAddSub(const char *pattern1, const char *pattern2)
         bind(opcode | 0 << 6 | 7 << 3 | 1, Add<I __ 8 __ Byte>);
         bind(opcode | 0 << 6 | 7 << 3 | 2, Add<I __ 9 __ Byte>);
         bind(opcode | 0 << 6 | 7 << 3 | 3, Add<I __ 10 __ Byte>);
-        bind(opcode | 0 << 6 | 7 << 3 | 4, Add<I __ 11 __ Byte>);
+        bind(opcode | 0 << 6 | 7 << 3 | 4, AddIm<I __ 11 __ Byte>);
 
         bind(opcode | 1 << 6 | 7 << 3 | 0, Add<I __ 7 __ Word>);
         bind(opcode | 1 << 6 | 7 << 3 | 1, Add<I __ 8 __ Word>);
         bind(opcode | 1 << 6 | 7 << 3 | 2, Add<I __ 9 __ Word>);
         bind(opcode | 1 << 6 | 7 << 3 | 3, Add<I __ 10 __ Word>);
-        bind(opcode | 1 << 6 | 7 << 3 | 4, Add<I __ 11 __ Word>);
+        bind(opcode | 1 << 6 | 7 << 3 | 4, AddIm<I __ 11 __ Word>);
 
         bind(opcode | 2 << 6 | 7 << 3 | 0, Add<I __ 7 __ Long>);
         bind(opcode | 2 << 6 | 7 << 3 | 1, Add<I __ 8 __ Long>);
         bind(opcode | 2 << 6 | 7 << 3 | 2, Add<I __ 9 __ Long>);
         bind(opcode | 2 << 6 | 7 << 3 | 3, Add<I __ 10 __ Long>);
-        bind(opcode | 2 << 6 | 7 << 3 | 4, Add<I __ 11 __ Long>);
+        bind(opcode | 2 << 6 | 7 << 3 | 4, AddIm<I __ 11 __ Long>);
     }
 
     // (2)

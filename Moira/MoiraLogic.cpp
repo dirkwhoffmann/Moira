@@ -183,8 +183,76 @@ CPU::computeEA(u32 n, u32 dis, u32 idx) {
     return result;
 }
 
+template<Size S> u32
+CPU::readImm()
+{
+    u32 result;
 
-template<Size size, Instr instr> u32
+    switch (S) {
+        case Byte:
+            result = (u8)irc;
+            readExtensionWord();
+            break;
+        case Word:
+            result = irc;
+            readExtensionWord();
+            break;
+        case Long:
+            result = irc << 16;
+            readExtensionWord();
+            result |= irc;
+            readExtensionWord();
+            break;
+    }
+
+    return result;
+}
+
+/*
+template<Size S, Mode M> u32
+CPU::readSrc(int n)
+{
+     switch (M) {
+
+         case 0: // Dn
+         {
+             return readD(n);
+         }
+         case 1: // An
+         {
+             return readA(n);
+         }
+         case 2: // (An)
+         case 3: // (An)+
+         case 4: // -(An)
+         case 5: // (d,An)
+         case 6: // (d,An,Xi)
+         case 7: // ABS.W
+         case 8: // ABS.L
+         case 9: // (d,PC)
+         case 10: // (d,PC,Xi)
+         {
+             computeEA<S, M>(n);
+
+             assert(false);
+             return 0;
+         }
+
+         case 11: // Imm
+         {
+             assert(false);
+             return 0;
+         }
+
+         default:
+             assert(false);
+     }
+
+     return 0;
+}
+*/
+
+template<Size S, Instr I> u32
 CPU::shift(u32 cnt, u32 data) {
     
     assert(cnt > 0);
@@ -192,22 +260,22 @@ CPU::shift(u32 cnt, u32 data) {
     bool c = 0;
     bool v = 0;
     
-    switch(instr) {
+    switch(I) {
             
         case ASL:
             
             for (int i = 0; i < cnt; i++) {
-                c = MSBIT<size>(data);
+                c = MSBIT<S>(data);
                 v |= data ^ (data << 1);
                 data <<= 1;
             }
             sr.c = c;
-            sr.v = NEG<size>(v);
-            sr.z = ZERO<size>(data);
-            sr.n = NEG<size>(data);
+            sr.v = NEG<S>(v);
+            sr.z = ZERO<S>(data);
+            sr.n = NEG<S>(data);
             if (cnt) sr.x = c; // IF IS OBSOLETE???
             
-            return CLIP<size>(data);
+            return CLIP<S>(data);
             
         case ASR:    return 2; // asr<Size>( data, shift );
         case LSL:    return 3; // lsl<Size>( data, shift );
@@ -223,3 +291,18 @@ CPU::shift(u32 cnt, u32 data) {
     return 0;
 }
 
+template<Size S> u32
+CPU::add(u32 op1, u32 op2)
+{
+    u64 result = op1 + op2;
+
+    result += sr.x;
+
+    sr.c = NEG<S>(result >> 1);
+    sr.v = NEG<S>((op1 ^ result) & (op2 ^ result));
+    if (CLIP<S>(result)) sr.z = 0;
+    sr.n = NEG<S>(result);
+    sr.x = sr.c;
+
+    return (u32)result;
+}

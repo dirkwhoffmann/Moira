@@ -132,6 +132,32 @@ StrWriter::operator<<(Index v)
 }
 
 StrWriter&
+StrWriter::operator<<(Sz sz)
+{
+    switch (sz.s) {
+
+        case Byte: *this << ".b"; break;
+        case Word: *this << ".s"; break;
+        case Long: *this << ".l"; break;
+        default:   assert(false);
+    }
+    return *this;
+}
+
+StrWriter&
+StrWriter::operator<<(Im im)
+{
+    *this << "#";
+    switch (im.s) {
+        case Byte: *this << (u8)im.ext1; break;
+        case Word: *this << im.ext1; break;
+        case Long: *this << ((u32)(im.ext1 << 16) | im.ext2); break;
+        default:   assert(false);
+    }
+    return *this;
+}
+
+StrWriter&
 StrWriter::operator<<(Ea ea)
 {
     switch (ea.m) {

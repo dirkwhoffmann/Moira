@@ -57,11 +57,20 @@ CPU::dasmAdd(StrWriter &str, u16 op, u16 ext1, u16 ext2)
     assert(0);
 }
 
+template<Instr I, Mode M, Size S> void
+CPU::dasmAddIm(StrWriter &str, u16 op, u16 ext1, u16 ext2)
+{
+    Dn dn { op >> 9 & 7 };
+    Im im { S, ext1, ext2 };
+
+    str << "add " << im << "," << dn;
+}
+
 template <Mode M> void
 CPU::dasmLea(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 {
     Ea ea { M, op, ext1, ext2 };
-    An an { (op >> 9) & 7 };
+    An an { op >> 9 & 7 };
 
     str << "lea     " << ea << ", " << an;
 }
