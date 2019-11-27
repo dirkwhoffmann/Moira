@@ -73,8 +73,14 @@ CPU::execAddEa(u16 opcode)
 template<Instr I, Mode M, Size S> void
 CPU::execAddIm(u16 opcode)
 {
-    readImm<S>();
-    
+    int src = readImm<S>();
+    int dst = (opcode >> 9) & 0b111; //  ---- xxx- ---- ----
+
+    printf("src = %x dst = %x\n", src, dst);
+    u32 result = add<S>(src,readD(dst));
+
+    reg.d[dst] = result;
+    prefetch();
 }
 
 template<Instr I, Mode M, Size S> void

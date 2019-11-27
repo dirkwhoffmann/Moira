@@ -16,13 +16,13 @@ using namespace Moira;
 
 enum Size { Byte, Word, Long };
 
-template<Size> u32 CLIP(u32 data);
-template<Size> u32 MASK();
-template<Size> bool     MSBIT(u32 data);
-template<Size> u32 SIGN(u32 data);
-template<Size> u8  BYTES();
-template<Size S> bool   ZERO(u32 data) { return CLIP<S>(data) == 0; }
-template<Size S> bool   NEG(u32 data) { return SIGN<S>(data) < 0; }
+template<Size> u32 CLIP(u64 data);
+template<Size> u64 MASK();
+template<Size> bool MSBIT(u64 data);
+template<Size> u32 SIGN(u64 data);
+template<Size> u8 BYTES();
+template<Size S> bool ZERO(u64 data) { return CLIP<S>(data) == 0; }
+template<Size S> bool NEG(u64 data) { return SIGN<S>(data) < 0; }
 
 
 enum Instr {

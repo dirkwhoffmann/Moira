@@ -190,14 +190,18 @@ CPU::readImm()
 
     switch (S) {
         case Byte:
+            printf("readImm (Byte)\n");
             result = (u8)irc;
             readExtensionWord();
             break;
         case Word:
             result = irc;
+            printf("readImm (Word) irc = %x\n", irc);
             readExtensionWord();
+            printf("irc = %x, ird = %x\n", irc, ird);
             break;
         case Long:
+            printf("readImm (Long)\n");
             result = irc << 16;
             readExtensionWord();
             result |= irc;
@@ -294,15 +298,16 @@ CPU::shift(u32 cnt, u32 data) {
 template<Size S> u32
 CPU::add(u32 op1, u32 op2)
 {
-    u64 result = op1 + op2;
+    u64 result64 = op1 + op2;
+    result64 += sr.x;
 
-    result += sr.x;
+    u32 result = (u32)result64;
 
-    sr.c = NEG<S>(result >> 1);
+    sr.c = NEG<S>((u32)(result64 >> 1));
     sr.v = NEG<S>((op1 ^ result) & (op2 ^ result));
     if (CLIP<S>(result)) sr.z = 0;
     sr.n = NEG<S>(result);
     sr.x = sr.c;
 
-    return (u32)result;
+    return result;
 }
