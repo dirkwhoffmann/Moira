@@ -7,7 +7,7 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-
+#include "StringWriter.cpp"
 
 //
 // Disassembling adressing modes
@@ -60,8 +60,8 @@ CPU::dasmAdd(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 template<Instr I, Mode M, Size S> void
 CPU::dasmAddXXRg(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
-    Ea<M> src { _____________xxx(op), e1, e2, S };
-    Dn    dst { ____xxx_________(op) };
+    Ea<M,S> src { _____________xxx(op), e1, e2 };
+    Dn      dst { ____xxx_________(op) };
 
     str << "add" << Sz<S>{} << " " << src << "," << dst;
 }
@@ -69,8 +69,8 @@ CPU::dasmAddXXRg(StrWriter &str, u16 op, u16 e1, u16 e2)
 template<Instr I, Mode M, Size S> void
 CPU::dasmAddRgXX(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
-    Dn    src { ____xxx_________(op) };
-    Ea<M> dst { _____________xxx(op), e1, e2, S };
+    Dn      src { ____xxx_________(op) };
+    Ea<M,S> dst { _____________xxx(op), e1, e2 };
 
     str << "add" << Sz<S>{} << " " << src << "," << dst;
 }
@@ -87,8 +87,8 @@ CPU::dasmAddRgRg(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 template<Instr I, Mode M, Size S> void
 CPU::dasmAddEaRg(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 {
-    Ea<M> src { _____________xxx(op), ext1, ext2 };
-    Dn    dst { ____xxx_________(op) };
+    Ea<M,S> src { _____________xxx(op), ext1, ext2 };
+    Dn      dst { ____xxx_________(op) };
 
     str << "add" << Sz<S>{} << "  " << src << ", " << dst;
 }
@@ -105,8 +105,8 @@ CPU::dasmAddImRg(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 template<Instr I, Mode M, Size S> void
 CPU::dasmAddRgEa(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 {
-    Dn    src { ____xxx_________(op) };
-    Ea<M> dst { _____________xxx(op), ext1, ext2 };
+    Dn      src { ____xxx_________(op) };
+    Ea<M,S> dst { _____________xxx(op), ext1, ext2 };
 
     str << "add" << Sz<S>{} << "  " << src << ", " << dst;
 }
@@ -114,8 +114,8 @@ CPU::dasmAddRgEa(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 template <Mode M> void
 CPU::dasmLea(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 {
-    Ea<M> src { _____________xxx(op), ext1, ext2 };
-    An    dst { ____xxx_________(op) };
+    Ea<M,Long> src { _____________xxx(op), ext1, ext2 };
+    An         dst { ____xxx_________(op) };
 
     str << "lea     " << src << ", " << dst;
 }

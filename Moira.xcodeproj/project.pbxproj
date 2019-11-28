@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5010BDAE238A897400CFD010 /* StringWriter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5010BDAC238A897400CFD010 /* StringWriter.cpp */; };
 		50804EDE2386A72C004D3EC2 /* tester.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E792386A72C004D3EC2 /* tester.cpp */; };
 		50804EDF2386A72C004D3EC2 /* exception.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E7C2386A72C004D3EC2 /* exception.cpp */; };
 		50804EE02386A72C004D3EC2 /* 68k.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E812386A72C004D3EC2 /* 68k.cpp */; };
@@ -542,7 +541,6 @@
 				50804EF22386A72C004D3EC2 /* trapv.cpp in Sources */,
 				50804F172386A72C004D3EC2 /* eori.cpp in Sources */,
 				50804EFD2386A72C004D3EC2 /* subi.cpp in Sources */,
-				5010BDAE238A897400CFD010 /* StringWriter.cpp in Sources */,
 				50804F162386A72C004D3EC2 /* and.cpp in Sources */,
 				50804EED2386A72C004D3EC2 /* movem.cpp in Sources */,
 				50804EF42386A72C004D3EC2 /* andisr.cpp in Sources */,
