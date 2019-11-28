@@ -18,6 +18,8 @@ void dasmEaShift(StrWriter &str, u16 op, u16 ext1, u16 ext2);
 template<Instr I, Mode M, Size S>
 void dasmAdd(StrWriter &str, u16 op, u16 ext1, u16 ext2);
 template<Instr I, Mode M, Size S>
-void dasmAddIm(StrWriter &str, u16 op, u16 ext1, u16 ext2);
+void dasmAddImRg(StrWriter &str, u16 op, u16 ext1, u16 ext2);
+template<Instr I, Mode M, Size S>
+void dasmAddRgEa(StrWriter &str, u16 op, u16 ext1, u16 ext2);
 template<Mode M>
 void dasmLea(StrWriter &str, u16 op, u16 ext1, u16 ext2);

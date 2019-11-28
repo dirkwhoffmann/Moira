@@ -8,9 +8,18 @@
 // -----------------------------------------------------------------------------
 
 
-// Compute effective address
-template<Size S, Mode M>
-u32 computeEA(u32 n, u32 dis = 0, u32 idx = 0);
+// Reads a value from memory
+template<Size S> u32 read(u32 addr);
+
+// Writes a value to memory
+template<Size S> void write(u32 addr, u32 value);
+
+// Computea an effective address
+template<Mode M, Size S> u32 computeEA(u32 n, u32 dis = 0, u32 idx = 0);
+
+// Reads a value from an effective address
+template<Mode M, Size S> u32 readEA(u32 n, u32 dis = 0, u32 idx = 0);
+
 
 // Read immediate value
 template<Size S> u32 readImm();

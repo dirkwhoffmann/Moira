@@ -294,7 +294,7 @@ public:
     void testRts();
     void sampleRts();
 
-    u8 moiraRead8(u32 addr) { return memRead(addr); }
+    u8 moiraRead8(u32 addr) { printf("moiraRead8: %x\n", memRead(addr)); return memRead(addr); }
     virtual u16 moiraRead16(u32 addr) { return memWordRead(addr); }
     virtual void moiraWrite8(u32 addr, u8 value) { memWrite(addr, value); }
     virtual void moiraWrite16(u32 addr, u16 value) { memWordWrite(addr, value); }

@@ -7,6 +7,9 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+#define _____________xxx(opcode) ((opcode >> 0) & 0b111)
+#define ____xxx_________(opcode) ((opcode >> 9) & 0b111)
+
 void
 CPU::execIllegal(u16 opcode)
 {
@@ -30,8 +33,8 @@ template<Instr I, Size S> void
 CPU::execImmShift(u16 opcode)
 {
     // #<cnt>,Dy
-    int cnt = (opcode >> 9) & 0b111; //  ---- xxx- ---- ----
-    int y   = (opcode >> 0) & 0b111; //  ---- ---- ---- -xxx
+    int cnt = ____xxx_________(opcode);
+    int y   = _____________xxx(opcode);
 
     u32 dy = readD<S>(y);
 
@@ -71,15 +74,28 @@ CPU::execAddEa(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAddIm(u16 opcode)
+CPU::execAddImRg(u16 opcode)
 {
-    int src = readImm<S>();
-    int dst = (opcode >> 9) & 0b111; //  ---- xxx- ---- ----
+    int dst = ____xxx_________(opcode);
 
-    printf("src = %x dst = %x\n", src, dst);
-    u32 result = add<S>(src,readD(dst));
+    u32 result = add<S>(readImm<S>(),readD<S>(dst));
 
-    reg.d[dst] = result;
+    writeD<S>(dst, result);
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execAddRgEa(u16 opcode)
+{
+    int src = ____xxx_________(opcode);
+    int dst = _____________xxx(opcode);
+
+    u32 ea  = computeEA<M,S>(dst);
+
+    printf("ea = %x (ea) = %x\n", ea, read<S>(ea));
+    u32 result = add<S>(readD<S>(src), read<S>(ea));
+
+    // write<S>(ea, result);
     prefetch();
 }
 
@@ -92,11 +108,11 @@ CPU::execAdd(u16 opcode)
 template<Mode M> void
 CPU::execLea(u16 opcode)
 {
-    int src = (opcode >> 0) & 0b111; //  ---- ---- ---- -xxx
-    int dst = (opcode >> 9) & 0b111; //  ---- xxx- ---- ----
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
 
-    u32 addr = computeEA<Long, M>(src);
+    u32 result = computeEA<M, Long>(src);
 
-    reg.a[dst] = addr;
+    reg.a[dst] = result;
     prefetch();
 }

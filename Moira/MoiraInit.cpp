@@ -167,22 +167,54 @@ CPU::registerAddSub(const char *pattern1, const char *pattern2)
         bind(opcode | 0 << 6 | 7 << 3 | 1, Add<I __ 8 __ Byte>);
         bind(opcode | 0 << 6 | 7 << 3 | 2, Add<I __ 9 __ Byte>);
         bind(opcode | 0 << 6 | 7 << 3 | 3, Add<I __ 10 __ Byte>);
-        bind(opcode | 0 << 6 | 7 << 3 | 4, AddIm<I __ 11 __ Byte>);
+        bind(opcode | 0 << 6 | 7 << 3 | 4, AddImRg<I __ 11 __ Byte>);
 
         bind(opcode | 1 << 6 | 7 << 3 | 0, Add<I __ 7 __ Word>);
         bind(opcode | 1 << 6 | 7 << 3 | 1, Add<I __ 8 __ Word>);
         bind(opcode | 1 << 6 | 7 << 3 | 2, Add<I __ 9 __ Word>);
         bind(opcode | 1 << 6 | 7 << 3 | 3, Add<I __ 10 __ Word>);
-        bind(opcode | 1 << 6 | 7 << 3 | 4, AddIm<I __ 11 __ Word>);
+        bind(opcode | 1 << 6 | 7 << 3 | 4, AddImRg<I __ 11 __ Word>);
 
         bind(opcode | 2 << 6 | 7 << 3 | 0, Add<I __ 7 __ Long>);
         bind(opcode | 2 << 6 | 7 << 3 | 1, Add<I __ 8 __ Long>);
         bind(opcode | 2 << 6 | 7 << 3 | 2, Add<I __ 9 __ Long>);
         bind(opcode | 2 << 6 | 7 << 3 | 3, Add<I __ 10 __ Long>);
-        bind(opcode | 2 << 6 | 7 << 3 | 4, AddIm<I __ 11 __ Long>);
+        bind(opcode | 2 << 6 | 7 << 3 | 4, AddImRg<I __ 11 __ Long>);
     }
 
     // (2)
+     for (int dy = 0; dy < 8; dy++) {
+
+         opcode = parse(pattern2) | dy << 9;
+         for (int reg = 0; reg < 8; reg++) {
+
+             bind(opcode | 0 << 6 | 2 << 3 | reg, AddRgEa<I __ 2 __ Byte>);
+             bind(opcode | 0 << 6 | 3 << 3 | reg, AddRgEa<I __ 3 __ Byte>);
+             bind(opcode | 0 << 6 | 4 << 3 | reg, AddRgEa<I __ 4 __ Byte>);
+             bind(opcode | 0 << 6 | 5 << 3 | reg, AddRgEa<I __ 5 __ Byte>);
+             bind(opcode | 0 << 6 | 6 << 3 | reg, AddRgEa<I __ 6 __ Byte>);
+
+             bind(opcode | 1 << 6 | 2 << 3 | reg, AddRgEa<I __ 2 __ Word>);
+             bind(opcode | 1 << 6 | 3 << 3 | reg, AddRgEa<I __ 3 __ Word>);
+             bind(opcode | 1 << 6 | 4 << 3 | reg, AddRgEa<I __ 4 __ Word>);
+             bind(opcode | 1 << 6 | 5 << 3 | reg, AddRgEa<I __ 5 __ Word>);
+             bind(opcode | 1 << 6 | 6 << 3 | reg, AddRgEa<I __ 6 __ Word>);
+
+             bind(opcode | 2 << 6 | 2 << 3 | reg, AddRgEa<I __ 2 __ Long>);
+             bind(opcode | 2 << 6 | 3 << 3 | reg, AddRgEa<I __ 3 __ Long>);
+             bind(opcode | 2 << 6 | 4 << 3 | reg, AddRgEa<I __ 4 __ Long>);
+             bind(opcode | 2 << 6 | 5 << 3 | reg, AddRgEa<I __ 5 __ Long>);
+             bind(opcode | 2 << 6 | 6 << 3 | reg, AddRgEa<I __ 6 __ Long>);
+         }
+         bind(opcode | 0 << 6 | 7 << 3 | 0, AddRgEa<I __ 7 __ Byte>);
+         bind(opcode | 0 << 6 | 7 << 3 | 1, AddRgEa<I __ 8 __ Byte>);
+
+         bind(opcode | 1 << 6 | 7 << 3 | 0, AddRgEa<I __ 7 __ Word>);
+         bind(opcode | 1 << 6 | 7 << 3 | 1, AddRgEa<I __ 8 __ Word>);
+
+         bind(opcode | 2 << 6 | 7 << 3 | 0, AddRgEa<I __ 7 __ Long>);
+         bind(opcode | 2 << 6 | 7 << 3 | 1, AddRgEa<I __ 8 __ Long>);
+     }
     
 }
 

@@ -11,8 +11,6 @@ extern Moira::CPU *moira;
 
 void Core_68k::process() { //execute next opcode
 
-    char instr[256];
-
     if ( doubleFault ) {
         cpuHalted();
         sync(4);
@@ -30,12 +28,7 @@ void Core_68k::process() { //execute next opcode
         incrementPc();
         logInstruction(reg_ird, true);
 
-        u32 ird = reg_ird;
         (this->*opcodes[ reg_ird ])(reg_ird);
-
-        moira->disassemble(moira->getPC(), instr);
-        printf("Moira: %s\n", instr);
-        moira->process(ird);
 
     } catch(CpuException) {
         //bus or address error, leave opcode or exception handler
@@ -620,6 +613,7 @@ void Core_68k::setFlags(u8 type, u8 size, u64 result, u32 src, u32 dest) {
 			reg_s.n = ResN;
         case flag_addx:
             reg_s.c = (result >> bits_(size)) & 1;
+            printf("c: %d result %llx\n", reg_s.c, result);
 			reg_s.x = reg_s.c;
 			reg_s.v = ( SrcN ^ ResN ) & ( DestN ^ ResN ); return;
 		case flag_zn:

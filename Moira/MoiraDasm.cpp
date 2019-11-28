@@ -58,12 +58,18 @@ CPU::dasmAdd(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmAddIm(StrWriter &str, u16 op, u16 ext1, u16 ext2)
+CPU::dasmAddImRg(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 {
     Dn dn { op >> 9 & 7 };
     Im im { S, ext1, ext2 };
 
     str << "add " << im << "," << dn;
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::dasmAddRgEa(StrWriter &str, u16 op, u16 ext1, u16 ext2)
+{
+    str << "MISSING";
 }
 
 template <Mode M> void

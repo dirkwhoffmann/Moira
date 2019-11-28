@@ -7,7 +7,47 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-template<Size S, Mode M> u32
+template<> u32
+CPU::read<Byte>(u32 addr)
+{
+    printf("read<Byte>(%x)\n", addr);
+    return memory->moiraRead8(addr);
+}
+
+template<> u32
+CPU::read<Word>(u32 addr)
+{
+    printf("read<Word>(%x)\n", addr);
+    return memory->moiraRead16(addr);
+}
+
+template<> u32
+CPU::read<Long>(u32 addr)
+{
+    printf("read<Long>(%x)\n", addr);
+    return memory->moiraRead16(addr) << 16 | memory->moiraRead16(addr + 2);
+}
+
+template<> void
+CPU::write<Byte>(u32 addr, u32 value)
+{
+    memory->moiraWrite8(addr, (u8)value);
+}
+
+template<> void
+CPU::write<Word>(u32 addr, u32 value)
+{
+    memory->moiraWrite16(addr, (u16)value);
+}
+
+template<> void
+CPU::write<Long>(u32 addr, u32 value)
+{
+    memory->moiraWrite16(addr, (u16)(value >> 16));
+    memory->moiraWrite16(addr + 2, (u16)value);
+}
+
+template<Mode M, Size S> u32
 CPU::computeEA(u32 n, u32 dis, u32 idx) {
 
     u32 result;
@@ -63,6 +103,7 @@ CPU::computeEA(u32 n, u32 dis, u32 idx) {
         case 7: // ABS.W
         {
             result = irc;
+            printf("ABS.W %x\n", result);
             readExtensionWord();
             break;
         }
@@ -71,6 +112,7 @@ CPU::computeEA(u32 n, u32 dis, u32 idx) {
             result = irc << 16;
             readExtensionWord();
             result |= irc;
+            printf("ABS.L %x\n", result);
             readExtensionWord();
             break;
         }
@@ -183,6 +225,15 @@ CPU::computeEA(u32 n, u32 dis, u32 idx) {
     return result;
 }
 
+template<Mode M, Size S> u32
+CPU::readEA(u32 n, u32 dis, u32 idx)
+{
+    u32 addr = computeEA<M,S>(n, dis, idx);
+    printf("readEA: M: %d addr: %x result: %x\n", M, addr, read<S>(addr));
+    return read<S>(addr);
+    
+}
+
 template<Size S> u32
 CPU::readImm()
 {
@@ -211,50 +262,6 @@ CPU::readImm()
 
     return result;
 }
-
-/*
-template<Size S, Mode M> u32
-CPU::readSrc(int n)
-{
-     switch (M) {
-
-         case 0: // Dn
-         {
-             return readD(n);
-         }
-         case 1: // An
-         {
-             return readA(n);
-         }
-         case 2: // (An)
-         case 3: // (An)+
-         case 4: // -(An)
-         case 5: // (d,An)
-         case 6: // (d,An,Xi)
-         case 7: // ABS.W
-         case 8: // ABS.L
-         case 9: // (d,PC)
-         case 10: // (d,PC,Xi)
-         {
-             computeEA<S, M>(n);
-
-             assert(false);
-             return 0;
-         }
-
-         case 11: // Imm
-         {
-             assert(false);
-             return 0;
-         }
-
-         default:
-             assert(false);
-     }
-
-     return 0;
-}
-*/
 
 template<Size S, Instr I> u32
 CPU::shift(u32 cnt, u32 data) {
@@ -298,16 +305,15 @@ CPU::shift(u32 cnt, u32 data) {
 template<Size S> u32
 CPU::add(u32 op1, u32 op2)
 {
-    u64 result64 = op1 + op2;
-    result64 += sr.x;
+    u64 result = op1 + op2;
 
-    u32 result = (u32)result64;
-
-    sr.c = NEG<S>((u32)(result64 >> 1));
-    sr.v = NEG<S>((op1 ^ result) & (op2 ^ result));
-    if (CLIP<S>(result)) sr.z = 0;
-    sr.n = NEG<S>(result);
+    printf("add(%x,%x) = %llx\n",op1, op2, result);
+    
+    sr.c = NEG<S>((u32)(result >> 1));
+    sr.v = NEG<S>((u32)((op1 ^ result) & (op2 ^ result)));
+    sr.z = ZERO<S>((u32)result);
+    sr.n = NEG<S>((u32)result);
     sr.x = sr.c;
 
-    return result;
+    return (u32)result;
 }

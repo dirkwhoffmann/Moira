@@ -59,8 +59,6 @@ CPU::reset()
 void
 CPU::process(u16 reg_ird)
 {
-    printf("Processing opcode %x\n", reg_ird);
-
     pc += 2;
     (this->*exec[reg_ird])(reg_ird);
 }
@@ -124,8 +122,8 @@ CPU::disassemble(u32 addr, char *str, bool hex)
 
     StrWriter writer{str, hex};
 
-    printf("disassemble [%x,%x,%x] at %x\n", opcode, ext1, ext2, addr);
-
     (this->*dasm[opcode])(writer, opcode, ext1, ext2);
     writer.finish();
+
+    printf("%02x: [%04x,%04x,%04x] %s\n", addr, opcode, ext1, ext2, str);
 }

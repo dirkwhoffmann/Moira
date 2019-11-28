@@ -326,7 +326,7 @@ void Tester_68k::check(string ident) {
         cout << ident + " -> error: expected " + oSampled->getError() + oCalced->getError(true) << endl;
         errorCounter++;
     } else {
-        cout << ident + " -> success " << endl;
+        cout << "    " + ident + " -> OK";
     }
 
     // Compare result with Moira
@@ -407,8 +407,25 @@ void Tester_68k::setRegD(u8 reg, u32 value)
 
 void Tester_68k::process()
 {
+    char instr[256];
+
+    // Save register IRD
+    u32 ird = reg_ird;
+
+    // Disassemble the instruction
+    moira->disassemble(moira->getPC(), instr);
+
+    // Run a pre check
     comparePre();
+
+    // Run portable68000
     Core_68k::process();
+
+    // Run Moira
+    moira->process(ird);
+
+    // Compare the result
+    // comparePost();
 }
 
 void Tester_68k::dump()
@@ -475,8 +492,10 @@ void Tester_68k::comparePre()
 void Tester_68k::comparePost()
 {
     if (!compare()) {
-        printf("Mismatch after running command\n");
+        printf("\n\nMismatch after running command\n");
         dump();
         exit(1);
+    } else {
+        printf(" -> OK\n\n");
     }
 }
