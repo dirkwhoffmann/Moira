@@ -58,12 +58,21 @@ CPU::dasmAdd(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::dasmAddRgRg(StrWriter &str, u16 op, u16 ext1, u16 ext2)
+{
+    Dn    src { _____________xxx(op) };
+    Dn    dst { ____xxx_________(op) };
+
+    str << "add " << src << "," << dst;
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::dasmAddImRg(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 {
-    Dn    dn { ____xxx_________(op) };
-    Im<S> im { ext1, ext2 };
+    Im<S> src { ext1, ext2 };
+    Dn    dst { ____xxx_________(op) };
 
-    str << "add " << im << "," << dn;
+    str << "add " << src << "," << dst;
 }
 
 template<Instr I, Mode M, Size S> void
@@ -71,9 +80,8 @@ CPU::dasmAddRgEa(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 {
     Dn    src { ____xxx_________(op) };
     Ea<M> dst { _____________xxx(op), ext1, ext2 };
-    Sz<S> sz  { };
 
-    str << "add" << sz << "  " << src << ", " << dst;
+    str << "add" << Sz<S>{} << "  " << src << ", " << dst;
 }
 
 template <Mode M> void

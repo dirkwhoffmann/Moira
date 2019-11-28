@@ -7,19 +7,12 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-void
-dasmIllegal(StrWriter &str, u16 op, u16 ext1, u16 ext2);
-template<Instr I, Size S>
-void dasmRegShift(StrWriter &str, u16 op, u16 ext1, u16 ext2);
-template<Instr I, Size S>
-void dasmImmShift(StrWriter &str, u16 op, u16 ext1, u16 ext2);
-template<Instr I, Mode M>
-void dasmEaShift(StrWriter &str, u16 op, u16 ext1, u16 ext2);
-template<Instr I, Mode M, Size S>
-void dasmAdd(StrWriter &str, u16 op, u16 ext1, u16 ext2);
-template<Instr I, Mode M, Size S>
-void dasmAddImRg(StrWriter &str, u16 op, u16 ext1, u16 ext2);
-template<Instr I, Mode M, Size S>
-void dasmAddRgEa(StrWriter &str, u16 op, u16 ext1, u16 ext2);
-template<Mode M>
-void dasmLea(StrWriter &str, u16 op, u16 ext1, u16 ext2);
+void dasmIllegal(StrWriter &str, u16 op, u16 ext1, u16 ext2);
+template<Instr I, Size S> void dasmRegShift(StrWriter &str, u16 op, u16 e1, u16 e2);
+template<Instr I, Size S> void dasmImmShift(StrWriter &str, u16 op, u16 e1, u16 e2);
+template<Instr I, Mode M> void dasmEaShift(StrWriter &str, u16 op, u16 e1, u16 e2);
+template<Instr I, Mode M, Size S> void dasmAdd(StrWriter &str, u16 op, u16 e1, u16 e2);
+template<Instr I, Mode M, Size S> void dasmAddRgRg(StrWriter &str, u16 op, u16 e1, u16 e2);
+template<Instr I, Mode M, Size S> void dasmAddImRg(StrWriter &str, u16 op, u16 e1, u16 e2);
+template<Instr I, Mode M, Size S> void dasmAddRgEa(StrWriter &str, u16 op, u16 e1, u16 e2);
+template<Mode M> void dasmLea(StrWriter &str, u16 op, u16 e1, u16 e2);

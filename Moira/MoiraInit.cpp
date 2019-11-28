@@ -131,7 +131,7 @@ CPU::registerAddSub(const char *pattern1, const char *pattern2)
     //               --------------------------------------------------
     //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
     //               --------------------------------------------------
-    //                X       X   X   X   X   X   X   X
+    //                        X   X   X   X   X   X   X
 
     // (1)
     for (int dy = 0; dy < 8; dy++) {
@@ -147,7 +147,7 @@ CPU::registerAddSub(const char *pattern1, const char *pattern2)
             bind(opcode | 0 << 6 | 5 << 3 | reg, Add<I __ 5 __ Byte>);
             bind(opcode | 0 << 6 | 6 << 3 | reg, Add<I __ 6 __ Byte>);
 
-            bind(opcode | 1 << 6 | 0 << 3 | reg, Add<I __ 0 __ Word>);
+            bind(opcode | 1 << 6 | 0 << 3 | reg, AddRgRg<I __ 0 __ Word>);
             bind(opcode | 1 << 6 | 1 << 3 | reg, Add<I __ 1 __ Word>);
             bind(opcode | 1 << 6 | 2 << 3 | reg, Add<I __ 2 __ Word>);
             bind(opcode | 1 << 6 | 3 << 3 | reg, Add<I __ 3 __ Word>);
@@ -155,7 +155,7 @@ CPU::registerAddSub(const char *pattern1, const char *pattern2)
             bind(opcode | 1 << 6 | 5 << 3 | reg, Add<I __ 5 __ Word>);
             bind(opcode | 1 << 6 | 6 << 3 | reg, Add<I __ 6 __ Word>);
 
-            bind(opcode | 2 << 6 | 0 << 3 | reg, Add<I __ 0 __ Long>);
+            bind(opcode | 2 << 6 | 0 << 3 | reg, AddRgRg<I __ 0 __ Long>);
             bind(opcode | 2 << 6 | 1 << 3 | reg, Add<I __ 1 __ Long>);
             bind(opcode | 2 << 6 | 2 << 3 | reg, Add<I __ 2 __ Long>);
             bind(opcode | 2 << 6 | 3 << 3 | reg, Add<I __ 3 __ Long>);
