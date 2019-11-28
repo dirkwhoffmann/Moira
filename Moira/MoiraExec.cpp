@@ -92,7 +92,7 @@ CPU::execAddRgEa(u16 opcode)
     printf("ea = %x (ea) = %x\n", ea, read<S>(ea));
     u32 result = add<S>(readD<S>(src), read<S>(ea));
 
-    // write<S>(ea, result);
+    write<S>(ea, result);
     prefetch();
 }
 
