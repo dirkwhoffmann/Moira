@@ -34,9 +34,13 @@ protected:
 
     u8 memRead(u32 addr);
     void memWrite(u32 addr, u8 data);
+    u8 memRead2(u32 addr);
+    void memWrite2(u32 addr, u8 data);
 
     u16 memWordRead(u32 addr);
     void memWordWrite(u32 addr, u16 data);
+    u16 memWordRead2(u32 addr);
+    void memWordWrite2(u32 addr, u16 data);
 
     void setUp();
     void check(string ident);
@@ -294,13 +298,13 @@ public:
     void testRts();
     void sampleRts();
 
-    u8 moiraRead8(u32 addr) { printf("moiraRead8: %x\n", memRead(addr)); return memRead(addr); }
-    virtual u16 moiraRead16(u32 addr) { return memWordRead(addr); }
-    virtual void moiraWrite8(u32 addr, u8 value) { memWrite(addr, value); }
-    virtual void moiraWrite16(u32 addr, u16 value) { memWordWrite(addr, value); }
+    u8 moiraRead8(u32 addr) { return memRead2(addr); }
+    virtual u16 moiraRead16(u32 addr) { return memWordRead2(addr); }
+    virtual void moiraWrite8(u32 addr, u8 value) { memWrite2(addr, value); }
+    virtual void moiraWrite16(u32 addr, u16 value) { memWordWrite2(addr, value); }
 
-    virtual u16 moiraSpyRead16(u32 addr) { return memWordRead(addr); }
-    virtual u16 moiraReadAfterReset16(u32 addr) { return memWordRead(addr); }
+    virtual u16 moiraSpyRead16(u32 addr) { return memWordRead2(addr); }
+    virtual u16 moiraReadAfterReset16(u32 addr) { return memWordRead2(addr); }
 
     void power();
     void setRegA(u8 reg, u32 value);
