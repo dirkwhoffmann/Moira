@@ -112,7 +112,7 @@ void Tester_68k::testAdd() {
     check("add.w D, D");
 
     //MOVE.L #$b2d05e00, D2
-    //MOVE.W #8192, A2
+    //MOVE.W #$2000, A2
     //MOVE.L #$77359400, $2000
     //ADD.L D2, (A2)+
     //MOVE.L $2000, D3

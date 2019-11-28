@@ -34,6 +34,6 @@ template<> i32 SIGN<Byte>(u32 data) { return  (i8)data; }
 template<> i32 SIGN<Word>(u32 data) { return (i16)data; }
 template<> i32 SIGN<Long>(u32 data) { return (i32)data; }
 
-template<> u8 BYTES<Byte>() { return 1; }
-template<> u8 BYTES<Word>() { return 2; }
-template<> u8 BYTES<Long>() { return 4; }
+template<> u32 BYTES<Byte>() { return 1; }
+template<> u32 BYTES<Word>() { return 2; }
+template<> u32 BYTES<Long>() { return 4; }

@@ -17,9 +17,12 @@ template<Instr I, Mode M, Size S> void execAdd(u16 opcode); // DEPRECATED
 template<Instr I, Mode M, Size S> void execAddRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execAddEa(u16 opcode);
 
-template<Instr I, Mode M, Size S> void execAddRgRg(u16 opcode);
-template<Instr I, Mode M, Size S> void execAddImRg(u16 opcode);
+template<Instr I, Mode M, Size S> void execAddXXRg(u16 opcode);
+template<Instr I, Mode M, Size S> void execAddRgXX(u16 opcode);
 
+template<Instr I, Mode M, Size S> void execAddRgRg(u16 opcode);
+template<Instr I, Mode M, Size S> void execAddEaRg(u16 opcode);
+template<Instr I, Mode M, Size S> void execAddImRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execAddRgEa(u16 opcode);
 
 

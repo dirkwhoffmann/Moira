@@ -174,6 +174,22 @@ StrWriter::operator<<(Im<Long> im)
 }
 
 template <> StrWriter&
+StrWriter::operator<<(Ea<0> ea)
+{
+    // Dn
+    *this << Dn{ea.reg};
+    return *this;
+}
+
+template <> StrWriter&
+StrWriter::operator<<(Ea<1> ea)
+{
+    // An
+    *this << An{ea.reg};
+    return *this;
+}
+
+template <> StrWriter&
 StrWriter::operator<<(Ea<2> ea)
 {
     // (An)
@@ -250,5 +266,13 @@ StrWriter::operator<<(Ea<10> ea)
     *this << "(" << Disp8{(i8)ea.ext1};
     *this << ",PC," << Index{ea.ext1 >> 12};
     *this << ((ea.ext1 & 0x800) ? ".l)" : ".w)");
+    return *this;
+}
+
+template <> StrWriter&
+StrWriter::operator<<(Ea<11> ea)
+{
+    // Imm
+    *this << "MISSING";
     return *this;
 }

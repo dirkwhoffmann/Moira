@@ -23,7 +23,7 @@ public:
         unsigned addr;
         u8 value;
         bool used;
-    } block[100];
+    } block1[100];
     struct {
          unsigned addr;
          u8 value;
@@ -33,7 +33,7 @@ public:
     struct {
         unsigned addr;
         bool used;
-    } buserror[100];
+    } buserror1[100];
     struct {
          unsigned addr;
          bool used;
@@ -41,26 +41,26 @@ public:
 
     void init() {
         for(int i = 0; i < maxElements; i++) {
-            block[i].addr = block2[i].addr = 0;
-            block[i].value = block2[i].value = 0;
-            block[i].used = block2[i].used = false;
+            block1[i].addr = block2[i].addr = 0;
+            block1[i].value = block2[i].value = 0;
+            block1[i].used = block2[i].used = false;
 
-            buserror[i].used = buserror2[i].used = false;
-            buserror[i].addr = buserror2[i].addr = 0;
+            buserror1[i].used = buserror2[i].used = false;
+            buserror1[i].addr = buserror2[i].addr = 0;
         }
-        pos = 0;
+        pos1 = pos2 = 0;
     }
 
     void setBusError(unsigned addr) {
         for(int i = 0; i < maxElements; i++) {
-            if(buserror[i].addr == addr) {
+            if(buserror1[i].addr == addr) {
                 return;
             }
         }
         for(int i = 0; i < maxElements; i++) {
-            if(!buserror[i].used) {
-                buserror[i].used = true;
-                buserror[i].addr = addr;
+            if(!buserror1[i].used) {
+                buserror1[i].used = true;
+                buserror1[i].addr = addr;
                 return;
             }
         }
@@ -82,7 +82,7 @@ public:
 
     bool isBusError(unsigned addr) {
         for(int i = 0; i < maxElements; i++) {
-            if (buserror[i].used && buserror[i].addr == addr) {
+            if (buserror1[i].used && buserror1[i].addr == addr) {
                 return true;
             }
         }
@@ -99,8 +99,8 @@ public:
 
     u8 read1(unsigned addr) {
         for(int i = 0; i < maxElements; i++) {
-            if (block[i].used && block[i].addr == addr) {
-                return block[i].value;
+            if (block1[i].used && block1[i].addr == addr) {
+                return block1[i].value;
             }
         }
         return 0;
@@ -116,16 +116,16 @@ public:
 
     void write1(unsigned addr, u8 value) {
         for(int i = 0; i < maxElements; i++) {
-            if (block[i].used && block[i].addr == addr) {
-                block[i].value = value;
+            if (block1[i].used && block1[i].addr == addr) {
+                block1[i].value = value;
                 return;
             }
         }
-        block[pos].addr = addr;
-        block[pos].value = value;
-        block[pos].used = true;
+        block1[pos1].addr = addr;
+        block1[pos1].value = value;
+        block1[pos1].used = true;
 
-        if (++pos == maxElements) {
+        if (++pos1 == maxElements) {
             throw Exception("memory block is too small, increase size");
         }
     }
@@ -136,9 +136,13 @@ public:
                 return;
             }
         }
-        block2[pos].addr = addr;
-        block2[pos].value = value;
-        block2[pos].used = true;
+        block2[pos2].addr = addr;
+        block2[pos2].value = value;
+        block2[pos2].used = true;
+
+        if (++pos2 == maxElements) {
+             throw Exception("memory block is too small, increase size");
+         }
     }
     void write(unsigned addr, u8 value) {
         write1(addr, value);
@@ -194,7 +198,7 @@ public:
             error = " address not found ";
             return;
         }
-        error = "adr: " + Helper::convertIntToHexString(block[blockCount].addr) + ", val: " + Helper::convertIntToHexString(block[blockCount].value);
+        error = "adr: " + Helper::convertIntToHexString(block1[blockCount].addr) + ", val: " + Helper::convertIntToHexString(block1[blockCount].value);
     }
 
     string getError() {
@@ -206,15 +210,15 @@ public:
         int backup;
 
         for(int i = 0; i < sampled->getMaxElements(); i++) {
-            if (!sampled->block[i].used) {
+            if (!sampled->block1[i].used) {
                 continue;
             }
             found = false;
             backup = -1;
             for(int j = 0; j < calced->getMaxElements(); j++) {
-                if (sampled->block[i].addr == calced->block[j].addr) {
+                if (sampled->block1[i].addr == calced->block1[j].addr) {
                     backup = j;
-                    if (sampled->block[i].value == calced->block[j].value) {
+                    if (sampled->block1[i].value == calced->block1[j].value) {
                         found = true;
                     }
                     break;
@@ -230,7 +234,8 @@ public:
     }
 
 private:
-    unsigned pos;
+    unsigned pos1;
+    unsigned pos2;
     unsigned maxElements;
     string error;
 };

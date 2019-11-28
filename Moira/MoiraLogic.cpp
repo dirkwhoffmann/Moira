@@ -73,18 +73,26 @@ CPU::computeEA(u32 n, u32 dis, u32 idx) {
         }
         case 3: // (An)+
         {
-            assert(false);
-            return 0;
+            u32 an     = readA(n);
+            u32 offset = (n == 7 && S == Byte) ? 2 : BYTES<S>();
+
+            result = an;
+            writeA(n, an + offset);
+            break;
         }
         case 4: // -(An)
         {
-            assert(false);
-            return 0;
+            u32 an     = readA(n);
+            u32 offset = (n == 7 && S == Byte) ? 2 : BYTES<S>();
+
+            result = an - offset;
+            writeA(n, result);
+            break;
         }
         case 5: // (d,An)
         {
+            u32 an = readA(n);
             i16  d = (i16)irc;
-            i32 an = readA(n);
 
             result = d + an;
             readExtensionWord();
@@ -305,9 +313,9 @@ CPU::shift(u32 cnt, u32 data) {
 template<Size S> u32
 CPU::add(u32 op1, u32 op2)
 {
-    u64 result = op1 + op2;
+    u64 result = (u64)op1 + (u64)op2;
 
-    printf("add(%x,%x) = %llx\n",op1, op2, result);
+    // printf("add(%x,%x) = %llx\n",op1, op2, result);
     
     sr.c = NEG<S>((u32)(result >> 1));
     sr.v = NEG<S>((u32)((op1 ^ result) & (op2 ^ result)));

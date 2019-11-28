@@ -71,6 +71,67 @@ CPU::execAddEa(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::execAddXXRg(u16 opcode)
+{
+    u32 result;
+
+    int dst = ____xxx_________(opcode);
+
+    printf("execAddXXRg<%d,%d,%d> dst = %d\n", I, M, S, dst);
+
+    switch (M) {
+
+        case 0: // Dn
+        {
+            int src = _____________xxx(opcode);
+            result = add<S>(readD<S>(src), readD<S>(dst));
+            break;
+        }
+        case 1: // An
+        {
+            int src = _____________xxx(opcode);
+            printf("A%d = %x D%d = %x\n", src, readA<S>(src), dst, readD<S>(dst));
+            result = add<S>(readA<S>(src), readD<S>(dst));
+            break;
+        }
+        case 11: // Imm
+        {
+            result = add<S>(readImm<S>(), readD<S>(dst));
+            break;
+        }
+        default: // Ea
+        {
+            assert(M >= 3 && M <= 10);
+
+            int src = _____________xxx(opcode);
+            u32 ea  = computeEA<M,S>(src);
+            result = add<S>(read<S>(ea), readD<S>(dst));
+            break;
+        }
+    }
+
+    writeD<S>(dst, result);
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execAddRgXX(u16 opcode)
+{
+    assert(M >= 3 && M <= 8);
+
+    int src = ____xxx_________(opcode);
+    int dst = _____________xxx(opcode);
+    u32 ea  = computeEA<M,S>(dst);
+
+    printf("execAddRgEa:: src %x dst %x ea %x\n", src, dst, ea);
+    printf("read<S>(%x) = %x\n", ea, read<S>(ea));
+    u32 result = add<S>(readD<S>(src), read<S>(ea));
+
+    write<S>(ea, result);
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::execAddRgRg(u16 opcode)
 {
     int src = _____________xxx(opcode);
@@ -79,6 +140,21 @@ CPU::execAddRgRg(u16 opcode)
     u32 result = add<S>(readD<S>(src), readD<S>(dst));
 
     writeD<S>(dst, result);
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execAddEaRg(u16 opcode)
+{
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+    u32 ea  = computeEA<M,S>(src);
+
+    printf("execAddRgEa:: src %x dst %x ea %x\n", src, dst, ea);
+    printf("read<S>(%x) = %x\n", ea, read<S>(ea));
+    u32 result = add<S>(readD<S>(ea), read<S>(dst));
+
+    write<S>(ea, result);
     prefetch();
 }
 
@@ -100,6 +176,8 @@ CPU::execAddRgEa(u16 opcode)
     int dst = _____________xxx(opcode);
     u32 ea  = computeEA<M,S>(dst);
 
+    printf("execAddRgEa:: src %x dst %x ea %x\n", src, dst, ea);
+    printf("read<S>(%x) = %x\n", ea, read<S>(ea));
     u32 result = add<S>(readD<S>(src), read<S>(ea));
 
     write<S>(ea, result);
