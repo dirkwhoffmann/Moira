@@ -77,8 +77,6 @@ CPU::execAddXXRg(u16 opcode)
 
     int dst = ____xxx_________(opcode);
 
-    printf("execAddXXRg<%d,%d,%d> dst = %d\n", I, M, S, dst);
-
     switch (M) {
 
         case 0: // Dn
@@ -90,7 +88,6 @@ CPU::execAddXXRg(u16 opcode)
         case 1: // An
         {
             int src = _____________xxx(opcode);
-            printf("A%d = %x D%d = %x\n", src, readA<S>(src), dst, readD<S>(dst));
             result = add<S>(readA<S>(src), readD<S>(dst));
             break;
         }
@@ -123,8 +120,6 @@ CPU::execAddRgXX(u16 opcode)
     int dst = _____________xxx(opcode);
     u32 ea  = computeEA<M,S>(dst);
 
-    printf("execAddRgEa:: src %x dst %x ea %x\n", src, dst, ea);
-    printf("read<S>(%x) = %x\n", ea, read<S>(ea));
     u32 result = add<S>(readD<S>(src), read<S>(ea));
 
     write<S>(ea, result);

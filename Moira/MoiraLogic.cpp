@@ -10,21 +10,21 @@
 template<> u32
 CPU::read<Byte>(u32 addr)
 {
-    printf("read<Byte>(%x)\n", addr);
+    // printf("read<Byte>(%x)\n", addr);
     return memory->moiraRead8(addr);
 }
 
 template<> u32
 CPU::read<Word>(u32 addr)
 {
-    printf("read<Word>(%x)\n", addr);
+    // printf("read<Word>(%x)\n", addr);
     return memory->moiraRead16(addr);
 }
 
 template<> u32
 CPU::read<Long>(u32 addr)
 {
-    printf("read<Long>(%x)\n", addr);
+    // printf("read<Long>(%x)\n", addr);
     return memory->moiraRead16(addr) << 16 | memory->moiraRead16(addr + 2);
 }
 
@@ -111,7 +111,6 @@ CPU::computeEA(u32 n, u32 dis, u32 idx) {
         case 7: // ABS.W
         {
             result = irc;
-            printf("ABS.W %x\n", result);
             readExtensionWord();
             break;
         }
@@ -120,7 +119,6 @@ CPU::computeEA(u32 n, u32 dis, u32 idx) {
             result = irc << 16;
             readExtensionWord();
             result |= irc;
-            printf("ABS.L %x\n", result);
             readExtensionWord();
             break;
         }
@@ -249,18 +247,17 @@ CPU::readImm()
 
     switch (S) {
         case Byte:
-            printf("readImm (Byte)\n");
+            // printf("readImm (Byte)\n");
             result = (u8)irc;
             readExtensionWord();
             break;
         case Word:
             result = irc;
-            printf("readImm (Word) irc = %x\n", irc);
+            // printf("readImm (Word) irc = %x\n", irc);
             readExtensionWord();
-            printf("irc = %x, ird = %x\n", irc, ird);
             break;
         case Long:
-            printf("readImm (Long)\n");
+            // printf("readImm (Long)\n");
             result = irc << 16;
             readExtensionWord();
             result |= irc;

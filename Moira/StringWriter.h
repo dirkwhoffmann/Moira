@@ -20,7 +20,7 @@ struct Disp16 { i16 value; };
 struct Index { int value; };
 template <Size S> struct Sz { };
 template <Size S> struct Im { u16 ext1; u16 ext2; };
-template <Mode M> struct Ea { u16 reg; u16 ext1; u16 ext2; };
+template <Mode M> struct Ea { u16 reg; u16 ext1; u16 ext2; Size S; };
 
 class StrWriter
 {

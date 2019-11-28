@@ -272,7 +272,10 @@ StrWriter::operator<<(Ea<10> ea)
 template <> StrWriter&
 StrWriter::operator<<(Ea<11> ea)
 {
-    // Imm
-    *this << "MISSING";
+    switch (ea.S) {
+        case Byte: *this << "#" << (u8)ea.ext1; break;
+        case Word: *this << "#" << ea.ext1; break;
+        case Long: *this << "#" << ((u32)(ea.ext1 << 16) | ea.ext2); break;
+    }
     return *this;
 }

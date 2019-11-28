@@ -179,11 +179,12 @@ Tester_68k::Tester_68k() : Core_68k()
 }
 
 void Tester_68k::runTestCases() {
-    printf("Testing LEA\n");
+    printf("*\n* Testing LEA\n*\n\n");
     testLea();
-    printf("Testing ADD\n");
+    printf("*\n* Testing ADD\n*\n\n");
     testAdd();
-    testAsl(); // 
+    printf("*\n* Testing ASL\n*\n\n");
+    testAsl();
     testAsr();
     testLsr();
     testLsl();

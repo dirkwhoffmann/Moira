@@ -613,7 +613,6 @@ void Core_68k::setFlags(u8 type, u8 size, u64 result, u32 src, u32 dest) {
 			reg_s.n = ResN;
         case flag_addx:
             reg_s.c = (result >> bits_(size)) & 1;
-            printf("c: %d result %llx\n", reg_s.c, result);
 			reg_s.x = reg_s.c;
 			reg_s.v = ( SrcN ^ ResN ) & ( DestN ^ ResN ); return;
 		case flag_zn:
