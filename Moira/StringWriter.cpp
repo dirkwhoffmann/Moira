@@ -157,68 +157,158 @@ StrWriter::operator<<(Im im)
     return *this;
 }
 
+template <> StrWriter&
+StrWriter::operator<<(Ea<2> ea)
+{
+    // (An)
+    *this << "(" << An{ea.reg} << ")";
+    return *this;
+}
+
+template <> StrWriter&
+StrWriter::operator<<(Ea<3> ea)
+{
+    // (An)+
+    *this << "(" << An{ea.reg} << ")+";
+    return *this;
+}
+
+template <> StrWriter&
+StrWriter::operator<<(Ea<4> ea)
+{
+    // -(An)
+    *this << "-(" << An{ea.reg} << ")";
+    return *this;
+}
+
+template <> StrWriter&
+StrWriter::operator<<(Ea<5> ea)
+{
+    // // (d,An)
+    *this << "(" << Disp16{(i16)ea.ext1};
+    *this << "," << An{ea.reg} << ")";
+    return *this;
+}
+
+template <> StrWriter&
+StrWriter::operator<<(Ea<6> ea)
+{
+    // (d,An,Xi)
+    *this << "(" << Disp8{(i8)ea.ext1};
+    *this << "," << An{ea.reg};
+    *this << "," << Index{ea.ext1 >> 12};
+    *this << ((ea.ext1 & 0x800) ? ".l)" : ".w)");
+    return *this;
+}
+
+template <> StrWriter&
+StrWriter::operator<<(Ea<7> ea)
+{
+    // ABS.W
+    *this << ea.ext1;
+    *this << ".w";
+    return *this;
+}
+
+template <> StrWriter&
+StrWriter::operator<<(Ea<8> ea)
+{
+    // ABS.L
+    *this << (u32)(ea.ext1 << 16 | ea.ext2);
+    *this << ".l";
+    return *this;
+}
+
+template <> StrWriter&
+StrWriter::operator<<(Ea<9> ea)
+{
+    // (d,PC)
+    *this << "(" << Disp16{(i16)ea.ext1} << ",PC)";
+    return *this;
+}
+
+template <> StrWriter&
+StrWriter::operator<<(Ea<10> ea)
+{
+    // (d,PC,Xi)
+    *this << "(" << Disp8{(i8)ea.ext1};
+    *this << ",PC," << Index{ea.ext1 >> 12};
+    *this << ((ea.ext1 & 0x800) ? ".l)" : ".w)");
+    return *this;
+}
+
+/*
+template <> StrWriter&
+StrWriter::operator<<(Ea<11> ea)
+{
+    assert(false);
+}
+*/
+
+/*
 StrWriter&
 StrWriter::operator<<(Ea ea)
 {
     switch (ea.m) {
-
+            
         case 0: // Dn
             *this << Dn{ea.opcode & 7};
             break;
-
+            
         case 1: // An
             *this << An{ea.opcode & 7};
             break;
-
+            
         case 2: // (An)
             *this << "(" << An{ea.opcode & 7} << ")";
             break;
-
+            
         case 3: // (An)+
             *this << "(" << An{ea.opcode & 7} << ")+";
             break;
-
+            
         case 4: // -(An)
             *this << "-(" << An{ea.opcode & 7} << ")";
             break;
-
+            
         case 5: // (d,An)
             *this << "(" << Disp16{(i16)ea.ext1};
             *this << "," << An{ea.opcode & 7} << ")";
             break;
-
+            
         case 6: // (d,An,Xi)
             *this << "(" << Disp8{(i8)ea.ext1};
             *this << "," << An{ea.opcode & 7};
             *this << "," << Index{ea.ext1 >> 12};
             *this << ((ea.ext1 & 0x800) ? ".L)" : ".W)");
             break;
-
+            
         case 7: // ABS.W
             *this << ea.ext1 << ".w";
             break;
-
+            
         case 8: // ABS.L
             *this << (u32)(ea.ext1 << 16 | ea.ext2) << ".l";
             break;
-
+            
         case 9: // (d,PC)
             *this << "(" << Disp16{(i16)ea.ext1} << ",PC)";
             break;
-
+            
         case 10: // (d,PC,Xi)
             *this << "(" << Disp8{(i8)ea.ext1};
             *this << ",PC," << Index{ea.ext1 >> 12};
             *this << ((ea.ext1 & 0x800) ? ".L)" : ".W)");
             break;
-
+            
         case 11: // Imm
             assert(false);
             break;
-
+            
         default:
             assert(false);
             }
-
+            
             return *this;
             }
+*/

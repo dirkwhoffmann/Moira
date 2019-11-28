@@ -60,7 +60,7 @@ CPU::dasmAdd(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 template<Instr I, Mode M, Size S> void
 CPU::dasmAddImRg(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 {
-    Dn dn { op >> 9 & 7 };
+    Dn dn { ____xxx_________(op) };
     Im im { S, ext1, ext2 };
 
     str << "add " << im << "," << dn;
@@ -69,14 +69,18 @@ CPU::dasmAddImRg(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 template<Instr I, Mode M, Size S> void
 CPU::dasmAddRgEa(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 {
-    str << "MISSING";
+    Dn    src { ____xxx_________(op) };
+    Ea<M> dst { _____________xxx(op), ext1, ext2 };
+    Sz    sz  { S };
+
+    str << "add" << sz << "  " << src << ", " << dst;
 }
 
 template <Mode M> void
 CPU::dasmLea(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 {
-    Ea ea { M, op, ext1, ext2 };
-    An an { op >> 9 & 7 };
+    Ea<M> src { _____________xxx(op), ext1, ext2 };
+    An    dst { ____xxx_________(op) };
 
-    str << "lea     " << ea << ", " << an;
+    str << "lea     " << src << ", " << dst;
 }

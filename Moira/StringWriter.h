@@ -20,7 +20,7 @@ struct Disp16 { i16 value; };
 struct Index { int value; };
 struct Sz { Size s; };
 struct Im { Size s; u16 ext1; u16 ext2; };
-struct Ea { Mode m; u16 opcode; u16 ext1; u16 ext2; };
+template <Mode M> struct Ea { u16 reg; u16 ext1; u16 ext2; };
 
 class StrWriter
 {
@@ -43,7 +43,7 @@ public:
     StrWriter& operator<<(Index i);
     StrWriter& operator<<(Sz sz);
     StrWriter& operator<<(Im im);
-    StrWriter& operator<<(Ea ea);
+    template <Mode M> StrWriter& operator<<(Ea<M> ea);
 
     void finish() { *ptr = 0; }
 };

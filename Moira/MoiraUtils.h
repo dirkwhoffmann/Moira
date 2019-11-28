@@ -12,6 +12,10 @@
 
 #include "types.h"
 
+#define _____________xxx(opcode) (u16)((opcode >> 0)  & 0b111)
+#define ____xxx_________(opcode) (u16)((opcode >> 9)  & 0b111)
+#define xxxx____________(opcode) (u16)((opcode >> 12) & 0b1111)
+
 using namespace Moira;
 
 enum Size { Byte, Word, Long };

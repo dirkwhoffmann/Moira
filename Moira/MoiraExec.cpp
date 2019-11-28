@@ -7,9 +7,6 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#define _____________xxx(opcode) ((opcode >> 0) & 0b111)
-#define ____xxx_________(opcode) ((opcode >> 9) & 0b111)
-
 void
 CPU::execIllegal(u16 opcode)
 {
