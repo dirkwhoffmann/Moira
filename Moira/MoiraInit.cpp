@@ -111,9 +111,9 @@ CPU::registerShift(const char *patternReg,
         for (int dy = 0; dy < 8; dy++) {
 
             opcode = parse(patternReg) | dx << 9 | dy;
-            bind(opcode | 0 << 6, RegShift<I __ Byte>);
-            bind(opcode | 1 << 6, RegShift<I __ Word>);
-            bind(opcode | 2 << 6, RegShift<I __ Long>);
+            bind(opcode | 0 << 6, Shift<I __ 0 __ Byte>);
+            bind(opcode | 1 << 6, Shift<I __ 0 __ Word>);
+            bind(opcode | 2 << 6, Shift<I __ 0 __ Long>);
         }
     }
 

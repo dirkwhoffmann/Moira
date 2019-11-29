@@ -9,31 +9,26 @@
 
 #include "MoiraUtils.h"
 
-template<> u32 CLIP<Byte>(u32 data) { return data & 0xff; }
-template<> u32 CLIP<Word>(u32 data) { return data & 0xffff; }
-template<> u32 CLIP<Long>(u32 data) { return data; }
+template<> int  BYTES <Byte> () { return 1; }
+template<> int  BYTES <Word> () { return 2; }
+template<> int  BYTES <Long> () { return 4; }
 
-template<> u32 CLEAR<Byte>(u32 data) { return data & 0xffffff00; }
-template<> u32 CLEAR<Word>(u32 data) { return data & 0xffff0000; }
-template<> u32 CLEAR<Long>(u32 data) { return 0; }
+template<> u32  CLIP  <Byte> (u64 data) { return data & 0x000000FF; }
+template<> u32  CLIP  <Word> (u64 data) { return data & 0x0000FFFF; }
+template<> u32  CLIP  <Long> (u64 data) { return data & 0xFFFFFFFF; }
 
-// template<Size S> u32 SUBS(u32 d1, u32 d2) { return CLEAR<S>(d1) | CLIP<S>(d2); }
+template<> u32  CLEAR <Byte> (u64 data) { return data & 0xFFFFFF00; }
+template<> u32  CLEAR <Word> (u64 data) { return data & 0xFFFF0000; }
+template<> u32  CLEAR <Long> (u64 data) { return data & 0x00000000; }
 
+template<> bool MSBIT <Byte> (u64 data) { return data & 0x00000080; }
+template<> bool MSBIT <Word> (u64 data) { return data & 0x00008000; }
+template<> bool MSBIT <Long> (u64 data) { return data & 0x80000000; }
 
-/*
-template<> u64 MASK<Byte>() { return 0xff; }
-template<> u64 MASK<Word>() { return 0xffff; }
-template<> u64 MASK<Long>() { return 0xffffffff; }
-*/
+template<> bool CARRY <Byte> (u64 data) { return data & 0x000000100; }
+template<> bool CARRY <Word> (u64 data) { return data & 0x000010000; }
+template<> bool CARRY <Long> (u64 data) { return data & 0x100000000; }
 
-template<> bool MSBIT<Byte>(u32 data) { return data & 0x80; }
-template<> bool MSBIT<Word>(u32 data) { return data & 0x8000; }
-template<> bool MSBIT<Long>(u32 data) { return data & 0x80000000; }
-
-template<> i32 SIGN<Byte>(u32 data) { return  (i8)data; }
-template<> i32 SIGN<Word>(u32 data) { return (i16)data; }
-template<> i32 SIGN<Long>(u32 data) { return (i32)data; }
-
-template<> u32 BYTES<Byte>() { return 1; }
-template<> u32 BYTES<Word>() { return 2; }
-template<> u32 BYTES<Long>() { return 4; }
+template<> i32  SIGN  <Byte> (u64 data) { return  (i8)data; }
+template<> i32  SIGN  <Word> (u64 data) { return (i16)data; }
+template<> i32  SIGN  <Long> (u64 data) { return (i32)data; }

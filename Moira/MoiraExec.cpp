@@ -90,21 +90,39 @@ CPU::execEaShift(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-execAdd(u16 opcode)
+CPU::execShift(u16 op)
 {
-    assert(0);
-}
+    int src = ____xxx_________(op);
+    int dst = _____________xxx(op);
+    int cnt;
 
-template<Instr I, Mode M, Size S> void
-CPU::execAddRg(u16 opcode)
-{
-    assert(0);
-}
+    switch (M) {
 
-template<Instr I, Mode M, Size S> void
-CPU::execAddEa(u16 opcode)
-{
-    assert(0);
+        case 0: // Dn
+        {
+            cnt = readD(src) & 0x3F;
+            break;
+        }
+        case 1: // An
+        {
+            assert(false);
+            break;
+        }
+        case 11: // Imm
+        {
+            assert(false);
+            break;
+        }
+        default: // Ea
+        {
+            assert(false);
+            break;
+        }
+    }
+
+    u32 result = shift<S, I>(cnt, readD<S>(dst));
+    writeD<S>(dst, result);
+    prefetch();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -161,12 +179,6 @@ CPU::execAddRgXX(u16 opcode)
 
     write<S>(ea, result);
     prefetch();
-}
-
-template<Instr I, Mode M, Size S> void
-CPU::execAdd(u16 opcode)
-{
-    assert(0);
 }
 
 template<Mode M> void

@@ -148,86 +148,6 @@ CPU::computeEA(u32 n, u32 dis, u32 idx) {
             assert(false);
     }
 
-    /*
-     if (ea.calculated) return ea.address;
-     u32 adr;
-
-     switch(ea.mode) {
-     case DataRegisterDirect:
-     return Base::read<Size>( DataRegister{ea.reg} );
-
-     case AddressRegisterDirect:
-     return Base::read<Size>( AddressRegister{ea.reg} );
-
-     case AddressRegisterIndirect:
-     return Base::read( AddressRegister{ea.reg} );
-
-     case AddressRegisterIndirectWithPostIncrement:
-     return Base::read( AddressRegister{ea.reg} );
-
-     case AddressRegisterIndirectWithPreDecrement:
-     if(specialCase != NoCyclesPreDec) ctx->sync(2);
-     adr = Base::read( AddressRegister{ea.reg} );
-     adr -= bytes<Size>();
-     if (Size == Byte && ea.reg == 7) adr -= 1;
-     return adr;
-
-     case AddressRegisterIndirectWithDisplacement:
-     adr = Base::read( AddressRegister{ea.reg} ) + (i16)ctx->irc;
-     if (specialCase != NoLastPrefetch) readExtensionWord();
-     return adr;
-
-     case AddressRegisterIndirectWithIndex: {
-     adr = Base::read( AddressRegister{ea.reg} );
-     d8Xn:
-     if(specialCase != NoCyclesD8) ctx->sync(2);
-     u8 displacement = ctx->irc & 0xff;
-     u8 reg = (ctx->irc & 0x7000) >> 12;
-     u32 dispReg = ctx->irc & 0x8000
-     ? Base::read( AddressRegister{reg} )
-     : Base::read( DataRegister{reg} );
-     if ( !(ctx->irc & 0x800) ) dispReg = (i16)dispReg;
-     adr += dispReg + (i8)displacement;
-
-     if (specialCase != NoLastPrefetch) readExtensionWord();
-     return adr;
-     }
-     case AbsoluteShort:
-     adr = (i16)ctx->irc;
-     if (specialCase != NoLastPrefetch) readExtensionWord();
-     return adr;
-
-     case AbsoluteLong:
-     adr = ctx->irc << 16;
-     readExtensionWord();
-     adr |= ctx->irc;
-     if (specialCase != NoLastPrefetch) readExtensionWord();
-     return adr;
-
-     case ProgramCounterIndirectWithDisplacement:
-     adr = ctx->prefetchCounterLast + (i16)ctx->irc;
-     if (specialCase != NoLastPrefetch) readExtensionWord();
-     return adr;
-
-     case ProgramCounterIndirectWithIndex:
-     adr = ctx->prefetchCounterLast;
-     goto d8Xn;
-
-     case Immediate:
-     if (Size == Byte) {
-     adr = ctx->irc & 0xff;
-     } else if (Size == Word) {
-     adr = ctx->irc;
-     } else {
-     adr = ctx->irc << 16;
-     readExtensionWord();
-     adr |= ctx->irc;
-     }
-     readExtensionWord();
-     return adr;
-     }
-     */
-
     return result;
 }
 
@@ -269,28 +189,33 @@ CPU::readImm()
 }
 
 template<Size S, Instr I> u32
-CPU::shift(u32 cnt, u32 data) {
-    
-    assert(cnt > 0);
-    
-    bool c = 0;
-    bool v = 0;
+CPU::shift(int cnt, u64 data) {
+
+    u32 changedBits = 0;
     
     switch(I) {
             
         case ASL:
-            
+
+            /* X: Equals the last bit shifted out of the operand.
+             *    Unaffected for a shift count of zero.
+             * N: Equals the most significant bit of the result.
+             * Z: Equals 1 iff the result is zero.
+             * V: Equals 1 iff the MSB has changed any time.
+             * C: Equals the last bit shifted out of the operand.
+             *    Unaffected for a shift count of zero.
+             */
+
             for (int i = 0; i < cnt; i++) {
-                c = MSBIT<S>(data);
-                v |= data ^ (data << 1);
+                changedBits |= data ^ (data << 1);
                 data <<= 1;
             }
-            sr.c = c;
-            sr.v = NEG<S>(v);
-            sr.z = ZERO<S>(data);
-            sr.n = NEG<S>(data);
-            if (cnt) sr.x = c; // IF IS OBSOLETE???
-            
+            if (cnt) sr.x = sr.c = CARRY<S>(data);
+            sr.n = MSBIT<S>(data);
+            sr.z = ZERO <S>(data);
+            sr.v = MSBIT<S>(changedBits);
+
+            printf("Result of ASL = %x\n", CLIP<S>(data)); 
             return CLIP<S>(data);
             
         case ASR:    return 2; // asr<Size>( data, shift );
@@ -314,10 +239,10 @@ CPU::add(u32 op1, u32 op2)
 
     // printf("add(%x,%x) = %llx\n",op1, op2, result);
     
-    sr.c = NEG<S>((u32)(result >> 1));
-    sr.v = NEG<S>((u32)((op1 ^ result) & (op2 ^ result)));
+    sr.c = MSBIT<S>((u32)(result >> 1));
+    sr.v = MSBIT<S>((u32)((op1 ^ result) & (op2 ^ result)));
     sr.z = ZERO<S>((u32)result);
-    sr.n = NEG<S>((u32)result);
+    sr.n = MSBIT<S>((u32)result);
     sr.x = sr.c;
 
     return (u32)result;

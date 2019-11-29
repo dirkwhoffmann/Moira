@@ -28,6 +28,15 @@ CPU::dasmLineF(StrWriter &str, u16 op, u16 ext1, u16 ext2)
     str << "LINE F";
 }
 
+template<Instr I, Mode M, Size S> void
+CPU::dasmShift(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    Ea<M,S> src { ____xxx_________(op), e1, e2 };
+    Dn      dst { _____________xxx(op) };
+
+    str << instrStr[I] << Sz<S>{} << " " << src << "," << dst;
+}
+
 template<Instr I, Size S> void 
 CPU::dasmRegShift(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 {
@@ -53,12 +62,6 @@ CPU::dasmEaShift(StrWriter &str, u16 op, u16 ext1, u16 ext2)
     << (const char *)"EA_SHIFT "
     << "size = " << (u8)42
     << "mode = " << (u16)13;
-}
-
-template<Instr I, Mode M, Size S> void
-CPU::dasmAdd(StrWriter &str, u16 op, u16 ext1, u16 ext2)
-{
-    assert(0);
 }
 
 template<Instr I, Mode M, Size S> void
