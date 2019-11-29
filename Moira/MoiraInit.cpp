@@ -122,23 +122,23 @@ CPU::registerShift(const char *patternReg,
         for (int dy = 0; dy < 8; dy++) {
 
             opcode = parse(patternImm) | data << 9 | dy;
-            bind(opcode | 0 << 6, ImmShift<I __ Byte>);
-            bind(opcode | 1 << 6, ImmShift<I __ Word>);
-            bind(opcode | 2 << 6, ImmShift<I __ Long>);
+            bind(opcode | 0 << 6, Shift<I __ 11 __ Byte>);
+            bind(opcode | 1 << 6, Shift<I __ 11 __ Word>);
+            bind(opcode | 2 << 6, Shift<I __ 11 __ Long>);
         }
     }
 
     // (3)
     opcode = parse(patternEa);
     for (int ax = 0; ax < 8; ax++) {
-        bind(opcode | 2 << 3 | ax, EaShift<I __ 2>);
-        bind(opcode | 3 << 3 | ax, EaShift<I __ 3>);
-        bind(opcode | 4 << 3 | ax, EaShift<I __ 4>);
-        bind(opcode | 5 << 3 | ax, EaShift<I __ 5>);
-        bind(opcode | 6 << 3 | ax, EaShift<I __ 6>);
+        bind(opcode | 2 << 3 | ax, Shift<I __ 2 __ Word>);
+        bind(opcode | 3 << 3 | ax, Shift<I __ 3 __ Word>);
+        bind(opcode | 4 << 3 | ax, Shift<I __ 4 __ Word>);
+        bind(opcode | 5 << 3 | ax, Shift<I __ 5 __ Word>);
+        bind(opcode | 6 << 3 | ax, Shift<I __ 6 __ Word>);
     }
-    bind(opcode | 7 << 3 | 0, EaShift<I __ 7>);
-    bind(opcode | 7 << 3 | 1, EaShift<I __ 8>);
+    bind(opcode | 7 << 3 | 0, Shift<I __ 7 __ Word>);
+    bind(opcode | 7 << 3 | 1, Shift<I __ 8 __ Word>);
 }
 
 template<Instr I> void

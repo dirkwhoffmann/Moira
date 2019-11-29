@@ -56,6 +56,7 @@ public:
     Tester_68k();
 
     void printErrorCounter();
+    void printInfo(const char *s) { printf("*\n* Testing %s\n*\n\n", s); }
     void runTestCases();
 
     void testAdd(); //c

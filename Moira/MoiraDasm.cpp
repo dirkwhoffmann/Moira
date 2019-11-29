@@ -46,15 +46,6 @@ CPU::dasmRegShift(StrWriter &str, u16 op, u16 ext1, u16 ext2)
     << "mode = " << (u16)13;
 }
 
-template <Instr I, Size S> void
-CPU::dasmImmShift(StrWriter &str, u16 op, u16 ext1, u16 ext2)
-{
-    str
-    << (const char *)"IMM_SHIFT "
-    << "size = " << (u8)42
-    << "mode = " << (u16)13;
-}
-
 template <Instr I, Mode M> void
 CPU::dasmEaShift(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 {

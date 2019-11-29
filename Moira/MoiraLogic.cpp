@@ -207,24 +207,37 @@ CPU::shift(int cnt, u64 data) {
              */
 
             for (int i = 0; i < cnt; i++) {
-                changedBits |= data ^ (data << 1);
-                data <<= 1;
+                sr.x = sr.c = MSBIT<S>(data);
+                u64 shifted = data << 1;
+                changedBits |= data ^ shifted;
+                data = shifted;
             }
-            if (cnt) sr.x = sr.c = CARRY<S>(data);
             sr.n = MSBIT<S>(data);
             sr.z = ZERO <S>(data);
             sr.v = MSBIT<S>(changedBits);
 
-            printf("Result of ASL = %x\n", CLIP<S>(data)); 
             return CLIP<S>(data);
             
-        case ASR:    return 2; // asr<Size>( data, shift );
-        case LSL:    return 3; // lsl<Size>( data, shift );
-        case LSR:    return 4; // lsr<Size>( data, shift );
-        case ROL:    return 5; // rol<Size>( data, shift );
-        case ROR:    return 6; // ror<Size>( data, shift );
-        case ROXL:   return 7; // roxl<Size>( data, shift );
-        case ROXR:   return 8; // roxr<Size>( data, shift );
+        case ASR:
+
+            for (int i = 0; i < cnt; i++) {
+                sr.x = sr.c = data & 1;
+                u64 shifted = SIGN<S>(data) >> 1;
+                changedBits |= data ^ shifted;
+                data = shifted;
+            }
+            sr.n = MSBIT<S>(data);
+            sr.z = ZERO <S>(data);
+            sr.v = MSBIT<S>(changedBits);
+
+            return CLIP<S>(data);
+
+        case LSL:    assert(false); return 3; // lsl<Size>( data, shift );
+        case LSR:    assert(false); return 4; // lsr<Size>( data, shift );
+        case ROL:    assert(false); return 5; // rol<Size>( data, shift );
+        case ROR:    assert(false); return 6; // ror<Size>( data, shift );
+        case ROXL:   assert(false); return 7; // roxl<Size>( data, shift );
+        case ROXR:   assert(false); return 8; // roxr<Size>( data, shift );
             
         default: assert(false);
     }

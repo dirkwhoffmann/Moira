@@ -14,7 +14,6 @@ void execException(u8 nr);
 
 
 template<Instr I, Size S> void execRegShift(u16 opcode); // DEPRECATED
-template<Instr I, Size S> void execImmShift(u16 opcode); // DEPRECATED
 template<Instr I, Mode M> void execEaShift(u16 opcode);  // DEPRECATED
 
 template<Instr I, Mode M, Size S> void execShift(u16 opcode);

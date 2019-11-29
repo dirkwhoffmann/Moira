@@ -63,18 +63,6 @@ CPU::execRegShift(u16 opcode)
     writeD<S>(y, shift<S,I>(dx, dy));
 }
 
-template<Instr I, Size S> void
-CPU::execImmShift(u16 opcode)
-{
-    // #<cnt>,Dy
-    int cnt = ____xxx_________(opcode);
-    int y   = _____________xxx(opcode);
-
-    u32 dy = readD<S>(y);
-
-    writeD<S>(y, shift<S,I>(cnt ? cnt : 8, dy));
-}
-
 template<Instr I, Mode M> void
 CPU::execEaShift(u16 opcode)
 {
@@ -101,27 +89,24 @@ CPU::execShift(u16 op)
         case 0: // Dn
         {
             cnt = readD(src) & 0x3F;
-            break;
-        }
-        case 1: // An
-        {
-            assert(false);
+            writeD<S>(dst, shift<S,I>(cnt, readD<S>(dst)));
             break;
         }
         case 11: // Imm
         {
-            assert(false);
+            cnt = src ? src : 8;
+            writeD<S>(dst, shift<S,I>(cnt, readD<S>(dst)));
             break;
         }
         default: // Ea
         {
-            assert(false);
+            assert(M >= 2 && M <= 8);
+            u32 ea = computeEA<M,S>(src);
+            write<S>(ea, shift<S,I>(1, read<S>(ea)));
             break;
         }
     }
 
-    u32 result = shift<S, I>(cnt, readD<S>(dst));
-    writeD<S>(dst, result);
     prefetch();
 }
 
@@ -130,19 +115,18 @@ CPU::execAddXXRg(u16 opcode)
 {
     u32 result;
 
+    int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
     switch (M) {
 
         case 0: // Dn
         {
-            int src = _____________xxx(opcode);
             result = add<S>(readD<S>(src), readD<S>(dst));
             break;
         }
         case 1: // An
         {
-            int src = _____________xxx(opcode);
             result = add<S>(readA<S>(src), readD<S>(dst));
             break;
         }
@@ -155,8 +139,7 @@ CPU::execAddXXRg(u16 opcode)
         {
             assert(M >= 3 && M <= 10);
 
-            int src = _____________xxx(opcode);
-            u32 ea  = computeEA<M,S>(src);
+            u32 ea = computeEA<M,S>(src);
             result = add<S>(read<S>(ea), readD<S>(dst));
             break;
         }
