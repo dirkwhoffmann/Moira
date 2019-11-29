@@ -7,6 +7,17 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+int
+CPU::syncLineA(u16 opcode, int i)
+{
+    return 0;
+}
+
+int
+CPU::syncLineF(u16 opcode, int i)
+{
+    return 0;
+}
 
 int
 CPU::syncIllegal(u16 opcode, int i)

@@ -44,12 +44,16 @@ void
 CPU::init()
 {
     // Start with clean tables
-    for (int i = 0; i < 65536; i++) {
+    for (int i = 0; i < 0x10000; i++) {
         exec[i] = &CPU::execIllegal;
         dasm[i] = &CPU::dasmIllegal;
         sync[i] = &CPU::syncIllegal;
     }
 
+    // Register unimplemented instructions
+    registerUnimplemented();
+
+    // Register the instruction set
     registerADD();
     registerASL();
     registerASR();
@@ -60,6 +64,29 @@ CPU::init()
     registerROR();
     registerROXL();
     registerROXR();
+}
+
+void
+CPU::registerUnimplemented()
+{
+    /* Unimplemented instructions are identified by the following bit patterns:
+     *
+     *    1010 ---- ---- ---- : (Line A instructions)
+     *    1111 ---- ---- ---- : (Line F instructions)
+     *
+     * Both instructions types are handles similarly. They only differ in the
+     * associated vector number.
+     */
+    for (int i = 0; i < 0x1000; i++) {
+
+        exec[0b1010 << 12 | i] = &CPU::execLineA;
+        dasm[0b1010 << 12 | i] = &CPU::dasmLineA;
+        sync[0b1010 << 12 | i] = &CPU::syncLineA;
+
+        exec[0b1111 << 12 | i] = &CPU::execLineF;
+        dasm[0b1111 << 12 | i] = &CPU::dasmLineF;
+        sync[0b1111 << 12 | i] = &CPU::syncLineF;
+    }
 }
 
 template<Instr I> void
@@ -139,8 +166,8 @@ CPU::registerAddSub(const char *pattern1, const char *pattern2)
         opcode = parse(pattern1) | dy << 9;
         for (int reg = 0; reg < 8; reg++) {
 
-            // Note: Byte size is not avaiable for mode 0 addressing mode
-            bind(opcode | 0 << 6 | 1 << 3 | reg, AddXXRg<I __ 1 __ Byte>);
+            bind(opcode | 0 << 6 | 0 << 3 | reg, AddXXRg<I __ 0 __ Byte>);
+            // Byte size is not supported for addressing mode 1
             bind(opcode | 0 << 6 | 2 << 3 | reg, AddXXRg<I __ 2 __ Byte>);
             bind(opcode | 0 << 6 | 3 << 3 | reg, AddXXRg<I __ 3 __ Byte>);
             bind(opcode | 0 << 6 | 4 << 3 | reg, AddXXRg<I __ 4 __ Byte>);

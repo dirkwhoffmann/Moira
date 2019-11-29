@@ -1,16 +1,25 @@
+#include <stdio.h>
 #include "68k.h"
 
 void Core_68k::group1exceptions() {
     status_code._instruction = false;
     if (trace) {
+        printf("group1exceptions::trace\n");
         traceException();
     }
 
     if ( ( irqSamplingLevel == 7 ) || ( irqSamplingLevel > reg_s.intr ) ) {
+        if ( irqSamplingLevel == 7 ) {
+            printf("group1exceptions::IRQ = 7\n");
+        }
+        if ( irqSamplingLevel > reg_s.intr ) {
+            printf("group1exceptions:: %d > %d\n", irqSamplingLevel, reg_s.intr);
+        }
         interruptException( irqSamplingLevel );
     }
 
     if (illegalMode != NONE) {
+        printf("group1exceptions::illegalMode == %d\n", illegalMode);
         illegalException(illegalMode);
     }
     status_code._instruction = true;
@@ -63,13 +72,16 @@ unsigned Core_68k::getInterruptVector(u8 level) {
 }
 
 void Core_68k::op_illegal(u16 opcode) {
+    printf("Core_68k::op_illegal(%x)\n", opcode);
     u8 nibble = opcode >> 12; //line A OR line F detection
     illegalMode = ILLEGAL_OPCODE;
 
     if (nibble == 0xA) {
         illegalMode = LINE_A;
+        printf("illegalMode = LINE_A\n");
     } else if (nibble == 0xF) {
         illegalMode = LINE_F;
+        printf("illegalMode = LINE_F\n");
     }
     trace = false;
 }

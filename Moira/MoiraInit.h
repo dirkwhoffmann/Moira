@@ -11,6 +11,7 @@
 #define MOIRA_INIT_H
 
 void init();
+void registerUnimplemented();
 
 template<Instr I> void registerShift(const char *patternReg,
                                      const char *patternImm,
@@ -29,7 +30,5 @@ void registerROL();
 void registerROR();
 void registerROXL();
 void registerROXR();
-
-
 
 #endif

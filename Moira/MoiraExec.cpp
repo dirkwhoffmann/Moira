@@ -8,6 +8,18 @@
 // -----------------------------------------------------------------------------
 
 void
+CPU::execLineA(u16 opcode)
+{
+    printf("Moira::execLineA\n");
+}
+
+void
+CPU::execLineF(u16 opcode)
+{
+    printf("Moira::execLineF\n");
+}
+
+void
 CPU::execIllegal(u16 opcode)
 {
     printf("Moira::execIllegal\n");

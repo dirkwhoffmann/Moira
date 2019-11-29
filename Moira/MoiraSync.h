@@ -7,6 +7,8 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+int syncLineA(u16 opcode, int i);
+int syncLineF(u16 opcode, int i);
 int syncIllegal(u16 opcode, int i);
 
 template<Instr I, Size S> int syncRegShift(u16 opcode, int i);

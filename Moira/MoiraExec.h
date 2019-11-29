@@ -7,6 +7,8 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+void execLineA(u16 opcode);
+void execLineF(u16 opcode);
 void execIllegal(u16 opcode);
 
 template<Instr I, Size S> void execRegShift(u16 opcode);

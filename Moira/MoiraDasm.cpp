@@ -9,19 +9,23 @@
 
 #include "StringWriter.cpp"
 
-//
-// Disassembling adressing modes
-//
-
-
-//
-// Disassembling instructions
-//
 
 void
 CPU::dasmIllegal(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 {
     str << "ILLEGAL";
+}
+
+void
+CPU::dasmLineA(StrWriter &str, u16 op, u16 ext1, u16 ext2)
+{
+    str << "LINE A";
+}
+
+void
+CPU::dasmLineF(StrWriter &str, u16 op, u16 ext1, u16 ext2)
+{
+    str << "LINE F";
 }
 
 template<Instr I, Size S> void 
@@ -73,42 +77,6 @@ CPU::dasmAddRgXX(StrWriter &str, u16 op, u16 e1, u16 e2)
     Ea<M,S> dst { _____________xxx(op), e1, e2 };
 
     str << "add" << Sz<S>{} << " " << src << "," << dst;
-}
-
-template<Instr I, Mode M, Size S> void
-CPU::dasmAddRgRg(StrWriter &str, u16 op, u16 ext1, u16 ext2)
-{
-    Dn    src { _____________xxx(op) };
-    Dn    dst { ____xxx_________(op) };
-
-    str << "add " << src << "," << dst;
-}
-
-template<Instr I, Mode M, Size S> void
-CPU::dasmAddEaRg(StrWriter &str, u16 op, u16 ext1, u16 ext2)
-{
-    Ea<M,S> src { _____________xxx(op), ext1, ext2 };
-    Dn      dst { ____xxx_________(op) };
-
-    str << "add" << Sz<S>{} << "  " << src << ", " << dst;
-}
-
-template<Instr I, Mode M, Size S> void
-CPU::dasmAddImRg(StrWriter &str, u16 op, u16 ext1, u16 ext2)
-{
-    Im<S> src { ext1, ext2 };
-    Dn    dst { ____xxx_________(op) };
-
-    str << "add " << src << "," << dst;
-}
-
-template<Instr I, Mode M, Size S> void
-CPU::dasmAddRgEa(StrWriter &str, u16 op, u16 ext1, u16 ext2)
-{
-    Dn      src { ____xxx_________(op) };
-    Ea<M,S> dst { _____________xxx(op), ext1, ext2 };
-
-    str << "add" << Sz<S>{} << "  " << src << ", " << dst;
 }
 
 template <Mode M> void
