@@ -233,6 +233,25 @@ public:
         return true;
     }
 
+    bool compareBlocks() {
+
+        bool result = true;
+
+        for (int i = 0; i < 100; i++) {
+            if (block1[i].addr != block2[i].addr ||
+                block1[i].used != block2[i].used ||
+                block1[i].value != block2[i].value) {
+                result = false;
+                printf("%d: addr / used / value: (%x, %d, %x) --> (%x %d %x)\n",
+                      i,
+                      block1[i].addr, block1[i].used, block1[i].value,
+                      block2[i].addr, block2[i].used, block2[i].value);
+            }
+        }
+
+        return result;
+    }
+
 private:
     unsigned pos1;
     unsigned pos2;

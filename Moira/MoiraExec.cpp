@@ -23,6 +23,29 @@ void
 CPU::execIllegal(u16 opcode)
 {
     printf("Moira::execIllegal\n");
+
+
+}
+
+void execException(u8 nr)
+{
+    // Enter supervisor mode and update the status register
+     setSupervisorMode(true);
+     sr.t = 0;
+
+     // Push PC and SR
+     reg.sp -= 2;
+     write<Word>(reg.sp, pc & 0xFFFF);
+     reg.sp -= 2;
+     write<Word>(reg.sp, pc >> 16);
+     reg.sp -= 2;
+     write<Word>(reg.sp, getSR());
+
+     // Update the prefetch queue
+     readExtensionWord();
+     prefetch();
+
+     jumpToVector(nr);
 }
 
 template<Instr I, Size S> void

@@ -457,6 +457,7 @@ void Tester_68k::dump()
     u16 ird = reg_ird, mird = moira->getIRD();
 
     u16 sr = reg_s, msr = moira->getSR();
+    bool t = (sr >> 15) & 1, mt = (msr >> 15) & 1;
     bool s = (sr >> 13) & 1, ms = (msr >> 13) & 1;
     bool c = (sr >> 0) & 1, mc = (msr >> 0) & 1;
     bool v = (sr >> 1) & 1, mv = (msr >> 1) & 1;
@@ -480,6 +481,7 @@ void Tester_68k::dump()
     }
 
     printf("\nStatus register:\n");
+    printf("T: %d / %d %s\n", t, mt, t != mt ? "<--" : "");
     printf("S: %d / %d %s\n", s, ms, s != ms ? "<--" : "");
     printf("C: %d / %d %s\n", c, mc, c != mc ? "<--" : "");
     printf("V: %d / %d %s\n", v, mv, v != mv ? "<--" : "");
@@ -498,7 +500,9 @@ bool Tester_68k::compare()
         if (getRegA(i) != moira->readA(i)) return false;
 
     if (getSR() != moira->getSR()) return false;
-    
+
+    if (!memoryblock.compareBlocks()) return false;
+
     return true;
 }
 

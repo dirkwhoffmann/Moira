@@ -35,12 +35,13 @@ void
 CPU::reset()
 {
     // Reset the status register
-    sr.c = 0;
-    sr.v = 0;
-    sr.z = 0;
-    sr.n = 0;
-    sr.x = 0;
+    sr.t = 0;
     sr.s = 1;
+    sr.x = 0;
+    sr.n = 0;
+    sr.z = 0;
+    sr.v = 0;
+    sr.c = 0;
     sr.ipl = 7;
 
     // Read the initial stack pointer from memory
@@ -66,21 +67,20 @@ CPU::process(u16 reg_ird)
 u16
 CPU::getSR()
 {
-    return (sr.s << 13) | (sr.ipl << 8) | getCCR();
+    return sr.t << 15 | sr.s << 13 | sr.ipl << 8 | getCCR();
 }
 
 void
 CPU::setSR(u16 value)
 {
-    bool s   = (value >> 13) & 1;
-    bool ipl = (value >>  8) & 7;
+    bool s   = value >> 13 & 1;
+    bool ipl = value >>  8 & 7;
 
-    sr.s = s;
+    sr.s   = s;
     sr.ipl = ipl;
 
-    if (sr.s ^ s) {
-        // Supervisior flag has changed
-    }
+    setCCR((u8)value);
+    setSupervisorMode(s);
 }
 
 u8
@@ -100,6 +100,22 @@ CPU::setCCR(u8 value)
 }
 
 void
+CPU::setSupervisorMode(bool enable)
+{
+    if (sr.s == enable) return;
+
+    if (enable) {
+        sr.s = 1;
+        reg.usp = reg.a[7];
+        reg.a[7] = reg.ssp;
+    } else {
+        sr.s = 0;
+        reg.ssp = reg.a[7];
+        reg.a[7] = reg.usp;
+    }
+}
+
+void
 CPU::prefetch()
 {
     ird = irc;
@@ -107,10 +123,27 @@ CPU::prefetch()
 }
 
 void
+CPU::fullPrefetch()
+{
+    assert(false);
+}
+
+void
 CPU::readExtensionWord()
 {
     pc += 2;
     irc = memory->moiraRead16(pc);
+}
+
+void
+CPU::jumpToVector(u8 nr)
+{
+    // Update the program counter
+    pc = read<Long>(4 * nr);
+
+    // Update the prefetch queue
+    readExtensionWord();
+    prefetch();
 }
 
 void

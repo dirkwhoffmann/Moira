@@ -21,22 +21,25 @@ struct Registers {
 
     union {
         struct {
-            u32 d[8];      // D0, D1 ... D7
-            u32 a[8];      // A0, A1 ... A7
+            u32 d[8];  // D0, D1 ... D7
+            u32 a[8];  // A0, A1 ... A7
         };
         struct {
-            u32 _pad[14];
-            u32 usp;       // User Stack Pointer (equals a[7])
-            u32 ssp;       // Supervisor Stack Pointer
+            u32 r[16]; // D0, D1 ... D7, A0, A1 ... A7
         };
-        u32 r[17];
+        struct {
+            u32 _pad[15];
+            u32 sp;    // Visible stack pointer (overlays a[7])
+        };
     };
+    u32 usp;           // User Stack Pointer
+    u32 ssp;           // Supervisor Stack Pointer
 };
 
 struct StatusRegister {
 
+    bool t;       // Trace flag
     bool s;       // Supervisor flag
-    bool m;       // Master / Interrupt state
     bool x;       // Extend flag
     bool n;       // Negative flag
     bool z;       // Zero flag
@@ -80,7 +83,6 @@ private:
 
     // Flags
     StatusRegister sr;
-
 
     // Jump table storing all instruction handlers
     void (CPU::*exec[65536])(u16);
@@ -129,7 +131,7 @@ private:
 
 
     //
-    // Working with the instruction register
+    // Working with the Status Register
     //
 
 public:
@@ -142,6 +144,9 @@ public:
     u8 getCCR();
     void setCCR(u8 value);
 
+    // Enters or leaves supervisior mode
+    void setSupervisorMode(bool enable);
+
 
     //
     // Managing the instruction stream
@@ -150,8 +155,9 @@ public:
 private:
 
     void prefetch();
+    void fullPrefetch();
     void readExtensionWord();
-
+    void jumpToVector(u8 nr);
     
     //
     // Running the disassembler
