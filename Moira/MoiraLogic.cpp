@@ -191,58 +191,123 @@ CPU::readImm()
 template<Size S, Instr I> u32
 CPU::shift(int cnt, u64 data) {
 
-    u32 changedBits = 0;
-    
     switch(I) {
             
         case ASL:
-
-            /* X: Equals the last bit shifted out of the operand.
-             *    Unaffected for a shift count of zero.
-             * N: Equals the most significant bit of the result.
-             * Z: Equals 1 iff the result is zero.
-             * V: Equals 1 iff the MSB has changed any time.
-             * C: Equals the last bit shifted out of the operand.
-             *    Unaffected for a shift count of zero.
-             */
-
+        {
+            bool carry = false;
+            u32 changed = 0;
             for (int i = 0; i < cnt; i++) {
-                sr.x = sr.c = MSBIT<S>(data);
+                carry = MSBIT<S>(data);
                 u64 shifted = data << 1;
-                changedBits |= data ^ shifted;
+                changed |= data ^ shifted;
                 data = shifted;
             }
-            sr.n = MSBIT<S>(data);
-            sr.z = ZERO <S>(data);
-            sr.v = MSBIT<S>(changedBits);
-
-            return CLIP<S>(data);
-            
+            if (cnt) sr.x = carry;
+            sr.c = carry;
+            sr.v = MSBIT<S>(changed);
+            break;
+        }
         case ASR:
-
+        {
+            bool carry = false;
+            u32 changed = 0;
             for (int i = 0; i < cnt; i++) {
-                sr.x = sr.c = data & 1;
+                carry = data & 1;
                 u64 shifted = SIGN<S>(data) >> 1;
-                changedBits |= data ^ shifted;
+                changed |= data ^ shifted;
                 data = shifted;
             }
-            sr.n = MSBIT<S>(data);
-            sr.z = ZERO <S>(data);
-            sr.v = MSBIT<S>(changedBits);
+            if (cnt) sr.x = carry;
+            sr.c = carry;
+            sr.v = MSBIT<S>(changed);
+            break;
+        }
+        case LSL:
+        {
+            bool carry = false;
+            for (int i = 0; i < cnt; i++) {
+                carry = MSBIT<S>(data);
+                data = data << 1;
+            }
+            if (cnt) sr.x = carry;
+            sr.c = carry;
+            sr.v = 0;
+            break;
+        }
+        case LSR:
+        {
+            bool carry = false;
+            for (int i = 0; i < cnt; i++) {
+                carry = data & 1;
+                data = data >> 1;
+            }
+            if (cnt) sr.x = carry;
+            sr.c = carry;
+            sr.v = 0;
+            break;
+        }
+        case ROL:
+        {
+            bool carry = false;
+            for (int i = 0; i < cnt; i++) {
+                carry = MSBIT<S>(data);
+                data = data << 1 | carry;
+            }
+            sr.c = carry;
+            sr.v = 0;
+            break;
+        }
+        case ROR:
+        {
+            bool carry = false;
+            for (int i = 0; i < cnt; i++) {
+                carry = data & 1;
+                data >>= 1;
+                if(carry) data |= MSBIT<S>(data);
+            }
+            sr.c = carry;
+            sr.v = 0;
+            break;
+        }
+        case ROXL:
+        {
+            bool carry = false;
+            for (int i = 0; i < cnt; i++) {
+                bool extend = carry;
+                carry = MSBIT<S>(data);
+                data = data << 1 | extend;
+            }
 
-            return CLIP<S>(data);
+            sr.x = carry;
+            sr.c = carry;
+            sr.v = 0;
+            break;
+        }
+        case ROXR:
+        {
+            bool carry = false;
+            for (int i = 0; i < cnt; i++) {
+                bool extend = carry;
+                carry = data & 1;
+                data >>= 1;
+                if(extend) data |= MSBIT<S>(data);
+            }
 
-        case LSL:    assert(false); return 3; // lsl<Size>( data, shift );
-        case LSR:    assert(false); return 4; // lsr<Size>( data, shift );
-        case ROL:    assert(false); return 5; // rol<Size>( data, shift );
-        case ROR:    assert(false); return 6; // ror<Size>( data, shift );
-        case ROXL:   assert(false); return 7; // roxl<Size>( data, shift );
-        case ROXR:   assert(false); return 8; // roxr<Size>( data, shift );
-            
-        default: assert(false);
+            sr.x = carry;
+            sr.c = carry;
+            sr.v = 0;
+            break;
+        }
+        default:
+        {
+            assert(false);
+        }
     }
-    
-    return 0;
+
+    sr.n = MSBIT<S>(data);
+    sr.z = ZERO <S>(data);
+    return CLIP<S>(data);
 }
 
 template<Size S> u32
