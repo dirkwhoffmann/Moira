@@ -19,7 +19,7 @@ void Core_68k::group1exceptions() {
     }
 
     if (illegalMode != NONE) {
-        printf("group1exceptions::illegalMode == %d\n", illegalMode);
+        // printf("group1exceptions::illegalMode == %d\n", illegalMode);
         illegalException(illegalMode);
     }
     status_code._instruction = true;
@@ -72,16 +72,16 @@ unsigned Core_68k::getInterruptVector(u8 level) {
 }
 
 void Core_68k::op_illegal(u16 opcode) {
-    printf("Core_68k::op_illegal(%x)\n", opcode);
+    // printf("Core_68k::op_illegal(%x)\n", opcode);
     u8 nibble = opcode >> 12; //line A OR line F detection
     illegalMode = ILLEGAL_OPCODE;
 
     if (nibble == 0xA) {
         illegalMode = LINE_A;
-        printf("illegalMode = LINE_A\n");
+        // printf("illegalMode = LINE_A\n");
     } else if (nibble == 0xF) {
         illegalMode = LINE_F;
-        printf("illegalMode = LINE_F\n");
+        // printf("illegalMode = LINE_F\n");
     }
     trace = false;
 }
@@ -103,9 +103,15 @@ void Core_68k::illegalException(u8 iType) {
 
     sync(4);
     reg_a[7] -= 6;
+    /*
     writeWord(reg_a[7] + 4, reg_pc & 0xFFFF);
     writeWord(reg_a[7] + 0, SR);
     writeWord(reg_a[7] + 2, (reg_pc >> 16) & 0xFFFF);
+    */
+    writeWord(reg_a[7] + 4, reg_pc & 0xFFFF);
+    writeWord(reg_a[7] + 2, (reg_pc >> 16) & 0xFFFF);
+    writeWord(reg_a[7] + 0, SR);
+    
     if (iType == ILLEGAL_OPCODE) {
         executeAt(4);
     } else if (iType == LINE_A) {

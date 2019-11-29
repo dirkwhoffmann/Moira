@@ -142,8 +142,8 @@ CPU::jumpToVector(u8 nr)
     pc = read<Long>(4 * nr);
 
     // Update the prefetch queue
-    readExtensionWord();
-    prefetch();
+    ird = read<Word>(pc);
+    irc = read<Word>(pc + 2);
 }
 
 void

@@ -499,6 +499,7 @@ bool Tester_68k::compare()
     for (int i = 0; i < 8; i++)
         if (getRegA(i) != moira->readA(i)) return false;
 
+    if (reg_pc != moira->getPC()) return false;
     if (getSR() != moira->getSR()) return false;
 
     if (!memoryblock.compareBlocks()) return false;

@@ -11,23 +11,25 @@ void
 CPU::execLineA(u16 opcode)
 {
     printf("Moira::execLineA\n");
+    execException(10);
 }
 
 void
 CPU::execLineF(u16 opcode)
 {
     printf("Moira::execLineF\n");
+    execException(11);
 }
 
 void
 CPU::execIllegal(u16 opcode)
 {
-    printf("Moira::execIllegal\n");
-
-
+    // printf("Moira::execIllegal\n");
+    execException(4);
 }
 
-void execException(u8 nr)
+void
+CPU::execException(u8 nr)
 {
     // Enter supervisor mode and update the status register
      setSupervisorMode(true);

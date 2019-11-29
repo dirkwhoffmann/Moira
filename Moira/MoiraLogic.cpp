@@ -31,20 +31,20 @@ CPU::read<Long>(u32 addr)
 template<> void
 CPU::write<Byte>(u32 addr, u32 value)
 {
-    memory->moiraWrite8(addr, (u8)value);
+    memory->moiraWrite8(addr & 0xFFFFFF, (u8)value);
 }
 
 template<> void
 CPU::write<Word>(u32 addr, u32 value)
 {
-    memory->moiraWrite16(addr, (u16)value);
+    memory->moiraWrite16(addr & 0xFFFFFF, (u16)value);
 }
 
 template<> void
 CPU::write<Long>(u32 addr, u32 value)
 {
-    memory->moiraWrite16(addr, (u16)(value >> 16));
-    memory->moiraWrite16(addr + 2, (u16)value);
+    memory->moiraWrite16(addr & 0xFFFFFF, (u16)(value >> 16));
+    memory->moiraWrite16((addr + 2) & 0xFFFFFF, (u16)value);
 }
 
 template<Mode M, Size S> u32
