@@ -164,59 +164,6 @@ CPU::execAddRgXX(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAddRgRg(u16 opcode)
-{
-    int src = _____________xxx(opcode);
-    int dst = ____xxx_________(opcode);
-
-    u32 result = add<S>(readD<S>(src), readD<S>(dst));
-
-    writeD<S>(dst, result);
-    prefetch();
-}
-
-template<Instr I, Mode M, Size S> void
-CPU::execAddEaRg(u16 opcode)
-{
-    int src = _____________xxx(opcode);
-    int dst = ____xxx_________(opcode);
-    u32 ea  = computeEA<M,S>(src);
-
-    printf("execAddRgEa:: src %x dst %x ea %x\n", src, dst, ea);
-    printf("read<S>(%x) = %x\n", ea, read<S>(ea));
-    u32 result = add<S>(readD<S>(ea), read<S>(dst));
-
-    write<S>(ea, result);
-    prefetch();
-}
-
-template<Instr I, Mode M, Size S> void
-CPU::execAddImRg(u16 opcode)
-{
-    int dst = ____xxx_________(opcode);
-
-    u32 result = add<S>(readImm<S>(), readD<S>(dst));
-
-    writeD<S>(dst, result);
-    prefetch();
-}
-
-template<Instr I, Mode M, Size S> void
-CPU::execAddRgEa(u16 opcode)
-{
-    int src = ____xxx_________(opcode);
-    int dst = _____________xxx(opcode);
-    u32 ea  = computeEA<M,S>(dst);
-
-    printf("execAddRgEa:: src %x dst %x ea %x\n", src, dst, ea);
-    printf("read<S>(%x) = %x\n", ea, read<S>(ea));
-    u32 result = add<S>(readD<S>(src), read<S>(ea));
-
-    write<S>(ea, result);
-    prefetch();
-}
-
-template<Instr I, Mode M, Size S> void
 CPU::execAdd(u16 opcode)
 {
     assert(0);
