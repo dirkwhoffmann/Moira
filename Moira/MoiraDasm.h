@@ -20,4 +20,7 @@ template<Instr I, Mode M> void dasmEaShift(StrWriter &str, u16 op, u16 e1, u16 e
 template<Instr I, Mode M, Size S> void dasmAddXXRg(StrWriter &str, u16 op, u16 e1, u16 e2);
 template<Instr I, Mode M, Size S> void dasmAddRgXX(StrWriter &str, u16 op, u16 e1, u16 e2);
 
+template<Instr I, Mode M, Size S> void dasmAndXXRg(StrWriter &str, u16 op, u16 e1, u16 e2);
+template<Instr I, Mode M, Size S> void dasmAndRgXX(StrWriter &str, u16 op, u16 e1, u16 e2);
+
 template<Mode M> void dasmLea(StrWriter &str, u16 op, u16 e1, u16 e2);

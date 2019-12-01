@@ -159,7 +159,7 @@ CPU::execAddXXRg(u16 opcode)
         }
         default: // Ea
         {
-            assert(M >= 3 && M <= 10);
+            assert(M >= 2 && M <= 10);
 
             u32 ea = computeEA<M,S>(src);
             if (addressError(ea)) return;
@@ -176,7 +176,7 @@ CPU::execAddXXRg(u16 opcode)
 template<Instr I, Mode M, Size S> void
 CPU::execAddRgXX(u16 opcode)
 {
-    assert(M >= 3 && M <= 8);
+    assert(M >= 2 && M <= 8);
 
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
@@ -188,6 +188,59 @@ CPU::execAddRgXX(u16 opcode)
 
     write<S>(ea, result);
     prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execAndXXRg(u16 opcode)
+{
+    u32 result;
+
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    switch (M) {
+
+        case 0: // Dn
+        {
+            result = logic<I,S>(readD<S>(src), readD<S>(dst));
+            break;
+        }
+        case 11: // Imm
+        {
+            result = logic<I,S>(readImm<S>(), readD<S>(dst));
+            break;
+        }
+        default: // Ea
+        {
+            assert(M >= 2 && M <= 10);
+
+            u32 ea = computeEA<M,S>(src);
+            if (addressError(ea)) return;
+
+            result = logic<I,S>(read<S>(ea), readD<S>(dst));
+            break;
+        }
+    }
+
+    writeD<S>(dst, result);
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execAndRgXX(u16 opcode)
+{
+    assert(M >= 2 && M <= 8);
+
+     int src = ____xxx_________(opcode);
+     int dst = _____________xxx(opcode);
+
+     u32 ea  = computeEA<M,S>(dst);
+     if (ea & 1) { execAddressError(ea); return; }
+
+     u32 result = logic<I,S>(readD<S>(src), read<S>(ea));
+
+     write<S>(ea, result);
+     prefetch();
 }
 
 template<Mode M> void

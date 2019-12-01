@@ -668,7 +668,6 @@ u32 Core_68k::LoadEA(u8 size, u8 ea, bool noReadFromEA, bool fetchLastExtension,
             eaAddr = reg_a[regPos];
             break;
         case 4: //-(An)
-            printf("-(An)\n");
             adm = AR_INDIRECT_DEC;
             eaAddr = reg_a[regPos];
 

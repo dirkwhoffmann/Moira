@@ -73,6 +73,24 @@ CPU::dasmAddRgXX(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<I>{} << Sz<S>{} << " " << src << "," << dst;
 }
 
+template<Instr I, Mode M, Size S> void
+CPU::dasmAndXXRg(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    Ea<M,S> src { _____________xxx(op), e1, e2 };
+    Dn      dst { ____xxx_________(op) };
+
+    str << Ins<I>{} << Sz<S>{} << " " << src << "," << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::dasmAndRgXX(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    Dn      src { ____xxx_________(op) };
+    Ea<M,S> dst { _____________xxx(op), e1, e2 };
+
+    str << Ins<I>{} << Sz<S>{} << " " << src << "," << dst;
+}
+
 template <Mode M> void
 CPU::dasmLea(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 {

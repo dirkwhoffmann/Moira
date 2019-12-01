@@ -134,11 +134,7 @@ StrWriter::operator<<(Index v)
 template <Instr I> StrWriter&
 StrWriter::operator<<(Ins<I> i)
 {
-    switch (I) {
-        case ADD: *this << "add"; break;
-        case SUB: *this << "sub"; break;
-        default: assert(false);
-    }
+    *this << instrStr[I];
     return *this;
 }
 

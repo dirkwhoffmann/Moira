@@ -17,10 +17,14 @@ template<Instr I> void registerShift(const char *patternReg,
                                      const char *patternImm,
                                      const char *patternEa);
 
-template<Instr I> void registerAddSub(const char *pattern1,
-                                      const char *pattern2);
+template<Instr I> void registerAddSub(const char *patternXXReg,
+                                      const char *patternRegXX);
+
+template<Instr I> void registerLogic(const char *patternXXReg,
+                                     const char *patternRegXX);
 
 void registerADD();
+void registerAND();
 void registerASL();
 void registerASR();
 void registerLEA();
