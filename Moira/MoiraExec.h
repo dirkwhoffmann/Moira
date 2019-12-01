@@ -14,9 +14,6 @@ void execIllegal(u16 opcode);
 void execGroup0Exception(u32 addr, u8 nr);
 void execGroup1Exception(u8 nr);
 
-template<Instr I, Size S> void execRegShift(u16 opcode); // DEPRECATED
-template<Instr I, Mode M> void execEaShift(u16 opcode);  // DEPRECATED
-
 template<Instr I, Mode M, Size S> void execShift(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execAddXXRg(u16 opcode);

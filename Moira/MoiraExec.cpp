@@ -97,33 +97,6 @@ CPU::execGroup1Exception(u8 nr)
      jumpToVector(nr);
 }
 
-template<Instr I, Size S> void
-CPU::execRegShift(u16 opcode)
-{
-    // Dx,Dy
-    int x = (opcode >> 9) & 0b111; //  ---- xxx- ---- ----
-    int y = (opcode >> 0) & 0b111; //  ---- ---- ---- -xxx
-
-    u32 dx = readD<S>(x);
-    u32 dy = readD<S>(y);
-
-    writeD<S>(y, shift<S,I>(dx, dy));
-}
-
-template<Instr I, Mode M> void
-CPU::execEaShift(u16 opcode)
-{
-    //
-    // TODO: Read from Ea
-    // value = ...
-
-    // TODO: Shift value by 1:
-    // shift<Word,I>(1, value);
-
-    // TODO: Write back value
-    // write(..., value)
-}
-
 template<Instr I, Mode M, Size S> void
 CPU::execShift(u16 op)
 {
@@ -149,6 +122,8 @@ CPU::execShift(u16 op)
         {
             assert(M >= 2 && M <= 8);
             u32 ea = computeEA<M,S>(src);
+            if (addressError(ea)) return;
+
             write<S>(ea, shift<I,S>(1, read<S>(ea)));
             break;
         }
@@ -187,7 +162,7 @@ CPU::execAddXXRg(u16 opcode)
             assert(M >= 3 && M <= 10);
 
             u32 ea = computeEA<M,S>(src);
-            if (ea & 1) { execAddressError(ea); return; }
+            if (addressError(ea)) return;
 
             result = arith<I,S>(read<S>(ea), readD<S>(dst));
             break;

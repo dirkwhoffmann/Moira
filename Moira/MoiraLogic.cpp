@@ -7,6 +7,18 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+bool
+CPU::addressError(u32 addr)
+{
+#ifdef MOIRA_EMULATE_ADDRESS_ERROR
+    if (addr & 1) {
+        execAddressError(addr);
+        return true;
+    }
+#endif
+    return false;
+}
+
 template<> u32
 CPU::read<Byte>(u32 addr)
 {

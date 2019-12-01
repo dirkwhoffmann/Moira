@@ -7,6 +7,8 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+// Checks for an address error
+bool addressError(u32 addr);
 
 // Reads a value from memory
 template<Size S> u32 read(u32 addr);

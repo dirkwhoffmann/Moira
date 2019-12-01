@@ -17,6 +17,12 @@
 
 namespace Moira {
 
+//
+// Configuration
+//
+
+#define MOIRA_EMULATE_ADDRESS_ERROR
+
 struct Registers {
 
     union {
