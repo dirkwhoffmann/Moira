@@ -59,9 +59,11 @@ CPU::init()
     registerASL();
     registerASR();
     registerCLR();
+    registerEXT();
     registerLEA();
     registerLSL();
     registerLSR();
+    registerNOP();
     registerROL();
     registerROR();
     registerROXL();
@@ -431,6 +433,17 @@ CPU::registerCLR()
 }
 
 void
+CPU::registerEXT()
+{
+    u32 opcode = parse("0100 1000 --00 0---");
+
+    for (int reg = 0; reg < 8; reg++) {
+        bind(opcode | 2 << 6 | reg, Ext<Word>);
+        bind(opcode | 3 << 6 | reg, Ext<Long>);
+    }
+}
+
+void
 CPU::registerLSL()
 {
     registerShift<LSL>("1110 ---1 --10 1---",  // Dx,Dy
@@ -444,6 +457,12 @@ CPU::registerLSR()
     registerShift<LSR>("1110 ---0 --10 1---",  // Dx,Dy
                        "1110 ---0 --00 1---",  // ##,Dy
                        "1110 0010 11-- ----"); // <ea>
+}
+
+void
+CPU::registerNOP()
+{
+    bind(parse("0100 1110 0111 0001"), Nop);
 }
 
 void

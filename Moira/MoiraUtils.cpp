@@ -9,9 +9,13 @@
 
 #include "MoiraUtils.h"
 
-template<> int  BYTES <Byte> () { return 1; }
-template<> int  BYTES <Word> () { return 2; }
-template<> int  BYTES <Long> () { return 4; }
+template<> int  BYTES <Byte> ()         { return 1; }
+template<> int  BYTES <Word> ()         { return 2; }
+template<> int  BYTES <Long> ()         { return 4; }
+
+template<> u32  MASK  <Byte> ()         { return 0x000000FF; }
+template<> u32  MASK  <Word> ()         { return 0x0000FFFF; }
+template<> u32  MASK  <Long> ()         { return 0xFFFFFFFF; }
 
 template<> i32  SIGN  <Byte> (u64 data) { return  (i8)data; }
 template<> i32  SIGN  <Word> (u64 data) { return (i16)data; }

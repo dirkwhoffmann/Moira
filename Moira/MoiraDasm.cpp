@@ -81,6 +81,14 @@ CPU::dasmClr(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<I>{} << Sz<S>{} << " " << dst;
 }
 
+template<Size S> void
+CPU::dasmExt(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    Dn src { _____________xxx(op) };
+
+    str << Ins<EXT>{} << Sz<S>{} << " " << Dn{src};
+}
+
 template <Mode M> void
 CPU::dasmLea(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
@@ -88,4 +96,10 @@ CPU::dasmLea(StrWriter &str, u16 op, u16 e1, u16 e2)
     An         dst { ____xxx_________(op) };
 
     str << Ins<LEA>{} << src << ", " << dst;
+}
+
+void
+CPU::dasmNop(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    str << Ins<NOP>{};
 }

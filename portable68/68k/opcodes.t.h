@@ -1095,16 +1095,20 @@ template<u8 opmode> void Core_68k::op_exg(u16 opcode) {
 template<bool _longSize> void Core_68k::op_ext(u16 opcode) {
     u8 Rx = opcode & 7;
 
+    u32 old = reg_d[Rx].d;
+
     if (_longSize) {
         reg_d[Rx].d &= 0x0000FFFF;
-        reg_d[Rx].d = reg_d[Rx].w | ((reg_d[Rx].w & 0x8000) ? 0xFFFF << 16 : 0);
+        reg_d[Rx].d = reg_d[Rx].w | (((reg_d[Rx].w & 0x8000) ? 0xFFFF << 16 : 0));
         setFlags(flag_logical, SizeLong, reg_d[Rx], 0, 0);
     } else {
+        // printf("WORD SIZE\n");
         reg_d[Rx].w &= 0x00FF;
-        reg_d[Rx].w = reg_d[Rx].l | ((reg_d[Rx].l & 0x80) ? 0xFF << 8 : 0);
+        reg_d[Rx].w = reg_d[Rx].l | (((reg_d[Rx].l & 0x80) ? 0xFF << 8 : 0));
         setFlags(flag_logical, SizeWord, reg_d[Rx], 0, 0);
     }
 
+    // printf("reg_d[Rx].d = %x %x\n", old, reg_d[Rx].d);
     prefetch(true);
 }
 

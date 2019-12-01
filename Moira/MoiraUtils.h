@@ -21,6 +21,7 @@ using namespace Moira;
 enum Size { Byte, Word, Long };
 
 template<Size>   int  BYTES();
+template<Size>   u32  MASK();
 template<Size>   i32  SIGN (u64 data);
 template<Size>   u32  CLIP (u64 data);
 template<Size>   u32  CLEAR(u64 data);

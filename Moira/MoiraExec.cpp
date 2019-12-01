@@ -276,6 +276,25 @@ CPU::execClr(u16 opcode)
     prefetch();
 }
 
+template<Size S> void
+CPU::execExt(u16 opcode)
+{
+    int n     = _____________xxx(opcode);
+    u32 dn    = readD(n);
+    u32 mask  = (S == Word) ? MASK<Byte>() << 8 : MASK<Word>() << 16;
+    bool msb  = (S == Word) ? MSBIT<Byte>(dn) : MSBIT<Word>(dn);
+
+    if (msb) { dn |= mask; } else {dn &= ~mask; }
+
+    writeD(n, dn);
+    sr.c = 0;
+    sr.v = 0;
+    sr.n = MSBIT<S>(dn);
+    sr.z = ZERO<S>(dn);
+
+    prefetch();
+}
+
 template<Mode M> void
 CPU::execLea(u16 opcode)
 {
@@ -286,4 +305,10 @@ CPU::execLea(u16 opcode)
 
     reg.a[dst] = result;
     prefetch();
+}
+
+void
+CPU::execNop(u16 opcode)
+{
+    
 }
