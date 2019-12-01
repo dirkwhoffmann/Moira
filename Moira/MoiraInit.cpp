@@ -58,6 +58,7 @@ CPU::init()
     registerAND();
     registerASL();
     registerASR();
+    registerCLR();
     registerLEA();
     registerLSL();
     registerLSR();
@@ -349,6 +350,50 @@ CPU::registerAddSub(const char *patternXXReg, const char *patternRegXX)
      }
 }
 
+template<Instr I> void
+CPU::registerClr(const char *pattern)
+{
+     // CLR
+     //
+     // Modes:       <ea>
+     //               ------------------------------------------------
+     //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+     //               ------------------------------------------------
+     //                X       X   X   X   X   X   X   X
+
+     u32 opcode = parse(pattern);
+
+     for (int reg = 0; reg < 8; reg++) {
+
+         bind(opcode | 0 << 6 | 0 << 3 | reg, Clr<I __ 0 __ Byte>);
+         bind(opcode | 0 << 6 | 2 << 3 | reg, Clr<I __ 2 __ Byte>);
+         bind(opcode | 0 << 6 | 3 << 3 | reg, Clr<I __ 3 __ Byte>);
+         bind(opcode | 0 << 6 | 4 << 3 | reg, Clr<I __ 4 __ Byte>);
+         bind(opcode | 0 << 6 | 5 << 3 | reg, Clr<I __ 5 __ Byte>);
+         bind(opcode | 0 << 6 | 6 << 3 | reg, Clr<I __ 6 __ Byte>);
+
+         bind(opcode | 1 << 6 | 0 << 3 | reg, Clr<I __ 0 __ Word>);
+         bind(opcode | 1 << 6 | 2 << 3 | reg, Clr<I __ 2 __ Word>);
+         bind(opcode | 1 << 6 | 3 << 3 | reg, Clr<I __ 3 __ Word>);
+         bind(opcode | 1 << 6 | 4 << 3 | reg, Clr<I __ 4 __ Word>);
+         bind(opcode | 1 << 6 | 5 << 3 | reg, Clr<I __ 5 __ Word>);
+         bind(opcode | 1 << 6 | 6 << 3 | reg, Clr<I __ 6 __ Word>);
+
+         bind(opcode | 2 << 6 | 0 << 3 | reg, Clr<I __ 0 __ Long>);
+         bind(opcode | 2 << 6 | 2 << 3 | reg, Clr<I __ 2 __ Long>);
+         bind(opcode | 2 << 6 | 3 << 3 | reg, Clr<I __ 3 __ Long>);
+         bind(opcode | 2 << 6 | 4 << 3 | reg, Clr<I __ 4 __ Long>);
+         bind(opcode | 2 << 6 | 5 << 3 | reg, Clr<I __ 5 __ Long>);
+         bind(opcode | 2 << 6 | 6 << 3 | reg, Clr<I __ 6 __ Long>);
+     }
+    bind(opcode | 0 << 6 | 7 << 3 | 0, Clr<I __ 7 __ Byte>);
+    bind(opcode | 0 << 6 | 7 << 3 | 1, Clr<I __ 8 __ Byte>);
+    bind(opcode | 1 << 6 | 7 << 3 | 0, Clr<I __ 7 __ Word>);
+    bind(opcode | 1 << 6 | 7 << 3 | 1, Clr<I __ 8 __ Word>);
+    bind(opcode | 2 << 6 | 7 << 3 | 0, Clr<I __ 7 __ Long>);
+    bind(opcode | 2 << 6 | 7 << 3 | 1, Clr<I __ 8 __ Long>);
+}
+
 void
 CPU::registerADD()
 {
@@ -377,6 +422,12 @@ CPU::registerASR()
     registerShift<ASR>("1110 ---0 --10 0---",  // Dx,Dy
                        "1110 ---0 --00 0---",  // ##,Dy
                        "1110 0000 11-- ----"); // <ea>
+}
+
+void
+CPU::registerCLR()
+{
+    registerClr<CLR>("0100 0010 ---- ----");   // <ea>
 }
 
 void

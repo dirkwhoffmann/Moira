@@ -45,6 +45,7 @@ void Tester_68k::testClr() {
     power();
     setRegD(4, 0x9853abcd);
     setCCR(0x1b);
+
     process();
     check("clr.w D4");
 

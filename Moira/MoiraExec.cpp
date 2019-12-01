@@ -243,6 +243,39 @@ CPU::execAndRgXX(u16 opcode)
      prefetch();
 }
 
+template<Instr I, Mode M, Size S> void
+CPU::execClr(u16 opcode)
+{
+    int dst = _____________xxx(opcode);
+
+    switch (M) {
+
+        case 0: // Dn
+        {
+            writeD<S>(dst, 0);
+            break;
+        }
+        default: // Ea
+        {
+            assert(M >= 2 && M <= 8);
+
+            u32 ea = computeEA<M,S>(dst);
+            if (addressError(ea)) return;
+
+            (void)read<S>(ea);
+            write<S>(ea, 0);
+            break;
+        }
+    }
+
+    sr.n = 0;
+    sr.z = 1;
+    sr.v = 0;
+    sr.c = 0;
+
+    prefetch();
+}
+
 template<Mode M> void
 CPU::execLea(u16 opcode)
 {

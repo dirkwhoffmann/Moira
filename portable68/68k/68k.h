@@ -6,6 +6,9 @@
 #define CORE_68k_h
 
 #include "dataTypes.h"
+#include "Moira.h"
+
+extern CPU *moira;
 
 class Core_68k {
 
@@ -113,6 +116,7 @@ protected:
     }
     void setCCR(u8 val) {
         reg_s.l = val;
+        moira->setCCR(val);
     }
 
 public:

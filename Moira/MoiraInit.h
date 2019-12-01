@@ -23,10 +23,13 @@ template<Instr I> void registerAddSub(const char *patternXXReg,
 template<Instr I> void registerLogic(const char *patternXXReg,
                                      const char *patternRegXX);
 
+template<Instr I> void registerClr(const char *pattern);
+
 void registerADD();
 void registerAND();
 void registerASL();
 void registerASR();
+void registerCLR();
 void registerLEA();
 void registerLSL();
 void registerLSR();

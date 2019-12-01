@@ -34,25 +34,7 @@ CPU::dasmShift(StrWriter &str, u16 op, u16 e1, u16 e2)
     Ea<M,S> src { ____xxx_________(op), e1, e2 };
     Dn      dst { _____________xxx(op) };
 
-    str << instrStr[I] << Sz<S>{} << " " << src << "," << dst;
-}
-
-template<Instr I, Size S> void 
-CPU::dasmRegShift(StrWriter &str, u16 op, u16 ext1, u16 ext2)
-{
-    str
-    << (const char *)"REG_SHIFT "
-    << "size = " << (u8)42
-    << "mode = " << (u16)13;
-}
-
-template <Instr I, Mode M> void
-CPU::dasmEaShift(StrWriter &str, u16 op, u16 ext1, u16 ext2)
-{
-    str
-    << (const char *)"EA_SHIFT "
-    << "size = " << (u8)42
-    << "mode = " << (u16)13;
+    str << Ins<I>{} << Sz<S>{} << " " << src << "," << dst;
 }
 
 template<Instr I, Mode M, Size S> void
@@ -91,11 +73,19 @@ CPU::dasmAndRgXX(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<I>{} << Sz<S>{} << " " << src << "," << dst;
 }
 
-template <Mode M> void
-CPU::dasmLea(StrWriter &str, u16 op, u16 ext1, u16 ext2)
+template<Instr I, Mode M, Size S> void
+CPU::dasmClr(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
-    Ea<M,Long> src { _____________xxx(op), ext1, ext2 };
+    Ea<M,Long> dst { _____________xxx(op), e1, e2 };
+
+    str << Ins<I>{} << Sz<S>{} << " " << dst;
+}
+
+template <Mode M> void
+CPU::dasmLea(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    Ea<M,Long> src { _____________xxx(op), e1, e2 };
     An         dst { ____xxx_________(op) };
 
-    str << "lea     " << src << ", " << dst;
+    str << Ins<LEA>{} << src << ", " << dst;
 }
