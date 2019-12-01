@@ -53,7 +53,7 @@ CPU::reset()
     memory->moiraReadAfterReset16(4) << 16 | memory->moiraReadAfterReset16(6);
 
     // Fill the prefetch queue
-    irc = memory->moiraRead16(pc);
+    irc = memory->moiraReadAfterReset16(pc);
     prefetch();
 }
 

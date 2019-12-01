@@ -17,7 +17,12 @@ CPU::read<Byte>(u32 addr)
 template<> u32
 CPU::read<Word>(u32 addr)
 {
-    // printf("read<Word>(%x)\n", addr);
+    printf("read<Word>(%x)\n", addr);
+    if (addr & 1) {
+        printf("ADDRESS ERROR\n");
+        execAddressError(addr);
+    }
+
     return memory->moiraRead16(addr);
 }
 

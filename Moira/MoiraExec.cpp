@@ -8,28 +8,73 @@
 // -----------------------------------------------------------------------------
 
 void
+CPU::execAddressError(u32 addr)
+{
+    assert(addr & 1);
+    printf("Moira::execAddressViolation\n");
+    execGroup0Exception(addr, 3);
+}
+
+void
 CPU::execLineA(u16 opcode)
 {
     printf("Moira::execLineA\n");
-    execException(10);
+    execGroup1Exception(10);
 }
 
 void
 CPU::execLineF(u16 opcode)
 {
     printf("Moira::execLineF\n");
-    execException(11);
+    execGroup1Exception(11);
 }
 
 void
 CPU::execIllegal(u16 opcode)
 {
     // printf("Moira::execIllegal\n");
-    execException(4);
+    execGroup1Exception(4);
 }
 
 void
-CPU::execException(u8 nr)
+CPU::execGroup0Exception(u32 addr, u8 nr)
+{
+    /* Group 0 exceptions indicate a serious error condition. Detailed
+     * information about the current CPU state is pushed on the stack to
+     * support diagnosis.
+     */
+
+    // Error description
+    u16 error = sr.s ? 4 : 0;
+
+    // Enter supervisor mode and update the status register
+    setSupervisorMode(true);
+    sr.t = 0;
+
+    // Push PC and SR
+    reg.sp -= 2; write<Word>(reg.sp, pc & 0xFFFF);
+    reg.sp -= 2; write<Word>(reg.sp, pc >> 16);
+    reg.sp -= 2; write<Word>(reg.sp, getSR());
+
+    // Push IRD
+    reg.sp -= 2; write<Word>(ird, getSR());
+
+    // Push address
+    reg.sp -= 2; write<Word>(reg.sp, addr & 0xFFFF);
+    reg.sp -= 2; write<Word>(reg.sp, addr >> 16);
+
+    // Push memory access type and function code (TODO)
+    reg.sp -= 2; write<Word>(reg.sp, error);
+
+    // Update the prefetch queue
+     readExtensionWord();
+     prefetch();
+
+     jumpToVector(nr);
+}
+
+void
+CPU::execGroup1Exception(u8 nr)
 {
     // Enter supervisor mode and update the status register
      setSupervisorMode(true);
