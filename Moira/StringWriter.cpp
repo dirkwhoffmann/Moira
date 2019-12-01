@@ -131,6 +131,17 @@ StrWriter::operator<<(Index v)
     return *this;
 }
 
+template <Instr I> StrWriter&
+StrWriter::operator<<(Ins<I> i)
+{
+    switch (I) {
+        case ADD: *this << "add"; break;
+        case SUB: *this << "sub"; break;
+        default: assert(false);
+    }
+    return *this;
+}
+
 template <> StrWriter&
 StrWriter::operator<<(Sz<Byte>)
 {

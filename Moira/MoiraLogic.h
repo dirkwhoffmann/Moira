@@ -24,5 +24,5 @@ template<Mode M, Size S> u32 readEA(u32 n, u32 dis = 0, u32 idx = 0);
 // Read immediate value
 template<Size S> u32 readImm();
 
-template<Size S, Instr I> u32 shift(int cnt, u64 data);
-template<Size S> u32 add(u32 op1, u32 op2);
+template<Instr I, Size S> u32 shift(int cnt, u64 data);
+template<Instr I, Size S> u32 arith(u32 op1, u32 op2);

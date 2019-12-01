@@ -30,5 +30,6 @@ void registerROL();
 void registerROR();
 void registerROXL();
 void registerROXR();
+void registerSUB();
 
 #endif

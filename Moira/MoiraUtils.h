@@ -31,17 +31,19 @@ template<Size S> u32  SUBS (u32 d1, u32 d2) { return CLEAR<S>(d1) | CLIP<S>(d2);
 
 
 enum Instr {
-    ADD, ASL, ASR,
+    ADD, ADDX, ASL, ASR,
+    CMP,
     LSL, LSR,
     ROL, ROR, ROXL, ROXR,
-    SUB
+    SUB, SUBX,
 };
 
 static const char *instrStr[] {
-    "add", "asl", "asr",
+    "add", "addx", "asl", "asr",
+    "cmp",
     "lsl", "lsr",
     "rol", "ror", "roxl", "roxr",
-    "sub"
+    "sub", "subx"
 };
 
 /* Adressing modes

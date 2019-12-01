@@ -89,20 +89,20 @@ CPU::execShift(u16 op)
         case 0: // Dn
         {
             cnt = readD(src) & 0x3F;
-            writeD<S>(dst, shift<S,I>(cnt, readD<S>(dst)));
+            writeD<S>(dst, shift<I,S>(cnt, readD<S>(dst)));
             break;
         }
         case 11: // Imm
         {
             cnt = src ? src : 8;
-            writeD<S>(dst, shift<S,I>(cnt, readD<S>(dst)));
+            writeD<S>(dst, shift<I,S>(cnt, readD<S>(dst)));
             break;
         }
         default: // Ea
         {
             assert(M >= 2 && M <= 8);
             u32 ea = computeEA<M,S>(src);
-            write<S>(ea, shift<S,I>(1, read<S>(ea)));
+            write<S>(ea, shift<I,S>(1, read<S>(ea)));
             break;
         }
     }
@@ -122,17 +122,17 @@ CPU::execAddXXRg(u16 opcode)
 
         case 0: // Dn
         {
-            result = add<S>(readD<S>(src), readD<S>(dst));
+            result = arith<I,S>(readD<S>(src), readD<S>(dst));
             break;
         }
         case 1: // An
         {
-            result = add<S>(readA<S>(src), readD<S>(dst));
+            result = arith<I,S>(readA<S>(src), readD<S>(dst));
             break;
         }
         case 11: // Imm
         {
-            result = add<S>(readImm<S>(), readD<S>(dst));
+            result = arith<I,S>(readImm<S>(), readD<S>(dst));
             break;
         }
         default: // Ea
@@ -140,7 +140,7 @@ CPU::execAddXXRg(u16 opcode)
             assert(M >= 3 && M <= 10);
 
             u32 ea = computeEA<M,S>(src);
-            result = add<S>(read<S>(ea), readD<S>(dst));
+            result = arith<I,S>(read<S>(ea), readD<S>(dst));
             break;
         }
     }
@@ -158,7 +158,7 @@ CPU::execAddRgXX(u16 opcode)
     int dst = _____________xxx(opcode);
     u32 ea  = computeEA<M,S>(dst);
 
-    u32 result = add<S>(readD<S>(src), read<S>(ea));
+    u32 result = arith<I,S>(readD<S>(src), read<S>(ea));
 
     write<S>(ea, result);
     prefetch();

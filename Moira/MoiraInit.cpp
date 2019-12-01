@@ -64,6 +64,7 @@ CPU::init()
     registerROR();
     registerROXL();
     registerROXR();
+    registerSUB();
 }
 
 void
@@ -275,39 +276,51 @@ CPU::registerLSL()
                        "1110 0011 11-- ----"); // <ea>
 }
 
-void CPU::registerLSR()
+void
+CPU::registerLSR()
 {
     registerShift<LSR>("1110 ---0 --10 1---",  // Dx,Dy
                        "1110 ---0 --00 1---",  // ##,Dy
                        "1110 0010 11-- ----"); // <ea>
 }
 
-void CPU::registerROL()
+void
+CPU::registerROL()
 {
     registerShift<ROL>("1110 ---1 --11 1---",  // Dx,Dy
                        "1110 ---1 --01 1---",  // ##,Dy
                        "1110 0111 11-- ----"); // <ea>
 }
 
-void CPU::registerROR()
+void
+CPU::registerROR()
 {
     registerShift<ROR>("1110 ---0 --11 1---",  // Dx,Dy
                        "1110 ---0 --01 1---",  // ##,Dy
                        "1110 0110 11-- ----"); // <ea>
 }
 
-void CPU::registerROXL()
+void
+CPU::registerROXL()
 {
     registerShift<ROXL>("1110 ---1 --11 0---",  // Dx,Dy
                         "1110 ---1 --01 0---",  // ##,Dy
                         "1110 0101 11-- ----"); // <ea>
 }
 
-void CPU::registerROXR()
+void
+CPU::registerROXR()
 {
     registerShift<ROXR>("1110 ---0 --11 0---",  // Dx,Dy
                         "1110 ---0 --01 0---",  // ##,Dy
                         "1110 0100 11-- ----"); // <ea>
+}
+
+void
+CPU::registerSUB()
+{
+    registerAddSub<SUB>("1001 ---0 ---- ----",  // <ea>,Dy
+                        "1001 ---1 ---- ----"); // Dx,<ea>
 }
 
 void

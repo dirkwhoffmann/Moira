@@ -18,6 +18,7 @@ struct An { int value; };
 struct Disp8 { i8 value; };
 struct Disp16 { i16 value; };
 struct Index { int value; };
+template <Instr I> struct Ins { };
 template <Size S> struct Sz { };
 template <Size S> struct Im { u16 ext1; u16 ext2; };
 template <Mode M, Size S> struct Ea { u16 reg; u16 ext1; u16 ext2; };
@@ -41,6 +42,7 @@ public:
     StrWriter& operator<<(Disp8 d);
     StrWriter& operator<<(Disp16 d);
     StrWriter& operator<<(Index i);
+    template <Instr I> StrWriter& operator<<(Ins<I> i);
     template <Size S> StrWriter& operator<<(Sz<S> sz);
     template <Size S> StrWriter& operator<<(Im<S> im);
     template <Mode M, Size S> StrWriter& operator<<(Ea<M,S> ea);

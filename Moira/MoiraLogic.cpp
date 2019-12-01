@@ -188,7 +188,7 @@ CPU::readImm()
     return result;
 }
 
-template<Size S, Instr I> u32
+template<Instr I, Size S> u32
 CPU::shift(int cnt, u64 data) {
 
     switch(I) {
@@ -304,24 +304,69 @@ CPU::shift(int cnt, u64 data) {
             assert(false);
         }
     }
-
     sr.n = MSBIT<S>(data);
     sr.z = ZERO <S>(data);
     return CLIP<S>(data);
 }
 
-template<Size S> u32
-CPU::add(u32 op1, u32 op2)
+template<Instr I, Size S> u32
+CPU::arith(u32 op1, u32 op2)
 {
-    u64 result = (u64)op1 + (u64)op2;
+    u64 result;
 
-    // printf("add(%x,%x) = %llx\n",op1, op2, result);
-    
-    sr.c = MSBIT<S>((u32)(result >> 1));
-    sr.v = MSBIT<S>((u32)((op1 ^ result) & (op2 ^ result)));
-    sr.z = ZERO<S>((u32)result);
-    sr.n = MSBIT<S>((u32)result);
-    sr.x = sr.c;
+    switch(I) {
 
+        case ADD:
+        {
+            result = (u64)op1 + (u64)op2;
+
+            sr.x = sr.c = CARRY<S>(result);
+            sr.v = MSBIT<S>((op1 ^ result) & (op2 ^ result));
+            sr.z = ZERO<S>(result);
+            break;
+        }
+        case ADDX:
+        {
+            result = (u64)op1 + (u64)op2 + (u64)sr.x;
+
+            sr.x = sr.c = CARRY<S>(result);
+            sr.v = MSBIT<S>((op1 ^ result) & (op2 ^ result));
+            if (CLIP<S>(result)) sr.z = 0;
+            break;
+        }
+        case SUB:
+        {
+            result = (u64)op2 - (u64)op1;
+            // printf("arith::SUB %x %x %llx \n", op1, op2, result);
+
+            sr.x = sr.c = CARRY<S>(result);
+            sr.v = MSBIT<S>((op1 ^ op2) & (op2 ^ result));
+            sr.z = ZERO<S>(result);
+            break;
+        }
+        case SUBX:
+        {
+            result = (u64)op2 - (u64)op1 - (u64)sr.x;
+
+            sr.x = sr.c = CARRY<S>(result);
+            sr.v = MSBIT<S>((op1 ^ op2) & (op2 ^ result));
+            if (CLIP<S>(result)) sr.z = 0;
+            break;
+        }
+        case CMP:
+        {
+            result = (u64)op1 - (u64)op2;
+
+            sr.c = CARRY<S>(result);
+            sr.v = MSBIT<S>((op1 ^ op2) & (op2 ^ result));
+            sr.z = ZERO<S>(result);
+            break;
+        }
+        default:
+        {
+            assert(false);
+        }
+    }
+    sr.n = MSBIT<S>(result);
     return (u32)result;
 }
