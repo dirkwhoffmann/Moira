@@ -121,6 +121,7 @@ public:
                 return;
             }
         }
+        assert(pos1 < maxElements);
         block1[pos1].addr = addr;
         block1[pos1].value = value;
         block1[pos1].used = true;
@@ -136,6 +137,7 @@ public:
                 return;
             }
         }
+        assert(pos2 < maxElements);
         block2[pos2].addr = addr;
         block2[pos2].value = value;
         block2[pos2].used = true;
@@ -253,8 +255,8 @@ public:
     }
 
 private:
-    unsigned pos1;
-    unsigned pos2;
+    unsigned pos1 = 0;
+    unsigned pos2 = 0;
     unsigned maxElements;
     string error;
 };

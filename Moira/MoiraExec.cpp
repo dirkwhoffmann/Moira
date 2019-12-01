@@ -44,26 +44,28 @@ CPU::execGroup0Exception(u32 addr, u8 nr)
      * support diagnosis.
      */
 
-    // Error description
-    u16 error = sr.s ? 4 : 0;
+    // Error description (TODO: THIS IS INCOMPLETE)
+    u16 error = 0x11 | (sr.s ? 4 : 0);
 
     // Enter supervisor mode and update the status register
     setSupervisorMode(true);
     sr.t = 0;
 
-    // Push PC and SR
+    printf("Moira group0: %x %x %x %x\n, ", pc, addr, getSR(), error);
+
+    // Push PC
     reg.sp -= 2; write<Word>(reg.sp, pc & 0xFFFF);
     reg.sp -= 2; write<Word>(reg.sp, pc >> 16);
-    reg.sp -= 2; write<Word>(reg.sp, getSR());
 
-    // Push IRD
-    reg.sp -= 2; write<Word>(ird, getSR());
+    // Push SR and IRD
+    reg.sp -= 2; write<Word>(reg.sp, getSR());
+    reg.sp -= 2; write<Word>(reg.sp, ird);
 
     // Push address
     reg.sp -= 2; write<Word>(reg.sp, addr & 0xFFFF);
     reg.sp -= 2; write<Word>(reg.sp, addr >> 16);
 
-    // Push memory access type and function code (TODO)
+    // Push memory access type and function code
     reg.sp -= 2; write<Word>(reg.sp, error);
 
     // Update the prefetch queue
@@ -185,6 +187,8 @@ CPU::execAddXXRg(u16 opcode)
             assert(M >= 3 && M <= 10);
 
             u32 ea = computeEA<M,S>(src);
+            if (ea & 1) { execAddressError(ea); return; }
+
             result = arith<I,S>(read<S>(ea), readD<S>(dst));
             break;
         }
@@ -201,7 +205,9 @@ CPU::execAddRgXX(u16 opcode)
 
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
+
     u32 ea  = computeEA<M,S>(dst);
+    if (ea & 1) { execAddressError(ea); return; }
 
     u32 result = arith<I,S>(readD<S>(src), read<S>(ea));
 

@@ -18,7 +18,7 @@ template<Size S> void write(u32 addr, u32 value);
 template<Mode M, Size S> u32 computeEA(u32 n, u32 dis = 0, u32 idx = 0);
 
 // Reads a value from an effective address
-template<Mode M, Size S> u32 readEA(u32 n, u32 dis = 0, u32 idx = 0);
+// template<Mode M, Size S> bool readFromEA(u32 ea, u32 n);
 
 
 // Read immediate value

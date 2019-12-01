@@ -50,7 +50,6 @@ template<bool left, bool memory, bool arithmetic> void Core_68k::op_xsx(u16 opco
 		sync(2 + (size == SizeLong ? 2 : 0) + shiftCount * 2);
 	}
 
-    printf("op_xsx: data = %x\n", data);
     writeEA(size, data, true);
 }
 

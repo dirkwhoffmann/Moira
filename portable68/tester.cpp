@@ -370,10 +370,12 @@ u16 Tester_68k::memWordRead2(u32 addr) {
 }
 
 void Tester_68k::memWordWrite(u32 addr, u16 data) {
+    // printf("memWordWrite(%x, %x)\n", addr, data);
     memWrite(addr, data >> 8);
     memWrite(addr + 1, data & 0xff);
 }
 void Tester_68k::memWordWrite2(u32 addr, u16 data) {
+    // printf("memWordWrite2(%x, %x)\n", addr, data);
     memWrite2(addr, data >> 8);
     memWrite2(addr + 1, data & 0xff);
 }

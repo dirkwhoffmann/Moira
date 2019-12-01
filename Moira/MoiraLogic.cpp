@@ -17,12 +17,12 @@ CPU::read<Byte>(u32 addr)
 template<> u32
 CPU::read<Word>(u32 addr)
 {
-    printf("read<Word>(%x)\n", addr);
+    // printf("read<Word>(%x)\n", addr);
+    /*
     if (addr & 1) {
-        printf("ADDRESS ERROR\n");
         execAddressError(addr);
     }
-
+    */
     return memory->moiraRead16(addr);
 }
 
@@ -78,20 +78,20 @@ CPU::computeEA(u32 n, u32 dis, u32 idx) {
         }
         case 3: // (An)+
         {
-            u32 an     = readA(n);
+            u32 an = readA(n);
             u32 offset = (n == 7 && S == Byte) ? 2 : BYTES<S>();
-
             result = an;
-            writeA(n, an + offset);
+            printf("(An)+ result = %x\n", result);
+            if ((result & 1) == 0) writeA(n, an + offset);
             break;
         }
         case 4: // -(An)
         {
-            u32 an     = readA(n);
+            u32 an = readA(n);
             u32 offset = (n == 7 && S == Byte) ? 2 : BYTES<S>();
-
             result = an - offset;
-            writeA(n, result);
+            printf("-(An) result = %x\n", result);
+            if ((result & 1) == 0) writeA(n, an - offset);
             break;
         }
         case 5: // (d,An)
@@ -156,14 +156,39 @@ CPU::computeEA(u32 n, u32 dis, u32 idx) {
     return result;
 }
 
-template<Mode M, Size S> u32
-CPU::readEA(u32 n, u32 dis, u32 idx)
+/*
+template<Mode M, Size S> bool
+CPU::readEA(u32 &result, u32 n, u32 dis, u32 idx)
 {
-    u32 addr = computeEA<M,S>(n, dis, idx);
-    printf("readEA: M: %d addr: %x result: %x\n", M, addr, read<S>(addr));
-    return read<S>(addr);
-    
+    u32 ea = computeEA<M,S>(n, dis, idx);
+    u32 newA;
+
+    if (M == 3) { // (An)+
+        printf("(An)+\n");
+        if (S == Byte) newA = ea + (n == 7 ? 2 : 1);
+        if (S == Word) newA = ea + 2;
+        if (S == Long) newA = ea + 4;
+    }
+    if (M == 4) { // -(An)
+        printf("-(An)\n");
+        if (S == Byte) newA = ea - (n == 7 ? 2 : 1);
+        if (S == Word) newA = ea - 2;
+        if (S == Long) newA = ea - 4;
+        ea = newA;
+    }
+
+    // Check integrity of computed address
+    if (ea & 1) { execAddressError(ea); return false; }
+
+    // Read from effective address
+    result = read<S>(ea);
+
+    // Update address register if applicable
+    if (M == 3 || M == 4) { writeA(n, newA); }
+
+    return true;
 }
+*/
 
 template<Size S> u32
 CPU::readImm()

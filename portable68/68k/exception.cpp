@@ -160,18 +160,22 @@ void Core_68k::group0exception(u8 type) { //bus or address error
     u16 _status = (status_code._read ? 16 : 0) | (status_code._instruction ? 0 : 8);
     _status |= (SR & 0x2000 ? 4 : 0) | (status_code._program ? 2 : 1);
 
+    printf("_status = %x SR = %x\n", _status, SR);
+
     reg_s.trace = trace = 0;
     switchToSupervisor();
+
+    u32 fault_address = this->fault_address;
 
     sync(8);
     reg_a[7] -= 14;
     writeWord(reg_a[7] + 12, reg_pc & 0xFFFF);
-    writeWord(reg_a[7] + 8, SR);
     writeWord(reg_a[7] + 10, (reg_pc >> 16) & 0xFFFF);
+    writeWord(reg_a[7] + 8, SR);
     writeWord(reg_a[7] + 6, reg_ird);
     writeWord(reg_a[7] + 4, (fault_address) & 0xFFFF);
-    writeWord(reg_a[7] + 0, _status );
     writeWord(reg_a[7] + 2, ((fault_address) >> 16) & 0xFFFF);
+    writeWord(reg_a[7] + 0, _status );
     sync(2);
     executeAt(type == BUS_ERROR ? 2 : 3);
     doubleFault = false; //no further problem
