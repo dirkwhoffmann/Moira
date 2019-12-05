@@ -37,6 +37,12 @@ CPU::dasmShift(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<I>{} << Sz<S>{} << " " << src << "," << dst;
 }
 
+template<Instr I, Mode M> void
+CPU::dasmAbcd(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    str << Ins<I>{} << " MISSING";
+}
+
 template<Instr I, Mode M, Size S> void
 CPU::dasmAddXXRg(StrWriter &str, u16 op, u16 e1, u16 e2)
 {

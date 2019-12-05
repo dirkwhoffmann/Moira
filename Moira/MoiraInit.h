@@ -17,6 +17,9 @@ template<Instr I> void registerShift(const char *patternReg,
                                      const char *patternImm,
                                      const char *patternEa);
 
+template<Instr I> void registerAbcdSbcd(const char *patternReg,
+                                        const char *pattermInd);
+
 template<Instr I> void registerAddSub(const char *patternXXReg,
                                       const char *patternRegXX);
 
@@ -25,6 +28,7 @@ template<Instr I> void registerLogic(const char *patternXXReg,
 
 template<Instr I> void registerClr(const char *pattern);
 
+void registerABCD();
 void registerADD();
 void registerAND();
 void registerASL();
@@ -40,6 +44,7 @@ void registerROL();
 void registerROR();
 void registerROXL();
 void registerROXR();
+void registerSBCD();
 void registerSUB();
 void registerTST();
 

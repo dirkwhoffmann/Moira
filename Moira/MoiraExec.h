@@ -16,6 +16,8 @@ void execGroup1Exception(u8 nr);
 
 template<Instr I, Mode M, Size S> void execShift(u16 opcode);
 
+template<Instr I, Mode M> void execAbcd(u16 opcode);
+
 template<Instr I, Mode M, Size S> void execAddXXRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execAddRgXX(u16 opcode);
 

@@ -55,6 +55,7 @@ CPU::init()
 
 
     // Register the instruction set
+    registerABCD();
     registerADD();
     registerAND();
     registerASL();
@@ -70,6 +71,7 @@ CPU::init()
     registerROR();
     registerROXL();
     registerROXR();
+    registerSBCD();
     registerSUB();
     registerTST();
 }
@@ -253,6 +255,17 @@ CPU::registerLogic(const char *patternXXReg, const char *patternRegXX)
 }
 
 template<Instr I> void
+CPU::registerAbcdSbcd(const char *patternReg, const char *pattermInd)
+{
+    // ABCD, SBCD
+     //
+     // Modes: (1)   Dx,Dy
+     //        (2)   -(Ay),-(Ax)
+
+    assert(false);
+}
+
+template<Instr I> void
 CPU::registerAddSub(const char *patternXXReg, const char *patternRegXX)
 {
     u16 opcode;
@@ -400,6 +413,13 @@ CPU::registerClr(const char *pattern)
 }
 
 void
+CPU::registerABCD()
+{
+    registerAbcdSbcd<ABCD>("1100 ---1 0000 0---",  // Dx,Dy
+                           "1100 ---1 0000 1---"); // -(Ax),-(Ay)
+}
+
+void
 CPU::registerADD()
 {
     registerAddSub<ADD>("1101 ---0 ---- ----",  // <ea>,Dy
@@ -524,6 +544,13 @@ CPU::registerROXR()
     registerShift<ROXR>("1110 ---0 --11 0---",  // Dx,Dy
                         "1110 ---0 --01 0---",  // ##,Dy
                         "1110 0100 11-- ----"); // <ea>
+}
+
+void
+CPU::registerSBCD()
+{
+    registerAbcdSbcd<SBCD>("1000 ---1 0000 0---",  // Dx,Dy
+                           "1000 ---1 0000 1---"); // -(Ax),-(Ay)
 }
 
 void

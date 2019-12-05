@@ -132,6 +132,12 @@ CPU::execShift(u16 op)
     prefetch();
 }
 
+template<Instr I, Mode M> void
+CPU::execAbcd(u16 opcode)
+{
+    
+}
+
 template<Instr I, Mode M, Size S> void
 CPU::execAddXXRg(u16 opcode)
 {
