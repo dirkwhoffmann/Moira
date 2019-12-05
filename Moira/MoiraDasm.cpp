@@ -40,7 +40,29 @@ CPU::dasmShift(StrWriter &str, u16 op, u16 e1, u16 e2)
 template<Instr I, Mode M> void
 CPU::dasmAbcd(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
-    str << Ins<I>{} << " MISSING";
+    switch (M) {
+
+        case 0:
+        {
+            Dn src { _____________xxx(op) };
+            Dn dst { ____xxx_________(op) };
+
+            str << Ins<I>{} << " " << src << ", " << dst;
+            break;
+        }
+        case 4:
+        {
+            An src { _____________xxx(op) };
+            An dst { ____xxx_________(op) };
+
+            str << Ins<I>{} << " -(" << src << "), -(" << dst << ")";
+            break;
+        }
+        default:
+        {
+            assert(false);
+        }
+    }
 }
 
 template<Instr I, Mode M, Size S> void

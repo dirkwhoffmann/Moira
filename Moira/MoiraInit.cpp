@@ -255,14 +255,30 @@ CPU::registerLogic(const char *patternXXReg, const char *patternRegXX)
 }
 
 template<Instr I> void
-CPU::registerAbcdSbcd(const char *patternReg, const char *pattermInd)
+CPU::registerAbcdSbcd(const char *patternReg, const char *patternInd)
 {
-    // ABCD, SBCD
-     //
-     // Modes: (1)   Dx,Dy
-     //        (2)   -(Ay),-(Ax)
+    u32 opcode;
 
-    assert(false);
+    // ABCD, SBCD
+    //
+    // Modes: (1)   Dx,Dy
+    //        (2)   -(Ay),-(Ax)
+
+    // (1)
+    opcode = parse(patternReg);
+    for (int src = 0; src < 8; src++) {
+        for (int dst = 0; dst < 8; dst++) {
+            bind(opcode | dst << 9 | src, Abcd<I __ 0>);
+        }
+    }
+
+    // (2)
+    opcode = parse(patternInd);
+    for (int src = 0; src < 8; src++) {
+        for (int dst = 0; dst < 8; dst++) {
+            bind(opcode | dst << 9 | src, Abcd<I __ 4>);
+        }
+    }
 }
 
 template<Instr I> void

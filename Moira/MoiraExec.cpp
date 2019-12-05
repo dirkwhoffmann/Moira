@@ -135,7 +135,7 @@ CPU::execShift(u16 op)
 template<Instr I, Mode M> void
 CPU::execAbcd(u16 opcode)
 {
-    
+    assert(false);
 }
 
 template<Instr I, Mode M, Size S> void
