@@ -1095,7 +1095,7 @@ template<u8 opmode> void Core_68k::op_exg(u16 opcode) {
 template<bool _longSize> void Core_68k::op_ext(u16 opcode) {
     u8 Rx = opcode & 7;
 
-    u32 old = reg_d[Rx].d;
+    // u32 old = reg_d[Rx].d;
 
     if (_longSize) {
         reg_d[Rx].d &= 0x0000FFFF;

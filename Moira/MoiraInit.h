@@ -30,6 +30,7 @@ void registerAND();
 void registerASL();
 void registerASR();
 void registerCLR();
+void registerDBcc();
 void registerEXT();
 void registerLEA();
 void registerLSL();

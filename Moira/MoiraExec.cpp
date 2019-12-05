@@ -276,6 +276,39 @@ CPU::execClr(u16 opcode)
     prefetch();
 }
 
+template<Cond C> void
+CPU::execDbcc(u16 opcode)
+{
+    int dn = _____________xxx(opcode);
+
+    /* IF (condition false)
+     *   THEN [Dn] := [Dn] - 1 {decrement loop counter}
+     *     IF [Dn] == -1 THEN [PC] ← [PC] + 2 {fall through to next instruction}
+     *                   ELSE [PC] ← [PC] + d {take branch}
+     * ELSE [PC] := [PC] + 2 {fall through to next instruction}
+     */
+
+    if (!check<C>()) {
+        // Decrement loop counter
+        writeD<Word>(dn, readD<Word>(dn) - 1);
+        readExtensionWord();
+        if ((int16_t)readD<Word>(dn) == -1) {
+            // Fall through to next instruction
+            prefetch();
+            return;
+        } else {
+            // Take branch
+            pc += irc - 2;
+            prefetch();
+            return;
+        }
+    } else {
+        // Fall through to next instruction
+        readExtensionWord();
+        prefetch();
+    }
+}
+
 template<Size S> void
 CPU::execExt(u16 opcode)
 {

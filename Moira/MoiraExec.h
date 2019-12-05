@@ -23,7 +23,7 @@ template<Instr I, Mode M, Size S> void execAndXXRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execAndRgXX(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execClr(u16 opcode);
-
+template<Cond C> void execDbcc(u16 opcode);
 template<Size S> void execExt(u16 opcode);
 
 template<Mode M> void execLea(u16 opcode);

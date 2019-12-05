@@ -20,7 +20,7 @@ template<Instr I, Mode M, Size S> void dasmAndXXRg(StrWriter &str, u16 op, u16 e
 template<Instr I, Mode M, Size S> void dasmAndRgXX(StrWriter &str, u16 op, u16 e1, u16 e2);
 
 template<Instr I, Mode M, Size S> void dasmClr(StrWriter &str, u16 op, u16 e1, u16 e2);
-
+template<Cond C> void dasmDbcc(StrWriter &str, u16 op, u16 e1, u16 e2);
 template<Size S> void dasmExt(StrWriter &str, u16 op, u16 e1, u16 e2);
 
 template<Mode M> void dasmLea(StrWriter &str, u16 op, u16 e1, u16 e2);

@@ -138,6 +138,13 @@ StrWriter::operator<<(Ins<I> i)
     return *this;
 }
 
+template <Cond C> StrWriter&
+StrWriter::operator<<(Cnd<C> c)
+{
+    *this << condStr[C];
+    return *this;
+}
+
 template <> StrWriter&
 StrWriter::operator<<(Sz<Byte>)
 {

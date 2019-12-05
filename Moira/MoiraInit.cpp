@@ -59,6 +59,7 @@ CPU::init()
     registerASL();
     registerASR();
     registerCLR();
+    registerDBcc();
     registerEXT();
     registerLEA();
     registerLSL();
@@ -430,6 +431,32 @@ void
 CPU::registerCLR()
 {
     registerClr<CLR>("0100 0010 ---- ----");   // <ea>
+}
+
+void
+CPU::registerDBcc()
+{
+    u32 opcode = parse("0101 ---- 1100 1---");
+
+    for (int reg = 0; reg < 8; reg++) {
+
+        bind(opcode | 0x0 << 8 | reg, Dbcc<CT>);
+        bind(opcode | 0x1 << 8 | reg, Dbcc<CF>);
+        bind(opcode | 0x2 << 8 | reg, Dbcc<HI>);
+        bind(opcode | 0x3 << 8 | reg, Dbcc<LS>);
+        bind(opcode | 0x4 << 8 | reg, Dbcc<CC>);
+        bind(opcode | 0x5 << 8 | reg, Dbcc<CS>);
+        bind(opcode | 0x6 << 8 | reg, Dbcc<NE>);
+        bind(opcode | 0x7 << 8 | reg, Dbcc<EQ>);
+        bind(opcode | 0x8 << 8 | reg, Dbcc<VC>);
+        bind(opcode | 0x9 << 8 | reg, Dbcc<VS>);
+        bind(opcode | 0xA << 8 | reg, Dbcc<PL>);
+        bind(opcode | 0xB << 8 | reg, Dbcc<MI>);
+        bind(opcode | 0xC << 8 | reg, Dbcc<GE>);
+        bind(opcode | 0xD << 8 | reg, Dbcc<LT>);
+        bind(opcode | 0xE << 8 | reg, Dbcc<GT>);
+        bind(opcode | 0xF << 8 | reg, Dbcc<LE>);
+    }
 }
 
 void

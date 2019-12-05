@@ -81,6 +81,14 @@ CPU::dasmClr(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<I>{} << Sz<S>{} << " " << dst;
 }
 
+template<Cond C> void
+CPU::dasmDbcc(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    Dn src { _____________xxx(op) };
+
+    str << "db" << Cnd<C>{} << " " << Dn{src} << ", " << irc;
+}
+
 template<Size S> void
 CPU::dasmExt(StrWriter &str, u16 op, u16 e1, u16 e2)
 {

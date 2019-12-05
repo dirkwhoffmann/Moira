@@ -412,3 +412,27 @@ CPU::logic(u32 op1, u32 op2)
 
     return result;
 }
+
+template <Cond C> bool
+CPU::check() {
+
+    switch(C) {
+
+        case CT: return true;
+        case CF: return false;
+        case HI: return !sr.c && !sr.z;
+        case LS: return sr.c || sr.z;
+        case CC: return !sr.c;
+        case CS: return sr.c;
+        case NE: return !sr.z;
+        case EQ: return sr.z;
+        case VC: return !sr.v;
+        case VS: return sr.v;
+        case PL: return !sr.n;
+        case MI: return sr.n;
+        case GE: return sr.n == sr.v;
+        case LT: return sr.n != sr.v;
+        case GT: return sr.n == sr.v && !sr.z;
+        case LE: return sr.n != sr.v || sr.z;
+    }
+}
