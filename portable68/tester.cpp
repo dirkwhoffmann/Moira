@@ -436,7 +436,7 @@ void Tester_68k::check(string ident) {
     if (testCounter++ > 100) {
         testCounter = 0;
         cout << endl;
-        system("PAUSE");
+        // system("PAUSE");
     }
 }
 
@@ -531,7 +531,7 @@ void Tester_68k::process()
 
 void Tester_68k::dump()
 {
-    u16 pc = reg_pc, mpc = moira->getPC();
+    u32 pc = reg_pc, mpc = moira->getPC();
     u16 irc = reg_irc, mirc = moira->getIRC();
     u16 ird = reg_ird, mird = moira->getIRD();
 

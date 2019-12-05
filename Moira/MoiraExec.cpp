@@ -289,24 +289,24 @@ CPU::execDbcc(u16 opcode)
      */
 
     if (!check<C>()) {
+
+        u32 newpc = pc + (i16)irc;
+
         // Decrement loop counter
         writeD<Word>(dn, readD<Word>(dn) - 1);
+
         readExtensionWord();
-        if ((int16_t)readD<Word>(dn) == -1) {
-            // Fall through to next instruction
-            prefetch();
-            return;
-        } else {
-            // Take branch
-            pc += irc - 2;
-            prefetch();
-            return;
-        }
-    } else {
-        // Fall through to next instruction
-        readExtensionWord();
+
+        // Take branch if Dn does not equal -1
+        if ((i16)readD<Word>(dn) != -1) {  pc = newpc; }
+
         prefetch();
+        return;
     }
+
+    // Fall through to next instruction
+    readExtensionWord();
+    prefetch();
 }
 
 template<Size S> void
