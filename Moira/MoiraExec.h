@@ -28,3 +28,4 @@ template<Size S> void execExt(u16 opcode);
 
 template<Mode M> void execLea(u16 opcode);
 void execNop(u16 opcode);
+template<Mode M, Size S> void execTst(u16 opcode);

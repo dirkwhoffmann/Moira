@@ -53,6 +53,7 @@ CPU::init()
     // Register unimplemented instructions
     registerUnimplemented();
 
+
     // Register the instruction set
     registerADD();
     registerAND();
@@ -70,6 +71,7 @@ CPU::init()
     registerROXL();
     registerROXR();
     registerSUB();
+    registerTST();
 }
 
 void
@@ -529,6 +531,59 @@ CPU::registerSUB()
 {
     registerAddSub<SUB>("1001 ---0 ---- ----",  // <ea>,Dy
                         "1001 ---1 ---- ----"); // Dx,<ea>
+}
+
+void
+CPU::registerTST()
+{
+    u16 opcode = parse("0100 1010 ---- ----");
+
+    // TST
+    //
+    // Modes:       TST <ea>
+    //
+    //               ------------------------------------------------
+    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               ------------------------------------------------
+    //                X       X   X   X   X   X   X   X   X   X
+
+    for (int reg = 0; reg < 8; reg++) {
+
+        bind(opcode | 0 << 6 | 0 << 3 | reg, Tst<0 __ Byte>);
+        bind(opcode | 0 << 6 | 2 << 3 | reg, Tst<2 __ Byte>);
+        bind(opcode | 0 << 6 | 3 << 3 | reg, Tst<3 __ Byte>);
+        bind(opcode | 0 << 6 | 4 << 3 | reg, Tst<4 __ Byte>);
+        bind(opcode | 0 << 6 | 5 << 3 | reg, Tst<5 __ Byte>);
+        bind(opcode | 0 << 6 | 6 << 3 | reg, Tst<6 __ Byte>);
+
+        bind(opcode | 1 << 6 | 0 << 3 | reg, Tst<0 __ Word>);
+        bind(opcode | 1 << 6 | 2 << 3 | reg, Tst<2 __ Word>);
+        bind(opcode | 1 << 6 | 3 << 3 | reg, Tst<3 __ Word>);
+        bind(opcode | 1 << 6 | 4 << 3 | reg, Tst<4 __ Word>);
+        bind(opcode | 1 << 6 | 5 << 3 | reg, Tst<5 __ Word>);
+        bind(opcode | 1 << 6 | 6 << 3 | reg, Tst<6 __ Word>);
+
+        bind(opcode | 2 << 6 | 0 << 3 | reg, Tst<0 __ Long>);
+        bind(opcode | 2 << 6 | 2 << 3 | reg, Tst<2 __ Long>);
+        bind(opcode | 2 << 6 | 3 << 3 | reg, Tst<3 __ Long>);
+        bind(opcode | 2 << 6 | 4 << 3 | reg, Tst<4 __ Long>);
+        bind(opcode | 2 << 6 | 5 << 3 | reg, Tst<5 __ Long>);
+        bind(opcode | 2 << 6 | 6 << 3 | reg, Tst<6 __ Long>);
+    }
+    bind(opcode | 0 << 6 | 7 << 3 | 0, Tst<7 __ Byte>);
+    bind(opcode | 0 << 6 | 7 << 3 | 1, Tst<8 __ Byte>);
+    bind(opcode | 0 << 6 | 7 << 3 | 2, Tst<9 __ Byte>);
+    bind(opcode | 0 << 6 | 7 << 3 | 3, Tst<10 __ Byte>);
+
+    bind(opcode | 1 << 6 | 7 << 3 | 0, Tst<7 __ Word>);
+    bind(opcode | 1 << 6 | 7 << 3 | 1, Tst<8 __ Word>);
+    bind(opcode | 1 << 6 | 7 << 3 | 2, Tst<9 __ Word>);
+    bind(opcode | 1 << 6 | 7 << 3 | 3, Tst<10 __ Word>);
+
+    bind(opcode | 2 << 6 | 7 << 3 | 0, Tst<7 __ Long>);
+    bind(opcode | 2 << 6 | 7 << 3 | 1, Tst<8 __ Long>);
+    bind(opcode | 2 << 6 | 7 << 3 | 2, Tst<9 __ Long>);
+    bind(opcode | 2 << 6 | 7 << 3 | 3, Tst<10 __ Long>);
 }
 
 void

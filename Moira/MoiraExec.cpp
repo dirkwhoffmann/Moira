@@ -343,5 +343,11 @@ CPU::execLea(u16 opcode)
 void
 CPU::execNop(u16 opcode)
 {
-    
+
+}
+
+template<Mode M, Size S> void
+CPU::execTst(u16 opcode)
+{
+    assert(false);
 }

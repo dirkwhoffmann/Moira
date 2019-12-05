@@ -41,5 +41,6 @@ void registerROR();
 void registerROXL();
 void registerROXR();
 void registerSUB();
+void registerTST();
 
 #endif

@@ -111,3 +111,12 @@ CPU::dasmNop(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     str << Ins<NOP>{};
 }
+
+template<Mode M, Size S> void
+CPU::dasmTst(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    Ea<M,S> ea { _____________xxx(op), e1, e2 };
+
+    str << Ins<TST>{} << " " << ea;
+}
+
