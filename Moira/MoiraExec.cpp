@@ -349,5 +349,32 @@ CPU::execNop(u16 opcode)
 template<Mode M, Size S> void
 CPU::execTst(u16 opcode)
 {
-    assert(false);
+    int reg = _____________xxx(opcode);
+    u32 value;
+
+    switch (M) {
+
+        case 0: // Dn
+        {
+            value = readD<S>(reg);
+            break;
+        }
+        default: // Ea
+        {
+            assert(M >= 2 && M <= 10);
+
+            u32 ea = computeEA<M,S>(reg);
+            if (addressError(ea)) return;
+
+            value = read<S>(ea);
+            break;
+        }
+    }
+
+    sr.c = 0;
+    sr.v = 0;
+    sr.n = MSBIT<S>(value);
+    sr.z = ZERO<S>(value);
+
+    prefetch();
 }
