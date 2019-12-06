@@ -69,6 +69,7 @@ CPU::init()
     registerMOVEQ();
     registerNBCD();
     registerNOP();
+    registerOR();
     registerROL();
     registerROR();
     registerROXL();
@@ -568,6 +569,13 @@ void
 CPU::registerNOP()
 {
     bind(parse("0100 1110 0111 0001"), Nop);
+}
+
+void
+CPU::registerOR()
+{
+    registerLogic<OR>("1000 ---0 ---- ----",  // <ea>,Dy
+                      "1000 ---1 ---- ----"); // Dx,<ea>
 }
 
 void

@@ -42,6 +42,7 @@ void registerLSR();
 void registerMOVEQ();
 void registerNBCD();
 void registerNOP();
+void registerOR();
 void registerROL();
 void registerROR();
 void registerROXL();
