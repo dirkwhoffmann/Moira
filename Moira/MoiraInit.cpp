@@ -88,6 +88,7 @@ CPU::init()
     registerROXL();
     registerROXR();
     registerSBCD();
+    registerScc();
     registerSUB();
     registerTST();
 }
@@ -905,6 +906,53 @@ CPU::registerSBCD()
 {
     registerAbcdSbcd<SBCD>("1000 ---1 0000 0---",  // Dx,Dy
                            "1000 ---1 0000 1---"); // -(Ax),-(Ay)
+}
+
+void
+CPU::registerScc()
+{
+    registerS<CT>();
+    registerS<CF>();
+    registerS<HI>();
+    registerS<LS>();
+    registerS<CC>();
+    registerS<CS>();
+    registerS<NE>();
+    registerS<EQ>();
+    registerS<VC>();
+    registerS<VS>();
+    registerS<PL>();
+    registerS<MI>();
+    registerS<GE>();
+    registerS<LT>();
+    registerS<GT>();
+    registerS<LE>();
+}
+
+template <Cond CC> void
+CPU::registerS()
+{
+    // Scc
+    //
+    // Modes:       <ea>
+    //              -------------------------------------------------
+    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    //                X       X   X   X   X   X   X   X
+
+    u32 opcode = parse("0101 ---- 11-- ----") | CC << 8;
+
+    for (int reg = 0; reg < 8; reg++) {
+
+        bind(opcode | 0 << 3 | reg, SccDn<CC __ 0>);
+        bind(opcode | 2 << 3 | reg, SccEa<CC __ 2>);
+        bind(opcode | 3 << 3 | reg, SccEa<CC __ 3>);
+        bind(opcode | 4 << 3 | reg, SccEa<CC __ 4>);
+        bind(opcode | 5 << 3 | reg, SccEa<CC __ 5>);
+        bind(opcode | 6 << 3 | reg, SccEa<CC __ 6>);
+    }
+    bind(opcode | 7 << 3 | 0, SccEa<CC __ 7>);
+    bind(opcode | 7 << 3 | 1, SccEa<CC __ 8>);
 }
 
 void

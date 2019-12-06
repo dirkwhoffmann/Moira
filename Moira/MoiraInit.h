@@ -68,6 +68,8 @@ void registerROR();
 void registerROXL();
 void registerROXR();
 void registerSBCD();
+void registerScc();
+template <Cond CC> void registerS();
 void registerSUB();
 void registerTST();
 

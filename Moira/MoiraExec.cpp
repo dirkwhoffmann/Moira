@@ -670,8 +670,6 @@ CPU::execNegNotDx(u16 opcode)
 {
     int dst = { _____________xxx(opcode) };
 
-       printf("S = %d\n", S);
-
     u32 data = readD<S>(dst);
 
     switch (I) {
@@ -689,8 +687,6 @@ template<Instr I, Mode M, Size S> void
 CPU::execNegNotEa(u16 opcode)
 {
     int dst = { _____________xxx(opcode) };
-
-    printf("S = %d\n", S);
 
     u32 ea = computeEA<M,S>(dst);
     if (addressError(ea)) return;
@@ -711,6 +707,27 @@ void
 CPU::execNop(u16 opcode)
 {
 
+}
+
+template<Cond C, Mode M> void
+CPU::execSccDn(u16 opcode)
+{
+    int dst = { _____________xxx(opcode) };
+
+    prefetch();
+    writeD<Byte>(dst, check<C>() ? 0xFF : 0);
+}
+
+template<Cond C, Mode M> void
+CPU::execSccEa(u16 opcode)
+{
+    int dst = { _____________xxx(opcode) };
+
+    u32 ea = computeEA<M,Byte>(dst);
+    (void)read<Byte>(ea);
+
+    prefetch();
+    write<Byte>(ea, check<C>() ? 0xFF : 0);
 }
 
 template<Mode M, Size S> void
