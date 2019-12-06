@@ -122,7 +122,7 @@ CPU::execShift(u16 op)
         {
             assert(M >= 2 && M <= 8);
             u32 ea = computeEA<M,S>(src);
-            if (addressError(ea)) return;
+            if (addressError<S>(ea)) return;
 
             write<S>(ea, shift<I,S>(1, read<S>(ea)));
             break;
@@ -194,7 +194,8 @@ CPU::execAddXXRg(u16 opcode)
             assert(M >= 2 && M <= 10);
 
             u32 ea = computeEA<M,S>(src);
-            if (addressError(ea)) return;
+            printf("ea = %x\n", ea); 
+            if (addressError<S>(ea)) return;
 
             result = arith<I,S>(read<S>(ea), readD<S>(dst));
             break;
@@ -213,8 +214,8 @@ CPU::execAddRgXX(u16 opcode)
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
 
-    u32 ea  = computeEA<M,S>(dst);
-    if (ea & 1) { execAddressError(ea); return; }
+    u32 ea = computeEA<M,S>(dst);
+    if (addressError<S>(ea)) return;
 
     u32 result = arith<I,S>(readD<S>(src), read<S>(ea));
 
@@ -265,7 +266,7 @@ CPU::execAndXXRg(u16 opcode)
             assert(M >= 2 && M <= 10);
 
             u32 ea = computeEA<M,S>(src);
-            if (addressError(ea)) return;
+            if (addressError<S>(ea)) return;
 
             result = logic<I,S>(read<S>(ea), readD<S>(dst));
             break;
@@ -294,8 +295,8 @@ CPU::execAndRgXX(u16 opcode)
         {
             assert(M >= 2 && M <= 8);
 
-            u32 ea  = computeEA<M,S>(dst);
-            if (ea & 1) { execAddressError(ea); return; }
+            u32 ea = computeEA<M,S>(dst);
+            if (addressError<S>(ea)) return;
 
             u32 result = logic<I,S>(readD<S>(src), read<S>(ea));
             write<S>(ea, result);
@@ -330,7 +331,6 @@ CPU::execBitDxEa(u16 opcode)
     u8 bit = readD(src) & 0b111;
 
     u32 ea = computeEA<M,Byte>(dst);
-    if (addressError(ea)) return;
 
     u32 data = read<Byte>(ea);
     data = bitop<I>(data, bit);
@@ -363,7 +363,6 @@ CPU::execBitImEa(u16 opcode)
     readExtensionWord();
 
     u32 ea = computeEA<M,Byte>(dst);
-    if (addressError(ea)) return;
 
     u32 data = read<Byte>(ea);
     data = bitop<I>(data, bit);
@@ -390,7 +389,7 @@ CPU::execClr(u16 opcode)
             assert(M >= 2 && M <= 8);
 
             u32 ea = computeEA<M,S>(dst);
-            if (addressError(ea)) return;
+            if (addressError<S>(ea)) return;
 
             (void)read<S>(ea);
             write<S>(ea, 0);
@@ -464,7 +463,7 @@ CPU::execLea(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    u32 ea = computeEA<M, Long>(src);
+    u32 ea = computeEA<M,Long>(src);
 
     reg.a[dst] = ea;
     prefetch();
@@ -500,7 +499,7 @@ CPU::execMovea(u16 opcode)
             assert(M >= 2 && M <= 11);
 
             u32 ea = computeEA<M,S>(src);
-            if (addressError(ea)) return;
+            if (addressError<S>(ea)) return;
 
             result = SIGN<S>(read<S>(ea));
             break;
@@ -650,7 +649,7 @@ CPU::mulDivOp(u16 src, u16& result)
         default: // Ea
         {
             u32 ea = computeEA<M,Word>(src);
-            if (addressError(ea)) return false;
+            if (addressError<Word>(ea)) return false;
 
             result = read<Word>(ea);
             return true;
@@ -707,7 +706,7 @@ CPU::execNegNotEa(u16 opcode)
     int dst = { _____________xxx(opcode) };
 
     u32 ea = computeEA<M,S>(dst);
-    if (addressError(ea)) return;
+    if (addressError<S>(ea)) return;
     
     u32 data = read<S>(ea);
     switch (I) {
@@ -803,7 +802,7 @@ CPU::execTst(u16 opcode)
             assert(M >= 2 && M <= 10);
 
             u32 ea = computeEA<M,S>(reg);
-            if (addressError(ea)) return;
+            if (addressError<S>(ea)) return;
 
             value = read<S>(ea);
             break;

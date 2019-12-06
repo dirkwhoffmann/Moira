@@ -7,11 +7,11 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-bool
+template <Size S> bool
 CPU::addressError(u32 addr)
 {
 #ifdef MOIRA_EMULATE_ADDRESS_ERROR
-    if (addr & 1) {
+    if (S != Byte && addr & 1) {
         execAddressError(addr);
         return true;
     }
