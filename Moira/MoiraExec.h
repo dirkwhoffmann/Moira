@@ -21,6 +21,10 @@ template<Instr I, Mode M> void execAbcd(u16 opcode);
 template<Instr I, Mode M, Size S> void execAddXXRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execAddRgXX(u16 opcode);
 
+template<Instr I, Mode M, Size S> void execAddaDn(u16 opcode);
+template<Instr I, Mode M, Size S> void execAddaEa(u16 opcode);
+template<Instr I, Mode M, Size S> void execAddaIm(u16 opcode);
+
 template<Instr I, Mode M, Size S> void execAndXXRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execAndRgXX(u16 opcode);
 

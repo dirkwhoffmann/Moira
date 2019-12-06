@@ -223,6 +223,24 @@ CPU::execAddRgXX(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::execAddaDn(u16 opcode)
+{
+    assert(false);
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execAddaEa(u16 opcode)
+{
+    assert(false);
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execAddaIm(u16 opcode)
+{
+    assert(false);
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::execAndXXRg(u16 opcode)
 {
     u32 result;

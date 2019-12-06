@@ -57,6 +57,7 @@ CPU::init()
     // Register the instruction set
     registerABCD();
     registerADD();
+    registerADDA();
     registerAND();
     registerASL();
     registerASR();
@@ -90,6 +91,7 @@ CPU::init()
     registerSBCD();
     registerScc();
     registerSUB();
+    registerSUBA();
     registerTAS();
     registerTST();
 }
@@ -473,6 +475,56 @@ CPU::registerAddSub(const char *patternXXReg, const char *patternRegXX)
 }
 
 template<Instr I> void
+CPU::registerAddSubA(const char *pattern)
+{
+    // ADDA, SUBA
+    //
+    // Modes:       <ea>,An
+    //              -------------------------------------------------
+    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    //                X   X   X   X   X   X   X   X   X   X   X   X
+
+    u16 opcode = parse(pattern);
+    u16 opcodeW = opcode | 0 << 8;
+    u16 opcodeL = opcode | 1 << 8;
+
+    for (int dst = 0; dst < 8; dst++) {
+
+        for (int src = 0; src < 8; src++) {
+
+            bind(opcodeW | dst << 9 | 0 << 3 | src, AddaDn<I __ 0 __ Word>);
+            bind(opcodeW | dst << 9 | 1 << 3 | src, AddaEa<I __ 1 __ Word>);
+            bind(opcodeW | dst << 9 | 2 << 3 | src, AddaEa<I __ 2 __ Word>);
+            bind(opcodeW | dst << 9 | 3 << 3 | src, AddaEa<I __ 3 __ Word>);
+            bind(opcodeW | dst << 9 | 4 << 3 | src, AddaEa<I __ 4 __ Word>);
+            bind(opcodeW | dst << 9 | 5 << 3 | src, AddaEa<I __ 5 __ Word>);
+            bind(opcodeW | dst << 9 | 6 << 3 | src, AddaEa<I __ 6 __ Word>);
+
+            bind(opcodeL | dst << 9 | 0 << 3 | src, AddaEa<I __ 0 __ Long>);
+            bind(opcodeL | dst << 9 | 1 << 3 | src, AddaEa<I __ 1 __ Long>);
+            bind(opcodeL | dst << 9 | 2 << 3 | src, AddaEa<I __ 2 __ Long>);
+            bind(opcodeL | dst << 9 | 3 << 3 | src, AddaEa<I __ 3 __ Long>);
+            bind(opcodeL | dst << 9 | 4 << 3 | src, AddaEa<I __ 4 __ Long>);
+            bind(opcodeL | dst << 9 | 5 << 3 | src, AddaEa<I __ 5 __ Long>);
+            bind(opcodeL | dst << 9 | 6 << 3 | src, AddaEa<I __ 6 __ Long>);
+
+        }
+        bind(opcodeW | dst << 9 | 7 << 3 | 0, AddaEa<I __  7 __ Word>);
+        bind(opcodeW | dst << 9 | 7 << 3 | 1, AddaEa<I __  8 __ Word>);
+        bind(opcodeW | dst << 9 | 7 << 3 | 2, AddaEa<I __  9 __ Word>);
+        bind(opcodeW | dst << 9 | 7 << 3 | 3, AddaEa<I __ 10 __ Word>);
+        bind(opcodeW | dst << 9 | 7 << 3 | 4, AddaIm<I __ 11 __ Word>);
+
+        bind(opcodeL | dst << 9 | 7 << 3 | 0, AddaEa<I __  7 __ Long>);
+        bind(opcodeL | dst << 9 | 7 << 3 | 1, AddaEa<I __  8 __ Long>);
+        bind(opcodeL | dst << 9 | 7 << 3 | 2, AddaEa<I __  9 __ Long>);
+        bind(opcodeL | dst << 9 | 7 << 3 | 3, AddaEa<I __ 10 __ Long>);
+        bind(opcodeL | dst << 9 | 7 << 3 | 4, AddaIm<I __ 11 __ Long>);
+    }
+}
+
+template<Instr I> void
 CPU::registerMulDiv(const char *pattern)
 {
     // DIVS, DIVU, MULS, MULU
@@ -609,6 +661,12 @@ CPU::registerADD()
 {
     registerAddSub<ADD>("1101 ---0 ---- ----",  // <ea>,Dy
                         "1101 ---1 ---- ----"); // Dx,<ea>
+}
+
+void
+CPU::registerADDA()
+{
+    registerAddSubA<ADDA>("1101 ---- 11-- ----"); // <ea>,Ay
 }
 
 void
@@ -990,6 +1048,12 @@ CPU::registerSUB()
 {
     registerAddSub<SUB>("1001 ---0 ---- ----",  // <ea>,Dy
                         "1001 ---1 ---- ----"); // Dx,<ea>
+}
+
+void
+CPU::registerSUBA()
+{
+    registerAddSubA<SUBA>("1001 ---- 11-- ----"); // <ea>,Ay
 }
 
 void
