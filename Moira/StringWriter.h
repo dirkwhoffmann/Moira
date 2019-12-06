@@ -13,6 +13,7 @@
 #include "MoiraDelegate.h"
 #include "MoiraUtils.h"
 
+struct Align { int column; };
 struct Dn { int value; };
 struct An { int value; };
 struct Disp8 { i8 value; };
@@ -26,18 +27,20 @@ template <Mode M, Size S> struct Ea { u16 reg; u16 ext1; u16 ext2; };
 
 class StrWriter
 {
+    char *base;
     char *ptr;
     bool hex;
 
 public:
 
-    StrWriter(char *p, bool h) : ptr(p), hex(h) { };
+    StrWriter(char *p, bool h) : base(p), ptr(p), hex(h) { };
 
     // StrWriter& operator<<(char c);
     StrWriter& operator<<(const char *str);
     StrWriter& operator<<(u8 value);
     StrWriter& operator<<(u16 value);
     StrWriter& operator<<(u32 value);
+    StrWriter& operator<<(Align align);
     StrWriter& operator<<(Dn dn);
     StrWriter& operator<<(An an);
     StrWriter& operator<<(Disp8 d);

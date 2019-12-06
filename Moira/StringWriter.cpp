@@ -89,6 +89,13 @@ StrWriter::operator<<(u32 value)
 }
 
 StrWriter&
+StrWriter::operator<<(Align align)
+{
+    while (ptr < base + align.column) *ptr++ = ' ';
+    return *this;
+}
+
+StrWriter&
 StrWriter::operator<<(Dn dn)
 {
     // assert(dn.value < 8);

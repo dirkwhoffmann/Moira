@@ -99,8 +99,12 @@ private:
     // Jump table storing all time information handlers
     int (CPU::*sync[65536])(u16, int);
 
+    //
     // Disassembler
+    //
     bool hex = true;
+    Align tab{10};
+    
     char str[256];
 
 public:

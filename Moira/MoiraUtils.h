@@ -32,33 +32,33 @@ template<Size>   bool ZERO (u64 data);
 template<Size S> u32  SUBS (u32 d1, u32 d2) { return CLEAR<S>(d1) | CLIP<S>(d2); }
 
 enum Instr {
-    ABCD,    ADD,     ADDA,    ADDI,    ADDQ,    ADDX,    AND,     ANDI,
-    ANDICCR, ANDISR,  ASL,     ASR,     BCC,     BCHG,    BCLR,    BRA,
-    BSET,    BSR,     BTST,    CHK,     CLR,     CMP,     CMPA,    CMPI,
-    CMPM,    DBCC,    DIVS,    DIVU,    EOR,     EORI,    EORICCR, EORISR,
-    EXG,     EXT,     ILLEGAL, JMP,     JSR,     LEA,     LINK,    LSL,
+    ABCD,    ADD,     ADDA,    ADDI,    ADDQ,    ADDX,     AND,     ANDI,
+    ANDICCR, ANDISR,  ASL,     ASR,     BCC,     BCHG,     BCLR,    BRA,
+    BSET,    BSR,     BTST,    CHK,     CLR,     CMP,      CMPA,    CMPI,
+    CMPM,    DBCC,    DIVS,    DIVU,    EOR,     EORI,     EORICCR, EORISR,
+    EXG,     EXT,     ILLEGAL, JMP,     JSR,     LEA,      LINK,    LSL,
     LSR,
-    MOVE,    MOVEA,   MOVECCR, MOVEFSR, MOVETSR, MOVEUSP, MOVEM,   MOVEP,
-    MOVEQ,   MULS,    MULU,    NBCD,    NEG,     NEGX,    NOP,     NOT,
-    OR,      ORI,     ORICCR,  ORISR,   PEA,     RESET,   ROL,     ROR,
-    ROXL,    ROXR,    RTE,     RTR,     RTS,     SBCD,    SCC,     STOP,
-    SUB,     SUBA,    SUBI,    SUBQ,    SUBX,    SWAP,    TAS,     TRAP,
+    MOVE,    MOVEA,   MOVECCR, MOVEFSR, MOVETSR, MOVEUSP,  MOVEM,   MOVEP,
+    MOVEQ,   MULS,    MULU,    NBCD,    NEG,     NEGX,     NOP,     NOT,
+    OR,      ORI,     ORICCR,  ORISR,   PEA,     RESET,    ROL,     ROR,
+    ROXL,    ROXR,    RTE,     RTR,     RTS,     SBCD,     SCC,     STOP,
+    SUB,     SUBA,    SUBI,    SUBQ,    SUBX,    SWAP,     TAS,     TRAP,
     TRAPV,   TST,     UNLK
 };
 
 static const char *instrStr[] {
-    "abcd  ", "add   ", "adda  ", "addi  ", "addq  ", "addx  ", "and   ", "andi  ",
-    "andi  ", "andi  ", "asl   ", "asr   ", "bcc   ", "bchg  ", "bclr  ", "bra   ",
-    "bset  ", "bsr   ", "btst  ", "chk   ", "clr   ", "cmp   ", "cmpa  ", "cmpi  ",
-    "cmpm  ", "dbcc  ", "divs  ", "divu  ", "eor   ", "eori  ", "eori  ", "eori  ",
-    "exg   ", "ext   ", "      ", "jmp   ", "jsr   ", "lea   ", "link  ", "lsl   ",
-    "lsr   ",
-    "move  ", "movea ", "move  ", "move  ", "move  ", "move  ", "movem ", "movep ",
-    "moveq ", "muls  ", "mulu  ", "nbcd  ", "neg   ", "negx  ", "nop   ", "not   ",
-    "or    ", "ori   ", "ori   ", "ori   ", "pea   ", "reset ", "rol   ", "ror   ",
-    "roxl  ", "roxr  ", "rte   ", "rtr   ", "rts   ", "sbcd  ", "scc   ", "stop  ",
-    "sub   ", "suba  ", "subi  ", "subq  ", "subx  ", "swap  ", "tas   ", "trap  ",
-    "trapv ", "tst   ", "unlk  "
+    "abcd" , "add",   "adda",  "addi",  "addq",  "addx",  "and",    "andi",
+    "andi" , "and",   "asl",   "asr",   "bcc",   "bchg",  "bclr",   "bra",
+    "bset" , "bsr",   "btst",  "chk",   "clr",   "cmp",   "cmpa",   "cmpi",
+    "cmpm" , "dbcc",  "divs",  "divu",  "eor",   "eori",  "eori",   "eori",
+    "exg"  , "ext",   "",      "jmp",   "jsr",   "lea",   "link",   "lsl",
+    "lsr"  ,
+    "move" , "movea", "move",  "move",  "move",  "move",  "movem",  "movep",
+    "moveq", "muls",  "mulu",  "nbcd",  "neg",   "negx",  "nop",    "not",
+    "or"   , "ori",   "ori",   "ori",   "pea",   "reset", "rol",    "ror",
+    "roxl" , "roxr",  "rte",   "rtr",   "rts",   "sbcd",  "scc",    "stop",
+    "sub"  , "suba",  "subi",  "subq",  "subx",  "swap",  "tas",    "trap",
+    "trapv", "tst",   "unlk"
 };
 
 enum Cond {
