@@ -71,6 +71,7 @@ void registerSBCD();
 void registerScc();
 template <Cond CC> void registerS();
 void registerSUB();
+void registerTAS();
 void registerTST();
 
 #endif

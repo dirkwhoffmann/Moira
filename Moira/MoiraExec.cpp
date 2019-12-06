@@ -666,7 +666,7 @@ CPU::execNbcd(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execNegNotDx(u16 opcode)
+CPU::execNegNotDn(u16 opcode)
 {
     int dst = { _____________xxx(opcode) };
 
@@ -728,6 +728,43 @@ CPU::execSccEa(u16 opcode)
 
     prefetch();
     write<Byte>(ea, check<C>() ? 0xFF : 0);
+}
+
+template<Mode M> void
+CPU::execTasDn(u16 opcode)
+{
+    int dst = { _____________xxx(opcode) };
+
+    u8 data = readD<Byte>(dst);
+
+    sr.c = 0;
+    sr.v = 0;
+    sr.n = NBIT<Byte>(data);
+    sr.z = ZERO<Byte>(data);
+
+    data |= 0x80;
+    writeD<Byte>(dst, data);
+
+    prefetch();
+}
+
+template<Mode M> void
+CPU::execTasEa(u16 opcode)
+{
+    int dst = { _____________xxx(opcode) };
+
+    u32 ea = computeEA<M,Byte>(dst);
+    u8 data = read<Byte>(ea);
+
+    sr.c = 0;
+    sr.v = 0;
+    sr.n = NBIT<Byte>(data);
+    sr.z = ZERO<Byte>(data);
+
+    data |= 0x80;
+    write<Byte>(ea, data);
+
+    prefetch();
 }
 
 template<Mode M, Size S> void

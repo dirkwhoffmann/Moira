@@ -40,7 +40,7 @@ template<Instr I, Mode M> void execMulDiv(u16 opcode);
 template<Mode M> bool mulDivOp(u16 src, u16& result);
 template<Mode M> void execNbcd(u16 opcode);
 
-template<Instr I, Mode M, Size S> void execNegNotDx(u16 opcode);
+template<Instr I, Mode M, Size S> void execNegNotDn(u16 opcode);
 template<Instr I, Mode M, Size S> void execNegNotEa(u16 opcode);
 
 void execNop(u16 opcode);
@@ -48,5 +48,7 @@ void execNop(u16 opcode);
 template<Cond C, Mode M> void execSccDn(u16 opcode);
 template<Cond C, Mode M> void execSccEa(u16 opcode);
 
+template<Mode M> void execTasDn(u16 opcode);
+template<Mode M> void execTasEa(u16 opcode);
 template<Mode M, Size S> void execTst(u16 opcode);
 
