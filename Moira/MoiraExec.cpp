@@ -135,7 +135,33 @@ CPU::execShift(u16 op)
 template<Instr I, Mode M> void
 CPU::execAbcd(u16 opcode)
 {
-    assert(false);
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    printf("src = %x dst = %x\n", src, dst);
+    switch (M) {
+
+        case 0: // Dn
+        {
+            u32 result = arith<I,Byte>(readD<Byte>(src), readD<Byte>(dst));
+            printf("(src) = %x (dst) = %x\n", readD<Byte>(src), readD<Byte>(dst));
+            writeD<Byte>(dst, result);
+            break;
+        }
+        default: // Ea
+        {
+            assert(M == 4);
+
+            u32 ea1 = computeEA<M,Byte>(src);
+            u32 ea2 = computeEA<M,Byte>(dst);
+
+            u32 result = arith<I,Byte>(read<Byte>(ea1), read<Byte>(ea2));
+            write<Byte>(ea2, result);
+            break;
+        }
+    }
+
+    prefetch();
 }
 
 template<Instr I, Mode M, Size S> void

@@ -91,17 +91,19 @@ CPU::computeEA(u32 n, u32 dis, u32 idx) {
         case 3: // (An)+
         {
             u32 an = readA(n);
+            bool addressError = (S != Byte) && (an & 1);
             u32 offset = (n == 7 && S == Byte) ? 2 : BYTES<S>();
             result = an;
-            if ((result & 1) == 0) writeA(n, an + offset);
+            if (!addressError) writeA(n, an + offset);
             break;
         }
         case 4: // -(An)
         {
             u32 an = readA(n);
+            bool addressError = (S != Byte) && (an & 1);
             u32 offset = (n == 7 && S == Byte) ? 2 : BYTES<S>();
             result = an - offset;
-            if ((result & 1) == 0) writeA(n, an - offset);
+            if (!addressError) writeA(n, an - offset);
             break;
         }
         case 5: // (d,An)
@@ -322,7 +324,7 @@ CPU::arith(u32 op1, u32 op2)
 
     switch(I) {
 
-        case ADD:
+        case ADD:   // Numeric addition
         {
             result = (u64)op1 + (u64)op2;
 
@@ -331,7 +333,7 @@ CPU::arith(u32 op1, u32 op2)
             sr.z = ZERO<S>(result);
             break;
         }
-        case ADDX:
+        case ADDX:  // Numeric addition with X flag
         {
             result = (u64)op1 + (u64)op2 + (u64)sr.x;
 
@@ -340,7 +342,26 @@ CPU::arith(u32 op1, u32 op2)
             if (CLIP<S>(result)) sr.z = 0;
             break;
         }
-        case SUB:
+        case ABCD:  // BCD addition
+        {
+            // Extract nibbles
+            u16 op1_hi = op1 & 0xF0, op1_lo = op1 & 0x0F;
+            u16 op2_hi = op2 & 0xF0, op2_lo = op2 & 0x0F;
+
+            // From portable68000
+            u16 resLo = op1_lo + op2_lo + sr.x;
+            u16 resHi = op1_hi + op2_hi;
+            u64 tmp_result;
+            result = tmp_result = resHi + resLo;
+            if (resLo > 9) result += 6;
+            sr.x = sr.c = (result & 0x3F0) > 0x90;
+            if (sr.c) result += 0x60;
+            if (CLIP<Byte>(result)) sr.z = 0;
+            sr.n = MSBIT<Byte>(result);
+            sr.v = ((tmp_result & 0x80) == 0) && ((result & 0x80) == 0x80);
+            break;
+        }
+        case SUB:   // Numeric subtraction
         {
             result = (u64)op2 - (u64)op1;
             // printf("arith::SUB %x %x %llx \n", op1, op2, result);
@@ -350,13 +371,37 @@ CPU::arith(u32 op1, u32 op2)
             sr.z = ZERO<S>(result);
             break;
         }
-        case SUBX:
+        case SUBX:  // Numeric subtraction with X flag
         {
             result = (u64)op2 - (u64)op1 - (u64)sr.x;
 
             sr.x = sr.c = CARRY<S>(result);
             sr.v = MSBIT<S>((op1 ^ op2) & (op2 ^ result));
             if (CLIP<S>(result)) sr.z = 0;
+            break;
+        }
+        case SBCD:  // BCD subtraction
+        {
+            // Extract nibbles
+            u16 op1_hi = op1 & 0xF0, op1_lo = op1 & 0x0F;
+            u16 op2_hi = op2 & 0xF0, op2_lo = op2 & 0x0F;
+
+            // From portable68000
+            u16 resLo = op2_lo - op1_lo - sr.x;
+            u16 resHi = op2_hi - op1_hi;
+            u64 tmp_result;
+            result = tmp_result = resHi + resLo;
+            int bcd = 0;
+            if (resLo & 0xf0) {
+                bcd = 6;
+                result -= 6;
+            }
+            if (((op2 - op1 - sr.x) & 0x100) > 0xff) result -= 0x60;
+            sr.c = sr.x = ((op2 - op1 - bcd - sr.x) & 0x300) > 0xff;
+
+            if (CLIP<Byte>(result)) sr.z = 0;
+            sr.n = MSBIT<Byte>(result);
+            sr.v = ((tmp_result & 0x80) == 0x80) && ((result & 0x80) == 0);
             break;
         }
         case CMP:
