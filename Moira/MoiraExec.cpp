@@ -261,18 +261,31 @@ CPU::execAndXXRg(u16 opcode)
 template<Instr I, Mode M, Size S> void
 CPU::execAndRgXX(u16 opcode)
 {
-    assert(M >= 2 && M <= 8);
-
      int src = ____xxx_________(opcode);
      int dst = _____________xxx(opcode);
 
-     u32 ea  = computeEA<M,S>(dst);
-     if (ea & 1) { execAddressError(ea); return; }
+    switch (M) {
 
-     u32 result = logic<I,S>(readD<S>(src), read<S>(ea));
+        case 0: // Dn
+        {
+            u32 result = logic<I,S>(readD<S>(src), readD<S>(dst));
+            writeD<S>(dst, result);
+            break;
+        }
+        default: // Ea
+        {
+            assert(M >= 2 && M <= 8);
 
-     write<S>(ea, result);
-     prefetch();
+            u32 ea  = computeEA<M,S>(dst);
+            if (ea & 1) { execAddressError(ea); return; }
+
+            u32 result = logic<I,S>(readD<S>(src), read<S>(ea));
+            write<S>(ea, result);
+            break;
+        }
+    }
+
+    prefetch();
 }
 
 template<Instr I, Mode M, Size S> void

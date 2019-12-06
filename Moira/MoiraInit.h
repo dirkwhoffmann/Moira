@@ -23,8 +23,8 @@ template<Instr I> void registerAbcdSbcd(const char *patternReg,
 template<Instr I> void registerAddSub(const char *patternXXReg,
                                       const char *patternRegXX);
 
-template<Instr I> void registerLogic(const char *patternXXReg,
-                                     const char *patternRegXX);
+template<Instr I> void registerLogicXXReg(const char *pattern);
+template<Instr I> void registerLogicRegXX(const char *pattern, bool mode0 = false);
 
 template<Instr I> void registerClr(const char *pattern);
 
@@ -35,6 +35,7 @@ void registerASL();
 void registerASR();
 void registerCLR();
 void registerDBcc();
+void registerEOR();
 void registerEXT();
 void registerLEA();
 void registerLSL();
