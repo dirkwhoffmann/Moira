@@ -134,6 +134,14 @@ CPU::dasmLea(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<LEA>{} << src << ", " << dst;
 }
 
+void
+CPU::dasmMoveq(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    Dn dst { ____xxx_________(op) };
+
+    str << Ins<MOVEQ>{} << " #" << (u8)(op & 0xFF) << ", " << dst;
+}
+
 template <Mode M> void
 CPU::dasmNbcd(StrWriter &str, u16 op, u16 e1, u16 e2)
 {

@@ -372,6 +372,22 @@ CPU::execLea(u16 opcode)
     prefetch();
 }
 
+void
+CPU::execMoveq(u16 opcode)
+{
+    i8  src = (i8)(opcode & 0xFF);
+    int dst = ____xxx_________(opcode);
+
+    writeD<Long>(dst, (i32)src);
+
+    sr.c = 0;
+    sr.v = 0;
+    sr.n = MSBIT<Byte>(src);
+    sr.z = ZERO<Byte>(src);
+
+    prefetch();
+}
+
 template<Mode M> void
 CPU::execNbcd(u16 opcode)
 {

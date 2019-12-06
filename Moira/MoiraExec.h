@@ -29,6 +29,7 @@ template<Cond C> void execDbcc(u16 opcode);
 template<Size S> void execExt(u16 opcode);
 
 template<Mode M> void execLea(u16 opcode);
+void execMoveq(u16 opcode);
 template<Mode M> void execNbcd(u16 opcode);
 void execNop(u16 opcode);
 template<Mode M, Size S> void execTst(u16 opcode);

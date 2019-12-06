@@ -66,6 +66,7 @@ CPU::init()
     registerLEA();
     registerLSL();
     registerLSR();
+    registerMOVEQ();
     registerNBCD();
     registerNOP();
     registerROL();
@@ -523,6 +524,18 @@ CPU::registerLSR()
     registerShift<LSR>("1110 ---0 --10 1---",  // Dx,Dy
                        "1110 ---0 --00 1---",  // ##,Dy
                        "1110 0010 11-- ----"); // <ea>
+}
+
+void
+CPU::registerMOVEQ()
+{
+    u16 opcode = parse("0111 ---0 ---- ----");
+
+    for (int dst = 0; dst < 8; dst++) {
+        for (int src = 0; src < 256; src++) {
+            bind(opcode | dst << 9 | src, Moveq);
+        }
+    }
 }
 
 void
