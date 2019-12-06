@@ -40,29 +40,12 @@ CPU::dasmShift(StrWriter &str, u16 op, u16 e1, u16 e2)
 template<Instr I, Mode M> void
 CPU::dasmAbcd(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
-    switch (M) {
+    assert(M == 0 || M == 4);
 
-        case 0:
-        {
-            Dn src { _____________xxx(op) };
-            Dn dst { ____xxx_________(op) };
+    Ea<M,Long> src { _____________xxx(op) };
+    Ea<M,Long> dst { ____xxx_________(op) };
 
-            str << Ins<I>{} << " " << src << ", " << dst;
-            break;
-        }
-        case 4:
-        {
-            An src { _____________xxx(op) };
-            An dst { ____xxx_________(op) };
-
-            str << Ins<I>{} << " -(" << src << "), -(" << dst << ")";
-            break;
-        }
-        default:
-        {
-            assert(false);
-        }
-    }
+    str << Ins<I>{} << src << ", " << dst;
 }
 
 template<Instr I, Mode M, Size S> void
@@ -132,6 +115,15 @@ CPU::dasmLea(StrWriter &str, u16 op, u16 e1, u16 e2)
     An         dst { ____xxx_________(op) };
 
     str << Ins<LEA>{} << src << ", " << dst;
+}
+
+template<Mode M, Size S> void
+CPU::dasmMovea(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    Ea<M,Long> src { _____________xxx(op), e1, e2 };
+    An         dst { ____xxx_________(op) };
+
+    str << Ins<MOVEA>{} << src << ", " << dst;
 }
 
 void

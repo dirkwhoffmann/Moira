@@ -40,6 +40,7 @@ void registerEXT();
 void registerLEA();
 void registerLSL();
 void registerLSR();
+void registerMOVEA();
 void registerMOVEQ();
 void registerNBCD();
 void registerNOP();

@@ -67,6 +67,7 @@ CPU::init()
     registerLEA();
     registerLSL();
     registerLSR();
+    registerMOVEA();
     registerMOVEQ();
     registerNBCD();
     registerNOP();
@@ -115,9 +116,9 @@ CPU::registerShift(const char *patternReg,
     // Modes: (1)   Dx,Dy       8,16,32
     //        (2)   #<data>,Dy  8,16,32
     //        (3)   <ea>          16
-    //               ------------------------------------------------
+    //              -------------------------------------------------
     //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //               ------------------------------------------------
+    //              -------------------------------------------------
     //                X       X   X   X   X   X   X?? X??         X?!
 
     // (1)
@@ -301,15 +302,15 @@ CPU::registerAddSub(const char *patternXXReg, const char *patternRegXX)
     // ADD
     //
     // Modes: (1)   <ea>,Dy
-    //               ------------------------------------------------
+    //              -------------------------------------------------
     //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //               ------------------------------------------------
+    //              -------------------------------------------------
     //                X   X   X   X   X   X   X   X   X   X   X   X
     //
     //        (2)   Dx,<ea>
-    //               ------------------------------------------------
+    //              -------------------------------------------------
     //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //               ------------------------------------------------
+    //              -------------------------------------------------
     //                        X   X   X   X   X   X   X
 
     // (1)
@@ -404,9 +405,9 @@ CPU::registerClr(const char *pattern)
     // CLR
     //
     // Modes:       <ea>
-    //               ------------------------------------------------
+    //              -------------------------------------------------
     //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //               ------------------------------------------------
+    //              -------------------------------------------------
     //                X       X   X   X   X   X   X   X
 
     for (int reg = 0; reg < 8; reg++) {
@@ -543,6 +544,56 @@ CPU::registerLSR()
 }
 
 void
+CPU::registerMOVEA()
+{
+    // MOVEA
+    //
+    // Modes:       <ea>,An
+    //              -------------------------------------------------
+    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    //                X   X   X   X   X   X   X   X   X   X   X   X
+
+    u16 opcode = parse("00-- ---0 01-- ----");
+    u16 opcodeW = opcode | 3 << 12;
+    u16 opcodeL = opcode | 2 << 12;
+
+    for (int dst = 0; dst < 8; dst++) {
+
+        for (int src = 0; src < 8; src++) {
+
+            bind(opcodeW | dst << 9 | 0 << 3 | src, Movea<0 __ Word>);
+            bind(opcodeW | dst << 9 | 1 << 3 | src, Movea<1 __ Word>);
+            bind(opcodeW | dst << 9 | 2 << 3 | src, Movea<2 __ Word>);
+            bind(opcodeW | dst << 9 | 3 << 3 | src, Movea<3 __ Word>);
+            bind(opcodeW | dst << 9 | 4 << 3 | src, Movea<4 __ Word>);
+            bind(opcodeW | dst << 9 | 5 << 3 | src, Movea<5 __ Word>);
+            bind(opcodeW | dst << 9 | 6 << 3 | src, Movea<6 __ Word>);
+
+            bind(opcodeL | dst << 9 | 0 << 3 | src, Movea<0 __ Long>);
+            bind(opcodeL | dst << 9 | 1 << 3 | src, Movea<1 __ Long>);
+            bind(opcodeL | dst << 9 | 2 << 3 | src, Movea<2 __ Long>);
+            bind(opcodeL | dst << 9 | 3 << 3 | src, Movea<3 __ Long>);
+            bind(opcodeL | dst << 9 | 4 << 3 | src, Movea<4 __ Long>);
+            bind(opcodeL | dst << 9 | 5 << 3 | src, Movea<5 __ Long>);
+            bind(opcodeL | dst << 9 | 6 << 3 | src, Movea<6 __ Long>);
+
+        }
+        bind(opcodeW | dst << 9 | 7 << 3 | 0, Movea< 7 __ Word>);
+        bind(opcodeW | dst << 9 | 7 << 3 | 1, Movea< 8 __ Word>);
+        bind(opcodeW | dst << 9 | 7 << 3 | 2, Movea< 9 __ Word>);
+        bind(opcodeW | dst << 9 | 7 << 3 | 3, Movea<10 __ Word>);
+        bind(opcodeW | dst << 9 | 7 << 3 | 4, Movea<11 __ Word>);
+
+        bind(opcodeL | dst << 9 | 7 << 3 | 0, Movea< 7 __ Long>);
+        bind(opcodeL | dst << 9 | 7 << 3 | 1, Movea< 8 __ Long>);
+        bind(opcodeL | dst << 9 | 7 << 3 | 2, Movea< 9 __ Long>);
+        bind(opcodeL | dst << 9 | 7 << 3 | 3, Movea<10 __ Long>);
+        bind(opcodeL | dst << 9 | 7 << 3 | 4, Movea<11 __ Long>);
+    }
+}
+
+void
 CPU::registerMOVEQ()
 {
     u16 opcode = parse("0111 ---0 ---- ----");
@@ -562,9 +613,9 @@ CPU::registerNBCD()
     // NBCD
     //
     // Modes:       <ea>
-    //               ------------------------------------------------
+    //              -------------------------------------------------
     //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //               ------------------------------------------------
+    //              -------------------------------------------------
     //                X       X   X   X   X   X   X   X
 
     for (int reg = 0; reg < 8; reg++) {
@@ -648,9 +699,9 @@ CPU::registerTST()
     //
     // Modes:       TST <ea>
     //
-    //               ------------------------------------------------
+    //              -------------------------------------------------
     //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //               ------------------------------------------------
+    //              -------------------------------------------------
     //                X       X   X   X   X   X   X   X   X   X
 
     for (int reg = 0; reg < 8; reg++) {
@@ -701,9 +752,9 @@ CPU::registerLEA()
     //
     // Modes:       LEA <ea>,An
     //
-    //               ------------------------------------------------
+    //              -------------------------------------------------
     //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //               ------------------------------------------------
+    //              -------------------------------------------------
     //                        X           X   X   X   X   X   X
 
     for (int an = 0; an < 8; an++) {

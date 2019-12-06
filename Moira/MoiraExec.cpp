@@ -379,9 +379,50 @@ CPU::execLea(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    u32 result = computeEA<M, Long>(src);
+    u32 ea = computeEA<M, Long>(src);
 
-    reg.a[dst] = result;
+    reg.a[dst] = ea;
+    prefetch();
+}
+
+template<Mode M, Size S> void
+CPU::execMovea(u16 opcode)
+{
+    i32 result;
+
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    switch(M) {
+
+       case 0: // Dn
+        {
+            result = SIGN<S>(readD<S>(src));
+            break;
+        }
+        case 1: // An
+        {
+            result =  SIGN<S>(readA<S>(src));
+            break;
+        }
+        case 11: // Imm
+        {
+            result = SIGN<S>(readImm<S>());
+            break;
+        }
+        default: // Ea
+        {
+            assert(M >= 2 && M <= 11);
+
+            u32 ea = computeEA<M,S>(src);
+            if (addressError(ea)) return;
+
+            result = SIGN<S>(read<S>(ea));
+            break;
+        }
+    }
+
+    writeA(dst, result);
     prefetch();
 }
 

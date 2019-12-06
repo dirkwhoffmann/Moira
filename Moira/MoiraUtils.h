@@ -46,18 +46,18 @@ enum Instr {
 };
 
 static const char *instrStr[] {
-    "abcd",  "add",   "adda", "addi",  "addq",   "addx",  "and",   "andi",
-    "andi",  "andi",  "asl",  "asr",   "bcc",    "bchg",  "bclr",  "bra",
-    "bset",  "bsr",   "btst", "chk",   "clr",    "cmp",   "cmpa",  "cmpi",
-    "cmpm",  "dbcc",  "divs", "divu",  "eor",    "eori",  "eori",  "eori",
-    "exg",   "ext",   "",     "jmp",   "jsr",    "lea",   "link",  "lsl",
-    "lsr",
-    "move",  "movea", "move", "move",  "move",   "move",  "movem", "movep",
-    "moveq", "muls",  "mulu", "nbcd",  "neg",    "negx",  "nop",   "not",
-    "or",    "ori",   "ori",  "ori",   "pea",    "reset", "rol",   "ror",
-    "roxl",  "roxr",  "rte",  "rtr",   "rts",    "sbcd",  "scc",   "stop",
-    "sub",   "suba",  "subi", "subq",  "subx",   "swap",  "tas",   "trap",
-    "trapv", "tst",   "unlk"
+    "abcd  ", "add   ", "adda  ", "addi  ", "addq  ", "addx  ", "and   ", "andi  ",
+    "andi  ", "andi  ", "asl   ", "asr   ", "bcc   ", "bchg  ", "bclr  ", "bra   ",
+    "bset  ", "bsr   ", "btst  ", "chk   ", "clr   ", "cmp   ", "cmpa  ", "cmpi  ",
+    "cmpm  ", "dbcc  ", "divs  ", "divu  ", "eor   ", "eori  ", "eori  ", "eori  ",
+    "exg   ", "ext   ", "      ", "jmp   ", "jsr   ", "lea   ", "link  ", "lsl   ",
+    "lsr   ",
+    "move  ", "movea ", "move  ", "move  ", "move  ", "move  ", "movem ", "movep ",
+    "moveq ", "muls  ", "mulu  ", "nbcd  ", "neg   ", "negx  ", "nop   ", "not   ",
+    "or    ", "ori   ", "ori   ", "ori   ", "pea   ", "reset ", "rol   ", "ror   ",
+    "roxl  ", "roxr  ", "rte   ", "rtr   ", "rts   ", "sbcd  ", "scc   ", "stop  ",
+    "sub   ", "suba  ", "subi  ", "subq  ", "subx  ", "swap  ", "tas   ", "trap  ",
+    "trapv ", "tst   ", "unlk  "
 };
 
 enum Cond {
