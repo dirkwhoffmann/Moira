@@ -31,10 +31,23 @@ CPU::dasmLineF(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 template<Instr I, Mode M, Size S> void
 CPU::dasmShift(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
-    Ea<M,S> src { ____xxx_________(op), e1, e2 };
-    Dn      dst { _____________xxx(op) };
+    Dn dst { _____________xxx(op) };
 
-    str << Ins<I>{} << Sz<S>{} << " " << src << "," << dst;
+    switch (M) {
+        case 11: // Imm
+        {
+            u8 src = ____xxx_________(op);
+            if (src == 0) src = 8;
+
+            str << Ins<I>{} << Sz<S>{} << " #" << src << "," << dst;
+            break;
+        }
+        default:
+        {
+            Ea<M,S> src { ____xxx_________(op), e1, e2 };
+            str << Ins<I>{} << Sz<S>{} << " " << src << "," << dst;
+        }
+    }
 }
 
 template<Instr I, Mode M> void

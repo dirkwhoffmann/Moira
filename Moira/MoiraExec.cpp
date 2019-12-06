@@ -360,14 +360,14 @@ CPU::execExt(u16 opcode)
     int n     = _____________xxx(opcode);
     u32 dn    = readD(n);
     u32 mask  = (S == Word) ? MASK<Byte>() << 8 : MASK<Word>() << 16;
-    bool msb  = (S == Word) ? MSBIT<Byte>(dn) : MSBIT<Word>(dn);
+    bool neg  = (S == Word) ? NEG<Byte>(dn) : NEG<Word>(dn);
 
-    if (msb) { dn |= mask; } else {dn &= ~mask; }
+    if (neg) { dn |= mask; } else {dn &= ~mask; }
 
     writeD(n, dn);
     sr.c = 0;
     sr.v = 0;
-    sr.n = MSBIT<S>(dn);
+    sr.n = NEG<S>(dn);
     sr.z = ZERO<S>(dn);
 
     prefetch();
@@ -436,7 +436,7 @@ CPU::execMoveq(u16 opcode)
 
     sr.c = 0;
     sr.v = 0;
-    sr.n = MSBIT<Byte>(src);
+    sr.n = NEG<Byte>(src);
     sr.z = ZERO<Byte>(src);
 
     prefetch();
@@ -462,7 +462,7 @@ CPU::execMulDiv(u16 opcode)
 
             sr.c = 0;
             sr.v = 0;
-            sr.n = MSBIT<Long>(result);
+            sr.n = NEG<Long>(result);
             sr.z = ZERO<Long>(result);
             break;
         }
@@ -477,7 +477,7 @@ CPU::execMulDiv(u16 opcode)
 
             sr.c = 0;
             sr.v = 0;
-            sr.n = MSBIT<Long>(result);
+            sr.n = NEG<Long>(result);
             sr.z = ZERO<Long>(result);
             break;
         }
@@ -504,7 +504,7 @@ CPU::execMulDiv(u16 opcode)
                 break;
             }
 
-            sr.n = MSBIT<Word>(result);
+            sr.n = NEG<Word>(result);
             sr.z = ZERO<Word>(result);
             writeD(dst, (result & 0xffff) | (remainder << 16));
             break;
@@ -533,7 +533,7 @@ CPU::execMulDiv(u16 opcode)
                 break;
             }
 
-            sr.n = MSBIT<Word>(result);
+            sr.n = NEG<Word>(result);
             sr.z = ZERO<Word>(result);
 
             writeD(dst, (result & 0xffff) | (remainder << 16));
@@ -631,7 +631,7 @@ CPU::execTst(u16 opcode)
 
     sr.c = 0;
     sr.v = 0;
-    sr.n = MSBIT<S>(value);
+    sr.n = NEG<S>(value);
     sr.z = ZERO<S>(value);
 
     prefetch();

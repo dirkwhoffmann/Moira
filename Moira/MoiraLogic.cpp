@@ -206,14 +206,14 @@ CPU::shift(int cnt, u64 data) {
             bool carry = false;
             u32 changed = 0;
             for (int i = 0; i < cnt; i++) {
-                carry = MSBIT<S>(data);
+                carry = NEG<S>(data);
                 u64 shifted = data << 1;
                 changed |= data ^ shifted;
                 data = shifted;
             }
             if (cnt) sr.x = carry;
             sr.c = carry;
-            sr.v = MSBIT<S>(changed);
+            sr.v = NEG<S>(changed);
             break;
         }
         case ASR:
@@ -228,14 +228,14 @@ CPU::shift(int cnt, u64 data) {
             }
             if (cnt) sr.x = carry;
             sr.c = carry;
-            sr.v = MSBIT<S>(changed);
+            sr.v = NEG<S>(changed);
             break;
         }
         case LSL:
         {
             bool carry = false;
             for (int i = 0; i < cnt; i++) {
-                carry = MSBIT<S>(data);
+                carry = NEG<S>(data);
                 data = data << 1;
             }
             if (cnt) sr.x = carry;
@@ -259,7 +259,7 @@ CPU::shift(int cnt, u64 data) {
         {
             bool carry = false;
             for (int i = 0; i < cnt; i++) {
-                carry = MSBIT<S>(data);
+                carry = NEG<S>(data);
                 data = data << 1 | carry;
             }
             sr.c = carry;
@@ -272,7 +272,7 @@ CPU::shift(int cnt, u64 data) {
             for (int i = 0; i < cnt; i++) {
                 carry = data & 1;
                 data >>= 1;
-                if(carry) data |= MSBIT<S>(data);
+                if (carry) data |= MSBIT<S>(0xFFFFFFFF);
             }
             sr.c = carry;
             sr.v = 0;
@@ -283,7 +283,7 @@ CPU::shift(int cnt, u64 data) {
             bool carry = sr.x;
             for (int i = 0; i < cnt; i++) {
                 bool extend = carry;
-                carry = MSBIT<S>(data);
+                carry = NEG<S>(data);
                 data = data << 1 | extend;
             }
 
@@ -299,7 +299,7 @@ CPU::shift(int cnt, u64 data) {
                 bool extend = carry;
                 carry = data & 1;
                 data >>= 1;
-                if(extend) data |= MSBIT<S>(data);
+                if (extend) data |= MSBIT<S>(0xFFFFFFFF);
             }
 
             sr.x = carry;
@@ -312,8 +312,8 @@ CPU::shift(int cnt, u64 data) {
             assert(false);
         }
     }
-    sr.n = MSBIT<S>(data);
-    sr.z = ZERO <S>(data);
+    sr.n = NEG<S>(data);
+    sr.z = ZERO<S>(data);
     return CLIP<S>(data);
 }
 
@@ -329,7 +329,7 @@ CPU::arith(u32 op1, u32 op2)
             result = (u64)op1 + (u64)op2;
 
             sr.x = sr.c = CARRY<S>(result);
-            sr.v = MSBIT<S>((op1 ^ result) & (op2 ^ result));
+            sr.v = NEG<S>((op1 ^ result) & (op2 ^ result));
             sr.z = ZERO<S>(result);
             break;
         }
@@ -338,7 +338,7 @@ CPU::arith(u32 op1, u32 op2)
             result = (u64)op1 + (u64)op2 + (u64)sr.x;
 
             sr.x = sr.c = CARRY<S>(result);
-            sr.v = MSBIT<S>((op1 ^ result) & (op2 ^ result));
+            sr.v = NEG<S>((op1 ^ result) & (op2 ^ result));
             if (CLIP<S>(result)) sr.z = 0;
             break;
         }
@@ -357,7 +357,7 @@ CPU::arith(u32 op1, u32 op2)
             sr.x = sr.c = (result & 0x3F0) > 0x90;
             if (sr.c) result += 0x60;
             if (CLIP<Byte>(result)) sr.z = 0;
-            sr.n = MSBIT<Byte>(result);
+            sr.n = NEG<Byte>(result);
             sr.v = ((tmp_result & 0x80) == 0) && ((result & 0x80) == 0x80);
             break;
         }
@@ -367,7 +367,7 @@ CPU::arith(u32 op1, u32 op2)
             // printf("arith::SUB %x %x %llx \n", op1, op2, result);
 
             sr.x = sr.c = CARRY<S>(result);
-            sr.v = MSBIT<S>((op1 ^ op2) & (op2 ^ result));
+            sr.v = NEG<S>((op1 ^ op2) & (op2 ^ result));
             sr.z = ZERO<S>(result);
             break;
         }
@@ -376,7 +376,7 @@ CPU::arith(u32 op1, u32 op2)
             result = (u64)op2 - (u64)op1 - (u64)sr.x;
 
             sr.x = sr.c = CARRY<S>(result);
-            sr.v = MSBIT<S>((op1 ^ op2) & (op2 ^ result));
+            sr.v = NEG<S>((op1 ^ op2) & (op2 ^ result));
             if (CLIP<S>(result)) sr.z = 0;
             break;
         }
@@ -401,7 +401,7 @@ CPU::arith(u32 op1, u32 op2)
 
             printf("SBCD result = %llx c: %d x: %d\n", result, sr.c, sr.x);
             if (CLIP<Byte>(result)) sr.z = 0;
-            sr.n = MSBIT<Byte>(result);
+            sr.n = NEG<Byte>(result);
             sr.v = ((tmp_result & 0x80) == 0x80) && ((result & 0x80) == 0);
             break;
         }
@@ -410,7 +410,7 @@ CPU::arith(u32 op1, u32 op2)
             result = (u64)op1 - (u64)op2;
 
             sr.c = CARRY<S>(result);
-            sr.v = MSBIT<S>((op1 ^ op2) & (op2 ^ result));
+            sr.v = NEG<S>((op1 ^ op2) & (op2 ^ result));
             sr.z = ZERO<S>(result);
             break;
         }
@@ -419,7 +419,7 @@ CPU::arith(u32 op1, u32 op2)
             assert(false);
         }
     }
-    sr.n = MSBIT<S>(result);
+    sr.n = NEG<S>(result);
     return (u32)result;
 }
 
@@ -453,7 +453,7 @@ CPU::logic(u32 op1, u32 op2)
 
     sr.c = 0;
     sr.v = 0;
-    sr.n = MSBIT<S>(result);
+    sr.n = NEG<S>(result);
     sr.z = ZERO<S>(result);
 
     return result;
