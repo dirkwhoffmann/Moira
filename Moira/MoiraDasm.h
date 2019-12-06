@@ -35,5 +35,7 @@ template<Mode M, Size S> void dasmMovea(StrWriter &str, u16 op, u16 e1, u16 e2);
 void dasmMoveq(StrWriter &str, u16 op, u16 e1, u16 e2);
 template<Instr I, Mode M> void dasmMulDiv(StrWriter &str, u16 op, u16 e1, u16 e2);
 template<Mode M> void dasmNbcd(StrWriter &str, u16 op, u16 e1, u16 e2);
+template<Instr I, Mode M, Size S> void dasmNegNotDx(StrWriter &str, u16 op, u16 e1, u16 e2);
+template<Instr I, Mode M, Size S> void dasmNegNotEa(StrWriter &str, u16 op, u16 e1, u16 e2);
 void dasmNop(StrWriter &str, u16 op, u16 e1, u16 e2);
 template<Mode M, Size S> void dasmTst(StrWriter &str, u16 op, u16 e1, u16 e2);

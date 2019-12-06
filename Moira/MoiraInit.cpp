@@ -78,6 +78,9 @@ CPU::init()
     registerMULS();
     registerMULU();
     registerNBCD();
+    registerNEG();
+    registerNEGX();
+    registerNOT();
     registerNOP();
     registerOR();
     registerROL();
@@ -499,6 +502,56 @@ CPU::registerMulDiv(const char *pattern)
 }
 
 template<Instr I> void
+CPU::registerNegNot(const char *pattern)
+{
+    // NEG, NEGX, NOT
+    //
+    // Modes:       <ea>
+    //              -------------------------------------------------
+    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    //                X       X   X   X   X   X   X   X
+
+    u16 opcode = parse(pattern);
+    u16 opcodeB = opcode | 0 << 6;
+    u16 opcodeW = opcode | 1 << 6;
+    u16 opcodeL = opcode | 2 << 6;
+
+    for (int dst = 0; dst < 8; dst++) {
+
+        bind(opcodeB | 0 << 3 | dst, NegNotDx<I __ 0 __ Byte>);
+        bind(opcodeB | 2 << 3 | dst, NegNotEa<I __ 2 __ Byte>);
+        bind(opcodeB | 3 << 3 | dst, NegNotEa<I __ 3 __ Byte>);
+        bind(opcodeB | 4 << 3 | dst, NegNotEa<I __ 4 __ Byte>);
+        bind(opcodeB | 5 << 3 | dst, NegNotEa<I __ 5 __ Byte>);
+        bind(opcodeB | 6 << 3 | dst, NegNotEa<I __ 6 __ Byte>);
+
+        bind(opcodeW | 0 << 3 | dst, NegNotDx<I __ 0 __ Word>);
+        bind(opcodeW | 2 << 3 | dst, NegNotEa<I __ 2 __ Word>);
+        bind(opcodeW | 3 << 3 | dst, NegNotEa<I __ 3 __ Word>);
+        bind(opcodeW | 4 << 3 | dst, NegNotEa<I __ 4 __ Word>);
+        bind(opcodeW | 5 << 3 | dst, NegNotEa<I __ 5 __ Word>);
+        bind(opcodeW | 6 << 3 | dst, NegNotEa<I __ 6 __ Word>);
+
+        bind(opcodeL | 0 << 3 | dst, NegNotDx<I __ 0 __ Long>);
+        bind(opcodeL | 2 << 3 | dst, NegNotEa<I __ 2 __ Long>);
+        bind(opcodeL | 3 << 3 | dst, NegNotEa<I __ 3 __ Long>);
+        bind(opcodeL | 4 << 3 | dst, NegNotEa<I __ 4 __ Long>);
+        bind(opcodeL | 5 << 3 | dst, NegNotEa<I __ 5 __ Long>);
+        bind(opcodeL | 6 << 3 | dst, NegNotEa<I __ 6 __ Long>);
+
+    }
+    bind(opcodeB | 7 << 3 | 0, NegNotEa<I __  7 __ Byte>);
+    bind(opcodeB | 7 << 3 | 1, NegNotEa<I __  8 __ Byte>);
+
+    bind(opcodeW | 7 << 3 | 0, NegNotEa<I __  7 __ Word>);
+    bind(opcodeW | 7 << 3 | 1, NegNotEa<I __  8 __ Word>);
+
+    bind(opcodeL | 7 << 3 | 0, NegNotEa<I __  7 __ Long>);
+    bind(opcodeL | 7 << 3 | 1, NegNotEa<I __  8 __ Long>);
+}
+
+template<Instr I> void
 CPU::registerClr(const char *pattern)
 {
     u32 opcode = parse(pattern);
@@ -782,6 +835,24 @@ CPU::registerNBCD()
     }
     bind(opcode | 0 << 6 | 7 << 3 | 0, Nbcd<7>);
     bind(opcode | 0 << 6 | 7 << 3 | 1, Nbcd<8>);
+}
+
+void
+CPU::registerNEG()
+{
+    registerNegNot<NEG>("0100 0100 ---- ----");
+}
+
+void
+CPU::registerNEGX()
+{
+    registerNegNot<NEGX>("0100 0000 ---- ----");
+}
+
+void
+CPU::registerNOT()
+{
+    registerNegNot<NOT>("0100 0110 ---- ----");
 }
 
 void

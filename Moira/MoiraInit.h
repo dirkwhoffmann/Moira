@@ -28,6 +28,8 @@ template<Instr I> void registerAddSub(const char *patternXXReg,
 
 template<Instr I> void registerMulDiv(const char *pattern);
 
+template<Instr I> void registerNegNot(const char *pattern);
+
 template<Instr I> void registerLogicXXReg(const char *pattern);
 template<Instr I> void registerLogicRegXX(const char *pattern, bool mode0 = false);
 
@@ -56,6 +58,9 @@ void registerMOVEQ();
 void registerMULS();
 void registerMULU();
 void registerNBCD();
+void registerNEG();
+void registerNEGX();
+void registerNOT();
 void registerNOP();
 void registerOR();
 void registerROL();

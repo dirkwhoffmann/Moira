@@ -427,14 +427,14 @@ CPU::execExt(u16 opcode)
     int n     = _____________xxx(opcode);
     u32 dn    = readD(n);
     u32 mask  = (S == Word) ? MASK<Byte>() << 8 : MASK<Word>() << 16;
-    bool neg  = (S == Word) ? NEG<Byte>(dn) : NEG<Word>(dn);
+    bool neg  = (S == Word) ? NBIT<Byte>(dn) : NBIT<Word>(dn);
 
     if (neg) { dn |= mask; } else {dn &= ~mask; }
 
     writeD(n, dn);
     sr.c = 0;
     sr.v = 0;
-    sr.n = NEG<S>(dn);
+    sr.n = NBIT<S>(dn);
     sr.z = ZERO<S>(dn);
 
     prefetch();
@@ -503,7 +503,7 @@ CPU::execMoveq(u16 opcode)
 
     sr.c = 0;
     sr.v = 0;
-    sr.n = NEG<Byte>(src);
+    sr.n = NBIT<Byte>(src);
     sr.z = ZERO<Byte>(src);
 
     prefetch();
@@ -529,7 +529,7 @@ CPU::execMulDiv(u16 opcode)
 
             sr.c = 0;
             sr.v = 0;
-            sr.n = NEG<Long>(result);
+            sr.n = NBIT<Long>(result);
             sr.z = ZERO<Long>(result);
             break;
         }
@@ -544,7 +544,7 @@ CPU::execMulDiv(u16 opcode)
 
             sr.c = 0;
             sr.v = 0;
-            sr.n = NEG<Long>(result);
+            sr.n = NBIT<Long>(result);
             sr.z = ZERO<Long>(result);
             break;
         }
@@ -571,7 +571,7 @@ CPU::execMulDiv(u16 opcode)
                 break;
             }
 
-            sr.n = NEG<Word>(result);
+            sr.n = NBIT<Word>(result);
             sr.z = ZERO<Word>(result);
             writeD(dst, (result & 0xffff) | (remainder << 16));
             break;
@@ -600,7 +600,7 @@ CPU::execMulDiv(u16 opcode)
                 break;
             }
 
-            sr.n = NEG<Word>(result);
+            sr.n = NBIT<Word>(result);
             sr.z = ZERO<Word>(result);
 
             writeD(dst, (result & 0xffff) | (remainder << 16));
@@ -665,6 +665,48 @@ CPU::execNbcd(u16 opcode)
     prefetch();
 }
 
+template<Instr I, Mode M, Size S> void
+CPU::execNegNotDx(u16 opcode)
+{
+    int dst = { _____________xxx(opcode) };
+
+       printf("S = %d\n", S);
+
+    u32 data = readD<S>(dst);
+
+    switch (I) {
+        case NEG:  data = arith<SUB,S>(data, 0); break;
+        case NEGX: data = arith<SUBX,S>(data, 0); break;
+        case NOT:  data = logic<NOT,S>(data); break;
+        default:   assert(false); break;
+    }
+
+    prefetch();
+    writeD<S>(dst, data);
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execNegNotEa(u16 opcode)
+{
+    int dst = { _____________xxx(opcode) };
+
+    printf("S = %d\n", S);
+
+    u32 ea = computeEA<M,S>(dst);
+    if (addressError(ea)) return;
+    
+    u32 data = read<S>(ea);
+    switch (I) {
+        case NEG:  data = arith<SUB,S>(data, 0); break;
+        case NEGX: data = arith<SUBX,S>(data, 0); break;
+        case NOT:  data = logic<NOT,S>(data); break;
+        default:   assert(false); break;
+    }
+
+    prefetch();
+    write<S>(ea, data);
+}
+
 void
 CPU::execNop(u16 opcode)
 {
@@ -698,7 +740,7 @@ CPU::execTst(u16 opcode)
 
     sr.c = 0;
     sr.v = 0;
-    sr.n = NEG<S>(value);
+    sr.n = NBIT<S>(value);
     sr.z = ZERO<S>(value);
 
     prefetch();

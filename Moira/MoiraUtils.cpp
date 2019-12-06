@@ -33,9 +33,9 @@ template<> u32  CLEAR <Byte> (u64 data) { return data & 0xFFFFFF00; }
 template<> u32  CLEAR <Word> (u64 data) { return data & 0xFFFF0000; }
 template<> u32  CLEAR <Long> (u64 data) { return data & 0x00000000; }
 
-template<> bool NEG   <Byte> (u64 data) { return data & 0x00000080; }
-template<> bool NEG   <Word> (u64 data) { return data & 0x00008000; }
-template<> bool NEG   <Long> (u64 data) { return data & 0x80000000; }
+template<> bool NBIT  <Byte> (u64 data) { return data & 0x00000080; }
+template<> bool NBIT  <Word> (u64 data) { return data & 0x00008000; }
+template<> bool NBIT  <Long> (u64 data) { return data & 0x80000000; }
 
 template<> bool CARRY <Byte> (u64 data) { return data & 0x000000100; }
 template<> bool CARRY <Word> (u64 data) { return data & 0x000010000; }
