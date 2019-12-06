@@ -280,7 +280,7 @@ CPU::shift(int cnt, u64 data) {
         }
         case ROXL:
         {
-            bool carry = false;
+            bool carry = sr.x;
             for (int i = 0; i < cnt; i++) {
                 bool extend = carry;
                 carry = MSBIT<S>(data);
@@ -294,7 +294,7 @@ CPU::shift(int cnt, u64 data) {
         }
         case ROXR:
         {
-            bool carry = false;
+            bool carry = sr.x;
             for (int i = 0; i < cnt; i++) {
                 bool extend = carry;
                 carry = data & 1;

@@ -62,6 +62,8 @@ CPU::init()
     registerASR();
     registerCLR();
     registerDBcc();
+    registerDIVS();
+    registerDIVU();
     registerEOR();
     registerEXT();
     registerLEA();
@@ -69,6 +71,8 @@ CPU::init()
     registerLSR();
     registerMOVEA();
     registerMOVEQ();
+    registerMULS();
+    registerMULU();
     registerNBCD();
     registerNOP();
     registerOR();
@@ -398,6 +402,37 @@ CPU::registerAddSub(const char *patternXXReg, const char *patternRegXX)
 }
 
 template<Instr I> void
+CPU::registerMulDiv(const char *pattern)
+{
+    // DIVS, DIVU, MULS, MULU
+    //
+    // Modes: (1)   <ea>,Dy
+    //              -------------------------------------------------
+    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    //                X       X   X   X   X   X   X   X   X   X   X
+
+    u16 opcode = parse(pattern);
+
+    for (int dst = 0; dst < 8; dst++) {
+        for (int src = 0; src < 8; src++) {
+
+            bind(opcode | dst << 9 | 0 << 3 | src, MulDiv<I __ 0>);
+            bind(opcode | dst << 9 | 2 << 3 | src, MulDiv<I __ 2>);
+            bind(opcode | dst << 9 | 3 << 3 | src, MulDiv<I __ 3>);
+            bind(opcode | dst << 9 | 4 << 3 | src, MulDiv<I __ 4>);
+            bind(opcode | dst << 9 | 5 << 3 | src, MulDiv<I __ 5>);
+            bind(opcode | dst << 9 | 6 << 3 | src, MulDiv<I __ 6>);
+        }
+        bind(opcode | dst << 9 | 7 << 3 | 0, MulDiv<I __  7>);
+        bind(opcode | dst << 9 | 7 << 3 | 1, MulDiv<I __  8>);
+        bind(opcode | dst << 9 | 7 << 3 | 2, MulDiv<I __  9>);
+        bind(opcode | dst << 9 | 7 << 3 | 3, MulDiv<I __ 10>);
+        bind(opcode | dst << 9 | 7 << 3 | 4, MulDiv<I __ 11>);
+     }
+}
+
+template<Instr I> void
 CPU::registerClr(const char *pattern)
 {
     u32 opcode = parse(pattern);
@@ -511,6 +546,18 @@ CPU::registerDBcc()
 }
 
 void
+CPU::registerDIVS()
+{
+    registerMulDiv<DIVS>("1000 ---1 11-- ----");
+}
+
+void
+CPU::registerDIVU()
+{
+    registerMulDiv<DIVU>("1000 ---0 11-- ----");
+}
+
+void
 CPU::registerEOR()
 {
     registerLogicRegXX<EOR>("1011 ---1 ---- ----", true);
@@ -603,6 +650,18 @@ CPU::registerMOVEQ()
             bind(opcode | dst << 9 | src, Moveq);
         }
     }
+}
+
+void
+CPU::registerMULS()
+{
+    registerMulDiv<MULS>("1100 ---1 11-- ----");
+}
+
+void
+CPU::registerMULU()
+{
+    registerMulDiv<MULU>("1100 ---0 11-- ----");
 }
 
 void

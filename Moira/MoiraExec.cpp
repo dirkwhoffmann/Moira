@@ -442,6 +442,137 @@ CPU::execMoveq(u16 opcode)
     prefetch();
 }
 
+template<Instr I, Mode M> void
+CPU::execMulDiv(u16 opcode)
+{
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+    u16 dn  = readD<Word>(dst);
+    u16 data;
+
+    switch (I) {
+
+        case MULS: // Signed multiplication
+        {
+            if (!mulDivOp<M>(src, data)) return;
+            prefetch();
+
+            u32 result = (i16)data * (i16)dn;
+            writeD(dst, result);
+
+            sr.c = 0;
+            sr.v = 0;
+            sr.n = MSBIT<Long>(result);
+            sr.z = ZERO<Long>(result);
+            break;
+        }
+
+        case MULU: // Unsigned multiplication
+        {
+            if (!mulDivOp<M>(src, data)) return;
+            prefetch();
+
+            u32 result = data * dn;
+            writeD(dst, result);
+
+            sr.c = 0;
+            sr.v = 0;
+            sr.n = MSBIT<Long>(result);
+            sr.z = ZERO<Long>(result);
+            break;
+        }
+        case DIVS: // Signed division
+        {
+            if (!mulDivOp<M>(src, data)) return;
+
+            if (data == 0) {
+                // TODO: DIV 0 EXCEPTION
+                // return trapException( 5 );
+            }
+            u32 dividend = readD(dst);
+            prefetch();
+
+            i32 result = (i32)dividend / (i16)data;
+            i16 remainder = (i32)dividend % (i16)data;
+
+            sr.c = 0;
+            sr.v = 0;
+
+            if ((result & 0xffff8000) != 0 && (result & 0xffff8000) != 0xffff8000) {
+                sr.v = 1;
+                sr.n = 1;
+                break;
+            }
+
+            sr.n = MSBIT<Word>(result);
+            sr.z = ZERO<Word>(result);
+            writeD(dst, (result & 0xffff) | (remainder << 16));
+            break;
+        }
+        case DIVU: // Unsigned division
+        {
+            if (!mulDivOp<M>(src, data)) return;
+
+            if (data == 0) {
+                // TODO: DIV 0 EXCEPTION
+                // return trapException( 5 );
+            }
+
+            u32 dividend = readD(dst);
+            prefetch();
+
+            u32 result = dividend / data;
+            u16 remainder = dividend % data;
+
+            sr.c = 0;
+            sr.v = 0;
+
+            if (result > 0xffff) {
+                sr.v = 1;
+                sr.n = 1;
+                break;
+            }
+
+            sr.n = MSBIT<Word>(result);
+            sr.z = ZERO<Word>(result);
+
+            writeD(dst, (result & 0xffff) | (remainder << 16));
+            break;
+        }
+    }
+}
+
+template<Mode M> bool
+CPU::mulDivOp(u16 src, u16& result)
+{
+    switch (M) {
+
+        case 0: // Dn
+        {
+            result = readD<Word>(src);
+            return true;
+        }
+        case 1: // An
+        {
+            result = readA<Word>(src);
+            return true;
+        }
+        case 11: // Imm
+        {
+            result = readImm<Word>();
+            return true;
+        }
+        default: // Ea
+        {
+            u32 ea = computeEA<M,Word>(src);
+            if (addressError(ea)) return false;
+
+            result = read<Word>(ea);
+            return true;
+        }
+    }
+}
+
 template<Mode M> void
 CPU::execNbcd(u16 opcode)
 {

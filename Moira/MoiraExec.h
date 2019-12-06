@@ -31,6 +31,9 @@ template<Size S> void execExt(u16 opcode);
 template<Mode M> void execLea(u16 opcode);
 template<Mode M, Size S> void execMovea(u16 opcode);
 void execMoveq(u16 opcode);
+template<Instr I, Mode M> void execMulDiv(u16 opcode);
+template<Mode M> bool mulDivOp(u16 src, u16& result);
 template<Mode M> void execNbcd(u16 opcode);
 void execNop(u16 opcode);
 template<Mode M, Size S> void execTst(u16 opcode);
+
