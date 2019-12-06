@@ -272,7 +272,7 @@ CPU::shift(int cnt, u64 data) {
             for (int i = 0; i < cnt; i++) {
                 carry = data & 1;
                 data >>= 1;
-                if (carry) data |= MSBIT<S>(0xFFFFFFFF);
+                if (carry) data |= MSBIT<S>();
             }
             sr.c = carry;
             sr.v = 0;
@@ -299,7 +299,7 @@ CPU::shift(int cnt, u64 data) {
                 bool extend = carry;
                 carry = data & 1;
                 data >>= 1;
-                if (extend) data |= MSBIT<S>(0xFFFFFFFF);
+                if (extend) data |= MSBIT<S>();
             }
 
             sr.x = carry;
@@ -457,6 +457,41 @@ CPU::logic(u32 op1, u32 op2)
     sr.z = ZERO<S>(result);
 
     return result;
+}
+
+template <Instr I> u32
+CPU::bitop(u32 op, u8 bit)
+{
+    switch (I) {
+        case BCHG:
+        {
+            sr.z = 1 ^ ((op >> bit) & 1);
+            op ^= (1 << bit);
+            break;
+        }
+        case BSET:
+        {
+            sr.z = 1 ^ ((op >> bit) & 1);
+            op |= (1 << bit);
+            break;
+        }
+        case BCLR:
+        {
+            sr.z = 1 ^ ((op >> bit) & 1);
+            op &= ~(1 << bit);
+            break;
+        }
+        case BTST:
+        {
+            sr.z = 1 ^ ((op >> bit) & 1);
+            break;
+        }
+        default:
+        {
+            assert(false);
+        }
+    }
+    return op;
 }
 
 template <Cond C> bool

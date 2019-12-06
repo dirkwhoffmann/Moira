@@ -22,10 +22,10 @@ enum Size { Byte, Word, Long };
 
 template<Size>   int  BYTES();
 template<Size>   u32  MASK();
+template<Size>   u32  MSBIT();
 template<Size>   i32  SIGN (u64 data);
 template<Size>   u32  CLIP (u64 data);
 template<Size>   u32  CLEAR(u64 data);
-template<Size>   u32  MSBIT(u64 data);
 template<Size>   bool NEG  (u64 data);
 template<Size>   bool CARRY(u64 data);
 template<Size>   bool ZERO (u64 data);

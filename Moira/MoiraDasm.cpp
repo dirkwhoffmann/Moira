@@ -105,6 +105,42 @@ CPU::dasmClr(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<I>{} << Sz<S>{} << " " << dst;
 }
 
+template<Instr I, Mode M> void
+CPU::dasmBitDxDy(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    Dn src { ____xxx_________(op) };
+    Dn dst { _____________xxx(op) };
+
+    str << Ins<I>{} << " " << src << "," << dst;
+}
+
+template<Instr I, Mode M> void
+CPU::dasmBitDxEa(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    Dn         src { ____xxx_________(op) };
+    Ea<M,Byte> dst { _____________xxx(op), e1, e2 };
+
+    str << Ins<I>{} << " " << src << "," << dst;
+}
+
+template<Instr I, Mode M> void
+CPU::dasmBitImDy(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    u8 src = e1 & 0b11111;
+    Dn dst { _____________xxx(op) };
+
+    str << Ins<I>{} << " #" << src << "," << dst;
+}
+
+template<Instr I, Mode M> void
+CPU::dasmBitImEa(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    u8 src = e1 & 0b11111;
+    Ea<M,Byte> dst { _____________xxx(op), e1, e2 };
+
+    str << Ins<I>{} << " #" << src << "," << dst;
+}
+
 template<Cond C> void
 CPU::dasmDbcc(StrWriter &str, u16 op, u16 e1, u16 e2)
 {

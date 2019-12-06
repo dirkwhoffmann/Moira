@@ -60,6 +60,10 @@ CPU::init()
     registerAND();
     registerASL();
     registerASR();
+    registerBCHG();
+    registerBCLR();
+    registerBSET();
+    registerBTST();
     registerCLR();
     registerDBcc();
     registerDIVS();
@@ -158,6 +162,68 @@ CPU::registerShift(const char *patternReg,
     }
     bind(opcode | 7 << 3 | 0, Shift<I __ 7 __ Word>);
     bind(opcode | 7 << 3 | 1, Shift<I __ 8 __ Word>);
+}
+
+template<Instr I> void
+CPU::registerBit(const char *patternReg, const char *patternImm)
+{
+    // BCHG, BSET, BCLR
+    //
+    // Modes: (1)   Dx,<ea>
+    //        (2)   #<data>,<ea>
+    //              -------------------------------------------------
+    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    //                X       X   X   X   X   X   X   X
+    //
+    // BTST
+    //
+    // Modes: (1)   Dx,<ea>
+    //        (2)   #<data>,<ea>
+    //              -------------------------------------------------
+    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    //                X       X   X   X   X   X   X   X   X   X
+
+    // (1)
+    u16 opcode = parse(patternReg);
+
+    for (int src = 0; src < 8; src++) {
+        for (int dst = 0; dst < 8; dst++) {
+
+            bind(opcode | src << 9 | 0 << 3 | dst, BitDxDy<I __ 0>);
+            bind(opcode | src << 9 | 2 << 3 | dst, BitDxEa<I __ 2>);
+            bind(opcode | src << 9 | 3 << 3 | dst, BitDxEa<I __ 3>);
+            bind(opcode | src << 9 | 4 << 3 | dst, BitDxEa<I __ 4>);
+            bind(opcode | src << 9 | 5 << 3 | dst, BitDxEa<I __ 5>);
+            bind(opcode | src << 9 | 6 << 3 | dst, BitDxEa<I __ 6>);
+        }
+        bind(opcode | src << 9 | 7 << 3 | 0, BitDxEa<I __ 7>);
+        bind(opcode | src << 9 | 7 << 3 | 1, BitDxEa<I __ 8>);
+        if (I == BTST) {
+            bind(opcode | src << 9 | 7 << 3 | 2, BitDxEa<I __  9>);
+            bind(opcode | src << 9 | 7 << 3 | 3, BitDxEa<I __ 10>);
+        }
+    }
+
+    // (2)
+    opcode = parse(patternImm);
+
+    for (int dst = 0; dst < 8; dst++) {
+
+        bind(opcode | 0 << 3 | dst, BitImDy<I __ 0>);
+        bind(opcode | 2 << 3 | dst, BitImEa<I __ 2>);
+        bind(opcode | 3 << 3 | dst, BitImEa<I __ 3>);
+        bind(opcode | 4 << 3 | dst, BitImEa<I __ 4>);
+        bind(opcode | 5 << 3 | dst, BitImEa<I __ 5>);
+        bind(opcode | 6 << 3 | dst, BitImEa<I __ 6>);
+    }
+    bind(opcode | 7 << 3 | 0, BitImEa<I __ 7>);
+    bind(opcode | 7 << 3 | 1, BitImEa<I __ 8>);
+    if (I == BTST) {
+        bind(opcode | 7 << 3 | 2, BitImEa<I __  9>);
+        bind(opcode | 7 << 3 | 3, BitImEa<I __ 10>);
+    }
 }
 
 template<Instr I> void
@@ -511,6 +577,34 @@ CPU::registerASR()
     registerShift<ASR>("1110 ---0 --10 0---",  // Dx,Dy
                        "1110 ---0 --00 0---",  // ##,Dy
                        "1110 0000 11-- ----"); // <ea>
+}
+
+void
+CPU::registerBCHG()
+{
+    registerBit<BCHG>("0000 ---1 01-- ----",   // Dx,<ea>
+                      "0000 1000 01-- ----");  // ##,<ea>
+}
+
+void
+CPU::registerBCLR()
+{
+    registerBit<BCLR>("0000 ---1 10-- ----",   // Dx,<ea>
+                      "0000 1000 10-- ----");  // ##,<ea>
+}
+
+void
+CPU::registerBSET()
+{
+    registerBit<BSET>("0000 ---1 11-- ----",   // Dx,<ea>
+                      "0000 1000 11-- ----");  // ##,<ea>
+}
+
+void
+CPU::registerBTST()
+{
+    registerBit<BTST>("0000 ---1 00-- ----",   // Dx,<ea>
+                      "0000 1000 00-- ----");  // ##,<ea>
 }
 
 void

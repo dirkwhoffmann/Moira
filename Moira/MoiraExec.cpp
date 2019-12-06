@@ -288,6 +288,73 @@ CPU::execAndRgXX(u16 opcode)
     prefetch();
 }
 
+template<Instr I, Mode M> void
+CPU::execBitDxDy(u16 opcode)
+{
+    int src = ____xxx_________(opcode);
+    int dst = _____________xxx(opcode);
+
+    u8 bit = readD(src) & 0b11111;
+    u32 data = readD(dst);
+    data = bitop<I>(data, bit);
+
+    if (I != BTST) writeD(dst, data);
+
+    prefetch();
+}
+
+template<Instr I, Mode M> void
+CPU::execBitDxEa(u16 opcode)
+{
+    int src = ____xxx_________(opcode);
+    int dst = _____________xxx(opcode);
+
+    u8 bit = readD(src) & 0b111;
+
+    u32 ea = computeEA<M,Byte>(dst);
+    if (addressError(ea)) return;
+
+    u32 data = read<Byte>(ea);
+    data = bitop<I>(data, bit);
+
+    if (I != BTST) write<Byte>(ea, data);
+
+    prefetch();
+}
+
+template<Instr I, Mode M> void
+CPU::execBitImDy(u16 opcode)
+{
+    int dst = _____________xxx(opcode);
+    u8  bit = irc & 0b11111;
+    readExtensionWord();
+
+    u32 data = readD(dst);
+    data = bitop<I>(data, bit);
+
+    if (I != BTST) writeD(dst, data);
+
+    prefetch();
+}
+
+template<Instr I, Mode M> void
+CPU::execBitImEa(u16 opcode)
+{
+    int dst = _____________xxx(opcode);
+    u8  bit = irc & 0b11111;
+    readExtensionWord();
+
+    u32 ea = computeEA<M,Byte>(dst);
+    if (addressError(ea)) return;
+
+    u32 data = read<Byte>(ea);
+    data = bitop<I>(data, bit);
+
+    if (I != BTST) write<Byte>(ea, data);
+
+    prefetch();
+}
+
 template<Instr I, Mode M, Size S> void
 CPU::execClr(u16 opcode)
 {
