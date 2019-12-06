@@ -207,6 +207,9 @@ void Core_68k::op_nbcd(u16 opcode) {
     reg_s.v = ( ((tmp_result & 0x80) == 0x80) && ((result & 0x80) == 0) );
     prefetch(isRegisterMode());
     if (adm == DR_DIRECT) sync(2);
+
+    printf("p68k: nbcd result = %x\n", result);
+
     writeEA(SizeByte, result, true);
 }
 
@@ -938,6 +941,8 @@ template<bool memTomem> void Core_68k::op_sbcd(u16 opcode) {
 	reg_s.x = reg_s.c;
     reg_s.v = ((tmp_result & 0x80) == 0x80) && ((result & 0x80) == 0);
 	setFlags(flag_zn, SizeByte, result, 0, 0);
+
+    // printf("p68k: SBCD result = %x\n", result);
 
     writeEA(SizeByte, result, true);
 }

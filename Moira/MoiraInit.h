@@ -39,6 +39,7 @@ void registerEXT();
 void registerLEA();
 void registerLSL();
 void registerLSR();
+void registerNBCD();
 void registerNOP();
 void registerROL();
 void registerROR();

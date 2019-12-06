@@ -372,6 +372,31 @@ CPU::execLea(u16 opcode)
     prefetch();
 }
 
+template<Mode M> void
+CPU::execNbcd(u16 opcode)
+{
+    int reg = _____________xxx(opcode);
+
+    switch (M) {
+
+        case 0: // Dn
+        {
+            writeD<Byte>(reg, arith<SBCD,Byte>(readD<Byte>(reg), 0));
+            break;
+        }
+        default: // Ea
+        {
+            assert(M >= 2 && M <= 8);
+
+            u32 ea = computeEA<M,Byte>(reg);
+            write<Byte>(ea, arith<SBCD,Byte>(read<Byte>(ea), 0));
+            break;
+        }
+    }
+
+    prefetch();
+}
+
 void
 CPU::execNop(u16 opcode)
 {

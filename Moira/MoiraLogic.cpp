@@ -399,6 +399,7 @@ CPU::arith(u32 op1, u32 op2)
             if (((op2 - op1 - sr.x) & 0x100) > 0xff) result -= 0x60;
             sr.c = sr.x = ((op2 - op1 - bcd - sr.x) & 0x300) > 0xff;
 
+            printf("SBCD result = %llx c: %d x: %d\n", result, sr.c, sr.x);
             if (CLIP<Byte>(result)) sr.z = 0;
             sr.n = MSBIT<Byte>(result);
             sr.v = ((tmp_result & 0x80) == 0x80) && ((result & 0x80) == 0);
