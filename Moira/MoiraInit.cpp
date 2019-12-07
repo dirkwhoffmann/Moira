@@ -66,6 +66,7 @@ CPU::init()
     registerBSET();
     registerBTST();
     registerCLR();
+    registerCMP();
     registerDBcc();
     registerDIVS();
     registerDIVU();
@@ -372,106 +373,110 @@ CPU::registerAbcdSbcd(const char *patternReg, const char *patternInd)
 }
 
 template<Instr I> void
-CPU::registerAddSub(const char *patternXXReg, const char *patternRegXX)
+CPU::registerAddSubEaRg(const char *pattern)
 {
-    u16 opcode;
-
-    // ADD
-    //
-    // Modes: (1)   <ea>,Dy
+    // Mode :       <ea>,Dy
     //              -------------------------------------------------
     //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
     //              -------------------------------------------------
     //                X   X   X   X   X   X   X   X   X   X   X   X
-    //
-    //        (2)   Dx,<ea>
+
+    u16 opcode = parse(pattern);
+    u16 opcodeB = opcode | 0 << 6;
+    u16 opcodeW = opcode | 1 << 6;
+    u16 opcodeL = opcode | 2 << 6;
+
+    for (int dy = 0; dy < 8; dy++) {
+        for (int reg = 0; reg < 8; reg++) {
+
+            bind(opcodeB | dy << 9 | 0 << 3 | reg, AddXXRg<I __ 0 __ Byte>);
+            // Byte size is not supported for addressing mode 1
+            bind(opcodeB | dy << 9 | 2 << 3 | reg, AddXXRg<I __ 2 __ Byte>);
+            bind(opcodeB | dy << 9 | 3 << 3 | reg, AddXXRg<I __ 3 __ Byte>);
+            bind(opcodeB | dy << 9 | 4 << 3 | reg, AddXXRg<I __ 4 __ Byte>);
+            bind(opcodeB | dy << 9 | 5 << 3 | reg, AddXXRg<I __ 5 __ Byte>);
+            bind(opcodeB | dy << 9 | 6 << 3 | reg, AddXXRg<I __ 6 __ Byte>);
+
+            bind(opcodeW | dy << 9 | 0 << 3 | reg, AddXXRg<I __ 0 __ Word>);
+            bind(opcodeW | dy << 9 | 1 << 3 | reg, AddXXRg<I __ 1 __ Word>);
+            bind(opcodeW | dy << 9 | 2 << 3 | reg, AddXXRg<I __ 2 __ Word>);
+            bind(opcodeW | dy << 9 | 3 << 3 | reg, AddXXRg<I __ 3 __ Word>);
+            bind(opcodeW | dy << 9 | 4 << 3 | reg, AddXXRg<I __ 4 __ Word>);
+            bind(opcodeW | dy << 9 | 5 << 3 | reg, AddXXRg<I __ 5 __ Word>);
+            bind(opcodeW | dy << 9 | 6 << 3 | reg, AddXXRg<I __ 6 __ Word>);
+
+            bind(opcodeL | dy << 9 | 0 << 3 | reg, AddXXRg<I __ 0 __ Long>);
+            bind(opcodeL | dy << 9 | 1 << 3 | reg, AddXXRg<I __ 1 __ Long>);
+            bind(opcodeL | dy << 9 | 2 << 3 | reg, AddXXRg<I __ 2 __ Long>);
+            bind(opcodeL | dy << 9 | 3 << 3 | reg, AddXXRg<I __ 3 __ Long>);
+            bind(opcodeL | dy << 9 | 4 << 3 | reg, AddXXRg<I __ 4 __ Long>);
+            bind(opcodeL | dy << 9 | 5 << 3 | reg, AddXXRg<I __ 5 __ Long>);
+            bind(opcodeL | dy << 9 | 6 << 3 | reg, AddXXRg<I __ 6 __ Long>);
+        }
+        bind(opcodeB | dy << 9 | 7 << 3 | 0, AddXXRg<I __  7 __ Byte>);
+        bind(opcodeB | dy << 9 | 7 << 3 | 1, AddXXRg<I __  8 __ Byte>);
+        bind(opcodeB | dy << 9 | 7 << 3 | 2, AddXXRg<I __  9 __ Byte>);
+        bind(opcodeB | dy << 9 | 7 << 3 | 3, AddXXRg<I __ 10 __ Byte>);
+        bind(opcodeB | dy << 9 | 7 << 3 | 4, AddXXRg<I __ 11 __ Byte>);
+
+        bind(opcodeW | dy << 9 | 7 << 3 | 0, AddXXRg<I __  7 __ Word>);
+        bind(opcodeW | dy << 9 | 7 << 3 | 1, AddXXRg<I __  8 __ Word>);
+        bind(opcodeW | dy << 9 | 7 << 3 | 2, AddXXRg<I __  9 __ Word>);
+        bind(opcodeW | dy << 9 | 7 << 3 | 3, AddXXRg<I __ 10 __ Word>);
+        bind(opcodeW | dy << 9 | 7 << 3 | 4, AddXXRg<I __ 11 __ Word>);
+
+        bind(opcodeL | dy << 9 | 7 << 3 | 0, AddXXRg<I __  7 __ Long>);
+        bind(opcodeL | dy << 9 | 7 << 3 | 1, AddXXRg<I __  8 __ Long>);
+        bind(opcodeL | dy << 9 | 7 << 3 | 2, AddXXRg<I __  9 __ Long>);
+        bind(opcodeL | dy << 9 | 7 << 3 | 3, AddXXRg<I __ 10 __ Long>);
+        bind(opcodeL | dy << 9 | 7 << 3 | 4, AddXXRg<I __ 11 __ Long>);
+    }
+}
+
+template<Instr I> void
+CPU::registerAddSubRgEa(const char *pattern)
+{
+    // Mode:        Dx,<ea>
     //              -------------------------------------------------
     //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
     //              -------------------------------------------------
     //                        X   X   X   X   X   X   X
 
-    // (1)
-    for (int dy = 0; dy < 8; dy++) {
+    u16 opcode = parse(pattern);
+    u16 opcodeB = opcode | 0 << 6;
+    u16 opcodeW = opcode | 1 << 6;
+    u16 opcodeL = opcode | 2 << 6;
 
-        opcode = parse(patternXXReg) | dy << 9;
+    for (int dy = 0; dy < 8; dy++) {
         for (int reg = 0; reg < 8; reg++) {
 
-            bind(opcode | 0 << 6 | 0 << 3 | reg, AddXXRg<I __ 0 __ Byte>);
-            // Byte size is not supported for addressing mode 1
-            bind(opcode | 0 << 6 | 2 << 3 | reg, AddXXRg<I __ 2 __ Byte>);
-            bind(opcode | 0 << 6 | 3 << 3 | reg, AddXXRg<I __ 3 __ Byte>);
-            bind(opcode | 0 << 6 | 4 << 3 | reg, AddXXRg<I __ 4 __ Byte>);
-            bind(opcode | 0 << 6 | 5 << 3 | reg, AddXXRg<I __ 5 __ Byte>);
-            bind(opcode | 0 << 6 | 6 << 3 | reg, AddXXRg<I __ 6 __ Byte>);
+            bind(opcodeB | dy << 9 | 2 << 3 | reg, AddRgXX<I __ 2 __ Byte>);
+            bind(opcodeB | dy << 9 | 3 << 3 | reg, AddRgXX<I __ 3 __ Byte>);
+            bind(opcodeB | dy << 9 | 4 << 3 | reg, AddRgXX<I __ 4 __ Byte>);
+            bind(opcodeB | dy << 9 | 5 << 3 | reg, AddRgXX<I __ 5 __ Byte>);
+            bind(opcodeB | dy << 9 | 6 << 3 | reg, AddRgXX<I __ 6 __ Byte>);
 
-            bind(opcode | 1 << 6 | 0 << 3 | reg, AddXXRg<I __ 0 __ Word>);
-            bind(opcode | 1 << 6 | 1 << 3 | reg, AddXXRg<I __ 1 __ Word>);
-            bind(opcode | 1 << 6 | 2 << 3 | reg, AddXXRg<I __ 2 __ Word>);
-            bind(opcode | 1 << 6 | 3 << 3 | reg, AddXXRg<I __ 3 __ Word>);
-            bind(opcode | 1 << 6 | 4 << 3 | reg, AddXXRg<I __ 4 __ Word>);
-            bind(opcode | 1 << 6 | 5 << 3 | reg, AddXXRg<I __ 5 __ Word>);
-            bind(opcode | 1 << 6 | 6 << 3 | reg, AddXXRg<I __ 6 __ Word>);
+            bind(opcodeW | dy << 9 | 2 << 3 | reg, AddRgXX<I __ 2 __ Word>);
+            bind(opcodeW | dy << 9 | 3 << 3 | reg, AddRgXX<I __ 3 __ Word>);
+            bind(opcodeW | dy << 9 | 4 << 3 | reg, AddRgXX<I __ 4 __ Word>);
+            bind(opcodeW | dy << 9 | 5 << 3 | reg, AddRgXX<I __ 5 __ Word>);
+            bind(opcodeW | dy << 9 | 6 << 3 | reg, AddRgXX<I __ 6 __ Word>);
 
-            bind(opcode | 2 << 6 | 0 << 3 | reg, AddXXRg<I __ 0 __ Long>);
-            bind(opcode | 2 << 6 | 1 << 3 | reg, AddXXRg<I __ 1 __ Long>);
-            bind(opcode | 2 << 6 | 2 << 3 | reg, AddXXRg<I __ 2 __ Long>);
-            bind(opcode | 2 << 6 | 3 << 3 | reg, AddXXRg<I __ 3 __ Long>);
-            bind(opcode | 2 << 6 | 4 << 3 | reg, AddXXRg<I __ 4 __ Long>);
-            bind(opcode | 2 << 6 | 5 << 3 | reg, AddXXRg<I __ 5 __ Long>);
-            bind(opcode | 2 << 6 | 6 << 3 | reg, AddXXRg<I __ 6 __ Long>);
+            bind(opcodeL | dy << 9 | 2 << 3 | reg, AddRgXX<I __ 2 __ Long>);
+            bind(opcodeL | dy << 9 | 3 << 3 | reg, AddRgXX<I __ 3 __ Long>);
+            bind(opcodeL | dy << 9 | 4 << 3 | reg, AddRgXX<I __ 4 __ Long>);
+            bind(opcodeL | dy << 9 | 5 << 3 | reg, AddRgXX<I __ 5 __ Long>);
+            bind(opcodeL | dy << 9 | 6 << 3 | reg, AddRgXX<I __ 6 __ Long>);
         }
-        bind(opcode | 0 << 6 | 7 << 3 | 0, AddXXRg<I __ 7 __ Byte>);
-        bind(opcode | 0 << 6 | 7 << 3 | 1, AddXXRg<I __ 8 __ Byte>);
-        bind(opcode | 0 << 6 | 7 << 3 | 2, AddXXRg<I __ 9 __ Byte>);
-        bind(opcode | 0 << 6 | 7 << 3 | 3, AddXXRg<I __ 10 __ Byte>);
-        bind(opcode | 0 << 6 | 7 << 3 | 4, AddXXRg<I __ 11 __ Byte>);
+        bind(opcodeB | dy << 9 | 7 << 3 | 0, AddRgXX<I __ 7 __ Byte>);
+        bind(opcodeB | dy << 9 | 7 << 3 | 1, AddRgXX<I __ 8 __ Byte>);
 
-        bind(opcode | 1 << 6 | 7 << 3 | 0, AddXXRg<I __ 7 __ Word>);
-        bind(opcode | 1 << 6 | 7 << 3 | 1, AddXXRg<I __ 8 __ Word>);
-        bind(opcode | 1 << 6 | 7 << 3 | 2, AddXXRg<I __ 9 __ Word>);
-        bind(opcode | 1 << 6 | 7 << 3 | 3, AddXXRg<I __ 10 __ Word>);
-        bind(opcode | 1 << 6 | 7 << 3 | 4, AddXXRg<I __ 11 __ Word>);
+        bind(opcodeW | dy << 9 | 7 << 3 | 0, AddRgXX<I __ 7 __ Word>);
+        bind(opcodeW | dy << 9 | 7 << 3 | 1, AddRgXX<I __ 8 __ Word>);
 
-        bind(opcode | 2 << 6 | 7 << 3 | 0, AddXXRg<I __ 7 __ Long>);
-        bind(opcode | 2 << 6 | 7 << 3 | 1, AddXXRg<I __ 8 __ Long>);
-        bind(opcode | 2 << 6 | 7 << 3 | 2, AddXXRg<I __ 9 __ Long>);
-        bind(opcode | 2 << 6 | 7 << 3 | 3, AddXXRg<I __ 10 __ Long>);
-        bind(opcode | 2 << 6 | 7 << 3 | 4, AddXXRg<I __ 11 __ Long>);
+        bind(opcodeL | dy << 9 | 7 << 3 | 0, AddRgXX<I __ 7 __ Long>);
+        bind(opcodeL | dy << 9 | 7 << 3 | 1, AddRgXX<I __ 8 __ Long>);
     }
-
-    // (2)
-     for (int dy = 0; dy < 8; dy++) {
-
-         opcode = parse(patternRegXX) | dy << 9;
-         for (int reg = 0; reg < 8; reg++) {
-
-             bind(opcode | 0 << 6 | 2 << 3 | reg, AddRgXX<I __ 2 __ Byte>);
-             bind(opcode | 0 << 6 | 3 << 3 | reg, AddRgXX<I __ 3 __ Byte>);
-             bind(opcode | 0 << 6 | 4 << 3 | reg, AddRgXX<I __ 4 __ Byte>);
-             bind(opcode | 0 << 6 | 5 << 3 | reg, AddRgXX<I __ 5 __ Byte>);
-             bind(opcode | 0 << 6 | 6 << 3 | reg, AddRgXX<I __ 6 __ Byte>);
-
-             bind(opcode | 1 << 6 | 2 << 3 | reg, AddRgXX<I __ 2 __ Word>);
-             bind(opcode | 1 << 6 | 3 << 3 | reg, AddRgXX<I __ 3 __ Word>);
-             bind(opcode | 1 << 6 | 4 << 3 | reg, AddRgXX<I __ 4 __ Word>);
-             bind(opcode | 1 << 6 | 5 << 3 | reg, AddRgXX<I __ 5 __ Word>);
-             bind(opcode | 1 << 6 | 6 << 3 | reg, AddRgXX<I __ 6 __ Word>);
-
-             bind(opcode | 2 << 6 | 2 << 3 | reg, AddRgXX<I __ 2 __ Long>);
-             bind(opcode | 2 << 6 | 3 << 3 | reg, AddRgXX<I __ 3 __ Long>);
-             bind(opcode | 2 << 6 | 4 << 3 | reg, AddRgXX<I __ 4 __ Long>);
-             bind(opcode | 2 << 6 | 5 << 3 | reg, AddRgXX<I __ 5 __ Long>);
-             bind(opcode | 2 << 6 | 6 << 3 | reg, AddRgXX<I __ 6 __ Long>);
-         }
-         bind(opcode | 0 << 6 | 7 << 3 | 0, AddRgXX<I __ 7 __ Byte>);
-         bind(opcode | 0 << 6 | 7 << 3 | 1, AddRgXX<I __ 8 __ Byte>);
-
-         bind(opcode | 1 << 6 | 7 << 3 | 0, AddRgXX<I __ 7 __ Word>);
-         bind(opcode | 1 << 6 | 7 << 3 | 1, AddRgXX<I __ 8 __ Word>);
-
-         bind(opcode | 2 << 6 | 7 << 3 | 0, AddRgXX<I __ 7 __ Long>);
-         bind(opcode | 2 << 6 | 7 << 3 | 1, AddRgXX<I __ 8 __ Long>);
-     }
 }
 
 template<Instr I> void
@@ -652,21 +657,21 @@ CPU::registerClr(const char *pattern)
 void
 CPU::registerABCD()
 {
-    registerAbcdSbcd<ABCD>("1100 ---1 0000 0---",  // Dx,Dy
-                           "1100 ---1 0000 1---"); // -(Ax),-(Ay)
+    registerAbcdSbcd<ABCD>("1100 ---1 0000 0---",   // Dx,Dy
+                           "1100 ---1 0000 1---");  // -(Ax),-(Ay)
 }
 
 void
 CPU::registerADD()
 {
-    registerAddSub<ADD>("1101 ---0 ---- ----",  // <ea>,Dy
-                        "1101 ---1 ---- ----"); // Dx,<ea>
+    registerAddSubEaRg<ADD>("1101 ---0 ---- ----"); // <ea>,Dy
+    registerAddSubRgEa<ADD>("1101 ---1 ---- ----"); // Dx,<ea>
 }
 
 void
 CPU::registerADDA()
 {
-    registerAddSubA<ADDA>("1101 ---- 11-- ----"); // <ea>,Ay
+    registerAddSubA<ADDA>("1101 ---- 11-- ----");  // <ea>,Ay
 }
 
 void
@@ -724,6 +729,12 @@ void
 CPU::registerCLR()
 {
     registerClr<CLR>("0100 0010 ---- ----");   // <ea>
+}
+
+void
+CPU::registerCMP()
+{
+    // assert(false);
 }
 
 void
@@ -1046,14 +1057,14 @@ CPU::registerS()
 void
 CPU::registerSUB()
 {
-    registerAddSub<SUB>("1001 ---0 ---- ----",  // <ea>,Dy
-                        "1001 ---1 ---- ----"); // Dx,<ea>
+    registerAddSubEaRg<SUB>("1001 ---0 ---- ----"); // <ea>,Dy
+    registerAddSubRgEa<SUB>("1001 ---1 ---- ----"); // Dx,<ea>
 }
 
 void
 CPU::registerSUBA()
 {
-    registerAddSubA<SUBA>("1001 ---- 11-- ----"); // <ea>,Ay
+    registerAddSubA<SUBA>("1001 ---- 11-- ----");  // <ea>,Ay
 }
 
 void

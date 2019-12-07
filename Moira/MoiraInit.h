@@ -23,8 +23,8 @@ template<Instr I> void registerBit(const char *patternReg,
 template<Instr I> void registerAbcdSbcd(const char *patternReg,
                                         const char *patternInd);
 
-template<Instr I> void registerAddSub(const char *patternXXReg,
-                                      const char *patternRegXX);
+template<Instr I> void registerAddSubEaRg(const char *pattern);
+template<Instr I> void registerAddSubRgEa(const char *pattern);
 
 template<Instr I> void registerAddSubA(const char *pattern);
 
@@ -48,6 +48,7 @@ void registerBCLR();
 void registerBSET();
 void registerBTST();
 void registerCLR();
+void registerCMP();
 void registerDBcc();
 void registerDIVS();
 void registerDIVU();
