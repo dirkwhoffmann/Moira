@@ -33,6 +33,10 @@ template<> u32  CLEAR <Byte> (u64 data) { return data & 0xFFFFFF00; }
 template<> u32  CLEAR <Word> (u64 data) { return data & 0xFFFF0000; }
 template<> u32  CLEAR <Long> (u64 data) { return data & 0x00000000; }
 
+template<> u32  SEXT  <Byte> (u64 data) { return (i8)data;          }
+template<> u32  SEXT  <Word> (u64 data) { return (i16)data;         }
+template<> u32  SEXT  <Long> (u64 data) { return (i32)data;         }
+
 template<> bool NBIT  <Byte> (u64 data) { return data & 0x00000080; }
 template<> bool NBIT  <Word> (u64 data) { return data & 0x00008000; }
 template<> bool NBIT  <Long> (u64 data) { return data & 0x80000000; }

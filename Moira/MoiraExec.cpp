@@ -226,19 +226,42 @@ CPU::execAddRgXX(u16 opcode)
 template<Instr I, Mode M, Size S> void
 CPU::execAddaDn(u16 opcode)
 {
-    assert(false);
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    u32 sop = SEXT<S>(readD<S>(src));
+    u32 dop = readA(dst);
+
+    prefetch();
+    writeA(dst, sop + dop);
 }
 
 template<Instr I, Mode M, Size S> void
 CPU::execAddaEa(u16 opcode)
 {
-    assert(false);
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    u32 ea = computeEA<M,S>(src);
+    if (addressError<S>(ea)) return;
+
+    u32 sop = SEXT<S>(read<S>(ea));
+    u32 dop = readA(dst);
+
+    prefetch();
+    writeA(dst, sop + dop);
 }
 
 template<Instr I, Mode M, Size S> void
 CPU::execAddaIm(u16 opcode)
 {
-    assert(false);
+    int dst = ____xxx_________(opcode);
+
+    u32 sop = SEXT<S>(readImm<S>());
+    u32 dop = readA(dst);
+
+    prefetch();
+    writeA(dst, sop + dop);
 }
 
 template<Instr I, Mode M, Size S> void
