@@ -585,7 +585,6 @@ CPU::registerCMPA()
 {
     u16 opcode = parse("1011 ---- 11-- ----");
 
-    // Modes:       <ea>,An
     //              -------------------------------------------------
     // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
     //              -------------------------------------------------
@@ -599,25 +598,29 @@ CPU::registerDBcc()
 {
     u32 opcode = parse("0101 ---- 1100 1---");
 
-    for (int reg = 0; reg < 8; reg++) {
+    // DBcc
+    //
+    //              -------------------------------------------------
+    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    // Dn,<label>     X
 
-        register(opcode | 0x0 << 8 | reg, Dbcc<DBT  __ 0 __ Word>);
-        register(opcode | 0x1 << 8 | reg, Dbcc<DBF  __ 0 __ Word>);
-        register(opcode | 0x2 << 8 | reg, Dbcc<DBHI __ 0 __ Word>);
-        register(opcode | 0x3 << 8 | reg, Dbcc<DBLS __ 0 __ Word>);
-        register(opcode | 0x4 << 8 | reg, Dbcc<DBCC __ 0 __ Word>);
-        register(opcode | 0x5 << 8 | reg, Dbcc<DBCS __ 0 __ Word>);
-        register(opcode | 0x6 << 8 | reg, Dbcc<DBNE __ 0 __ Word>);
-        register(opcode | 0x7 << 8 | reg, Dbcc<DBEQ __ 0 __ Word>);
-        register(opcode | 0x8 << 8 | reg, Dbcc<DBVC __ 0 __ Word>);
-        register(opcode | 0x9 << 8 | reg, Dbcc<DBVS __ 0 __ Word>);
-        register(opcode | 0xA << 8 | reg, Dbcc<DBPL __ 0 __ Word>);
-        register(opcode | 0xB << 8 | reg, Dbcc<DBMI __ 0 __ Word>);
-        register(opcode | 0xC << 8 | reg, Dbcc<DBGE __ 0 __ Word>);
-        register(opcode | 0xD << 8 | reg, Dbcc<DBLT __ 0 __ Word>);
-        register(opcode | 0xE << 8 | reg, Dbcc<DBGT __ 0 __ Word>);
-        register(opcode | 0xF << 8 | reg, Dbcc<DBLE __ 0 __ Word>);
-    }
+    _____________XXX(opcode | 0x000, DBT,  0, Word, Dbcc);
+    _____________XXX(opcode | 0x100, DBF,  0, Word, Dbcc);
+    _____________XXX(opcode | 0x200, DBHI, 0, Word, Dbcc);
+    _____________XXX(opcode | 0x300, DBLS, 0, Word, Dbcc);
+    _____________XXX(opcode | 0x400, DBCC, 0, Word, Dbcc);
+    _____________XXX(opcode | 0x500, DBCS, 0, Word, Dbcc);
+    _____________XXX(opcode | 0x600, DBNE, 0, Word, Dbcc);
+    _____________XXX(opcode | 0x700, DBEQ, 0, Word, Dbcc);
+    _____________XXX(opcode | 0x800, DBVC, 0, Word, Dbcc);
+    _____________XXX(opcode | 0x900, DBVS, 0, Word, Dbcc);
+    _____________XXX(opcode | 0xA00, DBPL, 0, Word, Dbcc);
+    _____________XXX(opcode | 0xB00, DBMI, 0, Word, Dbcc);
+    _____________XXX(opcode | 0xC00, DBGE, 0, Word, Dbcc);
+    _____________XXX(opcode | 0xD00, DBLT, 0, Word, Dbcc);
+    _____________XXX(opcode | 0xE00, DBGT, 0, Word, Dbcc);
+    _____________XXX(opcode | 0xF00, DBLE, 0, Word, Dbcc);
 }
 
 void
