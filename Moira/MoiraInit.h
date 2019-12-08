@@ -23,8 +23,6 @@ template<Instr I> void registerAbcdSbcd(const char *patternReg,
 template<Instr I> void registerAddSubEaRg(const char *pattern);
 template<Instr I> void registerAddSubRgEa(const char *pattern);
 
-template<Instr I> void registerAddSubA(const char *pattern);
-
 template<Instr I> void registerMulDiv(const char *pattern);
 
 template<Instr I> void registerNegNot(const char *pattern);

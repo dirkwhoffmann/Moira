@@ -187,7 +187,7 @@ CPU::execAbcd(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAddXXRg(u16 opcode)
+CPU::execAddEaRg(u16 opcode)
 {
     u32 result;
 
@@ -229,7 +229,7 @@ CPU::execAddXXRg(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAddRgXX(u16 opcode)
+CPU::execAddRgEa(u16 opcode)
 {
     assert(M >= 2 && M <= 8);
 
@@ -246,45 +246,15 @@ CPU::execAddRgXX(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAddaDn(u16 opcode)
+CPU::execAdda(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
+    u32 ea, sop, dop;
 
-    u32 sop = SEXT<S>(readD<S>(src));
-    u32 dop = readA(dst);
-
-    u32 result = (I == ADDA) ? dop + sop : dop - sop;
-
-    prefetch();
-    writeA(dst, result);
-}
-
-template<Instr I, Mode M, Size S> void
-CPU::execAddaEa(u16 opcode)
-{
-    int src = _____________xxx(opcode);
-    int dst = ____xxx_________(opcode);
-
-    u32 ea = computeEA<M,S>(src);
-    if (addressError<S>(ea)) return;
-
-    u32 sop = SEXT<S>(read<S>(ea));
-    u32 dop = readA(dst);
-
-    u32 result = (I == ADDA) ? dop + sop : dop - sop;
-
-    prefetch();
-    writeA(dst, result);
-}
-
-template<Instr I, Mode M, Size S> void
-CPU::execAddaIm(u16 opcode)
-{
-    int dst = ____xxx_________(opcode);
-
-    u32 sop = SEXT<S>(readImm<S>());
-    u32 dop = readA(dst);
+    if (!readOperand<M,S>(src, ea, sop)) return;
+    sop = SEXT<S>(sop);
+    dop = readA(dst);
 
     u32 result = (I == ADDA) ? dop + sop : dop - sop;
 

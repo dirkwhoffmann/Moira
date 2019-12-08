@@ -20,12 +20,10 @@ template<Instr I, Mode M, Size S> void execShift(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execAbcd(u16 opcode);
 
-template<Instr I, Mode M, Size S> void execAddXXRg(u16 opcode);
-template<Instr I, Mode M, Size S> void execAddRgXX(u16 opcode);
+template<Instr I, Mode M, Size S> void execAddEaRg(u16 opcode);
+template<Instr I, Mode M, Size S> void execAddRgEa(u16 opcode);
 
-template<Instr I, Mode M, Size S> void execAddaDn(u16 opcode);
-template<Instr I, Mode M, Size S> void execAddaEa(u16 opcode);
-template<Instr I, Mode M, Size S> void execAddaIm(u16 opcode);
+template<Instr I, Mode M, Size S> void execAdda(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execAndEaRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execAndRgEa(u16 opcode);

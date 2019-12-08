@@ -288,47 +288,47 @@ CPU::registerAddSubEaRg(const char *pattern)
     for (int dy = 0; dy < 8; dy++) {
         for (int reg = 0; reg < 8; reg++) {
 
-            register(opcodeB | dy << 9 | 0 << 3 | reg, AddXXRg<I __ 0 __ Byte>);
+            register(opcodeB | dy << 9 | 0 << 3 | reg, AddEaRg<I __ 0 __ Byte>);
             // Byte size is not supported for addressing mode 1
-            register(opcodeB | dy << 9 | 2 << 3 | reg, AddXXRg<I __ 2 __ Byte>);
-            register(opcodeB | dy << 9 | 3 << 3 | reg, AddXXRg<I __ 3 __ Byte>);
-            register(opcodeB | dy << 9 | 4 << 3 | reg, AddXXRg<I __ 4 __ Byte>);
-            register(opcodeB | dy << 9 | 5 << 3 | reg, AddXXRg<I __ 5 __ Byte>);
-            register(opcodeB | dy << 9 | 6 << 3 | reg, AddXXRg<I __ 6 __ Byte>);
+            register(opcodeB | dy << 9 | 2 << 3 | reg, AddEaRg<I __ 2 __ Byte>);
+            register(opcodeB | dy << 9 | 3 << 3 | reg, AddEaRg<I __ 3 __ Byte>);
+            register(opcodeB | dy << 9 | 4 << 3 | reg, AddEaRg<I __ 4 __ Byte>);
+            register(opcodeB | dy << 9 | 5 << 3 | reg, AddEaRg<I __ 5 __ Byte>);
+            register(opcodeB | dy << 9 | 6 << 3 | reg, AddEaRg<I __ 6 __ Byte>);
 
-            register(opcodeW | dy << 9 | 0 << 3 | reg, AddXXRg<I __ 0 __ Word>);
-            register(opcodeW | dy << 9 | 1 << 3 | reg, AddXXRg<I __ 1 __ Word>);
-            register(opcodeW | dy << 9 | 2 << 3 | reg, AddXXRg<I __ 2 __ Word>);
-            register(opcodeW | dy << 9 | 3 << 3 | reg, AddXXRg<I __ 3 __ Word>);
-            register(opcodeW | dy << 9 | 4 << 3 | reg, AddXXRg<I __ 4 __ Word>);
-            register(opcodeW | dy << 9 | 5 << 3 | reg, AddXXRg<I __ 5 __ Word>);
-            register(opcodeW | dy << 9 | 6 << 3 | reg, AddXXRg<I __ 6 __ Word>);
+            register(opcodeW | dy << 9 | 0 << 3 | reg, AddEaRg<I __ 0 __ Word>);
+            register(opcodeW | dy << 9 | 1 << 3 | reg, AddEaRg<I __ 1 __ Word>);
+            register(opcodeW | dy << 9 | 2 << 3 | reg, AddEaRg<I __ 2 __ Word>);
+            register(opcodeW | dy << 9 | 3 << 3 | reg, AddEaRg<I __ 3 __ Word>);
+            register(opcodeW | dy << 9 | 4 << 3 | reg, AddEaRg<I __ 4 __ Word>);
+            register(opcodeW | dy << 9 | 5 << 3 | reg, AddEaRg<I __ 5 __ Word>);
+            register(opcodeW | dy << 9 | 6 << 3 | reg, AddEaRg<I __ 6 __ Word>);
 
-            register(opcodeL | dy << 9 | 0 << 3 | reg, AddXXRg<I __ 0 __ Long>);
-            register(opcodeL | dy << 9 | 1 << 3 | reg, AddXXRg<I __ 1 __ Long>);
-            register(opcodeL | dy << 9 | 2 << 3 | reg, AddXXRg<I __ 2 __ Long>);
-            register(opcodeL | dy << 9 | 3 << 3 | reg, AddXXRg<I __ 3 __ Long>);
-            register(opcodeL | dy << 9 | 4 << 3 | reg, AddXXRg<I __ 4 __ Long>);
-            register(opcodeL | dy << 9 | 5 << 3 | reg, AddXXRg<I __ 5 __ Long>);
-            register(opcodeL | dy << 9 | 6 << 3 | reg, AddXXRg<I __ 6 __ Long>);
+            register(opcodeL | dy << 9 | 0 << 3 | reg, AddEaRg<I __ 0 __ Long>);
+            register(opcodeL | dy << 9 | 1 << 3 | reg, AddEaRg<I __ 1 __ Long>);
+            register(opcodeL | dy << 9 | 2 << 3 | reg, AddEaRg<I __ 2 __ Long>);
+            register(opcodeL | dy << 9 | 3 << 3 | reg, AddEaRg<I __ 3 __ Long>);
+            register(opcodeL | dy << 9 | 4 << 3 | reg, AddEaRg<I __ 4 __ Long>);
+            register(opcodeL | dy << 9 | 5 << 3 | reg, AddEaRg<I __ 5 __ Long>);
+            register(opcodeL | dy << 9 | 6 << 3 | reg, AddEaRg<I __ 6 __ Long>);
         }
-        register(opcodeB | dy << 9 | 7 << 3 | 0, AddXXRg<I __  7 __ Byte>);
-        register(opcodeB | dy << 9 | 7 << 3 | 1, AddXXRg<I __  8 __ Byte>);
-        register(opcodeB | dy << 9 | 7 << 3 | 2, AddXXRg<I __  9 __ Byte>);
-        register(opcodeB | dy << 9 | 7 << 3 | 3, AddXXRg<I __ 10 __ Byte>);
-        register(opcodeB | dy << 9 | 7 << 3 | 4, AddXXRg<I __ 11 __ Byte>);
+        register(opcodeB | dy << 9 | 7 << 3 | 0, AddEaRg<I __  7 __ Byte>);
+        register(opcodeB | dy << 9 | 7 << 3 | 1, AddEaRg<I __  8 __ Byte>);
+        register(opcodeB | dy << 9 | 7 << 3 | 2, AddEaRg<I __  9 __ Byte>);
+        register(opcodeB | dy << 9 | 7 << 3 | 3, AddEaRg<I __ 10 __ Byte>);
+        register(opcodeB | dy << 9 | 7 << 3 | 4, AddEaRg<I __ 11 __ Byte>);
 
-        register(opcodeW | dy << 9 | 7 << 3 | 0, AddXXRg<I __  7 __ Word>);
-        register(opcodeW | dy << 9 | 7 << 3 | 1, AddXXRg<I __  8 __ Word>);
-        register(opcodeW | dy << 9 | 7 << 3 | 2, AddXXRg<I __  9 __ Word>);
-        register(opcodeW | dy << 9 | 7 << 3 | 3, AddXXRg<I __ 10 __ Word>);
-        register(opcodeW | dy << 9 | 7 << 3 | 4, AddXXRg<I __ 11 __ Word>);
+        register(opcodeW | dy << 9 | 7 << 3 | 0, AddEaRg<I __  7 __ Word>);
+        register(opcodeW | dy << 9 | 7 << 3 | 1, AddEaRg<I __  8 __ Word>);
+        register(opcodeW | dy << 9 | 7 << 3 | 2, AddEaRg<I __  9 __ Word>);
+        register(opcodeW | dy << 9 | 7 << 3 | 3, AddEaRg<I __ 10 __ Word>);
+        register(opcodeW | dy << 9 | 7 << 3 | 4, AddEaRg<I __ 11 __ Word>);
 
-        register(opcodeL | dy << 9 | 7 << 3 | 0, AddXXRg<I __  7 __ Long>);
-        register(opcodeL | dy << 9 | 7 << 3 | 1, AddXXRg<I __  8 __ Long>);
-        register(opcodeL | dy << 9 | 7 << 3 | 2, AddXXRg<I __  9 __ Long>);
-        register(opcodeL | dy << 9 | 7 << 3 | 3, AddXXRg<I __ 10 __ Long>);
-        register(opcodeL | dy << 9 | 7 << 3 | 4, AddXXRg<I __ 11 __ Long>);
+        register(opcodeL | dy << 9 | 7 << 3 | 0, AddEaRg<I __  7 __ Long>);
+        register(opcodeL | dy << 9 | 7 << 3 | 1, AddEaRg<I __  8 __ Long>);
+        register(opcodeL | dy << 9 | 7 << 3 | 2, AddEaRg<I __  9 __ Long>);
+        register(opcodeL | dy << 9 | 7 << 3 | 3, AddEaRg<I __ 10 __ Long>);
+        register(opcodeL | dy << 9 | 7 << 3 | 4, AddEaRg<I __ 11 __ Long>);
     }
 }
 
@@ -349,82 +349,32 @@ CPU::registerAddSubRgEa(const char *pattern)
     for (int dy = 0; dy < 8; dy++) {
         for (int reg = 0; reg < 8; reg++) {
 
-            register(opcodeB | dy << 9 | 2 << 3 | reg, AddRgXX<I __ 2 __ Byte>);
-            register(opcodeB | dy << 9 | 3 << 3 | reg, AddRgXX<I __ 3 __ Byte>);
-            register(opcodeB | dy << 9 | 4 << 3 | reg, AddRgXX<I __ 4 __ Byte>);
-            register(opcodeB | dy << 9 | 5 << 3 | reg, AddRgXX<I __ 5 __ Byte>);
-            register(opcodeB | dy << 9 | 6 << 3 | reg, AddRgXX<I __ 6 __ Byte>);
+            register(opcodeB | dy << 9 | 2 << 3 | reg, AddRgEa<I __ 2 __ Byte>);
+            register(opcodeB | dy << 9 | 3 << 3 | reg, AddRgEa<I __ 3 __ Byte>);
+            register(opcodeB | dy << 9 | 4 << 3 | reg, AddRgEa<I __ 4 __ Byte>);
+            register(opcodeB | dy << 9 | 5 << 3 | reg, AddRgEa<I __ 5 __ Byte>);
+            register(opcodeB | dy << 9 | 6 << 3 | reg, AddRgEa<I __ 6 __ Byte>);
 
-            register(opcodeW | dy << 9 | 2 << 3 | reg, AddRgXX<I __ 2 __ Word>);
-            register(opcodeW | dy << 9 | 3 << 3 | reg, AddRgXX<I __ 3 __ Word>);
-            register(opcodeW | dy << 9 | 4 << 3 | reg, AddRgXX<I __ 4 __ Word>);
-            register(opcodeW | dy << 9 | 5 << 3 | reg, AddRgXX<I __ 5 __ Word>);
-            register(opcodeW | dy << 9 | 6 << 3 | reg, AddRgXX<I __ 6 __ Word>);
+            register(opcodeW | dy << 9 | 2 << 3 | reg, AddRgEa<I __ 2 __ Word>);
+            register(opcodeW | dy << 9 | 3 << 3 | reg, AddRgEa<I __ 3 __ Word>);
+            register(opcodeW | dy << 9 | 4 << 3 | reg, AddRgEa<I __ 4 __ Word>);
+            register(opcodeW | dy << 9 | 5 << 3 | reg, AddRgEa<I __ 5 __ Word>);
+            register(opcodeW | dy << 9 | 6 << 3 | reg, AddRgEa<I __ 6 __ Word>);
 
-            register(opcodeL | dy << 9 | 2 << 3 | reg, AddRgXX<I __ 2 __ Long>);
-            register(opcodeL | dy << 9 | 3 << 3 | reg, AddRgXX<I __ 3 __ Long>);
-            register(opcodeL | dy << 9 | 4 << 3 | reg, AddRgXX<I __ 4 __ Long>);
-            register(opcodeL | dy << 9 | 5 << 3 | reg, AddRgXX<I __ 5 __ Long>);
-            register(opcodeL | dy << 9 | 6 << 3 | reg, AddRgXX<I __ 6 __ Long>);
+            register(opcodeL | dy << 9 | 2 << 3 | reg, AddRgEa<I __ 2 __ Long>);
+            register(opcodeL | dy << 9 | 3 << 3 | reg, AddRgEa<I __ 3 __ Long>);
+            register(opcodeL | dy << 9 | 4 << 3 | reg, AddRgEa<I __ 4 __ Long>);
+            register(opcodeL | dy << 9 | 5 << 3 | reg, AddRgEa<I __ 5 __ Long>);
+            register(opcodeL | dy << 9 | 6 << 3 | reg, AddRgEa<I __ 6 __ Long>);
         }
-        register(opcodeB | dy << 9 | 7 << 3 | 0, AddRgXX<I __ 7 __ Byte>);
-        register(opcodeB | dy << 9 | 7 << 3 | 1, AddRgXX<I __ 8 __ Byte>);
+        register(opcodeB | dy << 9 | 7 << 3 | 0, AddRgEa<I __ 7 __ Byte>);
+        register(opcodeB | dy << 9 | 7 << 3 | 1, AddRgEa<I __ 8 __ Byte>);
 
-        register(opcodeW | dy << 9 | 7 << 3 | 0, AddRgXX<I __ 7 __ Word>);
-        register(opcodeW | dy << 9 | 7 << 3 | 1, AddRgXX<I __ 8 __ Word>);
+        register(opcodeW | dy << 9 | 7 << 3 | 0, AddRgEa<I __ 7 __ Word>);
+        register(opcodeW | dy << 9 | 7 << 3 | 1, AddRgEa<I __ 8 __ Word>);
 
-        register(opcodeL | dy << 9 | 7 << 3 | 0, AddRgXX<I __ 7 __ Long>);
-        register(opcodeL | dy << 9 | 7 << 3 | 1, AddRgXX<I __ 8 __ Long>);
-    }
-}
-
-template<Instr I> void
-CPU::registerAddSubA(const char *pattern)
-{
-    // ADDA, SUBA
-    //
-    // Modes:       <ea>,An
-    //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    //                X   X   X   X   X   X   X   X   X   X   X   X
-
-    u16 opcode = parse(pattern);
-    u16 opcodeW = opcode | 0 << 8;
-    u16 opcodeL = opcode | 1 << 8;
-
-    for (int dst = 0; dst < 8; dst++) {
-
-        for (int src = 0; src < 8; src++) {
-
-            register(opcodeW | dst << 9 | 0 << 3 | src, AddaDn<I __ 0 __ Word>);
-            register(opcodeW | dst << 9 | 1 << 3 | src, AddaEa<I __ 1 __ Word>);
-            register(opcodeW | dst << 9 | 2 << 3 | src, AddaEa<I __ 2 __ Word>);
-            register(opcodeW | dst << 9 | 3 << 3 | src, AddaEa<I __ 3 __ Word>);
-            register(opcodeW | dst << 9 | 4 << 3 | src, AddaEa<I __ 4 __ Word>);
-            register(opcodeW | dst << 9 | 5 << 3 | src, AddaEa<I __ 5 __ Word>);
-            register(opcodeW | dst << 9 | 6 << 3 | src, AddaEa<I __ 6 __ Word>);
-
-            register(opcodeL | dst << 9 | 0 << 3 | src, AddaEa<I __ 0 __ Long>);
-            register(opcodeL | dst << 9 | 1 << 3 | src, AddaEa<I __ 1 __ Long>);
-            register(opcodeL | dst << 9 | 2 << 3 | src, AddaEa<I __ 2 __ Long>);
-            register(opcodeL | dst << 9 | 3 << 3 | src, AddaEa<I __ 3 __ Long>);
-            register(opcodeL | dst << 9 | 4 << 3 | src, AddaEa<I __ 4 __ Long>);
-            register(opcodeL | dst << 9 | 5 << 3 | src, AddaEa<I __ 5 __ Long>);
-            register(opcodeL | dst << 9 | 6 << 3 | src, AddaEa<I __ 6 __ Long>);
-
-        }
-        register(opcodeW | dst << 9 | 7 << 3 | 0, AddaEa<I __  7 __ Word>);
-        register(opcodeW | dst << 9 | 7 << 3 | 1, AddaEa<I __  8 __ Word>);
-        register(opcodeW | dst << 9 | 7 << 3 | 2, AddaEa<I __  9 __ Word>);
-        register(opcodeW | dst << 9 | 7 << 3 | 3, AddaEa<I __ 10 __ Word>);
-        register(opcodeW | dst << 9 | 7 << 3 | 4, AddaIm<I __ 11 __ Word>);
-
-        register(opcodeL | dst << 9 | 7 << 3 | 0, AddaEa<I __  7 __ Long>);
-        register(opcodeL | dst << 9 | 7 << 3 | 1, AddaEa<I __  8 __ Long>);
-        register(opcodeL | dst << 9 | 7 << 3 | 2, AddaEa<I __  9 __ Long>);
-        register(opcodeL | dst << 9 | 7 << 3 | 3, AddaEa<I __ 10 __ Long>);
-        register(opcodeL | dst << 9 | 7 << 3 | 4, AddaIm<I __ 11 __ Long>);
+        register(opcodeL | dy << 9 | 7 << 3 | 0, AddRgEa<I __ 7 __ Long>);
+        register(opcodeL | dy << 9 | 7 << 3 | 1, AddRgEa<I __ 8 __ Long>);
     }
 }
 
@@ -574,7 +524,14 @@ CPU::registerADD()
 void
 CPU::registerADDA()
 {
-    registerAddSubA<ADDA>("1101 ---- 11-- ----");  // <ea>,Ay
+    u16 opcode = parse("1101 ---- 11-- ----");
+
+     //              -------------------------------------------------
+     // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+     //              -------------------------------------------------
+     // <ea>,An        X   X   X   X   X   X   X   X   X   X   X   X
+
+     ____XXXS__MMMXXX(opcode, ADDA, 0b111111111111, Word | Long, Adda)
 }
 
 void
@@ -1053,7 +1010,14 @@ CPU::registerSUB()
 void
 CPU::registerSUBA()
 {
-    registerAddSubA<SUBA>("1001 ---- 11-- ----");  // <ea>,Ay
+    u16 opcode = parse("1001 ---- 11-- ----");
+
+    //              -------------------------------------------------
+    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    // <ea>,An        X   X   X   X   X   X   X   X   X   X   X   X
+
+    ____XXXS__MMMXXX(opcode, SUBA, 0b111111111111, Word | Long, Adda)
 }
 
 void
