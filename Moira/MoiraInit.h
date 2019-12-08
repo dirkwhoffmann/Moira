@@ -11,14 +11,11 @@
 #define MOIRA_INIT_H
 
 void init();
-void registerUnimplemented();
+void registerInstructions();
 
 template<Instr I> void registerShift(const char *patternReg,
                                      const char *patternImm,
                                      const char *patternEa);
-
-template<Instr I> void registerAbcdSbcd(const char *patternReg,
-                                        const char *patternInd);
 
 template<Instr I> void registerAddSubEaRg(const char *pattern);
 template<Instr I> void registerAddSubRgEa(const char *pattern);

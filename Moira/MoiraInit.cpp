@@ -105,15 +105,7 @@ parse(const char *s, u16 sum = 0)
 void
 CPU::init()
 {
-    // Start with clean tables
-    for (int i = 0; i < 0x10000; i++) {
-        exec[i] = &CPU::execIllegal;
-        dasm[i] = &CPU::dasmIllegal;
-        sync[i] = &CPU::syncIllegal;
-    }
-
-    // Register unimplemented instructions
-    registerUnimplemented();
+    registerInstructions();
 
     // Register the instruction set
     registerAND();
@@ -158,16 +150,23 @@ CPU::init()
 }
 
 void
-CPU::registerUnimplemented()
+CPU::registerInstructions()
 {
-    /* Unimplemented instructions are identified by the following bit patterns:
-     *
-     *    1010 ---- ---- ---- : (Line A instructions)
-     *    1111 ---- ---- ---- : (Line F instructions)
-     *
-     * Both instructions types are handles similarly. They only differ in the
-     * associated vector number.
-     */
+    // Start with clean tables
+    for (int i = 0; i < 0x10000; i++) {
+        exec[i] = &CPU::execIllegal;
+        dasm[i] = &CPU::dasmIllegal;
+        sync[i] = &CPU::syncIllegal;
+    }
+
+    // Unimplemented instructions are identified by the following bit patterns:
+    //
+    //    1010 ---- ---- ---- : (Line A instructions)
+    //    1111 ---- ---- ---- : (Line F instructions)
+    //
+    // Both instructions types are handles similarly. They only differ in the
+    // associated vector number.
+
     for (int i = 0; i < 0x1000; i++) {
 
         exec[0b1010 << 12 | i] = &CPU::execLineA;
@@ -199,74 +198,10 @@ CPU::registerShift(const char *patternReg,
     // #<data>,Dy                                                 X
     // <ea>                   X   X   X   X   X   X   X
 
-    // (1)
-    ____XXX_SS___XXX(opcode1, I, 0x0, Byte | Word | Long, ShiftRg);
+    ____XXX_SS___XXX(opcode1, I, 0b0, Byte | Word | Long, ShiftRg);
     ____XXX_SS___XXX(opcode2, I, 0xB, Byte | Word | Long, ShiftIm);
+    __________MMMXXX(opcode3, I, 0b001111111000, Word, Shift);
 
-    /*
-    for (int dx = 0; dx < 8; dx++) {
-        for (int dy = 0; dy < 8; dy++) {
-
-            opcode = parse(patternReg) | dx << 9 | dy;
-            register(opcode | 0 << 6, Shift<I __ 0 __ Byte>);
-            register(opcode | 1 << 6, Shift<I __ 0 __ Word>);
-            register(opcode | 2 << 6, Shift<I __ 0 __ Long>);
-        }
-    }
-    */
-
-    // (2)
-
-    /*
-    for (int data = 0; data < 8; data++) {
-        for (int dy = 0; dy < 8; dy++) {
-
-            opcode = parse(patternImm) | data << 9 | dy;
-            register(opcode | 0 << 6, Shift<I __ 11 __ Byte>);
-            register(opcode | 1 << 6, Shift<I __ 11 __ Word>);
-            register(opcode | 2 << 6, Shift<I __ 11 __ Long>);
-        }
-    }
-    */
-
-    // (3)
-    opcode = parse(patternEa);
-    for (int ax = 0; ax < 8; ax++) {
-        register(opcode | 2 << 3 | ax, Shift<I __ 2 __ Word>);
-        register(opcode | 3 << 3 | ax, Shift<I __ 3 __ Word>);
-        register(opcode | 4 << 3 | ax, Shift<I __ 4 __ Word>);
-        register(opcode | 5 << 3 | ax, Shift<I __ 5 __ Word>);
-        register(opcode | 6 << 3 | ax, Shift<I __ 6 __ Word>);
-    }
-    register(opcode | 7 << 3 | 0, Shift<I __ 7 __ Word>);
-    register(opcode | 7 << 3 | 1, Shift<I __ 8 __ Word>);
-}
-
-template<Instr I> void
-CPU::registerAbcdSbcd(const char *patternReg, const char *patternInd)
-{
-    u32 opcode;
-
-    // ABCD, SBCD
-    //
-    // Modes: (1)   Dx,Dy
-    //        (2)   -(Ay),-(Ax)
-
-    // (1)
-    opcode = parse(patternReg);
-    for (int src = 0; src < 8; src++) {
-        for (int dst = 0; dst < 8; dst++) {
-            register(opcode | dst << 9 | src, Abcd<I __ 0 __ Byte>);
-        }
-    }
-
-    // (2)
-    opcode = parse(patternInd);
-    for (int src = 0; src < 8; src++) {
-        for (int dst = 0; dst < 8; dst++) {
-            register(opcode | dst << 9 | src, Abcd<I __ 4 __ Byte>);
-        }
-    }
 }
 
 template<Instr I> void
@@ -276,58 +211,12 @@ CPU::registerAddSubEaRg(const char *pattern)
     //              -------------------------------------------------
     //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
     //              -------------------------------------------------
-    //                X   X   X   X   X   X   X   X   X   X   X   X
+    //                X  (X)  X   X   X   X   X   X   X   X   X   X
 
     u16 opcode = parse(pattern);
-    u16 opcodeB = opcode | 0 << 6;
-    u16 opcodeW = opcode | 1 << 6;
-    u16 opcodeL = opcode | 2 << 6;
 
-    for (int dy = 0; dy < 8; dy++) {
-        for (int reg = 0; reg < 8; reg++) {
-
-            register(opcodeB | dy << 9 | 0 << 3 | reg, AddEaRg<I __ 0 __ Byte>);
-            // Byte size is not supported for addressing mode 1
-            register(opcodeB | dy << 9 | 2 << 3 | reg, AddEaRg<I __ 2 __ Byte>);
-            register(opcodeB | dy << 9 | 3 << 3 | reg, AddEaRg<I __ 3 __ Byte>);
-            register(opcodeB | dy << 9 | 4 << 3 | reg, AddEaRg<I __ 4 __ Byte>);
-            register(opcodeB | dy << 9 | 5 << 3 | reg, AddEaRg<I __ 5 __ Byte>);
-            register(opcodeB | dy << 9 | 6 << 3 | reg, AddEaRg<I __ 6 __ Byte>);
-
-            register(opcodeW | dy << 9 | 0 << 3 | reg, AddEaRg<I __ 0 __ Word>);
-            register(opcodeW | dy << 9 | 1 << 3 | reg, AddEaRg<I __ 1 __ Word>);
-            register(opcodeW | dy << 9 | 2 << 3 | reg, AddEaRg<I __ 2 __ Word>);
-            register(opcodeW | dy << 9 | 3 << 3 | reg, AddEaRg<I __ 3 __ Word>);
-            register(opcodeW | dy << 9 | 4 << 3 | reg, AddEaRg<I __ 4 __ Word>);
-            register(opcodeW | dy << 9 | 5 << 3 | reg, AddEaRg<I __ 5 __ Word>);
-            register(opcodeW | dy << 9 | 6 << 3 | reg, AddEaRg<I __ 6 __ Word>);
-
-            register(opcodeL | dy << 9 | 0 << 3 | reg, AddEaRg<I __ 0 __ Long>);
-            register(opcodeL | dy << 9 | 1 << 3 | reg, AddEaRg<I __ 1 __ Long>);
-            register(opcodeL | dy << 9 | 2 << 3 | reg, AddEaRg<I __ 2 __ Long>);
-            register(opcodeL | dy << 9 | 3 << 3 | reg, AddEaRg<I __ 3 __ Long>);
-            register(opcodeL | dy << 9 | 4 << 3 | reg, AddEaRg<I __ 4 __ Long>);
-            register(opcodeL | dy << 9 | 5 << 3 | reg, AddEaRg<I __ 5 __ Long>);
-            register(opcodeL | dy << 9 | 6 << 3 | reg, AddEaRg<I __ 6 __ Long>);
-        }
-        register(opcodeB | dy << 9 | 7 << 3 | 0, AddEaRg<I __  7 __ Byte>);
-        register(opcodeB | dy << 9 | 7 << 3 | 1, AddEaRg<I __  8 __ Byte>);
-        register(opcodeB | dy << 9 | 7 << 3 | 2, AddEaRg<I __  9 __ Byte>);
-        register(opcodeB | dy << 9 | 7 << 3 | 3, AddEaRg<I __ 10 __ Byte>);
-        register(opcodeB | dy << 9 | 7 << 3 | 4, AddEaRg<I __ 11 __ Byte>);
-
-        register(opcodeW | dy << 9 | 7 << 3 | 0, AddEaRg<I __  7 __ Word>);
-        register(opcodeW | dy << 9 | 7 << 3 | 1, AddEaRg<I __  8 __ Word>);
-        register(opcodeW | dy << 9 | 7 << 3 | 2, AddEaRg<I __  9 __ Word>);
-        register(opcodeW | dy << 9 | 7 << 3 | 3, AddEaRg<I __ 10 __ Word>);
-        register(opcodeW | dy << 9 | 7 << 3 | 4, AddEaRg<I __ 11 __ Word>);
-
-        register(opcodeL | dy << 9 | 7 << 3 | 0, AddEaRg<I __  7 __ Long>);
-        register(opcodeL | dy << 9 | 7 << 3 | 1, AddEaRg<I __  8 __ Long>);
-        register(opcodeL | dy << 9 | 7 << 3 | 2, AddEaRg<I __  9 __ Long>);
-        register(opcodeL | dy << 9 | 7 << 3 | 3, AddEaRg<I __ 10 __ Long>);
-        register(opcodeL | dy << 9 | 7 << 3 | 4, AddEaRg<I __ 11 __ Long>);
-    }
+    ____XXX_SSMMMXXX(opcode, I, 0b101111111111, Byte,        AddEaRg);
+    ____XXX_SSMMMXXX(opcode, I, 0b111111111111, Word | Long, AddEaRg);
 }
 
 template<Instr I> void
@@ -340,40 +229,8 @@ CPU::registerAddSubRgEa(const char *pattern)
     //                        X   X   X   X   X   X   X
 
     u16 opcode = parse(pattern);
-    u16 opcodeB = opcode | 0 << 6;
-    u16 opcodeW = opcode | 1 << 6;
-    u16 opcodeL = opcode | 2 << 6;
 
-    for (int dy = 0; dy < 8; dy++) {
-        for (int reg = 0; reg < 8; reg++) {
-
-            register(opcodeB | dy << 9 | 2 << 3 | reg, AddRgEa<I __ 2 __ Byte>);
-            register(opcodeB | dy << 9 | 3 << 3 | reg, AddRgEa<I __ 3 __ Byte>);
-            register(opcodeB | dy << 9 | 4 << 3 | reg, AddRgEa<I __ 4 __ Byte>);
-            register(opcodeB | dy << 9 | 5 << 3 | reg, AddRgEa<I __ 5 __ Byte>);
-            register(opcodeB | dy << 9 | 6 << 3 | reg, AddRgEa<I __ 6 __ Byte>);
-
-            register(opcodeW | dy << 9 | 2 << 3 | reg, AddRgEa<I __ 2 __ Word>);
-            register(opcodeW | dy << 9 | 3 << 3 | reg, AddRgEa<I __ 3 __ Word>);
-            register(opcodeW | dy << 9 | 4 << 3 | reg, AddRgEa<I __ 4 __ Word>);
-            register(opcodeW | dy << 9 | 5 << 3 | reg, AddRgEa<I __ 5 __ Word>);
-            register(opcodeW | dy << 9 | 6 << 3 | reg, AddRgEa<I __ 6 __ Word>);
-
-            register(opcodeL | dy << 9 | 2 << 3 | reg, AddRgEa<I __ 2 __ Long>);
-            register(opcodeL | dy << 9 | 3 << 3 | reg, AddRgEa<I __ 3 __ Long>);
-            register(opcodeL | dy << 9 | 4 << 3 | reg, AddRgEa<I __ 4 __ Long>);
-            register(opcodeL | dy << 9 | 5 << 3 | reg, AddRgEa<I __ 5 __ Long>);
-            register(opcodeL | dy << 9 | 6 << 3 | reg, AddRgEa<I __ 6 __ Long>);
-        }
-        register(opcodeB | dy << 9 | 7 << 3 | 0, AddRgEa<I __ 7 __ Byte>);
-        register(opcodeB | dy << 9 | 7 << 3 | 1, AddRgEa<I __ 8 __ Byte>);
-
-        register(opcodeW | dy << 9 | 7 << 3 | 0, AddRgEa<I __ 7 __ Word>);
-        register(opcodeW | dy << 9 | 7 << 3 | 1, AddRgEa<I __ 8 __ Word>);
-
-        register(opcodeL | dy << 9 | 7 << 3 | 0, AddRgEa<I __ 7 __ Long>);
-        register(opcodeL | dy << 9 | 7 << 3 | 1, AddRgEa<I __ 8 __ Long>);
-    }
+    ____XXX_SSMMMXXX(opcode, I, 0b001111111000, Byte | Word | Long, AddRgEa);
 }
 
 template<Instr I> void
@@ -439,8 +296,25 @@ CPU::registerClr(const char *pattern)
 void
 CPU::registerABCD()
 {
-    registerAbcdSbcd<ABCD>("1100 ---1 0000 0---",   // Dx,Dy
-                           "1100 ---1 0000 1---");  // -(Ax),-(Ay)
+    u16 opcode;
+
+    // ABCD
+
+    //              -------------------------------------------------
+    // Mode:        | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    // Dx,Dy          X
+
+    opcode = parse("1100 ---1 0000 0---");
+    ____XXX______XXX(opcode, ABCD, 0, Byte, Abcd);
+
+    //              -------------------------------------------------
+    // Mode:        | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    // -(Ay),-(Ax)                    X
+
+    opcode = parse("1100 ---1 0000 1---");
+    ____XXX______XXX(opcode, ABCD, 4, Byte, Abcd);
 }
 
 void
@@ -908,8 +782,25 @@ CPU::registerROXR()
 void
 CPU::registerSBCD()
 {
-    registerAbcdSbcd<SBCD>("1000 ---1 0000 0---",  // Dx,Dy
-                           "1000 ---1 0000 1---"); // -(Ax),-(Ay)
+    u16 opcode;
+
+    // SBCD
+
+    //              -------------------------------------------------
+    // Mode:        | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    // Dx,Dy          X
+
+    opcode = parse("1000 ---1 0000 0---");
+    ____XXX______XXX(opcode, SBCD, 0, Byte, Abcd);
+
+    //              -------------------------------------------------
+    // Mode:        | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    // -(Ay),-(Ax)                    X
+
+    opcode = parse("1000 ---1 0000 1---");
+    ____XXX______XXX(opcode, SBCD, 4, Byte, Abcd);
 }
 
 void
