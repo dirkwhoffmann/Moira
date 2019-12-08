@@ -98,6 +98,28 @@ CPU::execGroup1Exception(u8 nr)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::execShiftRg(u16 opcode)
+{
+    int src = ____xxx_________(opcode);
+    int dst = _____________xxx(opcode);
+    int cnt;
+
+    cnt = readD(src) & 0x3F;
+    writeD<S>(dst, shift<I,S>(cnt, readD<S>(dst)));
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execShiftIm(u16 opcode)
+{
+    int src = ____xxx_________(opcode);
+    int dst = _____________xxx(opcode);
+    int cnt;
+
+    cnt = src ? src : 8;
+    writeD<S>(dst, shift<I,S>(cnt, readD<S>(dst)));
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::execShift(u16 op)
 {
     int src = ____xxx_________(op);

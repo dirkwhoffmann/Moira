@@ -29,6 +29,26 @@ CPU::dasmLineF(StrWriter &str, u16 op, u16 ext1, u16 ext2)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::dasmShiftRg(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    Dn dst { _____________xxx(op) };
+    u8 src = ____xxx_________(op);
+    if (src == 0) src = 8;
+    
+    str << Ins<I>{} << Sz<S>{} << tab << "#" << src << "," << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::dasmShiftIm(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    Dn dst { _____________xxx(op) };
+    u8 src = ____xxx_________(op);
+    if (src == 0) src = 8;
+
+    str << Ins<I>{} << Sz<S>{} << tab << "#" << src << "," << dst;
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::dasmShift(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Dn dst { _____________xxx(op) };

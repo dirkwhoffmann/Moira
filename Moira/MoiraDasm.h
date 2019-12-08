@@ -11,6 +11,8 @@ void dasmLineA(StrWriter &str, u16 op, u16 ext1, u16 ext2);
 void dasmLineF(StrWriter &str, u16 op, u16 ext1, u16 ext2);
 void dasmIllegal(StrWriter &str, u16 op, u16 ext1, u16 ext2);
 
+template<Instr I, Mode M, Size S> void dasmShiftRg(StrWriter &str, u16 op, u16 e1, u16 e2);
+template<Instr I, Mode M, Size S> void dasmShiftIm(StrWriter &str, u16 op, u16 e1, u16 e2);
 template<Instr I, Mode M, Size S> void dasmShift(StrWriter &str, u16 op, u16 e1, u16 e2);
 
 template<Instr I, Mode M> void dasmAbcd(StrWriter &str, u16 op, u16 e1, u16 e2);

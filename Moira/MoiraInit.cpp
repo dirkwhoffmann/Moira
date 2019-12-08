@@ -29,16 +29,18 @@ if (exec[id] != &CPU::execIllegal) printf("id = %x\n", id); \
 assert(exec[id] == &CPU::execIllegal); \
 assert(dasm[id] == &CPU::dasmIllegal); \
 exec[id] = &CPU::exec##name; \
-dasm[id] = &CPU::dasm##name; \
-}
+dasm[id] = &CPU::dasm##name; }
 
 // Registers an instruction in one of the standard instruction formats:
 //
 //     Variants:  ____ ____ ____ _XXX
-//                ____ ___S ____ _XXX
 //                ____ XXX_ ____ _XXX
-//                ____ XXXS ____ _XXX
 //                ____ XXX_ SS__ _XXX
+//                ____ ____ __MM MXXX
+//                ____ ___S __MM MXXX
+//                ____ XXX_ __MM MXXX
+//                ____ XXXS __MM MXXX
+//                ____ XXX_ SSMM MXXX
 //
 //       Legend:  XXX : Operand parameters    (0 .. 7)
 //                  S : Size information      (0 = Word, 1 = Long)
@@ -76,27 +78,38 @@ if ((m) & 0b000000000100) register((op) | 7 << 3 | 2, f<I __  9 __ S>); \
 if ((m) & 0b000000000010) register((op) | 7 << 3 | 3, f<I __ 10 __ S>); \
 if ((m) & 0b000000000001) register((op) | 7 << 3 | 4, f<I __ 11 __ S>); }
 
-#define _____________XXX(op,I,m,f) \
-{ REG_IM((op), I, m, f); }
+#define _____________XXX(op,I,M,S,f) { \
+for (int j = 0; j < 8; j++) register((op) | j, f<I __ M __ S>); }
 
-#define _______S_____XXX(op,I,m,s,f) { \
+#define ____XXX______XXX(op,I,M,S,f) { \
+for (int i = 0; i < 8; i++) _____________XXX((op) | i << 9, I, M, S, f); }
+
+#define ____XXX_SS___XXX(op,I,M,s,f) { \
+if ((s) & 0b100) ____XXX______XXX((op) | 2 << 6, I, M, Long, f); \
+if ((s) & 0b010) ____XXX______XXX((op) | 1 << 6, I, M, Word, f); \
+if ((s) & 0b001) ____XXX______XXX((op) | 0 << 6, I, M, Byte, f); }
+
+#define __________MMMXXX(op,I,m,f) { \
+REG_IM((op), I, m, f); }
+
+#define _______S__MMMXXX(op,I,m,s,f) { \
 if ((s) & 0b100) REG_IMS((op) | 1 << 8, I, m, Long, f); \
 if ((s) & 0b010) REG_IMS((op) | 0 << 8, I, m, Word, f); \
 if ((s) & 0b001) assert(false); }
 
-#define ________SS___XXX(op,I,m,s,f) { \
+#define ________SSMMMXXX(op,I,m,s,f) { \
 if ((s) & 0b100) REG_IMS((op) | 2 << 6, I, m, Long, f); \
 if ((s) & 0b010) REG_IMS((op) | 1 << 6, I, m, Word, f); \
 if ((s) & 0b001) REG_IMS((op) | 0 << 6, I, m, Byte, f); }
 
-#define ____XXX______XXX(op,I,m,f) { \
-for (int i = 0; i < 8; i++) _____________XXX((op) | i << 9, I, m, f) }
+#define ____XXX___MMMXXX(op,I,m,f) { \
+for (int i = 0; i < 8; i++) __________MMMXXX((op) | i << 9, I, m, f) }
 
-#define ____XXXS_____XXX(op,I,m,s,f) { \
-for (int i = 0; i < 8; i++) _______S_____XXX((op) | i << 9, I, m, s, f) }
+#define ____XXXS__MMMXXX(op,I,m,s,f) { \
+for (int i = 0; i < 8; i++) _______S__MMMXXX((op) | i << 9, I, m, s, f) }
 
-#define ____XXX_SS___XXX(op,I,m,s,f) { \
-for (int i = 0; i < 8; i++) ________SS___XXX((op) | i << 9, I, m, s, f) }
+#define ____XXX_SSMMMXXX(op,I,m,s,f) { \
+for (int i = 0; i < 8; i++) ________SSMMMXXX((op) | i << 9, I, m, s, f) }
 
 
 static u16
@@ -195,18 +208,24 @@ CPU::registerShift(const char *patternReg,
                    const char *patternEa)
 {
     u16 opcode;
+    u16 opcode1 = parse(patternReg);
+    u16 opcode2 = parse(patternImm);
+    u16 opcode3 = parse(patternEa);
 
     // ASL, ASR, LSL, LSR, ROL, ROR, ROXL, ROXR
     //
-    // Modes: (1)   Dx,Dy       8,16,32
-    //        (2)   #<data>,Dy  8,16,32
-    //        (3)   <ea>          16
     //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
     //              -------------------------------------------------
-    //                X       X   X   X   X   X   X?? X??         X?!
+    // Dx,Dy          X
+    // #<data>,Dy                                                 X
+    // <ea>                   X   X   X   X   X   X   X
 
     // (1)
+    ____XXX_SS___XXX(opcode1, I, 0x0, Byte | Word | Long, ShiftRg);
+    ____XXX_SS___XXX(opcode2, I, 0xB, Byte | Word | Long, ShiftIm);
+
+    /*
     for (int dx = 0; dx < 8; dx++) {
         for (int dy = 0; dy < 8; dy++) {
 
@@ -216,8 +235,11 @@ CPU::registerShift(const char *patternReg,
             register(opcode | 2 << 6, Shift<I __ 0 __ Long>);
         }
     }
+    */
 
     // (2)
+
+    /*
     for (int data = 0; data < 8; data++) {
         for (int dy = 0; dy < 8; dy++) {
 
@@ -227,6 +249,7 @@ CPU::registerShift(const char *patternReg,
             register(opcode | 2 << 6, Shift<I __ 11 __ Long>);
         }
     }
+    */
 
     // (3)
     opcode = parse(patternEa);
@@ -438,7 +461,7 @@ CPU::registerMulDiv(const char *pattern)
 
     u16 opcode = parse(pattern);
 
-    ____XXX______XXX(opcode, I, 0b101111111111, MulDiv);
+    ____XXX___MMMXXX(opcode, I, 0b101111111111, MulDiv);
 
     /*
     for (int dst = 0; dst < 8; dst++) {
@@ -587,8 +610,8 @@ CPU::registerAND()
     // <ea>,Dy      X       X   X   X   X   X   X   X   X   X   X
     // Dx,<ea>              X   X   X   X   X   X   X
 
-    ____XXX_SS___XXX(opcode1, AND, 0b101111111111, Byte | Word | Long, AndEaRg);
-    ____XXX_SS___XXX(opcode2, AND, 0b001111111000, Byte | Word | Long, AndRgEa);
+    ____XXX_SSMMMXXX(opcode1, AND, 0b101111111111, Byte | Word | Long, AndEaRg);
+    ____XXX_SSMMMXXX(opcode2, AND, 0b001111111000, Byte | Word | Long, AndRgEa);
 }
 
 void
@@ -619,8 +642,8 @@ CPU::registerBCHG()
     // Dx,<ea>        X       X   X   X   X   X   X   X
     // #<data>,<ea>   X       X   X   X   X   X   X   X
 
-    ____XXX______XXX(opcode1, BCHG, 0b101111111000, BitDxEa);
-    _____________XXX(opcode2, BCHG, 0b101111111000, BitImEa);
+    ____XXX___MMMXXX(opcode1, BCHG, 0b101111111000, BitDxEa);
+    __________MMMXXX(opcode2, BCHG, 0b101111111000, BitImEa);
 }
 
 void
@@ -635,8 +658,8 @@ CPU::registerBCLR()
     // Dx,<ea>        X       X   X   X   X   X   X   X
     // #<data>,<ea>   X       X   X   X   X   X   X   X
 
-    ____XXX______XXX(opcode1, BCLR, 0b101111111000, BitDxEa);
-    _____________XXX(opcode2, BCLR, 0b101111111000, BitImEa);
+    ____XXX___MMMXXX(opcode1, BCLR, 0b101111111000, BitDxEa);
+    __________MMMXXX(opcode2, BCLR, 0b101111111000, BitImEa);
 }
 
 void
@@ -651,8 +674,8 @@ CPU::registerBSET()
     // Dx,<ea>        X       X   X   X   X   X   X   X
     // #<data>,<ea>   X       X   X   X   X   X   X   X
 
-    ____XXX______XXX(opcode1, BSET, 0b101111111000, BitDxEa);
-    _____________XXX(opcode2, BSET, 0b101111111000, BitImEa);
+    ____XXX___MMMXXX(opcode1, BSET, 0b101111111000, BitDxEa);
+    __________MMMXXX(opcode2, BSET, 0b101111111000, BitImEa);
 }
 
 void
@@ -667,8 +690,8 @@ CPU::registerBTST()
     // Dx,<ea>        X       X   X   X   X   X   X   X   X   X
     // #<data>,<ea>   X       X   X   X   X   X   X   X   X   X
 
-    ____XXX______XXX(opcode1, BTST, 0b101111111110, BitDxEa);
-    _____________XXX(opcode2, BTST, 0b101111111110, BitImEa);
+    ____XXX___MMMXXX(opcode1, BTST, 0b101111111110, BitDxEa);
+    __________MMMXXX(opcode2, BTST, 0b101111111110, BitImEa);
 }
 
 void
@@ -687,8 +710,8 @@ CPU::registerCMP()
     //              -------------------------------------------------
     // <ea>,Dn        X  (X)  X   X   X   X   X   X   X   X   X   X
 
-    ____XXX_SS___XXX(opcode, CMP, 0b101111111111, Byte,        Cmp);
-    ____XXX_SS___XXX(opcode, CMP, 0b111111111111, Word | Long, Cmp);
+    ____XXX_SSMMMXXX(opcode, CMP, 0b101111111111, Byte,        Cmp);
+    ____XXX_SSMMMXXX(opcode, CMP, 0b111111111111, Word | Long, Cmp);
 }
 
 void
@@ -702,7 +725,7 @@ CPU::registerCMPA()
     //              -------------------------------------------------
     // <ea>,An        X   X   X   X   X   X   X   X   X   X   X   X
 
-    ____XXXS_____XXX(opcode, CMPA, 0b111111111111, Word | Long, Cmpa);
+    ____XXXS__MMMXXX(opcode, CMPA, 0b111111111111, Word | Long, Cmpa);
 }
 
 void
@@ -754,7 +777,7 @@ CPU::registerEOR()
     //            -------------------------------------------------
     // Dx,<ea>      X       X   X   X   X   X   X   X
 
-    ____XXX_SS___XXX(opcode, EOR, 0b101111111000, Byte | Word | Long, AndRgEa);
+    ____XXX_SSMMMXXX(opcode, EOR, 0b101111111000, Byte | Word | Long, AndRgEa);
 }
 
 void
@@ -950,8 +973,8 @@ CPU::registerOR()
     // <ea>,Dy      X       X   X   X   X   X   X   X   X   X   X
     // Dx,<ea>              X   X   X   X   X   X   X
 
-    ____XXX_SS___XXX(opcode1, OR, 0b101111111111, Byte | Word | Long, AndEaRg);
-    ____XXX_SS___XXX(opcode2, OR, 0b001111111000, Byte | Word | Long, AndRgEa);
+    ____XXX_SSMMMXXX(opcode1, OR, 0b101111111111, Byte | Word | Long, AndEaRg);
+    ____XXX_SSMMMXXX(opcode2, OR, 0b001111111000, Byte | Word | Long, AndRgEa);
 }
 
 void
