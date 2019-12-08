@@ -148,6 +148,7 @@ CPU::dasmCmpa(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<I>{} << Sz<S>{} << tab << dst;
 }
 
+/*
 template<Instr I, Mode M> void
 CPU::dasmBitDxDy(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
@@ -156,6 +157,7 @@ CPU::dasmBitDxDy(StrWriter &str, u16 op, u16 e1, u16 e2)
 
     str << Ins<I>{} << tab << src << "," << dst;
 }
+*/
 
 template<Instr I, Mode M> void
 CPU::dasmBitDxEa(StrWriter &str, u16 op, u16 e1, u16 e2)
@@ -166,6 +168,7 @@ CPU::dasmBitDxEa(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<I>{} << tab << src << "," << dst;
 }
 
+/*
 template<Instr I, Mode M> void
 CPU::dasmBitImDy(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
@@ -174,6 +177,7 @@ CPU::dasmBitImDy(StrWriter &str, u16 op, u16 e1, u16 e2)
 
     str << Ins<I>{} << tab << "#" << src << "," << dst;
 }
+*/
 
 template<Instr I, Mode M> void
 CPU::dasmBitImEa(StrWriter &str, u16 op, u16 e1, u16 e2)

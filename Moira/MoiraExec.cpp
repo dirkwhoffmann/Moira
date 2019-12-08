@@ -331,38 +331,38 @@ CPU::execAndRgEa(u16 opcode)
 }
 
 template<Instr I, Mode M> void
-CPU::execBitDxDy(u16 opcode)
-{
-    int src = ____xxx_________(opcode);
-    int dst = _____________xxx(opcode);
-
-    u8 bit = readD(src) & 0b11111;
-    u32 data = readD(dst);
-    data = bitop<I>(data, bit);
-
-    if (I != BTST) writeD(dst, data);
-
-    prefetch();
-}
-
-template<Instr I, Mode M> void
 CPU::execBitDxEa(u16 opcode)
 {
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
 
-    u8 bit = readD(src) & 0b111;
+    switch (M) {
 
-    u32 ea = computeEA<M,Byte>(dst);
+        case 0:
+        {
+            u8 bit = readD(src) & 0b11111;
+            u32 data = readD(dst);
+            data = bitop<I>(data, bit);
 
-    u32 data = read<Byte>(ea);
-    data = bitop<I>(data, bit);
+            if (I != BTST) writeD(dst, data);
+            break;
+        }
+        default:
+        {
+            u8 bit = readD(src) & 0b111;
+            u32 ea = computeEA<M,Byte>(dst);
 
-    if (I != BTST) write<Byte>(ea, data);
+            u32 data = read<Byte>(ea);
+            data = bitop<I>(data, bit);
+
+            if (I != BTST) write<Byte>(ea, data);
+        }
+    }
 
     prefetch();
 }
 
+/*
 template<Instr I, Mode M> void
 CPU::execBitImDy(u16 opcode)
 {
@@ -377,6 +377,7 @@ CPU::execBitImDy(u16 opcode)
 
     prefetch();
 }
+*/
 
 template<Instr I, Mode M> void
 CPU::execBitImEa(u16 opcode)
@@ -385,13 +386,26 @@ CPU::execBitImEa(u16 opcode)
     u8  bit = irc & 0b11111;
     readExtensionWord();
 
-    u32 ea = computeEA<M,Byte>(dst);
+    switch (M)
+    {
+        case 0:
+        {
+            u32 data = readD(dst);
+            data = bitop<I>(data, bit);
 
-    u32 data = read<Byte>(ea);
-    data = bitop<I>(data, bit);
+            if (I != BTST) writeD(dst, data);
+            break;
+        }
+        default:
+        {
+            u32 ea = computeEA<M,Byte>(dst);
 
-    if (I != BTST) write<Byte>(ea, data);
+            u32 data = read<Byte>(ea);
+            data = bitop<I>(data, bit);
 
+            if (I != BTST) write<Byte>(ea, data);
+        }
+    }
     prefetch();
 }
 

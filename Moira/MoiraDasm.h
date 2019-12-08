@@ -25,9 +25,9 @@ template<Instr I, Mode M, Size S> void dasmAddaIm(StrWriter &str, u16 op, u16 e1
 template<Instr I, Mode M, Size S> void dasmAndEaRg(StrWriter &str, u16 op, u16 e1, u16 e2);
 template<Instr I, Mode M, Size S> void dasmAndRgEa(StrWriter &str, u16 op, u16 e1, u16 e2);
 
-template<Instr I, Mode M> void dasmBitDxDy(StrWriter &str, u16 op, u16 e1, u16 e2);
+// template<Instr I, Mode M> void dasmBitDxDy(StrWriter &str, u16 op, u16 e1, u16 e2);
 template<Instr I, Mode M> void dasmBitDxEa(StrWriter &str, u16 op, u16 e1, u16 e2);
-template<Instr I, Mode M> void dasmBitImDy(StrWriter &str, u16 op, u16 e1, u16 e2);
+// template<Instr I, Mode M> void dasmBitImDy(StrWriter &str, u16 op, u16 e1, u16 e2);
 template<Instr I, Mode M> void dasmBitImEa(StrWriter &str, u16 op, u16 e1, u16 e2);
 
 template<Instr I, Mode M, Size S> void dasmClr(StrWriter &str, u16 op, u16 e1, u16 e2);
