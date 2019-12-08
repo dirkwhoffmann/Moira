@@ -18,8 +18,6 @@ template<Instr I> void registerShift(const char *patternReg,
                                      const char *patternImm,
                                      const char *patternEa);
 
-void registerBCHG();
-void registerBCLR();
 void registerBSET();
 void registerBTST();
 void registerCLR();
