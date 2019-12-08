@@ -130,8 +130,7 @@ CPU::init()
     registerCMP();
     registerCMPA();
     registerDBcc();
-    registerDIVS();
-    registerDIVU();
+    registerDIVx();
     registerEOR();
     registerEXT();
     registerLEA();
@@ -139,8 +138,7 @@ CPU::init()
     registerLSR();
     registerMOVEA();
     registerMOVEQ();
-    registerMULS();
-    registerMULU();
+    registerMULx();
     registerNBCD();
     registerNEG();
     registerNEGX();
@@ -392,25 +390,6 @@ CPU::registerMulDiv(const char *pattern)
     u16 opcode = parse(pattern);
 
     ____XXX___MMMXXX(opcode, I, 0b101111111111, Long, MulDiv);
-
-    /*
-    for (int dst = 0; dst < 8; dst++) {
-        for (int src = 0; src < 8; src++) {
-
-            register(opcode | dst << 9 | 0 << 3 | src, MulDiv<I __ 0>);
-            register(opcode | dst << 9 | 2 << 3 | src, MulDiv<I __ 2>);
-            register(opcode | dst << 9 | 3 << 3 | src, MulDiv<I __ 3>);
-            register(opcode | dst << 9 | 4 << 3 | src, MulDiv<I __ 4>);
-            register(opcode | dst << 9 | 5 << 3 | src, MulDiv<I __ 5>);
-            register(opcode | dst << 9 | 6 << 3 | src, MulDiv<I __ 6>);
-        }
-        register(opcode | dst << 9 | 7 << 3 | 0, MulDiv<I __  7>);
-        register(opcode | dst << 9 | 7 << 3 | 1, MulDiv<I __  8>);
-        register(opcode | dst << 9 | 7 << 3 | 2, MulDiv<I __  9>);
-        register(opcode | dst << 9 | 7 << 3 | 3, MulDiv<I __ 10>);
-        register(opcode | dst << 9 | 7 << 3 | 4, MulDiv<I __ 11>);
-     }
-     */
 }
 
 template<Instr I> void
@@ -692,15 +671,18 @@ CPU::registerDBcc()
 }
 
 void
-CPU::registerDIVS()
+CPU::registerDIVx()
 {
-    registerMulDiv<DIVS>("1000 ---1 11-- ----");
-}
+    u16 divs = parse("1000 ---1 11-- ----");
+    u16 divu = parse("1000 ---0 11-- ----");
 
-void
-CPU::registerDIVU()
-{
-    registerMulDiv<DIVU>("1000 ---0 11-- ----");
+     //              -------------------------------------------------
+     // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+     //              -------------------------------------------------
+     // <ea>,Dy        X       X   X   X   X   X   X   X   X   X   X
+
+    ____XXX___MMMXXX(divs, DIVS, 0b101111111111, Long, MulDiv);
+    ____XXX___MMMXXX(divu, DIVU, 0b101111111111, Long, MulDiv);
 }
 
 void
@@ -836,15 +818,18 @@ CPU::registerMOVEQ()
 }
 
 void
-CPU::registerMULS()
+CPU::registerMULx()
 {
-    registerMulDiv<MULS>("1100 ---1 11-- ----");
-}
+    u16 muls = parse("1100 ---1 11-- ----");
+    u16 mulu = parse("1100 ---0 11-- ----");
 
-void
-CPU::registerMULU()
-{
-    registerMulDiv<MULU>("1100 ---0 11-- ----");
+    //              -------------------------------------------------
+    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    // <ea>,Dy        X       X   X   X   X   X   X   X   X   X   X
+
+    ____XXX___MMMXXX(muls, MULS, 0b101111111111, Long, MulDiv);
+    ____XXX___MMMXXX(mulu, MULU, 0b101111111111, Long, MulDiv);
 }
 
 void
