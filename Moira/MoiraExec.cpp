@@ -528,7 +528,7 @@ CPU::execExt(u16 opcode)
     prefetch();
 }
 
-template<Mode M> void
+template<Instr I, Mode M, Size S> void
 CPU::execLea(u16 opcode)
 {
     int src = _____________xxx(opcode);
@@ -540,7 +540,7 @@ CPU::execLea(u16 opcode)
     prefetch();
 }
 
-template<Mode M, Size S> void
+template<Instr I, Mode M, Size S> void
 CPU::execMovea(u16 opcode)
 {
     i32 result;
@@ -581,7 +581,7 @@ CPU::execMovea(u16 opcode)
     prefetch();
 }
 
-void
+template<Instr I, Mode M, Size S> void
 CPU::execMoveq(u16 opcode)
 {
     i8  src = (i8)(opcode & 0xFF);
@@ -728,7 +728,7 @@ CPU::mulDivOp(u16 src, u16& result)
     }
 }
 
-template<Mode M> void
+template<Instr I, Mode M, Size S> void
 CPU::execNbcd(u16 opcode)
 {
     int reg = _____________xxx(opcode);
@@ -797,7 +797,7 @@ CPU::execNop(u16 opcode)
 
 }
 
-template<Cond C, Instr I, Mode M> void
+template<Instr I, Mode M, Size S> void
 CPU::execSccDn(u16 opcode)
 {
     int dst = { _____________xxx(opcode) };
@@ -806,7 +806,7 @@ CPU::execSccDn(u16 opcode)
     writeD<Byte>(dst, bcond<I>() ? 0xFF : 0);
 }
 
-template<Cond C, Instr I, Mode M> void
+template<Instr I, Mode M, Size S> void
 CPU::execSccEa(u16 opcode)
 {
     int dst = { _____________xxx(opcode) };

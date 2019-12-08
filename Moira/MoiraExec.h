@@ -40,20 +40,22 @@ template<Instr I, Mode M, Size S> void execCmpa(u16 opcode);
 template<Instr I, Mode M, Size S> void execDbcc(u16 opcode);
 template<Instr I, Mode M, Size S> void execExt(u16 opcode);
 
-template<Mode M> void execLea(u16 opcode);
-template<Mode M, Size S> void execMovea(u16 opcode);
-void execMoveq(u16 opcode);
+template<Instr I, Mode M, Size S> void execLea(u16 opcode);
+template<Instr I, Mode M, Size S> void execMovea(u16 opcode);
+template<Instr I, Mode M, Size S> void execMoveq(u16 opcode);
 template<Instr I, Mode M, Size S> void execMulDiv(u16 opcode);
-template<Mode M> bool mulDivOp(u16 src, u16& result);
-template<Mode M> void execNbcd(u16 opcode);
+
+template<Mode M> bool mulDivOp(u16 src, u16& result); // DEPRECATED
+
+template<Instr I, Mode M, Size S> void execNbcd(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execNegNotDn(u16 opcode);
 template<Instr I, Mode M, Size S> void execNegNotEa(u16 opcode);
 
 void execNop(u16 opcode);
 
-template<Cond C, Instr I, Mode M> void execSccDn(u16 opcode);
-template<Cond C, Instr I, Mode M> void execSccEa(u16 opcode);
+template<Instr I, Mode M, Size S> void execSccDn(u16 opcode);
+template<Instr I, Mode M, Size S> void execSccEa(u16 opcode);
 
 template<Mode M> void execTasDn(u16 opcode);
 template<Mode M> void execTasEa(u16 opcode);

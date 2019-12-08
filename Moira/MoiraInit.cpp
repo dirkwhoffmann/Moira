@@ -789,14 +789,14 @@ CPU::registerLEA()
 
         opcode = parse("0100 ---1 11-- ----") | an << 9;
         for (int reg = 0; reg < 8; reg++) {
-            register(opcode | 2 << 3 | reg, Lea<2>);
-            register(opcode | 5 << 3 | reg, Lea<5>);
-            register(opcode | 6 << 3 | reg, Lea<6>);
+            register(opcode | 2 << 3 | reg, Lea<LEA __ 2 __ Long>);
+            register(opcode | 5 << 3 | reg, Lea<LEA __ 5 __ Long>);
+            register(opcode | 6 << 3 | reg, Lea<LEA __ 6 __ Long>);
         }
-        register(opcode | 7 << 3 | 0, Lea<7>);
-        register(opcode | 7 << 3 | 1, Lea<8>);
-        register(opcode | 7 << 3 | 2, Lea<9>);
-        register(opcode | 7 << 3 | 3, Lea<10>);
+        register(opcode | 7 << 3 | 0, Lea<LEA __  7 __ Long>);
+        register(opcode | 7 << 3 | 1, Lea<LEA __  8 __ Long>);
+        register(opcode | 7 << 3 | 2, Lea<LEA __  9 __ Long>);
+        register(opcode | 7 << 3 | 3, Lea<LEA __ 10 __ Long>);
     }
 }
 
@@ -835,34 +835,34 @@ CPU::registerMOVEA()
 
         for (int src = 0; src < 8; src++) {
 
-            register(opcodeW | dst << 9 | 0 << 3 | src, Movea<0 __ Word>);
-            register(opcodeW | dst << 9 | 1 << 3 | src, Movea<1 __ Word>);
-            register(opcodeW | dst << 9 | 2 << 3 | src, Movea<2 __ Word>);
-            register(opcodeW | dst << 9 | 3 << 3 | src, Movea<3 __ Word>);
-            register(opcodeW | dst << 9 | 4 << 3 | src, Movea<4 __ Word>);
-            register(opcodeW | dst << 9 | 5 << 3 | src, Movea<5 __ Word>);
-            register(opcodeW | dst << 9 | 6 << 3 | src, Movea<6 __ Word>);
+            register(opcodeW | dst << 9 | 0 << 3 | src, Movea<MOVEA __ 0 __ Word>);
+            register(opcodeW | dst << 9 | 1 << 3 | src, Movea<MOVEA __ 1 __ Word>);
+            register(opcodeW | dst << 9 | 2 << 3 | src, Movea<MOVEA __ 2 __ Word>);
+            register(opcodeW | dst << 9 | 3 << 3 | src, Movea<MOVEA __ 3 __ Word>);
+            register(opcodeW | dst << 9 | 4 << 3 | src, Movea<MOVEA __ 4 __ Word>);
+            register(opcodeW | dst << 9 | 5 << 3 | src, Movea<MOVEA __ 5 __ Word>);
+            register(opcodeW | dst << 9 | 6 << 3 | src, Movea<MOVEA __ 6 __ Word>);
 
-            register(opcodeL | dst << 9 | 0 << 3 | src, Movea<0 __ Long>);
-            register(opcodeL | dst << 9 | 1 << 3 | src, Movea<1 __ Long>);
-            register(opcodeL | dst << 9 | 2 << 3 | src, Movea<2 __ Long>);
-            register(opcodeL | dst << 9 | 3 << 3 | src, Movea<3 __ Long>);
-            register(opcodeL | dst << 9 | 4 << 3 | src, Movea<4 __ Long>);
-            register(opcodeL | dst << 9 | 5 << 3 | src, Movea<5 __ Long>);
-            register(opcodeL | dst << 9 | 6 << 3 | src, Movea<6 __ Long>);
+            register(opcodeL | dst << 9 | 0 << 3 | src, Movea<MOVEA __ 0 __ Long>);
+            register(opcodeL | dst << 9 | 1 << 3 | src, Movea<MOVEA __ 1 __ Long>);
+            register(opcodeL | dst << 9 | 2 << 3 | src, Movea<MOVEA __ 2 __ Long>);
+            register(opcodeL | dst << 9 | 3 << 3 | src, Movea<MOVEA __ 3 __ Long>);
+            register(opcodeL | dst << 9 | 4 << 3 | src, Movea<MOVEA __ 4 __ Long>);
+            register(opcodeL | dst << 9 | 5 << 3 | src, Movea<MOVEA __ 5 __ Long>);
+            register(opcodeL | dst << 9 | 6 << 3 | src, Movea<MOVEA __ 6 __ Long>);
 
         }
-        register(opcodeW | dst << 9 | 7 << 3 | 0, Movea< 7 __ Word>);
-        register(opcodeW | dst << 9 | 7 << 3 | 1, Movea< 8 __ Word>);
-        register(opcodeW | dst << 9 | 7 << 3 | 2, Movea< 9 __ Word>);
-        register(opcodeW | dst << 9 | 7 << 3 | 3, Movea<10 __ Word>);
-        register(opcodeW | dst << 9 | 7 << 3 | 4, Movea<11 __ Word>);
+        register(opcodeW | dst << 9 | 7 << 3 | 0, Movea<MOVEA __  7 __ Word>);
+        register(opcodeW | dst << 9 | 7 << 3 | 1, Movea<MOVEA __  8 __ Word>);
+        register(opcodeW | dst << 9 | 7 << 3 | 2, Movea<MOVEA __  9 __ Word>);
+        register(opcodeW | dst << 9 | 7 << 3 | 3, Movea<MOVEA __ 10 __ Word>);
+        register(opcodeW | dst << 9 | 7 << 3 | 4, Movea<MOVEA __ 11 __ Word>);
 
-        register(opcodeL | dst << 9 | 7 << 3 | 0, Movea< 7 __ Long>);
-        register(opcodeL | dst << 9 | 7 << 3 | 1, Movea< 8 __ Long>);
-        register(opcodeL | dst << 9 | 7 << 3 | 2, Movea< 9 __ Long>);
-        register(opcodeL | dst << 9 | 7 << 3 | 3, Movea<10 __ Long>);
-        register(opcodeL | dst << 9 | 7 << 3 | 4, Movea<11 __ Long>);
+        register(opcodeL | dst << 9 | 7 << 3 | 0, Movea<MOVEA __  7 __ Long>);
+        register(opcodeL | dst << 9 | 7 << 3 | 1, Movea<MOVEA __  8 __ Long>);
+        register(opcodeL | dst << 9 | 7 << 3 | 2, Movea<MOVEA __  9 __ Long>);
+        register(opcodeL | dst << 9 | 7 << 3 | 3, Movea<MOVEA __ 10 __ Long>);
+        register(opcodeL | dst << 9 | 7 << 3 | 4, Movea<MOVEA __ 11 __ Long>);
     }
 }
 
@@ -873,7 +873,7 @@ CPU::registerMOVEQ()
 
     for (int dst = 0; dst < 8; dst++) {
         for (int src = 0; src < 256; src++) {
-            register(opcode | dst << 9 | src, Moveq);
+            register(opcode | dst << 9 | src, Moveq<MOVEQ __ 11 __ Long>);
         }
     }
 }
@@ -905,15 +905,15 @@ CPU::registerNBCD()
 
     for (int reg = 0; reg < 8; reg++) {
 
-        register(opcode | 0 << 6 | 0 << 3 | reg, Nbcd<0>);
-        register(opcode | 0 << 6 | 2 << 3 | reg, Nbcd<2>);
-        register(opcode | 0 << 6 | 3 << 3 | reg, Nbcd<3>);
-        register(opcode | 0 << 6 | 4 << 3 | reg, Nbcd<4>);
-        register(opcode | 0 << 6 | 5 << 3 | reg, Nbcd<5>);
-        register(opcode | 0 << 6 | 6 << 3 | reg, Nbcd<6>);
+        register(opcode | 0 << 6 | 0 << 3 | reg, Nbcd<NBCD __ 0 __ Byte>);
+        register(opcode | 0 << 6 | 2 << 3 | reg, Nbcd<NBCD __ 2 __ Byte>);
+        register(opcode | 0 << 6 | 3 << 3 | reg, Nbcd<NBCD __ 3 __ Byte>);
+        register(opcode | 0 << 6 | 4 << 3 | reg, Nbcd<NBCD __ 4 __ Byte>);
+        register(opcode | 0 << 6 | 5 << 3 | reg, Nbcd<NBCD __ 5 __ Byte>);
+        register(opcode | 0 << 6 | 6 << 3 | reg, Nbcd<NBCD __ 6 __ Byte>);
     }
-    register(opcode | 0 << 6 | 7 << 3 | 0, Nbcd<7>);
-    register(opcode | 0 << 6 | 7 << 3 | 1, Nbcd<8>);
+    register(opcode | 0 << 6 | 7 << 3 | 0, Nbcd<NBCD __ 7 __ Byte>);
+    register(opcode | 0 << 6 | 7 << 3 | 1, Nbcd<NBCD __ 8 __ Byte>);
 }
 
 void
@@ -1032,15 +1032,15 @@ CPU::registerS()
 
     for (int reg = 0; reg < 8; reg++) {
 
-        register(opcode | 0 << 3 | reg, SccDn<CC __ I __ 0>);
-        register(opcode | 2 << 3 | reg, SccEa<CC __ I __ 2>);
-        register(opcode | 3 << 3 | reg, SccEa<CC __ I __ 3>);
-        register(opcode | 4 << 3 | reg, SccEa<CC __ I __ 4>);
-        register(opcode | 5 << 3 | reg, SccEa<CC __ I __ 5>);
-        register(opcode | 6 << 3 | reg, SccEa<CC __ I __ 6>);
+        register(opcode | 0 << 3 | reg, SccDn<I __ 0 __ Byte>);
+        register(opcode | 2 << 3 | reg, SccEa<I __ 2 __ Byte>);
+        register(opcode | 3 << 3 | reg, SccEa<I __ 3 __ Byte>);
+        register(opcode | 4 << 3 | reg, SccEa<I __ 4 __ Byte>);
+        register(opcode | 5 << 3 | reg, SccEa<I __ 5 __ Byte>);
+        register(opcode | 6 << 3 | reg, SccEa<I __ 6 __ Byte>);
     }
-    register(opcode | 7 << 3 | 0, SccEa<CC __ I __ 7>);
-    register(opcode | 7 << 3 | 1, SccEa<CC __ I __ 8>);
+    register(opcode | 7 << 3 | 0, SccEa<I __ 7 __ Byte>);
+    register(opcode | 7 << 3 | 1, SccEa<I __ 8 __ Byte>);
 }
 
 void

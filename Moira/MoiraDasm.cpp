@@ -202,7 +202,7 @@ CPU::dasmExt(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<EXT>{} << Sz<S>{} << tab << Dn{src};
 }
 
-template <Mode M> void
+template <Instr I, Mode M, Size S> void
 CPU::dasmLea(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Ea<M,Long> src { _____________xxx(op), e1, e2 };
@@ -211,21 +211,21 @@ CPU::dasmLea(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<LEA>{} << tab << src << ", " << dst;
 }
 
-template<Mode M, Size S> void
+template<Instr I, Mode M, Size S> void
 CPU::dasmMovea(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Ea<M,Long> src { _____________xxx(op), e1, e2 };
     An         dst { ____xxx_________(op) };
 
-    str << Ins<MOVEA>{} << tab << src << ", " << dst;
+    str << Ins<I>{} << tab << src << ", " << dst;
 }
 
-void
+template<Instr I, Mode M, Size S> void
 CPU::dasmMoveq(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Dn dst { ____xxx_________(op) };
 
-    str << Ins<MOVEQ>{} << tab << "#" << (u8)(op & 0xFF) << ", " << dst;
+    str << Ins<I>{} << tab << "#" << (u8)(op & 0xFF) << ", " << dst;
 }
 
 template<Instr I, Mode M, Size S> void
@@ -237,7 +237,7 @@ CPU::dasmMulDiv(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<I>{} << src << "," << dst;
 }
 
-template <Mode M> void
+template <Instr I, Mode M, Size S> void
 CPU::dasmNbcd(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Ea<M,Byte> dst { _____________xxx(op), e1, e2 };
@@ -251,20 +251,20 @@ CPU::dasmNop(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<NOP>{};
 }
 
-template<Cond C, Instr I, Mode M> void
+template<Instr I, Mode M, Size S> void
 CPU::dasmSccDn(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Dn src { _____________xxx(op) };
 
-    str << Ins<SCC>{} << Cnd<C>{} << tab << src;
+    str << Ins<I>{} << tab << src;
 }
 
-template<Cond C, Instr I, Mode M> void
+template<Instr I, Mode M, Size S> void
 CPU::dasmSccEa(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Ea<M,Byte> src { _____________xxx(op), e1, e2 };
 
-    str << Ins<SCC>{} << Cnd<C>{} << tab << src;
+    str << Ins<I>{} << tab << src;
 }
 
 template<Instr I, Mode M, Size S> void
