@@ -476,7 +476,7 @@ CPU::execCmpa(u16 opcode)
     cmp<Long>(sop, dop);
 }
 
-template<Cond C, Instr I, Mode M, Size S> void
+template<Instr I, Mode M, Size S> void
 CPU::execDbcc(u16 opcode)
 {
     int dn = _____________xxx(opcode);
@@ -488,7 +488,7 @@ CPU::execDbcc(u16 opcode)
      * ELSE [PC] := [PC] + 2 {fall through to next instruction}
      */
 
-    if (!bcond<C,I>()) {
+    if (!bcond<I>()) {
 
         u32 newpc = pc + (i16)irc;
 
@@ -509,7 +509,7 @@ CPU::execDbcc(u16 opcode)
     prefetch();
 }
 
-template<Size S> void
+template<Instr I, Mode M, Size S> void
 CPU::execExt(u16 opcode)
 {
     int n     = _____________xxx(opcode);
@@ -803,7 +803,7 @@ CPU::execSccDn(u16 opcode)
     int dst = { _____________xxx(opcode) };
 
     prefetch();
-    writeD<Byte>(dst, bcond<C,I>() ? 0xFF : 0);
+    writeD<Byte>(dst, bcond<I>() ? 0xFF : 0);
 }
 
 template<Cond C, Instr I, Mode M> void
@@ -815,7 +815,7 @@ CPU::execSccEa(u16 opcode)
     (void)read<Byte>(ea);
 
     prefetch();
-    write<Byte>(ea, bcond<C,I>() ? 0xFF : 0);
+    write<Byte>(ea, bcond<I>() ? 0xFF : 0);
 }
 
 template<Mode M> void

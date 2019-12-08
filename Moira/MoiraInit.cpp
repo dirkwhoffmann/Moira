@@ -715,22 +715,22 @@ CPU::registerDBcc()
 
     for (int reg = 0; reg < 8; reg++) {
 
-        register(opcode | 0x0 << 8 | reg, Dbcc<CT __ DBT  __ 0 __ Word>);
-        register(opcode | 0x1 << 8 | reg, Dbcc<CF __ DBF  __ 0 __ Word>);
-        register(opcode | 0x2 << 8 | reg, Dbcc<HI __ DBHI __ 0 __ Word>);
-        register(opcode | 0x3 << 8 | reg, Dbcc<LS __ DBLS __ 0 __ Word>);
-        register(opcode | 0x4 << 8 | reg, Dbcc<CC __ DBCC __ 0 __ Word>);
-        register(opcode | 0x5 << 8 | reg, Dbcc<CS __ DBCS __ 0 __ Word>);
-        register(opcode | 0x6 << 8 | reg, Dbcc<NE __ DBNE __ 0 __ Word>);
-        register(opcode | 0x7 << 8 | reg, Dbcc<EQ __ DBEQ __ 0 __ Word>);
-        register(opcode | 0x8 << 8 | reg, Dbcc<VC __ DBVC __ 0 __ Word>);
-        register(opcode | 0x9 << 8 | reg, Dbcc<VS __ DBVS __ 0 __ Word>);
-        register(opcode | 0xA << 8 | reg, Dbcc<PL __ DBPL __ 0 __ Word>);
-        register(opcode | 0xB << 8 | reg, Dbcc<MI __ DBMI __ 0 __ Word>);
-        register(opcode | 0xC << 8 | reg, Dbcc<GE __ DBGE __ 0 __ Word>);
-        register(opcode | 0xD << 8 | reg, Dbcc<LT __ DBLT __ 0 __ Word>);
-        register(opcode | 0xE << 8 | reg, Dbcc<GT __ DBGT __ 0 __ Word>);
-        register(opcode | 0xF << 8 | reg, Dbcc<LE __ DBLE __ 0 __ Word>);
+        register(opcode | 0x0 << 8 | reg, Dbcc<DBT  __ 0 __ Word>);
+        register(opcode | 0x1 << 8 | reg, Dbcc<DBF  __ 0 __ Word>);
+        register(opcode | 0x2 << 8 | reg, Dbcc<DBHI __ 0 __ Word>);
+        register(opcode | 0x3 << 8 | reg, Dbcc<DBLS __ 0 __ Word>);
+        register(opcode | 0x4 << 8 | reg, Dbcc<DBCC __ 0 __ Word>);
+        register(opcode | 0x5 << 8 | reg, Dbcc<DBCS __ 0 __ Word>);
+        register(opcode | 0x6 << 8 | reg, Dbcc<DBNE __ 0 __ Word>);
+        register(opcode | 0x7 << 8 | reg, Dbcc<DBEQ __ 0 __ Word>);
+        register(opcode | 0x8 << 8 | reg, Dbcc<DBVC __ 0 __ Word>);
+        register(opcode | 0x9 << 8 | reg, Dbcc<DBVS __ 0 __ Word>);
+        register(opcode | 0xA << 8 | reg, Dbcc<DBPL __ 0 __ Word>);
+        register(opcode | 0xB << 8 | reg, Dbcc<DBMI __ 0 __ Word>);
+        register(opcode | 0xC << 8 | reg, Dbcc<DBGE __ 0 __ Word>);
+        register(opcode | 0xD << 8 | reg, Dbcc<DBLT __ 0 __ Word>);
+        register(opcode | 0xE << 8 | reg, Dbcc<DBGT __ 0 __ Word>);
+        register(opcode | 0xF << 8 | reg, Dbcc<DBLE __ 0 __ Word>);
     }
 }
 
@@ -766,8 +766,8 @@ CPU::registerEXT()
     u32 opcode = parse("0100 1000 --00 0---");
 
     for (int reg = 0; reg < 8; reg++) {
-        register(opcode | 2 << 6 | reg, Ext<Word>);
-        register(opcode | 3 << 6 | reg, Ext<Long>);
+        register(opcode | 2 << 6 | reg, Ext<EXT __ 0 __ Word>);
+        register(opcode | 3 << 6 | reg, Ext<EXT __ 0 __ Long>);
     }
 }
 

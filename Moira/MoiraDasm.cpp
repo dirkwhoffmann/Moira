@@ -186,15 +186,15 @@ CPU::dasmBitImEa(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<I>{} << tab << "#" << src << "," << dst;
 }
 
-template<Cond C, Instr I, Mode M, Size S> void
+template<Instr I, Mode M, Size S> void
 CPU::dasmDbcc(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Dn src { _____________xxx(op) };
 
-    str << Ins<DBCC>{} << Cnd<C>{} << tab << Dn{src} << ", " << irc;
+    str << Ins<I>{} << tab << Dn{src} << ", " << irc;
 }
 
-template<Size S> void
+template<Instr I, Mode M, Size S> void
 CPU::dasmExt(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Dn src { _____________xxx(op) };

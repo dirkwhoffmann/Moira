@@ -633,26 +633,26 @@ CPU::cmp(u32 op1, u32 op2)
     sr.n = NBIT<S>(result);
 }
 
-template <Cond C, Instr I> bool
+template <Instr I> bool
 CPU::bcond() {
 
-    switch(C) {
+    switch(I) {
 
-        case CT: return true;
-        case CF: return false;
-        case HI: return !sr.c && !sr.z;
-        case LS: return sr.c || sr.z;
-        case CC: return !sr.c;
-        case CS: return sr.c;
-        case NE: return !sr.z;
-        case EQ: return sr.z;
-        case VC: return !sr.v;
-        case VS: return sr.v;
-        case PL: return !sr.n;
-        case MI: return sr.n;
-        case GE: return sr.n == sr.v;
-        case LT: return sr.n != sr.v;
-        case GT: return sr.n == sr.v && !sr.z;
-        case LE: return sr.n != sr.v || sr.z;
+        case BT:  case DBT:  case ST:  return true;
+        case BF:  case DBF:  case SF:  return false;
+        case BHI: case DBHI: case SHI: return !sr.c && !sr.z;
+        case BLS: case DBLS: case SLS: return sr.c || sr.z;
+        case BCC: case DBCC: case SCC: return !sr.c;
+        case BCS: case DBCS: case SCS: return sr.c;
+        case BNE: case DBNE: case SNE: return !sr.z;
+        case BEQ: case DBEQ: case SEQ: return sr.z;
+        case BVC: case DBVC: case SVC: return !sr.v;
+        case BVS: case DBVS: case SVS: return sr.v;
+        case BPL: case DBPL: case SPL: return !sr.n;
+        case BMI: case DBMI: case SMI: return sr.n;
+        case BGE: case DBGE: case SGE: return sr.n == sr.v;
+        case BLT: case DBLT: case SLT: return sr.n != sr.v;
+        case BGT: case DBGT: case SGT: return sr.n == sr.v && !sr.z;
+        case BLE: case DBLE: case SLE: return sr.n != sr.v || sr.z;
     }
 }
