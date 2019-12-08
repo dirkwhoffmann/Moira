@@ -265,7 +265,7 @@ CPU::execAddaIm(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAndXXRg(u16 opcode)
+CPU::execAndEaRg(u16 opcode)
 {
     u32 result;
 
@@ -301,7 +301,7 @@ CPU::execAndXXRg(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAndRgXX(u16 opcode)
+CPU::execAndRgEa(u16 opcode)
 {
      int src = ____xxx_________(opcode);
      int dst = _____________xxx(opcode);

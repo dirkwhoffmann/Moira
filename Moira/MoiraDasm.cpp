@@ -80,7 +80,7 @@ CPU::dasmAddRgXX(StrWriter &str, u16 op, u16 e1, u16 e2)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmAndXXRg(StrWriter &str, u16 op, u16 e1, u16 e2)
+CPU::dasmAndEaRg(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Ea<M,S> src { _____________xxx(op), e1, e2 };
     Dn      dst { ____xxx_________(op) };
@@ -116,7 +116,7 @@ CPU::dasmAddaIm(StrWriter &str, u16 op, u16 e1, u16 e2)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmAndRgXX(StrWriter &str, u16 op, u16 e1, u16 e2)
+CPU::dasmAndRgEa(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Dn      src { ____xxx_________(op) };
     Ea<M,S> dst { _____________xxx(op), e1, e2 };

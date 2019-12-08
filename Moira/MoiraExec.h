@@ -25,8 +25,8 @@ template<Instr I, Mode M, Size S> void execAddaDn(u16 opcode);
 template<Instr I, Mode M, Size S> void execAddaEa(u16 opcode);
 template<Instr I, Mode M, Size S> void execAddaIm(u16 opcode);
 
-template<Instr I, Mode M, Size S> void execAndXXRg(u16 opcode);
-template<Instr I, Mode M, Size S> void execAndRgXX(u16 opcode);
+template<Instr I, Mode M, Size S> void execAndEaRg(u16 opcode);
+template<Instr I, Mode M, Size S> void execAndRgEa(u16 opcode);
 
 template<Instr I, Mode M> void execBitDxDy(u16 opcode);
 template<Instr I, Mode M> void execBitDxEa(u16 opcode);
