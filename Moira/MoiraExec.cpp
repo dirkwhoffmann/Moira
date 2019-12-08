@@ -254,8 +254,10 @@ CPU::execAddaDn(u16 opcode)
     u32 sop = SEXT<S>(readD<S>(src));
     u32 dop = readA(dst);
 
+    u32 result = (I == ADDA) ? dop + sop : dop - sop;
+
     prefetch();
-    writeA(dst, sop + dop);
+    writeA(dst, result);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -270,8 +272,10 @@ CPU::execAddaEa(u16 opcode)
     u32 sop = SEXT<S>(read<S>(ea));
     u32 dop = readA(dst);
 
+    u32 result = (I == ADDA) ? dop + sop : dop - sop;
+
     prefetch();
-    writeA(dst, sop + dop);
+    writeA(dst, result);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -282,8 +286,10 @@ CPU::execAddaIm(u16 opcode)
     u32 sop = SEXT<S>(readImm<S>());
     u32 dop = readA(dst);
 
+    u32 result = (I == ADDA) ? dop + sop : dop - sop;
+
     prefetch();
-    writeA(dst, sop + dop);
+    writeA(dst, result);
 }
 
 template<Instr I, Mode M, Size S> void
