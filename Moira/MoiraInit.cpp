@@ -34,6 +34,7 @@ dasm[id] = &CPU::dasm##name; }
 // Registers an instruction in one of the standard instruction formats:
 //
 //     Variants:  ____ ____ ____ _XXX
+//                ____ ____ SS__ _XXX
 //                ____ XXX_ ____ _XXX
 //                ____ XXX_ SS__ _XXX
 //                ____ ____ __MM MXXX
@@ -48,6 +49,11 @@ dasm[id] = &CPU::dasm##name; }
 
 #define _____________XXX(op,I,M,S,f) { \
 for (int j = 0; j < 8; j++) register((op) | j, f<I __ M __ S>); }
+
+#define ________SS___XXX(op,I,M,s,f) { \
+if ((s) & 0b100) _____________XXX((op) | 2 << 6, I, M, Long, f); \
+if ((s) & 0b010) _____________XXX((op) | 1 << 6, I, M, Word, f); \
+if ((s) & 0b001) _____________XXX((op) | 0 << 6, I, M, Byte, f); }
 
 #define ____XXX______XXX(op,I,M,S,f) { \
 for (int i = 0; i < 8; i++) _____________XXX((op) | i << 9, I, M, S, f); }
@@ -399,28 +405,38 @@ CPU::registerInstructions()
 void
 CPU::registerCLR()
 {
-     // CLR
-     //
-     //              -------------------------------------------------
-     //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-     //              -------------------------------------------------
-     // <ea>           X       X   X   X   X   X   X   X
+    u16 opcode;
 
-    u32 opcode = parse("0100 0010 ---- ----");
+    // CLR
+    //
+    //       Syntax: CLR <ea>
+    //         Size: Byte, Word, Longword
 
-     ________SSMMMXXX(opcode, CLR, 0b101111111000, Byte | Word | Long, Clr);
+    //               -------------------------------------------------
+    //         <ea>: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X
+
+    opcode = parse("0100 0010 ---- ----");
+    ________SSMMMXXX(opcode, CLR, 0b101111111000, Byte | Word | Long, Clr);
 }
 
 void
 CPU::registerCMP()
 {
-    u16 opcode = parse("1011 ---0 ---- ----");
+    u16 opcode;
 
-    //              -------------------------------------------------
-    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    // <ea>,Dn        X  (X)  X   X   X   X   X   X   X   X   X   X
+    // CMP
+    //
+    //       Syntax: CMP <ea>,Dy
+    //         Size: Byte, Word, Longword
 
+    //               -------------------------------------------------
+    //      <ea>,Dy: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X  (X)  X   X   X   X   X   X   X   X   X   X
+
+    opcode = parse("1011 ---0 ---- ----");
     ____XXX_SSMMMXXX(opcode, CMP, 0b101111111111, Byte,        Cmp);
     ____XXX_SSMMMXXX(opcode, CMP, 0b111111111111, Word | Long, Cmp);
 }
@@ -428,27 +444,38 @@ CPU::registerCMP()
 void
 CPU::registerCMPA()
 {
-    u16 opcode = parse("1011 ---- 11-- ----");
+    u16 opcode;
 
-    //              -------------------------------------------------
-    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    // <ea>,An        X   X   X   X   X   X   X   X   X   X   X   X
+    // CMPA
+    //
+    //       Syntax: CMPA <ea>,Ay
+    //         Size: Byte, Word, Longword
 
+    //               -------------------------------------------------
+    //      <ea>,Ay: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X   X   X   X   X   X   X   X   X   X   X   X
+
+    opcode = parse("1011 ---- 11-- ----");
     ____XXXS__MMMXXX(opcode, CMPA, 0b111111111111, Word | Long, Cmpa);
 }
 
 void
 CPU::registerDBcc()
 {
-    u32 opcode = parse("0101 ---- 1100 1---");
+    u16 opcode;
 
     // DBcc
     //
-    //              -------------------------------------------------
-    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    // Dn,<label>     X
+    //       Syntax: DBcc Dn,<label>
+    //         Size: Word
+
+    //               -------------------------------------------------
+    //   Dn,<label>: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X
+
+    opcode = parse("0101 ---- 1100 1---");
 
     _____________XXX(opcode | 0x000, DBT,  0, Word, Dbcc);
     _____________XXX(opcode | 0x100, DBF,  0, Word, Dbcc);
@@ -471,41 +498,63 @@ CPU::registerDBcc()
 void
 CPU::registerDIVx()
 {
-    u16 divs = parse("1000 ---1 11-- ----");
-    u16 divu = parse("1000 ---0 11-- ----");
+    u16 opcode;
 
-     //              -------------------------------------------------
-     // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-     //              -------------------------------------------------
-     // <ea>,Dy        X       X   X   X   X   X   X   X   X   X   X
+    // DIVS, DIVU
+    //
+    //       Syntax: DIVx <ea>,Dy
+    //        Sizes: Longword, Word -> Longword
 
-    ____XXX___MMMXXX(divs, DIVS, 0b101111111111, Long, MulDiv);
-    ____XXX___MMMXXX(divu, DIVU, 0b101111111111, Long, MulDiv);
+    //               -------------------------------------------------
+    //      <ea>,Dn: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X   X   X   X
+
+    opcode = parse("1000 ---1 11-- ----");
+    ____XXX___MMMXXX(opcode, DIVS, 0b101111111111, Long, MulDiv);
+
+    opcode = parse("1000 ---0 11-- ----");
+    ____XXX___MMMXXX(opcode, DIVU, 0b101111111111, Long, MulDiv);
 }
 
 void
 CPU::registerEOR()
 {
-    u16 opcode = parse("1011 ---1 ---- ----");
+    u16 opcode;
 
     // EOR
-    //            -------------------------------------------------
-    //            | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //            -------------------------------------------------
-    // Dx,<ea>      X       X   X   X   X   X   X   X
+    //
+    //       Syntax: DIVx Dx,<ea>
+    //        Sizes: Byte, Word, Longword
 
+    //               -------------------------------------------------
+    //      <ea>,Dn: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X
+
+    opcode = parse("1011 ---1 ---- ----");
     ____XXX_SSMMMXXX(opcode, EOR, 0b101111111000, Byte | Word | Long, AndRgEa);
 }
 
 void
 CPU::registerEXT()
 {
-    u32 opcode = parse("0100 1000 --00 0---");
+    u16 opcode;
 
-    for (int reg = 0; reg < 8; reg++) {
-        register(opcode | 2 << 6 | reg, Ext<EXT __ 0 __ Word>);
-        register(opcode | 3 << 6 | reg, Ext<EXT __ 0 __ Long>);
-    }
+    // EXT
+    //
+    //       Syntax: EXT Dx
+    //        Sizes: Word, Longword
+
+    //               -------------------------------------------------
+    //           Dx: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X
+
+    opcode = parse("0100 1000 --00 0---");
+
+    _____________XXX(opcode | 2 << 6, EXT, 0, Word, Ext);
+    _____________XXX(opcode | 3 << 6, EXT, 0, Long, Ext);
 }
 
 void
@@ -515,26 +564,16 @@ CPU::registerLEA()
 
     // LEA
     //
-    // Modes:       LEA <ea>,An
-    //
-    //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    //                        X           X   X   X   X   X   X
+    //       Syntax: LEA <ea>,Ay
+    //        Sizes: Longword
 
-    for (int an = 0; an < 8; an++) {
+    //               -------------------------------------------------
+    //      <ea>,Ay: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                         X           X   X   X   X   X   X
 
-        opcode = parse("0100 ---1 11-- ----") | an << 9;
-        for (int reg = 0; reg < 8; reg++) {
-            register(opcode | 2 << 3 | reg, Lea<LEA __ 2 __ Long>);
-            register(opcode | 5 << 3 | reg, Lea<LEA __ 5 __ Long>);
-            register(opcode | 6 << 3 | reg, Lea<LEA __ 6 __ Long>);
-        }
-        register(opcode | 7 << 3 | 0, Lea<LEA __  7 __ Long>);
-        register(opcode | 7 << 3 | 1, Lea<LEA __  8 __ Long>);
-        register(opcode | 7 << 3 | 2, Lea<LEA __  9 __ Long>);
-        register(opcode | 7 << 3 | 3, Lea<LEA __ 10 __ Long>);
-    }
+    opcode = parse("0100 ---1 11-- ----");
+    ____XXX___MMMXXX(opcode, LEA, 0b001001111110, Long, Lea);
 }
 
 void
