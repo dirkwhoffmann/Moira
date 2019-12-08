@@ -21,6 +21,7 @@ template<Mode M, Size S> u32 computeEA(u32 n, u32 dis = 0, u32 idx = 0);
 
 // Reads an operand
 template<Mode M, Size S> bool readOperand(int n, u32 &ea, u32 &result);
+template<Mode M, Size S> void writeOperand(int n, u32 ea, u32 value);
 
 
 // Read immediate value

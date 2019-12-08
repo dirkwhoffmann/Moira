@@ -270,6 +270,31 @@ CPU::readOperand(int n, u32 &ea, u32 &result)
     return true;
 }
 
+template<Mode M, Size S> void
+CPU::writeOperand(int n, u32 ea, u32 value)
+{
+    assert(M < 11);
+
+    switch (M) {
+
+        case 0: // Dn
+        {
+            writeD<S>(n, value);
+            break;
+        }
+        case 1: // An
+        {
+            writeA<S>(n, value);
+            break;
+        }
+        default:
+        {
+            write<S>(ea, value);
+            break;
+        }
+    }
+}
+
 template<Size S> u32
 CPU::readImm()
 {
