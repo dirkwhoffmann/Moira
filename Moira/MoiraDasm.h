@@ -49,6 +49,5 @@ template<Instr I, Mode M, Size S> void dasmNop(StrWriter &str, u16 op, u16 e1, u
 template<Instr I, Mode M, Size S> void dasmSccDn(StrWriter &str, u16 op, u16 e1, u16 e2);
 template<Instr I, Mode M, Size S> void dasmSccEa(StrWriter &str, u16 op, u16 e1, u16 e2);
 
-template<Instr I, Mode M, Size S> void dasmTasDn(StrWriter &str, u16 op, u16 e1, u16 e2);
-template<Instr I, Mode M, Size S> void dasmTasEa(StrWriter &str, u16 op, u16 e1, u16 e2);
+template<Instr I, Mode M, Size S> void dasmTas(StrWriter &str, u16 op, u16 e1, u16 e2);
 template<Instr I, Mode M, Size S> void dasmTst(StrWriter &str, u16 op, u16 e1, u16 e2);

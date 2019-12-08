@@ -57,7 +57,6 @@ template<Instr I, Mode M, Size S> void execNop(u16 opcode);
 template<Instr I, Mode M, Size S> void execSccDn(u16 opcode);
 template<Instr I, Mode M, Size S> void execSccEa(u16 opcode);
 
-template<Instr I, Mode M, Size S> void execTasDn(u16 opcode);
-template<Instr I, Mode M, Size S> void execTasEa(u16 opcode);
+template<Instr I, Mode M, Size S> void execTas(u16 opcode);
 template<Instr I, Mode M, Size S> void execTst(u16 opcode);
 

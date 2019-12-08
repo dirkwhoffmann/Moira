@@ -819,39 +819,40 @@ CPU::execSccEa(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execTasDn(u16 opcode)
+CPU::execTas(u16 opcode)
 {
     int dst = { _____________xxx(opcode) };
 
-    u8 data = readD<Byte>(dst);
+    switch (M) {
 
-    sr.c = 0;
-    sr.v = 0;
-    sr.n = NBIT<Byte>(data);
-    sr.z = ZERO<Byte>(data);
+        case 0:
+        {
+            u8 data = readD<Byte>(dst);
 
-    data |= 0x80;
-    writeD<Byte>(dst, data);
+            sr.c = 0;
+            sr.v = 0;
+            sr.n = NBIT<Byte>(data);
+            sr.z = ZERO<Byte>(data);
 
-    prefetch();
-}
+            data |= 0x80;
+            writeD<Byte>(dst, data);
+            break;
+        }
+        default:
+        {
+            u32 ea = computeEA<M,Byte>(dst);
+            u8 data = read<Byte>(ea);
 
-template<Instr I, Mode M, Size S> void
-CPU::execTasEa(u16 opcode)
-{
-    int dst = { _____________xxx(opcode) };
+            sr.c = 0;
+            sr.v = 0;
+            sr.n = NBIT<Byte>(data);
+            sr.z = ZERO<Byte>(data);
 
-    u32 ea = computeEA<M,Byte>(dst);
-    u8 data = read<Byte>(ea);
-
-    sr.c = 0;
-    sr.v = 0;
-    sr.n = NBIT<Byte>(data);
-    sr.z = ZERO<Byte>(data);
-
-    data |= 0x80;
-    write<Byte>(ea, data);
-
+            data |= 0x80;
+            write<Byte>(ea, data);
+            break;
+        }
+    }
     prefetch();
 }
 

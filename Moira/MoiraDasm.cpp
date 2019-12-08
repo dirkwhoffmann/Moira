@@ -282,17 +282,10 @@ CPU::dasmNegNotEa(StrWriter &str, u16 op, u16 e1, u16 e2)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmTasDn(StrWriter &str, u16 op, u16 e1, u16 e2)
-{
-    Dn dst { _____________xxx(op) };
-    str << Ins<TAS>{} << tab << dst;
-}
-
-template<Instr I, Mode M, Size S> void
-CPU::dasmTasEa(StrWriter &str, u16 op, u16 e1, u16 e2)
+CPU::dasmTas(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Ea<M,Byte> dst { _____________xxx(op), e1, e2 };
-    str << Ins<TAS>{} << tab << dst;
+    str << Ins<I>{} << tab << dst;
 }
 
 template<Instr I, Mode M, Size S> void

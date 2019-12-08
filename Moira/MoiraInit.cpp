@@ -1059,85 +1059,27 @@ CPU::registerSUBA()
 void
 CPU::registerTAS()
 {
-    // TAS
-    //
-    // Modes:       <ea>
-    //
-    //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    //                X       X   X   X   X   X   X   X   X   X
-
     u16 opcode = parse("0100 1010 11-- ----");
 
-    for (int reg = 0; reg < 8; reg++) {
+    //              -------------------------------------------------
+    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    // <ea>           X       X   X   X   X   X   X   X
 
-        register(opcode | 0 << 6 | 0 << 3 | reg, TasDn<TAS __ 0 __ Byte>);
-        register(opcode | 0 << 6 | 2 << 3 | reg, TasEa<TAS __ 2 __ Byte>);
-        register(opcode | 0 << 6 | 3 << 3 | reg, TasEa<TAS __ 3 __ Byte>);
-        register(opcode | 0 << 6 | 4 << 3 | reg, TasEa<TAS __ 4 __ Byte>);
-        register(opcode | 0 << 6 | 5 << 3 | reg, TasEa<TAS __ 5 __ Byte>);
-        register(opcode | 0 << 6 | 6 << 3 | reg, TasEa<TAS __ 6 __ Byte>);
-
-    }
-    register(opcode | 0 << 6 | 7 << 3 | 0, TasEa<TAS __ 7 __ Byte>);
-    register(opcode | 0 << 6 | 7 << 3 | 1, TasEa<TAS __ 8 __ Byte>);
+    __________MMMXXX(opcode, TAS, 0b101111111000, Byte, Tas);
 }
 
 void
 CPU::registerTST()
 {
-    // TST
-    //
-    // Modes:       TST <ea>
-    //
-    //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    //                X       X   X   X   X   X   X   X   X   X
-
     u16 opcode = parse("0100 1010 ---- ----");
-    u16 opcodeB = opcode | 0 << 6;
-    u16 opcodeW = opcode | 1 << 6;
-    u16 opcodeL = opcode | 2 << 6;
 
-    for (int reg = 0; reg < 8; reg++) {
+    //              -------------------------------------------------
+    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    // <ea>           X       X   X   X   X   X   X   X   X   X
 
-        register(opcodeB | 0 << 3 | reg, Tst<TST __ 0 __ Byte>);
-        register(opcodeB | 2 << 3 | reg, Tst<TST __ 2 __ Byte>);
-        register(opcodeB | 3 << 3 | reg, Tst<TST __ 3 __ Byte>);
-        register(opcodeB | 4 << 3 | reg, Tst<TST __ 4 __ Byte>);
-        register(opcodeB | 5 << 3 | reg, Tst<TST __ 5 __ Byte>);
-        register(opcodeB | 6 << 3 | reg, Tst<TST __ 6 __ Byte>);
-
-        register(opcodeW | 0 << 3 | reg, Tst<TST __ 0 __ Word>);
-        register(opcodeW | 2 << 3 | reg, Tst<TST __ 2 __ Word>);
-        register(opcodeW | 3 << 3 | reg, Tst<TST __ 3 __ Word>);
-        register(opcodeW | 4 << 3 | reg, Tst<TST __ 4 __ Word>);
-        register(opcodeW | 5 << 3 | reg, Tst<TST __ 5 __ Word>);
-        register(opcodeW | 6 << 3 | reg, Tst<TST __ 6 __ Word>);
-
-        register(opcodeL | 0 << 3 | reg, Tst<TST __ 0 __ Long>);
-        register(opcodeL | 2 << 3 | reg, Tst<TST __ 2 __ Long>);
-        register(opcodeL | 3 << 3 | reg, Tst<TST __ 3 __ Long>);
-        register(opcodeL | 4 << 3 | reg, Tst<TST __ 4 __ Long>);
-        register(opcodeL | 5 << 3 | reg, Tst<TST __ 5 __ Long>);
-        register(opcodeL | 6 << 3 | reg, Tst<TST __ 6 __ Long>);
-    }
-    register(opcodeB | 7 << 3 | 0, Tst<TST __  7 __ Byte>);
-    register(opcodeB | 7 << 3 | 1, Tst<TST __  8 __ Byte>);
-    register(opcodeB | 7 << 3 | 2, Tst<TST __  9 __ Byte>);
-    register(opcodeB | 7 << 3 | 3, Tst<TST __ 10 __ Byte>);
-
-    register(opcodeW | 7 << 3 | 0, Tst<TST __  7 __ Word>);
-    register(opcodeW | 7 << 3 | 1, Tst<TST __  8 __ Word>);
-    register(opcodeW | 7 << 3 | 2, Tst<TST __  9 __ Word>);
-    register(opcodeW | 7 << 3 | 3, Tst<TST __ 10 __ Word>);
-
-    register(opcodeL | 7 << 3 | 0, Tst<TST __  7 __ Long>);
-    register(opcodeL | 7 << 3 | 1, Tst<TST __  8 __ Long>);
-    register(opcodeL | 7 << 3 | 2, Tst<TST __  9 __ Long>);
-    register(opcodeL | 7 << 3 | 3, Tst<TST __ 10 __ Long>);
+    ________SSMMMXXX(opcode, TST, 0b101111111110, Byte | Word | Long, Tst);
 }
 
 #undef __
