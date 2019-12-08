@@ -32,4 +32,4 @@ template <Instr I, Size S> u32  logic(u32 op1);
 template <Instr I, Size S> u32  logic(u32 op1, u32 op2);
 template <Instr I>         u32  bitop(u32 op, u8 bit);
 template <Size S>          void cmp(u32 op1, u32 op2);
-template <Cond C> bool check();
+template <Cond C, Instr I> bool bcond();

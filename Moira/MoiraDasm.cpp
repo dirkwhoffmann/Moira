@@ -186,7 +186,7 @@ CPU::dasmBitImEa(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<I>{} << tab << "#" << src << "," << dst;
 }
 
-template<Cond C> void
+template<Cond C, Instr I, Mode M, Size S> void
 CPU::dasmDbcc(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Dn src { _____________xxx(op) };
@@ -251,7 +251,7 @@ CPU::dasmNop(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<NOP>{};
 }
 
-template<Cond C, Mode M> void
+template<Cond C, Instr I, Mode M> void
 CPU::dasmSccDn(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Dn src { _____________xxx(op) };
@@ -259,7 +259,7 @@ CPU::dasmSccDn(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<SCC>{} << Cnd<C>{} << tab << src;
 }
 
-template<Cond C, Mode M> void
+template<Cond C, Instr I, Mode M> void
 CPU::dasmSccEa(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Ea<M,Byte> src { _____________xxx(op), e1, e2 };

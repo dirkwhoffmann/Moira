@@ -46,23 +46,18 @@ dasm[id] = &CPU::dasm##name; }
 //                  S : Size information      (0 = Word, 1 = Long)
 //                 SS : Size information      (0 = Byte, 1 = Word, 2 = Long)
 
-#define REG_IM(op,I,m,f) { \
-for (int j = 0; j < 8; j++) { \
-if ((m) & 0b100000000000) register((op) | 0 << 3 | j, f<I __  0>); \
-if ((m) & 0b010000000000) register((op) | 1 << 3 | j, f<I __  1>); \
-if ((m) & 0b001000000000) register((op) | 2 << 3 | j, f<I __  2>); \
-if ((m) & 0b000100000000) register((op) | 3 << 3 | j, f<I __  3>); \
-if ((m) & 0b000010000000) register((op) | 4 << 3 | j, f<I __  4>); \
-if ((m) & 0b000001000000) register((op) | 5 << 3 | j, f<I __  5>); \
-if ((m) & 0b000000100000) register((op) | 6 << 3 | j, f<I __  6>); \
-} \
-if ((m) & 0b000000010000) register((op) | 7 << 3 | 0, f<I __  7>); \
-if ((m) & 0b000000001000) register((op) | 7 << 3 | 1, f<I __  8>); \
-if ((m) & 0b000000000100) register((op) | 7 << 3 | 2, f<I __  9>); \
-if ((m) & 0b000000000010) register((op) | 7 << 3 | 3, f<I __ 10>); \
-if ((m) & 0b000000000001) register((op) | 7 << 3 | 4, f<I __ 11>); }
+#define _____________XXX(op,I,M,S,f) { \
+for (int j = 0; j < 8; j++) register((op) | j, f<I __ M __ S>); }
 
-#define REG_IMS(op,I,m,S,f) { \
+#define ____XXX______XXX(op,I,M,S,f) { \
+for (int i = 0; i < 8; i++) _____________XXX((op) | i << 9, I, M, S, f); }
+
+#define ____XXX_SS___XXX(op,I,M,s,f) { \
+if ((s) & 0b100) ____XXX______XXX((op) | 2 << 6, I, M, Long, f); \
+if ((s) & 0b010) ____XXX______XXX((op) | 1 << 6, I, M, Word, f); \
+if ((s) & 0b001) ____XXX______XXX((op) | 0 << 6, I, M, Byte, f); }
+
+#define __________MMMXXX(op,I,m,S,f) { \
 for (int j = 0; j < 8; j++) { \
 if ((m) & 0b100000000000) register((op) | 0 << 3 | j, f<I __  0 __ S>); \
 if ((m) & 0b010000000000) register((op) | 1 << 3 | j, f<I __  1 __ S>); \
@@ -78,29 +73,15 @@ if ((m) & 0b000000000100) register((op) | 7 << 3 | 2, f<I __  9 __ S>); \
 if ((m) & 0b000000000010) register((op) | 7 << 3 | 3, f<I __ 10 __ S>); \
 if ((m) & 0b000000000001) register((op) | 7 << 3 | 4, f<I __ 11 __ S>); }
 
-#define _____________XXX(op,I,M,S,f) { \
-for (int j = 0; j < 8; j++) register((op) | j, f<I __ M __ S>); }
-
-#define ____XXX______XXX(op,I,M,S,f) { \
-for (int i = 0; i < 8; i++) _____________XXX((op) | i << 9, I, M, S, f); }
-
-#define ____XXX_SS___XXX(op,I,M,s,f) { \
-if ((s) & 0b100) ____XXX______XXX((op) | 2 << 6, I, M, Long, f); \
-if ((s) & 0b010) ____XXX______XXX((op) | 1 << 6, I, M, Word, f); \
-if ((s) & 0b001) ____XXX______XXX((op) | 0 << 6, I, M, Byte, f); }
-
-#define __________MMMXXX(op,I,m,S,f) { \
-REG_IMS((op), I, m, S, f); }
-
 #define _______S__MMMXXX(op,I,m,s,f) { \
-if ((s) & 0b100) REG_IMS((op) | 1 << 8, I, m, Long, f); \
-if ((s) & 0b010) REG_IMS((op) | 0 << 8, I, m, Word, f); \
+if ((s) & 0b100) __________MMMXXX((op) | 1 << 8, I, m, Long, f); \
+if ((s) & 0b010) __________MMMXXX((op) | 0 << 8, I, m, Word, f); \
 if ((s) & 0b001) assert(false); }
 
 #define ________SSMMMXXX(op,I,m,s,f) { \
-if ((s) & 0b100) REG_IMS((op) | 2 << 6, I, m, Long, f); \
-if ((s) & 0b010) REG_IMS((op) | 1 << 6, I, m, Word, f); \
-if ((s) & 0b001) REG_IMS((op) | 0 << 6, I, m, Byte, f); }
+if ((s) & 0b100) __________MMMXXX((op) | 2 << 6, I, m, Long, f); \
+if ((s) & 0b010) __________MMMXXX((op) | 1 << 6, I, m, Word, f); \
+if ((s) & 0b001) __________MMMXXX((op) | 0 << 6, I, m, Byte, f); }
 
 #define ____XXX___MMMXXX(op,I,m,S,f) { \
 for (int i = 0; i < 8; i++) __________MMMXXX((op) | i << 9, I, m, S, f) }
@@ -110,7 +91,6 @@ for (int i = 0; i < 8; i++) _______S__MMMXXX((op) | i << 9, I, m, s, f) }
 
 #define ____XXX_SSMMMXXX(op,I,m,s,f) { \
 for (int i = 0; i < 8; i++) ________SSMMMXXX((op) | i << 9, I, m, s, f) }
-
 
 static u16
 parse(const char *s, u16 sum = 0)
@@ -735,22 +715,22 @@ CPU::registerDBcc()
 
     for (int reg = 0; reg < 8; reg++) {
 
-        register(opcode | 0x0 << 8 | reg, Dbcc<CT>);
-        register(opcode | 0x1 << 8 | reg, Dbcc<CF>);
-        register(opcode | 0x2 << 8 | reg, Dbcc<HI>);
-        register(opcode | 0x3 << 8 | reg, Dbcc<LS>);
-        register(opcode | 0x4 << 8 | reg, Dbcc<CC>);
-        register(opcode | 0x5 << 8 | reg, Dbcc<CS>);
-        register(opcode | 0x6 << 8 | reg, Dbcc<NE>);
-        register(opcode | 0x7 << 8 | reg, Dbcc<EQ>);
-        register(opcode | 0x8 << 8 | reg, Dbcc<VC>);
-        register(opcode | 0x9 << 8 | reg, Dbcc<VS>);
-        register(opcode | 0xA << 8 | reg, Dbcc<PL>);
-        register(opcode | 0xB << 8 | reg, Dbcc<MI>);
-        register(opcode | 0xC << 8 | reg, Dbcc<GE>);
-        register(opcode | 0xD << 8 | reg, Dbcc<LT>);
-        register(opcode | 0xE << 8 | reg, Dbcc<GT>);
-        register(opcode | 0xF << 8 | reg, Dbcc<LE>);
+        register(opcode | 0x0 << 8 | reg, Dbcc<CT __ DBT  __ 0 __ Word>);
+        register(opcode | 0x1 << 8 | reg, Dbcc<CF __ DBF  __ 0 __ Word>);
+        register(opcode | 0x2 << 8 | reg, Dbcc<HI __ DBHI __ 0 __ Word>);
+        register(opcode | 0x3 << 8 | reg, Dbcc<LS __ DBLS __ 0 __ Word>);
+        register(opcode | 0x4 << 8 | reg, Dbcc<CC __ DBCC __ 0 __ Word>);
+        register(opcode | 0x5 << 8 | reg, Dbcc<CS __ DBCS __ 0 __ Word>);
+        register(opcode | 0x6 << 8 | reg, Dbcc<NE __ DBNE __ 0 __ Word>);
+        register(opcode | 0x7 << 8 | reg, Dbcc<EQ __ DBEQ __ 0 __ Word>);
+        register(opcode | 0x8 << 8 | reg, Dbcc<VC __ DBVC __ 0 __ Word>);
+        register(opcode | 0x9 << 8 | reg, Dbcc<VS __ DBVS __ 0 __ Word>);
+        register(opcode | 0xA << 8 | reg, Dbcc<PL __ DBPL __ 0 __ Word>);
+        register(opcode | 0xB << 8 | reg, Dbcc<MI __ DBMI __ 0 __ Word>);
+        register(opcode | 0xC << 8 | reg, Dbcc<GE __ DBGE __ 0 __ Word>);
+        register(opcode | 0xD << 8 | reg, Dbcc<LT __ DBLT __ 0 __ Word>);
+        register(opcode | 0xE << 8 | reg, Dbcc<GT __ DBGT __ 0 __ Word>);
+        register(opcode | 0xF << 8 | reg, Dbcc<LE __ DBLE __ 0 __ Word>);
     }
 }
 
@@ -1019,25 +999,25 @@ CPU::registerSBCD()
 void
 CPU::registerScc()
 {
-    registerS<CT>();
-    registerS<CF>();
-    registerS<HI>();
-    registerS<LS>();
-    registerS<CC>();
-    registerS<CS>();
-    registerS<NE>();
-    registerS<EQ>();
-    registerS<VC>();
-    registerS<VS>();
-    registerS<PL>();
-    registerS<MI>();
-    registerS<GE>();
-    registerS<LT>();
-    registerS<GT>();
-    registerS<LE>();
+    registerS<CT, ST>();
+    registerS<CF, SF>();
+    registerS<HI, SHI>();
+    registerS<LS, SLS>();
+    registerS<CC, SCC>();
+    registerS<CS, SCS>();
+    registerS<NE, SNE>();
+    registerS<EQ, SEQ>();
+    registerS<VC, SVC>();
+    registerS<VS, SVS>();
+    registerS<PL, SPL>();
+    registerS<MI, SMI>();
+    registerS<GE, SGE>();
+    registerS<LT, SLT>();
+    registerS<GT, SGT>();
+    registerS<LE, SLE>();
 }
 
-template <Cond CC> void
+template <Cond CC, Instr I> void
 CPU::registerS()
 {
     // Scc
@@ -1052,15 +1032,15 @@ CPU::registerS()
 
     for (int reg = 0; reg < 8; reg++) {
 
-        register(opcode | 0 << 3 | reg, SccDn<CC __ 0>);
-        register(opcode | 2 << 3 | reg, SccEa<CC __ 2>);
-        register(opcode | 3 << 3 | reg, SccEa<CC __ 3>);
-        register(opcode | 4 << 3 | reg, SccEa<CC __ 4>);
-        register(opcode | 5 << 3 | reg, SccEa<CC __ 5>);
-        register(opcode | 6 << 3 | reg, SccEa<CC __ 6>);
+        register(opcode | 0 << 3 | reg, SccDn<CC __ I __ 0>);
+        register(opcode | 2 << 3 | reg, SccEa<CC __ I __ 2>);
+        register(opcode | 3 << 3 | reg, SccEa<CC __ I __ 3>);
+        register(opcode | 4 << 3 | reg, SccEa<CC __ I __ 4>);
+        register(opcode | 5 << 3 | reg, SccEa<CC __ I __ 5>);
+        register(opcode | 6 << 3 | reg, SccEa<CC __ I __ 6>);
     }
-    register(opcode | 7 << 3 | 0, SccEa<CC __ 7>);
-    register(opcode | 7 << 3 | 1, SccEa<CC __ 8>);
+    register(opcode | 7 << 3 | 0, SccEa<CC __ I __ 7>);
+    register(opcode | 7 << 3 | 1, SccEa<CC __ I __ 8>);
 }
 
 void

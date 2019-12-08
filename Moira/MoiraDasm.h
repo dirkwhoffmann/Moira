@@ -33,7 +33,7 @@ template<Instr I, Mode M, Size S> void dasmBitImEa(StrWriter &str, u16 op, u16 e
 template<Instr I, Mode M, Size S> void dasmClr(StrWriter &str, u16 op, u16 e1, u16 e2);
 template<Instr I, Mode M, Size S> void dasmCmp(StrWriter &str, u16 op, u16 e1, u16 e2);
 template<Instr I, Mode M, Size S> void dasmCmpa(StrWriter &str, u16 op, u16 e1, u16 e2);
-template<Cond C> void dasmDbcc(StrWriter &str, u16 op, u16 e1, u16 e2);
+template<Cond C, Instr I, Mode M, Size S> void dasmDbcc(StrWriter &str, u16 op, u16 e1, u16 e2);
 template<Size S> void dasmExt(StrWriter &str, u16 op, u16 e1, u16 e2);
 
 template<Mode M> void dasmLea(StrWriter &str, u16 op, u16 e1, u16 e2);
@@ -45,8 +45,8 @@ template<Instr I, Mode M, Size S> void dasmNegNotDn(StrWriter &str, u16 op, u16 
 template<Instr I, Mode M, Size S> void dasmNegNotEa(StrWriter &str, u16 op, u16 e1, u16 e2);
 void dasmNop(StrWriter &str, u16 op, u16 e1, u16 e2);
 
-template<Cond C, Mode M> void dasmSccDn(StrWriter &str, u16 op, u16 e1, u16 e2);
-template<Cond C, Mode M> void dasmSccEa(StrWriter &str, u16 op, u16 e1, u16 e2);
+template<Cond C, Instr I, Mode M> void dasmSccDn(StrWriter &str, u16 op, u16 e1, u16 e2);
+template<Cond C, Instr I, Mode M> void dasmSccEa(StrWriter &str, u16 op, u16 e1, u16 e2);
 
 template<Mode M> void dasmTasDn(StrWriter &str, u16 op, u16 e1, u16 e2);
 template<Mode M> void dasmTasEa(StrWriter &str, u16 op, u16 e1, u16 e2);

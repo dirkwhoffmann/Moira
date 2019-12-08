@@ -633,8 +633,8 @@ CPU::cmp(u32 op1, u32 op2)
     sr.n = NBIT<S>(result);
 }
 
-template <Cond C> bool
-CPU::check() {
+template <Cond C, Instr I> bool
+CPU::bcond() {
 
     switch(C) {
 

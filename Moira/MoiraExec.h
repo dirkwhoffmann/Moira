@@ -37,7 +37,7 @@ template<Instr I, Mode M, Size S> void execClr(u16 opcode);
 template<Instr I, Mode M, Size S> void execCmp(u16 opcode);
 template<Instr I, Mode M, Size S> void execCmpa(u16 opcode);
 
-template<Cond C> void execDbcc(u16 opcode);
+template<Cond C, Instr I, Mode M, Size S> void execDbcc(u16 opcode);
 template<Size S> void execExt(u16 opcode);
 
 template<Mode M> void execLea(u16 opcode);
@@ -52,8 +52,8 @@ template<Instr I, Mode M, Size S> void execNegNotEa(u16 opcode);
 
 void execNop(u16 opcode);
 
-template<Cond C, Mode M> void execSccDn(u16 opcode);
-template<Cond C, Mode M> void execSccEa(u16 opcode);
+template<Cond C, Instr I, Mode M> void execSccDn(u16 opcode);
+template<Cond C, Instr I, Mode M> void execSccEa(u16 opcode);
 
 template<Mode M> void execTasDn(u16 opcode);
 template<Mode M> void execTasEa(u16 opcode);
