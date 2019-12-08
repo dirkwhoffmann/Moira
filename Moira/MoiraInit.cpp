@@ -242,44 +242,6 @@ CPU::registerShift(const char *patternReg,
 }
 
 template<Instr I> void
-CPU::registerBit(const char *patternReg, const char *patternImm)
-{
-    // BCHG, BSET, BCLR
-    //
-    // Modes: (1)   Dx,<ea>
-    //        (2)   #<data>,<ea>
-    //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    //                X       X   X   X   X   X   X   X
-    //
-    // BTST
-    //
-    // Modes: (1)   Dx,<ea>
-    //        (2)   #<data>,<ea>
-    //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    //                X       X   X   X   X   X   X   X   X   X
-
-    // (1)
-    u16 opcode = parse(patternReg);
-
-    if (I == BTST) {
-        ____XXX______XXX(opcode, I, 0b101111111110, BitDxEa);
-    } else {
-        ____XXX______XXX(opcode, I, 0b101111111000, BitDxEa);
-    }
-
-    opcode = parse(patternImm);
-    if (I == BTST) {
-        _____________XXX(opcode, I, 0b101111111110, BitImEa);
-    } else {
-        _____________XXX(opcode, I, 0b101111111000, BitImEa);
-    }
-}
-
-template<Instr I> void
 CPU::registerAbcdSbcd(const char *patternReg, const char *patternInd)
 {
     u32 opcode;
@@ -648,22 +610,49 @@ CPU::registerASR()
 void
 CPU::registerBCHG()
 {
-    registerBit<BCHG>("0000 ---1 01-- ----",   // Dx,<ea>
-                      "0000 1000 01-- ----");  // ##,<ea>
+    u16 opcode1 = parse("0000 ---1 01-- ----");
+    u16 opcode2 = parse("0000 1000 01-- ----");
+
+    //              -------------------------------------------------
+    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    // Dx,<ea>        X       X   X   X   X   X   X   X
+    // #<data>,<ea>   X       X   X   X   X   X   X   X
+
+    ____XXX______XXX(opcode1, BCHG, 0b101111111000, BitDxEa);
+    _____________XXX(opcode2, BCHG, 0b101111111000, BitImEa);
 }
 
 void
 CPU::registerBCLR()
 {
-    registerBit<BCLR>("0000 ---1 10-- ----",   // Dx,<ea>
-                      "0000 1000 10-- ----");  // ##,<ea>
+    u16 opcode1 = parse("0000 ---1 10-- ----");
+    u16 opcode2 = parse("0000 1000 10-- ----");
+
+    //              -------------------------------------------------
+    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    // Dx,<ea>        X       X   X   X   X   X   X   X
+    // #<data>,<ea>   X       X   X   X   X   X   X   X
+
+    ____XXX______XXX(opcode1, BCLR, 0b101111111000, BitDxEa);
+    _____________XXX(opcode2, BCLR, 0b101111111000, BitImEa);
 }
 
 void
 CPU::registerBSET()
 {
-    registerBit<BSET>("0000 ---1 11-- ----",   // Dx,<ea>
-                      "0000 1000 11-- ----");  // ##,<ea>
+    u16 opcode1 = parse("0000 ---1 11-- ----");
+    u16 opcode2 = parse("0000 1000 11-- ----");
+
+    //              -------------------------------------------------
+    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    // Dx,<ea>        X       X   X   X   X   X   X   X
+    // #<data>,<ea>   X       X   X   X   X   X   X   X
+
+    ____XXX______XXX(opcode1, BSET, 0b101111111000, BitDxEa);
+    _____________XXX(opcode2, BSET, 0b101111111000, BitImEa);
 }
 
 void
@@ -673,7 +662,7 @@ CPU::registerBTST()
     u16 opcode2 = parse("0000 1000 00-- ----");
 
     //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
     //              -------------------------------------------------
     // Dx,<ea>        X       X   X   X   X   X   X   X   X   X
     // #<data>,<ea>   X       X   X   X   X   X   X   X   X   X
@@ -693,13 +682,10 @@ CPU::registerCMP()
 {
     u16 opcode = parse("1011 ---0 ---- ----");
 
-    // CMP
-    //
-    // Modes:       <ea>,Dn
     //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
     //              -------------------------------------------------
-    //                X  (X)  X   X   X   X   X   X   X   X   X   X
+    // <ea>,Dn        X  (X)  X   X   X   X   X   X   X   X   X   X
 
     ____XXX_SS___XXX(opcode, CMP, 0b101111111111, Byte,        Cmp);
     ____XXX_SS___XXX(opcode, CMP, 0b111111111111, Word | Long, Cmp);
@@ -710,13 +696,11 @@ CPU::registerCMPA()
 {
     u16 opcode = parse("1011 ---- 11-- ----");
 
-    // CMPA
-    //
     // Modes:       <ea>,An
     //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
     //              -------------------------------------------------
-    //                X   X   X   X   X   X   X   X   X   X   X   X
+    // <ea>,An        X   X   X   X   X   X   X   X   X   X   X   X
 
     ____XXXS_____XXX(opcode, CMPA, 0b111111111111, Word | Long, Cmpa);
 }

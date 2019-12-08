@@ -17,9 +17,6 @@ template<Instr I> void registerShift(const char *patternReg,
                                      const char *patternImm,
                                      const char *patternEa);
 
-template<Instr I> void registerBit(const char *patternReg,
-                                   const char *patternImm);
-
 template<Instr I> void registerAbcdSbcd(const char *patternReg,
                                         const char *patternInd);
 
