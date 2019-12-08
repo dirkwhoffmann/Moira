@@ -108,8 +108,6 @@ CPU::init()
     createJumpTable();
 
     // Register the instruction set
-    registerBSET();
-    registerBTST();
     registerCLR();
     registerCMP();
     registerCMPA();
@@ -350,56 +348,52 @@ CPU::registerInstructions()
     __________MMMXXX(opcode, BCHG, 0b101111111000, Long, BitImEa);
     opcode = parse("0000 1000 10-- ----");
     __________MMMXXX(opcode, BCLR, 0b101111111000, Long, BitImEa);
-}
 
-/*
-void
-CPU::registerBCLR()
-{
-    u16 opcode1 = parse("0000 ---1 10-- ----");
-    u16 opcode2 = parse("0000 1000 10-- ----");
 
-    //              -------------------------------------------------
-    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    // Dx,<ea>        X       X   X   X   X   X   X   X
-    // #<data>,<ea>   X       X   X   X   X   X   X   X
+    // BSET
+    //
+    //       Syntax: BSET Dx,<ea>
+    //               BSET #<data>,<ea>
+    //         Size: Byte, Longword
 
-    ____XXX___MMMXXX(opcode1, BCLR, 0b101111111000, Long, BitDxEa);
-    __________MMMXXX(opcode2, BCLR, 0b101111111000, Long, BitImEa);
-}
-*/
+    //               -------------------------------------------------
+    //      Dx,<ea>: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X
 
-void
-CPU::registerBSET()
-{
-    u16 opcode1 = parse("0000 ---1 11-- ----");
-    u16 opcode2 = parse("0000 1000 11-- ----");
+    opcode = parse("0000 ---1 11-- ----");
+    ____XXX___MMMXXX(opcode, BSET, 0b101111111000, Long, BitDxEa);
 
-    //              -------------------------------------------------
-    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    // Dx,<ea>        X       X   X   X   X   X   X   X
-    // #<data>,<ea>   X       X   X   X   X   X   X   X
+    //               -------------------------------------------------
+    // #<data>,<ea>: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X
 
-    ____XXX___MMMXXX(opcode1, BSET, 0b101111111000, Long, BitDxEa);
-    __________MMMXXX(opcode2, BSET, 0b101111111000, Long, BitImEa);
-}
+    opcode = parse("0000 1000 11-- ----");
+    __________MMMXXX(opcode, BSET, 0b101111111000, Long, BitImEa);
 
-void
-CPU::registerBTST()
-{
-    u16 opcode1 = parse("0000 ---1 00-- ----");
-    u16 opcode2 = parse("0000 1000 00-- ----");
 
-    //              -------------------------------------------------
-    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    // Dx,<ea>        X       X   X   X   X   X   X   X   X   X
-    // #<data>,<ea>   X       X   X   X   X   X   X   X   X   X
+    // BTST
+    //
+    //       Syntax: BTST Dx,<ea>
+    //               BTST #<data>,<ea>
+    //         Size: Byte, Longword
 
-    ____XXX___MMMXXX(opcode1, BTST, 0b101111111110, Long, BitDxEa);
-    __________MMMXXX(opcode2, BTST, 0b101111111110, Long, BitImEa);
+    //               -------------------------------------------------
+    //      Dx,<ea>: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X   X   X
+
+    opcode = parse("0000 ---1 00-- ----");
+    ____XXX___MMMXXX(opcode, BTST, 0b101111111110, Long, BitDxEa);
+
+    //               -------------------------------------------------
+    // #<data>,<ea>: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X   X   X
+
+    opcode = parse("0000 1000 00-- ----");
+    __________MMMXXX(opcode, BTST, 0b101111111110, Long, BitImEa);
 }
 
 void
