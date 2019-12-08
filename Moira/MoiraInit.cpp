@@ -33,6 +33,7 @@ dasm[id] = &CPU::dasm##name; \
 
 // Registers an instruction with two parameterized operands:
 //
+//     Variant 1:   ____ 222_ --mm m111
 //     Variant 1:   ____ 222_ ssmm m111
 //     Variant 2:   ____ 222s --mm m111
 //
@@ -41,16 +42,39 @@ dasm[id] = &CPU::dasm##name; \
 //                  s = Size
 //                  m = Addressing mode
 
-#define REGISTER(op,I,s,m,f) \
-if ((s) & 0b001) { REG((op) | 0 << 6, I, Byte, m, f) } \
-if ((s) & 0b010) { REG((op) | 1 << 6, I, Word, m, f) } \
-if ((s) & 0b100) { REG((op) | 2 << 6, I, Long, m, f) }
 
-#define REGISTER2(op,I,s,m,f) \
-if ((s) & 0b010) { REG((op) | 0 << 8, I, Word, m, f) } \
-if ((s) & 0b100) { REG((op) | 1 << 8, I, Long, m, f) }
+#define REGISTER(op,I,m,f) { REG((op), I, m, f) }
 
-#define REG(op,I,S,m,f) \
+#define REGISTER_S(op,I,s,m,f) \
+if ((s) & 0b001) { assert(false); } \
+if ((s) & 0b010) { REG_S((op) | 0 << 8, I, Word, m, f) } \
+if ((s) & 0b100) { REG_S((op) | 1 << 8, I, Long, m, f) }
+
+#define REGISTER_SS(op,I,s,m,f) \
+if ((s) & 0b001) { REG_S((op) | 0 << 6, I, Byte, m, f) } \
+if ((s) & 0b010) { REG_S((op) | 1 << 6, I, Word, m, f) } \
+if ((s) & 0b100) { REG_S((op) | 2 << 6, I, Long, m, f) }
+
+
+#define REG(op,I,m,f) \
+for (int i = 0; i < 8; i++) { \
+for (int j = 0; j < 8; j++) { \
+if ((m) & 0b100000000000) register(op | i << 9 | 0 << 3 | j, f<I __  0>); \
+if ((m) & 0b010000000000) register(op | i << 9 | 1 << 3 | j, f<I __  1>); \
+if ((m) & 0b001000000000) register(op | i << 9 | 2 << 3 | j, f<I __  2>); \
+if ((m) & 0b000100000000) register(op | i << 9 | 3 << 3 | j, f<I __  3>); \
+if ((m) & 0b000010000000) register(op | i << 9 | 4 << 3 | j, f<I __  4>); \
+if ((m) & 0b000001000000) register(op | i << 9 | 5 << 3 | j, f<I __  5>); \
+if ((m) & 0b000000100000) register(op | i << 9 | 6 << 3 | j, f<I __  6>); \
+} \
+if ((m) & 0b000000010000) register(op | i << 9 | 7 << 3 | 0, f<I __  7>); \
+if ((m) & 0b000000001000) register(op | i << 9 | 7 << 3 | 1, f<I __  8>); \
+if ((m) & 0b000000000100) register(op | i << 9 | 7 << 3 | 2, f<I __  9>); \
+if ((m) & 0b000000000010) register(op | i << 9 | 7 << 3 | 3, f<I __ 10>); \
+if ((m) & 0b000000000001) register(op | i << 9 | 7 << 3 | 4, f<I __ 11>); \
+}
+
+#define REG_S(op,I,S,m,f) \
 for (int i = 0; i < 8; i++) { \
 for (int j = 0; j < 8; j++) { \
 if ((m) & 0b100000000000) register(op | i << 9 | 0 << 3 | j, f<I __  0 __ S>); \
@@ -77,6 +101,21 @@ parse(const char *s, u16 sum = 0)
     *s == '0' ? parse(s + 1, sum << 1) :
     *s == '1' ? parse(s + 1, (sum << 1) + 1) : sum;
 }
+
+/*
+static void
+parse(const char *s, u16& result, u16& scnt)
+{
+    switch (*s) {
+        case ' ': break;
+        case '-': case '0': result <<= 1; break;
+        case '1': result = (result << 1) + 1; break;
+        case 's': result <<= 1; scnt++; break;
+        default: return;
+    }
+    parse(s + 1, result, scnt);
+}
+*/
 
 void
 CPU::init()
@@ -470,7 +509,7 @@ CPU::registerMulDiv(const char *pattern)
 
     u16 opcode = parse(pattern);
 
-    REGISTER(opcode, I, 1, 0b101111111111, MulDiv);
+    REGISTER(opcode, I, 0b101111111111, MulDiv);
 
     /*
     for (int dst = 0; dst < 8; dst++) {
@@ -619,8 +658,8 @@ CPU::registerAND()
     // <ea>,Dy      X       X   X   X   X   X   X   X   X   X   X
     // Dx,<ea>              X   X   X   X   X   X   X
 
-    REGISTER(opcode1, AND, Byte | Word | Long, 0b101111111111, AndEaRg);
-    REGISTER(opcode2, AND, Byte | Word | Long, 0b001111111000, AndRgEa);
+    REGISTER_SS(opcode1, AND, Byte | Word | Long, 0b101111111111, AndEaRg);
+    REGISTER_SS(opcode2, AND, Byte | Word | Long, 0b001111111000, AndRgEa);
 }
 
 void
@@ -686,8 +725,8 @@ CPU::registerCMP()
     //              -------------------------------------------------
     //                X  (X)  X   X   X   X   X   X   X   X   X   X
 
-    REGISTER(opcode, CMP, Byte,        0b101111111111, Cmp);
-    REGISTER(opcode, CMP, Word | Long, 0b111111111111, Cmp);
+    REGISTER_SS(opcode, CMP, Byte,        0b101111111111, Cmp);
+    REGISTER_SS(opcode, CMP, Word | Long, 0b111111111111, Cmp);
 }
 
 void
@@ -703,7 +742,7 @@ CPU::registerCMPA()
     //              -------------------------------------------------
     //                X   X   X   X   X   X   X   X   X   X   X   X
 
-    REGISTER2(opcode, CMPA, Word | Long, 0b111111111111, Cmpa);
+    REGISTER_S(opcode, CMPA, Word | Long, 0b111111111111, Cmpa);
 }
 
 void
@@ -755,7 +794,7 @@ CPU::registerEOR()
     //            -------------------------------------------------
     // Dx,<ea>      X       X   X   X   X   X   X   X
 
-    REGISTER(opcode, EOR, Byte | Word | Long, 0b101111111000, AndRgEa);
+    REGISTER_SS(opcode, EOR, Byte | Word | Long, 0b101111111000, AndRgEa);
 }
 
 void
@@ -951,8 +990,8 @@ CPU::registerOR()
     // <ea>,Dy      X       X   X   X   X   X   X   X   X   X   X
     // Dx,<ea>              X   X   X   X   X   X   X
 
-    REGISTER(opcode1, OR, Byte | Word | Long, 0b101111111111, AndEaRg);
-    REGISTER(opcode2, OR, Byte | Word | Long, 0b001111111000, AndRgEa);
+    REGISTER_SS(opcode1, OR, Byte | Word | Long, 0b101111111111, AndEaRg);
+    REGISTER_SS(opcode2, OR, Byte | Word | Long, 0b001111111000, AndRgEa);
 }
 
 void

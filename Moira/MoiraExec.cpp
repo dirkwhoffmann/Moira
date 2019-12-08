@@ -578,7 +578,7 @@ CPU::execMoveq(u16 opcode)
     prefetch();
 }
 
-template<Instr I, Mode M, Size S> void
+template<Instr I, Mode M> void
 CPU::execMulDiv(u16 opcode)
 {
     int src = _____________xxx(opcode);
