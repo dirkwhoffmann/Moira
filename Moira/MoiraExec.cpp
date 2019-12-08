@@ -431,7 +431,20 @@ CPU::execClr(u16 opcode)
 template<Instr I, Mode M, Size S> void
 CPU::execCmp(u16 opcode)
 {
-    assert(false); 
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+    u32 ea, sop, dop;
+
+    if (!readOperand<M,S>(src, ea, sop)) return;
+    prefetch();
+
+    dop = readD<S>(dst);
+    u64 result = (u64)dop - (u64)sop;
+
+    sr.c = NBIT<S>(result >> 1);
+    sr.v = NBIT<S>((dop ^ sop) & (dop ^ result));
+    sr.z = ZERO<S>(result);
+    sr.n = NBIT<S>(result);
 }
 
 template<Cond C> void

@@ -19,8 +19,8 @@ template<Size S> void write(u32 addr, u32 value);
 // Computea an effective address
 template<Mode M, Size S> u32 computeEA(u32 n, u32 dis = 0, u32 idx = 0);
 
-// Reads a value from an effective address
-// template<Mode M, Size S> bool readFromEA(u32 ea, u32 n);
+// Reads an operand
+template<Mode M, Size S> bool readOperand(int n, u32 &ea, u32 &result);
 
 
 // Read immediate value
@@ -31,4 +31,5 @@ template <Instr I, Size S> u32 arith(u32 op1, u32 op2);
 template <Instr I, Size S> u32 logic(u32 op1);
 template <Instr I, Size S> u32 logic(u32 op1, u32 op2);
 template <Instr I>         u32 bitop(u32 op, u8 bit);
+
 template <Cond C> bool check();

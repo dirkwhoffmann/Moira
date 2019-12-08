@@ -168,6 +168,108 @@ CPU::computeEA(u32 n, u32 dis, u32 idx) {
     return result;
 }
 
+template<Mode M, Size S> bool
+CPU::readOperand(int n, u32 &ea, u32 &result)
+{
+    switch (M) {
+
+        case 0: // Dn
+        {
+            result = readD<S>(n);
+            break;
+        }
+        case 1: // An
+        {
+            result = readA<S>(n);
+            break;
+        }
+        case 2: // (An)
+        {
+            ea = readA(n);
+            if (addressError<S>(ea)) return false;
+
+            result = read<S>(ea);
+            break;
+        }
+        case 3: // (An)+
+        {
+            ea = readA(n);
+            if (addressError<S>(ea)) return false;
+            result = read<S>(ea);
+            ea += ((n == 7 && S == Byte) ? 2 : S);
+            writeA(n, ea);
+            break;
+        }
+        case 4: // -(An)
+        {
+            ea = readA(n);
+            if (addressError<S>(ea)) return false;
+            ea -= ((n == 7 && S == Byte) ? 2 : S);
+            writeA(n, ea);
+            result = read<S>(ea);
+            break;
+        }
+        case 5: // (d,An)
+        {
+            i16 d = (i16)irc;
+            ea = readA(n);
+            result = ea + d;
+            readExtensionWord();
+            break;
+        }
+        case 6: // (d,An,Xi)
+        {
+            i8 d = (i8)irc;
+            i32 xi = readR((irc >> 12) & 0b1111);
+            ea = readA(n) + d + ((irc & 0x800) ? xi : (i16)xi);
+            result = read<S>(ea);
+            readExtensionWord();
+            break;
+        }
+        case 7: // ABS.W
+        {
+            ea = irc;
+            readExtensionWord();
+            result = ea;
+            break;
+        }
+        case 8: // ABS.L
+        {
+            ea = irc << 16;
+            readExtensionWord();
+            ea |= irc;
+            readExtensionWord();
+            result = ea;
+            break;
+        }
+        case 9: // (d,PC)
+        {
+            i16 d = (i16)irc;
+            result = pc + d;
+            readExtensionWord();
+            break;
+        }
+        case 10: // (d,PC,Xi)
+        {
+            i8  d = (i8)irc;
+            i32 xi = readR((irc >> 12) & 0b1111);
+            ea = pc + d + ((irc & 0x800) ? xi : (i16)xi);
+            result = read<S>(ea);
+            readExtensionWord();
+            break;
+        }
+        case 11: // Imm
+        {
+            result = readImm<S>();
+            break;
+        }
+        default:
+            assert(false);
+    }
+
+    return true;
+}
+
 template<Size S> u32
 CPU::readImm()
 {
