@@ -52,12 +52,12 @@ template<Instr I, Mode M, Size S> void execNbcd(u16 opcode);
 template<Instr I, Mode M, Size S> void execNegNotDn(u16 opcode);
 template<Instr I, Mode M, Size S> void execNegNotEa(u16 opcode);
 
-void execNop(u16 opcode);
+template<Instr I, Mode M, Size S> void execNop(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execSccDn(u16 opcode);
 template<Instr I, Mode M, Size S> void execSccEa(u16 opcode);
 
-template<Mode M> void execTasDn(u16 opcode);
-template<Mode M> void execTasEa(u16 opcode);
-template<Mode M, Size S> void execTst(u16 opcode);
+template<Instr I, Mode M, Size S> void execTasDn(u16 opcode);
+template<Instr I, Mode M, Size S> void execTasEa(u16 opcode);
+template<Instr I, Mode M, Size S> void execTst(u16 opcode);
 

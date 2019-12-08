@@ -937,7 +937,7 @@ CPU::registerNOT()
 void
 CPU::registerNOP()
 {
-    register(parse("0100 1110 0111 0001"), Nop);
+    register(parse("0100 1110 0111 0001"), Nop<NOP __ 0 __ Long>);
 }
 
 void
@@ -1072,16 +1072,16 @@ CPU::registerTAS()
 
     for (int reg = 0; reg < 8; reg++) {
 
-        register(opcode | 0 << 6 | 0 << 3 | reg, TasDn<0>);
-        register(opcode | 0 << 6 | 2 << 3 | reg, TasEa<2>);
-        register(opcode | 0 << 6 | 3 << 3 | reg, TasEa<3>);
-        register(opcode | 0 << 6 | 4 << 3 | reg, TasEa<4>);
-        register(opcode | 0 << 6 | 5 << 3 | reg, TasEa<5>);
-        register(opcode | 0 << 6 | 6 << 3 | reg, TasEa<6>);
+        register(opcode | 0 << 6 | 0 << 3 | reg, TasDn<TAS __ 0 __ Byte>);
+        register(opcode | 0 << 6 | 2 << 3 | reg, TasEa<TAS __ 2 __ Byte>);
+        register(opcode | 0 << 6 | 3 << 3 | reg, TasEa<TAS __ 3 __ Byte>);
+        register(opcode | 0 << 6 | 4 << 3 | reg, TasEa<TAS __ 4 __ Byte>);
+        register(opcode | 0 << 6 | 5 << 3 | reg, TasEa<TAS __ 5 __ Byte>);
+        register(opcode | 0 << 6 | 6 << 3 | reg, TasEa<TAS __ 6 __ Byte>);
 
     }
-    register(opcode | 0 << 6 | 7 << 3 | 0, TasEa<7>);
-    register(opcode | 0 << 6 | 7 << 3 | 1, TasEa<8>);
+    register(opcode | 0 << 6 | 7 << 3 | 0, TasEa<TAS __ 7 __ Byte>);
+    register(opcode | 0 << 6 | 7 << 3 | 1, TasEa<TAS __ 8 __ Byte>);
 }
 
 void
@@ -1103,41 +1103,41 @@ CPU::registerTST()
 
     for (int reg = 0; reg < 8; reg++) {
 
-        register(opcodeB | 0 << 3 | reg, Tst<0 __ Byte>);
-        register(opcodeB | 2 << 3 | reg, Tst<2 __ Byte>);
-        register(opcodeB | 3 << 3 | reg, Tst<3 __ Byte>);
-        register(opcodeB | 4 << 3 | reg, Tst<4 __ Byte>);
-        register(opcodeB | 5 << 3 | reg, Tst<5 __ Byte>);
-        register(opcodeB | 6 << 3 | reg, Tst<6 __ Byte>);
+        register(opcodeB | 0 << 3 | reg, Tst<TST __ 0 __ Byte>);
+        register(opcodeB | 2 << 3 | reg, Tst<TST __ 2 __ Byte>);
+        register(opcodeB | 3 << 3 | reg, Tst<TST __ 3 __ Byte>);
+        register(opcodeB | 4 << 3 | reg, Tst<TST __ 4 __ Byte>);
+        register(opcodeB | 5 << 3 | reg, Tst<TST __ 5 __ Byte>);
+        register(opcodeB | 6 << 3 | reg, Tst<TST __ 6 __ Byte>);
 
-        register(opcodeW | 0 << 3 | reg, Tst<0 __ Word>);
-        register(opcodeW | 2 << 3 | reg, Tst<2 __ Word>);
-        register(opcodeW | 3 << 3 | reg, Tst<3 __ Word>);
-        register(opcodeW | 4 << 3 | reg, Tst<4 __ Word>);
-        register(opcodeW | 5 << 3 | reg, Tst<5 __ Word>);
-        register(opcodeW | 6 << 3 | reg, Tst<6 __ Word>);
+        register(opcodeW | 0 << 3 | reg, Tst<TST __ 0 __ Word>);
+        register(opcodeW | 2 << 3 | reg, Tst<TST __ 2 __ Word>);
+        register(opcodeW | 3 << 3 | reg, Tst<TST __ 3 __ Word>);
+        register(opcodeW | 4 << 3 | reg, Tst<TST __ 4 __ Word>);
+        register(opcodeW | 5 << 3 | reg, Tst<TST __ 5 __ Word>);
+        register(opcodeW | 6 << 3 | reg, Tst<TST __ 6 __ Word>);
 
-        register(opcodeL | 0 << 3 | reg, Tst<0 __ Long>);
-        register(opcodeL | 2 << 3 | reg, Tst<2 __ Long>);
-        register(opcodeL | 3 << 3 | reg, Tst<3 __ Long>);
-        register(opcodeL | 4 << 3 | reg, Tst<4 __ Long>);
-        register(opcodeL | 5 << 3 | reg, Tst<5 __ Long>);
-        register(opcodeL | 6 << 3 | reg, Tst<6 __ Long>);
+        register(opcodeL | 0 << 3 | reg, Tst<TST __ 0 __ Long>);
+        register(opcodeL | 2 << 3 | reg, Tst<TST __ 2 __ Long>);
+        register(opcodeL | 3 << 3 | reg, Tst<TST __ 3 __ Long>);
+        register(opcodeL | 4 << 3 | reg, Tst<TST __ 4 __ Long>);
+        register(opcodeL | 5 << 3 | reg, Tst<TST __ 5 __ Long>);
+        register(opcodeL | 6 << 3 | reg, Tst<TST __ 6 __ Long>);
     }
-    register(opcodeB | 7 << 3 | 0, Tst< 7 __ Byte>);
-    register(opcodeB | 7 << 3 | 1, Tst< 8 __ Byte>);
-    register(opcodeB | 7 << 3 | 2, Tst< 9 __ Byte>);
-    register(opcodeB | 7 << 3 | 3, Tst<10 __ Byte>);
+    register(opcodeB | 7 << 3 | 0, Tst<TST __  7 __ Byte>);
+    register(opcodeB | 7 << 3 | 1, Tst<TST __  8 __ Byte>);
+    register(opcodeB | 7 << 3 | 2, Tst<TST __  9 __ Byte>);
+    register(opcodeB | 7 << 3 | 3, Tst<TST __ 10 __ Byte>);
 
-    register(opcodeW | 7 << 3 | 0, Tst< 7 __ Word>);
-    register(opcodeW | 7 << 3 | 1, Tst< 8 __ Word>);
-    register(opcodeW | 7 << 3 | 2, Tst< 9 __ Word>);
-    register(opcodeW | 7 << 3 | 3, Tst<10 __ Word>);
+    register(opcodeW | 7 << 3 | 0, Tst<TST __  7 __ Word>);
+    register(opcodeW | 7 << 3 | 1, Tst<TST __  8 __ Word>);
+    register(opcodeW | 7 << 3 | 2, Tst<TST __  9 __ Word>);
+    register(opcodeW | 7 << 3 | 3, Tst<TST __ 10 __ Word>);
 
-    register(opcodeL | 7 << 3 | 0, Tst< 7 __ Long>);
-    register(opcodeL | 7 << 3 | 1, Tst< 8 __ Long>);
-    register(opcodeL | 7 << 3 | 2, Tst< 9 __ Long>);
-    register(opcodeL | 7 << 3 | 3, Tst<10 __ Long>);
+    register(opcodeL | 7 << 3 | 0, Tst<TST __  7 __ Long>);
+    register(opcodeL | 7 << 3 | 1, Tst<TST __  8 __ Long>);
+    register(opcodeL | 7 << 3 | 2, Tst<TST __  9 __ Long>);
+    register(opcodeL | 7 << 3 | 3, Tst<TST __ 10 __ Long>);
 }
 
 #undef __

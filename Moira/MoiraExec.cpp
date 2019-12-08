@@ -791,7 +791,7 @@ CPU::execNegNotEa(u16 opcode)
     write<S>(ea, data);
 }
 
-void
+template<Instr I, Mode M, Size S> void
 CPU::execNop(u16 opcode)
 {
 
@@ -818,7 +818,7 @@ CPU::execSccEa(u16 opcode)
     write<Byte>(ea, bcond<I>() ? 0xFF : 0);
 }
 
-template<Mode M> void
+template<Instr I, Mode M, Size S> void
 CPU::execTasDn(u16 opcode)
 {
     int dst = { _____________xxx(opcode) };
@@ -836,7 +836,7 @@ CPU::execTasDn(u16 opcode)
     prefetch();
 }
 
-template<Mode M> void
+template<Instr I, Mode M, Size S> void
 CPU::execTasEa(u16 opcode)
 {
     int dst = { _____________xxx(opcode) };
@@ -855,7 +855,7 @@ CPU::execTasEa(u16 opcode)
     prefetch();
 }
 
-template<Mode M, Size S> void
+template<Instr I, Mode M, Size S> void
 CPU::execTst(u16 opcode)
 {
     int reg = _____________xxx(opcode);

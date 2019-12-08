@@ -245,7 +245,7 @@ CPU::dasmNbcd(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<NBCD>{} << tab << dst;
 }
 
-void
+template<Instr I, Mode M, Size S> void
 CPU::dasmNop(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     str << Ins<NOP>{};
@@ -281,21 +281,21 @@ CPU::dasmNegNotEa(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<I>{} << Sz<S>{} << tab << dst;
 }
 
-template<Mode M> void
+template<Instr I, Mode M, Size S> void
 CPU::dasmTasDn(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Dn dst { _____________xxx(op) };
     str << Ins<TAS>{} << tab << dst;
 }
 
-template<Mode M> void
+template<Instr I, Mode M, Size S> void
 CPU::dasmTasEa(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Ea<M,Byte> dst { _____________xxx(op), e1, e2 };
     str << Ins<TAS>{} << tab << dst;
 }
 
-template<Mode M, Size S> void
+template<Instr I, Mode M, Size S> void
 CPU::dasmTst(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Ea<M,S> ea { _____________xxx(op), e1, e2 };
