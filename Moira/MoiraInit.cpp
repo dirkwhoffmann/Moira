@@ -105,15 +105,9 @@ parse(const char *s, u16 sum = 0)
 void
 CPU::init()
 {
-    registerInstructions();
+    createJumpTable();
 
     // Register the instruction set
-    registerAND();
-    registerABCD();
-    registerADD();
-    registerADDA();
-    registerASL();
-    registerASR();
     registerBCHG();
     registerBCLR();
     registerBSET();
@@ -149,8 +143,32 @@ CPU::init()
     registerTST();
 }
 
+template<Instr I> void
+CPU::registerShift(const char *patternReg,
+                   const char *patternImm,
+                   const char *patternEa)
+{
+    u16 opcode;
+    u16 opcode1 = parse(patternReg);
+    u16 opcode2 = parse(patternImm);
+    u16 opcode3 = parse(patternEa);
+
+    // ASL, ASR, LSL, LSR, ROL, ROR, ROXL, ROXR
+    //
+    //              -------------------------------------------------
+    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    // Dx,Dy          X
+    // #<data>,Dy                                                 X
+    // <ea>                   X   X   X   X   X   X   X
+
+    ____XXX_SS___XXX(opcode1, I, 0b0, Byte | Word | Long, ShiftRg);
+    ____XXX_SS___XXX(opcode2, I, 0xB, Byte | Word | Long, ShiftIm);
+    __________MMMXXX(opcode3, I, 0b001111111000, Word, Shift);
+}
+
 void
-CPU::registerInstructions()
+CPU::createJumpTable()
 {
     // Start with clean tables
     for (int i = 0; i < 0x10000; i++) {
@@ -177,197 +195,139 @@ CPU::registerInstructions()
         dasm[0b1111 << 12 | i] = &CPU::dasmLineF;
         sync[0b1111 << 12 | i] = &CPU::syncLineF;
     }
-}
 
-template<Instr I> void
-CPU::registerShift(const char *patternReg,
-                   const char *patternImm,
-                   const char *patternEa)
-{
-    u16 opcode;
-    u16 opcode1 = parse(patternReg);
-    u16 opcode2 = parse(patternImm);
-    u16 opcode3 = parse(patternEa);
+    // Register all instructions
+    registerInstructions();
 
-    // ASL, ASR, LSL, LSR, ROL, ROR, ROXL, ROXR
-    //
-    //              -------------------------------------------------
-    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    // Dx,Dy          X
-    // #<data>,Dy                                                 X
-    // <ea>                   X   X   X   X   X   X   X
-
-    ____XXX_SS___XXX(opcode1, I, 0b0, Byte | Word | Long, ShiftRg);
-    ____XXX_SS___XXX(opcode2, I, 0xB, Byte | Word | Long, ShiftIm);
-    __________MMMXXX(opcode3, I, 0b001111111000, Word, Shift);
-
-}
-
-template<Instr I> void
-CPU::registerAddSubEaRg(const char *pattern)
-{
-    // Mode :       <ea>,Dy
-    //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    //                X  (X)  X   X   X   X   X   X   X   X   X   X
-
-    u16 opcode = parse(pattern);
-
-    ____XXX_SSMMMXXX(opcode, I, 0b101111111111, Byte,        AddEaRg);
-    ____XXX_SSMMMXXX(opcode, I, 0b111111111111, Word | Long, AddEaRg);
-}
-
-template<Instr I> void
-CPU::registerAddSubRgEa(const char *pattern)
-{
-    // Mode:        Dx,<ea>
-    //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    //                        X   X   X   X   X   X   X
-
-    u16 opcode = parse(pattern);
-
-    ____XXX_SSMMMXXX(opcode, I, 0b001111111000, Byte | Word | Long, AddRgEa);
-}
-
-template<Instr I> void
-CPU::registerMulDiv(const char *pattern)
-{
-    // DIVS, DIVU, MULS, MULU
-    //
-    // Modes: (1)   <ea>,Dy
-    //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    //                X       X   X   X   X   X   X   X   X   X   X
-
-    u16 opcode = parse(pattern);
-
-    ____XXX___MMMXXX(opcode, I, 0b101111111111, Long, MulDiv);
-}
-
-template<Instr I> void
-CPU::registerClr(const char *pattern)
-{
-    u32 opcode = parse(pattern);
-
-    // CLR
-    //
-    // Modes:       <ea>
-    //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    //                X       X   X   X   X   X   X   X
-
-    for (int reg = 0; reg < 8; reg++) {
-
-        register(opcode | 0 << 6 | 0 << 3 | reg, Clr<I __ 0 __ Byte>);
-        register(opcode | 0 << 6 | 2 << 3 | reg, Clr<I __ 2 __ Byte>);
-        register(opcode | 0 << 6 | 3 << 3 | reg, Clr<I __ 3 __ Byte>);
-        register(opcode | 0 << 6 | 4 << 3 | reg, Clr<I __ 4 __ Byte>);
-        register(opcode | 0 << 6 | 5 << 3 | reg, Clr<I __ 5 __ Byte>);
-        register(opcode | 0 << 6 | 6 << 3 | reg, Clr<I __ 6 __ Byte>);
-
-        register(opcode | 1 << 6 | 0 << 3 | reg, Clr<I __ 0 __ Word>);
-        register(opcode | 1 << 6 | 2 << 3 | reg, Clr<I __ 2 __ Word>);
-        register(opcode | 1 << 6 | 3 << 3 | reg, Clr<I __ 3 __ Word>);
-        register(opcode | 1 << 6 | 4 << 3 | reg, Clr<I __ 4 __ Word>);
-        register(opcode | 1 << 6 | 5 << 3 | reg, Clr<I __ 5 __ Word>);
-        register(opcode | 1 << 6 | 6 << 3 | reg, Clr<I __ 6 __ Word>);
-
-        register(opcode | 2 << 6 | 0 << 3 | reg, Clr<I __ 0 __ Long>);
-        register(opcode | 2 << 6 | 2 << 3 | reg, Clr<I __ 2 __ Long>);
-        register(opcode | 2 << 6 | 3 << 3 | reg, Clr<I __ 3 __ Long>);
-        register(opcode | 2 << 6 | 4 << 3 | reg, Clr<I __ 4 __ Long>);
-        register(opcode | 2 << 6 | 5 << 3 | reg, Clr<I __ 5 __ Long>);
-        register(opcode | 2 << 6 | 6 << 3 | reg, Clr<I __ 6 __ Long>);
-    }
-    register(opcode | 0 << 6 | 7 << 3 | 0, Clr<I __ 7 __ Byte>);
-    register(opcode | 0 << 6 | 7 << 3 | 1, Clr<I __ 8 __ Byte>);
-    register(opcode | 1 << 6 | 7 << 3 | 0, Clr<I __ 7 __ Word>);
-    register(opcode | 1 << 6 | 7 << 3 | 1, Clr<I __ 8 __ Word>);
-    register(opcode | 2 << 6 | 7 << 3 | 0, Clr<I __ 7 __ Long>);
-    register(opcode | 2 << 6 | 7 << 3 | 1, Clr<I __ 8 __ Long>);
 }
 
 void
-CPU::registerABCD()
+CPU::registerInstructions()
 {
     u16 opcode;
 
     // ABCD
+    //
+    //   Operation: [dst]BCD := [src]BCD + [dst]BCD + [X]
+    //      Syntax: ABCD Dy,Dx
+    //              ABCD -(Ay),-(Ax)
+    //        Size: Byte
 
     //              -------------------------------------------------
-    // Mode:        | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //       Dy,Dx: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
     //              -------------------------------------------------
-    // Dx,Dy          X
+    //                X
 
     opcode = parse("1100 ---1 0000 0---");
     ____XXX______XXX(opcode, ABCD, 0, Byte, Abcd);
 
     //              -------------------------------------------------
-    // Mode:        | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    // -(Ay),-(Ax): | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
     //              -------------------------------------------------
-    // -(Ay),-(Ax)                    X
+    //                                X
 
     opcode = parse("1100 ---1 0000 1---");
     ____XXX______XXX(opcode, ABCD, 4, Byte, Abcd);
-}
 
-void
-CPU::registerADD()
-{
-    registerAddSubEaRg<ADD>("1101 ---0 ---- ----"); // <ea>,Dy
-    registerAddSubRgEa<ADD>("1101 ---1 ---- ----"); // Dx,<ea>
-}
 
-void
-CPU::registerADDA()
-{
-    u16 opcode = parse("1101 ---- 11-- ----");
+    // ADD
+    //
+    //   Operation: [dst] := [src] + [dst]
+    //      Syntax: ADD <ea>,Dy
+    //              ADD Dx,<ea>
+    //        Size: Byte, Word, Longword
 
-     //              -------------------------------------------------
-     // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-     //              -------------------------------------------------
-     // <ea>,An        X   X   X   X   X   X   X   X   X   X   X   X
+    //              -------------------------------------------------
+    //     <ea>,Dy: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    //                X  (X)  X   X   X   X   X   X   X   X   X   X
 
-     ____XXXS__MMMXXX(opcode, ADDA, 0b111111111111, Word | Long, Adda)
-}
+    opcode = parse("1101 ---0 ---- ----");
+    ____XXX_SSMMMXXX(opcode, ADD, 0b101111111111, Byte,        AddEaRg);
+    ____XXX_SSMMMXXX(opcode, ADD, 0b111111111111, Word | Long, AddEaRg);
 
-void
-CPU::registerAND()
-{
-    u16 opcode1 = parse("1100 ---0 ---- ----");
-    u16 opcode2 = parse("1100 ---1 ---- ----");
+    //              -------------------------------------------------
+    //     Dx,<ea>: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    //                        X   X   X   X   X   X   X
+
+     opcode = parse("1101 ---1 ---- ----");
+     ____XXX_SSMMMXXX(opcode, ADD, 0b001111111000, Byte | Word | Long, AddRgEa);
+
+
+    // ADDA
+    //
+    //              -------------------------------------------------
+    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    // <ea>,An        X   X   X   X   X   X   X   X   X   X   X   X
+
+    opcode = parse("1101 ---- 11-- ----");
+    ____XXXS__MMMXXX(opcode, ADDA, 0b111111111111, Word | Long, Adda)
+
 
     // AND
-    //            -------------------------------------------------
-    //            | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //            -------------------------------------------------
-    // <ea>,Dy      X       X   X   X   X   X   X   X   X   X   X
-    // Dx,<ea>              X   X   X   X   X   X   X
+    //
+    //   Operation: [dst] := [src] & [dst]
+    //      Syntax: AND <ea>,Dy
+    //              AND Dx,<ea>
+    //        Size: Byte, Word, Longword
 
-    ____XXX_SSMMMXXX(opcode1, AND, 0b101111111111, Byte | Word | Long, AndEaRg);
-    ____XXX_SSMMMXXX(opcode2, AND, 0b001111111000, Byte | Word | Long, AndRgEa);
-}
+    //              -------------------------------------------------
+    //     <ea>,Dy: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    //                X       X   X   X   X   X   X   X   X   X   X
 
-void
-CPU::registerASL()
-{
-    registerShift<ASL>("1110 ---1 --10 0---",  // Dx,Dy
-                       "1110 ---1 --00 0---",  // ##,Dy
-                       "1110 0001 11-- ----"); // <ea>
-}
+    opcode = parse("1100 ---0 ---- ----");
+    ____XXX_SSMMMXXX(opcode, AND, 0b101111111111, Byte | Word | Long, AndEaRg);
 
-void
-CPU::registerASR()
-{
-    registerShift<ASR>("1110 ---0 --10 0---",  // Dx,Dy
-                       "1110 ---0 --00 0---",  // ##,Dy
-                       "1110 0000 11-- ----"); // <ea>
+    //              -------------------------------------------------
+    //     Dx,<ea>: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    //                        X   X   X   X   X   X   X
+
+    opcode = parse("1100 ---1 ---- ----");
+    ____XXX_SSMMMXXX(opcode, AND, 0b001111111000, Byte | Word | Long, AndRgEa);
+
+
+    // ASL, ASR
+    //
+    //   Operation: [dst] := [dst] shifted by <count>
+    //      Syntax: ASx Dx,Dy
+    //              ASx #<data>,Dy
+    //              ASx <ea>
+    //        Size: Byte, Word, Longword
+
+    //              -------------------------------------------------
+    //       Dx,Dy: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    //                X
+    opcode = parse("1110 ---1 --10 0---");
+    ____XXX_SS___XXX(opcode, ASL, 0,  Byte | Word | Long, ShiftRg);
+    opcode = parse("1110 ---0 --10 0---");
+    ____XXX_SS___XXX(opcode, ASR, 0,  Byte | Word | Long, ShiftRg);
+
+
+    //              -------------------------------------------------
+    //  #<data>,Dy: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    // #<data>,Dy                                                 X
+    // <ea>                   X   X   X   X   X   X   X
+
+    opcode = parse("1110 ---1 --00 0---");
+    ____XXX_SS___XXX(opcode, ASL, 11, Byte | Word | Long, ShiftIm);
+    opcode = parse("1110 ---0 --00 0---");
+    ____XXX_SS___XXX(opcode, ASR, 11, Byte | Word | Long, ShiftIm);
+
+    //              -------------------------------------------------
+    //        <ea>: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    //                        X   X   X   X   X   X   X
+
+    opcode = parse("1110 0001 11-- ----");
+    __________MMMXXX(opcode, ASL, 0b001111111000, Word, Shift);
+    opcode = parse("1110 0000 11-- ----");
+    __________MMMXXX(opcode, ASR, 0b001111111000, Word, Shift);
 }
 
 void
@@ -437,7 +397,16 @@ CPU::registerBTST()
 void
 CPU::registerCLR()
 {
-    registerClr<CLR>("0100 0010 ---- ----");   // <ea>
+     // CLR
+     //
+     //              -------------------------------------------------
+     //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+     //              -------------------------------------------------
+     // <ea>           X       X   X   X   X   X   X   X
+
+    u32 opcode = parse("0100 0010 ---- ----");
+
+     ________SSMMMXXX(opcode, CLR, 0b101111111000, Byte | Word | Long, Clr);
 }
 
 void
@@ -853,8 +822,24 @@ CPU::registerS()
 void
 CPU::registerSUB()
 {
-    registerAddSubEaRg<SUB>("1001 ---0 ---- ----"); // <ea>,Dy
-    registerAddSubRgEa<SUB>("1001 ---1 ---- ----"); // Dx,<ea>
+    // SUB
+    //
+    //              -------------------------------------------------
+    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    // <ea>,Dy        X  (X)  X   X   X   X   X   X   X   X   X   X
+
+    u16 opcode = parse("1001 ---0 ---- ----");
+    ____XXX_SSMMMXXX(opcode, SUB, 0b101111111111, Byte,        AddEaRg);
+    ____XXX_SSMMMXXX(opcode, SUB, 0b111111111111, Word | Long, AddEaRg);
+
+    //              -------------------------------------------------
+    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    // Dx,<ea>                X   X   X   X   X   X   X
+
+    opcode = parse("1001 ---1 ---- ----");
+    ____XXX_SSMMMXXX(opcode, SUB, 0b001111111000, Byte | Word | Long, AddRgEa);
 }
 
 void

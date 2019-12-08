@@ -11,25 +11,13 @@
 #define MOIRA_INIT_H
 
 void init();
+void createJumpTable();
 void registerInstructions();
 
 template<Instr I> void registerShift(const char *patternReg,
                                      const char *patternImm,
                                      const char *patternEa);
 
-template<Instr I> void registerAddSubEaRg(const char *pattern);
-template<Instr I> void registerAddSubRgEa(const char *pattern);
-
-template<Instr I> void registerMulDiv(const char *pattern);
-
-template<Instr I> void registerClr(const char *pattern);
-
-void registerABCD();
-void registerADD();
-void registerADDA();
-void registerAND();
-void registerASL();
-void registerASR();
 void registerBCHG();
 void registerBCLR();
 void registerBSET();
