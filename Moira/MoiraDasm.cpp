@@ -70,7 +70,7 @@ CPU::dasmShift(StrWriter &str, u16 op, u16 e1, u16 e2)
     }
 }
 
-template<Instr I, Mode M> void
+template<Instr I, Mode M, Size S> void
 CPU::dasmAbcd(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     assert(M == 0 || M == 4);
@@ -168,18 +168,7 @@ CPU::dasmCmpa(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<I>{} << Sz<S>{} << tab << dst;
 }
 
-/*
-template<Instr I, Mode M> void
-CPU::dasmBitDxDy(StrWriter &str, u16 op, u16 e1, u16 e2)
-{
-    Dn src { ____xxx_________(op) };
-    Dn dst { _____________xxx(op) };
-
-    str << Ins<I>{} << tab << src << "," << dst;
-}
-*/
-
-template<Instr I, Mode M> void
+template<Instr I, Mode M, Size S> void
 CPU::dasmBitDxEa(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Dn         src { ____xxx_________(op) };
@@ -188,18 +177,7 @@ CPU::dasmBitDxEa(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<I>{} << tab << src << "," << dst;
 }
 
-/*
-template<Instr I, Mode M> void
-CPU::dasmBitImDy(StrWriter &str, u16 op, u16 e1, u16 e2)
-{
-    u8 src = e1 & 0b11111;
-    Dn dst { _____________xxx(op) };
-
-    str << Ins<I>{} << tab << "#" << src << "," << dst;
-}
-*/
-
-template<Instr I, Mode M> void
+template<Instr I, Mode M, Size S> void
 CPU::dasmBitImEa(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     u8 src = e1 & 0b11111;
@@ -250,7 +228,7 @@ CPU::dasmMoveq(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<MOVEQ>{} << tab << "#" << (u8)(op & 0xFF) << ", " << dst;
 }
 
-template<Instr I, Mode M> void
+template<Instr I, Mode M, Size S> void
 CPU::dasmMulDiv(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Ea<M,Word> src { _____________xxx(op), e1, e2 };

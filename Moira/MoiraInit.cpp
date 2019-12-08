@@ -89,8 +89,8 @@ if ((s) & 0b100) ____XXX______XXX((op) | 2 << 6, I, M, Long, f); \
 if ((s) & 0b010) ____XXX______XXX((op) | 1 << 6, I, M, Word, f); \
 if ((s) & 0b001) ____XXX______XXX((op) | 0 << 6, I, M, Byte, f); }
 
-#define __________MMMXXX(op,I,m,f) { \
-REG_IM((op), I, m, f); }
+#define __________MMMXXX(op,I,m,S,f) { \
+REG_IMS((op), I, m, S, f); }
 
 #define _______S__MMMXXX(op,I,m,s,f) { \
 if ((s) & 0b100) REG_IMS((op) | 1 << 8, I, m, Long, f); \
@@ -102,8 +102,8 @@ if ((s) & 0b100) REG_IMS((op) | 2 << 6, I, m, Long, f); \
 if ((s) & 0b010) REG_IMS((op) | 1 << 6, I, m, Word, f); \
 if ((s) & 0b001) REG_IMS((op) | 0 << 6, I, m, Byte, f); }
 
-#define ____XXX___MMMXXX(op,I,m,f) { \
-for (int i = 0; i < 8; i++) __________MMMXXX((op) | i << 9, I, m, f) }
+#define ____XXX___MMMXXX(op,I,m,S,f) { \
+for (int i = 0; i < 8; i++) __________MMMXXX((op) | i << 9, I, m, S, f) }
 
 #define ____XXXS__MMMXXX(op,I,m,s,f) { \
 for (int i = 0; i < 8; i++) _______S__MMMXXX((op) | i << 9, I, m, s, f) }
@@ -278,7 +278,7 @@ CPU::registerAbcdSbcd(const char *patternReg, const char *patternInd)
     opcode = parse(patternReg);
     for (int src = 0; src < 8; src++) {
         for (int dst = 0; dst < 8; dst++) {
-            register(opcode | dst << 9 | src, Abcd<I __ 0>);
+            register(opcode | dst << 9 | src, Abcd<I __ 0 __ Byte>);
         }
     }
 
@@ -286,7 +286,7 @@ CPU::registerAbcdSbcd(const char *patternReg, const char *patternInd)
     opcode = parse(patternInd);
     for (int src = 0; src < 8; src++) {
         for (int dst = 0; dst < 8; dst++) {
-            register(opcode | dst << 9 | src, Abcd<I __ 4>);
+            register(opcode | dst << 9 | src, Abcd<I __ 4 __ Byte>);
         }
     }
 }
@@ -461,7 +461,7 @@ CPU::registerMulDiv(const char *pattern)
 
     u16 opcode = parse(pattern);
 
-    ____XXX___MMMXXX(opcode, I, 0b101111111111, MulDiv);
+    ____XXX___MMMXXX(opcode, I, 0b101111111111, Long, MulDiv);
 
     /*
     for (int dst = 0; dst < 8; dst++) {
@@ -642,8 +642,8 @@ CPU::registerBCHG()
     // Dx,<ea>        X       X   X   X   X   X   X   X
     // #<data>,<ea>   X       X   X   X   X   X   X   X
 
-    ____XXX___MMMXXX(opcode1, BCHG, 0b101111111000, BitDxEa);
-    __________MMMXXX(opcode2, BCHG, 0b101111111000, BitImEa);
+    ____XXX___MMMXXX(opcode1, BCHG, 0b101111111000, Long, BitDxEa);
+    __________MMMXXX(opcode2, BCHG, 0b101111111000, Long, BitImEa);
 }
 
 void
@@ -658,8 +658,8 @@ CPU::registerBCLR()
     // Dx,<ea>        X       X   X   X   X   X   X   X
     // #<data>,<ea>   X       X   X   X   X   X   X   X
 
-    ____XXX___MMMXXX(opcode1, BCLR, 0b101111111000, BitDxEa);
-    __________MMMXXX(opcode2, BCLR, 0b101111111000, BitImEa);
+    ____XXX___MMMXXX(opcode1, BCLR, 0b101111111000, Long, BitDxEa);
+    __________MMMXXX(opcode2, BCLR, 0b101111111000, Long, BitImEa);
 }
 
 void
@@ -674,8 +674,8 @@ CPU::registerBSET()
     // Dx,<ea>        X       X   X   X   X   X   X   X
     // #<data>,<ea>   X       X   X   X   X   X   X   X
 
-    ____XXX___MMMXXX(opcode1, BSET, 0b101111111000, BitDxEa);
-    __________MMMXXX(opcode2, BSET, 0b101111111000, BitImEa);
+    ____XXX___MMMXXX(opcode1, BSET, 0b101111111000, Long, BitDxEa);
+    __________MMMXXX(opcode2, BSET, 0b101111111000, Long, BitImEa);
 }
 
 void
@@ -690,8 +690,8 @@ CPU::registerBTST()
     // Dx,<ea>        X       X   X   X   X   X   X   X   X   X
     // #<data>,<ea>   X       X   X   X   X   X   X   X   X   X
 
-    ____XXX___MMMXXX(opcode1, BTST, 0b101111111110, BitDxEa);
-    __________MMMXXX(opcode2, BTST, 0b101111111110, BitImEa);
+    ____XXX___MMMXXX(opcode1, BTST, 0b101111111110, Long, BitDxEa);
+    __________MMMXXX(opcode2, BTST, 0b101111111110, Long, BitImEa);
 }
 
 void

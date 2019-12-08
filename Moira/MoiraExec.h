@@ -18,7 +18,7 @@ template<Instr I, Mode M, Size S> void execShiftRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execShiftIm(u16 opcode);
 template<Instr I, Mode M, Size S> void execShift(u16 opcode);
 
-template<Instr I, Mode M> void execAbcd(u16 opcode);
+template<Instr I, Mode M, Size S> void execAbcd(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execAddXXRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execAddRgXX(u16 opcode);
@@ -30,9 +30,8 @@ template<Instr I, Mode M, Size S> void execAddaIm(u16 opcode);
 template<Instr I, Mode M, Size S> void execAndEaRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execAndRgEa(u16 opcode);
 
-template<Instr I, Mode M> void execBitDxEa(u16 opcode);
-// template<Instr I, Mode M> void execBitImDy(u16 opcode);
-template<Instr I, Mode M> void execBitImEa(u16 opcode);
+template<Instr I, Mode M, Size S> void execBitDxEa(u16 opcode);
+template<Instr I, Mode M, Size S> void execBitImEa(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execClr(u16 opcode);
 template<Instr I, Mode M, Size S> void execCmp(u16 opcode);
@@ -44,7 +43,7 @@ template<Size S> void execExt(u16 opcode);
 template<Mode M> void execLea(u16 opcode);
 template<Mode M, Size S> void execMovea(u16 opcode);
 void execMoveq(u16 opcode);
-template<Instr I, Mode M> void execMulDiv(u16 opcode);
+template<Instr I, Mode M, Size S> void execMulDiv(u16 opcode);
 template<Mode M> bool mulDivOp(u16 src, u16& result);
 template<Mode M> void execNbcd(u16 opcode);
 

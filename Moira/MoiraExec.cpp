@@ -154,7 +154,7 @@ CPU::execShift(u16 op)
     prefetch();
 }
 
-template<Instr I, Mode M> void
+template<Instr I, Mode M, Size S> void
 CPU::execAbcd(u16 opcode)
 {
     int src = _____________xxx(opcode);
@@ -352,7 +352,7 @@ CPU::execAndRgEa(u16 opcode)
     prefetch();
 }
 
-template<Instr I, Mode M> void
+template<Instr I, Mode M, Size S> void
 CPU::execBitDxEa(u16 opcode)
 {
     int src = ____xxx_________(opcode);
@@ -384,24 +384,7 @@ CPU::execBitDxEa(u16 opcode)
     prefetch();
 }
 
-/*
-template<Instr I, Mode M> void
-CPU::execBitImDy(u16 opcode)
-{
-    int dst = _____________xxx(opcode);
-    u8  bit = irc & 0b11111;
-    readExtensionWord();
-
-    u32 data = readD(dst);
-    data = bitop<I>(data, bit);
-
-    if (I != BTST) writeD(dst, data);
-
-    prefetch();
-}
-*/
-
-template<Instr I, Mode M> void
+template<Instr I, Mode M, Size S> void
 CPU::execBitImEa(u16 opcode)
 {
     int dst = _____________xxx(opcode);
@@ -614,7 +597,7 @@ CPU::execMoveq(u16 opcode)
     prefetch();
 }
 
-template<Instr I, Mode M> void
+template<Instr I, Mode M, Size S> void
 CPU::execMulDiv(u16 opcode)
 {
     int src = _____________xxx(opcode);
