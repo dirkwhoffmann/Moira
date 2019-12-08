@@ -266,37 +266,6 @@ CPU::registerBit(const char *patternReg, const char *patternImm)
 }
 
 template<Instr I> void
-CPU::registerLogicXXReg(const char *pattern)
-{
-    // Modes: (1)   <ea>,Dy
-    //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    //                X       X   X   X   X   X   X   X   X   X   X
-
-    u16 opcode  = parse(pattern);
-    REGISTER(opcode, I, Byte | Word | Long, 0b101111111111, AndEaRg);
-}
-
-template<Instr I> void
-CPU::registerLogicRegXX(const char *pattern, bool mode0)
-{
-    // Modes:       Dx,<ea>
-    //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    //               (X)      X   X   X   X   X   X   X
-
-    u16 opcode  = parse(pattern);
-
-    if (mode0) {
-        REGISTER(opcode, I, Byte | Word | Long, 0b101111111000, AndRgEa);
-    } else {
-        REGISTER(opcode, I, Byte | Word | Long, 0b001111111000, AndRgEa);
-    }
-}
-
-template<Instr I> void
 CPU::registerAbcdSbcd(const char *patternReg, const char *patternInd)
 {
     u32 opcode;
@@ -750,7 +719,15 @@ CPU::registerDIVU()
 void
 CPU::registerEOR()
 {
-    registerLogicRegXX<EOR>("1011 ---1 ---- ----", true);
+    u16 opcode = parse("1011 ---1 ---- ----");
+
+    // EOR
+    //            -------------------------------------------------
+    //            | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //            -------------------------------------------------
+    // Dx,<ea>      X       X   X   X   X   X   X   X
+
+    REGISTER(opcode, EOR, Byte | Word | Long, 0b101111111000, AndRgEa);
 }
 
 void
@@ -936,8 +913,18 @@ CPU::registerNOP()
 void
 CPU::registerOR()
 {
-    registerLogicXXReg<OR>("1000 ---0 ---- ----"); // <ea>,Dy
-    registerLogicRegXX<OR>("1000 ---1 ---- ----"); // Dx,<ea>
+    u16 opcode1 = parse("1000 ---0 ---- ----");
+    u16 opcode2 = parse("1000 ---1 ---- ----");
+
+    // OR
+    //            -------------------------------------------------
+    //            | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //            -------------------------------------------------
+    // <ea>,Dy      X       X   X   X   X   X   X   X   X   X   X
+    // Dx,<ea>              X   X   X   X   X   X   X
+
+    REGISTER(opcode1, OR, Byte | Word | Long, 0b101111111111, AndEaRg);
+    REGISTER(opcode2, OR, Byte | Word | Long, 0b001111111000, AndRgEa);
 }
 
 void

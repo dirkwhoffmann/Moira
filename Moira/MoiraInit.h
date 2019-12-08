@@ -32,9 +32,6 @@ template<Instr I> void registerMulDiv(const char *pattern);
 
 template<Instr I> void registerNegNot(const char *pattern);
 
-template<Instr I> void registerLogicXXReg(const char *pattern);
-template<Instr I> void registerLogicRegXX(const char *pattern, bool mode0 = false);
-
 template<Instr I> void registerClr(const char *pattern);
 
 void registerABCD();
