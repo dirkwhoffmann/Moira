@@ -31,17 +31,24 @@ exec[id] = &CPU::exec##name; \
 dasm[id] = &CPU::dasm##name; \
 }
 
-// Registers an instruction in standard format with two parameterized operands:
+// Registers an instruction with two parameterized operands:
 //
-//                                  222 = Operand 2
-//       FEDC BA98 7654 3210         ss = Size (Byte, Word, Long)
-//       ____ 222_ ssmm m111        mmm = Addressing mode
-//                                  111 = Operand 1
+//     Variant 1:   ____ 222_ ssmm m111
+//     Variant 2:   ____ 222s --mm m111
+//
+//                  1 = Operand 1
+//                  2 = Operand 2
+//                  s = Size
+//                  m = Addressing mode
 
 #define REGISTER(op,I,s,m,f) \
 if ((s) & 0b001) { REG((op) | 0 << 6, I, Byte, m, f) } \
 if ((s) & 0b010) { REG((op) | 1 << 6, I, Word, m, f) } \
 if ((s) & 0b100) { REG((op) | 2 << 6, I, Long, m, f) }
+
+#define REGISTER2(op,I,s,m,f) \
+if ((s) & 0b010) { REG((op) | 0 << 8, I, Word, m, f) } \
+if ((s) & 0b100) { REG((op) | 1 << 8, I, Long, m, f) }
 
 #define REG(op,I,S,m,f) \
 for (int i = 0; i < 8; i++) { \
@@ -98,6 +105,7 @@ CPU::init()
     registerBTST();
     registerCLR();
     registerCMP();
+    registerCMPA();
     registerDBcc();
     registerDIVS();
     registerDIVU();
@@ -676,6 +684,22 @@ CPU::registerCMP()
 
     REGISTER(opcode, CMP, Byte,        0b101111111111, Cmp);
     REGISTER(opcode, CMP, Word | Long, 0b111111111111, Cmp);
+}
+
+void
+CPU::registerCMPA()
+{
+    u16 opcode = parse("1011 ---- 11-- ----");
+
+    // CMPA
+    //
+    // Modes:       <ea>,An
+    //              -------------------------------------------------
+    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    //                X   X   X   X   X   X   X   X   X   X   X   X
+
+    REGISTER2(opcode, CMPA, Word | Long, 0b111111111111, Cmpa);
 }
 
 void

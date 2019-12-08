@@ -46,6 +46,7 @@ void registerBSET();
 void registerBTST();
 void registerCLR();
 void registerCMP();
+void registerCMPA();
 void registerDBcc();
 void registerDIVS();
 void registerDIVU();

@@ -26,10 +26,10 @@ template<Mode M, Size S> bool readOperand(int n, u32 &ea, u32 &result);
 // Read immediate value
 template<Size S> u32 readImm();
 
-template <Instr I, Size S> u32 shift(int cnt, u64 data);
-template <Instr I, Size S> u32 arith(u32 op1, u32 op2);
-template <Instr I, Size S> u32 logic(u32 op1);
-template <Instr I, Size S> u32 logic(u32 op1, u32 op2);
-template <Instr I>         u32 bitop(u32 op, u8 bit);
-
+template <Instr I, Size S> u32  shift(int cnt, u64 data);
+template <Instr I, Size S> u32  arith(u32 op1, u32 op2);
+template <Instr I, Size S> u32  logic(u32 op1);
+template <Instr I, Size S> u32  logic(u32 op1, u32 op2);
+template <Instr I>         u32  bitop(u32 op, u8 bit);
+template <Size S>          void cmp(u32 op1, u32 op2);
 template <Cond C> bool check();
