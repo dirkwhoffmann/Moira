@@ -18,7 +18,7 @@
 
 using namespace Moira;
 
-enum Size { Byte, Word, Long };
+enum Size { Byte = 1, Word = 2, Long = 4 };
 
 template<Size>   int  BYTES();
 template<Size>   u32  MASK();

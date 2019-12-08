@@ -31,6 +31,35 @@ exec[id] = &CPU::exec##name; \
 dasm[id] = &CPU::dasm##name; \
 }
 
+// Registers an instruction in standard format with two parameterized operands:
+//
+//                                  222 = Operand 2
+//       FEDC BA98 7654 3210         ss = Size (Byte, Word, Long)
+//       ____ 222_ ssmm m111        mmm = Addressing mode
+//                                  111 = Operand 1
+
+#define REGISTER(op,I,s,m,f) \
+if ((s) & 0b001) { REG((op) | 0 << 6, I, Byte, m, f) } \
+if ((s) & 0b010) { REG((op) | 1 << 6, I, Word, m, f) } \
+if ((s) & 0b100) { REG((op) | 2 << 6, I, Long, m, f) }
+
+#define REG(op,I,S,m,f) \
+for (int i = 0; i < 8; i++) { \
+for (int j = 0; j < 8; j++) { \
+if ((m) & 0b100000000000) register(op | i << 9 | 0 << 3 | j, f<I __  0 __ S>); \
+if ((m) & 0b010000000000) register(op | i << 9 | 1 << 3 | j, f<I __  1 __ S>); \
+if ((m) & 0b001000000000) register(op | i << 9 | 2 << 3 | j, f<I __  2 __ S>); \
+if ((m) & 0b000100000000) register(op | i << 9 | 3 << 3 | j, f<I __  3 __ S>); \
+if ((m) & 0b000010000000) register(op | i << 9 | 4 << 3 | j, f<I __  4 __ S>); \
+if ((m) & 0b000001000000) register(op | i << 9 | 5 << 3 | j, f<I __  5 __ S>); \
+if ((m) & 0b000000100000) register(op | i << 9 | 6 << 3 | j, f<I __  6 __ S>); \
+} \
+if ((m) & 0b000000010000) register(op | i << 9 | 7 << 3 | 0, f<I __  7 __ S>); \
+if ((m) & 0b000000001000) register(op | i << 9 | 7 << 3 | 1, f<I __  8 __ S>); \
+if ((m) & 0b000000000100) register(op | i << 9 | 7 << 3 | 2, f<I __  9 __ S>); \
+if ((m) & 0b000000000010) register(op | i << 9 | 7 << 3 | 3, f<I __ 10 __ S>); \
+if ((m) & 0b000000000001) register(op | i << 9 | 7 << 3 | 4, f<I __ 11 __ S>); \
+}
 
 static u16
 parse(const char *s, u16 sum = 0)
@@ -246,11 +275,14 @@ CPU::registerLogicXXReg(const char *pattern)
     //                X       X   X   X   X   X   X   X   X   X   X
 
     u16 opcode  = parse(pattern);
+    REGISTER(opcode, I, Byte | Word | Long, 0b101111111111, AndXXRg);
+
+    /*
     u16 opcodeB = opcode | 0 << 6;
     u16 opcodeW = opcode | 1 << 6;
     u16 opcodeL = opcode | 2 << 6;
-
-    // (1)
+    */
+    /*
     for (int dy = 0; dy < 8; dy++) {
         for (int reg = 0; reg < 8; reg++) {
 
@@ -296,6 +328,7 @@ CPU::registerLogicXXReg(const char *pattern)
         register(opcodeL | dy << 9 | 7 << 3 | 3, AndXXRg<I __ 10 __ Long>);
         register(opcodeL | dy << 9 | 7 << 3 | 4, AndXXRg<I __ 11 __ Long>);
     }
+    */
 }
 
 template<Instr I> void
@@ -308,6 +341,14 @@ CPU::registerLogicRegXX(const char *pattern, bool mode0)
     //               (X)      X   X   X   X   X   X   X
 
     u16 opcode  = parse(pattern);
+
+    if (mode0) {
+        REGISTER(opcode, I, Byte | Word | Long, 0b101111111000, AndRgXX);
+    } else {
+        REGISTER(opcode, I, Byte | Word | Long, 0b001111111000, AndRgXX);
+    }
+
+    /*
     u16 opcodeB = opcode | 0 << 6;
     u16 opcodeW = opcode | 1 << 6;
     u16 opcodeL = opcode | 2 << 6;
@@ -345,6 +386,7 @@ CPU::registerLogicRegXX(const char *pattern, bool mode0)
         register(opcodeL | dy << 9 | 7 << 3 | 0, AndRgXX<I __ 7 __ Long>);
         register(opcodeL | dy << 9 | 7 << 3 | 1, AndRgXX<I __ 8 __ Long>);
     }
+    */
 }
 
 template<Instr I> void
@@ -736,7 +778,18 @@ CPU::registerCLR()
 void
 CPU::registerCMP()
 {
-    // assert(false);
+    u16 opcode = parse("1011 ---0 ---- ----");
+
+    // CMP
+    //
+    // Modes:       <ea>,Dn
+    //              -------------------------------------------------
+    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //              -------------------------------------------------
+    //                X  (X)  X   X   X   X   X   X   X   X   X   X
+
+    REGISTER(opcode, CMP, Byte,        0b101111111111, Cmp);
+    REGISTER(opcode, CMP, Word | Long, 0b111111111111, Cmp);
 }
 
 void

@@ -428,6 +428,12 @@ CPU::execClr(u16 opcode)
     prefetch();
 }
 
+template<Instr I, Mode M, Size S> void
+CPU::execCmp(u16 opcode)
+{
+    assert(false); 
+}
+
 template<Cond C> void
 CPU::execDbcc(u16 opcode)
 {

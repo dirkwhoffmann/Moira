@@ -34,6 +34,8 @@ template<Instr I, Mode M> void execBitImDy(u16 opcode);
 template<Instr I, Mode M> void execBitImEa(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execClr(u16 opcode);
+template<Instr I, Mode M, Size S> void execCmp(u16 opcode);
+
 template<Cond C> void execDbcc(u16 opcode);
 template<Size S> void execExt(u16 opcode);
 

@@ -132,6 +132,14 @@ CPU::dasmClr(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<I>{} << Sz<S>{} << tab << dst;
 }
 
+template<Instr I, Mode M, Size S> void
+CPU::dasmCmp(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    Ea<M,S> dst { _____________xxx(op), e1, e2 };
+
+    str << Ins<I>{} << Sz<S>{} << tab << dst;
+}
+
 template<Instr I, Mode M> void
 CPU::dasmBitDxDy(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
