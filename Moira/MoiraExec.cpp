@@ -751,11 +751,10 @@ template<Instr I, Mode M, Size S> void
 CPU::execNegNotEa(u16 opcode)
 {
     int dst = { _____________xxx(opcode) };
+    u32 ea, data;
 
-    u32 ea = computeEA<M,S>(dst);
-    if (addressError<S>(ea)) return;
-    
-    u32 data = read<S>(ea);
+    if (!readOperand<M,S>(dst, ea, data)) return;
+
     switch (I) {
         case NEG:  data = arith<SUB,S>(data, 0); break;
         case NEGX: data = arith<SUBX,S>(data, 0); break;

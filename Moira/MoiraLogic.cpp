@@ -230,7 +230,7 @@ CPU::readOperand(int n, u32 &ea, u32 &result)
         {
             ea = irc;
             readExtensionWord();
-            result = ea;
+            result = read<S>(ea);
             break;
         }
         case 8: // ABS.L
@@ -239,7 +239,7 @@ CPU::readOperand(int n, u32 &ea, u32 &result)
             readExtensionWord();
             ea |= irc;
             readExtensionWord();
-            result = ea;
+            result = read<S>(ea);
             break;
         }
         case 9: // (d,PC)
