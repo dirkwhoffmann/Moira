@@ -470,6 +470,9 @@ CPU::registerMulDiv(const char *pattern)
 
     u16 opcode = parse(pattern);
 
+    REGISTER(opcode, I, 1, 0b101111111111, MulDiv);
+
+    /*
     for (int dst = 0; dst < 8; dst++) {
         for (int src = 0; src < 8; src++) {
 
@@ -486,6 +489,7 @@ CPU::registerMulDiv(const char *pattern)
         register(opcode | dst << 9 | 7 << 3 | 3, MulDiv<I __ 10>);
         register(opcode | dst << 9 | 7 << 3 | 4, MulDiv<I __ 11>);
      }
+     */
 }
 
 template<Instr I> void

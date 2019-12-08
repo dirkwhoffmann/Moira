@@ -226,7 +226,7 @@ CPU::dasmMoveq(StrWriter &str, u16 op, u16 e1, u16 e2)
     str << Ins<MOVEQ>{} << tab << "#" << (u8)(op & 0xFF) << ", " << dst;
 }
 
-template<Instr I, Mode M> void
+template<Instr I, Mode M, Size S> void
 CPU::dasmMulDiv(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Ea<M,Word> src { _____________xxx(op), e1, e2 };
