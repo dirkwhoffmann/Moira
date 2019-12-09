@@ -18,18 +18,7 @@ template<Instr I> void registerShift(const char *patternReg,
                                      const char *patternImm,
                                      const char *patternEa);
 
-void registerCLR();
-void registerCMP();
-void registerCMPA();
-void registerDBcc();
-void registerDIVx();
-void registerEOR();
-void registerEXT();
-void registerLEA();
-void registerLSL();
 
-void registerMOVEA();
-void registerMOVEQ();
 void registerMULx();
 void registerNBCD();
 void registerNEG();

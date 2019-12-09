@@ -34,8 +34,10 @@ dasm[id] = &CPU::dasm##name; }
 // Registers an instruction in one of the standard instruction formats:
 //
 //     Variants:  ____ ____ ____ _XXX
+//                ____ ____ XXXX XXXX
 //                ____ ____ SS__ _XXX
 //                ____ XXX_ ____ _XXX
+//                ____ XXX_ XXXX XXXX
 //                ____ XXX_ SS__ _XXX
 //                ____ ____ __MM MXXX
 //                ____ ___S __MM MXXX
@@ -50,6 +52,9 @@ dasm[id] = &CPU::dasm##name; }
 #define _____________XXX(op,I,M,S,f) { \
 for (int j = 0; j < 8; j++) register((op) | j, f<I __ M __ S>); }
 
+#define ________XXXXXXXX(op,I,M,S,f) { \
+for (int j = 0; j < 256; j++) register((op) | j, f<I __ M __ S>); }
+
 #define ________SS___XXX(op,I,M,s,f) { \
 if ((s) & 0b100) _____________XXX((op) | 2 << 6, I, M, Long, f); \
 if ((s) & 0b010) _____________XXX((op) | 1 << 6, I, M, Word, f); \
@@ -57,6 +62,9 @@ if ((s) & 0b001) _____________XXX((op) | 0 << 6, I, M, Byte, f); }
 
 #define ____XXX______XXX(op,I,M,S,f) { \
 for (int i = 0; i < 8; i++) _____________XXX((op) | i << 9, I, M, S, f); }
+
+#define ____XXX_XXXXXXXX(op,I,M,S,f) { \
+for (int i = 0; i < 8; i++) ________XXXXXXXX((op) | i << 9, I, M, S, f); }
 
 #define ____XXX_SS___XXX(op,I,M,s,f) { \
 if ((s) & 0b100) ____XXX______XXX((op) | 2 << 6, I, M, Long, f); \
@@ -114,18 +122,7 @@ CPU::init()
     createJumpTable();
 
     // Register the instruction set
-    registerCLR();
-    registerCMP();
-    registerCMPA();
-    registerDBcc();
-    registerDIVx();
-    registerEOR();
-    registerEXT();
-    registerLEA();
-    registerLSL();
-   
-    registerMOVEA();
-    registerMOVEQ();
+
     registerMULx();
     registerNBCD();
     registerNEG();
@@ -384,12 +381,7 @@ CPU::registerInstructions()
 
     opcode = parse("0000 1000 00-- ----");
     __________MMMXXX(opcode, BTST, 0b101111111110, Long, BitImEa);
-}
 
-void
-CPU::registerCLR()
-{
-    u16 opcode;
 
     // CLR
     //
@@ -403,12 +395,7 @@ CPU::registerCLR()
 
     opcode = parse("0100 0010 ---- ----");
     ________SSMMMXXX(opcode, CLR, 0b101111111000, Byte | Word | Long, Clr);
-}
 
-void
-CPU::registerCMP()
-{
-    u16 opcode;
 
     // CMP
     //
@@ -423,12 +410,7 @@ CPU::registerCMP()
     opcode = parse("1011 ---0 ---- ----");
     ____XXX_SSMMMXXX(opcode, CMP, 0b101111111111, Byte,        Cmp);
     ____XXX_SSMMMXXX(opcode, CMP, 0b111111111111, Word | Long, Cmp);
-}
 
-void
-CPU::registerCMPA()
-{
-    u16 opcode;
 
     // CMPA
     //
@@ -442,12 +424,7 @@ CPU::registerCMPA()
 
     opcode = parse("1011 ---- 11-- ----");
     ____XXXS__MMMXXX(opcode, CMPA, 0b111111111111, Word | Long, Cmpa);
-}
 
-void
-CPU::registerDBcc()
-{
-    u16 opcode;
 
     // DBcc
     //
@@ -477,12 +454,7 @@ CPU::registerDBcc()
     _____________XXX(opcode | 0xD00, DBLT, 0, Word, Dbcc);
     _____________XXX(opcode | 0xE00, DBGT, 0, Word, Dbcc);
     _____________XXX(opcode | 0xF00, DBLE, 0, Word, Dbcc);
-}
 
-void
-CPU::registerDIVx()
-{
-    u16 opcode;
 
     // DIVS, DIVU
     //
@@ -499,12 +471,7 @@ CPU::registerDIVx()
 
     opcode = parse("1000 ---0 11-- ----");
     ____XXX___MMMXXX(opcode, DIVU, 0b101111111111, Long, MulDiv);
-}
 
-void
-CPU::registerEOR()
-{
-    u16 opcode;
 
     // EOR
     //
@@ -518,12 +485,7 @@ CPU::registerEOR()
 
     opcode = parse("1011 ---1 ---- ----");
     ____XXX_SSMMMXXX(opcode, EOR, 0b101111111000, Byte | Word | Long, AndRgEa);
-}
 
-void
-CPU::registerEXT()
-{
-    u16 opcode;
 
     // EXT
     //
@@ -534,12 +496,7 @@ CPU::registerEXT()
     opcode = parse("0100 1000 --00 0---");
     _____________XXX(opcode | 2 << 6, EXT, 0, Word, Ext);
     _____________XXX(opcode | 3 << 6, EXT, 0, Long, Ext);
-}
 
-void
-CPU::registerLEA()
-{
-    u16 opcode;
 
     // LEA
     //
@@ -553,12 +510,7 @@ CPU::registerLEA()
 
     opcode = parse("0100 ---1 11-- ----");
     ____XXX___MMMXXX(opcode, LEA, 0b001001111110, Long, Lea);
-}
 
-void
-CPU::registerLSL()
-{
-    u16 opcode;
 
     // LSL, LSR
     //
@@ -591,78 +543,32 @@ CPU::registerLSL()
 
     opcode = parse("1110 0010 11-- ----");
       __________MMMXXX(opcode, LSR, 0b001111111000, Word, Shift);
-}
 
-/*
-void
-CPU::registerLSR()
-{
-    registerShift<LSR>("1110 ---0 --10 1---",  // Dx,Dy
-                       "1110 ---0 --00 1---",  // ##,Dy
-                       "1110 0010 11-- ----"); // <ea>
-}
-*/
 
-void
-CPU::registerMOVEA()
-{
     // MOVEA
     //
-    // Modes:       <ea>,An
-    //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    //                X   X   X   X   X   X   X   X   X   X   X   X
+    //       Syntax: MOVEA <ea>,Ay
+    //        Sizes: Word, Longword
 
-    u16 opcode = parse("00-- ---0 01-- ----");
-    u16 opcodeW = opcode | 3 << 12;
-    u16 opcodeL = opcode | 2 << 12;
+    //               -------------------------------------------------
+    // <ea>,Ay       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X   X   X   X   X   X   X   X   X   X   X   X
 
-    for (int dst = 0; dst < 8; dst++) {
+    opcode = parse("001- ---0 01-- ----");
 
-        for (int src = 0; src < 8; src++) {
+    ____XXX___MMMXXX(opcode | 0 << 12, MOVEA, 0b111111111111, Long, Movea)
+    ____XXX___MMMXXX(opcode | 1 << 12, MOVEA, 0b111111111111, Word, Movea)
 
-            register(opcodeW | dst << 9 | 0 << 3 | src, Movea<MOVEA __ 0 __ Word>);
-            register(opcodeW | dst << 9 | 1 << 3 | src, Movea<MOVEA __ 1 __ Word>);
-            register(opcodeW | dst << 9 | 2 << 3 | src, Movea<MOVEA __ 2 __ Word>);
-            register(opcodeW | dst << 9 | 3 << 3 | src, Movea<MOVEA __ 3 __ Word>);
-            register(opcodeW | dst << 9 | 4 << 3 | src, Movea<MOVEA __ 4 __ Word>);
-            register(opcodeW | dst << 9 | 5 << 3 | src, Movea<MOVEA __ 5 __ Word>);
-            register(opcodeW | dst << 9 | 6 << 3 | src, Movea<MOVEA __ 6 __ Word>);
 
-            register(opcodeL | dst << 9 | 0 << 3 | src, Movea<MOVEA __ 0 __ Long>);
-            register(opcodeL | dst << 9 | 1 << 3 | src, Movea<MOVEA __ 1 __ Long>);
-            register(opcodeL | dst << 9 | 2 << 3 | src, Movea<MOVEA __ 2 __ Long>);
-            register(opcodeL | dst << 9 | 3 << 3 | src, Movea<MOVEA __ 3 __ Long>);
-            register(opcodeL | dst << 9 | 4 << 3 | src, Movea<MOVEA __ 4 __ Long>);
-            register(opcodeL | dst << 9 | 5 << 3 | src, Movea<MOVEA __ 5 __ Long>);
-            register(opcodeL | dst << 9 | 6 << 3 | src, Movea<MOVEA __ 6 __ Long>);
+    // MOVEQ
+    //
+    //       Syntax: MOVEQ #<data>,Dn
+    //        Sizes: Longword
 
-        }
-        register(opcodeW | dst << 9 | 7 << 3 | 0, Movea<MOVEA __  7 __ Word>);
-        register(opcodeW | dst << 9 | 7 << 3 | 1, Movea<MOVEA __  8 __ Word>);
-        register(opcodeW | dst << 9 | 7 << 3 | 2, Movea<MOVEA __  9 __ Word>);
-        register(opcodeW | dst << 9 | 7 << 3 | 3, Movea<MOVEA __ 10 __ Word>);
-        register(opcodeW | dst << 9 | 7 << 3 | 4, Movea<MOVEA __ 11 __ Word>);
-
-        register(opcodeL | dst << 9 | 7 << 3 | 0, Movea<MOVEA __  7 __ Long>);
-        register(opcodeL | dst << 9 | 7 << 3 | 1, Movea<MOVEA __  8 __ Long>);
-        register(opcodeL | dst << 9 | 7 << 3 | 2, Movea<MOVEA __  9 __ Long>);
-        register(opcodeL | dst << 9 | 7 << 3 | 3, Movea<MOVEA __ 10 __ Long>);
-        register(opcodeL | dst << 9 | 7 << 3 | 4, Movea<MOVEA __ 11 __ Long>);
-    }
-}
-
-void
-CPU::registerMOVEQ()
-{
-    u16 opcode = parse("0111 ---0 ---- ----");
-
-    for (int dst = 0; dst < 8; dst++) {
-        for (int src = 0; src < 256; src++) {
-            register(opcode | dst << 9 | src, Moveq<MOVEQ __ 11 __ Long>);
-        }
-    }
+    // #<data>,Dn
+    opcode = parse("0111 ---0 ---- ----");
+    ____XXX_XXXXXXXX(opcode, MOVEQ, 11, Long, Moveq);
 }
 
 void
