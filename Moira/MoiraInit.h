@@ -27,7 +27,7 @@ void registerEOR();
 void registerEXT();
 void registerLEA();
 void registerLSL();
-void registerLSR();
+
 void registerMOVEA();
 void registerMOVEQ();
 void registerMULx();
@@ -37,10 +37,7 @@ void registerNEGX();
 void registerNOT();
 void registerNOP();
 void registerOR();
-void registerROL();
-void registerROR();
-void registerROXL();
-void registerROXR();
+
 void registerSBCD();
 void registerScc();
 template <Cond CC, Instr I> void registerS();
