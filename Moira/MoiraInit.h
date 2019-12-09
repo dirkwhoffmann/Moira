@@ -19,14 +19,6 @@ template<Instr I> void registerShift(const char *patternReg,
                                      const char *patternEa);
 
 
-void registerMULx();
-void registerNBCD();
-void registerNEG();
-void registerNEGX();
-void registerNOT();
-void registerNOP();
-void registerOR();
-
 void registerSBCD();
 void registerScc();
 template <Cond CC, Instr I> void registerS();

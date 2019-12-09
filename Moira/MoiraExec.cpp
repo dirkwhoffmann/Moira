@@ -755,6 +755,7 @@ CPU::execNop(u16 opcode)
 
 }
 
+/*
 template<Instr I, Mode M, Size S> void
 CPU::execSccDn(u16 opcode)
 {
@@ -763,17 +764,18 @@ CPU::execSccDn(u16 opcode)
     prefetch();
     writeD<Byte>(dst, bcond<I>() ? 0xFF : 0);
 }
+*/
 
 template<Instr I, Mode M, Size S> void
 CPU::execSccEa(u16 opcode)
 {
     int dst = { _____________xxx(opcode) };
+    u32 ea, data;
 
-    u32 ea = computeEA<M,Byte>(dst);
-    (void)read<Byte>(ea);
+    if (!readOperand<M,Byte>(dst, ea, data)) return;
 
     prefetch();
-    write<Byte>(ea, bcond<I>() ? 0xFF : 0);
+    writeOperand<M,Byte>(dst, ea, bcond<I>() ? 0xFF : 0);
 }
 
 template<Instr I, Mode M, Size S> void

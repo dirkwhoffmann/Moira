@@ -212,8 +212,8 @@ CPU::readOperand(int n, u32 &ea, u32 &result)
         case 5: // (d,An)
         {
             i16 d = (i16)irc;
-            ea = readA(n);
-            result = ea + d;
+            ea = readA(n) + d;
+            result = read<S>(ea);
             readExtensionWord();
             break;
         }
