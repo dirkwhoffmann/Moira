@@ -43,8 +43,6 @@ template<Instr I, Mode M, Size S> void execMovea(u16 opcode);
 template<Instr I, Mode M, Size S> void execMoveq(u16 opcode);
 template<Instr I, Mode M, Size S> void execMulDiv(u16 opcode);
 
-template<Mode M> bool mulDivOp(u16 src, u16& result); // DEPRECATED
-
 template<Instr I, Mode M, Size S> void execNbcd(u16 opcode);
 template<Instr I, Mode M, Size S> void execNegNot(u16 opcode);
 template<Instr I, Mode M, Size S> void execNop(u16 opcode);

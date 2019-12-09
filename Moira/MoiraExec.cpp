@@ -579,13 +579,14 @@ CPU::execMulDiv(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
     u16 dn  = readD<Word>(dst);
-    u16 data;
+    u32 ea, data;
+
+    if (!readOperand<M, Word>(src, ea, data)) return;
 
     switch (I) {
 
         case MULS: // Signed multiplication
         {
-            if (!mulDivOp<M>(src, data)) return;
             prefetch();
 
             u32 result = (i16)data * (i16)dn;
@@ -600,7 +601,6 @@ CPU::execMulDiv(u16 opcode)
 
         case MULU: // Unsigned multiplication
         {
-            if (!mulDivOp<M>(src, data)) return;
             prefetch();
 
             u32 result = data * dn;
@@ -614,8 +614,6 @@ CPU::execMulDiv(u16 opcode)
         }
         case DIVS: // Signed division
         {
-            if (!mulDivOp<M>(src, data)) return;
-
             if (data == 0) {
                 // TODO: DIV 0 EXCEPTION
                 // return trapException( 5 );
@@ -641,8 +639,6 @@ CPU::execMulDiv(u16 opcode)
         }
         case DIVU: // Unsigned division
         {
-            if (!mulDivOp<M>(src, data)) return;
-
             if (data == 0) {
                 // TODO: DIV 0 EXCEPTION
                 // return trapException( 5 );
@@ -666,37 +662,6 @@ CPU::execMulDiv(u16 opcode)
 
             writeD(dst, (result & 0xffff) | (remainder << 16));
             break;
-        }
-    }
-}
-
-template<Mode M> bool
-CPU::mulDivOp(u16 src, u16& result)
-{
-    switch (M) {
-
-        case 0: // Dn
-        {
-            result = readD<Word>(src);
-            return true;
-        }
-        case 1: // An
-        {
-            result = readA<Word>(src);
-            return true;
-        }
-        case 11: // Imm
-        {
-            result = readImm<Word>();
-            return true;
-        }
-        default: // Ea
-        {
-            u32 ea = computeEA<M,Word>(src);
-            if (addressError<Word>(ea)) return false;
-
-            result = read<Word>(ea);
-            return true;
         }
     }
 }
