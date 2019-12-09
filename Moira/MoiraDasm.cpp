@@ -234,15 +234,7 @@ CPU::dasmNop(StrWriter &str, u16 op, u16 e1, u16 e2)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmSccDn(StrWriter &str, u16 op, u16 e1, u16 e2)
-{
-    Dn src { _____________xxx(op) };
-
-    str << Ins<I>{} << tab << src;
-}
-
-template<Instr I, Mode M, Size S> void
-CPU::dasmSccEa(StrWriter &str, u16 op, u16 e1, u16 e2)
+CPU::dasmScc(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Ea<M,Byte> src { _____________xxx(op), e1, e2 };
 

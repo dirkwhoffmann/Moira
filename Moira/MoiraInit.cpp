@@ -122,35 +122,10 @@ CPU::init()
     createJumpTable();
 
     // Register the instruction set (DEPRECATED)
-    registerSBCD();
-    registerScc();
     registerSUB();
     registerSUBA();
     registerTAS();
     registerTST();
-}
-
-template<Instr I> void
-CPU::registerShift(const char *patternReg,
-                   const char *patternImm,
-                   const char *patternEa)
-{
-    u16 opcode1 = parse(patternReg);
-    u16 opcode2 = parse(patternImm);
-    u16 opcode3 = parse(patternEa);
-
-    // ASL, ASR, LSL, LSR, ROL, ROR, ROXL, ROXR
-    //
-    //              -------------------------------------------------
-    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    // Dx,Dy          X
-    // #<data>,Dy                                                 X
-    // <ea>                   X   X   X   X   X   X   X
-
-    ____XXX_SS___XXX(opcode1, I, 0b0, Byte | Word | Long, ShiftRg);
-    ____XXX_SS___XXX(opcode2, I, 0xB, Byte | Word | Long, ShiftIm);
-    __________MMMXXX(opcode3, I, 0b001111111000, Word, Shift);
 }
 
 void
@@ -690,12 +665,6 @@ CPU::registerInstructions()
     opcode = parse("1110 0100 11-- ----");
     __________MMMXXX(opcode, ROXR, 0b001111111000, Word, Shift);
 
-}
-
-void
-CPU::registerSBCD()
-{
-    u16 opcode;
 
     // SBCD
     //
@@ -710,83 +679,40 @@ CPU::registerSBCD()
     // -(Ay),-(Ax)
     opcode = parse("1000 ---1 0000 1---");
     ____XXX______XXX(opcode, SBCD, 4, Byte, Abcd);
-}
 
-void
-CPU::registerScc()
-{
-    u16 opcode;
 
-    // Scc
-     //
-     //       Syntax: Scc Dn,<label>
-     //         Size: Word
-
-     // Dn,<label>
-    /*
-     opcode = parse("0101 ---- 1100 0---");
-     _____________XXX(opcode | 0x000, ST,  0, Word, Scc);
-     _____________XXX(opcode | 0x100, SF,  0, Word, Scc);
-     _____________XXX(opcode | 0x200, SHI, 0, Word, Scc);
-     _____________XXX(opcode | 0x300, SLS, 0, Word, Scc);
-     _____________XXX(opcode | 0x400, SCC, 0, Word, Scc);
-     _____________XXX(opcode | 0x500, SCS, 0, Word, Dbcc);
-     _____________XXX(opcode | 0x600, SNE, 0, Word, Dbcc);
-     _____________XXX(opcode | 0x700, SEQ, 0, Word, Dbcc);
-     _____________XXX(opcode | 0x800, SVC, 0, Word, Dbcc);
-     _____________XXX(opcode | 0x900, SVS, 0, Word, Dbcc);
-     _____________XXX(opcode | 0xA00, SPL, 0, Word, Dbcc);
-     _____________XXX(opcode | 0xB00, SMI, 0, Word, Dbcc);
-     _____________XXX(opcode | 0xC00, SGE, 0, Word, Dbcc);
-     _____________XXX(opcode | 0xD00, SLT, 0, Word, Dbcc);
-     _____________XXX(opcode | 0xE00, SGT, 0, Word, Dbcc);
-     _____________XXX(opcode | 0xF00, SLE, 0, Word, Dbcc);
-
-*/
-    
-    registerS<CT, ST>();
-    registerS<CF, SF>();
-    registerS<HI, SHI>();
-    registerS<LS, SLS>();
-    registerS<CC, SCC>();
-    registerS<CS, SCS>();
-    registerS<NE, SNE>();
-    registerS<EQ, SEQ>();
-    registerS<VC, SVC>();
-    registerS<VS, SVS>();
-    registerS<PL, SPL>();
-    registerS<MI, SMI>();
-    registerS<GE, SGE>();
-    registerS<LT, SLT>();
-    registerS<GT, SGT>();
-    registerS<LE, SLE>();
-}
-
-template <Cond CC, Instr I> void
-CPU::registerS()
-{
     // Scc
     //
-    // Modes:       <ea>
-    //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    //                X       X   X   X   X   X   X   X
+    //       Syntax: Scc <ea>
+    //         Size: Word
 
-    u32 opcode = parse("0101 ---- 11-- ----") | CC << 8;
+    //               -------------------------------------------------
+    // <ea>          | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X
 
-    for (int reg = 0; reg < 8; reg++) {
-
-        register(opcode | 0 << 3 | reg, SccEa<I __ 0 __ Byte>);
-        register(opcode | 2 << 3 | reg, SccEa<I __ 2 __ Byte>);
-        register(opcode | 3 << 3 | reg, SccEa<I __ 3 __ Byte>);
-        register(opcode | 4 << 3 | reg, SccEa<I __ 4 __ Byte>);
-        register(opcode | 5 << 3 | reg, SccEa<I __ 5 __ Byte>);
-        register(opcode | 6 << 3 | reg, SccEa<I __ 6 __ Byte>);
-    }
-    register(opcode | 7 << 3 | 0, SccEa<I __ 7 __ Byte>);
-    register(opcode | 7 << 3 | 1, SccEa<I __ 8 __ Byte>);
+    opcode = parse("0101 ---- 11-- ----");
+    __________MMMXXX(opcode | 0x000, ST,  0b101111111000, Word, Scc);
+    __________MMMXXX(opcode | 0x100, SF,  0b101111111000, Word, Scc);
+    __________MMMXXX(opcode | 0x200, SHI, 0b101111111000, Word, Scc);
+    __________MMMXXX(opcode | 0x300, SLS, 0b101111111000, Word, Scc);
+    __________MMMXXX(opcode | 0x400, SCC, 0b101111111000, Word, Scc);
+    __________MMMXXX(opcode | 0x500, SCS, 0b101111111000, Word, Scc);
+    __________MMMXXX(opcode | 0x600, SNE, 0b101111111000, Word, Scc);
+    __________MMMXXX(opcode | 0x700, SEQ, 0b101111111000, Word, Scc);
+    __________MMMXXX(opcode | 0x800, SVC, 0b101111111000, Word, Scc);
+    __________MMMXXX(opcode | 0x900, SVS, 0b101111111000, Word, Scc);
+    __________MMMXXX(opcode | 0xA00, SPL, 0b101111111000, Word, Scc);
+    __________MMMXXX(opcode | 0xB00, SMI, 0b101111111000, Word, Scc);
+    __________MMMXXX(opcode | 0xC00, SGE, 0b101111111000, Word, Scc);
+    __________MMMXXX(opcode | 0xD00, SLT, 0b101111111000, Word, Scc);
+    __________MMMXXX(opcode | 0xE00, SGT, 0b101111111000, Word, Scc);
+    __________MMMXXX(opcode | 0xF00, SLE, 0b101111111000, Word, Scc);
 }
+
+
+
+
 
 void
 CPU::registerSUB()

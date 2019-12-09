@@ -14,14 +14,6 @@ void init();
 void createJumpTable();
 void registerInstructions();
 
-template<Instr I> void registerShift(const char *patternReg,
-                                     const char *patternImm,
-                                     const char *patternEa);
-
-
-void registerSBCD();
-void registerScc();
-template <Cond CC, Instr I> void registerS();
 void registerSUB();
 void registerSUBA();
 void registerTAS();
