@@ -120,12 +120,6 @@ void
 CPU::init()
 {
     createJumpTable();
-
-    // Register the instruction set (DEPRECATED)
-    registerSUB();
-    registerSUBA();
-    registerTAS();
-    registerTST();
 }
 
 void
@@ -208,7 +202,7 @@ CPU::registerInstructions()
 
     // ADDA
     //
-    //       Syntax: ADD <ea>,Ay
+    //       Syntax: ADDA <ea>,Ay
     //         Size: Word, Longword
     //
     //               -------------------------------------------------
@@ -708,71 +702,71 @@ CPU::registerInstructions()
     __________MMMXXX(opcode | 0xD00, SLT, 0b101111111000, Word, Scc);
     __________MMMXXX(opcode | 0xE00, SGT, 0b101111111000, Word, Scc);
     __________MMMXXX(opcode | 0xF00, SLE, 0b101111111000, Word, Scc);
-}
 
 
-
-
-
-void
-CPU::registerSUB()
-{
     // SUB
     //
-    //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    // <ea>,Dy        X  (X)  X   X   X   X   X   X   X   X   X   X
+    //       Syntax: (1) SUB <ea>,Dy
+    //               (2) SUB Dx,<ea>
+    //         Size: Byte, Word, Longword
 
-    u16 opcode = parse("1001 ---0 ---- ----");
+    //               -------------------------------------------------
+    // <ea>,Dy       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X  (X)  X   X   X   X   X   X   X   X   X   X
+
+    opcode = parse("1001 ---0 ---- ----");
     ____XXX_SSMMMXXX(opcode, SUB, 0b101111111111, Byte,        AddEaRg);
     ____XXX_SSMMMXXX(opcode, SUB, 0b111111111111, Word | Long, AddEaRg);
 
-    //              -------------------------------------------------
-    //              | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    // Dx,<ea>                X   X   X   X   X   X   X
+    //               -------------------------------------------------
+    // Dx,<ea>       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                         X   X   X   X   X   X   X
 
     opcode = parse("1001 ---1 ---- ----");
     ____XXX_SSMMMXXX(opcode, SUB, 0b001111111000, Byte | Word | Long, AddRgEa);
-}
 
-void
-CPU::registerSUBA()
-{
-    u16 opcode = parse("1001 ---- 11-- ----");
 
-    //              -------------------------------------------------
-    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    // <ea>,An        X   X   X   X   X   X   X   X   X   X   X   X
+    // SUBA
+    //
+    //       Syntax: SUBA <ea>,Ay
+    //         Size: Word, Longword
+    //
+    //               -------------------------------------------------
+    // <ea>,Ay       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X   X   X   X   X   X   X   X   X   X   X   X
 
+    opcode = parse("1001 ---- 11-- ----");
     ____XXXS__MMMXXX(opcode, SUBA, 0b111111111111, Word | Long, Adda)
-}
 
-void
-CPU::registerTAS()
-{
-    u16 opcode = parse("0100 1010 11-- ----");
 
-    //              -------------------------------------------------
-    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    // <ea>           X       X   X   X   X   X   X   X
+    // TAS
+    //
+    //       Syntax: TAS <ea>
+    //         Size: Byte
 
+    //               -------------------------------------------------
+    // <ea>          | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X
+
+    opcode = parse("0100 1010 11-- ----");
     __________MMMXXX(opcode, TAS, 0b101111111000, Byte, Tas);
-}
 
-void
-CPU::registerTST()
-{
-    u16 opcode = parse("0100 1010 ---- ----");
 
-    //              -------------------------------------------------
-    // Modes:       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
-    //              -------------------------------------------------
-    // <ea>           X       X   X   X   X   X   X   X   X   X
+    // TST
+    //
+    //       Syntax: TST <ea>
+    //         Size: Byte, Word, Longword
 
+    //               -------------------------------------------------
+    // <ea>          | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X   X   X
+
+    opcode = parse("0100 1010 ---- ----");
     ________SSMMMXXX(opcode, TST, 0b101111111110, Byte | Word | Long, Tst);
 }
 

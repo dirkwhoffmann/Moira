@@ -14,9 +14,4 @@ void init();
 void createJumpTable();
 void registerInstructions();
 
-void registerSUB();
-void registerSUBA();
-void registerTAS();
-void registerTST();
-
 #endif
