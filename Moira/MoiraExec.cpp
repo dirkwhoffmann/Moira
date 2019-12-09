@@ -626,17 +626,16 @@ CPU::execMulDiv(u16 opcode)
             i32 result = (i32)dividend / (i16)data;
             i16 remainder = (i32)dividend % (i16)data;
 
-            sr.c = 0;
-            sr.v = 0;
+            sr.n = sr.z = sr.v = sr.c = 0;
 
             if ((result & 0xffff8000) != 0 && (result & 0xffff8000) != 0xffff8000) {
                 sr.v = 1;
                 sr.n = 1;
                 break;
             }
-
             sr.n = NBIT<Word>(result);
             sr.z = ZERO<Word>(result);
+            
             writeD(dst, (result & 0xffff) | (remainder << 16));
             break;
         }
@@ -655,15 +654,13 @@ CPU::execMulDiv(u16 opcode)
             u32 result = dividend / data;
             u16 remainder = dividend % data;
 
-            sr.c = 0;
-            sr.v = 0;
+            sr.n = sr.z = sr.v = sr.c = 0;
 
             if (result > 0xffff) {
                 sr.v = 1;
                 sr.n = 1;
                 break;
             }
-
             sr.n = NBIT<Word>(result);
             sr.z = ZERO<Word>(result);
 

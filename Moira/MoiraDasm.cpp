@@ -216,7 +216,7 @@ CPU::dasmMulDiv(StrWriter &str, u16 op, u16 e1, u16 e2)
     Ea<M,Word> src { _____________xxx(op), e1, e2 };
     Dn         dst { ____xxx_________(op) };
 
-    str << Ins<I>{} << src << "," << dst;
+    str << Ins<I>{} << tab << src << "," << dst;
 }
 
 template <Instr I, Mode M, Size S> void
