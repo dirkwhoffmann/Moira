@@ -97,6 +97,24 @@ CPU::execGroup1Exception(u8 nr)
      jumpToVector(nr);
 }
 
+void
+CPU::execTrapException(u8 nr)
+{
+    // Enter supervisor mode and update the status register
+    setSupervisorMode(true);
+    sr.t = 0;
+
+    // Push PC and SR
+    reg.sp -= 2;
+    write<Word>(reg.sp, pc & 0xFFFF);
+    reg.sp -= 2;
+    write<Word>(reg.sp, pc >> 16);
+    reg.sp -= 2;
+    write<Word>(reg.sp, getSR());
+
+    jumpToVector(nr);
+}
+
 template<Instr I, Mode M, Size S> void
 CPU::execShiftRg(u16 opcode)
 {
@@ -583,6 +601,8 @@ CPU::execMulDiv(u16 opcode)
 
     if (!readOperand<M, Word>(src, ea, data)) return;
 
+    printf("data = %x\n", data);
+
     switch (I) {
 
         case MULS: // Signed multiplication
@@ -614,17 +634,21 @@ CPU::execMulDiv(u16 opcode)
         }
         case DIVS: // Signed division
         {
+            sr.n = sr.z = sr.v = sr.c = 0;
+
             if (data == 0) {
-                // TODO: DIV 0 EXCEPTION
-                // return trapException( 5 );
+                 return execTrapException(5);
             }
+            
             u32 dividend = readD(dst);
             prefetch();
 
+            if (dividend == 0x80000000 && (i16)data == -1) {
+                sr.v = sr.n = 1;
+                return;
+            }
             i32 result = (i32)dividend / (i16)data;
             i16 remainder = (i32)dividend % (i16)data;
-
-            sr.n = sr.z = sr.v = sr.c = 0;
 
             if ((result & 0xffff8000) != 0 && (result & 0xffff8000) != 0xffff8000) {
                 sr.v = 1;
@@ -639,9 +663,10 @@ CPU::execMulDiv(u16 opcode)
         }
         case DIVU: // Unsigned division
         {
+            sr.n = sr.z = sr.v = sr.c = 0;
+
             if (data == 0) {
-                // TODO: DIV 0 EXCEPTION
-                // return trapException( 5 );
+                return execTrapException(5);
             }
 
             u32 dividend = readD(dst);
@@ -649,8 +674,6 @@ CPU::execMulDiv(u16 opcode)
 
             u32 result = dividend / data;
             u16 remainder = dividend % data;
-
-            sr.n = sr.z = sr.v = sr.c = 0;
 
             if (result > 0xffff) {
                 sr.v = 1;

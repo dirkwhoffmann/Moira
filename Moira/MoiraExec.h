@@ -13,7 +13,8 @@ void execLineF(u16 opcode);
 void execIllegal(u16 opcode);
 void execGroup0Exception(u32 addr, u8 nr);
 void execGroup1Exception(u8 nr);
-         
+void execTrapException(u8 nr);
+
 template<Instr I, Mode M, Size S> void execShiftRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execShiftIm(u16 opcode);
 template<Instr I, Mode M, Size S> void execShift(u16 opcode);
