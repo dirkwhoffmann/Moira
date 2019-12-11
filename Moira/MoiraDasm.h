@@ -21,6 +21,7 @@ template<Instr I, Mode M, Size S> void dasmAddEaRg(StrWriter &str, u16 op, u16 e
 template<Instr I, Mode M, Size S> void dasmAddRgEa(StrWriter &str, u16 op, u16 e1, u16 e2);
 
 template<Instr I, Mode M, Size S> void dasmAdda(StrWriter &str, u16 op, u16 e1, u16 e2);
+template<Instr I, Mode M, Size S> void dasmAddi(StrWriter &str, u16 op, u16 e1, u16 e2);
 
 template<Instr I, Mode M, Size S> void dasmAndEaRg(StrWriter &str, u16 op, u16 e1, u16 e2);
 template<Instr I, Mode M, Size S> void dasmAndRgEa(StrWriter &str, u16 op, u16 e1, u16 e2);

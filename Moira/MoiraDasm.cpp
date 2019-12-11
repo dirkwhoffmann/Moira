@@ -118,6 +118,16 @@ CPU::dasmAdda(StrWriter &str, u16 op, u16 e1, u16 e2)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::dasmAddi(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    Ea<11,S> src { 0, e1, e2 };
+    Ea<M,S>  dst { _____________xxx(op), e1, e2 };
+
+    printf("M = %d\n", M);
+    str << Ins<I>{} << Sz<S>{} << tab << src << "," << dst;
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::dasmAndRgEa(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Dn      src { ____xxx_________(op) };

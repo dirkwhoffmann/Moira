@@ -262,6 +262,20 @@ CPU::registerInstructions()
     ____XXXS__MMMXXX(opcode, ADDA, 0b111111111111, Word | Long, Adda)
 
 
+    // ADDI
+    //
+    //       Syntax: ADDI #<data>,<ea>
+    //         Size: Byte, Word, Longword
+    //
+    //               -------------------------------------------------
+    // #<data>,<ea>  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X
+
+    opcode = parse("0000 0110 ---- ----");
+    ________SSMMMXXX(opcode, ADDI, 0b101111111000, Byte | Word | Long, Addi);
+
+
     // AND
     //
     //       Syntax: (1) AND <ea>,Dy

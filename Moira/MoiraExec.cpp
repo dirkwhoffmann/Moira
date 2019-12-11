@@ -281,6 +281,20 @@ CPU::execAdda(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::execAddi(u16 opcode)
+{
+    int dst = _____________xxx(opcode);
+
+    u32 ea, data;
+    if (!readOperand<M,S>(dst, ea, data)) return;
+
+    u32 result = arith<I,S>(readImm<S>(), data);
+
+    writeOperand<M,S>(dst, ea, result);
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::execAndEaRg(u16 opcode)
 {
     u32 result;

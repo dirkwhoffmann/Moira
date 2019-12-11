@@ -454,9 +454,11 @@ CPU::arith(u32 op1, u32 op2)
     switch(I) {
 
         case ADD:   // Numeric addition
+        case ADDI:
         {
             result = (u64)op1 + (u64)op2;
 
+            printf("op1 = %x op2 = %x result = %x\n", op1, op2, result);
             sr.x = sr.c = CARRY<S>(result);
             sr.v = NBIT<S>((op1 ^ result) & (op2 ^ result));
             sr.z = ZERO<S>(result);
