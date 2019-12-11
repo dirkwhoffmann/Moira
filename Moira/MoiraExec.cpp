@@ -741,6 +741,18 @@ CPU::execMovea(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::execMovemEaRg(u16 opcode)
+{
+    assert(false);
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execMovemRgEa(u16 opcode)
+{
+    assert(false);
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::execMoveq(u16 opcode)
 {
     i8  src = (i8)(opcode & 0xFF);

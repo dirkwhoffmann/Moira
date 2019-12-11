@@ -7,6 +7,9 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+void dasmRegList(u16 regs, char *result);
+void dasmRegList(u8 regs, char sym, char *&result);
+
 template <Size S> u32 dasmRead(u32 &addr);
 template <Mode M, Size S> Ea<M,S> makeOp(u32 &addr, u16 reg = 0);
 
@@ -43,6 +46,8 @@ template<Instr I, Mode M, Size S> void dasmJsr(StrWriter &str, u32 addr, u16 op)
 template<Instr I, Mode M, Size S> void dasmLea(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M1, Mode M2, Size S> void dasmMove(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmMovea(StrWriter &str, u32 addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmMovemEaRg(StrWriter &str, u32 addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmMovemRgEa(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmMoveq(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmMoveUsp(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmMulDiv(StrWriter &str, u32 addr, u16 op);

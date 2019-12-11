@@ -53,6 +53,8 @@ template<Instr I, Mode M, Size S> void execJsr(u16 opcode);
 template<Instr I, Mode M, Size S> void execLea(u16 opcode);
 template<Instr I, Mode M1, Mode M2, Size S> void execMove(u16 opcode);
 template<Instr I, Mode M, Size S> void execMovea(u16 opcode);
+template<Instr I, Mode M, Size S> void execMovemEaRg(u16 opcode);
+template<Instr I, Mode M, Size S> void execMovemRgEa(u16 opcode);
 template<Instr I, Mode M, Size S> void execMoveq(u16 opcode);
 template<Instr I, Mode M, Size S> void execMoveUsp(u16 opcode);
 template<Instr I, Mode M, Size S> void execMulDiv(u16 opcode);
