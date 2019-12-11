@@ -276,6 +276,21 @@ CPU::registerInstructions()
     ________SSMMMXXX(opcode, ADDI, 0b101111111000, Byte | Word | Long, Addi);
 
 
+    // ADDQ
+    //
+    //       Syntax: ADDQ #<data>,<ea>
+    //         Size: Byte, Word, Longword
+    //
+    //               -------------------------------------------------
+    // #<data>,<ea>  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X  (X)  X   X   X   X   X   X   X
+
+    opcode = parse("0101 ---0 ---- ----");
+    ____XXX_SSMMMXXX(opcode, ADDQ, 0b101111111000, Byte | Word | Long, Addq);
+    ____XXX_SSMMMXXX(opcode, ADDQ, 0b010000000000, Word | Long, AddqAn);
+
+
     // AND
     //
     //       Syntax: (1) AND <ea>,Dy

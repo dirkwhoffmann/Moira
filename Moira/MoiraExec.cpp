@@ -283,15 +283,51 @@ CPU::execAdda(u16 opcode)
 template<Instr I, Mode M, Size S> void
 CPU::execAddi(u16 opcode)
 {
+    u32 src = readImm<S>();
     int dst = _____________xxx(opcode);
-    u32 imm = readImm<S>();
 
     u32 ea, data;
     if (!readOperand<M,S>(dst, ea, data)) return;
 
-    u32 result = arith<I,S>(imm, data);
+    u32 result = arith<I,S>(src, data);
 
     writeOperand<M,S>(dst, ea, result);
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execAddq(u16 opcode)
+{
+    assert(I == ADDQ || I == SUBQ);
+
+    i8  src = ____xxx_________(opcode);
+    int dst = _____________xxx(opcode);
+
+    u32 ea, data;
+    if (!readOperand<M,S>(dst, ea, data)) return;
+
+    if (src == 0) src = 8;
+    u32 result = arith<I,S>(src, data);
+    
+    writeOperand<M,S>(dst, ea, result);
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execAddqAn(u16 opcode)
+{
+    assert(I == ADDQ || I == SUBQ);
+
+    i8  src = ____xxx_________(opcode);
+    int dst = _____________xxx(opcode);
+
+    u32 ea, data;
+    if (!readOperand<M,Long>(dst, ea, data)) return;
+
+    if (src == 0) src = 8;
+    u32 result = (I == ADDQ) ? readA(dst) + src : readA(dst) - src;
+
+    writeA(dst, result);
     prefetch();
 }
 

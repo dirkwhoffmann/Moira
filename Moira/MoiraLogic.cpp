@@ -455,6 +455,7 @@ CPU::arith(u32 op1, u32 op2)
 
         case ADD:   // Numeric addition
         case ADDI:
+        case ADDQ:
         {
             result = (u64)op1 + (u64)op2;
 
@@ -492,6 +493,8 @@ CPU::arith(u32 op1, u32 op2)
             break;
         }
         case SUB:   // Numeric subtraction
+        case SUBI:
+        case SUBQ:
         {
             result = (u64)op2 - (u64)op1;
             // printf("arith::SUB %x %x %llx \n", op1, op2, result);
