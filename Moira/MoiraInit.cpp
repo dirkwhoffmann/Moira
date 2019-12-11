@@ -34,12 +34,15 @@ dasm[id] = &CPU::dasm##name; }
 // Registers an instruction in one of the standard instruction formats:
 //
 //     Variants:  ____ ____ ____ _XXX
-//                ____ ____ XXXX XXXX
-//                ____ ____ SS__ _XXX
+//                ____ ___X XX__ _XXX
 //                ____ XXX_ ____ _XXX
+//                ____ ____ XXXX XXXX
 //                ____ XXX_ XXXX XXXX
+//                ____ ____ SS__ _XXX
 //                ____ XXX_ SS__ _XXX
 //                ____ ____ __MM MXXX
+//                ____ XXXM MM__ ____
+//                ____ MMMX XXMM MXXX
 //                ____ ___S __MM MXXX
 //                ____ XXX_ __MM MXXX
 //                ____ XXXS __MM MXXX
@@ -52,6 +55,12 @@ dasm[id] = &CPU::dasm##name; }
 #define _____________XXX(op,I,M,S,f) { \
 for (int j = 0; j < 8; j++) register((op) | j, f<I __ M __ S>); }
 
+#define _______XXX___XXX(op,I,M,S,f) { \
+for (int i = 0; i < 8; i++) _____________XXX((op) | i << 6, I, M, S, f); }
+
+#define ____XXX______XXX(op,I,M,S,f) { \
+for (int i = 0; i < 8; i++) _____________XXX((op) | i << 9, I, M, S, f); }
+
 #define ________XXXXXXXX(op,I,M,S,f) { \
 for (int j = 0; j < 256; j++) register((op) | j, f<I __ M __ S>); }
 
@@ -59,9 +68,6 @@ for (int j = 0; j < 256; j++) register((op) | j, f<I __ M __ S>); }
 if ((s) & 0b100) _____________XXX((op) | 2 << 6, I, M, Long, f); \
 if ((s) & 0b010) _____________XXX((op) | 1 << 6, I, M, Word, f); \
 if ((s) & 0b001) _____________XXX((op) | 0 << 6, I, M, Byte, f); }
-
-#define ____XXX______XXX(op,I,M,S,f) { \
-for (int i = 0; i < 8; i++) _____________XXX((op) | i << 9, I, M, S, f); }
 
 #define ____XXX_XXXXXXXX(op,I,M,S,f) { \
 for (int i = 0; i < 8; i++) ________XXXXXXXX((op) | i << 9, I, M, S, f); }
@@ -87,6 +93,38 @@ if ((m) & 0b000000000100) register((op) | 7 << 3 | 2, f<I __  9 __ S>); \
 if ((m) & 0b000000000010) register((op) | 7 << 3 | 3, f<I __ 10 __ S>); \
 if ((m) & 0b000000000001) register((op) | 7 << 3 | 4, f<I __ 11 __ S>); }
 
+#define ____XXXMMM______(op,I,M,m,S,f) { \
+for (int j = 0; j < 8; j++) { \
+if ((m) & 0b100000000000) register((op) | 0 << 6 | j << 9, f<I __ M __  0 __ S>); \
+if ((m) & 0b010000000000) register((op) | 1 << 6 | j << 9, f<I __ M __  1 __ S>); \
+if ((m) & 0b001000000000) register((op) | 2 << 6 | j << 9, f<I __ M __  2 __ S>); \
+if ((m) & 0b000100000000) register((op) | 3 << 6 | j << 9, f<I __ M __  3 __ S>); \
+if ((m) & 0b000010000000) register((op) | 4 << 6 | j << 9, f<I __ M __  4 __ S>); \
+if ((m) & 0b000001000000) register((op) | 5 << 6 | j << 9, f<I __ M __  5 __ S>); \
+if ((m) & 0b000000100000) register((op) | 6 << 6 | j << 9, f<I __ M __  6 __ S>); \
+} \
+if ((m) & 0b000000010000) register((op) | 7 << 6 | 0 << 9, f<I __ M __  7 __ S>); \
+if ((m) & 0b000000001000) register((op) | 7 << 6 | 1 << 9, f<I __ M __  8 __ S>); \
+if ((m) & 0b000000000100) register((op) | 7 << 6 | 2 << 9, f<I __ M __  9 __ S>); \
+if ((m) & 0b000000000010) register((op) | 7 << 6 | 3 << 9, f<I __ M __ 10 __ S>); \
+if ((m) & 0b000000000001) register((op) | 7 << 6 | 4 << 9, f<I __ M __ 11 __ S>); }
+
+#define ____XXXMMMMMMXXX(op,I,m,m2,S,f) { \
+for (int k = 0; k < 8; k++) { \
+if ((m) & 0b100000000000) ____XXXMMM______((op) | 0 << 3 | k, I,  0, m2, S, f); \
+if ((m) & 0b010000000000) ____XXXMMM______((op) | 1 << 3 | k, I,  1, m2, S, f); \
+if ((m) & 0b001000000000) ____XXXMMM______((op) | 2 << 3 | k, I,  2, m2, S, f); \
+if ((m) & 0b000100000000) ____XXXMMM______((op) | 3 << 3 | k, I,  3, m2, S, f); \
+if ((m) & 0b000010000000) ____XXXMMM______((op) | 4 << 3 | k, I,  4, m2, S, f); \
+if ((m) & 0b000001000000) ____XXXMMM______((op) | 5 << 3 | k, I,  5, m2, S, f); \
+if ((m) & 0b000000100000) ____XXXMMM______((op) | 6 << 3 | k, I,  6, m2, S, f); \
+} \
+if ((m) & 0b000000010000) ____XXXMMM______((op) | 7 << 3 | 0, I,  7, m2, S, f); \
+if ((m) & 0b000000001000) ____XXXMMM______((op) | 7 << 3 | 1, I,  8, m2, S, f); \
+if ((m) & 0b000000000100) ____XXXMMM______((op) | 7 << 3 | 2, I,  9, m2, S, f); \
+if ((m) & 0b000000000010) ____XXXMMM______((op) | 7 << 3 | 3, I, 10, m2, S, f); \
+if ((m) & 0b000000000001) ____XXXMMM______((op) | 7 << 3 | 4, I, 11, m2, S, f); }
+
 #define _______S__MMMXXX(op,I,m,s,f) { \
 if ((s) & 0b100) __________MMMXXX((op) | 1 << 8, I, m, Long, f); \
 if ((s) & 0b010) __________MMMXXX((op) | 0 << 8, I, m, Word, f); \
@@ -105,6 +143,10 @@ for (int i = 0; i < 8; i++) _______S__MMMXXX((op) | i << 9, I, m, s, f) }
 
 #define ____XXX_SSMMMXXX(op,I,m,s,f) { \
 for (int i = 0; i < 8; i++) ________SSMMMXXX((op) | i << 9, I, m, s, f) }
+
+#define ______MMXXXMMXXX(op,I,m,s,f) { \
+for (int i = 0; i < 8; i++) ________SSMMMXXX((op) | i << 9, I, m, s, f) }
+
 
 static u16
 parse(const char *s, u16 sum = 0)
@@ -494,10 +536,30 @@ CPU::registerInstructions()
     //                         X   X   X   X   X   X   X
 
     opcode = parse("1110 0011 11-- ----");
-     __________MMMXXX(opcode, LSL, 0b001111111000, Word, Shift);
+    __________MMMXXX(opcode, LSL, 0b001111111000, Word, Shift);
 
     opcode = parse("1110 0010 11-- ----");
-      __________MMMXXX(opcode, LSR, 0b001111111000, Word, Shift);
+    __________MMMXXX(opcode, LSR, 0b001111111000, Word, Shift);
+
+
+    // MOVE
+    //
+    //       Syntax: MOVE <ea>,<e>
+    //        Sizes: Byte, Word, Longword
+
+    //               -------------------------------------------------
+    // <ea>          | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X   X   X   X   X   X   X   X   X   X   X   X
+
+    //               -------------------------------------------------
+    // <e>           | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X
+
+    opcode = parse("0001 ---- ---- ----");
+
+    ____XXXMMMMMMXXX(opcode, MOVE, 0b100000000000, 0b101111111000, Byte, Move);
 
 
     // MOVEA

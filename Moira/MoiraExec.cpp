@@ -534,6 +534,22 @@ CPU::execLea(u16 opcode)
     prefetch();
 }
 
+template<Instr I, Mode M1, Mode M2, Size S> void
+CPU::execMove(u16 opcode)
+{
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    u32 ea1, data1, ea2, data2;
+
+    if (!readOperand<M1,S>(src, ea1, data1)) return;
+    if (!readOperand<M2,S>(dst, ea2, data2)) return;
+
+    writeOperand<M2,S>(dst, ea2, data1);
+
+    prefetch();
+}
+
 template<Instr I, Mode M, Size S> void
 CPU::execMovea(u16 opcode)
 {
