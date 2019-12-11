@@ -398,6 +398,46 @@ CPU::execAndRgEa(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::execAndi(u16 opcode)
+{
+    u32 src = readImm<S>();
+    int dst = _____________xxx(opcode);
+
+    u32 ea, data;
+    if (!readOperand<M,S>(dst, ea, data)) return;
+
+    u32 result = logic<I,S>(src, data);
+
+    writeOperand<M,S>(dst, ea, result);
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execBcc(u16 opcode)
+{
+    if (bcond<I>()) {
+
+        i16 offset = S == Word ? (i16)irc : (i8)opcode;
+        u32 newpc = pc + offset;
+
+        printf("Take branch pc = %x irc = %d %d\n", pc, (i16)irc, offset);
+
+        readExtensionWord();
+
+        // Take branch
+        pc = newpc;
+
+        prefetch();
+        return;
+     }
+
+     // Fall through to next instruction
+    printf("Fall through to next instruction\n");
+     if (S == Word) readExtensionWord();
+     prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::execBitDxEa(u16 opcode)
 {
     int src = ____xxx_________(opcode);
@@ -519,6 +559,19 @@ CPU::execCmpa(u16 opcode)
     sop = SEXT<S>(sop);
     dop = readA(dst);
     cmp<Long>(sop, dop);
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execCmpi(u16 opcode)
+{
+    u32 src = readImm<S>();
+    int dst = _____________xxx(opcode);
+
+    u32 ea, data;
+    if (!readOperand<M,S>(dst, ea, data)) return;
+    prefetch();
+
+    cmp<S>(src, data);
 }
 
 template<Instr I, Mode M, Size S> void

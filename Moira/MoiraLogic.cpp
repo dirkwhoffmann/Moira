@@ -590,16 +590,19 @@ CPU::logic(u32 op1, u32 op2)
     switch(I) {
 
         case AND:
+        case ANDI:
         {
             result = op1 & op2;
             break;
         }
         case OR:
+        case ORI:
         {
             result = op1 | op2;
             break;
         }
         case EOR:
+        case EORI:
         {
             result = op1 ^ op2;
             break;
@@ -669,8 +672,8 @@ CPU::bcond() {
 
     switch(I) {
 
-        case BT:  case DBT:  case ST:  return true;
-        case BF:  case DBF:  case SF:  return false;
+        case BRA: case DBT:  case ST:  return true;
+        case DBF: case SF:             return false;
         case BHI: case DBHI: case SHI: return !sr.c && !sr.z;
         case BLS: case DBLS: case SLS: return sr.c || sr.z;
         case BCC: case DBCC: case SCC: return !sr.c;

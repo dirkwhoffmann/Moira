@@ -314,6 +314,20 @@ CPU::registerInstructions()
     ____XXX_SSMMMXXX(opcode, AND, 0b001111111000, Byte | Word | Long, AndRgEa);
 
 
+    // ANDI
+    //
+    //       Syntax: ANDI #<data>,<ea>
+    //         Size: Byte, Word, Longword
+    //
+    //               -------------------------------------------------
+    // #<data>,<ea>  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X
+
+    opcode = parse("0000 0010 ---- ----");
+    ________SSMMMXXX(opcode, ANDI, 0b101111111000, Byte | Word | Long, Andi);
+
+
     // ASL, ASR
     //
     //       Syntax: (1) ASx Dx,Dy
@@ -345,6 +359,49 @@ CPU::registerInstructions()
 
     opcode = parse("1110 0000 11-- ----");
     __________MMMXXX(opcode, ASR, 0b001111111000, Word, Shift);
+
+
+    // Bcc
+    //
+    //       Syntax: Bcc <label>
+    //         Size: Word
+
+    // Dn,<label>
+    opcode = parse("0110 ---- ---- ----");
+
+    register(opcode | 0x000, Bcc<BRA __ 0 __ Word>);
+    register(opcode | 0x200, Bcc<BHI __ 0 __ Word>);
+    register(opcode | 0x300, Bcc<BLS __ 0 __ Word>);
+    register(opcode | 0x400, Bcc<BCC __ 0 __ Word>);
+    register(opcode | 0x500, Bcc<BCS __ 0 __ Word>);
+    register(opcode | 0x600, Bcc<BNE __ 0 __ Word>);
+    register(opcode | 0x700, Bcc<BEQ __ 0 __ Word>);
+    register(opcode | 0x800, Bcc<BVC __ 0 __ Word>);
+    register(opcode | 0x900, Bcc<BVS __ 0 __ Word>);
+    register(opcode | 0xA00, Bcc<BPL __ 0 __ Word>);
+    register(opcode | 0xB00, Bcc<BMI __ 0 __ Word>);
+    register(opcode | 0xC00, Bcc<BGE __ 0 __ Word>);
+    register(opcode | 0xD00, Bcc<BLT __ 0 __ Word>);
+    register(opcode | 0xE00, Bcc<BGT __ 0 __ Word>);
+    register(opcode | 0xF00, Bcc<BLE __ 0 __ Word>);
+
+    for (int i = 1; i < 256; i++) {
+        register(opcode | 0x000 | i, Bcc<BRA __ 0 __ Byte>);
+        register(opcode | 0x200 | i, Bcc<BHI __ 0 __ Byte>);
+        register(opcode | 0x300 | i, Bcc<BLS __ 0 __ Byte>);
+        register(opcode | 0x400 | i, Bcc<BCC __ 0 __ Byte>);
+        register(opcode | 0x500 | i, Bcc<BCS __ 0 __ Byte>);
+        register(opcode | 0x600 | i, Bcc<BNE __ 0 __ Byte>);
+        register(opcode | 0x700 | i, Bcc<BEQ __ 0 __ Byte>);
+        register(opcode | 0x800 | i, Bcc<BVC __ 0 __ Byte>);
+        register(opcode | 0x900 | i, Bcc<BVS __ 0 __ Byte>);
+        register(opcode | 0xA00 | i, Bcc<BPL __ 0 __ Byte>);
+        register(opcode | 0xB00 | i, Bcc<BMI __ 0 __ Byte>);
+        register(opcode | 0xC00 | i, Bcc<BGE __ 0 __ Byte>);
+        register(opcode | 0xD00 | i, Bcc<BLT __ 0 __ Byte>);
+        register(opcode | 0xE00 | i, Bcc<BGT __ 0 __ Byte>);
+        register(opcode | 0xF00 | i, Bcc<BLE __ 0 __ Byte>);
+    }
 
 
     // BCHG, BCLR
@@ -463,6 +520,20 @@ CPU::registerInstructions()
     ____XXXS__MMMXXX(opcode, CMPA, 0b111111111111, Word | Long, Cmpa);
 
 
+    // CMPI
+    //
+    //       Syntax: CMPI #<data>,<ea>
+    //         Size: Byte, Word, Longword
+    //
+    //               -------------------------------------------------
+    // #<data>,<ea>  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X
+
+    opcode = parse("0000 1100 ---- ----");
+    ________SSMMMXXX(opcode, SUBI, 0b101111111000, Byte | Word | Long, Cmpi);
+
+
     // DBcc
     //
     //       Syntax: DBcc Dn,<label>
@@ -517,6 +588,20 @@ CPU::registerInstructions()
 
     opcode = parse("1011 ---1 ---- ----");
     ____XXX_SSMMMXXX(opcode, EOR, 0b101111111000, Byte | Word | Long, AndRgEa);
+
+
+    // EORI
+    //
+    //       Syntax: EORI #<data>,<ea>
+    //         Size: Byte, Word, Longword
+    //
+    //               -------------------------------------------------
+    // #<data>,<ea>  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X
+
+    opcode = parse("0000 1010 ---- ----");
+    ________SSMMMXXX(opcode, EORI, 0b101111111000, Byte | Word | Long, Andi);
 
 
     // EXT
@@ -719,6 +804,20 @@ CPU::registerInstructions()
     ____XXX_SSMMMXXX(opcode, OR, 0b001111111000, Byte | Word | Long, AndRgEa);
 
 
+    // ORI
+    //
+    //       Syntax: ORI #<data>,<ea>
+    //         Size: Byte, Word, Longword
+    //
+    //               -------------------------------------------------
+    // #<data>,<ea>  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X
+
+    opcode = parse("0000 0000 ---- ----");
+    ________SSMMMXXX(opcode, ORI, 0b101111111000, Byte | Word | Long, Andi);
+
+
     // ROL, ROR, ROXL, ROXR
     //
     //       Syntax: (1) ROxx Dx,Dy
@@ -850,6 +949,35 @@ CPU::registerInstructions()
 
     opcode = parse("1001 ---- 11-- ----");
     ____XXXS__MMMXXX(opcode, SUBA, 0b111111111111, Word | Long, Adda)
+
+
+    // SUBI
+    //
+    //       Syntax: SUBI #<data>,<ea>
+    //         Size: Byte, Word, Longword
+    //
+    //               -------------------------------------------------
+    // #<data>,<ea>  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X
+
+    opcode = parse("0000 0100 ---- ----");
+    ________SSMMMXXX(opcode, SUBI, 0b101111111000, Byte | Word | Long, Addi);
+
+
+    // SUBQ
+    //
+    //       Syntax: SUBQ #<data>,<ea>
+    //         Size: Byte, Word, Longword
+    //
+    //               -------------------------------------------------
+    // #<data>,<ea>  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X  (X)  X   X   X   X   X   X   X
+
+    opcode = parse("0101 ---1 ---- ----");
+    ____XXX_SSMMMXXX(opcode, SUBQ, 0b101111111000, Byte | Word | Long, Addq);
+    ____XXX_SSMMMXXX(opcode, SUBQ, 0b010000000000, Word | Long, AddqAn);
 
 
     // TAS

@@ -204,6 +204,15 @@ CPU::dasmAndRgEa(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::dasmAndi(StrWriter &str, u32 addr, u16 op)
+{
+    Ea<11,S> src = makeOp<11,S>(addr);
+    Ea<M, S> dst = makeOp<M, S>(addr, _____________xxx(op));
+
+    str << Ins<I>{} << Sz<S>{} << tab << src << "," << dst;
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::dasmClr(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,Long> dst = makeOp<M,Long>(addr, _____________xxx(op));
@@ -225,6 +234,20 @@ CPU::dasmCmpa(StrWriter &str, u32 addr, u16 op)
     Ea<M,S> dst = makeOp<M,S>(addr, _____________xxx(op));
 
     str << Ins<I>{} << Sz<S>{} << tab << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::dasmCmpi(StrWriter &str, u32 addr, u16 op)
+{
+    Ea<M,S> dst = makeOp<M,S>(addr, _____________xxx(op));
+
+    str << Ins<I>{} << Sz<S>{} << tab << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::dasmBcc(StrWriter &str, u32 addr, u16 op)
+{
+    str << Ins<I>{} << tab << "#" << Disp8{ (i8)op };
 }
 
 template<Instr I, Mode M, Size S> void
@@ -295,7 +318,7 @@ CPU::dasmMoveq(StrWriter &str, u32 addr, u16 op)
 {
     Dn dst { ____xxx_________(op) };
 
-    str << Ins<I>{} << tab << "#" << (u8)(op & 0xFF) << ", " << dst;
+    str << Ins<I>{} << tab << "#" << (u8)op << ", " << dst;
 }
 
 template<Instr I, Mode M, Size S> void
