@@ -39,6 +39,7 @@ template<Instr I, Mode M, Size S> void dasmCmpi(StrWriter &str, u32 addr, u16 op
 template<Instr I, Mode M, Size S> void dasmDbcc(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmExt(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmJmp(StrWriter &str, u32 addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmJsr(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmLea(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M1, Mode M2, Size S> void dasmMove(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmMovea(StrWriter &str, u32 addr, u16 op);

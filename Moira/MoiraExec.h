@@ -48,6 +48,7 @@ template<Instr I, Mode M, Size S> void execDbcc(u16 opcode);
 template<Instr I, Mode M, Size S> void execExt(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execJmp(u16 opcode);
+template<Instr I, Mode M, Size S> void execJsr(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execLea(u16 opcode);
 template<Instr I, Mode M1, Mode M2, Size S> void execMove(u16 opcode);

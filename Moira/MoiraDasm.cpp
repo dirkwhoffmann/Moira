@@ -305,6 +305,13 @@ CPU::dasmJmp(StrWriter &str, u32 addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
+CPU::dasmJsr(StrWriter &str, u32 addr, u16 op)
+{
+    Ea<M,Long> src = makeOp<M,Long>(addr, _____________xxx(op));
+    str << Ins<I>{} << tab << src;
+}
+
+template <Instr I, Mode M, Size S> void
 CPU::dasmLea(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,Long> src = makeOp<M,Long>(addr, _____________xxx(op));
