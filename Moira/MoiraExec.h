@@ -14,6 +14,7 @@ void execIllegal(u16 opcode);
 void execGroup0Exception(u32 addr, u8 nr);
 void execGroup1Exception(u8 nr);
 void execTrapException(u8 nr);
+void privilegeException() { execGroup1Exception(8); }
 
 template<Instr I, Mode M, Size S> void execShiftRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execShiftIm(u16 opcode);
@@ -42,6 +43,7 @@ template<Instr I, Mode M, Size S> void execExt(u16 opcode);
 template<Instr I, Mode M, Size S> void execLea(u16 opcode);
 template<Instr I, Mode M, Size S> void execMovea(u16 opcode);
 template<Instr I, Mode M, Size S> void execMoveq(u16 opcode);
+template<Instr I, Mode M, Size S> void execMoveUsp(u16 opcode);
 template<Instr I, Mode M, Size S> void execMulDiv(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execNbcd(u16 opcode);

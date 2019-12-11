@@ -211,6 +211,18 @@ CPU::dasmMoveq(StrWriter &str, u16 op, u16 e1, u16 e2)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::dasmMoveUsp(StrWriter &str, u16 op, u16 e1, u16 e2)
+{
+    An reg { _____________xxx(op) };
+
+    if (M == 0) {
+        str << Ins<I>{} << tab << "USP," << reg;
+    } else {
+        str << Ins<I>{} << tab << reg << ",USP";
+    }
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::dasmMulDiv(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Ea<M,Word> src { _____________xxx(op), e1, e2 };

@@ -592,6 +592,23 @@ CPU::execMoveq(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::execMoveUsp(u16 opcode)
+{
+    int an = _____________xxx(opcode);
+
+    // Check for supervisior mode
+    if (!sr.s) privilegeException();
+
+    prefetch();
+
+    if (M == 0) {
+        writeA(an, reg.usp);
+    } else {
+        reg.usp = readA(an);
+    }
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::execMulDiv(u16 opcode)
 {
     int src = _____________xxx(opcode);

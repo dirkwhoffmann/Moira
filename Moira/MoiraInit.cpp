@@ -526,6 +526,17 @@ CPU::registerInstructions()
     ____XXX_XXXXXXXX(opcode, MOVEQ, 11, Long, Moveq);
 
 
+    // MOVEUSP
+    //
+    //       Syntax: MOVE USP,An
+    //               MOVE An,USP
+    //        Sizes: Longword
+
+    opcode = parse("0100 1110 0110 ----");
+    _____________XXX(opcode | 0 << 3, MOVEUSP, 0, Long, MoveUsp);
+    _____________XXX(opcode | 1 << 3, MOVEUSP, 0, Long, MoveUsp);
+
+
     // MULS, MULU
     //
     //       Syntax: MULx <ea>,Dy

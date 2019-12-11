@@ -38,6 +38,7 @@ template<Instr I, Mode M, Size S> void dasmLea(StrWriter &str, u16 op, u16 e1, u
 
 template<Instr I, Mode M, Size S> void dasmMovea(StrWriter &str, u16 op, u16 e1, u16 e2);
 template<Instr I, Mode M, Size S> void dasmMoveq(StrWriter &str, u16 op, u16 e1, u16 e2);
+template<Instr I, Mode M, Size S> void dasmMoveUsp(StrWriter &str, u16 op, u16 e1, u16 e2);
 template<Instr I, Mode M, Size S> void dasmMulDiv(StrWriter &str, u16 op, u16 e1, u16 e2);
 
 template<Instr I, Mode M, Size S> void dasmNbcd(StrWriter &str, u16 op, u16 e1, u16 e2);
