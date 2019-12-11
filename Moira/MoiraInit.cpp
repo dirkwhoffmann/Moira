@@ -626,6 +626,20 @@ CPU::registerInstructions()
     _____________XXX(opcode | 3 << 6, EXT, 0, Long, Ext);
 
 
+    // JMP
+    //
+    //       Syntax: JMP <ea>
+    //        Sizes: Longword
+
+    //               -------------------------------------------------
+    // <ea>          | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                         X           X   X   X   X   X   X
+
+     opcode = parse("0100 1110 11-- ----");
+     __________MMMXXX(opcode, JMP, 0b001001111110, Long, Jmp);
+
+
     // LEA
     //
     //       Syntax: LEA <ea>,Ay

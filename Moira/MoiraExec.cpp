@@ -643,6 +643,17 @@ CPU::execExt(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::execJmp(u16 opcode)
+{
+    int src = _____________xxx(opcode);
+
+    u32 ea = computeEA<M,Long>(src);
+
+    pc = ea;
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::execLea(u16 opcode)
 {
     int src = _____________xxx(opcode);
