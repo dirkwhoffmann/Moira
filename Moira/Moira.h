@@ -94,7 +94,7 @@ private:
     void (CPU::*exec[65536])(u16);
 
     // Jump table storing all disassebler handlers
-    void (CPU::*dasm[65536])(StrWriter&, u16, u16, u16);
+    void (CPU::*dasm[65536])(StrWriter&, u32, u16, u16, u16);
 
     // Jump table storing all time information handlers
     int (CPU::*sync[65536])(u16, int);
