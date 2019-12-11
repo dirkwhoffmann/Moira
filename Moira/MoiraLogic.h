@@ -16,6 +16,9 @@ template<Size S> u32 read(u32 addr);
 // Writes a value to memory
 template<Size S> void write(u32 addr, u32 value);
 
+// Writes a value to the stack
+void writeStack(u32 value);
+
 // Computea an effective address
 template<Mode M, Size S> u32 computeEA(u32 n, u32 dis = 0, u32 idx = 0);
 

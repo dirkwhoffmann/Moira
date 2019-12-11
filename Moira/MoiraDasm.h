@@ -31,6 +31,7 @@ template<Instr I, Mode M, Size S> void dasmAndi(StrWriter &str, u32 addr, u16 op
 template<Instr I, Mode M, Size S> void dasmBcc(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmBitDxEa(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmBitImEa(StrWriter &str, u32 addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmBsr(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmClr(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmCmp(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmCmpa(StrWriter &str, u32 addr, u16 op);

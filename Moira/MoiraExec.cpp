@@ -420,8 +420,6 @@ CPU::execBcc(u16 opcode)
         i16 offset = S == Word ? (i16)irc : (i8)opcode;
         u32 newpc = pc + offset;
 
-        printf("Take branch pc = %x irc = %d %d\n", pc, (i16)irc, offset);
-
         readExtensionWord();
 
         // Take branch
@@ -432,7 +430,6 @@ CPU::execBcc(u16 opcode)
      }
 
      // Fall through to next instruction
-    printf("Fall through to next instruction\n");
      if (S == Word) readExtensionWord();
      prefetch();
 }
@@ -497,6 +494,25 @@ CPU::execBitImEa(u16 opcode)
         }
     }
     prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execBsr(u16 opcode)
+{
+    i16 offset = S == Word ? (i16)irc : (i8)opcode;
+    u32 newpc = pc + offset;
+    u32 retpc = pc + (S == Word ? 2 : 0);
+
+    // Save the return address
+    writeStack(retpc);
+
+    readExtensionWord();
+
+    // Take branch
+    pc = newpc;
+
+    prefetch();
+    return;
 }
 
 template<Instr I, Mode M, Size S> void

@@ -64,6 +64,13 @@ CPU::write<Long>(u32 addr, u32 value)
     memory->moiraWrite16((addr + 2) & 0xFFFFFF, (u16)value);
 }
 
+void
+CPU::writeStack(u32 value)
+{
+    reg.sp -= 4;
+    write<Long>(reg.sp, value);
+}
+
 template<Mode M, Size S> u32
 CPU::computeEA(u32 n, u32 dis, u32 idx) {
 

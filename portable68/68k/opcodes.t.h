@@ -658,12 +658,10 @@ void Core_68k::op_bcc(u16 opcode) {
 
 	if (conditionalTest(cond)) {
         reg_pc += ( displacement == 0 ? (i16)reg_irc : (i8)displacement );
-        printf("68k: Take branch reg_pc = %x reg_irc = %d displacement = %d\n", reg_pc, (i16)reg_irc, displacement);
 		sync(2);
 		if (displacement == 0) logInstruction(reg_irc, false);
         fullprefetch(true);
 	} else {
-        printf("68k: Fallthrough\n");
 		sync(4);
         if (displacement == 0) {
             readExtensionWord();

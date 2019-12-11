@@ -454,6 +454,17 @@ CPU::registerInstructions()
     __________MMMXXX(opcode, BSET, 0b101111111000, Long, BitImEa);
 
 
+    // BSR
+    //
+    //       Syntax: (1) BSR <label>
+    //         Size: Byte, Word
+
+    opcode = parse("0110 0001 ---- ----");
+    register(opcode, Bsr<BSR __ 0 __ Word>);
+    for (int i = 1; i < 256; i++) {
+        register(opcode | i, Bsr<BSR __ 0 __ Byte>);
+    }
+
     // BTST
     //
     //       Syntax: (1) BTST Dx,<ea>

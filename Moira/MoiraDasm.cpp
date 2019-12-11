@@ -213,6 +213,17 @@ CPU::dasmAndi(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::dasmBsr(StrWriter &str, u32 addr, u16 op)
+{
+    if (S == Word) {
+        Ea<11,S> value = makeOp<11,S>(addr);
+        str << Ins<I>{} << tab << "#" << value;
+    } else {
+        str << Ins<I>{} << tab << "#" << Disp8{ (i8)op };
+    }
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::dasmClr(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,Long> dst = makeOp<M,Long>(addr, _____________xxx(op));
