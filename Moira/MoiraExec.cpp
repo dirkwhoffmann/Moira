@@ -923,6 +923,18 @@ CPU::execNop(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::execPea(u16 opcode)
+{
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    u32 ea = computeEA<M,Long>(src);
+
+    writeStack(ea);
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::execScc(u16 opcode)
 {
     int dst = { _____________xxx(opcode) };

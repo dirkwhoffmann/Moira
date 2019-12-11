@@ -908,6 +908,20 @@ CPU::registerInstructions()
     __________MMMXXX(opcode, ROXR, 0b001111111000, Word, Shift);
 
 
+    // PEA
+    //
+    //       Syntax: PEA <ea>,Ay
+    //        Sizes: Longword
+
+    //               -------------------------------------------------
+    // <ea>,Ay       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                         X           X   X   X   X   X   X
+
+    opcode = parse("0100 1000 01-- ----");
+    __________MMMXXX(opcode, PEA, 0b001001111110, Long, Pea);
+
+
     // SBCD
     //
     //       Syntax: (1) SBCD Dy,Dx

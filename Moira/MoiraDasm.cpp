@@ -317,7 +317,7 @@ CPU::dasmLea(StrWriter &str, u32 addr, u16 op)
     Ea<M,Long> src = makeOp<M,Long>(addr, _____________xxx(op));
     An         dst { ____xxx_________(op) };
 
-    str << Ins<LEA>{} << tab << src << ", " << dst;
+    str << Ins<I>{} << tab << src << ", " << dst;
 }
 
 template<Instr I, Mode M1, Mode M2, Size S> void
@@ -379,6 +379,15 @@ template<Instr I, Mode M, Size S> void
 CPU::dasmNop(StrWriter &str, u32 addr, u16 op)
 {
     str << Ins<NOP>{};
+}
+
+template <Instr I, Mode M, Size S> void
+CPU::dasmPea(StrWriter &str, u32 addr, u16 op)
+{
+    Ea<M,Long> src = makeOp<M,Long>(addr, _____________xxx(op));
+    An         dst { ____xxx_________(op) };
+
+    str << Ins<I>{} << tab << src << ", " << dst;
 }
 
 template<Instr I, Mode M, Size S> void

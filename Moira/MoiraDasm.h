@@ -49,6 +49,7 @@ template<Instr I, Mode M, Size S> void dasmMulDiv(StrWriter &str, u32 addr, u16 
 template<Instr I, Mode M, Size S> void dasmNbcd(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmNegNot(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmNop(StrWriter &str, u32 addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmPea(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmScc(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmTas(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmTst(StrWriter &str, u32 addr, u16 op);
