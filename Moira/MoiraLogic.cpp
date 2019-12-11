@@ -194,10 +194,12 @@ CPU::readOperand(int n, u32 &ea, u32 &result)
         case 3: // (An)+
         {
             ea = readA(n);
+            printf("(An)+: ea = %x\n", ea);
             if (addressError<S>(ea)) return false;
             result = read<S>(ea);
-            ea += ((n == 7 && S == Byte) ? 2 : S);
-            writeA(n, ea);
+            // ea += ((n == 7 && S == Byte) ? 2 : S);
+            // writeA(n, ea);
+            writeA(n, ea + ((n == 7 && S == Byte) ? 2 : S));
             break;
         }
         case 4: // -(An)

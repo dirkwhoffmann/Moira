@@ -547,6 +547,11 @@ CPU::execMove(u16 opcode)
 
     writeOperand<M2,S>(dst, ea2, data1);
 
+    sr.c = 0;
+    sr.v = 0;
+    sr.n = NBIT<S>(data1);
+    sr.z = ZERO<S>(data1);
+
     prefetch();
 }
 

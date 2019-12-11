@@ -197,7 +197,7 @@ template<Instr I, Mode M1, Mode M2, Size S> void
 CPU::dasmMove(StrWriter &str, u16 op, u16 e1, u16 e2)
 {
     Ea<M1,S> src { _____________xxx(op), e1, e2 };
-    Ea<M2,S> dst { _______xxx______(op), e1, e2 };
+    Ea<M2,S> dst { ____xxx_________(op), e1, e2 };
 
     str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
 }
