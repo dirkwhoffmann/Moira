@@ -269,6 +269,15 @@ CPU::dasmBsr(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::dasmChk(StrWriter &str, u32 addr, u16 op)
+{
+    Ea<M,S> src = makeOp<M,S>(addr, _____________xxx(op));
+    Dn      dst = Dn { ____xxx_________(op) };
+
+    str << Ins<I>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::dasmClr(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,Long> dst = makeOp<M,Long>(addr, _____________xxx(op));

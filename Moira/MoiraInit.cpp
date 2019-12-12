@@ -521,6 +521,20 @@ CPU::registerInstructions()
     __________MMMXXX(opcode, BTST, 0b101111111110, Long, BitImEa);
 
 
+    // CHK
+    //
+    //       Syntax: CHK <ea>,Dy
+    //         Size: Word
+
+    //               -------------------------------------------------
+    // <ea>,Ay       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X
+
+    opcode = parse("0100 ---1 10-- ----");
+    ____XXX___MMMXXX(opcode, CHK, 0b101111111000, Word, Chk);
+
+
     // CLR
     //
     //       Syntax: CLR <ea>

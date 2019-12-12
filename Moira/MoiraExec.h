@@ -43,6 +43,7 @@ template<Instr I, Mode M, Size S> void execBitDxEa(u16 opcode);
 template<Instr I, Mode M, Size S> void execBitImEa(u16 opcode);
 template<Instr I, Mode M, Size S> void execBsr(u16 opcode);
 
+template<Instr I, Mode M, Size S> void execChk(u16 opcode);
 template<Instr I, Mode M, Size S> void execClr(u16 opcode);
 template<Instr I, Mode M, Size S> void execCmp(u16 opcode);
 template<Instr I, Mode M, Size S> void execCmpa(u16 opcode);

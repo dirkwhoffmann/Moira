@@ -568,6 +568,32 @@ CPU::execBsr(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::execChk(u16 opcode)
+{
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+    u32 ea, sop, dop;
+
+    if (!readOperand<M,S>(src, ea, sop)) return;
+    dop = readD<S>(dst);
+
+    prefetch();
+
+    sr.z = ZERO<S>(dop);
+    sr.v = 0;
+    sr.c = 0;
+    sr.n = 0;
+
+    if ((i16)dop > (i16)sop) {
+        execTrapException(6);
+    }
+    else if ((i16)dop < 0) {
+        sr.n = 1;
+        execTrapException(6);
+    }
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::execClr(u16 opcode)
 {
     int dst = _____________xxx(opcode);
