@@ -35,6 +35,7 @@ template<Instr I, Mode M, Size S> void execAddxEa(u16 opcode);
 template<Instr I, Mode M, Size S> void execAndEaRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execAndRgEa(u16 opcode);
 template<Instr I, Mode M, Size S> void execAndi(u16 opcode);
+template<Instr I, Mode M, Size S> void execAndiccr(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execBcc(u16 opcode);
 template<Instr I, Mode M, Size S> void execBitDxEa(u16 opcode);
@@ -45,6 +46,7 @@ template<Instr I, Mode M, Size S> void execClr(u16 opcode);
 template<Instr I, Mode M, Size S> void execCmp(u16 opcode);
 template<Instr I, Mode M, Size S> void execCmpa(u16 opcode);
 template<Instr I, Mode M, Size S> void execCmpi(u16 opcode);
+template<Instr I, Mode M, Size S> void execCmpm(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execDbcc(u16 opcode);
 template<Instr I, Mode M, Size S> void execExt(u16 opcode);

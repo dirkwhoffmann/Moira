@@ -242,6 +242,14 @@ CPU::dasmAndi(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::dasmAndiccr(StrWriter &str, u32 addr, u16 op)
+{
+    Ea<11,S> src = makeOp<11,S>(addr);
+
+    str << Ins<I>{} << tab << src << ", CCR";
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::dasmBsr(StrWriter &str, u32 addr, u16 op)
 {
     if (S == Word) {
@@ -282,6 +290,15 @@ CPU::dasmCmpi(StrWriter &str, u32 addr, u16 op)
     Ea<M,S> dst = makeOp<M,S>(addr, _____________xxx(op));
 
     str << Ins<I>{} << Sz<S>{} << tab << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::dasmCmpm(StrWriter &str, u32 addr, u16 op)
+{
+    Ea<M,S> src = makeOp<M,S>(addr, _____________xxx(op));
+    Ea<M,S> dst = makeOp<M,S>(addr, ____xxx_________(op));
+
+    str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
 }
 
 template<Instr I, Mode M, Size S> void

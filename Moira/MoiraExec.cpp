@@ -435,6 +435,18 @@ CPU::execAndi(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::execAndiccr(u16 opcode)
+{
+    u32 src = readImm<S>();
+    int dst = getCCR();
+
+    u32 result = logic<I,S>(src, dst);
+    setCCR(result);
+
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::execBcc(u16 opcode)
 {
     if (bcond<I>()) {
@@ -610,6 +622,21 @@ CPU::execCmpi(u16 opcode)
     prefetch();
 
     cmp<S>(src, data);
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execCmpm(u16 opcode)
+{
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    u32 ea1, ea2, data1, data2;
+
+    if (!readOperand<M,S>(src, ea1, data1)) return;
+    if (!readOperand<M,S>(dst, ea2, data2)) return;
+
+    cmp<S>(data1, data2);
+    prefetch();
 }
 
 template<Instr I, Mode M, Size S> void
