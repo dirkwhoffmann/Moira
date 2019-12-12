@@ -114,6 +114,14 @@ StrWriter::operator<<(An an)
 }
 
 StrWriter&
+StrWriter::operator<<(Rn rn)
+{
+    *ptr++ = rn.symbol;
+    *ptr++ = '0' + rn.value;
+    return *this;
+}
+
+StrWriter&
 StrWriter::operator<<(Disp8 d)
 {
     hex ? sprintx_signed(ptr, d.value) : sprintd_signed(ptr, d.value);
@@ -134,6 +142,41 @@ StrWriter::operator<<(Index v)
         *ptr++ = 'D'; *ptr++ = '0' + v.value;
     } else {
         *ptr++ = 'A'; *ptr++ = '0' + v.value - 8;
+    }
+    return *this;
+}
+
+StrWriter&
+StrWriter::operator<<(RegList l)
+{
+    int r[8];
+
+    // Step 1: If l equals, e.g., 0xED, convert it to 11101101
+    for (int i = 0; i <= 7; i++) { r[i] = (l.members & (0x80 >> i)) ? 1 : 0; }
+        
+    // Step 2: Convert 11101101 to 12301201
+    for (int i = 1; i <= 7; i++) { if (r[i]) r[i] = r[i-1] + 1; }
+            
+    // Step 3: Convert 12301201 to 33302201
+    for (int i = 6; i >= 0; i--) { if (r[i] && r[i+1]) r[i] = r[i+1]; }
+
+    // Step 4: Convert 33302201 to "D0-D2/D4/D5/D7"
+    bool first = true;
+    for (int i = 0; i <= 7; i += r[i] + 1) {
+
+        if (r[i] == 0) continue;
+
+        // Print delimiter
+        if (first) { first = false; } else { *this << "/"; }
+
+        // Format variant 1: Single register
+        if (r[i] == 1) { *this << Rn{i,l.symbol}; }
+
+        // Format variant 2: Register pair
+        else if (r[i] == 2) { *this << Rn{i,l.symbol} << "/" << Rn{i+1,l.symbol}; }
+
+        // Format variant 3: Register range
+        else { *this << Rn{i,l.symbol} << "-" << Rn{i+r[i]-1,l.symbol}; }
     }
     return *this;
 }

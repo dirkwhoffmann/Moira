@@ -243,6 +243,7 @@ public:
             if (block1[i].addr != block2[i].addr ||
                 block1[i].used != block2[i].used ||
                 block1[i].value != block2[i].value) {
+                if (result) printf("\n\nMemory contents mismatch:\n");
                 result = false;
                 printf("%d: addr / used / value: (%x, %d, %x) --> (%x %d %x)\n",
                       i,

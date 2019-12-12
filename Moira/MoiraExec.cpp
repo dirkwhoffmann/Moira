@@ -749,7 +749,55 @@ CPU::execMovemEaRg(u16 opcode)
 template<Instr I, Mode M, Size S> void
 CPU::execMovemRgEa(u16 opcode)
 {
-    assert(false);
+    switch (M) {
+
+        case 3: // (An)+
+        {
+            assert(false);
+            break;
+        }
+        case 4: // -(An)
+        {
+            int dst = _____________xxx(opcode);
+
+            u32 ea = computeEA<M,S>(dst);
+            if (addressError<S>(ea)) return;
+
+            u16 mask = irc;
+            readExtensionWord();
+
+            printf("mask = %x\n", mask);
+            for(int i = 15; i >= 0; i--) {
+
+                if (mask & (0x8000 >> i)) {
+                    write<S>(ea, reg.r[i]);
+                    printf("Writing %d:%x\n",i,reg.r[i]);
+                    ea -= S;
+                }
+            }
+            writeA(dst, ea + S);
+            break;
+        }
+        default:
+        {
+            int dst = _____________xxx(opcode);
+
+            u32 ea = computeEA<M,S>(dst);
+            if (addressError<S>(ea)) return;
+
+            u16 mask = irc;
+            readExtensionWord();
+
+            for(int i = 0; i < 16; i++, ea += S) {
+
+                if (mask & (1 << i)) {
+                    write<S>(ea, reg.r[i]);
+                }
+            }
+            break;
+        }
+    }
+    prefetch();
 }
 
 template<Instr I, Mode M, Size S> void

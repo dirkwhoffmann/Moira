@@ -16,9 +16,11 @@
 struct Align { int column; };
 struct Dn { int value; };
 struct An { int value; };
+struct Rn { int value; const char symbol; };
 struct Disp8 { i8 value; };
 struct Disp16 { i16 value; };
 struct Index { int value; };
+struct RegList { u8 members; char symbol; };
 template <Instr I> struct Ins { };
 template <Cond C> struct Cnd { };
 template <Size S> struct Sz { };
@@ -43,9 +45,11 @@ public:
     StrWriter& operator<<(Align align);
     StrWriter& operator<<(Dn dn);
     StrWriter& operator<<(An an);
+    StrWriter& operator<<(Rn rn);
     StrWriter& operator<<(Disp8 d);
     StrWriter& operator<<(Disp16 d);
     StrWriter& operator<<(Index i);
+    StrWriter& operator<<(RegList l);
     template <Instr I> StrWriter& operator<<(Ins<I> i);
     template <Cond C> StrWriter& operator<<(Cnd<C> c);
     template <Size S> StrWriter& operator<<(Sz<S> sz);

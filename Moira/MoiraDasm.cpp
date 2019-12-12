@@ -9,53 +9,6 @@
 
 #include "StringWriter.cpp"
 
-void
-CPU::dasmRegList(u16 regs, char *result)
-{
-    char *p = result;
-    u8 hi = regs >> 8;
-    u8 lo = regs & 0xFF;
-
-    dasmRegList(hi, 'D', p);
-    if (hi && lo) *p++ = '/';
-    dasmRegList(lo, 'A', p);
-}
-
-void
-CPU::dasmRegList(u8 regs, char sym, char *&p)
-{
-    int r[8];
-    // This functions converts, e.g., 0xED to "D0-D2/D4/D5/D7"
-
-    // Step 1: Convert 0xED to 11101101
-    for (int i = 0; i <= 7; i++) r[i] = (regs & (0x80 >> i)) ? 1 : 0;
-
-    // Step 2: Convert 11101101 to 12301201
-    for (int i = 1; i <= 7; i++) if (r[i]) r[i] = r[i-1] + 1;
-
-    // Step 3: Convert 12301201 to 33302201
-    for (int i = 6; i >= 0; i--) if (r[i] && r[i+1]) r[i] = r[i+1];
-
-    // Step 4: Convert 33302201 to "D0-D2/D4/D5/D7"
-    bool first = true;
-    for (int i = 0; i <= 7; i++) {
-        if (r[i] == 1) {
-            if (first) first = false; else *p++ = '/';
-            *p++ = sym; *p++ = '0'+i;
-        }
-        if (r[i] == 2) {
-            if (first) first = false; else *p++ = '/';
-            *p++ = sym; *p++ = '0'+i; *p++ = '/'; *p++ = sym; *p++ = '0'+i+1;
-        }
-        if (r[i] > 2) {
-            if (first) first = false; else *p++ = '/';
-            *p++ = sym; *p++ = '0'+i; *p++ = '-'; *p++ = sym; *p++ = '0'+i+r[i]-1;
-        }
-        i += r[i];
-    }
-    *p = 0;
-}
-
 template <> u32
 CPU::dasmRead<Word>(u32 &addr)
 {
@@ -394,24 +347,17 @@ CPU::dasmMovemEaRg(StrWriter &str, u32 addr, u16 op)
 template<Instr I, Mode M, Size S> void
 CPU::dasmMovemRgEa(StrWriter &str, u32 addr, u16 op)
 {
-    char s[32];
+    Ea<M,S> dst   = makeOp<M,S>(addr, _____________xxx(op));
+    u8      dmask = irc >> 8;
+    u8      amask = irc & 0xFF;
 
-    dasmRegList(0b11101101, s);
-    printf("'%s'\n", s);
-    dasmRegList(0b1110110100000000, s);
-    printf("'%s'\n", s);
-    dasmRegList(0b0001010111111111, s);
-    printf("'%s'\n", s);
-    dasmRegList(0b1111111101010111, s);
-    printf("'%s'\n", s);
-    dasmRegList(0b1111000011110000, s);
-    printf("'%s'\n", s);
-    dasmRegList(0b1101100011011001, s);
-    printf("'%s'\n", s);
-    dasmRegList(0b1111101111100000, s);
-    printf("'%s'\n", s);
+    str << Ins<I>{} << tab;
 
-    assert(false);
+    str << RegList{dmask,'d'};
+    if (dmask && amask) str << "/";
+    str << RegList{amask,'a'};
+
+    str << "," << dst;
 }
 
 template<Instr I, Mode M, Size S> void

@@ -7,9 +7,6 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-void dasmRegList(u16 regs, char *result);
-void dasmRegList(u8 regs, char sym, char *&result);
-
 template <Size S> u32 dasmRead(u32 &addr);
 template <Mode M, Size S> Ea<M,S> makeOp(u32 &addr, u16 reg = 0);
 
