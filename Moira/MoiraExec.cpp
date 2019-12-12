@@ -1223,6 +1223,23 @@ CPU::execScc(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::execSwap(u16 opcode)
+{
+    int reg = { _____________xxx(opcode) };
+    u32 dat = readD(reg);
+
+    prefetch();
+
+    dat = (dat >> 16) | (dat & 0xFFFF) << 16;
+    writeD(reg,dat);
+
+    sr.c = 0;
+    sr.v = 0;
+    sr.n = NBIT<Long>(dat);
+    sr.z = ZERO<Long>(dat);
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::execTas(u16 opcode)
 {
     int dst = { _____________xxx(opcode) };
@@ -1296,7 +1313,13 @@ CPU::execTst(u16 opcode)
 template<Instr I, Mode M, Size S> void
 CPU::execUnlk(u16 opcode)
 {
-    int ax = _____________xxx(opcode);
+    int an = _____________xxx(opcode);
+    reg.sp = readA(an);
 
-    assert(false);
+    u32 ea, data;
+    if (!readOperand<2,Long>(7, ea, data)) return;
+    writeA(an, data);
+
+    if (an != 7) reg.sp += 4;
+    prefetch();
 }

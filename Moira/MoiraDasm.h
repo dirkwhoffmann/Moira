@@ -65,11 +65,16 @@ template<Instr I, Mode M, Size S> void dasmMoveFromSr(StrWriter &str, u32 addr, 
 template<Instr I, Mode M, Size S> void dasmMoveToSr(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmMoveUsp(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmMulDiv(StrWriter &str, u32 addr, u16 op);
+
 template<Instr I, Mode M, Size S> void dasmNbcd(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmNegNot(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmNop(StrWriter &str, u32 addr, u16 op);
+
 template<Instr I, Mode M, Size S> void dasmPea(StrWriter &str, u32 addr, u16 op);
+
 template<Instr I, Mode M, Size S> void dasmScc(StrWriter &str, u32 addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmSwap(StrWriter &str, u32 addr, u16 op);
+
 template<Instr I, Mode M, Size S> void dasmTas(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmTst(StrWriter &str, u32 addr, u16 op);
 

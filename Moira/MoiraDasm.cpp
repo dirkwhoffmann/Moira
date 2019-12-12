@@ -563,6 +563,13 @@ CPU::dasmNegNot(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::dasmSwap(StrWriter &str, u32 addr, u16 op)
+{
+    Dn reg = Dn { _____________xxx(op) };
+    str << Ins<I>{} << tab << reg;
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::dasmTas(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,Byte> dst = makeOp<M,Byte>(addr, _____________xxx(op));
@@ -580,9 +587,6 @@ CPU::dasmTst(StrWriter &str, u32 addr, u16 op)
 template <Instr I, Mode M, Size S> void
 CPU::dasmUnlk(StrWriter &str, u32 addr, u16 op)
 {
-    An src { _____________xxx(op) };
-    i16 disp = (i16)dasmRead<Word>(addr);
-
-    assert(false); 
-    // str << Ins<I>{} << tab << src << ", #" << Dis16{disp};
+    An reg { _____________xxx(op) };
+    str << Ins<I>{} << tab << reg;
 }

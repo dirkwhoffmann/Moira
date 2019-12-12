@@ -1233,6 +1233,15 @@ CPU::registerInstructions()
     ____XXX_SS___XXX(opcode, SUBX, 4, Byte | Word | Long, AddxEa);
 
 
+    // SWAP
+    //
+    //       Syntax: SWAP Dn
+    //         Size: Word
+
+    opcode = parse("0100 1000 0100 0---");
+    _____________XXX(opcode, SWAP, 0, Word, Swap);
+
+
     // TAS
     //
     //       Syntax: TAS <ea>
