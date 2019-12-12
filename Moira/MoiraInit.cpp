@@ -849,6 +849,48 @@ CPU::registerInstructions()
     ____XXX_XXXXXXXX(opcode, MOVEQ, 11, Long, Moveq);
 
 
+    // MOVE to CCR
+    //
+    //       Syntax: MOVE <ea>,CCR
+    //         Size: Word
+    //
+    //               -------------------------------------------------
+    // #<data>,<ea>  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X   X   X   X
+
+    opcode = parse("0100 0100 11-- ----");
+    __________MMMXXX(opcode, MOVETSR, 0b101111111111, Word, MoveToCcr);
+
+
+    // MOVE from SR
+    //
+    //       Syntax: MOVE SR,<ea>
+    //         Size: Word
+    //
+    //               -------------------------------------------------
+    // #<data>,<ea>  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X
+
+    opcode = parse("0100 0000 11-- ----");
+    __________MMMXXX(opcode, MOVEFSR, 0b101111111000, Word, MoveFromSr);
+
+
+    // MOVE to SR
+    //
+    //       Syntax: MOVE <ea>,SR
+    //         Size: Word
+    //
+    //               -------------------------------------------------
+    // #<data>,<ea>  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X   X   X   X   X   X   X   X   X   X
+
+    opcode = parse("0100 0110 11-- ----");
+    __________MMMXXX(opcode, MOVETSR, 0b101111111111, Word, MoveToSr);
+
+
     // MOVEUSP
     //
     //       Syntax: MOVE USP,An

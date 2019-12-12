@@ -62,6 +62,9 @@ template<Instr I, Mode M, Size S> void execMovea(u16 opcode);
 template<Instr I, Mode M, Size S> void execMovemEaRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execMovemRgEa(u16 opcode);
 template<Instr I, Mode M, Size S> void execMoveq(u16 opcode);
+template<Instr I, Mode M, Size S> void execMoveToCcr(u16 opcode);
+template<Instr I, Mode M, Size S> void execMoveFromSr(u16 opcode);
+template<Instr I, Mode M, Size S> void execMoveToSr(u16 opcode);
 template<Instr I, Mode M, Size S> void execMoveUsp(u16 opcode);
 template<Instr I, Mode M, Size S> void execMulDiv(u16 opcode);
 

@@ -444,6 +444,30 @@ CPU::dasmMoveq(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::dasmMoveToCcr(StrWriter &str, u32 addr, u16 op)
+{
+    Ea<M,S> src = makeOp<M,S>(addr, _____________xxx(op));
+
+    str << Ins<I>{} << tab << src << ", CCR";
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::dasmMoveFromSr(StrWriter &str, u32 addr, u16 op)
+{
+    Ea<M,S> dst = makeOp<M,S>(addr, _____________xxx(op));
+
+    str << Ins<I>{} << tab << "SR, " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::dasmMoveToSr(StrWriter &str, u32 addr, u16 op)
+{
+    Ea<M,S> src = makeOp<M,S>(addr, _____________xxx(op));
+
+    str << Ins<I>{} << tab << src << ", SR";
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::dasmMoveUsp(StrWriter &str, u32 addr, u16 op)
 {
     An reg { _____________xxx(op) };

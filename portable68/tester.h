@@ -312,7 +312,8 @@ public:
     virtual u16 moiraReadAfterReset16(u32 addr) { return memWordRead2(addr); }
 
     void power();
-    void setSR(u16 value); 
+    void setSR(u16 value);
+    void setCCR(u8 value);
     void setRegA(u8 reg, u32 value);
     void setRegD(u8 reg, u32 value);
     void process();

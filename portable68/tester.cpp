@@ -500,6 +500,11 @@ void Tester_68k::setSR(u16 value) {
     moira->setSR(value);
 }
 
+void Tester_68k::setCCR(u8 value) {
+    Core_68k::setCCR(value);
+    moira->setCCR(value);
+}
+
 void Tester_68k::setRegA(u8 reg, u32 value)
 {
     Core_68k::setRegA(reg, value);
@@ -552,6 +557,7 @@ void Tester_68k::dump()
     int ipl = (sr >> 8) & 7, mipl = (msr >> 8) & 7;
 
     printf("PC: %x / %x %s\n", pc, mpc, pc != mpc ? "<--" : "");
+    printf("SR: %x / %x %s\n", sr, msr, sr != msr ? "<--" : "");
     printf("IRC: %x / %x %s\n", irc, mirc, irc != mirc ? "<--" : "");
     printf("IRD: %x / %x %s\n", ird, mird, ird != mird ? "<--" : "");
     printf("\n");
@@ -585,7 +591,7 @@ bool Tester_68k::compare()
         if (getRegA(i) != moira->readA(i)) return false;
 
     if (reg_pc != moira->getPC()) return false;
-    if (getSR() != moira->getSR()) return false;
+    if ((getSR() & 0xFF1F) != (moira->getSR() & 0xFF1F)) return false;
 
     if (!memoryblock.compareBlocks()) return false;
 

@@ -945,6 +945,50 @@ CPU::execMoveq(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::execMoveToCcr(u16 opcode)
+{
+    int src = _____________xxx(opcode);
+
+    u32 ea, data;
+
+    if (!readOperand<M,S>(src, ea, data)) return;
+    setCCR(data & 0xFF);
+
+    pc -= 2;
+    readExtensionWord();
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execMoveFromSr(u16 opcode)
+{
+    int dst = _____________xxx(opcode);
+
+    u32 ea, data;
+    if (!readOperand<M,S>(dst, ea, data)) return;
+    prefetch();
+
+    writeOperand<M,S>(dst, ea, getSR());
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execMoveToSr(u16 opcode)
+{
+    // This instruction requires supervisor mode
+    if (!sr.s) { privilegeException(); return; }
+
+    int src = _____________xxx(opcode);
+
+    u32 ea, data;
+    if (!readOperand<M,S>(src, ea, data)) return;
+    setSR(data);
+
+    pc -= 2;
+    readExtensionWord();
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::execMoveUsp(u16 opcode)
 {
     int an = _____________xxx(opcode);
