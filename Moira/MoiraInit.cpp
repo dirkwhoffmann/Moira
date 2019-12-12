@@ -690,6 +690,23 @@ CPU::registerInstructions()
     register(parse("0000 1010 0111 1100"), Andisr<EORISR __ 11 __ Word>);
 
 
+    // EXG
+    //
+    //       Syntax: EXG Dx,Dy
+    //               EXG Ax,Dy
+    //               EXG Ax,Ay
+    //         Size: Longword
+
+    opcode = parse("1100 ---1 0100 0---");
+    ____XXX______XXX(opcode, EXG, 0, Long, ExgDxDy);
+
+    opcode = parse("1100 ---1 1000 1---");
+    ____XXX______XXX(opcode, EXG, 0, Long, ExgAxDy);
+
+    opcode = parse("1100 ---1 0100 1---");
+    ____XXX______XXX(opcode, EXG, 0, Long, ExgAxAy);
+
+
     // EXT
     //
     //       Syntax: EXT Dx

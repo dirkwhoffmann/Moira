@@ -7,6 +7,8 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+#include <utility>
+
 void
 CPU::execAddressError(u32 addr)
 {
@@ -714,6 +716,36 @@ CPU::execDbcc(u16 opcode)
     // Fall through to next instruction
     readExtensionWord();
     prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execExgDxDy(u16 opcode)
+{
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    prefetch();
+    std::swap(reg.d[src], reg.d[dst]);
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execExgAxDy(u16 opcode)
+{
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    prefetch();
+    std::swap(reg.a[src], reg.d[dst]);
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execExgAxAy(u16 opcode)
+{
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    prefetch();
+    std::swap(reg.a[src], reg.a[dst]);
 }
 
 template<Instr I, Mode M, Size S> void

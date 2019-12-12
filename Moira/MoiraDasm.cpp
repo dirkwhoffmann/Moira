@@ -353,11 +353,38 @@ CPU::dasmDbcc(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::dasmExgDxDy(StrWriter &str, u32 addr, u16 op)
+{
+    Dn src { ____xxx_________(op) };
+    Dn dst { _____________xxx(op) };
+
+    str << Ins<I>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::dasmExgAxDy(StrWriter &str, u32 addr, u16 op)
+{
+    An src { _____________xxx(op) };
+    Dn dst { ____xxx_________(op) };
+
+    str << Ins<I>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::dasmExgAxAy(StrWriter &str, u32 addr, u16 op)
+{
+    An src { ____xxx_________(op) };
+    An dst { _____________xxx(op) };
+
+    str << Ins<I>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::dasmExt(StrWriter &str, u32 addr, u16 op)
 {
     Dn src { _____________xxx(op) };
 
-    str << Ins<EXT>{} << Sz<S>{} << tab << Dn{src};
+    str << Ins<I>{} << Sz<S>{} << tab << Dn{src};
 }
 
 template <Instr I, Mode M, Size S> void

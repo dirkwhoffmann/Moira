@@ -51,6 +51,10 @@ template<Instr I, Mode M, Size S> void execCmpi(u16 opcode);
 template<Instr I, Mode M, Size S> void execCmpm(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execDbcc(u16 opcode);
+
+template<Instr I, Mode M, Size S> void execExgDxDy(u16 opcode);
+template<Instr I, Mode M, Size S> void execExgAxDy(u16 opcode);
+template<Instr I, Mode M, Size S> void execExgAxAy(u16 opcode);
 template<Instr I, Mode M, Size S> void execExt(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execJmp(u16 opcode);

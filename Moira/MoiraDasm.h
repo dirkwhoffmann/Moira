@@ -43,10 +43,17 @@ template<Instr I, Mode M, Size S> void dasmCmpa(StrWriter &str, u32 addr, u16 op
 template<Instr I, Mode M, Size S> void dasmCmpi(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmCmpm(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmDbcc(StrWriter &str, u32 addr, u16 op);
+
+template<Instr I, Mode M, Size S> void dasmExgDxDy(StrWriter &str, u32 addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmExgAxDy(StrWriter &str, u32 addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmExgAxAy(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmExt(StrWriter &str, u32 addr, u16 op);
+
 template<Instr I, Mode M, Size S> void dasmJmp(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmJsr(StrWriter &str, u32 addr, u16 op);
+
 template<Instr I, Mode M, Size S> void dasmLea(StrWriter &str, u32 addr, u16 op);
+
 template<Instr I, Mode M1, Mode M2, Size S> void dasmMove(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmMovea(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmMovemEaRg(StrWriter &str, u32 addr, u16 op);
