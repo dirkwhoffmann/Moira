@@ -681,6 +681,15 @@ CPU::registerInstructions()
     register(parse("0000 1010 0011 1100"), Andiccr<EORICCR __ 11 __ Byte>);
 
 
+    // EORI to SR
+    //
+    //       Syntax: EORI #<data>,SR
+    //         Size: Byte
+    //
+
+    register(parse("0000 1010 0111 1100"), Andisr<EORISR __ 11 __ Word>);
+
+
     // EXT
     //
     //       Syntax: EXT Dx
@@ -955,6 +964,15 @@ CPU::registerInstructions()
     //
 
     register(parse("0000 0000 0011 1100"), Andiccr<ORICCR __ 11 __ Byte>);
+
+
+    // ORI to SR
+    //
+    //       Syntax: ORI #<data>,SR
+    //         Size: Byte
+    //
+
+    register(parse("0000 0000 0111 1100"), Andisr<ORISR __ 11 __ Word>);
 
 
     // ROL, ROR, ROXL, ROXR
