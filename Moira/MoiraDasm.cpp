@@ -206,6 +206,24 @@ CPU::dasmAddqAn(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::dasmAddxRg(StrWriter &str, u32 addr, u16 op)
+{
+    Ea<M,S> src = makeOp<M,S>(addr, _____________xxx(op));
+    Ea<M,S> dst = makeOp<M,S>(addr, ____xxx_________(op));
+
+    str << Ins<I>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::dasmAddxEa(StrWriter &str, u32 addr, u16 op)
+{
+    Ea<M,S> src = makeOp<M,S>(addr, _____________xxx(op));
+    Ea<M,S> dst = makeOp<M,S>(addr, ____xxx_________(op));
+
+    str << Ins<I>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::dasmAndRgEa(StrWriter &str, u32 addr, u16 op)
 {
     Dn      src { ____xxx_________(op) };

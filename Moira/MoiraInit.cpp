@@ -211,15 +211,15 @@ CPU::registerInstructions()
 
     // ABCD
     //
-    //       Syntax: (1) ABCD Dy,Dx
-    //               (2) ABCD -(Ay),-(Ax)
+    //       Syntax: (1) ABCD Dx,Dy
+    //               (2) ABCD -(Ax),-(Ay)
     //         Size: Byte
 
-    // Dy,Dx
+    // Dx,Dy
     opcode = parse("1100 ---1 0000 0---");
     ____XXX______XXX(opcode, ABCD, 0, Byte, Abcd);
 
-    // -(Ay),-(Ax)
+    // -(Ax),-(Ay)
     opcode = parse("1100 ---1 0000 1---");
     ____XXX______XXX(opcode, ABCD, 4, Byte, Abcd);
 
@@ -289,6 +289,21 @@ CPU::registerInstructions()
     opcode = parse("0101 ---0 ---- ----");
     ____XXX_SSMMMXXX(opcode, ADDQ, 0b101111111000, Byte | Word | Long, Addq);
     ____XXX_SSMMMXXX(opcode, ADDQ, 0b010000000000, Word | Long, AddqAn);
+
+
+    // ADDX
+    //
+    //       Syntax: (1) ADDX Dx,Dy
+    //               (2) ADDX -(Ax),-(Ay)
+    //         Size: Byte, Word, Longword
+
+    // Dx,Dy
+    opcode = parse("1101 ---1 --00 0---");
+    ____XXX_SS___XXX(opcode, ADDX, 0, Byte | Word | Long, AddxRg);
+
+    // -(Ax),-(Ay)
+    opcode = parse("1101 ---1 --00 1---");
+    ____XXX_SS___XXX(opcode, ADDX, 4, Byte | Word | Long, AddxEa);
 
 
     // AND
@@ -949,15 +964,15 @@ CPU::registerInstructions()
 
     // SBCD
     //
-    //       Syntax: (1) SBCD Dy,Dx
-    //               (2) SBCD -(Ay),-(Ax)
+    //       Syntax: (1) SBCD Dx,Dy
+    //               (2) SBCD -(Ax),-(Ay)
     //         Size: Byte
 
-    // Dy,Dx
+    // Dx,Dy
     opcode = parse("1000 ---1 0000 0---");
     ____XXX______XXX(opcode, SBCD, 0, Byte, Abcd);
 
-    // -(Ay),-(Ax)
+    // -(Ax),-(Ay)
     opcode = parse("1000 ---1 0000 1---");
     ____XXX______XXX(opcode, SBCD, 4, Byte, Abcd);
 

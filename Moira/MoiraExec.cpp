@@ -178,13 +178,11 @@ CPU::execAbcd(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    printf("src = %x dst = %x\n", src, dst);
     switch (M) {
 
         case 0: // Dn
         {
             u32 result = arith<I,Byte>(readD<Byte>(src), readD<Byte>(dst));
-            printf("(src) = %x (dst) = %x\n", readD<Byte>(src), readD<Byte>(dst));
             writeD<Byte>(dst, result);
             break;
         }
@@ -329,6 +327,30 @@ CPU::execAddqAn(u16 opcode)
 
     writeA(dst, result);
     prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execAddxRg(u16 opcode)
+{
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    u32 result = arith<I,S>(readD<S>(src), readD<S>(dst));
+    writeD<S>(dst, result);
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execAddxEa(u16 opcode)
+{
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    u32 ea1, ea2, data1, data2;
+    if (!readOperand<M,S>(src, ea1, data1)) return;
+    if (!readOperand<M,S>(dst, ea2, data2)) return;
+
+    u32 result = arith<I,S>(data1, data2);
+    write<S>(ea2, result);
 }
 
 template<Instr I, Mode M, Size S> void
