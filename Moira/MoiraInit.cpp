@@ -748,7 +748,7 @@ CPU::registerInstructions()
     //               -------------------------------------------------
     // <ea>,<list>   | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
     //               -------------------------------------------------
-    //                         X       X   X   X   X   X   X   X
+    //                         X   X       X   X   X   X   X   X
 
     //               -------------------------------------------------
     // <list>,<ea>   | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
@@ -756,8 +756,8 @@ CPU::registerInstructions()
     //                         X       X   X   X   X   X
 
     opcode = parse("0100 1100 1--- ----");
-    __________MMMXXX(opcode | 0 << 6, MOVEM, 0b001011111110, Word, MovemEaRg);
-    __________MMMXXX(opcode | 1 << 6, MOVEM, 0b001011111110, Long, MovemEaRg);
+    __________MMMXXX(opcode | 0 << 6, MOVEM, 0b001101111110, Word, MovemEaRg);
+    __________MMMXXX(opcode | 1 << 6, MOVEM, 0b001101111110, Long, MovemEaRg);
 
     opcode = parse("0100 1000 1--- ----");
     __________MMMXXX(opcode | 0 << 6, MOVEM, 0b001011111000, Word, MovemRgEa);

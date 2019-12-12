@@ -9,6 +9,17 @@
 
 #include "StringWriter.cpp"
 
+/*
+static u16 swapBits(u16 value) {
+
+    u16 result = 0;
+    for (int i = 0; i < 16; i++) {
+        result = result << 1 | !!(value & (1 << i));
+    }
+    return result;
+}
+*/
+
 template <> u32
 CPU::dasmRead<Word>(u32 &addr)
 {
@@ -341,15 +352,40 @@ CPU::dasmMovea(StrWriter &str, u32 addr, u16 op)
 template<Instr I, Mode M, Size S> void
 CPU::dasmMovemEaRg(StrWriter &str, u32 addr, u16 op)
 {
-    assert(false);
+    Ea<M,S> src   = makeOp<M,S>(addr, _____________xxx(op));
+    u16     mask  = irc;
+
+    // if (M == 3) {  // (An)+
+    {
+        mask = REVERSE_16(mask);
+    }
+    printf("irc = %x mask = %x\n", irc, mask); 
+
+    u8      dmask = mask >> 8;
+    u8      amask = mask & 0xFF;
+
+    str << Ins<I>{} << tab;
+
+    str << src << ",";
+
+    str << RegList{dmask,'d'};
+    if (dmask && amask) str << "/";
+    str << RegList{amask,'a'};
 }
 
 template<Instr I, Mode M, Size S> void
 CPU::dasmMovemRgEa(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> dst   = makeOp<M,S>(addr, _____________xxx(op));
-    u8      dmask = irc >> 8;
-    u8      amask = irc & 0xFF;
+    u16     mask  = irc;
+
+    if (M != 4) {  // -(An)
+        printf("Reversing\n");
+        mask = REVERSE_16(mask);
+    }
+
+    u8      dmask = mask >> 8;
+    u8      amask = mask & 0xFF;
 
     str << Ins<I>{} << tab;
 

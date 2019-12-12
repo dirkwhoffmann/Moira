@@ -743,7 +743,50 @@ CPU::execMovea(u16 opcode)
 template<Instr I, Mode M, Size S> void
 CPU::execMovemEaRg(u16 opcode)
 {
-    assert(false);
+    switch (M) {
+
+        case 3: // (An)+
+        {
+            int src = _____________xxx(opcode);
+
+            u32 ea = readA(src);
+            if (addressError<S>(ea)) return; // TODO: Trigger exception
+
+            u16 mask = REVERSE_16(irc);
+            readExtensionWord();
+
+            for(int i = 0; i <= 15; i++) {
+
+                if (mask & (0x8000 >> i)) {
+                    writeR(i, SEXT<S>(read<S>(ea)));
+                    ea += S;
+                }
+            }
+            writeA(src, ea);
+            break;
+        }
+        default:
+        {
+            int src = _____________xxx(opcode);
+
+            u32 ea = computeEA<M,S>(src);
+            if (addressError<S>(ea)) return; // TODO: Trigger exception
+
+            u16 mask = REVERSE_16(irc);
+            printf("irc = %x mask = %x\n", irc, mask);
+            readExtensionWord();
+
+            for(int i = 0; i <= 15; i++) {
+
+                if (mask & (0x8000 >> i)) {
+                    writeR(i, SEXT<S>(read<S>(ea)));
+                    ea += S;
+                }
+            }
+            break;
+        }
+    }
+    prefetch();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -760,22 +803,20 @@ CPU::execMovemRgEa(u16 opcode)
         {
             int dst = _____________xxx(opcode);
 
-            u32 ea = computeEA<M,S>(dst);
-            if (addressError<S>(ea)) return;
+            u32 ea = readA(dst);
+            if (addressError<S>(ea)) return; // TODO: Trigger exception
 
             u16 mask = irc;
             readExtensionWord();
 
-            printf("mask = %x\n", mask);
             for(int i = 15; i >= 0; i--) {
 
                 if (mask & (0x8000 >> i)) {
-                    write<S>(ea, reg.r[i]);
-                    printf("Writing %d:%x\n",i,reg.r[i]);
                     ea -= S;
+                    write<S>(ea, reg.r[i]);
                 }
             }
-            writeA(dst, ea + S);
+            writeA(dst, ea);
             break;
         }
         default:
@@ -783,15 +824,17 @@ CPU::execMovemRgEa(u16 opcode)
             int dst = _____________xxx(opcode);
 
             u32 ea = computeEA<M,S>(dst);
-            if (addressError<S>(ea)) return;
+            if (addressError<S>(ea)) return; // TODO: Trigger exception
 
-            u16 mask = irc;
+            u16 mask = REVERSE_16(irc);
+            printf("irc = %x mask = %x\n", irc, mask);
             readExtensionWord();
 
-            for(int i = 0; i < 16; i++, ea += S) {
+            for(int i = 0; i < 16; i++) {
 
-                if (mask & (1 << i)) {
+                if (mask & (0x8000 >> i)) {
                     write<S>(ea, reg.r[i]);
+                    ea += S;
                 }
             }
             break;
@@ -986,7 +1029,6 @@ template<Instr I, Mode M, Size S> void
 CPU::execPea(u16 opcode)
 {
     int src = _____________xxx(opcode);
-    int dst = ____xxx_________(opcode);
 
     u32 ea = computeEA<M,Long>(src);
 

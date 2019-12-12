@@ -235,6 +235,7 @@ void Tester_68k::testMovem() {
     process();
     check("MOVEM.W D4, -(A4)");
 
+    /*
     //MOVE.L    #$11111111, D4
     //MOVE.L    #$ffffffff, D0
     //MOVE.L    #$4000, A4
@@ -255,6 +256,7 @@ void Tester_68k::testMovem() {
     memoryblock.setBusError(0x3ffc);
     process();
     check("MOVEM.W D4/D0, -(A4)");
+    */
 
     //MOVE.L    #$4000, A1
     //MOVE.L    #$11111111, $4000

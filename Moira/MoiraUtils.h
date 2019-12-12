@@ -12,6 +12,12 @@
 
 #include "types.h"
 
+#define HI_LO(x,y) ((x) << 8 | (y))
+#define LO_BYTE(x) ((x) & 0xFF)
+#define HI_BYTE(x) (((x) >> 8) & 0xFF)
+#define REVERSE_8(x) (((x) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
+#define REVERSE_16(x) HI_LO(REVERSE_8(LO_BYTE(x)),REVERSE_8(HI_BYTE(x)))
+
 #define _____________xxx(opcode) (u16)((opcode >> 0)  & 0b111)
 #define __________xxx___(opcode) (u16)((opcode >> 3)  & 0b111)
 #define _______xxx______(opcode) (u16)((opcode >> 6)  & 0b111)
