@@ -803,6 +803,19 @@ CPU::execLea(u16 opcode)
     prefetch();
 }
 
+template<Instr I, Mode M, Size S> void
+CPU::execLink(u16 opcode)
+{
+    int ax   = _____________xxx(opcode);
+    i16 disp = (i16)irc;
+
+    readExtensionWord();
+    writeStack(readA(ax) - (ax == 7 ? 4 : 0));
+    prefetch();
+    writeA(ax, reg.sp);
+    reg.sp += (i32)disp;
+}
+
 template<Instr I, Mode M1, Mode M2, Size S> void
 CPU::execMove(u16 opcode)
 {
@@ -1278,4 +1291,12 @@ CPU::execTst(u16 opcode)
     sr.z = ZERO<S>(value);
 
     prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execUnlk(u16 opcode)
+{
+    int ax = _____________xxx(opcode);
+
+    assert(false);
 }

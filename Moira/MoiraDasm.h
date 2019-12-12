@@ -53,6 +53,7 @@ template<Instr I, Mode M, Size S> void dasmJmp(StrWriter &str, u32 addr, u16 op)
 template<Instr I, Mode M, Size S> void dasmJsr(StrWriter &str, u32 addr, u16 op);
 
 template<Instr I, Mode M, Size S> void dasmLea(StrWriter &str, u32 addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmLink(StrWriter &str, u32 addr, u16 op);
 
 template<Instr I, Mode M1, Mode M2, Size S> void dasmMove(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmMovea(StrWriter &str, u32 addr, u16 op);
@@ -71,3 +72,5 @@ template<Instr I, Mode M, Size S> void dasmPea(StrWriter &str, u32 addr, u16 op)
 template<Instr I, Mode M, Size S> void dasmScc(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmTas(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmTst(StrWriter &str, u32 addr, u16 op);
+
+template<Instr I, Mode M, Size S> void dasmUnlk(StrWriter &str, u32 addr, u16 op);

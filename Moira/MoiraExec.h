@@ -57,6 +57,8 @@ template<Instr I, Mode M, Size S> void execExgAxDy(u16 opcode);
 template<Instr I, Mode M, Size S> void execExgAxAy(u16 opcode);
 template<Instr I, Mode M, Size S> void execExt(u16 opcode);
 
+template<Instr I, Mode M, Size S> void execLink(u16 opcode);
+
 template<Instr I, Mode M, Size S> void execJmp(u16 opcode);
 template<Instr I, Mode M, Size S> void execJsr(u16 opcode);
 
@@ -82,4 +84,6 @@ template<Instr I, Mode M, Size S> void execScc(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execTas(u16 opcode);
 template<Instr I, Mode M, Size S> void execTst(u16 opcode);
+
+template<Instr I, Mode M, Size S> void execUnlk(u16 opcode);
 

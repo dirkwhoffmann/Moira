@@ -410,6 +410,15 @@ CPU::dasmLea(StrWriter &str, u32 addr, u16 op)
     str << Ins<I>{} << tab << src << ", " << dst;
 }
 
+template <Instr I, Mode M, Size S> void
+CPU::dasmLink(StrWriter &str, u32 addr, u16 op)
+{
+    An src { _____________xxx(op) };
+    i16 disp = (i16)dasmRead<Word>(addr);
+
+    str << Ins<I>{} << tab << src << ", #" << Disp16{disp};
+}
+
 template<Instr I, Mode M1, Mode M2, Size S> void
 CPU::dasmMove(StrWriter &str, u32 addr, u16 op)
 {
@@ -568,3 +577,12 @@ CPU::dasmTst(StrWriter &str, u32 addr, u16 op)
     str << Ins<TST>{} << tab << ea;
 }
 
+template <Instr I, Mode M, Size S> void
+CPU::dasmUnlk(StrWriter &str, u32 addr, u16 op)
+{
+    An src { _____________xxx(op) };
+    i16 disp = (i16)dasmRead<Word>(addr);
+
+    assert(false); 
+    // str << Ins<I>{} << tab << src << ", #" << Dis16{disp};
+}

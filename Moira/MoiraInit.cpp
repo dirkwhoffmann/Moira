@@ -712,10 +712,18 @@ CPU::registerInstructions()
     //       Syntax: EXT Dx
     //        Sizes: Word, Longword
 
-    // Dx
     opcode = parse("0100 1000 --00 0---");
     _____________XXX(opcode | 2 << 6, EXT, 0, Word, Ext);
     _____________XXX(opcode | 3 << 6, EXT, 0, Long, Ext);
+
+
+    // LINK
+    //
+    //       Syntax: LINK An,#<displacement>
+    //        Sizes: Word
+
+    opcode = parse("0100 1110 0101 0---");
+    _____________XXX(opcode, LINK, 0, Word, Link);
 
 
     // JMP
@@ -1251,6 +1259,15 @@ CPU::registerInstructions()
 
     opcode = parse("0100 1010 ---- ----");
     ________SSMMMXXX(opcode, TST, 0b101111111110, Byte | Word | Long, Tst);
+
+
+    // UNLK
+    //
+    //       Syntax: UNLK An
+    //        Sizes: Word
+
+    opcode = parse("0100 1110 0101 1---");
+    _____________XXX(opcode, UNLK, 0, Word, Unlk);
 }
 
 #undef __
