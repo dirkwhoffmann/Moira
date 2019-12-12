@@ -354,15 +354,8 @@ CPU::dasmMovemEaRg(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> src   = makeOp<M,S>(addr, _____________xxx(op));
     u16     mask  = irc;
-
-    // if (M == 3) {  // (An)+
-    {
-        mask = REVERSE_16(mask);
-    }
-    printf("irc = %x mask = %x\n", irc, mask); 
-
-    u8      dmask = mask >> 8;
-    u8      amask = mask & 0xFF;
+    u8      amask = mask >> 8;
+    u8      dmask = mask & 0xFF;
 
     str << Ins<I>{} << tab;
 
@@ -377,15 +370,9 @@ template<Instr I, Mode M, Size S> void
 CPU::dasmMovemRgEa(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> dst   = makeOp<M,S>(addr, _____________xxx(op));
-    u16     mask  = irc;
-
-    if (M != 4) {  // -(An)
-        printf("Reversing\n");
-        mask = REVERSE_16(mask);
-    }
-
-    u8      dmask = mask >> 8;
-    u8      amask = mask & 0xFF;
+    u16     mask  = M == 4 ? REVERSE_16(irc) : irc;
+    u8      amask = mask >> 8;
+    u8      dmask = mask & 0xFF;
 
     str << Ins<I>{} << tab;
 

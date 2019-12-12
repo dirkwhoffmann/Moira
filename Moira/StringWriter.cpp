@@ -151,8 +151,8 @@ StrWriter::operator<<(RegList l)
 {
     int r[8];
 
-    // Step 1: If l equals, e.g., 0xED, convert it to 11101101
-    for (int i = 0; i <= 7; i++) { r[i] = (l.members & (0x80 >> i)) ? 1 : 0; }
+    // Step 1: Fill array r with the register list bits
+    for (int i = 0; i <= 7; i++) { r[i] = !!(l.members & (1 << i)); }
         
     // Step 2: Convert 11101101 to 12301201
     for (int i = 1; i <= 7; i++) { if (r[i]) r[i] = r[i-1] + 1; }
@@ -173,7 +173,7 @@ StrWriter::operator<<(RegList l)
         if (r[i] == 1) { *this << Rn{i,l.symbol}; }
 
         // Format variant 2: Register pair
-        else if (r[i] == 2) { *this << Rn{i,l.symbol} << "/" << Rn{i+1,l.symbol}; }
+        else if (r[i] == 2) { *this << Rn{i,l.symbol} << "-" << Rn{i+1,l.symbol}; }
 
         // Format variant 3: Register range
         else { *this << Rn{i,l.symbol} << "-" << Rn{i+r[i]-1,l.symbol}; }
