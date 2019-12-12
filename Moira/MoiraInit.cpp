@@ -352,6 +352,15 @@ CPU::registerInstructions()
     register(parse("0000 0010 0011 1100"), Andiccr<ANDICCR __ 11 __ Byte>);
 
 
+    // ANDI to SR
+    //
+    //       Syntax: ANDI #<data>,SR
+    //         Size: Byte
+    //
+
+    register(parse("0000 0010 0111 1100"), Andisr<ANDISR __ 11 __ Word>);
+
+
     // ASL, ASR
     //
     //       Syntax: (1) ASx Dx,Dy

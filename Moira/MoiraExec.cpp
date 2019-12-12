@@ -78,6 +78,8 @@ CPU::execGroup0Exception(u32 addr, u8 nr)
 void
 CPU::execGroup1Exception(u8 nr)
 {
+    u16 status = getSR();
+
     // Enter supervisor mode and update the status register
      setSupervisorMode(true);
      sr.t = 0;
@@ -88,7 +90,7 @@ CPU::execGroup1Exception(u8 nr)
      reg.sp -= 2;
      write<Word>(reg.sp, pc >> 16);
      reg.sp -= 2;
-     write<Word>(reg.sp, getSR());
+     write<Word>(reg.sp, status);
 
      // Update the prefetch queue
      readExtensionWord();
@@ -438,10 +440,26 @@ template<Instr I, Mode M, Size S> void
 CPU::execAndiccr(u16 opcode)
 {
     u32 src = readImm<S>();
-    int dst = getCCR();
+    u8  dst = getCCR();
 
     u32 result = logic<I,S>(src, dst);
     setCCR(result);
+
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execAndisr(u16 opcode)
+{
+    // This instruction requires supervisor mode
+    if (!sr.s) { privilegeException(); return; }
+
+    u32 src = readImm<S>();
+    u16 dst = getSR();
+
+    u32 result = logic<I,S>(src, dst);
+
+    setSR(result);
 
     prefetch();
 }
@@ -905,8 +923,8 @@ CPU::execMoveUsp(u16 opcode)
 {
     int an = _____________xxx(opcode);
 
-    // Check for supervisior mode
-    if (!sr.s) privilegeException();
+    // This instruction requires supervisor mode
+    if (!sr.s) { privilegeException(); return; }
 
     prefetch();
 

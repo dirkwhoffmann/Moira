@@ -596,17 +596,17 @@ CPU::logic(u32 op1, u32 op2)
 
     switch(I) {
 
-        case AND: case ANDI: case ANDICCR:
+        case AND: case ANDI: case ANDICCR: case ANDISR:
         {
             result = op1 & op2;
             break;
         }
-        case OR: case ORI: case ORICCR:
+        case OR: case ORI: case ORICCR: case ORISR:
         {
             result = op1 | op2;
             break;
         }
-        case EOR: case EORI: case EORICCR:
+        case EOR: case EORI: case EORICCR: case EORISR:
         {
             result = op1 ^ op2;
             break;

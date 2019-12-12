@@ -495,6 +495,11 @@ void Tester_68k::power()
     moira->power();
 }
 
+void Tester_68k::setSR(u16 value) {
+    Core_68k::setSR(value);
+    moira->setSR(value);
+}
+
 void Tester_68k::setRegA(u8 reg, u32 value)
 {
     Core_68k::setRegA(reg, value);

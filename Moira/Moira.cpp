@@ -73,10 +73,9 @@ CPU::getSR()
 void
 CPU::setSR(u16 value)
 {
-    bool s   = value >> 13 & 1;
-    bool ipl = value >>  8 & 7;
+    bool s = (value >> 13) & 1;
+    u8 ipl = (value >>  8) & 7;
 
-    sr.s   = s;
     sr.ipl = ipl;
 
     setCCR((u8)value);
