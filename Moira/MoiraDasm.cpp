@@ -472,6 +472,28 @@ CPU::dasmMovemRgEa(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::dasmMovepDxEa(StrWriter &str, u32 addr, u16 op)
+{
+    assert(S == Word || S == Long);
+
+    Ea<0,S> src   = makeOp<0,S>(addr, ____xxx_________(op));
+    Ea<5,S> dst   = makeOp<5,S>(addr, _____________xxx(op));
+
+    str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::dasmMovepEaDx(StrWriter &str, u32 addr, u16 op)
+{
+    assert(S == Word || S == Long);
+
+    Ea<5,S> src   = makeOp<5,S>(addr, _____________xxx(op));
+    Ea<0,S> dst   = makeOp<0,S>(addr, ____xxx_________(op));
+
+    str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::dasmMoveq(StrWriter &str, u32 addr, u16 op)
 {
     Dn dst { ____xxx_________(op) };

@@ -974,6 +974,62 @@ CPU::execMovemRgEa(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::execMovepDxEa(u16 opcode)
+{
+    int src = ____xxx_________(opcode);
+    int dst = _____________xxx(opcode);
+
+    u32 ea = computeEA<M,S>(dst);
+    if (addressError<S>(ea)) return;
+
+    u32 dx = readD(src);
+
+    switch (S) {
+
+        case Long:
+        {
+            write<Byte>(ea, (dx >> 24) & 0xFF); ea += 2;
+            write<Byte>(ea, (dx >> 16) & 0xFF); ea += 2;
+        }
+        case Word:
+        {
+            write<Byte>(ea, (dx >>  8) & 0xFF); ea += 2;
+            write<Byte>(ea, (dx >>  0) & 0xFF);
+        }
+    }
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execMovepEaDx(u16 opcode)
+{
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    u32 ea = computeEA<M,S>(src);
+    if (addressError<S>(ea)) return;
+
+    u32 dx = 0;
+
+    switch (S) {
+
+        case Long:
+        {
+            dx |= read<Byte>(ea) << 24; ea += 2;
+            dx |= read<Byte>(ea) << 16; ea += 2;
+        }
+        case Word:
+        {
+            dx |= read<Byte>(ea) << 8; ea += 2;
+            dx |= read<Byte>(ea) << 0;
+        }
+
+    }
+    writeD(dst, dx);
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::execMoveq(u16 opcode)
 {
     i8  src = (i8)(opcode & 0xFF);
@@ -995,7 +1051,6 @@ CPU::execMoveToCcr(u16 opcode)
     int src = _____________xxx(opcode);
 
     u32 ea, data;
-
     if (!readOperand<M,S>(src, ea, data)) return;
     setCCR(data & 0xFF);
 

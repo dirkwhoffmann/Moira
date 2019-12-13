@@ -864,6 +864,23 @@ CPU::registerInstructions()
     __________MMMXXX(opcode | 1 << 6, MOVEM, 0b001011111000, Long, MovemRgEa);
 
 
+    // MOVEP
+    //
+    //       Syntax: MOVEP Dx,(d,Ay)
+    //               MOVEP (d,Ay),Dx
+    //         Size: Word, Longword
+
+    // MOVEP Dx,(d,Ay)
+    opcode = parse("0000 ---1 1-00 1---");
+    ____XXX______XXX(opcode | 0 << 6, MOVEP, 5, Word, MovepDxEa);
+    ____XXX______XXX(opcode | 1 << 6, MOVEP, 5, Long, MovepDxEa);
+
+    // MOVEP (d,Ay),Dx
+    opcode = parse("0000 ---1 0-00 1---");
+    ____XXX______XXX(opcode | 0 << 6, MOVEP, 5, Word, MovepEaDx);
+    ____XXX______XXX(opcode | 1 << 6, MOVEP, 5, Long, MovepEaDx);
+
+
     // MOVEQ
     //
     //       Syntax: MOVEQ #<data>,Dn
