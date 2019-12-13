@@ -104,6 +104,8 @@ CPU::execGroup1Exception(u8 nr)
 void
 CPU::execTrapException(u8 nr)
 {
+    u16 status = getSR();
+
     // Enter supervisor mode and update the status register
     setSupervisorMode(true);
     sr.t = 0;
@@ -114,7 +116,7 @@ CPU::execTrapException(u8 nr)
     reg.sp -= 2;
     write<Word>(reg.sp, pc >> 16);
     reg.sp -= 2;
-    write<Word>(reg.sp, getSR());
+    write<Word>(reg.sp, status);
 
     jumpToVector(nr);
 }
@@ -1330,6 +1332,14 @@ CPU::execTas(u16 opcode)
         }
     }
     prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execTrap(u16 opcode)
+{
+    int nr = ____________xxxx(opcode) + 32;
+
+    execTrapException(nr);
 }
 
 template<Instr I, Mode M, Size S> void

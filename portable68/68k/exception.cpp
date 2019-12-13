@@ -146,6 +146,8 @@ void Core_68k::trapException(u8 vector) { //group 2 exceptions will triggered wi
     writeWord(reg_a[7] + 4, reg_pc & 0xFFFF);
     writeWord(reg_a[7] + 2, (reg_pc >> 16) & 0xFFFF);
     writeWord(reg_a[7] + 0, SR);
+
+    printf("%x %x %x\n", reg_pc & 0xFFFF, (reg_pc >> 16) & 0xFFFF, SR);
     executeAt(vector);
 }
 

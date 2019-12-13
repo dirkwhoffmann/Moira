@@ -313,6 +313,7 @@ public:
 
     void power();
     void setSR(u16 value);
+    void setSSP(u32 value);
     void setCCR(u8 value);
     void setRegA(u8 reg, u32 value);
     void setRegD(u8 reg, u32 value);

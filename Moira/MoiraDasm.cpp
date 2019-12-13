@@ -599,6 +599,13 @@ CPU::dasmTas(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::dasmTrap(StrWriter &str, u32 addr, u16 op)
+{
+    int nr = ____________xxxx(op);
+    str << Ins<I>{} << tab << "#" << (u8)nr;
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::dasmTst(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> ea = makeOp<M,S>(addr, _____________xxx(op));

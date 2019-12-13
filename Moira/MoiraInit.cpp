@@ -34,6 +34,7 @@ dasm[id] = &CPU::dasm##name; }
 // Registers an instruction in one of the standard instruction formats:
 //
 //     Variants:  ____ ____ ____ _XXX
+//                ____ ____ ____ XXXX
 //                ____ ___X XX__ _XXX
 //                ____ XXX_ ____ _XXX
 //                ____ ____ XXXX XXXX
@@ -55,6 +56,9 @@ dasm[id] = &CPU::dasm##name; }
 
 #define _____________XXX(op,I,M,S,f) { \
 for (int j = 0; j < 8; j++) register((op) | j, f<I __ M __ S>); }
+
+#define ____________XXXX(op,I,M,S,f) { \
+for (int j = 0; j < 16; j++) register((op) | j, f<I __ M __ S>); }
 
 #define _______XXX___XXX(op,I,M,S,f) { \
 for (int i = 0; i < 8; i++) _____________XXX((op) | i << 6, I, M, S, f); }
@@ -1271,6 +1275,15 @@ CPU::registerInstructions()
 
     opcode = parse("0100 1010 11-- ----");
     __________MMMXXX(opcode, TAS, 0b101111111000, Byte, Tas);
+
+
+    // TRAP
+    //
+    //       Syntax: TRAP #<vector>
+    //        Sizes: Unsized
+
+    opcode = parse("0100 1110 0100 ----");
+    ____________XXXX(opcode, TRAP, 0, Long, Trap);
 
 
     // TST

@@ -78,6 +78,7 @@ template<Instr I, Mode M, Size S> void dasmScc(StrWriter &str, u32 addr, u16 op)
 template<Instr I, Mode M, Size S> void dasmSwap(StrWriter &str, u32 addr, u16 op);
 
 template<Instr I, Mode M, Size S> void dasmTas(StrWriter &str, u32 addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmTrap(StrWriter &str, u32 addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmTst(StrWriter &str, u32 addr, u16 op);
 
 template<Instr I, Mode M, Size S> void dasmUnlk(StrWriter &str, u32 addr, u16 op);

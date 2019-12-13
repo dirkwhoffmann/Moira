@@ -19,6 +19,7 @@
 #define REVERSE_16(x) HI_LO(REVERSE_8(LO_BYTE(x)),REVERSE_8(HI_BYTE(x)))
 
 #define _____________xxx(opcode) (u16)((opcode >> 0)  & 0b111)
+#define ____________xxxx(opcode) (u16)((opcode >> 0)  & 0b1111)
 #define __________xxx___(opcode) (u16)((opcode >> 3)  & 0b111)
 #define _______xxx______(opcode) (u16)((opcode >> 6)  & 0b111)
 #define ____xxx_________(opcode) (u16)((opcode >> 9)  & 0b111)

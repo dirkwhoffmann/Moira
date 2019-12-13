@@ -500,6 +500,11 @@ void Tester_68k::setSR(u16 value) {
     moira->setSR(value);
 }
 
+void Tester_68k::setSSP(u32 value) {
+    Core_68k::setSSP(value);
+    moira->setSSP(value);
+}
+
 void Tester_68k::setCCR(u8 value) {
     Core_68k::setCCR(value);
     moira->setCCR(value);

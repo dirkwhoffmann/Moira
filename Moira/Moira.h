@@ -157,6 +157,11 @@ public:
     u8 getCCR();
     void setCCR(u8 value);
 
+    // Gets or sets the Supervisor Stack Pointer (SSP)
+    u32 getSSP() { return reg.ssp; }
+    void setSSP(u32 value) { reg.ssp = value; }
+
+
     // Enters or leaves supervisior mode
     void setSupervisorMode(bool enable);
 
