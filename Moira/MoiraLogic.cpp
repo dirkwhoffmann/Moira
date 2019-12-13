@@ -150,7 +150,7 @@ CPU::computeEA(u32 n, u32 dis, u32 idx) {
         {
             i16  d = (i16)irc;
 
-            result = pc + d;
+            result = reg.pc + d;
             readExtensionWord();
             break;
         }
@@ -159,7 +159,7 @@ CPU::computeEA(u32 n, u32 dis, u32 idx) {
             i8   d = (i8)irc;
             i32 xi = readR((irc >> 12) & 0b1111);
 
-            result = d + pc + ((irc & 0x800) ? xi : (i16)xi);
+            result = d + reg.pc + ((irc & 0x800) ? xi : (i16)xi);
             readExtensionWord();
             break;
         }
@@ -254,7 +254,7 @@ CPU::readOperand(int n, u32 &ea, u32 &result)
         case 9: // (d,PC)
         {
             i16 d = (i16)irc;
-            result = pc + d;
+            result = reg.pc + d;
             readExtensionWord();
             break;
         }
@@ -262,7 +262,7 @@ CPU::readOperand(int n, u32 &ea, u32 &result)
         {
             i8  d = (i8)irc;
             i32 xi = readR((irc >> 12) & 0b1111);
-            ea = pc + d + ((irc & 0x800) ? xi : (i16)xi);
+            ea = reg.pc + d + ((irc & 0x800) ? xi : (i16)xi);
             result = read<S>(ea);
             readExtensionWord();
             break;

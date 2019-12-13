@@ -49,18 +49,18 @@ CPU::reset()
     memory->moiraReadAfterReset16(0) << 16 | memory->moiraReadAfterReset16(2);
 
     // Read the initial program counter from memory
-    pc =
+    reg.pc =
     memory->moiraReadAfterReset16(4) << 16 | memory->moiraReadAfterReset16(6);
 
     // Fill the prefetch queue
-    irc = memory->moiraReadAfterReset16(pc);
+    irc = memory->moiraReadAfterReset16(reg.pc);
     prefetch();
 }
 
 void
 CPU::process(u16 reg_ird)
 {
-    pc += 2;
+    reg.pc += 2;
     (this->*exec[reg_ird])(reg_ird);
 }
 
@@ -118,7 +118,7 @@ void
 CPU::prefetch()
 {
     ird = irc;
-    irc = memory->moiraRead16(pc + 2);
+    irc = memory->moiraRead16(reg.pc + 2);
 }
 
 void
@@ -130,19 +130,19 @@ CPU::fullPrefetch()
 void
 CPU::readExtensionWord()
 {
-    pc += 2;
-    irc = memory->moiraRead16(pc);
+    reg.pc += 2;
+    irc = memory->moiraRead16(reg.pc);
 }
 
 void
 CPU::jumpToVector(u8 nr)
 {
     // Update the program counter
-    pc = read<Long>(4 * nr);
+    reg.pc = read<Long>(4 * nr);
 
     // Update the prefetch queue
-    ird = read<Word>(pc);
-    irc = read<Word>(pc + 2);
+    ird = read<Word>(reg.pc);
+    irc = read<Word>(reg.pc + 2);
 }
 
 void

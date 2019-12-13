@@ -53,11 +53,9 @@ CPU::execGroup0Exception(u32 addr, u8 nr)
     setSupervisorMode(true);
     sr.t = 0;
 
-    printf("Moira group0: %x %x %x %x\n, ", pc, addr, getSR(), error);
-
     // Push PC
-    reg.sp -= 2; write<Word>(reg.sp, pc & 0xFFFF);
-    reg.sp -= 2; write<Word>(reg.sp, pc >> 16);
+    reg.sp -= 2; write<Word>(reg.sp, reg.pc & 0xFFFF);
+    reg.sp -= 2; write<Word>(reg.sp, reg.pc >> 16);
 
     // Push SR and IRD
     reg.sp -= 2; write<Word>(reg.sp, getSR());
@@ -88,9 +86,9 @@ CPU::execGroup1Exception(u8 nr)
 
      // Push PC and SR
      reg.sp -= 2;
-     write<Word>(reg.sp, pc & 0xFFFF);
+     write<Word>(reg.sp, reg.pc & 0xFFFF);
      reg.sp -= 2;
-     write<Word>(reg.sp, pc >> 16);
+     write<Word>(reg.sp, reg.pc >> 16);
      reg.sp -= 2;
      write<Word>(reg.sp, status);
 
@@ -112,9 +110,9 @@ CPU::execTrapException(u8 nr)
 
     // Push PC and SR
     reg.sp -= 2;
-    write<Word>(reg.sp, pc & 0xFFFF);
+    write<Word>(reg.sp, reg.pc & 0xFFFF);
     reg.sp -= 2;
-    write<Word>(reg.sp, pc >> 16);
+    write<Word>(reg.sp, reg.pc >> 16);
     reg.sp -= 2;
     write<Word>(reg.sp, status);
 
@@ -474,12 +472,12 @@ CPU::execBcc(u16 opcode)
     if (bcond<I>()) {
 
         i16 offset = S == Word ? (i16)irc : (i8)opcode;
-        u32 newpc = pc + offset;
+        u32 newpc = reg.pc + offset;
 
         readExtensionWord();
 
         // Take branch
-        pc = newpc;
+        reg.pc = newpc;
 
         prefetch();
         return;
@@ -556,8 +554,8 @@ template<Instr I, Mode M, Size S> void
 CPU::execBsr(u16 opcode)
 {
     i16 offset = S == Word ? (i16)irc : (i8)opcode;
-    u32 newpc = pc + offset;
-    u32 retpc = pc + (S == Word ? 2 : 0);
+    u32 newpc = reg.pc + offset;
+    u32 retpc = reg.pc + (S == Word ? 2 : 0);
 
     // Save the return address
     writeStack(retpc);
@@ -565,7 +563,7 @@ CPU::execBsr(u16 opcode)
     readExtensionWord();
 
     // Take branch
-    pc = newpc;
+    reg.pc = newpc;
 
     prefetch();
     return;
@@ -701,7 +699,7 @@ CPU::execDbcc(u16 opcode)
 
     if (!bcond<I>()) {
 
-        u32 newpc = pc + (i16)irc;
+        u32 newpc = reg.pc + (i16)irc;
 
         // Decrement loop counter
         writeD<Word>(dn, readD<Word>(dn) - 1);
@@ -709,7 +707,7 @@ CPU::execDbcc(u16 opcode)
         readExtensionWord();
 
         // Take branch if Dn does not equal -1
-        if ((i16)readD<Word>(dn) != -1) {  pc = newpc; }
+        if ((i16)readD<Word>(dn) != -1) { reg.pc = newpc; }
 
         prefetch();
         return;
@@ -776,7 +774,7 @@ CPU::execJmp(u16 opcode)
 
     u32 ea = computeEA<M,Long>(src);
 
-    pc = ea;
+    reg.pc = ea;
     prefetch();
 }
 
@@ -787,9 +785,9 @@ CPU::execJsr(u16 opcode)
 
     u32 ea = computeEA<M,Long>(src);
 
-    writeStack(pc);
+    writeStack(reg.pc);
 
-    pc = ea;
+    reg.pc = ea;
     prefetch();
 }
 
@@ -1056,7 +1054,7 @@ CPU::execMoveToCcr(u16 opcode)
     if (!readOperand<M,S>(src, ea, data)) return;
     setCCR(data & 0xFF);
 
-    pc -= 2;
+    reg.pc -= 2;
     readExtensionWord();
     prefetch();
 }
@@ -1085,7 +1083,7 @@ CPU::execMoveToSr(u16 opcode)
     if (!readOperand<M,S>(src, ea, data)) return;
     setSR(data);
 
-    pc -= 2;
+    reg.pc -= 2;
     readExtensionWord();
     prefetch();
 }
@@ -1276,7 +1274,7 @@ CPU::execRtr(u16 opcode)
     reg.sp += 4;
 
     readExtensionWord();
-    pc = newpc;
+    reg.pc = newpc;
     prefetch();
 }
 
@@ -1287,7 +1285,7 @@ CPU::execRts(u16 opcode)
     reg.sp += 4;
 
     readExtensionWord();
-    pc = newpc;
+    reg.pc = newpc;
     prefetch();
 }
 

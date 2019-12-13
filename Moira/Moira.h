@@ -27,32 +27,33 @@ struct Registers {
 
     union {
         struct {
-            u32 d[8];  // D0, D1 ... D7
-            u32 a[8];  // A0, A1 ... A7
+            u32 d[8];     // D0, D1 ... D7
+            u32 a[8];     // A0, A1 ... A7
         };
         struct {
-            u32 r[16]; // D0, D1 ... D7, A0, A1 ... A7
+            u32 r[16];    // D0, D1 ... D7, A0, A1 ... A7
         };
         struct {
             u32 _pad[15];
-            u32 sp;    // Visible stack pointer (overlays a[7])
+            u32 sp;       // Visible stack pointer (overlays a[7])
         };
     };
-    u32 usp;           // User Stack Pointer
-    u32 ssp;           // Supervisor Stack Pointer
+    u32 usp;              // User Stack Pointer
+    u32 ssp;              // Supervisor Stack Pointer
+    u32 pc;               // Program counter
 };
 
 struct StatusRegister {
 
-    bool t;       // Trace flag
-    bool s;       // Supervisor flag
-    bool x;       // Extend flag
-    bool n;       // Negative flag
-    bool z;       // Zero flag
-    bool v;       // Overflow flag
-    bool c;       // Carry flag
+    bool t;               // Trace flag
+    bool s;               // Supervisor flag
+    bool x;               // Extend flag
+    bool n;               // Negative flag
+    bool z;               // Zero flag
+    bool v;               // Overflow flag
+    bool c;               // Carry flag
 
-    u8 ipl;       // Interrupt Priority Level
+    u8 ipl;               // Interrupt Priority Level
 };
 
 class CPU {
@@ -69,9 +70,6 @@ private:
 
     // The data and address registers
     Registers reg;
-
-    // The program counter
-    u32 pc;
 
     /* The prefetch queue
      * http://pasti.fxatari.com/68kdocs/68kPrefetch.html
@@ -125,7 +123,7 @@ public:
     template<Size S = Long> void incA(int n, i32 v) { writeA<S>(n, readA<S>(n) + v); }
     template<Size S = Long> void incR(int n, i32 v) { writeR<S>(n, readR<S>(n) + v); }
 
-    u32 getPC() { return pc; }
+    u32 getPC() { return reg.pc; }
     u32 getIRC() { return irc; }
     u32 getIRD() { return ird; }
 
