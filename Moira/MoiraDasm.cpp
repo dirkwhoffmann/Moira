@@ -21,7 +21,7 @@ static u16 swapBits(u16 value) {
 */
 
 template <> u32
-CPU::dasmRead<Word>(u32 &addr)
+Moira::dasmRead<Word>(u32 &addr)
 {
     u32 result = memory->moiraSpyRead16(addr + 2);
     addr += 2;
@@ -29,7 +29,7 @@ CPU::dasmRead<Word>(u32 &addr)
 }
 
 template <> u32
-CPU::dasmRead<Long>(u32 &addr)
+Moira::dasmRead<Long>(u32 &addr)
 {
     u32 result = dasmRead<Word>(addr) << 16;
     result |= dasmRead<Word>(addr);
@@ -37,7 +37,7 @@ CPU::dasmRead<Long>(u32 &addr)
 }
 
 template <Mode M, Size S> Ea<M,S>
-CPU::makeOp(u32 &addr, u16 reg)
+Moira::makeOp(u32 &addr, u16 reg)
 {
     Ea<M,S> result; //  = Ea<M,S> { reg, 0, 0 };
 
@@ -76,25 +76,25 @@ CPU::makeOp(u32 &addr, u16 reg)
 }
 
 void
-CPU::dasmIllegal(StrWriter &str, u32 addr, u16 op)
+Moira::dasmIllegal(StrWriter &str, u32 addr, u16 op)
 {
     str << "ILLEGAL";
 }
 
 void
-CPU::dasmLineA(StrWriter &str, u32 addr, u16 op)
+Moira::dasmLineA(StrWriter &str, u32 addr, u16 op)
 {
     str << "LINE A";
 }
 
 void
-CPU::dasmLineF(StrWriter &str, u32 addr, u16 op)
+Moira::dasmLineF(StrWriter &str, u32 addr, u16 op)
 {
     str << "LINE F";
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmShiftRg(StrWriter &str, u32 addr, u16 op)
+Moira::dasmShiftRg(StrWriter &str, u32 addr, u16 op)
 {
     Dn dst { _____________xxx(op) };
     Dn src { ____xxx_________(op) };
@@ -103,7 +103,7 @@ CPU::dasmShiftRg(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmShiftIm(StrWriter &str, u32 addr, u16 op)
+Moira::dasmShiftIm(StrWriter &str, u32 addr, u16 op)
 {
     Dn dst { _____________xxx(op) };
     u8 src = ____xxx_________(op);
@@ -113,7 +113,7 @@ CPU::dasmShiftIm(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmShift(StrWriter &str, u32 addr, u16 op)
+Moira::dasmShift(StrWriter &str, u32 addr, u16 op)
 {
     Dn dst { _____________xxx(op) };
 
@@ -136,7 +136,7 @@ CPU::dasmShift(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmAbcd(StrWriter &str, u32 addr, u16 op)
+Moira::dasmAbcd(StrWriter &str, u32 addr, u16 op)
 {
     assert(M == 0 || M == 4);
 
@@ -147,7 +147,7 @@ CPU::dasmAbcd(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmAddEaRg(StrWriter &str, u32 addr, u16 op)
+Moira::dasmAddEaRg(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> src = makeOp<M,S>(addr, _____________xxx(op));
     Dn      dst { ____xxx_________(op) };
@@ -156,7 +156,7 @@ CPU::dasmAddEaRg(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmAddRgEa(StrWriter &str, u32 addr, u16 op)
+Moira::dasmAddRgEa(StrWriter &str, u32 addr, u16 op)
 {
     Dn      src { ____xxx_________(op) };
     Ea<M,S> dst = makeOp<M,S>(addr, _____________xxx(op));
@@ -165,7 +165,7 @@ CPU::dasmAddRgEa(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmAndEaRg(StrWriter &str, u32 addr, u16 op)
+Moira::dasmAndEaRg(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> src = makeOp<M,S>(addr, _____________xxx(op));
     Dn      dst { ____xxx_________(op) };
@@ -174,7 +174,7 @@ CPU::dasmAndEaRg(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmAdda(StrWriter &str, u32 addr, u16 op)
+Moira::dasmAdda(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> src = makeOp<M,S>(addr, _____________xxx(op));
     An      dst { ____xxx_________(op) };
@@ -183,7 +183,7 @@ CPU::dasmAdda(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmAddi(StrWriter &str, u32 addr, u16 op)
+Moira::dasmAddi(StrWriter &str, u32 addr, u16 op)
 {
     Ea<11,S> src = makeOp<11,S>(addr);
     Ea<M, S> dst = makeOp<M, S>(addr, _____________xxx(op));
@@ -192,21 +192,21 @@ CPU::dasmAddi(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmAddq(StrWriter &str, u32 addr, u16 op)
+Moira::dasmAddq(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> dst = makeOp<M,S>(addr, ____xxx_________(op));
     str << Ins<I>{} << tab << "#" << (u8)op << ", " << dst;
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmAddqAn(StrWriter &str, u32 addr, u16 op)
+Moira::dasmAddqAn(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> dst = makeOp<M,S>(addr, ____xxx_________(op));
     str << Ins<I>{} << tab << "#" << (u8)op << ", " << dst;
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmAddxRg(StrWriter &str, u32 addr, u16 op)
+Moira::dasmAddxRg(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> src = makeOp<M,S>(addr, _____________xxx(op));
     Ea<M,S> dst = makeOp<M,S>(addr, ____xxx_________(op));
@@ -215,7 +215,7 @@ CPU::dasmAddxRg(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmAddxEa(StrWriter &str, u32 addr, u16 op)
+Moira::dasmAddxEa(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> src = makeOp<M,S>(addr, _____________xxx(op));
     Ea<M,S> dst = makeOp<M,S>(addr, ____xxx_________(op));
@@ -224,7 +224,7 @@ CPU::dasmAddxEa(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmAndRgEa(StrWriter &str, u32 addr, u16 op)
+Moira::dasmAndRgEa(StrWriter &str, u32 addr, u16 op)
 {
     Dn      src { ____xxx_________(op) };
     Ea<M,S> dst = makeOp<M,S>(addr, _____________xxx(op));
@@ -233,7 +233,7 @@ CPU::dasmAndRgEa(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmAndi(StrWriter &str, u32 addr, u16 op)
+Moira::dasmAndi(StrWriter &str, u32 addr, u16 op)
 {
     Ea<11,S> src = makeOp<11,S>(addr);
     Ea<M, S> dst = makeOp<M, S>(addr, _____________xxx(op));
@@ -242,7 +242,7 @@ CPU::dasmAndi(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmAndiccr(StrWriter &str, u32 addr, u16 op)
+Moira::dasmAndiccr(StrWriter &str, u32 addr, u16 op)
 {
     Ea<11,S> src = makeOp<11,S>(addr);
 
@@ -250,7 +250,7 @@ CPU::dasmAndiccr(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmAndisr(StrWriter &str, u32 addr, u16 op)
+Moira::dasmAndisr(StrWriter &str, u32 addr, u16 op)
 {
     Ea<11,S> src = makeOp<11,S>(addr);
 
@@ -258,7 +258,7 @@ CPU::dasmAndisr(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmBsr(StrWriter &str, u32 addr, u16 op)
+Moira::dasmBsr(StrWriter &str, u32 addr, u16 op)
 {
     if (S == Word) {
         Ea<11,S> value = makeOp<11,S>(addr);
@@ -269,7 +269,7 @@ CPU::dasmBsr(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmChk(StrWriter &str, u32 addr, u16 op)
+Moira::dasmChk(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> src = makeOp<M,S>(addr, _____________xxx(op));
     Dn      dst = Dn { ____xxx_________(op) };
@@ -278,7 +278,7 @@ CPU::dasmChk(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmClr(StrWriter &str, u32 addr, u16 op)
+Moira::dasmClr(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,Long> dst = makeOp<M,Long>(addr, _____________xxx(op));
 
@@ -286,7 +286,7 @@ CPU::dasmClr(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmCmp(StrWriter &str, u32 addr, u16 op)
+Moira::dasmCmp(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> dst = makeOp<M,S>(addr, _____________xxx(op));
 
@@ -294,7 +294,7 @@ CPU::dasmCmp(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmCmpa(StrWriter &str, u32 addr, u16 op)
+Moira::dasmCmpa(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> dst = makeOp<M,S>(addr, _____________xxx(op));
 
@@ -302,7 +302,7 @@ CPU::dasmCmpa(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmCmpi(StrWriter &str, u32 addr, u16 op)
+Moira::dasmCmpi(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> dst = makeOp<M,S>(addr, _____________xxx(op));
 
@@ -310,7 +310,7 @@ CPU::dasmCmpi(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmCmpm(StrWriter &str, u32 addr, u16 op)
+Moira::dasmCmpm(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> src = makeOp<M,S>(addr, _____________xxx(op));
     Ea<M,S> dst = makeOp<M,S>(addr, ____xxx_________(op));
@@ -319,13 +319,13 @@ CPU::dasmCmpm(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmBcc(StrWriter &str, u32 addr, u16 op)
+Moira::dasmBcc(StrWriter &str, u32 addr, u16 op)
 {
     str << Ins<I>{} << tab << "#" << Disp8{ (i8)op };
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmBitDxEa(StrWriter &str, u32 addr, u16 op)
+Moira::dasmBitDxEa(StrWriter &str, u32 addr, u16 op)
 {
     Dn         src { ____xxx_________(op) };
     Ea<M,Byte> dst = makeOp<M,Byte>(addr, _____________xxx(op));
@@ -334,7 +334,7 @@ CPU::dasmBitDxEa(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmBitImEa(StrWriter &str, u32 addr, u16 op)
+Moira::dasmBitImEa(StrWriter &str, u32 addr, u16 op)
 {
     // u8         src = e1 & 0b11111;
     Ea<11,Byte> src = makeOp<11,Byte>(addr);
@@ -345,7 +345,7 @@ CPU::dasmBitImEa(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmDbcc(StrWriter &str, u32 addr, u16 op)
+Moira::dasmDbcc(StrWriter &str, u32 addr, u16 op)
 {
     Dn src { _____________xxx(op) };
 
@@ -353,7 +353,7 @@ CPU::dasmDbcc(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmExgDxDy(StrWriter &str, u32 addr, u16 op)
+Moira::dasmExgDxDy(StrWriter &str, u32 addr, u16 op)
 {
     Dn src { ____xxx_________(op) };
     Dn dst { _____________xxx(op) };
@@ -362,7 +362,7 @@ CPU::dasmExgDxDy(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmExgAxDy(StrWriter &str, u32 addr, u16 op)
+Moira::dasmExgAxDy(StrWriter &str, u32 addr, u16 op)
 {
     An src { _____________xxx(op) };
     Dn dst { ____xxx_________(op) };
@@ -371,7 +371,7 @@ CPU::dasmExgAxDy(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmExgAxAy(StrWriter &str, u32 addr, u16 op)
+Moira::dasmExgAxAy(StrWriter &str, u32 addr, u16 op)
 {
     An src { ____xxx_________(op) };
     An dst { _____________xxx(op) };
@@ -380,7 +380,7 @@ CPU::dasmExgAxAy(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmExt(StrWriter &str, u32 addr, u16 op)
+Moira::dasmExt(StrWriter &str, u32 addr, u16 op)
 {
     Dn src { _____________xxx(op) };
 
@@ -388,21 +388,21 @@ CPU::dasmExt(StrWriter &str, u32 addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
-CPU::dasmJmp(StrWriter &str, u32 addr, u16 op)
+Moira::dasmJmp(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,Long> src = makeOp<M,Long>(addr, _____________xxx(op));
     str << Ins<I>{} << tab << src;
 }
 
 template <Instr I, Mode M, Size S> void
-CPU::dasmJsr(StrWriter &str, u32 addr, u16 op)
+Moira::dasmJsr(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,Long> src = makeOp<M,Long>(addr, _____________xxx(op));
     str << Ins<I>{} << tab << src;
 }
 
 template <Instr I, Mode M, Size S> void
-CPU::dasmLea(StrWriter &str, u32 addr, u16 op)
+Moira::dasmLea(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,Long> src = makeOp<M,Long>(addr, _____________xxx(op));
     An         dst { ____xxx_________(op) };
@@ -411,7 +411,7 @@ CPU::dasmLea(StrWriter &str, u32 addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
-CPU::dasmLink(StrWriter &str, u32 addr, u16 op)
+Moira::dasmLink(StrWriter &str, u32 addr, u16 op)
 {
     An src { _____________xxx(op) };
     i16 disp = (i16)dasmRead<Word>(addr);
@@ -420,7 +420,7 @@ CPU::dasmLink(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M1, Mode M2, Size S> void
-CPU::dasmMove(StrWriter &str, u32 addr, u16 op)
+Moira::dasmMove(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M1,S> src = makeOp<M1,S>(addr, _____________xxx(op));
     Ea<M2,S> dst = makeOp<M2,S>(addr, ____xxx_________(op));
@@ -429,7 +429,7 @@ CPU::dasmMove(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmMovea(StrWriter &str, u32 addr, u16 op)
+Moira::dasmMovea(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,Long> src = makeOp<M,Long>(addr, _____________xxx(op));
     An         dst { ____xxx_________(op) };
@@ -438,7 +438,7 @@ CPU::dasmMovea(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmMovemEaRg(StrWriter &str, u32 addr, u16 op)
+Moira::dasmMovemEaRg(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> src   = makeOp<M,S>(addr, _____________xxx(op));
     u16     mask  = irc;
@@ -455,7 +455,7 @@ CPU::dasmMovemEaRg(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmMovemRgEa(StrWriter &str, u32 addr, u16 op)
+Moira::dasmMovemRgEa(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> dst   = makeOp<M,S>(addr, _____________xxx(op));
     u16     mask  = M == 4 ? REVERSE_16(irc) : irc;
@@ -472,7 +472,7 @@ CPU::dasmMovemRgEa(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmMovepDxEa(StrWriter &str, u32 addr, u16 op)
+Moira::dasmMovepDxEa(StrWriter &str, u32 addr, u16 op)
 {
     assert(S == Word || S == Long);
 
@@ -483,7 +483,7 @@ CPU::dasmMovepDxEa(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmMovepEaDx(StrWriter &str, u32 addr, u16 op)
+Moira::dasmMovepEaDx(StrWriter &str, u32 addr, u16 op)
 {
     assert(S == Word || S == Long);
 
@@ -494,7 +494,7 @@ CPU::dasmMovepEaDx(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmMoveq(StrWriter &str, u32 addr, u16 op)
+Moira::dasmMoveq(StrWriter &str, u32 addr, u16 op)
 {
     Dn dst { ____xxx_________(op) };
 
@@ -502,7 +502,7 @@ CPU::dasmMoveq(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmMoveToCcr(StrWriter &str, u32 addr, u16 op)
+Moira::dasmMoveToCcr(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> src = makeOp<M,S>(addr, _____________xxx(op));
 
@@ -510,7 +510,7 @@ CPU::dasmMoveToCcr(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmMoveFromSr(StrWriter &str, u32 addr, u16 op)
+Moira::dasmMoveFromSr(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> dst = makeOp<M,S>(addr, _____________xxx(op));
 
@@ -518,7 +518,7 @@ CPU::dasmMoveFromSr(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmMoveToSr(StrWriter &str, u32 addr, u16 op)
+Moira::dasmMoveToSr(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> src = makeOp<M,S>(addr, _____________xxx(op));
 
@@ -526,7 +526,7 @@ CPU::dasmMoveToSr(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmMoveUsp(StrWriter &str, u32 addr, u16 op)
+Moira::dasmMoveUsp(StrWriter &str, u32 addr, u16 op)
 {
     An reg { _____________xxx(op) };
 
@@ -538,7 +538,7 @@ CPU::dasmMoveUsp(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmMulDiv(StrWriter &str, u32 addr, u16 op)
+Moira::dasmMulDiv(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,Word> src = makeOp<M,Word>(addr, _____________xxx(op));
     Dn         dst { ____xxx_________(op) };
@@ -547,7 +547,7 @@ CPU::dasmMulDiv(StrWriter &str, u32 addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
-CPU::dasmNbcd(StrWriter &str, u32 addr, u16 op)
+Moira::dasmNbcd(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,Byte> dst = makeOp<M,Byte>(addr, _____________xxx(op));
 
@@ -555,13 +555,13 @@ CPU::dasmNbcd(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmNop(StrWriter &str, u32 addr, u16 op)
+Moira::dasmNop(StrWriter &str, u32 addr, u16 op)
 {
     str << Ins<NOP>{};
 }
 
 template <Instr I, Mode M, Size S> void
-CPU::dasmPea(StrWriter &str, u32 addr, u16 op)
+Moira::dasmPea(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,Long> src = makeOp<M,Long>(addr, _____________xxx(op));
     An         dst { ____xxx_________(op) };
@@ -570,19 +570,19 @@ CPU::dasmPea(StrWriter &str, u32 addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
-CPU::dasmRtr(StrWriter &str, u32 addr, u16 op)
+Moira::dasmRtr(StrWriter &str, u32 addr, u16 op)
 {
     str << Ins<I>{};
 }
 
 template <Instr I, Mode M, Size S> void
-CPU::dasmRts(StrWriter &str, u32 addr, u16 op)
+Moira::dasmRts(StrWriter &str, u32 addr, u16 op)
 {
     str << Ins<I>{};
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmScc(StrWriter &str, u32 addr, u16 op)
+Moira::dasmScc(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,Byte> src = makeOp<M,Byte>(addr, _____________xxx(op));
 
@@ -590,41 +590,41 @@ CPU::dasmScc(StrWriter &str, u32 addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmNegNot(StrWriter &str, u32 addr, u16 op)
+Moira::dasmNegNot(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,Byte> dst = makeOp<M,Byte>(addr, _____________xxx(op));
     str << Ins<I>{} << Sz<S>{} << tab << dst;
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmSwap(StrWriter &str, u32 addr, u16 op)
+Moira::dasmSwap(StrWriter &str, u32 addr, u16 op)
 {
     Dn reg = Dn { _____________xxx(op) };
     str << Ins<I>{} << tab << reg;
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmTas(StrWriter &str, u32 addr, u16 op)
+Moira::dasmTas(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,Byte> dst = makeOp<M,Byte>(addr, _____________xxx(op));
     str << Ins<I>{} << tab << dst;
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmTrap(StrWriter &str, u32 addr, u16 op)
+Moira::dasmTrap(StrWriter &str, u32 addr, u16 op)
 {
     int nr = ____________xxxx(op);
     str << Ins<I>{} << tab << "#" << (u8)nr;
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmTrapv(StrWriter &str, u32 addr, u16 op)
+Moira::dasmTrapv(StrWriter &str, u32 addr, u16 op)
 {
     str << Ins<I>{};
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::dasmTst(StrWriter &str, u32 addr, u16 op)
+Moira::dasmTst(StrWriter &str, u32 addr, u16 op)
 {
     Ea<M,S> ea = makeOp<M,S>(addr, _____________xxx(op));
 
@@ -632,7 +632,7 @@ CPU::dasmTst(StrWriter &str, u32 addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
-CPU::dasmUnlk(StrWriter &str, u32 addr, u16 op)
+Moira::dasmUnlk(StrWriter &str, u32 addr, u16 op)
 {
     An reg { _____________xxx(op) };
     str << Ins<I>{} << tab << reg;

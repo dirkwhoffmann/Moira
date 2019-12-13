@@ -8,7 +8,7 @@
 #include "dataTypes.h"
 #include "Moira.h"
 
-extern CPU *moira;
+extern Moira *moiracpu;
 
 class Core_68k {
 
@@ -116,7 +116,7 @@ protected:
     }
     void setCCR(u8 val) {
         reg_s.l = val;
-        moira->setCCR(val);
+        moiracpu->setCCR(val);
     }
 
 public:

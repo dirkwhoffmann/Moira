@@ -10,7 +10,7 @@
 #include <utility>
 
 void
-CPU::execAddressError(u32 addr)
+Moira::execAddressError(u32 addr)
 {
     assert(addr & 1);
     printf("Moira::execAddressViolation\n");
@@ -18,28 +18,28 @@ CPU::execAddressError(u32 addr)
 }
 
 void
-CPU::execLineA(u16 opcode)
+Moira::execLineA(u16 opcode)
 {
     printf("Moira::execLineA\n");
     execGroup1Exception(10);
 }
 
 void
-CPU::execLineF(u16 opcode)
+Moira::execLineF(u16 opcode)
 {
     printf("Moira::execLineF\n");
     execGroup1Exception(11);
 }
 
 void
-CPU::execIllegal(u16 opcode)
+Moira::execIllegal(u16 opcode)
 {
     // printf("Moira::execIllegal\n");
     execGroup1Exception(4);
 }
 
 void
-CPU::execGroup0Exception(u32 addr, u8 nr)
+Moira::execGroup0Exception(u32 addr, u8 nr)
 {
     /* Group 0 exceptions indicate a serious error condition. Detailed
      * information about the current CPU state is pushed on the stack to
@@ -76,7 +76,7 @@ CPU::execGroup0Exception(u32 addr, u8 nr)
 }
 
 void
-CPU::execGroup1Exception(u8 nr)
+Moira::execGroup1Exception(u8 nr)
 {
     u16 status = getSR();
 
@@ -100,7 +100,7 @@ CPU::execGroup1Exception(u8 nr)
 }
 
 void
-CPU::execTrapException(u8 nr)
+Moira::execTrapException(u8 nr)
 {
     u16 status = getSR();
 
@@ -120,7 +120,7 @@ CPU::execTrapException(u8 nr)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execShiftRg(u16 opcode)
+Moira::execShiftRg(u16 opcode)
 {
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
@@ -131,7 +131,7 @@ CPU::execShiftRg(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execShiftIm(u16 opcode)
+Moira::execShiftIm(u16 opcode)
 {
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
@@ -142,7 +142,7 @@ CPU::execShiftIm(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execShift(u16 op)
+Moira::execShift(u16 op)
 {
     int src = ____xxx_________(op);
     int dst = _____________xxx(op);
@@ -177,7 +177,7 @@ CPU::execShift(u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAbcd(u16 opcode)
+Moira::execAbcd(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
@@ -207,7 +207,7 @@ CPU::execAbcd(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAddEaRg(u16 opcode)
+Moira::execAddEaRg(u16 opcode)
 {
     u32 result;
 
@@ -249,7 +249,7 @@ CPU::execAddEaRg(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAddRgEa(u16 opcode)
+Moira::execAddRgEa(u16 opcode)
 {
     assert(M >= 2 && M <= 8);
 
@@ -266,7 +266,7 @@ CPU::execAddRgEa(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAdda(u16 opcode)
+Moira::execAdda(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
@@ -283,7 +283,7 @@ CPU::execAdda(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAddi(u16 opcode)
+Moira::execAddi(u16 opcode)
 {
     u32 src = readImm<S>();
     int dst = _____________xxx(opcode);
@@ -298,7 +298,7 @@ CPU::execAddi(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAddq(u16 opcode)
+Moira::execAddq(u16 opcode)
 {
     assert(I == ADDQ || I == SUBQ);
 
@@ -316,7 +316,7 @@ CPU::execAddq(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAddqAn(u16 opcode)
+Moira::execAddqAn(u16 opcode)
 {
     assert(I == ADDQ || I == SUBQ);
 
@@ -334,7 +334,7 @@ CPU::execAddqAn(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAddxRg(u16 opcode)
+Moira::execAddxRg(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
@@ -344,7 +344,7 @@ CPU::execAddxRg(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAddxEa(u16 opcode)
+Moira::execAddxEa(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
@@ -358,7 +358,7 @@ CPU::execAddxEa(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAndEaRg(u16 opcode)
+Moira::execAndEaRg(u16 opcode)
 {
     u32 result;
 
@@ -394,7 +394,7 @@ CPU::execAndEaRg(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAndRgEa(u16 opcode)
+Moira::execAndRgEa(u16 opcode)
 {
      int src = ____xxx_________(opcode);
      int dst = _____________xxx(opcode);
@@ -424,7 +424,7 @@ CPU::execAndRgEa(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAndi(u16 opcode)
+Moira::execAndi(u16 opcode)
 {
     u32 src = readImm<S>();
     int dst = _____________xxx(opcode);
@@ -439,7 +439,7 @@ CPU::execAndi(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAndiccr(u16 opcode)
+Moira::execAndiccr(u16 opcode)
 {
     u32 src = readImm<S>();
     u8  dst = getCCR();
@@ -451,7 +451,7 @@ CPU::execAndiccr(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execAndisr(u16 opcode)
+Moira::execAndisr(u16 opcode)
 {
     // This instruction requires supervisor mode
     if (!sr.s) { privilegeException(); return; }
@@ -467,7 +467,7 @@ CPU::execAndisr(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execBcc(u16 opcode)
+Moira::execBcc(u16 opcode)
 {
     if (bcond<I>()) {
 
@@ -489,7 +489,7 @@ CPU::execBcc(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execBitDxEa(u16 opcode)
+Moira::execBitDxEa(u16 opcode)
 {
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
@@ -521,7 +521,7 @@ CPU::execBitDxEa(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execBitImEa(u16 opcode)
+Moira::execBitImEa(u16 opcode)
 {
     int dst = _____________xxx(opcode);
     u8  bit = irc & 0b11111;
@@ -551,7 +551,7 @@ CPU::execBitImEa(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execBsr(u16 opcode)
+Moira::execBsr(u16 opcode)
 {
     i16 offset = S == Word ? (i16)irc : (i8)opcode;
     u32 newpc = reg.pc + offset;
@@ -570,7 +570,7 @@ CPU::execBsr(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execChk(u16 opcode)
+Moira::execChk(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
@@ -596,7 +596,7 @@ CPU::execChk(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execClr(u16 opcode)
+Moira::execClr(u16 opcode)
 {
     int dst = _____________xxx(opcode);
 
@@ -629,7 +629,7 @@ CPU::execClr(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execCmp(u16 opcode)
+Moira::execCmp(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
@@ -643,7 +643,7 @@ CPU::execCmp(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execCmpa(u16 opcode)
+Moira::execCmpa(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
@@ -658,7 +658,7 @@ CPU::execCmpa(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execCmpi(u16 opcode)
+Moira::execCmpi(u16 opcode)
 {
     u32 src = readImm<S>();
     int dst = _____________xxx(opcode);
@@ -671,7 +671,7 @@ CPU::execCmpi(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execCmpm(u16 opcode)
+Moira::execCmpm(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
@@ -686,7 +686,7 @@ CPU::execCmpm(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execDbcc(u16 opcode)
+Moira::execDbcc(u16 opcode)
 {
     int dn = _____________xxx(opcode);
 
@@ -719,7 +719,7 @@ CPU::execDbcc(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execExgDxDy(u16 opcode)
+Moira::execExgDxDy(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
@@ -729,7 +729,7 @@ CPU::execExgDxDy(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execExgAxDy(u16 opcode)
+Moira::execExgAxDy(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
@@ -739,7 +739,7 @@ CPU::execExgAxDy(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execExgAxAy(u16 opcode)
+Moira::execExgAxAy(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
@@ -749,7 +749,7 @@ CPU::execExgAxAy(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execExt(u16 opcode)
+Moira::execExt(u16 opcode)
 {
     int n     = _____________xxx(opcode);
     u32 dn    = readD(n);
@@ -768,7 +768,7 @@ CPU::execExt(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execJmp(u16 opcode)
+Moira::execJmp(u16 opcode)
 {
     int src = _____________xxx(opcode);
 
@@ -779,7 +779,7 @@ CPU::execJmp(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execJsr(u16 opcode)
+Moira::execJsr(u16 opcode)
 {
     int src = _____________xxx(opcode);
 
@@ -792,7 +792,7 @@ CPU::execJsr(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execLea(u16 opcode)
+Moira::execLea(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
@@ -804,7 +804,7 @@ CPU::execLea(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execLink(u16 opcode)
+Moira::execLink(u16 opcode)
 {
     int ax   = _____________xxx(opcode);
     i16 disp = (i16)irc;
@@ -817,7 +817,7 @@ CPU::execLink(u16 opcode)
 }
 
 template<Instr I, Mode M1, Mode M2, Size S> void
-CPU::execMove(u16 opcode)
+Moira::execMove(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
@@ -838,7 +838,7 @@ CPU::execMove(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execMovea(u16 opcode)
+Moira::execMovea(u16 opcode)
 {
     i32 result;
 
@@ -879,7 +879,7 @@ CPU::execMovea(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execMovemEaRg(u16 opcode)
+Moira::execMovemEaRg(u16 opcode)
 {
     int src  = _____________xxx(opcode);
     u16 mask = irc;
@@ -924,7 +924,7 @@ CPU::execMovemEaRg(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execMovemRgEa(u16 opcode)
+Moira::execMovemRgEa(u16 opcode)
 {
     int dst  = _____________xxx(opcode);
     u16 mask = irc;
@@ -974,7 +974,7 @@ CPU::execMovemRgEa(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execMovepDxEa(u16 opcode)
+Moira::execMovepDxEa(u16 opcode)
 {
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
@@ -1001,7 +1001,7 @@ CPU::execMovepDxEa(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execMovepEaDx(u16 opcode)
+Moira::execMovepEaDx(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
@@ -1030,7 +1030,7 @@ CPU::execMovepEaDx(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execMoveq(u16 opcode)
+Moira::execMoveq(u16 opcode)
 {
     i8  src = (i8)(opcode & 0xFF);
     int dst = ____xxx_________(opcode);
@@ -1046,7 +1046,7 @@ CPU::execMoveq(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execMoveToCcr(u16 opcode)
+Moira::execMoveToCcr(u16 opcode)
 {
     int src = _____________xxx(opcode);
 
@@ -1060,7 +1060,7 @@ CPU::execMoveToCcr(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execMoveFromSr(u16 opcode)
+Moira::execMoveFromSr(u16 opcode)
 {
     int dst = _____________xxx(opcode);
 
@@ -1072,7 +1072,7 @@ CPU::execMoveFromSr(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execMoveToSr(u16 opcode)
+Moira::execMoveToSr(u16 opcode)
 {
     // This instruction requires supervisor mode
     if (!sr.s) { privilegeException(); return; }
@@ -1089,7 +1089,7 @@ CPU::execMoveToSr(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execMoveUsp(u16 opcode)
+Moira::execMoveUsp(u16 opcode)
 {
     int an = _____________xxx(opcode);
 
@@ -1106,7 +1106,7 @@ CPU::execMoveUsp(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execMulDiv(u16 opcode)
+Moira::execMulDiv(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
@@ -1204,7 +1204,7 @@ CPU::execMulDiv(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execNbcd(u16 opcode)
+Moira::execNbcd(u16 opcode)
 {
     int reg = _____________xxx(opcode);
 
@@ -1229,7 +1229,7 @@ CPU::execNbcd(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execNegNot(u16 opcode)
+Moira::execNegNot(u16 opcode)
 {
     int dst = { _____________xxx(opcode) };
     u32 ea, data;
@@ -1249,13 +1249,13 @@ CPU::execNegNot(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execNop(u16 opcode)
+Moira::execNop(u16 opcode)
 {
 
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execPea(u16 opcode)
+Moira::execPea(u16 opcode)
 {
     int src = _____________xxx(opcode);
 
@@ -1266,7 +1266,7 @@ CPU::execPea(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execRtr(u16 opcode)
+Moira::execRtr(u16 opcode)
 {
     setCCR(read<Word>(reg.sp));
     reg.sp += 2;
@@ -1279,7 +1279,7 @@ CPU::execRtr(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execRts(u16 opcode)
+Moira::execRts(u16 opcode)
 {
     u32 newpc = read<Long>(reg.sp);
     reg.sp += 4;
@@ -1290,7 +1290,7 @@ CPU::execRts(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execScc(u16 opcode)
+Moira::execScc(u16 opcode)
 {
     int dst = { _____________xxx(opcode) };
     u32 ea, data;
@@ -1302,7 +1302,7 @@ CPU::execScc(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execSwap(u16 opcode)
+Moira::execSwap(u16 opcode)
 {
     int reg = { _____________xxx(opcode) };
     u32 dat = readD(reg);
@@ -1319,7 +1319,7 @@ CPU::execSwap(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execTas(u16 opcode)
+Moira::execTas(u16 opcode)
 {
     int dst = { _____________xxx(opcode) };
 
@@ -1357,7 +1357,7 @@ CPU::execTas(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execTrap(u16 opcode)
+Moira::execTrap(u16 opcode)
 {
     int nr = ____________xxxx(opcode) + 32;
 
@@ -1365,13 +1365,13 @@ CPU::execTrap(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execTrapv(u16 opcode)
+Moira::execTrapv(u16 opcode)
 {
     if (sr.v) execTrapException(7);
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execTst(u16 opcode)
+Moira::execTst(u16 opcode)
 {
     int reg = _____________xxx(opcode);
     u32 value;
@@ -1404,7 +1404,7 @@ CPU::execTst(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-CPU::execUnlk(u16 opcode)
+Moira::execUnlk(u16 opcode)
 {
     int an = _____________xxx(opcode);
     reg.sp = readA(an);

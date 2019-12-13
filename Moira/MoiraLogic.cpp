@@ -8,7 +8,7 @@
 // -----------------------------------------------------------------------------
 
 template <Size S> bool
-CPU::addressError(u32 addr)
+Moira::addressError(u32 addr)
 {
 #ifdef MOIRA_EMULATE_ADDRESS_ERROR
     if (S != Byte && addr & 1) {
@@ -20,14 +20,14 @@ CPU::addressError(u32 addr)
 }
 
 template<> u32
-CPU::read<Byte>(u32 addr)
+Moira::read<Byte>(u32 addr)
 {
     // printf("read<Byte>(%x)\n", addr);
     return memory->moiraRead8(addr);
 }
 
 template<> u32
-CPU::read<Word>(u32 addr)
+Moira::read<Word>(u32 addr)
 {
     // printf("read<Word>(%x)\n", addr);
     /*
@@ -39,40 +39,40 @@ CPU::read<Word>(u32 addr)
 }
 
 template<> u32
-CPU::read<Long>(u32 addr)
+Moira::read<Long>(u32 addr)
 {
     // printf("read<Long>(%x)\n", addr);
     return memory->moiraRead16(addr) << 16 | memory->moiraRead16(addr + 2);
 }
 
 template<> void
-CPU::write<Byte>(u32 addr, u32 value)
+Moira::write<Byte>(u32 addr, u32 value)
 {
     memory->moiraWrite8(addr & 0xFFFFFF, (u8)value);
 }
 
 template<> void
-CPU::write<Word>(u32 addr, u32 value)
+Moira::write<Word>(u32 addr, u32 value)
 {
     memory->moiraWrite16(addr & 0xFFFFFF, (u16)value);
 }
 
 template<> void
-CPU::write<Long>(u32 addr, u32 value)
+Moira::write<Long>(u32 addr, u32 value)
 {
     memory->moiraWrite16(addr & 0xFFFFFF, (u16)(value >> 16));
     memory->moiraWrite16((addr + 2) & 0xFFFFFF, (u16)value);
 }
 
 void
-CPU::writeStack(u32 value)
+Moira::writeStack(u32 value)
 {
     reg.sp -= 4;
     write<Long>(reg.sp, value);
 }
 
 template<Mode M, Size S> u32
-CPU::computeEA(u32 n, u32 dis, u32 idx) {
+Moira::computeEA(u32 n, u32 dis, u32 idx) {
 
     u32 result;
 
@@ -176,7 +176,7 @@ CPU::computeEA(u32 n, u32 dis, u32 idx) {
 }
 
 template<Mode M, Size S> bool
-CPU::readOperand(int n, u32 &ea, u32 &result)
+Moira::readOperand(int n, u32 &ea, u32 &result)
 {
     switch (M) {
 
@@ -280,7 +280,7 @@ CPU::readOperand(int n, u32 &ea, u32 &result)
 }
 
 template<Mode M, Size S> void
-CPU::writeOperand(int n, u32 ea, u32 value)
+Moira::writeOperand(int n, u32 ea, u32 value)
 {
     assert(M < 11);
 
@@ -305,7 +305,7 @@ CPU::writeOperand(int n, u32 ea, u32 value)
 }
 
 template<Size S> u32
-CPU::readImm()
+Moira::readImm()
 {
     u32 result;
 
@@ -333,7 +333,7 @@ CPU::readImm()
 }
 
 template<Instr I, Size S> u32
-CPU::shift(int cnt, u64 data) {
+Moira::shift(int cnt, u64 data) {
 
     switch(I) {
             
@@ -454,7 +454,7 @@ CPU::shift(int cnt, u64 data) {
 }
 
 template<Instr I, Size S> u32
-CPU::arith(u32 op1, u32 op2)
+Moira::arith(u32 op1, u32 op2)
 {
     u64 result;
 
@@ -564,7 +564,7 @@ CPU::arith(u32 op1, u32 op2)
 }
 
 template<Instr I, Size S> u32
-CPU::logic(u32 op)
+Moira::logic(u32 op)
 {
     u32 result;
 
@@ -590,7 +590,7 @@ CPU::logic(u32 op)
 }
 
 template<Instr I, Size S> u32
-CPU::logic(u32 op1, u32 op2)
+Moira::logic(u32 op1, u32 op2)
 {
     u32 result;
 
@@ -626,7 +626,7 @@ CPU::logic(u32 op1, u32 op2)
 }
 
 template <Instr I> u32
-CPU::bitop(u32 op, u8 bit)
+Moira::bitop(u32 op, u8 bit)
 {
     switch (I) {
         case BCHG:
@@ -661,7 +661,7 @@ CPU::bitop(u32 op, u8 bit)
 }
 
 template <Size S> void
-CPU::cmp(u32 op1, u32 op2)
+Moira::cmp(u32 op1, u32 op2)
 {
     u64 result = (u64)op2 - (u64)op1;
 
@@ -672,7 +672,7 @@ CPU::cmp(u32 op1, u32 op2)
 }
 
 template <Instr I> bool
-CPU::bcond() {
+Moira::bcond() {
 
     switch(I) {
 

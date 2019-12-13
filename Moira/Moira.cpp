@@ -17,14 +17,14 @@
 #include "MoiraDasm.cpp"
 #include "MoiraSync.cpp"
 
-CPU::CPU()
+Moira::Moira()
 {
     init();
 }
 
 
 void
-CPU::power()
+Moira::power()
 {
     // Initialize data and address registers
     for(int i = 0; i < 8; i++) reg.d[i] = reg.a[i] = 0;
@@ -32,7 +32,7 @@ CPU::power()
 }
 
 void
-CPU::reset()
+Moira::reset()
 {
     // Reset the status register
     sr.t = 0;
@@ -58,20 +58,20 @@ CPU::reset()
 }
 
 void
-CPU::process(u16 reg_ird)
+Moira::process(u16 reg_ird)
 {
     reg.pc += 2;
     (this->*exec[reg_ird])(reg_ird);
 }
 
 u16
-CPU::getSR()
+Moira::getSR()
 {
     return sr.t << 15 | sr.s << 13 | sr.ipl << 8 | getCCR();
 }
 
 void
-CPU::setSR(u16 value)
+Moira::setSR(u16 value)
 {
     bool s = (value >> 13) & 1;
     u8 ipl = (value >>  8) & 7;
@@ -83,13 +83,13 @@ CPU::setSR(u16 value)
 }
 
 u8
-CPU::getCCR()
+Moira::getCCR()
 {
     return sr.c << 0 | sr.v << 1 | sr.z << 2 | sr.n << 3 | sr.x << 4;
 }
 
 void
-CPU::setCCR(u8 value)
+Moira::setCCR(u8 value)
 {
     sr.c = (value >> 0) & 1;
     sr.v = (value >> 1) & 1;
@@ -99,7 +99,7 @@ CPU::setCCR(u8 value)
 }
 
 void
-CPU::setSupervisorMode(bool enable)
+Moira::setSupervisorMode(bool enable)
 {
     if (sr.s == enable) return;
 
@@ -115,27 +115,27 @@ CPU::setSupervisorMode(bool enable)
 }
 
 void
-CPU::prefetch()
+Moira::prefetch()
 {
     ird = irc;
     irc = memory->moiraRead16(reg.pc + 2);
 }
 
 void
-CPU::fullPrefetch()
+Moira::fullPrefetch()
 {
     assert(false);
 }
 
 void
-CPU::readExtensionWord()
+Moira::readExtensionWord()
 {
     reg.pc += 2;
     irc = memory->moiraRead16(reg.pc);
 }
 
 void
-CPU::jumpToVector(u8 nr)
+Moira::jumpToVector(u8 nr)
 {
     // Update the program counter
     reg.pc = read<Long>(4 * nr);
@@ -146,7 +146,7 @@ CPU::jumpToVector(u8 nr)
 }
 
 void
-CPU::disassemble(u32 addr, char *str, bool hex)
+Moira::disassemble(u32 addr, char *str, bool hex)
 {
     u16 opcode = memory->moiraSpyRead16(addr);
     u16 ext1   = memory->moiraSpyRead16(addr + 2);

@@ -7,17 +7,17 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-using namespace Moira;
+using namespace moira;
 
 /*
 #define __ ,
 #define register(id, name) { \
-assert(exec[id] == &CPU::execIllegal); \
-assert(dasm[id] == &CPU::dasmIllegal); \
-assert(sync[id] == &CPU::syncIllegal); \
-exec[id] = &CPU::exec##name; \
-dasm[id] = &CPU::dasm##name; \
-sync[id] = &CPU::sync##name; \
+assert(exec[id] == &Moira::execIllegal); \
+assert(dasm[id] == &Moira::dasmIllegal); \
+assert(sync[id] == &Moira::syncIllegal); \
+exec[id] = &Moira::exec##name; \
+dasm[id] = &Moira::dasm##name; \
+sync[id] = &Moira::sync##name; \
 }
 */
 
@@ -25,11 +25,11 @@ sync[id] = &CPU::sync##name; \
 // Adds a single entry to the instruction jump table
 #define __ ,
 #define register(id, name) { \
-if (exec[id] != &CPU::execIllegal) printf("id = %x\n", id); \
-assert(exec[id] == &CPU::execIllegal); \
-assert(dasm[id] == &CPU::dasmIllegal); \
-exec[id] = &CPU::exec##name; \
-dasm[id] = &CPU::dasm##name; }
+if (exec[id] != &Moira::execIllegal) printf("id = %x\n", id); \
+assert(exec[id] == &Moira::execIllegal); \
+assert(dasm[id] == &Moira::dasmIllegal); \
+exec[id] = &Moira::exec##name; \
+dasm[id] = &Moira::dasm##name; }
 
 // Registers an instruction in one of the standard instruction formats:
 //
@@ -169,19 +169,19 @@ parse(const char *s, u16 sum = 0)
 }
 
 void
-CPU::init()
+Moira::init()
 {
     createJumpTable();
 }
 
 void
-CPU::createJumpTable()
+Moira::createJumpTable()
 {
     // Start with clean tables
     for (int i = 0; i < 0x10000; i++) {
-        exec[i] = &CPU::execIllegal;
-        dasm[i] = &CPU::dasmIllegal;
-        sync[i] = &CPU::syncIllegal;
+        exec[i] = &Moira::execIllegal;
+        dasm[i] = &Moira::dasmIllegal;
+        sync[i] = &Moira::syncIllegal;
     }
 
     // Unimplemented instructions are identified by the following bit patterns:
@@ -194,13 +194,13 @@ CPU::createJumpTable()
 
     for (int i = 0; i < 0x1000; i++) {
 
-        exec[0b1010 << 12 | i] = &CPU::execLineA;
-        dasm[0b1010 << 12 | i] = &CPU::dasmLineA;
-        sync[0b1010 << 12 | i] = &CPU::syncLineA;
+        exec[0b1010 << 12 | i] = &Moira::execLineA;
+        dasm[0b1010 << 12 | i] = &Moira::dasmLineA;
+        sync[0b1010 << 12 | i] = &Moira::syncLineA;
 
-        exec[0b1111 << 12 | i] = &CPU::execLineF;
-        dasm[0b1111 << 12 | i] = &CPU::dasmLineF;
-        sync[0b1111 << 12 | i] = &CPU::syncLineF;
+        exec[0b1111 << 12 | i] = &Moira::execLineF;
+        dasm[0b1111 << 12 | i] = &Moira::dasmLineF;
+        sync[0b1111 << 12 | i] = &Moira::syncLineF;
     }
 
     // Register all instructions
@@ -209,7 +209,7 @@ CPU::createJumpTable()
 }
 
 void
-CPU::registerInstructions()
+Moira::registerInstructions()
 {
     u16 opcode;
 

@@ -15,7 +15,7 @@
 #include "MoiraDelegate.h"
 #include "assert.h"
 
-namespace Moira {
+namespace moira {
 
 //
 // Configuration
@@ -56,7 +56,7 @@ struct StatusRegister {
     u8 ipl;               // Interrupt Priority Level
 };
 
-class CPU {
+class Moira {
 
 public:
 
@@ -89,13 +89,13 @@ private:
     StatusRegister sr;
 
     // Jump table storing all instruction handlers
-    void (CPU::*exec[65536])(u16);
+    void (Moira::*exec[65536])(u16);
 
     // Jump table storing all disassebler handlers
-    void (CPU::*dasm[65536])(StrWriter&, u32, u16);
+    void (Moira::*dasm[65536])(StrWriter&, u32, u16);
 
     // Jump table storing all time information handlers
-    int (CPU::*sync[65536])(u16, int);
+    int (Moira::*sync[65536])(u16, int);
 
     //
     // Disassembler
@@ -107,7 +107,7 @@ private:
 
 public:
     
-    CPU();
+    Moira();
 
     void power();
     void reset();

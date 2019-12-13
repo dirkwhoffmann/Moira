@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 #include "Moira.h"
-extern Moira::CPU *moira;
+extern moira::Moira *moiracpu;
 
 void Core_68k::process() { //execute next opcode
 
@@ -43,7 +43,7 @@ void Core_68k::power() {
     }
     reset();
 
-    moira->power();
+    moiracpu->power();
 }
 
 void Core_68k::reset() {
@@ -62,7 +62,7 @@ void Core_68k::reset() {
     reg_pc = readLong(4);
     fullprefetch();
 
-    moira->reset();
+    moiracpu->reset();
 }
 
 void Core_68k::switchToUser() {

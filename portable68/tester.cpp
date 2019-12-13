@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #include "Moira.h"
-extern Moira::CPU *moira;
+extern moira::Moira *moiracpu;
 
 /*
 #include "testcases/add.cpp"
@@ -492,34 +492,34 @@ void Tester_68k::trapException(u8 vector) {
 void Tester_68k::power()
 {
     Core_68k::power();
-    moira->power();
+    moiracpu->power();
 }
 
 void Tester_68k::setSR(u16 value) {
     Core_68k::setSR(value);
-    moira->setSR(value);
+    moiracpu->setSR(value);
 }
 
 void Tester_68k::setSSP(u32 value) {
     Core_68k::setSSP(value);
-    moira->setSSP(value);
+    moiracpu->setSSP(value);
 }
 
 void Tester_68k::setCCR(u8 value) {
     Core_68k::setCCR(value);
-    moira->setCCR(value);
+    moiracpu->setCCR(value);
 }
 
 void Tester_68k::setRegA(u8 reg, u32 value)
 {
     Core_68k::setRegA(reg, value);
-    moira->writeA(reg, value);
+    moiracpu->writeA(reg, value);
 }
 
 void Tester_68k::setRegD(u8 reg, u32 value)
 {
     Core_68k::setRegD(reg, value);
-    moira->writeD(reg, value);
+    moiracpu->writeD(reg, value);
 }
 
 void Tester_68k::process()
@@ -530,7 +530,7 @@ void Tester_68k::process()
     u32 ird = reg_ird;
 
     // Disassemble the instruction
-    moira->disassemble(moira->getPC(), instr);
+    moiracpu->disassemble(moiracpu->getPC(), instr);
 
     // Run a pre check
     comparePre();
@@ -539,7 +539,7 @@ void Tester_68k::process()
     Core_68k::process();
 
     // Run Moira
-    moira->process(ird);
+    moiracpu->process(ird);
 
     // Compare the result
     // comparePost();
@@ -547,11 +547,11 @@ void Tester_68k::process()
 
 void Tester_68k::dump()
 {
-    u32 pc = reg_pc, mpc = moira->getPC();
-    u16 irc = reg_irc, mirc = moira->getIRC();
-    u16 ird = reg_ird, mird = moira->getIRD();
+    u32 pc = reg_pc, mpc = moiracpu->getPC();
+    u16 irc = reg_irc, mirc = moiracpu->getIRC();
+    u16 ird = reg_ird, mird = moiracpu->getIRD();
 
-    u16 sr = reg_s, msr = moira->getSR();
+    u16 sr = reg_s, msr = moiracpu->getSR();
     bool t = (sr >> 15) & 1, mt = (msr >> 15) & 1;
     bool s = (sr >> 13) & 1, ms = (msr >> 13) & 1;
     bool c = (sr >> 0) & 1, mc = (msr >> 0) & 1;
@@ -568,12 +568,12 @@ void Tester_68k::dump()
     printf("\n");
 
     for (int i = 0; i < 8; i++) {
-        printf("D%i: %x / %x %s\n", i, getRegD(i), moira->readD(i),
-               getRegD(i) != moira->readD(i) ? "<--" : "");
+        printf("D%i: %x / %x %s\n", i, getRegD(i), moiracpu->readD(i),
+               getRegD(i) != moiracpu->readD(i) ? "<--" : "");
     }
     for (int i = 0; i < 8; i++) {
-        printf("A%i: %x / %x %s\n", i, getRegA(i), moira->readA(i),
-               getRegA(i) != moira->readA(i) ? "<--" : "");
+        printf("A%i: %x / %x %s\n", i, getRegA(i), moiracpu->readA(i),
+               getRegA(i) != moiracpu->readA(i) ? "<--" : "");
     }
 
     printf("\nStatus register:\n");
@@ -590,13 +590,13 @@ void Tester_68k::dump()
 bool Tester_68k::compare()
 {
     for (int i = 0; i < 8; i++)
-        if (getRegD(i) != moira->readD(i)) return false;
+        if (getRegD(i) != moiracpu->readD(i)) return false;
 
     for (int i = 0; i < 8; i++)
-        if (getRegA(i) != moira->readA(i)) return false;
+        if (getRegA(i) != moiracpu->readA(i)) return false;
 
-    if (reg_pc != moira->getPC()) return false;
-    if ((getSR() & 0xFF1F) != (moira->getSR() & 0xFF1F)) return false;
+    if (reg_pc != moiracpu->getPC()) return false;
+    if ((getSR() & 0xFF1F) != (moiracpu->getSR() & 0xFF1F)) return false;
 
     if (!memoryblock.compareBlocks()) return false;
 

@@ -12,7 +12,7 @@
 
 #include "types.h"
 
-using namespace Moira;
+using namespace moira;
 
 class MoiraDelegate {
 

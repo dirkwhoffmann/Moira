@@ -4,15 +4,15 @@
 #include <time.h>
 #include "Moira.h"
 
-Moira::CPU *moira;
+moira::Moira *moiracpu;
 
 int main()
 {
-    moira = new Moira::CPU();
+    moiracpu = new moira::Moira();
 
     try {
         Tester_68k tester;
-        moira->memory = &tester;
+        moiracpu->memory = &tester;
 
         tester.runTestCases();
         tester.printErrorCounter();
