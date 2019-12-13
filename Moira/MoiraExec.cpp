@@ -1268,6 +1268,30 @@ CPU::execPea(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+CPU::execRtr(u16 opcode)
+{
+    setCCR(read<Word>(reg.sp));
+    reg.sp += 2;
+    u32 newpc = read<Long>(reg.sp);
+    reg.sp += 4;
+
+    readExtensionWord();
+    pc = newpc;
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execRts(u16 opcode)
+{
+    u32 newpc = read<Long>(reg.sp);
+    reg.sp += 4;
+
+    readExtensionWord();
+    pc = newpc;
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
 CPU::execScc(u16 opcode)
 {
     int dst = { _____________xxx(opcode) };
@@ -1340,6 +1364,12 @@ CPU::execTrap(u16 opcode)
     int nr = ____________xxxx(opcode) + 32;
 
     execTrapException(nr);
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::execTrapv(u16 opcode)
+{
+    if (sr.v) execTrapException(7);
 }
 
 template<Instr I, Mode M, Size S> void

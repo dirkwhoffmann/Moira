@@ -1128,6 +1128,22 @@ CPU::registerInstructions()
     __________MMMXXX(opcode, PEA, 0b001001111110, Long, Pea);
 
 
+    // RTR
+    //
+    //       Syntax: RTR
+    //        Sizes: Unsized
+
+    register(parse("0100 1110 0111 0111"), Rtr<RTR __ 0 __ Long>);
+
+
+    // RTS
+    //
+    //       Syntax: RTS
+    //        Sizes: Unsized
+
+    register(parse("0100 1110 0111 0101"), Rts<RTS __ 0 __ Long>);
+
+
     // SBCD
     //
     //       Syntax: (1) SBCD Dx,Dy
@@ -1284,6 +1300,14 @@ CPU::registerInstructions()
 
     opcode = parse("0100 1110 0100 ----");
     ____________XXXX(opcode, TRAP, 0, Long, Trap);
+
+
+    // TRAPV
+    //
+    //       Syntax: TRAPV
+    //        Sizes: Unsized
+
+    register(parse("0100 1110 0111 0110"), Trapv<TRAPV __ 0 __ Long>);
 
 
     // TST

@@ -569,6 +569,18 @@ CPU::dasmPea(StrWriter &str, u32 addr, u16 op)
     str << Ins<I>{} << tab << src << ", " << dst;
 }
 
+template <Instr I, Mode M, Size S> void
+CPU::dasmRtr(StrWriter &str, u32 addr, u16 op)
+{
+    str << Ins<I>{};
+}
+
+template <Instr I, Mode M, Size S> void
+CPU::dasmRts(StrWriter &str, u32 addr, u16 op)
+{
+    str << Ins<I>{};
+}
+
 template<Instr I, Mode M, Size S> void
 CPU::dasmScc(StrWriter &str, u32 addr, u16 op)
 {
@@ -603,6 +615,12 @@ CPU::dasmTrap(StrWriter &str, u32 addr, u16 op)
 {
     int nr = ____________xxxx(op);
     str << Ins<I>{} << tab << "#" << (u8)nr;
+}
+
+template<Instr I, Mode M, Size S> void
+CPU::dasmTrapv(StrWriter &str, u32 addr, u16 op)
+{
+    str << Ins<I>{};
 }
 
 template<Instr I, Mode M, Size S> void
