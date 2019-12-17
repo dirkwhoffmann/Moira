@@ -117,6 +117,7 @@ public:
     void power();
     void reset();
     void process(u16 reg_ird);
+    void process() { process(ird); }
 
     template<Size S = Long> u32 readD(int n) { return CLIP<S>(reg.d[n]); }
     template<Size S = Long> u32 readA(int n) { return CLIP<S>(reg.a[n]); }
@@ -131,6 +132,7 @@ public:
     u32 getPC() { return reg.pc; }
     u32 getIRC() { return irc; }
     u32 getIRD() { return ird; }
+    void setIRD(u32 value) { ird = value; }
 
 private:
 

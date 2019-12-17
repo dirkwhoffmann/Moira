@@ -96,6 +96,9 @@ void Core_68k::setPrivilegeException() {
 }
 
 void Core_68k::illegalException(u8 iType) {
+
+    printf("Core_68k::illegalException(%d)\n", iType);
+
     illegalMode = NONE;
     u16 SR = reg_s;
     switchToSupervisor();
@@ -185,6 +188,7 @@ void Core_68k::group0exception(u8 type) { //bus or address error
 }
 
 void Core_68k::executeAt(u8 vector) {
+    printf("Core_68k::executeAt(%d)\n", vector);
     reg_pc = readLong(vector << 2);
     fullprefetchFirstStep();
     sync(2);

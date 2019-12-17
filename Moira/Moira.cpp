@@ -26,7 +26,8 @@ Moira::Moira()
 void
 Moira::power()
 {
-    printf("Moira::power()\n");
+    // printf("Moira::power()\n");
+    
     // Initialize data and address registers
     for(int i = 0; i < 8; i++) reg.d[i] = reg.a[i] = 0;
     reset();
@@ -35,7 +36,7 @@ Moira::power()
 void
 Moira::reset()
 {
-    printf("Moira::reset()\n");
+    // printf("Moira::reset()\n");
 
     // Reset the status register
     sr.t = 0;
@@ -140,6 +141,7 @@ Moira::readExtensionWord()
 void
 Moira::jumpToVector(u8 nr)
 {
+    printf("Moira::jumpToVector(%d)\n", nr);
     // Update the program counter
     reg.pc = read<Long>(4 * nr);
 

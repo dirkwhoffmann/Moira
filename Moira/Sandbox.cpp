@@ -22,6 +22,14 @@ void
 Sandbox::record(AccessType type, u32 addr, u64 cycle, u16 value)
 {
     access[recordCnt] = AccessRecord { type, addr, value, cycle };
+
+    printf("Recording i: %2d  ", recordCnt);
+    printf("Type: %s  ", accessTypeStr[type]);
+    printf("Addr: %4x  ", addr);
+    printf("Value: %4x  ", value);
+    printf("Cycle: %lld  ", cycle);
+    printf("\n");
+
     recordCnt++;
     assert(recordCnt < 64);
 }
@@ -40,11 +48,13 @@ Sandbox::replayPeek(AccessType type, u32 addr, u64 cycle)
         if (access[i].cycle != cycle) continue;
 
         // Match found
+        /*
         printf("i: %2d  ", replayCnt);
         printf("Type: %s  ", accessTypeStr[type]);
         printf("Addr: %4x  ", addr);
         printf("Cycle: %lld  ", cycle);
         printf("\n");
+        */
 
         replayCnt++;
         if (replayCnt > recordCnt) { break; }
@@ -81,7 +91,7 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u16 value)
 void
 Sandbox::error(AccessType type, u32 addr, u64 cycle, u16 value)
 {
-    printf("\nACCESS DOESN'T MATCH:\n");
+    printf("\nACCESS %d DOESN'T MATCH:\n", replayCnt);
     printf("i: %2d  ", replayCnt);
     printf("Type: %s  ", accessTypeStr[type]);
     printf("Addr: %4x  ", addr);
@@ -94,7 +104,8 @@ Sandbox::error(AccessType type, u32 addr, u64 cycle, u16 value)
         printf("Type: %s  ", accessTypeStr[access[i].type]);
         printf("Addr: %4x  ", access[i].addr);
         printf("Cycle: %lld  ", access[i].cycle);
-        if (type == PEEK8 || type == PEEK16) printf("Value: %4x  ", access[i].value);
+        if (access[i].type == PEEK8 || access[i].type == PEEK16)
+            printf("Value: %4x  ", access[i].value);
         printf("\n");
     }
     assert(false);

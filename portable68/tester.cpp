@@ -436,6 +436,10 @@ void Tester_68k::check(string ident) {
         cout << "    " + ident + " -> OK";
     }
 
+    // Run Moira
+    moiracpu->process();
+
+
     // Compare result with Moira
     comparePost();
 
@@ -535,7 +539,7 @@ void Tester_68k::process()
 
     // Disassemble the instruction
     moiracpu->disassemble(pc, instr);
-    printf("Moira: '%s'\n", instr);
+    printf("Instruction: %s\n", instr);
     
     // Run a pre check
     comparePre();
@@ -543,8 +547,8 @@ void Tester_68k::process()
     // Run portable68000
     Core_68k::process();
 
-    // Run Moira
-    moiracpu->process(ird);
+    // Prepare Moira
+    moiracpu->setIRD(ird);
 }
 
 void Tester_68k::dump()

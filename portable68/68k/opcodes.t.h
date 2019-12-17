@@ -278,11 +278,13 @@ template<u8 size> void Core_68k::op_tst(u16 opcode) {
 template<u8 size, bool writeEa> void Core_68k::op_add(u16 opcode) {
 	u8 dregPos = (opcode >> 9) & 7;
 	u32 data = LoadEA(size, opcode & 0x3F);
+    printf("(1)\n");
     u64 result = u64(maskVal_(reg_d[dregPos], size)) + u64(data);
 
     setFlags(flag_add, size, result, data, reg_d[dregPos]);
 
     prefetch(!writeEa);
+    printf("(2)\n");
 
     if ( !writeEa ) {
         eaReg = &reg_d[dregPos];

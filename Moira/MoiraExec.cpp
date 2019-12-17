@@ -34,7 +34,7 @@ Moira::execLineF(u16 opcode)
 void
 Moira::execIllegal(u16 opcode)
 {
-    // printf("Moira::execIllegal\n");
+    printf("Moira::execIllegal\n");
     execGroup1Exception(4);
 }
 
@@ -93,8 +93,11 @@ Moira::execGroup1Exception(u8 nr)
      write<Word>(reg.sp, status);
 
      // Update the prefetch queue
+    printf("execGroup1Exception(1) nr = %d\n", nr);
      readExtensionWord();
+    printf("execGroup1Exception(2)\n");
      prefetch();
+    printf("execGroup1Exception(3)\n");
 
      jumpToVector(nr);
 }
@@ -235,11 +238,10 @@ Moira::execAddEaRg(u16 opcode)
         {
             assert(M >= 2 && M <= 10);
 
-            u32 ea = computeEA<M,S>(src);
-            printf("ea = %x\n", ea);
-            if (addressError<S>(ea)) return;
+            u32 ea, data;
+            if (!readOperand<M,S>(src, ea, data)) return;
 
-            result = arith<I,S>(read<S>(ea), readD<S>(dst));
+            result = arith<I,S>(data, readD<S>(dst));
             break;
         }
     }
@@ -256,13 +258,14 @@ Moira::execAddRgEa(u16 opcode)
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
 
-    u32 ea = computeEA<M,S>(dst);
-    if (addressError<S>(ea)) return;
+    u32 ea, data;
+    if (!readOperand<M,S>(dst, ea, data)) return;
 
-    u32 result = arith<I,S>(readD<S>(src), read<S>(ea));
+    u32 result = arith<I,S>(readD<S>(src), data);
+
+    prefetch();
 
     write<S>(ea, result);
-    prefetch();
 }
 
 template<Instr I, Mode M, Size S> void
