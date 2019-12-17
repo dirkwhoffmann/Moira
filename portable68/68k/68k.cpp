@@ -42,8 +42,6 @@ void Core_68k::power() {
         reg_d[i] = reg_a[i] = 0;
     }
     reset();
-
-    moiracpu->power();
 }
 
 void Core_68k::reset() {
@@ -61,8 +59,6 @@ void Core_68k::reset() {
     reg_a[7] = reg_ssp = readLong(0);
     reg_pc = readLong(4);
     fullprefetch();
-
-    moiracpu->reset();
 }
 
 void Core_68k::switchToUser() {

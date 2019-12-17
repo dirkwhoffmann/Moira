@@ -19,7 +19,7 @@ Sandbox::prepare()
 }
 
 void
-Sandbox::record(AccessType type, u32 addr, u16 value, u64 cycle)
+Sandbox::record(AccessType type, u32 addr, u64 cycle, u16 value)
 {
     access[recordCnt] = AccessRecord { type, addr, value, cycle };
     recordCnt++;
@@ -40,6 +40,12 @@ Sandbox::replayPeek(AccessType type, u32 addr, u64 cycle)
         if (access[i].cycle != cycle) continue;
 
         // Match found
+        printf("i: %2d  ", replayCnt);
+        printf("Type: %s  ", accessTypeStr[type]);
+        printf("Addr: %4x  ", addr);
+        printf("Cycle: %lld  ", cycle);
+        printf("\n");
+
         replayCnt++;
         if (replayCnt > recordCnt) { break; }
         return access[i].value;
@@ -69,26 +75,29 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u16 value)
         return;
     }
 
-    error(type, addr, cycle);
+    error(type, addr, cycle, value);
 }
 
 void
-Sandbox::error(AccessType type, u32 addr, u64 cycle)
+Sandbox::error(AccessType type, u32 addr, u64 cycle, u16 value)
 {
-   const char *accessTypeStr[] = { "Peek 8", "Peek 16", "Poke 8", "Poke 16" };
-
-    printf("ACCESS %d DOESN'T MATCH:\n\n", replayCnt);
-    printf("      Type: %s\n", accessTypeStr[type]);
-    printf("   Address: %x\n", addr);
-    printf("     Cycle: %lld\n\n", cycle);
+    printf("ACCESS DOESN'T MATCH:\n\n");
+    printf("i: %2d  ", replayCnt);
+    printf("Type: %s  ", accessTypeStr[type]);
+    printf("Addr: %4x  ", addr);
+    printf("Cycle: %lld  ", cycle);
+    if (type == PEEK8 || type == PEEK16) printf("Value: %4x  ", value);
+    printf("\n\n");
     printf("ACCESS RECORD:\n");
-
     for (int i = 0; i < recordCnt; i++) {
-        printf("%i: %d %x %lld %x\n", i,
-            access[i].type, access[i].addr,
-            access[i].cycle, access[i].value);
-        assert(false);
+        printf("i: %2d  ", i);
+        printf("Type: %s  ", accessTypeStr[access[i].type]);
+        printf("Addr: %4x  ", access[i].addr);
+        printf("Cycle: %lld  ", access[i].cycle);
+        if (type == PEEK8 || type == PEEK16) printf("Value: %4x  ", access[i].value);
+        printf("\n");
     }
+    assert(false);
 }
 
 }

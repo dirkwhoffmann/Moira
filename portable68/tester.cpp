@@ -356,16 +356,19 @@ void Tester_68k::setUp() {
     cycleCounter = -40;
     adrCounter = 8;
     memoryblock.write(7, 8);
+    moiracpu->sandbox.prepare();
 }
 
 u16 Tester_68k::memWordRead(u32 addr) {
     u16 res = memRead(addr) << 8;
     res |= memRead(addr + 1);
+    moiracpu->sandbox.record(PEEK16, addr, 0, res);
     return res;
 }
 u16 Tester_68k::memWordRead2(u32 addr) {
-    u16 res = memRead2(addr) << 8;
-    res |= memRead2(addr + 1);
+    u16 res = moiracpu->sandbox.replayPeek(PEEK16, addr, 0);
+    // u16 res = memRead2(addr) << 8;
+    // res |= memRead2(addr + 1);
     return res;
 }
 
@@ -373,11 +376,13 @@ void Tester_68k::memWordWrite(u32 addr, u16 data) {
     // printf("memWordWrite(%x, %x)\n", addr, data);
     memWrite(addr, data >> 8);
     memWrite(addr + 1, data & 0xff);
+    moiracpu->sandbox.record(POKE16, addr, 0, data);
 }
 void Tester_68k::memWordWrite2(u32 addr, u16 data) {
     // printf("memWordWrite2(%x, %x)\n", addr, data);
     memWrite2(addr, data >> 8);
     memWrite2(addr + 1, data & 0xff);
+    moiracpu->sandbox.replayPoke(POKE16, addr, 0, data);
 }
 
 u8 Tester_68k::memRead(u32 addr) {
@@ -529,8 +534,8 @@ void Tester_68k::process()
     char instr[256];
 
     // Disassemble the instruction
-    moiracpu->disassemble(pc, instr);
-    printf("Moira: '%s'\n", instr);
+    // moiracpu->disassemble(pc, instr);
+    // printf("Moira: '%s'\n", instr);
     
     // Run a pre check
     comparePre();

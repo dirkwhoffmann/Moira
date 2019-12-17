@@ -26,6 +26,7 @@ Moira::Moira()
 void
 Moira::power()
 {
+    printf("Moira::power()\n");
     // Initialize data and address registers
     for(int i = 0; i < 8; i++) reg.d[i] = reg.a[i] = 0;
     reset();
@@ -34,6 +35,8 @@ Moira::power()
 void
 Moira::reset()
 {
+    printf("Moira::reset()\n");
+
     // Reset the status register
     sr.t = 0;
     sr.s = 1;
@@ -45,16 +48,21 @@ Moira::reset()
     sr.ipl = 7;
 
     // Read the initial stack pointer from memory
+    printf("(a)\n");
     reg.usp = reg.usp =
     memory->moiraReadAfterReset16(0) << 16 | memory->moiraReadAfterReset16(2);
 
     // Read the initial program counter from memory
+    printf("(b)\n");
     reg.pc =
     memory->moiraReadAfterReset16(4) << 16 | memory->moiraReadAfterReset16(6);
 
     // Fill the prefetch queue
+    printf("(c)\n");
     irc = memory->moiraReadAfterReset16(reg.pc);
+    printf("(d)\n");
     prefetch();
+    printf("(e)\n");
 }
 
 void

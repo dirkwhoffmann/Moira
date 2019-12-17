@@ -21,6 +21,8 @@ enum AccessType {
     POKE16
 };
 
+static const char *accessTypeStr[] = { "Peek8 ", "Peek16", "Poke8 ", "Poke16" };
+
 struct AccessRecord {
 
     AccessType type;
@@ -35,12 +37,14 @@ class Sandbox {
     int recordCnt;
     int replayCnt;
 
+public:
+
     void prepare();
-    void record(AccessType type, u32 addr, u16 value, u64 cycle);
+    void record(AccessType type, u32 addr, u64 cycle, u16 value);
     u32  replayPeek(AccessType type, u32 addr, u64 cycle);
     void replayPoke(AccessType type, u32 addr, u64 cycle, u16 value);
 
-    void error(AccessType type, u32 addr, u64 cycle);
+    void error(AccessType type, u32 addr, u64 cycle, u16 value = 0);
 };
 
 }
