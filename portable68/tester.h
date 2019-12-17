@@ -305,8 +305,11 @@ public:
     virtual u16 moiraRead16(u32 addr) { return memWordRead2(addr); }
     virtual void moiraWrite8(u32 addr, u8 value) { memWrite2(addr, value); }
     virtual void moiraWrite16(u32 addr, u16 value) { memWordWrite2(addr, value); }
-
-    virtual u16 moiraSpyRead16(u32 addr) { return memWordRead2(addr); }
+    virtual u16 moiraSpyRead16(u32 addr) {
+        u16 res = memRead2(addr) << 8;
+        res |= memRead2(addr + 1);
+        return res;
+    }
     virtual u32 moiraSpyRead32(u32 addr) {
         return moiraSpyRead16(addr) << 16 | moiraSpyRead16(addr + 2); }
     virtual u16 moiraReadAfterReset16(u32 addr) { return memWordRead2(addr); }

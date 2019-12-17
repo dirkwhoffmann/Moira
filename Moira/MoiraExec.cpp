@@ -797,16 +797,10 @@ Moira::execLea(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    printf("(0)\n");
-
     u32 ea = computeEA<M,Long>(src);
-
-    printf("(1)\n");
 
     reg.a[dst] = ea;
     prefetch();
-    printf("(2)\n");
-
 }
 
 template<Instr I, Mode M, Size S> void

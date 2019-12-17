@@ -81,7 +81,7 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u16 value)
 void
 Sandbox::error(AccessType type, u32 addr, u64 cycle, u16 value)
 {
-    printf("ACCESS DOESN'T MATCH:\n\n");
+    printf("\nACCESS DOESN'T MATCH:\n");
     printf("i: %2d  ", replayCnt);
     printf("Type: %s  ", accessTypeStr[type]);
     printf("Addr: %4x  ", addr);

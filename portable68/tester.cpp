@@ -534,8 +534,8 @@ void Tester_68k::process()
     char instr[256];
 
     // Disassemble the instruction
-    // moiracpu->disassemble(pc, instr);
-    // printf("Moira: '%s'\n", instr);
+    moiracpu->disassemble(pc, instr);
+    printf("Moira: '%s'\n", instr);
     
     // Run a pre check
     comparePre();
