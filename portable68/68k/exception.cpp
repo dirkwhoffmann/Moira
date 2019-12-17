@@ -19,7 +19,7 @@ void Core_68k::group1exceptions() {
     }
 
     if (illegalMode != NONE) {
-        // printf("group1exceptions::illegalMode == %d\n", illegalMode);
+        printf("group1exceptions::illegalMode == %d\n", illegalMode);
         illegalException(illegalMode);
     }
     status_code._instruction = true;

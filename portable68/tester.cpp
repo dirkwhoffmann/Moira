@@ -524,14 +524,14 @@ void Tester_68k::setRegD(u8 reg, u32 value)
 
 void Tester_68k::process()
 {
+    u32 pc = moiracpu->getPC();
+    u32 ird = reg_ird;
     char instr[256];
 
-    // Save register IRD
-    u32 ird = reg_ird;
-
     // Disassemble the instruction
-    moiracpu->disassemble(moiracpu->getPC(), instr);
-
+    moiracpu->disassemble(pc, instr);
+    printf("Moira: '%s'\n", instr);
+    
     // Run a pre check
     comparePre();
 
@@ -540,9 +540,6 @@ void Tester_68k::process()
 
     // Run Moira
     moiracpu->process(ird);
-
-    // Compare the result
-    // comparePost();
 }
 
 void Tester_68k::dump()

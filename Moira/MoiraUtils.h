@@ -140,16 +140,6 @@ static const char *condStr[] {
  */
 typedef u8 Mode;
 
-struct Reg {
-
-    u32 value;
-
-    template<Size S> u32 read() { return CLIP<S>(value); }
-    template<Size S> void write(u32 v) { value = CLIP<S>(v); }
-
-    Reg & operator=(const u32 & rhs) { value = rhs; return *this; }
-};
-
 }
 #endif
 

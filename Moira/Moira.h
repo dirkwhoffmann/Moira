@@ -13,6 +13,7 @@
 #include "MoiraUtils.h"
 #include "StringWriter.h"
 #include "MoiraDelegate.h"
+#include "Sandbox.h"
 #include "assert.h"
 
 namespace moira {
@@ -62,6 +63,9 @@ public:
 
     // The emulated CPU type
     // MoiraCpu type;
+
+    // Sandbox (for memory debugging)
+    Sandbox sandbox;
 
     // The delegation object (connected memory)
     MoiraDelegate *memory = NULL;
