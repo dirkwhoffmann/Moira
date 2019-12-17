@@ -145,17 +145,17 @@ Moira::jumpToVector(u8 nr)
     irc = read<Word>(reg.pc + 2);
 }
 
-void
+int
 Moira::disassemble(u32 addr, char *str, bool hex)
 {
-    u16 opcode = memory->moiraSpyRead16(addr);
-    u16 ext1   = memory->moiraSpyRead16(addr + 2);
-    u16 ext2   = memory->moiraSpyRead16(addr + 4);
+    u32 pc     = addr;
+    u16 opcode = memory->moiraSpyRead16(pc);
 
-    StrWriter writer{str, hex};
+    StrWriter writer(str, hex);
 
-    (this->*dasm[opcode])(writer, addr, opcode);
-    writer.finish();
+    (this->*dasm[opcode])(writer, pc, opcode);
+    writer << Finish{};
 
-    printf("%02x: [%04x,%04x,%04x] %s\n", addr, opcode, ext1, ext2, str);
+    return pc - addr + 2;
 }
+

@@ -18,7 +18,7 @@ void privilegeException() { reg.pc -= 2; execGroup1Exception(8); }
 
 template<Instr I, Mode M, Size S> void execShiftRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execShiftIm(u16 opcode);
-template<Instr I, Mode M, Size S> void execShift(u16 opcode);
+template<Instr I, Mode M, Size S> void execShiftEa(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execAbcd(u16 opcode);
 
@@ -73,7 +73,8 @@ template<Instr I, Mode M, Size S> void execMoveq(u16 opcode);
 template<Instr I, Mode M, Size S> void execMoveToCcr(u16 opcode);
 template<Instr I, Mode M, Size S> void execMoveFromSr(u16 opcode);
 template<Instr I, Mode M, Size S> void execMoveToSr(u16 opcode);
-template<Instr I, Mode M, Size S> void execMoveUsp(u16 opcode);
+template<Instr I, Mode M, Size S> void execMoveUspAn(u16 opcode);
+template<Instr I, Mode M, Size S> void execMoveAnUsp(u16 opcode);
 template<Instr I, Mode M, Size S> void execMulDiv(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execNbcd(u16 opcode);
@@ -82,10 +83,13 @@ template<Instr I, Mode M, Size S> void execNop(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execPea(u16 opcode);
 
+template<Instr I, Mode M, Size S> void execReset(u16 opcode);
+template<Instr I, Mode M, Size S> void execRte(u16 opcode);
 template<Instr I, Mode M, Size S> void execRtr(u16 opcode);
 template<Instr I, Mode M, Size S> void execRts(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execScc(u16 opcode);
+template<Instr I, Mode M, Size S> void execStop(u16 opcode);
 template<Instr I, Mode M, Size S> void execSwap(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execTas(u16 opcode);
@@ -94,4 +98,5 @@ template<Instr I, Mode M, Size S> void execTrapv(u16 opcode);
 template<Instr I, Mode M, Size S> void execTst(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execUnlk(u16 opcode);
+
 

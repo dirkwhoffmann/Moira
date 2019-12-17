@@ -92,7 +92,7 @@ private:
     void (Moira::*exec[65536])(u16);
 
     // Jump table storing all disassebler handlers
-    void (Moira::*dasm[65536])(StrWriter&, u32, u16);
+    void (Moira::*dasm[65536])(StrWriter&, u32&, u16);
 
     // Jump table storing all time information handlers
     int (Moira::*sync[65536])(u16, int);
@@ -100,13 +100,14 @@ private:
     //
     // Disassembler
     //
+
     bool hex = true;
-    Align tab{10};
-    
+    Align tab{8};
+
     char str[256];
 
 public:
-    
+
     Moira();
 
     void power();
@@ -174,15 +175,16 @@ private:
     void fullPrefetch();
     void readExtensionWord();
     void jumpToVector(u8 nr);
-    
+
     //
     // Running the disassembler
     //
 
 public:
-    
-    void disassemble(u32 addr, char *str, bool hex = true);
+
+    int disassemble(u32 addr, char *str, bool hex = true);
 };
 
-} 
+}
 #endif
+

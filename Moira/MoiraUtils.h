@@ -12,20 +12,26 @@
 
 #include "types.h"
 
-#define HI_LO(x,y) ((x) << 8 | (y))
-#define LO_BYTE(x) ((x) & 0xFF)
-#define HI_BYTE(x) (((x) >> 8) & 0xFF)
 #define REVERSE_8(x) (((x) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
-#define REVERSE_16(x) HI_LO(REVERSE_8(LO_BYTE(x)),REVERSE_8(HI_BYTE(x)))
+#define REVERSE_16(x) ((REVERSE_8((x) & 0xFF) << 8) | REVERSE_8(((x) >> 8) & 0xFF))
 
+#define ______________xx(opcode) (u16)((opcode >> 0)  & 0b11)
 #define _____________xxx(opcode) (u16)((opcode >> 0)  & 0b111)
 #define ____________xxxx(opcode) (u16)((opcode >> 0)  & 0b1111)
+#define ________xxxxxxxx(opcode) (u16)((opcode >> 0)  & 0b11111111)
 #define __________xxx___(opcode) (u16)((opcode >> 3)  & 0b111)
+#define __________xx____(opcode) (u16)((opcode >> 4)  & 0b11)
 #define _______xxx______(opcode) (u16)((opcode >> 6)  & 0b111)
+#define _________x______(opcode) (u16)((opcode >> 6)  & 0b1)
+#define ________x_______(opcode) (u16)((opcode >> 7)  & 0b1)
+#define _______x________(opcode) (u16)((opcode >> 8)  & 0b1)
+#define _____xx_________(opcode) (u16)((opcode >> 9)  & 0b11)
 #define ____xxx_________(opcode) (u16)((opcode >> 9)  & 0b111)
+#define ____x___________(opcode) (u16)((opcode >> 11) & 0b1)
 #define xxxx____________(opcode) (u16)((opcode >> 12) & 0b1111)
 
-using namespace moira;
+
+namespace moira {
 
 enum Size { Byte = 1, Word = 2, Long = 4 };
 
@@ -70,13 +76,13 @@ enum Instr {
 
 static const char *instrStr[] {
     "abcd" , "add",   "adda",  "addi",  "addq",  "addx",  "and",    "andi",
-    "andi" , "and",   "asl",   "asr",
+    "andi" , "andi",  "asl",   "asr",
     "bcc",   "bcs",   "beq",   "bge",   "bgt",   "bhi",   "ble",    "bls",
     "blt",   "bmi",   "bne",   "bpl",   "bvc",   "bvs",   "bchg",  "bclr",
     "bra",   "bset",  "bsr",   "btst",
     "chk",   "clr",   "cmp",   "cmpa",  "cmpi",  "cmpm",
     "dbcc",  "dbcs",  "dbeq",  "dbge",  "dbgt",  "dbhi",  "dble",   "dbls",
-    "dblt",  "dbmi",  "dbne",  "dbpl",  "dbvc",  "dbvs",  "dbf",    "dbt",
+    "dblt",  "dbmi",  "dbne",  "dbpl",  "dbvc",  "dbvs",  "dbra",   "dbt",
     "divs",  "divu",
     "eor",   "eori",  "eori",  "eori",  "exg", "ext",
     "???",
@@ -144,4 +150,6 @@ struct Reg {
     Reg & operator=(const u32 & rhs) { value = rhs; return *this; }
 };
 
+}
 #endif
+

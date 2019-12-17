@@ -392,10 +392,10 @@ Moira::registerInstructions()
     //                         X   X   X   X   X   X   X
 
     opcode = parse("1110 0001 11-- ----");
-    __________MMMXXX(opcode, ASL, 0b001111111000, Word, Shift);
+    __________MMMXXX(opcode, ASL, 0b001111111000, Word, ShiftEa);
 
     opcode = parse("1110 0000 11-- ----");
-    __________MMMXXX(opcode, ASR, 0b001111111000, Word, Shift);
+    __________MMMXXX(opcode, ASR, 0b001111111000, Word, ShiftEa);
 
 
     // Bcc
@@ -422,7 +422,7 @@ Moira::registerInstructions()
     register(opcode | 0xE00, Bcc<BGT __ 0 __ Word>);
     register(opcode | 0xF00, Bcc<BLE __ 0 __ Word>);
 
-    for (int i = 1; i < 256; i++) {
+    for (int i = 1; i < 255; i++) {
         register(opcode | 0x000 | i, Bcc<BRA __ 0 __ Byte>);
         register(opcode | 0x200 | i, Bcc<BHI __ 0 __ Byte>);
         register(opcode | 0x300 | i, Bcc<BLS __ 0 __ Byte>);
@@ -498,7 +498,7 @@ Moira::registerInstructions()
 
     opcode = parse("0110 0001 ---- ----");
     register(opcode, Bsr<BSR __ 0 __ Word>);
-    for (int i = 1; i < 256; i++) {
+    for (int i = 1; i < 255; i++) {
         register(opcode | i, Bsr<BSR __ 0 __ Byte>);
     }
 
@@ -511,10 +511,10 @@ Moira::registerInstructions()
     //               -------------------------------------------------
     // Dx,<ea>       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
     //               -------------------------------------------------
-    //                 X       X   X   X   X   X   X   X   X   X
+    //                 X       X   X   X   X   X   X   X   X   X   X?
 
     opcode = parse("0000 ---1 00-- ----");
-    ____XXX___MMMXXX(opcode, BTST, 0b101111111110, Long, BitDxEa);
+    ____XXX___MMMXXX(opcode, BTST, 0b101111111111, Byte, BitDxEa);
 
     //               -------------------------------------------------
     // #<data>,<ea>  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
@@ -533,10 +533,10 @@ Moira::registerInstructions()
     //               -------------------------------------------------
     // <ea>,Ay       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
     //               -------------------------------------------------
-    //                 X       X   X   X   X   X   X   X
+    //                 X       X   X   X   X   X   X   X   X   X   X?
 
     opcode = parse("0100 ---1 10-- ----");
-    ____XXX___MMMXXX(opcode, CHK, 0b101111111000, Word, Chk);
+    ____XXX___MMMXXX(opcode, CHK, 0b101111111111, Word, Chk);
 
 
     // CLR
@@ -593,7 +593,7 @@ Moira::registerInstructions()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0000 1100 ---- ----");
-    ________SSMMMXXX(opcode, SUBI, 0b101111111000, Byte | Word | Long, Cmpi);
+    ________SSMMMXXX(opcode, CMPI, 0b101111111000, Byte | Word | Long, Cmpi);
 
 
     // CMPM
@@ -642,10 +642,10 @@ Moira::registerInstructions()
     //                 X       X   X   X   X   X   X   X   X   X   X
 
     opcode = parse("1000 ---1 11-- ----");
-    ____XXX___MMMXXX(opcode, DIVS, 0b101111111111, Long, MulDiv);
+    ____XXX___MMMXXX(opcode, DIVS, 0b101111111111, Word, MulDiv);
 
     opcode = parse("1000 ---0 11-- ----");
-    ____XXX___MMMXXX(opcode, DIVU, 0b101111111111, Long, MulDiv);
+    ____XXX___MMMXXX(opcode, DIVU, 0b101111111111, Word, MulDiv);
 
 
     // EOR
@@ -799,10 +799,10 @@ Moira::registerInstructions()
     //                         X   X   X   X   X   X   X
 
     opcode = parse("1110 0011 11-- ----");
-    __________MMMXXX(opcode, LSL, 0b001111111000, Word, Shift);
+    __________MMMXXX(opcode, LSL, 0b001111111000, Word, ShiftEa);
 
     opcode = parse("1110 0010 11-- ----");
-    __________MMMXXX(opcode, LSR, 0b001111111000, Word, Shift);
+    __________MMMXXX(opcode, LSR, 0b001111111000, Word, ShiftEa);
 
 
     // MOVE
@@ -813,7 +813,7 @@ Moira::registerInstructions()
     //               -------------------------------------------------
     // <ea>          | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
     //               -------------------------------------------------
-    //                 X   X   X   X   X   X   X   X   X   X   X   X
+    //                 X  (X)   X   X   X   X   X   X   X   X   X   X
 
     //               -------------------------------------------------
     // <e>           | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
@@ -823,8 +823,12 @@ Moira::registerInstructions()
     opcode = parse("00-- ---- ---- ----");
 
     __SSXXXMMMMMMXXX(opcode, MOVE,
+                     0b101111111111, 0b101111111000,
+                     Byte, Move);
+
+    __SSXXXMMMMMMXXX(opcode, MOVE,
                      0b111111111111, 0b101111111000,
-                     Byte | Word | Long, Move);
+                     Word | Long, Move);
 
 
     // MOVEA
@@ -906,7 +910,7 @@ Moira::registerInstructions()
     //                 X       X   X   X   X   X   X   X   X   X   X
 
     opcode = parse("0100 0100 11-- ----");
-    __________MMMXXX(opcode, MOVETSR, 0b101111111111, Word, MoveToCcr);
+    __________MMMXXX(opcode, MOVETSR, 0b101111111111, Byte, MoveToCcr);
 
 
     // MOVE from SR
@@ -944,8 +948,8 @@ Moira::registerInstructions()
     //        Sizes: Longword
 
     opcode = parse("0100 1110 0110 ----");
-    _____________XXX(opcode | 0 << 3, MOVEUSP, 0, Long, MoveUsp);
-    _____________XXX(opcode | 1 << 3, MOVEUSP, 0, Long, MoveUsp);
+    _____________XXX(opcode | 1 << 3, MOVEUSP, 0, Long, MoveUspAn);
+    _____________XXX(opcode | 0 << 3, MOVEUSP, 0, Long, MoveAnUsp);
 
 
     // MULS, MULU
@@ -959,10 +963,10 @@ Moira::registerInstructions()
     //                 X       X   X   X   X   X   X   X   X   X   X
 
     opcode = parse("1100 ---1 11-- ----");
-    ____XXX___MMMXXX(opcode, MULS, 0b101111111111, Long, MulDiv);
+    ____XXX___MMMXXX(opcode, MULS, 0b101111111111, Word, MulDiv);
 
     opcode = parse("1100 ---0 11-- ----");
-    ____XXX___MMMXXX(opcode, MULU, 0b101111111111, Long, MulDiv);
+    ____XXX___MMMXXX(opcode, MULU, 0b101111111111, Word, MulDiv);
 
 
     // NBCD
@@ -1102,16 +1106,16 @@ Moira::registerInstructions()
     //                         X   X   X   X   X   X   X
 
     opcode = parse("1110 0111 11-- ----");
-    __________MMMXXX(opcode, ROL, 0b001111111000, Word, Shift);
+    __________MMMXXX(opcode, ROL, 0b001111111000, Word, ShiftEa);
 
     opcode = parse("1110 0110 11-- ----");
-    __________MMMXXX(opcode, ROR, 0b001111111000, Word, Shift);
+    __________MMMXXX(opcode, ROR, 0b001111111000, Word, ShiftEa);
 
     opcode = parse("1110 0101 11-- ----");
-    __________MMMXXX(opcode, ROXL, 0b001111111000, Word, Shift);
+    __________MMMXXX(opcode, ROXL, 0b001111111000, Word, ShiftEa);
 
     opcode = parse("1110 0100 11-- ----");
-    __________MMMXXX(opcode, ROXR, 0b001111111000, Word, Shift);
+    __________MMMXXX(opcode, ROXR, 0b001111111000, Word, ShiftEa);
 
 
     // PEA
@@ -1126,6 +1130,22 @@ Moira::registerInstructions()
 
     opcode = parse("0100 1000 01-- ----");
     __________MMMXXX(opcode, PEA, 0b001001111110, Long, Pea);
+
+
+    // RESET
+    //
+    //       Syntax: RESET
+    //        Sizes: Unsized
+
+    register(parse("0100 1110 0111 0000"), Reset<RESET __ 0 __ Long>);
+
+
+    // RTE
+    //
+    //       Syntax: RTE
+    //        Sizes: Unsized
+
+    register(parse("0100 1110 0111 0011"), Rte<RTE __ 0 __ Long>);
 
 
     // RTR
@@ -1186,6 +1206,14 @@ Moira::registerInstructions()
     __________MMMXXX(opcode | 0xD00, SLT, 0b101111111000, Word, Scc);
     __________MMMXXX(opcode | 0xE00, SGT, 0b101111111000, Word, Scc);
     __________MMMXXX(opcode | 0xF00, SLE, 0b101111111000, Word, Scc);
+
+
+    // STOP
+    //
+    //       Syntax: STOP
+    //        Sizes: Unsized
+
+    register(parse("0100 1110 0111 0010"), Stop<STOP __ 11 __ Word>);
 
 
     // SUB
@@ -1318,10 +1346,10 @@ Moira::registerInstructions()
     //               -------------------------------------------------
     // <ea>          | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
     //               -------------------------------------------------
-    //                 X       X   X   X   X   X   X   X   X   X
+    //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0100 1010 ---- ----");
-    ________SSMMMXXX(opcode, TST, 0b101111111110, Byte | Word | Long, Tst);
+    ________SSMMMXXX(opcode, TST, 0b101111111000, Byte | Word | Long, Tst);
 
 
     // UNLK
@@ -1334,3 +1362,4 @@ Moira::registerInstructions()
 }
 
 #undef __
+

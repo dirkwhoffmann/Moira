@@ -142,7 +142,7 @@ Moira::execShiftIm(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-Moira::execShift(u16 op)
+Moira::execShiftEa(u16 op)
 {
     int src = ____xxx_________(op);
     int dst = _____________xxx(op);
@@ -236,7 +236,7 @@ Moira::execAddEaRg(u16 opcode)
             assert(M >= 2 && M <= 10);
 
             u32 ea = computeEA<M,S>(src);
-            printf("ea = %x\n", ea); 
+            printf("ea = %x\n", ea);
             if (addressError<S>(ea)) return;
 
             result = arith<I,S>(read<S>(ea), readD<S>(dst));
@@ -310,7 +310,7 @@ Moira::execAddq(u16 opcode)
 
     if (src == 0) src = 8;
     u32 result = arith<I,S>(src, data);
-    
+
     writeOperand<M,S>(dst, ea, result);
     prefetch();
 }
@@ -1052,7 +1052,7 @@ Moira::execMoveToCcr(u16 opcode)
 
     u32 ea, data;
     if (!readOperand<M,S>(src, ea, data)) return;
-    setCCR(data & 0xFF);
+    setCCR(data);
 
     reg.pc -= 2;
     readExtensionWord();
@@ -1089,7 +1089,7 @@ Moira::execMoveToSr(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-Moira::execMoveUsp(u16 opcode)
+Moira::execMoveUspAn(u16 opcode)
 {
     int an = _____________xxx(opcode);
 
@@ -1097,12 +1097,19 @@ Moira::execMoveUsp(u16 opcode)
     if (!sr.s) { privilegeException(); return; }
 
     prefetch();
+    writeA(an, reg.usp);
+}
 
-    if (M == 0) {
-        writeA(an, reg.usp);
-    } else {
-        reg.usp = readA(an);
-    }
+template<Instr I, Mode M, Size S> void
+Moira::execMoveAnUsp(u16 opcode)
+{
+    int an = _____________xxx(opcode);
+
+    // This instruction requires supervisor mode
+    if (!sr.s) { privilegeException(); return; }
+
+    prefetch();
+    reg.usp = readA(an);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1153,7 +1160,7 @@ Moira::execMulDiv(u16 opcode)
             if (data == 0) {
                  return execTrapException(5);
             }
-            
+
             u32 dividend = readD(dst);
             prefetch();
 
@@ -1171,7 +1178,7 @@ Moira::execMulDiv(u16 opcode)
             }
             sr.n = NBIT<Word>(result);
             sr.z = ZERO<Word>(result);
-            
+
             writeD(dst, (result & 0xffff) | (remainder << 16));
             break;
         }
@@ -1231,7 +1238,7 @@ Moira::execNbcd(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execNegNot(u16 opcode)
 {
-    int dst = { _____________xxx(opcode) };
+    int dst = ( _____________xxx(opcode) );
     u32 ea, data;
 
     if (!readOperand<M,S>(dst, ea, data)) return;
@@ -1245,7 +1252,7 @@ Moira::execNegNot(u16 opcode)
 
     prefetch();
     // write<S>(ea, data);
-    writeOperand<M,S>(dst, ea, data); 
+    writeOperand<M,S>(dst, ea, data);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1262,6 +1269,32 @@ Moira::execPea(u16 opcode)
     u32 ea = computeEA<M,Long>(src);
 
     writeStack(ea);
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::execReset(u16 opcode)
+{
+    // This instruction requires supervisor mode
+    if (!sr.s) { privilegeException(); return; }
+
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::execRte(u16 opcode)
+{
+    // This instruction requires supervisor mode
+     if (!sr.s) { privilegeException(); return; }
+
+    setSR(read<Word>(reg.sp));
+    reg.sp += 2;
+
+    u32 newpc = read<Long>(reg.sp);
+    reg.sp += 4;
+
+    readExtensionWord();
+    reg.pc = newpc;
     prefetch();
 }
 
@@ -1292,7 +1325,7 @@ Moira::execRts(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execScc(u16 opcode)
 {
-    int dst = { _____________xxx(opcode) };
+    int dst = ( _____________xxx(opcode) );
     u32 ea, data;
 
     if (!readOperand<M,Byte>(dst, ea, data)) return;
@@ -1302,9 +1335,21 @@ Moira::execScc(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+Moira::execStop(u16 opcode)
+{
+    // This instruction requires supervisor mode
+    if (!sr.s) { privilegeException(); return; }
+
+    setSR(irc | 1 << 13);
+    readExtensionWord();
+
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
 Moira::execSwap(u16 opcode)
 {
-    int reg = { _____________xxx(opcode) };
+    int reg = ( _____________xxx(opcode) );
     u32 dat = readD(reg);
 
     prefetch();
@@ -1321,7 +1366,7 @@ Moira::execSwap(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execTas(u16 opcode)
 {
-    int dst = { _____________xxx(opcode) };
+    int dst = ( _____________xxx(opcode) );
 
     switch (M) {
 
@@ -1416,3 +1461,4 @@ Moira::execUnlk(u16 opcode)
     if (an != 7) reg.sp += 4;
     prefetch();
 }
+

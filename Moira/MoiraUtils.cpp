@@ -9,6 +9,8 @@
 
 #include "MoiraUtils.h"
 
+namespace moira {
+
 template<> int  BYTES <Byte> ()         { return 1; }
 template<> int  BYTES <Word> ()         { return 2; }
 template<> int  BYTES <Long> ()         { return 4; }
@@ -21,7 +23,7 @@ template<> u32  MSBIT <Byte> ()         { return 0x00000080; }
 template<> u32  MSBIT <Word> ()         { return 0x00008000; }
 template<> u32  MSBIT <Long> ()         { return 0x80000000; }
 
-template<> i32  SIGN  <Byte> (u64 data) { return  (i8)data; }
+template<> i32  SIGN  <Byte> (u64 data) { return (i8)data; }
 template<> i32  SIGN  <Word> (u64 data) { return (i16)data; }
 template<> i32  SIGN  <Long> (u64 data) { return (i32)data; }
 
@@ -48,3 +50,6 @@ template<> bool CARRY <Long> (u64 data) { return data & 0x100000000; }
 template<> bool ZERO  <Byte> (u64 data) { return (data & 0x000000FF) == 0; }
 template<> bool ZERO  <Word> (u64 data) { return (data & 0x0000FFFF) == 0; }
 template<> bool ZERO  <Long> (u64 data) { return (data & 0xFFFFFFFF) == 0; }
+
+}
+
