@@ -7,6 +7,14 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+// Save information to stack for group 0 exceptions
+void saveToStackDetailed(u16 sr, u32 addr, u16 code);
+
+// Save information to stack for group 1 and group 2 exceptions
+void saveToStackBrief(u16 sr);
+
+
+// DEPRECATED
 void execAddressError(u32 addr);
 void execLineA(u16 opcode);
 void execLineF(u16 opcode);

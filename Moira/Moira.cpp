@@ -141,7 +141,8 @@ Moira::readExtensionWord()
 void
 Moira::jumpToVector(u8 nr)
 {
-    printf("Moira::jumpToVector(%d)\n", nr);
+    // printf("Moira::jumpToVector(%d)\n", nr);
+
     // Update the program counter
     reg.pc = read<Long>(4 * nr);
 

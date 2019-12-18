@@ -96,7 +96,7 @@ Sandbox::error(AccessType type, u32 addr, u64 cycle, u16 value)
     printf("Type: %s  ", accessTypeStr[type]);
     printf("Addr: %4x  ", addr);
     printf("Cycle: %lld  ", cycle);
-    if (type == PEEK8 || type == PEEK16) printf("Value: %4x  ", value);
+    if (type == POKE8 || type == POKE16) printf("Value: %4x  ", value);
     printf("\n\n");
     printf("ACCESS RECORD:\n");
     for (int i = 0; i < recordCnt; i++) {
@@ -104,8 +104,7 @@ Sandbox::error(AccessType type, u32 addr, u64 cycle, u16 value)
         printf("Type: %s  ", accessTypeStr[access[i].type]);
         printf("Addr: %4x  ", access[i].addr);
         printf("Cycle: %lld  ", access[i].cycle);
-        if (access[i].type == PEEK8 || access[i].type == PEEK16)
-            printf("Value: %4x  ", access[i].value);
+        printf("Value: %4x  ", access[i].value);
         printf("\n");
     }
     assert(false);

@@ -222,8 +222,8 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
         {
             i16 d = (i16)irc;
             ea = readA(n) + d;
-            result = read<S>(ea);
             readExtensionWord();
+            result = read<S>(ea);
             break;
         }
         case 6: // (d,An,Xi)

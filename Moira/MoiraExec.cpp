@@ -10,11 +10,58 @@
 #include <utility>
 
 void
+Moira::saveToStackDetailed(u16 sr, u32 addr, u16 code)
+{
+    // Push PC
+     reg.sp -= 2; write<Word>(reg.sp, reg.pc & 0xFFFF);
+     reg.sp -= 2; write<Word>(reg.sp, reg.pc >> 16);
+
+     // Push SR and IRD
+     reg.sp -= 2; write<Word>(reg.sp, sr);
+     reg.sp -= 2; write<Word>(reg.sp, ird);
+
+     // Push address
+     reg.sp -= 2; write<Word>(reg.sp, addr & 0xFFFF);
+     reg.sp -= 2; write<Word>(reg.sp, addr >> 16);
+
+     // Push memory access type and function code
+     reg.sp -= 2; write<Word>(reg.sp, code);
+}
+
+void
+Moira::saveToStackBrief(u16 sr)
+{
+    // Push PC and SR
+     reg.sp -= 2;
+     write<Word>(reg.sp, reg.pc & 0xFFFF);
+     reg.sp -= 2;
+     write<Word>(reg.sp, reg.pc >> 16);
+     reg.sp -= 2;
+     write<Word>(reg.sp, sr);
+}
+
+void
 Moira::execAddressError(u32 addr)
 {
     assert(addr & 1);
     printf("Moira::execAddressViolation\n");
-    execGroup0Exception(addr, 3);
+
+    /* Group 0 exceptions indicate a serious error condition. Detailed
+     * information about the current CPU state is pushed on the stack to
+     * support diagnosis.
+     */
+
+    // Memory access type and function code (TODO: THIS IS INCOMPLETE)
+    u16 code = 0x11 | (sr.s ? 4 : 0);
+
+    // Enter supervisor mode and update the status register
+    setSupervisorMode(true);
+    sr.t = 0;
+
+    addr -= 2;
+    saveToStackDetailed(getSR(), addr, code);
+
+    jumpToVector(3);
 }
 
 void
@@ -34,8 +81,16 @@ Moira::execLineF(u16 opcode)
 void
 Moira::execIllegal(u16 opcode)
 {
-    printf("Moira::execIllegal\n");
-    execGroup1Exception(4);
+    u16 status = getSR();
+
+    // Enter supervisor mode and update the status register
+    setSupervisorMode(true);
+    sr.t = 0;
+
+    // Put information on stack
+    saveToStackBrief(status);
+
+    jumpToVector(4);
 }
 
 void
@@ -46,33 +101,37 @@ Moira::execGroup0Exception(u32 addr, u8 nr)
      * support diagnosis.
      */
 
-    // Error description (TODO: THIS IS INCOMPLETE)
-    u16 error = 0x11 | (sr.s ? 4 : 0);
+    // Memory access type and function code (TODO: THIS IS INCOMPLETE)
+    u16 code = 0x11 | (sr.s ? 4 : 0);
 
     // Enter supervisor mode and update the status register
     setSupervisorMode(true);
     sr.t = 0;
 
-    // Push PC
-    reg.sp -= 2; write<Word>(reg.sp, reg.pc & 0xFFFF);
-    reg.sp -= 2; write<Word>(reg.sp, reg.pc >> 16);
+    saveToStackDetailed(getSR(), addr, code);
 
-    // Push SR and IRD
-    reg.sp -= 2; write<Word>(reg.sp, getSR());
-    reg.sp -= 2; write<Word>(reg.sp, ird);
+    /*
+     // Push PC
+     reg.sp -= 2; write<Word>(reg.sp, reg.pc & 0xFFFF);
+     reg.sp -= 2; write<Word>(reg.sp, reg.pc >> 16);
 
-    // Push address
-    reg.sp -= 2; write<Word>(reg.sp, addr & 0xFFFF);
-    reg.sp -= 2; write<Word>(reg.sp, addr >> 16);
+     // Push SR and IRD
+     reg.sp -= 2; write<Word>(reg.sp, getSR());
+     reg.sp -= 2; write<Word>(reg.sp, ird);
 
-    // Push memory access type and function code
-    reg.sp -= 2; write<Word>(reg.sp, error);
+     // Push address
+     reg.sp -= 2; write<Word>(reg.sp, addr & 0xFFFF);
+     reg.sp -= 2; write<Word>(reg.sp, addr >> 16);
+
+     // Push memory access type and function code
+     reg.sp -= 2; write<Word>(reg.sp, error);
+     */
 
     // Update the prefetch queue
-     readExtensionWord();
-     prefetch();
+    readExtensionWord();
+    prefetch();
 
-     jumpToVector(nr);
+    jumpToVector(nr);
 }
 
 void
@@ -81,9 +140,12 @@ Moira::execGroup1Exception(u8 nr)
     u16 status = getSR();
 
     // Enter supervisor mode and update the status register
-     setSupervisorMode(true);
-     sr.t = 0;
+    setSupervisorMode(true);
+    sr.t = 0;
 
+    saveToStackBrief(status);
+
+    /*
      // Push PC and SR
      reg.sp -= 2;
      write<Word>(reg.sp, reg.pc & 0xFFFF);
@@ -91,15 +153,13 @@ Moira::execGroup1Exception(u8 nr)
      write<Word>(reg.sp, reg.pc >> 16);
      reg.sp -= 2;
      write<Word>(reg.sp, status);
+     */
 
-     // Update the prefetch queue
-    printf("execGroup1Exception(1) nr = %d\n", nr);
-     readExtensionWord();
-    printf("execGroup1Exception(2)\n");
-     prefetch();
-    printf("execGroup1Exception(3)\n");
+    // Update the prefetch queue
+    readExtensionWord();
+    prefetch();
 
-     jumpToVector(nr);
+    jumpToVector(nr);
 }
 
 void
@@ -112,12 +172,15 @@ Moira::execTrapException(u8 nr)
     sr.t = 0;
 
     // Push PC and SR
+    saveToStackBrief(status);
+    /*
     reg.sp -= 2;
     write<Word>(reg.sp, reg.pc & 0xFFFF);
     reg.sp -= 2;
     write<Word>(reg.sp, reg.pc >> 16);
     reg.sp -= 2;
     write<Word>(reg.sp, status);
+    */
 
     jumpToVector(nr);
 }
@@ -151,32 +214,34 @@ Moira::execShiftEa(u16 op)
     int dst = _____________xxx(op);
     int cnt;
 
+    printf("execShiftEa(M = %d)\n", M);
+
     switch (M) {
 
         case 0: // Dn
         {
+            printf("Ea(Dn)\n");
             cnt = readD(src) & 0x3F;
             writeD<S>(dst, shift<I,S>(cnt, readD<S>(dst)));
             break;
         }
         case 11: // Imm
         {
+            prefetch();
+
             cnt = src ? src : 8;
             writeD<S>(dst, shift<I,S>(cnt, readD<S>(dst)));
             break;
         }
         default: // Ea
         {
-            assert(M >= 2 && M <= 8);
-            u32 ea = computeEA<M,S>(src);
-            if (addressError<S>(ea)) return;
-
-            write<S>(ea, shift<I,S>(1, read<S>(ea)));
+            u32 ea, data;
+            if (!readOperand<M,S>(src, ea, data)) return;
+            prefetch();
+            write<S>(ea, shift<I,S>(1, data));
             break;
         }
     }
-
-    prefetch();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -246,8 +311,8 @@ Moira::execAddEaRg(u16 opcode)
         }
     }
 
-    writeD<S>(dst, result);
     prefetch();
+    writeD<S>(dst, result);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -259,12 +324,14 @@ Moira::execAddRgEa(u16 opcode)
     int dst = _____________xxx(opcode);
 
     u32 ea, data;
+    printf("execAddRgEa(1)\n");
     if (!readOperand<M,S>(dst, ea, data)) return;
+    printf("execAddRgEa(2)\n");
 
     u32 result = arith<I,S>(readD<S>(src), data);
+    printf("execAddRgEa(3)\n");
 
     prefetch();
-
     write<S>(ea, result);
 }
 
@@ -382,12 +449,11 @@ Moira::execAndEaRg(u16 opcode)
         }
         default: // Ea
         {
-            assert(M >= 2 && M <= 10);
+            u32 ea, data;
+            printf("execAndEaRg\n");
+            if (!readOperand<M,S>(src, ea, data)) return;
 
-            u32 ea = computeEA<M,S>(src);
-            if (addressError<S>(ea)) return;
-
-            result = logic<I,S>(read<S>(ea), readD<S>(dst));
+            result = logic<I,S>(data, readD<S>(dst));
             break;
         }
     }
@@ -511,9 +577,10 @@ Moira::execBitDxEa(u16 opcode)
         default:
         {
             u8 bit = readD(src) & 0b111;
-            u32 ea = computeEA<M,Byte>(dst);
 
-            u32 data = read<Byte>(ea);
+            u32 ea, data;
+            if (!readOperand<M,Byte>(dst, ea, data)) return;
+
             data = bitop<I>(data, bit);
 
             if (I != BTST) write<Byte>(ea, data);
@@ -542,9 +609,9 @@ Moira::execBitImEa(u16 opcode)
         }
         default:
         {
-            u32 ea = computeEA<M,Byte>(dst);
+            u32 ea, data;
 
-            u32 data = read<Byte>(ea);
+            if (!readOperand<M,S>(dst, ea, data)) return;
             data = bitop<I>(data, bit);
 
             if (I != BTST) write<Byte>(ea, data);
