@@ -301,10 +301,20 @@ public:
     void testRts();
     void sampleRts();
 
-    u8 moiraRead8(u32 addr) { return memRead2(addr); }
-    virtual u16 moiraRead16(u32 addr) { return memWordRead2(addr); }
-    virtual void moiraWrite8(u32 addr, u8 value) { memWrite2(addr, value); }
-    virtual void moiraWrite16(u32 addr, u16 value) { memWordWrite2(addr, value); }
+    u8 moiraRead8(u32 addr) {
+        return moiracpu->sandbox.replayPeek(PEEK8, addr, 0);
+    }
+    virtual u16 moiraRead16(u32 addr) {
+        return moiracpu->sandbox.replayPeek(PEEK16, addr, 0);
+    }
+    virtual void moiraWrite8(u32 addr, u8 value) {
+        moiracpu->sandbox.replayPoke(POKE8, addr, 0, value);
+        memWrite2(addr, value);
+    }
+    virtual void moiraWrite16(u32 addr, u16 value) {
+        moiracpu->sandbox.replayPoke(POKE16, addr, 0, value);
+        memWordWrite2(addr, value);
+    }
     virtual u16 moiraSpyRead16(u32 addr) {
         u16 res = memRead2(addr) << 8;
         res |= memRead2(addr + 1);
@@ -312,7 +322,10 @@ public:
     }
     virtual u32 moiraSpyRead32(u32 addr) {
         return moiraSpyRead16(addr) << 16 | moiraSpyRead16(addr + 2); }
-    virtual u16 moiraReadAfterReset16(u32 addr) { return memWordRead2(addr); }
+    virtual u16 moiraReadAfterReset16(u32 addr) {
+        return moiracpu->sandbox.replayPeek(PEEK16, addr, 0);
+        // return memWordRead2(addr);
+    }
 
     void power();
     void setSR(u16 value);
