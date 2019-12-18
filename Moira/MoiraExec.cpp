@@ -677,6 +677,7 @@ Moira::execClr(u16 opcode)
 
         case 0: // Dn
         {
+            prefetch();
             writeD<S>(dst, 0);
             break;
         }
@@ -688,6 +689,7 @@ Moira::execClr(u16 opcode)
             if (addressError<S>(ea)) return;
 
             (void)read<S>(ea);
+            prefetch();
             write<S>(ea, 0);
             break;
         }
@@ -697,8 +699,6 @@ Moira::execClr(u16 opcode)
     sr.z = 1;
     sr.v = 0;
     sr.c = 0;
-
-    prefetch();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -777,18 +777,20 @@ Moira::execDbcc(u16 opcode)
         // Decrement loop counter
         writeD<Word>(dn, readD<Word>(dn) - 1);
 
-        readExtensionWord();
-
         // Take branch if Dn does not equal -1
-        if ((i16)readD<Word>(dn) != -1) { reg.pc = newpc; }
+        if ((i16)readD<Word>(dn) != -1) {
 
-        prefetch();
-        return;
+            reg.pc = newpc;
+            fullPrefetch();
+            return;
+        } else {
+            (void)memory->moiraRead16(reg.pc + 2);
+        }
     }
 
     // Fall through to next instruction
-    readExtensionWord();
-    prefetch();
+    reg.pc += 2;
+    fullPrefetch();
 }
 
 template<Instr I, Mode M, Size S> void

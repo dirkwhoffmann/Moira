@@ -128,7 +128,8 @@ Moira::prefetch()
 void
 Moira::fullPrefetch()
 {
-    assert(false);
+    irc = memory->moiraRead16(reg.pc);
+    prefetch();
 }
 
 void
