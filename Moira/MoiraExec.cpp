@@ -255,6 +255,7 @@ Moira::execAbcd(u16 opcode)
         case 0: // Dn
         {
             u32 result = arith<I,Byte>(readD<Byte>(src), readD<Byte>(dst));
+            prefetch();
             writeD<Byte>(dst, result);
             break;
         }
@@ -262,16 +263,18 @@ Moira::execAbcd(u16 opcode)
         {
             assert(M == 4);
 
-            u32 ea1 = computeEA<M,Byte>(src);
-            u32 ea2 = computeEA<M,Byte>(dst);
+            u32 ea1, ea2, data1, data2;
+            if (!readOperand<M,S>(src, ea1, data1)) return;
+            if (!readOperand<M,S>(dst, ea2, data2)) return;
 
-            u32 result = arith<I,Byte>(read<Byte>(ea1), read<Byte>(ea2));
+            u32 result = arith<I,Byte>(data1, data2);
+
+            prefetch();
+
             write<Byte>(ea2, result);
             break;
         }
     }
-
-    prefetch();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1297,20 +1300,20 @@ Moira::execNbcd(u16 opcode)
 
         case 0: // Dn
         {
+            prefetch();
             writeD<Byte>(reg, arith<SBCD,Byte>(readD<Byte>(reg), 0));
             break;
         }
         default: // Ea
         {
             assert(M >= 2 && M <= 8);
-
-            u32 ea = computeEA<M,Byte>(reg);
-            write<Byte>(ea, arith<SBCD,Byte>(read<Byte>(ea), 0));
+            u32 ea, data;
+            if (!readOperand<M,Byte>(reg, ea, data)) return;
+            prefetch();
+            write<Byte>(ea, arith<SBCD,Byte>(data, 0));
             break;
         }
     }
-
-    prefetch();
 }
 
 template<Instr I, Mode M, Size S> void
