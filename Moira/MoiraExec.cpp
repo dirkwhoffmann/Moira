@@ -549,18 +549,18 @@ Moira::execBcc(u16 opcode)
         i16 offset = S == Word ? (i16)irc : (i8)opcode;
         u32 newpc = reg.pc + offset;
 
-        readExtensionWord();
-
         // Take branch
+        printf("Take branch \n");
         reg.pc = newpc;
+        fullPrefetch();
 
+    } else {
+
+        // Fall through to next instruction
+        printf("Fall through S = %d M = %d\n", S, M);
+        if (S == Word) readExtensionWord();
         prefetch();
-        return;
-     }
-
-     // Fall through to next instruction
-     if (S == Word) readExtensionWord();
-     prefetch();
+    }
 }
 
 template<Instr I, Mode M, Size S> void
@@ -577,6 +577,8 @@ Moira::execBitDxEa(u16 opcode)
             u32 data = readD(dst);
             data = bitop<I>(data, bit);
 
+            prefetch();
+
             if (I != BTST) writeD(dst, data);
             break;
         }
@@ -588,12 +590,11 @@ Moira::execBitDxEa(u16 opcode)
             if (!readOperand<M,Byte>(dst, ea, data)) return;
 
             data = bitop<I>(data, bit);
+            prefetch();
 
             if (I != BTST) write<Byte>(ea, data);
         }
     }
-
-    prefetch();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -618,10 +619,9 @@ Moira::execBitImEa(u16 opcode)
         default:
         {
             u32 ea, data;
+            if (!readOperand<M,Byte>(dst, ea, data)) return;
 
-            if (!readOperand<M,S>(dst, ea, data)) return;
             data = bitop<I>(data, bit);
-
             prefetch();
 
             if (I != BTST) write<Byte>(ea, data);
