@@ -11,7 +11,7 @@ template <Size S> bool
 Moira::addressError(u32 addr)
 {
 #ifdef MOIRA_EMULATE_ADDRESS_ERROR
-    if (S != Byte && addr & 1) {
+    if (S != Byte && (addr & 1)) {
         execAddressError(addr);
         return true;
     }
@@ -212,8 +212,8 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
         case 4: // -(An)
         {
             ea = readA(n);
-            if (addressError<S>(ea)) return false;
             ea -= ((n == 7 && S == Byte) ? 2 : S);
+            if (addressError<S>(ea)) return false;
             writeA(n, ea);
             result = read<S>(ea);
             break;
@@ -231,8 +231,8 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
             i8 d = (i8)irc;
             i32 xi = readR((irc >> 12) & 0b1111);
             ea = readA(n) + d + ((irc & 0x800) ? xi : (i16)xi);
-            result = read<S>(ea);
             readExtensionWord();
+            result = read<S>(ea);
             break;
         }
         case 7: // ABS.W
@@ -254,8 +254,11 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
         case 9: // (d,PC)
         {
             i16 d = (i16)irc;
-            result = reg.pc + d;
+            ea = reg.pc + d;
             readExtensionWord();
+            result = read<S>(ea);
+            printf("(aaaa)\n");
+            printf("(bbbb)\n");
             break;
         }
         case 10: // (d,PC,Xi)
@@ -263,8 +266,8 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
             i8  d = (i8)irc;
             i32 xi = readR((irc >> 12) & 0b1111);
             ea = reg.pc + d + ((irc & 0x800) ? xi : (i16)xi);
-            result = read<S>(ea);
             readExtensionWord();
+            result = read<S>(ea);
             break;
         }
         case 11: // Imm

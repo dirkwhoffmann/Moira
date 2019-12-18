@@ -58,7 +58,7 @@ Moira::execAddressError(u32 addr)
     setSupervisorMode(true);
     sr.t = 0;
 
-    addr -= 2;
+    // addr -= 2;
     saveToStackDetailed(getSR(), addr, code);
 
     jumpToVector(3);
@@ -440,18 +440,22 @@ Moira::execAndEaRg(u16 opcode)
         case 0: // Dn
         {
             result = logic<I,S>(readD<S>(src), readD<S>(dst));
+            prefetch();
             break;
         }
         case 11: // Imm
         {
             result = logic<I,S>(readImm<S>(), readD<S>(dst));
+            prefetch();
             break;
         }
         default: // Ea
         {
             u32 ea, data;
             printf("execAndEaRg\n");
+
             if (!readOperand<M,S>(src, ea, data)) return;
+            prefetch();
 
             result = logic<I,S>(data, readD<S>(dst));
             break;
@@ -459,7 +463,6 @@ Moira::execAndEaRg(u16 opcode)
     }
 
     writeD<S>(dst, result);
-    prefetch();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -473,6 +476,7 @@ Moira::execAndRgEa(u16 opcode)
         case 0: // Dn
         {
             u32 result = logic<I,S>(readD<S>(src), readD<S>(dst));
+            prefetch();
             writeD<S>(dst, result);
             break;
         }
@@ -484,12 +488,11 @@ Moira::execAndRgEa(u16 opcode)
             if (addressError<S>(ea)) return;
 
             u32 result = logic<I,S>(readD<S>(src), read<S>(ea));
+            prefetch();
             write<S>(ea, result);
             break;
         }
     }
-
-    prefetch();
 }
 
 template<Instr I, Mode M, Size S> void

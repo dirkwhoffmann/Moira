@@ -533,13 +533,15 @@ void Tester_68k::setRegD(u8 reg, u32 value)
 
 void Tester_68k::process()
 {
+    static int cnt = 0;
+
     u32 pc = moiracpu->getPC();
     u32 ird = reg_ird;
     char instr[256];
 
     // Disassemble the instruction
     moiracpu->disassemble(pc, instr);
-    printf("Instruction: %s\n", instr);
+    printf("Instruction %d: %s\n", ++cnt, instr);
     
     // Run a pre check
     comparePre();
