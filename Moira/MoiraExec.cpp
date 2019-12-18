@@ -607,6 +607,8 @@ Moira::execBitImEa(u16 opcode)
             u32 data = readD(dst);
             data = bitop<I>(data, bit);
 
+            prefetch();
+
             if (I != BTST) writeD(dst, data);
             break;
         }
@@ -617,10 +619,11 @@ Moira::execBitImEa(u16 opcode)
             if (!readOperand<M,S>(dst, ea, data)) return;
             data = bitop<I>(data, bit);
 
+            prefetch();
+
             if (I != BTST) write<Byte>(ea, data);
         }
     }
-    prefetch();
 }
 
 template<Instr I, Mode M, Size S> void

@@ -704,10 +704,10 @@ u32 Core_68k::LoadEA(u8 size, u8 ea, bool noReadFromEA, bool fetchLastExtension,
 					adm = ABS_SHORT;
                     eaAddr = (i32)(i16)reg_irc;
                     if (fetchLastExtension) {
-                        // printf("DIRK: fetchLastExtension = %d\n", fetchLastExtension);
+                        printf("a) fetchLastExtension = %d\n", fetchLastExtension);
                         readExtensionWord();
                     } else {
-                        // printf("DIRK: fetchLastExtension = %d\n", fetchLastExtension);
+                        printf("b) fetchLastExtension = %d\n", fetchLastExtension);
                         logInstruction(reg_irc, false); incrementPc();
                     }
 
@@ -754,9 +754,9 @@ u32 Core_68k::LoadEA(u8 size, u8 ea, bool noReadFromEA, bool fetchLastExtension,
     if (noReadFromEA) return eaAddr;
 
 	switch(size) {
-		case SizeByte: operand = readByte(eaAddr); break;
-		case SizeWord: operand = readWord(eaAddr); break;
-		case SizeLong: operand = readLong(eaAddr); break;
+        case SizeByte: printf("SizeByte\n"); operand = readByte(eaAddr); break;
+		case SizeWord: printf("SizeWord\n"); operand = readWord(eaAddr); break;
+		case SizeLong: printf("SizeLong\n"); operand = readLong(eaAddr); break;
 	}
 
 	updateRegAForIndirectAddressing(size, regPos);

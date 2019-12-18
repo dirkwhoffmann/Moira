@@ -100,17 +100,21 @@ template<bool dynamic> void Core_68k::op_bchg(u16 opcode) {
         readExtensionWord();
     }
 
+    printf("Core_68k::op_bchg(1)\n");
 	u32 data = LoadEA(size, opcode & 0x3F);
+    printf("Core_68k::op_bchg(2)\n");
 
 	data ^= (1 << bit);
 	reg_s.z = !! ((data & (1 << bit)) >> bit);
     prefetch(isRegisterMode());
+    printf("Core_68k::op_bchg(3)\n");
 
     if (size == SizeLong) {
         sync(2);
         if (bit > 15) sync(2);
     }
     writeEA(size, data, true);
+    printf("Core_68k::op_bchg(4)\n");
 }
 
 template<bool dynamic> void Core_68k::op_bclr(u16 opcode) {
