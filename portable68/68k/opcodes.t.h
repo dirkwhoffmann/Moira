@@ -523,20 +523,29 @@ void Core_68k::op_divs(u16 opcode) {
 
 template<u8 size> void Core_68k::op_move(u16 opcode) {
     u8 destEA = (((opcode >> 6) & 7) << 3) | ((opcode >> 9) & 7);
-	u32 data = LoadEA(size, opcode & 0x3F);
+    printf("op_move(1) destEA = %s\n", destEA == ABS_LONG ? "ABS_LONG" : "?");
+    u32 data = LoadEA(size, opcode & 0x3F);
     bool isClass2 = isMemoryOperand() && destEA == ABS_LONG;
 
+    printf("op_move(2) isClass2 = %d\n", isClass2);
+
     LoadEA(size, destEA, true, !isClass2, true);
-	setFlags(flag_logical, size, data, 0, 0);
+    printf("op_move(3)\n");
+
+    setFlags(flag_logical, size, data, 0, 0);
     if (adm == AR_INDIRECT_DEC) { //dest adm
         prefetch();
     }
     writeEA(size, data, adm == AR_INDIRECT_DEC);
+    printf("op_move(4)\n");
+
     updateRegAForIndirectAddressing(size, (opcode >> 9) & 7 );
 
     if (adm != AR_INDIRECT_DEC) { //dest adm
         isClass2 ? fullprefetch(true) : prefetch(true);
     }
+    printf("op_move(5)\n");
+
 }
 
 template<u8 size> void Core_68k::op_movea(u16 opcode) {

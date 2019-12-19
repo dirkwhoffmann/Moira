@@ -35,9 +35,9 @@ template<Mode M, Size S> bool readOperand(int n, u32 &ea, u32 &result);
 template<Mode M, Size S> void writeOperand(int n, u32 ea, u32 value);
 
 /* Writes an operand.
- * This function supports all addressing modes.
+ * This function must not be called for immediate addressing.
  */
-template<Mode M, Size S> void writeOperand(int n, u32 value);
+template<Mode M, Size S> bool writeOperand(int n, u32 value);
 
 
 // Read immediate value

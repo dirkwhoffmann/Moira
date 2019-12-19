@@ -187,7 +187,6 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
         case 3: // (An)+
         {
             ea = readA(n);
-            printf("(An)+: ea = %x\n", ea);
             if (addressError<S>(ea)) return false;
             result = read<S>(ea);
 
@@ -242,8 +241,6 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
             ea = reg.pc + d;
             readExtensionWord();
             result = read<S>(ea);
-            printf("(aaaa)\n");
-            printf("(bbbb)\n");
             break;
         }
         case 10: // (d,PC,Xi)
@@ -292,10 +289,109 @@ Moira::writeOperand(int n, u32 ea, u32 value)
     }
 }
 
-template<Mode M, Size S> void
+template<Mode M, Size S> bool
 Moira::writeOperand(int n, u32 value)
 {
+    u32 ea;
 
+    switch (M) {
+
+        case 0: // Dn
+        {
+            writeD<S>(n, value);
+            return true;
+        }
+        case 1: // An
+        {
+            writeA<S>(n, value);
+            return true;
+        }
+        case 2: // (An)
+        {
+            ea = readA(n);
+            if (addressError<S>(ea)) return false;
+
+            write<S>(ea, value);
+            break;
+        }
+        case 3: // (An)+
+        {
+            ea = readA(n);
+            if (addressError<S>(ea)) return false;
+            write<S>(ea, value);
+
+            writeA(n, ea + ((n == 7 && S == Byte) ? 2 : S));
+            break;
+        }
+        case 4: // -(An)
+        {
+            ea = readA(n);
+            ea -= ((n == 7 && S == Byte) ? 2 : S);
+            if (addressError<S>(ea)) return false;
+            writeA(n, ea);
+            write<S>(ea, value);
+            break;
+        }
+        case 5: // (d,An)
+        {
+            i16 d = (i16)irc;
+            ea = readA(n) + d;
+            readExtensionWord();
+            write<S>(ea, value);
+            break;
+        }
+        case 6: // (d,An,Xi)
+        {
+            i8 d = (i8)irc;
+            i32 xi = readR((irc >> 12) & 0b1111);
+            ea = readA(n) + d + ((irc & 0x800) ? xi : (i16)xi);
+            readExtensionWord();
+            write<S>(ea, value);
+            break;
+        }
+        case 7: // ABS.W
+        {
+            ea = irc;
+            readExtensionWord();
+            write<S>(ea, value);
+            break;
+        }
+        case 8: // ABS.L
+        {
+            ea = irc << 16;
+            readExtensionWord();
+            ea |= irc;
+            readExtensionWord();
+            write<S>(ea, value);
+            break;
+        }
+        case 9: // (d,PC)
+        {
+            i16 d = (i16)irc;
+            ea = reg.pc + d;
+            readExtensionWord();
+            write<S>(ea, value);
+            break;
+        }
+        case 10: // (d,PC,Xi)
+        {
+            i8  d = (i8)irc;
+            i32 xi = readR((irc >> 12) & 0b1111);
+            ea = reg.pc + d + ((irc & 0x800) ? xi : (i16)xi);
+            readExtensionWord();
+            write<S>(ea, value);
+            break;
+        }
+        case 11: // Imm
+        {
+            assert(false);
+            break;
+        }
+        default:
+            assert(false);
+    }
+
+    return true;
 }
 
 template<Size S> u32

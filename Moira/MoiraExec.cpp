@@ -902,19 +902,43 @@ Moira::execMove(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    u32 ea1, data1, ea2, data2;
+    u32 ea1, data;
 
-    if (!readOperand<M1,S>(src, ea1, data1)) return;
-    if (!readOperand<M2,S>(dst, ea2, data2)) return;
+    /* Check for mode combinations that show special timing behaviour
+     * http://pasti.fxatari.com/68kdocs/68kPrefetch.html
+     */
+    if (M2 == 4) {
 
-    writeOperand<M2,S>(dst, ea2, data1);
+        printf("Special case MOVE <ea>,-(An)\n");
+
+        if (!readOperand<M1,S>(src, ea1, data)) return;
+        prefetch();
+        if (!writeOperand<M2,S>(dst, data)) return;
+
+    } else if (M2 == 8 && M1 >= 2 && M1 <= 10) {
+
+        printf("Special case MOVE memory,(xxx).l\n");
+        u32 ea2;
+
+        if (!readOperand<M1,S>(src, ea1, data)) return;
+        ea2 = irc << 16;
+        readExtensionWord();
+        ea2 |= irc;
+        write<Long>(ea2, data);
+        readExtensionWord();
+        prefetch();
+
+    } else {
+
+        if (!readOperand<M1,S>(src, ea1, data)) return;
+        if (!writeOperand<M2,S>(dst, data)) return;
+        prefetch();
+    }
 
     sr.c = 0;
     sr.v = 0;
-    sr.n = NBIT<S>(data1);
-    sr.z = ZERO<S>(data1);
-
-    prefetch();
+    sr.n = NBIT<S>(data);
+    sr.z = ZERO<S>(data);
 }
 
 template<Instr I, Mode M, Size S> void
