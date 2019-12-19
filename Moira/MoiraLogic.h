@@ -19,12 +19,25 @@ template<Size S> void write(u32 addr, u32 value);
 // Writes a value to the stack
 void writeStack(u32 value);
 
-// Computea an effective address
-template<Mode M, Size S> u32 computeEA(u32 n, u32 dis = 0, u32 idx = 0);
+/* Computea an effective address.
+ * This function must not be called for direct addressing modes 0 and 1.
+ */
+template<Mode M, Size S> u32 computeEA(u32 n);
 
-// Reads an operand
+/* Reads an operand.
+ * This function supports all addressing modes.
+ */
 template<Mode M, Size S> bool readOperand(int n, u32 &ea, u32 &result);
+
+/* Writes an operand to a given effective address.
+ * This function must not be called for direct addressing modes 0 and 1.
+ */
 template<Mode M, Size S> void writeOperand(int n, u32 ea, u32 value);
+
+/* Writes an operand.
+ * This function supports all addressing modes.
+ */
+template<Mode M, Size S> void writeOperand(int n, u32 value);
 
 
 // Read immediate value

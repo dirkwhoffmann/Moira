@@ -72,30 +72,20 @@ Moira::writeStack(u32 value)
 }
 
 template<Mode M, Size S> u32
-Moira::computeEA(u32 n, u32 dis, u32 idx) {
+Moira::computeEA(u32 n) {
+
+    assert(n < 8);
 
     u32 result;
 
-    assert(n < 8);
-    
     switch (M) {
-            
-        case 0: // Dn
-        {
-            assert(false);
-            break;
-        }
-        case 1: // An
-        {
-            assert(false);
-            break;
-        }
-        case 2: // (An)
+
+        case 2:  // (An)
         {
             result = readA(n);
             break;
         }
-        case 3: // (An)+
+        case 3:  // (An)+
         {
             u32 an = readA(n);
             bool addressError = (S != Byte) && (an & 1);
@@ -104,7 +94,7 @@ Moira::computeEA(u32 n, u32 dis, u32 idx) {
             if (!addressError) writeA(n, an + offset);
             break;
         }
-        case 4: // -(An)
+        case 4:  // -(An)
         {
             u32 an = readA(n);
             bool addressError = (S != Byte) && (an & 1);
@@ -163,15 +153,11 @@ Moira::computeEA(u32 n, u32 dis, u32 idx) {
             readExtensionWord();
             break;
         }
-        case 11: // Imm
+        default: // Dn, An, Imm
         {
             assert(false);
-            return 0;
         }
-        default:
-            assert(false);
     }
-
     return result;
 }
 
@@ -204,8 +190,7 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
             printf("(An)+: ea = %x\n", ea);
             if (addressError<S>(ea)) return false;
             result = read<S>(ea);
-            // ea += ((n == 7 && S == Byte) ? 2 : S);
-            // writeA(n, ea);
+
             writeA(n, ea + ((n == 7 && S == Byte) ? 2 : S));
             break;
         }
@@ -305,6 +290,12 @@ Moira::writeOperand(int n, u32 ea, u32 value)
             break;
         }
     }
+}
+
+template<Mode M, Size S> void
+Moira::writeOperand(int n, u32 value)
+{
+
 }
 
 template<Size S> u32
