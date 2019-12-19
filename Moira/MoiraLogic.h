@@ -22,7 +22,7 @@ void writeStack(u32 value);
 /* Computea an effective address.
  * This function must not be called for direct addressing modes 0 and 1.
  */
-template<Mode M, Size S, bool skipRead = false> u32 computeEA(u32 n);
+template<Mode M, Size S, u8 flags = 0> u32 computeEA(u32 n);
 
 // Emulates the address register modification for modes (An)+, (An)-
 template<Mode M, Size S> void postIncPreDec(int n);

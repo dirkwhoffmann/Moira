@@ -12,6 +12,10 @@
 
 #include "types.h"
 
+// FLags
+#define CHECK_ADDR_ERR 0b00000001
+#define SKIP_LAST_READ 0b00000010
+
 #define REVERSE_8(x) (((x) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
 #define REVERSE_16(x) ((REVERSE_8((x) & 0xFF) << 8) | REVERSE_8(((x) >> 8) & 0xFF))
 

@@ -63,7 +63,7 @@ Moira::writeStack(u32 value)
     write<Long>(reg.sp, value);
 }
 
-template<Mode M, Size S, bool skipRead> u32
+template<Mode M, Size S, u8 flags> u32
 Moira::computeEA(u32 n) {
 
     assert(n < 8);
@@ -95,7 +95,7 @@ Moira::computeEA(u32 n) {
             i16  d = (i16)irc;
 
             result = d + an;
-            if (!skipRead) readExtensionWord();
+            if (!(flags & SKIP_LAST_READ)) readExtensionWord();
             break;
         }
         case 6: // (d,An,Xi)
@@ -105,13 +105,13 @@ Moira::computeEA(u32 n) {
             i32 xi = readR((irc >> 12) & 0b1111);
 
             result = d + an + ((irc & 0x800) ? xi : (i16)xi);
-            if (!skipRead) readExtensionWord();
+            if (!(flags & SKIP_LAST_READ)) readExtensionWord();
             break;
         }
         case 7: // ABS.W
         {
             result = irc;
-            if (!skipRead) readExtensionWord();
+            if (!(flags & SKIP_LAST_READ)) readExtensionWord();
             break;
         }
         case 8: // ABS.L
@@ -119,7 +119,7 @@ Moira::computeEA(u32 n) {
             result = irc << 16;
             readExtensionWord();
             result |= irc;
-            if (!skipRead) readExtensionWord();
+            if (!(flags & SKIP_LAST_READ)) readExtensionWord();
             break;
         }
         case 9: // (d,PC)
@@ -127,7 +127,7 @@ Moira::computeEA(u32 n) {
             i16  d = (i16)irc;
 
             result = reg.pc + d;
-            if (!skipRead) readExtensionWord();
+            if (!(flags & SKIP_LAST_READ)) readExtensionWord();
             break;
         }
         case 10: // (d,PC,Xi)

@@ -858,7 +858,7 @@ Moira::execJmp(u16 opcode)
     u32 ea;
     int src = _____________xxx(opcode);
 
-    ea = computeEA<M,Long,true>(src);
+    ea = computeEA<M,Long,SKIP_LAST_READ>(src);
 
     reg.pc = ea;
     fullPrefetch();
@@ -869,7 +869,7 @@ Moira::execJsr(u16 opcode)
 {
     int src = _____________xxx(opcode);
 
-    u32 ea = computeEA<M,Long,true>(src);
+    u32 ea = computeEA<M,Long,SKIP_LAST_READ>(src);
     u32 pc = reg.pc;
 
     reg.pc = ea;
