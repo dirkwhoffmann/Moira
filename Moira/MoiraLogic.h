@@ -8,7 +8,7 @@
 // -----------------------------------------------------------------------------
 
 // Checks for an address error
-template<Size S> bool addressError(u32 addr);
+template<Mode M, Size S> bool addressError(u32 addr);
 
 // Reads a value from memory
 template<Size S> u32 read(u32 addr);

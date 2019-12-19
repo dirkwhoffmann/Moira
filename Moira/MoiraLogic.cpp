@@ -7,11 +7,11 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-template <Size S> bool
+template <Mode M, Size S> bool
 Moira::addressError(u32 addr)
 {
 #ifdef MOIRA_EMULATE_ADDRESS_ERROR
-    if (S != Byte && (addr & 1)) {
+    if ((addr & 1) && S != Byte && isMemMode(M)) {
         execAddressError(addr);
         return true;
     }
@@ -72,6 +72,12 @@ Moira::computeEA(u32 n) {
 
     switch (M) {
 
+        case 0:  // Dn
+        case 1:  // An
+        {
+            result = n;
+            break;
+        }
         case 2:  // (An)
         {
             result = readA(n);
@@ -139,7 +145,12 @@ Moira::computeEA(u32 n) {
             readExtensionWord();
             break;
         }
-        default: // Dn, An, Imm
+        case 11: // Im
+        {
+            result = readImm<S>();
+            break;
+        }
+        default:
         {
             assert(false);
         }
@@ -181,7 +192,7 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
         default:
         {
             ea = computeEA<M,S,SKIP_POST_PRE>(n);
-            if (addressError<S>(ea)) return false;
+            if (addressError<M,S>(ea)) return false;
 
             postIncPreDec<M,S>(n);
             result = read<S>(ea);
@@ -213,7 +224,7 @@ Moira::writeOperand(int n, u32 value)
         default:
         {
             u32 ea = computeEA<M,S,SKIP_POST_PRE>(n);
-            if (addressError<S>(ea)) return false;
+            if (addressError<M,S>(ea)) return false;
 
             postIncPreDec<M,S>(n);
             write<S>(ea, value);
