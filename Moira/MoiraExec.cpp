@@ -173,14 +173,6 @@ Moira::execTrapException(u8 nr)
 
     // Push PC and SR
     saveToStackBrief(status);
-    /*
-    reg.sp -= 2;
-    write<Word>(reg.sp, reg.pc & 0xFFFF);
-    reg.sp -= 2;
-    write<Word>(reg.sp, reg.pc >> 16);
-    reg.sp -= 2;
-    write<Word>(reg.sp, status);
-    */
 
     jumpToVector(nr);
 }
@@ -1547,6 +1539,7 @@ Moira::execTrap(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execTrapv(u16 opcode)
 {
+    prefetch();
     if (sr.v) execTrapException(7);
 }
 
