@@ -487,10 +487,10 @@ Moira::execAndRgEa(u16 opcode)
         {
             assert(M >= 2 && M <= 8);
 
-            u32 ea = computeEA<M,S>(dst);
-            if (addressError<S>(ea)) return;
+            u32 ea, data;
+            if (!readOperand<M,S>(dst, ea, data)) return;
 
-            u32 result = logic<I,S>(readD<S>(src), read<S>(ea));
+            u32 result = logic<I,S>(readD<S>(src), data);
             prefetch();
             write<S>(ea, result);
             break;
@@ -691,10 +691,9 @@ Moira::execClr(u16 opcode)
         {
             assert(M >= 2 && M <= 8);
 
-            u32 ea = computeEA<M,S>(dst);
-            if (addressError<S>(ea)) return;
+            u32 ea, data;
+            if (!readOperand<M,S>(dst, ea, data)) return;
 
-            (void)read<S>(ea);
             prefetch();
             write<S>(ea, 0);
             break;
@@ -947,10 +946,10 @@ Moira::execMovea(u16 opcode)
         {
             assert(M >= 2 && M <= 11);
 
-            u32 ea = computeEA<M,S>(src);
-            if (addressError<S>(ea)) return;
+            u32 ea, data;
+            if (!readOperand<M,S>(src, ea, data)) return;
 
-            result = SIGN<S>(read<S>(ea));
+            result = SIGN<S>(data);
             break;
         }
     }
@@ -1513,10 +1512,8 @@ Moira::execTst(u16 opcode)
         {
             assert(M >= 2 && M <= 10);
 
-            u32 ea = computeEA<M,S>(reg);
-            if (addressError<S>(ea)) return;
-
-            value = read<S>(ea);
+            u32 ea;
+            if (!readOperand<M,S>(reg, ea, value)) return;
             break;
         }
     }
