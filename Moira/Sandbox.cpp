@@ -23,12 +23,14 @@ Sandbox::record(AccessType type, u32 addr, u64 cycle, u16 value)
 {
     access[recordCnt] = AccessRecord { type, addr, value, cycle };
 
+    /*
     printf("Recording i: %2d  ", recordCnt);
     printf("Type: %s  ", accessTypeStr[type]);
     printf("Addr: %4x  ", addr);
     printf("Value: %4x  ", value);
     printf("Cycle: %lld  ", cycle);
     printf("\n");
+    */
 
     recordCnt++;
     assert(recordCnt < 64);

@@ -4,22 +4,21 @@
 void Core_68k::group1exceptions() {
     status_code._instruction = false;
     if (trace) {
-        printf("group1exceptions::trace\n");
+        // printf("group1exceptions::trace\n");
         traceException();
     }
 
     if ( ( irqSamplingLevel == 7 ) || ( irqSamplingLevel > reg_s.intr ) ) {
         if ( irqSamplingLevel == 7 ) {
-            printf("group1exceptions::IRQ = 7\n");
+            // printf("group1exceptions::IRQ = 7\n");
         }
         if ( irqSamplingLevel > reg_s.intr ) {
-            printf("group1exceptions:: %d > %d\n", irqSamplingLevel, reg_s.intr);
+            // printf("group1exceptions:: %d > %d\n", irqSamplingLevel, reg_s.intr);
         }
         interruptException( irqSamplingLevel );
     }
 
     if (illegalMode != NONE) {
-        printf("group1exceptions::illegalMode == %d\n", illegalMode);
         illegalException(illegalMode);
     }
     status_code._instruction = true;
@@ -78,10 +77,8 @@ void Core_68k::op_illegal(u16 opcode) {
 
     if (nibble == 0xA) {
         illegalMode = LINE_A;
-        // printf("illegalMode = LINE_A\n");
     } else if (nibble == 0xF) {
         illegalMode = LINE_F;
-        // printf("illegalMode = LINE_F\n");
     }
     trace = false;
 }
@@ -96,8 +93,6 @@ void Core_68k::setPrivilegeException() {
 }
 
 void Core_68k::illegalException(u8 iType) {
-
-    printf("Core_68k::illegalException(%d)\n", iType);
 
     illegalMode = NONE;
     u16 SR = reg_s;
@@ -150,7 +145,6 @@ void Core_68k::trapException(u8 vector) { //group 2 exceptions will triggered wi
     writeWord(reg_a[7] + 2, (reg_pc >> 16) & 0xFFFF);
     writeWord(reg_a[7] + 0, SR);
 
-    printf("%x %x %x\n", reg_pc & 0xFFFF, (reg_pc >> 16) & 0xFFFF, SR);
     executeAt(vector);
 }
 
@@ -164,8 +158,6 @@ void Core_68k::group0exception(u8 type) { //bus or address error
 
     u16 _status = (status_code._read ? 16 : 0) | (status_code._instruction ? 0 : 8);
     _status |= (SR & 0x2000 ? 4 : 0) | (status_code._program ? 2 : 1);
-
-    printf("_status = %x SR = %x\n", _status, SR);
 
     reg_s.trace = trace = 0;
     switchToSupervisor();
@@ -188,7 +180,6 @@ void Core_68k::group0exception(u8 type) { //bus or address error
 }
 
 void Core_68k::executeAt(u8 vector) {
-    printf("Core_68k::executeAt(%d)\n", vector);
     reg_pc = readLong(vector << 2);
     fullprefetchFirstStep();
     sync(2);

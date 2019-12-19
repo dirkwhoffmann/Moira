@@ -44,7 +44,6 @@ void
 Moira::execAddressError(u32 addr)
 {
     assert(addr & 1);
-    printf("Moira::execAddressViolation\n");
 
     /* Group 0 exceptions indicate a serious error condition. Detailed
      * information about the current CPU state is pushed on the stack to
@@ -67,14 +66,12 @@ Moira::execAddressError(u32 addr)
 void
 Moira::execLineA(u16 opcode)
 {
-    printf("Moira::execLineA\n");
     execGroup1Exception(10);
 }
 
 void
 Moira::execLineF(u16 opcode)
 {
-    printf("Moira::execLineF\n");
     execGroup1Exception(11);
 }
 
@@ -225,13 +222,10 @@ Moira::execShiftEa(u16 op)
     int dst = _____________xxx(op);
     int cnt;
 
-    printf("execShiftEa(M = %d)\n", M);
-
     switch (M) {
 
         case 0: // Dn
         {
-            printf("Ea(Dn)\n");
             cnt = readD(src) & 0x3F;
             writeD<S>(dst, shift<I,S>(cnt, readD<S>(dst)));
             break;
@@ -338,12 +332,9 @@ Moira::execAddRgEa(u16 opcode)
     int dst = _____________xxx(opcode);
 
     u32 ea, data;
-    printf("execAddRgEa(1)\n");
     if (!readOperand<M,S>(dst, ea, data)) return;
-    printf("execAddRgEa(2)\n");
 
     u32 result = arith<I,S>(readD<S>(src), data);
-    printf("execAddRgEa(3)\n");
 
     prefetch();
     write<S>(ea, result);
@@ -474,7 +465,6 @@ Moira::execAndEaRg(u16 opcode)
         default: // Ea
         {
             u32 ea, data;
-            printf("execAndEaRg\n");
 
             if (!readOperand<M,S>(src, ea, data)) return;
             prefetch();
@@ -569,14 +559,12 @@ Moira::execBcc(u16 opcode)
         u32 newpc = reg.pc + offset;
 
         // Take branch
-        printf("Take branch \n");
         reg.pc = newpc;
         fullPrefetch();
 
     } else {
 
         // Fall through to next instruction
-        printf("Fall through S = %d M = %d\n", S, M);
         if (S == Word) readExtensionWord();
         prefetch();
     }
@@ -928,15 +916,12 @@ Moira::execMove(u16 opcode)
      */
     if (M2 == 4) {
 
-        printf("Special case MOVE <ea>,-(An)\n");
-
         if (!readOperand<M1,S>(src, ea1, data)) return;
         prefetch();
         if (!writeOperand<M2,S>(dst, data)) return;
 
     } else if (M2 == 8 && M1 >= 2 && M1 <= 10) {
 
-        printf("Special case MOVE memory,(xxx).l\n");
         u32 ea2;
 
         if (!readOperand<M1,S>(src, ea1, data)) return;
@@ -1243,8 +1228,6 @@ Moira::execMulDiv(u16 opcode)
     u32 ea, data;
 
     if (!readOperand<M, Word>(src, ea, data)) return;
-
-    printf("data = %x\n", data);
 
     switch (I) {
 

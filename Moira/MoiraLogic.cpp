@@ -22,26 +22,18 @@ Moira::addressError(u32 addr)
 template<> u32
 Moira::read<Byte>(u32 addr)
 {
-    // printf("read<Byte>(%x)\n", addr);
     return memory->moiraRead8(addr);
 }
 
 template<> u32
 Moira::read<Word>(u32 addr)
 {
-    // printf("read<Word>(%x)\n", addr);
-    /*
-    if (addr & 1) {
-        execAddressError(addr);
-    }
-    */
     return memory->moiraRead16(addr);
 }
 
 template<> u32
 Moira::read<Long>(u32 addr)
 {
-    // printf("read<Long>(%x)\n", addr);
     return memory->moiraRead16(addr) << 16 | memory->moiraRead16(addr + 2);
 }
 
@@ -401,17 +393,14 @@ Moira::readImm()
 
     switch (S) {
         case Byte:
-            // printf("readImm (Byte)\n");
             result = (u8)irc;
             readExtensionWord();
             break;
         case Word:
             result = irc;
-            // printf("readImm (Word) irc = %x\n", irc);
             readExtensionWord();
             break;
         case Long:
-            // printf("readImm (Long)\n");
             result = irc << 16;
             readExtensionWord();
             result |= irc;
@@ -594,7 +583,6 @@ Moira::arith(u32 op1, u32 op2)
         case SUBQ:
         {
             result = (u64)op2 - (u64)op1;
-            // printf("arith::SUB %x %x %llx \n", op1, op2, result);
 
             sr.x = sr.c = CARRY<S>(result);
             sr.v = NBIT<S>((op1 ^ op2) & (op2 ^ result));
@@ -629,7 +617,6 @@ Moira::arith(u32 op1, u32 op2)
             if (((op2 - op1 - sr.x) & 0x100) > 0xff) result -= 0x60;
             sr.c = sr.x = ((op2 - op1 - bcd - sr.x) & 0x300) > 0xff;
 
-            printf("SBCD result = %llx c: %d x: %d\n", result, sr.c, sr.x);
             if (CLIP<Byte>(result)) sr.z = 0;
             sr.n = NBIT<Byte>(result);
             sr.v = ((tmp_result & 0x80) == 0x80) && ((result & 0x80) == 0);

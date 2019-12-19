@@ -100,21 +100,17 @@ template<bool dynamic> void Core_68k::op_bchg(u16 opcode) {
         readExtensionWord();
     }
 
-    printf("Core_68k::op_bchg(1)\n");
 	u32 data = LoadEA(size, opcode & 0x3F);
-    printf("Core_68k::op_bchg(2)\n");
 
 	data ^= (1 << bit);
 	reg_s.z = !! ((data & (1 << bit)) >> bit);
     prefetch(isRegisterMode());
-    printf("Core_68k::op_bchg(3)\n");
 
     if (size == SizeLong) {
         sync(2);
         if (bit > 15) sync(2);
     }
     writeEA(size, data, true);
-    printf("Core_68k::op_bchg(4)\n");
 }
 
 template<bool dynamic> void Core_68k::op_bclr(u16 opcode) {
@@ -212,8 +208,6 @@ void Core_68k::op_nbcd(u16 opcode) {
     prefetch(isRegisterMode());
     if (adm == DR_DIRECT) sync(2);
 
-    printf("p68k: nbcd result = %x\n", result);
-
     writeEA(SizeByte, result, true);
 }
 
@@ -282,13 +276,11 @@ template<u8 size> void Core_68k::op_tst(u16 opcode) {
 template<u8 size, bool writeEa> void Core_68k::op_add(u16 opcode) {
 	u8 dregPos = (opcode >> 9) & 7;
 	u32 data = LoadEA(size, opcode & 0x3F);
-    printf("(1)\n");
     u64 result = u64(maskVal_(reg_d[dregPos], size)) + u64(data);
 
     setFlags(flag_add, size, result, data, reg_d[dregPos]);
 
     prefetch(!writeEa);
-    printf("(2)\n");
 
     if ( !writeEa ) {
         eaReg = &reg_d[dregPos];
@@ -523,29 +515,21 @@ void Core_68k::op_divs(u16 opcode) {
 
 template<u8 size> void Core_68k::op_move(u16 opcode) {
     u8 destEA = (((opcode >> 6) & 7) << 3) | ((opcode >> 9) & 7);
-    printf("op_move(1) destEA = %s\n", destEA == ABS_LONG ? "ABS_LONG" : "?");
     u32 data = LoadEA(size, opcode & 0x3F);
     bool isClass2 = isMemoryOperand() && destEA == ABS_LONG;
 
-    printf("op_move(2) isClass2 = %d\n", isClass2);
-
     LoadEA(size, destEA, true, !isClass2, true);
-    printf("op_move(3)\n");
-
     setFlags(flag_logical, size, data, 0, 0);
     if (adm == AR_INDIRECT_DEC) { //dest adm
         prefetch();
     }
     writeEA(size, data, adm == AR_INDIRECT_DEC);
-    printf("op_move(4)\n");
 
     updateRegAForIndirectAddressing(size, (opcode >> 9) & 7 );
 
     if (adm != AR_INDIRECT_DEC) { //dest adm
         isClass2 ? fullprefetch(true) : prefetch(true);
     }
-    printf("op_move(5)\n");
-
 }
 
 template<u8 size> void Core_68k::op_movea(u16 opcode) {
@@ -828,8 +812,6 @@ template<u8 size, bool memTomem> void Core_68k::op_addx(u16 opcode) {
 	u32 mem_src, mem_dest;
     u64 result;
 
-    printf("memTomem = %d\n", memTomem);
-    
     if (!memTomem) {
         result = u64(maskVal_(reg_d[Rx], size)) + u64(maskVal_(reg_d[Ry], size)) + (u64)reg_s.x;
 		setFlags(flag_addx, size, result, reg_d[Ry], reg_d[Rx]);
@@ -843,17 +825,14 @@ template<u8 size, bool memTomem> void Core_68k::op_addx(u16 opcode) {
 
 	setFlags(flag_zn, size, result, 0, 0);
     if (memTomem && (size == SizeLong) ) {
-        printf("memTomem (1)\n");
         writeWord(eaAddr + 2, result & 0xFFFF, false);
     }
     prefetch(!memTomem);
     if (!memTomem && (size == SizeLong) ) sync(4);
 
     if (memTomem && (size == SizeLong) ) {
-        printf("memTomem (2)\n");
         writeWord(eaAddr, (result >> 16) & 0xFFFF, true);
     } else {
-        printf("memTomem (3)\n");
         writeEA(size, (u32)result, true);
     }
 }
@@ -961,8 +940,6 @@ template<bool memTomem> void Core_68k::op_sbcd(u16 opcode) {
 	reg_s.x = reg_s.c;
     reg_s.v = ((tmp_result & 0x80) == 0x80) && ((result & 0x80) == 0);
 	setFlags(flag_zn, SizeByte, result, 0, 0);
-
-    // printf("p68k: SBCD result = %x\n", result);
 
     writeEA(SizeByte, result, true);
 }
@@ -1127,13 +1104,11 @@ template<bool _longSize> void Core_68k::op_ext(u16 opcode) {
         reg_d[Rx].d = reg_d[Rx].w | (((reg_d[Rx].w & 0x8000) ? 0xFFFF << 16 : 0));
         setFlags(flag_logical, SizeLong, reg_d[Rx], 0, 0);
     } else {
-        // printf("WORD SIZE\n");
         reg_d[Rx].w &= 0x00FF;
         reg_d[Rx].w = reg_d[Rx].l | (((reg_d[Rx].l & 0x80) ? 0xFF << 8 : 0));
         setFlags(flag_logical, SizeWord, reg_d[Rx], 0, 0);
     }
 
-    // printf("reg_d[Rx].d = %x %x\n", old, reg_d[Rx].d);
     prefetch(true);
 }
 
