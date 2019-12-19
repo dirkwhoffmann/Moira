@@ -39,7 +39,6 @@ template<Mode M, Size S> void writeOperand(int n, u32 ea, u32 value);
  */
 template<Mode M, Size S> bool writeOperand(int n, u32 value);
 
-
 // Read immediate value
 template<Size S> u32 readImm();
 

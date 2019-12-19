@@ -80,19 +80,19 @@ Moira::computeEA(u32 n) {
         case 3:  // (An)+
         {
             u32 an = readA(n);
-            bool addressError = (S != Byte) && (an & 1);
+            // bool addressError = (S != Byte) && (an & 1);
             u32 offset = (n == 7 && S == Byte) ? 2 : BYTES<S>();
             result = an;
-            if (!addressError) writeA(n, an + offset);
+            writeA(n, an + offset);
             break;
         }
         case 4:  // -(An)
         {
             u32 an = readA(n);
-            bool addressError = (S != Byte) && (an & 1);
+            // bool addressError = (S != Byte) && (an & 1);
             u32 offset = (n == 7 && S == Byte) ? 2 : BYTES<S>();
             result = an - offset;
-            if (!addressError) writeA(n, an - offset);
+            writeA(n, an - offset);
             break;
         }
         case 5: // (d,An)
@@ -177,70 +177,27 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
             break;
         }
         case 3: // (An)+
-        {
-            ea = readA(n);
-            if (addressError<S>(ea)) return false;
-            result = read<S>(ea);
-
-            writeA(n, ea + ((n == 7 && S == Byte) ? 2 : S));
-            break;
-        }
         case 4: // -(An)
         {
-            ea = readA(n);
-            ea -= ((n == 7 && S == Byte) ? 2 : S);
-            if (addressError<S>(ea)) return false;
-            writeA(n, ea);
+            u32 olda = readA(n);
+            ea = computeEA<M,S>(n);
+            if (addressError<S>(ea)) {
+                writeA(n,olda);
+                return false;
+            }
             result = read<S>(ea);
             break;
         }
-        case 5: // (d,An)
-        {
-            i16 d = (i16)irc;
-            ea = readA(n) + d;
-            readExtensionWord();
-            result = read<S>(ea);
-            break;
-        }
-        case 6: // (d,An,Xi)
-        {
-            i8 d = (i8)irc;
-            i32 xi = readR((irc >> 12) & 0b1111);
-            ea = readA(n) + d + ((irc & 0x800) ? xi : (i16)xi);
-            readExtensionWord();
-            result = read<S>(ea);
-            break;
-        }
-        case 7: // ABS.W
-        {
-            ea = irc;
-            readExtensionWord();
-            result = read<S>(ea);
-            break;
-        }
-        case 8: // ABS.L
-        {
-            ea = irc << 16;
-            readExtensionWord();
-            ea |= irc;
-            readExtensionWord();
-            result = read<S>(ea);
-            break;
-        }
-        case 9: // (d,PC)
-        {
-            i16 d = (i16)irc;
-            ea = reg.pc + d;
-            readExtensionWord();
-            result = read<S>(ea);
-            break;
-        }
+        case 5:  // (d,An)
+        case 6:  // (d,An,Xi)
+        case 7:  // ABS.W
+        case 8:  // ABS.L
+        case 9:  // (d,PC)
         case 10: // (d,PC,Xi)
         {
-            i8  d = (i8)irc;
-            i32 xi = readR((irc >> 12) & 0b1111);
-            ea = reg.pc + d + ((irc & 0x800) ? xi : (i16)xi);
-            readExtensionWord();
+            ea = computeEA<M,S>(n);
+            if (addressError<S>(ea)) return false;
+
             result = read<S>(ea);
             break;
         }
@@ -250,9 +207,10 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
             break;
         }
         default:
+        {
             assert(false);
+        }
     }
-
     return true;
 }
 
