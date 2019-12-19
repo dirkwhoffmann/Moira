@@ -828,6 +828,8 @@ template<u8 size, bool memTomem> void Core_68k::op_addx(u16 opcode) {
 	u32 mem_src, mem_dest;
     u64 result;
 
+    printf("memTomem = %d\n", memTomem);
+    
     if (!memTomem) {
         result = u64(maskVal_(reg_d[Rx], size)) + u64(maskVal_(reg_d[Ry], size)) + (u64)reg_s.x;
 		setFlags(flag_addx, size, result, reg_d[Ry], reg_d[Rx]);
@@ -841,14 +843,17 @@ template<u8 size, bool memTomem> void Core_68k::op_addx(u16 opcode) {
 
 	setFlags(flag_zn, size, result, 0, 0);
     if (memTomem && (size == SizeLong) ) {
+        printf("memTomem (1)\n");
         writeWord(eaAddr + 2, result & 0xFFFF, false);
     }
     prefetch(!memTomem);
     if (!memTomem && (size == SizeLong) ) sync(4);
 
     if (memTomem && (size == SizeLong) ) {
+        printf("memTomem (2)\n");
         writeWord(eaAddr, (result >> 16) & 0xFFFF, true);
     } else {
+        printf("memTomem (3)\n");
         writeEA(size, (u32)result, true);
     }
 }

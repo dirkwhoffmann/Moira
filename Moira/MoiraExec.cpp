@@ -427,7 +427,15 @@ Moira::execAddxEa(u16 opcode)
     if (!readOperand<M,S>(dst, ea2, data2)) return;
 
     u32 result = arith<I,S>(data1, data2);
-    write<S>(ea2, result);
+
+    if (S == Long) {
+        write<Word>(ea2 + 2, result & 0xFFFF);
+        prefetch();
+        write<Word>(ea2, result >> 16);
+    } else {
+        prefetch();
+        write<S>(ea2, result);
+    }
 }
 
 template<Instr I, Mode M, Size S> void
