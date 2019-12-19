@@ -365,9 +365,9 @@ Moira::execAddi(u16 opcode)
     if (!readOperand<M,S>(dst, ea, data)) return;
 
     u32 result = arith<I,S>(src, data);
+    prefetch();
 
     writeOperand<M,S>(dst, ea, result);
-    prefetch();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -384,8 +384,8 @@ Moira::execAddq(u16 opcode)
     if (src == 0) src = 8;
     u32 result = arith<I,S>(src, data);
 
-    writeOperand<M,S>(dst, ea, result);
     prefetch();
+    writeOperand<M,S>(dst, ea, result);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -509,8 +509,8 @@ Moira::execAndi(u16 opcode)
 
     u32 result = logic<I,S>(src, data);
 
-    writeOperand<M,S>(dst, ea, result);
     prefetch();
+    writeOperand<M,S>(dst, ea, result);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -639,12 +639,10 @@ Moira::execBsr(u16 opcode)
     // Save the return address
     writeStack(retpc);
 
-    readExtensionWord();
-
     // Take branch
     reg.pc = newpc;
 
-    prefetch();
+    fullPrefetch();
     return;
 }
 
@@ -850,12 +848,13 @@ Moira::execExt(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execJmp(u16 opcode)
 {
+    u32 ea;
     int src = _____________xxx(opcode);
 
-    u32 ea = computeEA<M,Long>(src);
+    ea = computeEA<M,Long,true>(src);
 
     reg.pc = ea;
-    prefetch();
+    fullPrefetch();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -863,11 +862,12 @@ Moira::execJsr(u16 opcode)
 {
     int src = _____________xxx(opcode);
 
-    u32 ea = computeEA<M,Long>(src);
-
-    writeStack(reg.pc);
+    u32 ea = computeEA<M,Long,true>(src);
+    u32 pc = reg.pc;
 
     reg.pc = ea;
+    irc = memory->moiraRead16(reg.pc);
+    writeStack(pc + 2);
     prefetch();
 }
 
@@ -1372,8 +1372,13 @@ Moira::execPea(u16 opcode)
 
     u32 ea = computeEA<M,Long>(src);
 
-    writeStack(ea);
-    prefetch();
+    if (isAbsMode(M)) {
+        writeStack(ea);
+        prefetch();
+    } else {
+        prefetch();
+        writeStack(ea);
+    }
 }
 
 template<Instr I, Mode M, Size S> void

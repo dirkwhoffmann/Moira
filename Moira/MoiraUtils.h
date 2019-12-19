@@ -133,12 +133,16 @@ static const char *condStr[] {
  *   4:     -(An) : Address register indirect with pre decrement
  *   5:    (d,An) : Address register indirect with displacement
  *   6: (d,An,Xi) : Address register indirect with displacement and indexing
- *   7:    ####.w : Absolute addressing short
- *   8:    ####.l : Absolute addressing long
+ *   7:  (####).w : Absolute addressing short
+ *   8:  (####).l : Absolute addressing long
  *   9:    (d,PC) : Program counter indirect with displacement
  *  10: (d,PC,Xi) : Program counter indirect with displacement and indexing
+ *  11:      #### : Immediate
  */
 typedef u8 Mode;
+
+inline bool isAbsMode(Mode M) { return M == 7 || M == 8;  }
+inline bool isMemMode(Mode M) { return M >= 2 && M <= 10; }
 
 }
 #endif

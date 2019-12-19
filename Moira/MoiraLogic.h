@@ -22,7 +22,7 @@ void writeStack(u32 value);
 /* Computea an effective address.
  * This function must not be called for direct addressing modes 0 and 1.
  */
-template<Mode M, Size S> u32 computeEA(u32 n);
+template<Mode M, Size S, bool skipRead = false> u32 computeEA(u32 n);
 
 /* Reads an operand.
  * This function supports all addressing modes.
