@@ -80,13 +80,13 @@ Moira::computeEA(u32 n) {
         case 3:  // (An)+
         {
             result = readA(n);
-            postIncPreDec<M,S>(n);
+            if (!(flags & SKIP_POST_PRE)) postIncPreDec<M,S>(n);
             break;
         }
         case 4:  // -(An)
         {
             result = readA(n) - ((n == 7 && S == Byte) ? 2 : S);
-            postIncPreDec<M,S>(n);
+            if (!(flags & SKIP_POST_PRE)) postIncPreDec<M,S>(n);
             break;
         }
         case 5: // (d,An)
@@ -166,12 +166,12 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
         case 0: // Dn
         {
             result = readD<S>(n);
-            break;
+            return true;
         }
         case 1: // An
         {
             result = readA<S>(n);
-            break;
+            return true;
         }
         case 2: // (An)
         {
@@ -179,44 +179,23 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
             if (addressError<S>(ea)) return false;
 
             result = read<S>(ea);
-            break;
-        }
-        case 3: // (An)+
-        case 4: // -(An)
-        {
-            u32 olda = readA(n);
-            ea = computeEA<M,S>(n);
-            if (addressError<S>(ea)) {
-                writeA(n,olda);
-                return false;
-            }
-            result = read<S>(ea);
-            break;
-        }
-        case 5:  // (d,An)
-        case 6:  // (d,An,Xi)
-        case 7:  // ABS.W
-        case 8:  // ABS.L
-        case 9:  // (d,PC)
-        case 10: // (d,PC,Xi)
-        {
-            ea = computeEA<M,S>(n);
-            if (addressError<S>(ea)) return false;
-
-            result = read<S>(ea);
-            break;
+            return true;
         }
         case 11: // Imm
         {
             result = readImm<S>();
-            break;
+            return true;
         }
         default:
         {
-            assert(false);
+            ea = computeEA<M,S,SKIP_POST_PRE>(n);
+            if (addressError<S>(ea)) return false;
+
+            postIncPreDec<M,S>(n);
+            result = read<S>(ea);
+            return true;
         }
     }
-    return true;
 }
 
 template<Mode M, Size S> void

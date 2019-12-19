@@ -12,8 +12,8 @@
 
 #include "types.h"
 
-// FLags
-#define CHECK_ADDR_ERR 0b00000001
+// Flags
+#define SKIP_POST_PRE  0b00000001
 #define SKIP_LAST_READ 0b00000010
 
 #define REVERSE_8(x) (((x) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
