@@ -32,14 +32,10 @@ template<Mode M, Size S> void postIncPreDec(int n);
  */
 template<Mode M, Size S> bool readOperand(int n, u32 &ea, u32 &result);
 
-/* Writes an operand to a given effective address.
+/* Writes an operand.
  * This function must not be called for direct addressing modes 0 and 1.
  */
 template<Mode M, Size S> void writeOperand(int n, u32 ea, u32 value);
-
-/* Writes an operand.
- * This function must not be called for immediate addressing.
- */
 template<Mode M, Size S> bool writeOperand(int n, u32 value);
 
 // Read immediate value
