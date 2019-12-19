@@ -681,7 +681,7 @@ void Core_68k::op_bsr(u16 opcode) { //todo check stacked reg_pc at address error
 	u8 displacement = opcode & 0xFF;
 
     sync(2);
-    writeStack(displacement == 0 ? reg_pc + 2 : reg_pc);
+    writeToStack(displacement == 0 ? reg_pc + 2 : reg_pc);
     u32 reg_pc_new = reg_pc + ( displacement == 0 ? (i16)reg_irc : (i8)displacement );
 
     if (displacement == 0) logInstruction(reg_irc, false);
@@ -729,7 +729,7 @@ void Core_68k::op_jsr(u16 opcode) {
     u32 pcNextOp = reg_pc;
     reg_pc = addr;
     fullprefetchFirstStep();
-    writeStack(pcNextOp);
+    writeToStack(pcNextOp);
     prefetch(true);
 }
 
@@ -745,11 +745,11 @@ void Core_68k::op_pea(u16 opcode) {
 	if ( (adm == AR_INDIRECT_D8) || (adm == PC_INDIRECT_D8) ) sync(2);
     bool isAbs = (adm == ABS_SHORT) || (adm == ABS_LONG);
     if (isAbs) {
-        writeStack(addr);
+        writeToStack(addr);
         prefetch(true);
     } else {
         prefetch();
-        writeStack(addr, true);
+        writeToStack(addr, true);
     }
 }
 

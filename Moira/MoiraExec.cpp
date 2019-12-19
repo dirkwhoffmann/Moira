@@ -644,7 +644,7 @@ Moira::execBsr(u16 opcode)
     u32 retpc = reg.pc + (S == Word ? 2 : 0);
 
     // Save the return address
-    writeStack(retpc);
+    writeToStack(retpc);
 
     // Take branch
     reg.pc = newpc;
@@ -874,7 +874,7 @@ Moira::execJsr(u16 opcode)
 
     reg.pc = ea;
     irc = memory->moiraRead16(reg.pc);
-    writeStack(pc + 2);
+    writeToStack(pc + 2);
     prefetch();
 }
 
@@ -897,7 +897,7 @@ Moira::execLink(u16 opcode)
     i16 disp = (i16)irc;
 
     readExtensionWord();
-    writeStack(readA(ax) - (ax == 7 ? 4 : 0));
+    writeToStack(readA(ax) - (ax == 7 ? 4 : 0));
     prefetch();
     writeA(ax, reg.sp);
     reg.sp += (i32)disp;
@@ -1370,11 +1370,11 @@ Moira::execPea(u16 opcode)
     u32 ea = computeEA<M,Long>(src);
 
     if (isAbsMode(M)) {
-        writeStack(ea);
+        writeToStack(ea);
         prefetch();
     } else {
         prefetch();
-        writeStack(ea);
+        writeToStack(ea);
     }
 }
 

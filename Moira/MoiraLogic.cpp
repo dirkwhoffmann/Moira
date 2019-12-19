@@ -57,7 +57,7 @@ Moira::write<Long>(u32 addr, u32 value)
 }
 
 void
-Moira::writeStack(u32 value)
+Moira::writeToStack(u32 value)
 {
     reg.sp -= 4;
     write<Long>(reg.sp, value);
