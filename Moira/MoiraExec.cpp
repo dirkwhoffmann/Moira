@@ -988,14 +988,19 @@ Moira::execMovemEaRg(u16 opcode)
     int src  = _____________xxx(opcode);
     u16 mask = irc;
 
+    u32 ea = computeEA<M,S>(src);
+    if (addressError<S>(ea)) return; // TODO: Trigger exception
+
+    readExtensionWord();
+    if (S == Long) (void)read<Word>(ea); // Dummy read
+
     switch (M) {
 
         case 3: // (An)+
         {
-            u32 ea = readA(src);
-            if (addressError<S>(ea)) return; // TODO: Trigger exception
-
-            readExtensionWord();
+            // u32 ea = readA(src);
+            // if (addressError<S>(ea)) return; // TODO: Trigger exception
+            // readExtensionWord();
 
             for(int i = 0; i <= 15; i++) {
 
@@ -1009,11 +1014,6 @@ Moira::execMovemEaRg(u16 opcode)
         }
         default:
         {
-            u32 ea = computeEA<M,S>(src);
-            if (addressError<S>(ea)) return; // TODO: Trigger exception
-
-            readExtensionWord();
-
             for(int i = 0; i <= 15; i++) {
 
                 if (mask & (1 << i)) {
@@ -1024,6 +1024,7 @@ Moira::execMovemEaRg(u16 opcode)
             break;
         }
     }
+    if (S == Word) (void)read<Word>(ea);
     prefetch();
 }
 
