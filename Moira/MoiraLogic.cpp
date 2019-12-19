@@ -163,25 +163,17 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
 {
     switch (M) {
 
-        case 0: // Dn
+        case 0:  // Dn
         {
             result = readD<S>(n);
             return true;
         }
-        case 1: // An
+        case 1:  // An
         {
             result = readA<S>(n);
             return true;
         }
-        case 2: // (An)
-        {
-            ea = readA(n);
-            if (addressError<S>(ea)) return false;
-
-            result = read<S>(ea);
-            return true;
-        }
-        case 11: // Imm
+        case 11: // Im
         {
             result = readImm<S>();
             return true;
@@ -203,22 +195,14 @@ Moira::writeOperand(int n, u32 value)
 {
     switch (M) {
 
-        case 0: // Dn
+        case 0:  // Dn
         {
             writeD<S>(n, value);
             return true;
         }
-        case 1: // An
+        case 1:  // An
         {
             writeA<S>(n, value);
-            return true;
-        }
-        case 2: // (An)
-        {
-            u32 ea = readA(n);
-            if (addressError<S>(ea)) return false;
-
-            write<S>(ea, value);
             return true;
         }
         case 11: // Im
