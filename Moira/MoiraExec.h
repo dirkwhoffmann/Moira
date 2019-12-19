@@ -22,7 +22,7 @@ void execIllegal(u16 opcode);
 void execGroup0Exception(u32 addr, u8 nr);
 void execGroup1Exception(u8 nr);
 void execTrapException(u8 nr);
-void privilegeException() { reg.pc -= 2; execGroup1Exception(8); }
+void privilegeException();
 
 template<Instr I, Mode M, Size S> void execShiftRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execShiftIm(u16 opcode);

@@ -140,6 +140,12 @@ Moira::readExtensionWord()
 }
 
 void
+Moira::dummyRead(u32 pc)
+{
+    (void)memory->moiraRead16(pc);
+}
+
+void
 Moira::jumpToVector(u8 nr)
 {
     // printf("Moira::jumpToVector(%d)\n", nr);

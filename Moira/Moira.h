@@ -180,6 +180,8 @@ private:
     void prefetch();
     void fullPrefetch();
     void readExtensionWord();
+    void dummyRead(u32 pc);
+    void dummyRead() { dummyRead(reg.pc); }
     void jumpToVector(u8 nr);
 
     //

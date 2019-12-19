@@ -185,6 +185,25 @@ Moira::execTrapException(u8 nr)
     jumpToVector(nr);
 }
 
+void
+Moira::privilegeException()
+{
+    u16 status = getSR();
+
+    // Enter supervisor mode and update the status register
+    setSupervisorMode(true);
+    sr.t = 0;
+
+    reg.pc -= 2;
+    saveToStackBrief(status);
+
+    // Update the prefetch queue
+    // readExtensionWord();
+    // prefetch();
+
+    jumpToVector(8);
+}
+
 template<Instr I, Mode M, Size S> void
 Moira::execShiftRg(u16 opcode)
 {
@@ -1167,8 +1186,7 @@ Moira::execMoveToCcr(u16 opcode)
     if (!readOperand<M,S>(src, ea, data)) return;
     setCCR(data);
 
-    reg.pc -= 2;
-    readExtensionWord();
+    dummyRead(reg.pc + 2);
     prefetch();
 }
 
@@ -1196,8 +1214,7 @@ Moira::execMoveToSr(u16 opcode)
     if (!readOperand<M,S>(src, ea, data)) return;
     setSR(data);
 
-    reg.pc -= 2;
-    readExtensionWord();
+    dummyRead(reg.pc + 2);
     prefetch();
 }
 
