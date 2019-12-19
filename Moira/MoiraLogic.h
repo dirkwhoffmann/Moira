@@ -24,6 +24,9 @@ void writeStack(u32 value);
  */
 template<Mode M, Size S, bool skipRead = false> u32 computeEA(u32 n);
 
+// Emulates the address register modification for modes (An)+, (An)-
+template<Mode M, Size S> void postIncPreDec(int n);
+
 /* Reads an operand.
  * This function supports all addressing modes.
  */

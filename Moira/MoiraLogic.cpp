@@ -79,20 +79,14 @@ Moira::computeEA(u32 n) {
         }
         case 3:  // (An)+
         {
-            u32 an = readA(n);
-            // bool addressError = (S != Byte) && (an & 1);
-            u32 offset = (n == 7 && S == Byte) ? 2 : BYTES<S>();
-            result = an;
-            writeA(n, an + offset);
+            result = readA(n);
+            postIncPreDec<M,S>(n);
             break;
         }
         case 4:  // -(An)
         {
-            u32 an = readA(n);
-            // bool addressError = (S != Byte) && (an & 1);
-            u32 offset = (n == 7 && S == Byte) ? 2 : BYTES<S>();
-            result = an - offset;
-            writeA(n, an - offset);
+            result = readA(n) - ((n == 7 && S == Byte) ? 2 : S);
+            postIncPreDec<M,S>(n);
             break;
         }
         case 5: // (d,An)
@@ -151,6 +145,17 @@ Moira::computeEA(u32 n) {
         }
     }
     return result;
+}
+
+template<Mode M, Size S> void
+Moira::postIncPreDec(int n)
+{
+    if (M == 3) { // (An)+
+        reg.a[n] += (n == 7 && S == Byte) ? 2 : S;
+    }
+    if (M == 4) { // (-(An)
+        reg.a[n] -= (n == 7 && S == Byte) ? 2 : S;
+    }
 }
 
 template<Mode M, Size S> bool
