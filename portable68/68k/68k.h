@@ -15,6 +15,8 @@ class Core_68k {
 public:
     Core_68k() { build_optable(); }
 
+    int cycleCounter = 0;
+
     enum Interrupt { USER_VECTOR/*Amiga*/, AUTO_VECTOR/*Genesis*/, SPURIOUS, UNINITIALIZED };
 
 //public interface

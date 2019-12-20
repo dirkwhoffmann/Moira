@@ -105,7 +105,7 @@ Sandbox::error(AccessType type, u32 addr, u64 cycle, u16 value)
         printf("i: %2d  ", i);
         printf("Type: %s  ", accessTypeStr[access[i].type]);
         printf("Addr: %4x  ", access[i].addr);
-        printf("Cycle: %lld  ", access[i].cycle);
+        printf("Cycle: %3lld  ", access[i].cycle);
         printf("Value: %4x  ", access[i].value);
         printf("\n");
     }

@@ -181,7 +181,7 @@ Moira::createJumpTable()
     for (int i = 0; i < 0x10000; i++) {
         exec[i] = &Moira::execIllegal;
         dasm[i] = &Moira::dasmIllegal;
-        sync[i] = &Moira::syncIllegal;
+        // sync[i] = &Moira::syncIllegal;
     }
 
     // Unimplemented instructions are identified by the following bit patterns:
@@ -196,11 +196,11 @@ Moira::createJumpTable()
 
         exec[0b1010 << 12 | i] = &Moira::execLineA;
         dasm[0b1010 << 12 | i] = &Moira::dasmLineA;
-        sync[0b1010 << 12 | i] = &Moira::syncLineA;
+        // sync[0b1010 << 12 | i] = &Moira::syncLineA;
 
         exec[0b1111 << 12 | i] = &Moira::execLineF;
         dasm[0b1111 << 12 | i] = &Moira::dasmLineF;
-        sync[0b1111 << 12 | i] = &Moira::syncLineF;
+        // sync[0b1111 << 12 | i] = &Moira::syncLineF;
     }
 
     // Register all instructions

@@ -72,6 +72,9 @@ public:
 
 private:
 
+    // The clock
+    i64 clock;
+    
     // The data and address registers
     Registers reg;
 
@@ -99,7 +102,7 @@ private:
     void (Moira::*dasm[65536])(StrWriter&, u32&, u16);
 
     // Jump table storing all time information handlers
-    int (Moira::*sync[65536])(u16, int);
+    // int (Moira::*sync[65536])(u16, int);
 
     //
     // Disassembler
@@ -129,10 +132,13 @@ public:
     template<Size S = Long> void incA(int n, i32 v) { writeA<S>(n, readA<S>(n) + v); }
     template<Size S = Long> void incR(int n, i32 v) { writeR<S>(n, readR<S>(n) + v); }
 
+    i64 getClock() { return clock; }
     u32 getPC() { return reg.pc; }
     u32 getIRC() { return irc; }
     u32 getIRD() { return ird; }
     void setIRD(u32 value) { ird = value; }
+
+    void sync(int cycles) { clock += cycles; }
 
 private:
 

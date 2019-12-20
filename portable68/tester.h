@@ -12,7 +12,6 @@ class Tester_68k : public Core_68k, public MoiraDelegate
 protected:
     MemoryBlock memoryblock;
 
-    int cycleCounter;
     unsigned adrCounter;
 
     void sync(u8 cycles) { cycleCounter += cycles; }
@@ -302,17 +301,17 @@ public:
     void sampleRts();
 
     u8 moiraRead8(u32 addr) {
-        return moiracpu->sandbox.replayPeek(PEEK8, addr, 0);
+        return moiracpu->sandbox.replayPeek(PEEK8, addr, moiracpu->getClock());
     }
     virtual u16 moiraRead16(u32 addr) {
-        return moiracpu->sandbox.replayPeek(PEEK16, addr, 0);
+        return moiracpu->sandbox.replayPeek(PEEK16, addr, moiracpu->getClock());
     }
     virtual void moiraWrite8(u32 addr, u8 value) {
-        moiracpu->sandbox.replayPoke(POKE8, addr, 0, value);
+        moiracpu->sandbox.replayPoke(POKE8, addr, moiracpu->getClock(), value);
         memWrite2(addr, value);
     }
     virtual void moiraWrite16(u32 addr, u16 value) {
-        moiracpu->sandbox.replayPoke(POKE16, addr, 0, value);
+        moiracpu->sandbox.replayPoke(POKE16, addr, moiracpu->getClock(), value);
         memWordWrite2(addr, value);
     }
     virtual u16 moiraSpyRead16(u32 addr) {
@@ -323,7 +322,7 @@ public:
     virtual u32 moiraSpyRead32(u32 addr) {
         return moiraSpyRead16(addr) << 16 | moiraSpyRead16(addr + 2); }
     virtual u16 moiraReadAfterReset16(u32 addr) {
-        return moiracpu->sandbox.replayPeek(PEEK16, addr, 0);
+        return moiracpu->sandbox.replayPeek(PEEK16, addr, moiracpu->getClock());
         // return memWordRead2(addr);
     }
 

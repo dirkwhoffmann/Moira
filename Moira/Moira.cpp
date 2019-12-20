@@ -34,6 +34,8 @@ Moira::power()
 void
 Moira::reset()
 {
+    clock = -40;
+
     // Reset the status register
     sr.t = 0;
     sr.s = 1;
@@ -44,6 +46,8 @@ Moira::reset()
     sr.c = 0;
     sr.ipl = 7;
 
+    sync(16);
+    
     // Read the initial stack pointer from memory
     reg.usp = reg.usp =
     memory->moiraReadAfterReset16(0) << 16 | memory->moiraReadAfterReset16(2);
