@@ -627,26 +627,11 @@ Moira::execClr(u16 opcode)
 {
     int dst = _____________xxx(opcode);
 
-    switch (M) {
+    u32 ea, data;
+    if (!readOperand<M,S>(dst, ea, data)) return;
 
-        case 0: // Dn
-        {
-            prefetch();
-            writeD<S>(dst, 0);
-            break;
-        }
-        default: // Ea
-        {
-            assert(M >= 2 && M <= 8);
-
-            u32 ea, data;
-            if (!readOperand<M,S>(dst, ea, data)) return;
-
-            prefetch();
-            writeM<S>(ea, 0);
-            break;
-        }
-    }
+    prefetch();
+    writeOperand<M,S>(dst, ea, 0);
 
     sr.n = 0;
     sr.z = 1;
@@ -1302,7 +1287,6 @@ Moira::execNegNot(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execNop(u16 opcode)
 {
-
 }
 
 template<Instr I, Mode M, Size S> void
