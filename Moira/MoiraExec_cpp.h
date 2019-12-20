@@ -922,7 +922,6 @@ Moira::execMovemEaRg(u16 opcode)
 
     u32 ea = computeEA<M,S>(src);
     if (addressError<S>(ea)) return;
-    // postIncPreDec<M,S>(src);
 
     readExtensionWord();
     if (S == Long) dummyRead(ea);

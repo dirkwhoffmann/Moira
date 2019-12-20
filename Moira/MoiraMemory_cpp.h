@@ -166,14 +166,12 @@ Moira::computeEA(u32 n) {
         case 3:  // (An)+
         {
             result = readA(n);
-            // if (!(flags & SKIP_POST_PRE)) postIncPreDec<M,S>(n);
             break;
         }
         case 4:  // -(An)
         {
             sync(2);
             result = readA(n) - ((n == 7 && S == Byte) ? 2 : S);
-            // if (!(flags & SKIP_POST_PRE)) postIncPreDec<M,S>(n);
             break;
         }
         case 5: // (d,An)
@@ -279,7 +277,7 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
         default:
         {
             bool error;
-            ea = computeEA<M,S,SKIP_POST_PRE>(n);
+            ea = computeEA<M,S>(n);
             result = readM<S>(ea, error);
 
             // Early exit in case of an address error
@@ -314,7 +312,7 @@ Moira::writeOperand(int n, u32 value)
         default:
         {
             bool error;
-            u32 ea = computeEA<M,S,SKIP_POST_PRE>(n);
+            u32 ea = computeEA<M,S>(n);
             writeM<S>(ea, value, error);
 
             // Early exit in case of an address error
