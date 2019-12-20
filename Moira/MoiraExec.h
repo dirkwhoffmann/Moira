@@ -83,7 +83,8 @@ template<Instr I, Mode M, Size S> void execMoveFromSr(u16 opcode);
 template<Instr I, Mode M, Size S> void execMoveToSr(u16 opcode);
 template<Instr I, Mode M, Size S> void execMoveUspAn(u16 opcode);
 template<Instr I, Mode M, Size S> void execMoveAnUsp(u16 opcode);
-template<Instr I, Mode M, Size S> void execMulDiv(u16 opcode);
+template<Instr I, Mode M, Size S> void execMul(u16 opcode);
+template<Instr I, Mode M, Size S> void execDiv(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execNbcd(u16 opcode);
 template<Instr I, Mode M, Size S> void execNegNot(u16 opcode);

@@ -612,10 +612,10 @@ Moira::createJumpTables()
     //                 X       X   X   X   X   X   X   X   X   X   X
 
     opcode = parse("1000 ---1 11-- ----");
-    ____XXX___MMMXXX(opcode, DIVS, 0b101111111111, Word, MulDiv);
+    ____XXX___MMMXXX(opcode, DIVS, 0b101111111111, Word, Div);
 
     opcode = parse("1000 ---0 11-- ----");
-    ____XXX___MMMXXX(opcode, DIVU, 0b101111111111, Word, MulDiv);
+    ____XXX___MMMXXX(opcode, DIVU, 0b101111111111, Word, Div);
 
 
     // EOR
@@ -933,10 +933,10 @@ Moira::createJumpTables()
     //                 X       X   X   X   X   X   X   X   X   X   X
 
     opcode = parse("1100 ---1 11-- ----");
-    ____XXX___MMMXXX(opcode, MULS, 0b101111111111, Word, MulDiv);
+    ____XXX___MMMXXX(opcode, MULS, 0b101111111111, Word, Mul);
 
     opcode = parse("1100 ---0 11-- ----");
-    ____XXX___MMMXXX(opcode, MULU, 0b101111111111, Word, MulDiv);
+    ____XXX___MMMXXX(opcode, MULU, 0b101111111111, Word, Mul);
 
 
     // NBCD
