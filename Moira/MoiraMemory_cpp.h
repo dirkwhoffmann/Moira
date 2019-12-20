@@ -7,19 +7,6 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-template <Mode M, Size S> bool
-Moira::addressErrorDeprecated(u32 addr)
-{
-    if (MOIRA_EMULATE_ADDRESS_ERROR) {
-
-        if ((addr & 1) && S != Byte && isMemMode(M)) {
-            execAddressError(addr);
-            return true;
-        }
-    }
-    return false;
-}
-
 template <Size S> bool
 Moira::addressError(u32 addr)
 {
@@ -179,14 +166,14 @@ Moira::computeEA(u32 n) {
         case 3:  // (An)+
         {
             result = readA(n);
-            if (!(flags & SKIP_POST_PRE)) postIncPreDec<M,S>(n);
+            // if (!(flags & SKIP_POST_PRE)) postIncPreDec<M,S>(n);
             break;
         }
         case 4:  // -(An)
         {
             sync(2);
             result = readA(n) - ((n == 7 && S == Byte) ? 2 : S);
-            if (!(flags & SKIP_POST_PRE)) postIncPreDec<M,S>(n);
+            // if (!(flags & SKIP_POST_PRE)) postIncPreDec<M,S>(n);
             break;
         }
         case 5: // (d,An)

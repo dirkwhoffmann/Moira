@@ -163,7 +163,6 @@ public:
      * odd address.
      */
     template<Size S> bool addressError(u32 addr);
-    template<Mode M, Size S> bool addressErrorDeprecated(u32 addr);
 
     /* Reads a value from memory.
      * Provide a second parameter to check for address errors.

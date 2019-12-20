@@ -921,7 +921,8 @@ Moira::execMovemEaRg(u16 opcode)
     u16 mask = irc;
 
     u32 ea = computeEA<M,S>(src);
-    if (addressErrorDeprecated<M,S>(ea)) return; // TODO: Trigger exception
+    if (addressError<S>(ea)) return;
+    // postIncPreDec<M,S>(src);
 
     readExtensionWord();
     if (S == Long) dummyRead(ea);
@@ -972,7 +973,7 @@ Moira::execMovemRgEa(u16 opcode)
         case 4: // -(An)
         {
             u32 ea = readA(dst);
-            if (addressErrorDeprecated<M,S>(ea)) return; // TODO: Trigger exception
+            if (addressError<S>(ea)) return;
 
             readExtensionWord();
 
@@ -989,7 +990,7 @@ Moira::execMovemRgEa(u16 opcode)
         default:
         {
             u32 ea = computeEA<M,S>(dst);
-            if (addressErrorDeprecated<M,S>(ea)) return; // TODO: Trigger exception
+            if (addressError<S>(ea)) return;
 
             readExtensionWord();
 
@@ -1013,7 +1014,8 @@ Moira::execMovepDxEa(u16 opcode)
     int dst = _____________xxx(opcode);
 
     u32 ea = computeEA<M,S>(dst);
-    if (addressErrorDeprecated<M,S>(ea)) return;
+    if (addressError<S>(ea)) return;
+    // postIncPreDec<M,S>(src);
 
     u32 dx = readD(src);
 
@@ -1040,7 +1042,8 @@ Moira::execMovepEaDx(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     u32 ea = computeEA<M,S>(src);
-    if (addressErrorDeprecated<M,S>(ea)) return;
+    if (addressError<S>(ea)) return;
+    // postIncPreDec<M,S>(src);
 
     u32 dx = 0;
 
