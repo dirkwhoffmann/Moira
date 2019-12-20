@@ -91,6 +91,16 @@ Moira::readM<Long>(u32 addr, bool &error)
     return hi << 16 | lo;
 }
 
+u32
+Moira::readOnReset(u32 addr)
+{
+    sync(2);
+    u32 result = memory->moiraReadAfterReset16(addr & 0xFFFFFF);
+    sync(2);
+
+    return result;
+}
+
 template<> void
 Moira::writeM<Byte>(u32 addr, u32 value)
 {
@@ -138,115 +148,6 @@ Moira::writeM<Long>(u32 addr, u32 value, bool &error)
     if (error) return;
     writeM<Word>(addr + 2, value & 0xFFFF);
 }
-
-u32
-Moira::readOnReset(u32 addr)
-{
-    sync(2);
-    u32 result = memory->moiraReadAfterReset16(addr & 0xFFFFFF);
-    sync(2);
-
-    return result;
-}
-
-template<> u32
-Moira::readMDeprecated<Byte>(u32 addr)
-{
-    return readM<Byte>(addr);
-}
-
-template<> u32
-Moira::readMDeprecated<Word>(u32 addr)
-{
-    return readM<Word>(addr);
-}
-
-template<> u32
-Moira::readMDeprecated<Long>(u32 addr)
-{
-    return readM<Long>(addr);
-}
-
-template<> void
-Moira::writeMDeprecated<Byte>(u32 addr, u32 value)
-{
-    writeM<Byte>(addr, value);
-}
-
-template<> void
-Moira::writeMDeprecated<Word>(u32 addr, u32 value)
-{
-    writeM<Word>(addr, value);
-}
-
-template<> void
-Moira::writeMDeprecated<Long>(u32 addr, u32 value)
-{
-    writeM<Long>(addr, value);
-}
-
-template<> bool
-Moira::readMDeprecated<Byte>(u32 addr, u32 &value)
-{
-    bool error;
-    value = readM<Byte>(addr, error);
-    return error;
-}
-
-template<> bool
-Moira::readMDeprecated<Word>(u32 addr, u32 &value)
-{
-    bool error;
-    value = readM<Word>(addr, error);
-    return error;
-}
-
-template<> bool
-Moira::readMDeprecated<Long>(u32 addr, u32 &value)
-{
-    bool error;
-    value = readM<Long>(addr, error);
-    return error;
-}
-
-/*
-template<> u32
-Moira::read<Byte>(u32 addr)
-{
-    return memory->moiraRead8(addr);
-}
-
-template<> u32
-Moira::read<Word>(u32 addr)
-{
-    return memory->moiraRead16(addr);
-}
-
-template<> u32
-Moira::read<Long>(u32 addr)
-{
-    return memory->moiraRead16(addr) << 16 | memory->moiraRead16(addr + 2);
-}
-
-template<> void
-Moira::write<Byte>(u32 addr, u32 value)
-{
-    memory->moiraWrite8(addr & 0xFFFFFF, (u8)value);
-}
-
-template<> void
-Moira::write<Word>(u32 addr, u32 value)
-{
-    memory->moiraWrite16(addr & 0xFFFFFF, (u16)value);
-}
-
-template<> void
-Moira::write<Long>(u32 addr, u32 value)
-{
-    memory->moiraWrite16(addr & 0xFFFFFF, (u16)(value >> 16));
-    memory->moiraWrite16((addr + 2) & 0xFFFFFF, (u16)value);
-}
-*/
 
 void
 Moira::push(u32 value)
