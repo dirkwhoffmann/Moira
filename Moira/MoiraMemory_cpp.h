@@ -292,11 +292,14 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
         default:
         {
             bool error;
-
             ea = computeEA<M,S,SKIP_POST_PRE>(n);
             result = readM<S>(ea, error);
-            if (!error) { postIncPreDec<M,S>(n); }
-            return !error;
+
+            // Early exit in case of an address error
+            if (error) { return false; }
+
+            postIncPreDec<M,S>(n);
+            return true;
         }
     }
 }
@@ -323,11 +326,14 @@ Moira::writeOperand(int n, u32 value)
         }
         default:
         {
+            bool error;
             u32 ea = computeEA<M,S,SKIP_POST_PRE>(n);
-            if (addressErrorDeprecated<M,S>(ea)) return false;
+            writeM<S>(ea, value, error);
+
+            // Early exit in case of an address error
+            if (error) { return false; }
 
             postIncPreDec<M,S>(n);
-            writeM<S>(ea, value);
             return true;
         }
     }
