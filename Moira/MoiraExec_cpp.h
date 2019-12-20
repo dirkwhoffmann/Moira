@@ -306,17 +306,17 @@ Moira::execAddRgEa(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execAdda(u16 opcode)
 {
+    u32 ea, data, result;
+
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
-    u32 ea, sop, dop;
 
-    if (!readOperand<M,S>(src, ea, sop)) return;
-    sop = SEXT<S>(sop);
-    dop = readA(dst);
+    if (!readOperand<M,S>(src, ea, data)) return;
+    data = SEXT<S>(data);
 
-    u32 result = (I == ADDA) ? dop + sop : dop - sop;
-
+    result = (I == ADDA) ? readA(dst) + data : readA(dst) - data;
     prefetch();
+
     writeA(dst, result);
 }
 
@@ -643,13 +643,12 @@ Moira::execCmp(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
-    u32 ea, sop, dop;
 
-    if (!readOperand<M,S>(src, ea, sop)) return;
+    u32 ea, data;
+    if (!readOperand<M,S>(src, ea, data)) return;
+
+    cmp<S>(data, readD<S>(dst));
     prefetch();
-
-    dop = readD<S>(dst);
-    cmp<S>(sop, dop);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -657,14 +656,14 @@ Moira::execCmpa(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
-    u32 ea, sop, dop;
 
-    if (!readOperand<M,S>(src, ea, sop)) return;
+    u32 ea, data;
+    if (!readOperand<M,S>(src, ea, data)) return;
+
+    data = SEXT<S>(data);
     prefetch();
 
-    sop = SEXT<S>(sop);
-    dop = readA(dst);
-    cmp<Long>(sop, dop);
+    cmp<Long>(data, readA(dst));
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1369,6 +1368,8 @@ Moira::execTas(u16 opcode)
     sr.v = 0;
     sr.n = NBIT<Byte>(data);
     sr.z = ZERO<Byte>(data);
+
+    if (!isRegMode(M)) sync(2);
 
     data |= 0x80;
     writeOperand<M,S>(dst, ea, data);
