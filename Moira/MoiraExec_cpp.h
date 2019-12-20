@@ -708,6 +708,7 @@ Moira::execDbcc(u16 opcode)
      * ELSE [PC] := [PC] + 2 {fall through to next instruction}
      */
 
+    sync(2);
     if (!bcond<I>()) {
 
         u32 newpc = reg.pc + (i16)irc;
@@ -722,8 +723,10 @@ Moira::execDbcc(u16 opcode)
             fullPrefetch();
             return;
         } else {
-            (void)memory->moiraRead16(reg.pc + 2);
+            dummyRead(reg.pc + 2);
         }
+    } else {
+        sync(2);
     }
 
     // Fall through to next instruction
