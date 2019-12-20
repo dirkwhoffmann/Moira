@@ -17,7 +17,6 @@ Moira::addressErrorDeprecated(u32 addr)
             return true;
         }
     }
-
     return false;
 }
 
@@ -31,8 +30,65 @@ Moira::addressError(u32 addr)
             return true;
         }
     }
-
     return false;
+}
+
+template<> u32
+Moira::readM<Byte>(u32 addr)
+{
+    sync(2);
+    u32 result = memory->moiraRead8(addr & 0xFFFFFF);
+    sync(2);
+
+    return result;
+}
+
+template<> u32
+Moira::readM<Byte>(u32 addr, bool &error)
+{
+    error = false;
+
+    return readM<Byte>(addr);
+}
+
+template<> u32
+Moira::readM<Word>(u32 addr)
+{
+    sync(2);
+    u32 result = memory->moiraRead16(addr & 0xFFFFFF);
+    sync(2);
+
+    return result;
+}
+
+template<> u32
+Moira::readM<Word>(u32 addr, bool &error)
+{
+    sync(2);
+    if ((error = addressError<Word>(addr))) { return 0; }
+    u32 result = memory->moiraRead16(addr & 0xFFFFFF);
+    sync(2);
+
+    return result;
+}
+
+template<> u32
+Moira::readM<Long>(u32 addr)
+{
+    u32 hi = readM<Word>(addr);
+    u32 lo = readM<Word>(addr);
+
+    return hi << 16 | lo;
+}
+
+template<> u32
+Moira::readM<Long>(u32 addr, bool &error)
+{
+    u32 hi = readM<Word>(addr, error);
+    if (error) return 0;
+    u32 lo = readM<Word>(addr + 2);
+
+    return hi << 16 | lo;
 }
 
 bool
@@ -66,7 +122,7 @@ Moira::read32(u32 addr, u32 &value)
     u16 hi, lo;
 
     if (!read16(addr, hi)) return false;
-    if (!read16(addr, lo)) return false;
+    if (!read16(addr + 2, lo)) return false;
 
     value = (u32)hi << 16 | (u32)lo;
     return true;
@@ -83,43 +139,43 @@ Moira::readOnReset(u32 addr)
 }
 
 template<> u32
-Moira::readM<Byte>(u32 addr)
+Moira::readMDeprecated<Byte>(u32 addr)
 {
     u8 v; read8(addr, v); return v;
 }
 
 template<> u32
-Moira::readM<Word>(u32 addr)
+Moira::readMDeprecated<Word>(u32 addr)
 {
     u16 v; read16(addr, v); return v;
 }
 
 template<> u32
-Moira::readM<Long>(u32 addr)
+Moira::readMDeprecated<Long>(u32 addr)
 {
     u32 v; read32(addr, v); return v;
 }
 
 template<> void
-Moira::writeM<Byte>(u32 addr, u32 value)
+Moira::writeMDeprecated<Byte>(u32 addr, u32 value)
 {
     write8(addr, value);
 }
 
 template<> void
-Moira::writeM<Word>(u32 addr, u32 value)
+Moira::writeMDeprecated<Word>(u32 addr, u32 value)
 {
     write16(addr, value);
 }
 
 template<> void
-Moira::writeM<Long>(u32 addr, u32 value)
+Moira::writeMDeprecated<Long>(u32 addr, u32 value)
 {
     write32(addr, value);
 }
 
 template<> bool
-Moira::readM<Byte>(u32 addr, u32 &value)
+Moira::readMDeprecated<Byte>(u32 addr, u32 &value)
 {
     u8 v;
     if (!read8(addr, v)) { value = v; return true; }
@@ -127,7 +183,7 @@ Moira::readM<Byte>(u32 addr, u32 &value)
 }
 
 template<> bool
-Moira::readM<Word>(u32 addr, u32 &value)
+Moira::readMDeprecated<Word>(u32 addr, u32 &value)
 {
     u16 v;
     if (!read16(addr, v)) { value = v; return true; }
@@ -135,7 +191,7 @@ Moira::readM<Word>(u32 addr, u32 &value)
 }
 
 template<> bool
-Moira::readM<Long>(u32 addr, u32 &value)
+Moira::readMDeprecated<Long>(u32 addr, u32 &value)
 {
     u32 v;
     if (!read32(addr, v)) { value = v; return true; }
@@ -361,8 +417,7 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
             if (addressErrorDeprecated<M,S>(ea)) return false;
 
             postIncPreDec<M,S>(n);
-            // result = read<S>(ea);
-            result = readM<S>(ea);
+            result = readMDeprecated<S>(ea);
             return true;
         }
     }

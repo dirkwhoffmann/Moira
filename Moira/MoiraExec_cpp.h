@@ -339,8 +339,7 @@ Moira::execAddRgEa(u16 opcode)
     u32 result = arith<I,S>(readD<S>(src), data);
 
     prefetch();
-    writeM<S>(ea, result);
-    // write<S>(ea, result);
+    writeMDeprecated<S>(ea, result);
 }
 
 template<Instr I, Mode M, Size S> void
