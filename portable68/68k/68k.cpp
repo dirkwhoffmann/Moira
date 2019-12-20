@@ -618,7 +618,10 @@ void Core_68k::setFlags(u8 type, u8 size, u64 result, u32 src, u32 dest) {
 }
 
 void Core_68k::writeEA(u8 size, u32 value, bool lastBusCycle) {
+
+    printf("Core_68k::writeEA(%d, %x, %d)\n", size, value, lastBusCycle);
 	if (eaReg) {
+        printf("Core_68k::eaReg\n");
 		switch(size) {
 			case SizeByte: eaReg->l = value & 0xFF; return;
 			case SizeWord: eaReg->w = value & 0xFFFF; return;
@@ -635,6 +638,9 @@ void Core_68k::writeEA(u8 size, u32 value, bool lastBusCycle) {
 }
 
 u32 Core_68k::LoadEA(u8 size, u8 ea, bool noReadFromEA, bool fetchLastExtension, bool noSyncDec) {
+
+    printf("Core_68k::LoadEA(%d, %x, %d, %d, %d)\n",
+           size, ea, noReadFromEA, fetchLastExtension, noSyncDec);
 	u32 operand = 0;
 	u8 displacement;
 	eaAddr = 0;
@@ -676,7 +682,7 @@ u32 Core_68k::LoadEA(u8 size, u8 ea, bool noReadFromEA, bool fetchLastExtension,
                 eaAddr -= 4;
             }
 
-            if (!noSyncDec) sync(2);
+            if (!noSyncDec) { sync(2); printf("noSyncDec %d\n", cycleCounter); }
             break;
 		case 5: //(d16, An)
             adm = AR_INDIRECT_D16;

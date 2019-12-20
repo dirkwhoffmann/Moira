@@ -22,6 +22,8 @@ namespace moira {
 // Configuration
 //
 
+#define MOIRA_CHECK_CYCLES 1
+
 #define MOIRA_EMULATE_ADDRESS_ERROR 1
 
 struct Registers {
@@ -176,8 +178,8 @@ public:
     template<Size S> void writeM(u32 addr, u32 value);
     template<Size S> void writeM(u32 addr, u32 value, bool &error);
 
-    // Pushes a long word onto the stack
-    void push(u32 value);
+    // Pushes a value onto the stack
+    template<Size S> void push(u32 value);
 
     // Computes an effective address
     template<Mode M, Size S, u8 flags = 0> u32 computeEA(u32 n);

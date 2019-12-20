@@ -149,11 +149,11 @@ Moira::writeM<Long>(u32 addr, u32 value, bool &error)
     writeM<Word>(addr + 2, value & 0xFFFF);
 }
 
-void
+template<Size S> void
 Moira::push(u32 value)
 {
-    reg.sp -= 4;
-    writeM<Long>(reg.sp, value);
+    reg.sp -= S;
+    writeM<S>(reg.sp, value);
 }
 
 template<Mode M, Size S, u8 flags> u32
@@ -184,6 +184,7 @@ Moira::computeEA(u32 n) {
         }
         case 4:  // -(An)
         {
+            sync(2);
             result = readA(n) - ((n == 7 && S == Byte) ? 2 : S);
             if (!(flags & SKIP_POST_PRE)) postIncPreDec<M,S>(n);
             break;
@@ -263,7 +264,7 @@ Moira::postIncPreDec(int n)
         reg.a[n] += (n == 7 && S == Byte) ? 2 : S;
     }
     if (M == 4) { // (-(An)
-        sync(2);
+        // sync(2);
         reg.a[n] -= (n == 7 && S == Byte) ? 2 : S;
     }
 }
@@ -293,15 +294,9 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
             bool error;
 
             ea = computeEA<M,S,SKIP_POST_PRE>(n);
-            if (addressErrorDeprecated<M,S>(ea)) return false;
-
-            printf("S = %d\n", S);
-            
             result = readM<S>(ea, error);
             if (!error) { postIncPreDec<M,S>(n); }
-            // result = readMDeprecated<S>(ea);
-
-            return true; // error;
+            return !error;
         }
     }
 }

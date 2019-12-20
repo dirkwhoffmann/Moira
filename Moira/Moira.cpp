@@ -120,6 +120,7 @@ Moira::setSupervisorMode(bool enable)
 void
 Moira::prefetch()
 {
+    // printf("Moira::prefetch clock = %lld\n", clock); 
     ird = irc;
     irc = readM<Word>(reg.pc + 2);
     // read16(reg.pc + 2, irc);
@@ -129,7 +130,6 @@ void
 Moira::fullPrefetch()
 {
     irc = readM<Word>(reg.pc);
-    // read16(reg.pc, irc);
     prefetch();
 }
 
@@ -138,7 +138,6 @@ Moira::readExtensionWord()
 {
     reg.pc += 2;
     irc = readM<Word>(reg.pc);
-    // read16(reg.pc, irc);
 }
 
 void
@@ -155,6 +154,7 @@ Moira::jumpToVector(u8 nr)
 
     // Update the prefetch queue
     ird = readM<Word>(reg.pc);
+    sync(2);
     irc = readM<Word>(reg.pc + 2);
 }
 

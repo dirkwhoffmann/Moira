@@ -47,7 +47,7 @@ Sandbox::replayPeek(AccessType type, u32 addr, u64 cycle)
         // Check for a matching entry
         if (access[i].type != type) continue;
         if (access[i].addr != addr) continue;
-        if (access[i].cycle != cycle) continue;
+        if (MOIRA_CHECK_CYCLES && access[i].cycle != cycle) continue;
 
         replayCnt++;
         if (replayCnt > recordCnt) { break; }
@@ -70,7 +70,7 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u16 value)
         if (access[i].type != type) continue;
         if (access[i].addr != addr) continue;
         if (access[i].value != value) continue;
-        if (access[i].cycle != cycle) continue;
+        if (MOIRA_CHECK_CYCLES && access[i].cycle != cycle) continue;
 
         // Match found
         replayCnt++;

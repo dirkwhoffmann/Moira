@@ -13,31 +13,28 @@ void
 Moira::saveToStackDetailed(u16 sr, u32 addr, u16 code)
 {
     // Push PC
-     reg.sp -= 2; writeM<Word>(reg.sp, reg.pc & 0xFFFF);
-     reg.sp -= 2; writeM<Word>(reg.sp, reg.pc >> 16);
+    push<Word>((u16)reg.pc);
+    push<Word>(reg.pc >> 16);
 
-     // Push SR and IRD
-     reg.sp -= 2; writeM<Word>(reg.sp, sr);
-     reg.sp -= 2; writeM<Word>(reg.sp, ird);
+    // Push SR and IRD
+    push<Word>(sr);
+    push<Word>(ird);
+    
+    // Push address
+    push<Word>((u16)addr);
+    push<Word>(addr >> 16);
 
-     // Push address
-     reg.sp -= 2; writeM<Word>(reg.sp, addr & 0xFFFF);
-     reg.sp -= 2; writeM<Word>(reg.sp, addr >> 16);
-
-     // Push memory access type and function code
-     reg.sp -= 2; writeM<Word>(reg.sp, code);
+    // Push memory access type and function code
+    push<Word>(code);
 }
 
 void
 Moira::saveToStackBrief(u16 sr)
 {
     // Push PC and SR
-     reg.sp -= 2;
-     writeM<Word>(reg.sp, reg.pc & 0xFFFF);
-     reg.sp -= 2;
-     writeM<Word>(reg.sp, reg.pc >> 16);
-     reg.sp -= 2;
-     writeM<Word>(reg.sp, sr);
+    push<Word>((u16)reg.pc);
+    push<Word>(reg.pc >> 16);
+    push<Word>(sr);
 }
 
 void
@@ -83,6 +80,8 @@ Moira::execIllegal(u16 opcode)
     // Enter supervisor mode and update the status register
     setSupervisorMode(true);
     sr.t = 0;
+
+    sync(4);
 
     // Put information on stack
     saveToStackBrief(status);
@@ -285,39 +284,13 @@ Moira::execAbcd(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execAddEaRg(u16 opcode)
 {
-    u32 result;
+    u32 ea, data, result;
 
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    switch (M) {
-
-        case 0: // Dn
-        {
-            result = arith<I,S>(readD<S>(src), readD<S>(dst));
-            break;
-        }
-        case 1: // An
-        {
-            result = arith<I,S>(readA<S>(src), readD<S>(dst));
-            break;
-        }
-        case 11: // Imm
-        {
-            result = arith<I,S>(readImm<S>(), readD<S>(dst));
-            break;
-        }
-        default: // Ea
-        {
-            assert(M >= 2 && M <= 10);
-
-            u32 ea, data;
-            if (!readOperand<M,S>(src, ea, data)) return;
-
-            result = arith<I,S>(data, readD<S>(dst));
-            break;
-        }
-    }
+    if (!readOperand<M,S>(src, ea, data)) return;
+    result = arith<I,S>(data, readD<S>(dst));
 
     prefetch();
     writeD<S>(dst, result);
@@ -326,23 +299,15 @@ Moira::execAddEaRg(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execAddRgEa(u16 opcode)
 {
+    u32 ea, data, result;
+
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
 
-    printf("execAddRgEa(M = %d S = %d)\n", M, S);
-
-    printf("clock = %lld\n", clock);
-    
-    u32 ea, data;
     if (!readOperand<M,S>(dst, ea, data)) return;
+    result = arith<I,S>(readD<S>(src), data);
 
-    printf("clock = %lld execAddRgEa(2)\n", clock);
-
-    u32 result = arith<I,S>(readD<S>(src), data);
-
-    printf("clock = %lld\n", clock);
     prefetch();
-    // writeMDeprecated<S>(ea, result);
     writeM<S>(ea, result);
 }
 
@@ -650,7 +615,7 @@ Moira::execBsr(u16 opcode)
     u32 retpc = reg.pc + (S == Word ? 2 : 0);
 
     // Save the return address
-    push(retpc);
+    push<Long>(retpc);
 
     // Take branch
     reg.pc = newpc;
@@ -880,7 +845,7 @@ Moira::execJsr(u16 opcode)
 
     reg.pc = ea;
     irc = memory->moiraRead16(reg.pc);
-    push(pc + 2);
+    push<Long>(pc + 2);
     prefetch();
 }
 
@@ -903,7 +868,7 @@ Moira::execLink(u16 opcode)
     i16 disp = (i16)irc;
 
     readExtensionWord();
-    push(readA(ax) - (ax == 7 ? 4 : 0));
+    push<Long>(readA(ax) - (ax == 7 ? 4 : 0));
     prefetch();
     writeA(ax, reg.sp);
     reg.sp += (i32)disp;
@@ -1376,11 +1341,11 @@ Moira::execPea(u16 opcode)
     u32 ea = computeEA<M,Long>(src);
 
     if (isAbsMode(M)) {
-        push(ea);
+        push<Long>(ea);
         prefetch();
     } else {
         prefetch();
-        push(ea);
+        push<Long>(ea);
     }
 }
 
