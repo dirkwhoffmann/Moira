@@ -121,14 +121,12 @@ void
 Moira::prefetch()
 {
     ird = irc;
-    // irc = memory->moiraRead16(reg.pc + 2);
     read16(reg.pc + 2, irc);
 }
 
 void
 Moira::fullPrefetch()
 {
-    // irc = memory->moiraRead16(reg.pc);
     read16(reg.pc, irc);
     prefetch();
 }
@@ -137,13 +135,14 @@ void
 Moira::readExtensionWord()
 {
     reg.pc += 2;
-    irc = memory->moiraRead16(reg.pc);
+    read16(reg.pc, irc);
 }
 
 void
 Moira::dummyRead(u32 pc)
 {
-    (void)memory->moiraRead16(pc);
+    u16 dummy;
+    read16(reg.pc, dummy);
 }
 
 void

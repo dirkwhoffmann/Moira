@@ -82,6 +82,66 @@ Moira::readOnReset(u32 addr)
     return result;
 }
 
+template<> u32
+Moira::readM<Byte>(u32 addr)
+{
+    u8 v; read8(addr, v); return v;
+}
+
+template<> u32
+Moira::readM<Word>(u32 addr)
+{
+    u16 v; read16(addr, v); return v;
+}
+
+template<> u32
+Moira::readM<Long>(u32 addr)
+{
+    u32 v; read32(addr, v); return v;
+}
+
+template<> void
+Moira::writeM<Byte>(u32 addr, u32 value)
+{
+    write8(addr, value);
+}
+
+template<> void
+Moira::writeM<Word>(u32 addr, u32 value)
+{
+    write16(addr, value);
+}
+
+template<> void
+Moira::writeM<Long>(u32 addr, u32 value)
+{
+    write32(addr, value);
+}
+
+template<> bool
+Moira::readM<Byte>(u32 addr, u32 &value)
+{
+    u8 v;
+    if (!read8(addr, v)) { value = v; return true; }
+    return false;
+}
+
+template<> bool
+Moira::readM<Word>(u32 addr, u32 &value)
+{
+    u16 v;
+    if (!read16(addr, v)) { value = v; return true; }
+    return false;
+}
+
+template<> bool
+Moira::readM<Long>(u32 addr, u32 &value)
+{
+    u32 v;
+    if (!read32(addr, v)) { value = v; return true; }
+    return false;
+}
+
 bool
 Moira::write8(u32 addr, u8 value)
 {
@@ -211,6 +271,8 @@ Moira::computeEA(u32 n) {
             i32 xi = readR((irc >> 12) & 0b1111);
 
             result = d + an + ((irc & 0x800) ? xi : (i16)xi);
+
+            sync(2);
             if (!(flags & SKIP_LAST_READ)) readExtensionWord();
             break;
         }
@@ -242,6 +304,8 @@ Moira::computeEA(u32 n) {
             i32 xi = readR((irc >> 12) & 0b1111);
 
             result = d + reg.pc + ((irc & 0x800) ? xi : (i16)xi);
+
+            sync(2);
             readExtensionWord();
             break;
         }
@@ -262,9 +326,11 @@ template<Mode M, Size S> void
 Moira::postIncPreDec(int n)
 {
     if (M == 3) { // (An)+
+        sync(2);
         reg.a[n] += (n == 7 && S == Byte) ? 2 : S;
     }
     if (M == 4) { // (-(An)
+        sync(2);
         reg.a[n] -= (n == 7 && S == Byte) ? 2 : S;
     }
 }
@@ -295,7 +361,8 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
             if (addressErrorDeprecated<M,S>(ea)) return false;
 
             postIncPreDec<M,S>(n);
-            result = read<S>(ea);
+            // result = read<S>(ea);
+            result = readM<S>(ea);
             return true;
         }
     }

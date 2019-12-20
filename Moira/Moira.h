@@ -163,7 +163,9 @@ public:
     /* Reads or writes a value from or to memory
      * Returns false if an address error has occurred.
      */
+    // DEPRECATED
     bool read8(u32 addr, u8 &value);
+    bool read8(u32 addr, u32 &value);
     bool read16(u32 addr, u16 &value);
     bool read32(u32 addr, u32 &value);
     bool write8(u32 addr, u8 value);
@@ -171,6 +173,11 @@ public:
     bool write32(u32 addr, u32 value);
 
     u32 readOnReset(u32 addr);
+
+    template<Size S> u32  readM(u32 addr);
+    template<Size S> bool readM(u32 addr, u32 &value);
+
+    template<Size S> void writeM(u32 addr, u32 value);
 
     // Reads a value from memory (DEPRECATED)
     template<Size S> u32 read(u32 addr);

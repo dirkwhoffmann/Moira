@@ -326,18 +326,21 @@ Moira::execAddEaRg(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execAddRgEa(u16 opcode)
 {
-    assert(M >= 2 && M <= 8);
-
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
+
+    printf("execAddRgEa(M = %d)\n", M);
 
     u32 ea, data;
     if (!readOperand<M,S>(dst, ea, data)) return;
 
+    printf("execAddRgEa(2)\n");
+
     u32 result = arith<I,S>(readD<S>(src), data);
 
     prefetch();
-    write<S>(ea, result);
+    writeM<S>(ea, result);
+    // write<S>(ea, result);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -884,9 +887,9 @@ Moira::execLea(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    u32 ea = computeEA<M,Long>(src);
+    reg.a[dst] = computeEA<M,S>(src);
+    if (isIndexMode(M)) sync(2);
 
-    reg.a[dst] = ea;
     prefetch();
 }
 
