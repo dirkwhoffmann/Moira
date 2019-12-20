@@ -764,14 +764,12 @@ Moira::execExgAxAy(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execExt(u16 opcode)
 {
-    int n     = _____________xxx(opcode);
-    u32 dn    = readD(n);
-    u32 mask  = (S == Word) ? MASK<Byte>() << 8 : MASK<Word>() << 16;
-    bool neg  = (S == Word) ? NBIT<Byte>(dn) : NBIT<Word>(dn);
+    int n = _____________xxx(opcode);
 
-    if (neg) { dn |= mask; } else {dn &= ~mask; }
+    u32 dn = readD(n);
+    dn = (S == Long) ? SEXT<Word>(dn) : SEXT<Byte>(dn);
+    writeD<S>(n, dn);
 
-    writeD(n, dn);
     sr.c = 0;
     sr.v = 0;
     sr.n = NBIT<S>(dn);
