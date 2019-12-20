@@ -258,8 +258,6 @@ Moira::execAbcd(u16 opcode)
         }
         default: // Ea
         {
-            assert(M == 4);
-            
             u32 ea1, ea2, data1, data2;
             if (!readOperand<M,S>(src, ea1, data1)) return;
             sync(-2);
@@ -877,42 +875,15 @@ Moira::execMove(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execMovea(u16 opcode)
 {
-    i32 result;
-
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    switch(M) {
+    u32 ea, data;
+    if (!readOperand<M,S>(src, ea, data)) return;
 
-       case 0: // Dn
-        {
-            result = SIGN<S>(readD<S>(src));
-            break;
-        }
-        case 1: // An
-        {
-            result =  SIGN<S>(readA<S>(src));
-            break;
-        }
-        case 11: // Imm
-        {
-            result = SIGN<S>(readImm<S>());
-            break;
-        }
-        default: // Ea
-        {
-            assert(M >= 2 && M <= 11);
-
-            u32 ea, data;
-            if (!readOperand<M,S>(src, ea, data)) return;
-
-            result = SIGN<S>(data);
-            break;
-        }
-    }
-
-    writeA(dst, result);
     prefetch();
+
+    writeA(dst, SIGN<S>(data));
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1255,7 +1226,6 @@ Moira::execNbcd(u16 opcode)
         }
         default: // Ea
         {
-            assert(M >= 2 && M <= 8);
             u32 ea, data;
             if (!readOperand<M,Byte>(reg, ea, data)) return;
             prefetch();
