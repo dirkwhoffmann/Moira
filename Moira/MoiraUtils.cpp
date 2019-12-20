@@ -11,10 +11,6 @@
 
 namespace moira {
 
-template<> int  BYTES <Byte> ()         { return 1; }
-template<> int  BYTES <Word> ()         { return 2; }
-template<> int  BYTES <Long> ()         { return 4; }
-
 template<> u32  MASK  <Byte> ()         { return 0x000000FF; }
 template<> u32  MASK  <Word> ()         { return 0x0000FFFF; }
 template<> u32  MASK  <Long> ()         { return 0xFFFFFFFF; }

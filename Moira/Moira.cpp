@@ -14,15 +14,15 @@
 
 #include "MoiraInit_cpp.h"
 #include "MoiraLogic_cpp.h"
+#include "MoiraMemory_cpp.h"
+#include "MoiraTiming_cpp.h"
 #include "MoiraExec_cpp.h"
 #include "MoiraDasm_cpp.h"
-#include "MoiraMemory_cpp.h"
 
 Moira::Moira()
 {
     createJumpTables();
 }
-
 
 void
 Moira::power()

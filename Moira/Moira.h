@@ -98,8 +98,6 @@ private:
     // Jump table storing all disassebler handlers
     void (Moira::*dasm[65536])(StrWriter&, u32&, u16);
 
-    // Jump table storing all time information handlers
-    // int (Moira::*sync[65536])(u16, int);
 
     //
     // Disassembler
@@ -155,10 +153,45 @@ public:
     void setIRD(u32 value) { ird = value; }
 
     //
+    // Accessing memory
+    //
+
+    // Checks an address for an address error
+    template<Mode M, Size S> bool addressError(u32 addr);
+
+    // Reads a value from memory
+    template<Size S> u32 read(u32 addr);
+
+    // Writes a value to memory
+    template<Size S> void write(u32 addr, u32 value);
+
+    // Writes a value to the stack
+    void writeToStack(u32 value);
+
+    // Computes an effective address
+    template<Mode M, Size S, u8 flags = 0> u32 computeEA(u32 n);
+
+    // Emulates the address register modification for modes (An)+, (An)-
+    template<Mode M, Size S> void postIncPreDec(int n);
+
+    // Reads an operand
+    template<Mode M, Size S> bool readOperand(int n, u32 &ea, u32 &result);
+
+    // Writes an operand
+    template<Mode M, Size S> bool writeOperand(int n, u32 value);
+
+    // Writes an operand to an already computed effective address
+    template<Mode M, Size S> void writeOperand(int n, u32 ea, u32 value);
+
+    // Reads an immediate value
+    template<Size S> u32 readImm();
+
+
+    //
     // Emulate timing
     //
 
-    void sync(int cycles) { clock += cycles; }
+    void sync(int cycles);
 
     
 private:
