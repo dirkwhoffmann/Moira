@@ -329,17 +329,21 @@ Moira::execAddRgEa(u16 opcode)
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
 
-    printf("execAddRgEa(M = %d)\n", M);
+    printf("execAddRgEa(M = %d S = %d)\n", M, S);
 
+    printf("clock = %lld\n", clock);
+    
     u32 ea, data;
     if (!readOperand<M,S>(dst, ea, data)) return;
 
-    printf("execAddRgEa(2)\n");
+    printf("clock = %lld execAddRgEa(2)\n", clock);
 
     u32 result = arith<I,S>(readD<S>(src), data);
 
+    printf("clock = %lld\n", clock);
     prefetch();
-    writeMDeprecated<S>(ea, result);
+    // writeMDeprecated<S>(ea, result);
+    writeM<S>(ea, result);
 }
 
 template<Instr I, Mode M, Size S> void

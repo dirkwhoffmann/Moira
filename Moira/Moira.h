@@ -169,18 +169,11 @@ public:
     template<Size S> u32 readM(u32 addr);
     template<Size S> u32 readM(u32 addr, bool &error);
 
-
-    /* Reads or writes a value from or to memory
-     * Returns false if an address error has occurred.
+    /* Writes a value into memory.
+     * Provide a second parameter to check for address errors.
      */
-    // DEPRECATED
-    bool read8(u32 addr, u8 &value);
-    bool read8(u32 addr, u32 &value);
-    bool read16(u32 addr, u16 &value);
-    bool read32(u32 addr, u32 &value);
-    bool write8(u32 addr, u8 value);
-    bool write16(u32 addr, u16 value);
-    bool write32(u32 addr, u32 value);
+    template<Size S> void writeM(u32 addr, u32 value);
+    template<Size S> void writeM(u32 addr, u32 value, bool &error);
 
     u32 readOnReset(u32 addr);
 
