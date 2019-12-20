@@ -267,6 +267,8 @@
 			children = (
 				5010BDAF238AB77C00CFD010 /* types.h */,
 				50804F342386A7DD004D3EC2 /* Moira.h */,
+				50804F382386AB37004D3EC2 /* MoiraExec.h */,
+				50804F3A2387B466004D3EC2 /* MoiraDasm.h */,
 				50804F332386A7DD004D3EC2 /* Moira.cpp */,
 				50804F4723882EB8004D3EC2 /* MoiraDelegate.h */,
 				50804F4623882EB8004D3EC2 /* MoiraDelegate.cpp */,
@@ -276,9 +278,7 @@
 				50804F4923891480004D3EC2 /* MoiraLogic_cpp.h */,
 				506E013B23AC8E8A0015AE3F /* MoiraMemory_cpp.h */,
 				50804F3D2387CC52004D3EC2 /* MoiraTiming_cpp.h */,
-				50804F382386AB37004D3EC2 /* MoiraExec.h */,
 				50804F362386AA5C004D3EC2 /* MoiraExec_cpp.h */,
-				50804F3A2387B466004D3EC2 /* MoiraDasm.h */,
 				50804F392387B466004D3EC2 /* MoiraDasm_cpp.h */,
 				5010BDAD238A897400CFD010 /* StringWriter.h */,
 				5010BDAC238A897400CFD010 /* StringWriter.cpp */,

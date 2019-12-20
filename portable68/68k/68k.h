@@ -7,6 +7,7 @@
 
 #include "dataTypes.h"
 #include "Moira.h"
+#include <stdio.h>
 
 extern Moira *moiracpu;
 

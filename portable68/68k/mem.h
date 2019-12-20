@@ -33,9 +33,11 @@ u8 readByte(u32 addr, bool lastCycle = false) {
     fault_address = addr;
     sync(2); //put address on bus
     if (lastCycle) sampleIrq();
+    // printf("portable68000::readByte %d\n", cycleCounter);
     u8 data = memRead(addr & 0xffffff);
     moiracpu->sandbox.record(PEEK8, addr & 0xffffff, cycleCounter, data);
     sync(2);
+    // printf("portable68000:: %d\n", cycleCounter);
 	return data;
 }
 
@@ -44,12 +46,15 @@ u16 readWord(u32 addr, bool lastCycle = false) {
     fault_address = addr;
     sync(2);
     if ((addr & 1) == 1) {
+        // printf("portable68000::Address error at cycle %d\n", cycleCounter);
         group0exception( ADDRESS_ERROR );
     }
     if (lastCycle) sampleIrq();
+    // printf("portable68000::readWord %d\n", cycleCounter);
     u16 word = memWordRead(addr & 0xffffff);
     moiracpu->sandbox.record(PEEK16, addr & 0xffffff, cycleCounter, word);
     sync(2);
+    // printf("portable68000:: %d\n", cycleCounter);
 	return word;
 }
 

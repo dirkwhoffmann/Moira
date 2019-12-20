@@ -639,8 +639,7 @@ void Core_68k::writeEA(u8 size, u32 value, bool lastBusCycle) {
 
 u32 Core_68k::LoadEA(u8 size, u8 ea, bool noReadFromEA, bool fetchLastExtension, bool noSyncDec) {
 
-    printf("Core_68k::LoadEA(%d, %x, %d, %d, %d)\n",
-           size, ea, noReadFromEA, fetchLastExtension, noSyncDec);
+    // printf("Core_68k::LoadEA(%d, %x, %d, %d, %d) cycle: %d\n", size, ea, noReadFromEA, fetchLastExtension, noSyncDec, cycleCounter);
 	u32 operand = 0;
 	u8 displacement;
 	eaAddr = 0;
@@ -757,6 +756,7 @@ u32 Core_68k::LoadEA(u8 size, u8 ea, bool noReadFromEA, bool fetchLastExtension,
 
     if (noReadFromEA) return eaAddr;
 
+    // printf("Reading... size = %d\n", size);
 	switch(size) {
         case SizeByte: operand = readByte(eaAddr); break;
 		case SizeWord: operand = readWord(eaAddr); break;

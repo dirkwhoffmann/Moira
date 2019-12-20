@@ -42,11 +42,6 @@ Moira::execAddressError(u32 addr)
 {
     assert(addr & 1);
 
-    /* Group 0 exceptions indicate a serious error condition. Detailed
-     * information about the current CPU state is pushed on the stack to
-     * support diagnosis.
-     */
-
     // Memory access type and function code (TODO: THIS IS INCOMPLETE)
     u16 code = 0x11 | (sr.s ? 4 : 0);
 
@@ -54,9 +49,11 @@ Moira::execAddressError(u32 addr)
     setSupervisorMode(true);
     sr.t = 0;
 
-    // addr -= 2;
+    // Write exception information to stack
+    sync(8);
     saveToStackDetailed(getSR(), addr, code);
-
+    sync(2);
+    
     jumpToVector(3);
 }
 
@@ -81,9 +78,8 @@ Moira::execIllegal(u16 opcode)
     setSupervisorMode(true);
     sr.t = 0;
 
+    // Write exception information to stack
     sync(4);
-
-    // Put information on stack
     saveToStackBrief(status);
 
     jumpToVector(4);
@@ -197,9 +193,8 @@ Moira::execShiftRg(u16 opcode)
 {
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
-    int cnt;
+    int cnt = readD(src) & 0x3F;
 
-    cnt = readD(src) & 0x3F;
     writeD<S>(dst, shift<I,S>(cnt, readD<S>(dst)));
 }
 
@@ -208,9 +203,8 @@ Moira::execShiftIm(u16 opcode)
 {
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
-    int cnt;
+    int cnt = src ? src : 8;
 
-    cnt = src ? src : 8;
     writeD<S>(dst, shift<I,S>(cnt, readD<S>(dst)));
 }
 
@@ -219,13 +213,12 @@ Moira::execShiftEa(u16 op)
 {
     int src = ____xxx_________(op);
     int dst = _____________xxx(op);
-    int cnt;
 
     switch (M) {
 
         case 0: // Dn
         {
-            cnt = readD(src) & 0x3F;
+            int cnt = readD(src) & 0x3F;
             writeD<S>(dst, shift<I,S>(cnt, readD<S>(dst)));
             break;
         }
@@ -233,7 +226,7 @@ Moira::execShiftEa(u16 op)
         {
             prefetch();
 
-            cnt = src ? src : 8;
+            int cnt = src ? src : 8;
             writeD<S>(dst, shift<I,S>(cnt, readD<S>(dst)));
             break;
         }
