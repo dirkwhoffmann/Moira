@@ -22,7 +22,7 @@ namespace moira {
 // Configuration
 //
 
-#define MOIRA_CHECK_CYCLES 0
+#define MOIRA_CHECK_CYCLES 1
 
 #define MOIRA_EMULATE_ADDRESS_ERROR 1
 

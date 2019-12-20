@@ -1160,7 +1160,10 @@ Moira::execDiv(u16 opcode)
     sr.n = sr.z = sr.v = sr.c = 0;
 
     // Check for division by zero
-    if (data == 0) return execTrapException(5);
+    if (data == 0) {
+        sync(8);
+        return execTrapException(5);
+    }
 
     u32 dividend = readD(dst);
     prefetch();
