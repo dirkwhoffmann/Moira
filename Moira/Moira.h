@@ -193,11 +193,21 @@ public:
 
     void sync(int cycles);
 
-    
-private:
 
-    // Instruction logic
-    #include "MoiraLogic.h"
+    //
+    // Processing arithmetical and logical operations
+    //
+
+    template <Instr I, Size S> u32  shift(int cnt, u64 data);
+    template <Instr I, Size S> u32  arith(u32 op1, u32 op2);
+    template <Instr I, Size S> u32  logic(u32 op1);
+    template <Instr I, Size S> u32  logic(u32 op1, u32 op2);
+    template <Instr I>         u32  bitop(u32 op, u8 bit);
+    template <Size S>          void cmp(u32 op1, u32 op2);
+    template <Instr I>         bool bcond();
+
+
+private:
 
     // Instruction handlers
     #include "MoiraExec.h"
