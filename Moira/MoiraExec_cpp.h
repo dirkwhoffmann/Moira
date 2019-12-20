@@ -407,36 +407,15 @@ Moira::execAddxEa(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execAndEaRg(u16 opcode)
 {
-    u32 result;
+    u32 ea, data, result;
 
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    switch (M) {
+    if (!readOperand<M,S>(src, ea, data)) return;
 
-        case 0: // Dn
-        {
-            result = logic<I,S>(readD<S>(src), readD<S>(dst));
-            prefetch();
-            break;
-        }
-        case 11: // Imm
-        {
-            result = logic<I,S>(readImm<S>(), readD<S>(dst));
-            prefetch();
-            break;
-        }
-        default: // Ea
-        {
-            u32 ea, data;
-
-            if (!readOperand<M,S>(src, ea, data)) return;
-            prefetch();
-
-            result = logic<I,S>(data, readD<S>(dst));
-            break;
-        }
-    }
+    result = logic<I,S>(data, readD<S>(dst));
+    prefetch();
 
     writeD<S>(dst, result);
 }
