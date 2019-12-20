@@ -16,6 +16,7 @@
 #include "MoiraExec.cpp"
 #include "MoiraDasm.cpp"
 #include "MoiraSync.cpp"
+#include "MoiraMemory_cpp.h"
 
 Moira::Moira()
 {

@@ -61,9 +61,6 @@ class Moira {
 
 public:
 
-    // The emulated CPU type
-    // MoiraCpu type;
-
     // Sandbox (for memory debugging)
     Sandbox sandbox;
 
@@ -110,17 +107,35 @@ private:
 
     bool hex = true;
     Align tab{8};
-
     char str[256];
+
+    
+    //
+    // Constructing and destructing
+    //
 
 public:
 
     Moira();
 
+
+    //
+    // Running the device
+    //
+
+public:
+
     void power();
     void reset();
     void process(u16 reg_ird);
     void process() { process(ird); }
+
+
+    //
+    // Accessing registers
+    //
+
+public:
 
     template<Size S = Long> u32 readD(int n) { return CLIP<S>(reg.d[n]); }
     template<Size S = Long> u32 readA(int n) { return CLIP<S>(reg.a[n]); }
@@ -138,8 +153,13 @@ public:
     u32 getIRD() { return ird; }
     void setIRD(u32 value) { ird = value; }
 
+    //
+    // Emulate timing
+    //
+
     void sync(int cycles) { clock += cycles; }
 
+    
 private:
 
     // Initialization

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		506E013C23AC8E8A0015AE3F /* MoiraMemory_cpp.h in Sources */ = {isa = PBXBuildFile; fileRef = 506E013B23AC8E8A0015AE3F /* MoiraMemory_cpp.h */; };
 		50804EDE2386A72C004D3EC2 /* tester.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E792386A72C004D3EC2 /* tester.cpp */; };
 		50804EDF2386A72C004D3EC2 /* exception.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E7C2386A72C004D3EC2 /* exception.cpp */; };
 		50804EE02386A72C004D3EC2 /* 68k.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E812386A72C004D3EC2 /* 68k.cpp */; };
@@ -114,6 +115,7 @@
 		5010BDAC238A897400CFD010 /* StringWriter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = StringWriter.cpp; sourceTree = "<group>"; };
 		5010BDAD238A897400CFD010 /* StringWriter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StringWriter.h; sourceTree = "<group>"; };
 		5010BDAF238AB77C00CFD010 /* types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = "<group>"; };
+		506E013B23AC8E8A0015AE3F /* MoiraMemory_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraMemory_cpp.h; sourceTree = "<group>"; };
 		50804E062386A4CE004D3EC2 /* Moira */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Moira; sourceTree = BUILT_PRODUCTS_DIR; };
 		50804E782386A72C004D3EC2 /* tester.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tester.h; sourceTree = "<group>"; };
 		50804E792386A72C004D3EC2 /* tester.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tester.cpp; sourceTree = "<group>"; };
@@ -287,6 +289,7 @@
 				50804F392387B466004D3EC2 /* MoiraDasm.cpp */,
 				5010BDAD238A897400CFD010 /* StringWriter.h */,
 				5010BDAC238A897400CFD010 /* StringWriter.cpp */,
+				506E013B23AC8E8A0015AE3F /* MoiraMemory_cpp.h */,
 			);
 			path = Moira;
 			sourceTree = "<group>";
@@ -494,6 +497,7 @@
 				50804F452387EF15004D3EC2 /* MoiraUtils.cpp in Sources */,
 				50804EFE2386A72C004D3EC2 /* andi.cpp in Sources */,
 				50804F242386A72C004D3EC2 /* unlk.cpp in Sources */,
+				506E013C23AC8E8A0015AE3F /* MoiraMemory_cpp.h in Sources */,
 				50804EFC2386A72C004D3EC2 /* adda.cpp in Sources */,
 				50804F182386A72C004D3EC2 /* tas.cpp in Sources */,
 				50804F2F2386A72C004D3EC2 /* moveq.cpp in Sources */,

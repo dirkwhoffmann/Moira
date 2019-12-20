@@ -6,13 +6,3 @@
 //
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
-
-int syncLineA(u16 opcode, int i);
-int syncLineF(u16 opcode, int i);
-int syncIllegal(u16 opcode, int i);
-
-template<Instr I, Size S> int syncRegShift(u16 opcode, int i);
-template<Instr I, Size S> int syncImmShift(u16 opcode, int i);
-template<Instr I, Mode M> int syncEaShift(u16 opcode, int i);
-
-template<Mode M> int syncLea(u16 opcode, int i);
