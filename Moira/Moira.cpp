@@ -50,15 +50,13 @@ Moira::reset()
     sync(16);
     
     // Read the initial stack pointer from memory
-    reg.usp = reg.usp =
-    memory->moiraReadAfterReset16(0) << 16 | memory->moiraReadAfterReset16(2);
+    reg.usp = reg.ssp = readOnReset(0) << 16 | readOnReset(2);
 
     // Read the initial program counter from memory
-    reg.pc =
-    memory->moiraReadAfterReset16(4) << 16 | memory->moiraReadAfterReset16(6);
+    reg.pc = readOnReset(4) << 16 | readOnReset(6);
 
     // Fill the prefetch queue
-    irc = memory->moiraReadAfterReset16(reg.pc);
+    irc = readOnReset(reg.pc);
     prefetch();
 }
 
@@ -123,13 +121,15 @@ void
 Moira::prefetch()
 {
     ird = irc;
-    irc = memory->moiraRead16(reg.pc + 2);
+    // irc = memory->moiraRead16(reg.pc + 2);
+    read16(reg.pc + 2, irc);
 }
 
 void
 Moira::fullPrefetch()
 {
-    irc = memory->moiraRead16(reg.pc);
+    // irc = memory->moiraRead16(reg.pc);
+    read16(reg.pc, irc);
     prefetch();
 }
 

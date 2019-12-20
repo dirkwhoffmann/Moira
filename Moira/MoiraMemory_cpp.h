@@ -35,20 +35,20 @@ Moira::addressError(u32 addr)
     return false;
 }
 
-template<> bool
-Moira::readM<Byte>(u32 addr, u32 &value)
+bool
+Moira::read8(u32 addr, u8 &value)
 {
     sync(2);
 
-    value = (u32)memory->moiraRead8(addr & 0xFFFFFF);
+    value = memory->moiraRead8(addr & 0xFFFFFF);
 
     sync(2);
 
     return true;
 }
 
-template<> bool
-Moira::readM<Word>(u32 addr, u32 &value)
+bool
+Moira::read16(u32 addr, u16 &value)
 {
     sync(2);
 
@@ -60,20 +60,30 @@ Moira::readM<Word>(u32 addr, u32 &value)
     return true;
 }
 
-template<> bool
-Moira::readM<Long>(u32 addr, u32 &value)
+bool
+Moira::read32(u32 addr, u32 &value)
 {
-    u32 hi, lo;
+    u16 hi, lo;
 
-    if (!readM<Word>(addr, hi)) return false;
-    if (!readM<Word>(addr, lo)) return false;
+    if (!read16(addr, hi)) return false;
+    if (!read16(addr, lo)) return false;
 
-    value = hi << 16 | lo;
+    value = (u32)hi << 16 | (u32)lo;
     return true;
 }
 
-template<> bool
-Moira::writeM<Byte>(u32 addr, u32 value)
+u32
+Moira::readOnReset(u32 addr)
+{
+    sync(2);
+    u32 result = memory->moiraReadAfterReset16(addr & 0xFFFFFF);
+    sync(2);
+
+    return result;
+}
+
+bool
+Moira::write8(u32 addr, u8 value)
 {
     sync(2);
 
@@ -84,8 +94,8 @@ Moira::writeM<Byte>(u32 addr, u32 value)
     return true;
 }
 
-template<> bool
-Moira::writeM<Word>(u32 addr, u32 value)
+bool
+Moira::write16(u32 addr, u16 value)
 {
     sync(2);
 
@@ -97,14 +107,14 @@ Moira::writeM<Word>(u32 addr, u32 value)
     return true;
 }
 
-template<> bool
-Moira::writeM<Long>(u32 addr, u32 value)
+bool
+Moira::write32(u32 addr, u32 value)
 {
-    u32 hi = value >> 16;
-    u32 lo = value & 0xFFFF;
+    u16 hi = value >> 16;
+    u16 lo = value & 0xFFFF;
 
-    if (!readM<Word>(addr, hi)) return false;
-    if (!readM<Word>(addr, lo)) return false;
+    if (!write16(addr, hi)) return false;
+    if (!write16(addr, lo)) return false;
 
     return true;
 }
