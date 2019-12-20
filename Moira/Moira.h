@@ -182,10 +182,10 @@ public:
     template<Size S> void writeMDeprecated(u32 addr, u32 value);
 
     // Reads a value from memory (DEPRECATED)
-    template<Size S> u32 read(u32 addr);
+    // template<Size S> u32 read(u32 addr);
 
     // Writes a value to memory (DEPRECATED)
-    template<Size S> void write(u32 addr, u32 value);
+    // template<Size S> void write(u32 addr, u32 value);
 
     // Pushes a long word onto the stack
     void push(u32 value);

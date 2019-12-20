@@ -13,19 +13,19 @@ void
 Moira::saveToStackDetailed(u16 sr, u32 addr, u16 code)
 {
     // Push PC
-     reg.sp -= 2; write<Word>(reg.sp, reg.pc & 0xFFFF);
-     reg.sp -= 2; write<Word>(reg.sp, reg.pc >> 16);
+     reg.sp -= 2; writeM<Word>(reg.sp, reg.pc & 0xFFFF);
+     reg.sp -= 2; writeM<Word>(reg.sp, reg.pc >> 16);
 
      // Push SR and IRD
-     reg.sp -= 2; write<Word>(reg.sp, sr);
-     reg.sp -= 2; write<Word>(reg.sp, ird);
+     reg.sp -= 2; writeM<Word>(reg.sp, sr);
+     reg.sp -= 2; writeM<Word>(reg.sp, ird);
 
      // Push address
-     reg.sp -= 2; write<Word>(reg.sp, addr & 0xFFFF);
-     reg.sp -= 2; write<Word>(reg.sp, addr >> 16);
+     reg.sp -= 2; writeM<Word>(reg.sp, addr & 0xFFFF);
+     reg.sp -= 2; writeM<Word>(reg.sp, addr >> 16);
 
      // Push memory access type and function code
-     reg.sp -= 2; write<Word>(reg.sp, code);
+     reg.sp -= 2; writeM<Word>(reg.sp, code);
 }
 
 void
@@ -33,11 +33,11 @@ Moira::saveToStackBrief(u16 sr)
 {
     // Push PC and SR
      reg.sp -= 2;
-     write<Word>(reg.sp, reg.pc & 0xFFFF);
+     writeM<Word>(reg.sp, reg.pc & 0xFFFF);
      reg.sp -= 2;
-     write<Word>(reg.sp, reg.pc >> 16);
+     writeM<Word>(reg.sp, reg.pc >> 16);
      reg.sp -= 2;
-     write<Word>(reg.sp, sr);
+     writeM<Word>(reg.sp, sr);
 }
 
 void
@@ -243,7 +243,7 @@ Moira::execShiftEa(u16 op)
             u32 ea, data;
             if (!readOperand<M,S>(src, ea, data)) return;
             prefetch();
-            write<S>(ea, shift<I,S>(1, data));
+            writeM<S>(ea, shift<I,S>(1, data));
             break;
         }
     }
@@ -276,7 +276,7 @@ Moira::execAbcd(u16 opcode)
 
             prefetch();
 
-            write<Byte>(ea2, result);
+            writeM<Byte>(ea2, result);
             break;
         }
     }
@@ -437,12 +437,12 @@ Moira::execAddxEa(u16 opcode)
     u32 result = arith<I,S>(data1, data2);
 
     if (S == Long) {
-        write<Word>(ea2 + 2, result & 0xFFFF);
+        writeM<Word>(ea2 + 2, result & 0xFFFF);
         prefetch();
-        write<Word>(ea2, result >> 16);
+        writeM<Word>(ea2, result >> 16);
     } else {
         prefetch();
-        write<S>(ea2, result);
+        writeM<S>(ea2, result);
     }
 }
 
@@ -507,7 +507,7 @@ Moira::execAndRgEa(u16 opcode)
 
             u32 result = logic<I,S>(readD<S>(src), data);
             prefetch();
-            write<S>(ea, result);
+            writeM<S>(ea, result);
             break;
         }
     }
@@ -605,7 +605,7 @@ Moira::execBitDxEa(u16 opcode)
             data = bitop<I>(data, bit);
             prefetch();
 
-            if (I != BTST) write<Byte>(ea, data);
+            if (I != BTST) writeM<Byte>(ea, data);
         }
     }
 }
@@ -637,7 +637,7 @@ Moira::execBitImEa(u16 opcode)
             data = bitop<I>(data, bit);
             prefetch();
 
-            if (I != BTST) write<Byte>(ea, data);
+            if (I != BTST) writeM<Byte>(ea, data);
         }
     }
 }
@@ -706,7 +706,7 @@ Moira::execClr(u16 opcode)
             if (!readOperand<M,S>(dst, ea, data)) return;
 
             prefetch();
-            write<S>(ea, 0);
+            writeM<S>(ea, 0);
             break;
         }
     }
@@ -934,7 +934,7 @@ Moira::execMove(u16 opcode)
         ea2 = irc << 16;
         readExtensionWord();
         ea2 |= irc;
-        write<Long>(ea2, data);
+        writeM<Long>(ea2, data);
         readExtensionWord();
         prefetch();
 
@@ -1002,7 +1002,7 @@ Moira::execMovemEaRg(u16 opcode)
     if (addressErrorDeprecated<M,S>(ea)) return; // TODO: Trigger exception
 
     readExtensionWord();
-    if (S == Long) (void)read<Word>(ea); // Dummy read
+    if (S == Long) dummyRead(ea);
 
     switch (M) {
 
@@ -1011,7 +1011,7 @@ Moira::execMovemEaRg(u16 opcode)
             for(int i = 0; i <= 15; i++) {
 
                 if (mask & (1 << i)) {
-                    writeR(i, SEXT<S>(read<S>(ea)));
+                    writeR(i, SEXT<S>(readM<S>(ea)));
                     ea += S;
                 }
             }
@@ -1023,14 +1023,14 @@ Moira::execMovemEaRg(u16 opcode)
             for(int i = 0; i <= 15; i++) {
 
                 if (mask & (1 << i)) {
-                    writeR(i, SEXT<S>(read<S>(ea)));
+                    writeR(i, SEXT<S>(readM<S>(ea)));
                     ea += S;
                 }
             }
             break;
         }
     }
-    if (S == Word) (void)read<Word>(ea);
+    if (S == Word) (void)readM<Word>(ea);
     prefetch();
 }
 
@@ -1058,7 +1058,7 @@ Moira::execMovemRgEa(u16 opcode)
 
                 if (mask & (0x8000 >> i)) {
                     ea -= S;
-                    write<S>(ea, reg.r[i]);
+                    writeM<S>(ea, reg.r[i]);
                 }
             }
             writeA(dst, ea);
@@ -1074,7 +1074,7 @@ Moira::execMovemRgEa(u16 opcode)
             for(int i = 0; i < 16; i++) {
 
                 if (mask & (1 << i)) {
-                    write<S>(ea, reg.r[i]);
+                    writeM<S>(ea, reg.r[i]);
                     ea += S;
                 }
             }
@@ -1099,13 +1099,13 @@ Moira::execMovepDxEa(u16 opcode)
 
         case Long:
         {
-            write<Byte>(ea, (dx >> 24) & 0xFF); ea += 2;
-            write<Byte>(ea, (dx >> 16) & 0xFF); ea += 2;
+            writeM<Byte>(ea, (dx >> 24) & 0xFF); ea += 2;
+            writeM<Byte>(ea, (dx >> 16) & 0xFF); ea += 2;
         }
         case Word:
         {
-            write<Byte>(ea, (dx >>  8) & 0xFF); ea += 2;
-            write<Byte>(ea, (dx >>  0) & 0xFF);
+            writeM<Byte>(ea, (dx >>  8) & 0xFF); ea += 2;
+            writeM<Byte>(ea, (dx >>  0) & 0xFF);
         }
     }
     prefetch();
@@ -1126,13 +1126,13 @@ Moira::execMovepEaDx(u16 opcode)
 
         case Long:
         {
-            dx |= read<Byte>(ea) << 24; ea += 2;
-            dx |= read<Byte>(ea) << 16; ea += 2;
+            dx |= readM<Byte>(ea) << 24; ea += 2;
+            dx |= readM<Byte>(ea) << 16; ea += 2;
         }
         case Word:
         {
-            dx |= read<Byte>(ea) << 8; ea += 2;
-            dx |= read<Byte>(ea) << 0;
+            dx |= readM<Byte>(ea) << 8; ea += 2;
+            dx |= readM<Byte>(ea) << 0;
         }
 
     }
@@ -1336,7 +1336,7 @@ Moira::execNbcd(u16 opcode)
             u32 ea, data;
             if (!readOperand<M,Byte>(reg, ea, data)) return;
             prefetch();
-            write<Byte>(ea, arith<SBCD,Byte>(data, 0));
+            writeM<Byte>(ea, arith<SBCD,Byte>(data, 0));
             break;
         }
     }
@@ -1399,10 +1399,10 @@ Moira::execRte(u16 opcode)
     // This instruction requires supervisor mode
      if (!sr.s) { privilegeException(); return; }
 
-    setSR(read<Word>(reg.sp));
+    setSR(readM<Word>(reg.sp));
     reg.sp += 2;
 
-    u32 newpc = read<Long>(reg.sp);
+    u32 newpc = readM<Long>(reg.sp);
     reg.sp += 4;
 
     readExtensionWord();
@@ -1413,9 +1413,9 @@ Moira::execRte(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execRtr(u16 opcode)
 {
-    setCCR(read<Word>(reg.sp));
+    setCCR(readM<Word>(reg.sp));
     reg.sp += 2;
-    u32 newpc = read<Long>(reg.sp);
+    u32 newpc = readM<Long>(reg.sp);
     reg.sp += 4;
 
     readExtensionWord();
@@ -1426,7 +1426,7 @@ Moira::execRtr(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execRts(u16 opcode)
 {
-    u32 newpc = read<Long>(reg.sp);
+    u32 newpc = readM<Long>(reg.sp);
     reg.sp += 4;
 
     readExtensionWord();
@@ -1498,7 +1498,7 @@ Moira::execTas(u16 opcode)
         default:
         {
             u32 ea = computeEA<M,Byte>(dst);
-            u8 data = read<Byte>(ea);
+            u8 data = readM<Byte>(ea);
 
             sr.c = 0;
             sr.v = 0;
@@ -1506,7 +1506,7 @@ Moira::execTas(u16 opcode)
             sr.z = ZERO<Byte>(data);
 
             data |= 0x80;
-            write<Byte>(ea, data);
+            writeM<Byte>(ea, data);
             break;
         }
     }

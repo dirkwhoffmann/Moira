@@ -209,6 +209,7 @@ Moira::readMDeprecated<Long>(u32 addr, u32 &value)
     return error;
 }
 
+/*
 template<> u32
 Moira::read<Byte>(u32 addr)
 {
@@ -245,12 +246,13 @@ Moira::write<Long>(u32 addr, u32 value)
     memory->moiraWrite16(addr & 0xFFFFFF, (u16)(value >> 16));
     memory->moiraWrite16((addr + 2) & 0xFFFFFF, (u16)value);
 }
+*/
 
 void
 Moira::push(u32 value)
 {
     reg.sp -= 4;
-    write<Long>(reg.sp, value);
+    writeM<Long>(reg.sp, value);
 }
 
 template<Mode M, Size S, u8 flags> u32
@@ -429,7 +431,7 @@ Moira::writeOperand(int n, u32 value)
             if (addressErrorDeprecated<M,S>(ea)) return false;
 
             postIncPreDec<M,S>(n);
-            write<S>(ea, value);
+            writeM<S>(ea, value);
             return true;
         }
     }
@@ -459,7 +461,7 @@ Moira::writeOperand(int n, u32 ea, u32 value)
         }
         default:
         {
-            write<S>(ea, value);
+            writeM<S>(ea, value);
             break;
         }
     }

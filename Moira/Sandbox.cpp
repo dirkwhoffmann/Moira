@@ -49,15 +49,6 @@ Sandbox::replayPeek(AccessType type, u32 addr, u64 cycle)
         if (access[i].addr != addr) continue;
         if (access[i].cycle != cycle) continue;
 
-        // Match found
-        /*
-        printf("i: %2d  ", replayCnt);
-        printf("Type: %s  ", accessTypeStr[type]);
-        printf("Addr: %4x  ", addr);
-        printf("Cycle: %lld  ", cycle);
-        printf("\n");
-        */
-
         replayCnt++;
         if (replayCnt > recordCnt) { break; }
         return access[i].value;

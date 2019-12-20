@@ -144,19 +144,18 @@ Moira::readExtensionWord()
 void
 Moira::dummyRead(u32 pc)
 {
-    (void)readM<Word>(reg.pc);
-    // read16(reg.pc, dummy);
+    (void)readM<Word>(pc);
 }
 
 void
 Moira::jumpToVector(u8 nr)
 {
     // Update the program counter
-    reg.pc = read<Long>(4 * nr);
+    reg.pc = readM<Long>(4 * nr);
 
     // Update the prefetch queue
-    ird = read<Word>(reg.pc);
-    irc = read<Word>(reg.pc + 2);
+    ird = readM<Word>(reg.pc);
+    irc = readM<Word>(reg.pc + 2);
 }
 
 int
