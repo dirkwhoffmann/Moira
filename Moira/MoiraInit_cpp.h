@@ -7,21 +7,6 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-using namespace moira;
-
-/*
-#define __ ,
-#define register(id, name) { \
-assert(exec[id] == &Moira::execIllegal); \
-assert(dasm[id] == &Moira::dasmIllegal); \
-assert(sync[id] == &Moira::syncIllegal); \
-exec[id] = &Moira::exec##name; \
-dasm[id] = &Moira::dasm##name; \
-sync[id] = &Moira::sync##name; \
-}
-*/
-
-
 // Adds a single entry to the instruction jump table
 #define __ ,
 #define register(id, name) { \

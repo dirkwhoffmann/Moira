@@ -644,7 +644,7 @@ Moira::execBsr(u16 opcode)
     u32 retpc = reg.pc + (S == Word ? 2 : 0);
 
     // Save the return address
-    writeToStack(retpc);
+    push(retpc);
 
     // Take branch
     reg.pc = newpc;
@@ -874,7 +874,7 @@ Moira::execJsr(u16 opcode)
 
     reg.pc = ea;
     irc = memory->moiraRead16(reg.pc);
-    writeToStack(pc + 2);
+    push(pc + 2);
     prefetch();
 }
 
@@ -897,7 +897,7 @@ Moira::execLink(u16 opcode)
     i16 disp = (i16)irc;
 
     readExtensionWord();
-    writeToStack(readA(ax) - (ax == 7 ? 4 : 0));
+    push(readA(ax) - (ax == 7 ? 4 : 0));
     prefetch();
     writeA(ax, reg.sp);
     reg.sp += (i32)disp;
@@ -993,7 +993,7 @@ Moira::execMovemEaRg(u16 opcode)
     u16 mask = irc;
 
     u32 ea = computeEA<M,S>(src);
-    if (addressError<M,S>(ea)) return; // TODO: Trigger exception
+    if (addressErrorDeprecated<M,S>(ea)) return; // TODO: Trigger exception
 
     readExtensionWord();
     if (S == Long) (void)read<Word>(ea); // Dummy read
@@ -1044,7 +1044,7 @@ Moira::execMovemRgEa(u16 opcode)
         case 4: // -(An)
         {
             u32 ea = readA(dst);
-            if (addressError<M,S>(ea)) return; // TODO: Trigger exception
+            if (addressErrorDeprecated<M,S>(ea)) return; // TODO: Trigger exception
 
             readExtensionWord();
 
@@ -1061,7 +1061,7 @@ Moira::execMovemRgEa(u16 opcode)
         default:
         {
             u32 ea = computeEA<M,S>(dst);
-            if (addressError<M,S>(ea)) return; // TODO: Trigger exception
+            if (addressErrorDeprecated<M,S>(ea)) return; // TODO: Trigger exception
 
             readExtensionWord();
 
@@ -1085,7 +1085,7 @@ Moira::execMovepDxEa(u16 opcode)
     int dst = _____________xxx(opcode);
 
     u32 ea = computeEA<M,S>(dst);
-    if (addressError<M,S>(ea)) return;
+    if (addressErrorDeprecated<M,S>(ea)) return;
 
     u32 dx = readD(src);
 
@@ -1112,7 +1112,7 @@ Moira::execMovepEaDx(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     u32 ea = computeEA<M,S>(src);
-    if (addressError<M,S>(ea)) return;
+    if (addressErrorDeprecated<M,S>(ea)) return;
 
     u32 dx = 0;
 
@@ -1370,11 +1370,11 @@ Moira::execPea(u16 opcode)
     u32 ea = computeEA<M,Long>(src);
 
     if (isAbsMode(M)) {
-        writeToStack(ea);
+        push(ea);
         prefetch();
     } else {
         prefetch();
-        writeToStack(ea);
+        push(ea);
     }
 }
 

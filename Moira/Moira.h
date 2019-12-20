@@ -22,7 +22,7 @@ namespace moira {
 // Configuration
 //
 
-#define MOIRA_EMULATE_ADDRESS_ERROR
+#define MOIRA_EMULATE_ADDRESS_ERROR 1
 
 struct Registers {
 
@@ -157,16 +157,23 @@ public:
     //
 
     // Checks an address for an address error
-    template<Mode M, Size S> bool addressError(u32 addr);
+    template<Size S> bool addressError(u32 addr);
+    template<Mode M, Size S> bool addressErrorDeprecated(u32 addr);
 
-    // Reads a value from memory
+    /* Reads or writes a value from or to memory
+     * Returns false if an address error has occurred.
+     */
+     template<Size S> bool readM(u32 addr, u32 &value);
+     template<Size S> bool writeM(u32 addr, u32 value);
+
+    // Reads a value from memory (DEPRECATED)
     template<Size S> u32 read(u32 addr);
 
-    // Writes a value to memory
+    // Writes a value to memory (DEPRECATED)
     template<Size S> void write(u32 addr, u32 value);
 
-    // Writes a value to the stack
-    void writeToStack(u32 value);
+    // Pushes a long word onto the stack
+    void push(u32 value);
 
     // Computes an effective address
     template<Mode M, Size S, u8 flags = 0> u32 computeEA(u32 n);

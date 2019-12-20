@@ -8,15 +8,105 @@
 // -----------------------------------------------------------------------------
 
 template <Mode M, Size S> bool
+Moira::addressErrorDeprecated(u32 addr)
+{
+    if (MOIRA_EMULATE_ADDRESS_ERROR) {
+
+        if ((addr & 1) && S != Byte && isMemMode(M)) {
+            execAddressError(addr);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+template <Size S> bool
 Moira::addressError(u32 addr)
 {
-#ifdef MOIRA_EMULATE_ADDRESS_ERROR
-    if ((addr & 1) && S != Byte && isMemMode(M)) {
-        execAddressError(addr);
-        return true;
+    if (MOIRA_EMULATE_ADDRESS_ERROR) {
+
+        if ((addr & 1) && S != Byte) {
+            execAddressError(addr);
+            return true;
+        }
     }
-#endif
+
     return false;
+}
+
+template<> bool
+Moira::readM<Byte>(u32 addr, u32 &value)
+{
+    sync(2);
+
+    value = (u32)memory->moiraRead8(addr & 0xFFFFFF);
+
+    sync(2);
+
+    return true;
+}
+
+template<> bool
+Moira::readM<Word>(u32 addr, u32 &value)
+{
+    sync(2);
+
+    if (addressError<Word>(addr)) return false;
+    value = (u32)memory->moiraRead16(addr & 0xFFFFFF);
+
+    sync(2);
+
+    return true;
+}
+
+template<> bool
+Moira::readM<Long>(u32 addr, u32 &value)
+{
+    u32 hi, lo;
+
+    if (!readM<Word>(addr, hi)) return false;
+    if (!readM<Word>(addr, lo)) return false;
+
+    value = hi << 16 | lo;
+    return true;
+}
+
+template<> bool
+Moira::writeM<Byte>(u32 addr, u32 value)
+{
+    sync(2);
+
+    memory->moiraWrite8(addr & 0xFFFFFF, value);
+
+    sync(2);
+
+    return true;
+}
+
+template<> bool
+Moira::writeM<Word>(u32 addr, u32 value)
+{
+    sync(2);
+
+    if (addressError<Word>(addr)) return false;
+    memory->moiraWrite16(addr & 0xFFFFFF, value);
+
+    sync(2);
+
+    return true;
+}
+
+template<> bool
+Moira::writeM<Long>(u32 addr, u32 value)
+{
+    u32 hi = value >> 16;
+    u32 lo = value & 0xFFFF;
+
+    if (!readM<Word>(addr, hi)) return false;
+    if (!readM<Word>(addr, lo)) return false;
+
+    return true;
 }
 
 template<> u32
@@ -57,7 +147,7 @@ Moira::write<Long>(u32 addr, u32 value)
 }
 
 void
-Moira::writeToStack(u32 value)
+Moira::push(u32 value)
 {
     reg.sp -= 4;
     write<Long>(reg.sp, value);
@@ -192,7 +282,7 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
         default:
         {
             ea = computeEA<M,S,SKIP_POST_PRE>(n);
-            if (addressError<M,S>(ea)) return false;
+            if (addressErrorDeprecated<M,S>(ea)) return false;
 
             postIncPreDec<M,S>(n);
             result = read<S>(ea);
@@ -224,7 +314,7 @@ Moira::writeOperand(int n, u32 value)
         default:
         {
             u32 ea = computeEA<M,S,SKIP_POST_PRE>(n);
-            if (addressError<M,S>(ea)) return false;
+            if (addressErrorDeprecated<M,S>(ea)) return false;
 
             postIncPreDec<M,S>(n);
             write<S>(ea, value);
