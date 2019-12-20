@@ -1454,31 +1454,16 @@ template<Instr I, Mode M, Size S> void
 Moira::execTst(u16 opcode)
 {
     int reg = _____________xxx(opcode);
-    u32 value;
 
-    switch (M) {
+    u32 ea, data;
+    if (!readOperand<M,S>(reg, ea, data)) return;
 
-        case 0: // Dn
-        {
-            value = readD<S>(reg);
-            break;
-        }
-        default: // Ea
-        {
-            assert(M >= 2 && M <= 10);
-
-            u32 ea;
-            if (!readOperand<M,S>(reg, ea, value)) return;
-            break;
-        }
-    }
+    prefetch();
 
     sr.c = 0;
     sr.v = 0;
-    sr.n = NBIT<S>(value);
-    sr.z = ZERO<S>(value);
-
-    prefetch();
+    sr.n = NBIT<S>(data);
+    sr.z = ZERO<S>(data);
 }
 
 template<Instr I, Mode M, Size S> void
