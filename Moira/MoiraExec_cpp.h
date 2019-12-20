@@ -262,6 +262,7 @@ Moira::execAbcd(u16 opcode)
             
             u32 ea1, ea2, data1, data2;
             if (!readOperand<M,S>(src, ea1, data1)) return;
+            sync(-2);
             if (!readOperand<M,S>(dst, ea2, data2)) return;
 
             u32 result = arith<I,Byte>(data1, data2);
@@ -1014,7 +1015,6 @@ Moira::execMovepDxEa(u16 opcode)
 
     u32 ea = computeEA<M,S>(dst);
     if (addressError<S>(ea)) return;
-    // postIncPreDec<M,S>(src);
 
     u32 dx = readD(src);
 
@@ -1042,7 +1042,6 @@ Moira::execMovepEaDx(u16 opcode)
 
     u32 ea = computeEA<M,S>(src);
     if (addressError<S>(ea)) return;
-    // postIncPreDec<M,S>(src);
 
     u32 dx = 0;
 

@@ -245,11 +245,9 @@ template<Mode M, Size S> void
 Moira::postIncPreDec(int n)
 {
     if (M == 3) { // (An)+
-        // sync(2);
         reg.a[n] += (n == 7 && S == Byte) ? 2 : S;
     }
     if (M == 4) { // (-(An)
-        // sync(2);
         reg.a[n] -= (n == 7 && S == Byte) ? 2 : S;
     }
 }
