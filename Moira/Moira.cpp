@@ -11,16 +11,16 @@
 #include <assert.h>
 
 #include "Moira.h"
-#include "MoiraInit.cpp"
-#include "MoiraLogic.cpp"
-#include "MoiraExec.cpp"
-#include "MoiraDasm.cpp"
-#include "MoiraSync.cpp"
+
+#include "MoiraInit_cpp.h"
+#include "MoiraLogic_cpp.h"
+#include "MoiraExec_cpp.h"
+#include "MoiraDasm_cpp.h"
 #include "MoiraMemory_cpp.h"
 
 Moira::Moira()
 {
-    init();
+    createJumpTables();
 }
 
 

@@ -218,20 +218,18 @@
 		50804EDD2386A72C004D3EC2 /* sub.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sub.cpp; sourceTree = "<group>"; };
 		50804F332386A7DD004D3EC2 /* Moira.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Moira.cpp; sourceTree = "<group>"; };
 		50804F342386A7DD004D3EC2 /* Moira.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Moira.h; sourceTree = "<group>"; };
-		50804F362386AA5C004D3EC2 /* MoiraExec.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraExec.cpp; sourceTree = "<group>"; };
+		50804F362386AA5C004D3EC2 /* MoiraExec_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraExec_cpp.h; sourceTree = "<group>"; };
 		50804F382386AB37004D3EC2 /* MoiraExec.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraExec.h; sourceTree = "<group>"; };
-		50804F392387B466004D3EC2 /* MoiraDasm.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraDasm.cpp; sourceTree = "<group>"; };
+		50804F392387B466004D3EC2 /* MoiraDasm_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraDasm_cpp.h; sourceTree = "<group>"; };
 		50804F3A2387B466004D3EC2 /* MoiraDasm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraDasm.h; sourceTree = "<group>"; };
-		50804F3C2387CC52004D3EC2 /* MoiraSync.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraSync.cpp; sourceTree = "<group>"; };
 		50804F3D2387CC52004D3EC2 /* MoiraSync.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraSync.h; sourceTree = "<group>"; };
 		50804F412387DF86004D3EC2 /* MoiraLogic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraLogic.h; sourceTree = "<group>"; };
 		50804F432387E46B004D3EC2 /* MoiraUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraUtils.h; sourceTree = "<group>"; };
 		50804F442387EF15004D3EC2 /* MoiraUtils.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraUtils.cpp; sourceTree = "<group>"; };
 		50804F4623882EB8004D3EC2 /* MoiraDelegate.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraDelegate.cpp; sourceTree = "<group>"; };
 		50804F4723882EB8004D3EC2 /* MoiraDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraDelegate.h; sourceTree = "<group>"; };
-		50804F4923891480004D3EC2 /* MoiraLogic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraLogic.cpp; sourceTree = "<group>"; };
-		50804F4B23891893004D3EC2 /* MoiraInit.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraInit.cpp; sourceTree = "<group>"; };
-		50804F4D23891B7E004D3EC2 /* MoiraInit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraInit.h; sourceTree = "<group>"; };
+		50804F4923891480004D3EC2 /* MoiraLogic_cpp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MoiraLogic_cpp.h; sourceTree = "<group>"; };
+		50804F4B23891893004D3EC2 /* MoiraInit_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraInit_cpp.h; sourceTree = "<group>"; };
 		50CECEC523A924B000E07C65 /* Sandbox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Sandbox.cpp; sourceTree = "<group>"; };
 		50CECEC623A924B000E07C65 /* Sandbox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sandbox.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -271,22 +269,20 @@
 				5010BDAF238AB77C00CFD010 /* types.h */,
 				50804F342386A7DD004D3EC2 /* Moira.h */,
 				50804F332386A7DD004D3EC2 /* Moira.cpp */,
-				50804F4D23891B7E004D3EC2 /* MoiraInit.h */,
-				50804F4B23891893004D3EC2 /* MoiraInit.cpp */,
+				50804F4B23891893004D3EC2 /* MoiraInit_cpp.h */,
 				50804F432387E46B004D3EC2 /* MoiraUtils.h */,
 				50804F442387EF15004D3EC2 /* MoiraUtils.cpp */,
 				50804F4723882EB8004D3EC2 /* MoiraDelegate.h */,
 				50804F4623882EB8004D3EC2 /* MoiraDelegate.cpp */,
 				50804F382386AB37004D3EC2 /* MoiraExec.h */,
-				50804F362386AA5C004D3EC2 /* MoiraExec.cpp */,
+				50804F362386AA5C004D3EC2 /* MoiraExec_cpp.h */,
 				50804F3D2387CC52004D3EC2 /* MoiraSync.h */,
-				50804F3C2387CC52004D3EC2 /* MoiraSync.cpp */,
 				50804F412387DF86004D3EC2 /* MoiraLogic.h */,
-				50804F4923891480004D3EC2 /* MoiraLogic.cpp */,
+				50804F4923891480004D3EC2 /* MoiraLogic_cpp.h */,
 				50CECEC623A924B000E07C65 /* Sandbox.h */,
 				50CECEC523A924B000E07C65 /* Sandbox.cpp */,
 				50804F3A2387B466004D3EC2 /* MoiraDasm.h */,
-				50804F392387B466004D3EC2 /* MoiraDasm.cpp */,
+				50804F392387B466004D3EC2 /* MoiraDasm_cpp.h */,
 				5010BDAD238A897400CFD010 /* StringWriter.h */,
 				5010BDAC238A897400CFD010 /* StringWriter.cpp */,
 				506E013B23AC8E8A0015AE3F /* MoiraMemory_cpp.h */,

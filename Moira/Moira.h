@@ -111,12 +111,13 @@ private:
 
     
     //
-    // Constructing and destructing
+    // Constructing and initializing
     //
 
 public:
 
     Moira();
+    void createJumpTables();
 
 
     //
@@ -162,16 +163,12 @@ public:
     
 private:
 
-    // Initialization
-    #include "MoiraInit.h"
-
     // Instruction logic
     #include "MoiraLogic.h"
 
     // Instruction handlers
     #include "MoiraExec.h"
     #include "MoiraDasm.h"
-    #include "MoiraSync.h"
 
 
     //

@@ -169,49 +169,34 @@ parse(const char *s, u16 sum = 0)
 }
 
 void
-Moira::init()
+Moira::createJumpTables()
 {
-    createJumpTable();
-}
+    u16 opcode;
 
-void
-Moira::createJumpTable()
-{
+    //
     // Start with clean tables
+    //
+
     for (int i = 0; i < 0x10000; i++) {
         exec[i] = &Moira::execIllegal;
         dasm[i] = &Moira::dasmIllegal;
-        // sync[i] = &Moira::syncIllegal;
     }
 
-    // Unimplemented instructions are identified by the following bit patterns:
+
+    // Unimplemented instructions
     //
-    //    1010 ---- ---- ---- : (Line A instructions)
-    //    1111 ---- ---- ---- : (Line F instructions)
-    //
-    // Both instructions types are handles similarly. They only differ in the
-    // associated vector number.
+    //       Format: 1010 ---- ---- ---- (Line A instructions)
+    //               1111 ---- ---- ---- (Line F instructions)
 
     for (int i = 0; i < 0x1000; i++) {
 
         exec[0b1010 << 12 | i] = &Moira::execLineA;
         dasm[0b1010 << 12 | i] = &Moira::dasmLineA;
-        // sync[0b1010 << 12 | i] = &Moira::syncLineA;
 
         exec[0b1111 << 12 | i] = &Moira::execLineF;
         dasm[0b1111 << 12 | i] = &Moira::dasmLineF;
-        // sync[0b1111 << 12 | i] = &Moira::syncLineF;
     }
 
-    // Register all instructions
-    registerInstructions();
-
-}
-
-void
-Moira::registerInstructions()
-{
-    u16 opcode;
 
     // ABCD
     //
