@@ -1120,10 +1120,11 @@ Moira::execMulDiv(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
-    u16 dn  = readD<Word>(dst);
-    u32 ea, data;
 
+    u32 ea, data;
     if (!readOperand<M, Word>(src, ea, data)) return;
+
+    sr.n = sr.z = sr.v = sr.c = 0;
 
     switch (I) {
 
@@ -1131,36 +1132,28 @@ Moira::execMulDiv(u16 opcode)
         {
             prefetch();
 
-            u32 result = (i16)data * (i16)dn;
+            u32 result = (i16)data * (i16)readD<Word>(dst);
             writeD(dst, result);
 
-            sr.c = 0;
-            sr.v = 0;
             sr.n = NBIT<Long>(result);
             sr.z = ZERO<Long>(result);
             break;
         }
-
         case MULU: // Unsigned multiplication
         {
             prefetch();
 
-            u32 result = data * dn;
+            u32 result = data * readD<Word>(dst);
             writeD(dst, result);
 
-            sr.c = 0;
-            sr.v = 0;
             sr.n = NBIT<Long>(result);
             sr.z = ZERO<Long>(result);
             break;
         }
         case DIVS: // Signed division
         {
-            sr.n = sr.z = sr.v = sr.c = 0;
-
-            if (data == 0) {
-                 return execTrapException(5);
-            }
+            // Check for division by zero
+            if (data == 0) return execTrapException(5);
 
             u32 dividend = readD(dst);
             prefetch();
@@ -1185,11 +1178,8 @@ Moira::execMulDiv(u16 opcode)
         }
         case DIVU: // Unsigned division
         {
-            sr.n = sr.z = sr.v = sr.c = 0;
-
-            if (data == 0) {
-                return execTrapException(5);
-            }
+            // Check for division by zero
+            if (data == 0) return execTrapException(5);
 
             u32 dividend = readD(dst);
             prefetch();
