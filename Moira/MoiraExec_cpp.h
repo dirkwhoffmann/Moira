@@ -259,7 +259,7 @@ Moira::execAbcd(u16 opcode)
         default: // Ea
         {
             assert(M == 4);
-
+            
             u32 ea1, ea2, data1, data2;
             if (!readOperand<M,S>(src, ea1, data1)) return;
             if (!readOperand<M,S>(dst, ea2, data2)) return;
@@ -784,10 +784,9 @@ Moira::execExt(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execJmp(u16 opcode)
 {
-    u32 ea;
     int src = _____________xxx(opcode);
 
-    ea = computeEA<M,Long,SKIP_LAST_READ>(src);
+    u32 ea = computeEA<M,Long,SKIP_LAST_READ>(src);
 
     reg.pc = ea;
     fullPrefetch();
