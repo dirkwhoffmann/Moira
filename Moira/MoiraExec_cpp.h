@@ -1401,36 +1401,17 @@ Moira::execTas(u16 opcode)
 {
     int dst = ( _____________xxx(opcode) );
 
-    switch (M) {
+    u32 ea, data;
+    readOperand<M,Byte>(dst, ea, data);
 
-        case 0:
-        {
-            u8 data = readD<Byte>(dst);
+    sr.c = 0;
+    sr.v = 0;
+    sr.n = NBIT<Byte>(data);
+    sr.z = ZERO<Byte>(data);
 
-            sr.c = 0;
-            sr.v = 0;
-            sr.n = NBIT<Byte>(data);
-            sr.z = ZERO<Byte>(data);
+    data |= 0x80;
+    writeOperand<M,S>(dst, ea, data);
 
-            data |= 0x80;
-            writeD<Byte>(dst, data);
-            break;
-        }
-        default:
-        {
-            u32 ea = computeEA<M,Byte>(dst);
-            u8 data = readM<Byte>(ea);
-
-            sr.c = 0;
-            sr.v = 0;
-            sr.n = NBIT<Byte>(data);
-            sr.z = ZERO<Byte>(data);
-
-            data |= 0x80;
-            writeM<Byte>(ea, data);
-            break;
-        }
-    }
     prefetch();
 }
 
