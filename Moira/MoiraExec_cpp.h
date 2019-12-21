@@ -9,6 +9,8 @@
 
 #include <utility>
 
+#define stdFlags(x) { sr.n = NBIT<S>(x); sr.z = ZERO<S>(x); sr.v = 0; sr.c = 0;  }
+
 void
 Moira::saveToStackDetailed(u16 sr, u32 addr, u16 code)
 {
@@ -872,6 +874,48 @@ Moira::execMove(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+Moira::execMove0(u16 opcode)
+{
+    u32 ea, data;
+
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    if (!readOperand<M,S>(src, ea, data)) return;
+    stdFlags(data);
+    if (!writeOperand<0,S>(dst, data)) return;
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::execMove2(u16 opcode)
+{
+    u32 ea, data;
+
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    if (!readOperand<M,S>(src, ea, data)) return;
+    stdFlags(data);
+    if (!writeOperand<2,S>(dst, data)) return;
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::execMove3(u16 opcode)
+{
+    u32 ea, data;
+
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    if (!readOperand<M,S>(src, ea, data)) return;
+    stdFlags(data);
+    if (!writeOperand<3,S>(dst, data)) return;
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
 Moira::execMove4(u16 opcode)
 {
     u32 ea, data;
@@ -879,7 +923,8 @@ Moira::execMove4(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    /* http://pasti.fxatari.com/68kdocs/68kPrefetch.html
+    /* Source: http://pasti.fxatari.com/68kdocs/68kPrefetch.html
+     *
      * "When the destination addressing mode is pre-decrement, steps 4 and 5
      *  above are inverted. So it behaves like a read modify instruction and it
      *  is a class 0 instruction. Note: The behavior is the same disregarding
@@ -888,14 +933,92 @@ Moira::execMove4(u16 opcode)
      */
 
     if (!readOperand<M,S>(src, ea, data)) return;
+    stdFlags(data);
     prefetch();
     sync(-2);
     if (!writeOperand<4,S>(dst, data)) return;
+}
 
-    sr.c = 0;
-    sr.v = 0;
-    sr.n = NBIT<S>(data);
-    sr.z = ZERO<S>(data);
+template<Instr I, Mode M, Size S> void
+Moira::execMove5(u16 opcode)
+{
+    u32 ea, data;
+
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    if (!readOperand<M,S>(src, ea, data)) return;
+    stdFlags(data);
+    if (!writeOperand<5,S>(dst, data)) return;
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::execMove6(u16 opcode)
+{
+    u32 ea, data;
+
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    if (!readOperand<M,S>(src, ea, data)) return;
+    stdFlags(data);
+    if (!writeOperand<6,S>(dst, data)) return;
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::execMove7(u16 opcode)
+{
+    u32 ea, data;
+
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    if (!readOperand<M,S>(src, ea, data)) return;
+    stdFlags(data);
+    if (!writeOperand<7,S>(dst, data)) return;
+    prefetch();
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::execMove8(u16 opcode)
+{
+    u32 ea, data;
+
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    /* Source: http://pasti.fxatari.com/68kdocs/68kPrefetch.html
+     *
+     * "When the destination addressing mode is long absolute and the source
+     *  operand is any memory addr.mode, step 4 is interleaved in the middle of
+     *  step 3. Step 3 only performs a single prefetch in this case. The other
+     *  prefetch cycle that is normally performed at that step is deferred
+     *  after the write cycles. So, two prefetch cycles are performed after the
+     *  write ones. It is a class 2 instruction. Note: The behavior is the same
+     *  disregarding transfer size (byte, word or long). But if the source
+     *  operand is a data or address register, or immediate, then the behavior
+     *  is the same as other MOVE variants (class 1 instruction)."
+     */
+    if (isMemMode(M)) {
+
+        if (!readOperand<M,S>(src, ea, data)) return;
+        stdFlags(data);
+        u32 ea2 = irc << 16;
+        readExtensionWord();
+        ea2 |= irc;
+        writeM<Long>(ea2, data);
+        readExtensionWord();
+
+    } else {
+
+        if (!readOperand<M,S>(src, ea, data)) return;
+        stdFlags(data);
+        if (!writeOperand<8,S>(dst, data)) return;
+    }
+
+    prefetch();
 }
 
 template<Instr I, Mode M, Size S> void

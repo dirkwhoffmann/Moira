@@ -460,10 +460,73 @@ Moira::dasmMove(StrWriter &str, u32 &addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
+Moira::dasmMove0(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = Op <M,S> ( _____________xxx(op), addr );
+    auto dst = Op <0,S> ( ____xxx_________(op), addr );
+
+    str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmMove2(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = Op <M,S> ( _____________xxx(op), addr );
+    auto dst = Op <2,S> ( ____xxx_________(op), addr );
+
+    str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmMove3(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = Op <M,S> ( _____________xxx(op), addr );
+    auto dst = Op <3,S> ( ____xxx_________(op), addr );
+
+    str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
 Moira::dasmMove4(StrWriter &str, u32 &addr, u16 op)
 {
     auto src = Op <M,S> ( _____________xxx(op), addr );
     auto dst = Op <4,S> ( ____xxx_________(op), addr );
+
+    str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmMove5(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = Op <M,S> ( _____________xxx(op), addr );
+    auto dst = Op <5,S> ( ____xxx_________(op), addr );
+
+    str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmMove6(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = Op <M,S> ( _____________xxx(op), addr );
+    auto dst = Op <6,S> ( ____xxx_________(op), addr );
+
+    str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmMove7(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = Op <M,S> ( _____________xxx(op), addr );
+    auto dst = Op <7,S> ( ____xxx_________(op), addr );
+
+    str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmMove8(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = Op <M,S> ( _____________xxx(op), addr );
+    auto dst = Op <8,S> ( ____xxx_________(op), addr );
 
     str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
 }

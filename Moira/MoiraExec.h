@@ -72,7 +72,15 @@ template<Instr I, Mode M, Size S> void execJsr(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execLea(u16 opcode);
 template<Instr I, Mode M1, Mode M2, Size S> void execMove(u16 opcode);
+template<Mode M1, Mode M2, Size S> void execStdMove(u16 opcode);
+template<Instr I, Mode M, Size S> void execMove0(u16 opcode);
+template<Instr I, Mode M, Size S> void execMove2(u16 opcode);
+template<Instr I, Mode M, Size S> void execMove3(u16 opcode);
 template<Instr I, Mode M, Size S> void execMove4(u16 opcode);
+template<Instr I, Mode M, Size S> void execMove5(u16 opcode);
+template<Instr I, Mode M, Size S> void execMove6(u16 opcode);
+template<Instr I, Mode M, Size S> void execMove7(u16 opcode);
+template<Instr I, Mode M, Size S> void execMove8(u16 opcode);
 template<Instr I, Mode M, Size S> void execMovea(u16 opcode);
 template<Instr I, Mode M, Size S> void execMovemEaRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execMovemRgEa(u16 opcode);
