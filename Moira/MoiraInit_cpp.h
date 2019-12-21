@@ -8,6 +8,7 @@
 // -----------------------------------------------------------------------------
 
 // Adds a single entry to the instruction jump table
+
 #define __ ,
 #define register(id, name) { \
 if (exec[id] != &Moira::execIllegal) printf("id = %x\n", id); \
@@ -18,24 +19,20 @@ dasm[id] = &Moira::dasm##name; }
 
 // Registers an instruction in one of the standard instruction formats:
 //
-//     Variants:  ____ ____ ____ _XXX
-//                ____ ____ ____ XXXX
-//                ____ XXX_ ____ _XXX
-//                ____ ____ XXXX XXXX
-//                ____ XXX_ XXXX XXXX
-//                ____ ____ __MM MXXX
-//                ____ XXX_ __MM MXXX
-//                ____ XXX_ SS__ _XXX
-//                ____ ____ SSMM MXXX
-//                ____ XXX_ SSMM MXXX
-//                ____ ___S __MM MXXX
-//                ____ XXXS __MM MXXX
-//                __SS ____ __MM MXXX
-//                __SS XXX_ __MM MXXX
-//
-//       Legend:  XXX : Operand parameter
-//                  S : Size information (Word or Long)
-//                 SS : Size information (Byte or Word or Long)
+//     ____ ____ ____ _XXX      XXX : Operand parameter (Register number etc.)
+//     ____ ____ ____ XXXX        S : Size information  (Word or Long)
+//     ____ ____ XXXX XXXX       SS : Size information  (Byte or Word or Long)
+//     ____ XXX_ ____ _XXX
+//     ____ XXX_ XXXX XXXX
+//     ____ ____ __MM MXXX
+//     ____ XXX_ __MM MXXX
+//     ____ XXX_ SS__ _XXX
+//     ____ ____ SSMM MXXX
+//     ____ XXX_ SSMM MXXX
+//     ____ ___S __MM MXXX
+//     ____ XXXS __MM MXXX
+//     __SS ____ __MM MXXX
+//     __SS XXX_ __MM MXXX
 
 #define _____________XXX(op,I,M,S,f) { \
 for (int j = 0; j < 8; j++) register((op) | j, f<I __ M __ S>); }
@@ -43,11 +40,11 @@ for (int j = 0; j < 8; j++) register((op) | j, f<I __ M __ S>); }
 #define ____________XXXX(op,I,M,S,f) { \
 for (int j = 0; j < 16; j++) register((op) | j, f<I __ M __ S>); }
 
-#define ____XXX______XXX(op,I,M,S,f) { \
-for (int i = 0; i < 8; i++) _____________XXX((op) | i << 9, I, M, S, f); }
-
 #define ________XXXXXXXX(op,I,M,S,f) { \
 for (int j = 0; j < 256; j++) register((op) | j, f<I __ M __ S>); }
+
+#define ____XXX______XXX(op,I,M,S,f) { \
+for (int i = 0; i < 8; i++) _____________XXX((op) | i << 9, I, M, S, f); }
 
 #define ____XXX_XXXXXXXX(op,I,M,S,f) { \
 for (int i = 0; i < 8; i++) ________XXXXXXXX((op) | i << 9, I, M, S, f); }
@@ -754,54 +751,42 @@ Moira::createJumpTables()
     //               -------------------------------------------------
     //                 X       X   X   X   X   X   X   X
 
-    /*
-    opcode = parse("00-- ---- ---- ----");
-
-    __SSXXXMMMMMMXXX(opcode, MOVE,
-                     0b101111111111, 0b000001100000,
-                     Byte, Move);
-
-    __SSXXXMMMMMMXXX(opcode, MOVE,
-                     0b111111111111, 0b000001100000,
-                     Word | Long, Move);
-     */
-    
-    // MOVE <ea>,Dy
+    // <ea>,Dy
     opcode = parse("00-- ---0 00-- ----");
     __SSXXX___MMMXXX(opcode, MOVE, 0b101111111111, Byte,        Move0);
     __SSXXX___MMMXXX(opcode, MOVE, 0b111111111111, Word | Long, Move0);
 
-    // MOVE <ea>,(Ay)
+    // <ea>,(Ay)
     opcode = parse("00-- ---0 10-- ----");
     __SSXXX___MMMXXX(opcode, MOVE, 0b101111111111, Byte,        Move2);
     __SSXXX___MMMXXX(opcode, MOVE, 0b111111111111, Word | Long, Move2);
 
-    // MOVE <ea>,(Ay)+
+    // <ea>,(Ay)+
     opcode = parse("00-- ---0 11-- ----");
     __SSXXX___MMMXXX(opcode, MOVE, 0b101111111111, Byte,        Move3);
     __SSXXX___MMMXXX(opcode, MOVE, 0b111111111111, Word | Long, Move3);
 
-    // MOVE <ea>,-(Ay)
+    // <ea>,-(Ay)
     opcode = parse("00-- ---1 00-- ----");
     __SSXXX___MMMXXX(opcode, MOVE, 0b101111111111, Byte,        Move4);
     __SSXXX___MMMXXX(opcode, MOVE, 0b111111111111, Word | Long, Move4);
 
-    // MOVE <ea>,(d,Ay)
+    // <ea>,(d,Ay)
     opcode = parse("00-- ---1 01-- ----");
     __SSXXX___MMMXXX(opcode, MOVE, 0b101111111111, Byte,        Move5);
     __SSXXX___MMMXXX(opcode, MOVE, 0b111111111111, Word | Long, Move5);
 
-    // MOVE <ea>,(d,Ay,Xi)
+    // <ea>,(d,Ay,Xi)
      opcode = parse("00-- ---1 10-- ----");
      __SSXXX___MMMXXX(opcode, MOVE, 0b101111111111, Byte,        Move6);
      __SSXXX___MMMXXX(opcode, MOVE, 0b111111111111, Word | Long, Move6);
 
-    // MOVE <ea>,ABS.w
+    // <ea>,ABS.w
     opcode = parse("00-- 0101 11-- ----");
     __SS______MMMXXX(opcode, MOVE, 0b101111111111, Byte,        Move7);
     __SS______MMMXXX(opcode, MOVE, 0b111111111111, Word | Long, Move7);
 
-    // MOVE <ea>,ABS.l
+    // <ea>,ABS.l
     opcode = parse("00-- 0011 11-- ----");
     __SS______MMMXXX(opcode, MOVE, 0b101111111111, Byte,        Move8);
     __SS______MMMXXX(opcode, MOVE, 0b111111111111, Word | Long, Move8);

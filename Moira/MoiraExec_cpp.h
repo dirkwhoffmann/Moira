@@ -328,10 +328,10 @@ Moira::execAddi(u16 opcode)
     u32 src = readImm<S>();
     int dst = _____________xxx(opcode);
 
-    u32 ea, data;
+    u32 ea, data, result;
     if (!readOperand<M,S>(dst, ea, data)) return;
 
-    u32 result = arith<I,S>(src, data);
+    result = arith<I,S>(src, data);
     prefetch();
 
     writeOperand<M,S>(dst, ea, result);
@@ -340,36 +340,33 @@ Moira::execAddi(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execAddq(u16 opcode)
 {
-    assert(I == ADDQ || I == SUBQ);
-
     i8  src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
 
-    u32 ea, data;
+    u32 ea, data, result;
     if (!readOperand<M,S>(dst, ea, data)) return;
 
     if (src == 0) src = 8;
-    u32 result = arith<I,S>(src, data);
-
+    result = arith<I,S>(src, data);
     prefetch();
+
     writeOperand<M,S>(dst, ea, result);
 }
 
 template<Instr I, Mode M, Size S> void
 Moira::execAddqAn(u16 opcode)
 {
-    assert(I == ADDQ || I == SUBQ);
-
     i8  src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
 
-    u32 ea, data;
+    u32 ea, data, result;
     if (!readOperand<M,Long>(dst, ea, data)) return;
 
     if (src == 0) src = 8;
-    u32 result = (I == ADDQ) ? readA(dst) + src : readA(dst) - src;
+    result = (I == ADDQ) ? readA(dst) + src : readA(dst) - src;
 
     writeA(dst, result);
+
     prefetch();
 }
 
@@ -380,6 +377,10 @@ Moira::execAddxRg(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     u32 result = arith<I,S>(readD<S>(src), readD<S>(dst));
+    prefetch();
+
+    sync(S == Long ? 6 : 4);
+
     writeD<S>(dst, result);
 }
 
@@ -391,6 +392,7 @@ Moira::execAddxEa(u16 opcode)
 
     u32 ea1, ea2, data1, data2;
     if (!readOperand<M,S>(src, ea1, data1)) return;
+    sync(-2);
     if (!readOperand<M,S>(dst, ea2, data2)) return;
 
     u32 result = arith<I,S>(data1, data2);
@@ -454,15 +456,16 @@ Moira::execAndRgEa(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execAndi(u16 opcode)
 {
+    u32 ea, data, result;
+
     u32 src = readImm<S>();
     int dst = _____________xxx(opcode);
 
-    u32 ea, data;
     if (!readOperand<M,S>(dst, ea, data)) return;
 
-    u32 result = logic<I,S>(src, data);
-
+    result = logic<I,S>(src, data);
     prefetch();
+
     writeOperand<M,S>(dst, ea, result);
 }
 
@@ -488,7 +491,6 @@ Moira::execAndisr(u16 opcode)
     u16 dst = getSR();
 
     u32 result = logic<I,S>(src, dst);
-
     setSR(result);
 
     prefetch();
@@ -497,10 +499,11 @@ Moira::execAndisr(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execBcc(u16 opcode)
 {
+    sync(2);
     if (bcond<I>()) {
 
-        i16 offset = S == Word ? (i16)irc : (i8)opcode;
-        u32 newpc = reg.pc + offset;
+        // i16 offset = S == Word ? (i16)irc : (i8)opcode;
+        u32 newpc = reg.pc + (S == Word ? (i16)irc : (i8)opcode);
 
         // Take branch
         reg.pc = newpc;
@@ -509,6 +512,7 @@ Moira::execBcc(u16 opcode)
     } else {
 
         // Fall through to next instruction
+        sync(2);
         if (S == Word) readExtensionWord();
         prefetch();
     }
@@ -588,6 +592,7 @@ Moira::execBsr(u16 opcode)
     u32 retpc = reg.pc + (S == Word ? 2 : 0);
 
     // Save the return address
+    sync(2);
     push<Long>(retpc);
 
     // Take branch
@@ -699,18 +704,10 @@ Moira::execCmpm(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execDbcc(u16 opcode)
 {
-    int dn = _____________xxx(opcode);
-
-    /* IF (condition false)
-     *   THEN [Dn] := [Dn] - 1 {decrement loop counter}
-     *     IF [Dn] == -1 THEN [PC] ← [PC] + 2 {fall through to next instruction}
-     *                   ELSE [PC] ← [PC] + d {take branch}
-     * ELSE [PC] := [PC] + 2 {fall through to next instruction}
-     */
-
     sync(2);
     if (!bcond<I>()) {
 
+        int dn = _____________xxx(opcode);
         u32 newpc = reg.pc + (i16)irc;
 
         // Decrement loop counter
@@ -785,23 +782,35 @@ template<Instr I, Mode M, Size S> void
 Moira::execJmp(u16 opcode)
 {
     int src = _____________xxx(opcode);
+    u32 ea  = computeEA<M,Long,SKIP_LAST_READ>(src);
 
-    u32 ea = computeEA<M,Long,SKIP_LAST_READ>(src);
+    const int delay[] = { 0,0,0,0,0,2,4,2,0,2,4,0 };
+    sync(delay[M]);
 
+    // Jump to new address
     reg.pc = ea;
+
+    // Fill the prefetch queue
     fullPrefetch();
 }
 
 template<Instr I, Mode M, Size S> void
 Moira::execJsr(u16 opcode)
 {
+    printf("execJsr(1)\n");
+
     int src = _____________xxx(opcode);
+    u32 ea  = computeEA<M,Long,SKIP_LAST_READ>(src);
 
-    u32 ea = computeEA<M,Long,SKIP_LAST_READ>(src);
+    const int delay[] = { 0,0,0,0,0,2,4,2,0,2,4,0 };
+    sync(delay[M]);
+
+    // Jump to new address
     u32 pc = reg.pc;
-
     reg.pc = ea;
-    irc = memory->moiraRead16(reg.pc);
+
+    if (addressError<Word>(ea)) return;
+    irc = readM<Word>(reg.pc);
     push<Long>(pc + 2);
     prefetch();
 }
@@ -829,48 +838,6 @@ Moira::execLink(u16 opcode)
     prefetch();
     writeA(ax, reg.sp);
     reg.sp += (i32)disp;
-}
-
-template<Instr I, Mode M1, Mode M2, Size S> void
-Moira::execMove(u16 opcode)
-{
-    int src = _____________xxx(opcode);
-    int dst = ____xxx_________(opcode);
-
-    u32 ea1, data;
-
-    /* Check for mode combinations that show special timing behaviour
-     * http://pasti.fxatari.com/68kdocs/68kPrefetch.html
-     */
-    if (M2 == 4) {
-
-        if (!readOperand<M1,S>(src, ea1, data)) return;
-        prefetch();
-        if (!writeOperand<M2,S>(dst, data)) return;
-
-    } else if (M2 == 8 && M1 >= 2 && M1 <= 10) {
-
-        u32 ea2;
-
-        if (!readOperand<M1,S>(src, ea1, data)) return;
-        ea2 = irc << 16;
-        readExtensionWord();
-        ea2 |= irc;
-        writeM<Long>(ea2, data);
-        readExtensionWord();
-        prefetch();
-
-    } else {
-
-        if (!readOperand<M1,S>(src, ea1, data)) return;
-        if (!writeOperand<M2,S>(dst, data)) return;
-        prefetch();
-    }
-
-    sr.c = 0;
-    sr.v = 0;
-    sr.n = NBIT<S>(data);
-    sr.z = ZERO<S>(data);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1073,7 +1040,7 @@ Moira::execMovemEaRg(u16 opcode)
             break;
         }
     }
-    if (S == Word) (void)readM<Word>(ea);
+    if (S == Word) dummyRead(ea);
     prefetch();
 }
 
@@ -1085,11 +1052,6 @@ Moira::execMovemRgEa(u16 opcode)
 
     switch (M) {
 
-        case 3: // (An)+
-        {
-            assert(false);
-            break;
-        }
         case 4: // -(An)
         {
             u32 ea = readA(dst);
