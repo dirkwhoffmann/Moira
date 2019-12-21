@@ -104,23 +104,6 @@ Moira::execGroup0Exception(u32 addr, u8 nr)
 
     saveToStackDetailed(getSR(), addr, code);
 
-    /*
-     // Push PC
-     reg.sp -= 2; write<Word>(reg.sp, reg.pc & 0xFFFF);
-     reg.sp -= 2; write<Word>(reg.sp, reg.pc >> 16);
-
-     // Push SR and IRD
-     reg.sp -= 2; write<Word>(reg.sp, getSR());
-     reg.sp -= 2; write<Word>(reg.sp, ird);
-
-     // Push address
-     reg.sp -= 2; write<Word>(reg.sp, addr & 0xFFFF);
-     reg.sp -= 2; write<Word>(reg.sp, addr >> 16);
-
-     // Push memory access type and function code
-     reg.sp -= 2; write<Word>(reg.sp, error);
-     */
-
     // Update the prefetch queue
     readExtensionWord();
     prefetch();
@@ -139,16 +122,6 @@ Moira::execGroup1Exception(u8 nr)
 
     saveToStackBrief(status);
 
-    /*
-     // Push PC and SR
-     reg.sp -= 2;
-     write<Word>(reg.sp, reg.pc & 0xFFFF);
-     reg.sp -= 2;
-     write<Word>(reg.sp, reg.pc >> 16);
-     reg.sp -= 2;
-     write<Word>(reg.sp, status);
-     */
-
     // Update the prefetch queue
     readExtensionWord();
     prefetch();
@@ -165,7 +138,8 @@ Moira::execTrapException(u8 nr)
     setSupervisorMode(true);
     sr.t = 0;
 
-    // Push PC and SR
+    // Write exception information to stack
+    sync(4);
     saveToStackBrief(status);
 
     jumpToVector(nr);
@@ -181,11 +155,10 @@ Moira::privilegeException()
     sr.t = 0;
 
     reg.pc -= 2;
-    saveToStackBrief(status);
 
-    // Update the prefetch queue
-    // readExtensionWord();
-    // prefetch();
+    // Write exception information to stack
+    sync(4);
+    saveToStackBrief(status);
 
     jumpToVector(8);
 }
@@ -475,6 +448,8 @@ Moira::execAndiccr(u16 opcode)
     u32 src = readImm<S>();
     u8  dst = getCCR();
 
+    sync(8);
+
     u32 result = logic<I,S>(src, dst);
     setCCR(result);
 
@@ -490,6 +465,8 @@ Moira::execAndisr(u16 opcode)
     u32 src = readImm<S>();
     u16 dst = getSR();
 
+    sync(8);
+    
     u32 result = logic<I,S>(src, dst);
     setSR(result);
 
@@ -613,7 +590,8 @@ Moira::execChk(u16 opcode)
     dop = readD<S>(dst);
 
     prefetch();
-
+    sync(4);
+    
     sr.z = ZERO<S>(dop);
     sr.v = 0;
     sr.c = 0;
@@ -621,8 +599,12 @@ Moira::execChk(u16 opcode)
 
     if ((i16)dop > (i16)sop) {
         execTrapException(6);
+        return;
     }
-    else if ((i16)dop < 0) {
+
+    sync(2);
+
+    if ((i16)dop < 0) {
         sr.n = 1;
         execTrapException(6);
     }
@@ -1273,7 +1255,7 @@ Moira::execDiv(u16 opcode)
 
     // Check for division by zero
     if (data == 0) {
-        sync(8);
+        sync(4);
         return execTrapException(5);
     }
 
