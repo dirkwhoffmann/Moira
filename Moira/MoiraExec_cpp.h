@@ -139,7 +139,6 @@ Moira::execTrapException(u8 nr)
     sr.t = 0;
 
     // Write exception information to stack
-    sync(4);
     saveToStackBrief(status);
 
     jumpToVector(nr);
@@ -598,6 +597,7 @@ Moira::execChk(u16 opcode)
     sr.n = 0;
 
     if ((i16)dop > (i16)sop) {
+        sync(4);
         execTrapException(6);
         return;
     }
@@ -606,6 +606,7 @@ Moira::execChk(u16 opcode)
 
     if ((i16)dop < 0) {
         sr.n = 1;
+        sync(4);
         execTrapException(6);
     }
 }
@@ -1150,6 +1151,8 @@ Moira::execMoveToCcr(u16 opcode)
 
     u32 ea, data;
     if (!readOperand<M,S>(src, ea, data)) return;
+
+    sync(4);
     setCCR(data);
 
     dummyRead(reg.pc + 2);
@@ -1178,6 +1181,8 @@ Moira::execMoveToSr(u16 opcode)
 
     u32 ea, data;
     if (!readOperand<M,S>(src, ea, data)) return;
+
+    sync(4);
     setSR(data);
 
     dummyRead(reg.pc + 2);
@@ -1255,7 +1260,7 @@ Moira::execDiv(u16 opcode)
 
     // Check for division by zero
     if (data == 0) {
-        sync(4);
+        sync(8);
         return execTrapException(5);
     }
 
@@ -1490,6 +1495,7 @@ Moira::execTrap(u16 opcode)
 {
     int nr = ____________xxxx(opcode) + 32;
 
+    sync(4);
     execTrapException(nr);
 }
 
