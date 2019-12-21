@@ -433,15 +433,16 @@ void Tester_68k::check(string ident) {
     // Run Moira
     moiracpu->process();
 
-
     // Compare result with Moira
     comparePost();
 
+    /*
     if (testCounter++ > 100) {
         testCounter = 0;
         cout << endl;
         // system("PAUSE");
     }
+    */
 }
 
 Results* Tester_68k::sampleResult() {
@@ -552,6 +553,7 @@ void Tester_68k::dump()
     u32 pc = reg_pc, mpc = moiracpu->getPC();
     u16 irc = reg_irc, mirc = moiracpu->getIRC();
     u16 ird = reg_ird, mird = moiracpu->getIRD();
+    i64 clk = cycleCounter, mclk = moiracpu->getClock();
 
     u16 sr = reg_s, msr = moiracpu->getSR();
     bool t = (sr >> 15) & 1, mt = (msr >> 15) & 1;
@@ -563,10 +565,11 @@ void Tester_68k::dump()
     bool x = (sr >> 4) & 1, mx = (msr >> 4) & 1;
     int ipl = (sr >> 8) & 7, mipl = (msr >> 8) & 7;
 
-    printf("PC: %x / %x %s\n", pc, mpc, pc != mpc ? "<--" : "");
-    printf("SR: %x / %x %s\n", sr, msr, sr != msr ? "<--" : "");
-    printf("IRC: %x / %x %s\n", irc, mirc, irc != mirc ? "<--" : "");
-    printf("IRD: %x / %x %s\n", ird, mird, ird != mird ? "<--" : "");
+    printf("   PC: %x / %x %s\n", pc, mpc, pc != mpc ? "<--" : "");
+    printf("   SR: %x / %x %s\n", sr, msr, sr != msr ? "<--" : "");
+    printf("  IRC: %x / %x %s\n", irc, mirc, irc != mirc ? "<--" : "");
+    printf("  IRD: %x / %x %s\n", ird, mird, ird != mird ? "<--" : "");
+    printf("  Clk: %lld / %lld %s\n", clk, mclk, clk != mclk ? "<--" : "");
     printf("\n");
 
     for (int i = 0; i < 8; i++) {
@@ -591,6 +594,8 @@ void Tester_68k::dump()
 
 bool Tester_68k::compare()
 {
+    if (cycleCounter != moiracpu->getClock()) return false;
+
     for (int i = 0; i < 8; i++)
         if (getRegD(i) != moiracpu->readD(i)) return false;
 

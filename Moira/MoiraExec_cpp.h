@@ -170,6 +170,9 @@ Moira::execShiftRg(u16 opcode)
     int dst = _____________xxx(opcode);
     int cnt = readD(src) & 0x3F;
 
+    prefetch();
+    sync((S == Long ? 4 : 2) + 2 * cnt);
+
     writeD<S>(dst, shift<I,S>(cnt, readD<S>(dst)));
 }
 
@@ -179,6 +182,9 @@ Moira::execShiftIm(u16 opcode)
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
     int cnt = src ? src : 8;
+
+    prefetch();
+    sync((S == Long ? 4 : 2) + 2 * cnt);
 
     writeD<S>(dst, shift<I,S>(cnt, readD<S>(dst)));
 }
@@ -257,9 +263,11 @@ Moira::execAddEaRg(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     if (!readOperand<M,S>(src, ea, data)) return;
-    result = arith<I,S>(data, readD<S>(dst));
 
+    result = arith<I,S>(data, readD<S>(dst));
     prefetch();
+
+    if (S == Long) sync(4);
     writeD<S>(dst, result);
 }
 
@@ -383,47 +391,32 @@ Moira::execAddxEa(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execAndEaRg(u16 opcode)
 {
-    u32 ea, data, result;
-
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
+    u32 ea, data;
     if (!readOperand<M,S>(src, ea, data)) return;
 
-    result = logic<I,S>(data, readD<S>(dst));
+    u32 result = logic<I,S>(data, readD<S>(dst));
     prefetch();
 
+    if (S == Long) sync(isRegMode(M) || isImmMode(M) ? 4 : 2);
     writeD<S>(dst, result);
 }
 
 template<Instr I, Mode M, Size S> void
 Moira::execAndRgEa(u16 opcode)
 {
-     int src = ____xxx_________(opcode);
-     int dst = _____________xxx(opcode);
+    int src = ____xxx_________(opcode);
+    int dst = _____________xxx(opcode);
 
-    switch (M) {
+    u32 ea, data;
+    if (!readOperand<M,S>(dst, ea, data)) return;
 
-        case 0: // Dn
-        {
-            u32 result = logic<I,S>(readD<S>(src), readD<S>(dst));
-            prefetch();
-            writeD<S>(dst, result);
-            break;
-        }
-        default: // Ea
-        {
-            assert(M >= 2 && M <= 8);
+    u32 result = logic<I,S>(readD<S>(src), data);
+    prefetch();
 
-            u32 ea, data;
-            if (!readOperand<M,S>(dst, ea, data)) return;
-
-            u32 result = logic<I,S>(readD<S>(src), data);
-            prefetch();
-            writeM<S>(ea, result);
-            break;
-        }
-    }
+    writeOperand<M,S>(dst, ea, result);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -620,6 +613,8 @@ Moira::execClr(u16 opcode)
     if (!readOperand<M,S>(dst, ea, data)) return;
 
     prefetch();
+
+    if (S == Long && isRegMode(M)) sync(2);
     writeOperand<M,S>(dst, ea, 0);
 
     sr.n = 0;
@@ -805,7 +800,7 @@ Moira::execLea(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     reg.a[dst] = computeEA<M,S>(src);
-    if (isIndexMode(M)) sync(2);
+    if (isIdxMode(M)) sync(2);
 
     prefetch();
 }
@@ -1356,6 +1351,7 @@ Moira::execNegNot(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execNop(u16 opcode)
 {
+    prefetch();
 }
 
 template<Instr I, Mode M, Size S> void

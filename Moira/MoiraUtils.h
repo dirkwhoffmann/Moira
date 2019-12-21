@@ -143,10 +143,11 @@ static const char *condStr[] {
  */
 typedef u8 Mode;
 
-inline bool isRegMode  (Mode M) { return M == 0 || M == 1;  }
-inline bool isAbsMode  (Mode M) { return M == 7 || M == 8;  }
-inline bool isIndexMode(Mode M) { return M == 6 || M == 10; }
-inline bool isMemMode  (Mode M) { return M >= 2 && M <= 10; }
+inline bool isRegMode(Mode M) { return M == 0 || M == 1;  }
+inline bool isAbsMode(Mode M) { return M == 7 || M == 8;  }
+inline bool isIdxMode(Mode M) { return M == 6 || M == 10; }
+inline bool isMemMode(Mode M) { return M >= 2 && M <= 10; }
+inline bool isImmMode(Mode M) { return M == 11; }
 
 }
 #endif

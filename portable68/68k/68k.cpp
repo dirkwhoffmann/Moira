@@ -619,9 +619,7 @@ void Core_68k::setFlags(u8 type, u8 size, u64 result, u32 src, u32 dest) {
 
 void Core_68k::writeEA(u8 size, u32 value, bool lastBusCycle) {
 
-    printf("Core_68k::writeEA(%d, %x, %d)\n", size, value, lastBusCycle);
 	if (eaReg) {
-        printf("Core_68k::eaReg\n");
 		switch(size) {
 			case SizeByte: eaReg->l = value & 0xFF; return;
 			case SizeWord: eaReg->w = value & 0xFFFF; return;
