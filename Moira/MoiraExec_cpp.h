@@ -300,6 +300,7 @@ Moira::execAdda(u16 opcode)
     result = (I == ADDA) ? readA(dst) + data : readA(dst) - data;
     prefetch();
 
+    sync((S == Word || isRegMode(M) || isImmMode(M)) ? 4 : 2);
     writeA(dst, result);
 }
 
@@ -315,6 +316,7 @@ Moira::execAddi(u16 opcode)
     result = arith<I,S>(src, data);
     prefetch();
 
+    if (S == Long && isRegMode(M)) sync(4);
     writeOperand<M,S>(dst, ea, result);
 }
 
@@ -331,6 +333,7 @@ Moira::execAddq(u16 opcode)
     result = arith<I,S>(src, data);
     prefetch();
 
+    if (S == Long && isRegMode(M)) sync(4);
     writeOperand<M,S>(dst, ea, result);
 }
 
@@ -346,9 +349,10 @@ Moira::execAddqAn(u16 opcode)
     if (src == 0) src = 8;
     result = (I == ADDQ) ? readA(dst) + src : readA(dst) - src;
 
-    writeA(dst, result);
-
     prefetch();
+    sync(4);
+
+    writeA(dst, result);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -360,8 +364,7 @@ Moira::execAddxRg(u16 opcode)
     u32 result = arith<I,S>(readD<S>(src), readD<S>(dst));
     prefetch();
 
-    sync(S == Long ? 6 : 4);
-
+    if (S == Long) sync(4);
     writeD<S>(dst, result);
 }
 
@@ -446,6 +449,7 @@ Moira::execAndiccr(u16 opcode)
     u32 result = logic<I,S>(src, dst);
     setCCR(result);
 
+    dummyRead(reg.pc+2);
     prefetch();
 }
 
@@ -462,6 +466,7 @@ Moira::execAndisr(u16 opcode)
     u32 result = logic<I,S>(src, dst);
     setSR(result);
 
+    dummyRead(reg.pc+2);
     prefetch();
 }
 
@@ -636,6 +641,8 @@ Moira::execCmp(u16 opcode)
 
     cmp<S>(data, readD<S>(dst));
     prefetch();
+
+    if (S == Long) sync(2);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -648,9 +655,10 @@ Moira::execCmpa(u16 opcode)
     if (!readOperand<M,S>(src, ea, data)) return;
 
     data = SEXT<S>(data);
+    cmp<Long>(data, readA(dst));
     prefetch();
 
-    cmp<Long>(data, readA(dst));
+    sync(2);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -663,6 +671,7 @@ Moira::execCmpi(u16 opcode)
     if (!readOperand<M,S>(dst, ea, data)) return;
     prefetch();
 
+    if (S == Long && isRegMode(M)) sync(2);
     cmp<S>(src, data);
 }
 
@@ -718,6 +727,7 @@ Moira::execExgDxDy(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     prefetch();
+    sync(2);
     std::swap(reg.d[src], reg.d[dst]);
 }
 
@@ -728,6 +738,7 @@ Moira::execExgAxDy(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     prefetch();
+    sync(2);
     std::swap(reg.a[src], reg.d[dst]);
 }
 
@@ -738,6 +749,7 @@ Moira::execExgAxAy(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     prefetch();
+    sync(2);
     std::swap(reg.a[src], reg.a[dst]);
 }
 
@@ -1165,6 +1177,7 @@ Moira::execMoveFromSr(u16 opcode)
     if (!readOperand<M,S>(dst, ea, data)) return;
     prefetch();
 
+    if (isRegMode(M) || isImmMode(M)) sync(2);
     writeOperand<M,S>(dst, ea, getSR());
 }
 
@@ -1346,7 +1359,8 @@ Moira::execNegNot(u16 opcode)
     }
 
     prefetch();
-    // write<S>(ea, data);
+
+    if (isRegMode(M) && S == Long) sync(2);
     writeOperand<M,S>(dst, ea, data);
 }
 
@@ -1428,8 +1442,11 @@ Moira::execScc(u16 opcode)
 
     if (!readOperand<M,Byte>(dst, ea, data)) return;
 
+    data = bcond<I>() ? 0xFF : 0;
     prefetch();
-    writeOperand<M,Byte>(dst, ea, bcond<I>() ? 0xFF : 0);
+
+    if (data && isRegMode(M)) sync(2);
+    writeOperand<M,Byte>(dst, ea, data);
 }
 
 template<Instr I, Mode M, Size S> void
