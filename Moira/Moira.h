@@ -205,6 +205,9 @@ public:
 
     void sync(int cycles);
 
+    int cyclesDIVU(u32 dividend, u16 divisor);
+    int cyclesDIVS(i32 dividend, i16 divisor);
+
 
     //
     // Processing arithmetical and logical operations

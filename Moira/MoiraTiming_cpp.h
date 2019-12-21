@@ -12,3 +12,50 @@ Moira::sync(int cycles)
 {
     clock += cycles;
 }
+
+int
+Moira::cyclesDIVU(u32 dividend, u16 divisor)
+{
+    // Check if quotient is larger than 16 bit
+    if ((dividend >> 16) >= divisor) return 10;
+    u32 hdivisor = divisor << 16;
+
+    int mcycles = 38;
+    for (int i = 0; i < 15; i++) {
+        if ((i32)dividend < 0) {
+            dividend <<= 1;
+            dividend -= hdivisor;
+        } else {
+            dividend <<= 1;
+            if (dividend >= hdivisor) {
+                dividend -= hdivisor;
+                mcycles += 1;
+            } else {
+                mcycles += 2;
+            }
+        }
+    }
+    return 2 * mcycles;
+}
+
+int
+Moira::cyclesDIVS(i32 dividend, i16 divisor)
+{
+    int mcycles = (dividend < 0) ? 7 : 6;
+
+    if ((abs(dividend) >> 16) >= abs(divisor))
+        return (mcycles + 2) * 2;
+
+    mcycles += 55;
+
+    if (divisor >= 0) {
+        mcycles += (dividend < 0) ? 1 : -1;
+    }
+
+    u32 aquot = abs(dividend) / abs(divisor);
+    for (int i = 0; i < 15; i++) {
+        if ( (i16)aquot >= 0) mcycles++;
+        aquot <<= 1;
+    }
+    return 2 * mcycles;
+}

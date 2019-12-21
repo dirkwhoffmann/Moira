@@ -1166,12 +1166,14 @@ Moira::execDiv(u16 opcode)
     }
 
     u32 dividend = readD(dst);
-    prefetch();
 
     switch (I) {
 
         case DIVS: // Signed division
         {
+            sync(cyclesDIVS(dividend, data) - 4);
+            prefetch();
+
             if (dividend == 0x80000000 && (i16)data == -1) {
                 sr.v = sr.n = 1;
                 return;
@@ -1192,6 +1194,9 @@ Moira::execDiv(u16 opcode)
         }
         case DIVU: // Unsigned division
         {
+            sync(cyclesDIVU(dividend, data) - 4);
+            prefetch();
+
             u32 result = dividend / data;
             u16 remainder = dividend % data;
 
