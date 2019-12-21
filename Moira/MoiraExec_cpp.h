@@ -9,6 +9,7 @@
 
 #include <utility>
 
+#define SUPERVISOR_MODE_INSTR if (!sr.s) { privilegeException(); return; }
 #define stdFlags(x) { sr.n = NBIT<S>(x); sr.z = ZERO<S>(x); sr.v = 0; sr.c = 0;  }
 
 void
@@ -458,8 +459,7 @@ Moira::execAndiccr(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execAndisr(u16 opcode)
 {
-    // This instruction requires supervisor mode
-    if (!sr.s) { privilegeException(); return; }
+    SUPERVISOR_MODE_INSTR
 
     u32 src = readImm<S>();
     u16 dst = getSR();
@@ -1174,8 +1174,7 @@ Moira::execMoveFromSr(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execMoveToSr(u16 opcode)
 {
-    // This instruction requires supervisor mode
-    if (!sr.s) { privilegeException(); return; }
+    SUPERVISOR_MODE_INSTR
 
     int src = _____________xxx(opcode);
 
@@ -1192,10 +1191,9 @@ Moira::execMoveToSr(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execMoveUspAn(u16 opcode)
 {
-    int an = _____________xxx(opcode);
+    SUPERVISOR_MODE_INSTR
 
-    // This instruction requires supervisor mode
-    if (!sr.s) { privilegeException(); return; }
+    int an = _____________xxx(opcode);
 
     prefetch();
     writeA(an, reg.usp);
@@ -1204,11 +1202,9 @@ Moira::execMoveUspAn(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execMoveAnUsp(u16 opcode)
 {
+    SUPERVISOR_MODE_INSTR
+
     int an = _____________xxx(opcode);
-
-    // This instruction requires supervisor mode
-    if (!sr.s) { privilegeException(); return; }
-
     prefetch();
     reg.usp = readA(an);
 }
@@ -1381,8 +1377,7 @@ Moira::execPea(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execReset(u16 opcode)
 {
-    // This instruction requires supervisor mode
-    if (!sr.s) { privilegeException(); return; }
+    SUPERVISOR_MODE_INSTR
 
     prefetch();
 }
@@ -1390,8 +1385,7 @@ Moira::execReset(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execRte(u16 opcode)
 {
-    // This instruction requires supervisor mode
-     if (!sr.s) { privilegeException(); return; }
+    SUPERVISOR_MODE_INSTR
 
     setSR(readM<Word>(reg.sp));
     reg.sp += 2;
@@ -1443,8 +1437,7 @@ Moira::execScc(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execStop(u16 opcode)
 {
-    // This instruction requires supervisor mode
-    if (!sr.s) { privilegeException(); return; }
+    SUPERVISOR_MODE_INSTR
 
     setSR(irc | 1 << 13);
     readExtensionWord();
