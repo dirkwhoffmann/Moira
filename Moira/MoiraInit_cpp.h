@@ -30,10 +30,13 @@ dasm[id] = &Moira::dasm##name; }
 //                ____ XXXM MM__ ____
 //                ____ MMMX XXMM MXXX
 //                ____ ___S __MM MXXX
+//                ____ ____ SSMM MXXX
+//                __SS ____ __MM MXXX DEPRECATED
 //                ____ XXX_ __MM MXXX
 //                ____ XXXS __MM MXXX
 //                ____ XXX_ SSMM MXXX
 //                __SS MMMX XXMM MXXX
+//                __SS ___X XXMM MXXX
 //
 //       Legend:  XXX : Operand parameters    (0 .. 7)
 //                  S : Size information      (0 = Word, 1 = Long)
@@ -125,6 +128,13 @@ if ((s) & 0b100) __________MMMXXX((op) | 2 << 6, I, m, Long, f); \
 if ((s) & 0b010) __________MMMXXX((op) | 1 << 6, I, m, Word, f); \
 if ((s) & 0b001) __________MMMXXX((op) | 0 << 6, I, m, Byte, f); }
 
+/*
+#define __SS______MMMXXX(op,I,m,s,f) { \
+if ((s) & 0b100) __________MMMXXX((op) | 2 << 12, I, m, Long, f); \
+if ((s) & 0b010) __________MMMXXX((op) | 3 << 12, I, m, Word, f); \
+if ((s) & 0b001) __________MMMXXX((op) | 1 << 12, I, m, Byte, f); }
+*/
+
 #define ____XXX___MMMXXX(op,I,m,S,f) { \
 for (int i = 0; i < 8; i++) __________MMMXXX((op) | i << 9, I, m, S, f) }
 
@@ -134,14 +144,20 @@ for (int i = 0; i < 8; i++) _______S__MMMXXX((op) | i << 9, I, m, s, f) }
 #define ____XXX_SSMMMXXX(op,I,m,s,f) { \
 for (int i = 0; i < 8; i++) ________SSMMMXXX((op) | i << 9, I, m, s, f) }
 
+/*
 #define ______MMXXXMMXXX(op,I,m,s,f) { \
 for (int i = 0; i < 8; i++) ________SSMMMXXX((op) | i << 9, I, m, s, f) }
+*/
+
+#define __SSXXX___MMMXXX(op,I,m,s,f) { \
+if ((s) & 0b100) ____XXX___MMMXXX((op) | 2 << 12, I, m, Long, f); \
+if ((s) & 0b010) ____XXX___MMMXXX((op) | 3 << 12, I, m, Word, f); \
+if ((s) & 0b001) ____XXX___MMMXXX((op) | 1 << 12, I, m, Byte, f); }
 
 #define __SSXXXMMMMMMXXX(op,I,m,m2,s,f) { \
 if ((s) & 0b100) ____XXXMMMMMMXXX((op) | 2 << 12, I, m, m2, Long, f); \
 if ((s) & 0b010) ____XXXMMMMMMXXX((op) | 3 << 12, I, m, m2, Word, f); \
 if ((s) & 0b001) ____XXXMMMMMMXXX((op) | 1 << 12, I, m, m2, Byte, f); }
-
 
 static u16
 parse(const char *s, u16 sum = 0)
@@ -793,12 +809,15 @@ Moira::createJumpTables()
     opcode = parse("00-- ---- ---- ----");
 
     __SSXXXMMMMMMXXX(opcode, MOVE,
-                     0b101111111111, 0b101111111000,
+                     0b101111111111, 0b101101111000,
                      Byte, Move);
 
     __SSXXXMMMMMMXXX(opcode, MOVE,
-                     0b111111111111, 0b101111111000,
+                     0b111111111111, 0b101101111000,
                      Word | Long, Move);
+
+    opcode = parse("00-- ---1 00-- ----");
+    __SSXXX___MMMXXX(opcode, MOVE, 0b111111111111, Byte | Word | Long, Move4);
 
 
     // MOVEA

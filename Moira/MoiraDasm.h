@@ -69,6 +69,8 @@ template<Instr I, Mode M, Size S> void dasmLea(StrWriter &str, u32 &addr, u16 op
 template<Instr I, Mode M, Size S> void dasmLink(StrWriter &str, u32 &addr, u16 op);
 
 template<Instr I, Mode M1, Mode M2, Size S> void dasmMove(StrWriter &str, u32 &addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmMove4(StrWriter &str, u32 &addr, u16 op);
+
 template<Instr I, Mode M, Size S> void dasmMovea(StrWriter &str, u32 &addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmMovemEaRg(StrWriter &str, u32 &addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmMovemRgEa(StrWriter &str, u32 &addr, u16 op);

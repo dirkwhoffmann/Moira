@@ -872,6 +872,32 @@ Moira::execMove(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+Moira::execMove4(u16 opcode)
+{
+    u32 ea, data;
+
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    /* http://pasti.fxatari.com/68kdocs/68kPrefetch.html
+     * "When the destination addressing mode is pre-decrement, steps 4 and 5
+     *  above are inverted. So it behaves like a read modify instruction and it
+     *  is a class 0 instruction. Note: The behavior is the same disregarding
+     *  transfer size (byte, word or long), and disregarding the source
+     *  addressing mode."
+     */
+
+    if (!readOperand<M,S>(src, ea, data)) return;
+    prefetch();
+    if (!writeOperand<4,S>(dst, data)) return;
+
+    sr.c = 0;
+    sr.v = 0;
+    sr.n = NBIT<S>(data);
+    sr.z = ZERO<S>(data);
+}
+
+template<Instr I, Mode M, Size S> void
 Moira::execMovea(u16 opcode)
 {
     int src = _____________xxx(opcode);

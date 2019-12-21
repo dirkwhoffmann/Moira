@@ -460,6 +460,15 @@ Moira::dasmMove(StrWriter &str, u32 &addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
+Moira::dasmMove4(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = Op <M,S> ( _____________xxx(op), addr );
+    auto dst = Op <4,S> ( ____xxx_________(op), addr );
+
+    str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
 Moira::dasmMovea(StrWriter &str, u32 &addr, u16 op)
 {
     auto src = Op <M,S> ( _____________xxx(op), addr );
