@@ -889,6 +889,7 @@ Moira::execMove4(u16 opcode)
 
     if (!readOperand<M,S>(src, ea, data)) return;
     prefetch();
+    sync(-2);
     if (!writeOperand<4,S>(dst, data)) return;
 
     sr.c = 0;
