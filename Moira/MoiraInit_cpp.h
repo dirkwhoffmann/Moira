@@ -23,22 +23,19 @@ dasm[id] = &Moira::dasm##name; }
 //                ____ XXX_ ____ _XXX
 //                ____ ____ XXXX XXXX
 //                ____ XXX_ XXXX XXXX
-//                ____ XXX_ SS__ _XXX
 //                ____ ____ __MM MXXX
-//                ____ XXXM MM__ ____
-//                ____ MMMX XXMM MXXX
-//                ____ ___S __MM MXXX
-//                ____ ____ SSMM MXXX
 //                ____ XXX_ __MM MXXX
-//                ____ XXXS __MM MXXX
+//                ____ XXX_ SS__ _XXX
+//                ____ ____ SSMM MXXX
 //                ____ XXX_ SSMM MXXX
+//                ____ ___S __MM MXXX
+//                ____ XXXS __MM MXXX
 //                __SS ____ __MM MXXX
 //                __SS XXX_ __MM MXXX
-//                __SS ___X XXMM MXXX
 //
-//       Legend:  XXX : Operand parameters    (0 .. 7)
-//                  S : Size information      (0 = Word, 1 = Long)
-//                 SS : Size information      (0 = Byte, 1 = Word, 2 = Long)
+//       Legend:  XXX : Operand parameter
+//                  S : Size information (Word or Long)
+//                 SS : Size information (Byte or Word or Long)
 
 #define _____________XXX(op,I,M,S,f) { \
 for (int j = 0; j < 8; j++) register((op) | j, f<I __ M __ S>); }
@@ -84,9 +81,19 @@ if ((s) & 0b100) __________MMMXXX((op) | 2 << 6, I, m, Long, f); \
 if ((s) & 0b010) __________MMMXXX((op) | 1 << 6, I, m, Word, f); \
 if ((s) & 0b001) __________MMMXXX((op) | 0 << 6, I, m, Byte, f); }
 
+#define ____XXX_SSMMMXXX(op,I,m,s,f) { \
+if ((s) & 0b100) ____XXX___MMMXXX((op) | 2 << 6, I, m, Long, f); \
+if ((s) & 0b010) ____XXX___MMMXXX((op) | 1 << 6, I, m, Word, f); \
+if ((s) & 0b001) ____XXX___MMMXXX((op) | 0 << 6, I, m, Byte, f); }
+
 #define _______S__MMMXXX(op,I,m,s,f) { \
 if ((s) & 0b100) __________MMMXXX((op) | 1 << 8, I, m, Long, f); \
 if ((s) & 0b010) __________MMMXXX((op) | 0 << 8, I, m, Word, f); \
+if ((s) & 0b001) assert(false); }
+
+#define ____XXXS__MMMXXX(op,I,m,s,f) { \
+if ((s) & 0b100) ____XXX___MMMXXX((op) | 1 << 8, I, m, Long, f); \
+if ((s) & 0b010) ____XXX___MMMXXX((op) | 0 << 8, I, m, Word, f); \
 if ((s) & 0b001) assert(false); }
 
 #define __SS______MMMXXX(op,I,m,s,f) { \
@@ -94,14 +101,10 @@ if ((s) & 0b100) __________MMMXXX((op) | 2 << 12, I, m, Long, f); \
 if ((s) & 0b010) __________MMMXXX((op) | 3 << 12, I, m, Word, f); \
 if ((s) & 0b001) __________MMMXXX((op) | 1 << 12, I, m, Byte, f); }
 
-#define ____XXX_SSMMMXXX(op,I,m,s,f) { \
-for (int i = 0; i < 8; i++) ________SSMMMXXX((op) | i << 9, I, m, s, f) }
-
-#define ____XXXS__MMMXXX(op,I,m,s,f) { \
-for (int i = 0; i < 8; i++) _______S__MMMXXX((op) | i << 9, I, m, s, f) }
-
 #define __SSXXX___MMMXXX(op,I,m,s,f) { \
-for (int i = 0; i < 8; i++) __SS______MMMXXX((op) | i << 9, I, m, s, f) }
+if ((s) & 0b100) ____XXX___MMMXXX((op) | 2 << 12, I, m, Long, f); \
+if ((s) & 0b010) ____XXX___MMMXXX((op) | 3 << 12, I, m, Word, f); \
+if ((s) & 0b001) ____XXX___MMMXXX((op) | 1 << 12, I, m, Byte, f); }
 
 
 static u16
