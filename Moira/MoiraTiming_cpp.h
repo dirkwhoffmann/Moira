@@ -13,6 +13,20 @@ Moira::sync(int cycles)
     clock += cycles;
 }
 
+template <Instr I> int
+Moira::cyclesBit(u8 bit)
+{
+    switch (I)
+    {
+        case BTST: return 2;
+        case BCLR: return (bit > 15 ? 6 : 4);
+        case BSET:
+        case BCHG: return (bit > 15 ? 4 : 2);
+    }
+    assert(false);
+    return 0;
+}
+
 int
 Moira::cyclesMULU(u16 data)
 {

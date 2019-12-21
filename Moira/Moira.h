@@ -57,6 +57,13 @@ struct StatusRegister {
     bool c;               // Carry flag
 
     u8 ipl;               // Interrupt Priority Level
+
+    template <Size S> void setNZVC(u32 value) {
+        n = NBIT<S>(value);
+        z = ZERO<S>(value);
+        v = 0;
+        c = 0;
+    }
 };
 
 class Moira {
@@ -205,6 +212,7 @@ public:
 
     void sync(int cycles);
 
+    template <Instr I> int cyclesBit(u8 bit);
     int cyclesMULU(u16 data);
     int cyclesMULS(u16 data);
     int cyclesDIVU(u32 dividend, u16 divisor);

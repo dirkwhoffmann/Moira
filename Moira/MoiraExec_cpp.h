@@ -10,7 +10,6 @@
 #include <utility>
 
 #define SUPERVISOR_MODE_INSTR if (!sr.s) { privilegeException(); return; }
-#define stdFlags(x) { sr.n = NBIT<S>(x); sr.z = ZERO<S>(x); sr.v = 0; sr.c = 0;  }
 
 void
 Moira::saveToStackDetailed(u16 sr, u32 addr, u16 code)
@@ -504,6 +503,7 @@ Moira::execBitDxEa(u16 opcode)
 
             prefetch();
 
+            sync(cyclesBit<I>(bit));
             if (I != BTST) writeD(dst, data);
             break;
         }
@@ -538,6 +538,7 @@ Moira::execBitImEa(u16 opcode)
 
             prefetch();
 
+            sync(cyclesBit<I>(bit));
             if (I != BTST) writeD(dst, data);
             break;
         }
@@ -828,7 +829,7 @@ Moira::execMove0(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     if (!readOperand<M,S>(src, ea, data)) return;
-    stdFlags(data);
+    sr.setNZVC<S>(data);
     if (!writeOperand<0,S>(dst, data)) return;
     prefetch();
 }
@@ -842,7 +843,7 @@ Moira::execMove2(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     if (!readOperand<M,S>(src, ea, data)) return;
-    stdFlags(data);
+    sr.setNZVC<S>(data);
     if (!writeOperand<2,S>(dst, data)) return;
     prefetch();
 }
@@ -856,7 +857,7 @@ Moira::execMove3(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     if (!readOperand<M,S>(src, ea, data)) return;
-    stdFlags(data);
+    sr.setNZVC<S>(data);
     if (!writeOperand<3,S>(dst, data)) return;
     prefetch();
 }
@@ -879,7 +880,7 @@ Moira::execMove4(u16 opcode)
      */
 
     if (!readOperand<M,S>(src, ea, data)) return;
-    stdFlags(data);
+    sr.setNZVC<S>(data);
     prefetch();
     sync(-2);
     if (!writeOperand<4,S>(dst, data)) return;
@@ -894,7 +895,7 @@ Moira::execMove5(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     if (!readOperand<M,S>(src, ea, data)) return;
-    stdFlags(data);
+    sr.setNZVC<S>(data);
     if (!writeOperand<5,S>(dst, data)) return;
     prefetch();
 }
@@ -908,7 +909,7 @@ Moira::execMove6(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     if (!readOperand<M,S>(src, ea, data)) return;
-    stdFlags(data);
+    sr.setNZVC<S>(data);
     if (!writeOperand<6,S>(dst, data)) return;
     prefetch();
 }
@@ -922,7 +923,7 @@ Moira::execMove7(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     if (!readOperand<M,S>(src, ea, data)) return;
-    stdFlags(data);
+    sr.setNZVC<S>(data);
     if (!writeOperand<7,S>(dst, data)) return;
     prefetch();
 }
@@ -950,7 +951,7 @@ Moira::execMove8(u16 opcode)
     if (isMemMode(M)) {
 
         if (!readOperand<M,S>(src, ea, data)) return;
-        stdFlags(data);
+        sr.setNZVC<S>(data);
         u32 ea2 = irc << 16;
         readExtensionWord();
         ea2 |= irc;
@@ -960,7 +961,7 @@ Moira::execMove8(u16 opcode)
     } else {
 
         if (!readOperand<M,S>(src, ea, data)) return;
-        stdFlags(data);
+        sr.setNZVC<S>(data);
         if (!writeOperand<8,S>(dst, data)) return;
     }
 
@@ -1234,11 +1235,7 @@ Moira::execMul(u16 opcode)
     }
 
     writeD(dst, result);
-
-    sr.c = 0;
-    sr.v = 0;
-    sr.n = NBIT<Long>(result);
-    sr.z = ZERO<Long>(result);
+    sr.setNZVC<Long>(result);
 }
 
 template<Instr I, Mode M, Size S> void
