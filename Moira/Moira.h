@@ -205,6 +205,8 @@ public:
 
     void sync(int cycles);
 
+    int cyclesMULU(u16 data);
+    int cyclesMULS(u16 data);
     int cyclesDIVU(u32 dividend, u16 divisor);
     int cyclesDIVS(i32 dividend, i16 divisor);
 

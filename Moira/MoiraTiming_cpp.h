@@ -14,13 +14,33 @@ Moira::sync(int cycles)
 }
 
 int
+Moira::cyclesMULU(u16 data)
+{
+    int mcycles = 17;
+
+    for (; data; data >>= 1) if (data & 1) mcycles++;
+    return 2 * mcycles;
+}
+
+int
+Moira::cyclesMULS(u16 data)
+{
+    int mcycles = 17;
+
+    data = ((data << 1) ^ data) & 0xFFFF;
+    for (; data; data >>= 1) if (data & 1) mcycles++;
+    return 2 * mcycles;
+}
+
+int
 Moira::cyclesDIVU(u32 dividend, u16 divisor)
 {
+    int mcycles = 38;
+
     // Check if quotient is larger than 16 bit
     if ((dividend >> 16) >= divisor) return 10;
     u32 hdivisor = divisor << 16;
 
-    int mcycles = 38;
     for (int i = 0; i < 15; i++) {
         if ((i32)dividend < 0) {
             dividend <<= 1;
@@ -43,6 +63,7 @@ Moira::cyclesDIVS(i32 dividend, i16 divisor)
 {
     int mcycles = (dividend < 0) ? 7 : 6;
 
+    // Check if quotient is larger than 16 bit
     if ((abs(dividend) >> 16) >= abs(divisor))
         return (mcycles + 2) * 2;
 

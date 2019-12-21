@@ -234,6 +234,8 @@ Moira::execAbcd(u16 opcode)
         {
             u32 result = arith<I,Byte>(readD<Byte>(src), readD<Byte>(dst));
             prefetch();
+
+            sync(S == Long ? 6 : 2);
             writeD<Byte>(dst, result);
             break;
         }
@@ -245,7 +247,6 @@ Moira::execAbcd(u16 opcode)
             if (!readOperand<M,S>(dst, ea2, data2)) return;
 
             u32 result = arith<I,Byte>(data1, data2);
-
             prefetch();
 
             writeM<Byte>(ea2, result);
@@ -1221,11 +1222,13 @@ Moira::execMul(u16 opcode)
         case MULS: // Signed multiplication
         {
             result = (i16)data * (i16)readD<Word>(dst);
+            sync(cyclesMULS(data));
             break;
         }
         case MULU: // Unsigned multiplication
         {
             result = data * readD<Word>(dst);
+            sync(cyclesMULU(data));
             break;
         }
     }
@@ -1314,6 +1317,8 @@ Moira::execNbcd(u16 opcode)
         case 0: // Dn
         {
             prefetch();
+
+            sync(2);
             writeD<Byte>(reg, arith<SBCD,Byte>(readD<Byte>(reg), 0));
             break;
         }
