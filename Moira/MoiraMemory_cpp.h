@@ -242,14 +242,13 @@ Moira::computeEA(u32 n) {
 }
 
 template<Mode M, Size S> void
-Moira::postIncPreDec(int n)
+Moira::updateAn(int n)
 {
-    if (M == 3) { // (An)+
-        reg.a[n] += (n == 7 && S == Byte) ? 2 : S;
-    }
-    if (M == 4) { // (-(An)
-        reg.a[n] -= (n == 7 && S == Byte) ? 2 : S;
-    }
+    // (An)+
+    if (M == 3) reg.a[n] += (n == 7 && S == Byte) ? 2 : S;
+
+    // -(An)
+    if (M == 4) reg.a[n] -= (n == 7 && S == Byte) ? 2 : S;
 }
 
 template<Mode M, Size S> bool
@@ -260,31 +259,35 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
         case 0:  // Dn
         {
             result = readD<S>(n);
-            return true;
+            break;
         }
         case 1:  // An
         {
             result = readA<S>(n);
-            return true;
+            break;
         }
         case 11: // Im
         {
             result = readImm<S>();
-            return true;
+            break;
         }
-        default:
+        default: // Ea
         {
-            bool error;
+            // Compute effective address
             ea = computeEA<M,S>(n);
-            result = readM<S>(ea, error);
 
-            // Early exit in case of an address error
-            if (error) { return false; }
+            // Read from effective address
+            bool error; result = readM<S>(ea, error);
 
-            postIncPreDec<M,S>(n);
-            return true;
+            // Exit if an address error has occurred
+            if (error) return false;
+
+            // Emulate (An)+ or -(An) register modification
+            updateAn<M,S>(n);
         }
     }
+
+   return true;
 }
 
 template<Mode M, Size S> bool
@@ -295,31 +298,35 @@ Moira::writeOperand(int n, u32 value)
         case 0:  // Dn
         {
             writeD<S>(n, value);
-            return true;
+            break;
         }
         case 1:  // An
         {
             writeA<S>(n, value);
-            return true;
+            break;
         }
         case 11: // Im
         {
             assert(false);
-            return false;
+            break;
         }
         default:
         {
-            bool error;
+            // Compute effective address
             u32 ea = computeEA<M,S>(n);
-            writeM<S>(ea, value, error);
+
+            // Write to effective address
+            bool error; writeM<S>(ea, value, error);
 
             // Early exit in case of an address error
-            if (error) { return false; }
+            if (error) return false;
 
-            postIncPreDec<M,S>(n);
-            return true;
+            // Emulate (An)+ or -(An) register modification
+            updateAn<M,S>(n);
         }
     }
+
+    return true;
 }
 
 template<Mode M, Size S> void

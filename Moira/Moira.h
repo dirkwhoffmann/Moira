@@ -184,7 +184,7 @@ public:
     template<Mode M, Size S, u8 flags = 0> u32 computeEA(u32 n);
 
     // Emulates the address register modification for modes (An)+, (An)-
-    template<Mode M, Size S> void postIncPreDec(int n);
+    template<Mode M, Size S> void updateAn(int n);
 
     // Reads an operand
     template<Mode M, Size S> bool readOperand(int n, u32 &ea, u32 &result);
