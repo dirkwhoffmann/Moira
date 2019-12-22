@@ -200,10 +200,10 @@ public:
     template<Mode M, Size S> bool readOperand(int n, u32 &ea, u32 &result);
 
     // Writes an operand
-    template<Mode M, Size S> bool writeOperand(int n, u32 value);
+    template<Mode M, Size S, bool last = false> bool writeOperand(int n, u32 value);
 
     // Writes an operand to an already computed effective address
-    template<Mode M, Size S> void writeOperand(int n, u32 ea, u32 value);
+    template<Mode M, Size S, bool last = false> void writeOperand(int n, u32 ea, u32 value);
 
     // Reads an immediate value
     template<Size S> u32 readImm();
@@ -272,7 +272,7 @@ public:
 private:
 
     template<bool last = false> void prefetch();
-    void fullPrefetch();
+    template<bool last = false> void fullPrefetch();
     void readExtensionWord();
     void dummyRead(u32 pc);
     void dummyRead() { dummyRead(reg.pc); }

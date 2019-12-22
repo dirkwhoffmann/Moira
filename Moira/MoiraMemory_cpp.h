@@ -262,7 +262,7 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
    return true;
 }
 
-template<Mode M, Size S> bool
+template<Mode M, Size S, bool last> bool
 Moira::writeOperand(int n, u32 value)
 {
     switch (M) {
@@ -288,7 +288,7 @@ Moira::writeOperand(int n, u32 value)
             u32 ea = computeEA<M,S>(n);
 
             // Write to effective address
-            bool error; writeM<S>(ea, value, error);
+            bool error; writeM<S,last>(ea, value, error);
 
             // Early exit in case of an address error
             if (error) return false;
@@ -301,7 +301,7 @@ Moira::writeOperand(int n, u32 value)
     return true;
 }
 
-template<Mode M, Size S> void
+template<Mode M, Size S, bool last> void
 Moira::writeOperand(int n, u32 ea, u32 value)
 {
     assert(M < 11);
@@ -325,7 +325,7 @@ Moira::writeOperand(int n, u32 ea, u32 value)
         }
         default:
         {
-            writeM<S>(ea, value);
+            writeM<S,last>(ea, value);
             break;
         }
     }

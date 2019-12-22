@@ -400,7 +400,7 @@ Moira::execAndRgEa(u16 opcode)
     u32 result = logic<I,S>(readD<S>(src), data);
     prefetch();
 
-    writeOperand<M,S>(dst, ea, result);
+    writeOperand<M,S,LAST_BUS_CYCLE>(dst, ea, result);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -600,10 +600,10 @@ Moira::execClr(u16 opcode)
     u32 ea, data;
     if (!readOperand<M,S>(dst, ea, data)) return;
 
-    prefetch();
+    isMemMode(M) ? prefetch() : prefetch<LAST_BUS_CYCLE>();
 
     if (S == Long && isRegMode(M)) sync(2);
-    writeOperand<M,S>(dst, ea, 0);
+    writeOperand<M,S,LAST_BUS_CYCLE>(dst, ea, 0);
 
     sr.n = 0;
     sr.z = 1;
@@ -687,7 +687,7 @@ Moira::execDbcc(u16 opcode)
         if ((i16)readD<Word>(dn) != -1) {
 
             reg.pc = newpc;
-            fullPrefetch();
+            fullPrefetch<LAST_BUS_CYCLE>();
             return;
         } else {
             dummyRead(reg.pc + 2);
@@ -698,7 +698,7 @@ Moira::execDbcc(u16 opcode)
 
     // Fall through to next instruction
     reg.pc += 2;
-    fullPrefetch();
+    fullPrefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -745,7 +745,7 @@ Moira::execExt(u16 opcode)
     writeD<S>(n, dn);
     sr.setNZVC<S>(dn);
 
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1345,7 +1345,7 @@ Moira::execNegNot(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execNop(u16 opcode)
 {
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void

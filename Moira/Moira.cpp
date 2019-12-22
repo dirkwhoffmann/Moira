@@ -121,17 +121,15 @@ Moira::setSupervisorMode(bool enable)
 template<bool last> void
 Moira::prefetch()
 {
-    // printf("Moira::prefetch clock = %lld\n", clock); 
     ird = irc;
     irc = readM<Word,last>(reg.pc + 2);
-    // read16(reg.pc + 2, irc);
 }
 
-void
+template<bool last> void
 Moira::fullPrefetch()
 {
     irc = readM<Word>(reg.pc);
-    prefetch();
+    prefetch<last>();
 }
 
 void
