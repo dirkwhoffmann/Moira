@@ -156,7 +156,7 @@ Moira::jumpToVector(u8 nr)
     // Update the prefetch queue
     ird = readM<Word>(reg.pc);
     sync(2);
-    irc = readM<Word>(reg.pc + 2);
+    irc = readM<Word,LAST_BUS_CYCLE>(reg.pc + 2);
 }
 
 void

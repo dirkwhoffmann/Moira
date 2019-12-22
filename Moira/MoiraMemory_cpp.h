@@ -65,30 +65,30 @@ Moira::readM(u32 addr, bool &error)
 template<Size S, bool last> void
 Moira::writeM(u32 addr, u32 value)
 {
-    sync(2);
-    if (last) pollIrq();
-
     switch (S) {
         case Byte:
         {
+            sync(2);
+            if (last) pollIrq();
             memory->moiraWrite8(addr & 0xFFFFFF, (u8)value);
+            sync(2);
             break;
         }
         case Word:
         {
+            sync(2);
+            if (last) pollIrq();
             memory->moiraWrite16(addr & 0xFFFFFF, (u16)value);
+            sync(2);
             break;
         }
         case Long:
         {
-            memory->moiraWrite16(addr & 0xFFFFFF, value >> 16);
-            sync(4);
-            memory->moiraWrite16((addr + 2) & 0xFFFFFF, value & 0xFFFF);
+            writeM<Word>     (addr,     value >> 16   );
+            writeM<Word,last>(addr + 2, value & 0xFFFF);
             break;
         }
     }
-
-    sync(2);
 }
 
 template<Size S, bool last> void

@@ -266,7 +266,7 @@ Moira::execAddEaRg(u16 opcode)
     if (!readOperand<M,S>(src, ea, data)) return;
 
     result = arith<I,S>(data, readD<S>(dst));
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 
     if (S == Long) sync(4);
     writeD<S>(dst, result);
@@ -284,7 +284,7 @@ Moira::execAddRgEa(u16 opcode)
     result = arith<I,S>(readD<S>(src), data);
 
     prefetch();
-    writeM<S>(ea, result);
+    writeM<S,LAST_BUS_CYCLE>(ea, result);
 }
 
 template<Instr I, Mode M, Size S> void
