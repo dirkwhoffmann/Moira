@@ -169,7 +169,7 @@ public:
      * An address error occurs if a word or long word is being read from an
      * odd address.
      */
-    template<Size S> bool addressError(u32 addr);
+    template<Size S, int delay = 0> bool addressError(u32 addr);
 
     /* Reads a value from memory.
      * Provide a second parameter to check for address errors.

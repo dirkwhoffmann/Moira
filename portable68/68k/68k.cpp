@@ -679,7 +679,7 @@ u32 Core_68k::LoadEA(u8 size, u8 ea, bool noReadFromEA, bool fetchLastExtension,
                 eaAddr -= 4;
             }
 
-            if (!noSyncDec) { sync(2); printf("noSyncDec %d\n", cycleCounter); }
+            if (!noSyncDec) { sync(2); }
             break;
 		case 5: //(d16, An)
             adm = AR_INDIRECT_D16;

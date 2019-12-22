@@ -7,12 +7,13 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-template <Size S> bool
+template <Size S, int delay> bool
 Moira::addressError(u32 addr)
 {
     if (MOIRA_EMULATE_ADDRESS_ERROR) {
 
         if ((addr & 1) && S != Byte) {
+            sync(delay);
             execAddressError(addr);
             return true;
         }
@@ -20,62 +21,44 @@ Moira::addressError(u32 addr)
     return false;
 }
 
-template<> u32
-Moira::readM<Byte>(u32 addr)
+template<Size S> u32
+Moira::readM(u32 addr)
 {
-    sync(2);
-    u32 result = memory->moiraRead8(addr & 0xFFFFFF);
-    sync(2);
+    u32 result;
 
-    return result;
-}
-
-template<> u32
-Moira::readM<Byte>(u32 addr, bool &error)
-{
-    error = false;
-
-    return readM<Byte>(addr);
-}
-
-template<> u32
-Moira::readM<Word>(u32 addr)
-{
-    sync(2);
-    u32 result = memory->moiraRead16(addr & 0xFFFFFF);
     sync(2);
 
-    return result;
-}
+    switch (S) {
+        case Byte:
+        {
+            result = memory->moiraRead8(addr & 0xFFFFFF);
+            break;
+        }
+        case Word:
+        {
+            result = memory->moiraRead16(addr & 0xFFFFFF);
+            break;
+        }
+        case Long:
+        {
+            u32 hi = memory->moiraRead16(addr & 0xFFFFFF);
+            sync(4);
+            u32 lo = memory->moiraRead16((addr + 2) & 0xFFFFFF);
+            result = hi << 16 | lo;
+            break;
+        }
+    }
 
-template<> u32
-Moira::readM<Word>(u32 addr, bool &error)
-{
-    sync(2);
-    if ((error = addressError<Word>(addr))) { return 0; }
-    u32 result = memory->moiraRead16(addr & 0xFFFFFF);
     sync(2);
 
     return result;
 }
 
-template<> u32
-Moira::readM<Long>(u32 addr)
+template<Size S> u32
+Moira::readM(u32 addr, bool &error)
 {
-    u32 hi = readM<Word>(addr);
-    u32 lo = readM<Word>(addr + 2);
-
-    return hi << 16 | lo;
-}
-
-template<> u32
-Moira::readM<Long>(u32 addr, bool &error)
-{
-    u32 hi = readM<Word>(addr, error);
-    if (error) return 0;
-    u32 lo = readM<Word>(addr + 2);
-
-    return hi << 16 | lo;
+    if ((error = addressError<S,2>(addr))) { return 0; }
+    return readM<S>(addr);
 }
 
 u32
@@ -88,52 +71,39 @@ Moira::readOnReset(u32 addr)
     return result;
 }
 
-template<> void
-Moira::writeM<Byte>(u32 addr, u32 value)
+template<Size S> void
+Moira::writeM(u32 addr, u32 value)
 {
     sync(2);
-    memory->moiraWrite8(addr & 0xFFFFFF, (u8)value);
-    sync(2);
-}
 
-template<> void
-Moira::writeM<Byte>(u32 addr, u32 value, bool &error)
-{
-    error = false;
+    switch (S) {
+        case Byte:
+        {
+            memory->moiraWrite8(addr & 0xFFFFFF, (u8)value);
+            break;
+        }
+        case Word:
+        {
+            memory->moiraWrite16(addr & 0xFFFFFF, (u16)value);
+            break;
+        }
+        case Long:
+        {
+            memory->moiraWrite16(addr & 0xFFFFFF, value >> 16);
+            sync(4);
+            memory->moiraWrite16((addr + 2) & 0xFFFFFF, value & 0xFFFF);
+            break;
+        }
+    }
 
-    writeM<Byte>(addr, value);
-}
-
-template<> void
-Moira::writeM<Word>(u32 addr, u32 value)
-{
-    sync(2);
-    memory->moiraWrite16(addr & 0xFFFFFF, value);
-    sync(2);
-}
-
-template<> void
-Moira::writeM<Word>(u32 addr, u32 value, bool &error)
-{
-    sync(2);
-    if ((error = addressError<Word>(addr))) { return; }
-    memory->moiraWrite16(addr & 0xFFFFFF, value);
     sync(2);
 }
 
-template<> void
-Moira::writeM<Long>(u32 addr, u32 value)
+template<Size S> void
+Moira::writeM(u32 addr, u32 value, bool &error)
 {
-    writeM<Word>(addr, value >> 16);
-    writeM<Word>(addr + 2, value & 0xFFFF);
-}
-
-template<> void
-Moira::writeM<Long>(u32 addr, u32 value, bool &error)
-{
-    writeM<Word>(addr, value >> 16, error);
-    if (error) return;
-    writeM<Word>(addr + 2, value & 0xFFFF);
+    if ((error = addressError<S,2>(addr))) { return; }
+    writeM<S>(addr, value);
 }
 
 template<Size S> void
