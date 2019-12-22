@@ -174,15 +174,15 @@ public:
     /* Reads a value from memory.
      * Provide a second parameter to check for address errors.
      */
-    template<Size S> u32 readM(u32 addr);
-    template<Size S> u32 readM(u32 addr, bool &error);
+    template<Size S, bool last = false> u32 readM(u32 addr);
+    template<Size S, bool last = false> u32 readM(u32 addr, bool &error);
     u32 readOnReset(u32 addr);
 
     /* Writes a value into memory.
      * Provide a second parameter to check for address errors.
      */
-    template<Size S> void writeM(u32 addr, u32 value);
-    template<Size S> void writeM(u32 addr, u32 value, bool &error);
+    template<Size S, bool last = false> void writeM(u32 addr, u32 value);
+    template<Size S, bool last = false> void writeM(u32 addr, u32 value, bool &error);
 
     // Pushes a value onto the stack
     template<Size S> void push(u32 value);

@@ -21,7 +21,7 @@ Moira::addressError(u32 addr)
     return false;
 }
 
-template<Size S> u32
+template<Size S, bool last> u32
 Moira::readM(u32 addr)
 {
     u32 result;
@@ -54,11 +54,11 @@ Moira::readM(u32 addr)
     return result;
 }
 
-template<Size S> u32
+template<Size S, bool last> u32
 Moira::readM(u32 addr, bool &error)
 {
     if ((error = addressError<S,2>(addr))) { return 0; }
-    return readM<S>(addr);
+    return readM<S,last>(addr);
 }
 
 u32
@@ -71,7 +71,7 @@ Moira::readOnReset(u32 addr)
     return result;
 }
 
-template<Size S> void
+template<Size S, bool last> void
 Moira::writeM(u32 addr, u32 value)
 {
     sync(2);
@@ -99,11 +99,11 @@ Moira::writeM(u32 addr, u32 value)
     sync(2);
 }
 
-template<Size S> void
+template<Size S, bool last> void
 Moira::writeM(u32 addr, u32 value, bool &error)
 {
     if ((error = addressError<S,2>(addr))) { return; }
-    writeM<S>(addr, value);
+    writeM<S,last>(addr, value);
 }
 
 template<Size S> void
