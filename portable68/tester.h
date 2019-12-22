@@ -323,8 +323,12 @@ public:
         return moiraSpyRead16(addr) << 16 | moiraSpyRead16(addr + 2); }
     virtual u16 moiraReadAfterReset16(u32 addr) {
         return moiracpu->sandbox.replayPeek(PEEK16, addr, moiracpu->getClock());
-        // return memWordRead2(addr);
     }
+
+    virtual u8 moiraReadIpl() {
+        return moiracpu->sandbox.replayPoll(moiracpu->getClock());
+    }
+
 
     void power();
     void setSR(u16 value);

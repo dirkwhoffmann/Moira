@@ -22,8 +22,6 @@ namespace moira {
 // Configuration
 //
 
-#define MOIRA_CHECK_CYCLES 1
-
 #define MOIRA_EMULATE_ADDRESS_ERROR 1
 
 struct Registers {
@@ -78,13 +76,16 @@ public:
 
 private:
 
-    // The clock
+    // Number of elapsed cycles since power up
     i64 clock;
     
-    // The data and address registers
+    // Data and address registers
     Registers reg;
 
-    /* The prefetch queue
+    // Status register
+    StatusRegister sr;
+
+    /* Instruction prefetch queue
      * http://pasti.fxatari.com/68kdocs/68kPrefetch.html
      *
      * Three registers are involved in prefetching:
@@ -98,8 +99,8 @@ private:
     u16 irc;
     u16 ird;
 
-    // Flags
-    StatusRegister sr;
+    //  Interrupt Priority Levels
+    u8 iplPolled;
 
     // Jump table storing all instruction handlers
     void (Moira::*exec[65536])(u16);
@@ -171,18 +172,20 @@ public:
      */
     template<Size S, int delay = 0> bool addressError(u32 addr);
 
-    /* Reads a value from memory.
-     * Provide a second parameter to check for address errors.
+    /* Reads or writes a value from or into memory.
+     *
+     *      last: Indicates if this bus cycle is the last one. In that case,
+     *            the CPU polls the interrupt level.
+     *     error: If provided, the functions checks for an address error and
+     *            triggers an address error exception if applicable.
      */
     template<Size S, bool last = false> u32 readM(u32 addr);
     template<Size S, bool last = false> u32 readM(u32 addr, bool &error);
-    u32 readOnReset(u32 addr);
 
-    /* Writes a value into memory.
-     * Provide a second parameter to check for address errors.
-     */
     template<Size S, bool last = false> void writeM(u32 addr, u32 value);
     template<Size S, bool last = false> void writeM(u32 addr, u32 value, bool &error);
+
+    u32 readOnReset(u32 addr);
 
     // Pushes a value onto the stack
     template<Size S> void push(u32 value);
@@ -274,6 +277,16 @@ private:
     void dummyRead(u32 pc);
     void dummyRead() { dummyRead(reg.pc); }
     void jumpToVector(u8 nr);
+
+    //
+    // Handling interrupts
+    //
+
+    /* Polls the IPL pins.
+     * Takes place during the last bus cycle of an instruction.
+     */
+    void pollIrq();
+
 
     //
     // Running the disassembler

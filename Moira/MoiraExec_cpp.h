@@ -760,12 +760,9 @@ Moira::execExt(u16 opcode)
 
     u32 dn = readD(n);
     dn = (S == Long) ? SEXT<Word>(dn) : SEXT<Byte>(dn);
-    writeD<S>(n, dn);
 
-    sr.c = 0;
-    sr.v = 0;
-    sr.n = NBIT<S>(dn);
-    sr.z = ZERO<S>(dn);
+    writeD<S>(n, dn);
+    sr.setNZVC<S>(dn);
 
     prefetch();
 }

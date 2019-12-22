@@ -37,7 +37,6 @@ Moira::reset()
 {
     clock = -40;
 
-    // Reset the status register
     sr.t = 0;
     sr.s = 1;
     sr.x = 0;
@@ -47,8 +46,10 @@ Moira::reset()
     sr.c = 0;
     sr.ipl = 7;
 
+    iplPolled = 0;
+
     sync(16);
-    
+
     // Read the initial stack pointer from memory
     reg.usp = reg.ssp = readOnReset(0) << 16 | readOnReset(2);
 
@@ -156,6 +157,12 @@ Moira::jumpToVector(u8 nr)
     ird = readM<Word>(reg.pc);
     sync(2);
     irc = readM<Word>(reg.pc + 2);
+}
+
+void
+Moira::pollIrq()
+{
+    iplPolled = memory->moiraReadIpl();
 }
 
 int

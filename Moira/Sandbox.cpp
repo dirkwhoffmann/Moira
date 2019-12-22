@@ -23,17 +23,14 @@ Sandbox::record(AccessType type, u32 addr, u64 cycle, u16 value)
 {
     access[recordCnt] = AccessRecord { type, addr, value, cycle };
 
-    /*
-    printf("Recording i: %2d  ", recordCnt);
-    printf("Type: %s  ", accessTypeStr[type]);
-    printf("Addr: %4x  ", addr);
-    printf("Value: %4x  ", value);
-    printf("Cycle: %lld  ", cycle);
-    printf("\n");
-    */
-
     recordCnt++;
     assert(recordCnt < 64);
+}
+
+void
+Sandbox::recordPoll(u64 cycle, u8 value)
+{
+    record(POLL, 0, cycle, value);
 }
 
 u32
@@ -47,7 +44,7 @@ Sandbox::replayPeek(AccessType type, u32 addr, u64 cycle)
         // Check for a matching entry
         if (access[i].type != type) continue;
         if (access[i].addr != addr) continue;
-        if (MOIRA_CHECK_CYCLES && access[i].cycle != cycle) continue;
+        if (access[i].cycle != cycle) continue;
 
         replayCnt++;
         if (replayCnt > recordCnt) { break; }
@@ -55,6 +52,27 @@ Sandbox::replayPeek(AccessType type, u32 addr, u64 cycle)
     }
 
     error(type, addr, cycle);
+    return 0;
+}
+
+u8
+Sandbox::replayPoll(u64 cycle)
+{
+    for (int i = 0; i < recordCnt; i++) {
+
+        // Enable for strict checking
+        if (i != replayCnt) continue;
+
+        // Check for a matching entry
+        if (access[i].type != POLL) continue;
+        if (access[i].cycle != cycle) continue;
+
+        replayCnt++;
+        if (replayCnt > recordCnt) { break; }
+        return access[i].value;
+    }
+
+    error(POLL, 0, cycle);
     return 0;
 }
 
@@ -70,7 +88,7 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u16 value)
         if (access[i].type != type) continue;
         if (access[i].addr != addr) continue;
         if (access[i].value != value) continue;
-        if (MOIRA_CHECK_CYCLES && access[i].cycle != cycle) continue;
+        if (access[i].cycle != cycle) continue;
 
         // Match found
         replayCnt++;

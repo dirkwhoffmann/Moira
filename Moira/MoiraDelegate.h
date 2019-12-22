@@ -25,6 +25,8 @@ public:
 
     virtual u16 moiraSpyRead16(u32 addr) = 0;
     virtual u16 moiraReadAfterReset16(u32 addr) = 0;
+
+    virtual u8 moiraReadIpl() = 0;
 };
 
 #endif

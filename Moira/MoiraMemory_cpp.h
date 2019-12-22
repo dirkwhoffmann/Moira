@@ -61,16 +61,6 @@ Moira::readM(u32 addr, bool &error)
     return readM<S,last>(addr);
 }
 
-u32
-Moira::readOnReset(u32 addr)
-{
-    sync(2);
-    u32 result = memory->moiraReadAfterReset16(addr & 0xFFFFFF);
-    sync(2);
-
-    return result;
-}
-
 template<Size S, bool last> void
 Moira::writeM(u32 addr, u32 value)
 {
@@ -104,6 +94,16 @@ Moira::writeM(u32 addr, u32 value, bool &error)
 {
     if ((error = addressError<S,2>(addr))) { return; }
     writeM<S,last>(addr, value);
+}
+
+u32
+Moira::readOnReset(u32 addr)
+{
+    sync(2);
+    u32 result = memory->moiraReadAfterReset16(addr & 0xFFFFFF);
+    sync(2);
+
+    return result;
 }
 
 template<Size S> void
