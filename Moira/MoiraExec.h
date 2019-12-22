@@ -94,7 +94,8 @@ template<Instr I, Mode M, Size S> void execMul(u16 opcode);
 template<Instr I, Mode M, Size S> void execDiv(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execNbcd(u16 opcode);
-template<Instr I, Mode M, Size S> void execNegNot(u16 opcode);
+template<Instr I, Mode M, Size S> void execNegRg(u16 opcode);
+template<Instr I, Mode M, Size S> void execNegEa(u16 opcode);
 template<Instr I, Mode M, Size S> void execNop(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execPea(u16 opcode);

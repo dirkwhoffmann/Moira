@@ -1325,23 +1325,33 @@ Moira::execNbcd(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-Moira::execNegNot(u16 opcode)
+Moira::execNegRg(u16 opcode)
+{
+    printf("Moira::execNegRg(u16 opcode)");
+
+    int dst = ( _____________xxx(opcode) );
+    u32 ea, data;
+
+    if (!readOperand<M,S>(dst, ea, data)) return;
+
+    data = logic<I,S>(data);
+    prefetch<LAST_BUS_CYCLE>();
+
+    if (S == Long) sync(2);
+    writeD<S>(dst, data);
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::execNegEa(u16 opcode)
 {
     int dst = ( _____________xxx(opcode) );
     u32 ea, data;
 
     if (!readOperand<M,S>(dst, ea, data)) return;
 
-    switch (I) {
-        case NEG:  data = arith<SUB,S>(data, 0); break;
-        case NEGX: data = arith<SUBX,S>(data, 0); break;
-        case NOT:  data = logic<NOT,S>(data); break;
-        default:   assert(false); break;
-    }
-
+    data = logic<I,S>(data);
     prefetch();
 
-    if (isRegMode(M) && S == Long) sync(2);
     writeOperand<M,S>(dst, ea, data);
 }
 

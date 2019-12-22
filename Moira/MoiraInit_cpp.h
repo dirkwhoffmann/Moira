@@ -955,13 +955,16 @@ Moira::createJumpTables()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0100 0100 ---- ----");
-    ________SSMMMXXX(opcode, NEG, 0b101111111000, Byte | Word | Long, NegNot);
+    ________SSMMMXXX(opcode, NEG, 0b100000000000, Byte | Word | Long, NegRg);
+    ________SSMMMXXX(opcode, NEG, 0b001111111000, Byte | Word | Long, NegEa);
 
     opcode = parse("0100 0000 ---- ----");
-    ________SSMMMXXX(opcode, NEGX, 0b101111111000, Byte | Word | Long, NegNot);
+    ________SSMMMXXX(opcode, NEGX, 0b100000000000, Byte | Word | Long, NegRg);
+    ________SSMMMXXX(opcode, NEGX, 0b001111111000, Byte | Word | Long, NegEa);
 
     opcode = parse("0100 0110 ---- ----");
-    ________SSMMMXXX(opcode, NOT, 0b101111111000, Byte | Word | Long, NegNot);
+    ________SSMMMXXX(opcode, NOT, 0b100000000000, Byte | Word | Long, NegRg);
+    ________SSMMMXXX(opcode, NOT, 0b001111111000, Byte | Word | Long, NegEa);
 
 
     // NOP

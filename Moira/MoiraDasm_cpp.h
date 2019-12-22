@@ -709,7 +709,15 @@ Moira::dasmStop(StrWriter &str, u32 &addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-Moira::dasmNegNot(StrWriter &str, u32 &addr, u16 op)
+Moira::dasmNegRg(StrWriter &str, u32 &addr, u16 op)
+{
+    auto dst = Dn ( _____________xxx(op) );
+
+    str << Ins<I>{} << Sz<S>{} << tab << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmNegEa(StrWriter &str, u32 &addr, u16 op)
 {
     auto dst = Op <M,S> ( _____________xxx(op), addr );
 

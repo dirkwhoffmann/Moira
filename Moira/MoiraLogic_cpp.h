@@ -246,6 +246,17 @@ Moira::logic(u32 op)
         case NOT:
         {
             result = ~op;
+            sr.setNZVC<S>(result);
+            break;
+        }
+        case NEG:
+        {
+            result = arith<SUB,S>(op, 0);
+            break;
+        }
+        case NEGX:
+        {
+            result = arith<SUBX,S>(op, 0);
             break;
         }
         default:
@@ -253,7 +264,6 @@ Moira::logic(u32 op)
             assert(false);
         }
     }
-    sr.setNZVC<S>(result);
     return result;
 }
 
