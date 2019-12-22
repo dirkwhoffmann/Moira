@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		505580E623AFA04C0009F77F /* m68kfpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 505580DC23AFA04C0009F77F /* m68kfpu.c */; };
+		505580E723AFA04C0009F77F /* m68kcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 505580DE23AFA04C0009F77F /* m68kcpu.c */; };
+		505580E823AFA04C0009F77F /* m68kdasm.c in Sources */ = {isa = PBXBuildFile; fileRef = 505580DF23AFA04C0009F77F /* m68kdasm.c */; };
+		505580E923AFA04C0009F77F /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 505580E023AFA04C0009F77F /* m68kops.c */; };
+		505580EC23AFA14D0009F77F /* musashi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505580EA23AFA14D0009F77F /* musashi.cpp */; };
 		506E013C23AC8E8A0015AE3F /* MoiraMemory_cpp.h in Sources */ = {isa = PBXBuildFile; fileRef = 506E013B23AC8E8A0015AE3F /* MoiraMemory_cpp.h */; };
 		50804EDE2386A72C004D3EC2 /* tester.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E792386A72C004D3EC2 /* tester.cpp */; };
 		50804EDF2386A72C004D3EC2 /* exception.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E7C2386A72C004D3EC2 /* exception.cpp */; };
@@ -115,6 +120,18 @@
 		5010BDAC238A897400CFD010 /* StringWriter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = StringWriter.cpp; sourceTree = "<group>"; };
 		5010BDAD238A897400CFD010 /* StringWriter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StringWriter.h; sourceTree = "<group>"; };
 		5010BDAF238AB77C00CFD010 /* types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = "<group>"; };
+		505580DC23AFA04C0009F77F /* m68kfpu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kfpu.c; sourceTree = "<group>"; };
+		505580DD23AFA04C0009F77F /* m68k.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68k.h; sourceTree = "<group>"; };
+		505580DE23AFA04C0009F77F /* m68kcpu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kcpu.c; sourceTree = "<group>"; };
+		505580DF23AFA04C0009F77F /* m68kdasm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kdasm.c; sourceTree = "<group>"; };
+		505580E023AFA04C0009F77F /* m68kops.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kops.c; sourceTree = "<group>"; };
+		505580E123AFA04C0009F77F /* m68kcpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kcpu.h; sourceTree = "<group>"; };
+		505580E223AFA04C0009F77F /* m68kconf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kconf.h; sourceTree = "<group>"; };
+		505580E323AFA04C0009F77F /* readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
+		505580E423AFA04C0009F77F /* history.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = history.txt; sourceTree = "<group>"; };
+		505580E523AFA04C0009F77F /* m68kops.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kops.h; sourceTree = "<group>"; };
+		505580EA23AFA14D0009F77F /* musashi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = musashi.cpp; sourceTree = "<group>"; };
+		505580EB23AFA14D0009F77F /* musashi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = musashi.h; sourceTree = "<group>"; };
 		506E013B23AC8E8A0015AE3F /* MoiraMemory_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraMemory_cpp.h; sourceTree = "<group>"; };
 		50804E062386A4CE004D3EC2 /* Moira */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Moira; sourceTree = BUILT_PRODUCTS_DIR; };
 		50804E782386A72C004D3EC2 /* tester.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tester.h; sourceTree = "<group>"; };
@@ -244,10 +261,30 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		505580DB23AFA04C0009F77F /* Musashi */ = {
+			isa = PBXGroup;
+			children = (
+				505580DC23AFA04C0009F77F /* m68kfpu.c */,
+				505580DD23AFA04C0009F77F /* m68k.h */,
+				505580DE23AFA04C0009F77F /* m68kcpu.c */,
+				505580DF23AFA04C0009F77F /* m68kdasm.c */,
+				505580E023AFA04C0009F77F /* m68kops.c */,
+				505580E123AFA04C0009F77F /* m68kcpu.h */,
+				505580E223AFA04C0009F77F /* m68kconf.h */,
+				505580E323AFA04C0009F77F /* readme.txt */,
+				505580E423AFA04C0009F77F /* history.txt */,
+				505580E523AFA04C0009F77F /* m68kops.h */,
+			);
+			path = Musashi;
+			sourceTree = "<group>";
+		};
 		50804DFD2386A4CE004D3EC2 = {
 			isa = PBXGroup;
 			children = (
 				50804E8C2386A72C004D3EC2 /* main.cpp */,
+				505580EB23AFA14D0009F77F /* musashi.h */,
+				505580EA23AFA14D0009F77F /* musashi.cpp */,
+				505580DB23AFA04C0009F77F /* Musashi */,
 				50804E082386A4CE004D3EC2 /* Moira */,
 				50804E772386A72C004D3EC2 /* portable68 */,
 				50804E072386A4CE004D3EC2 /* Products */,
@@ -478,6 +515,7 @@
 				50804F082386A72C004D3EC2 /* movetosr.cpp in Sources */,
 				50804F072386A72C004D3EC2 /* ror.cpp in Sources */,
 				50804F032386A72C004D3EC2 /* cmp.cpp in Sources */,
+				505580EC23AFA14D0009F77F /* musashi.cpp in Sources */,
 				50804F132386A72C004D3EC2 /* move.cpp in Sources */,
 				50804EDE2386A72C004D3EC2 /* tester.cpp in Sources */,
 				50804EE72386A72C004D3EC2 /* mulu.cpp in Sources */,
@@ -488,6 +526,7 @@
 				50804F2A2386A72C004D3EC2 /* add.cpp in Sources */,
 				50804F292386A72C004D3EC2 /* cmpa.cpp in Sources */,
 				50804EF62386A72C004D3EC2 /* ori.cpp in Sources */,
+				505580E823AFA04C0009F77F /* m68kdasm.c in Sources */,
 				50804F452387EF15004D3EC2 /* MoiraUtils.cpp in Sources */,
 				50804EFE2386A72C004D3EC2 /* andi.cpp in Sources */,
 				50804F242386A72C004D3EC2 /* unlk.cpp in Sources */,
@@ -513,11 +552,13 @@
 				50804F4823882EB8004D3EC2 /* MoiraDelegate.cpp in Sources */,
 				50804F092386A72C004D3EC2 /* movetoccr.cpp in Sources */,
 				50804EF32386A72C004D3EC2 /* not.cpp in Sources */,
+				505580E923AFA04C0009F77F /* m68kops.c in Sources */,
 				50804F102386A72C004D3EC2 /* roxr.cpp in Sources */,
 				50804F022386A72C004D3EC2 /* eoriccr.cpp in Sources */,
 				50804EFB2386A72C004D3EC2 /* roxl.cpp in Sources */,
 				50804EE42386A72C004D3EC2 /* oriccr.cpp in Sources */,
 				50804F352386A7DD004D3EC2 /* Moira.cpp in Sources */,
+				505580E723AFA04C0009F77F /* m68kcpu.c in Sources */,
 				50804EEB2386A72C004D3EC2 /* cmpi.cpp in Sources */,
 				50804EE52386A72C004D3EC2 /* movefromsr.cpp in Sources */,
 				50804F212386A72C004D3EC2 /* lsr.cpp in Sources */,
@@ -529,6 +570,7 @@
 				50804F002386A72C004D3EC2 /* swap.cpp in Sources */,
 				50804EE82386A72C004D3EC2 /* scc.cpp in Sources */,
 				50804F112386A72C004D3EC2 /* suba.cpp in Sources */,
+				505580E623AFA04C0009F77F /* m68kfpu.c in Sources */,
 				50804EFA2386A72C004D3EC2 /* exg.cpp in Sources */,
 				50804EEF2386A72C004D3EC2 /* muls.cpp in Sources */,
 				50804EF02386A72C004D3EC2 /* chk.cpp in Sources */,

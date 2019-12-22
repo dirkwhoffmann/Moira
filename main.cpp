@@ -3,11 +3,15 @@
 #include "exception.h"
 #include <time.h>
 #include "Moira.h"
+#include "musashi.h"
 
 moira::Moira *moiracpu;
 
 int main()
 {
+    // dasmTest();
+
+
     moiracpu = new moira::Moira();
 
     try {
@@ -20,7 +24,7 @@ int main()
     } catch(Exception& exception) {
         exception.handle();
     }
-
+    
 
     return 0;
 }
