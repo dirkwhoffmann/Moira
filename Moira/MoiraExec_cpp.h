@@ -213,7 +213,7 @@ Moira::execAbcd(u16 opcode)
         case 0: // Dn
         {
             u32 result = arith<I,Byte>(readD<Byte>(src), readD<Byte>(dst));
-            prefetch();
+            prefetch<LAST_BUS_CYCLE>();
 
             sync(S == Long ? 6 : 2);
             writeD<Byte>(dst, result);
@@ -229,7 +229,7 @@ Moira::execAbcd(u16 opcode)
             u32 result = arith<I,Byte>(data1, data2);
             prefetch();
 
-            writeM<Byte>(ea2, result);
+            writeM<Byte,LAST_BUS_CYCLE>(ea2, result);
             break;
         }
     }
@@ -398,7 +398,7 @@ Moira::execAndRgEa(u16 opcode)
     if (!readOperand<M,S>(dst, ea, data)) return;
 
     u32 result = logic<I,S>(readD<S>(src), data);
-    prefetch();
+    isMemMode(M) ? prefetch() : prefetch<LAST_BUS_CYCLE>();
 
     writeOperand<M,S,LAST_BUS_CYCLE>(dst, ea, result);
 }
@@ -487,7 +487,7 @@ Moira::execBitDxEa(u16 opcode)
             u32 data = readD(dst);
             data = bitop<I>(data, bit);
 
-            prefetch();
+            prefetch<LAST_BUS_CYCLE>();
 
             sync(cyclesBit<I>(bit));
             if (I != BTST) writeD(dst, data);
@@ -501,9 +501,13 @@ Moira::execBitDxEa(u16 opcode)
             if (!readOperand<M,Byte>(dst, ea, data)) return;
 
             data = bitop<I>(data, bit);
-            prefetch();
 
-            if (I != BTST) writeM<Byte>(ea, data);
+            if (I != BTST) {
+                prefetch();
+                writeM<Byte,LAST_BUS_CYCLE>(ea, data);
+            } else {
+                prefetch<LAST_BUS_CYCLE>();
+            }
         }
     }
 }
@@ -522,7 +526,7 @@ Moira::execBitImEa(u16 opcode)
             u32 data = readD(dst);
             data = bitop<I>(data, bit);
 
-            prefetch();
+            prefetch<LAST_BUS_CYCLE>();
 
             sync(cyclesBit<I>(bit));
             if (I != BTST) writeD(dst, data);
@@ -534,9 +538,13 @@ Moira::execBitImEa(u16 opcode)
             if (!readOperand<M,Byte>(dst, ea, data)) return;
 
             data = bitop<I>(data, bit);
-            prefetch();
 
-            if (I != BTST) writeM<Byte>(ea, data);
+            if (I != BTST) {
+                prefetch();
+                writeM<Byte,LAST_BUS_CYCLE>(ea, data);
+            } else {
+                prefetch<LAST_BUS_CYCLE>();
+            }
         }
     }
 }
@@ -967,8 +975,7 @@ Moira::execMovea(u16 opcode)
     u32 ea, data;
     if (!readOperand<M,S>(src, ea, data)) return;
 
-    prefetch();
-
+    prefetch<LAST_BUS_CYCLE>();
     writeA(dst, SIGN<S>(data));
 }
 
@@ -1123,12 +1130,8 @@ Moira::execMoveq(u16 opcode)
 
     writeD<Long>(dst, (i32)src);
 
-    sr.c = 0;
-    sr.v = 0;
-    sr.n = NBIT<Byte>(src);
-    sr.z = ZERO<Byte>(src);
-
-    prefetch();
+    sr.setNZVC<Byte>(src);
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1207,7 +1210,7 @@ Moira::execMul(u16 opcode)
 
     if (!readOperand<M, Word>(src, ea, data)) return;
 
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 
     switch (I) {
 
@@ -1304,7 +1307,7 @@ Moira::execNbcd(u16 opcode)
 
         case 0: // Dn
         {
-            prefetch();
+            prefetch<LAST_BUS_CYCLE>();
 
             sync(2);
             writeD<Byte>(reg, arith<SBCD,Byte>(readD<Byte>(reg), 0));
@@ -1315,7 +1318,7 @@ Moira::execNbcd(u16 opcode)
             u32 ea, data;
             if (!readOperand<M,Byte>(reg, ea, data)) return;
             prefetch();
-            writeM<Byte>(ea, arith<SBCD,Byte>(data, 0));
+            writeM<Byte,LAST_BUS_CYCLE>(ea, arith<SBCD,Byte>(data, 0));
             break;
         }
     }
@@ -1462,11 +1465,7 @@ Moira::execTas(u16 opcode)
 
     u32 ea, data;
     readOperand<M,Byte>(dst, ea, data);
-
-    sr.c = 0;
-    sr.v = 0;
-    sr.n = NBIT<Byte>(data);
-    sr.z = ZERO<Byte>(data);
+    sr.setNZVC<Byte>(data);
 
     if (!isRegMode(M)) sync(2);
 
@@ -1500,12 +1499,8 @@ Moira::execTst(u16 opcode)
     u32 ea, data;
     if (!readOperand<M,S>(reg, ea, data)) return;
 
-    prefetch();
-
-    sr.c = 0;
-    sr.v = 0;
-    sr.n = NBIT<S>(data);
-    sr.z = ZERO<S>(data);
+    sr.setNZVC<S>(data);
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void

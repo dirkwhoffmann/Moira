@@ -253,12 +253,7 @@ Moira::logic(u32 op)
             assert(false);
         }
     }
-
-    sr.c = 0;
-    sr.v = 0;
-    sr.n = NBIT<S>(result);
-    sr.z = ZERO<S>(result);
-
+    sr.setNZVC<S>(result);
     return result;
 }
 
@@ -289,12 +284,7 @@ Moira::logic(u32 op1, u32 op2)
             assert(false);
         }
     }
-
-    sr.c = 0;
-    sr.v = 0;
-    sr.n = NBIT<S>(result);
-    sr.z = ZERO<S>(result);
-
+    sr.setNZVC<S>(result);
     return result;
 }
 
