@@ -108,11 +108,11 @@ Moira::readOnReset(u32 addr)
     return result;
 }
 
-template<Size S> void
+template<Size S, bool last> void
 Moira::push(u32 value)
 {
     reg.sp -= S;
-    writeM<S>(reg.sp, value);
+    writeM<S,last>(reg.sp, value);
 }
 
 template<Mode M, Size S, u8 flags> u32

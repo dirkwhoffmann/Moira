@@ -188,7 +188,7 @@ public:
     u32 readOnReset(u32 addr);
 
     // Pushes a value onto the stack
-    template<Size S> void push(u32 value);
+    template<Size S, bool last = false> void push(u32 value);
 
     // Computes an effective address
     template<Mode M, Size S, u8 flags = 0> u32 computeEA(u32 n);

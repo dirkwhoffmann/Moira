@@ -498,14 +498,14 @@ Moira::execBcc(u16 opcode)
 
         // Take branch
         reg.pc = newpc;
-        fullPrefetch();
+        fullPrefetch<LAST_BUS_CYCLE>();
 
     } else {
 
         // Fall through to next instruction
         sync(2);
         if (S == Word) readExtensionWord();
-        prefetch();
+        prefetch<LAST_BUS_CYCLE>();
     }
 }
 
@@ -599,7 +599,7 @@ Moira::execBsr(u16 opcode)
     // Take branch
     reg.pc = newpc;
 
-    fullPrefetch();
+    fullPrefetch<LAST_BUS_CYCLE>();
     return;
 }
 
@@ -816,7 +816,7 @@ Moira::execJmp(u16 opcode)
     reg.pc = ea;
 
     // Fill the prefetch queue
-    fullPrefetch();
+    fullPrefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -837,7 +837,7 @@ Moira::execJsr(u16 opcode)
     if (addressError<Word>(ea)) return;
     irc = readM<Word>(reg.pc);
     push<Long>(pc + 2);
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1417,10 +1417,10 @@ Moira::execPea(u16 opcode)
 
     if (isAbsMode(M)) {
         push<Long>(ea);
-        prefetch();
+        prefetch<LAST_BUS_CYCLE>();
     } else {
         prefetch();
-        push<Long>(ea);
+        push<Long,LAST_BUS_CYCLE>(ea);
     }
 }
 
