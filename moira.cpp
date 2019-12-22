@@ -12,6 +12,8 @@
 extern uint8_t mem[0x10000];
 extern Tester_68k tester;
 
+using namespace moira;
+
 u8
 Moira::read8(u32 addr)
 {
@@ -25,17 +27,29 @@ Moira::read16(u32 addr)
 }
 
 u16
-Moira::readDasm(u32 addr)
+Moira::read16Dasm(u32 addr)
 {
+    u16 res = tester.memRead(addr) << 8;
+    res |= tester.memRead(addr + 1);
+    return res;
+
+    /*
     u16 res = mem[addr] << 8;
     res |= mem[addr + 1];
     return res;
+    */
+}
+
+u16
+Moira::read16Reset(u32 addr)
+{
+    return sandbox.replayPeek(PEEK16, addr, getClock());
 }
 
 u8
 Moira::readIPL()
 {
-    return 0;
+    return sandbox.replayPoll(getClock()); 
 }
 
 void

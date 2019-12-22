@@ -9,7 +9,7 @@
 #include "Moira.h"
 #include <stdio.h>
 
-extern Moira *moiracpu;
+extern moira::Moira *moiracpu;
 
 class Core_68k {
 

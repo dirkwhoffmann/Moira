@@ -6,28 +6,3 @@
 //
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
-
-#ifndef MOIRA_DELEGATE_H
-#define MOIRA_DELEGATE_H
-
-#include "types.h"
-
-using namespace moira;
-
-// DEPRECATED
-class MoiraDelegate {
-
-public:
-
-    virtual u8 moiraRead8(u32 addr) = 0;
-    virtual u16 moiraRead16(u32 addr) = 0;
-    virtual void moiraWrite8(u32 addr, u8 value) = 0;
-    virtual void moiraWrite16(u32 addr, u16 value) = 0;
-
-    virtual u16 moiraSpyRead16(u32 addr) = 0;
-    virtual u16 moiraReadAfterReset16(u32 addr) = 0;
-
-    virtual u8 moiraReadIpl() = 0;
-};
-
-#endif

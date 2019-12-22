@@ -12,6 +12,8 @@
 
 #include "Moira.h"
 
+namespace moira {
+
 #include "MoiraInit_cpp.h"
 #include "MoiraLogic_cpp.h"
 #include "MoiraMemory_cpp.h"
@@ -160,14 +162,14 @@ Moira::jumpToVector(u8 nr)
 void
 Moira::pollIrq()
 {
-    iplPolled = memory->moiraReadIpl();
+    iplPolled = readIPL();
 }
 
 int
 Moira::disassemble(u32 addr, char *str, bool hex)
 {
     u32 pc     = addr;
-    u16 opcode = memory->moiraSpyRead16(pc);
+    u16 opcode = read16Dasm(pc);
 
     StrWriter writer(str, hex);
 
@@ -177,3 +179,4 @@ Moira::disassemble(u32 addr, char *str, bool hex)
     return pc - addr + 2;
 }
 
+}

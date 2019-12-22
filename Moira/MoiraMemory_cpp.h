@@ -32,19 +32,19 @@ Moira::readM(u32 addr)
     switch (S) {
         case Byte:
         {
-            result = memory->moiraRead8(addr & 0xFFFFFF);
+            result = read8(addr & 0xFFFFFF);
             break;
         }
         case Word:
         {
-            result = memory->moiraRead16(addr & 0xFFFFFF);
+            result = read16(addr & 0xFFFFFF);
             break;
         }
         case Long:
         {
-            u32 hi = memory->moiraRead16(addr & 0xFFFFFF);
+            u32 hi = read16(addr & 0xFFFFFF);
             sync(4);
-            u32 lo = memory->moiraRead16((addr + 2) & 0xFFFFFF);
+            u32 lo = read16((addr + 2) & 0xFFFFFF);
             result = hi << 16 | lo;
             break;
         }
@@ -70,7 +70,7 @@ Moira::writeM(u32 addr, u32 value)
         {
             sync(2);
             if (last) pollIrq();
-            memory->moiraWrite8(addr & 0xFFFFFF, (u8)value);
+            write8(addr & 0xFFFFFF, (u8)value);
             sync(2);
             break;
         }
@@ -78,7 +78,7 @@ Moira::writeM(u32 addr, u32 value)
         {
             sync(2);
             if (last) pollIrq();
-            memory->moiraWrite16(addr & 0xFFFFFF, (u16)value);
+            write16(addr & 0xFFFFFF, (u16)value);
             sync(2);
             break;
         }
@@ -102,7 +102,7 @@ u32
 Moira::readOnReset(u32 addr)
 {
     sync(2);
-    u32 result = memory->moiraReadAfterReset16(addr & 0xFFFFFF);
+    u32 result = read16Reset(addr & 0xFFFFFF);
     sync(2);
 
     return result;

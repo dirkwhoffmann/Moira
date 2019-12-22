@@ -3,11 +3,11 @@
 
 #include "68k/68k.h"
 #include "memoryblock.h"
-#include "MoiraDelegate.h"
+// #include "MoiraDelegate.h"
 
 class Results;
 
-class Tester_68k : public Core_68k, public MoiraDelegate
+class Tester_68k : public Core_68k
 {
 public:
     
@@ -300,36 +300,6 @@ public:
 
     void testRts();
     void sampleRts();
-
-    u8 moiraRead8(u32 addr) {
-        return moiracpu->sandbox.replayPeek(PEEK8, addr, moiracpu->getClock());
-    }
-    virtual u16 moiraRead16(u32 addr) {
-        return moiracpu->sandbox.replayPeek(PEEK16, addr, moiracpu->getClock());
-    }
-    virtual void moiraWrite8(u32 addr, u8 value) {
-        moiracpu->sandbox.replayPoke(POKE8, addr, moiracpu->getClock(), value);
-        memWrite2(addr, value);
-    }
-    virtual void moiraWrite16(u32 addr, u16 value) {
-        moiracpu->sandbox.replayPoke(POKE16, addr, moiracpu->getClock(), value);
-        memWordWrite2(addr, value);
-    }
-    virtual u16 moiraSpyRead16(u32 addr) {
-        u16 res = memRead2(addr) << 8;
-        res |= memRead2(addr + 1);
-        return res;
-    }
-    virtual u32 moiraSpyRead32(u32 addr) {
-        return moiraSpyRead16(addr) << 16 | moiraSpyRead16(addr + 2); }
-    virtual u16 moiraReadAfterReset16(u32 addr) {
-        return moiracpu->sandbox.replayPeek(PEEK16, addr, moiracpu->getClock());
-    }
-
-    virtual u8 moiraReadIpl() {
-        return moiracpu->sandbox.replayPoll(moiracpu->getClock());
-    }
-
 
     void power();
     void setSR(u16 value);

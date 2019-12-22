@@ -7,12 +7,12 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#include "StringWriter.cpp"
+#include "StringWriter_cpp.h"
 
 template <> u32
 Moira::dasmRead<Byte>(u32 &addr)
 {
-    u32 result = memory->moiraSpyRead16(addr + 2);
+    u32 result = read16Dasm(addr + 2);
     addr += 2;
     return result & 0xFF;
 }
@@ -20,7 +20,7 @@ Moira::dasmRead<Byte>(u32 &addr)
 template <> u32
 Moira::dasmRead<Word>(u32 &addr)
 {
-    u32 result = memory->moiraSpyRead16(addr + 2);
+    u32 result = read16Dasm(addr + 2);
     addr += 2;
     return result;
 }

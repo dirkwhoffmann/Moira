@@ -85,7 +85,7 @@ void setMem16(uint32_t addr, uint16_t val)
 
 void dasmTest()
 {
-    Moira moira;
+    moira::Moira moiraCPU;
     char moiraStr[128], musashiStr[128];
     int moiraCnt, musashiCnt;
     
@@ -101,7 +101,7 @@ void dasmTest()
 
     printf("Peforming disassembler test... \n");
     setupMusashi();
-    moira.reset();
+    moiraCPU.reset();
 
     // Iterate through all opcodes
     for (uint32_t opcode = 0x0000; opcode < 65536; opcode++) {
@@ -110,7 +110,7 @@ void dasmTest()
             for (int j = 0; j < 48; j++) {
 
                 // Setup instruction
-                const u32 pc = 0x1000;
+                const uint32_t pc = 0x1000;
                 setMem16(pc + 0, opcode);
                 setMem16(pc + 2, ext[i]);
                 setMem16(pc + 4, ext[j]);
@@ -119,7 +119,7 @@ void dasmTest()
                 musashiCnt = m68k_disassemble(musashiStr, pc, M68K_CPU_TYPE_68000);
 
                 // Ask Moira to disassemble
-                moiraCnt = moira.disassemble(pc, moiraStr);
+                moiraCnt = moiraCPU.disassemble(pc, moiraStr);
 
                 printf("Checking %x %x %x\n", opcode, ext[i], ext[j]);
 

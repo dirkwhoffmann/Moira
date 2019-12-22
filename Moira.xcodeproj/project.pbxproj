@@ -13,6 +13,7 @@
 		505580E923AFA04C0009F77F /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 505580E023AFA04C0009F77F /* m68kops.c */; };
 		505580EC23AFA14D0009F77F /* musashi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505580EA23AFA14D0009F77F /* musashi.cpp */; };
 		505580EE23AFB31F0009F77F /* moira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505580ED23AFB31F0009F77F /* moira.cpp */; };
+		505580EF23AFC2360009F77F /* StringWriter_cpp.h in Sources */ = {isa = PBXBuildFile; fileRef = 5010BDAC238A897400CFD010 /* StringWriter_cpp.h */; };
 		506E013C23AC8E8A0015AE3F /* MoiraMemory_cpp.h in Sources */ = {isa = PBXBuildFile; fileRef = 506E013B23AC8E8A0015AE3F /* MoiraMemory_cpp.h */; };
 		50804EDE2386A72C004D3EC2 /* tester.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E792386A72C004D3EC2 /* tester.cpp */; };
 		50804EDF2386A72C004D3EC2 /* exception.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E7C2386A72C004D3EC2 /* exception.cpp */; };
@@ -118,7 +119,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		5010BDAC238A897400CFD010 /* StringWriter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = StringWriter.cpp; sourceTree = "<group>"; };
+		5010BDAC238A897400CFD010 /* StringWriter_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StringWriter_cpp.h; sourceTree = "<group>"; };
 		5010BDAD238A897400CFD010 /* StringWriter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StringWriter.h; sourceTree = "<group>"; };
 		5010BDAF238AB77C00CFD010 /* types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = "<group>"; };
 		505580DC23AFA04C0009F77F /* m68kfpu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kfpu.c; sourceTree = "<group>"; };
@@ -321,7 +322,7 @@
 				50804F362386AA5C004D3EC2 /* MoiraExec_cpp.h */,
 				50804F392387B466004D3EC2 /* MoiraDasm_cpp.h */,
 				5010BDAD238A897400CFD010 /* StringWriter.h */,
-				5010BDAC238A897400CFD010 /* StringWriter.cpp */,
+				5010BDAC238A897400CFD010 /* StringWriter_cpp.h */,
 				50CECEC623A924B000E07C65 /* Sandbox.h */,
 				50CECEC523A924B000E07C65 /* Sandbox.cpp */,
 			);
@@ -514,6 +515,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				505580EF23AFC2360009F77F /* StringWriter_cpp.h in Sources */,
 				50804F322386A72C004D3EC2 /* sub.cpp in Sources */,
 				50804F082386A72C004D3EC2 /* movetosr.cpp in Sources */,
 				50804F072386A72C004D3EC2 /* ror.cpp in Sources */,

@@ -7,8 +7,6 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#include <utility>
-
 #define SUPERVISOR_MODE_ONLY if (!sr.s) { privilegeException(); return; }
 #define LAST_BUS_CYCLE true
 

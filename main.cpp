@@ -17,9 +17,6 @@ int main()
     moiracpu = new moira::Moira();
 
     try {
-        // Tester_68k tester;
-        moiracpu->memory = &tester;
-
         tester.runTestCases();
         tester.printErrorCounter();
 

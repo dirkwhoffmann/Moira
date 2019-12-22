@@ -6,5 +6,3 @@
 //
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
-
-#include "MoiraDelegate.h"

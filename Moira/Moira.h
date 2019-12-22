@@ -10,9 +10,12 @@
 #ifndef MOIRA_H
 #define MOIRA_H
 
+#include <stdio.h>
+#include <math.h>
+#include <utility>
+#include "types.h"
 #include "MoiraUtils.h"
 #include "StringWriter.h"
-#include "MoiraDelegate.h"
 #include "Sandbox.h"
 #include "assert.h"
 
@@ -72,7 +75,7 @@ public:
     Sandbox sandbox;
 
     // The delegation object (connected memory)
-    MoiraDelegate *memory = NULL;
+    // MoiraDelegate *memory = NULL;
 
 private:
 
@@ -213,10 +216,12 @@ public:
     // Low-level memory access functions (stubs)
     //
 
-    u8  read8    (u32 addr);
-    u16 read16   (u32 addr);
-    u16 readDasm (u32 addr);
-    u8  readIPL  ();
+    u8  read8      (u32 addr);
+    u16 read16     (u32 addr);
+    u16 read16Reset(u32 addr);
+    u16 read16Dasm (u32 addr);
+    u8  readIPL    ();
+
 
     void write8  (u32 addr, u8  val);
     void write16 (u32 addr, u16 val);

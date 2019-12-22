@@ -7,13 +7,6 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#include "StringWriter.h"
-#include "assert.h"
-#include <math.h>
-#include <stdio.h>
-
-namespace moira {
-
 static int decDigits(u64 value) { return value ? 1 + log10(value) : 1; }
 static int binDigits(u64 value) { return value ? 1 + log2(value) : 1; }
 static int hexDigits(u64 value) { return (binDigits(value) + 3) / 4; }
@@ -421,6 +414,3 @@ StrWriter::fullExtension(const Ea<M,S> &ea)
 
     *this << ")";
 }
-
-}
-
