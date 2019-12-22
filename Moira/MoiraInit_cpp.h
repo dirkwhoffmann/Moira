@@ -787,7 +787,7 @@ Moira::createJumpTables()
      __SSXXX___MMMXXX(opcode, MOVE, 0b111111111111, Word | Long, Move6);
 
     // <ea>,ABS.w
-    opcode = parse("00-- 0101 11-- ----");
+    opcode = parse("00-- 0001 11-- ----");
     __SS______MMMXXX(opcode, MOVE, 0b101111111111, Byte,        Move7);
     __SS______MMMXXX(opcode, MOVE, 0b111111111111, Word | Long, Move7);
 

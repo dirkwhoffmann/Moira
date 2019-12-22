@@ -151,4 +151,3 @@ inline bool isImmMode(Mode M) { return M == 11; }
 
 }
 #endif
-
