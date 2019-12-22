@@ -170,7 +170,7 @@ Moira::execShiftRg(u16 opcode)
     int dst = _____________xxx(opcode);
     int cnt = readD(src) & 0x3F;
 
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
     sync((S == Long ? 4 : 2) + 2 * cnt);
 
     writeD<S>(dst, shift<I,S>(cnt, readD<S>(dst)));
@@ -183,7 +183,7 @@ Moira::execShiftIm(u16 opcode)
     int dst = _____________xxx(opcode);
     int cnt = src ? src : 8;
 
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
     sync((S == Long ? 4 : 2) + 2 * cnt);
 
     writeD<S>(dst, shift<I,S>(cnt, readD<S>(dst)));
@@ -193,33 +193,13 @@ template<Instr I, Mode M, Size S> void
 Moira::execShiftEa(u16 op)
 {
     int src = ____xxx_________(op);
-    int dst = _____________xxx(op);
 
-    switch (M) {
+    u32 ea, data;
+    if (!readOperand<M,S>(src, ea, data)) return;
 
-        case 0: // Dn
-        {
-            int cnt = readD(src) & 0x3F;
-            writeD<S>(dst, shift<I,S>(cnt, readD<S>(dst)));
-            break;
-        }
-        case 11: // Imm
-        {
-            prefetch();
+    prefetch();
 
-            int cnt = src ? src : 8;
-            writeD<S>(dst, shift<I,S>(cnt, readD<S>(dst)));
-            break;
-        }
-        default: // Ea
-        {
-            u32 ea, data;
-            if (!readOperand<M,S>(src, ea, data)) return;
-            prefetch();
-            writeM<S>(ea, shift<I,S>(1, data));
-            break;
-        }
-    }
+    writeM<S,LAST_BUS_CYCLE>(ea, shift<I,S>(1, data));
 }
 
 template<Instr I, Mode M, Size S> void
@@ -402,7 +382,7 @@ Moira::execAndEaRg(u16 opcode)
     if (!readOperand<M,S>(src, ea, data)) return;
 
     u32 result = logic<I,S>(data, readD<S>(dst));
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 
     if (S == Long) sync(isRegMode(M) || isImmMode(M) ? 4 : 2);
     writeD<S>(dst, result);
