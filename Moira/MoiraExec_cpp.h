@@ -9,7 +9,7 @@
 
 #include <utility>
 
-#define SUPERVISOR_MODE_INSTR if (!sr.s) { privilegeException(); return; }
+#define SUPERVISOR_MODE_ONLY if (!sr.s) { privilegeException(); return; }
 #define LAST_BUS_CYCLE true
 
 void
@@ -367,7 +367,7 @@ Moira::execAddxRg(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     u32 result = arith<I,S>(readD<S>(src), readD<S>(dst));
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 
     if (S == Long) sync(4);
     writeD<S>(dst, result);
@@ -389,10 +389,10 @@ Moira::execAddxEa(u16 opcode)
     if (S == Long) {
         writeM<Word>(ea2 + 2, result & 0xFFFF);
         prefetch();
-        writeM<Word>(ea2, result >> 16);
+        writeM<Word,LAST_BUS_CYCLE>(ea2, result >> 16);
     } else {
         prefetch();
-        writeM<S>(ea2, result);
+        writeM<S,LAST_BUS_CYCLE>(ea2, result);
     }
 }
 
@@ -467,13 +467,13 @@ Moira::execAndiccr(u16 opcode)
     setCCR(result);
 
     dummyRead(reg.pc+2);
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
 Moira::execAndisr(u16 opcode)
 {
-    SUPERVISOR_MODE_INSTR
+    SUPERVISOR_MODE_ONLY
 
     u32 src = readImm<S>();
     u16 dst = getSR();
@@ -484,7 +484,7 @@ Moira::execAndisr(u16 opcode)
     setSR(result);
 
     dummyRead(reg.pc+2);
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -613,7 +613,7 @@ Moira::execChk(u16 opcode)
     if (!readOperand<M,S>(src, ea, sop)) return;
     dop = readD<S>(dst);
 
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
     sync(4);
     
     sr.z = ZERO<S>(dop);
@@ -723,7 +723,7 @@ Moira::execCmpm(u16 opcode)
     if (!readOperand<M,S>(dst, ea2, data2)) return;
 
     cmp<S>(data1, data2);
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -762,9 +762,10 @@ Moira::execExgDxDy(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    prefetch();
-    sync(2);
     std::swap(reg.d[src], reg.d[dst]);
+    prefetch<LAST_BUS_CYCLE>();
+
+    sync(2);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -773,9 +774,10 @@ Moira::execExgAxDy(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    prefetch();
-    sync(2);
     std::swap(reg.a[src], reg.d[dst]);
+
+    prefetch<LAST_BUS_CYCLE>();
+    sync(2);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -784,9 +786,10 @@ Moira::execExgAxAy(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    prefetch();
-    sync(2);
     std::swap(reg.a[src], reg.a[dst]);
+
+    prefetch<LAST_BUS_CYCLE>();
+    sync(2);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -860,9 +863,11 @@ Moira::execLink(u16 opcode)
 
     readExtensionWord();
     push<Long>(readA(ax) - (ax == 7 ? 4 : 0));
-    prefetch();
+
     writeA(ax, reg.sp);
     reg.sp += (i32)disp;
+
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -874,8 +879,10 @@ Moira::execMove0(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     if (!readOperand<M,S>(src, ea, data)) return;
+
     sr.setNZVC<S>(data);
     if (!writeOperand<0,S>(dst, data)) return;
+    
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -1065,7 +1072,7 @@ Moira::execMovemEaRg(u16 opcode)
         }
     }
     if (S == Word) dummyRead(ea);
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1110,7 +1117,7 @@ Moira::execMovemRgEa(u16 opcode)
             break;
         }
     }
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1137,7 +1144,7 @@ Moira::execMovepDxEa(u16 opcode)
             writeM<Byte>(ea, (dx >>  0) & 0xFF);
         }
     }
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1166,7 +1173,7 @@ Moira::execMovepEaDx(u16 opcode)
 
     }
     writeD(dst, dx);
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1193,11 +1200,24 @@ Moira::execMoveToCcr(u16 opcode)
     setCCR(data);
 
     dummyRead(reg.pc + 2);
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
-Moira::execMoveFromSr(u16 opcode)
+Moira::execMoveFromSrRg(u16 opcode)
+{
+    int dst = _____________xxx(opcode);
+
+    u32 ea, data;
+    if (!readOperand<M,S>(dst, ea, data)) return;
+    prefetch<LAST_BUS_CYCLE>();
+
+    sync(2);
+    writeD<S>(dst, getSR());
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::execMoveFromSrEa(u16 opcode)
 {
     int dst = _____________xxx(opcode);
 
@@ -1205,14 +1225,13 @@ Moira::execMoveFromSr(u16 opcode)
     if (!readOperand<M,S>(dst, ea, data)) return;
     prefetch();
 
-    if (isRegMode(M) || isImmMode(M)) sync(2);
-    writeOperand<M,S>(dst, ea, getSR());
+    writeOperand<M,S,LAST_BUS_CYCLE>(dst, ea, getSR());
 }
 
 template<Instr I, Mode M, Size S> void
 Moira::execMoveToSr(u16 opcode)
 {
-    SUPERVISOR_MODE_INSTR
+    SUPERVISOR_MODE_ONLY
 
     int src = _____________xxx(opcode);
 
@@ -1223,27 +1242,26 @@ Moira::execMoveToSr(u16 opcode)
     setSR(data);
 
     dummyRead(reg.pc + 2);
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
 Moira::execMoveUspAn(u16 opcode)
 {
-    SUPERVISOR_MODE_INSTR
+    SUPERVISOR_MODE_ONLY
 
     int an = _____________xxx(opcode);
-
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
     writeA(an, reg.usp);
 }
 
 template<Instr I, Mode M, Size S> void
 Moira::execMoveAnUsp(u16 opcode)
 {
-    SUPERVISOR_MODE_INSTR
+    SUPERVISOR_MODE_ONLY
 
     int an = _____________xxx(opcode);
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
     reg.usp = readA(an);
 }
 
@@ -1427,15 +1445,15 @@ Moira::execPea(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execReset(u16 opcode)
 {
-    SUPERVISOR_MODE_INSTR
+    SUPERVISOR_MODE_ONLY
 
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
 Moira::execRte(u16 opcode)
 {
-    SUPERVISOR_MODE_INSTR
+    SUPERVISOR_MODE_ONLY
 
     setSR(readM<Word>(reg.sp));
     reg.sp += 2;
@@ -1445,7 +1463,7 @@ Moira::execRte(u16 opcode)
 
     readExtensionWord();
     reg.pc = newpc;
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1458,7 +1476,7 @@ Moira::execRtr(u16 opcode)
 
     readExtensionWord();
     reg.pc = newpc;
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1469,7 +1487,7 @@ Moira::execRts(u16 opcode)
 
     readExtensionWord();
     reg.pc = newpc;
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1504,12 +1522,12 @@ Moira::execSccEa(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execStop(u16 opcode)
 {
-    SUPERVISOR_MODE_INSTR
+    SUPERVISOR_MODE_ONLY
 
     setSR(irc | 1 << 13);
     readExtensionWord();
 
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1518,15 +1536,12 @@ Moira::execSwap(u16 opcode)
     int reg = ( _____________xxx(opcode) );
     u32 dat = readD(reg);
 
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 
     dat = (dat >> 16) | (dat & 0xFFFF) << 16;
     writeD(reg,dat);
 
-    sr.c = 0;
-    sr.v = 0;
-    sr.n = NBIT<Long>(dat);
-    sr.z = ZERO<Long>(dat);
+    sr.setNZVC<Long>(dat);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1572,7 +1587,7 @@ Moira::execTrap(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execTrapv(u16 opcode)
 {
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
     if (sr.v) execTrapException(7);
 }
 
@@ -1599,6 +1614,6 @@ Moira::execUnlk(u16 opcode)
     writeA(an, data);
 
     if (an != 7) reg.sp += 4;
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 }
 

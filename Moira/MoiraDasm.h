@@ -88,7 +88,8 @@ template<Instr I, Mode M, Size S> void dasmMovepDxEa(StrWriter &str, u32 &addr, 
 template<Instr I, Mode M, Size S> void dasmMovepEaDx(StrWriter &str, u32 &addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmMoveq(StrWriter &str, u32 &addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmMoveToCcr(StrWriter &str, u32 &addr, u16 op);
-template<Instr I, Mode M, Size S> void dasmMoveFromSr(StrWriter &str, u32 &addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmMoveFromSrRg(StrWriter &str, u32 &addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmMoveFromSrEa(StrWriter &str, u32 &addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmMoveToSr(StrWriter &str, u32 &addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmMoveUspAn(StrWriter &str, u32 &addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmMoveAnUsp(StrWriter &str, u32 &addr, u16 op);

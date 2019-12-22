@@ -634,7 +634,15 @@ Moira::dasmMoveToCcr(StrWriter &str, u32 &addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-Moira::dasmMoveFromSr(StrWriter &str, u32 &addr, u16 op)
+Moira::dasmMoveFromSrRg(StrWriter &str, u32 &addr, u16 op)
+{
+    auto dst = Dn ( _____________xxx(op) );
+
+    str << Ins<I>{} << tab << "SR, " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmMoveFromSrEa(StrWriter &str, u32 &addr, u16 op)
 {
     auto dst = Op <M,S> ( _____________xxx(op), addr );
 

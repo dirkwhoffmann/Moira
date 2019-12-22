@@ -890,7 +890,8 @@ Moira::createJumpTables()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0100 0000 11-- ----");
-    __________MMMXXX(opcode, MOVEFSR, 0b101111111000, Word, MoveFromSr);
+    __________MMMXXX(opcode, MOVEFSR, 0b100000000000, Word, MoveFromSrRg);
+    __________MMMXXX(opcode, MOVEFSR, 0b001111111000, Word, MoveFromSrEa);
 
 
     // MOVE to SR
