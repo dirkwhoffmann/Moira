@@ -271,7 +271,7 @@ public:
 
 private:
 
-    void prefetch();
+    template<bool last = false> void prefetch();
     void fullPrefetch();
     void readExtensionWord();
     void dummyRead(u32 pc);

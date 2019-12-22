@@ -10,6 +10,7 @@
 #include <utility>
 
 #define SUPERVISOR_MODE_INSTR if (!sr.s) { privilegeException(); return; }
+#define LAST_BUS_CYCLE true
 
 void
 Moira::saveToStackDetailed(u16 sr, u32 addr, u16 code)
@@ -813,7 +814,7 @@ Moira::execLea(u16 opcode)
     reg.a[dst] = computeEA<M,S>(src);
     if (isIdxMode(M)) sync(2);
 
-    prefetch();
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void

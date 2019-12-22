@@ -27,6 +27,7 @@ Moira::readM(u32 addr)
     u32 result;
 
     sync(2);
+    if (last) pollIrq();
 
     switch (S) {
         case Byte:
@@ -65,6 +66,7 @@ template<Size S, bool last> void
 Moira::writeM(u32 addr, u32 value)
 {
     sync(2);
+    if (last) pollIrq();
 
     switch (S) {
         case Byte:
