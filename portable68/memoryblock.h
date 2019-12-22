@@ -23,58 +23,35 @@ public:
         unsigned addr;
         u8 value;
         bool used;
-    } block1[100];
-    struct {
-         unsigned addr;
-         u8 value;
-         bool used;
-     } block2[100];
+    } block[100];
 
     struct {
         unsigned addr;
         bool used;
-    } buserror1[100];
-    struct {
-         unsigned addr;
-         bool used;
-     } buserror2[100];
+    } buserror[100];
 
     void init() {
         for(int i = 0; i < maxElements; i++) {
-            block1[i].addr = block2[i].addr = 0;
-            block1[i].value = block2[i].value = 0;
-            block1[i].used = block2[i].used = false;
+            block[i].addr = 0;
+            block[i].value = 0;
+            block[i].used = false;
 
-            buserror1[i].used = buserror2[i].used = false;
-            buserror1[i].addr = buserror2[i].addr = 0;
+            buserror[i].used = false;
+            buserror[i].addr = 0;
         }
-        pos1 = pos2 = 0;
+        pos = 0;
     }
 
     void setBusError(unsigned addr) {
         for(int i = 0; i < maxElements; i++) {
-            if(buserror1[i].addr == addr) {
+            if(buserror[i].addr == addr) {
                 return;
             }
         }
         for(int i = 0; i < maxElements; i++) {
-            if(!buserror1[i].used) {
-                buserror1[i].used = true;
-                buserror1[i].addr = addr;
-                return;
-            }
-        }
-    }
-    void setBusError2(unsigned addr) {
-        for(int i = 0; i < maxElements; i++) {
-            if(buserror2[i].addr == addr) {
-                return;
-            }
-        }
-        for(int i = 0; i < maxElements; i++) {
-            if(!buserror2[i].used) {
-                buserror2[i].used = true;
-                buserror2[i].addr = addr;
+            if(!buserror[i].used) {
+                buserror[i].used = true;
+                buserror[i].addr = addr;
                 return;
             }
         }
@@ -82,125 +59,65 @@ public:
 
     bool isBusError(unsigned addr) {
         for(int i = 0; i < maxElements; i++) {
-            if (buserror1[i].used && buserror1[i].addr == addr) {
-                return true;
-            }
-        }
-        return false;
-    }
-    bool isBusError2(unsigned addr) {
-        for(int i = 0; i < maxElements; i++) {
-            if (buserror2[i].used && buserror2[i].addr == addr) {
+            if (buserror[i].used && buserror[i].addr == addr) {
                 return true;
             }
         }
         return false;
     }
 
-    u8 read1(unsigned addr) {
+    u8 read(unsigned addr) {
         for(int i = 0; i < maxElements; i++) {
-            if (block1[i].used && block1[i].addr == addr) {
-                return block1[i].value;
-            }
-        }
-        return 0;
-    }
-    u8 read2(unsigned addr) {
-        for(int i = 0; i < maxElements; i++) {
-            if (block2[i].used && block2[i].addr == addr) {
-                return block2[i].value;
+            if (block[i].used && block[i].addr == addr) {
+                return block[i].value;
             }
         }
         return 0;
     }
 
-    void write1(unsigned addr, u8 value) {
+    void write(unsigned addr, u8 value) {
         for(int i = 0; i < maxElements; i++) {
-            if (block1[i].used && block1[i].addr == addr) {
-                block1[i].value = value;
+            if (block[i].used && block[i].addr == addr) {
+                block[i].value = value;
                 return;
             }
         }
-        assert(pos1 < maxElements);
-        block1[pos1].addr = addr;
-        block1[pos1].value = value;
-        block1[pos1].used = true;
+        assert(pos < maxElements);
+        block[pos].addr = addr;
+        block[pos].value = value;
+        block[pos].used = true;
 
-        if (++pos1 == maxElements) {
+        if (++pos == maxElements) {
             throw Exception("memory block is too small, increase size");
         }
     }
-    void write2(unsigned addr, u8 value) {
-        for(int i = 0; i < maxElements; i++) {
-            if (block2[i].used && block2[i].addr == addr) {
-                block2[i].value = value;
-                return;
-            }
-        }
-        assert(pos2 < maxElements);
-        block2[pos2].addr = addr;
-        block2[pos2].value = value;
-        block2[pos2].used = true;
 
-        if (++pos2 == maxElements) {
-             throw Exception("memory block is too small, increase size");
-         }
-    }
-    void write(unsigned addr, u8 value) {
-        write1(addr, value);
-        write2(addr, value);
-    }
-
-    u32 readLong1(u32 addr) {
-        u32 Dword = readWord1(addr) << 16;
-        Dword |= readWord1(addr+2);
-        return Dword;
-    }
-    u32 readLong2(u32 addr) {
-        u32 Dword = readWord2(addr) << 16;
-        Dword |= readWord2(addr+2);
+    u32 readLong(u32 addr) {
+        u32 Dword = readWord(addr) << 16;
+        Dword |= readWord(addr+2);
         return Dword;
     }
 
-    u16 readWord1(u32 addr) {
-        return (read1(addr & 0xffffff) << 8) | read1( (addr+1) & 0xffffff);
+    u16 readWord(u32 addr) {
+        return (read(addr & 0xffffff) << 8) | read( (addr+1) & 0xffffff);
     }
-    u16 readWord2(u32 addr) {
-         return (read2(addr & 0xffffff) << 8) | read2( (addr+1) & 0xffffff);
-     }
 
-    void writeLong1(u32 addr, u32 value) {
-        writeWord1(addr, (value >> 16) & 0xFFFF);
-        writeWord1(addr+2, value & 0xFFFF);
-    }
-    void writeLong2(u32 addr, u32 value) {
-         writeWord2(addr, (value >> 16) & 0xFFFF);
-         writeWord2(addr+2, value & 0xFFFF);
-     }
     void writeLong(u32 addr, u32 value) {
-         writeLong1(addr,value);
-         writeLong2(addr,value);
-      }
+        writeWord(addr, (value >> 16) & 0xFFFF);
+        writeWord(addr+2, value & 0xFFFF);
+    }
 
-    void writeWord1(u32 addr, u16 value) {
-        write1(addr & 0xffffff, value >> 8);
-        write1((addr+1) & 0xffffff, value & 0xFF);
-    }
-    void writeWord2(u32 addr, u16 value) {
-        write2(addr & 0xffffff, value >> 8);
-        write2((addr+1) & 0xffffff, value & 0xFF);
-    }
     void writeWord(u32 addr, u16 value) {
-        writeWord1(addr,value);
-        writeWord2(addr,value);
-     }
+        write(addr & 0xffffff, value >> 8);
+        write((addr+1) & 0xffffff, value & 0xFF);
+    }
 
     void setError(unsigned blockCount) {
         if (blockCount == -1) {
             error = " address not found ";
             return;
         }
-        error = "adr: " + Helper::convertIntToHexString(block1[blockCount].addr) + ", val: " + Helper::convertIntToHexString(block1[blockCount].value);
+        error = "adr: " + Helper::convertIntToHexString(block[blockCount].addr) + ", val: " + Helper::convertIntToHexString(block[blockCount].value);
     }
 
     string getError() {
@@ -212,15 +129,15 @@ public:
         int backup;
 
         for(int i = 0; i < sampled->getMaxElements(); i++) {
-            if (!sampled->block1[i].used) {
+            if (!sampled->block[i].used) {
                 continue;
             }
             found = false;
             backup = -1;
             for(int j = 0; j < calced->getMaxElements(); j++) {
-                if (sampled->block1[i].addr == calced->block1[j].addr) {
+                if (sampled->block[i].addr == calced->block[j].addr) {
                     backup = j;
-                    if (sampled->block1[i].value == calced->block1[j].value) {
+                    if (sampled->block[i].value == calced->block[j].value) {
                         found = true;
                     }
                     break;
@@ -234,30 +151,9 @@ public:
         }
         return true;
     }
-
-    bool compareBlocks() {
-
-        bool result = true;
-
-        for (int i = 0; i < 100; i++) {
-            if (block1[i].addr != block2[i].addr ||
-                block1[i].used != block2[i].used ||
-                block1[i].value != block2[i].value) {
-                if (result) printf("\n\nMemory contents mismatch:\n");
-                result = false;
-                printf("%d: addr / used / value: (%x, %d, %x) --> (%x %d %x)\n",
-                      i,
-                      block1[i].addr, block1[i].used, block1[i].value,
-                      block2[i].addr, block2[i].used, block2[i].value);
-            }
-        }
-
-        return result;
-    }
-
+    
 private:
-    unsigned pos1 = 0;
-    unsigned pos2 = 0;
+    unsigned pos = 0;
     unsigned maxElements;
     string error;
 };

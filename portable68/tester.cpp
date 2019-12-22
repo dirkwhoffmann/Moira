@@ -364,46 +364,24 @@ u16 Tester_68k::memWordRead(u32 addr) {
     res |= memRead(addr + 1);
     return res;
 }
-u16 Tester_68k::memWordRead2(u32 addr) {
-    u16 res = memRead2(addr) << 8;
-    res |= memRead2(addr + 1);
-    return res;
-}
 
 void Tester_68k::memWordWrite(u32 addr, u16 data) {
     memWrite(addr, data >> 8);
     memWrite(addr + 1, data & 0xff);
-}
-void Tester_68k::memWordWrite2(u32 addr, u16 data) {
-    memWrite2(addr, data >> 8);
-    memWrite2(addr + 1, data & 0xff);
 }
 
 u8 Tester_68k::memRead(u32 addr) {
     if (memoryblock.isBusError(addr)) {
         raiseBusError(addr);
     }
-    return memoryblock.read1(addr);
-}
-u8 Tester_68k::memRead2(u32 addr) {
-    if (memoryblock.isBusError(addr)) {
-        raiseBusError(addr);
-    }
-    return memoryblock.read2(addr);
+    return memoryblock.read(addr);
 }
 
 void Tester_68k::memWrite(u32 addr, u8 data) {
     if (memoryblock.isBusError(addr)) {
         raiseBusError(addr);
     }
-    memoryblock.write1(addr, data);
-}
-void Tester_68k::memWrite2(u32 addr, u8 data) {
-    if (memoryblock.isBusError(addr)) {
-        // raiseBusError( addr);
-        return;
-    }
-    memoryblock.write2(addr, data);
+    memoryblock.write(addr, data);
 }
 
 unsigned Tester_68k::getEA(ADM _adm, unsigned reg) {
@@ -604,8 +582,6 @@ bool Tester_68k::compare()
 
     if (reg_pc != moiracpu->getPC()) return false;
     if ((getSR() & 0xFF1F) != (moiracpu->getSR() & 0xFF1F)) return false;
-
-    if (!memoryblock.compareBlocks()) return false;
 
     return true;
 }

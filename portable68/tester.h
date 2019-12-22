@@ -34,13 +34,9 @@ public:
 
     u8 memRead(u32 addr);
     void memWrite(u32 addr, u8 data);
-    u8 memRead2(u32 addr);
-    void memWrite2(u32 addr, u8 data);
 
     u16 memWordRead(u32 addr);
     void memWordWrite(u32 addr, u16 data);
-    u16 memWordRead2(u32 addr);
-    void memWordWrite2(u32 addr, u16 data);
 
     void setUp();
     void check(string ident);
