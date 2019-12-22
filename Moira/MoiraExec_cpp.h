@@ -7,8 +7,26 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#define SUPERVISOR_MODE_ONLY if (!sr.s) { privilegeException(); return; }
+#define SUPERVISOR_MODE_ONLY if (!sr.s) { execPrivilegeException(); return; }
 #define LAST_BUS_CYCLE true
+
+#define REVERSE_8(x) (((x) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
+#define REVERSE_16(x) ((REVERSE_8((x) & 0xFF) << 8) | REVERSE_8(((x) >> 8) & 0xFF))
+
+#define ______________xx(opcode) (u16)((opcode >> 0)  & 0b11)
+#define _____________xxx(opcode) (u16)((opcode >> 0)  & 0b111)
+#define ____________xxxx(opcode) (u16)((opcode >> 0)  & 0b1111)
+#define ________xxxxxxxx(opcode) (u16)((opcode >> 0)  & 0b11111111)
+#define __________xxx___(opcode) (u16)((opcode >> 3)  & 0b111)
+#define __________xx____(opcode) (u16)((opcode >> 4)  & 0b11)
+#define _______xxx______(opcode) (u16)((opcode >> 6)  & 0b111)
+#define _________x______(opcode) (u16)((opcode >> 6)  & 0b1)
+#define ________x_______(opcode) (u16)((opcode >> 7)  & 0b1)
+#define _______x________(opcode) (u16)((opcode >> 8)  & 0b1)
+#define _____xx_________(opcode) (u16)((opcode >> 9)  & 0b11)
+#define ____xxx_________(opcode) (u16)((opcode >> 9)  & 0b111)
+#define ____x___________(opcode) (u16)((opcode >> 11) & 0b1)
+#define xxxx____________(opcode) (u16)((opcode >> 12) & 0b1111)
 
 void
 Moira::saveToStackDetailed(u16 sr, u32 addr, u16 code)
@@ -59,15 +77,21 @@ Moira::execAddressError(u32 addr)
 }
 
 void
-Moira::execLineA(u16 opcode)
+Moira::execUnimplemented(u8 nr)
 {
-    execGroup1Exception(10);
-}
+    u16 status = getSR();
 
-void
-Moira::execLineF(u16 opcode)
-{
-    execGroup1Exception(11);
+    // Enter supervisor mode and update the status register
+    setSupervisorMode(true);
+    sr.t = 0;
+
+    saveToStackBrief(status);
+
+    // Update the prefetch queue
+    readExtensionWord();
+    prefetch();
+
+    jumpToVector(nr);
 }
 
 void
@@ -87,48 +111,6 @@ Moira::execIllegal(u16 opcode)
 }
 
 void
-Moira::execGroup0Exception(u32 addr, u8 nr)
-{
-    /* Group 0 exceptions indicate a serious error condition. Detailed
-     * information about the current CPU state is pushed on the stack to
-     * support diagnosis.
-     */
-
-    // Memory access type and function code (TODO: THIS IS INCOMPLETE)
-    u16 code = 0x11 | (sr.s ? 4 : 0);
-
-    // Enter supervisor mode and update the status register
-    setSupervisorMode(true);
-    sr.t = 0;
-
-    saveToStackDetailed(getSR(), addr, code);
-
-    // Update the prefetch queue
-    readExtensionWord();
-    prefetch();
-
-    jumpToVector(nr);
-}
-
-void
-Moira::execGroup1Exception(u8 nr)
-{
-    u16 status = getSR();
-
-    // Enter supervisor mode and update the status register
-    setSupervisorMode(true);
-    sr.t = 0;
-
-    saveToStackBrief(status);
-
-    // Update the prefetch queue
-    readExtensionWord();
-    prefetch();
-
-    jumpToVector(nr);
-}
-
-void
 Moira::execTrapException(u8 nr)
 {
     u16 status = getSR();
@@ -144,7 +126,7 @@ Moira::execTrapException(u8 nr)
 }
 
 void
-Moira::privilegeException()
+Moira::execPrivilegeException()
 {
     u16 status = getSR();
 

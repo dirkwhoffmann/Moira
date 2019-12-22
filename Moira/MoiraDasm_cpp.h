@@ -7,8 +7,6 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#include "StringWriter_cpp.h"
-
 template <> u32
 Moira::dasmRead<Byte>(u32 &addr)
 {

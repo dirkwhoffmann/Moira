@@ -7,22 +7,24 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-// Save information to stack for group 0 exceptions
+// Saves information to stack for group 0 exceptions
 void saveToStackDetailed(u16 sr, u32 addr, u16 code);
 
-// Save information to stack for group 1 and group 2 exceptions
+// Saves information to stack for group 1 and group 2 exceptions
 void saveToStackBrief(u16 sr);
 
-
-// DEPRECATED
+// Emulates an address error
 void execAddressError(u32 addr);
-void execLineA(u16 opcode);
-void execLineF(u16 opcode);
+
+// Emulates the execution of unimplemented and illegal instructions
+void execUnimplemented(u8 nr);
+void execLineA(u16 opcode) { execUnimplemented(10); }
+void execLineF(u16 opcode) { execUnimplemented(11); }
 void execIllegal(u16 opcode);
-void execGroup0Exception(u32 addr, u8 nr);
-void execGroup1Exception(u8 nr);
+
+// Emulates a trap or priviledge exception
 void execTrapException(u8 nr);
-void privilegeException();
+void execPrivilegeException();
 
 template<Instr I, Mode M, Size S> void execShiftRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execShiftIm(u16 opcode);

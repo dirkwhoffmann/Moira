@@ -17,6 +17,7 @@ namespace moira {
 // Flags
 #define SKIP_LAST_READ 0b00000001
 
+/*
 #define REVERSE_8(x) (((x) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
 #define REVERSE_16(x) ((REVERSE_8((x) & 0xFF) << 8) | REVERSE_8(((x) >> 8) & 0xFF))
 
@@ -34,6 +35,7 @@ namespace moira {
 #define ____xxx_________(opcode) (u16)((opcode >> 9)  & 0b111)
 #define ____x___________(opcode) (u16)((opcode >> 11) & 0b1)
 #define xxxx____________(opcode) (u16)((opcode >> 12) & 0b1111)
+*/
 
 enum Size { Byte = 1, Word = 2, Long = 4 };
 

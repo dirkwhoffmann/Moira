@@ -19,6 +19,7 @@ namespace moira {
 #include "MoiraMemory_cpp.h"
 #include "MoiraTiming_cpp.h"
 #include "MoiraExec_cpp.h"
+#include "StringWriter_cpp.h"
 #include "MoiraDasm_cpp.h"
 
 Moira::Moira()
