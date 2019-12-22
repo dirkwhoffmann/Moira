@@ -193,7 +193,16 @@ Moira::dasmAdda(StrWriter &str, u32 &addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-Moira::dasmAddi(StrWriter &str, u32 &addr, u16 op)
+Moira::dasmAddiRg(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = Ims ( SEXT<S>(dasmRead<S>(addr)) );
+    auto dst = Dn  ( _____________xxx(op)       );
+
+    str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmAddiEa(StrWriter &str, u32 &addr, u16 op)
 {
     auto src = Ims      ( SEXT<S>(dasmRead<S>(addr)) );
     auto dst = Op <M,S> ( _____________xxx(op), addr );
@@ -202,10 +211,10 @@ Moira::dasmAddi(StrWriter &str, u32 &addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-Moira::dasmAddq(StrWriter &str, u32 &addr, u16 op)
+Moira::dasmAddqDn(StrWriter &str, u32 &addr, u16 op)
 {
-    auto src = Imd      ( ____xxx_________(op)       );
-    auto dst = Op <M,S> ( _____________xxx(op), addr );
+    auto src = Imd ( ____xxx_________(op) );
+    auto dst = Dn  ( _____________xxx(op) );
 
     if (src.raw == 0) src.raw = 8;
     str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
@@ -213,6 +222,16 @@ Moira::dasmAddq(StrWriter &str, u32 &addr, u16 op)
 
 template<Instr I, Mode M, Size S> void
 Moira::dasmAddqAn(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = Imd ( ____xxx_________(op) );
+    auto dst = An  ( _____________xxx(op) );
+
+    if (src.raw == 0) src.raw = 8;
+    str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmAddqEa(StrWriter &str, u32 &addr, u16 op)
 {
     auto src = Imd      ( ____xxx_________(op)       );
     auto dst = Op <M,S> ( _____________xxx(op), addr );

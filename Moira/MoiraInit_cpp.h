@@ -208,7 +208,8 @@ Moira::createJumpTables()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0000 0110 ---- ----");
-    ________SSMMMXXX(opcode, ADDI, 0b101111111000, Byte | Word | Long, Addi);
+    ________SSMMMXXX(opcode, ADDI, 0b100000000000, Byte | Word | Long, AddiRg);
+    ________SSMMMXXX(opcode, ADDI, 0b001111111000, Byte | Word | Long, AddiEa);
 
 
     // ADDQ
@@ -222,8 +223,9 @@ Moira::createJumpTables()
     //                 X  (X)  X   X   X   X   X   X   X
 
     opcode = parse("0101 ---0 ---- ----");
-    ____XXX_SSMMMXXX(opcode, ADDQ, 0b101111111000, Byte | Word | Long, Addq);
-    ____XXX_SSMMMXXX(opcode, ADDQ, 0b010000000000, Word | Long, AddqAn);
+    ____XXX_SSMMMXXX(opcode, ADDQ, 0b100000000000, Byte | Word | Long, AddqDn);
+    ____XXX_SSMMMXXX(opcode, ADDQ, 0b010000000000, Word | Long,        AddqAn);
+    ____XXX_SSMMMXXX(opcode, ADDQ, 0b001111111000, Byte | Word | Long, AddqEa);
 
 
     // ADDX
@@ -1245,7 +1247,8 @@ Moira::createJumpTables()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0000 0100 ---- ----");
-    ________SSMMMXXX(opcode, SUBI, 0b101111111000, Byte | Word | Long, Addi);
+    ________SSMMMXXX(opcode, SUBI, 0b100000000000, Byte | Word | Long, AddiRg);
+    ________SSMMMXXX(opcode, SUBI, 0b001111111000, Byte | Word | Long, AddiEa);
 
 
     // SUBQ
@@ -1259,8 +1262,9 @@ Moira::createJumpTables()
     //                 X  (X)  X   X   X   X   X   X   X
 
     opcode = parse("0101 ---1 ---- ----");
-    ____XXX_SSMMMXXX(opcode, SUBQ, 0b101111111000, Byte | Word | Long, Addq);
-    ____XXX_SSMMMXXX(opcode, SUBQ, 0b010000000000, Word | Long, AddqAn);
+    ____XXX_SSMMMXXX(opcode, SUBQ, 0b100000000000, Byte | Word | Long, AddqDn);
+    ____XXX_SSMMMXXX(opcode, SUBQ, 0b010000000000, Word | Long,        AddqAn);
+    ____XXX_SSMMMXXX(opcode, SUBQ, 0b001111111000, Byte | Word | Long, AddqEa);
 
 
     // SUBX

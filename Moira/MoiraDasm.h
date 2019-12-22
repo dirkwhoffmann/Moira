@@ -32,9 +32,11 @@ template<Instr I, Mode M, Size S> void dasmAbcd(StrWriter &str, u32 &addr, u16 o
 template<Instr I, Mode M, Size S> void dasmAddEaRg(StrWriter &str, u32 &addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmAddRgEa(StrWriter &str, u32 &addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmAdda(StrWriter &str, u32 &addr, u16 op);
-template<Instr I, Mode M, Size S> void dasmAddi(StrWriter &str, u32 &addr, u16 op);
-template<Instr I, Mode M, Size S> void dasmAddq(StrWriter &str, u32 &addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmAddiRg(StrWriter &str, u32 &addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmAddiEa(StrWriter &str, u32 &addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmAddqDn(StrWriter &str, u32 &addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmAddqAn(StrWriter &str, u32 &addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmAddqEa(StrWriter &str, u32 &addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmAddxRg(StrWriter &str, u32 &addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmAddxEa(StrWriter &str, u32 &addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmAndEaRg(StrWriter &str, u32 &addr, u16 op);

@@ -286,7 +286,23 @@ Moira::execAdda(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-Moira::execAddi(u16 opcode)
+Moira::execAddiRg(u16 opcode)
+{
+    u32 src = readImm<S>();
+    int dst = _____________xxx(opcode);
+
+    u32 ea, data, result;
+    if (!readOperand<M,S>(dst, ea, data)) return;
+
+    result = arith<I,S>(src, data);
+    prefetch<LAST_BUS_CYCLE>();
+
+    if (S == Long) sync(4);
+    writeD(dst, result);
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::execAddiEa(u16 opcode)
 {
     u32 src = readImm<S>();
     int dst = _____________xxx(opcode);
@@ -297,12 +313,39 @@ Moira::execAddi(u16 opcode)
     result = arith<I,S>(src, data);
     prefetch();
 
-    if (S == Long && isRegMode(M)) sync(4);
-    writeOperand<M,S>(dst, ea, result);
+    writeOperand<M,S,LAST_BUS_CYCLE>(dst, ea, result);
 }
 
 template<Instr I, Mode M, Size S> void
-Moira::execAddq(u16 opcode)
+Moira::execAddqDn(u16 opcode)
+{
+    i8  src = ____xxx_________(opcode);
+    int dst = _____________xxx(opcode);
+
+    if (src == 0) src = 8;
+    u32 result = arith<I,S>(src, readD<S>(dst));
+    prefetch<LAST_BUS_CYCLE>();
+
+    if (S == Long) sync(4);
+    writeD<S>(dst, result);
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::execAddqAn(u16 opcode)
+{
+    i8  src = ____xxx_________(opcode);
+    int dst = _____________xxx(opcode);
+
+    if (src == 0) src = 8;
+    u32 result = (I == ADDQ) ? readA(dst) + src : readA(dst) - src;
+    prefetch<LAST_BUS_CYCLE>();
+
+    sync(4);
+    writeA(dst, result);
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::execAddqEa(u16 opcode)
 {
     i8  src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
@@ -314,26 +357,7 @@ Moira::execAddq(u16 opcode)
     result = arith<I,S>(src, data);
     prefetch();
 
-    if (S == Long && isRegMode(M)) sync(4);
-    writeOperand<M,S>(dst, ea, result);
-}
-
-template<Instr I, Mode M, Size S> void
-Moira::execAddqAn(u16 opcode)
-{
-    i8  src = ____xxx_________(opcode);
-    int dst = _____________xxx(opcode);
-
-    u32 ea, data, result;
-    if (!readOperand<M,Long>(dst, ea, data)) return;
-
-    if (src == 0) src = 8;
-    result = (I == ADDQ) ? readA(dst) + src : readA(dst) - src;
-
-    prefetch();
-    sync(4);
-
-    writeA(dst, result);
+    writeOperand<M,S,LAST_BUS_CYCLE>(dst, ea, result);
 }
 
 template<Instr I, Mode M, Size S> void

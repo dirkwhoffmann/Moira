@@ -34,9 +34,11 @@ template<Instr I, Mode M, Size S> void execAddEaRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execAddRgEa(u16 opcode);
 
 template<Instr I, Mode M, Size S> void execAdda(u16 opcode);
-template<Instr I, Mode M, Size S> void execAddi(u16 opcode);
-template<Instr I, Mode M, Size S> void execAddq(u16 opcode);
+template<Instr I, Mode M, Size S> void execAddiRg(u16 opcode);
+template<Instr I, Mode M, Size S> void execAddiEa(u16 opcode);
+template<Instr I, Mode M, Size S> void execAddqDn(u16 opcode);
 template<Instr I, Mode M, Size S> void execAddqAn(u16 opcode);
+template<Instr I, Mode M, Size S> void execAddqEa(u16 opcode);
 template<Instr I, Mode M, Size S> void execAddxRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execAddxEa(u16 opcode);
 
