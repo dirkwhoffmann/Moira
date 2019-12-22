@@ -275,13 +275,6 @@ StrWriter::operator<<(Ins<I> i)
     return *this;
 }
 
-template <Cond C> StrWriter&
-StrWriter::operator<<(Cnd<C> c)
-{
-    *this << condStr[C];
-    return *this;
-}
-
 template <Size S> StrWriter&
 StrWriter::operator<<(Sz<S>)
 {

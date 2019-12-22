@@ -76,11 +76,6 @@ enum Cond {
     LE  // Branch on less than or equal
 };
 
-static const char *condStr[] {
-    "t ", "f ", "hi", "ls", "cc", "cs", "ne", "eq",
-    "vc", "vs", "pl", "mi", "ge", "lt", "gt", "le"
-};
-
 /* Adressing modes
  *
  *   0:        Dn : Data register direct

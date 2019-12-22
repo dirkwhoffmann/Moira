@@ -75,7 +75,6 @@ public:
     StrWriter& operator<<(RegRegList l);
     StrWriter& operator<<(RegList l);
     template <Instr I> StrWriter& operator<<(Ins<I> i);
-    template <Cond C> StrWriter& operator<<(Cnd<C> c);
     template <Size S> StrWriter& operator<<(Sz<S> sz);
     template <Mode M, Size S> StrWriter& operator<<(const Ea<M,S> &ea);
     StrWriter& operator<<(Finish finish);
