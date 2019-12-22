@@ -12,6 +12,7 @@
 		505580E823AFA04C0009F77F /* m68kdasm.c in Sources */ = {isa = PBXBuildFile; fileRef = 505580DF23AFA04C0009F77F /* m68kdasm.c */; };
 		505580E923AFA04C0009F77F /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 505580E023AFA04C0009F77F /* m68kops.c */; };
 		505580EC23AFA14D0009F77F /* musashi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505580EA23AFA14D0009F77F /* musashi.cpp */; };
+		505580EE23AFB31F0009F77F /* moira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505580ED23AFB31F0009F77F /* moira.cpp */; };
 		506E013C23AC8E8A0015AE3F /* MoiraMemory_cpp.h in Sources */ = {isa = PBXBuildFile; fileRef = 506E013B23AC8E8A0015AE3F /* MoiraMemory_cpp.h */; };
 		50804EDE2386A72C004D3EC2 /* tester.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E792386A72C004D3EC2 /* tester.cpp */; };
 		50804EDF2386A72C004D3EC2 /* exception.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E7C2386A72C004D3EC2 /* exception.cpp */; };
@@ -132,6 +133,7 @@
 		505580E523AFA04C0009F77F /* m68kops.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kops.h; sourceTree = "<group>"; };
 		505580EA23AFA14D0009F77F /* musashi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = musashi.cpp; sourceTree = "<group>"; };
 		505580EB23AFA14D0009F77F /* musashi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = musashi.h; sourceTree = "<group>"; };
+		505580ED23AFB31F0009F77F /* moira.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moira.cpp; sourceTree = "<group>"; };
 		506E013B23AC8E8A0015AE3F /* MoiraMemory_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraMemory_cpp.h; sourceTree = "<group>"; };
 		50804E062386A4CE004D3EC2 /* Moira */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Moira; sourceTree = BUILT_PRODUCTS_DIR; };
 		50804E782386A72C004D3EC2 /* tester.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tester.h; sourceTree = "<group>"; };
@@ -284,6 +286,7 @@
 				50804E8C2386A72C004D3EC2 /* main.cpp */,
 				505580EB23AFA14D0009F77F /* musashi.h */,
 				505580EA23AFA14D0009F77F /* musashi.cpp */,
+				505580ED23AFB31F0009F77F /* moira.cpp */,
 				505580DB23AFA04C0009F77F /* Musashi */,
 				50804E082386A4CE004D3EC2 /* Moira */,
 				50804E772386A72C004D3EC2 /* portable68 */,
@@ -561,6 +564,7 @@
 				505580E723AFA04C0009F77F /* m68kcpu.c in Sources */,
 				50804EEB2386A72C004D3EC2 /* cmpi.cpp in Sources */,
 				50804EE52386A72C004D3EC2 /* movefromsr.cpp in Sources */,
+				505580EE23AFB31F0009F77F /* moira.cpp in Sources */,
 				50804F212386A72C004D3EC2 /* lsr.cpp in Sources */,
 				50804F0A2386A72C004D3EC2 /* ext.cpp in Sources */,
 				50804EDF2386A72C004D3EC2 /* exception.cpp in Sources */,

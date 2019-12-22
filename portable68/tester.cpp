@@ -400,7 +400,7 @@ void Tester_68k::memWrite(u32 addr, u8 data) {
 }
 void Tester_68k::memWrite2(u32 addr, u8 data) {
     if (memoryblock.isBusError(addr)) {
-        // raiseBusError(addr);
+        // raiseBusError( addr);
         return;
     }
     memoryblock.write2(addr, data);

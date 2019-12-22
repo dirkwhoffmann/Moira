@@ -9,7 +9,8 @@ class Results;
 
 class Tester_68k : public Core_68k, public MoiraDelegate
 {
-protected:
+public:
+    
     MemoryBlock memoryblock;
 
     unsigned adrCounter;

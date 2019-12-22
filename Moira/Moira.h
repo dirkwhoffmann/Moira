@@ -166,6 +166,7 @@ public:
     // Accessing memory
     //
 
+
     /* Checks an address for an address error.
      * An address error occurs if a word or long word is being read from an
      * odd address.
@@ -207,6 +208,18 @@ public:
 
     // Reads an immediate value
     template<Size S> u32 readImm();
+
+    //
+    // Low-level memory access functions (stubs)
+    //
+
+    u8  read8    (u32 addr);
+    u16 read16   (u32 addr);
+    u16 readDasm (u32 addr);
+    u8  readIPL  ();
+
+    void write8  (u32 addr, u8  val);
+    void write16 (u32 addr, u16 val);
 
 
     //

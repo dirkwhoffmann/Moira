@@ -6,6 +6,8 @@
 #include "musashi.h"
 
 moira::Moira *moiracpu;
+Tester_68k tester;
+uint8_t mem[0x10000];
 
 int main()
 {
@@ -15,7 +17,7 @@ int main()
     moiracpu = new moira::Moira();
 
     try {
-        Tester_68k tester;
+        // Tester_68k tester;
         moiracpu->memory = &tester;
 
         tester.runTestCases();

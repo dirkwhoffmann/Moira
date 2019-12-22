@@ -16,8 +16,6 @@ extern "C" {
 #include "m68k.h"
 }
 
-uint8_t mem[0x10000];
-
 extern "C" unsigned int m68k_read_memory_8(unsigned int addr)
 {
     return mem[addr & 0xFFFF];

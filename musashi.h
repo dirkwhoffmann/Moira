@@ -13,6 +13,8 @@ extern "C" int interrupt_handler(int irqLevel);
 extern "C" int read_sp_on_reset(void);
 extern "C" int read_pc_on_reset(void);
 
+extern uint8_t mem[0x10000];
+
 void setupMusashi();
 void setMem16(uint32_t addr, uint16_t word);
 

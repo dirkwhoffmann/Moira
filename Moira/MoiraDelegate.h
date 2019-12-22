@@ -14,6 +14,7 @@
 
 using namespace moira;
 
+// DEPRECATED
 class MoiraDelegate {
 
 public:
