@@ -11,9 +11,11 @@ uint8_t mem[0x10000];
 
 int main()
 {
-    // dasmTest();
+    // execTest();
 
+    dasmTest();
 
+    /*
     moiracpu = new moira::Moira();
 
     try {
@@ -23,7 +25,7 @@ int main()
     } catch(Exception& exception) {
         exception.handle();
     }
-    
+    */
 
     return 0;
 }

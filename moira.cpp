@@ -29,9 +29,7 @@ Moira::read16(u32 addr)
 u16
 Moira::read16Dasm(u32 addr)
 {
-    u16 res = tester.memRead(addr) << 8;
-    res |= tester.memRead(addr + 1);
-    return res;
+    return mem[addr & 0xFFFFFF] << 8 | mem[(addr + 2) & 0xFFFFFF];
 }
 
 u16

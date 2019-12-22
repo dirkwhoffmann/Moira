@@ -18,7 +18,8 @@ extern uint8_t mem[0x10000];
 void setupMusashi();
 void setMem16(uint32_t addr, uint16_t word);
 
-// Performs a disassembler test
+// Test functions
 void dasmTest();
+void execTest();
 
 #endif

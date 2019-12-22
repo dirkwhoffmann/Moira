@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "musashi.h"
 #include "Moira.h"
@@ -25,7 +26,7 @@ extern "C" unsigned int m68k_read_memory_16(unsigned int addr)
 {
     int hi = mem[addr & 0xFFFF];
     int lo = mem[(addr + 2) & 0xFFFF];
-    return hi << 16 | lo;
+    return hi << 8 | lo;
 }
 
 extern "C" unsigned int m68k_read_memory_32(unsigned int addr)
@@ -40,7 +41,7 @@ extern "C" unsigned int m68k_read_disassembler_16 (unsigned int addr)
 
 extern "C" unsigned int m68k_read_disassembler_32 (unsigned int addr)
 {
-    assert(false);
+    return m68k_read_memory_16(addr) << 16 | m68k_read_memory_16(addr + 2);
 }
 
 extern "C" void m68k_write_memory_8(unsigned int addr, unsigned int value)
@@ -99,12 +100,16 @@ void dasmTest()
         0x0000, 0x0001, 0x0010, 0x7456, 0x2AAA, 0x70F0, 0x700F, 0x7FFF,
     };
 
-    printf("Peforming disassembler test... \n");
+    printf("Peforming disassembler tests... \n");
     setupMusashi();
-    moiraCPU.reset();
+    // moiraCPU.reset();
+
+    clock_t start = clock();
 
     // Iterate through all opcodes
     for (uint32_t opcode = 0x0000; opcode < 65536; opcode++) {
+
+        if ((opcode & 0xFFF) == 0) printf("Opcodes %xxxx\n", opcode >> 12);
 
         for (int i = 0; i < 48; i++) {
             for (int j = 0; j < 48; j++) {
@@ -121,8 +126,6 @@ void dasmTest()
                 // Ask Moira to disassemble
                 moiraCnt = moiraCPU.disassemble(pc, moiraStr);
 
-                printf("Checking %x %x %x\n", opcode, ext[i], ext[j]);
-
                 // Compare
                 if (strcmp(musashiStr, moiraStr) != 0 || musashiCnt != moiraCnt) {
 
@@ -136,5 +139,69 @@ void dasmTest()
             }
         }
     }
-    printf("PASSED\n");
+
+    clock_t now = clock();
+    double elapsed = (double(now - start) / double(CLOCKS_PER_SEC));
+    printf("PASSED (%f sec)\n", elapsed);
+}
+
+void execTest()
+{
+    moira::Moira moiraCPU;
+    int64_t moiraCnt;
+    int musashiCnt;
+
+    // List of extension words used for testing
+    uint16_t ext[] = {
+        0x0001, 0x0002, 0x0004, 0x0008, 0x0010, 0x0020, 0x0040, 0x0080,
+        0x0100, 0x0200, 0x0400, 0x0800, 0x1000, 0x2000, 0x4000, 0x8000,
+        0x000F, 0x00F0, 0x0F00, 0xF000, 0x0007, 0x0070, 0x0700, 0x7000,
+        0x00FF, 0xFF00, 0x0FF0, 0xF00F, 0xF0F0, 0x0F0F, 0xFFF0, 0x0FFF,
+        0x8000, 0x8001, 0x8010, 0xF456, 0xAAAA, 0xF0F0, 0xF00F, 0xFFFF,
+        0x0000, 0x0001, 0x0010, 0x7456, 0x2AAA, 0x70F0, 0x700F, 0x7FFF,
+    };
+
+    printf("Peforming execution tests... \n");
+    setupMusashi();
+
+    clock_t start = clock();
+
+    // Iterate through all opcodes
+    for (uint32_t opcode = 0x0000; opcode < 65536; opcode++) {
+
+        if ((opcode & 0xFFF) == 0) printf("Opcodes %xxxx\n", opcode >> 12);
+
+        for (int i = 0; i < 48; i++) {
+            for (int j = 0; j < 48; j++) {
+
+                // Setup instruction
+                const uint32_t pc = 0x1000;
+                setMem16(pc + 0, opcode);
+                setMem16(pc + 2, ext[i]);
+                setMem16(pc + 4, ext[j]);
+
+                // Reset Musashi
+                m68k_pulse_reset();
+
+                printf("Musashi PC = %x\n", m68k_get_reg(NULL, M68K_REG_PC));
+
+                // Execute instruction
+                musashiCnt = m68k_execute(1);
+
+                // Reset Moira
+                moiraCPU.reset();
+
+                moiraCnt = moiraCPU.getClock();
+                printf("Moira PC = %x\n", moiraCPU.getPC());
+
+                // Execute instruction
+                moiraCPU.process();
+                moiraCnt = moiraCPU.getClock() - moiraCnt;
+            }
+        }
+    }
+
+    clock_t now = clock();
+    double elapsed = (double(now - start) / double(CLOCKS_PER_SEC));
+    printf("PASSED (%f sec)\n", elapsed);
 }
