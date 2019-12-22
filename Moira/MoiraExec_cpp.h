@@ -428,7 +428,19 @@ Moira::execAndRgEa(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-Moira::execAndi(u16 opcode)
+Moira::execAndiRg(u16 opcode)
+{
+    u32 src = readImm<S>();
+    int dst = _____________xxx(opcode);
+
+    u32 result = logic<I,S>(src, readD<S>(dst));
+    prefetch<LAST_BUS_CYCLE>();
+
+    writeD<S>(dst, result);
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::execAndiEa(u16 opcode)
 {
     u32 ea, data, result;
 
@@ -440,7 +452,7 @@ Moira::execAndi(u16 opcode)
     result = logic<I,S>(src, data);
     prefetch();
 
-    writeOperand<M,S>(dst, ea, result);
+    writeOperand<M,S,LAST_BUS_CYCLE>(dst, ea, result);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -675,7 +687,19 @@ Moira::execCmpa(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
-Moira::execCmpi(u16 opcode)
+Moira::execCmpiRg(u16 opcode)
+{
+    u32 src = readImm<S>();
+    int dst = _____________xxx(opcode);
+
+    prefetch<LAST_BUS_CYCLE>();
+
+    if (S == Long) sync(2);
+    cmp<S>(src, readD<S>(dst));
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::execCmpiEa(u16 opcode)
 {
     u32 src = readImm<S>();
     int dst = _____________xxx(opcode);
@@ -684,7 +708,6 @@ Moira::execCmpi(u16 opcode)
     if (!readOperand<M,S>(dst, ea, data)) return;
     prefetch();
 
-    if (S == Long && isRegMode(M)) sync(2);
     cmp<S>(src, data);
 }
 

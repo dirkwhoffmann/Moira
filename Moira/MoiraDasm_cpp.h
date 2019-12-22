@@ -277,7 +277,16 @@ Moira::dasmAndRgEa(StrWriter &str, u32 &addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-Moira::dasmAndi(StrWriter &str, u32 &addr, u16 op)
+Moira::dasmAndiRg(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = Imu ( dasmRead<S>(addr)    );
+    auto dst = Dn  ( _____________xxx(op) );
+
+    str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmAndiEa(StrWriter &str, u32 &addr, u16 op)
 {
     auto src = Imu      ( dasmRead<S>(addr)          );
     auto dst = Op <M,S> ( _____________xxx(op), addr );
@@ -346,7 +355,16 @@ Moira::dasmCmpa(StrWriter &str, u32 &addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-Moira::dasmCmpi(StrWriter &str, u32 &addr, u16 op)
+Moira::dasmCmpiRg(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = Ims ( SEXT<S>(dasmRead<S>(addr)) );
+    auto dst = Dn  ( _____________xxx(op)       );
+
+    str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmCmpiEa(StrWriter &str, u32 &addr, u16 op)
 {
     auto src = Ims      ( SEXT<S>(dasmRead<S>(addr)) );
     auto dst = Op <M,S> ( _____________xxx(op), addr );
