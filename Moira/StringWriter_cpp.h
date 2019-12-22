@@ -7,6 +7,58 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+static const char *instrLower[] {
+    "abcd" , "add",   "adda",  "addi",  "addq",  "addx",  "and",    "andi",
+    "andi" , "andi",  "asl",   "asr",
+    "bcc",   "bcs",   "beq",   "bge",   "bgt",   "bhi",   "ble",    "bls",
+    "blt",   "bmi",   "bne",   "bpl",   "bvc",   "bvs",   "bchg",   "bclr",
+    "bra",   "bset",  "bsr",   "btst",
+    "chk",   "clr",   "cmp",   "cmpa",  "cmpi",  "cmpm",
+    "dbcc",  "dbcs",  "dbeq",  "dbge",  "dbgt",  "dbhi",  "dble",   "dbls",
+    "dblt",  "dbmi",  "dbne",  "dbpl",  "dbvc",  "dbvs",  "dbra",   "dbt",
+    "divs",  "divu",
+    "eor",   "eori",  "eori",  "eori",  "exg",   "ext",
+    "???",
+    "jmp",   "jsr",
+    "lea",   "link",  "lsl",   "lsr",
+    "move" , "movea", "move",  "move",  "move",  "move",  "movem",  "movep",
+    "moveq", "muls",  "mulu",
+    "nbcd",  "neg",   "negx",  "nop",   "not",
+    "or"   , "ori",   "ori",   "ori",
+    "pea",
+    "reset", "rol",   "ror",   "roxl",  "roxr",  "rte",   "rtr",   "rts",
+    "sbcd",  "scc",   "scs",   "seq",   "sge",   "sgt",   "shi",   "sle",
+    "sls",   "slt",   "smi",   "sne",   "spl",   "svc",   "svs",   "sf",
+    "st",    "stop",  "sub",   "suba",  "subi",  "subq",  "subx",  "swap",
+    "tas",   "trap",  "trapv", "tst",   "unlk"
+};
+
+static const char *instrUpper[] {
+    "ABCD" , "ADD",   "ADDA",  "ADDI",  "ADDQ",  "ADDX",  "AND",    "ANDI",
+    "ANDI" , "ANDI",  "ASL",   "ASR",
+    "BCC",   "BCS",   "BEQ",   "BGE",   "BGT",   "BHI",   "BLE",    "BLS",
+    "BLT",   "BMI",   "BNE",   "BPL",   "BVC",   "BVS",   "BCHG",   "BCLR",
+    "BRA",   "BSET",  "BSR",   "BTST",
+    "CHK",   "CLR",   "CMP",   "CMPA",  "CMPI",  "CMPM",
+    "DBCC",  "DBCS",  "DBEQ",  "DBGE",  "DBGT",  "DBHI",  "DBLE",   "DBLS",
+    "DBLT",  "DBMI",  "DBNE",  "DBPL",  "DBVC",  "DBVS",  "DBRA",   "DBT",
+    "DIVS",  "DIVU",
+    "EOR",   "EORI",  "EORI",  "EORI",  "EXG",   "EXT",
+    "???",
+    "JMP",   "JSR",
+    "LEA",   "LINK",  "LSL",   "LSR",
+    "MOVE" , "MOVEA", "MOVE",  "MOVE",  "MOVE",  "MOVE",  "MOVEM",  "MOVEP",
+    "MOVEQ", "MULS",  "MULU",
+    "NBCD",  "NEG",   "NEGX",  "NOP",   "NOT",
+    "OR"   , "ORI",   "ORI",   "ORI",
+    "PEA",
+    "RESET", "ROL",   "ROR",   "ROXL",  "ROXR",  "RTE",   "RTR",   "RTS",
+    "SBCD",  "SCC",   "SCS",   "SEQ",   "SGE",   "SGT",   "SHI",   "SLE",
+    "SLS",   "SLT",   "SMI",   "SNE",   "SPL",   "SVC",   "SVS",   "SF",
+    "ST",    "STOP",  "SUB",   "SUBA",  "SUBI",  "SUBQ",  "SUBX",  "SWAP",
+    "TAS",   "TRAP",  "TRAPV", "TST",   "UNLK"
+};
+
 static int decDigits(u64 value) { return value ? 1 + log10(value) : 1; }
 static int binDigits(u64 value) { return value ? 1 + log2(value) : 1; }
 static int hexDigits(u64 value) { return (binDigits(value) + 3) / 4; }
@@ -219,7 +271,7 @@ StrWriter::operator<<(RegRegList l)
 template <Instr I> StrWriter&
 StrWriter::operator<<(Ins<I> i)
 {
-    *this << instrStr[I];
+    *this << instrLower[I];
     return *this;
 }
 
