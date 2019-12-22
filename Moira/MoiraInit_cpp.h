@@ -1154,23 +1154,39 @@ Moira::createJumpTables()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0101 ---- 11-- ----");
-    __________MMMXXX(opcode | 0x000, ST,  0b101111111000, Word, Scc);
-    __________MMMXXX(opcode | 0x100, SF,  0b101111111000, Word, Scc);
-    __________MMMXXX(opcode | 0x200, SHI, 0b101111111000, Word, Scc);
-    __________MMMXXX(opcode | 0x300, SLS, 0b101111111000, Word, Scc);
-    __________MMMXXX(opcode | 0x400, SCC, 0b101111111000, Word, Scc);
-    __________MMMXXX(opcode | 0x500, SCS, 0b101111111000, Word, Scc);
-    __________MMMXXX(opcode | 0x600, SNE, 0b101111111000, Word, Scc);
-    __________MMMXXX(opcode | 0x700, SEQ, 0b101111111000, Word, Scc);
-    __________MMMXXX(opcode | 0x800, SVC, 0b101111111000, Word, Scc);
-    __________MMMXXX(opcode | 0x900, SVS, 0b101111111000, Word, Scc);
-    __________MMMXXX(opcode | 0xA00, SPL, 0b101111111000, Word, Scc);
-    __________MMMXXX(opcode | 0xB00, SMI, 0b101111111000, Word, Scc);
-    __________MMMXXX(opcode | 0xC00, SGE, 0b101111111000, Word, Scc);
-    __________MMMXXX(opcode | 0xD00, SLT, 0b101111111000, Word, Scc);
-    __________MMMXXX(opcode | 0xE00, SGT, 0b101111111000, Word, Scc);
-    __________MMMXXX(opcode | 0xF00, SLE, 0b101111111000, Word, Scc);
+    __________MMMXXX(opcode | 0x000, ST,  0b100000000000, Word, SccRg);
+    __________MMMXXX(opcode | 0x100, SF,  0b100000000000, Word, SccRg);
+    __________MMMXXX(opcode | 0x200, SHI, 0b100000000000, Word, SccRg);
+    __________MMMXXX(opcode | 0x300, SLS, 0b100000000000, Word, SccRg);
+    __________MMMXXX(opcode | 0x400, SCC, 0b100000000000, Word, SccRg);
+    __________MMMXXX(opcode | 0x500, SCS, 0b100000000000, Word, SccRg);
+    __________MMMXXX(opcode | 0x600, SNE, 0b100000000000, Word, SccRg);
+    __________MMMXXX(opcode | 0x700, SEQ, 0b100000000000, Word, SccRg);
+    __________MMMXXX(opcode | 0x800, SVC, 0b100000000000, Word, SccRg);
+    __________MMMXXX(opcode | 0x900, SVS, 0b100000000000, Word, SccRg);
+    __________MMMXXX(opcode | 0xA00, SPL, 0b100000000000, Word, SccRg);
+    __________MMMXXX(opcode | 0xB00, SMI, 0b100000000000, Word, SccRg);
+    __________MMMXXX(opcode | 0xC00, SGE, 0b100000000000, Word, SccRg);
+    __________MMMXXX(opcode | 0xD00, SLT, 0b100000000000, Word, SccRg);
+    __________MMMXXX(opcode | 0xE00, SGT, 0b100000000000, Word, SccRg);
+    __________MMMXXX(opcode | 0xF00, SLE, 0b100000000000, Word, SccRg);
 
+    __________MMMXXX(opcode | 0x000, ST,  0b001111111000, Word, SccEa);
+    __________MMMXXX(opcode | 0x100, SF,  0b001111111000, Word, SccEa);
+    __________MMMXXX(opcode | 0x200, SHI, 0b001111111000, Word, SccEa);
+    __________MMMXXX(opcode | 0x300, SLS, 0b001111111000, Word, SccEa);
+    __________MMMXXX(opcode | 0x400, SCC, 0b001111111000, Word, SccEa);
+    __________MMMXXX(opcode | 0x500, SCS, 0b001111111000, Word, SccEa);
+    __________MMMXXX(opcode | 0x600, SNE, 0b001111111000, Word, SccEa);
+    __________MMMXXX(opcode | 0x700, SEQ, 0b001111111000, Word, SccEa);
+    __________MMMXXX(opcode | 0x800, SVC, 0b001111111000, Word, SccEa);
+    __________MMMXXX(opcode | 0x900, SVS, 0b001111111000, Word, SccEa);
+    __________MMMXXX(opcode | 0xA00, SPL, 0b001111111000, Word, SccEa);
+    __________MMMXXX(opcode | 0xB00, SMI, 0b001111111000, Word, SccEa);
+    __________MMMXXX(opcode | 0xC00, SGE, 0b001111111000, Word, SccEa);
+    __________MMMXXX(opcode | 0xD00, SLT, 0b001111111000, Word, SccEa);
+    __________MMMXXX(opcode | 0xE00, SGT, 0b001111111000, Word, SccEa);
+    __________MMMXXX(opcode | 0xF00, SLE, 0b001111111000, Word, SccEa);
 
     // STOP
     //
@@ -1282,7 +1298,8 @@ Moira::createJumpTables()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0100 1010 11-- ----");
-    __________MMMXXX(opcode, TAS, 0b101111111000, Byte, Tas);
+    __________MMMXXX(opcode, TAS, 0b100000000000, Byte, TasRg);
+    __________MMMXXX(opcode, TAS, 0b001111111000, Byte, TasEa);
 
 
     // TRAP

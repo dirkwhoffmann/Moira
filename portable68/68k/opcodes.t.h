@@ -260,7 +260,7 @@ void Core_68k::op_tas(u16 opcode) {
 	data |= 0x80;
 
     if (adm != DR_DIRECT) sync(2);
-    writeEA(SizeByte, data, true);
+    writeEA(SizeByte, data, false);
 
     rmwCycle = false;
     prefetch(true);

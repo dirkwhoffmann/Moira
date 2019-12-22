@@ -693,9 +693,17 @@ Moira::dasmRts(StrWriter &str, u32 &addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-Moira::dasmScc(StrWriter &str, u32 &addr, u16 op)
+Moira::dasmSccRg(StrWriter &str, u32 &addr, u16 op)
 {
-    auto src = Op <M,S> (_____________xxx(op), addr);
+    auto src = Dn ( _____________xxx(op) );
+
+    str << Ins<I>{} << tab << src;
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmSccEa(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = Op <M,S> ( _____________xxx(op), addr );
 
     str << Ins<I>{} << tab << src;
 }
@@ -733,7 +741,15 @@ Moira::dasmSwap(StrWriter &str, u32 &addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
-Moira::dasmTas(StrWriter &str, u32 &addr, u16 op)
+Moira::dasmTasRg(StrWriter &str, u32 &addr, u16 op)
+{
+    auto dst = Dn ( _____________xxx(op) );
+
+    str << Ins<I>{} << tab << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmTasEa(StrWriter &str, u32 &addr, u16 op)
 {
     auto dst = Op <M,S> ( _____________xxx(op), addr );
 

@@ -103,11 +103,13 @@ template<Instr I, Mode M, Size S> void dasmRte(StrWriter &str, u32 &addr, u16 op
 template<Instr I, Mode M, Size S> void dasmRtr(StrWriter &str, u32 &addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmRts(StrWriter &str, u32 &addr, u16 op);
 
-template<Instr I, Mode M, Size S> void dasmScc(StrWriter &str, u32 &addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmSccRg(StrWriter &str, u32 &addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmSccEa(StrWriter &str, u32 &addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmStop(StrWriter &str, u32 &addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmSwap(StrWriter &str, u32 &addr, u16 op);
 
-template<Instr I, Mode M, Size S> void dasmTas(StrWriter &str, u32 &addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmTasRg(StrWriter &str, u32 &addr, u16 op);
+template<Instr I, Mode M, Size S> void dasmTasEa(StrWriter &str, u32 &addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmTrap(StrWriter &str, u32 &addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmTrapv(StrWriter &str, u32 &addr, u16 op);
 template<Instr I, Mode M, Size S> void dasmTst(StrWriter &str, u32 &addr, u16 op);
