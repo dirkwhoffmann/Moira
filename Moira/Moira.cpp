@@ -54,7 +54,7 @@ Moira::reset()
     sync(16);
 
     // Read the initial stack pointer from memory
-    reg.usp = reg.ssp = readOnReset(0) << 16 | readOnReset(2);
+    reg.sp = reg.usp = reg.ssp = readOnReset(0) << 16 | readOnReset(2);
 
     // Read the initial program counter from memory
     reg.pc = readOnReset(4) << 16 | readOnReset(6);

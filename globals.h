@@ -9,6 +9,13 @@
 #ifndef globals_h
 #define globals_h
 
+//
+// Configure
+//
+
+// Set to true to compare Moira against Musashi
+#define MUSASHI false // true
+
 namespace moira { class Moira; }
 extern class moira::Moira *moiracpu;
 extern class Tester_68k *tester;

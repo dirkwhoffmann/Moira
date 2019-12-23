@@ -30,13 +30,19 @@ extern "C" unsigned int m68k_read_memory_16(unsigned int addr)
     int hi = mem[addr & 0xFFFF];
     int lo = mem[(addr + 1) & 0xFFFF];
     int result = hi << 8 | lo;
+
+    // printf("read_memory16(%x) = %x\n", addr, result);
     // moiracpu->sandbox.record(moira::PEEK16, addr, 0, result);
     return result;
 }
 
 extern "C" unsigned int m68k_read_memory_32(unsigned int addr)
 {
-    assert(false);
+    int hi = m68k_read_memory_16(addr);
+    int lo = m68k_read_memory_16(addr + 2);
+    int result = hi << 16 | lo;
+    
+    return result;
 }
 
 extern "C" unsigned int m68k_read_disassembler_16 (unsigned int addr)
@@ -64,7 +70,8 @@ extern "C" void m68k_write_memory_16(unsigned int addr, unsigned int value)
 
 extern "C" void m68k_write_memory_32(unsigned int addr, unsigned int value)
 {
-     assert(false);
+    m68k_write_memory_16(addr, (value >> 16) & 0xFFFF);
+    m68k_write_memory_16(addr + 2, value & 0xFFFF);
 }
 
 extern "C" int interrupt_handler(int irqLevel)
@@ -89,6 +96,12 @@ void setupMemory(uint32_t addr, uint16_t val1, uint16_t val2, uint16_t val3)
     setMem16(addr, val1);
     setMem16(addr + 2, val2);
     setMem16(addr + 4, val3);
+
+    /*
+    printf("Mem: %x %x %x %x %x %x %x %x\n",
+           mem[addr + 0], mem[addr + 1], mem[addr + 2], mem[addr + 3],
+           mem[addr + 4], mem[addr + 5], mem[addr + 6], mem[addr + 7]);
+    */
 }
 
 void setMem16(uint32_t addr, uint16_t val)
@@ -185,6 +198,8 @@ void execTest()
 
         if ((opcode & 0xFFF) == 0) printf("Opcodes %xxxx\n", opcode >> 12);
 
+        if (moiracpu->isIllegalInstr(opcode)) continue;
+
         /*
         for (int i = 0; i < 48; i++) {
             for (int j = 0; j < 48; j++) {
@@ -192,10 +207,13 @@ void execTest()
         for (int i = 32; i < 33; i++) {
             for (int j = 34; j < 35; j++) {
 
+                moiracpu->sandbox.prepare();
+                
                 // Setup memory for Musashi
                 setupMemory(pc, opcode, ext[i], ext[j]);
 
                 // Reset Musashi
+                setupMusashi();
                 m68k_pulse_reset();
                 printf("Musashi PC = %x\n", m68k_get_reg(NULL, M68K_REG_PC));
 
@@ -226,7 +244,7 @@ void execTest()
                 printf("Moira PC = %x\n", moiracpu->getPC());
 
                 printf("Cycles: %d / %lld\n", musashiCnt, moiraCnt);
-                // if (musashiCnt != moiraCnt) assert(false); 
+                if (musashiCnt != moiraCnt) assert(false); 
             }
         }
     }

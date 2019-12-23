@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include "Moira.h"
+#include "globals.h"
 
 namespace moira {
 
@@ -26,7 +27,6 @@ Sandbox::prepare()
 void
 Sandbox::record(AccessType type, u32 addr, u64 cycle, u16 value)
 {
-    printf("Recording %d\n", recordCnt); 
     access[recordCnt] = AccessRecord { type, addr, value, cycle };
 
     recordCnt++;
@@ -94,7 +94,9 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u16 value)
         if (access[i].type != type) continue;
         if (access[i].addr != addr) continue;
         if (access[i].value != value) continue;
-        // if (access[i].cycle != cycle) continue;
+        if (!MUSASHI) {
+            if (access[i].cycle != cycle) continue;
+        }
 
         // Match found
         replayCnt++;

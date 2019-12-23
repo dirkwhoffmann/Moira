@@ -228,6 +228,12 @@ public:
 
 
     //
+    // Querying instructions
+    //
+
+    bool isIllegalInstr(u16 op) { return exec[op] == &Moira::execIllegal; }
+
+    //
     // Emulate timing
     //
 

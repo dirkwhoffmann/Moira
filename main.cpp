@@ -4,6 +4,7 @@
 #include <time.h>
 #include "Moira.h"
 #include "musashi.h"
+#include "globals.h"
 
 moira::Moira *moiracpu;
 Tester_68k *tester;
@@ -14,19 +15,24 @@ int main()
     moiracpu = new moira::Moira();
     tester = new Tester_68k();
 
-    execTest();
+    if (MUSASHI) {
 
-    // dasmTest();
+        // Run Moira against Musashi
+        execTest();
+        // dasmTest();
 
-    /*
-    try {
-        tester->runTestCases();
-        tester->printErrorCounter();
+    } else {
 
-    } catch(Exception& exception) {
-        exception.handle();
+        // Run the portable68000 unit tests
+
+        try {
+            tester->runTestCases();
+            tester->printErrorCounter();
+
+        } catch(Exception& exception) {
+            exception.handle();
+        }
     }
-    */
 
     return 0;
 }

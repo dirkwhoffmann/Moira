@@ -13,7 +13,7 @@ extern "C" int interrupt_handler(int irqLevel);
 extern "C" int read_sp_on_reset(void);
 extern "C" int read_pc_on_reset(void);
 
-#include "globals.h"
+// #include "globals.h"
 
 void setupMusashi();
 void setupMemory(uint32_t addr, uint16_t val1, uint16_t val2, uint16_t val3);
