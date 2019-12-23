@@ -412,10 +412,11 @@ Moira::execAndiRg(u16 opcode)
 {
     u32 src = readImm<S>();
     int dst = _____________xxx(opcode);
-
+    
     u32 result = logic<I,S>(src, readD<S>(dst));
     prefetch<LAST_BUS_CYCLE>();
 
+    if (S == Long) sync(4);
     writeD<S>(dst, result);
 }
 
@@ -428,8 +429,6 @@ Moira::execAndiEa(u16 opcode)
     int dst = _____________xxx(opcode);
 
     if (!readOperand<M,S>(dst, ea, data)) return;
-
-    printf("*** ea = %x\n", ea);
     
     result = logic<I,S>(src, data);
     prefetch();

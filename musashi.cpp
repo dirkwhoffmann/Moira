@@ -173,9 +173,10 @@ void dasmTest()
 
 void execTest()
 {
-    char moiraStr[128], musashiStr[128];
-    int64_t moiraCnt;
-    int musashiCnt;
+    char musashiStr[128], moiraStr[128];
+    int64_t musashiCycles, moiraCycles;
+    int32_t musashiPC, moiraPC;
+
     const uint32_t pc = 0x1000;
 
     // List of extension words used for testing
@@ -213,38 +214,50 @@ void execTest()
                 setupMemory(pc, opcode, ext[i], ext[j]);
 
                 // Reset Musashi
-                setupMusashi();
+                // setupMusashi();
                 m68k_pulse_reset();
-                printf("Musashi PC = %x\n", m68k_get_reg(NULL, M68K_REG_PC));
 
                 // Disassemble instruction
-                m68k_disassemble(musashiStr, pc, M68K_CPU_TYPE_68000);
-                printf("Instruction: %s (Musashi)\n", musashiStr);
+                // m68k_disassemble(musashiStr, pc, M68K_CPU_TYPE_68000);
+                // printf("Instruction: %s (Musashi)\n", musashiStr);
                 
                 // Run Musashi
-                musashiCnt = m68k_execute(1);
-                printf("Musashi PC = %x\n", m68k_get_reg(NULL, M68K_REG_PC));
+                musashiCycles = m68k_execute(1);
+                musashiPC = m68k_get_reg(NULL, M68K_REG_PC);
 
                 // Setup memory for Moira
                 setupMemory(pc, opcode, ext[i], ext[j]);
 
                 // Reset Moira
                 moiracpu->reset();
-
-                moiraCnt = moiracpu->getClock();
-                printf("Moira PC = %x\n", moiracpu->getPC());
+                moiraCycles = moiracpu->getClock();
 
                 // Disassemble instruction
                 moiracpu->disassemble(pc, moiraStr);
-                printf("Instruction: %s (Moira)\n", moiraStr);
+                printf("Instruction: %s\n", moiraStr);
 
                 // Run Moira
                 moiracpu->process();
-                moiraCnt = moiracpu->getClock() - moiraCnt;
-                printf("Moira PC = %x\n", moiracpu->getPC());
+                moiraCycles = moiracpu->getClock() - moiraCycles;
+                moiraPC = moiracpu->getPC();
 
-                printf("Cycles: %d / %lld\n", musashiCnt, moiraCnt);
-                if (musashiCnt != moiraCnt) assert(false); 
+                // Compare results
+                bool error = false;
+                error |= (musashiPC != moiraPC);
+                error |= (musashiCycles != moiraCycles);
+
+                if (error) {
+                    moiracpu->disassemble(pc, moiraStr);
+                    printf("\nMISMATCH FOUND (opcode $%x out of $FFFF):\n\n", opcode);
+                    printf("Instruction: %s\n\n", moiraStr);
+                    printf("    Musashi: ");
+                    printf("PC: %4x ", musashiPC);
+                    printf("Elapsed cycles: %2lld\n" , musashiCycles);
+                    printf("      Moira: ");
+                    printf("PC: %4x ", moiraPC);
+                    printf("Elapsed cycles: %2lld\n\n" , moiraCycles);
+                    assert(false);
+                }
             }
         }
     }
