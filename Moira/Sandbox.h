@@ -44,6 +44,7 @@ class Sandbox {
 
 public:
 
+    Sandbox(); 
     void prepare();
     void record(AccessType type, u32 addr, u64 cycle, u16 value);
     void recordPoll(u64 cycle, u8 value);

@@ -246,6 +246,7 @@
 		50804F442387EF15004D3EC2 /* MoiraBase.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraBase.cpp; sourceTree = "<group>"; };
 		50804F4923891480004D3EC2 /* MoiraLogic_cpp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MoiraLogic_cpp.h; sourceTree = "<group>"; };
 		50804F4B23891893004D3EC2 /* MoiraInit_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraInit_cpp.h; sourceTree = "<group>"; };
+		50B99DAA23B0A7F700D8A89A /* globals.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = globals.h; sourceTree = "<group>"; };
 		50CECEC523A924B000E07C65 /* Sandbox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Sandbox.cpp; sourceTree = "<group>"; };
 		50CECEC623A924B000E07C65 /* Sandbox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sandbox.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -282,6 +283,7 @@
 			isa = PBXGroup;
 			children = (
 				50804E8C2386A72C004D3EC2 /* main.cpp */,
+				50B99DAA23B0A7F700D8A89A /* globals.h */,
 				505580EB23AFA14D0009F77F /* musashi.h */,
 				505580EA23AFA14D0009F77F /* musashi.cpp */,
 				505580ED23AFB31F0009F77F /* moira.cpp */,

@@ -12,6 +12,7 @@
 
 #include "musashi.h"
 #include "Moira.h"
+#include "globals.h"
 
 extern "C" {
 #include "m68k.h"
@@ -19,14 +20,18 @@ extern "C" {
 
 extern "C" unsigned int m68k_read_memory_8(unsigned int addr)
 {
-    return mem[addr & 0xFFFF];
+    int result = mem[addr & 0xFFFF];
+    // moiracpu->sandbox.record(moira::PEEK8, addr, 0, result);
+    return result;
 }
 
 extern "C" unsigned int m68k_read_memory_16(unsigned int addr)
 {
     int hi = mem[addr & 0xFFFF];
-    int lo = mem[(addr + 2) & 0xFFFF];
-    return hi << 8 | lo;
+    int lo = mem[(addr + 1) & 0xFFFF];
+    int result = hi << 8 | lo;
+    // moiracpu->sandbox.record(moira::PEEK16, addr, 0, result);
+    return result;
 }
 
 extern "C" unsigned int m68k_read_memory_32(unsigned int addr)
@@ -46,13 +51,15 @@ extern "C" unsigned int m68k_read_disassembler_32 (unsigned int addr)
 
 extern "C" void m68k_write_memory_8(unsigned int addr, unsigned int value)
 {
+    moiracpu->sandbox.record(moira::POKE8, addr, 0, value);
     mem[addr & 0xFFFF] = value;
 }
 
 extern "C" void m68k_write_memory_16(unsigned int addr, unsigned int value)
 {
     mem[addr & 0xFFFF] = (value >> 8) & 0xFF;
-    mem[(addr + 2) & 0xFFFF] = value & 0xFF;
+    mem[(addr + 1) & 0xFFFF] = value & 0xFF;
+    moiracpu->sandbox.record(moira::POKE16, addr, 0, value);
 }
 
 extern "C" void m68k_write_memory_32(unsigned int addr, unsigned int value)
@@ -71,11 +78,17 @@ extern "C" int read_pc_on_reset(void) { return 0x1000; }
 
 void setupMusashi()
 {
-    memset(mem, 0, sizeof(mem));
-
     m68k_init();
     m68k_set_cpu_type(M68K_CPU_TYPE_68000);
     m68k_set_int_ack_callback(interrupt_handler);
+}
+
+void setupMemory(uint32_t addr, uint16_t val1, uint16_t val2, uint16_t val3)
+{
+    memset(mem, 0, sizeof(mem));
+    setMem16(addr, val1);
+    setMem16(addr + 2, val2);
+    setMem16(addr + 4, val3);
 }
 
 void setMem16(uint32_t addr, uint16_t val)
@@ -147,9 +160,10 @@ void dasmTest()
 
 void execTest()
 {
-    moira::Moira moiraCPU;
+    char moiraStr[128], musashiStr[128];
     int64_t moiraCnt;
     int musashiCnt;
+    const uint32_t pc = 0x1000;
 
     // List of extension words used for testing
     uint16_t ext[] = {
@@ -171,32 +185,48 @@ void execTest()
 
         if ((opcode & 0xFFF) == 0) printf("Opcodes %xxxx\n", opcode >> 12);
 
+        /*
         for (int i = 0; i < 48; i++) {
             for (int j = 0; j < 48; j++) {
+        */
+        for (int i = 32; i < 33; i++) {
+            for (int j = 34; j < 35; j++) {
 
-                // Setup instruction
-                const uint32_t pc = 0x1000;
-                setMem16(pc + 0, opcode);
-                setMem16(pc + 2, ext[i]);
-                setMem16(pc + 4, ext[j]);
+                // Setup memory for Musashi
+                setupMemory(pc, opcode, ext[i], ext[j]);
 
                 // Reset Musashi
                 m68k_pulse_reset();
-
                 printf("Musashi PC = %x\n", m68k_get_reg(NULL, M68K_REG_PC));
 
-                // Execute instruction
+                // Disassemble instruction
+                m68k_disassemble(musashiStr, pc, M68K_CPU_TYPE_68000);
+                printf("Instruction: %s (Musashi)\n", musashiStr);
+                
+                // Run Musashi
                 musashiCnt = m68k_execute(1);
+                printf("Musashi PC = %x\n", m68k_get_reg(NULL, M68K_REG_PC));
+
+                // Setup memory for Moira
+                setupMemory(pc, opcode, ext[i], ext[j]);
 
                 // Reset Moira
-                moiraCPU.reset();
+                moiracpu->reset();
 
-                moiraCnt = moiraCPU.getClock();
-                printf("Moira PC = %x\n", moiraCPU.getPC());
+                moiraCnt = moiracpu->getClock();
+                printf("Moira PC = %x\n", moiracpu->getPC());
 
-                // Execute instruction
-                moiraCPU.process();
-                moiraCnt = moiraCPU.getClock() - moiraCnt;
+                // Disassemble instruction
+                moiracpu->disassemble(pc, moiraStr);
+                printf("Instruction: %s (Moira)\n", moiraStr);
+
+                // Run Moira
+                moiracpu->process();
+                moiraCnt = moiracpu->getClock() - moiraCnt;
+                printf("Moira PC = %x\n", moiracpu->getPC());
+
+                printf("Cycles: %d / %lld\n", musashiCnt, moiraCnt);
+                // if (musashiCnt != moiraCnt) assert(false); 
             }
         }
     }

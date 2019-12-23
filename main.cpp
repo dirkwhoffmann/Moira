@@ -6,21 +6,22 @@
 #include "musashi.h"
 
 moira::Moira *moiracpu;
-Tester_68k tester;
+Tester_68k *tester;
 uint8_t mem[0x10000];
 
 int main()
 {
-    // execTest();
+    moiracpu = new moira::Moira();
+    tester = new Tester_68k();
 
-    dasmTest();
+    execTest();
+
+    // dasmTest();
 
     /*
-    moiracpu = new moira::Moira();
-
     try {
-        tester.runTestCases();
-        tester.printErrorCounter();
+        tester->runTestCases();
+        tester->printErrorCounter();
 
     } catch(Exception& exception) {
         exception.handle();

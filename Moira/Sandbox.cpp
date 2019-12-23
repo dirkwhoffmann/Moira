@@ -12,6 +12,11 @@
 
 namespace moira {
 
+Sandbox::Sandbox()
+{
+    prepare();
+}
+
 void
 Sandbox::prepare()
 {
@@ -21,6 +26,7 @@ Sandbox::prepare()
 void
 Sandbox::record(AccessType type, u32 addr, u64 cycle, u16 value)
 {
+    printf("Recording %d\n", recordCnt); 
     access[recordCnt] = AccessRecord { type, addr, value, cycle };
 
     recordCnt++;
@@ -44,7 +50,7 @@ Sandbox::replayPeek(AccessType type, u32 addr, u64 cycle)
         // Check for a matching entry
         if (access[i].type != type) continue;
         if (access[i].addr != addr) continue;
-        if (access[i].cycle != cycle) continue;
+        // if (access[i].cycle != cycle) continue;
 
         replayCnt++;
         if (replayCnt > recordCnt) { break; }
@@ -88,7 +94,7 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u16 value)
         if (access[i].type != type) continue;
         if (access[i].addr != addr) continue;
         if (access[i].value != value) continue;
-        if (access[i].cycle != cycle) continue;
+        // if (access[i].cycle != cycle) continue;
 
         // Match found
         replayCnt++;

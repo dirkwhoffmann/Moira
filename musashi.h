@@ -13,9 +13,10 @@ extern "C" int interrupt_handler(int irqLevel);
 extern "C" int read_sp_on_reset(void);
 extern "C" int read_pc_on_reset(void);
 
-extern uint8_t mem[0x10000];
+#include "globals.h"
 
 void setupMusashi();
+void setupMemory(uint32_t addr, uint16_t val1, uint16_t val2, uint16_t val3);
 void setMem16(uint32_t addr, uint16_t word);
 
 // Test functions

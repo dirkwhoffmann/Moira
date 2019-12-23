@@ -8,40 +8,48 @@
 
 #include "Moira.h"
 #include "tester.h"
-
-extern uint8_t mem[0x10000];
-extern Tester_68k tester;
+#include "globals.h"
 
 using namespace moira;
 
 u8
 Moira::read8(u32 addr)
 {
-    return sandbox.replayPeek(PEEK8, addr, getClock());
+    return mem[addr & 0xFFFF];
+    // return sandbox.replayPeek(PEEK8, addr, getClock());
 }
 
 u16
 Moira::read16(u32 addr)
 {
-    return sandbox.replayPeek(PEEK16, addr, moiracpu->getClock());
+    return mem[addr & 0xFFFFFF] << 8 | mem[(addr + 1) & 0xFFFFFF];
+    // return sandbox.replayPeek(PEEK16, addr, moiracpu->getClock());
 }
 
 u16
 Moira::read16Dasm(u32 addr)
 {
-    return mem[addr & 0xFFFFFF] << 8 | mem[(addr + 2) & 0xFFFFFF];
+    return mem[addr & 0xFFFFFF] << 8 | mem[(addr + 1) & 0xFFFFFF];
 }
 
 u16
 Moira::read16Reset(u32 addr)
 {
-    return sandbox.replayPeek(PEEK16, addr, getClock());
+    switch (addr) {
+        case 0: return 0x0000;
+        case 2: return 0x2000;
+        case 4: return 0x0000;
+        case 6: return 0x1000;
+    }
+    // return sandbox.replayPeek(PEEK16, addr, getClock());
+    return mem[addr & 0xFFFFFF] << 8 | mem[(addr + 1) & 0xFFFFFF];
 }
 
 u8
 Moira::readIPL()
 {
-    return sandbox.replayPoll(getClock()); 
+    return 0;
+    // return sandbox.replayPoll(getClock()); 
 }
 
 void
