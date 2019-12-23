@@ -10,12 +10,13 @@
 #ifndef STRING_WRITER_H
 #define STRING_WRITER_H
 
-// #include "MoiraDelegate.h"
-#include "MoiraUtils.h"
+#include "MoiraBase.h"
 
 namespace moira {
 
-// Wrapper structures that control the output format
+//
+// Wrapper structures controlling the output format
+//
 
 struct Int        { i32 raw;        Int(i32 v) : raw(v) { } };
 struct UInt       { u32 raw;       UInt(u32 v) : raw(v) { } };
@@ -34,7 +35,6 @@ struct RegList    { u16 raw;    RegList(u16 v) : raw(v) { } };
 struct RegRegList { u16 raw; RegRegList(u16 v) : raw(v) { } };
 
 template <Instr I>        struct Ins { };
-template <Cond C>         struct Cnd { };
 template <Size S>         struct Sz  { };
 template <Mode M, Size S> struct Ea  { u32 pc; u16 reg; u32 ext1; u32 ext2; u32 ext3; };
 

@@ -8,20 +8,27 @@
 // -----------------------------------------------------------------------------
 
 //
-// Assembling operands
+// Auxiliary functions
 //
 
+// Reads a word from memory and increments addr
 template <Size S> u32 dasmRead(u32 &addr);
+
+// 
 int baseDispWords(u16 ext);
 int outerDispWords(u16 ext);
 template <Mode M, Size S> Ea<M,S> Op(u16 reg, u32 &pc);
+
+//
+// Handlers for unused and illegal instructions
+//
 
 void dasmLineA(StrWriter &str, u32 &addr, u16 op);
 void dasmLineF(StrWriter &str, u32 &addr, u16 op);
 void dasmIllegal(StrWriter &str, u32 &addr, u16 op);
 
 //
-// Printing instructions
+// Handlers for all legal instructions
 //
 
 template<Instr I, Mode M, Size S> void dasmShiftRg(StrWriter &str, u32 &addr, u16 op);

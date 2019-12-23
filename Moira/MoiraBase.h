@@ -57,25 +57,6 @@ enum Instr {
     UNLK
 };
 
-enum Cond {
-    CT, // Always true
-    CF, // Always false
-    HI, // Branch on higher than
-    LS, // Branch on lower than or same
-    CC, // Branch on carry clear
-    CS, // Branch on carry set
-    NE, // Branch on not equal
-    EQ, // Branch on equal
-    VC, // Branch on overflow clear
-    VS, // Branch on overflow set
-    PL, // Branch on plus (positive)
-    MI, // Branch on minus (negative)
-    GE, // Branch on greater than or equal
-    LT, // Branch on less than
-    GT, // Branch on greater than
-    LE  // Branch on less than or equal
-};
-
 /* Adressing modes
  *
  *   0:        Dn : Data register direct

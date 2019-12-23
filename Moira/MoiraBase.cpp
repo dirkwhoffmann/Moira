@@ -7,7 +7,7 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#include "MoiraUtils.h"
+#include "MoiraBase.h"
 
 namespace moira {
 
