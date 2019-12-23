@@ -14,7 +14,7 @@
 //
 
 // Set to true to compare Moira against Musashi
-#define MUSASHI false // true
+#define MUSASHI true
 
 namespace moira { class Moira; }
 extern class moira::Moira *moiracpu;

@@ -169,7 +169,7 @@ Moira::computeEA(u32 n) {
         }
         case 7: // ABS.W
         {
-            result = irc;
+            result = (i16)irc;
             if (!(flags & SKIP_LAST_READ)) readExtensionWord();
             break;
         }

@@ -429,6 +429,8 @@ Moira::execAndiEa(u16 opcode)
 
     if (!readOperand<M,S>(dst, ea, data)) return;
 
+    printf("*** ea = %x\n", ea);
+    
     result = logic<I,S>(src, data);
     prefetch();
 
