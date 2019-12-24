@@ -35451,7 +35451,7 @@ static const opcode_handler_struct m68k_opcode_handler_table[] =
 	{m68k_op_andi_16_pd          , 0xfff8, 0x0260, { 18,  18,   9,   9}},
 	{m68k_op_andi_16_di          , 0xfff8, 0x0268, { 20,  20,   9,   9}},
 	{m68k_op_andi_16_ix          , 0xfff8, 0x0270, { 22,  22,  11,  11}},
-	{m68k_op_andi_32_d           , 0xfff8, 0x0280, { 14,  14,   2,   2}},
+	{m68k_op_andi_32_d           , 0xfff8, 0x0280, { 16,  14,   2,   2}}, // Fixed
 	{m68k_op_andi_32_ai          , 0xfff8, 0x0290, { 28,  28,   8,   8}},
 	{m68k_op_andi_32_pi          , 0xfff8, 0x0298, { 28,  28,   8,   8}},
 	{m68k_op_andi_32_pd          , 0xfff8, 0x02a0, { 30,  30,   9,   9}},
