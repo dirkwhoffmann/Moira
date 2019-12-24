@@ -120,7 +120,6 @@
 /* Begin PBXFileReference section */
 		5010BDAC238A897400CFD010 /* StringWriter_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StringWriter_cpp.h; sourceTree = "<group>"; };
 		5010BDAD238A897400CFD010 /* StringWriter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StringWriter.h; sourceTree = "<group>"; };
-		5010BDAF238AB77C00CFD010 /* types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = "<group>"; };
 		505580DC23AFA04C0009F77F /* m68kfpu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kfpu.c; sourceTree = "<group>"; };
 		505580DD23AFA04C0009F77F /* m68k.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68k.h; sourceTree = "<group>"; };
 		505580DE23AFA04C0009F77F /* m68kcpu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kcpu.c; sourceTree = "<group>"; };
@@ -306,7 +305,6 @@
 		50804E082386A4CE004D3EC2 /* Moira */ = {
 			isa = PBXGroup;
 			children = (
-				5010BDAF238AB77C00CFD010 /* types.h */,
 				50804F342386A7DD004D3EC2 /* Moira.h */,
 				50B99DAB23B24E0C00D8A89A /* MoiraTypes.h */,
 				50804F432387E46B004D3EC2 /* MoiraBase.h */,
