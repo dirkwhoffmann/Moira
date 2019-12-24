@@ -52,6 +52,7 @@ Moira::saveToStackBrief(u16 sr)
 {
     if (MIMIC_MUSASHI) {
 
+        printf("Cycles (1): %lld\n", getClock());
         push<Long>(reg.pc);
         push<Word>(sr);
 
@@ -600,6 +601,8 @@ Moira::execBsr(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execChk(u16 opcode)
 {
+    i64 oldclock = clock;
+
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
     u32 ea, sop, dop;
@@ -616,17 +619,27 @@ Moira::execChk(u16 opcode)
     sr.n = 0;
 
     if ((i16)dop > (i16)sop) {
+        printf("execChk(1)\n");
         sync(4);
         execTrapException(6);
+
+        // Musashi consumes 40 cycles
+        if (MIMIC_MUSASHI) sync(40 - (int)(clock - oldclock));
+
         return;
     }
 
+    printf("execChk(2)\n");
     sync(2);
 
     if ((i16)dop < 0) {
+        printf("execChk(3)\n");
         sr.n = 1;
         sync(4);
         execTrapException(6);
+
+        // Musashi consumes 40 cycles
+        if (MIMIC_MUSASHI) sync(40 - (int)(clock - oldclock));
     }
 }
 

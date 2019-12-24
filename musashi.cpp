@@ -285,6 +285,8 @@ void execTest()
                 bool error = false;
                 bool regError = false;
 
+                printf("Cycles %d /%d\n", musashiCycles, moiraCycles);
+
                 error |= (musashiPC != moiraPC);
                 error |= (musashiCycles != moiraCycles);
                 for (int i = 0; i < 8; i++) regError |= musashiD[i] != moiraD[i];

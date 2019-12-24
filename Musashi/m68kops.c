@@ -9561,6 +9561,8 @@ static void m68k_op_chk_16_al(void)
 
 static void m68k_op_chk_16_pcdi(void)
 {
+    printf("m68k_op_chk_16_pcpi\n");
+
 	sint src = MAKE_INT_16(DX);
 	sint bound = MAKE_INT_16(OPER_PCDI_16());
 
@@ -9579,6 +9581,8 @@ static void m68k_op_chk_16_pcdi(void)
 
 static void m68k_op_chk_16_pcix(void)
 {
+    printf("m68k_op_chk_16_pcix\n");
+
 	sint src = MAKE_INT_16(DX);
 	sint bound = MAKE_INT_16(OPER_PCIX_16());
 
