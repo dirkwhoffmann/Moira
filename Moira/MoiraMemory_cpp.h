@@ -63,14 +63,15 @@ Moira::readM(u32 addr, bool &error)
 }
 
 template<Size S, bool last> void
-Moira::writeM(u32 addr, u32 value)
+Moira::writeM(u32 addr, u32 val)
 {
     switch (S) {
+
         case Byte:
         {
             sync(2);
             if (last) pollIrq();
-            write8(addr & 0xFFFFFF, (u8)value);
+            write8(addr & 0xFFFFFF, (u8)val);
             sync(2);
             break;
         }
@@ -78,24 +79,51 @@ Moira::writeM(u32 addr, u32 value)
         {
             sync(2);
             if (last) pollIrq();
-            write16(addr & 0xFFFFFF, (u16)value);
+            write16(addr & 0xFFFFFF, (u16)val);
             sync(2);
             break;
         }
         case Long:
         {
-            writeM<Word>     (addr,     value >> 16   );
-            writeM<Word,last>(addr + 2, value & 0xFFFF);
+            writeM<Word>     (addr,     val >> 16   );
+            writeM<Word,last>(addr + 2, val & 0xFFFF);
             break;
         }
     }
 }
 
 template<Size S, bool last> void
-Moira::writeM(u32 addr, u32 value, bool &error)
+Moira::writeM(u32 addr, u32 val, bool &error)
 {
     if ((error = addressError<S,2>(addr))) { return; }
-    writeM<S,last>(addr, value);
+    writeM<S,last>(addr, val);
+}
+
+template<Size S, bool last> void
+Moira::writeMrev(u32 addr, u32 val)
+{
+    switch (S) {
+
+        case Byte:
+        case Word:
+        {
+            writeM<S,last>(addr, val);
+            break;
+        }
+        case Long:
+        {
+            writeM<Word>     (addr + 2, val & 0xFFFF);
+            writeM<Word,last>(addr,     val >> 16   );
+            break;
+        }
+    }
+}
+
+template<Size S, bool last> void
+Moira::writeMrev(u32 addr, u32 val, bool &error)
+{
+    if ((error = addressError<S,2>(addr))) { return; }
+    writeMrev<S,last>(addr, val);
 }
 
 u32

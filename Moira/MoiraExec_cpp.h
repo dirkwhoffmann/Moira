@@ -919,19 +919,15 @@ Moira::execMove4(u16 opcode)
 
     if (!readOperand<M,S>(src, ea, data)) return;
     sr.setNZVC<S>(data);
+
     prefetch();
     sync(-2);
 
     ea = computeEA<MODE_PD,S>(dst);
-    bool error;
-    if (S == Long) {
-        writeM <Word>                 (ea + 2, data & 0xFFFF, error);
-        if (error) return;
-        writeM <Word, LAST_BUS_CYCLE> (ea,     data >> 16   );
-    } else {
-        writeM <S,LAST_BUS_CYCLE>    (ea, data, error);
-        if (error) return;
-    }
+
+    bool error; writeMrev<S,LAST_BUS_CYCLE>(ea, data, error);
+    if (error) return;
+
     updateAn<MODE_PD,S>(dst);
 }
 
