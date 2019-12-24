@@ -16,6 +16,7 @@ extern "C" int read_pc_on_reset(void);
 // #include "globals.h"
 
 void setupMusashi();
+void resetMusashi(); 
 void setupMemory(uint32_t addr, uint16_t val1, uint16_t val2, uint16_t val3);
 void setMem16(uint32_t addr, uint16_t word);
 

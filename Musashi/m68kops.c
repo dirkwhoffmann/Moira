@@ -23113,7 +23113,11 @@ static void m68k_op_movep_16_er(void)
 	uint ea = EA_AY_DI_16();
 	uint* r_dst = &DX;
 
+    printf("D = %x\n", *r_dst);
+
 	*r_dst = MASK_OUT_BELOW_16(*r_dst) | ((m68ki_read_8(ea) << 8) + m68ki_read_8(ea + 2));
+
+    printf("m68k_op_movep_16_er = %x\n", *r_dst);
 }
 
 
@@ -27854,9 +27858,13 @@ static void m68k_op_ori_8_ai(void)
 
 static void m68k_op_ori_8_pi(void)
 {
+    printf("m68k_op_ori_8_pi AY = %x\n", AY);
+
 	uint src = OPER_I_8();
 	uint ea = EA_AY_PI_8();
 	uint res = MASK_OUT_ABOVE_8(src | m68ki_read_8(ea));
+
+    printf("m68k_op_ori_8_pi AY = %x\n", AY);
 
 	m68ki_write_8(ea, res);
 
@@ -32284,6 +32292,8 @@ static void m68k_op_subi_16_al(void)
 
 static void m68k_op_subi_32_d(void)
 {
+    printf("m68k_op_subi_32_d\n");
+
 	uint* r_dst = &DY;
 	uint src = OPER_I_32();
 	uint dst = *r_dst;
@@ -32300,6 +32310,8 @@ static void m68k_op_subi_32_d(void)
 
 static void m68k_op_subi_32_ai(void)
 {
+    printf("m68k_op_subi_32_ai\n");
+
 	uint src = OPER_I_32();
 	uint ea = EA_AY_AI_32();
 	uint dst = m68ki_read_32(ea);
@@ -32316,6 +32328,8 @@ static void m68k_op_subi_32_ai(void)
 
 static void m68k_op_subi_32_pi(void)
 {
+    printf("m68k_op_subi_32_pi\n");
+
 	uint src = OPER_I_32();
 	uint ea = EA_AY_PI_32();
 	uint dst = m68ki_read_32(ea);
@@ -32332,6 +32346,8 @@ static void m68k_op_subi_32_pi(void)
 
 static void m68k_op_subi_32_pd(void)
 {
+    printf("m68k_op_subi_32_pd\n");
+
 	uint src = OPER_I_32();
 	uint ea = EA_AY_PD_32();
 	uint dst = m68ki_read_32(ea);
@@ -32348,6 +32364,8 @@ static void m68k_op_subi_32_pd(void)
 
 static void m68k_op_subi_32_di(void)
 {
+    printf("m68k_op_subi_32_di\n");
+
 	uint src = OPER_I_32();
 	uint ea = EA_AY_DI_32();
 	uint dst = m68ki_read_32(ea);
@@ -32364,22 +32382,30 @@ static void m68k_op_subi_32_di(void)
 
 static void m68k_op_subi_32_ix(void)
 {
+    printf("m68k_op_subi_32_ix\n");
+
 	uint src = OPER_I_32();
+    printf("src = %x\n", src);
+
 	uint ea = EA_AY_IX_32();
 	uint dst = m68ki_read_32(ea);
 	uint res = dst - src;
 
+    printf("ea = %x\n", ea);
 	FLAG_N = NFLAG_32(res);
 	FLAG_Z = MASK_OUT_ABOVE_32(res);
 	FLAG_X = FLAG_C = CFLAG_SUB_32(src, dst, res);
 	FLAG_V = VFLAG_SUB_32(src, dst, res);
 
+    printf("result = %x\n", FLAG_Z);
 	m68ki_write_32(ea, FLAG_Z);
 }
 
 
 static void m68k_op_subi_32_aw(void)
 {
+    printf("m68k_op_subi_32_aw\n");
+
 	uint src = OPER_I_32();
 	uint ea = EA_AW_32();
 	uint dst = m68ki_read_32(ea);
@@ -32396,6 +32422,8 @@ static void m68k_op_subi_32_aw(void)
 
 static void m68k_op_subi_32_al(void)
 {
+    printf("m68k_op_subi_32_al\n");
+
 	uint src = OPER_I_32();
 	uint ea = EA_AL_32();
 	uint dst = m68ki_read_32(ea);

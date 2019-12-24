@@ -27,7 +27,7 @@
  * THE SOFTWARE.
  */
 
-
+#include <stdio.h>
 
 
 #ifndef M68KCPU__HEADER

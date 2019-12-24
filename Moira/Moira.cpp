@@ -30,8 +30,6 @@ Moira::Moira()
 void
 Moira::power()
 {
-    // Initialize data and address registers
-    for(int i = 0; i < 8; i++) reg.d[i] = reg.a[i] = 0;
     reset();
 }
 
@@ -39,6 +37,11 @@ void
 Moira::reset()
 {
     clock = -40;
+
+    for(int i = 0; i < 8; i++) {
+        reg.d[i] = 0;
+        reg.a[i] = 0;
+    }
 
     sr.t = 0;
     sr.s = 1;

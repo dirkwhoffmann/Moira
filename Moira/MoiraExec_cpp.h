@@ -1150,6 +1150,7 @@ Moira::execMovepEaDx(u16 opcode)
         {
             dx |= readM<Byte>(ea) << 24; ea += 2;
             dx |= readM<Byte>(ea) << 16; ea += 2;
+            // fallthrough
         }
         case Word:
         {

@@ -90,6 +90,28 @@ void setupMusashi()
     m68k_set_int_ack_callback(interrupt_handler);
 }
 
+void resetMusashi()
+{
+    m68k_set_reg(M68K_REG_D0, 0);
+    m68k_set_reg(M68K_REG_D1, 0);
+    m68k_set_reg(M68K_REG_D2, 0);
+    m68k_set_reg(M68K_REG_D3, 0);
+    m68k_set_reg(M68K_REG_D4, 0);
+    m68k_set_reg(M68K_REG_D5, 0);
+    m68k_set_reg(M68K_REG_D6, 0);
+    m68k_set_reg(M68K_REG_D7, 0);
+    m68k_set_reg(M68K_REG_A0, 0);
+    m68k_set_reg(M68K_REG_A1, 0);
+    m68k_set_reg(M68K_REG_A2, 0);
+    m68k_set_reg(M68K_REG_A3, 0);
+    m68k_set_reg(M68K_REG_A4, 0);
+    m68k_set_reg(M68K_REG_A5, 0);
+    m68k_set_reg(M68K_REG_A6, 0);
+    m68k_set_reg(M68K_REG_A7, 0);
+
+    m68k_pulse_reset();
+}
+
 void setupMemory(uint32_t addr, uint16_t val1, uint16_t val2, uint16_t val3)
 {
     memset(mem, 0, sizeof(mem));
@@ -176,6 +198,8 @@ void execTest()
     char musashiStr[128], moiraStr[128];
     int64_t musashiCycles, moiraCycles;
     int32_t musashiPC, moiraPC;
+    uint32_t musashiD[8], moiraD[8];
+    uint32_t musashiA[8], moiraA[8];
 
     const uint32_t pc = 0x1000;
 
@@ -214,8 +238,7 @@ void execTest()
                 setupMemory(pc, opcode, ext[i], ext[j]);
 
                 // Reset Musashi
-                // setupMusashi();
-                m68k_pulse_reset();
+                resetMusashi();
 
                 // Disassemble instruction
                 // m68k_disassemble(musashiStr, pc, M68K_CPU_TYPE_68000);
@@ -224,6 +247,22 @@ void execTest()
                 // Run Musashi
                 musashiCycles = m68k_execute(1);
                 musashiPC = m68k_get_reg(NULL, M68K_REG_PC);
+                musashiD[0] = m68k_get_reg(NULL, M68K_REG_D0);
+                musashiD[1] = m68k_get_reg(NULL, M68K_REG_D1);
+                musashiD[2] = m68k_get_reg(NULL, M68K_REG_D2);
+                musashiD[3] = m68k_get_reg(NULL, M68K_REG_D3);
+                musashiD[4] = m68k_get_reg(NULL, M68K_REG_D4);
+                musashiD[5] = m68k_get_reg(NULL, M68K_REG_D5);
+                musashiD[6] = m68k_get_reg(NULL, M68K_REG_D6);
+                musashiD[7] = m68k_get_reg(NULL, M68K_REG_D7);
+                musashiA[0] = m68k_get_reg(NULL, M68K_REG_A0);
+                musashiA[1] = m68k_get_reg(NULL, M68K_REG_A1);
+                musashiA[2] = m68k_get_reg(NULL, M68K_REG_A2);
+                musashiA[3] = m68k_get_reg(NULL, M68K_REG_A3);
+                musashiA[4] = m68k_get_reg(NULL, M68K_REG_A4);
+                musashiA[5] = m68k_get_reg(NULL, M68K_REG_A5);
+                musashiA[6] = m68k_get_reg(NULL, M68K_REG_A6);
+                musashiA[7] = m68k_get_reg(NULL, M68K_REG_A7);
 
                 // Setup memory for Moira
                 setupMemory(pc, opcode, ext[i], ext[j]);
@@ -240,13 +279,19 @@ void execTest()
                 moiracpu->process();
                 moiraCycles = moiracpu->getClock() - moiraCycles;
                 moiraPC = moiracpu->getPC();
+                for (int i = 0; i < 8; i++) moiraD[i] = moiracpu->readD(i);
+                for (int i = 0; i < 8; i++) moiraA[i] = moiracpu->readA(i);
 
                 // Compare results
                 bool error = false;
+                bool regError = false;
+
                 error |= (musashiPC != moiraPC);
                 error |= (musashiCycles != moiraCycles);
+                for (int i = 0; i < 8; i++) regError |= musashiD[i] != moiraD[i];
+                for (int i = 0; i < 8; i++) regError |= musashiA[i] != moiraA[i];
 
-                if (error) {
+                if (error || regError) {
                     moiracpu->disassemble(pc, moiraStr);
                     printf("\nMISMATCH FOUND (opcode $%x out of $FFFF):\n\n", opcode);
                     printf("Instruction: %s\n\n", moiraStr);
@@ -256,6 +301,22 @@ void execTest()
                     printf("      Moira: ");
                     printf("PC: %4x ", moiraPC);
                     printf("Elapsed cycles: %2lld\n\n" , moiraCycles);
+                    printf("\n");
+
+                    if (regError) {
+                        printf("Musashi: Dx: %8x %8x %8x %8x %8x %8x %8x %8x\n",
+                               musashiD[0], musashiD[1], musashiD[2], musashiD[3],
+                               musashiD[4], musashiD[5], musashiD[6], musashiD[7]);
+                        printf("         Ax: %8x %8x %8x %8x %8x %8x %8x %8x\n\n",
+                               musashiA[0], musashiA[1], musashiA[2], musashiA[3],
+                               musashiA[4], musashiA[5], musashiA[6], musashiA[7]);
+                        printf("  Moira: Dx: %8x %8x %8x %8x %8x %8x %8x %8x\n",
+                               moiraD[0], moiraD[1], moiraD[2], moiraD[3],
+                               moiraD[4], moiraD[5], moiraD[6], moiraD[7]);
+                        printf("  Moira: Ax: %8x %8x %8x %8x %8x %8x %8x %8x\n",
+                               moiraA[0], moiraA[1], moiraA[2], moiraA[3],
+                               moiraA[4], moiraA[5], moiraA[6], moiraA[7]);
+                    }
                     assert(false);
                 }
             }
