@@ -7,8 +7,8 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#ifndef MOIRA_TYPES_H
-#define MOIRA_TYPES_H
+#ifndef TYPES_H
+#define TYPES_H
 
 #include <stdint.h>
 

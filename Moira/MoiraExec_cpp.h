@@ -278,7 +278,7 @@ Moira::execAddiRg(u16 opcode)
     prefetch<LAST_BUS_CYCLE>();
 
     if (S == Long) sync(4);
-    writeD(dst, result);
+    writeD<S>(dst, result);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -867,7 +867,7 @@ Moira::execMove0(u16 opcode)
     if (!readOperand<M,S>(src, ea, data)) return;
 
     sr.setNZVC<S>(data);
-    if (!writeOperand<0,S>(dst, data)) return;
+    if (!writeOperand<MODE_DN,S>(dst, data)) return;
     
     prefetch<LAST_BUS_CYCLE>();
 }
@@ -882,7 +882,7 @@ Moira::execMove2(u16 opcode)
 
     if (!readOperand<M,S>(src, ea, data)) return;
     sr.setNZVC<S>(data);
-    if (!writeOperand<2,S>(dst, data)) return;
+    if (!writeOperand<MODE_AI,S>(dst, data)) return;
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -896,7 +896,7 @@ Moira::execMove3(u16 opcode)
 
     if (!readOperand<M,S>(src, ea, data)) return;
     sr.setNZVC<S>(data);
-    if (!writeOperand<3,S>(dst, data)) return;
+    if (!writeOperand<MODE_PI,S>(dst, data)) return;
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -921,7 +921,7 @@ Moira::execMove4(u16 opcode)
     sr.setNZVC<S>(data);
     prefetch();
     sync(-2);
-    if (!writeOperand<4,S,LAST_BUS_CYCLE>(dst, data)) return;
+    if (!writeOperand<MODE_PD,S,LAST_BUS_CYCLE>(dst, data)) return;
 }
 
 template<Instr I, Mode M, Size S> void
@@ -934,7 +934,7 @@ Moira::execMove5(u16 opcode)
 
     if (!readOperand<M,S>(src, ea, data)) return;
     sr.setNZVC<S>(data);
-    if (!writeOperand<5,S>(dst, data)) return;
+    if (!writeOperand<MODE_DI,S>(dst, data)) return;
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -948,7 +948,7 @@ Moira::execMove6(u16 opcode)
 
     if (!readOperand<M,S>(src, ea, data)) return;
     sr.setNZVC<S>(data);
-    if (!writeOperand<6,S>(dst, data)) return;
+    if (!writeOperand<MODE_IX,S>(dst, data)) return;
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -962,7 +962,7 @@ Moira::execMove7(u16 opcode)
 
     if (!readOperand<M,S>(src, ea, data)) return;
     sr.setNZVC<S>(data);
-    if (!writeOperand<7,S>(dst, data)) return;
+    if (!writeOperand<MODE_AW,S>(dst, data)) return;
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -993,14 +993,14 @@ Moira::execMove8(u16 opcode)
         u32 ea2 = irc << 16;
         readExtensionWord();
         ea2 |= irc;
-        writeM<Long>(ea2, data);
+        writeM<S>(ea2, data);
         readExtensionWord();
 
     } else {
 
         if (!readOperand<M,S>(src, ea, data)) return;
         sr.setNZVC<S>(data);
-        if (!writeOperand<8,S>(dst, data)) return;
+        if (!writeOperand<MODE_AL,S>(dst, data)) return;
     }
 
     prefetch<LAST_BUS_CYCLE>();
@@ -1597,7 +1597,7 @@ Moira::execUnlk(u16 opcode)
     reg.sp = readA(an);
 
     u32 ea, data;
-    if (!readOperand<2,Long>(7, ea, data)) return;
+    if (!readOperand<MODE_AI,Long>(7, ea, data)) return;
     writeA(an, data);
 
     if (an != 7) reg.sp += 4;

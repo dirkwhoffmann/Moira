@@ -42,6 +42,7 @@ Moira::reset()
         reg.d[i] = 0;
         reg.a[i] = 0;
     }
+    reg.usp = 0;
 
     sr.t = 0;
     sr.s = 1;
@@ -56,8 +57,8 @@ Moira::reset()
 
     sync(16);
 
-    // Read the initial stack pointer from memory
-    reg.sp = reg.usp = reg.ssp = readOnReset(0) << 16 | readOnReset(2);
+    // Read the initial (supervisor) stack pointer from memory
+    reg.sp = reg.ssp = readOnReset(0) << 16 | readOnReset(2);
 
     // Read the initial program counter from memory
     reg.pc = readOnReset(4) << 16 | readOnReset(6);
