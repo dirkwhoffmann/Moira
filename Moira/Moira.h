@@ -25,7 +25,12 @@ namespace moira {
 // Configuration
 //
 
+// Set to 1 to check for address error exceptions
 #define MOIRA_EMULATE_ADDRESS_ERROR 1
+
+// Set to 1 to run Moira in Musashi compatibility mode
+#define MUSASHI 1
+
 
 struct Registers {
 

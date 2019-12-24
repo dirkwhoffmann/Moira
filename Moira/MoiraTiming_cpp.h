@@ -16,13 +16,27 @@ Moira::sync(int cycles)
 template <Instr I> int
 Moira::cyclesBit(u8 bit)
 {
-    switch (I)
-    {
-        case BTST: return 2;
-        case BCLR: return (bit > 15 ? 6 : 4);
-        case BSET:
-        case BCHG: return (bit > 15 ? 4 : 2);
+    if (MUSASHI) {
+
+        switch (I)
+        {
+            case BTST: return 2;
+            case BCLR: return 6;
+            case BSET:
+            case BCHG: return 4;
+        }
+
+    } else {
+
+        switch (I)
+        {
+            case BTST: return 2;
+            case BCLR: return (bit > 15 ? 6 : 4);
+            case BSET:
+            case BCHG: return (bit > 15 ? 4 : 2);
+        }
     }
+
     assert(false);
     return 0;
 }

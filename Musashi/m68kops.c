@@ -4815,7 +4815,7 @@ static void m68k_op_bchg_32_r_d(void)
 {
 	uint* r_dst = &DY;
 	uint mask = 1 << (DX & 0x1f);
-
+    
 	FLAG_Z = *r_dst & mask;
 	*r_dst ^= mask;
 }
@@ -27828,8 +27828,6 @@ static void m68k_op_or_32_re_al(void)
 
 static void m68k_op_ori_8_d(void)
 {
-    // printf("m68k_op_ori_8_d\n");
-
 	uint res = MASK_OUT_ABOVE_8((DY |= OPER_I_8()));
 
 	FLAG_N = NFLAG_8(res);
@@ -27841,8 +27839,6 @@ static void m68k_op_ori_8_d(void)
 
 static void m68k_op_ori_8_ai(void)
 {
-    printf("m68k_op_ori_8_ai\n");
-
 	uint src = OPER_I_8();
 	uint ea = EA_AY_AI_8();
 	uint res = MASK_OUT_ABOVE_8(src | m68ki_read_8(ea));
@@ -27858,8 +27854,6 @@ static void m68k_op_ori_8_ai(void)
 
 static void m68k_op_ori_8_pi(void)
 {
-    printf("m68k_op_ori_8_pi\n");
-
 	uint src = OPER_I_8();
 	uint ea = EA_AY_PI_8();
 	uint res = MASK_OUT_ABOVE_8(src | m68ki_read_8(ea));
@@ -27875,8 +27869,6 @@ static void m68k_op_ori_8_pi(void)
 
 static void m68k_op_ori_8_pi7(void)
 {
-    printf("m68k_op_ori_8_pi7\n");
-
 	uint src = OPER_I_8();
 	uint ea = EA_A7_PI_8();
 	uint res = MASK_OUT_ABOVE_8(src | m68ki_read_8(ea));
@@ -27892,8 +27884,6 @@ static void m68k_op_ori_8_pi7(void)
 
 static void m68k_op_ori_8_pd(void)
 {
-    printf("m68k_op_ori_8_pd\n");
-
 	uint src = OPER_I_8();
 	uint ea = EA_AY_PD_8();
 	uint res = MASK_OUT_ABOVE_8(src | m68ki_read_8(ea));
@@ -27909,8 +27899,6 @@ static void m68k_op_ori_8_pd(void)
 
 static void m68k_op_ori_8_pd7(void)
 {
-    printf("m68k_op_ori_8_pd7\n");
-
 	uint src = OPER_I_8();
 	uint ea = EA_A7_PD_8();
 	uint res = MASK_OUT_ABOVE_8(src | m68ki_read_8(ea));
@@ -27926,8 +27914,6 @@ static void m68k_op_ori_8_pd7(void)
 
 static void m68k_op_ori_8_di(void)
 {
-    printf("m68k_op_ori_8_di\n");
-
 	uint src = OPER_I_8();
 	uint ea = EA_AY_DI_8();
 	uint res = MASK_OUT_ABOVE_8(src | m68ki_read_8(ea));
@@ -27943,8 +27929,6 @@ static void m68k_op_ori_8_di(void)
 
 static void m68k_op_ori_8_ix(void)
 {
-    printf("m68k_op_ori_8_ix\n");
-
 	uint src = OPER_I_8();
 	uint ea = EA_AY_IX_8();
 	uint res = MASK_OUT_ABOVE_8(src | m68ki_read_8(ea));
@@ -27960,12 +27944,8 @@ static void m68k_op_ori_8_ix(void)
 
 static void m68k_op_ori_8_aw(void)
 {
-    printf("m68k_op_ori_8_aw\n");
-
 	uint src = OPER_I_8();
 	uint ea = EA_AW_8();
-
-    printf("ea = %x\n", ea); 
 	uint res = MASK_OUT_ABOVE_8(src | m68ki_read_8(ea));
 
 	m68ki_write_8(ea, res);
@@ -27979,8 +27959,6 @@ static void m68k_op_ori_8_aw(void)
 
 static void m68k_op_ori_8_al(void)
 {
-    printf("m68k_op_ori_8_al\n");
-
 	uint src = OPER_I_8();
 	uint ea = EA_AL_8();
 	uint res = MASK_OUT_ABOVE_8(src | m68ki_read_8(ea));

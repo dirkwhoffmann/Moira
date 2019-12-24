@@ -471,17 +471,22 @@ Moira::execAndisr(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execBcc(u16 opcode)
 {
+    printf("execBcc\n");
     sync(2);
     if (bcond<I>()) {
 
         // i16 offset = S == Word ? (i16)irc : (i8)opcode;
         u32 newpc = reg.pc + (S == Word ? (i16)irc : (i8)opcode);
 
+        printf("Take branch\n");
+
         // Take branch
         reg.pc = newpc;
         fullPrefetch<LAST_BUS_CYCLE>();
 
     } else {
+
+        printf("Fall through\n");
 
         // Fall through to next instruction
         sync(2);
