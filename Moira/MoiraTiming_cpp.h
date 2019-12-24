@@ -16,7 +16,7 @@ Moira::sync(int cycles)
 template <Instr I> int
 Moira::cyclesBit(u8 bit)
 {
-    if (MUSASHI) {
+    if (MIMIC_MUSASHI) {
 
         switch (I)
         {

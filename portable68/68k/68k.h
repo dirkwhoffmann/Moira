@@ -267,6 +267,7 @@ public:
 
     u32 LoadEA(u8 size, u8 ea, bool noReadFromEA = false, bool fetchLastExtension = true, bool noSyncDec = false);
     void writeEA(u8 size, u32 value, bool lastBusCycle = false);
+    void writeEAReversed(u8 size, u32 value, bool lastBusCycle = false);
     void updateRegAForIndirectAddressing(u8 size, u8 regPos);
 
 	int getDivs68kCycles (i32 dividend, i16 divisor);

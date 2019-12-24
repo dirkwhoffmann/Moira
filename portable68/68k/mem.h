@@ -95,6 +95,11 @@ void writeLong(u32 addr, u32 value, bool lastCycle = false) {
     writeWord(addr+2, value & 0xFFFF, lastCycle);
 }
 
+void writeLongReversed(u32 addr, u32 value, bool lastCycle = false) {
+    writeWord(addr+2, value & 0xFFFF);
+    writeWord(addr, (value >> 16) & 0xFFFF, lastCycle);
+}
+
 void writeToStack(u32 value, bool lastCycle = false) {
 	reg_a[7] -= 4;
     writeLong(reg_a[7], value, lastCycle);

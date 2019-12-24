@@ -15,7 +15,7 @@ int main()
     moiracpu = new moira::Moira();
     tester = new Tester_68k();
 
-    if (MUSASHI) {
+    if (MIMIC_MUSASHI) {
 
         // Run Moira against Musashi
         execTest();

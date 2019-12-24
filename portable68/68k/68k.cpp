@@ -635,6 +635,24 @@ void Core_68k::writeEA(u8 size, u32 value, bool lastBusCycle) {
 	}
 }
 
+void Core_68k::writeEAReversed(u8 size, u32 value, bool lastBusCycle) {
+
+    if (eaReg) {
+        switch(size) {
+            case SizeByte: eaReg->l = value & 0xFF; return;
+            case SizeWord: eaReg->w = value & 0xFFFF; return;
+            case SizeLong: eaReg->d = value; return;
+            default: return;
+        }
+    }
+
+    switch(size) {
+        case SizeByte: writeByte(eaAddr, value & 0xFF, lastBusCycle); return;
+        case SizeWord: writeWord(eaAddr, value & 0xFFFF, lastBusCycle); return;
+        case SizeLong: writeLongReversed(eaAddr, value, lastBusCycle); return;
+    }
+}
+
 u32 Core_68k::LoadEA(u8 size, u8 ea, bool noReadFromEA, bool fetchLastExtension, bool noSyncDec) {
 
     // printf("Core_68k::LoadEA(%d, %x, %d, %d, %d) cycle: %d\n", size, ea, noReadFromEA, fetchLastExtension, noSyncDec, cycleCounter);

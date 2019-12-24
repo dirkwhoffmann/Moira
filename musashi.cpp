@@ -70,6 +70,7 @@ extern "C" void m68k_write_memory_16(unsigned int addr, unsigned int value)
 
 extern "C" void m68k_write_memory_32(unsigned int addr, unsigned int value)
 {
+    printf("m68k_write_memory_32\n"); 
     m68k_write_memory_16(addr, (value >> 16) & 0xFFFF);
     m68k_write_memory_16(addr + 2, value & 0xFFFF);
 }

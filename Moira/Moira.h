@@ -29,7 +29,7 @@ namespace moira {
 #define MOIRA_EMULATE_ADDRESS_ERROR 1
 
 // Set to 1 to run Moira in Musashi compatibility mode
-#define MUSASHI 1
+#define MIMIC_MUSASHI 0 // 1
 
 
 struct Registers {

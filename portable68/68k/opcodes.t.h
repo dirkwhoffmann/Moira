@@ -522,8 +522,11 @@ template<u8 size> void Core_68k::op_move(u16 opcode) {
     setFlags(flag_logical, size, data, 0, 0);
     if (adm == AR_INDIRECT_DEC) { //dest adm
         prefetch();
+        printf("Writing reversed\n");
+        writeEAReversed(size, data, adm == AR_INDIRECT_DEC);
+    } else {
+        writeEA(size, data, adm == AR_INDIRECT_DEC);
     }
-    writeEA(size, data, adm == AR_INDIRECT_DEC);
 
     updateRegAForIndirectAddressing(size, (opcode >> 9) & 7 );
 
