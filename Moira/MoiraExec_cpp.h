@@ -50,10 +50,18 @@ Moira::saveToStackDetailed(u16 sr, u32 addr, u16 code)
 void
 Moira::saveToStackBrief(u16 sr)
 {
-    // Push PC and SR
-    push<Word>((u16)reg.pc);
-    push<Word>(reg.pc >> 16);
-    push<Word>(sr);
+    if (MIMIC_MUSASHI) {
+
+        push<Long>(reg.pc);
+        push<Word>(sr);
+
+    } else {
+
+        reg.sp -= 6;
+        writeM<Word>(reg.sp + 4, reg.pc & 0xFFFF);
+        writeM<Word>(reg.sp + 0, sr);
+        writeM<Word>(reg.sp + 2, reg.pc >> 16);
+    }
 }
 
 void

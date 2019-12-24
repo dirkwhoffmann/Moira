@@ -28,8 +28,8 @@ namespace moira {
 // Set to 1 to check for address error exceptions
 #define MOIRA_EMULATE_ADDRESS_ERROR 1
 
-// Set to 1 to run Moira in Musashi compatibility mode
-#define MIMIC_MUSASHI 0 // 1
+// Set to true to run Moira in Musashi compatibility mode
+#define MIMIC_MUSASHI true
 
 
 struct Registers {
