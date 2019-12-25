@@ -1448,6 +1448,8 @@ Moira::execPea(u16 opcode)
 
     u32 ea = computeEA<M,Long>(src);
 
+    if (isIdxMode(M)) sync(2);
+
     if (isAbsMode(M)) {
         push<Long>(ea);
         prefetch<LAST_BUS_CYCLE>();

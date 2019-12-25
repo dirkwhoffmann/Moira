@@ -222,7 +222,11 @@ void execTest()
 
         if ((opcode & 0xFFF) == 0) printf("Opcodes %xxxx\n", opcode >> 12);
 
+        // Skip illegal instructions
         if (moiracpu->isIllegalInstr(opcode)) continue;
+
+        // Skip NBCD for now
+        if ((opcode & 0xFFC0) == 0b0100100000000000) continue;
 
         /*
         for (int i = 0; i < 48; i++) {
