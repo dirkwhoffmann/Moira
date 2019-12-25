@@ -1099,16 +1099,17 @@ Moira::execMovemRgEa(u16 opcode)
 
         case 4: // -(An)
         {
+            printf("execMovemRgEa\n"); 
+            readExtensionWord();
+
             u32 ea = readA(dst);
             if (addressError<S>(ea)) return;
-
-            readExtensionWord();
 
             for(int i = 15; i >= 0; i--) {
 
                 if (mask & (0x8000 >> i)) {
                     ea -= S;
-                    writeM<S>(ea, reg.r[i]);
+                    writeMrev<S>(ea, reg.r[i]);
                 }
             }
             writeA(dst, ea);
@@ -1116,10 +1117,10 @@ Moira::execMovemRgEa(u16 opcode)
         }
         default:
         {
+            readExtensionWord();
+
             u32 ea = computeEA<M,S>(dst);
             if (addressError<S>(ea)) return;
-
-            readExtensionWord();
 
             for(int i = 0; i < 16; i++) {
 
