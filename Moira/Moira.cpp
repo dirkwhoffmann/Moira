@@ -139,11 +139,11 @@ Moira::fullPrefetch()
     prefetch<last>();
 }
 
-void
+template<bool skip> void
 Moira::readExtensionWord()
 {
     reg.pc += 2;
-    irc = readM<Word>(reg.pc);
+    if (!skip) irc = readM<Word>(reg.pc);
 }
 
 void

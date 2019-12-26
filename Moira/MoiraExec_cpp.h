@@ -831,12 +831,12 @@ Moira::execJsr(u16 opcode)
     sync(delay[M]);
 
     // Jump to new address
-    u32 pc = reg.pc;
+    u32 oldpc = reg.pc;
     reg.pc = ea;
 
     if (addressError<Word>(ea)) return;
-    irc = readM<Word>(reg.pc);
-    push<Long>(pc + 2);
+    irc = readM<Word>(ea);
+    push<Long>(oldpc);
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -1459,7 +1459,7 @@ Moira::execRte(u16 opcode)
 {
     SUPERVISOR_MODE_ONLY
 
-    setSR(readM<Word>(reg.sp));
+    u16 newsr = readM<Word>(reg.sp);
     reg.sp += 2;
 
     u32 newpc = readM<Long>(reg.sp);
@@ -1468,6 +1468,8 @@ Moira::execRte(u16 opcode)
     readExtensionWord();
     reg.pc = newpc;
     prefetch<LAST_BUS_CYCLE>();
+
+    setSR(newsr);
 }
 
 template<Instr I, Mode M, Size S> void

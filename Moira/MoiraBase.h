@@ -28,7 +28,7 @@ using f32 = float;
 using f64 = double;
 
 // Flags
-#define SKIP_LAST_READ 0b00000001
+#define SKIP_LAST_READ true
 
 template<Size>   u32  MASK();
 template<Size>   u32  MSBIT();

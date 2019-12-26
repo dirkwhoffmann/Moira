@@ -143,7 +143,7 @@ Moira::push(u32 value)
     writeM<S,last>(reg.sp, value);
 }
 
-template<Mode M, Size S, u8 flags> u32
+template<Mode M, Size S, bool skip> u32
 Moira::computeEA(u32 n) {
 
     assert(n < 8);
@@ -180,7 +180,8 @@ Moira::computeEA(u32 n) {
             i16  d = (i16)irc;
 
             result = d + an;
-            if (!(flags & SKIP_LAST_READ)) readExtensionWord();
+            readExtensionWord<skip>();
+            // if (!(flags & SKIP_LAST_READ)) readExtensionWord(); else reg.pc += 2;
             break;
         }
         case 6: // (d,An,Xi)
@@ -192,13 +193,15 @@ Moira::computeEA(u32 n) {
             result = d + an + ((irc & 0x800) ? xi : SEXT<Word>(xi));
 
             sync(2);
-            if (!(flags & SKIP_LAST_READ)) readExtensionWord();
+            readExtensionWord<skip>();
+            // if (!(flags & SKIP_LAST_READ)) readExtensionWord(); else reg.pc += 2;
             break;
         }
         case 7: // ABS.W
         {
             result = (i16)irc;
-            if (!(flags & SKIP_LAST_READ)) readExtensionWord();
+            readExtensionWord<skip>();
+            // if (!(flags & SKIP_LAST_READ)) readExtensionWord(); else reg.pc += 2;
             break;
         }
         case 8: // ABS.L
@@ -206,7 +209,8 @@ Moira::computeEA(u32 n) {
             result = irc << 16;
             readExtensionWord();
             result |= irc;
-            if (!(flags & SKIP_LAST_READ)) readExtensionWord();
+            readExtensionWord<skip>();
+            // if (!(flags & SKIP_LAST_READ)) readExtensionWord(); else reg.pc += 2;
             break;
         }
         case 9: // (d,PC)
@@ -214,7 +218,8 @@ Moira::computeEA(u32 n) {
             i16  d = (i16)irc;
 
             result = reg.pc + d;
-            if (!(flags & SKIP_LAST_READ)) readExtensionWord();
+            readExtensionWord<skip>();
+            // if (!(flags & SKIP_LAST_READ)) readExtensionWord(); else reg.pc += 2;
             break;
         }
         case 10: // (d,PC,Xi)
@@ -224,7 +229,8 @@ Moira::computeEA(u32 n) {
 
             result = d + reg.pc + ((irc & 0x800) ? xi : SEXT<Word>(xi));
             sync(2);
-            readExtensionWord();
+            readExtensionWord<skip>();
+            // if (!(flags & SKIP_LAST_READ)) readExtensionWord(); else reg.pc += 2;
             break;
         }
         case 11: // Im

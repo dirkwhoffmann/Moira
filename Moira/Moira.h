@@ -204,7 +204,7 @@ public:
     template<Size S, bool last = false> void push(u32 value);
 
     // Computes an effective address
-    template<Mode M, Size S, u8 flags = 0> u32 computeEA(u32 n);
+    template<Mode M, Size S, bool skip = false> u32 computeEA(u32 n);
 
     // Emulates the address register modification for modes (An)+, (An)-
     template<Mode M, Size S> void updateAn(int n);
@@ -306,7 +306,7 @@ private:
 
     template<bool last = false> void prefetch();
     template<bool last = false> void fullPrefetch();
-    void readExtensionWord();
+    template<bool skip = false> void readExtensionWord();
     void dummyRead(u32 pc);
     void dummyRead() { dummyRead(reg.pc); }
     void jumpToVector(u8 nr);
