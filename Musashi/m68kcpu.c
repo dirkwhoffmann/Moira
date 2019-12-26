@@ -957,6 +957,8 @@ void m68k_pulse_reset(void)
 	m68ki_jump(REG_PC);
 
 	CPU_RUN_MODE = RUN_MODE_NORMAL;
+
+    printf("Musashi reset SR = %x\n", m68k_get_reg(NULL, M68K_REG_SR));
 }
 
 /* Pulse the HALT line on the CPU */

@@ -52,6 +52,7 @@ Moira::saveToStackBrief(u16 sr)
 {
     if (MIMIC_MUSASHI) {
 
+        printf("saveToStackBrief(%x, %x)\n", reg.pc, sr); 
         push<Long>(reg.pc);
         push<Word>(sr);
 
@@ -1449,6 +1450,7 @@ Moira::execReset(u16 opcode)
 {
     SUPERVISOR_MODE_ONLY
 
+    sync(128);
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -1526,10 +1528,9 @@ Moira::execStop(u16 opcode)
 {
     SUPERVISOR_MODE_ONLY
 
-    setSR(irc | 1 << 13);
+    setSR(irc | (MIMIC_MUSASHI ? 0 : 1 << 13));
     readExtensionWord();
-
-    prefetch<LAST_BUS_CYCLE>();
+    pollIrq();
 }
 
 template<Instr I, Mode M, Size S> void

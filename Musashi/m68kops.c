@@ -33227,6 +33227,7 @@ static void m68k_op_tas_8_al(void)
 
 static void m68k_op_trap(void)
 {
+    printf("m68k_op_trap %x\n", m68ki_get_sr());
 	/* Trap#n stacks exception frame type 0 */
 	m68ki_exception_trapN(EXCEPTION_TRAP_BASE + (REG_IR & 0xf));	/* HJB 990403 */
 }

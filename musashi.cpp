@@ -107,6 +107,7 @@ void resetMusashi()
     m68k_set_reg(M68K_REG_A5, 0);
     m68k_set_reg(M68K_REG_A6, 0);
     m68k_set_reg(M68K_REG_A7, 0);
+    m68k_set_reg(M68K_REG_SR, 0);
 
     m68k_pulse_reset();
 }

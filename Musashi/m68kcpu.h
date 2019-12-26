@@ -1482,6 +1482,7 @@ static inline uint m68ki_init_exception(void)
 /* 3 word stack frame (68000 only) */
 static inline void m68ki_stack_frame_3word(uint pc, uint sr)
 {
+    printf("m68ki_stack_frame_3word(%x,%x)\n", pc, sr); 
 	m68ki_push_32(pc);
 	m68ki_push_16(sr);
 }
