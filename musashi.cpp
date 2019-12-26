@@ -290,7 +290,7 @@ void execTest()
                 bool error = false;
                 bool regError = false;
 
-                printf("Cycles %d /%d\n", musashiCycles, moiraCycles);
+                printf("Cycles %d / %d\n", musashiCycles, moiraCycles);
 
                 error |= (musashiPC != moiraPC);
                 error |= (musashiCycles != moiraCycles);

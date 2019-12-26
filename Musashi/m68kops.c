@@ -27708,6 +27708,8 @@ static void m68k_op_or_16_re_ix(void)
 
 static void m68k_op_or_16_re_aw(void)
 {
+    printf("m68k_op_or_16_re_aw\n");
+    
 	uint ea = EA_AW_16();
 	uint res = MASK_OUT_ABOVE_16(DX | m68ki_read_16(ea));
 
@@ -34776,7 +34778,7 @@ static const opcode_handler_struct m68k_opcode_handler_table[] =
 	{m68k_op_or_16_er_pd         , 0xf1f8, 0x8060, { 10,  10,   7,   7}},
 	{m68k_op_or_16_er_di         , 0xf1f8, 0x8068, { 12,  12,   7,   7}},
 	{m68k_op_or_16_er_ix         , 0xf1f8, 0x8070, { 14,  14,   9,   9}},
-	{m68k_op_or_32_er_d          , 0xf1f8, 0x8080, {  6,   6,   2,   2}},
+	{m68k_op_or_32_er_d          , 0xf1f8, 0x8080, {  8,   6,   2,   2}},
 	{m68k_op_or_32_er_ai         , 0xf1f8, 0x8090, { 14,  14,   6,   6}},
 	{m68k_op_or_32_er_pi         , 0xf1f8, 0x8098, { 14,  14,   6,   6}},
 	{m68k_op_or_32_er_pd         , 0xf1f8, 0x80a0, { 16,  16,   7,   7}},
@@ -34937,7 +34939,7 @@ static const opcode_handler_struct m68k_opcode_handler_table[] =
 	{m68k_op_and_16_er_pd        , 0xf1f8, 0xc060, { 10,  10,   7,   7}},
 	{m68k_op_and_16_er_di        , 0xf1f8, 0xc068, { 12,  12,   7,   7}},
 	{m68k_op_and_16_er_ix        , 0xf1f8, 0xc070, { 14,  14,   9,   9}},
-	{m68k_op_and_32_er_d         , 0xf1f8, 0xc080, {  6,   6,   2,   2}},
+	{m68k_op_and_32_er_d         , 0xf1f8, 0xc080, {  8,   6,   2,   2}},
 	{m68k_op_and_32_er_ai        , 0xf1f8, 0xc090, { 14,  14,   6,   6}},
 	{m68k_op_and_32_er_pi        , 0xf1f8, 0xc098, { 14,  14,   6,   6}},
 	{m68k_op_and_32_er_pd        , 0xf1f8, 0xc0a0, { 16,  16,   7,   7}},
@@ -35254,7 +35256,7 @@ static const opcode_handler_struct m68k_opcode_handler_table[] =
 	{m68k_op_or_16_er_al         , 0xf1ff, 0x8079, { 16,  16,   6,   6}},
 	{m68k_op_or_16_er_pcdi       , 0xf1ff, 0x807a, { 12,  12,   7,   7}},
 	{m68k_op_or_16_er_pcix       , 0xf1ff, 0x807b, { 14,  14,   9,   9}},
-	{m68k_op_or_16_er_i          , 0xf1ff, 0x807c, { 10,   8,   4,   4}},
+	{m68k_op_or_16_er_i          , 0xf1ff, 0x807c, {  8,   8,   4,   4}},
 	{m68k_op_or_32_er_aw         , 0xf1ff, 0x80b8, { 18,  18,   6,   6}},
 	{m68k_op_or_32_er_al         , 0xf1ff, 0x80b9, { 22,  22,   6,   6}},
 	{m68k_op_or_32_er_pcdi       , 0xf1ff, 0x80ba, { 18,  18,   7,   7}},
@@ -35364,7 +35366,7 @@ static const opcode_handler_struct m68k_opcode_handler_table[] =
 	{m68k_op_and_16_er_al        , 0xf1ff, 0xc079, { 16,  16,   6,   6}},
 	{m68k_op_and_16_er_pcdi      , 0xf1ff, 0xc07a, { 12,  12,   7,   7}},
 	{m68k_op_and_16_er_pcix      , 0xf1ff, 0xc07b, { 14,  14,   9,   9}},
-	{m68k_op_and_16_er_i         , 0xf1ff, 0xc07c, { 10,   8,   4,   4}},
+	{m68k_op_and_16_er_i         , 0xf1ff, 0xc07c, {  8,   8,   4,   4}},
 	{m68k_op_and_32_er_aw        , 0xf1ff, 0xc0b8, { 18,  18,   6,   6}},
 	{m68k_op_and_32_er_al        , 0xf1ff, 0xc0b9, { 22,  22,   6,   6}},
 	{m68k_op_and_32_er_pcdi      , 0xf1ff, 0xc0ba, { 18,  18,   7,   7}},
