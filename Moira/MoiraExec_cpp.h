@@ -329,6 +329,8 @@ Moira::execAddqAn(u16 opcode)
     u32 result = (I == ADDQ) ? readA(dst) + src : readA(dst) - src;
     prefetch<LAST_BUS_CYCLE>();
 
+    // printf("execAddqAn\n");
+    // if (S == Long)
     sync(4);
     writeA(dst, result);
 }
@@ -388,6 +390,8 @@ Moira::execAddxEa(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execAndEaRg(u16 opcode)
 {
+    printf("execAndEaRg M = %d\n", M);
+    
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
