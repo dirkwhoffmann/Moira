@@ -132,6 +132,16 @@ void setMem16(uint32_t addr, uint16_t val)
     mem[addr + 1] = val & 0xFF;
 }
 
+bool isDiv(uint16_t opcode)
+{
+    bool result = false;
+
+    if ((opcode & 0b1111000111000000) == 0b1000000111000000) result = true;
+    if ((opcode & 0b1111000111000000) == 0b1000000011000000) result = true;
+
+    return result;
+}
+
 void dasmTest()
 {
     moira::Moira moiraCPU;
@@ -175,8 +185,11 @@ void dasmTest()
                 moiraCnt = moiraCPU.disassemble(pc, moiraStr);
 
                 // Compare
-                if (strcmp(musashiStr, moiraStr) != 0 || musashiCnt != moiraCnt) {
+                bool error = false;
+                error |= (strcmp(musashiStr, moiraStr) != 0);
+                error |= (musashiCnt != moiraCnt);
 
+                if (error) {
                     printf("\n");
                     printf("Mismatch found: %x %x %x\n\n", opcode, ext[i], ext[j]);
                     printf("       Musashi: '%s'\n", musashiStr);
@@ -195,7 +208,7 @@ void dasmTest()
 
 void execTest()
 {
-    char musashiStr[128], moiraStr[128];
+    char moiraStr[128];
     int64_t musashiCycles, moiraCycles;
     int32_t musashiPC, moiraPC;
     uint32_t musashiD[8], moiraD[8];
@@ -293,7 +306,7 @@ void execTest()
                 printf("Cycles %d / %d\n", musashiCycles, moiraCycles);
 
                 error |= (musashiPC != moiraPC);
-                error |= (musashiCycles != moiraCycles);
+                error |= !isDiv(opcode) && (musashiCycles != moiraCycles);
                 for (int i = 0; i < 8; i++) regError |= musashiD[i] != moiraD[i];
                 for (int i = 0; i < 8; i++) regError |= musashiA[i] != moiraA[i];
 

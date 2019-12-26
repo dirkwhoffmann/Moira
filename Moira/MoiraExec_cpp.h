@@ -237,7 +237,7 @@ Moira::execAddEaRg(u16 opcode)
     result = arith<I,S>(data, readD<S>(dst));
     prefetch<LAST_BUS_CYCLE>();
 
-    if (S == Long) sync(4);
+    if (S == Long) sync(2 + (isMemMode(M) ? 0 : 2));
     writeD<S>(dst, result);
 }
 
