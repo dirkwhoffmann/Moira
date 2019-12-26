@@ -52,7 +52,6 @@ Moira::saveToStackBrief(u16 sr)
 {
     if (MIMIC_MUSASHI) {
 
-        printf("Cycles (1): %lld\n", getClock());
         push<Long>(reg.pc);
         push<Word>(sr);
 
@@ -480,22 +479,17 @@ Moira::execAndisr(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execBcc(u16 opcode)
 {
-    printf("execBcc\n");
     sync(2);
     if (bcond<I>()) {
 
         // i16 offset = S == Word ? (i16)irc : (i8)opcode;
         u32 newpc = reg.pc + (S == Word ? (i16)irc : (i8)opcode);
 
-        printf("Take branch\n");
-
         // Take branch
         reg.pc = newpc;
         fullPrefetch<LAST_BUS_CYCLE>();
 
     } else {
-
-        printf("Fall through\n");
 
         // Fall through to next instruction
         sync(2);
@@ -619,7 +613,6 @@ Moira::execChk(u16 opcode)
     sr.n = 0;
 
     if ((i16)dop > (i16)sop) {
-        printf("execChk(1)\n");
         sync(4);
         execTrapException(6);
 
@@ -629,11 +622,9 @@ Moira::execChk(u16 opcode)
         return;
     }
 
-    printf("execChk(2)\n");
     sync(2);
 
     if ((i16)dop < 0) {
-        printf("execChk(3)\n");
         sr.n = 1;
         sync(4);
         execTrapException(6);
@@ -832,8 +823,6 @@ Moira::execJmp(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execJsr(u16 opcode)
 {
-    printf("execJsr(1)\n");
-
     int src = _____________xxx(opcode);
     u32 ea  = computeEA<M,Long,SKIP_LAST_READ>(src);
 
@@ -1053,10 +1042,10 @@ Moira::execMovemEaRg(u16 opcode)
     int src  = _____________xxx(opcode);
     u16 mask = irc;
 
+    readExtensionWord();
+
     u32 ea = computeEA<M,S>(src);
     if (addressError<S>(ea)) return;
-
-    readExtensionWord();
     if (S == Long) dummyRead(ea);
 
     switch (M) {
@@ -1095,13 +1084,12 @@ Moira::execMovemRgEa(u16 opcode)
     int dst  = _____________xxx(opcode);
     u16 mask = irc;
 
+    readExtensionWord();
+
     switch (M) {
 
         case 4: // -(An)
         {
-            printf("execMovemRgEa\n"); 
-            readExtensionWord();
-
             u32 ea = readA(dst);
             if (addressError<S>(ea)) return;
 
@@ -1117,8 +1105,6 @@ Moira::execMovemRgEa(u16 opcode)
         }
         default:
         {
-            readExtensionWord();
-
             u32 ea = computeEA<M,S>(dst);
             if (addressError<S>(ea)) return;
 
@@ -1408,8 +1394,6 @@ Moira::execNbcd(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execNegRg(u16 opcode)
 {
-    printf("Moira::execNegRg(u16 opcode)");
-
     int dst = ( _____________xxx(opcode) );
     u32 ea, data;
 
@@ -1587,7 +1571,7 @@ Moira::execTasEa(u16 opcode)
     sr.setNZVC<Byte>(data);
     data |= 0x80;
 
-    sync(2);
+    sync(6);
     writeOperand<M,S>(dst, ea, data);
 
     prefetch<LAST_BUS_CYCLE>();

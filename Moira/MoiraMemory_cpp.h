@@ -186,10 +186,10 @@ Moira::computeEA(u32 n) {
         case 6: // (d,An,Xi)
         {
             i8   d = (i8)irc;
-            i32 an = readA(n);
-            i32 xi = readR((irc >> 12) & 0b1111);
+            u32 an = readA(n);
+            u32 xi = readR((irc >> 12) & 0b1111);
 
-            result = d + an + ((irc & 0x800) ? xi : (i16)xi);
+            result = d + an + ((irc & 0x800) ? xi : SEXT<Word>(xi));
 
             sync(2);
             if (!(flags & SKIP_LAST_READ)) readExtensionWord();
@@ -220,10 +220,9 @@ Moira::computeEA(u32 n) {
         case 10: // (d,PC,Xi)
         {
             i8   d = (i8)irc;
-            i32 xi = readR((irc >> 12) & 0b1111);
+            u32 xi = readR((irc >> 12) & 0b1111);
 
-            result = d + reg.pc + ((irc & 0x800) ? xi : (i16)xi);
-
+            result = d + reg.pc + ((irc & 0x800) ? xi : SEXT<Word>(xi));
             sync(2);
             readExtensionWord();
             break;
