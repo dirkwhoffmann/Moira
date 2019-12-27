@@ -951,7 +951,7 @@ void m68k_pulse_reset(void)
 	// REG_PC = m68ki_read_imm_32();
     REG_SP = read_sp_on_reset();
     REG_PC = read_pc_on_reset();
-
+    
 	m68ki_jump(REG_PC);
 
 	CPU_RUN_MODE = RUN_MODE_NORMAL;

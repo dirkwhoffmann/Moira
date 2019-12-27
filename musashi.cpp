@@ -89,22 +89,24 @@ void setupMusashi()
 
 void resetMusashi()
 {
-    m68k_set_reg(M68K_REG_D0, 0);
-    m68k_set_reg(M68K_REG_D1, 0);
-    m68k_set_reg(M68K_REG_D2, 0);
-    m68k_set_reg(M68K_REG_D3, 0);
-    m68k_set_reg(M68K_REG_D4, 0);
-    m68k_set_reg(M68K_REG_D5, 0);
-    m68k_set_reg(M68K_REG_D6, 0);
-    m68k_set_reg(M68K_REG_D7, 0);
-    m68k_set_reg(M68K_REG_A0, 0);
-    m68k_set_reg(M68K_REG_A1, 0);
-    m68k_set_reg(M68K_REG_A2, 0);
-    m68k_set_reg(M68K_REG_A3, 0);
-    m68k_set_reg(M68K_REG_A4, 0);
-    m68k_set_reg(M68K_REG_A5, 0);
-    m68k_set_reg(M68K_REG_A6, 0);
-    m68k_set_reg(M68K_REG_A7, 0);
+    m68k_set_reg(M68K_REG_D0, 0x10);
+    m68k_set_reg(M68K_REG_D1, 0x20);
+    m68k_set_reg(M68K_REG_D2, 0x30);
+    m68k_set_reg(M68K_REG_D3, 0x40);
+    m68k_set_reg(M68K_REG_D4, 0x50);
+    m68k_set_reg(M68K_REG_D5, 0x60);
+    m68k_set_reg(M68K_REG_D6, 0x70);
+    m68k_set_reg(M68K_REG_D7, 0x80);
+    m68k_set_reg(M68K_REG_A0, 0x90);
+    m68k_set_reg(M68K_REG_A1, 0x10000);
+    m68k_set_reg(M68K_REG_A2, 0x11011);
+    m68k_set_reg(M68K_REG_A3, 0x12033);
+    m68k_set_reg(M68K_REG_A4, 0x13000);
+    m68k_set_reg(M68K_REG_A5, 0x14000000);
+    m68k_set_reg(M68K_REG_A6, 0x80000000);
+    m68k_set_reg(M68K_REG_USP, 0);
+    m68k_set_reg(M68K_REG_ISP, 0);
+    m68k_set_reg(M68K_REG_MSP, 0);
     m68k_set_reg(M68K_REG_SR, 0);
 
     m68k_pulse_reset();
@@ -112,7 +114,9 @@ void resetMusashi()
 
 void setupMemory(uint32_t addr, uint16_t val1, uint16_t val2, uint16_t val3)
 {
-    memset(mem, 0, sizeof(mem));
+    for (unsigned i = 0; i < sizeof(mem); i++) {
+        mem[i] = (uint8_t)((7 * i) & ~1);
+    }
     setMem16(addr, val1);
     setMem16(addr + 2, val2);
     setMem16(addr + 4, val3);
@@ -140,6 +144,21 @@ bool isMul(uint16_t opcode)
 
     if ((opcode & 0b1111000111000000) == 0b1100000111000000) result = true;
     if ((opcode & 0b1111000111000000) == 0b1100000011000000) result = true;
+
+    return result;
+}
+
+bool isBcd(uint16_t opcode)
+{
+    bool result = false;
+
+    if ((opcode & 0b1111111111000000) == 0b0100100000000000) result = true;
+    if ((opcode & 0b1111000111111000) == 0b1100000100000000) result = true;
+
+    if ((opcode & 0b1111000111111000) == 0b1100000100001000) result = true;
+    if ((opcode & 0b1111000111111000) == 0b1000000100000000) result = true;
+
+    if ((opcode & 0b1111000111111000) == 0b1000000100001000) result = true;
 
     return result;
 }
@@ -243,9 +262,6 @@ void execTest()
         if (moiracpu->isLineAInstr(opcode)) continue;
         if (moiracpu->isLineFInstr(opcode)) continue;
 
-        // Skip NBCD for now
-        if ((opcode & 0xFFC0) == 0b0100100000000000) continue;
-
         /*
         for (int i = 0; i < 48; i++) {
             for (int j = 0; j < 48; j++) {
@@ -287,6 +303,13 @@ void execTest()
 
                 // Setup memory for Moira
                 setupMemory(pc, opcode, ext[i], ext[j]);
+
+                // Skip NBCD, SBCD, ABCD for now
+                if (isBcd(opcode)) {
+                    // moiracpu->disassemble(pc, moiraStr);
+                    // printf("SKIPPING $%4x: %s\n", opcode, moiraStr);
+                    continue;
+                }
 
                 // Reset Moira
                 moiracpu->reset();
