@@ -15,6 +15,7 @@
 		505580EE23AFB31F0009F77F /* moira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505580ED23AFB31F0009F77F /* moira.cpp */; };
 		505580EF23AFC2360009F77F /* StringWriter_cpp.h in Sources */ = {isa = PBXBuildFile; fileRef = 5010BDAC238A897400CFD010 /* StringWriter_cpp.h */; };
 		506E013C23AC8E8A0015AE3F /* MoiraMemory_cpp.h in Sources */ = {isa = PBXBuildFile; fileRef = 506E013B23AC8E8A0015AE3F /* MoiraMemory_cpp.h */; };
+		507BE4AF23B66456000B37D2 /* testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* testrunner.cpp */; };
 		50804EDE2386A72C004D3EC2 /* tester.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E792386A72C004D3EC2 /* tester.cpp */; };
 		50804EDF2386A72C004D3EC2 /* exception.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E7C2386A72C004D3EC2 /* exception.cpp */; };
 		50804EE02386A72C004D3EC2 /* 68k.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E812386A72C004D3EC2 /* 68k.cpp */; };
@@ -134,6 +135,8 @@
 		505580EB23AFA14D0009F77F /* musashi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = musashi.h; sourceTree = "<group>"; };
 		505580ED23AFB31F0009F77F /* moira.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moira.cpp; sourceTree = "<group>"; };
 		506E013B23AC8E8A0015AE3F /* MoiraMemory_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraMemory_cpp.h; sourceTree = "<group>"; };
+		507BE4AD23B66456000B37D2 /* testrunner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = testrunner.cpp; sourceTree = "<group>"; };
+		507BE4AE23B66456000B37D2 /* testrunner.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = testrunner.h; sourceTree = "<group>"; };
 		50804E062386A4CE004D3EC2 /* Moira */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Moira; sourceTree = BUILT_PRODUCTS_DIR; };
 		50804E782386A72C004D3EC2 /* tester.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tester.h; sourceTree = "<group>"; };
 		50804E792386A72C004D3EC2 /* tester.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tester.cpp; sourceTree = "<group>"; };
@@ -283,6 +286,8 @@
 			isa = PBXGroup;
 			children = (
 				50804E8C2386A72C004D3EC2 /* main.cpp */,
+				507BE4AE23B66456000B37D2 /* testrunner.h */,
+				507BE4AD23B66456000B37D2 /* testrunner.cpp */,
 				50B99DAA23B0A7F700D8A89A /* globals.h */,
 				505580EB23AFA14D0009F77F /* musashi.h */,
 				505580EA23AFA14D0009F77F /* musashi.cpp */,
@@ -595,6 +600,7 @@
 				50804F302386A72C004D3EC2 /* trap.cpp in Sources */,
 				50804F2E2386A72C004D3EC2 /* jmp.cpp in Sources */,
 				50804EE92386A72C004D3EC2 /* asr.cpp in Sources */,
+				507BE4AF23B66456000B37D2 /* testrunner.cpp in Sources */,
 				50804F0C2386A72C004D3EC2 /* lea.cpp in Sources */,
 				50804F1E2386A72C004D3EC2 /* btst.cpp in Sources */,
 				50804F0F2386A72C004D3EC2 /* addi.cpp in Sources */,

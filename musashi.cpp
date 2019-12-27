@@ -1,10 +1,13 @@
+// -----------------------------------------------------------------------------
+// This file is part of Moira - A Motorola 68k emulator
 //
-//  musashi.cpp
-//  Moira
+// Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de
+// Licensed under the GNU General Public License v3
 //
-//  Created by Dirk Hoffmann on 22.12.19.
-//  Copyright © 2019 Dirk Hoffmann. All rights reserved.
-//
+// See https://www.gnu.org for license information
+// -----------------------------------------------------------------------------
+
+#include "testrunner.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -126,41 +129,6 @@ void setMem16(uint32_t addr, uint16_t val)
 {
     mem[addr] = val >> 8;
     mem[addr + 1] = val & 0xFF;
-}
-
-bool isDiv(uint16_t opcode)
-{
-    bool result = false;
-
-    if ((opcode & 0b1111000111000000) == 0b1000000111000000) result = true;
-    if ((opcode & 0b1111000111000000) == 0b1000000011000000) result = true;
-
-    return result;
-}
-
-bool isMul(uint16_t opcode)
-{
-    bool result = false;
-
-    if ((opcode & 0b1111000111000000) == 0b1100000111000000) result = true;
-    if ((opcode & 0b1111000111000000) == 0b1100000011000000) result = true;
-
-    return result;
-}
-
-bool isBcd(uint16_t opcode)
-{
-    bool result = false;
-
-    if ((opcode & 0b1111111111000000) == 0b0100100000000000) result = true;
-    if ((opcode & 0b1111000111111000) == 0b1100000100000000) result = true;
-
-    if ((opcode & 0b1111000111111000) == 0b1100000100001000) result = true;
-    if ((opcode & 0b1111000111111000) == 0b1000000100000000) result = true;
-
-    if ((opcode & 0b1111000111111000) == 0b1000000100001000) result = true;
-
-    return result;
 }
 
 void dasmTest()
@@ -337,7 +305,7 @@ void execTest()
 
                 error |= (musashiPC != moiraPC);
                 error |= (musashiSR != moiraSR);
-                error |= !isMulDiv(opcode) && (musashiCycles != moiraCycles);
+                error |= !isMulOrDiv(opcode) && (musashiCycles != moiraCycles);
                 for (int i = 0; i < 8; i++) regError |= musashiD[i] != moiraD[i];
                 for (int i = 0; i < 8; i++) regError |= musashiA[i] != moiraA[i];
 

@@ -13,12 +13,5 @@
 // Configure
 //
 
-// Set to true to compare Moira against Musashi
-#define MUSASHI true
-
-namespace moira { class Moira; }
-extern class moira::Moira *moiracpu;
-extern class Tester_68k *tester;
-extern uint8_t mem[0x10000];
 
 #endif

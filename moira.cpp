@@ -1,10 +1,13 @@
+// -----------------------------------------------------------------------------
+// This file is part of Moira - A Motorola 68k emulator
 //
-//  moira.cpp
-//  Moira
+// Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de
+// Licensed under the GNU General Public License v3
 //
-//  Created by Dirk Hoffmann on 22.12.19.
-//  Copyright © 2019 Dirk Hoffmann. All rights reserved.
-//
+// See https://www.gnu.org for license information
+// -----------------------------------------------------------------------------
+
+#include "testrunner.h"
 
 #include "Moira.h"
 #include "tester.h"

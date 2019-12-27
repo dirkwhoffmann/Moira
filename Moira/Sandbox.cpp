@@ -94,7 +94,7 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u16 value)
         if (access[i].type != type) continue;
         if (access[i].addr != addr) continue;
         if (access[i].value != value) continue;
-        if (!MUSASHI) {
+        if (!MIMIC_MUSASHI) {
             if (access[i].cycle != cycle) continue;
         }
 
