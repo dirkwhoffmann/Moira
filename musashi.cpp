@@ -70,34 +70,3 @@ extern "C" int interrupt_handler(int irqLevel)
 extern "C" int read_sp_on_reset(void) { return 0x2000; }
 extern "C" int read_pc_on_reset(void) { return 0x1000; }
 
-void setupMusashi()
-{
-    m68k_init();
-    m68k_set_cpu_type(M68K_CPU_TYPE_68000);
-    m68k_set_int_ack_callback(interrupt_handler);
-}
-
-void resetMusashi()
-{
-    m68k_set_reg(M68K_REG_D0, 0x10);
-    m68k_set_reg(M68K_REG_D1, 0x20);
-    m68k_set_reg(M68K_REG_D2, 0x30);
-    m68k_set_reg(M68K_REG_D3, 0x40);
-    m68k_set_reg(M68K_REG_D4, 0x50);
-    m68k_set_reg(M68K_REG_D5, 0x60);
-    m68k_set_reg(M68K_REG_D6, 0x70);
-    m68k_set_reg(M68K_REG_D7, 0x80);
-    m68k_set_reg(M68K_REG_A0, 0x90);
-    m68k_set_reg(M68K_REG_A1, 0x10000);
-    m68k_set_reg(M68K_REG_A2, 0x11011);
-    m68k_set_reg(M68K_REG_A3, 0x12033);
-    m68k_set_reg(M68K_REG_A4, 0x13000);
-    m68k_set_reg(M68K_REG_A5, 0x14000000);
-    m68k_set_reg(M68K_REG_A6, 0x80000000);
-    m68k_set_reg(M68K_REG_USP, 0);
-    m68k_set_reg(M68K_REG_ISP, 0);
-    m68k_set_reg(M68K_REG_MSP, 0);
-    m68k_set_reg(M68K_REG_SR, 0);
-
-    m68k_pulse_reset();
-}

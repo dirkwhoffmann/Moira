@@ -24,7 +24,7 @@ int main()
     if (MIMIC_MUSASHI) {
 
         // Run Moira against Musashi
-        execTest();
+        run();
         // dasmTest();
 
     } else {

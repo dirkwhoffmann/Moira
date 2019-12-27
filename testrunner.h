@@ -29,26 +29,44 @@ extern "C" {
 // Set to true to compare Moira against Musashi
 #define MUSASHI true
 
-
-// Setting up memory
-void setupMemory(uint32_t addr, uint16_t val1, uint16_t val2, uint16_t val3);
-void setMem16(uint32_t addr, uint16_t word);
-
-// Setting up Musashi
-void setupMusashi();
-void resetMusashi();
-
-// Setting up Moira
-
-
-// Main entry point for running the test suite
-void dasmTest();
-void execTest();
+// Set to true to compare the disassembler, too
+#define TEST_DASM true
 
 namespace moira { class Moira; }
 extern class moira::Moira *moiracpu;
 extern class Tester_68k *tester;
 extern uint8_t mem[0x10000];
+
+//
+// Preparing a test
+//
+
+// Setting up memory
+void setupMemory(uint32_t addr, uint16_t val1, uint16_t val2, uint16_t val3);
+void setMem16(uint32_t addr, uint16_t word);
+
+// Setting up registers
+void setRegsMusashi(u32 dn[8], u32 an[8]);
+void setRegsMoira(u32 dn[8], u32 an[8]);
+
+// Setting up the CPU (called on start up)
+void setupMusashi();
+void setupMoira();
+
+// Resetting the CPU (called at the beginning of each test)
+void resetMusashi();
+void resetMoira();
+
+// Setting up Moira
+
+
+//
+// Performing a test
+//
+
+// Main entry point to run all tests
+void dasmTest();
+void run();
 
 
 // Check for certain instructions
