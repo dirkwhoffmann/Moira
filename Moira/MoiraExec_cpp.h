@@ -376,16 +376,13 @@ Moira::execAddxEa(u16 opcode)
 
     u32 result = arith<I,S>(data1, data2);
 
-    /*
-    if (S == Long) {
+    if (S == Long && !MIMIC_MUSASHI) {
         writeM<Word>(ea2 + 2, result & 0xFFFF);
         prefetch();
         writeM<Word,LAST_BUS_CYCLE>(ea2, result >> 16);
-    } else {
-        prefetch();
-        writeM<S,LAST_BUS_CYCLE>(ea2, result);
+        return;
     }
-    */
+
     prefetch();
     writeM<S,LAST_BUS_CYCLE>(ea2, result);
 }
@@ -1104,7 +1101,7 @@ Moira::execMovemRgEa(u16 opcode)
 
                 if (mask & (0x8000 >> i)) {
                     ea -= S;
-                    writeMrev<S>(ea, reg.r[i]);
+                    MIMIC_MUSASHI ? writeMrev<S>(ea, reg.r[i]) : writeM<S>(ea, reg.r[i]);
                 }
             }
             writeA(dst, ea);
@@ -1580,7 +1577,11 @@ Moira::execTasEa(u16 opcode)
     sr.setNZVC<Byte>(data);
     data |= 0x80;
 
-    sync(6);
+    if (MIMIC_MUSASHI) {
+        sync(6);
+    } else {
+        if (!isRegMode(M)) sync(2);
+    }
     writeOperand<M,S>(dst, ea, data);
 
     prefetch<LAST_BUS_CYCLE>();

@@ -294,7 +294,7 @@ void execTest()
 
                 // Disassemble instruction
                 moiracpu->disassemble(pc, moiraStr);
-                printf("Instruction $%4x: %s\n", opcode, moiraStr);
+                // printf("Instruction $%4x: %s\n", opcode, moiraStr);
 
                 // Run Moira
                 moiracpu->process();
