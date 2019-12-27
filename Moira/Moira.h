@@ -241,7 +241,10 @@ public:
     //
 
     bool isIllegalInstr(u16 op) { return exec[op] == &Moira::execIllegal; }
+    bool isLineAInstr(u16 op)   { return exec[op] == &Moira::execLineA; }
+    bool isLineFInstr(u16 op)   { return exec[op] == &Moira::execLineF; }
 
+    
     //
     // Emulate timing
     //

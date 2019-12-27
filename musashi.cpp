@@ -238,6 +238,8 @@ void execTest()
 
         // Skip illegal instructions
         if (moiracpu->isIllegalInstr(opcode)) continue;
+        if (moiracpu->isLineAInstr(opcode)) continue;
+        if (moiracpu->isLineFInstr(opcode)) continue;
 
         // Skip NBCD for now
         if ((opcode & 0xFFC0) == 0b0100100000000000) continue;

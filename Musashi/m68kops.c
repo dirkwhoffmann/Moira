@@ -1232,6 +1232,8 @@ static void m68k_op_adda_16_pcix(void)
 
 static void m68k_op_adda_16_i(void)
 {
+    printf("m68k_op_adda_16_i\n");
+    
 	uint* r_dst = &AX;
 	uint src = MAKE_INT_16(OPER_I_16());
 
@@ -31853,6 +31855,8 @@ static void m68k_op_suba_16_ix(void)
 
 static void m68k_op_suba_16_aw(void)
 {
+    printf("m68k_op_adda_16_aw\n");
+
 	uint* r_dst = &AX;
 	uint src = MAKE_INT_16(OPER_AW_16());
 
@@ -31862,6 +31866,8 @@ static void m68k_op_suba_16_aw(void)
 
 static void m68k_op_suba_16_al(void)
 {
+    printf("m68k_op_adda_16_al\n");
+
 	uint* r_dst = &AX;
 	uint src = MAKE_INT_16(OPER_AL_16());
 
@@ -31889,6 +31895,8 @@ static void m68k_op_suba_16_pcix(void)
 
 static void m68k_op_suba_16_i(void)
 {
+    printf("m68k_op_suba_16_i\n");
+
 	uint* r_dst = &AX;
 	uint src = MAKE_INT_16(OPER_I_16());
 
@@ -34865,8 +34873,8 @@ static const opcode_handler_struct m68k_opcode_handler_table[] =
 	{m68k_op_sub_32_re_pd        , 0xf1f8, 0x91a0, { 22,  22,   9,   9}},
 	{m68k_op_sub_32_re_di        , 0xf1f8, 0x91a8, { 24,  24,   9,   9}},
 	{m68k_op_sub_32_re_ix        , 0xf1f8, 0x91b0, { 26,  26,  11,  11}},
-	{m68k_op_suba_32_d           , 0xf1f8, 0x91c0, {  6,   6,   2,   2}},
-	{m68k_op_suba_32_a           , 0xf1f8, 0x91c8, {  6,   6,   2,   2}},
+	{m68k_op_suba_32_d           , 0xf1f8, 0x91c0, {  8,   6,   2,   2}},
+	{m68k_op_suba_32_a           , 0xf1f8, 0x91c8, {  8,   6,   2,   2}},
 	{m68k_op_suba_32_ai          , 0xf1f8, 0x91d0, { 14,  14,   6,   6}},
 	{m68k_op_suba_32_pi          , 0xf1f8, 0x91d8, { 14,  14,   6,   6}},
 	{m68k_op_suba_32_pd          , 0xf1f8, 0x91e0, { 16,  16,   7,   7}},
@@ -35304,7 +35312,7 @@ static const opcode_handler_struct m68k_opcode_handler_table[] =
 	{m68k_op_suba_16_al          , 0xf1ff, 0x90f9, { 20,  20,   6,   6}},
 	{m68k_op_suba_16_pcdi        , 0xf1ff, 0x90fa, { 16,  16,   7,   7}},
 	{m68k_op_suba_16_pcix        , 0xf1ff, 0x90fb, { 18,  18,   9,   9}},
-	{m68k_op_suba_16_i           , 0xf1ff, 0x90fc, { 14,  12,   4,   4}},
+	{m68k_op_suba_16_i           , 0xf1ff, 0x90fc, { 12,  12,   4,   4}},
 	{m68k_op_subx_8_mm_ay7       , 0xf1ff, 0x910f, { 18,  18,  12,  12}},
 	{m68k_op_sub_8_re_pi7        , 0xf1ff, 0x911f, { 12,  12,   8,   8}},
 	{m68k_op_sub_8_re_pd7        , 0xf1ff, 0x9127, { 14,  14,   9,   9}},

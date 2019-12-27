@@ -270,7 +270,9 @@ Moira::execAdda(u16 opcode)
     result = (I == ADDA) ? readA(dst) + data : readA(dst) - data;
     prefetch<LAST_BUS_CYCLE>();
 
-    sync((S == Word || isRegMode(M) || isImmMode(M)) ? 4 : 2);
+    sync(2);
+    if (S == Word || isRegMode(M) || isImmMode(M)) sync(2);
+    // if (S == Word || !isMemMode(M)) sync(2); 
     writeA(dst, result);
 }
 
@@ -377,6 +379,7 @@ Moira::execAddxEa(u16 opcode)
 
     u32 result = arith<I,S>(data1, data2);
 
+    /*
     if (S == Long) {
         writeM<Word>(ea2 + 2, result & 0xFFFF);
         prefetch();
@@ -385,6 +388,9 @@ Moira::execAddxEa(u16 opcode)
         prefetch();
         writeM<S,LAST_BUS_CYCLE>(ea2, result);
     }
+    */
+    prefetch();
+    writeM<S,LAST_BUS_CYCLE>(ea2, result);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -408,6 +414,8 @@ Moira::execAndEaRg(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execAndRgEa(u16 opcode)
 {
+    printf("execAndRgEa S = %d M = %d\n", S, M);
+
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
 
@@ -417,6 +425,7 @@ Moira::execAndRgEa(u16 opcode)
     u32 result = logic<I,S>(readD<S>(src), data);
     isMemMode(M) ? prefetch() : prefetch<LAST_BUS_CYCLE>();
 
+    if (S == Long && isRegMode(M)) sync(4);
     writeOperand<M,S,LAST_BUS_CYCLE>(dst, ea, result);
 }
 
