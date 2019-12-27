@@ -12,10 +12,38 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
+#include <time.h>
+
+// Portable 68000
+#include "tester.h"
+#include "exception.h"
+
+// Musashi
+extern "C" {
+#include "m68k.h"
+#include "m68kcpu.h"
+#include "m68kops.h"
+}
 
 // Set to true to compare Moira against Musashi
 #define MUSASHI true
 
+
+// Setting up memory
+void setupMemory(uint32_t addr, uint16_t val1, uint16_t val2, uint16_t val3);
+void setMem16(uint32_t addr, uint16_t word);
+
+// Setting up Musashi
+void setupMusashi();
+void resetMusashi();
+
+// Setting up Moira
+
+
+// Main entry point for running the test suite
+void dasmTest();
+void execTest();
 
 namespace moira { class Moira; }
 extern class moira::Moira *moiracpu;

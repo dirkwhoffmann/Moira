@@ -8,13 +8,9 @@
 // -----------------------------------------------------------------------------
 
 #include "testrunner.h"
-#include "tester.h"
-#include "exception.h"
-#include "Moira.h"
-#include "musashi.h"
-#include "globals.h"
 
-#include <time.h>
+#include "Moira.h"
+
 
 moira::Moira *moiracpu;
 Tester_68k *tester;

@@ -11,7 +11,6 @@
 
 #include "Moira.h"
 #include "tester.h"
-#include "globals.h"
 
 using namespace moira;
 

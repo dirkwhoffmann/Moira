@@ -9,7 +9,6 @@
 
 #include <stdio.h>
 #include "Moira.h"
-#include "globals.h"
 
 namespace moira {
 
