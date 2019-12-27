@@ -455,11 +455,8 @@ static char* get_ea_mode_str(uint instruction, uint size)
 					break;
 				}
 				base = EXT_BASE_DISPLACEMENT_PRESENT(extension) ? (EXT_BASE_DISPLACEMENT_LONG(extension) ? read_imm_32() : read_imm_16()) : 0;
-                // printf("present = %d base = %x\n", EXT_BASE_DISPLACEMENT_PRESENT(extension), base);
 				outer = EXT_OUTER_DISPLACEMENT_PRESENT(extension) ? (EXT_OUTER_DISPLACEMENT_LONG(extension) ? read_imm_32() : read_imm_16()) : 0;
-                // printf("present = %d long = %x outer = %x\n", EXT_OUTER_DISPLACEMENT_PRESENT(extension), EXT_OUTER_DISPLACEMENT_LONG(extension), outer);
                 if(EXT_BASE_REGISTER_PRESENT(extension)) {
-                    // printf("base_reg instruction&7 = %x\n", instruction&7);
 					sprintf(base_reg, "A%d", instruction&7);
                 }
 				else
@@ -509,7 +506,6 @@ static char* get_ea_mode_str(uint instruction, uint size)
 				}
 				if(outer)
 				{
-                    // printf("outer = %x\n", outer); 
 					if(comma)
 						strcat(mode, ",");
 					strcat(mode, make_signed_hex_str_16(outer));

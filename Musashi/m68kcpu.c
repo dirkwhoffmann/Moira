@@ -808,11 +808,9 @@ int m68k_execute(int num_cycles)
 
 			/* Record previous program counter */
 			REG_PPC = REG_PC;
-            // printf("REG_PC = %x\n", REG_PC);
 
 			/* Read an instruction and call its handler */
 			REG_IR = m68ki_read_imm_16();
-            // printf("Jumping to [%x]\n", REG_IR);
 			m68ki_instruction_jump_table[REG_IR]();
 			USE_CYCLES(CYC_INSTRUCTION[REG_IR]);
 

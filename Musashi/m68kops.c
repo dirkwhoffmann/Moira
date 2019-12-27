@@ -1232,8 +1232,6 @@ static void m68k_op_adda_16_pcix(void)
 
 static void m68k_op_adda_16_i(void)
 {
-    printf("m68k_op_adda_16_i\n");
-    
 	uint* r_dst = &AX;
 	uint src = MAKE_INT_16(OPER_I_16());
 
@@ -22804,8 +22802,6 @@ static void m68k_op_movem_16_er_pi(void)
 
 static void m68k_op_movem_16_er_pcdi(void)
 {
-    printf("m68k_op_movem_16_er_pcdi\n");
-
 	uint i = 0;
 	uint register_list = OPER_I_16();
 	uint ea = EA_PCDI_16();
@@ -22815,7 +22811,6 @@ static void m68k_op_movem_16_er_pcdi(void)
 		if(register_list & (1 << i))
 		{
 			REG_DA[i] = MAKE_INT_16(MASK_OUT_ABOVE_16(m68ki_read_pcrel_16(ea)));
-            printf("REG_DA[%d] = %x (ea = %x)\n", i, REG_DA[i], ea);
 			ea += 2;
 			count++;
 		}
@@ -22826,8 +22821,6 @@ static void m68k_op_movem_16_er_pcdi(void)
 
 static void m68k_op_movem_16_er_pcix(void)
 {
-    printf("m68k_op_movem_16_er_pcix\n");
-    
 	uint i = 0;
 	uint register_list = OPER_I_16();
 	uint ea = EA_PCIX_16();
@@ -22837,7 +22830,6 @@ static void m68k_op_movem_16_er_pcix(void)
 		if(register_list & (1 << i))
 		{
 			REG_DA[i] = MAKE_INT_16(MASK_OUT_ABOVE_16(m68ki_read_pcrel_16(ea)));
-            printf("REG_DA[%d] = %x (ea = %x)\n", i, REG_DA[i], ea);
 			ea += 2;
 			count++;
 		}
@@ -27710,8 +27702,6 @@ static void m68k_op_or_16_re_ix(void)
 
 static void m68k_op_or_16_re_aw(void)
 {
-    printf("m68k_op_or_16_re_aw\n");
-    
 	uint ea = EA_AW_16();
 	uint res = MASK_OUT_ABOVE_16(DX | m68ki_read_16(ea));
 
@@ -31855,8 +31845,6 @@ static void m68k_op_suba_16_ix(void)
 
 static void m68k_op_suba_16_aw(void)
 {
-    printf("m68k_op_adda_16_aw\n");
-
 	uint* r_dst = &AX;
 	uint src = MAKE_INT_16(OPER_AW_16());
 
@@ -31866,8 +31854,6 @@ static void m68k_op_suba_16_aw(void)
 
 static void m68k_op_suba_16_al(void)
 {
-    printf("m68k_op_adda_16_al\n");
-
 	uint* r_dst = &AX;
 	uint src = MAKE_INT_16(OPER_AL_16());
 
@@ -31895,8 +31881,6 @@ static void m68k_op_suba_16_pcix(void)
 
 static void m68k_op_suba_16_i(void)
 {
-    printf("m68k_op_suba_16_i\n");
-
 	uint* r_dst = &AX;
 	uint src = MAKE_INT_16(OPER_I_16());
 
@@ -33237,7 +33221,6 @@ static void m68k_op_tas_8_al(void)
 
 static void m68k_op_trap(void)
 {
-    printf("m68k_op_trap %x\n", m68ki_get_sr());
 	/* Trap#n stacks exception frame type 0 */
 	m68ki_exception_trapN(EXCEPTION_TRAP_BASE + (REG_IR & 0xf));	/* HJB 990403 */
 }
@@ -35033,8 +35016,8 @@ static const opcode_handler_struct m68k_opcode_handler_table[] =
 	{m68k_op_add_32_re_pd        , 0xf1f8, 0xd1a0, { 22,  22,   9,   9}},
 	{m68k_op_add_32_re_di        , 0xf1f8, 0xd1a8, { 24,  24,   9,   9}},
 	{m68k_op_add_32_re_ix        , 0xf1f8, 0xd1b0, { 26,  26,  11,  11}},
-	{m68k_op_adda_32_d           , 0xf1f8, 0xd1c0, {  6,   6,   2,   2}},
-	{m68k_op_adda_32_a           , 0xf1f8, 0xd1c8, {  6,   6,   2,   2}},
+	{m68k_op_adda_32_d           , 0xf1f8, 0xd1c0, {  8,   6,   2,   2}},
+	{m68k_op_adda_32_a           , 0xf1f8, 0xd1c8, {  8,   6,   2,   2}},
 	{m68k_op_adda_32_ai          , 0xf1f8, 0xd1d0, { 14,  14,   6,   6}},
 	{m68k_op_adda_32_pi          , 0xf1f8, 0xd1d8, { 14,  14,   6,   6}},
 	{m68k_op_adda_32_pd          , 0xf1f8, 0xd1e0, { 16,  16,   7,   7}},
@@ -35420,7 +35403,7 @@ static const opcode_handler_struct m68k_opcode_handler_table[] =
 	{m68k_op_adda_16_al          , 0xf1ff, 0xd0f9, { 20,  20,   6,   6}},
 	{m68k_op_adda_16_pcdi        , 0xf1ff, 0xd0fa, { 16,  16,   7,   7}},
 	{m68k_op_adda_16_pcix        , 0xf1ff, 0xd0fb, { 18,  18,   9,   9}},
-	{m68k_op_adda_16_i           , 0xf1ff, 0xd0fc, { 14,  12,   4,   4}},
+	{m68k_op_adda_16_i           , 0xf1ff, 0xd0fc, { 12,  12,   4,   4}},
 	{m68k_op_addx_8_mm_ay7       , 0xf1ff, 0xd10f, { 18,  18,  12,  12}},
 	{m68k_op_add_8_re_pi7        , 0xf1ff, 0xd11f, { 12,  12,   8,   8}},
 	{m68k_op_add_8_re_pd7        , 0xf1ff, 0xd127, { 14,  14,   9,   9}},

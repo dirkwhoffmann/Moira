@@ -52,7 +52,6 @@ Moira::saveToStackBrief(u16 sr)
 {
     if (MIMIC_MUSASHI) {
 
-        printf("saveToStackBrief(%x, %x)\n", reg.pc, sr); 
         push<Long>(reg.pc);
         push<Word>(sr);
 
@@ -181,7 +180,7 @@ Moira::execShiftIm(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execShiftEa(u16 op)
 {
-    int src = ____xxx_________(op);
+    int src = _____________xxx(op);
 
     u32 ea, data;
     if (!readOperand<M,S>(src, ea, data)) return;
@@ -331,8 +330,6 @@ Moira::execAddqAn(u16 opcode)
     u32 result = (I == ADDQ) ? readA(dst) + src : readA(dst) - src;
     prefetch<LAST_BUS_CYCLE>();
 
-    // printf("execAddqAn\n");
-    // if (S == Long)
     sync(4);
     writeA(dst, result);
 }
@@ -396,8 +393,6 @@ Moira::execAddxEa(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execAndEaRg(u16 opcode)
 {
-    printf("execAndEaRg M = %d\n", M);
-    
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
@@ -414,8 +409,6 @@ Moira::execAndEaRg(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execAndRgEa(u16 opcode)
 {
-    printf("execAndRgEa S = %d M = %d\n", S, M);
-
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
 

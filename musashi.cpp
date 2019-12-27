@@ -31,8 +31,6 @@ extern "C" unsigned int m68k_read_memory_16(unsigned int addr)
     int lo = mem[(addr + 1) & 0xFFFF];
     int result = hi << 8 | lo;
 
-    // printf("read_memory16(%x) = %x\n", addr, result);
-    // moiracpu->sandbox.record(moira::PEEK16, addr, 0, result);
     return result;
 }
 
@@ -118,12 +116,6 @@ void setupMemory(uint32_t addr, uint16_t val1, uint16_t val2, uint16_t val3)
     setMem16(addr, val1);
     setMem16(addr + 2, val2);
     setMem16(addr + 4, val3);
-
-    /*
-    printf("Mem: %x %x %x %x %x %x %x %x\n",
-           mem[addr + 0], mem[addr + 1], mem[addr + 2], mem[addr + 3],
-           mem[addr + 4], mem[addr + 5], mem[addr + 6], mem[addr + 7]);
-    */
 }
 
 void setMem16(uint32_t addr, uint16_t val)
@@ -138,6 +130,16 @@ bool isDiv(uint16_t opcode)
 
     if ((opcode & 0b1111000111000000) == 0b1000000111000000) result = true;
     if ((opcode & 0b1111000111000000) == 0b1000000011000000) result = true;
+
+    return result;
+}
+
+bool isMul(uint16_t opcode)
+{
+    bool result = false;
+
+    if ((opcode & 0b1111000111000000) == 0b1100000111000000) result = true;
+    if ((opcode & 0b1111000111000000) == 0b1100000011000000) result = true;
 
     return result;
 }
@@ -305,10 +307,10 @@ void execTest()
                 bool error = false;
                 bool regError = false;
 
-                printf("Cycles %d / %d\n", musashiCycles, moiraCycles);
+                // printf("Cycles %d / %d\n", musashiCycles, moiraCycles);
 
                 error |= (musashiPC != moiraPC);
-                error |= !isDiv(opcode) && (musashiCycles != moiraCycles);
+                error |= !isMulDiv(opcode) && (musashiCycles != moiraCycles);
                 for (int i = 0; i < 8; i++) regError |= musashiD[i] != moiraD[i];
                 for (int i = 0; i < 8; i++) regError |= musashiA[i] != moiraA[i];
 

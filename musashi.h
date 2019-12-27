@@ -21,6 +21,8 @@ void setupMemory(uint32_t addr, uint16_t val1, uint16_t val2, uint16_t val3);
 void setMem16(uint32_t addr, uint16_t word);
 
 bool isDiv(uint16_t opcode);
+bool isMul(uint16_t opcode);
+inline bool isMulDiv(uint16_t opcode) { return isDiv(opcode) || isMul(opcode); }
 
 // Test functions
 void dasmTest();
