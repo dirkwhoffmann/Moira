@@ -232,6 +232,7 @@ void execTest()
     char moiraStr[128];
     int64_t musashiCycles, moiraCycles;
     int32_t musashiPC, moiraPC;
+    uint16_t musashiSR, moiraSR;
     uint32_t musashiD[8], moiraD[8];
     uint32_t musashiA[8], moiraA[8];
 
@@ -284,6 +285,7 @@ void execTest()
                 // Run Musashi
                 musashiCycles = m68k_execute(1);
                 musashiPC = m68k_get_reg(NULL, M68K_REG_PC);
+                musashiSR = m68k_get_reg(NULL, M68K_REG_SR);
                 musashiD[0] = m68k_get_reg(NULL, M68K_REG_D0);
                 musashiD[1] = m68k_get_reg(NULL, M68K_REG_D1);
                 musashiD[2] = m68k_get_reg(NULL, M68K_REG_D2);
@@ -323,6 +325,7 @@ void execTest()
                 moiracpu->process();
                 moiraCycles = moiracpu->getClock() - moiraCycles;
                 moiraPC = moiracpu->getPC();
+                moiraSR = moiracpu->getSR();
                 for (int i = 0; i < 8; i++) moiraD[i] = moiracpu->readD(i);
                 for (int i = 0; i < 8; i++) moiraA[i] = moiracpu->readA(i);
 
@@ -333,6 +336,7 @@ void execTest()
                 // printf("Cycles %d / %d\n", musashiCycles, moiraCycles);
 
                 error |= (musashiPC != moiraPC);
+                error |= (musashiSR != moiraSR);
                 error |= !isMulDiv(opcode) && (musashiCycles != moiraCycles);
                 for (int i = 0; i < 8; i++) regError |= musashiD[i] != moiraD[i];
                 for (int i = 0; i < 8; i++) regError |= musashiA[i] != moiraA[i];
@@ -343,9 +347,11 @@ void execTest()
                     printf("Instruction: %s\n\n", moiraStr);
                     printf("    Musashi: ");
                     printf("PC: %4x ", musashiPC);
+                    printf("SR: %2x ", musashiSR);
                     printf("Elapsed cycles: %2lld\n" , musashiCycles);
                     printf("      Moira: ");
                     printf("PC: %4x ", moiraPC);
+                    printf("SR: %4x ", moiraSR);
                     printf("Elapsed cycles: %2lld\n\n" , moiraCycles);
                     printf("\n");
 

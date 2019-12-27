@@ -100,10 +100,12 @@ Moira::getSR()
 void
 Moira::setSR(u16 value)
 {
+    bool t = (value >> 15) & 1;
     bool s = (value >> 13) & 1;
     u8 ipl = (value >>  8) & 7;
 
     sr.ipl = ipl;
+    sr.t = t;
 
     setCCR((u8)value);
     setSupervisorMode(s);
