@@ -68,21 +68,19 @@ struct Result {
 // Preparing a test
 //
 
+void setupTestCase(Setup &s, uint32_t pc, uint16_t opcode);
+
 // Setting up memory
 void setupMemory(uint32_t addr, uint16_t val1, uint16_t val2, uint16_t val3);
 void setMem16(uint32_t addr, uint16_t word);
-
-// Setting up registers
-void setRegsMusashi(u32 dn[8], u32 an[8]);
-void setRegsMoira(u32 dn[8], u32 an[8]);
 
 // Setting up the CPU (called on start up)
 void setupMusashi();
 void setupMoira();
 
 // Resetting the CPU (called at the beginning of each test)
-void resetMusashi();
-void resetMoira();
+void resetMusashi(Setup &s);
+void resetMoira(Setup &s);
 
 // Setting up Moira
 

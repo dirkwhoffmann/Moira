@@ -66,22 +66,6 @@ Moira::reset()
     // Fill the prefetch queue
     irc = readOnReset(reg.pc);
     prefetch();
-
-    reg.d[0] = 0x10;
-    reg.d[1] = 0x20;
-    reg.d[2] = 0x30;
-    reg.d[3] = 0x40;
-    reg.d[4] = 0x50;
-    reg.d[5] = 0x60;
-    reg.d[6] = 0x70;
-    reg.d[7] = 0x80;
-    reg.a[0] = 0x90;
-    reg.a[1] = 0x10000;
-    reg.a[2] = 0x11011;
-    reg.a[3] = 0x12033;
-    reg.a[4] = 0x13000;
-    reg.a[5] = 0x14000000;
-    reg.a[6] = 0x80000000;
 }
 
 void

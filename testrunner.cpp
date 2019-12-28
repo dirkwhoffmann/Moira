@@ -57,11 +57,30 @@ bool isBcd(uint16_t opcode)
     return isAbcd(opcode) || isSbcd(opcode) || isNbcd(opcode);
 }
 
+void setupTestCase(Setup &s, uint32_t pc, uint16_t opcode)
+{
+    s.pc = pc;
+    s.opcode = opcode;
+    s.sr = 0;
+
+    for (int i = 0; i < 8; i++) s.d[i] = 0;
+    for (int i = 0; i < 8; i++) s.a[i] = 0;
+
+    for (unsigned i = 0; i < sizeof(s.mem); i++) {
+        s.mem[i] = (uint8_t)((7 * i) & ~1);
+    }
+    s.mem[pc] = opcode >> 8;
+    s.mem[pc + 1] = opcode & 0xFF;
+
+    // REMOVE ASAP
+    s.mem[pc + 2] = 0x80;
+    s.mem[pc + 3] = 0x00;
+    s.mem[pc + 4] = 0x80;
+    s.mem[pc + 5] = 0x10;
+}
+
 void setupMemory(uint32_t addr, uint16_t val1, uint16_t val2, uint16_t val3)
 {
-    for (unsigned i = 0; i < sizeof(mem); i++) {
-        mem[i] = (uint8_t)((7 * i) & ~1);
-    }
     setMem16(addr, val1);
     setMem16(addr + 2, val2);
     setMem16(addr + 4, val3);
@@ -73,33 +92,6 @@ void setMem16(uint32_t addr, uint16_t val)
     mem[addr + 1] = val & 0xFF;
 }
 
-void setRegsMusashi(u32 dn[8], u32 an[8])
-{
-    m68k_set_reg(M68K_REG_D0, dn[0]);
-    m68k_set_reg(M68K_REG_D1, dn[1]);
-    m68k_set_reg(M68K_REG_D2, dn[2]);
-    m68k_set_reg(M68K_REG_D3, dn[3]);
-    m68k_set_reg(M68K_REG_D4, dn[4]);
-    m68k_set_reg(M68K_REG_D5, dn[5]);
-    m68k_set_reg(M68K_REG_D6, dn[6]);
-    m68k_set_reg(M68K_REG_D7, dn[7]);
-
-    m68k_set_reg(M68K_REG_A0, an[0]);
-    m68k_set_reg(M68K_REG_A1, an[1]);
-    m68k_set_reg(M68K_REG_A2, an[2]);
-    m68k_set_reg(M68K_REG_A3, an[3]);
-    m68k_set_reg(M68K_REG_A4, an[4]);
-    m68k_set_reg(M68K_REG_A5, an[5]);
-    m68k_set_reg(M68K_REG_A6, an[6]);
-    m68k_set_reg(M68K_REG_A7, an[7]);
-}
-
-void setRegsMoira(u32 dn[8], u32 an[8])
-{
-    for (int n = 0; n < 8; n++) moiracpu->writeD(n, dn[n]);
-    for (int n = 0; n < 8; n++) moiracpu->writeA(n, an[n]);
-}
-
 void setupMusashi()
 {
     m68k_init();
@@ -109,25 +101,40 @@ void setupMusashi()
 
 void setupMoira()
 {
+
 }
 
-void resetMusashi()
+void resetMusashi(Setup &s)
 {
-    uint32_t dn[8] = { 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80 };
-    uint32_t an[8] = { 0x90, 0x10000, 0x11011, 0x12033, 0x13000, 0x14000000, 0x80000000 };
+    m68ki_set_sr_noint(0);
 
-    setRegsMusashi(dn, an);
+    m68k_pulse_reset();
+
+    memcpy(mem, s.mem, sizeof(mem));
+
     m68k_set_reg(M68K_REG_USP, 0);
     m68k_set_reg(M68K_REG_ISP, 0);
     m68k_set_reg(M68K_REG_MSP, 0);
-    m68k_set_reg(M68K_REG_SR, 0);
+    // m68ki_set_sr_noint(s.sr);
 
-    m68k_pulse_reset();
+    for (int i = 0; i < 8; i++) {
+        m68k_set_reg((m68k_register_t)(M68K_REG_D0 + i), s.d[0]);
+        m68k_set_reg((m68k_register_t)(M68K_REG_A0 + i), s.a[0]);
+    }
 }
 
-void resetMoira()
+void resetMoira(Setup &s)
 {
     moiracpu->reset();
+
+    memcpy(mem, s.mem, sizeof(mem));
+
+    // moiracpu->setSR(s.sr);
+
+    for (int i = 0; i < 8; i++) {
+        moiracpu->writeD(i,s.d[i]);
+        moiracpu->writeA(i,s.a[i]);
+    }
 }
 
 void dasmTest()
@@ -207,14 +214,8 @@ void run()
 
     char moiraStr[128];
     int64_t moiraCycles;
-    int32_t moiraPC;
-    uint16_t moiraSR;
-    uint32_t moiraD[8];
-    uint32_t moiraA[8];
-
-    Setup  mus, mos;
+    Setup  setup;
     Result mur, mor;
-
 
     // List of extension words used for testing
     uint16_t ext[] = {
@@ -246,11 +247,14 @@ void run()
 
                 moiracpu->sandbox.prepare();
 
+                // Prepare the test case for Musashi
+                setupTestCase(setup, pc, opcode);
+
                 // Setup memory for Musashi
-                setupMemory(pc, opcode, ext[i], ext[j]);
+                setupMemory(pc, opcode, ext[i], ext[j]); // DEPRECATED
 
                 // Reset Musashi
-                resetMusashi();
+                resetMusashi(setup);
 
                 // Disassemble instruction
                 // m68k_disassemble(musashiStr, pc, M68K_CPU_TYPE_68000);
@@ -268,16 +272,13 @@ void run()
                     mur.a[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_A0 + i));
                 }
 
-                // Setup memory for Moira
-                setupMemory(pc, opcode, ext[i], ext[j]);
-
                 // Skip NBCD, SBCD, ABCD for now
                 if (isBcd(opcode)) {
                     continue;
                 }
 
                 // Reset Moira
-                moiracpu->reset();
+                resetMoira(setup);
                 moiraCycles = moiracpu->getClock();
 
                 // Disassemble instruction
@@ -286,7 +287,7 @@ void run()
 
                 // Run Moira
                 moiracpu->process();
-                mor.cycles = (int)moiracpu->getClock() - moiraCycles;
+                mor.cycles = (int)(moiracpu->getClock() - moiraCycles);
                 mor.pc = moiracpu->getPC();
                 mor.sr = moiracpu->getSR();
                 for (int i = 0; i < 8; i++) mor.d[i] = moiracpu->readD(i);
@@ -310,7 +311,7 @@ void run()
                     printf("Instruction: %s\n\n", moiraStr);
                     printf("    Musashi: ");
                     printf("PC: %4x ", mur.pc);
-                    printf("SR: %2x ", mur.sr);
+                    printf("SR: %4x ", mur.sr);
                     printf("Elapsed cycles: %d\n" , mur.cycles);
                     printf("      Moira: ");
                     printf("PC: %4x ", mor.pc);
@@ -326,11 +327,11 @@ void run()
                                mur.a[0], mur.a[1], mur.a[2], mur.a[3],
                                mur.a[4], mur.a[5], mur.a[6], mur.a[7]);
                         printf("  Moira: Dx: %8x %8x %8x %8x %8x %8x %8x %8x\n",
-                               mur.d[0], mur.d[1], mur.d[2], mur.d[3],
-                               mur.d[4], mur.d[5], mur.d[6], mur.d[7]);
+                               mor.d[0], mor.d[1], mor.d[2], mor.d[3],
+                               mor.d[4], mor.d[5], mor.d[6], mor.d[7]);
                         printf("  Moira: Ax: %8x %8x %8x %8x %8x %8x %8x %8x\n",
-                               mur.a[0], mur.a[1], mur.a[2], mur.a[3],
-                               mur.a[4], mur.a[5], mur.a[6], mur.a[7]);
+                               mor.a[0], mor.a[1], mor.a[2], mor.a[3],
+                               mor.a[4], mor.a[5], mor.a[6], mor.a[7]);
                     }
                     assert(false);
                 }
