@@ -33,7 +33,7 @@ extern "C" {
 #define TEST_DASM false
 
 // Set to true for verbose output
-#define VERBOSE true
+#define VERBOSE false
 
 // Forward declarations
 namespace moira { class Moira; }
@@ -66,23 +66,30 @@ struct Result {
     int cycles;
 };
 
+// Checks for certain instruction types
+bool isMul(uint16_t opcode);
+bool isDiv(uint16_t opcode);
+bool isMulOrDiv(uint16_t opcode);
+bool isNbcd(uint16_t opcode);
+bool isAbcd(uint16_t opcode);
+bool isSbcd(uint16_t opcode);
+bool isBcd(uint16_t opcode);
+
+// Location of the tested instruction in memory
+const uint32_t pc = 0x1000;
 
 //
 // Preparing a test
 //
 
-void setupTestCase(Setup &s, uint32_t pc, uint16_t opcode);
-
-// Setting up the CPU (called on start up)
 void setupMusashi();
 void setupMoira();
 
-// Resetting the CPU (called at the beginning of each test)
+void createTestCase(Setup &s);
+void setupInstruction(Setup &s, uint32_t pc, uint16_t opcode);
+
 void resetMusashi(Setup &s);
 void resetMoira(Setup &s);
-
-// Setting up Moira
-
 
 //
 // Performing a test
@@ -100,16 +107,5 @@ void dumpResult(Result &r);
 void compare(Setup &s, Result &r1, Result &r2);
 void compare(int c1, int c2, char *s1, char *s2);
 void bugReport();
-
-// Check for certain instructions
-bool isMul(uint16_t opcode);
-bool isDiv(uint16_t opcode);
-bool isMulOrDiv(uint16_t opcode);
-bool isNbcd(uint16_t opcode);
-bool isAbcd(uint16_t opcode);
-bool isSbcd(uint16_t opcode);
-bool isBcd(uint16_t opcode);
-
-
 
 #endif

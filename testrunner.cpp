@@ -57,10 +57,19 @@ bool isBcd(uint16_t opcode)
     return isAbcd(opcode) || isSbcd(opcode) || isNbcd(opcode);
 }
 
-void setupTestCase(Setup &s, uint32_t pc, uint16_t opcode)
+void setupMusashi()
 {
-    s.pc = pc;
-    s.opcode = opcode;
+    m68k_init();
+    m68k_set_cpu_type(M68K_CPU_TYPE_68000);
+}
+
+void setupMoira()
+{
+
+}
+
+void createTestCase(Setup &s)
+{
     s.sr = 0;
 
     for (int i = 0; i < 8; i++) s.d[i] = 0;
@@ -69,6 +78,13 @@ void setupTestCase(Setup &s, uint32_t pc, uint16_t opcode)
     for (unsigned i = 0; i < sizeof(s.mem); i++) {
         s.mem[i] = (uint8_t)((7 * i) & ~1);
     }
+}
+
+void setupInstruction(Setup &s, uint32_t pc, uint16_t opcode)
+{
+    s.pc = pc;
+    s.opcode = opcode;
+
     s.mem[pc] = opcode >> 8;
     s.mem[pc + 1] = opcode & 0xFF;
 
@@ -77,18 +93,6 @@ void setupTestCase(Setup &s, uint32_t pc, uint16_t opcode)
     s.mem[pc + 3] = 0x00;
     s.mem[pc + 4] = 0x80;
     s.mem[pc + 5] = 0x10;
-}
-
-void setupMusashi()
-{
-    m68k_init();
-    m68k_set_cpu_type(M68K_CPU_TYPE_68000);
-    // m68k_set_int_ack_callback(interrupt_handler);
-}
-
-void setupMoira()
-{
-
 }
 
 void resetMusashi(Setup &s)
@@ -126,30 +130,37 @@ void resetMoira(Setup &s)
 
 void run()
 {
-    const uint32_t pc = 0x1000;
+    Setup setup;
 
-    char moiraStr[128];
-    int64_t moiraCycles;
-    Setup  setup;
+    printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019\n\n");
+    printf("The test program runs Moira agains Musashi with randomly generated data.\n");
+    printf("It runs until a bug has been found.\n\n");
 
-
-    printf("Peforming tests... \n");
     setupMusashi();
+    setupMoira();
 
-    clock_t start = clock();
+    for (long round = 1 ;; round++) {
 
-    // Iterate through all opcodes
-    for (int opcode = 0x0000; opcode < 65536; opcode++) {
+        createTestCase(setup);
 
-        if ((opcode & 0xFFF) == 0) printf("Opcodes %xxxx\n", opcode >> 12);
+        printf("Round %ld ", round); fflush(stdout);
+        clock_t start = clock();
 
-        setupTestCase(setup, pc, opcode);
-        runSingleTest(setup);
+        // Iterate through all opcodes
+        for (int opcode = 0x0000; opcode < 65536; opcode++) {
+
+            if ((opcode & 0xFFF) == 0) {
+                printf("."); fflush(stdout);
+            }
+
+            setupInstruction(setup, pc, opcode);
+            runSingleTest(setup);
+        }
+
+        clock_t now = clock();
+        double elapsed = (double(now - start) / double(CLOCKS_PER_SEC));
+        printf(" PASSED (%.2f sec)\n", elapsed);
     }
-
-    clock_t now = clock();
-    double elapsed = (double(now - start) / double(CLOCKS_PER_SEC));
-    printf("PASSED (%f sec)\n", elapsed);
 }
 
 void runSingleTest(Setup &s)
