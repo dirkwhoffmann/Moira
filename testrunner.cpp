@@ -79,19 +79,6 @@ void setupTestCase(Setup &s, uint32_t pc, uint16_t opcode)
     s.mem[pc + 5] = 0x10;
 }
 
-void setupMemory(uint32_t addr, uint16_t val1, uint16_t val2, uint16_t val3)
-{
-    setMem16(addr, val1);
-    setMem16(addr + 2, val2);
-    setMem16(addr + 4, val3);
-}
-
-void setMem16(uint32_t addr, uint16_t val)
-{
-    mem[addr] = val >> 8;
-    mem[addr + 1] = val & 0xFF;
-}
-
 void setupMusashi()
 {
     m68k_init();
@@ -137,77 +124,6 @@ void resetMoira(Setup &s)
     }
 }
 
-void dasmTest()
-{
-    int iteration = 0;
-    moira::Moira moiraCPU;
-    char moiraStr[128], musashiStr[128];
-    int moiraCnt, musashiCnt;
-
-    // List of extension words used for testing
-    uint16_t ext[] = {
-        0x0001, 0x0002, 0x0004, 0x0008, 0x0010, 0x0020, 0x0040, 0x0080,
-        0x0100, 0x0200, 0x0400, 0x0800, 0x1000, 0x2000, 0x4000, 0x8000,
-        0x000F, 0x00F0, 0x0F00, 0xF000, 0x0007, 0x0070, 0x0700, 0x7000,
-        0x00FF, 0xFF00, 0x0FF0, 0xF00F, 0xF0F0, 0x0F0F, 0xFFF0, 0x0FFF,
-        0x8000, 0x8001, 0x8010, 0xF456, 0xAAAA, 0xF0F0, 0xF00F, 0xFFFF,
-        0x0000, 0x0001, 0x0010, 0x7456, 0x2AAA, 0x70F0, 0x700F, 0x7FFF,
-    };
-
-    printf("Peforming disassembler tests... \n");
-    setupMusashi();
-    setupMoira();
-
-    // We run the tests in an infinite loop
-    while (1) {
-
-        printf("Iteration %d:", ++iteration);
-
-        clock_t start = clock();
-
-        // Iterate through all opcodes
-        for (uint32_t opcode = 0x0000; opcode < 65536; opcode++) {
-
-            if ((opcode & 0xFFF) == 0) printf("Opcodes %xxxx\n", opcode >> 12);
-
-            for (int i = 0; i < 48; i++) {
-                for (int j = 0; j < 48; j++) {
-
-                    // Setup instruction
-                    const uint32_t pc = 0x1000;
-                    setMem16(pc + 0, opcode);
-                    setMem16(pc + 2, ext[i]);
-                    setMem16(pc + 4, ext[j]);
-
-                    // Ask Musashi to disassemble
-                    musashiCnt = m68k_disassemble(musashiStr, pc, M68K_CPU_TYPE_68000);
-
-                    // Ask Moira to disassemble
-                    moiraCnt = moiraCPU.disassemble(pc, moiraStr);
-
-                    // Compare
-                    bool error = false;
-                    error |= (strcmp(musashiStr, moiraStr) != 0);
-                    error |= (musashiCnt != moiraCnt);
-
-                    if (error) {
-                        printf("\n");
-                        printf("Mismatch found: %x %x %x\n\n", opcode, ext[i], ext[j]);
-                        printf("       Musashi: '%s'\n", musashiStr);
-                        printf("         Moira: '%s'\n\n", moiraStr);
-                        printf("         Sizes: %d Bytes / %d Bytes\n", musashiCnt, moiraCnt);
-                        assert(false);
-                    }
-                }
-            }
-        }
-
-        clock_t now = clock();
-        double elapsed = (double(now - start) / double(CLOCKS_PER_SEC));
-        printf("PASSED (%f sec)\n", elapsed);
-    }
-}
-
 void run()
 {
     const uint32_t pc = 0x1000;
@@ -249,9 +165,6 @@ void run()
 
                 // Prepare the test case for Musashi
                 setupTestCase(setup, pc, opcode);
-
-                // Setup memory for Musashi
-                setupMemory(pc, opcode, ext[i], ext[j]); // DEPRECATED
 
                 // Reset Musashi
                 resetMusashi(setup);

@@ -25,7 +25,6 @@ int main()
 
         // Run Moira against Musashi
         run();
-        // dasmTest();
 
     } else {
 

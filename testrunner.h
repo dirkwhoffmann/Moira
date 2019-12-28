@@ -70,10 +70,6 @@ struct Result {
 
 void setupTestCase(Setup &s, uint32_t pc, uint16_t opcode);
 
-// Setting up memory
-void setupMemory(uint32_t addr, uint16_t val1, uint16_t val2, uint16_t val3);
-void setMem16(uint32_t addr, uint16_t word);
-
 // Setting up the CPU (called on start up)
 void setupMusashi();
 void setupMoira();
@@ -90,7 +86,6 @@ void resetMoira(Setup &s);
 //
 
 // Main entry point to run all tests
-void dasmTest();
 void run();
 
 //
