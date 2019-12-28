@@ -45,7 +45,7 @@ extern "C" unsigned int m68k_read_disassembler_32 (unsigned int addr)
 
 extern "C" void m68k_write_memory_8(unsigned int addr, unsigned int value)
 {
-    moiracpu->sandbox.record(moira::POKE8, addr, 0, value);
+    moiracpu->sandbox.record(moira::POKE8, addr & 0xFFFFFF, 0, value);
     mem[addr & 0xFFFF] = value;
 }
 
@@ -53,7 +53,7 @@ extern "C" void m68k_write_memory_16(unsigned int addr, unsigned int value)
 {
     mem[addr & 0xFFFF] = (value >> 8) & 0xFF;
     mem[(addr + 1) & 0xFFFF] = value & 0xFF;
-    moiracpu->sandbox.record(moira::POKE16, addr, 0, value);
+    moiracpu->sandbox.record(moira::POKE16, addr & 0xFFFFFF, 0, value);
 }
 
 extern "C" void m68k_write_memory_32(unsigned int addr, unsigned int value)

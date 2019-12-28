@@ -57,6 +57,29 @@ bool isBcd(uint16_t opcode)
     return isAbcd(opcode) || isSbcd(opcode) || isNbcd(opcode);
 }
 
+uint32 smartRandom()
+{
+    switch (rand() % 16) {
+
+        case  0: // 8-bit numbers
+        case  1: return rand() & 0xFF;
+        case  2: return 0x80;
+        case  3: return 0xFF;
+
+        case  4: // 16-bit numbers
+        case  5: return rand() & 0xFFFF;
+        case  6: return 0x8000;
+        case  7: return 0xFFFF;
+
+        case  8: // 32-bit numbers
+        case  9: return rand() & 0xFFFFFFFF;
+        case 10: return 0x80000000;
+        case 11: return 0xFFFFFFFF;
+
+        default: return 0;
+    }
+}
+
 void setupMusashi()
 {
     m68k_init();
@@ -72,11 +95,11 @@ void createTestCase(Setup &s)
 {
     s.sr = 0;
 
-    for (int i = 0; i < 8; i++) s.d[i] = 0;
-    for (int i = 0; i < 8; i++) s.a[i] = 0;
+    for (int i = 0; i < 8; i++) s.d[i] = smartRandom();
+    for (int i = 0; i < 8; i++) s.a[i] = smartRandom();
 
     for (unsigned i = 0; i < sizeof(s.mem); i++) {
-        s.mem[i] = (uint8_t)((7 * i) & ~1);
+        s.mem[i] = smartRandom();
     }
 }
 
@@ -103,8 +126,8 @@ void resetMusashi(Setup &s)
     // m68ki_set_sr_noint(s.sr);
 
     for (int i = 0; i < 8; i++) {
-        m68k_set_reg((m68k_register_t)(M68K_REG_D0 + i), s.d[0]);
-        m68k_set_reg((m68k_register_t)(M68K_REG_A0 + i), s.a[0]);
+        m68k_set_reg((m68k_register_t)(M68K_REG_D0 + i), s.d[i]);
+        m68k_set_reg((m68k_register_t)(M68K_REG_A0 + i), s.a[i]);
     }
 }
 
@@ -132,6 +155,7 @@ void run()
 
     setupMusashi();
     setupMoira();
+    srand((int)time(NULL));
 
     for (long round = 1 ;; round++) {
 

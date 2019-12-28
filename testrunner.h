@@ -33,7 +33,7 @@ extern "C" {
 #define TEST_DASM true
 
 // Set to true for verbose output
-#define VERBOSE false
+#define VERBOSE true
 
 // Forward declarations
 namespace moira { class Moira; }
@@ -74,6 +74,9 @@ bool isNbcd(uint16_t opcode);
 bool isAbcd(uint16_t opcode);
 bool isSbcd(uint16_t opcode);
 bool isBcd(uint16_t opcode);
+
+// Create smart random numbers
+uint32 smartRandom();
 
 // Location of the tested instruction in memory
 const uint32_t pc = 0x1000;

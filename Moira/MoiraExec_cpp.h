@@ -612,13 +612,19 @@ Moira::execChk(u16 opcode)
 
     prefetch<LAST_BUS_CYCLE>();
     sync(4);
-    
+
     sr.z = ZERO<S>(dop);
     sr.v = 0;
     sr.c = 0;
-    sr.n = 0;
+    sr.n = NBIT<S>(dop);
+
+    /*
+    if ((i16)dop > (i16)sop) { printf("dop > sop\n"); }
+    if ((i16)dop < 0) { printf("dop < 0\n"); }
+    */
 
     if ((i16)dop > (i16)sop) {
+
         sync(4);
         execTrapException(6);
 
@@ -631,7 +637,7 @@ Moira::execChk(u16 opcode)
     sync(2);
 
     if ((i16)dop < 0) {
-        sr.n = 1;
+
         sync(4);
         execTrapException(6);
 
@@ -1180,7 +1186,7 @@ Moira::execMovepEaDx(u16 opcode)
         }
 
     }
-    writeD(dst, dx);
+    writeD<S>(dst, dx);
     prefetch<LAST_BUS_CYCLE>();
 }
 
