@@ -149,9 +149,7 @@ void run()
         // Iterate through all opcodes
         for (int opcode = 0x0000; opcode < 65536; opcode++) {
 
-            if ((opcode & 0xFFF) == 0) {
-                printf("."); fflush(stdout);
-            }
+            if ((opcode & 0xFFF) == 0) { printf("."); fflush(stdout); }
 
             setupInstruction(setup, pc, opcode);
             runSingleTest(setup);
@@ -182,17 +180,16 @@ void runSingleTest(Setup &s)
     if (moiracpu->isLineAInstr(s.opcode)) return;
     if (moiracpu->isLineFInstr(s.opcode)) return;
 
-    // Skip NBCD, SBCD, ABCD (broken in Musashi)
+    // Skip NBCD, SBCD, ABCD (likely to be broken in Musashi)
     if (isBcd(s.opcode)) return;
 
     if (VERBOSE) {
-
          char mos[128];
          moiracpu->disassemble(s.pc, mos);
          printf("$%04x: %s\n", s.opcode, mos);
      }
 
-    // Reset the sandbox (oberseves memory accesses)
+    // Reset the sandbox (memory accesses observer)
     moiracpu->sandbox.prepare();
 
     // Prepare Musashi

@@ -626,7 +626,7 @@ Moira::dasmMoveq(StrWriter &str, u32 &addr, u16 op)
 template<Instr I, Mode M, Size S> void
 Moira::dasmMoveToCcr(StrWriter &str, u32 &addr, u16 op)
 {
-    auto src = Op <M,S> ( _____________xxx(op), addr );
+    auto src = Op <M,Byte> ( _____________xxx(op), addr );
 
     str << Ins<I>{} << tab << src << ", CCR";
 }

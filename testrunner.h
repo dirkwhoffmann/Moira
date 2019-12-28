@@ -30,7 +30,7 @@ extern "C" {
 #define MUSASHI true
 
 // Set to true to compare the disassemblers, too
-#define TEST_DASM false
+#define TEST_DASM true
 
 // Set to true for verbose output
 #define VERBOSE false
