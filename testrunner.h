@@ -30,7 +30,10 @@ extern "C" {
 #define MUSASHI true
 
 // Set to true to compare the disassemblers, too
-#define TEST_DASM true
+#define TEST_DASM false
+
+// Set to true for verbose output
+#define VERBOSE true
 
 // Forward declarations
 namespace moira { class Moira; }
@@ -85,8 +88,8 @@ void resetMoira(Setup &s);
 // Performing a test
 //
 
-// Main entry point to run all tests
 void run();
+void runSingleTest(Setup &s);
 
 //
 // Analysing a test result
@@ -95,7 +98,8 @@ void run();
 void dumpSetup(Setup &s);
 void dumpResult(Result &r);
 void compare(Setup &s, Result &r1, Result &r2);
-
+void compare(int c1, int c2, char *s1, char *s2);
+void bugReport();
 
 // Check for certain instructions
 bool isMul(uint16_t opcode);

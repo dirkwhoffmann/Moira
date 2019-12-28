@@ -131,7 +131,7 @@ void run()
     char moiraStr[128];
     int64_t moiraCycles;
     Setup  setup;
-    Result mur, mor;
+
 
     printf("Peforming tests... \n");
     setupMusashi();
@@ -143,65 +143,79 @@ void run()
 
         if ((opcode & 0xFFF) == 0) printf("Opcodes %xxxx\n", opcode >> 12);
 
-        // Skip illegal instructions
-        if (moiracpu->isIllegalInstr(opcode)) continue;
-        if (moiracpu->isLineAInstr(opcode)) continue;
-        if (moiracpu->isLineFInstr(opcode)) continue;
-
-        // Reset the sandbox which oberseves memory accesses
-        moiracpu->sandbox.prepare();
-
-        // Setup a test case
         setupTestCase(setup, pc, opcode);
-
-        // Make Musashi ready to run the test
-        resetMusashi(setup);
-
-        // Disassemble instruction
-        // m68k_disassemble(musashiStr, pc, M68K_CPU_TYPE_68000);
-        // printf("Instruction: %s (Musashi)\n", musashiStr);
-
-        // Run Musashi
-        mur.cycles = m68k_execute(1);
-
-        // Record the result
-        mur.pc = m68k_get_reg(NULL, M68K_REG_PC);
-        mur.sr = m68k_get_reg(NULL, M68K_REG_SR);
-        mur.usp = m68k_get_reg(NULL, M68K_REG_USP);
-        mur.ssp = m68k_get_reg(NULL, M68K_REG_ISP);
-        for (int i = 0; i < 8; i++) {
-            mur.d[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_D0 + i));
-            mur.a[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_A0 + i));
-        }
-
-        // Skip NBCD, SBCD, ABCD for now
-        if (isBcd(opcode)) {
-            continue;
-        }
-
-        // Reset Moira
-        resetMoira(setup);
-        moiraCycles = moiracpu->getClock();
-
-        // Disassemble instruction
-        moiracpu->disassemble(pc, moiraStr);
-        // printf("Instruction $%4x: %s\n", opcode, moiraStr);
-
-        // Run Moira
-        moiracpu->process();
-        mor.cycles = (int)(moiracpu->getClock() - moiraCycles);
-        mor.pc = moiracpu->getPC();
-        mor.sr = moiracpu->getSR();
-        for (int i = 0; i < 8; i++) mor.d[i] = moiracpu->readD(i);
-        for (int i = 0; i < 8; i++) mor.a[i] = moiracpu->readA(i);
-
-        // Compare results
-        compare(setup, mur, mor);
+        runSingleTest(setup);
     }
 
     clock_t now = clock();
     double elapsed = (double(now - start) / double(CLOCKS_PER_SEC));
     printf("PASSED (%f sec)\n", elapsed);
+}
+
+void runSingleTest(Setup &s)
+{
+    Result mur, mor;
+
+    if (TEST_DASM) {
+
+        int muc, moc;
+        char mus[128], mos[128];
+
+        muc = m68k_disassemble(mus, s.pc, M68K_CPU_TYPE_68000);
+        moc = moiracpu->disassemble(s.pc, mos);
+        compare(muc, moc, mus, mos);
+    }
+
+    // Skip illegal instructions
+    if (moiracpu->isIllegalInstr(s.opcode)) return;
+    if (moiracpu->isLineAInstr(s.opcode)) return;
+    if (moiracpu->isLineFInstr(s.opcode)) return;
+
+    // Skip NBCD, SBCD, ABCD (broken in Musashi)
+    if (isBcd(s.opcode)) return;
+
+    if (VERBOSE) {
+
+         char mos[128];
+         moiracpu->disassemble(s.pc, mos);
+         printf("$%04x: %s\n", s.opcode, mos);
+     }
+
+    // Reset the sandbox (oberseves memory accesses)
+    moiracpu->sandbox.prepare();
+
+    // Prepare Musashi
+    resetMusashi(s);
+
+    // Run Musashi
+    mur.cycles = m68k_execute(1);
+
+    // Record the result
+    mur.pc = m68k_get_reg(NULL, M68K_REG_PC);
+    mur.sr = m68k_get_reg(NULL, M68K_REG_SR);
+    mur.usp = m68k_get_reg(NULL, M68K_REG_USP);
+    mur.ssp = m68k_get_reg(NULL, M68K_REG_ISP);
+    for (int i = 0; i < 8; i++) {
+        mur.d[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_D0 + i));
+        mur.a[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_A0 + i));
+    }
+
+    // Prepare Moira
+    resetMoira(s);
+
+    // Run Moira
+    int64_t clock = moiracpu->getClock();
+    moiracpu->process();
+
+    // Record the result
+    mor.cycles = (int)(moiracpu->getClock() - clock);
+    mor.pc = moiracpu->getPC();
+    mor.sr = moiracpu->getSR();
+    for (int i = 0; i < 8; i++) mor.d[i] = moiracpu->readD(i);
+    for (int i = 0; i < 8; i++) mor.a[i] = moiracpu->readA(i);
+
+    // Compare
+    compare(s, mur, mor);
 }
 
 void dumpSetup(Setup &s)
@@ -256,8 +270,26 @@ void compare(Setup &s, Result &r1, Result &r2)
         printf("Moira:   ");
         dumpResult(r2);
 
-        printf("Please send a bug report to: dirk.hoffmann@me.com\n");
-        printf("Thanks you!\n\n");
-        assert(false);
+        bugReport();
     }
+}
+
+void compare(int c1, int c2, char *s1, char *s2)
+{
+    if (c1 != c2 || strcmp(s1, s2) != 0) {
+
+        printf("\nDISASSEMBLER MISMATCH FOUND:\n\n");
+        printf("    Musashi: %s\n", s1);
+        printf("      Moira: %s\n", s2);
+        printf("      Bytes: %d / %d\n\n", c1, c2);
+
+        bugReport();
+    }
+}
+
+void bugReport()
+{
+    printf("Please send a bug report to: dirk.hoffmann@me.com\n");
+    printf("Thanks you!\n\n");
+    assert(false);
 }
