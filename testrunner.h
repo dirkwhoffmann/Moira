@@ -29,13 +29,40 @@ extern "C" {
 // Set to true to compare Moira against Musashi
 #define MUSASHI true
 
-// Set to true to compare the disassembler, too
+// Set to true to compare the disassemblers, too
 #define TEST_DASM true
 
+// Forward declarations
 namespace moira { class Moira; }
 extern class moira::Moira *moiracpu;
 extern class Tester_68k *tester;
 extern uint8_t mem[0x10000];
+
+// A test setup
+struct Setup {
+
+    uint32_t pc;
+    uint16_t opcode;
+    uint16_t sr;
+    uint32_t d[8];
+    uint32_t a[8];
+    uint8_t  mem[0x10000];
+};
+
+// A test result
+struct Result {
+
+    uint32_t pc;
+    uint32_t usp;
+    uint32_t ssp;
+    uint32_t d[8];
+    uint32_t a[8];
+    uint16_t sr;
+    char dasm[128];
+    int dasmCnt;
+    int cycles;
+};
+
 
 //
 // Preparing a test
@@ -67,6 +94,14 @@ void resetMoira();
 // Main entry point to run all tests
 void dasmTest();
 void run();
+
+//
+// Analysing a test result
+//
+
+void dumpSetup(Setup &s);
+void dumpResult(Result &r);
+void compare(Result &r1, Result &r2);
 
 
 // Check for certain instructions

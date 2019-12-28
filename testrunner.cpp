@@ -203,14 +203,18 @@ void dasmTest()
 
 void run()
 {
-    char moiraStr[128];
-    int64_t musashiCycles, moiraCycles;
-    int32_t musashiPC, moiraPC;
-    uint16_t musashiSR, moiraSR;
-    uint32_t musashiD[8], moiraD[8];
-    uint32_t musashiA[8], moiraA[8];
-
     const uint32_t pc = 0x1000;
+
+    char moiraStr[128];
+    int64_t moiraCycles;
+    int32_t moiraPC;
+    uint16_t moiraSR;
+    uint32_t moiraD[8];
+    uint32_t moiraA[8];
+
+    Setup  mus, mos;
+    Result mur, mor;
+
 
     // List of extension words used for testing
     uint16_t ext[] = {
@@ -228,7 +232,7 @@ void run()
     clock_t start = clock();
 
     // Iterate through all opcodes
-    for (uint32_t opcode = 0x0000; opcode < 65536; opcode++) {
+    for (int opcode = 0x0000; opcode < 65536; opcode++) {
 
         if ((opcode & 0xFFF) == 0) printf("Opcodes %xxxx\n", opcode >> 12);
 
@@ -237,10 +241,6 @@ void run()
         if (moiracpu->isLineAInstr(opcode)) continue;
         if (moiracpu->isLineFInstr(opcode)) continue;
 
-        /*
-        for (int i = 0; i < 48; i++) {
-            for (int j = 0; j < 48; j++) {
-        */
         for (int i = 32; i < 33; i++) {
             for (int j = 34; j < 35; j++) {
 
@@ -257,33 +257,22 @@ void run()
                 // printf("Instruction: %s (Musashi)\n", musashiStr);
 
                 // Run Musashi
-                musashiCycles = m68k_execute(1);
-                musashiPC = m68k_get_reg(NULL, M68K_REG_PC);
-                musashiSR = m68k_get_reg(NULL, M68K_REG_SR);
-                musashiD[0] = m68k_get_reg(NULL, M68K_REG_D0);
-                musashiD[1] = m68k_get_reg(NULL, M68K_REG_D1);
-                musashiD[2] = m68k_get_reg(NULL, M68K_REG_D2);
-                musashiD[3] = m68k_get_reg(NULL, M68K_REG_D3);
-                musashiD[4] = m68k_get_reg(NULL, M68K_REG_D4);
-                musashiD[5] = m68k_get_reg(NULL, M68K_REG_D5);
-                musashiD[6] = m68k_get_reg(NULL, M68K_REG_D6);
-                musashiD[7] = m68k_get_reg(NULL, M68K_REG_D7);
-                musashiA[0] = m68k_get_reg(NULL, M68K_REG_A0);
-                musashiA[1] = m68k_get_reg(NULL, M68K_REG_A1);
-                musashiA[2] = m68k_get_reg(NULL, M68K_REG_A2);
-                musashiA[3] = m68k_get_reg(NULL, M68K_REG_A3);
-                musashiA[4] = m68k_get_reg(NULL, M68K_REG_A4);
-                musashiA[5] = m68k_get_reg(NULL, M68K_REG_A5);
-                musashiA[6] = m68k_get_reg(NULL, M68K_REG_A6);
-                musashiA[7] = m68k_get_reg(NULL, M68K_REG_A7);
+                mur.cycles = m68k_execute(1);
+
+                mur.pc = m68k_get_reg(NULL, M68K_REG_PC);
+                mur.sr = m68k_get_reg(NULL, M68K_REG_SR);
+                mur.usp = m68k_get_reg(NULL, M68K_REG_USP);
+                mur.ssp = m68k_get_reg(NULL, M68K_REG_ISP);
+                for (int i = 0; i < 8; i++) {
+                    mur.d[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_D0 + i));
+                    mur.a[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_A0 + i));
+                }
 
                 // Setup memory for Moira
                 setupMemory(pc, opcode, ext[i], ext[j]);
 
                 // Skip NBCD, SBCD, ABCD for now
                 if (isBcd(opcode)) {
-                    // moiracpu->disassemble(pc, moiraStr);
-                    // printf("SKIPPING $%4x: %s\n", opcode, moiraStr);
                     continue;
                 }
 
@@ -297,11 +286,11 @@ void run()
 
                 // Run Moira
                 moiracpu->process();
-                moiraCycles = moiracpu->getClock() - moiraCycles;
-                moiraPC = moiracpu->getPC();
-                moiraSR = moiracpu->getSR();
-                for (int i = 0; i < 8; i++) moiraD[i] = moiracpu->readD(i);
-                for (int i = 0; i < 8; i++) moiraA[i] = moiracpu->readA(i);
+                mor.cycles = (int)moiracpu->getClock() - moiraCycles;
+                mor.pc = moiracpu->getPC();
+                mor.sr = moiracpu->getSR();
+                for (int i = 0; i < 8; i++) mor.d[i] = moiracpu->readD(i);
+                for (int i = 0; i < 8; i++) mor.a[i] = moiracpu->readA(i);
 
                 // Compare results
                 bool error = false;
@@ -309,39 +298,39 @@ void run()
 
                 // printf("Cycles %d / %d\n", musashiCycles, moiraCycles);
 
-                error |= (musashiPC != moiraPC);
-                error |= (musashiSR != moiraSR);
-                error |= !isMulOrDiv(opcode) && (musashiCycles != moiraCycles);
-                for (int i = 0; i < 8; i++) regError |= musashiD[i] != moiraD[i];
-                for (int i = 0; i < 8; i++) regError |= musashiA[i] != moiraA[i];
+                error |= (mur.pc != mor.pc);
+                error |= (mur.sr != mor.sr);
+                error |= !isMulOrDiv(opcode) && (mur.cycles != mor.cycles);
+                for (int i = 0; i < 8; i++) regError |= mur.d[i] != mor.d[i];
+                for (int i = 0; i < 8; i++) regError |= mur.a[i] != mor.a[i];
 
                 if (error || regError) {
                     moiracpu->disassemble(pc, moiraStr);
                     printf("\nMISMATCH FOUND (opcode $%x out of $FFFF):\n\n", opcode);
                     printf("Instruction: %s\n\n", moiraStr);
                     printf("    Musashi: ");
-                    printf("PC: %4x ", musashiPC);
-                    printf("SR: %2x ", musashiSR);
-                    printf("Elapsed cycles: %2lld\n" , musashiCycles);
+                    printf("PC: %4x ", mur.pc);
+                    printf("SR: %2x ", mur.sr);
+                    printf("Elapsed cycles: %d\n" , mur.cycles);
                     printf("      Moira: ");
-                    printf("PC: %4x ", moiraPC);
-                    printf("SR: %4x ", moiraSR);
-                    printf("Elapsed cycles: %2lld\n\n" , moiraCycles);
+                    printf("PC: %4x ", mor.pc);
+                    printf("SR: %4x ", mor.sr);
+                    printf("Elapsed cycles: %d\n\n" , mor.cycles);
                     printf("\n");
 
                     if (regError) {
                         printf("Musashi: Dx: %8x %8x %8x %8x %8x %8x %8x %8x\n",
-                               musashiD[0], musashiD[1], musashiD[2], musashiD[3],
-                               musashiD[4], musashiD[5], musashiD[6], musashiD[7]);
+                               mur.d[0], mur.d[1], mur.d[2], mur.d[3],
+                               mur.d[4], mur.d[5], mur.d[6], mur.d[7]);
                         printf("         Ax: %8x %8x %8x %8x %8x %8x %8x %8x\n\n",
-                               musashiA[0], musashiA[1], musashiA[2], musashiA[3],
-                               musashiA[4], musashiA[5], musashiA[6], musashiA[7]);
+                               mur.a[0], mur.a[1], mur.a[2], mur.a[3],
+                               mur.a[4], mur.a[5], mur.a[6], mur.a[7]);
                         printf("  Moira: Dx: %8x %8x %8x %8x %8x %8x %8x %8x\n",
-                               moiraD[0], moiraD[1], moiraD[2], moiraD[3],
-                               moiraD[4], moiraD[5], moiraD[6], moiraD[7]);
+                               mur.d[0], mur.d[1], mur.d[2], mur.d[3],
+                               mur.d[4], mur.d[5], mur.d[6], mur.d[7]);
                         printf("  Moira: Ax: %8x %8x %8x %8x %8x %8x %8x %8x\n",
-                               moiraA[0], moiraA[1], moiraA[2], moiraA[3],
-                               moiraA[4], moiraA[5], moiraA[6], moiraA[7]);
+                               mur.a[0], mur.a[1], mur.a[2], mur.a[3],
+                               mur.a[4], mur.a[5], mur.a[6], mur.a[7]);
                     }
                     assert(false);
                 }
@@ -352,4 +341,57 @@ void run()
     clock_t now = clock();
     double elapsed = (double(now - start) / double(CLOCKS_PER_SEC));
     printf("PASSED (%f sec)\n", elapsed);
+}
+
+void dumpSetup(Setup &s)
+{
+    printf("SR: %2x \n", s.sr);
+    printf("Dn: ");
+    for (int i = 0; i < 8; i++) printf("%8x ", s.d[i]);
+    printf("\n");
+    printf("An: ");
+    for (int i = 0; i < 8; i++) printf("%8x ", s.a[i]);
+}
+
+void dumpResult(Result &r)
+{
+    printf("\n");
+    printf("PC: %4x ", r.pc);
+    printf("SR: %2x ", r.sr);
+    printf("Elapsed cycles: %d\n\n" , r.cycles);
+
+    printf("Dn: ");
+    for (int i = 0; i < 8; i++) printf("%8x ", r.d[i]);
+    printf("\n");
+    printf("An: ");
+    for (int i = 0; i < 8; i++) printf("%8x ", r.a[i]);
+    printf("\n");
+}
+
+void compare(Setup &s, Result &r1, Result &r2)
+{
+    bool error = false;
+    char str[128];
+
+    error |= (r1.pc != r2.pc);
+    error |= (r1.sr != r2.sr);
+    error |= !isMulOrDiv(s.opcode) && (r1.cycles != r2.cycles);
+    for (int i = 0; i < 8; i++) error |= r1.d[i] != r2.d[i];
+    for (int i = 0; i < 8; i++) error |= r1.a[i] != r2.a[i];
+
+    if (error) {
+
+        moiracpu->disassemble(s.pc, str);
+        printf("\nMISMATCH FOUND (opcode $%x out of $FFFF):\n\n", s.opcode);
+        printf("Instruction: %s\n\n", str);
+
+        printf("Setup: ");
+        dumpSetup(s);
+
+        printf("Musashi: ");
+        dumpResult(r1);
+
+        printf("Moira: ");
+        dumpResult(r2);
+    }
 }
