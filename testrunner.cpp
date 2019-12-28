@@ -133,16 +133,6 @@ void run()
     Setup  setup;
     Result mur, mor;
 
-    // List of extension words used for testing
-    uint16_t ext[] = {
-        0x0001, 0x0002, 0x0004, 0x0008, 0x0010, 0x0020, 0x0040, 0x0080,
-        0x0100, 0x0200, 0x0400, 0x0800, 0x1000, 0x2000, 0x4000, 0x8000,
-        0x000F, 0x00F0, 0x0F00, 0xF000, 0x0007, 0x0070, 0x0700, 0x7000,
-        0x00FF, 0xFF00, 0x0FF0, 0xF00F, 0xF0F0, 0x0F0F, 0xFFF0, 0x0FFF,
-        0x8000, 0x8001, 0x8010, 0xF456, 0xAAAA, 0xF0F0, 0xF00F, 0xFFFF,
-        0x0000, 0x0001, 0x0010, 0x7456, 0x2AAA, 0x70F0, 0x700F, 0x7FFF,
-    };
-
     printf("Peforming tests... \n");
     setupMusashi();
 
@@ -158,98 +148,55 @@ void run()
         if (moiracpu->isLineAInstr(opcode)) continue;
         if (moiracpu->isLineFInstr(opcode)) continue;
 
-        for (int i = 32; i < 33; i++) {
-            for (int j = 34; j < 35; j++) {
+        // Reset the sandbox which oberseves memory accesses
+        moiracpu->sandbox.prepare();
 
-                moiracpu->sandbox.prepare();
+        // Setup a test case
+        setupTestCase(setup, pc, opcode);
 
-                // Prepare the test case for Musashi
-                setupTestCase(setup, pc, opcode);
+        // Make Musashi ready to run the test
+        resetMusashi(setup);
 
-                // Reset Musashi
-                resetMusashi(setup);
+        // Disassemble instruction
+        // m68k_disassemble(musashiStr, pc, M68K_CPU_TYPE_68000);
+        // printf("Instruction: %s (Musashi)\n", musashiStr);
 
-                // Disassemble instruction
-                // m68k_disassemble(musashiStr, pc, M68K_CPU_TYPE_68000);
-                // printf("Instruction: %s (Musashi)\n", musashiStr);
+        // Run Musashi
+        mur.cycles = m68k_execute(1);
 
-                // Run Musashi
-                mur.cycles = m68k_execute(1);
-
-                mur.pc = m68k_get_reg(NULL, M68K_REG_PC);
-                mur.sr = m68k_get_reg(NULL, M68K_REG_SR);
-                mur.usp = m68k_get_reg(NULL, M68K_REG_USP);
-                mur.ssp = m68k_get_reg(NULL, M68K_REG_ISP);
-                for (int i = 0; i < 8; i++) {
-                    mur.d[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_D0 + i));
-                    mur.a[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_A0 + i));
-                }
-
-                // Skip NBCD, SBCD, ABCD for now
-                if (isBcd(opcode)) {
-                    continue;
-                }
-
-                // Reset Moira
-                resetMoira(setup);
-                moiraCycles = moiracpu->getClock();
-
-                // Disassemble instruction
-                moiracpu->disassemble(pc, moiraStr);
-                // printf("Instruction $%4x: %s\n", opcode, moiraStr);
-
-                // Run Moira
-                moiracpu->process();
-                mor.cycles = (int)(moiracpu->getClock() - moiraCycles);
-                mor.pc = moiracpu->getPC();
-                mor.sr = moiracpu->getSR();
-                for (int i = 0; i < 8; i++) mor.d[i] = moiracpu->readD(i);
-                for (int i = 0; i < 8; i++) mor.a[i] = moiracpu->readA(i);
-
-                // Compare results
-                bool error = false;
-                bool regError = false;
-
-                // printf("Cycles %d / %d\n", musashiCycles, moiraCycles);
-
-                error |= (mur.pc != mor.pc);
-                error |= (mur.sr != mor.sr);
-                error |= !isMulOrDiv(opcode) && (mur.cycles != mor.cycles);
-                for (int i = 0; i < 8; i++) regError |= mur.d[i] != mor.d[i];
-                for (int i = 0; i < 8; i++) regError |= mur.a[i] != mor.a[i];
-
-                if (error || regError) {
-                    moiracpu->disassemble(pc, moiraStr);
-                    printf("\nMISMATCH FOUND (opcode $%x out of $FFFF):\n\n", opcode);
-                    printf("Instruction: %s\n\n", moiraStr);
-                    printf("    Musashi: ");
-                    printf("PC: %4x ", mur.pc);
-                    printf("SR: %4x ", mur.sr);
-                    printf("Elapsed cycles: %d\n" , mur.cycles);
-                    printf("      Moira: ");
-                    printf("PC: %4x ", mor.pc);
-                    printf("SR: %4x ", mor.sr);
-                    printf("Elapsed cycles: %d\n\n" , mor.cycles);
-                    printf("\n");
-
-                    if (regError) {
-                        printf("Musashi: Dx: %8x %8x %8x %8x %8x %8x %8x %8x\n",
-                               mur.d[0], mur.d[1], mur.d[2], mur.d[3],
-                               mur.d[4], mur.d[5], mur.d[6], mur.d[7]);
-                        printf("         Ax: %8x %8x %8x %8x %8x %8x %8x %8x\n\n",
-                               mur.a[0], mur.a[1], mur.a[2], mur.a[3],
-                               mur.a[4], mur.a[5], mur.a[6], mur.a[7]);
-                        printf("  Moira: Dx: %8x %8x %8x %8x %8x %8x %8x %8x\n",
-                               mor.d[0], mor.d[1], mor.d[2], mor.d[3],
-                               mor.d[4], mor.d[5], mor.d[6], mor.d[7]);
-                        printf("  Moira: Ax: %8x %8x %8x %8x %8x %8x %8x %8x\n",
-                               mor.a[0], mor.a[1], mor.a[2], mor.a[3],
-                               mor.a[4], mor.a[5], mor.a[6], mor.a[7]);
-                    }
-                    assert(false);
-                }
-            }
+        // Record the result
+        mur.pc = m68k_get_reg(NULL, M68K_REG_PC);
+        mur.sr = m68k_get_reg(NULL, M68K_REG_SR);
+        mur.usp = m68k_get_reg(NULL, M68K_REG_USP);
+        mur.ssp = m68k_get_reg(NULL, M68K_REG_ISP);
+        for (int i = 0; i < 8; i++) {
+            mur.d[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_D0 + i));
+            mur.a[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_A0 + i));
         }
+
+        // Skip NBCD, SBCD, ABCD for now
+        if (isBcd(opcode)) {
+            continue;
+        }
+
+        // Reset Moira
+        resetMoira(setup);
+        moiraCycles = moiracpu->getClock();
+
+        // Disassemble instruction
+        moiracpu->disassemble(pc, moiraStr);
+        // printf("Instruction $%4x: %s\n", opcode, moiraStr);
+
+        // Run Moira
+        moiracpu->process();
+        mor.cycles = (int)(moiracpu->getClock() - moiraCycles);
+        mor.pc = moiracpu->getPC();
+        mor.sr = moiracpu->getSR();
+        for (int i = 0; i < 8; i++) mor.d[i] = moiracpu->readD(i);
+        for (int i = 0; i < 8; i++) mor.a[i] = moiracpu->readA(i);
+
+        // Compare results
+        compare(setup, mur, mor);
     }
 
     clock_t now = clock();
@@ -259,27 +206,28 @@ void run()
 
 void dumpSetup(Setup &s)
 {
-    printf("SR: %2x \n", s.sr);
-    printf("Dn: ");
+    printf("PC: %4x ", s.pc);
+    printf("SR: %2x\n", s.sr);
+    printf("         Dn: ");
     for (int i = 0; i < 8; i++) printf("%8x ", s.d[i]);
     printf("\n");
-    printf("An: ");
+    printf("         An: ");
     for (int i = 0; i < 8; i++) printf("%8x ", s.a[i]);
+    printf("\n\n");
 }
 
 void dumpResult(Result &r)
 {
-    printf("\n");
     printf("PC: %4x ", r.pc);
     printf("SR: %2x ", r.sr);
-    printf("Elapsed cycles: %d\n\n" , r.cycles);
+    printf("Elapsed cycles: %d\n" , r.cycles);
 
-    printf("Dn: ");
+    printf("         Dn: ");
     for (int i = 0; i < 8; i++) printf("%8x ", r.d[i]);
     printf("\n");
-    printf("An: ");
+    printf("         An: ");
     for (int i = 0; i < 8; i++) printf("%8x ", r.a[i]);
-    printf("\n");
+    printf("\n\n");
 }
 
 void compare(Setup &s, Result &r1, Result &r2)
@@ -299,13 +247,17 @@ void compare(Setup &s, Result &r1, Result &r2)
         printf("\nMISMATCH FOUND (opcode $%x out of $FFFF):\n\n", s.opcode);
         printf("Instruction: %s\n\n", str);
 
-        printf("Setup: ");
+        printf("Setup:   ");
         dumpSetup(s);
 
         printf("Musashi: ");
         dumpResult(r1);
 
-        printf("Moira: ");
+        printf("Moira:   ");
         dumpResult(r2);
+
+        printf("Please send a bug report to: dirk.hoffmann@me.com\n");
+        printf("Thanks you!\n\n");
+        assert(false);
     }
 }

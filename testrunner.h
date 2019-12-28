@@ -94,7 +94,7 @@ void run();
 
 void dumpSetup(Setup &s);
 void dumpResult(Result &r);
-void compare(Result &r1, Result &r2);
+void compare(Setup &s, Result &r1, Result &r2);
 
 
 // Check for certain instructions
