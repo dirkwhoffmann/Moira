@@ -545,13 +545,14 @@ template<Instr I, Mode M, Size S> void
 Moira::execBitImEa(u16 opcode)
 {
     int dst = _____________xxx(opcode);
-    u8  bit = irc & 0b11111;
+    u8  bit = irc;
     readExtensionWord();
 
     switch (M)
     {
         case 0:
         {
+            bit &= 0b11111;
             u32 data = readD(dst);
             data = bitop<I>(data, bit);
 
@@ -563,6 +564,7 @@ Moira::execBitImEa(u16 opcode)
         }
         default:
         {
+            bit &= 0b111;
             u32 ea, data;
             if (!readOperand<M,Byte>(dst, ea, data)) return;
 

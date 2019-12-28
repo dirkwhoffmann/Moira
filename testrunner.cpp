@@ -87,12 +87,6 @@ void setupInstruction(Setup &s, uint32_t pc, uint16_t opcode)
 
     s.mem[pc] = opcode >> 8;
     s.mem[pc + 1] = opcode & 0xFF;
-
-    // REMOVE ASAP
-    s.mem[pc + 2] = 0x80;
-    s.mem[pc + 3] = 0x00;
-    s.mem[pc + 4] = 0x80;
-    s.mem[pc + 5] = 0x10;
 }
 
 void resetMusashi(Setup &s)
