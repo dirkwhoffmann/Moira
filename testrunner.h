@@ -69,7 +69,8 @@ struct Result {
 };
 
 // Checks for certain instruction types
-bool isBtst(uint16_t opcode);
+bool isTas(uint16_t opcode);
+bool isChk(uint16_t opcode);
 bool isBclr(uint16_t opcode);
 bool isBset(uint16_t opcode);
 bool isBchg(uint16_t opcode);

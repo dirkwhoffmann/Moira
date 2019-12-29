@@ -14,13 +14,17 @@ Tester_68k *tester;
 uint8_t mem[0x10000];
 Sandbox sandbox;
 
-bool isBtst(uint16_t opcode)
+bool isTas(uint16_t opcode)
+{
+    return (opcode & 0b1111111111000000) == 0b0100101011000000;
+}
+
+bool isChk(uint16_t opcode)
 {
     bool result = false;
     
-    if ((opcode & 0b1111000111000000) == 0b0000000100000000) result = true;
-    if ((opcode & 0b1111111111000000) == 0b0000100000000000) result = true;
-    
+    if ((opcode & 0b1111000111000000) == 0b0100000110000000) result = true;
+
     return result;
 }
 
@@ -410,8 +414,13 @@ bool compareSR(Setup &s, Result &r1, Result &r2)
 bool compareCycles(Setup &s, Result &r1, Result &r2)
 {
     // Ignore instruction that are wrong in Musashi
-    if (isMul(s.opcode) || isDiv(s.opcode)) return true;
-    if (isBclr(s.opcode) || isBset(s.opcode) || isBchg(s.opcode)) return true;
+    if (isMul(s.opcode)  ||
+        isDiv(s.opcode)  ||
+        isBclr(s.opcode) ||
+        isBset(s.opcode) ||
+        isBchg(s.opcode) ||
+        isChk(s.opcode)  ||
+        isTas(s.opcode)) return true;
 
     return r1.cycles == r2.cycles;
 }

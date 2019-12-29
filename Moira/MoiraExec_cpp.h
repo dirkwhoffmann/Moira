@@ -623,9 +623,6 @@ Moira::execChk(u16 opcode)
         sr.n = NBIT<S>(dop);
         execTrapException(6);
 
-        // Musashi consumes 40 cycles
-        if (MIMIC_MUSASHI) sync(40 - (int)(clock - oldclock));
-
         return;
     }
 
@@ -636,9 +633,6 @@ Moira::execChk(u16 opcode)
         sync(4);
         sr.n = NBIT<S>(dop);
         execTrapException(6);
-
-        // Musashi consumes 40 cycles
-        if (MIMIC_MUSASHI) sync(40 - (int)(clock - oldclock));
     }
 }
 
@@ -1583,11 +1577,7 @@ Moira::execTasEa(u16 opcode)
     sr.setNZVC<Byte>(data);
     data |= 0x80;
 
-    if (MIMIC_MUSASHI) {
-        sync(6);
-    } else {
-        if (!isRegMode(M)) sync(2);
-    }
+    if (!isRegMode(M)) sync(2);
     writeOperand<M,S>(dst, ea, data);
 
     prefetch<LAST_BUS_CYCLE>();
