@@ -10,7 +10,7 @@
 #ifndef SANDBOX_H
 #define SANDBOX_H
 
-namespace moira {
+#include "simpletypes.h"
 
 enum AccessType {
     PEEK8,
@@ -53,5 +53,4 @@ public:
     void error(AccessType type, u32 addr, u64 cycle, u16 value = 0);
 };
 
-}
 #endif

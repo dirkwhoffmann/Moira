@@ -10,8 +10,6 @@
 #include <stdio.h>
 #include "Moira.h"
 
-namespace moira {
-
 Sandbox::Sandbox()
 {
     prepare();
@@ -126,6 +124,4 @@ Sandbox::error(AccessType type, u32 addr, u64 cycle, u16 value)
         printf("\n");
     }
     assert(false);
-}
-
 }

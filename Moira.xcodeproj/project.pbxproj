@@ -133,6 +133,7 @@
 		505580E523AFA04C0009F77F /* m68kops.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kops.h; sourceTree = "<group>"; };
 		505580EA23AFA14D0009F77F /* musashi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = musashi.cpp; sourceTree = "<group>"; };
 		505580ED23AFB31F0009F77F /* moira.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moira.cpp; sourceTree = "<group>"; };
+		5061893B23B8EF9D004B7F1E /* simpletypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = simpletypes.h; sourceTree = "<group>"; };
 		506E013B23AC8E8A0015AE3F /* MoiraMemory_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraMemory_cpp.h; sourceTree = "<group>"; };
 		507BE4AD23B66456000B37D2 /* testrunner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = testrunner.cpp; sourceTree = "<group>"; };
 		507BE4AE23B66456000B37D2 /* testrunner.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = testrunner.h; sourceTree = "<group>"; };
@@ -308,6 +309,7 @@
 			children = (
 				50804F342386A7DD004D3EC2 /* Moira.h */,
 				50B99DAB23B24E0C00D8A89A /* MoiraTypes.h */,
+				5061893B23B8EF9D004B7F1E /* simpletypes.h */,
 				50804F432387E46B004D3EC2 /* MoiraBase.h */,
 				50804F442387EF15004D3EC2 /* MoiraBase.cpp */,
 				50804F382386AB37004D3EC2 /* MoiraExec.h */,
