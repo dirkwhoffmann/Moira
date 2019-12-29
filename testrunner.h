@@ -44,6 +44,7 @@ extern uint8_t mem[0x10000];
 // A test setup
 struct Setup {
 
+    uint8_t  ccr;
     uint32_t pc;
     uint16_t opcode;
     uint16_t sr;

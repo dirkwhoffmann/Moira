@@ -616,16 +616,11 @@ Moira::execChk(u16 opcode)
     sr.z = ZERO<S>(dop);
     sr.v = 0;
     sr.c = 0;
-    sr.n = NBIT<S>(dop);
-
-    /*
-    if ((i16)dop > (i16)sop) { printf("dop > sop\n"); }
-    if ((i16)dop < 0) { printf("dop < 0\n"); }
-    */
 
     if ((i16)dop > (i16)sop) {
 
         sync(4);
+        sr.n = NBIT<S>(dop);
         execTrapException(6);
 
         // Musashi consumes 40 cycles
@@ -639,6 +634,7 @@ Moira::execChk(u16 opcode)
     if ((i16)dop < 0) {
 
         sync(4);
+        sr.n = NBIT<S>(dop);
         execTrapException(6);
 
         // Musashi consumes 40 cycles

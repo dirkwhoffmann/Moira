@@ -93,6 +93,7 @@ void setupMoira()
 void createTestCase(Setup &s)
 {
     s.sr = 0;
+    s.ccr = smartRandom();
 
     for (int i = 0; i < 8; i++) s.d[i] = smartRandom();
     for (int i = 0; i < 8; i++) s.a[i] = smartRandom();
@@ -113,7 +114,6 @@ void setupInstruction(Setup &s, uint32_t pc, uint16_t opcode)
 
 void resetMusashi(Setup &s)
 {
-    m68ki_set_sr_noint(0);
     m68k_set_reg(M68K_REG_USP, 0);
     m68k_set_reg(M68K_REG_ISP, 0);
     m68k_set_reg(M68K_REG_MSP, 0);
@@ -128,6 +128,7 @@ void resetMusashi(Setup &s)
     for (int i = 0; i < 7; i++) {
         m68k_set_reg((m68k_register_t)(M68K_REG_A0 + i), s.a[i]);
     }
+    m68ki_set_ccr(s.ccr);
 }
 
 void resetMoira(Setup &s)
@@ -144,6 +145,7 @@ void resetMoira(Setup &s)
     for (int i = 0; i < 7; i++) {
         moiracpu->writeA(i,s.a[i]);
     }
+    moiracpu->setCCR(s.ccr);
 }
 
 void run()
@@ -248,7 +250,7 @@ void runSingleTest(Setup &s)
 void dumpSetup(Setup &s)
 {
     printf("PC: %4x ", s.pc);
-    printf("SR: %2x\n", s.sr);
+    printf("CCR: %2x\n", s.ccr);
     printf("         Dn: ");
     for (int i = 0; i < 8; i++) printf("%8x ", s.d[i]);
     printf("\n");
