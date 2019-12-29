@@ -14,9 +14,48 @@ Tester_68k *tester;
 uint8_t mem[0x10000];
 Sandbox sandbox;
 
+bool isBtst(uint16_t opcode)
+{
+    bool result = false;
+    
+    if ((opcode & 0b1111000111000000) == 0b0000000100000000) result = true;
+    if ((opcode & 0b1111111111000000) == 0b0000100000000000) result = true;
+    
+    return result;
+}
+
+bool isBclr(uint16_t opcode)
+{
+    bool result = false;
+
+    if ((opcode & 0b1111000111000000) == 0b0000000110000000) result = true;
+    if ((opcode & 0b1111111111000000) == 0b0000100010000000) result = true;
+
+    return result;
+}
+
+bool isBset(uint16_t opcode)
+{
+    bool result = false;
+
+    if ((opcode & 0b1111000111000000) == 0b0000000111000000) result = true;
+    if ((opcode & 0b1111111111000000) == 0b0000100011000000) result = true;
+
+    return result;
+}
+
+bool isBchg(uint16_t opcode)
+{
+    bool result = false;
+
+    if ((opcode & 0b1111000111000000) == 0b0000000101000000) result = true;
+    if ((opcode & 0b1111111111000000) == 0b0000100001000000) result = true;
+
+    return result;
+}
+
 bool isMovem(uint16_t opcode)
 {
-
     bool result = false;
 
      if ((opcode & 0b1111111110000000) == 0b0100110010000000) result = true;
@@ -172,7 +211,7 @@ void run()
 
     setupMusashi();
     setupMoira();
-    srand(0); // (int)time(NULL));
+    srand((int)time(NULL));
 
     for (long round = 1 ;; round++) {
 
@@ -370,11 +409,9 @@ bool compareSR(Setup &s, Result &r1, Result &r2)
 
 bool compareCycles(Setup &s, Result &r1, Result &r2)
 {
-    if (isMul(s.opcode) || isDiv(s.opcode))
-    {
-        // Musashi differs (and is likely wrong). Ignore it
-        return true;
-    }
+    // Ignore instruction that are wrong in Musashi
+    if (isMul(s.opcode) || isDiv(s.opcode)) return true;
+    if (isBclr(s.opcode) || isBset(s.opcode) || isBchg(s.opcode)) return true;
 
     return r1.cycles == r2.cycles;
 }
