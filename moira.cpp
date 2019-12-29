@@ -51,7 +51,7 @@ Moira::read16Reset(u32 addr)
             case 4: return 0x0000;
             case 6: return 0x1000;
         }
-        return mem[addr & 0xFFFFFF] << 8 | mem[(addr + 1) & 0xFFFFFF];
+        return mem[addr & 0xFFFF] << 8 | mem[(addr + 1) & 0xFFFF];
     } else {
         return sandbox.replayPeek(PEEK16, addr, getClock());
     }

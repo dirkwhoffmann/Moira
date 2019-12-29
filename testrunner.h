@@ -69,6 +69,7 @@ struct Result {
 };
 
 // Checks for certain instruction types
+bool isMovem(uint16_t opcode);
 bool isTrap(uint16_t opcode);
 bool isMul(uint16_t opcode);
 bool isDiv(uint16_t opcode);

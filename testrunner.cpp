@@ -14,6 +14,17 @@ Tester_68k *tester;
 uint8_t mem[0x10000];
 Sandbox sandbox;
 
+bool isMovem(uint16_t opcode)
+{
+
+    bool result = false;
+
+     if ((opcode & 0b1111111110000000) == 0b0100110010000000) result = true;
+     if ((opcode & 0b1111111110000000) == 0b0100100010000000) result = true;
+
+     return result;
+}
+
 bool isTrap(uint16_t opcode)
 {
     return ((opcode & 0b1111111111110000) == 0b0100111001000000);
@@ -119,13 +130,13 @@ void setupInstruction(Setup &s, uint32_t pc, uint16_t opcode)
 
 void resetMusashi(Setup &s)
 {
+    memcpy(mem, s.mem, sizeof(mem));
+
     m68k_set_reg(M68K_REG_USP, 0);
     m68k_set_reg(M68K_REG_ISP, 0);
     m68k_set_reg(M68K_REG_MSP, 0);
 
     m68k_pulse_reset();
-
-    memcpy(mem, s.mem, sizeof(mem));
 
     for (int i = 0; i < 8; i++) {
         m68k_set_reg((m68k_register_t)(M68K_REG_D0 + i), s.d[i]);
@@ -138,11 +149,9 @@ void resetMusashi(Setup &s)
 
 void resetMoira(Setup &s)
 {
-    moiracpu->reset();
-
     memcpy(mem, s.mem, sizeof(mem));
 
-    // moiracpu->setSR(s.sr);
+    moiracpu->reset();
 
     for (int i = 0; i < 8; i++) {
         moiracpu->writeD(i,s.d[i]);
@@ -163,7 +172,7 @@ void run()
 
     setupMusashi();
     setupMoira();
-    srand((int)time(NULL));
+    srand(0); // (int)time(NULL));
 
     for (long round = 1 ;; round++) {
 
@@ -209,17 +218,17 @@ void runSingleTest(Setup &s)
     // Skip NBCD, SBCD, ABCD (likely to be broken in Musashi)
     if (isBcd(s.opcode)) return;
 
-    if (VERBOSE) {
-         char mos[128];
-         moiracpu->disassemble(s.pc, mos);
-         printf("$%04x: %s\n", s.opcode, mos);
-     }
-
     // Reset the sandbox (memory accesses observer)
     sandbox.prepare();
 
     // Prepare Musashi
     resetMusashi(s);
+
+    if (VERBOSE) {
+         char mos[128];
+         moiracpu->disassemble(s.pc, mos);
+         printf("$%04x: %s\n", s.opcode, mos);
+     }
 
     // Run Musashi
     mur.cycles = m68k_execute(1);
