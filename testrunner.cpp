@@ -9,6 +9,10 @@
 
 #include "testrunner.h"
 
+bool isTrap(uint16_t opcode)
+{
+    return ((opcode & 0b1111111111110000) == 0b0100111001000000);
+}
 
 bool isMul(uint16_t opcode)
 {
@@ -110,18 +114,18 @@ void setupInstruction(Setup &s, uint32_t pc, uint16_t opcode)
 void resetMusashi(Setup &s)
 {
     m68ki_set_sr_noint(0);
+    m68k_set_reg(M68K_REG_USP, 0);
+    m68k_set_reg(M68K_REG_ISP, 0);
+    m68k_set_reg(M68K_REG_MSP, 0);
 
     m68k_pulse_reset();
 
     memcpy(mem, s.mem, sizeof(mem));
 
-    m68k_set_reg(M68K_REG_USP, 0);
-    m68k_set_reg(M68K_REG_ISP, 0);
-    m68k_set_reg(M68K_REG_MSP, 0);
-    // m68ki_set_sr_noint(s.sr);
-
     for (int i = 0; i < 8; i++) {
         m68k_set_reg((m68k_register_t)(M68K_REG_D0 + i), s.d[i]);
+    }
+    for (int i = 0; i < 7; i++) {
         m68k_set_reg((m68k_register_t)(M68K_REG_A0 + i), s.a[i]);
     }
 }
@@ -136,6 +140,8 @@ void resetMoira(Setup &s)
 
     for (int i = 0; i < 8; i++) {
         moiracpu->writeD(i,s.d[i]);
+    }
+    for (int i = 0; i < 7; i++) {
         moiracpu->writeA(i,s.a[i]);
     }
 }
