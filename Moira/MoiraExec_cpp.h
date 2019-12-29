@@ -1316,13 +1316,16 @@ Moira::execDiv(u16 opcode)
     u32 ea, data;
     if (!readOperand<M, Word>(src, ea, data)) return;
 
-    sr.n = sr.z = sr.v = sr.c = 0;
-
     // Check for division by zero
     if (data == 0) {
+        if (!MIMIC_MUSASHI) {
+            sr.n = sr.z = sr.v = sr.c = 0;
+        }
         sync(8);
         return execTrapException(5);
     }
+
+    sr.n = sr.z = sr.v = sr.c = 0;
 
     u32 dividend = readD(dst);
 
