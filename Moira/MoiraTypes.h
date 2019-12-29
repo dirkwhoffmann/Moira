@@ -50,21 +50,7 @@ typedef enum
 }
 Instr;
 
-/* Adressing modes
- *
- *   0:        Dn : Data register direct
- *   1:        An : Address register direct
- *   2:      (An) : Address register indirect
- *   3:     (An)+ : Address register indirect with post increment
- *   4:     -(An) : Address register indirect with pre decrement
- *   5:    (d,An) : Address register indirect with displacement
- *   6: (d,An,Xi) : Address register indirect with displacement and indexing
- *   7:  (####).w : Absolute addressing short
- *   8:  (####).l : Absolute addressing long
- *   9:    (d,PC) : Program counter indirect with displacement
- *  10: (d,PC,Xi) : Program counter indirect with displacement and indexing
- *  11:      #### : Immediate
- */
+// Adressing modes
 typedef enum {
 
     MODE_DN,   //           Dn : Data register direct
