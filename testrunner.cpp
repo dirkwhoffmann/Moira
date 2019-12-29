@@ -27,11 +27,6 @@ bool isDiv(uint16_t opcode)
     return false;
 }
 
-bool isMulOrDiv(uint16_t opcode)
-{
-    return isDiv(opcode) || isMul(opcode);
-}
-
 bool isAbcd(uint16_t opcode)
 {
     if ((opcode & 0b1111000111111000) == 0b1000000100000000) return true;
@@ -275,17 +270,32 @@ void compare(Setup &s, Result &r1, Result &r2)
     bool error = false;
     char str[128];
 
-    error |= (r1.pc != r2.pc);
-    error |= (r1.sr != r2.sr);
-    error |= !isMulOrDiv(s.opcode) && (r1.cycles != r2.cycles);
-    for (int i = 0; i < 8; i++) error |= r1.d[i] != r2.d[i];
-    for (int i = 0; i < 8; i++) error |= r1.a[i] != r2.a[i];
+    if (!comparePC(s, r1, r2)) {
+        printf("\n\nPC MISMATCH FOUND\n");
+        error = true;
+    }
+    if (!compareSR(s, r1, r2)) {
+        printf("\n\nSR MISMATCH FOUND\n");
+        error = true;
+    }
+    if (!compareCycles(s, r1, r2)) {
+        printf("\n\nCLOCK MISMATCH FOUND\n");
+        error = true;
+    }
+    if (!compareD(s, r1, r2)) {
+        printf("\n\nDATA REGISTER MISMATCH FOUND\n");
+        error = true;
+    }
+    if (!compareA(s, r1, r2)) {
+        printf("\n\nADDRESS REGISTER MISMATCH FOUND\n");
+        error = true;
+    }
 
     if (error) {
 
         moiracpu->disassemble(s.pc, str);
-        printf("\nMISMATCH FOUND (opcode $%x out of $FFFF):\n\n", s.opcode);
-        printf("Instruction: %s\n\n", str);
+        printf("\nInstruction: %s ", str);
+        printf("(opcode $%x out of $FFFF)\n\n", s.opcode);
 
         printf("Setup:   ");
         dumpSetup(s);
@@ -298,6 +308,51 @@ void compare(Setup &s, Result &r1, Result &r2)
 
         bugReport();
     }
+}
+
+bool compareD(Setup &s, Result &r1, Result &r2)
+{
+    if (isDiv(s.opcode))
+    {
+        // Musashi differs in some corner cases
+        return true;
+    }
+
+    for (int i = 0; i < 8; i++) if (r1.d[i] != r2.d[i]) return false;
+    return true;
+}
+
+bool compareA(Setup &s, Result &r1, Result &r2)
+{
+    for (int i = 0; i < 8; i++) if (r1.a[i] != r2.a[i]) return false;
+    return true;
+}
+
+bool comparePC(Setup &s, Result &r1, Result &r2)
+{
+    return r1.pc == r2.pc;
+}
+
+bool compareSR(Setup &s, Result &r1, Result &r2)
+{
+    if (isDiv(s.opcode))
+    {
+        // Musashi differs (and is likely wrong). Ignore it
+        return true;
+    }
+
+    return r1.sr == r2.sr;
+}
+
+bool compareCycles(Setup &s, Result &r1, Result &r2)
+{
+    if (isMul(s.opcode) || isDiv(s.opcode))
+    {
+        // Musashi differs (and is likely wrong). Ignore it
+        return true;
+    }
+
+    return r1.cycles == r2.cycles;
 }
 
 void compare(int c1, int c2, char *s1, char *s2)

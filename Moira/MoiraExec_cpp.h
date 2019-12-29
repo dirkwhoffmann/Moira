@@ -1344,8 +1344,7 @@ Moira::execDiv(u16 opcode)
             i16 remainder = (i32)dividend % (i16)data;
 
             if ((result & 0xffff8000) != 0 && (result & 0xffff8000) != 0xffff8000) {
-                sr.v = 1;
-                sr.n = 1;
+                sr.v = sr.n = 1;
                 break;
             }
             sr.n = NBIT<Word>(result);
@@ -1361,7 +1360,7 @@ Moira::execDiv(u16 opcode)
             u32 result = dividend / data;
             u16 remainder = dividend % data;
 
-            if (result > 0xffff) {
+            if (result > 0xFFFF) {
                 sr.v = 1;
                 sr.n = 1;
                 break;

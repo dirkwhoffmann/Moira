@@ -953,16 +953,17 @@ void Core_68k::op_chk(u16 opcode) {
     prefetch(true);
     reg_s.v = reg_s.c = reg_s.n = 0;
     reg_s.z = (reg_d[regPos] & 0xffff) == 0;
+    reg_s.n = (i16)reg_d[regPos] < 0;
     sync(4);
     if ((i16)reg_d[regPos] > (i16)data) {
-		reg_s.n = 0;
+		// reg_s.n = 0;
 		sync(4);
         trapException(6);
 		return;
 	}
     sync(2);
     if ((i16)reg_d[regPos] < 0 ) {
-		reg_s.n = 1;
+		// reg_s.n = 1;
 		sync(4);
         trapException(6);
 		return;

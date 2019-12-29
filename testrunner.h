@@ -33,7 +33,7 @@ extern "C" {
 #define TEST_DASM true
 
 // Set to true for verbose output
-#define VERBOSE true
+#define VERBOSE false
 
 // Forward declarations
 namespace moira { class Moira; }
@@ -69,7 +69,6 @@ struct Result {
 // Checks for certain instruction types
 bool isMul(uint16_t opcode);
 bool isDiv(uint16_t opcode);
-bool isMulOrDiv(uint16_t opcode);
 bool isNbcd(uint16_t opcode);
 bool isAbcd(uint16_t opcode);
 bool isSbcd(uint16_t opcode);
@@ -108,6 +107,11 @@ void runSingleTest(Setup &s);
 void dumpSetup(Setup &s);
 void dumpResult(Result &r);
 void compare(Setup &s, Result &r1, Result &r2);
+bool compareD(Setup &s, Result &r1, Result &r2);
+bool compareA(Setup &s, Result &r1, Result &r2);
+bool comparePC(Setup &s, Result &r1, Result &r2);
+bool compareSR(Setup &s, Result &r1, Result &r2);
+bool compareCycles(Setup &s, Result &r1, Result &r2);
 void compare(int c1, int c2, char *s1, char *s2);
 void bugReport();
 

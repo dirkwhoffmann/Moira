@@ -165,6 +165,7 @@ public:
     template<Size S = Long> void incR(int n, i32 v) { writeR<S>(n, readR<S>(n) + v); }
 
     i64 getClock() { return clock; }
+    void setClock(i64 value) { clock = value; }
     u32 getPC() { return reg.pc; }
     u32 getIRC() { return irc; }
     u32 getIRD() { return ird; }
