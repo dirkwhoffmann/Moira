@@ -3,7 +3,6 @@
 
 #include "68k/68k.h"
 #include "memoryblock.h"
-// #include "MoiraDelegate.h"
 
 class Results;
 

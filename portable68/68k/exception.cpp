@@ -34,7 +34,7 @@ void Core_68k::setInterrupt(u8 level) {
  * too late irqs are not serviced till end of following opcode
  */
 void Core_68k::sampleIrq() {
-    moiracpu->sandbox.recordPoll(cycleCounter, irqPendingLevel);
+    sandbox.recordPoll(cycleCounter, irqPendingLevel);
     irqSamplingLevel = irqPendingLevel;
 }
 

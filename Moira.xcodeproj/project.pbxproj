@@ -277,6 +277,8 @@
 				505580E323AFA04C0009F77F /* readme.txt */,
 				505580E423AFA04C0009F77F /* history.txt */,
 				505580E523AFA04C0009F77F /* m68kops.h */,
+				50CECEC623A924B000E07C65 /* Sandbox.h */,
+				50CECEC523A924B000E07C65 /* Sandbox.cpp */,
 			);
 			path = Musashi;
 			sourceTree = "<group>";
@@ -323,8 +325,6 @@
 				50804F392387B466004D3EC2 /* MoiraDasm_cpp.h */,
 				5010BDAD238A897400CFD010 /* StringWriter.h */,
 				5010BDAC238A897400CFD010 /* StringWriter_cpp.h */,
-				50CECEC623A924B000E07C65 /* Sandbox.h */,
-				50CECEC523A924B000E07C65 /* Sandbox.cpp */,
 			);
 			path = Moira;
 			sourceTree = "<group>";

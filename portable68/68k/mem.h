@@ -35,7 +35,7 @@ u8 readByte(u32 addr, bool lastCycle = false) {
     if (lastCycle) sampleIrq();
     // printf("portable68000::readByte %d\n", cycleCounter);
     u8 data = memRead(addr & 0xffffff);
-    moiracpu->sandbox.record(PEEK8, addr & 0xffffff, cycleCounter, data);
+    sandbox.record(PEEK8, addr & 0xffffff, cycleCounter, data);
     sync(2);
     // printf("portable68000:: %d\n", cycleCounter);
 	return data;
@@ -52,7 +52,7 @@ u16 readWord(u32 addr, bool lastCycle = false) {
     if (lastCycle) sampleIrq();
     // printf("portable68000::readWord %d\n", cycleCounter);
     u16 word = memWordRead(addr & 0xffffff);
-    moiracpu->sandbox.record(PEEK16, addr & 0xffffff, cycleCounter, word);
+    sandbox.record(PEEK16, addr & 0xffffff, cycleCounter, word);
     sync(2);
     // printf("portable68000:: %d\n", cycleCounter);
 	return word;
@@ -72,7 +72,7 @@ void writeByte(u32 addr, u8 value, bool lastCycle = false) {
     if (lastCycle) sampleIrq();
 
     memWrite(addr & 0xffffff, value);
-    moiracpu->sandbox.record(POKE8, addr & 0xffffff, cycleCounter, value);
+    sandbox.record(POKE8, addr & 0xffffff, cycleCounter, value);
     sync(2);
 }
 
@@ -86,7 +86,7 @@ void writeWord(u32 addr, u16 value, bool lastCycle = false) {
     if (lastCycle) sampleIrq();
 
     memWordWrite(addr & 0xffffff, value);
-    moiracpu->sandbox.record(POKE16, addr & 0xffffff, cycleCounter, value);
+    sandbox.record(POKE16, addr & 0xffffff, cycleCounter, value);
     sync(2);
 }
 

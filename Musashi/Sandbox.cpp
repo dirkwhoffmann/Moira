@@ -8,7 +8,7 @@
 // -----------------------------------------------------------------------------
 
 #include <stdio.h>
-#include "Moira.h"
+#include "testrunner.h"
 
 Sandbox::Sandbox()
 {
@@ -19,6 +19,7 @@ void
 Sandbox::prepare()
 {
     recordCnt = replayCnt = 0;
+    errors = 0;
 }
 
 void
@@ -123,5 +124,5 @@ Sandbox::error(AccessType type, u32 addr, u64 cycle, u16 value)
         printf("Value: %4x  ", access[i].value);
         printf("\n");
     }
-    assert(false);
+    errors++;
 }

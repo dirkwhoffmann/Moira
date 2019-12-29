@@ -39,11 +39,13 @@ class Sandbox {
     AccessRecord access[64];
     int recordCnt;
     int replayCnt;
+    long errors;
 
 public:
 
     Sandbox(); 
     void prepare();
+    long getErrors() { return errors; }
     void record(AccessType type, u32 addr, u64 cycle, u16 value);
     void recordPoll(u64 cycle, u8 value);
     u32  replayPeek(AccessType type, u32 addr, u64 cycle);

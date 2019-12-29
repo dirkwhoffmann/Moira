@@ -40,6 +40,7 @@ namespace moira { class Moira; }
 extern class moira::Moira *moiracpu;
 extern class Tester_68k *tester;
 extern uint8_t mem[0x10000];
+extern Sandbox sandbox;
 
 // A test setup
 struct Setup {

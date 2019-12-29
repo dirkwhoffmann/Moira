@@ -11,11 +11,6 @@
 
 #include "Moira.h"
 
-
-moira::Moira *moiracpu;
-Tester_68k *tester;
-uint8_t mem[0x10000];
-
 int main()
 {
     moiracpu = new moira::Moira();

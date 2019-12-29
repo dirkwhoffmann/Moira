@@ -9,6 +9,11 @@
 
 #include "testrunner.h"
 
+moira::Moira *moiracpu;
+Tester_68k *tester;
+uint8_t mem[0x10000];
+Sandbox sandbox;
+
 bool isTrap(uint16_t opcode)
 {
     return ((opcode & 0b1111111111110000) == 0b0100111001000000);
@@ -211,7 +216,7 @@ void runSingleTest(Setup &s)
      }
 
     // Reset the sandbox (memory accesses observer)
-    moiracpu->sandbox.prepare();
+    sandbox.prepare();
 
     // Prepare Musashi
     resetMusashi(s);
@@ -298,6 +303,8 @@ void compare(Setup &s, Result &r1, Result &r2)
         printf("\n\nADDRESS REGISTER MISMATCH FOUND\n");
         error = true;
     }
+
+    error |= (sandbox.getErrors() != 0);
 
     if (error) {
 

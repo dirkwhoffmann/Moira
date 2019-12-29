@@ -356,7 +356,7 @@ void Tester_68k::setUp() {
     cycleCounter = -40;
     adrCounter = 8;
     memoryblock.write(7, 8);
-    moiracpu->sandbox.prepare();
+    sandbox.prepare();
 }
 
 u16 Tester_68k::memWordRead(u32 addr) {

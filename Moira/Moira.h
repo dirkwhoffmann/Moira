@@ -74,16 +74,6 @@ struct StatusRegister {
 
 class Moira {
 
-public:
-
-    // Sandbox (for memory debugging)
-    Sandbox sandbox;
-
-    // The delegation object (connected memory)
-    // MoiraDelegate *memory = NULL;
-
-private:
-
     // Number of elapsed cycles since power up
     i64 clock;
     
