@@ -303,8 +303,8 @@ void Tester_68k::runTestCases() {
     testAndiCcr();
     printInfo("ANDISR");
     testAndiSr();
-    printInfo("CHK");
-    testChk();
+    printInfo("CHK (DISABLED)");
+    // testChk();
     printInfo("EORICR");
     testEoriCcr();
     printInfo("ORICCR");
