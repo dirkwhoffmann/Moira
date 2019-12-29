@@ -205,6 +205,8 @@ void resetMoira(Setup &s)
     moiracpu->setCCR(s.ccr);
 }
 
+clock_t muclk = 0, moclk = 0;
+
 void run()
 {
     Setup setup;
@@ -235,7 +237,9 @@ void run()
 
         clock_t now = clock();
         double elapsed = (double(now - start) / double(CLOCKS_PER_SEC));
-        printf(" PASSED (%.2f sec)\n", elapsed);
+        printf(" PASSED (Musashi: %.2fs Moira: %.2fs)\n",
+               muclk / double(CLOCKS_PER_SEC),
+               moclk / double(CLOCKS_PER_SEC));
     }
 }
 
@@ -274,7 +278,9 @@ void runSingleTest(Setup &s)
      }
 
     // Run Musashi
+    clock_t now = clock();
     mur.cycles = m68k_execute(1);
+    muclk += clock() - now;
 
     // Record the result
     mur.pc = m68k_get_reg(NULL, M68K_REG_PC);
@@ -290,11 +296,13 @@ void runSingleTest(Setup &s)
     resetMoira(s);
 
     // Run Moira
-    int64_t clock = moiracpu->getClock();
+    int64_t cycles = moiracpu->getClock();
+    now = clock();
     moiracpu->process();
+    moclk += clock() - now;
 
     // Record the result
-    mor.cycles = (int)(moiracpu->getClock() - clock);
+    mor.cycles = (int)(moiracpu->getClock() - cycles);
     mor.pc = moiracpu->getPC();
     mor.sr = moiracpu->getSR();
     for (int i = 0; i < 8; i++) mor.d[i] = moiracpu->readD(i);
