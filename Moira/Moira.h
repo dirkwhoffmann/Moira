@@ -10,21 +10,11 @@
 #ifndef MOIRA_H
 #define MOIRA_H
 
+#include "MoiraConfig.h"
 #include "MoiraTypes.h"
-#include "StringWriter.h"
+#include "StrWriter.h"
 
 namespace moira {
-
-//
-// Configuration
-//
-
-// Set to 1 to check for address error exceptions
-#define MOIRA_EMULATE_ADDRESS_ERROR false
-
-// Set to true to run Moira in Musashi compatibility mode
-#define MIMIC_MUSASHI true
-
 
 struct Registers {
 
@@ -61,16 +51,34 @@ struct StatusRegister {
 
 class Moira {
 
-    // Number of elapsed cycles since power up
+    //
+    // Configuration
+    //
+
+    // Emulated CPU model (only 68000 at the moment)
+    CPUModel model = M68000;
+
+    // Number format used by the disassembler (hex or decimal)
+    bool hex = true;
+
+    // Tab spacing used by the disassembler
+    Align tab{8};
+
+
+    //
+    // Internal state
+    //
+
+    // Number of elapsed cycles since powerup
     i64 clock;
-    
-    // Data and address registers
+
+    // The data and address registers
     Registers reg;
 
-    // Status register
+    // The status register
     StatusRegister sr;
 
-    /* Instruction prefetch queue
+    /* The instruction prefetch queue
      * http://pasti.fxatari.com/68kdocs/68kPrefetch.html
      *
      * Three registers are involved in prefetching:
@@ -84,23 +92,14 @@ class Moira {
     u16 irc;
     u16 ird;
 
-    //  Interrupt Priority Levels
+    //  Interrupt Priority Level (combined value of the three IPL pins)
     u8 iplPolled;
 
-    // Jump table storing all instruction handlers
+    // Jump table holding the instruction handlers
     void (Moira::*exec[65536])(u16);
 
-    // Jump table storing all disassebler handlers
+    // Jump table holding the disassebler handlers
     void (Moira::*dasm[65536])(StrWriter&, u32&, u16);
-
-
-    //
-    // Disassembler
-    //
-
-    bool hex = true;
-    Align tab{8};
-    char str[256];
 
     
     //
@@ -121,8 +120,8 @@ public:
 
     void power();
     void reset();
-    void process(u16 reg_ird);
-    void process() { process(ird); }
+    void execute(u16 reg_ird);
+    void execute() { execute(ird); }
 
 
     //

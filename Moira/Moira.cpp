@@ -19,7 +19,7 @@ namespace moira {
 #include "MoiraMemory_cpp.h"
 #include "MoiraTiming_cpp.h"
 #include "MoiraExec_cpp.h"
-#include "StringWriter_cpp.h"
+#include "StrWriter_cpp.h"
 #include "MoiraDasm_cpp.h"
 
 Moira::Moira()
@@ -69,7 +69,7 @@ Moira::reset()
 }
 
 void
-Moira::process(u16 reg_ird)
+Moira::execute(u16 reg_ird)
 {
     reg.pc += 2;
     (this->*exec[reg_ird])(reg_ird);

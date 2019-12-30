@@ -409,7 +409,7 @@ void Tester_68k::check(string ident) {
     }
 
     // Run Moira
-    moiracpu->process();
+    moiracpu->execute();
 
     // Compare result with Moira
     comparePost();

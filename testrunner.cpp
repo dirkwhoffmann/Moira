@@ -298,7 +298,7 @@ void runSingleTest(Setup &s)
     // Run Moira
     int64_t cycles = moiracpu->getClock();
     now = clock();
-    moiracpu->process();
+    moiracpu->execute();
     moclk += clock() - now;
 
     // Record the result
