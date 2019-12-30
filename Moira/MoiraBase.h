@@ -17,7 +17,6 @@ namespace moira {
 // Flags
 #define SKIP_LAST_READ true
 
-template<Size>   u32  MASK();
 template<Size>   u32  MSBIT();
 template<Size>   i32  SIGN (u64 data);
 template<Size>   u32  CLIP (u64 data);
