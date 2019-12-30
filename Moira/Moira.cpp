@@ -75,6 +75,42 @@ Moira::process(u16 reg_ird)
     (this->*exec[reg_ird])(reg_ird);
 }
 
+template<Size S> u32
+Moira::readD(int n)
+{
+    return CLIP<S>(reg.d[n]);
+}
+
+template<Size S> u32
+Moira::readA(int n)
+{
+    return CLIP<S>(reg.a[n]);
+}
+
+template<Size S> u32
+Moira::readR(int n)
+{
+    return CLIP<S>(reg.r[n]);
+}
+
+template<Size S> void
+Moira::writeD(int n, u32 v)
+{
+    reg.d[n] = WRITE<S>(reg.d[n], v);
+}
+
+template<Size S> void
+Moira::writeA(int n, u32 v)
+{
+    reg.a[n] = WRITE<S>(reg.a[n], v);
+}
+
+template<Size S> void
+Moira::writeR(int n, u32 v)
+{
+    reg.r[n] = WRITE<S>(reg.r[n], v);
+}
+
 u16
 Moira::getSR()
 {

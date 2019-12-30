@@ -185,15 +185,12 @@ public:
 
 public:
 
-    template<Size S = Long> u32 readD(int n) { return CLIP<S>(reg.d[n]); }
-    template<Size S = Long> u32 readA(int n) { return CLIP<S>(reg.a[n]); }
-    template<Size S = Long> u32 readR(int n) { return CLIP<S>(reg.r[n]); }
-    template<Size S = Long> void writeD(int n, u32 v) { reg.d[n] = WRITE<S>(reg.d[n], v); }
-    template<Size S = Long> void writeA(int n, u32 v) { reg.a[n] = WRITE<S>(reg.a[n], v); }
-    template<Size S = Long> void writeR(int n, u32 v) { reg.r[n] = WRITE<S>(reg.r[n], v); }
-    template<Size S = Long> void incD(int n, i32 v) { writeD<S>(n, readD<S>(n) + v); }
-    template<Size S = Long> void incA(int n, i32 v) { writeA<S>(n, readA<S>(n) + v); }
-    template<Size S = Long> void incR(int n, i32 v) { writeR<S>(n, readR<S>(n) + v); }
+    template<Size S = Long> u32 readD(int n);
+    template<Size S = Long> u32 readA(int n);
+    template<Size S = Long> u32 readR(int n);
+    template<Size S = Long> void writeD(int n, u32 v);
+    template<Size S = Long> void writeA(int n, u32 v);
+    template<Size S = Long> void writeR(int n, u32 v);
 
     i64 getClock() { return clock; }
     void setClock(i64 value) { clock = value; }
@@ -202,10 +199,10 @@ public:
     u32 getIRD() { return ird; }
     void setIRD(u32 value) { ird = value; }
 
+    
     //
     // Accessing memory
     //
-
 
     /* Checks an address for an address error.
      * An address error occurs if a word or long word is being read from an
