@@ -237,7 +237,11 @@ public:
     void write8  (u32 addr, u8  val);
     void write16 (u32 addr, u16 val);
 
-    
+
+    void dummyRead(u32 pc);
+    void dummyRead() { dummyRead(reg.pc); }
+
+
     //
     // Emulate timing
     //
@@ -263,10 +267,6 @@ public:
 
 
 private:
-
-    // Instruction handlers
-    #include "MoiraExec.h"
-    #include "MoiraDasm.h"
 
 
     //
@@ -301,16 +301,16 @@ private:
     template<bool last = false> void prefetch();
     template<bool last = false> void fullPrefetch();
     template<bool skip = false> void readExtensionWord();
-    void dummyRead(u32 pc);
-    void dummyRead() { dummyRead(reg.pc); }
     void jumpToVector(u8 nr);
 
     //
     // Handling interrupts
     //
 
-    /* Polls the IPL pins.
-     * Takes place during the last bus cycle of an instruction.
+private:
+
+    /* Polls the IPL pins
+     * Polling takes place during the last bus cycle of an instruction.
      */
     void pollIrq();
 
@@ -320,11 +320,17 @@ private:
     //
 
 public:
-    
+
     bool isIllegalInstr(u16 op) { return exec[op] == &Moira::execIllegal; }
     bool isLineAInstr(u16 op)   { return exec[op] == &Moira::execLineA; }
     bool isLineFInstr(u16 op)   { return exec[op] == &Moira::execLineF; }
 
+
+private:
+
+    // Instruction handlers
+    #include "MoiraExec.h"
+    #include "MoiraDasm.h"
 };
 
 }
