@@ -18,6 +18,8 @@ namespace moira {
 
 struct Registers {
 
+    u32 pc;               // Program counter
+
     union {
         struct {
             u32 d[8];     // D0, D1 ... D7
@@ -31,9 +33,11 @@ struct Registers {
             u32 sp;       // Visible stack pointer (overlays a[7])
         };
     };
+
     u32 usp;              // User Stack Pointer
     u32 ssp;              // Supervisor Stack Pointer
-    u32 pc;               // Program counter
+
+    u8 ipl;               //  Interrupt Priority Level (polled from IPL lines)
 };
 
 struct StatusRegister {
@@ -46,7 +50,7 @@ struct StatusRegister {
     bool v;               // Overflow flag
     bool c;               // Carry flag
 
-    u8 ipl;               // Interrupt Priority Level
+    u8 ipl;               // Interrupt Priority Level (trigger threshold)
 };
 
 struct PrefetchQueue {    // http://pasti.fxatari.com/68kdocs/68kPrefetch.html
@@ -86,9 +90,6 @@ class Moira {
 
     // The prefetch queue
     PrefetchQueue queue;
-
-    //  Interrupt Priority Level (combined value of the three IPL pins)
-    u8 iplPolled;
 
     // Jump table holding the instruction handlers
     void (Moira::*exec[65536])(u16);
@@ -215,7 +216,7 @@ public:
     template<Mode M, Size S, bool last = false> void writeOperand(int n, u32 ea, u32 value);
 
     // Reads an immediate value
-    template<Size S> u32 readImm();
+    template<Size S> u32 readI();
 
     //
     // Low-level memory access functions (stubs)

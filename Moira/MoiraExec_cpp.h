@@ -278,7 +278,7 @@ Moira::execAdda(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execAddiRg(u16 opcode)
 {
-    u32 src = readImm<S>();
+    u32 src = readI<S>();
     int dst = _____________xxx(opcode);
 
     u32 ea, data, result;
@@ -294,7 +294,7 @@ Moira::execAddiRg(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execAddiEa(u16 opcode)
 {
-    u32 src = readImm<S>();
+    u32 src = readI<S>();
     int dst = _____________xxx(opcode);
 
     u32 ea, data, result;
@@ -422,7 +422,7 @@ Moira::execAndRgEa(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execAndiRg(u16 opcode)
 {
-    u32 src = readImm<S>();
+    u32 src = readI<S>();
     int dst = _____________xxx(opcode);
     
     u32 result = logic<I,S>(src, readD<S>(dst));
@@ -437,7 +437,7 @@ Moira::execAndiEa(u16 opcode)
 {
     u32 ea, data, result;
 
-    u32 src = readImm<S>();
+    u32 src = readI<S>();
     int dst = _____________xxx(opcode);
 
     if (!readOperand<M,S>(dst, ea, data)) return;
@@ -451,7 +451,7 @@ Moira::execAndiEa(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execAndiccr(u16 opcode)
 {
-    u32 src = readImm<S>();
+    u32 src = readI<S>();
     u8  dst = getCCR();
 
     sync(8);
@@ -468,7 +468,7 @@ Moira::execAndisr(u16 opcode)
 {
     SUPERVISOR_MODE_ONLY
 
-    u32 src = readImm<S>();
+    u32 src = readI<S>();
     u16 dst = getSR();
 
     sync(8);
@@ -688,7 +688,7 @@ Moira::execCmpa(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execCmpiRg(u16 opcode)
 {
-    u32 src = readImm<S>();
+    u32 src = readI<S>();
     int dst = _____________xxx(opcode);
 
     prefetch<LAST_BUS_CYCLE>();
@@ -700,7 +700,7 @@ Moira::execCmpiRg(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execCmpiEa(u16 opcode)
 {
-    u32 src = readImm<S>();
+    u32 src = readI<S>();
     int dst = _____________xxx(opcode);
 
     u32 ea, data;

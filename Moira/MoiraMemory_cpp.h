@@ -7,46 +7,147 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-/* Calling sequences for fetching an operand:
+/* Relationship of the functions defined in this file:
  *
- *                         readOperand()
- *                              |
- *          ---------------------------------------------
- *          |   |   |   |   |   |   |   |   |   |   |   |
- *          v   v   v   v   v   v   v   v   v   v   v   v
- *         -----------------------------------------------
- *  Mode: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
- *         -----------------------------------------------
- *          |   |   |   |   |   |   |   |   |   |   |   |
- *          V   |   ---------------------------------   V
- *      readD() V               |                   readImm()
- *                              V
- *                          computeEA() --> readExtensionWord()
- *                              |
- *                              V
- *                            readM() --> addressError()
- *                              |
- *                        --------------
- *                        |            |
- *                        V            V
- *                     read8()      read16()
+ *                                      |
+ * - - - - - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - - - - - -
+ * Layer 1:                             V
+ *                                 readOperand
+ *                                (writeOperand)
+ *                                      |
+ *  Addressing Mode M = 0---1---2---3---4---5---6---7---8---9---A---B
+ *                     /    |   |   |   |   |   |   |   |   |   |    \
+ *                    /     |   ---------------------------------     \
+ *                   /      |           |                              \
+ *                  /       |           V                               \
+ *                 /        |       computeEA --> readExtensionWord      \
+ *                /         |           |                                 \
+ * - - - - - - - -|- - - - -|- - - - - -|- - - - - - - - - - - - - - - - -|- - -
+ * Layer 2:       |         |           |                                 |
+ *                V         V           V                                 V
+ *              readD     readA      readM   ---> addressError()        readI
+ *             (writeD)  (writeA)   (writeM)
+ *                                      |
+ *                                  updateAn()
+ *                                      |
+ * - - - - - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - - - - - -
+ * Layer 3:                             |
+ *                 Size S = B-----------W-----------L
+ *                          |           |           |
+ *                          V           V           V
+ *                        read8       read16    2 x read16
+ *                       (write8)    (write8)  (2 x write16)
  *
  */
 
-
-template <Size S, int delay> bool
-Moira::addressError(u32 addr)
+template<Mode M, Size S> bool
+Moira::readOperand(int n, u32 &ea, u32 &result)
 {
-    if (MOIRA_EMULATE_ADDRESS_ERROR) {
+    switch (M) {
 
-        if ((addr & 1) && S != Byte) {
-            sync(delay);
-            execAddressError(addr);
-            return true;
+        case 0:  // Dn
+        {
+            result = readD<S>(n);
+            break;
+        }
+        case 1:  // An
+        {
+            result = readA<S>(n);
+            break;
+        }
+        case 11: // Im
+        {
+            result = readI<S>();
+            break;
+        }
+        default: // Ea
+        {
+            // Compute effective address
+            ea = computeEA<M,S>(n);
+
+            // Read from effective address
+            bool error; result = readM<S>(ea, error);
+
+            // Exit if an address error has occurred
+            if (error) return false;
+
+            // Emulate (An)+ or -(An) register modification
+            updateAn<M,S>(n);
         }
     }
-    return false;
+
+   return true;
 }
+
+template<Mode M, Size S, bool last> bool
+Moira::writeOperand(int n, u32 value)
+{
+    switch (M) {
+
+        case 0:  // Dn
+        {
+            writeD<S>(n, value);
+            break;
+        }
+        case 1:  // An
+        {
+            writeA<S>(n, value);
+            break;
+        }
+        case 11: // Im
+        {
+            assert(false);
+            break;
+        }
+        default:
+        {
+            // Compute effective address
+            u32 ea = computeEA<M,S>(n);
+
+            // Write to effective address
+            bool error; writeM<S,last>(ea, value, error);
+
+            // Early exit in case of an address error
+            if (error) return false;
+
+            // Emulate (An)+ or -(An) register modification
+            updateAn<M,S>(n);
+        }
+    }
+
+    return true;
+}
+
+template<Mode M, Size S, bool last> void
+Moira::writeOperand(int n, u32 ea, u32 value)
+{
+    assert(M < 11);
+
+    switch (M) {
+
+        case 0:  // Dn
+        {
+            writeD<S>(n, value);
+            break;
+        }
+        case 1:  // An
+        {
+            writeA<S>(n, value);
+            break;
+        }
+        case 11: // Im
+        {
+            assert(false);
+            break;
+        }
+        default:
+        {
+            writeM<S,last>(ea, value);
+            break;
+        }
+    }
+}
+
 
 template<Size S, bool last> u32
 Moira::readM(u32 addr)
@@ -153,6 +254,20 @@ Moira::writeMrev(u32 addr, u32 val, bool &error)
     writeMrev<S,last>(addr, val);
 }
 
+template <Size S, int delay> bool
+Moira::addressError(u32 addr)
+{
+    if (MOIRA_EMULATE_ADDRESS_ERROR) {
+
+        if ((addr & 1) && S != Byte) {
+            sync(delay);
+            execAddressError(addr);
+            return true;
+        }
+    }
+    return false;
+}
+
 u32
 Moira::readOnReset(u32 addr)
 {
@@ -256,7 +371,7 @@ Moira::computeEA(u32 n) {
         }
         case 11: // Im
         {
-            result = readImm<S>();
+            result = readI<S>();
             break;
         }
         default:
@@ -277,116 +392,8 @@ Moira::updateAn(int n)
     if (M == 4) reg.a[n] -= (n == 7 && S == Byte) ? 2 : S;
 }
 
-template<Mode M, Size S> bool
-Moira::readOperand(int n, u32 &ea, u32 &result)
-{
-    switch (M) {
-
-        case 0:  // Dn
-        {
-            result = readD<S>(n);
-            break;
-        }
-        case 1:  // An
-        {
-            result = readA<S>(n);
-            break;
-        }
-        case 11: // Im
-        {
-            result = readImm<S>();
-            break;
-        }
-        default: // Ea
-        {
-            // Compute effective address
-            ea = computeEA<M,S>(n);
-
-            // Read from effective address
-            bool error; result = readM<S>(ea, error);
-
-            // Exit if an address error has occurred
-            if (error) return false;
-
-            // Emulate (An)+ or -(An) register modification
-            updateAn<M,S>(n);
-        }
-    }
-
-   return true;
-}
-
-template<Mode M, Size S, bool last> bool
-Moira::writeOperand(int n, u32 value)
-{
-    switch (M) {
-
-        case 0:  // Dn
-        {
-            writeD<S>(n, value);
-            break;
-        }
-        case 1:  // An
-        {
-            writeA<S>(n, value);
-            break;
-        }
-        case 11: // Im
-        {
-            assert(false);
-            break;
-        }
-        default:
-        {
-            // Compute effective address
-            u32 ea = computeEA<M,S>(n);
-
-            // Write to effective address
-            bool error; writeM<S,last>(ea, value, error);
-
-            // Early exit in case of an address error
-            if (error) return false;
-
-            // Emulate (An)+ or -(An) register modification
-            updateAn<M,S>(n);
-        }
-    }
-
-    return true;
-}
-
-template<Mode M, Size S, bool last> void
-Moira::writeOperand(int n, u32 ea, u32 value)
-{
-    assert(M < 11);
-
-    switch (M) {
-
-        case 0:  // Dn
-        {
-            writeD<S>(n, value);
-            break;
-        }
-        case 1:  // An
-        {
-            writeA<S>(n, value);
-            break;
-        }
-        case 11: // Im
-        {
-            assert(false);
-            break;
-        }
-        default:
-        {
-            writeM<S,last>(ea, value);
-            break;
-        }
-    }
-}
-
 template<Size S> u32
-Moira::readImm()
+Moira::readI()
 {
     u32 result;
 

@@ -53,7 +53,7 @@ Moira::reset()
     sr.c = 0;
     sr.ipl = 7;
 
-    iplPolled = 0;
+    reg.ipl = 0;
 
     sync(16);
 
@@ -205,7 +205,7 @@ Moira::jumpToVector(u8 nr)
 void
 Moira::pollIrq()
 {
-    iplPolled = readIPL();
+    reg.ipl = readIPL();
 }
 
 int
