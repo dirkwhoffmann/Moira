@@ -10,7 +10,12 @@
 #ifndef SANDBOX_H
 #define SANDBOX_H
 
-#include "simpletypes.h"
+#include "MoiraTypes.h"
+
+using moira::u8;
+using moira::u16;
+using moira::u32;
+using moira::u64;
 
 enum AccessType {
     PEEK8,

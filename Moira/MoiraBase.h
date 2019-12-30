@@ -10,9 +10,7 @@
 #ifndef MOIRA_BASE_H
 #define MOIRA_BASE_H
 
-#include "simpletypes.h"
 #include "MoiraTypes.h"
-#include "stdint.h"
 
 namespace moira {
 
