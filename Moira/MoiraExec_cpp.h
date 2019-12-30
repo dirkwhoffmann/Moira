@@ -1035,7 +1035,7 @@ Moira::execMovea(u16 opcode)
     if (!readOperand<M,S>(src, ea, data)) return;
 
     prefetch<LAST_BUS_CYCLE>();
-    writeA(dst, SIGN<S>(data));
+    writeA(dst, SEXT<S>(data));
 }
 
 template<Instr I, Mode M, Size S> void

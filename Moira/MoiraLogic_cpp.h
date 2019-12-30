@@ -33,7 +33,7 @@ Moira::shift(int cnt, u64 data) {
             u32 changed = 0;
             for (int i = 0; i < cnt; i++) {
                 carry = data & 1;
-                u64 shifted = SIGN<S>(data) >> 1;
+                u64 shifted = SEXT<S>(data) >> 1;
                 changed |= data ^ shifted;
                 data = shifted;
             }

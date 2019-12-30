@@ -18,10 +18,9 @@ namespace moira {
 #define SKIP_LAST_READ true
 
 template<Size>   u32  MSBIT();
-template<Size>   i32  SIGN (u64 data);
 template<Size>   u32  CLIP (u64 data);
 template<Size>   u32  CLEAR(u64 data);
-template<Size>   u32  SEXT (u64 data);
+template<Size>   i32  SEXT (u64 data);
 template<Size>   bool NBIT (u64 data);
 template<Size>   bool CARRY(u64 data);
 template<Size>   bool ZERO (u64 data);
