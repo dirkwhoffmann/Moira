@@ -183,7 +183,7 @@ Moira::arith(u32 op1, u32 op2)
 
     switch(I) {
 
-        case ADD:   // Numeric addition
+        case ADD:
         case ADDI:
         case ADDQ:
         {
@@ -194,7 +194,7 @@ Moira::arith(u32 op1, u32 op2)
             sr.z = ZERO<S>(result);
             break;
         }
-        case ADDX:  // Numeric addition with X flag
+        case ADDX:
         {
             result = (u64)op1 + (u64)op2 + (u64)sr.x;
 
@@ -203,7 +203,43 @@ Moira::arith(u32 op1, u32 op2)
             if (CLIP<S>(result)) sr.z = 0;
             break;
         }
-        case ABCD:  // BCD addition
+        case SUB:
+        case SUBI:
+        case SUBQ:
+        {
+            result = (u64)op2 - (u64)op1;
+
+            sr.x = sr.c = CARRY<S>(result);
+            sr.v = NBIT<S>((op1 ^ op2) & (op2 ^ result));
+            sr.z = ZERO<S>(result);
+            break;
+        }
+        case SUBX:
+        {
+            result = (u64)op2 - (u64)op1 - (u64)sr.x;
+
+            sr.x = sr.c = CARRY<S>(result);
+            sr.v = NBIT<S>((op1 ^ op2) & (op2 ^ result));
+            if (CLIP<S>(result)) sr.z = 0;
+            break;
+        }
+        default:
+        {
+            assert(false);
+        }
+    }
+    sr.n = NBIT<S>(result);
+    return (u32)result;
+}
+
+template<Instr I, Size S> u32
+Moira::bcd(u32 op1, u32 op2)
+{
+    u64 result;
+
+    switch(I) {
+
+        case ABCD:
         {
             // Extract nibbles
             u16 op1_hi = op1 & 0xF0, op1_lo = op1 & 0x0F;
@@ -222,27 +258,7 @@ Moira::arith(u32 op1, u32 op2)
             sr.v = ((tmp_result & 0x80) == 0) && ((result & 0x80) == 0x80);
             break;
         }
-        case SUB:   // Numeric subtraction
-        case SUBI:
-        case SUBQ:
-        {
-            result = (u64)op2 - (u64)op1;
-
-            sr.x = sr.c = CARRY<S>(result);
-            sr.v = NBIT<S>((op1 ^ op2) & (op2 ^ result));
-            sr.z = ZERO<S>(result);
-            break;
-        }
-        case SUBX:  // Numeric subtraction with X flag
-        {
-            result = (u64)op2 - (u64)op1 - (u64)sr.x;
-
-            sr.x = sr.c = CARRY<S>(result);
-            sr.v = NBIT<S>((op1 ^ op2) & (op2 ^ result));
-            if (CLIP<S>(result)) sr.z = 0;
-            break;
-        }
-        case SBCD:  // BCD subtraction
+        case SBCD:
         {
             // Extract nibbles
             u16 op1_hi = op1 & 0xF0, op1_lo = op1 & 0x0F;
@@ -264,15 +280,6 @@ Moira::arith(u32 op1, u32 op2)
             if (CLIP<Byte>(result)) sr.z = 0;
             sr.n = NBIT<Byte>(result);
             sr.v = ((tmp_result & 0x80) == 0x80) && ((result & 0x80) == 0);
-            break;
-        }
-        case CMP:
-        {
-            result = (u64)op1 - (u64)op2;
-
-            sr.c = CARRY<S>(result);
-            sr.v = NBIT<S>((op1 ^ op2) & (op2 ^ result));
-            sr.z = ZERO<S>(result);
             break;
         }
         default:
@@ -354,7 +361,7 @@ Moira::logic(u32 op1, u32 op2)
 }
 
 template <Instr I> u32
-Moira::bitop(u32 op, u8 bit)
+Moira::bit(u32 op, u8 bit)
 {
     switch (I) {
         case BCHG:
@@ -400,7 +407,7 @@ Moira::cmp(u32 op1, u32 op2)
 }
 
 template <Instr I> bool
-Moira::bcond() {
+Moira::cond() {
 
     switch(I) {
 

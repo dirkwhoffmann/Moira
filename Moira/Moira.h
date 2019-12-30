@@ -254,16 +254,32 @@ public:
 
 
     //
-    // Processing arithmetical and logical operations
+    // Applying the arithmetic logic unit (ALU)
     //
 
+    // ASx, LSx, ROx, ROXx
     template <Instr I, Size S> u32  shift(int cnt, u64 data);
+
+    // ADDx, SUBx
     template <Instr I, Size S> u32  arith(u32 op1, u32 op2);
+
+    // ABCD, SBCD
+    template <Instr I, Size S> u32  bcd(u32 op1, u32 op2);
+    
+    // NOT, NEG, NEGX
     template <Instr I, Size S> u32  logic(u32 op1);
+
+    // ANDx, ORx, EORx
     template <Instr I, Size S> u32  logic(u32 op1, u32 op2);
-    template <Instr I>         u32  bitop(u32 op, u8 bit);
+
+    // BCHG, BSET, BCLR, BTST
+    template <Instr I>         u32  bit(u32 op, u8 bit);
+
+    // CMPx
     template <Size S>          void cmp(u32 op1, u32 op2);
-    template <Instr I>         bool bcond();
+
+    // Bxx, DBxx, Sx
+    template <Instr I>         bool cond();
 
 
 private:

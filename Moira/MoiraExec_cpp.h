@@ -200,7 +200,7 @@ Moira::execAbcd(u16 opcode)
 
         case 0: // Dn
         {
-            u32 result = arith<I,Byte>(readD<Byte>(src), readD<Byte>(dst));
+            u32 result = bcd<I,Byte>(readD<Byte>(src), readD<Byte>(dst));
             prefetch<LAST_BUS_CYCLE>();
 
             sync(S == Long ? 6 : 2);
@@ -214,7 +214,7 @@ Moira::execAbcd(u16 opcode)
             sync(-2);
             if (!readOperand<M,S>(dst, ea2, data2)) return;
 
-            u32 result = arith<I,Byte>(data1, data2);
+            u32 result = bcd<I,Byte>(data1, data2);
             prefetch();
 
             writeM<Byte,LAST_BUS_CYCLE>(ea2, result);
@@ -484,7 +484,7 @@ template<Instr I, Mode M, Size S> void
 Moira::execBcc(u16 opcode)
 {
     sync(2);
-    if (bcond<I>()) {
+    if (cond<I>()) {
 
         // i16 offset = S == Word ? (i16)irc : (i8)opcode;
         u32 newpc = reg.pc + (S == Word ? (i16)irc : (i8)opcode);
@@ -512,24 +512,24 @@ Moira::execBitDxEa(u16 opcode)
 
         case 0:
         {
-            u8 bit = readD(src) & 0b11111;
+            u8 b = readD(src) & 0b11111;
             u32 data = readD(dst);
-            data = bitop<I>(data, bit);
+            data = bit<I>(data, b);
 
             prefetch<LAST_BUS_CYCLE>();
 
-            sync(cyclesBit<I>(bit));
+            sync(cyclesBit<I>(b));
             if (I != BTST) writeD(dst, data);
             break;
         }
         default:
         {
-            u8 bit = readD(src) & 0b111;
+            u8 b = readD(src) & 0b111;
 
             u32 ea, data;
             if (!readOperand<M,Byte>(dst, ea, data)) return;
 
-            data = bitop<I>(data, bit);
+            data = bit<I>(data, b);
 
             if (I != BTST) {
                 prefetch();
@@ -544,31 +544,32 @@ Moira::execBitDxEa(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execBitImEa(u16 opcode)
 {
+    u8  src = irc;
     int dst = _____________xxx(opcode);
-    u8  bit = irc;
+
     readExtensionWord();
 
     switch (M)
     {
         case 0:
         {
-            bit &= 0b11111;
+            src &= 0b11111;
             u32 data = readD(dst);
-            data = bitop<I>(data, bit);
+            data = bit<I>(data, src);
 
             prefetch<LAST_BUS_CYCLE>();
 
-            sync(cyclesBit<I>(bit));
+            sync(cyclesBit<I>(src));
             if (I != BTST) writeD(dst, data);
             break;
         }
         default:
         {
-            bit &= 0b111;
+            src &= 0b111;
             u32 ea, data;
             if (!readOperand<M,Byte>(dst, ea, data)) return;
 
-            data = bitop<I>(data, bit);
+            data = bit<I>(data, src);
 
             if (I != BTST) {
                 prefetch();
@@ -728,7 +729,7 @@ template<Instr I, Mode M, Size S> void
 Moira::execDbcc(u16 opcode)
 {
     sync(2);
-    if (!bcond<I>()) {
+    if (!cond<I>()) {
 
         int dn = _____________xxx(opcode);
         u32 newpc = reg.pc + (i16)irc;
@@ -1432,7 +1433,7 @@ Moira::execNbcd(u16 opcode)
             prefetch<LAST_BUS_CYCLE>();
 
             sync(2);
-            writeD<Byte>(reg, arith<SBCD,Byte>(readD<Byte>(reg), 0));
+            writeD<Byte>(reg, bcd<SBCD,Byte>(readD<Byte>(reg), 0));
             break;
         }
         default: // Ea
@@ -1440,7 +1441,7 @@ Moira::execNbcd(u16 opcode)
             u32 ea, data;
             if (!readOperand<M,Byte>(reg, ea, data)) return;
             prefetch();
-            writeM<Byte,LAST_BUS_CYCLE>(ea, arith<SBCD,Byte>(data, 0));
+            writeM<Byte,LAST_BUS_CYCLE>(ea, bcd<SBCD,Byte>(data, 0));
             break;
         }
     }
@@ -1558,7 +1559,7 @@ Moira::execSccRg(u16 opcode)
 
     if (!readOperand<M,Byte>(dst, ea, data)) return;
 
-    data = bcond<I>() ? 0xFF : 0;
+    data = cond<I>() ? 0xFF : 0;
     prefetch<LAST_BUS_CYCLE>();
 
     if (data) sync(2);
@@ -1573,7 +1574,7 @@ Moira::execSccEa(u16 opcode)
 
     if (!readOperand<M,Byte>(dst, ea, data)) return;
 
-    data = bcond<I>() ? 0xFF : 0;
+    data = cond<I>() ? 0xFF : 0;
     prefetch();
 
     writeOperand<M,Byte,LAST_BUS_CYCLE>(dst, ea, data);
