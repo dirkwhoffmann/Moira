@@ -181,7 +181,6 @@ Moira::computeEA(u32 n) {
 
             result = d + an;
             readExtensionWord<skip>();
-            // if (!(flags & SKIP_LAST_READ)) readExtensionWord(); else reg.pc += 2;
             break;
         }
         case 6: // (d,An,Xi)
@@ -194,14 +193,12 @@ Moira::computeEA(u32 n) {
 
             sync(2);
             readExtensionWord<skip>();
-            // if (!(flags & SKIP_LAST_READ)) readExtensionWord(); else reg.pc += 2;
             break;
         }
         case 7: // ABS.W
         {
             result = (i16)irc;
             readExtensionWord<skip>();
-            // if (!(flags & SKIP_LAST_READ)) readExtensionWord(); else reg.pc += 2;
             break;
         }
         case 8: // ABS.L
@@ -210,7 +207,6 @@ Moira::computeEA(u32 n) {
             readExtensionWord();
             result |= irc;
             readExtensionWord<skip>();
-            // if (!(flags & SKIP_LAST_READ)) readExtensionWord(); else reg.pc += 2;
             break;
         }
         case 9: // (d,PC)
@@ -219,7 +215,6 @@ Moira::computeEA(u32 n) {
 
             result = reg.pc + d;
             readExtensionWord<skip>();
-            // if (!(flags & SKIP_LAST_READ)) readExtensionWord(); else reg.pc += 2;
             break;
         }
         case 10: // (d,PC,Xi)
@@ -230,7 +225,6 @@ Moira::computeEA(u32 n) {
             result = d + reg.pc + ((irc & 0x800) ? xi : SEXT<Word>(xi));
             sync(2);
             readExtensionWord<skip>();
-            // if (!(flags & SKIP_LAST_READ)) readExtensionWord(); else reg.pc += 2;
             break;
         }
         case 11: // Im

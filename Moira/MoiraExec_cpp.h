@@ -811,7 +811,7 @@ template<Instr I, Mode M, Size S> void
 Moira::execJmp(u16 opcode)
 {
     int src = _____________xxx(opcode);
-    u32 ea  = computeEA<M,Long,SKIP_LAST_READ>(src);
+    u32 ea  = computeEA <M,Long,true /* skip last read */> (src);
 
     const int delay[] = { 0,0,0,0,0,2,4,2,0,2,4,0 };
     sync(delay[M]);
@@ -827,7 +827,7 @@ template<Instr I, Mode M, Size S> void
 Moira::execJsr(u16 opcode)
 {
     int src = _____________xxx(opcode);
-    u32 ea  = computeEA<M,Long,SKIP_LAST_READ>(src);
+    u32 ea  = computeEA <M,Long, true /* skip last read */> (src);
 
     const int delay[] = { 0,0,0,0,0,2,4,2,0,2,4,0 };
     sync(delay[M]);

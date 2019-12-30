@@ -10,14 +10,12 @@
 #ifndef MOIRA_H
 #define MOIRA_H
 
-#include <stdio.h>
+// #include <stdio.h>
 #include <math.h>
 #include <utility>
 
-#include "MoiraBase.h"
+#include "MoiraTypes.h"
 #include "StringWriter.h"
-#include "Sandbox.h"
-#include "assert.h"
 
 namespace moira {
 
