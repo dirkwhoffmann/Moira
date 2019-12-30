@@ -147,9 +147,9 @@ public:
     template<Size S = Long> u32 readD(int n) { return CLIP<S>(reg.d[n]); }
     template<Size S = Long> u32 readA(int n) { return CLIP<S>(reg.a[n]); }
     template<Size S = Long> u32 readR(int n) { return CLIP<S>(reg.r[n]); }
-    template<Size S = Long> void writeD(int n, u32 v) { reg.d[n] = SUBS<S>(reg.d[n], v); }
-    template<Size S = Long> void writeA(int n, u32 v) { reg.a[n] = SUBS<S>(reg.a[n], v); }
-    template<Size S = Long> void writeR(int n, u32 v) { reg.r[n] = SUBS<S>(reg.r[n], v); }
+    template<Size S = Long> void writeD(int n, u32 v) { reg.d[n] = WRITE<S>(reg.d[n], v); }
+    template<Size S = Long> void writeA(int n, u32 v) { reg.a[n] = WRITE<S>(reg.a[n], v); }
+    template<Size S = Long> void writeR(int n, u32 v) { reg.r[n] = WRITE<S>(reg.r[n], v); }
     template<Size S = Long> void incD(int n, i32 v) { writeD<S>(n, readD<S>(n) + v); }
     template<Size S = Long> void incA(int n, i32 v) { writeA<S>(n, readA<S>(n) + v); }
     template<Size S = Long> void incR(int n, i32 v) { writeR<S>(n, readR<S>(n) + v); }
