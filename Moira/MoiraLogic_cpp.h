@@ -246,7 +246,10 @@ Moira::logic(u32 op)
         case NOT:
         {
             result = ~op;
-            sr.setNZVC<S>(result);
+            sr.n = NBIT<S>(result);
+            sr.z = ZERO<S>(result);
+            sr.v = 0;
+            sr.c = 0;
             break;
         }
         case NEG:
@@ -294,7 +297,11 @@ Moira::logic(u32 op1, u32 op2)
             assert(false);
         }
     }
-    sr.setNZVC<S>(result);
+    
+    sr.n = NBIT<S>(result);
+    sr.z = ZERO<S>(result);
+    sr.v = 0;
+    sr.c = 0;
     return result;
 }
 

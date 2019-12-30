@@ -601,8 +601,6 @@ Moira::execBsr(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execChk(u16 opcode)
 {
-    i64 oldclock = clock;
-
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
     u32 ea, sop, dop;
@@ -801,7 +799,10 @@ Moira::execExt(u16 opcode)
     dn = (S == Long) ? SEXT<Word>(dn) : SEXT<Byte>(dn);
 
     writeD<S>(n, dn);
-    sr.setNZVC<S>(dn);
+    sr.n = NBIT<S>(dn);
+    sr.z = ZERO<S>(dn);
+    sr.v = 0;
+    sr.c = 0;
 
     prefetch<LAST_BUS_CYCLE>();
 }
@@ -878,7 +879,11 @@ Moira::execMove0(u16 opcode)
 
     if (!readOperand<M,S>(src, ea, data)) return;
 
-    sr.setNZVC<S>(data);
+    sr.n = NBIT<S>(data);
+    sr.z = ZERO<S>(data);
+    sr.v = 0;
+    sr.c = 0;
+
     if (!writeOperand<MODE_DN,S>(dst, data)) return;
     
     prefetch<LAST_BUS_CYCLE>();
@@ -893,7 +898,12 @@ Moira::execMove2(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     if (!readOperand<M,S>(src, ea, data)) return;
-    sr.setNZVC<S>(data);
+
+    sr.n = NBIT<S>(data);
+    sr.z = ZERO<S>(data);
+    sr.v = 0;
+    sr.c = 0;
+
     if (!writeOperand<MODE_AI,S>(dst, data)) return;
     prefetch<LAST_BUS_CYCLE>();
 }
@@ -907,7 +917,12 @@ Moira::execMove3(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     if (!readOperand<M,S>(src, ea, data)) return;
-    sr.setNZVC<S>(data);
+
+    sr.n = NBIT<S>(data);
+    sr.z = ZERO<S>(data);
+    sr.v = 0;
+    sr.c = 0;
+
     if (!writeOperand<MODE_PI,S>(dst, data)) return;
     prefetch<LAST_BUS_CYCLE>();
 }
@@ -930,7 +945,11 @@ Moira::execMove4(u16 opcode)
      */
 
     if (!readOperand<M,S>(src, ea, data)) return;
-    sr.setNZVC<S>(data);
+
+    sr.n = NBIT<S>(data);
+    sr.z = ZERO<S>(data);
+    sr.v = 0;
+    sr.c = 0;
 
     prefetch();
     sync(-2);
@@ -952,7 +971,12 @@ Moira::execMove5(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     if (!readOperand<M,S>(src, ea, data)) return;
-    sr.setNZVC<S>(data);
+
+    sr.n = NBIT<S>(data);
+    sr.z = ZERO<S>(data);
+    sr.v = 0;
+    sr.c = 0;
+
     if (!writeOperand<MODE_DI,S>(dst, data)) return;
     prefetch<LAST_BUS_CYCLE>();
 }
@@ -966,7 +990,12 @@ Moira::execMove6(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     if (!readOperand<M,S>(src, ea, data)) return;
-    sr.setNZVC<S>(data);
+
+    sr.n = NBIT<S>(data);
+    sr.z = ZERO<S>(data);
+    sr.v = 0;
+    sr.c = 0;
+
     if (!writeOperand<MODE_IX,S>(dst, data)) return;
     prefetch<LAST_BUS_CYCLE>();
 }
@@ -980,7 +1009,12 @@ Moira::execMove7(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     if (!readOperand<M,S>(src, ea, data)) return;
-    sr.setNZVC<S>(data);
+
+    sr.n = NBIT<S>(data);
+    sr.z = ZERO<S>(data);
+    sr.v = 0;
+    sr.c = 0;
+
     if (!writeOperand<MODE_AW,S>(dst, data)) return;
     prefetch<LAST_BUS_CYCLE>();
 }
@@ -1008,7 +1042,12 @@ Moira::execMove8(u16 opcode)
     if (isMemMode(M)) {
 
         if (!readOperand<M,S>(src, ea, data)) return;
-        sr.setNZVC<S>(data);
+
+        sr.n = NBIT<S>(data);
+        sr.z = ZERO<S>(data);
+        sr.v = 0;
+        sr.c = 0;
+
         u32 ea2 = irc << 16;
         readExtensionWord();
         ea2 |= irc;
@@ -1018,7 +1057,12 @@ Moira::execMove8(u16 opcode)
     } else {
 
         if (!readOperand<M,S>(src, ea, data)) return;
-        sr.setNZVC<S>(data);
+
+        sr.n = NBIT<S>(data);
+        sr.z = ZERO<S>(data);
+        sr.v = 0;
+        sr.c = 0;
+
         if (!writeOperand<MODE_AL,S>(dst, data)) return;
     }
 
@@ -1188,7 +1232,11 @@ Moira::execMoveq(u16 opcode)
 
     writeD<Long>(dst, (i32)src);
 
-    sr.setNZVC<Byte>(src);
+    sr.n = NBIT<Byte>(src);
+    sr.z = ZERO<Byte>(src);
+    sr.v = 0;
+    sr.c = 0;
+
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -1298,7 +1346,10 @@ Moira::execMul(u16 opcode)
     }
 
     writeD(dst, result);
-    sr.setNZVC<Long>(result);
+    sr.n = NBIT<Long>(result);
+    sr.z = ZERO<Long>(result);
+    sr.v = 0;
+    sr.c = 0;
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1549,7 +1600,10 @@ Moira::execSwap(u16 opcode)
     dat = (dat >> 16) | (dat & 0xFFFF) << 16;
     writeD(reg,dat);
 
-    sr.setNZVC<Long>(dat);
+    sr.n = NBIT<Long>(dat);
+    sr.z = ZERO<Long>(dat);
+    sr.v = 0;
+    sr.c = 0;
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1559,7 +1613,11 @@ Moira::execTasRg(u16 opcode)
 
     u32 ea, data;
     readOperand<M,Byte>(dst, ea, data);
-    sr.setNZVC<Byte>(data);
+
+    sr.n = NBIT<Byte>(data);
+    sr.z = ZERO<Byte>(data);
+    sr.v = 0;
+    sr.c = 0;
 
     data |= 0x80;
     writeD<S>(dst, data);
@@ -1574,7 +1632,11 @@ Moira::execTasEa(u16 opcode)
 
     u32 ea, data;
     readOperand<M,Byte>(dst, ea, data);
-    sr.setNZVC<Byte>(data);
+
+    sr.n = NBIT<Byte>(data);
+    sr.z = ZERO<Byte>(data);
+    sr.v = 0;
+    sr.c = 0;
     data |= 0x80;
 
     if (!isRegMode(M)) sync(2);
@@ -1607,7 +1669,11 @@ Moira::execTst(u16 opcode)
     u32 ea, data;
     if (!readOperand<M,S>(reg, ea, data)) return;
 
-    sr.setNZVC<S>(data);
+    sr.n = NBIT<S>(data);
+    sr.z = ZERO<S>(data);
+    sr.v = 0;
+    sr.c = 0;
+
     prefetch<LAST_BUS_CYCLE>();
 }
 
