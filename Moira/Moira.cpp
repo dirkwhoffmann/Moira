@@ -209,7 +209,7 @@ Moira::pollIrq()
 }
 
 int
-Moira::disassemble(u32 addr, char *str, bool hex)
+Moira::disassemble(u32 addr, char *str)
 {
     u32 pc     = addr;
     u16 opcode = read16Dasm(pc);

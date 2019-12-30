@@ -120,8 +120,36 @@ public:
 
     void power();
     void reset();
-    void execute(u16 reg_ird);
+
+    // Executes a single instruction
     void execute() { execute(ird); }
+    void execute(u16 reg_ird);
+
+
+    //
+    // Running the disassembler
+    //
+
+public:
+
+    // Disassembles a single instruction and returns the instruction size in
+    // bytes
+    int disassemble(u32 addr, char *str);
+
+
+    //
+    // Managing time
+    //
+
+public:
+
+    i64 getClock() { return clock; }
+    void setClock(i64 value) { clock = value; }
+
+private:
+
+    // Advances the clock (called before each memory access)
+    void sync(int cycles);
 
 
     //
@@ -137,8 +165,7 @@ public:
     template<Size S = Long> void writeA(int n, u32 v);
     template<Size S = Long> void writeR(int n, u32 v);
 
-    i64 getClock() { return clock; }
-    void setClock(i64 value) { clock = value; }
+
     u32 getPC() { return reg.pc; }
     u32 getIRC() { return irc; }
     u32 getIRD() { return ird; }
@@ -149,9 +176,10 @@ public:
     // Accessing memory
     //
 
-    /* Checks an address for an address error.
-     * An address error occurs if a word or long word is being read from an
-     * odd address.
+    /* Checks for an address error
+     * An address error occurs if the CPU tries to access a word or a long word
+     * that is located at an odd address. If an address error is encountered,
+     * the function calls execAddressError to initiate exception processing.
      */
     template<Size S, int delay = 0> bool addressError(u32 addr);
 
@@ -209,21 +237,10 @@ public:
     void write8  (u32 addr, u8  val);
     void write16 (u32 addr, u16 val);
 
-
-    //
-    // Querying instructions
-    //
-
-    bool isIllegalInstr(u16 op) { return exec[op] == &Moira::execIllegal; }
-    bool isLineAInstr(u16 op)   { return exec[op] == &Moira::execLineA; }
-    bool isLineFInstr(u16 op)   { return exec[op] == &Moira::execLineF; }
-
     
     //
     // Emulate timing
     //
-
-    void sync(int cycles);
 
     template <Instr I> int cyclesBit(u8 bit);
     int cyclesMULU(u16 data);
@@ -299,12 +316,15 @@ private:
 
 
     //
-    // Running the disassembler
+    // Analyzing instructions
     //
 
 public:
+    
+    bool isIllegalInstr(u16 op) { return exec[op] == &Moira::execIllegal; }
+    bool isLineAInstr(u16 op)   { return exec[op] == &Moira::execLineA; }
+    bool isLineFInstr(u16 op)   { return exec[op] == &Moira::execLineF; }
 
-    int disassemble(u32 addr, char *str, bool hex = true);
 };
 
 }
