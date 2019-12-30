@@ -49,6 +49,12 @@ struct StatusRegister {
     u8 ipl;               // Interrupt Priority Level
 };
 
+struct PrefetchQueue {    // http://pasti.fxatari.com/68kdocs/68kPrefetch.html
+
+    u16 irc;              // The most recent word prefetched from memory
+    u16 ird;              // The instruction currently being executed
+};
+
 class Moira {
 
     //
@@ -78,19 +84,8 @@ class Moira {
     // The status register
     StatusRegister sr;
 
-    /* The instruction prefetch queue
-     * http://pasti.fxatari.com/68kdocs/68kPrefetch.html
-     *
-     * Three registers are involved in prefetching:
-     *
-     *     IRC : Holds the most recent word prefetched from memory
-     *     IR  : Holds the instruction currently being decoded
-     *     IRD : Holds the instruction currently being executed
-     *
-     * For emulation, only IRC and IRD are needed.
-     */
-    u16 irc;
-    u16 ird;
+    // The prefetch queue
+    PrefetchQueue queue;
 
     //  Interrupt Priority Level (combined value of the three IPL pins)
     u8 iplPolled;
@@ -121,9 +116,8 @@ public:
     void power();
     void reset();
 
-    // Executes a single instruction
-    void execute() { execute(ird); }
-    void execute(u16 reg_ird);
+    // Executes the next instruction
+    void execute();
 
 
     //
@@ -167,9 +161,9 @@ public:
 
 
     u32 getPC() { return reg.pc; }
-    u32 getIRC() { return irc; }
-    u32 getIRD() { return ird; }
-    void setIRD(u32 value) { ird = value; }
+    u32 getIRC() { return queue.irc; }
+    u32 getIRD() { return queue.ird; }
+    void setIRD(u32 value) { queue.ird = value; }
 
     
     //
@@ -265,7 +259,10 @@ public:
 
     // ABCD, SBCD
     template <Instr I, Size S> u32  bcd(u32 op1, u32 op2);
-    
+
+    // CMPx
+    template <Size S>          void cmp(u32 op1, u32 op2);
+
     // NOT, NEG, NEGX
     template <Instr I, Size S> u32  logic(u32 op1);
 
@@ -274,9 +271,6 @@ public:
 
     // BCHG, BSET, BCLR, BTST
     template <Instr I>         u32  bit(u32 op, u8 bit);
-
-    // CMPx
-    template <Size S>          void cmp(u32 op1, u32 op2);
 
     // Bxx, DBxx, Sx
     template <Instr I>         bool cond();

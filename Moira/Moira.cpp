@@ -64,15 +64,15 @@ Moira::reset()
     reg.pc = readOnReset(4) << 16 | readOnReset(6);
 
     // Fill the prefetch queue
-    irc = readOnReset(reg.pc);
+    queue.irc = readOnReset(reg.pc);
     prefetch();
 }
 
 void
-Moira::execute(u16 reg_ird)
+Moira::execute()
 {
     reg.pc += 2;
-    (this->*exec[reg_ird])(reg_ird);
+    (this->*exec[queue.ird])(queue.ird);
 }
 
 template<Size S> u32
@@ -166,14 +166,14 @@ Moira::setSupervisorMode(bool enable)
 template<bool last> void
 Moira::prefetch()
 {
-    ird = irc;
-    irc = readM<Word,last>(reg.pc + 2);
+    queue.ird = queue.irc;
+    queue.irc = readM<Word,last>(reg.pc + 2);
 }
 
 template<bool last> void
 Moira::fullPrefetch()
 {
-    irc = readM<Word>(reg.pc);
+    queue.irc = readM<Word>(reg.pc);
     prefetch<last>();
 }
 
@@ -181,7 +181,7 @@ template<bool skip> void
 Moira::readExtensionWord()
 {
     reg.pc += 2;
-    if (!skip) irc = readM<Word>(reg.pc);
+    if (!skip) queue.irc = readM<Word>(reg.pc);
 }
 
 void
@@ -197,9 +197,9 @@ Moira::jumpToVector(u8 nr)
     reg.pc = readM<Long>(4 * nr);
 
     // Update the prefetch queue
-    ird = readM<Word>(reg.pc);
+    queue.ird = readM<Word>(reg.pc);
     sync(2);
-    irc = readM<Word,LAST_BUS_CYCLE>(reg.pc + 2);
+    queue.irc = readM<Word,LAST_BUS_CYCLE>(reg.pc + 2);
 }
 
 void

@@ -291,6 +291,17 @@ Moira::bcd(u32 op1, u32 op2)
     return (u32)result;
 }
 
+template <Size S> void
+Moira::cmp(u32 op1, u32 op2)
+{
+    u64 result = (u64)op2 - (u64)op1;
+
+    sr.c = NBIT<S>(result >> 1);
+    sr.v = NBIT<S>((op2 ^ op1) & (op2 ^ result));
+    sr.z = ZERO<S>(result);
+    sr.n = NBIT<S>(result);
+}
+
 template<Instr I, Size S> u32
 Moira::logic(u32 op)
 {
@@ -393,17 +404,6 @@ Moira::bit(u32 op, u8 bit)
         }
     }
     return op;
-}
-
-template <Size S> void
-Moira::cmp(u32 op1, u32 op2)
-{
-    u64 result = (u64)op2 - (u64)op1;
-
-    sr.c = NBIT<S>(result >> 1);
-    sr.v = NBIT<S>((op2 ^ op1) & (op2 ^ result));
-    sr.z = ZERO<S>(result);
-    sr.n = NBIT<S>(result);
 }
 
 template <Instr I> bool

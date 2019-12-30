@@ -177,7 +177,7 @@ Moira::computeEA(u32 n) {
         case 5: // (d,An)
         {
             u32 an = readA(n);
-            i16  d = (i16)irc;
+            i16  d = (i16)queue.irc;
 
             result = d + an;
             readExtensionWord<skip>();
@@ -185,11 +185,11 @@ Moira::computeEA(u32 n) {
         }
         case 6: // (d,An,Xi)
         {
-            i8   d = (i8)irc;
+            i8   d = (i8)queue.irc;
             u32 an = readA(n);
-            u32 xi = readR((irc >> 12) & 0b1111);
+            u32 xi = readR((queue.irc >> 12) & 0b1111);
 
-            result = d + an + ((irc & 0x800) ? xi : SEXT<Word>(xi));
+            result = d + an + ((queue.irc & 0x800) ? xi : SEXT<Word>(xi));
 
             sync(2);
             readExtensionWord<skip>();
@@ -197,21 +197,21 @@ Moira::computeEA(u32 n) {
         }
         case 7: // ABS.W
         {
-            result = (i16)irc;
+            result = (i16)queue.irc;
             readExtensionWord<skip>();
             break;
         }
         case 8: // ABS.L
         {
-            result = irc << 16;
+            result = queue.irc << 16;
             readExtensionWord();
-            result |= irc;
+            result |= queue.irc;
             readExtensionWord<skip>();
             break;
         }
         case 9: // (d,PC)
         {
-            i16  d = (i16)irc;
+            i16  d = (i16)queue.irc;
 
             result = reg.pc + d;
             readExtensionWord<skip>();
@@ -219,10 +219,10 @@ Moira::computeEA(u32 n) {
         }
         case 10: // (d,PC,Xi)
         {
-            i8   d = (i8)irc;
-            u32 xi = readR((irc >> 12) & 0b1111);
+            i8   d = (i8)queue.irc;
+            u32 xi = readR((queue.irc >> 12) & 0b1111);
 
-            result = d + reg.pc + ((irc & 0x800) ? xi : SEXT<Word>(xi));
+            result = d + reg.pc + ((queue.irc & 0x800) ? xi : SEXT<Word>(xi));
             sync(2);
             readExtensionWord<skip>();
             break;
@@ -365,17 +365,17 @@ Moira::readImm()
 
     switch (S) {
         case Byte:
-            result = (u8)irc;
+            result = (u8)queue.irc;
             readExtensionWord();
             break;
         case Word:
-            result = irc;
+            result = queue.irc;
             readExtensionWord();
             break;
         case Long:
-            result = irc << 16;
+            result = queue.irc << 16;
             readExtensionWord();
-            result |= irc;
+            result |= queue.irc;
             readExtensionWord();
             break;
     }

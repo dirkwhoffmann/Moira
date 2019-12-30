@@ -37,7 +37,7 @@ Moira::saveToStackDetailed(u16 sr, u32 addr, u16 code)
 
     // Push SR and IRD
     push<Word>(sr);
-    push<Word>(ird);
+    push<Word>(queue.ird);
     
     // Push address
     push<Word>((u16)addr);
@@ -487,7 +487,7 @@ Moira::execBcc(u16 opcode)
     if (cond<I>()) {
 
         // i16 offset = S == Word ? (i16)irc : (i8)opcode;
-        u32 newpc = reg.pc + (S == Word ? (i16)irc : (i8)opcode);
+        u32 newpc = reg.pc + (S == Word ? (i16)queue.irc : (i8)opcode);
 
         // Take branch
         reg.pc = newpc;
@@ -544,7 +544,7 @@ Moira::execBitDxEa(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execBitImEa(u16 opcode)
 {
-    u8  src = irc;
+    u8  src = queue.irc;
     int dst = _____________xxx(opcode);
 
     readExtensionWord();
@@ -584,7 +584,7 @@ Moira::execBitImEa(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execBsr(u16 opcode)
 {
-    i16 offset = S == Word ? (i16)irc : (i8)opcode;
+    i16 offset = S == Word ? (i16)queue.irc : (i8)opcode;
     u32 newpc = reg.pc + offset;
     u32 retpc = reg.pc + (S == Word ? 2 : 0);
 
@@ -732,7 +732,7 @@ Moira::execDbcc(u16 opcode)
     if (!cond<I>()) {
 
         int dn = _____________xxx(opcode);
-        u32 newpc = reg.pc + (i16)irc;
+        u32 newpc = reg.pc + (i16)queue.irc;
 
         // Decrement loop counter
         writeD<Word>(dn, readD<Word>(dn) - 1);
@@ -838,7 +838,7 @@ Moira::execJsr(u16 opcode)
     reg.pc = ea;
 
     if (addressError<Word>(ea)) return;
-    irc = readM<Word>(ea);
+    queue.irc = readM<Word>(ea);
     push<Long>(oldpc);
     prefetch<LAST_BUS_CYCLE>();
 }
@@ -859,7 +859,7 @@ template<Instr I, Mode M, Size S> void
 Moira::execLink(u16 opcode)
 {
     int ax   = _____________xxx(opcode);
-    i16 disp = (i16)irc;
+    i16 disp = (i16)queue.irc;
 
     readExtensionWord();
     push<Long>(readA(ax) - (ax == 7 ? 4 : 0));
@@ -1049,9 +1049,9 @@ Moira::execMove8(u16 opcode)
         sr.v = 0;
         sr.c = 0;
 
-        u32 ea2 = irc << 16;
+        u32 ea2 = queue.irc << 16;
         readExtensionWord();
-        ea2 |= irc;
+        ea2 |= queue.irc;
         writeM<S>(ea2, data);
         readExtensionWord();
 
@@ -1087,7 +1087,7 @@ template<Instr I, Mode M, Size S> void
 Moira::execMovemEaRg(u16 opcode)
 {
     int src  = _____________xxx(opcode);
-    u16 mask = irc;
+    u16 mask = queue.irc;
 
     readExtensionWord();
 
@@ -1129,7 +1129,7 @@ template<Instr I, Mode M, Size S> void
 Moira::execMovemRgEa(u16 opcode)
 {
     int dst  = _____________xxx(opcode);
-    u16 mask = irc;
+    u16 mask = queue.irc;
 
     readExtensionWord();
 
@@ -1585,7 +1585,7 @@ Moira::execStop(u16 opcode)
 {
     SUPERVISOR_MODE_ONLY
 
-    setSR(irc | (MIMIC_MUSASHI ? 0 : 1 << 13));
+    setSR(queue.irc | (MIMIC_MUSASHI ? 0 : 1 << 13));
     readExtensionWord();
     pollIrq();
 }
