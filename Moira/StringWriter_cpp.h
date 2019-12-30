@@ -7,6 +7,8 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+#include <math.h>
+
 static const char *instrLower[] {
     "abcd" , "add",   "adda",  "addi",  "addq",  "addx",  "and",    "andi",
     "andi" , "andi",  "asl",   "asr",

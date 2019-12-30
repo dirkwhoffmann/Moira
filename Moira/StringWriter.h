@@ -10,7 +10,7 @@
 #ifndef STRING_WRITER_H
 #define STRING_WRITER_H
 
-#include "MoiraTypes.h"
+#include <math.h>
 
 namespace moira {
 
