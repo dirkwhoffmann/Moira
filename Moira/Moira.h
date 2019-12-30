@@ -120,20 +120,13 @@ public:
     // Executes the next instruction
     void execute();
 
-
-    //
-    // Running the disassembler
-    //
-
-public:
-
-    // Disassembles a single instruction and returns the instruction size in
-    // bytes
+    // Disassembles a single instruction
+    // Returns the instruction size in bytes
     int disassemble(u32 addr, char *str);
 
 
     //
-    // Managing time
+    // Accessing the clock
     //
 
 public:
@@ -153,6 +146,8 @@ private:
 
 public:
 
+    u32 getPC() { return reg.pc; }
+
     template<Size S = Long> u32 readD(int n);
     template<Size S = Long> u32 readA(int n);
     template<Size S = Long> u32 readR(int n);
@@ -160,8 +155,6 @@ public:
     template<Size S = Long> void writeA(int n, u32 v);
     template<Size S = Long> void writeR(int n, u32 v);
 
-
-    u32 getPC() { return reg.pc; }
     u32 getIRC() { return queue.irc; }
     u32 getIRD() { return queue.ird; }
     void setIRD(u32 value) { queue.ird = value; }
@@ -171,14 +164,17 @@ public:
     // Accessing memory
     //
 
-    /* Checks for an address error
-     * An address error occurs if the CPU tries to access a word or a long word
-     * that is located at an odd address. If an address error is encountered,
-     * the function calls execAddressError to initiate exception processing.
+    /* When the CPU accesses memory, a cascade of functions is executed.
+     * Based on the level of abstraction, we distinguish level 1, level 2, and
+     * level 3 functions. Level 1 functions are the most abstract ones and
+     * called inside the execution handler of an instruction. The level 3
+     * functions perform the actual memory access.
      */
-    template<Size S, int delay = 0> bool addressError(u32 addr);
 
-    /* Reads or writes a value from or into memory.
+
+    // Level 2
+
+    /* Reads a value from memory / Writes a value into memory
      *
      *      last: Indicates if this bus cycle is the last one. In that case,
      *            the CPU polls the interrupt level.
@@ -191,11 +187,34 @@ public:
     template<Size S, bool last = false> void writeM(u32 addr, u32 val);
     template<Size S, bool last = false> void writeM(u32 addr, u32 val, bool &error);
 
-    // Write to memory in reversed word order
     template<Size S, bool last = false> void writeMrev(u32 addr, u32 val);
     template<Size S, bool last = false> void writeMrev(u32 addr, u32 val, bool &error);
 
-    u32 readOnReset(u32 addr);
+
+    // Level 3
+
+    // Read a byte or a word from memory
+    u8 read8(u32 addr);
+    u16 read16(u32 addr);
+
+    // read16 variants used by the reset routine and the disassembler
+    u16 read16Reset(u32 addr);
+    u16 read16Dasm(u32 addr);
+
+    // Returns the current value of the IPL pins
+    u8 readIPL();
+
+
+    /* Checks for an address error
+     * An address error occurs if the CPU tries to access a word or a long word
+     * that is located at an odd address. If an address error is encountered,
+     * the function calls execAddressError to initiate exception processing.
+     */
+    template<Size S, int delay = 0> bool addressError(u32 addr);
+
+
+
+    u16 readOnReset(u32 addr);
 
     // Pushes a value onto the stack
     template<Size S, bool last = false> void push(u32 value);
@@ -218,15 +237,6 @@ public:
     // Reads an immediate value
     template<Size S> u32 readI();
 
-    //
-    // Low-level memory access functions (stubs)
-    //
-
-    u8  read8      (u32 addr);
-    u16 read16     (u32 addr);
-    u16 read16Reset(u32 addr);
-    u16 read16Dasm (u32 addr);
-    u8  readIPL    ();
 
 
     void write8  (u32 addr, u8  val);

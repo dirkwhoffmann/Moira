@@ -268,11 +268,11 @@ Moira::addressError(u32 addr)
     return false;
 }
 
-u32
+u16
 Moira::readOnReset(u32 addr)
 {
     sync(2);
-    u32 result = read16Reset(addr & 0xFFFFFF);
+    u16 result = read16Reset(addr & 0xFFFFFF);
     sync(2);
 
     return result;
