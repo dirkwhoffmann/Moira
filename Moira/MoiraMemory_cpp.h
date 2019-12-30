@@ -7,6 +7,33 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+/* Calling sequences for fetching an operand:
+ *
+ *                         readOperand()
+ *                              |
+ *          ---------------------------------------------
+ *          |   |   |   |   |   |   |   |   |   |   |   |
+ *          v   v   v   v   v   v   v   v   v   v   v   v
+ *         -----------------------------------------------
+ *  Mode: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+ *         -----------------------------------------------
+ *          |   |   |   |   |   |   |   |   |   |   |   |
+ *          V   |   ---------------------------------   V
+ *      readD() V               |                   readImm()
+ *                              V
+ *                          computeEA() --> readExtensionWord()
+ *                              |
+ *                              V
+ *                            readM() --> addressError()
+ *                              |
+ *                        --------------
+ *                        |            |
+ *                        V            V
+ *                     read8()      read16()
+ *
+ */
+
+
 template <Size S, int delay> bool
 Moira::addressError(u32 addr)
 {
