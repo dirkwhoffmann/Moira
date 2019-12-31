@@ -46,9 +46,9 @@ extern Sandbox sandbox;
 struct Setup {
 
     uint8_t  ccr;
+    bool     supervisor;
     uint32_t pc;
     uint16_t opcode;
-    uint16_t sr;
     uint32_t d[8];
     uint32_t a[8];
     uint8_t  mem[0x10000];

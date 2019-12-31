@@ -151,7 +151,7 @@ void setupMoira()
 
 void createTestCase(Setup &s)
 {
-    s.sr = 0;
+    s.supervisor = smartRandom() % 2;
     s.ccr = smartRandom();
 
     for (int i = 0; i < 8; i++) s.d[i] = smartRandom();
@@ -188,6 +188,7 @@ void resetMusashi(Setup &s)
         m68k_set_reg((m68k_register_t)(M68K_REG_A0 + i), s.a[i]);
     }
     m68ki_set_ccr(s.ccr);
+    s.supervisor ? m68ki_set_sm_flag(SFLAG_SET) : m68ki_set_sm_flag(SFLAG_CLEAR);
 }
 
 void resetMoira(Setup &s)
@@ -203,6 +204,7 @@ void resetMoira(Setup &s)
         moiracpu->writeA(i,s.a[i]);
     }
     moiracpu->setCCR(s.ccr);
+    moiracpu->setSupervisorMode(s.supervisor);
 }
 
 clock_t muclk = 0, moclk = 0;
