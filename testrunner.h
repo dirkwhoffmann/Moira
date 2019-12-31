@@ -27,7 +27,7 @@ extern "C" {
 }
 
 // Set to true to compare Moira against Musashi
-#define MUSASHI false
+#define MUSASHI true
 
 // Set to true to compare the disassemblers, too
 #define TEST_DASM true

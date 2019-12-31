@@ -86,12 +86,8 @@ Moira::readM(u32 addr)
         }
         case Long:
         {
-            sync(2);
-            result = read16(addr);
-            sync(4);
-            if (last) pollIrq();
-            result = result << 16 | read16(addr + 2);
-            sync(2);
+            result = readM<Word>(addr) << 16;
+            result |= readM<Word,last>(addr + 2);
             break;
         }
     }
