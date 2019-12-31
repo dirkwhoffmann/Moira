@@ -69,3 +69,16 @@ template<Mode M, Size S> bool readOp(int n, u32 &ea, u32 &result);
  */
 template<Mode M, Size S, bool last = false> bool writeOp(int n, u32 val);
 template<Mode M, Size S, bool last = false> void writeOp(int n, u32 ea, u32 val);
+
+// Reads an operand from memory (without or with address error checking)
+template<Size S, bool last = false> u32 readM(u32 addr);
+template<Size S, bool last = false> u32 readM(u32 addr, bool &error);
+
+// Writes an operand to memory (without or with address error checking)
+template<Size S, bool last = false> void writeM(u32 addr, u32 val);
+template<Size S, bool last = false> void writeM(u32 addr, u32 val, bool &error);
+
+// Writes an operand to memory in reversed memory access order
+template<Size S, bool last = false> void writeMrev(u32 addr, u32 val);
+template<Size S, bool last = false> void writeMrev(u32 addr, u32 val, bool &error);
+

@@ -12,11 +12,11 @@
 
 /* Set to true to enable address error checking
  */
-#define MOIRA_EMULATE_ADDRESS_ERROR false
+#define MOIRA_EMULATE_ADDRESS_ERROR true
 
 /* Set to true to run Moira in Musashi compatibility mode
  */
-#define MIMIC_MUSASHI true
+#define MIMIC_MUSASHI false
 
 
 #endif 

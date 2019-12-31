@@ -62,4 +62,111 @@ Moira::writeOp(int n, u32 ea, u32 val)
     writeM<S,last>(ea, val);
 }
 
+template<Size S, bool last> u32
+Moira::readM(u32 addr)
+{
+    u32 result;
+
+    switch (S) {
+        case Byte:
+        {
+            sync(2);
+            if (last) pollIrq();
+            result = read8(addr & 0xFFFFFF);
+            sync(2);
+            break;
+        }
+        case Word:
+        {
+            sync(2);
+            if (last) pollIrq();
+            result = read16(addr & 0xFFFFFF);
+            sync(2);
+            break;
+        }
+        case Long:
+        {
+            sync(2);
+            result = read16(addr);
+            sync(4);
+            if (last) pollIrq();
+            result = result << 16 | read16(addr + 2);
+            sync(2);
+            break;
+        }
+    }
+    return result;
+}
+
+template<Size S, bool last> u32
+Moira::readM(u32 addr, bool &error)
+{
+    if ((error = addressError<S,2>(addr))) { return 0; }
+    return readM<S,last>(addr);
+}
+
+template<Size S, bool last> void
+Moira::writeM(u32 addr, u32 val)
+{
+    switch (S) {
+
+        case Byte:
+        {
+            sync(2);
+            if (last) pollIrq();
+            write8(addr & 0xFFFFFF, (u8)val);
+            sync(2);
+            break;
+        }
+        case Word:
+        {
+            sync(2);
+            if (last) pollIrq();
+            write16(addr & 0xFFFFFF, (u16)val);
+            sync(2);
+            break;
+        }
+        case Long:
+        {
+            writeM<Word>     (addr,     val >> 16   );
+            writeM<Word,last>(addr + 2, val & 0xFFFF);
+            break;
+        }
+    }
+}
+
+template<Size S, bool last> void
+Moira::writeM(u32 addr, u32 val, bool &error)
+{
+    if ((error = addressError<S,2>(addr))) { return; }
+    writeM<S,last>(addr, val);
+}
+
+template<Size S, bool last> void
+Moira::writeMrev(u32 addr, u32 val)
+{
+    switch (S) {
+
+        case Byte:
+        case Word:
+        {
+            writeM<S,last>(addr, val);
+            break;
+        }
+        case Long:
+        {
+            writeM<Word>     (addr + 2, val & 0xFFFF);
+            writeM<Word,last>(addr,     val >> 16   );
+            break;
+        }
+    }
+}
+
+template<Size S, bool last> void
+Moira::writeMrev(u32 addr, u32 val, bool &error)
+{
+    if ((error = addressError<S,2>(addr))) { return; }
+    writeMrev<S,last>(addr, val);
+}
+
 

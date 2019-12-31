@@ -176,21 +176,7 @@ private:
 
     // Level 2
 
-    /* Reads a value from memory / Writes a value into memory
-     *
-     *      last: Indicates if this bus cycle is the last one. In that case,
-     *            the CPU polls the interrupt level.
-     *     error: If provided, the functions checks for an address error and
-     *            triggers an address error exception if applicable.
-     */
-    template<Size S, bool last = false> u32 readM(u32 addr);
-    template<Size S, bool last = false> u32 readM(u32 addr, bool &error);
 
-    template<Size S, bool last = false> void writeM(u32 addr, u32 val);
-    template<Size S, bool last = false> void writeM(u32 addr, u32 val, bool &error);
-
-    template<Size S, bool last = false> void writeMrev(u32 addr, u32 val);
-    template<Size S, bool last = false> void writeMrev(u32 addr, u32 val, bool &error);
 
 
     // Level 3

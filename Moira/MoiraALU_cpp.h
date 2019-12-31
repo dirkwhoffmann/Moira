@@ -272,8 +272,6 @@ Moira::div(u32 op1, u32 op2)
 
         case DIVS: // Signed division
         {
-            sync(cyclesDiv<I>(op1, op2) - 4);
-
             i64 quotient  = (i64)(i32)op1 / (i16)op2;
             i16 remainder = (i64)(i32)op1 % (i16)op2;
 
@@ -293,8 +291,9 @@ Moira::div(u32 op1, u32 op2)
             break;
         }
     }
-    sr.v   = overflow ? 1 : NBIT<Word>(result);
-    sr.n   = overflow ? 1 : ZERO<Word>(result);
+    sr.v   = overflow ? 1    : sr.v;
+    sr.n   = overflow ? 1    : NBIT<Word>(result);
+    sr.z   = overflow ? sr.z : ZERO<Word>(result);
 
     sync(cyclesDiv<I>(op1, op2) - 4);
     return overflow ? op1 : result;
