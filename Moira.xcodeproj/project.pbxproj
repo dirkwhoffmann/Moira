@@ -14,7 +14,6 @@
 		505580EC23AFA14D0009F77F /* musashi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505580EA23AFA14D0009F77F /* musashi.cpp */; };
 		505580EE23AFB31F0009F77F /* moira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505580ED23AFB31F0009F77F /* moira.cpp */; };
 		505580EF23AFC2360009F77F /* StrWriter_cpp.h in Sources */ = {isa = PBXBuildFile; fileRef = 5010BDAC238A897400CFD010 /* StrWriter_cpp.h */; };
-		506E013C23AC8E8A0015AE3F /* MoiraMemory_cpp.h in Sources */ = {isa = PBXBuildFile; fileRef = 506E013B23AC8E8A0015AE3F /* MoiraMemory_cpp.h */; };
 		507BE4AF23B66456000B37D2 /* testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* testrunner.cpp */; };
 		50804EDE2386A72C004D3EC2 /* tester.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E792386A72C004D3EC2 /* tester.cpp */; };
 		50804EDF2386A72C004D3EC2 /* exception.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E7C2386A72C004D3EC2 /* exception.cpp */; };
@@ -132,7 +131,6 @@
 		505580E523AFA04C0009F77F /* m68kops.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kops.h; sourceTree = "<group>"; };
 		505580EA23AFA14D0009F77F /* musashi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = musashi.cpp; sourceTree = "<group>"; };
 		505580ED23AFB31F0009F77F /* moira.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = moira.cpp; sourceTree = "<group>"; };
-		506E013B23AC8E8A0015AE3F /* MoiraMemory_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraMemory_cpp.h; sourceTree = "<group>"; };
 		507BE4AD23B66456000B37D2 /* testrunner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = testrunner.cpp; sourceTree = "<group>"; };
 		507BE4AE23B66456000B37D2 /* testrunner.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = testrunner.h; sourceTree = "<group>"; };
 		50804E062386A4CE004D3EC2 /* Moira */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Moira; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -313,7 +311,6 @@
 				50B99DAB23B24E0C00D8A89A /* MoiraTypes.h */,
 				50804F332386A7DD004D3EC2 /* Moira.cpp */,
 				50804F4B23891893004D3EC2 /* MoiraInit_cpp.h */,
-				506E013B23AC8E8A0015AE3F /* MoiraMemory_cpp.h */,
 				50BF14CA23BB4D2700EDFB9C /* MoiraALU.h */,
 				50804F4923891480004D3EC2 /* MoiraALU_cpp.h */,
 				509ABE1423BB402B00BD91A8 /* MoiraDataflow.h */,
@@ -533,7 +530,6 @@
 				505580E823AFA04C0009F77F /* m68kdasm.c in Sources */,
 				50804EFE2386A72C004D3EC2 /* andi.cpp in Sources */,
 				50804F242386A72C004D3EC2 /* unlk.cpp in Sources */,
-				506E013C23AC8E8A0015AE3F /* MoiraMemory_cpp.h in Sources */,
 				50804EFC2386A72C004D3EC2 /* adda.cpp in Sources */,
 				50804F182386A72C004D3EC2 /* tas.cpp in Sources */,
 				50804F2F2386A72C004D3EC2 /* moveq.cpp in Sources */,

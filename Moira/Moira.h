@@ -169,20 +169,15 @@ private:
     u8 read8(u32 addr);
     u16 read16(u32 addr);
     u16 read16OnReset(u32 addr);
-
-    // Special read16 variant used by the disassembler
     u16 read16Dasm(u32 addr);
-
-    // Returns the current value of the IPL pins
+    void dummyRead(u32 pc);
+    void dummyRead() { dummyRead(reg.pc); }
     u8 readIPL();
-
 
     void write8  (u32 addr, u8  val);
     void write16 (u32 addr, u16 val);
 
 
-    void dummyRead(u32 pc);
-    void dummyRead() { dummyRead(reg.pc); }
 
 
     //

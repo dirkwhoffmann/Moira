@@ -459,7 +459,7 @@ Moira::execAndiccr(u16 opcode)
     u32 result = logic<I,S>(src, dst);
     setCCR(result);
 
-    dummyRead(reg.pc+2);
+    (void)readM<Word>(reg.pc+2);
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -476,7 +476,7 @@ Moira::execAndisr(u16 opcode)
     u32 result = logic<I,S>(src, dst);
     setSR(result);
 
-    dummyRead(reg.pc+2);
+    (void)readM<Word>(reg.pc+2);
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -744,7 +744,7 @@ Moira::execDbcc(u16 opcode)
             fullPrefetch<LAST_BUS_CYCLE>();
             return;
         } else {
-            dummyRead(reg.pc + 2);
+            (void)readM<Word>(reg.pc + 2);
         }
     } else {
         sync(2);
@@ -1093,7 +1093,7 @@ Moira::execMovemEaRg(u16 opcode)
 
     u32 ea = computeEA<M,S>(src);
     if (addressError<S>(ea)) return;
-    if (S == Long) dummyRead(ea);
+    if (S == Long) (void)readM<Word>(ea);
 
     switch (M) {
 
@@ -1121,7 +1121,7 @@ Moira::execMovemEaRg(u16 opcode)
             break;
         }
     }
-    if (S == Word) dummyRead(ea);
+    if (S == Word) (void)readM<Word>(ea);
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -1252,7 +1252,7 @@ Moira::execMoveToCcr(u16 opcode)
     sync(4);
     setCCR(data);
 
-    dummyRead(reg.pc + 2);
+    (void)readM<Word>(reg.pc + 2);
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -1294,7 +1294,7 @@ Moira::execMoveToSr(u16 opcode)
     sync(4);
     setSR(data);
 
-    dummyRead(reg.pc + 2);
+    (void)readM<Word>(reg.pc + 2);
     prefetch<LAST_BUS_CYCLE>();
 }
 
