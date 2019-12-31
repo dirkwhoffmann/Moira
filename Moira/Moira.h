@@ -274,7 +274,7 @@ private:
     template <Instr I, Size S> u32  shift(int cnt, u64 data);
     template <Instr I, Size S> u32  arith(u32 op1, u32 op2);
     template <Instr I>         u32    mul(u32 op1, u32 op2);
-    template <Instr I, Size S> u32    div(u32 op1, u32 op2);
+    template <Instr I>         u32    div(u32 op1, u32 op2, bool &overflow);
     template <Instr I, Size S> u32    bcd(u32 op1, u32 op2);
     template <Size S>          void   cmp(u32 op1, u32 op2);
     template <Instr I, Size S> u32  logic(u32 op1);

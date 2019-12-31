@@ -255,10 +255,60 @@ Moira::mul(u32 op1, u32 op2)
     return result;
 }
 
-template <Instr I, Size S> u32
-Moira::div(u32 op1, u32 op2)
+template <Instr I> u32
+Moira::div(u32 op1, u32 op2, bool &overflow)
 {
- 
+    u32 result;
+    
+    switch (I) {
+
+        case DIVS: // Signed division
+        {
+            sync(cyclesDiv<I>(op1, op2) - 4);
+
+            if (op1 == 0x80000000 && (i16)op2 == -1) {
+                sr.v = sr.n = 1;
+                break;
+            }
+            i32 quotient  = (i32)op1 / (i16)op2;
+            i16 remainder = (i32)op1 % (i16)op2;
+
+            // Check overflow condition
+            if ((quotient & 0xffff8000) != 0 && (quotient & 0xffff8000) != 0xffff8000) {
+                overflow = true;
+                sr.v = 1;
+                sr.n = 1;
+                break;
+            }
+            sr.n = NBIT<Word>(quotient);
+            sr.z = ZERO<Word>(quotient);
+
+            result = (quotient & 0xffff) | remainder << 16;
+            break;
+        }
+        case DIVU: // Unsigned division
+        {
+            sync(cyclesDiv<I>(op1, op2) - 4);
+
+            u32 quotient  = op1 / op2;
+            u16 remainder = op1 % op2;
+
+            // Check overflow condition
+            if (quotient > 0xFFFF) {
+                overflow = true;
+                sr.v = 1;
+                sr.n = 1;
+                break;
+            }
+            sr.n = NBIT<Word>(quotient);
+            sr.z = ZERO<Word>(quotient);
+
+            result = (quotient & 0xffff) | remainder << 16;
+            break;
+        }
+    }
+
+    return result;
 }
 
 template<Instr I, Size S> u32

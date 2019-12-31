@@ -1344,11 +1344,11 @@ Moira::execDiv(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    u32 ea, data, result;
-    if (!readOperand<M, Word>(src, ea, data)) return;
+    u32 ea, divisor, result;
+    if (!readOperand<M, Word>(src, ea, divisor)) return;
 
     // Check for division by zero
-    if (data == 0) {
+    if (divisor == 0) {
         if (!MIMIC_MUSASHI) {
             sr.n = sr.z = sr.v = sr.c = 0;
         }
@@ -1360,8 +1360,8 @@ Moira::execDiv(u16 opcode)
     sr.n = sr.z = sr.v = sr.c = 0;
 
     u32 dividend = readD(dst);
-    bool overflow = false;
 
+    /*
     switch (I) {
 
         case DIVS: // Signed division
@@ -1409,8 +1409,11 @@ Moira::execDiv(u16 opcode)
             break;
         }
     }
+    */
+    bool overflow = false;
+    result = div<I>(dividend, divisor, overflow);
 
-    writeD(dst, result);
+    if (!overflow) writeD(dst, result);
     prefetch<LAST_BUS_CYCLE>();
 }
 
