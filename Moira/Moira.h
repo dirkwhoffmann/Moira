@@ -229,15 +229,6 @@ private:
     // Emulates the address register modification for modes (An)+, (An)-
     template<Mode M, Size S> void updateAn(int n);
 
-    // Reads an operand
-    template<Mode M, Size S> bool readOperand(int n, u32 &ea, u32 &result);
-
-    // Writes an operand
-    template<Mode M, Size S, bool last = false> bool writeOperand(int n, u32 value);
-
-    // Writes an operand to an already computed effective address
-    template<Mode M, Size S, bool last = false> void writeOperand(int n, u32 ea, u32 value);
-
     // Reads an immediate value
     template<Size S> u32 readI();
 
@@ -348,7 +339,7 @@ public:
 
 private:
 
-    // Instruction handlers
+    #include "MoiraDataflow.h"
     #include "MoiraExec.h"
     #include "MoiraDasm.h"
 };

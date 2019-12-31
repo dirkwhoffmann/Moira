@@ -14,6 +14,12 @@
 
 using namespace moira;
 
+void
+Moira::sync(int cycles)
+{
+    clock += cycles;
+}
+
 u8
 Moira::read8(u32 addr)
 {

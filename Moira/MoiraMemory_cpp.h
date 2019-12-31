@@ -7,38 +7,6 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-/* Relationship of the functions defined in this file:
- *
- *                                      |
- * - - - - - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - - - - - -
- * Layer 1:                             V
- *                                 readOperand
- *                                (writeOperand)
- *                                      |
- *  Addressing Mode M = 0---1---2---3---4---5---6---7---8---9---A---B
- *                     /    |   |   |   |   |   |   |   |   |   |    \
- *                    /     |   ---------------------------------     \
- *                   /      |           |                              \
- *                  /       |           V                               \
- *                 /        |       computeEA --> readExtensionWord      \
- *                /         |           |                                 \
- * - - - - - - - -|- - - - -|- - - - - -|- - - - - - - - - - - - - - - - -|- - -
- * Layer 2:       |         |           |                                 |
- *                V         V           V                                 V
- *              readD     readA      readM   ---> addressError()        readI
- *             (writeD)  (writeA)   (writeM)
- *                                      |
- *                                  updateAn()
- *                                      |
- * - - - - - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - - - - - -
- * Layer 3:                             |
- *                 Size S = B-----------W-----------L
- *                          |           |           |
- *                          V           V           V
- *                        read8       read16    2 x read16
- *                       (write8)    (write8)  (2 x write16)
- *
- */
 
 template<Mode M, Size S> bool
 Moira::readOperand(int n, u32 &ea, u32 &result)

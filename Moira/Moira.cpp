@@ -17,7 +17,7 @@ namespace moira {
 #include "MoiraInit_cpp.h"
 #include "MoiraLogic_cpp.h"
 #include "MoiraMemory_cpp.h"
-#include "MoiraTiming_cpp.h"
+#include "MoiraDataflow_cpp.h"
 #include "MoiraExec_cpp.h"
 #include "StrWriter_cpp.h"
 #include "MoiraDasm_cpp.h"

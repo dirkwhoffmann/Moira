@@ -497,3 +497,96 @@ Moira::cond() {
         case BLE: case DBLE: case SLE: return sr.n != sr.v || sr.z;
     }
 }
+
+template <Instr I> int
+Moira::cyclesBit(u8 bit)
+{
+    switch (I)
+    {
+        case BTST: return 2;
+        case BCLR: return (bit > 15 ? 6 : 4);
+        case BSET:
+        case BCHG: return (bit > 15 ? 4 : 2);
+    }
+
+    assert(false);
+    return 0;
+}
+
+template <Instr I> int
+Moira::cyclesMul(u16 data)
+{
+    int mcycles = 17;
+
+    switch (I)
+    {
+        case MULU:
+        {
+            for (; data; data >>= 1) if (data & 1) mcycles++;
+            return 2 * mcycles;
+        }
+        case MULS:
+        {
+            data = ((data << 1) ^ data) & 0xFFFF;
+            for (; data; data >>= 1) if (data & 1) mcycles++;
+            return 2 * mcycles;
+        }
+    }
+}
+
+template <Instr I> int
+Moira::cyclesDiv(u32 op1, u16 op2)
+{
+    switch (I)
+    {
+        case DIVU:
+        {
+            u32 dividend = op1;
+            u16 divisor  = op2;
+            int mcycles  = 38;
+
+            // Check if quotient is larger than 16 bit
+            if ((dividend >> 16) >= divisor) return 10;
+            u32 hdivisor = divisor << 16;
+
+            for (int i = 0; i < 15; i++) {
+                if ((i32)dividend < 0) {
+                    dividend <<= 1;
+                    dividend -= hdivisor;
+                } else {
+                    dividend <<= 1;
+                    if (dividend >= hdivisor) {
+                        dividend -= hdivisor;
+                        mcycles += 1;
+                    } else {
+                        mcycles += 2;
+                    }
+                }
+            }
+            return 2 * mcycles;
+        }
+        case DIVS:
+        {
+            i32 dividend = (i32)op1;
+            i16 divisor  = (i16)op2;
+            int mcycles  = (dividend < 0) ? 7 : 6;
+
+            // Check if quotient is larger than 16 bit
+            if ((abs(dividend) >> 16) >= abs(divisor))
+                return (mcycles + 2) * 2;
+
+            mcycles += 55;
+
+            if (divisor >= 0) {
+                mcycles += (dividend < 0) ? 1 : -1;
+            }
+
+            u32 aquot = abs(dividend) / abs(divisor);
+            for (int i = 0; i < 15; i++) {
+                if ( (i16)aquot >= 0) mcycles++;
+                aquot <<= 1;
+            }
+            return 2 * mcycles;
+        }
+    }
+}
