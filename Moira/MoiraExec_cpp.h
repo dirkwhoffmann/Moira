@@ -80,11 +80,11 @@ Moira::execAddressError(u32 addr)
     saveToStackDetailed(getSR(), addr, code);
     sync(2);
     
-    jumpToVector(ADDRESS_ERROR);
+    jumpToVector(3);
 }
 
 void
-Moira::execUnimplemented(Exception e)
+Moira::execUnimplemented(int nr)
 {
     u16 status = getSR();
 
@@ -98,7 +98,7 @@ Moira::execUnimplemented(Exception e)
     readExt();
     prefetch();
 
-    jumpToVector(e);
+    jumpToVector(nr);
 }
 
 void
@@ -114,11 +114,11 @@ Moira::execIllegal(u16 opcode)
     sync(4);
     saveToStackBrief(status);
 
-    jumpToVector(ILLEGAL_INSTRUCTION);
+    jumpToVector(4);
 }
 
 void
-Moira::execTrapException(Exception e)
+Moira::execTrapException(int nr)
 {
     u16 status = getSR();
 
@@ -129,7 +129,7 @@ Moira::execTrapException(Exception e)
     // Write exception information to stack
     saveToStackBrief(status);
 
-    jumpToVector(e);
+    jumpToVector(nr);
 }
 
 void
@@ -147,7 +147,7 @@ Moira::execPrivilegeException()
     sync(4);
     saveToStackBrief(status);
 
-    jumpToVector(PRIVILEGE_VIOLATION);
+    jumpToVector(8);
 }
 
 void
@@ -165,13 +165,13 @@ Moira::execIrqException(int level)
     reg.sp -= 6;
     writeM<Word>(reg.sp + 4, reg.pc & 0xFFFF);
 
-    u8 vector = getIrqVector(level);
+    u8 vec = getIrqVector(level);
 
     sync(4);
     writeM<Word>(reg.sp + 0, status);
     writeM<Word>(reg.sp + 2, reg.pc >> 16);
 
-    jumpToVector((Exception)vector);
+    jumpToVector(vec);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -640,7 +640,7 @@ Moira::execChk(u16 opcode)
 
         sync(4);
         sr.n = NBIT<S>(dop);
-        execTrapException(CHK_INSTRUCTION);
+        execTrapException(6);
 
         return;
     }
@@ -651,7 +651,7 @@ Moira::execChk(u16 opcode)
 
         sync(4);
         sr.n = NBIT<S>(dop);
-        execTrapException(CHK_INSTRUCTION);
+        execTrapException(6);
     }
 }
 
@@ -1362,7 +1362,7 @@ Moira::execDiv(u16 opcode)
     if (divisor == 0) {
         if (!MIMIC_MUSASHI) sr.n = sr.z = sr.v = sr.c = 0;
         sync(8);
-        execTrapException(ZERO_DIVIDE);
+        execTrapException(5);
         return;
     }
 
@@ -1605,14 +1605,14 @@ Moira::execTrap(u16 opcode)
     int nr = ____________xxxx(opcode);
 
     sync(4);
-    execTrapException((Exception)(TRAP_BASE + nr));
+    execTrapException(32 + nr);
 }
 
 template<Instr I, Mode M, Size S> void
 Moira::execTrapv(u16 opcode)
 {
     prefetch<LAST_BUS_CYCLE>();
-    if (sr.v) execTrapException(TRAPV_INSTRUCTION);
+    if (sr.v) execTrapException(7);
 }
 
 template<Instr I, Mode M, Size S> void

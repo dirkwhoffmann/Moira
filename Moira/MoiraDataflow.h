@@ -111,4 +111,4 @@ template<bool last = false> void fullPrefetch();
 template<bool skip = false> void readExt();
 
 // Jumps to an exception vector
-void jumpToVector(Exception e);
+void jumpToVector(int nr);

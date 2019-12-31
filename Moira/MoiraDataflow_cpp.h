@@ -342,10 +342,10 @@ Moira::readExt()
 }
 
 void
-Moira::jumpToVector(Exception e)
+Moira::jumpToVector(int nr)
 {
     // Update the program counter
-    reg.pc = readM<Long>(4 * e);
+    reg.pc = readM<Long>(4 * nr);
 
     // Update the prefetch queue
     queue.ird = readM<Word>(reg.pc);

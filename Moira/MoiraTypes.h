@@ -202,6 +202,7 @@ typedef enum
 }
 IrqMode;
 
+/*
 typedef enum
 {
     BUS_ERROR           = 2,
@@ -219,6 +220,7 @@ typedef enum
     TRAP_BASE           = 32
 }
 Exception;
+*/
 
 }
 #endif
