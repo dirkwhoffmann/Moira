@@ -8,113 +8,6 @@
 // -----------------------------------------------------------------------------
 
 
-template<Mode M, Size S> bool
-Moira::readOp(int n, u32 &ea, u32 &result)
-{
-    switch (M) {
-
-        case 0:  // Dn
-        {
-            result = readD<S>(n);
-            break;
-        }
-        case 1:  // An
-        {
-            result = readA<S>(n);
-            break;
-        }
-        case 11: // Im
-        {
-            result = readI<S>();
-            break;
-        }
-        default: // Ea
-        {
-            // Compute effective address
-            ea = computeEA<M,S>(n);
-
-            // Read from effective address
-            bool error; result = readM<S>(ea, error);
-
-            // Exit if an address error has occurred
-            if (error) return false;
-
-            // Emulate (An)+ or -(An) register modification
-            updateAn<M,S>(n);
-        }
-    }
-
-   return true;
-}
-
-template<Mode M, Size S, bool last> bool
-Moira::writeOp(int n, u32 value)
-{
-    switch (M) {
-
-        case 0:  // Dn
-        {
-            writeD<S>(n, value);
-            break;
-        }
-        case 1:  // An
-        {
-            writeA<S>(n, value);
-            break;
-        }
-        case 11: // Im
-        {
-            assert(false);
-            break;
-        }
-        default:
-        {
-            // Compute effective address
-            u32 ea = computeEA<M,S>(n);
-
-            // Write to effective address
-            bool error; writeM<S,last>(ea, value, error);
-
-            // Early exit in case of an address error
-            if (error) return false;
-
-            // Emulate (An)+ or -(An) register modification
-            updateAn<M,S>(n);
-        }
-    }
-
-    return true;
-}
-
-template<Mode M, Size S, bool last> void
-Moira::writeOp(int n, u32 ea, u32 value)
-{
-    assert(M < 11);
-
-    switch (M) {
-
-        case 0:  // Dn
-        {
-            writeD<S>(n, value);
-            break;
-        }
-        case 1:  // An
-        {
-            writeA<S>(n, value);
-            break;
-        }
-        case 11: // Im
-        {
-            assert(false);
-            break;
-        }
-        default:
-        {
-            writeM<S,last>(ea, value);
-            break;
-        }
-    }
-}
 
 
 template<Size S, bool last> u32
@@ -247,10 +140,10 @@ Moira::readOnReset(u32 addr)
 }
 
 template<Size S, bool last> void
-Moira::push(u32 value)
+Moira::push(u32 val)
 {
     reg.sp -= S;
-    writeM<S,last>(reg.sp, value);
+    writeM<S,last>(reg.sp, val);
 }
 
 template<Mode M, Size S, bool skip> u32

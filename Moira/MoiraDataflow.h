@@ -70,8 +70,8 @@ template<Mode M, Size S> bool readOp(int n, u32 &ea, u32 &result);
  * by the addressing mode M. Parameter 'last' indicates if this function is
  * initiates the last memory bus cycle of an instruction.
  */
-template<Mode M, Size S, bool last = false> bool writeOp(int n, u32 value);
-template<Mode M, Size S, bool last = false> void writeOp(int n, u32 ea, u32 value);
+template<Mode M, Size S, bool last = false> bool writeOp(int n, u32 val);
+template<Mode M, Size S, bool last = false> void writeOp(int n, u32 ea, u32 val);
 
 
 #endif
