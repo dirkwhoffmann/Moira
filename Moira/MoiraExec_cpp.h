@@ -1329,22 +1329,7 @@ Moira::execMul(u16 opcode)
     if (!readOperand<M, Word>(src, ea, data)) return;
 
     prefetch<LAST_BUS_CYCLE>();
-
-    switch (I) {
-
-        case MULS: // Signed multiplication
-        {
-            result = (i16)data * (i16)readD<Word>(dst);
-            sync(cyclesMULS(data));
-            break;
-        }
-        case MULU: // Unsigned multiplication
-        {
-            result = data * readD<Word>(dst);
-            sync(cyclesMULU(data));
-            break;
-        }
-    }
+    result = mul<I>(data, readD<Word>(dst));
 
     writeD(dst, result);
     sr.n = NBIT<Long>(result);
@@ -1359,7 +1344,7 @@ Moira::execDiv(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    u32 ea, data;
+    u32 ea, data, result;
     if (!readOperand<M, Word>(src, ea, data)) return;
 
     // Check for division by zero
@@ -1368,56 +1353,64 @@ Moira::execDiv(u16 opcode)
             sr.n = sr.z = sr.v = sr.c = 0;
         }
         sync(8);
-        return execTrapException(5);
+        execTrapException(5);
+        return;
     }
 
     sr.n = sr.z = sr.v = sr.c = 0;
 
     u32 dividend = readD(dst);
+    bool overflow = false;
 
     switch (I) {
 
         case DIVS: // Signed division
         {
-            sync(cyclesDIVS(dividend, data) - 4);
+            sync(cyclesDiv<I>(dividend, data) - 4);
 
             if (dividend == 0x80000000 && (i16)data == -1) {
                 sr.v = sr.n = 1;
                 break;
             }
-            i32 result = (i32)dividend / (i16)data;
+            i32 quotient  = (i32)dividend / (i16)data;
             i16 remainder = (i32)dividend % (i16)data;
 
-            if ((result & 0xffff8000) != 0 && (result & 0xffff8000) != 0xffff8000) {
-                sr.v = sr.n = 1;
-                break;
-            }
-            sr.n = NBIT<Word>(result);
-            sr.z = ZERO<Word>(result);
-
-            writeD(dst, (result & 0xffff) | (remainder << 16));
-            break;
-        }
-        case DIVU: // Unsigned division
-        {
-            sync(cyclesDIVU(dividend, data) - 4);
-
-            u32 result = dividend / data;
-            u16 remainder = dividend % data;
-
-            if (result > 0xFFFF) {
+            // Check overflow condition
+            if ((quotient & 0xffff8000) != 0 && (quotient & 0xffff8000) != 0xffff8000) {
+                overflow = true;
                 sr.v = 1;
                 sr.n = 1;
                 break;
             }
-            sr.n = NBIT<Word>(result);
-            sr.z = ZERO<Word>(result);
+            sr.n = NBIT<Word>(quotient);
+            sr.z = ZERO<Word>(quotient);
 
-            writeD(dst, (result & 0xffff) | (remainder << 16));
+            result = (quotient & 0xffff) | remainder << 16;
+            break;
+        }
+        case DIVU: // Unsigned division
+        {
+            sync(cyclesDiv<I>(dividend, data) - 4);
+
+            u32 quotient  = dividend / data;
+            u16 remainder = dividend % data;
+
+            // Check overflow condition
+            if (quotient > 0xFFFF) {
+                overflow = true;
+                sr.v = 1;
+                sr.n = 1;
+                break;
+            }
+            sr.n = NBIT<Word>(quotient);
+            sr.z = ZERO<Word>(quotient);
+
+            result = (quotient & 0xffff) | remainder << 16;
             break;
         }
     }
 
+    writeD(dst, result);
     prefetch<LAST_BUS_CYCLE>();
 }
 

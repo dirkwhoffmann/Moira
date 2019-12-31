@@ -28,70 +28,80 @@ Moira::cyclesBit(u8 bit)
     return 0;
 }
 
-int
-Moira::cyclesMULU(u16 data)
+template <Instr I> int
+Moira::cyclesMul(u16 data)
 {
     int mcycles = 17;
 
-    for (; data; data >>= 1) if (data & 1) mcycles++;
-    return 2 * mcycles;
-}
-
-int
-Moira::cyclesMULS(u16 data)
-{
-    int mcycles = 17;
-
-    data = ((data << 1) ^ data) & 0xFFFF;
-    for (; data; data >>= 1) if (data & 1) mcycles++;
-    return 2 * mcycles;
-}
-
-int
-Moira::cyclesDIVU(u32 dividend, u16 divisor)
-{
-    int mcycles = 38;
-
-    // Check if quotient is larger than 16 bit
-    if ((dividend >> 16) >= divisor) return 10;
-    u32 hdivisor = divisor << 16;
-
-    for (int i = 0; i < 15; i++) {
-        if ((i32)dividend < 0) {
-            dividend <<= 1;
-            dividend -= hdivisor;
-        } else {
-            dividend <<= 1;
-            if (dividend >= hdivisor) {
-                dividend -= hdivisor;
-                mcycles += 1;
-            } else {
-                mcycles += 2;
-            }
+    switch (I)
+    {
+        case MULU:
+        {
+            for (; data; data >>= 1) if (data & 1) mcycles++;
+            return 2 * mcycles;
+        }
+        case MULS:
+        {
+            data = ((data << 1) ^ data) & 0xFFFF;
+            for (; data; data >>= 1) if (data & 1) mcycles++;
+            return 2 * mcycles;
         }
     }
-    return 2 * mcycles;
 }
 
-int
-Moira::cyclesDIVS(i32 dividend, i16 divisor)
+template <Instr I> int
+Moira::cyclesDiv(u32 op1, u16 op2)
 {
-    int mcycles = (dividend < 0) ? 7 : 6;
+    switch (I)
+    {
+        case DIVU:
+        {
+            u32 dividend = op1;
+            u16 divisor  = op2;
+            int mcycles  = 38;
 
-    // Check if quotient is larger than 16 bit
-    if ((abs(dividend) >> 16) >= abs(divisor))
-        return (mcycles + 2) * 2;
+            // Check if quotient is larger than 16 bit
+            if ((dividend >> 16) >= divisor) return 10;
+            u32 hdivisor = divisor << 16;
 
-    mcycles += 55;
+            for (int i = 0; i < 15; i++) {
+                if ((i32)dividend < 0) {
+                    dividend <<= 1;
+                    dividend -= hdivisor;
+                } else {
+                    dividend <<= 1;
+                    if (dividend >= hdivisor) {
+                        dividend -= hdivisor;
+                        mcycles += 1;
+                    } else {
+                        mcycles += 2;
+                    }
+                }
+            }
+            return 2 * mcycles;
+        }
+        case DIVS:
+        {
+            i32 dividend = (i32)op1;
+            i16 divisor  = (i16)op2;
+            int mcycles  = (dividend < 0) ? 7 : 6;
 
-    if (divisor >= 0) {
-        mcycles += (dividend < 0) ? 1 : -1;
+            // Check if quotient is larger than 16 bit
+            if ((abs(dividend) >> 16) >= abs(divisor))
+                return (mcycles + 2) * 2;
+
+            mcycles += 55;
+
+            if (divisor >= 0) {
+                mcycles += (dividend < 0) ? 1 : -1;
+            }
+
+            u32 aquot = abs(dividend) / abs(divisor);
+            for (int i = 0; i < 15; i++) {
+                if ( (i16)aquot >= 0) mcycles++;
+                aquot <<= 1;
+            }
+            return 2 * mcycles;
+        }
     }
-
-    u32 aquot = abs(dividend) / abs(divisor);
-    for (int i = 0; i < 15; i++) {
-        if ( (i16)aquot >= 0) mcycles++;
-        aquot <<= 1;
-    }
-    return 2 * mcycles;
 }

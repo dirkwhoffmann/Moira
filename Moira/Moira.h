@@ -164,6 +164,8 @@ public:
     // Accessing memory
     //
 
+private:
+
     /* When the CPU accesses memory, a cascade of functions is executed.
      * Based on the level of abstraction, we distinguish level 1, level 2, and
      * level 3 functions. Level 1 functions are the most abstract ones and
@@ -197,8 +199,10 @@ public:
     u8 read8(u32 addr);
     u16 read16(u32 addr);
 
-    // read16 variants used by the reset routine and the disassembler
+    // Special read16 variant used inside the reset routine
     u16 read16Reset(u32 addr);
+
+    // Special read16 variant used by the disassembler
     u16 read16Dasm(u32 addr);
 
     // Returns the current value of the IPL pins
@@ -251,41 +255,36 @@ public:
     // Emulate timing
     //
 
-    template <Instr I> int cyclesBit(u8 bit);
-    int cyclesMULU(u16 data);
-    int cyclesMULS(u16 data);
-    int cyclesDIVU(u32 dividend, u16 divisor);
-    int cyclesDIVS(i32 dividend, i16 divisor);
+
 
 
     //
     // Applying the arithmetic logic unit (ALU)
     //
 
-    // ASx, LSx, ROx, ROXx
+    /*       shift : ASx, LSx, ROx, ROXx
+     *       arith : ADDx, SUBx
+     *         bcd : ABCD, NBCD, SBCD
+     *         cmp : CMPx
+     *       logic : NOT, NEG, NEGX, ANDx, ORx, EORx
+     *         bit : BCHG, BSET, BCLR, BTST
+     *        cond : Bxx, DBxx, Sx
+     */
+
     template <Instr I, Size S> u32  shift(int cnt, u64 data);
-
-    // ADDx, SUBx
     template <Instr I, Size S> u32  arith(u32 op1, u32 op2);
-
-    // ABCD, SBCD
-    template <Instr I, Size S> u32  bcd(u32 op1, u32 op2);
-
-    // CMPx
-    template <Size S>          void cmp(u32 op1, u32 op2);
-
-    // NOT, NEG, NEGX
+    template <Instr I>         u32    mul(u32 op1, u32 op2);
+    template <Instr I, Size S> u32    div(u32 op1, u32 op2);
+    template <Instr I, Size S> u32    bcd(u32 op1, u32 op2);
+    template <Size S>          void   cmp(u32 op1, u32 op2);
     template <Instr I, Size S> u32  logic(u32 op1);
-
-    // ANDx, ORx, EORx
     template <Instr I, Size S> u32  logic(u32 op1, u32 op2);
-
-    // BCHG, BSET, BCLR, BTST
-    template <Instr I>         u32  bit(u32 op, u8 bit);
-
-    // Bxx, DBxx, Sx
+    template <Instr I>         u32  bit(u32 op, u8 nr);
     template <Instr I>         bool cond();
 
+    template <Instr I>         int  cyclesBit(u8 nr);
+    template <Instr I>         int  cyclesMul(u16 data);
+    template <Instr I>         int  cyclesDiv(u32 dividend, u16 divisor);
 
 private:
 

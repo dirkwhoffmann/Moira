@@ -232,6 +232,35 @@ Moira::arith(u32 op1, u32 op2)
     return (u32)result;
 }
 
+template <Instr I> u32
+Moira::mul(u32 op1, u32 op2)
+{
+    u32 result;
+
+    switch (I) {
+
+         case MULS:
+         {
+             result = (i16)op1 * (i16)op2;
+             break;
+         }
+         case MULU:
+         {
+             result = (u16)op1 * (u16)op2;
+             break;
+         }
+     }
+
+    sync(cyclesMul<I>(op1));
+    return result;
+}
+
+template <Instr I, Size S> u32
+Moira::div(u32 op1, u32 op2)
+{
+ 
+}
+
 template<Instr I, Size S> u32
 Moira::bcd(u32 op1, u32 op2)
 {
