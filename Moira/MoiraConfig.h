@@ -14,7 +14,7 @@
  */
 #define MOIRA_EMULATE_ADDRESS_ERROR false
 
-/* Set to true to run Moira in Musashi compatibility mode
+/* Set to true to run Moira in a special Musashi compatibility mode
  */
 #define MIMIC_MUSASHI true
 

@@ -474,7 +474,7 @@ void Tester_68k::trapException(u8 vector) {
 void Tester_68k::power()
 {
     Core_68k::power();
-    moiracpu->power();
+    moiracpu->reset();
 }
 
 void Tester_68k::setSR(u16 value) {

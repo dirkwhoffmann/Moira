@@ -100,3 +100,15 @@ template<Size S, bool last = false> void writeMrev(u32 addr, u32 val, bool &erro
  * the function calls execAddressError to initiate exception processing.
  */
 template<Size S, int delay = 0> bool addressError(u32 addr);
+
+// Prefetches the next instruction
+template<bool last = false> void prefetch();
+
+// Performs a full prefetch cycle
+template<bool last = false> void fullPrefetch();
+
+// Reads an extension word from memory
+template<bool skip = false> void readExt();
+
+// Jumps to an exception vector
+void jumpToVector(Exception e);

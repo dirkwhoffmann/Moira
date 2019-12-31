@@ -17,13 +17,13 @@ void saveToStackBrief(u16 sr);
 void execAddressError(u32 addr);
 
 // Emulates the execution of unimplemented and illegal instructions
-void execUnimplemented(u8 nr);
-void execLineA(u16 opcode) { execUnimplemented(10); }
-void execLineF(u16 opcode) { execUnimplemented(11); }
+void execUnimplemented(Exception e);
+void execLineA(u16 opcode) { execUnimplemented(LINE_A_INSTRUCTION); }
+void execLineF(u16 opcode) { execUnimplemented(LINE_F_INSTRUCTION); }
 void execIllegal(u16 opcode);
 
 // Emulates a trap or priviledge exception
-void execTrapException(u8 nr);
+void execTrapException(Exception e);
 void execPrivilegeException();
 
 template<Instr I, Mode M, Size S> void execShiftRg(u16 opcode);

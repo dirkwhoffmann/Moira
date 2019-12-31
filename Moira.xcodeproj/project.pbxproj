@@ -306,8 +306,8 @@
 		50804E082386A4CE004D3EC2 /* Moira */ = {
 			isa = PBXGroup;
 			children = (
-				50804F342386A7DD004D3EC2 /* Moira.h */,
 				509ABE1323BA356E00BD91A8 /* MoiraConfig.h */,
+				50804F342386A7DD004D3EC2 /* Moira.h */,
 				50B99DAB23B24E0C00D8A89A /* MoiraTypes.h */,
 				50804F332386A7DD004D3EC2 /* Moira.cpp */,
 				50804F4B23891893004D3EC2 /* MoiraInit_cpp.h */,

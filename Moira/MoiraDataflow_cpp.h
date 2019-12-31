@@ -7,6 +7,8 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+#define LAST_BUS_CYCLE true
+
 template<Mode M, Size S> bool
 Moira::readOp(int n, u32 &ea, u32 &result)
 {
@@ -316,4 +318,37 @@ Moira::addressError(u32 addr)
         }
     }
     return false;
+}
+
+template<bool last> void
+Moira::prefetch()
+{
+    queue.ird = queue.irc;
+    queue.irc = readM<Word,last>(reg.pc + 2);
+}
+
+template<bool last> void
+Moira::fullPrefetch()
+{
+    queue.irc = readM<Word>(reg.pc);
+    prefetch<last>();
+}
+
+template<bool skip> void
+Moira::readExt()
+{
+    reg.pc += 2;
+    if (!skip) queue.irc = readM<Word>(reg.pc);
+}
+
+void
+Moira::jumpToVector(Exception e)
+{
+    // Update the program counter
+    reg.pc = readM<Long>(4 * e);
+
+    // Update the prefetch queue
+    queue.ird = readM<Word>(reg.pc);
+    sync(2);
+    queue.irc = readM<Word,LAST_BUS_CYCLE>(reg.pc + 2);
 }

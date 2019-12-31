@@ -65,7 +65,7 @@ class Moira {
     // Configuration
     //
 
-    // Emulated CPU model (only 68000 at the moment)
+    // Emulated CPU model (68000 is the only supported model yet)
     CPUModel model = M68000;
 
     // Number format used by the disassembler (hex or decimal)
@@ -114,7 +114,6 @@ public:
 
 public:
 
-    void power();
     void reset();
 
     // Executes the next instruction
@@ -202,18 +201,9 @@ public:
     bool isLineAInstr(u16 op)   { return exec[op] == &Moira::execLineA; }
     bool isLineFInstr(u16 op)   { return exec[op] == &Moira::execLineF; }
 
-
-    //
-    // Managing the instruction stream
-    //
+    
 
 private:
-
-    template<bool last = false> void prefetch();
-    template<bool last = false> void fullPrefetch();
-    template<bool skip = false> void readExt();
-    void jumpToVector(u8 nr);
-
 
     #include "MoiraALU.h"
     #include "MoiraDataflow.h"

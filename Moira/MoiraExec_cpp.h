@@ -8,7 +8,6 @@
 // -----------------------------------------------------------------------------
 
 #define SUPERVISOR_MODE_ONLY if (!sr.s) { execPrivilegeException(); return; }
-#define LAST_BUS_CYCLE true
 
 #define REVERSE_8(x) (((x) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
 #define REVERSE_16(x) ((REVERSE_8((x) & 0xFF) << 8) | REVERSE_8(((x) >> 8) & 0xFF))
@@ -81,11 +80,11 @@ Moira::execAddressError(u32 addr)
     saveToStackDetailed(getSR(), addr, code);
     sync(2);
     
-    jumpToVector(3);
+    jumpToVector(ADDRESS_ERROR);
 }
 
 void
-Moira::execUnimplemented(u8 nr)
+Moira::execUnimplemented(Exception e)
 {
     u16 status = getSR();
 
@@ -99,7 +98,7 @@ Moira::execUnimplemented(u8 nr)
     readExt();
     prefetch();
 
-    jumpToVector(nr);
+    jumpToVector(e);
 }
 
 void
@@ -115,11 +114,11 @@ Moira::execIllegal(u16 opcode)
     sync(4);
     saveToStackBrief(status);
 
-    jumpToVector(4);
+    jumpToVector(ILLEGAL_INSTRUCTION);
 }
 
 void
-Moira::execTrapException(u8 nr)
+Moira::execTrapException(Exception e)
 {
     u16 status = getSR();
 
@@ -130,7 +129,7 @@ Moira::execTrapException(u8 nr)
     // Write exception information to stack
     saveToStackBrief(status);
 
-    jumpToVector(nr);
+    jumpToVector(e);
 }
 
 void
@@ -148,7 +147,7 @@ Moira::execPrivilegeException()
     sync(4);
     saveToStackBrief(status);
 
-    jumpToVector(8);
+    jumpToVector(PRIVILEGE_VIOLATION);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -620,7 +619,7 @@ Moira::execChk(u16 opcode)
 
         sync(4);
         sr.n = NBIT<S>(dop);
-        execTrapException(6);
+        execTrapException(CHK_INSTRUCTION);
 
         return;
     }
@@ -631,7 +630,7 @@ Moira::execChk(u16 opcode)
 
         sync(4);
         sr.n = NBIT<S>(dop);
-        execTrapException(6);
+        execTrapException(CHK_INSTRUCTION);
     }
 }
 
@@ -1347,7 +1346,7 @@ Moira::execDiv(u16 opcode)
     if (divisor == 0) {
         if (!MIMIC_MUSASHI) sr.n = sr.z = sr.v = sr.c = 0;
         sync(8);
-        execTrapException(5);
+        execTrapException(ZERO_DIVIDE);
         return;
     }
 
@@ -1586,17 +1585,17 @@ Moira::execTasEa(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execTrap(u16 opcode)
 {
-    int nr = ____________xxxx(opcode) + 32;
+    int nr = ____________xxxx(opcode);
 
     sync(4);
-    execTrapException(nr);
+    execTrapException((Exception)(TRAP_BASE + nr));
 }
 
 template<Instr I, Mode M, Size S> void
 Moira::execTrapv(u16 opcode)
 {
     prefetch<LAST_BUS_CYCLE>();
-    if (sr.v) execTrapException(7);
+    if (sr.v) execTrapException(TRAPV_INSTRUCTION);
 }
 
 template<Instr I, Mode M, Size S> void

@@ -27,12 +27,6 @@ Moira::Moira()
 }
 
 void
-Moira::power()
-{
-    reset();
-}
-
-void
 Moira::reset()
 {
     clock = -40;
@@ -166,39 +160,6 @@ Moira::setSupervisorMode(bool enable)
         reg.ssp = reg.a[7];
         reg.a[7] = reg.usp;
     }
-}
-
-template<bool last> void
-Moira::prefetch()
-{
-    queue.ird = queue.irc;
-    queue.irc = readM<Word,last>(reg.pc + 2);
-}
-
-template<bool last> void
-Moira::fullPrefetch()
-{
-    queue.irc = readM<Word>(reg.pc);
-    prefetch<last>();
-}
-
-template<bool skip> void
-Moira::readExt()
-{
-    reg.pc += 2;
-    if (!skip) queue.irc = readM<Word>(reg.pc);
-}
-
-void
-Moira::jumpToVector(u8 nr)
-{
-    // Update the program counter
-    reg.pc = readM<Long>(4 * nr);
-
-    // Update the prefetch queue
-    queue.ird = readM<Word>(reg.pc);
-    sync(2);
-    queue.irc = readM<Word,LAST_BUS_CYCLE>(reg.pc + 2);
 }
 
 int
