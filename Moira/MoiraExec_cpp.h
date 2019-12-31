@@ -183,7 +183,7 @@ Moira::execShiftEa(u16 op)
     int src = _____________xxx(op);
 
     u32 ea, data;
-    if (!readOperand<M,S>(src, ea, data)) return;
+    if (!readOp<M,S>(src, ea, data)) return;
 
     prefetch();
 
@@ -210,9 +210,9 @@ Moira::execAbcd(u16 opcode)
         default: // Ea
         {
             u32 ea1, ea2, data1, data2;
-            if (!readOperand<M,S>(src, ea1, data1)) return;
+            if (!readOp<M,S>(src, ea1, data1)) return;
             sync(-2);
-            if (!readOperand<M,S>(dst, ea2, data2)) return;
+            if (!readOp<M,S>(dst, ea2, data2)) return;
 
             u32 result = bcd<I,Byte>(data1, data2);
             prefetch();
@@ -231,7 +231,7 @@ Moira::execAddEaRg(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    if (!readOperand<M,S>(src, ea, data)) return;
+    if (!readOp<M,S>(src, ea, data)) return;
 
     result = addsub<I,S>(data, readD<S>(dst));
     prefetch<LAST_BUS_CYCLE>();
@@ -248,7 +248,7 @@ Moira::execAddRgEa(u16 opcode)
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
 
-    if (!readOperand<M,S>(dst, ea, data)) return;
+    if (!readOp<M,S>(dst, ea, data)) return;
     result = addsub<I,S>(readD<S>(src), data);
 
     prefetch();
@@ -263,7 +263,7 @@ Moira::execAdda(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    if (!readOperand<M,S>(src, ea, data)) return;
+    if (!readOp<M,S>(src, ea, data)) return;
     data = SEXT<S>(data);
 
     result = (I == ADDA) ? readA(dst) + data : readA(dst) - data;
@@ -282,7 +282,7 @@ Moira::execAddiRg(u16 opcode)
     int dst = _____________xxx(opcode);
 
     u32 ea, data, result;
-    if (!readOperand<M,S>(dst, ea, data)) return;
+    if (!readOp<M,S>(dst, ea, data)) return;
 
     result = addsub<I,S>(src, data);
     prefetch<LAST_BUS_CYCLE>();
@@ -298,12 +298,12 @@ Moira::execAddiEa(u16 opcode)
     int dst = _____________xxx(opcode);
 
     u32 ea, data, result;
-    if (!readOperand<M,S>(dst, ea, data)) return;
+    if (!readOp<M,S>(dst, ea, data)) return;
 
     result = addsub<I,S>(src, data);
     prefetch();
 
-    writeOperand<M,S,LAST_BUS_CYCLE>(dst, ea, result);
+    writeOp<M,S,LAST_BUS_CYCLE>(dst, ea, result);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -341,13 +341,13 @@ Moira::execAddqEa(u16 opcode)
     int dst = _____________xxx(opcode);
 
     u32 ea, data, result;
-    if (!readOperand<M,S>(dst, ea, data)) return;
+    if (!readOp<M,S>(dst, ea, data)) return;
 
     if (src == 0) src = 8;
     result = addsub<I,S>(src, data);
     prefetch();
 
-    writeOperand<M,S,LAST_BUS_CYCLE>(dst, ea, result);
+    writeOp<M,S,LAST_BUS_CYCLE>(dst, ea, result);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -370,9 +370,9 @@ Moira::execAddxEa(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     u32 ea1, ea2, data1, data2;
-    if (!readOperand<M,S>(src, ea1, data1)) return;
+    if (!readOp<M,S>(src, ea1, data1)) return;
     sync(-2);
-    if (!readOperand<M,S>(dst, ea2, data2)) return;
+    if (!readOp<M,S>(dst, ea2, data2)) return;
 
     u32 result = addsub<I,S>(data1, data2);
 
@@ -394,7 +394,7 @@ Moira::execAndEaRg(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     u32 ea, data;
-    if (!readOperand<M,S>(src, ea, data)) return;
+    if (!readOp<M,S>(src, ea, data)) return;
 
     u32 result = logic<I,S>(data, readD<S>(dst));
     prefetch<LAST_BUS_CYCLE>();
@@ -410,13 +410,13 @@ Moira::execAndRgEa(u16 opcode)
     int dst = _____________xxx(opcode);
 
     u32 ea, data;
-    if (!readOperand<M,S>(dst, ea, data)) return;
+    if (!readOp<M,S>(dst, ea, data)) return;
 
     u32 result = logic<I,S>(readD<S>(src), data);
     isMemMode(M) ? prefetch() : prefetch<LAST_BUS_CYCLE>();
 
     if (S == Long && isRegMode(M)) sync(4);
-    writeOperand<M,S,LAST_BUS_CYCLE>(dst, ea, result);
+    writeOp<M,S,LAST_BUS_CYCLE>(dst, ea, result);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -440,12 +440,12 @@ Moira::execAndiEa(u16 opcode)
     u32 src = readI<S>();
     int dst = _____________xxx(opcode);
 
-    if (!readOperand<M,S>(dst, ea, data)) return;
+    if (!readOp<M,S>(dst, ea, data)) return;
     
     result = logic<I,S>(src, data);
     prefetch();
 
-    writeOperand<M,S,LAST_BUS_CYCLE>(dst, ea, result);
+    writeOp<M,S,LAST_BUS_CYCLE>(dst, ea, result);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -527,7 +527,7 @@ Moira::execBitDxEa(u16 opcode)
             u8 b = readD(src) & 0b111;
 
             u32 ea, data;
-            if (!readOperand<M,Byte>(dst, ea, data)) return;
+            if (!readOp<M,Byte>(dst, ea, data)) return;
 
             data = bit<I>(data, b);
 
@@ -567,7 +567,7 @@ Moira::execBitImEa(u16 opcode)
         {
             src &= 0b111;
             u32 ea, data;
-            if (!readOperand<M,Byte>(dst, ea, data)) return;
+            if (!readOp<M,Byte>(dst, ea, data)) return;
 
             data = bit<I>(data, src);
 
@@ -606,7 +606,7 @@ Moira::execChk(u16 opcode)
     int dst = ____xxx_________(opcode);
     u32 ea, sop, dop;
 
-    if (!readOperand<M,S>(src, ea, sop)) return;
+    if (!readOp<M,S>(src, ea, sop)) return;
     dop = readD<S>(dst);
 
     prefetch<LAST_BUS_CYCLE>();
@@ -641,12 +641,12 @@ Moira::execClr(u16 opcode)
     int dst = _____________xxx(opcode);
 
     u32 ea, data;
-    if (!readOperand<M,S>(dst, ea, data)) return;
+    if (!readOp<M,S>(dst, ea, data)) return;
 
     isMemMode(M) ? prefetch() : prefetch<LAST_BUS_CYCLE>();
 
     if (S == Long && isRegMode(M)) sync(2);
-    writeOperand<M,S,LAST_BUS_CYCLE>(dst, ea, 0);
+    writeOp<M,S,LAST_BUS_CYCLE>(dst, ea, 0);
 
     sr.n = 0;
     sr.z = 1;
@@ -661,7 +661,7 @@ Moira::execCmp(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     u32 ea, data;
-    if (!readOperand<M,S>(src, ea, data)) return;
+    if (!readOp<M,S>(src, ea, data)) return;
 
     cmp<S>(data, readD<S>(dst));
     prefetch<LAST_BUS_CYCLE>();
@@ -676,7 +676,7 @@ Moira::execCmpa(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     u32 ea, data;
-    if (!readOperand<M,S>(src, ea, data)) return;
+    if (!readOp<M,S>(src, ea, data)) return;
 
     data = SEXT<S>(data);
     cmp<Long>(data, readA(dst));
@@ -704,7 +704,7 @@ Moira::execCmpiEa(u16 opcode)
     int dst = _____________xxx(opcode);
 
     u32 ea, data;
-    if (!readOperand<M,S>(dst, ea, data)) return;
+    if (!readOp<M,S>(dst, ea, data)) return;
     prefetch();
 
     cmp<S>(src, data);
@@ -718,8 +718,8 @@ Moira::execCmpm(u16 opcode)
 
     u32 ea1, ea2, data1, data2;
 
-    if (!readOperand<M,S>(src, ea1, data1)) return;
-    if (!readOperand<M,S>(dst, ea2, data2)) return;
+    if (!readOp<M,S>(src, ea1, data1)) return;
+    if (!readOp<M,S>(dst, ea2, data2)) return;
 
     cmp<S>(data1, data2);
     prefetch<LAST_BUS_CYCLE>();
@@ -878,14 +878,14 @@ Moira::execMove0(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    if (!readOperand<M,S>(src, ea, data)) return;
+    if (!readOp<M,S>(src, ea, data)) return;
 
     sr.n = NBIT<S>(data);
     sr.z = ZERO<S>(data);
     sr.v = 0;
     sr.c = 0;
 
-    if (!writeOperand<MODE_DN,S>(dst, data)) return;
+    if (!writeOp<MODE_DN,S>(dst, data)) return;
     
     prefetch<LAST_BUS_CYCLE>();
 }
@@ -898,14 +898,14 @@ Moira::execMove2(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    if (!readOperand<M,S>(src, ea, data)) return;
+    if (!readOp<M,S>(src, ea, data)) return;
 
     sr.n = NBIT<S>(data);
     sr.z = ZERO<S>(data);
     sr.v = 0;
     sr.c = 0;
 
-    if (!writeOperand<MODE_AI,S>(dst, data)) return;
+    if (!writeOp<MODE_AI,S>(dst, data)) return;
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -917,14 +917,14 @@ Moira::execMove3(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    if (!readOperand<M,S>(src, ea, data)) return;
+    if (!readOp<M,S>(src, ea, data)) return;
 
     sr.n = NBIT<S>(data);
     sr.z = ZERO<S>(data);
     sr.v = 0;
     sr.c = 0;
 
-    if (!writeOperand<MODE_PI,S>(dst, data)) return;
+    if (!writeOp<MODE_PI,S>(dst, data)) return;
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -945,7 +945,7 @@ Moira::execMove4(u16 opcode)
      *  addressing mode."
      */
 
-    if (!readOperand<M,S>(src, ea, data)) return;
+    if (!readOp<M,S>(src, ea, data)) return;
 
     sr.n = NBIT<S>(data);
     sr.z = ZERO<S>(data);
@@ -971,14 +971,14 @@ Moira::execMove5(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    if (!readOperand<M,S>(src, ea, data)) return;
+    if (!readOp<M,S>(src, ea, data)) return;
 
     sr.n = NBIT<S>(data);
     sr.z = ZERO<S>(data);
     sr.v = 0;
     sr.c = 0;
 
-    if (!writeOperand<MODE_DI,S>(dst, data)) return;
+    if (!writeOp<MODE_DI,S>(dst, data)) return;
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -990,14 +990,14 @@ Moira::execMove6(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    if (!readOperand<M,S>(src, ea, data)) return;
+    if (!readOp<M,S>(src, ea, data)) return;
 
     sr.n = NBIT<S>(data);
     sr.z = ZERO<S>(data);
     sr.v = 0;
     sr.c = 0;
 
-    if (!writeOperand<MODE_IX,S>(dst, data)) return;
+    if (!writeOp<MODE_IX,S>(dst, data)) return;
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -1009,14 +1009,14 @@ Moira::execMove7(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    if (!readOperand<M,S>(src, ea, data)) return;
+    if (!readOp<M,S>(src, ea, data)) return;
 
     sr.n = NBIT<S>(data);
     sr.z = ZERO<S>(data);
     sr.v = 0;
     sr.c = 0;
 
-    if (!writeOperand<MODE_AW,S>(dst, data)) return;
+    if (!writeOp<MODE_AW,S>(dst, data)) return;
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -1042,7 +1042,7 @@ Moira::execMove8(u16 opcode)
      */
     if (isMemMode(M)) {
 
-        if (!readOperand<M,S>(src, ea, data)) return;
+        if (!readOp<M,S>(src, ea, data)) return;
 
         sr.n = NBIT<S>(data);
         sr.z = ZERO<S>(data);
@@ -1057,14 +1057,14 @@ Moira::execMove8(u16 opcode)
 
     } else {
 
-        if (!readOperand<M,S>(src, ea, data)) return;
+        if (!readOp<M,S>(src, ea, data)) return;
 
         sr.n = NBIT<S>(data);
         sr.z = ZERO<S>(data);
         sr.v = 0;
         sr.c = 0;
 
-        if (!writeOperand<MODE_AL,S>(dst, data)) return;
+        if (!writeOp<MODE_AL,S>(dst, data)) return;
     }
 
     prefetch<LAST_BUS_CYCLE>();
@@ -1077,7 +1077,7 @@ Moira::execMovea(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     u32 ea, data;
-    if (!readOperand<M,S>(src, ea, data)) return;
+    if (!readOp<M,S>(src, ea, data)) return;
 
     prefetch<LAST_BUS_CYCLE>();
     writeA(dst, SEXT<S>(data));
@@ -1247,7 +1247,7 @@ Moira::execMoveToCcr(u16 opcode)
     int src = _____________xxx(opcode);
 
     u32 ea, data;
-    if (!readOperand<M,S>(src, ea, data)) return;
+    if (!readOp<M,S>(src, ea, data)) return;
 
     sync(4);
     setCCR(data);
@@ -1262,7 +1262,7 @@ Moira::execMoveFromSrRg(u16 opcode)
     int dst = _____________xxx(opcode);
 
     u32 ea, data;
-    if (!readOperand<M,S>(dst, ea, data)) return;
+    if (!readOp<M,S>(dst, ea, data)) return;
     prefetch<LAST_BUS_CYCLE>();
 
     sync(2);
@@ -1275,10 +1275,10 @@ Moira::execMoveFromSrEa(u16 opcode)
     int dst = _____________xxx(opcode);
 
     u32 ea, data;
-    if (!readOperand<M,S>(dst, ea, data)) return;
+    if (!readOp<M,S>(dst, ea, data)) return;
     prefetch();
 
-    writeOperand<M,S,LAST_BUS_CYCLE>(dst, ea, getSR());
+    writeOp<M,S,LAST_BUS_CYCLE>(dst, ea, getSR());
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1289,7 +1289,7 @@ Moira::execMoveToSr(u16 opcode)
     int src = _____________xxx(opcode);
 
     u32 ea, data;
-    if (!readOperand<M,S>(src, ea, data)) return;
+    if (!readOp<M,S>(src, ea, data)) return;
 
     sync(4);
     setSR(data);
@@ -1326,7 +1326,7 @@ Moira::execMul(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    if (!readOperand<M, Word>(src, ea, data)) return;
+    if (!readOp<M, Word>(src, ea, data)) return;
 
     prefetch<LAST_BUS_CYCLE>();
     result = mul<I>(data, readD<Word>(dst));
@@ -1341,7 +1341,7 @@ Moira::execDiv(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     u32 ea, divisor, result;
-    if (!readOperand<M, Word>(src, ea, divisor)) return;
+    if (!readOp<M, Word>(src, ea, divisor)) return;
 
     // Check for division by zero
     if (divisor == 0) {
@@ -1376,7 +1376,7 @@ Moira::execNbcd(u16 opcode)
         default: // Ea
         {
             u32 ea, data;
-            if (!readOperand<M,Byte>(reg, ea, data)) return;
+            if (!readOp<M,Byte>(reg, ea, data)) return;
             prefetch();
             writeM<Byte,LAST_BUS_CYCLE>(ea, bcd<SBCD,Byte>(data, 0));
             break;
@@ -1390,7 +1390,7 @@ Moira::execNegRg(u16 opcode)
     int dst = ( _____________xxx(opcode) );
     u32 ea, data;
 
-    if (!readOperand<M,S>(dst, ea, data)) return;
+    if (!readOp<M,S>(dst, ea, data)) return;
 
     data = logic<I,S>(data);
     prefetch<LAST_BUS_CYCLE>();
@@ -1405,12 +1405,12 @@ Moira::execNegEa(u16 opcode)
     int dst = ( _____________xxx(opcode) );
     u32 ea, data;
 
-    if (!readOperand<M,S>(dst, ea, data)) return;
+    if (!readOp<M,S>(dst, ea, data)) return;
 
     data = logic<I,S>(data);
     prefetch();
 
-    writeOperand<M,S,LAST_BUS_CYCLE>(dst, ea, data);
+    writeOp<M,S,LAST_BUS_CYCLE>(dst, ea, data);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1494,7 +1494,7 @@ Moira::execSccRg(u16 opcode)
     int dst = ( _____________xxx(opcode) );
     u32 ea, data;
 
-    if (!readOperand<M,Byte>(dst, ea, data)) return;
+    if (!readOp<M,Byte>(dst, ea, data)) return;
 
     data = cond<I>() ? 0xFF : 0;
     prefetch<LAST_BUS_CYCLE>();
@@ -1509,12 +1509,12 @@ Moira::execSccEa(u16 opcode)
     int dst = ( _____________xxx(opcode) );
     u32 ea, data;
 
-    if (!readOperand<M,Byte>(dst, ea, data)) return;
+    if (!readOp<M,Byte>(dst, ea, data)) return;
 
     data = cond<I>() ? 0xFF : 0;
     prefetch();
 
-    writeOperand<M,Byte,LAST_BUS_CYCLE>(dst, ea, data);
+    writeOp<M,Byte,LAST_BUS_CYCLE>(dst, ea, data);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1550,7 +1550,7 @@ Moira::execTasRg(u16 opcode)
     int dst = ( _____________xxx(opcode) );
 
     u32 ea, data;
-    readOperand<M,Byte>(dst, ea, data);
+    readOp<M,Byte>(dst, ea, data);
 
     sr.n = NBIT<Byte>(data);
     sr.z = ZERO<Byte>(data);
@@ -1569,7 +1569,7 @@ Moira::execTasEa(u16 opcode)
     int dst = ( _____________xxx(opcode) );
 
     u32 ea, data;
-    readOperand<M,Byte>(dst, ea, data);
+    readOp<M,Byte>(dst, ea, data);
 
     sr.n = NBIT<Byte>(data);
     sr.z = ZERO<Byte>(data);
@@ -1578,7 +1578,7 @@ Moira::execTasEa(u16 opcode)
     data |= 0x80;
 
     if (!isRegMode(M)) sync(2);
-    writeOperand<M,S>(dst, ea, data);
+    writeOp<M,S>(dst, ea, data);
 
     prefetch<LAST_BUS_CYCLE>();
 }
@@ -1605,7 +1605,7 @@ Moira::execTst(u16 opcode)
     int reg = _____________xxx(opcode);
 
     u32 ea, data;
-    if (!readOperand<M,S>(reg, ea, data)) return;
+    if (!readOp<M,S>(reg, ea, data)) return;
 
     sr.n = NBIT<S>(data);
     sr.z = ZERO<S>(data);
@@ -1622,7 +1622,7 @@ Moira::execUnlk(u16 opcode)
     reg.sp = readA(an);
 
     u32 ea, data;
-    if (!readOperand<MODE_AI,Long>(7, ea, data)) return;
+    if (!readOp<MODE_AI,Long>(7, ea, data)) return;
     writeA(an, data);
 
     if (an != 7) reg.sp += 4;

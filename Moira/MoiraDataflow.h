@@ -26,8 +26,8 @@
  *                                      |
  * - - - - - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - - - - - -
  * Layer 1:                             V
- *                                 readOperand
- *                                (writeOperand)
+ *                                    readOp
+ *                                   (writeOp)
  *                                      |
  *  Addressing Mode M = 0---1---2---3---4---5---6---7---8---9---A---B
  *                     /    |   |   |   |   |   |   |   |   |   |    \
@@ -62,7 +62,7 @@
  * If the source is a register or an immediate value, variable ea remains
  * untouched.
  */
-template<Mode M, Size S> bool readOperand(int n, u32 &ea, u32 &result);
+template<Mode M, Size S> bool readOp(int n, u32 &ea, u32 &result);
 
 /* Writes an operand
  *
@@ -70,8 +70,8 @@ template<Mode M, Size S> bool readOperand(int n, u32 &ea, u32 &result);
  * by the addressing mode M. Parameter 'last' indicates if this function is
  * initiates the last memory bus cycle of an instruction.
  */
-template<Mode M, Size S, bool last = false> bool writeOperand(int n, u32 value);
-template<Mode M, Size S, bool last = false> void writeOperand(int n, u32 ea, u32 value);
+template<Mode M, Size S, bool last = false> bool writeOp(int n, u32 value);
+template<Mode M, Size S, bool last = false> void writeOp(int n, u32 ea, u32 value);
 
 
 #endif

@@ -9,7 +9,7 @@
 
 
 template<Mode M, Size S> bool
-Moira::readOperand(int n, u32 &ea, u32 &result)
+Moira::readOp(int n, u32 &ea, u32 &result)
 {
     switch (M) {
 
@@ -48,7 +48,7 @@ Moira::readOperand(int n, u32 &ea, u32 &result)
 }
 
 template<Mode M, Size S, bool last> bool
-Moira::writeOperand(int n, u32 value)
+Moira::writeOp(int n, u32 value)
 {
     switch (M) {
 
@@ -87,7 +87,7 @@ Moira::writeOperand(int n, u32 value)
 }
 
 template<Mode M, Size S, bool last> void
-Moira::writeOperand(int n, u32 ea, u32 value)
+Moira::writeOp(int n, u32 ea, u32 value)
 {
     assert(M < 11);
 
