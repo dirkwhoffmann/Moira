@@ -68,6 +68,9 @@ class Moira {
     // Emulated CPU model (68000 is the only supported model yet)
     CPUModel model = M68000;
 
+    // Interrupt mode of this CPU
+    IrqMode irqMode = IRQ_AUTO;
+
     // Number format used by the disassembler (hex or decimal)
     bool hex = true;
 
@@ -137,7 +140,7 @@ private:
     u8 readIPL();
     void write8  (u32 addr, u8  val);
     void write16 (u32 addr, u16 val);
-
+    int readIrqUserVector(u8 level) { return 0; }
 
     //
     // Accessing the clock
@@ -192,6 +195,12 @@ public:
 
 
     //
+    // Handling interrupts
+    //
+
+    int getIrqVector(int level);
+
+
     // Analyzing instructions
     //
 

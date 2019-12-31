@@ -150,6 +150,30 @@ Moira::execPrivilegeException()
     jumpToVector(PRIVILEGE_VIOLATION);
 }
 
+void
+Moira::execIrqException(int level)
+{
+    u16 status = getSR();
+
+    reg.ipl = 0;
+
+    // Enter supervisor mode and update the status register
+    setSupervisorMode(true);
+    sr.t = 0;
+
+    sync(6);
+    reg.sp -= 6;
+    writeM<Word>(reg.sp + 4, reg.pc & 0xFFFF);
+
+    u8 vector = getIrqVector(level);
+
+    sync(4);
+    writeM<Word>(reg.sp + 0, status);
+    writeM<Word>(reg.sp + 2, reg.pc >> 16);
+
+    jumpToVector((Exception)vector);
+}
+
 template<Instr I, Mode M, Size S> void
 Moira::execShiftRg(u16 opcode)
 {
@@ -485,7 +509,6 @@ Moira::execBcc(u16 opcode)
     sync(2);
     if (cond<I>()) {
 
-        // i16 offset = S == Word ? (i16)irc : (i8)opcode;
         u32 newpc = reg.pc + (S == Word ? (i16)queue.irc : (i8)opcode);
 
         // Take branch
@@ -543,10 +566,8 @@ Moira::execBitDxEa(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execBitImEa(u16 opcode)
 {
-    u8  src = queue.irc;
+    u8  src = readI<S>();
     int dst = _____________xxx(opcode);
-
-    readExt();
 
     switch (M)
     {
@@ -566,13 +587,13 @@ Moira::execBitImEa(u16 opcode)
         {
             src &= 0b111;
             u32 ea, data;
-            if (!readOp<M,Byte>(dst, ea, data)) return;
+            if (!readOp<M,S>(dst, ea, data)) return;
 
             data = bit<I>(data, src);
 
             if (I != BTST) {
                 prefetch();
-                writeM<Byte,LAST_BUS_CYCLE>(ea, data);
+                writeM<S,LAST_BUS_CYCLE>(ea, data);
             } else {
                 prefetch<LAST_BUS_CYCLE>();
             }
@@ -858,9 +879,8 @@ template<Instr I, Mode M, Size S> void
 Moira::execLink(u16 opcode)
 {
     int ax   = _____________xxx(opcode);
-    i16 disp = (i16)queue.irc;
+    i16 disp = (i16)readI<S>();
 
-    readExt();
     push<Long>(readA(ax) - (ax == 7 ? 4 : 0));
 
     writeA(ax, reg.sp);
@@ -1086,9 +1106,7 @@ template<Instr I, Mode M, Size S> void
 Moira::execMovemEaRg(u16 opcode)
 {
     int src  = _____________xxx(opcode);
-    u16 mask = queue.irc;
-
-    readExt();
+    u16 mask = readI<Word>();
 
     u32 ea = computeEA<M,S>(src);
     if (addressError<S>(ea)) return;
@@ -1128,9 +1146,7 @@ template<Instr I, Mode M, Size S> void
 Moira::execMovemRgEa(u16 opcode)
 {
     int dst  = _____________xxx(opcode);
-    u16 mask = queue.irc;
-
-    readExt();
+    u16 mask = readI<Word>();
 
     switch (M) {
 
@@ -1521,8 +1537,9 @@ Moira::execStop(u16 opcode)
 {
     SUPERVISOR_MODE_ONLY
 
-    setSR(queue.irc | (MIMIC_MUSASHI ? 0 : 1 << 13));
-    readExt();
+    u16 src = readI<Word>();
+
+    setSR(src | (MIMIC_MUSASHI ? 0 : 1 << 13));
     reg.ipl = readIPL();
 }
 

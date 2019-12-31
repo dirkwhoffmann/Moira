@@ -397,9 +397,9 @@ Moira::createJumpTables()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0000 1000 01-- ----");
-    __________MMMXXX(opcode, BCHG, 0b101111111000, Long, BitImEa);
+    __________MMMXXX(opcode, BCHG, 0b101111111000, Byte, BitImEa);
     opcode = parse("0000 1000 10-- ----");
-    __________MMMXXX(opcode, BCLR, 0b101111111000, Long, BitImEa);
+    __________MMMXXX(opcode, BCLR, 0b101111111000, Byte, BitImEa);
 
 
     // BSET
@@ -422,7 +422,7 @@ Moira::createJumpTables()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0000 1000 11-- ----");
-    __________MMMXXX(opcode, BSET, 0b101111111000, Long, BitImEa);
+    __________MMMXXX(opcode, BSET, 0b101111111000, Byte, BitImEa);
 
 
     // BSR
@@ -456,7 +456,7 @@ Moira::createJumpTables()
     //                 X       X   X   X   X   X   X   X   X   X
 
     opcode = parse("0000 1000 00-- ----");
-    __________MMMXXX(opcode, BTST, 0b101111111110, Long, BitImEa);
+    __________MMMXXX(opcode, BTST, 0b101111111110, Byte, BitImEa);
 
 
     // CHK

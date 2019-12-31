@@ -26,6 +26,9 @@ void execIllegal(u16 opcode);
 void execTrapException(Exception e);
 void execPrivilegeException();
 
+// Emulates an interrupt exception
+void execIrqException(int level);
+
 template<Instr I, Mode M, Size S> void execShiftRg(u16 opcode);
 template<Instr I, Mode M, Size S> void execShiftIm(u16 opcode);
 template<Instr I, Mode M, Size S> void execShiftEa(u16 opcode);

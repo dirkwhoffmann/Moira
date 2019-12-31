@@ -195,6 +195,15 @@ Size;
 
 typedef enum
 {
+    IRQ_AUTO,
+    IRQ_USER,
+    IRQ_SPURIOUS,
+    IRQ_UNINITIALIZED
+}
+IrqMode;
+
+typedef enum
+{
     BUS_ERROR           = 2,
     ADDRESS_ERROR       = 3,
     ILLEGAL_INSTRUCTION = 4,

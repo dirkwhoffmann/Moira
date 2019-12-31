@@ -36,6 +36,7 @@ Moira::reset()
         reg.a[i] = 0;
     }
     reg.usp = 0;
+    reg.ipl = 0;
 
     sr.t = 0;
     sr.s = 1;
@@ -45,8 +46,6 @@ Moira::reset()
     sr.v = 0;
     sr.c = 0;
     sr.ipl = 7;
-
-    reg.ipl = 0;
 
     sync(16);
 
@@ -70,6 +69,13 @@ Moira::reset()
 void
 Moira::execute()
 {
+    // Check for interrupts
+    if (reg.ipl >= sr.ipl) {
+        if (reg.ipl > sr.ipl || reg.ipl == 7) {
+            execIrqException(reg.ipl);
+        }
+    }
+
     reg.pc += 2;
     (this->*exec[queue.ird])(queue.ird);
 }
@@ -160,6 +166,25 @@ Moira::setSupervisorMode(bool enable)
         reg.ssp = reg.a[7];
         reg.a[7] = reg.usp;
     }
+}
+
+int
+Moira::getIrqVector(int level) {
+
+    assert(level < 8);
+
+    sync(4);
+
+    switch (irqMode) {
+
+        case IRQ_AUTO:          return 24 + level;
+        case IRQ_USER:          return readIrqUserVector(level);
+        case IRQ_SPURIOUS:      return 24;
+        case IRQ_UNINITIALIZED: return 15;
+    }
+
+    assert(false);
+    return 0;
 }
 
 int

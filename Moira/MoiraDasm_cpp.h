@@ -400,10 +400,9 @@ Moira::dasmBitDxEa(StrWriter &str, u32 &addr, u16 op)
 template<Instr I, Mode M, Size S> void
 Moira::dasmBitImEa(StrWriter &str, u32 &addr, u16 op)
 {
-    auto src = dasmRead<Byte>(addr);
+    auto src = dasmRead<S>(addr);
     auto dst = Op <M,S> ( _____________xxx(op), addr );
 
-    // src &= 0x1F;
     str << Ins<I>{} << tab << "#" << UInt(src) << ", " << dst;
 }
 
