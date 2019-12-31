@@ -96,7 +96,7 @@ Moira::execUnimplemented(u8 nr)
     saveToStackBrief(status);
 
     // Update the prefetch queue
-    readExtensionWord();
+    readExt();
     prefetch();
 
     jumpToVector(nr);
@@ -497,7 +497,7 @@ Moira::execBcc(u16 opcode)
 
         // Fall through to next instruction
         sync(2);
-        if (S == Word) readExtensionWord();
+        if (S == Word) readExt();
         prefetch<LAST_BUS_CYCLE>();
     }
 }
@@ -547,7 +547,7 @@ Moira::execBitImEa(u16 opcode)
     u8  src = queue.irc;
     int dst = _____________xxx(opcode);
 
-    readExtensionWord();
+    readExt();
 
     switch (M)
     {
@@ -861,7 +861,7 @@ Moira::execLink(u16 opcode)
     int ax   = _____________xxx(opcode);
     i16 disp = (i16)queue.irc;
 
-    readExtensionWord();
+    readExt();
     push<Long>(readA(ax) - (ax == 7 ? 4 : 0));
 
     writeA(ax, reg.sp);
@@ -1050,10 +1050,10 @@ Moira::execMove8(u16 opcode)
         sr.c = 0;
 
         u32 ea2 = queue.irc << 16;
-        readExtensionWord();
+        readExt();
         ea2 |= queue.irc;
         writeM<S>(ea2, data);
-        readExtensionWord();
+        readExt();
 
     } else {
 
@@ -1089,7 +1089,7 @@ Moira::execMovemEaRg(u16 opcode)
     int src  = _____________xxx(opcode);
     u16 mask = queue.irc;
 
-    readExtensionWord();
+    readExt();
 
     u32 ea = computeEA<M,S>(src);
     if (addressError<S>(ea)) return;
@@ -1131,7 +1131,7 @@ Moira::execMovemRgEa(u16 opcode)
     int dst  = _____________xxx(opcode);
     u16 mask = queue.irc;
 
-    readExtensionWord();
+    readExt();
 
     switch (M) {
 
@@ -1457,7 +1457,7 @@ Moira::execRte(u16 opcode)
     u32 newpc = readM<Long>(reg.sp);
     reg.sp += 4;
 
-    readExtensionWord();
+    readExt();
     reg.pc = newpc;
     prefetch<LAST_BUS_CYCLE>();
 
@@ -1472,7 +1472,7 @@ Moira::execRtr(u16 opcode)
     u32 newpc = readM<Long>(reg.sp);
     reg.sp += 4;
 
-    readExtensionWord();
+    readExt();
     reg.pc = newpc;
     prefetch<LAST_BUS_CYCLE>();
 }
@@ -1483,7 +1483,7 @@ Moira::execRts(u16 opcode)
     u32 newpc = readM<Long>(reg.sp);
     reg.sp += 4;
 
-    readExtensionWord();
+    readExt();
     reg.pc = newpc;
     prefetch<LAST_BUS_CYCLE>();
 }
@@ -1523,7 +1523,7 @@ Moira::execStop(u16 opcode)
     SUPERVISOR_MODE_ONLY
 
     setSR(queue.irc | (MIMIC_MUSASHI ? 0 : 1 << 13));
-    readExtensionWord();
+    readExt();
     pollIrq();
 }
 

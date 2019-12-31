@@ -62,6 +62,113 @@ Moira::writeOp(int n, u32 ea, u32 val)
     writeM<S,last>(ea, val);
 }
 
+template<Mode M, Size S, bool skip> u32
+Moira::computeEA(u32 n) {
+
+    assert(n < 8);
+
+    u32 result;
+
+    switch (M) {
+
+        case 0:  // Dn
+        case 1:  // An
+        {
+            result = n;
+            break;
+        }
+        case 2:  // (An)
+        {
+            result = readA(n);
+            break;
+        }
+        case 3:  // (An)+
+        {
+            result = readA(n);
+            break;
+        }
+        case 4:  // -(An)
+        {
+            sync(2);
+            result = readA(n) - ((n == 7 && S == Byte) ? 2 : S);
+            break;
+        }
+        case 5: // (d,An)
+        {
+            u32 an = readA(n);
+            i16  d = (i16)queue.irc;
+
+            result = d + an;
+            readExt<skip>();
+            break;
+        }
+        case 6: // (d,An,Xi)
+        {
+            i8   d = (i8)queue.irc;
+            u32 an = readA(n);
+            u32 xi = readR((queue.irc >> 12) & 0b1111);
+
+            result = d + an + ((queue.irc & 0x800) ? xi : SEXT<Word>(xi));
+
+            sync(2);
+            readExt<skip>();
+            break;
+        }
+        case 7: // ABS.W
+        {
+            result = (i16)queue.irc;
+            readExt<skip>();
+            break;
+        }
+        case 8: // ABS.L
+        {
+            result = queue.irc << 16;
+            readExt();
+            result |= queue.irc;
+            readExt<skip>();
+            break;
+        }
+        case 9: // (d,PC)
+        {
+            i16  d = (i16)queue.irc;
+
+            result = reg.pc + d;
+            readExt<skip>();
+            break;
+        }
+        case 10: // (d,PC,Xi)
+        {
+            i8   d = (i8)queue.irc;
+            u32 xi = readR((queue.irc >> 12) & 0b1111);
+
+            result = d + reg.pc + ((queue.irc & 0x800) ? xi : SEXT<Word>(xi));
+            sync(2);
+            readExt<skip>();
+            break;
+        }
+        case 11: // Im
+        {
+            result = readI<S>();
+            break;
+        }
+        default:
+        {
+            assert(false);
+        }
+    }
+    return result;
+}
+
+template<Mode M, Size S> void
+Moira::updateAn(int n)
+{
+    // (An)+
+    if (M == 3) reg.a[n] += (n == 7 && S == Byte) ? 2 : S;
+
+    // -(An)
+    if (M == 4) reg.a[n] -= (n == 7 && S == Byte) ? 2 : S;
+}
+
 template<Size S, bool last> u32
 Moira::readM(u32 addr)
 {
@@ -165,4 +272,48 @@ Moira::writeMrev(u32 addr, u32 val, bool &error)
     writeMrev<S,last>(addr, val);
 }
 
+template<Size S> u32
+Moira::readI()
+{
+    u32 result;
 
+    switch (S) {
+        case Byte:
+            result = (u8)queue.irc;
+            readExt();
+            break;
+        case Word:
+            result = queue.irc;
+            readExt();
+            break;
+        case Long:
+            result = queue.irc << 16;
+            readExt();
+            result |= queue.irc;
+            readExt();
+            break;
+    }
+
+    return result;
+}
+
+template<Size S, bool last> void
+Moira::push(u32 val)
+{
+    reg.sp -= S;
+    writeM<S,last>(reg.sp, val);
+}
+
+template <Size S, int delay> bool
+Moira::addressError(u32 addr)
+{
+    if (MOIRA_EMULATE_ADDRESS_ERROR) {
+
+        if ((addr & 1) && S != Byte) {
+            sync(delay);
+            execAddressError(addr);
+            return true;
+        }
+    }
+    return false;
+}

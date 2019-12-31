@@ -48,7 +48,7 @@ Moira::read16Dasm(u32 addr)
 }
 
 u16
-Moira::read16Reset(u32 addr)
+Moira::read16OnReset(u32 addr)
 {
     if (MUSASHI) {
         switch (addr) {

@@ -166,58 +166,15 @@ public:
 
 private:
 
-    /* When the CPU accesses memory, a cascade of functions is executed.
-     * Based on the level of abstraction, we distinguish level 1, level 2, and
-     * level 3 functions. Level 1 functions are the most abstract ones and
-     * called inside the execution handler of an instruction. The level 3
-     * functions perform the actual memory access.
-     */
-
-
-    // Level 2
-
-
-
-
-    // Level 3
-
-    // Read a byte or a word from memory
     u8 read8(u32 addr);
     u16 read16(u32 addr);
-
-    // Special read16 variant used inside the reset routine
-    u16 read16Reset(u32 addr);
+    u16 read16OnReset(u32 addr);
 
     // Special read16 variant used by the disassembler
     u16 read16Dasm(u32 addr);
 
     // Returns the current value of the IPL pins
     u8 readIPL();
-
-
-    /* Checks for an address error
-     * An address error occurs if the CPU tries to access a word or a long word
-     * that is located at an odd address. If an address error is encountered,
-     * the function calls execAddressError to initiate exception processing.
-     */
-    template<Size S, int delay = 0> bool addressError(u32 addr);
-
-
-
-    u16 readOnReset(u32 addr);
-
-    // Pushes a value onto the stack
-    template<Size S, bool last = false> void push(u32 value);
-
-    // Computes an effective address
-    template<Mode M, Size S, bool skip = false> u32 computeEA(u32 n);
-
-    // Emulates the address register modification for modes (An)+, (An)-
-    template<Mode M, Size S> void updateAn(int n);
-
-    // Reads an immediate value
-    template<Size S> u32 readI();
-
 
 
     void write8  (u32 addr, u8  val);
@@ -259,7 +216,7 @@ private:
 
     template<bool last = false> void prefetch();
     template<bool last = false> void fullPrefetch();
-    template<bool skip = false> void readExtensionWord();
+    template<bool skip = false> void readExt();
     void jumpToVector(u8 nr);
 
     //

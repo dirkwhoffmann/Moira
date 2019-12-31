@@ -58,13 +58,19 @@ Moira::reset()
     sync(16);
 
     // Read the initial (supervisor) stack pointer from memory
-    reg.sp = reg.ssp = readOnReset(0) << 16 | readOnReset(2);
-
-    // Read the initial program counter from memory
-    reg.pc = readOnReset(4) << 16 | readOnReset(6);
+    sync(2);
+    reg.sp = read16OnReset(0);
+    sync(4);
+    reg.ssp = reg.sp = read16OnReset(2) | reg.sp << 16;
+    sync(4);
+    reg.pc = read16OnReset(4);
+    sync(4);
+    reg.pc = read16OnReset(6) | reg.pc << 16;
 
     // Fill the prefetch queue
-    queue.irc = readOnReset(reg.pc);
+    sync(4);
+    queue.irc = read16OnReset(reg.pc & 0xFFFFFF);
+    sync(2);
     prefetch();
 }
 
@@ -178,7 +184,7 @@ Moira::fullPrefetch()
 }
 
 template<bool skip> void
-Moira::readExtensionWord()
+Moira::readExt()
 {
     reg.pc += 2;
     if (!skip) queue.irc = readM<Word>(reg.pc);

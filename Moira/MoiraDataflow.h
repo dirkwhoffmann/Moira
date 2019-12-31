@@ -35,7 +35,7 @@
  *                /         |           |               |                 \
  * - - - - - - - -|- - - - -|- - - - - -|- - - - - - - -|- - - - - - - - -|- - -
  * Layer 2:       |         |           |               V                 |
- *                |         |           |       readExtensionWord         |
+ *                |         |           |            readExt              |
  *                V         V           V                                 V
  *              readD     readA      readM -----> addressError          readI
  *             (writeD)  (writeA)   (writeM)
@@ -70,6 +70,12 @@ template<Mode M, Size S> bool readOp(int n, u32 &ea, u32 &result);
 template<Mode M, Size S, bool last = false> bool writeOp(int n, u32 val);
 template<Mode M, Size S, bool last = false> void writeOp(int n, u32 ea, u32 val);
 
+// Computes an effective address
+template<Mode M, Size S, bool skip = false> u32 computeEA(u32 n);
+
+// Emulates the address register modification for modes (An)+, (An)-
+template<Mode M, Size S> void updateAn(int n);
+
 // Reads an operand from memory (without or with address error checking)
 template<Size S, bool last = false> u32 readM(u32 addr);
 template<Size S, bool last = false> u32 readM(u32 addr, bool &error);
@@ -82,3 +88,15 @@ template<Size S, bool last = false> void writeM(u32 addr, u32 val, bool &error);
 template<Size S, bool last = false> void writeMrev(u32 addr, u32 val);
 template<Size S, bool last = false> void writeMrev(u32 addr, u32 val, bool &error);
 
+// Reads an immediate value from memory
+ template<Size S> u32 readI();
+
+// Pushes a value onto the stack
+ template<Size S, bool last = false> void push(u32 value);
+
+/* Checks for an address error
+ * An address error occurs if the CPU tries to access a word or a long word
+ * that is located at an odd address. If an address error is encountered,
+ * the function calls execAddressError to initiate exception processing.
+ */
+template<Size S, int delay = 0> bool addressError(u32 addr);
