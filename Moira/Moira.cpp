@@ -201,4 +201,9 @@ Moira::disassemble(u32 addr, char *str)
     return pc - addr + 2;
 }
 
+template u32 Moira::readD <Long> (int n);
+template u32 Moira::readA <Long> (int n);
+template void Moira::writeD <Long> (int n, u32 v);
+template void Moira::writeA <Long> (int n, u32 v);
+
 }

@@ -495,13 +495,13 @@ void Tester_68k::setCCR(u8 value) {
 void Tester_68k::setRegA(u8 reg, u32 value)
 {
     Core_68k::setRegA(reg, value);
-    moiracpu->writeA(reg, value);
+    moiracpu->setA(reg, value);
 }
 
 void Tester_68k::setRegD(u8 reg, u32 value)
 {
     Core_68k::setRegD(reg, value);
-    moiracpu->writeD(reg, value);
+    moiracpu->setD(reg, value);
 }
 
 void Tester_68k::process()
@@ -543,12 +543,12 @@ void Tester_68k::dump()
     printf("\n");
 
     for (int i = 0; i < 8; i++) {
-        printf("D%i: %x / %x %s\n", i, getRegD(i), moiracpu->readD(i),
-               getRegD(i) != moiracpu->readD(i) ? "<--" : "");
+        printf("D%i: %x / %x %s\n", i, getRegD(i), moiracpu->getD(i),
+               getRegD(i) != moiracpu->getD(i) ? "<--" : "");
     }
     for (int i = 0; i < 8; i++) {
-        printf("A%i: %x / %x %s\n", i, getRegA(i), moiracpu->readA(i),
-               getRegA(i) != moiracpu->readA(i) ? "<--" : "");
+        printf("A%i: %x / %x %s\n", i, getRegA(i), moiracpu->getA(i),
+               getRegA(i) != moiracpu->getA(i) ? "<--" : "");
     }
 
     printf("\nStatus register:\n");
@@ -567,10 +567,10 @@ bool Tester_68k::compare()
     if (cycleCounter != moiracpu->getClock()) return false;
 
     for (int i = 0; i < 8; i++)
-        if (getRegD(i) != moiracpu->readD(i)) return false;
+        if (getRegD(i) != moiracpu->getD(i)) return false;
 
     for (int i = 0; i < 8; i++)
-        if (getRegA(i) != moiracpu->readA(i)) return false;
+        if (getRegA(i) != moiracpu->getA(i)) return false;
 
     if (reg_pc != moiracpu->getPC()) return false;
     if ((getSR() & 0xFF1F) != (moiracpu->getSR() & 0xFF1F)) return false;

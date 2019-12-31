@@ -198,10 +198,10 @@ void resetMoira(Setup &s)
     moiracpu->reset();
 
     for (int i = 0; i < 8; i++) {
-        moiracpu->writeD(i,s.d[i]);
+        moiracpu->setD(i,s.d[i]);
     }
     for (int i = 0; i < 7; i++) {
-        moiracpu->writeA(i,s.a[i]);
+        moiracpu->setA(i,s.a[i]);
     }
     moiracpu->setCCR(s.ccr);
     moiracpu->setSupervisorMode(s.supervisor);
@@ -219,7 +219,7 @@ void run()
 
     setupMusashi();
     setupMoira();
-    srand((int)time(NULL));
+    srand(0); // (int)time(NULL));
 
     for (long round = 1 ;; round++) {
 
@@ -237,8 +237,6 @@ void run()
             runSingleTest(setup);
         }
 
-        clock_t now = clock();
-        double elapsed = (double(now - start) / double(CLOCKS_PER_SEC));
         printf(" PASSED (Musashi: %.2fs Moira: %.2fs)\n",
                muclk / double(CLOCKS_PER_SEC),
                moclk / double(CLOCKS_PER_SEC));
@@ -307,8 +305,8 @@ void runSingleTest(Setup &s)
     mor.cycles = (int)(moiracpu->getClock() - cycles);
     mor.pc = moiracpu->getPC();
     mor.sr = moiracpu->getSR();
-    for (int i = 0; i < 8; i++) mor.d[i] = moiracpu->readD(i);
-    for (int i = 0; i < 8; i++) mor.a[i] = moiracpu->readA(i);
+    for (int i = 0; i < 8; i++) mor.d[i] = moiracpu->getD(i);
+    for (int i = 0; i < 8; i++) mor.a[i] = moiracpu->getA(i);
 
     // Compare
     compare(s, mur, mor);

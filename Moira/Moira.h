@@ -161,7 +161,7 @@ private:
     // Accessing registers
     //
 
-public:
+private:
 
     template<Size S = Long> u32 readD(int n);
     template<Size S = Long> u32 readA(int n);
@@ -169,6 +169,14 @@ public:
     template<Size S = Long> void writeD(int n, u32 v);
     template<Size S = Long> void writeA(int n, u32 v);
     template<Size S = Long> void writeR(int n, u32 v);
+
+public:
+
+    u32 getD(int n) { return readD(n); }
+    void setD(int n, u32 v) { writeD(n,v); }
+
+    u32 getA(int n) { return readA(n); }
+    void setA(int n, u32 v) { writeA(n,v); }
 
     u32 getPC() { return reg.pc; }
     void setPC(u32 val) { reg.pc = val; }

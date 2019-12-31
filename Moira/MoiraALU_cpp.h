@@ -31,11 +31,18 @@ template<Size S> i32 SEXT(u64 data) {
     if (S == Long) return (i32)data;
 }
 
+/*
 template<Size S> bool NBIT(u64 data) {
-    if (S == Byte) return data & 0x00000080;
-    if (S == Word) return data & 0x00008000;
-    if (S == Long) return data & 0x80000000;
+    if (S == Byte) return (data & 0x00000080) != 0;
+    if (S == Word) return (data & 0x00008000) != 0;
+    if (S == Long) { printf("<%d>(%x) = %d\n", S, data, ((u32)data & 0x80000000) != 0); return (data & 0x80000000) != 0; }
 }
+*/
+template<Size S> bool NBIT(u64 data);
+
+template<> bool NBIT <Byte> (u64 data) { return (data & 0x00000080) != 0; }
+template<> bool NBIT <Word> (u64 data) { return (data & 0x00008000) != 0; }
+template<> bool NBIT <Long> (u64 data) { return (data & 0x80000000) != 0; }
 
 template<Size S> bool CARRY(u64 data) {
     if (S == Byte) return data & 0x000000100;
@@ -246,9 +253,10 @@ Moira::mul(u32 op1, u32 op2)
          }
          case MULU:
          {
-             result = (u16)op1 * (u16)op2;
+             result = op1 * op2;
              break;
          }
+        default: assert(false);
      }
 
     sr.n = NBIT<Long>(result);
