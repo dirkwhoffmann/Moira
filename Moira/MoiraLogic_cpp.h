@@ -177,7 +177,7 @@ Moira::shift(int cnt, u64 data) {
 }
 
 template<Instr I, Size S> u32
-Moira::arith(u32 op1, u32 op2)
+Moira::addsub(u32 op1, u32 op2)
 {
     u64 result;
 
@@ -388,12 +388,12 @@ Moira::logic(u32 op)
         }
         case NEG:
         {
-            result = arith<SUB,S>(op, 0);
+            result = addsub<SUB,S>(op, 0);
             break;
         }
         case NEGX:
         {
-            result = arith<SUBX,S>(op, 0);
+            result = addsub<SUBX,S>(op, 0);
             break;
         }
         default:

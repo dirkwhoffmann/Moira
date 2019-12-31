@@ -233,7 +233,7 @@ Moira::execAddEaRg(u16 opcode)
 
     if (!readOperand<M,S>(src, ea, data)) return;
 
-    result = arith<I,S>(data, readD<S>(dst));
+    result = addsub<I,S>(data, readD<S>(dst));
     prefetch<LAST_BUS_CYCLE>();
 
     if (S == Long) sync(2 + (isMemMode(M) ? 0 : 2));
@@ -249,7 +249,7 @@ Moira::execAddRgEa(u16 opcode)
     int dst = _____________xxx(opcode);
 
     if (!readOperand<M,S>(dst, ea, data)) return;
-    result = arith<I,S>(readD<S>(src), data);
+    result = addsub<I,S>(readD<S>(src), data);
 
     prefetch();
     writeM<S,LAST_BUS_CYCLE>(ea, result);
@@ -284,7 +284,7 @@ Moira::execAddiRg(u16 opcode)
     u32 ea, data, result;
     if (!readOperand<M,S>(dst, ea, data)) return;
 
-    result = arith<I,S>(src, data);
+    result = addsub<I,S>(src, data);
     prefetch<LAST_BUS_CYCLE>();
 
     if (S == Long) sync(4);
@@ -300,7 +300,7 @@ Moira::execAddiEa(u16 opcode)
     u32 ea, data, result;
     if (!readOperand<M,S>(dst, ea, data)) return;
 
-    result = arith<I,S>(src, data);
+    result = addsub<I,S>(src, data);
     prefetch();
 
     writeOperand<M,S,LAST_BUS_CYCLE>(dst, ea, result);
@@ -313,7 +313,7 @@ Moira::execAddqDn(u16 opcode)
     int dst = _____________xxx(opcode);
 
     if (src == 0) src = 8;
-    u32 result = arith<I,S>(src, readD<S>(dst));
+    u32 result = addsub<I,S>(src, readD<S>(dst));
     prefetch<LAST_BUS_CYCLE>();
 
     if (S == Long) sync(4);
@@ -344,7 +344,7 @@ Moira::execAddqEa(u16 opcode)
     if (!readOperand<M,S>(dst, ea, data)) return;
 
     if (src == 0) src = 8;
-    result = arith<I,S>(src, data);
+    result = addsub<I,S>(src, data);
     prefetch();
 
     writeOperand<M,S,LAST_BUS_CYCLE>(dst, ea, result);
@@ -356,7 +356,7 @@ Moira::execAddxRg(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    u32 result = arith<I,S>(readD<S>(src), readD<S>(dst));
+    u32 result = addsub<I,S>(readD<S>(src), readD<S>(dst));
     prefetch<LAST_BUS_CYCLE>();
 
     if (S == Long) sync(4);
@@ -374,7 +374,7 @@ Moira::execAddxEa(u16 opcode)
     sync(-2);
     if (!readOperand<M,S>(dst, ea2, data2)) return;
 
-    u32 result = arith<I,S>(data1, data2);
+    u32 result = addsub<I,S>(data1, data2);
 
     if (S == Long && !MIMIC_MUSASHI) {
         writeM<Word>(ea2 + 2, result & 0xFFFF);
