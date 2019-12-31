@@ -126,13 +126,28 @@ public:
 
 
     //
+    // Interfacing with the outside world
+    //
+
+private:
+
+    u8 read8(u32 addr);
+    u16 read16(u32 addr);
+    u16 read16OnReset(u32 addr);
+    u16 read16Dasm(u32 addr);
+    u8 readIPL();
+    void write8  (u32 addr, u8  val);
+    void write16 (u32 addr, u16 val);
+
+
+    //
     // Accessing the clock
     //
 
 public:
 
     i64 getClock() { return clock; }
-    void setClock(i64 value) { clock = value; }
+    void setClock(i64 val) { clock = val; }
 
 private:
 
@@ -146,8 +161,6 @@ private:
 
 public:
 
-    u32 getPC() { return reg.pc; }
-
     template<Size S = Long> u32 readD(int n);
     template<Size S = Long> u32 readA(int n);
     template<Size S = Long> u32 readR(int n);
@@ -155,75 +168,28 @@ public:
     template<Size S = Long> void writeA(int n, u32 v);
     template<Size S = Long> void writeR(int n, u32 v);
 
-    u32 getIRC() { return queue.irc; }
-    u32 getIRD() { return queue.ird; }
-    void setIRD(u32 value) { queue.ird = value; }
+    u32 getPC() { return reg.pc; }
+    void setPC(u32 val) { reg.pc = val; }
 
-    
-    //
-    // Accessing memory
-    //
+    u16 getIRC() { return queue.irc; }
+    void setIRC(u16 val) { queue.irc = val; }
 
-private:
+    u16 getIRD() { return queue.ird; }
+    void setIRD(u16 val) { queue.ird = val; }
 
-    u8 read8(u32 addr);
-    u16 read16(u32 addr);
-    u16 read16OnReset(u32 addr);
-    u16 read16Dasm(u32 addr);
-    void dummyRead(u32 pc);
-    void dummyRead() { dummyRead(reg.pc); }
-    u8 readIPL();
-
-    void write8  (u32 addr, u8  val);
-    void write16 (u32 addr, u16 val);
-
-
-
-
-    //
-    // Working with the Status Register
-    //
-
-public:
-
-    // Gets or sets the Status Register
-    u16 getSR();
-    void setSR(u16 value);
-
-    // Gets or sets the Condition Code Register (CCR, the lower byte of SR)
     u8 getCCR();
-    void setCCR(u8 value);
+    void setCCR(u8 val);
 
-    // Gets or sets the Supervisor Stack Pointer (SSP)
-    u32 getSSP() { return reg.ssp; }
-    void setSSP(u32 value) { reg.ssp = value; }
+    u16 getSR();
+    void setSR(u16 val);
 
-
-    // Enters or leaves supervisior mode
     void setSupervisorMode(bool enable);
 
+    u32 getSSP() { return reg.ssp; }
+    void setSSP(u32 val) { reg.ssp = val; }
 
-    //
-    // Managing the instruction stream
-    //
-
-private:
-
-    template<bool last = false> void prefetch();
-    template<bool last = false> void fullPrefetch();
-    template<bool skip = false> void readExt();
-    void jumpToVector(u8 nr);
-
-    //
-    // Handling interrupts
-    //
-
-private:
-
-    /* Polls the IPL pins
-     * Polling takes place during the last bus cycle of an instruction.
-     */
-    void pollIrq();
+    u32 getUSP() { return reg.usp; }
+    void setUSP(u32 val) { reg.usp = val; }
 
 
     //
@@ -237,7 +203,17 @@ public:
     bool isLineFInstr(u16 op)   { return exec[op] == &Moira::execLineF; }
 
 
+    //
+    // Managing the instruction stream
+    //
+
 private:
+
+    template<bool last = false> void prefetch();
+    template<bool last = false> void fullPrefetch();
+    template<bool skip = false> void readExt();
+    void jumpToVector(u8 nr);
+
 
     #include "MoiraALU.h"
     #include "MoiraDataflow.h"

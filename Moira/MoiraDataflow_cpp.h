@@ -178,7 +178,7 @@ Moira::readM(u32 addr)
         case Byte:
         {
             sync(2);
-            if (last) pollIrq();
+            if (last) reg.ipl = readIPL();
             result = read8(addr & 0xFFFFFF);
             sync(2);
             break;
@@ -186,7 +186,7 @@ Moira::readM(u32 addr)
         case Word:
         {
             sync(2);
-            if (last) pollIrq();
+            if (last) reg.ipl = readIPL();
             result = read16(addr & 0xFFFFFF);
             sync(2);
             break;
@@ -216,7 +216,7 @@ Moira::writeM(u32 addr, u32 val)
         case Byte:
         {
             sync(2);
-            if (last) pollIrq();
+            if (last) reg.ipl = readIPL();
             write8(addr & 0xFFFFFF, (u8)val);
             sync(2);
             break;
@@ -224,7 +224,7 @@ Moira::writeM(u32 addr, u32 val)
         case Word:
         {
             sync(2);
-            if (last) pollIrq();
+            if (last) reg.ipl = readIPL();
             write16(addr & 0xFFFFFF, (u16)val);
             sync(2);
             break;

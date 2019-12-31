@@ -116,26 +116,6 @@ Moira::writeR(int n, u32 v)
     reg.r[n] = WRITE<S>(reg.r[n], v);
 }
 
-u16
-Moira::getSR()
-{
-    return sr.t << 15 | sr.s << 13 | sr.ipl << 8 | getCCR();
-}
-
-void
-Moira::setSR(u16 value)
-{
-    bool t = (value >> 15) & 1;
-    bool s = (value >> 13) & 1;
-    u8 ipl = (value >>  8) & 7;
-
-    sr.ipl = ipl;
-    sr.t = t;
-
-    setCCR((u8)value);
-    setSupervisorMode(s);
-}
-
 u8
 Moira::getCCR()
 {
@@ -143,13 +123,33 @@ Moira::getCCR()
 }
 
 void
-Moira::setCCR(u8 value)
+Moira::setCCR(u8 val)
 {
-    sr.c = (value >> 0) & 1;
-    sr.v = (value >> 1) & 1;
-    sr.z = (value >> 2) & 1;
-    sr.n = (value >> 3) & 1;
-    sr.x = (value >> 4) & 1;
+    sr.c = (val >> 0) & 1;
+    sr.v = (val >> 1) & 1;
+    sr.z = (val >> 2) & 1;
+    sr.n = (val >> 3) & 1;
+    sr.x = (val >> 4) & 1;
+}
+
+u16
+Moira::getSR()
+{
+    return sr.t << 15 | sr.s << 13 | sr.ipl << 8 | getCCR();
+}
+
+void
+Moira::setSR(u16 val)
+{
+    bool t = (val >> 15) & 1;
+    bool s = (val >> 13) & 1;
+    u8 ipl = (val >>  8) & 7;
+
+    sr.ipl = ipl;
+    sr.t = t;
+
+    setCCR((u8)val);
+    setSupervisorMode(s);
 }
 
 void
@@ -190,12 +190,6 @@ Moira::readExt()
 }
 
 void
-Moira::dummyRead(u32 pc)
-{
-    (void)readM<Word>(pc);
-}
-
-void
 Moira::jumpToVector(u8 nr)
 {
     // Update the program counter
@@ -205,12 +199,6 @@ Moira::jumpToVector(u8 nr)
     queue.ird = readM<Word>(reg.pc);
     sync(2);
     queue.irc = readM<Word,LAST_BUS_CYCLE>(reg.pc + 2);
-}
-
-void
-Moira::pollIrq()
-{
-    reg.ipl = readIPL();
 }
 
 int

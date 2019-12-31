@@ -14,7 +14,6 @@
 // Reads a word from memory and increments addr
 template <Size S> u32 dasmRead(u32 &addr);
 
-// 
 int baseDispWords(u16 ext);
 int outerDispWords(u16 ext);
 template <Mode M, Size S> Ea<M,S> Op(u16 reg, u32 &pc);

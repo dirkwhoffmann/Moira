@@ -1524,7 +1524,7 @@ Moira::execStop(u16 opcode)
 
     setSR(queue.irc | (MIMIC_MUSASHI ? 0 : 1 << 13));
     readExt();
-    pollIrq();
+    reg.ipl = readIPL();
 }
 
 template<Instr I, Mode M, Size S> void
