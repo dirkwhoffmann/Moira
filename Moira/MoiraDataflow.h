@@ -7,9 +7,6 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#ifndef MOIRA_DATAFLOW_H
-#define MOIRA_DATAFLOW_H
-
 /* Moira utilizes a three layer design to model dataflow inside the processor.
  *
  * Layer 1: Main entry points. Most instruction execution handlers call a
@@ -72,6 +69,3 @@ template<Mode M, Size S> bool readOp(int n, u32 &ea, u32 &result);
  */
 template<Mode M, Size S, bool last = false> bool writeOp(int n, u32 val);
 template<Mode M, Size S, bool last = false> void writeOp(int n, u32 ea, u32 val);
-
-
-#endif
