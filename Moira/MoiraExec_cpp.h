@@ -1349,67 +1349,16 @@ Moira::execDiv(u16 opcode)
 
     // Check for division by zero
     if (divisor == 0) {
-        if (!MIMIC_MUSASHI) {
-            sr.n = sr.z = sr.v = sr.c = 0;
-        }
+        if (!MIMIC_MUSASHI) sr.n = sr.z = sr.v = sr.c = 0;
         sync(8);
         execTrapException(5);
         return;
     }
 
-    sr.n = sr.z = sr.v = sr.c = 0;
-
     u32 dividend = readD(dst);
 
-    /*
-    switch (I) {
+    sr.n = sr.z = sr.v = sr.c = 0;
 
-        case DIVS: // Signed division
-        {
-            sync(cyclesDiv<I>(dividend, data) - 4);
-
-            if (dividend == 0x80000000 && (i16)data == -1) {
-                sr.v = sr.n = 1;
-                break;
-            }
-            i32 quotient  = (i32)dividend / (i16)data;
-            i16 remainder = (i32)dividend % (i16)data;
-
-            // Check overflow condition
-            if ((quotient & 0xffff8000) != 0 && (quotient & 0xffff8000) != 0xffff8000) {
-                overflow = true;
-                sr.v = 1;
-                sr.n = 1;
-                break;
-            }
-            sr.n = NBIT<Word>(quotient);
-            sr.z = ZERO<Word>(quotient);
-
-            result = (quotient & 0xffff) | remainder << 16;
-            break;
-        }
-        case DIVU: // Unsigned division
-        {
-            sync(cyclesDiv<I>(dividend, data) - 4);
-
-            u32 quotient  = dividend / data;
-            u16 remainder = dividend % data;
-
-            // Check overflow condition
-            if (quotient > 0xFFFF) {
-                overflow = true;
-                sr.v = 1;
-                sr.n = 1;
-                break;
-            }
-            sr.n = NBIT<Word>(quotient);
-            sr.z = ZERO<Word>(quotient);
-
-            result = (quotient & 0xffff) | remainder << 16;
-            break;
-        }
-    }
-    */
     bool overflow = false;
     result = div<I>(dividend, divisor, overflow);
 
