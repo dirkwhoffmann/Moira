@@ -178,7 +178,7 @@ Moira::getIrqVector(int level) {
     switch (irqMode) {
 
         case IRQ_AUTO:          return 24 + level;
-        case IRQ_USER:          return readIrqUserVector(level);
+        case IRQ_USER:          return readIrqUserVector(level) & 0xFF;
         case IRQ_SPURIOUS:      return 24;
         case IRQ_UNINITIALIZED: return 15;
     }

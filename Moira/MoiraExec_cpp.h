@@ -153,9 +153,16 @@ Moira::execPrivilegeException()
 void
 Moira::execIrqException(int level)
 {
+    assert(level < 8);
+
+    // Remember the current value of the status register
     u16 status = getSR();
 
+    // Clear the polled IPL value
     reg.ipl = 0;
+
+    // Tempararily raise the interrupt threshold
+    sr.ipl = level;
 
     // Enter supervisor mode and update the status register
     setSupervisorMode(true);
@@ -165,13 +172,13 @@ Moira::execIrqException(int level)
     reg.sp -= 6;
     writeM<Word>(reg.sp + 4, reg.pc & 0xFFFF);
 
-    u8 vec = getIrqVector(level);
+    u8 vector = getIrqVector(level);
 
     sync(4);
     writeM<Word>(reg.sp + 0, status);
     writeM<Word>(reg.sp + 2, reg.pc >> 16);
 
-    jumpToVector(vec);
+    jumpToVector(vector);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1473,22 +1480,25 @@ Moira::execRte(u16 opcode)
     reg.sp += 4;
 
     readExt();
-    reg.pc = newpc;
-    prefetch<LAST_BUS_CYCLE>();
-
+    setPC(newpc);
     setSR(newsr);
+
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
 Moira::execRtr(u16 opcode)
 {
-    setCCR(readM<Word>(reg.sp));
+    u16 newccr = readM<Word>(reg.sp);
     reg.sp += 2;
+
     u32 newpc = readM<Long>(reg.sp);
     reg.sp += 4;
 
     readExt();
-    reg.pc = newpc;
+    setPC(newpc);
+    setCCR(newccr);
+
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -1499,7 +1509,8 @@ Moira::execRts(u16 opcode)
     reg.sp += 4;
 
     readExt();
-    reg.pc = newpc;
+    setPC(newpc);
+
     prefetch<LAST_BUS_CYCLE>();
 }
 
