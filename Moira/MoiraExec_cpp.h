@@ -1332,10 +1332,6 @@ Moira::execMul(u16 opcode)
     result = mul<I>(data, readD<Word>(dst));
 
     writeD(dst, result);
-    sr.n = NBIT<Long>(result);
-    sr.z = ZERO<Long>(result);
-    sr.v = 0;
-    sr.c = 0;
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1356,13 +1352,9 @@ Moira::execDiv(u16 opcode)
     }
 
     u32 dividend = readD(dst);
+    result = div<I>(dividend, divisor);
 
-    sr.n = sr.z = sr.v = sr.c = 0;
-
-    bool overflow = false;
-    result = div<I>(dividend, divisor, overflow);
-
-    if (!overflow) writeD(dst, result);
+    writeD(dst, result);
     prefetch<LAST_BUS_CYCLE>();
 }
 

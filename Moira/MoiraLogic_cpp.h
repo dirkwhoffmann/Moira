@@ -251,15 +251,23 @@ Moira::mul(u32 op1, u32 op2)
          }
      }
 
+    sr.n = NBIT<Long>(result);
+    sr.z = ZERO<Long>(result);
+    sr.v = 0;
+    sr.c = 0;
+
     sync(cyclesMul<I>(op1));
     return result;
 }
 
 template <Instr I> u32
-Moira::div(u32 op1, u32 op2, bool &overflow)
+Moira::div(u32 op1, u32 op2)
 {
-    u32 result, combined;
-    
+    u32 result;
+    bool overflow;
+
+    sr.n = sr.z = sr.v = sr.c = 0;
+
     switch (I) {
 
         case DIVS: // Signed division
@@ -269,7 +277,7 @@ Moira::div(u32 op1, u32 op2, bool &overflow)
             i64 quotient  = (i64)(i32)op1 / (i16)op2;
             i16 remainder = (i64)(i32)op1 % (i16)op2;
 
-            combined = (quotient & 0xffff) | remainder << 16;
+            result = (quotient & 0xffff) | remainder << 16;
             overflow = ((quotient & 0xffff8000) != 0 &&
                         (quotient & 0xffff8000) != 0xffff8000);
             overflow |= op1 == 0x80000000 && (i16)op2 == -1;
@@ -280,17 +288,16 @@ Moira::div(u32 op1, u32 op2, bool &overflow)
             i64 quotient  = op1 / op2;
             u16 remainder = op1 % op2;
 
-            combined = (quotient & 0xffff) | remainder << 16;
+            result = (quotient & 0xffff) | remainder << 16;
             overflow = quotient > 0xFFFF;
             break;
         }
     }
-    sr.v   = overflow ? 1   : NBIT<Word>(combined);
-    sr.n   = overflow ? 1   : ZERO<Word>(combined);
-    result = overflow ? op1 : combined;
+    sr.v   = overflow ? 1 : NBIT<Word>(result);
+    sr.n   = overflow ? 1 : ZERO<Word>(result);
 
     sync(cyclesDiv<I>(op1, op2) - 4);
-    return result;
+    return overflow ? op1 : result;
 }
 
 template<Instr I, Size S> u32
