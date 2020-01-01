@@ -42,14 +42,15 @@ struct Finish     { };
 
 class StrWriter
 {
-    char comment[32];
-    char *base;
-    char *ptr;
-    bool hex;
+    char comment[32];  // Appended at the end of the disassembled instruction
+    char *base;        // Start address of the destination string
+    char *ptr;         // Current writing position
+    bool hex;          // Number format: Hexadecimal / Decimal
+    bool upper;        // Text format: Upper case / Lower case
 
 public:
 
-    StrWriter(char *p, bool h) : base(p), ptr(p), hex(h) {
+    StrWriter(char *p, bool h, bool u) : base(p), ptr(p), hex(h), upper(u) {
         comment[0] = 0;
     };
 

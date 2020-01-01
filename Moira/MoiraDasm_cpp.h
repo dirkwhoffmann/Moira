@@ -10,17 +10,15 @@
 template <> u32
 Moira::dasmRead<Byte>(u32 &addr)
 {
-    u32 result = read16Dasm(addr + 2);
     addr += 2;
-    return result & 0xFF;
+    return read16Dasm(addr) & 0xFF;
 }
 
 template <> u32
 Moira::dasmRead<Word>(u32 &addr)
 {
-    u32 result = read16Dasm(addr + 2);
     addr += 2;
-    return result;
+    return read16Dasm(addr);
 }
 
 template <> u32
@@ -34,7 +32,7 @@ Moira::dasmRead<Long>(u32 &addr)
 int
 Moira::baseDispWords(u16 ext)
 {
-    u16 xx  = __________xx____ (ext);
+    u16 xx = __________xx____ (ext);
 
     bool base_disp      = (xx >= 2);
     bool base_disp_long = (xx == 3);
@@ -45,7 +43,7 @@ Moira::baseDispWords(u16 ext)
 int
 Moira::outerDispWords(u16 ext)
 {
-    u16 xx  = ______________xx (ext);
+    u16 xx = ______________xx (ext);
 
     bool outer_disp      = (xx >= 2) && (ext & 0x47) < 0x44;
     bool outer_disp_long = (xx == 3) && (ext & 0x47) < 0x44;

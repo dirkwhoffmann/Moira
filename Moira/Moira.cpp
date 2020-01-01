@@ -193,7 +193,7 @@ Moira::disassemble(u32 addr, char *str)
     u32 pc     = addr;
     u16 opcode = read16Dasm(pc);
 
-    StrWriter writer(str, hex);
+    StrWriter writer(str, hex, upper);
 
     (this->*dasm[opcode])(writer, pc, opcode);
     writer << Finish{};

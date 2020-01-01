@@ -74,6 +74,9 @@ class Moira {
     // Number format used by the disassembler (hex or decimal)
     bool hex = true;
 
+    // Text formatting style used by the disassembler (upper case or lower case)
+    bool upper = false;
+
     // Tab spacing used by the disassembler
     Align tab{8};
 
@@ -102,13 +105,15 @@ class Moira {
 
     
     //
-    // Constructing and initializing
+    // Constructing and configuring
     //
 
 public:
 
     Moira();
     void createJumpTables();
+
+    void configDasm(bool h, bool u) { hex = h; upper = u; }
 
 
     //

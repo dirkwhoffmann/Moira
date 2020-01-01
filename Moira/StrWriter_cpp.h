@@ -86,26 +86,28 @@ static void sprintd_signed(char *&s, i64 value)
     sprintd(s, value, decDigits(value));
 }
 
-static void sprintx(char *&s, u64 value, int digits)
+static void sprintx(char *&s, u64 value, int digits, bool upper)
 {
+    char a = (upper ? 'A' : 'a') - 10;
+
     *s++ = '$';
     for (int i = digits - 1; i >= 0; i--) {
         u8 digit = value % 16;
-        s[i] = (digit <= 9) ? ('0' + digit) : ('a' + digit - 10);
+        s[i] = (digit <= 9) ? ('0' + digit) : (a + digit);
         value /= 16;
     }
     s += digits;
 }
 
-static void sprintx(char *&s, u64 value)
+static void sprintx(char *&s, u64 value, bool upper)
 {
-    sprintx(s, value, hexDigits(value));
+    sprintx(s, value, hexDigits(value), upper);
 }
 
-static void sprintx_signed(char *&s, i64 value)
+static void sprintx_signed(char *&s, i64 value, bool upper)
 {
     if (value < 0) { *s++ = '-'; value *= -1; }
-    sprintx(s, value, hexDigits(value));
+    sprintx(s, value, hexDigits(value), upper);
 }
 
 StrWriter&
@@ -125,35 +127,35 @@ StrWriter::operator<<(int value)
 StrWriter&
 StrWriter::operator<<(Int i)
 {
-    hex ? sprintx_signed(ptr, i.raw) : sprintd_signed(ptr, i.raw);
+    hex ? sprintx_signed(ptr, i.raw, upper) : sprintd_signed(ptr, i.raw);
     return *this;
 }
 
 StrWriter&
 StrWriter::operator<<(UInt u)
 {
-    hex ? sprintx(ptr, u.raw) : sprintd(ptr, u.raw);
+    hex ? sprintx(ptr, u.raw, upper) : sprintd(ptr, u.raw);
     return *this;
 }
 
 StrWriter&
 StrWriter::operator<<(UInt8 u)
 {
-    hex ? sprintx(ptr, u.raw, 2) : sprintd(ptr, u.raw, 3);
+    hex ? sprintx(ptr, u.raw, 2, upper) : sprintd(ptr, u.raw, 3);
     return *this;
 }
 
 StrWriter&
 StrWriter::operator<<(UInt16 u)
 {
-    hex ? sprintx(ptr, u.raw, 4) : sprintd(ptr, u.raw, 5);
+    hex ? sprintx(ptr, u.raw, 4, upper) : sprintd(ptr, u.raw, 5);
     return *this;
 }
 
 StrWriter&
 StrWriter::operator<<(UInt32 u)
 {
-    hex ? sprintx(ptr, u.raw, 8) : sprintd(ptr, u.raw, 10);
+    hex ? sprintx(ptr, u.raw, 8, upper) : sprintd(ptr, u.raw, 10);
     return *this;
 }
 
@@ -273,14 +275,18 @@ StrWriter::operator<<(RegRegList l)
 template <Instr I> StrWriter&
 StrWriter::operator<<(Ins<I> i)
 {
-    *this << instrLower[I];
+    *this << (upper ? instrUpper[I] : instrLower[I]);
     return *this;
 }
 
 template <Size S> StrWriter&
 StrWriter::operator<<(Sz<S>)
 {
-    *this << ((S == Byte) ? ".b" : (S == Word) ? ".w" : ".l");
+    if (upper) {
+        *this << ((S == Byte) ? ".B" : (S == Word) ? ".W" : ".L");
+    } else {
+        *this << ((S == Byte) ? ".b" : (S == Word) ? ".w" : ".l");
+    }
     return *this;
 }
 
@@ -328,20 +334,20 @@ StrWriter::operator<<(const Ea<M,S> &ea)
         case 7: // ABS.W
         {
             *this << UInt(ea.ext1);
-            *this << ".w";
+            *this << (upper ? ".W" : ".w");
             break;
         }
         case 8: // ABS.L
         {
             *this << UInt(ea.ext1);
-            *this << ".l";
+            *this << (upper ? ".L" : ".l");
             break;
         }
         case 9: // (d,PC)
         {
             *this << "(" << Int{(i16)ea.ext1} << ",PC)";
             auto resolved = UInt(ea.pc + (i16)ea.ext1 + 2);
-            StrWriter(comment, hex) << "; (" << resolved << ")" << Finish{};
+            StrWriter(comment, hex, upper) << "; (" << resolved << ")" << Finish{};
             break;
         }
         case 10: // (d,PC,Xi)
