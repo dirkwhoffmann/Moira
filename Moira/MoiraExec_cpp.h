@@ -643,22 +643,22 @@ Moira::execChk(u16 opcode)
 {
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
-    u32 ea, sop, dop;
 
-    if (!readOp<M,S>(src, ea, sop)) return;
-    dop = readD<S>(dst);
+    u32 ea, data, dy;
+    if (!readOp<M,S>(src, ea, data)) return;
+    dy = readD<S>(dst);
 
     prefetch<LAST_BUS_CYCLE>();
     sync(4);
 
-    sr.z = ZERO<S>(dop);
+    sr.z = ZERO<S>(dy);
     sr.v = 0;
     sr.c = 0;
 
-    if ((i16)dop > (i16)sop) {
+    if ((i16)dy > (i16)data) {
 
         sync(4);
-        sr.n = NBIT<S>(dop);
+        sr.n = NBIT<S>(dy);
         execTrapException(6);
 
         return;
@@ -666,10 +666,10 @@ Moira::execChk(u16 opcode)
 
     sync(2);
 
-    if ((i16)dop < 0) {
+    if ((i16)dy < 0) {
 
         sync(4);
-        sr.n = NBIT<S>(dop);
+        sr.n = NBIT<S>(dy);
         execTrapException(6);
     }
 }

@@ -19,8 +19,10 @@ void execAddressError(u32 addr);
 // Emulates the execution of unimplemented and illegal instructions
 void execUnimplemented(int nr);
 
-// Emulates a trap or priviledge exception
+// Emulates a trap exception
 void execTrapException(int nr);
+
+// Emulates a priviledge exception
 void execPrivilegeException();
 
 // Emulates an interrupt exception
