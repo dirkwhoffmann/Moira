@@ -37,7 +37,7 @@ struct Registers {
     u32 usp;              // User Stack Pointer
     u32 ssp;              // Supervisor Stack Pointer
 
-    u8 ipl;               //  Interrupt Priority Level (polled from IPL lines)
+    u8 ipl;               // Polled Interrupt Priority Level
 };
 
 struct StatusRegister {
@@ -50,7 +50,7 @@ struct StatusRegister {
     bool v;               // Overflow flag
     bool c;               // Carry flag
 
-    u8 ipl;               // Interrupt Priority Level (trigger threshold)
+    u8 ipl;               // Required Interrupt Priority Level
 };
 
 struct PrefetchQueue {    // http://pasti.fxatari.com/68kdocs/68kPrefetch.html
@@ -96,6 +96,9 @@ class Moira {
 
     // The prefetch queue
     PrefetchQueue queue;
+
+    // Current value on the IPL pins (Interrupt Priority Level)
+    u8 ipl;
 
     // Jump table holding the instruction handlers
     void (Moira::*exec[65536])(u16);
@@ -152,7 +155,7 @@ private:
     void write16 (u32 addr, u16 val);
 
     // Reads the current interrupt level from the IPL pins
-    u8 readIPL();
+    u8 readIPL(); // DEPRECATED
 
     // Provides the interrupt level in IRQ_USER mode
     int readIrqUserVector(u8 level) { return 0; }
@@ -209,6 +212,9 @@ public:
     u16 getSR();
     void setSR(u16 val);
 
+    u32 getSP() { return reg.sp; }
+    void setSP(u32 val) { reg.sp = val; }
+
     u32 getSSP() { return reg.ssp; }
     void setSSP(u32 val) { reg.ssp = val; }
 
@@ -222,6 +228,17 @@ public:
     // Handling interrupts
     //
 
+public:
+
+    u8 getIPL() { return ipl; }
+    void setIPL(u8 val) { ipl = val; }
+
+private:
+
+    // Polls the IPL pins
+    void pollIrq() { reg.ipl = ipl; }
+    
+    // Selects the IRQ vector to branch to
     int getIrqVector(int level);
 
 

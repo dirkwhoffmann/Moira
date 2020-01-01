@@ -1563,7 +1563,7 @@ Moira::execStop(u16 opcode)
     u16 src = readI<Word>();
 
     setSR(src | (MIMIC_MUSASHI ? 0 : 1 << 13));
-    reg.ipl = readIPL();
+    pollIrq();
 }
 
 template<Instr I, Mode M, Size S> void
