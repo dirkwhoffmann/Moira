@@ -238,6 +238,7 @@ public:
 
 private:
 
+    #include "MoiraInit.h"
     #include "MoiraALU.h"
     #include "MoiraDataflow.h"
     #include "MoiraExec.h"

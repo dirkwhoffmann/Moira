@@ -117,6 +117,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		50032B4823BCA8D600959BEC /* MoiraInit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraInit.h; sourceTree = "<group>"; };
 		5010BDAC238A897400CFD010 /* StrWriter_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StrWriter_cpp.h; sourceTree = "<group>"; };
 		5010BDAD238A897400CFD010 /* StrWriter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StrWriter.h; sourceTree = "<group>"; };
 		505580DC23AFA04C0009F77F /* m68kfpu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kfpu.c; sourceTree = "<group>"; };
@@ -310,6 +311,7 @@
 				50804F342386A7DD004D3EC2 /* Moira.h */,
 				50B99DAB23B24E0C00D8A89A /* MoiraTypes.h */,
 				50804F332386A7DD004D3EC2 /* Moira.cpp */,
+				50032B4823BCA8D600959BEC /* MoiraInit.h */,
 				50804F4B23891893004D3EC2 /* MoiraInit_cpp.h */,
 				50BF14CA23BB4D2700EDFB9C /* MoiraALU.h */,
 				50804F4923891480004D3EC2 /* MoiraALU_cpp.h */,

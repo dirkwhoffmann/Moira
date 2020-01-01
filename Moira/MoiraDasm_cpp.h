@@ -482,15 +482,6 @@ Moira::dasmLink(StrWriter &str, u32 &addr, u16 op)
     str << Ins<I>{} << tab << src << ", " << dsp;
 }
 
-template<Instr I, Mode M1, Mode M2, Size S> void
-Moira::dasmMove(StrWriter &str, u32 &addr, u16 op)
-{
-    auto src = Op <M1,S> ( _____________xxx(op), addr );
-    auto dst = Op <M2,S> ( ____xxx_________(op), addr );
-
-    str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
-}
-
 template<Instr I, Mode M, Size S> void
 Moira::dasmMove0(StrWriter &str, u32 &addr, u16 op)
 {
