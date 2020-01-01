@@ -7,101 +7,102 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#define DASM(x) \
-template<Instr I, Mode M, Size S> void x(StrWriter &str, u32 &addr, u16 op);
+#define MOIRA_DECLARE(x) \
+template<Instr I, Mode M, Size S> void dasm##x(StrWriter &str, u32 &addr, u16 op); \
+template<Instr I, Mode M, Size S> void exec##x(u16 op);
 
-DASM(dasmShiftRg)
-DASM(dasmShiftIm)
-DASM(dasmShiftEa)
+MOIRA_DECLARE(ShiftRg)
+MOIRA_DECLARE(ShiftIm)
+MOIRA_DECLARE(ShiftEa)
 
-DASM(dasmAbcd);
-DASM(dasmAddEaRg);
-DASM(dasmAddRgEa);
-DASM(dasmAdda);
-DASM(dasmAddiRg);
-DASM(dasmAddiEa);
-DASM(dasmAddqDn);
-DASM(dasmAddqAn);
-DASM(dasmAddqEa);
-DASM(dasmAddxRg);
-DASM(dasmAddxEa);
-DASM(dasmAndEaRg);
-DASM(dasmAndRgEa);
-DASM(dasmAndiRg);
-DASM(dasmAndiEa);
-DASM(dasmAndiccr);
-DASM(dasmAndisr);
+MOIRA_DECLARE(Abcd);
+MOIRA_DECLARE(AddEaRg);
+MOIRA_DECLARE(AddRgEa);
+MOIRA_DECLARE(Adda);
+MOIRA_DECLARE(AddiRg);
+MOIRA_DECLARE(AddiEa);
+MOIRA_DECLARE(AddqDn);
+MOIRA_DECLARE(AddqAn);
+MOIRA_DECLARE(AddqEa);
+MOIRA_DECLARE(AddxRg);
+MOIRA_DECLARE(AddxEa);
+MOIRA_DECLARE(AndEaRg);
+MOIRA_DECLARE(AndRgEa);
+MOIRA_DECLARE(AndiRg);
+MOIRA_DECLARE(AndiEa);
+MOIRA_DECLARE(Andiccr);
+MOIRA_DECLARE(Andisr);
 
-DASM(dasmBcc);
-DASM(dasmBitDxEa);
-DASM(dasmBitImEa);
-DASM(dasmBsr);
+MOIRA_DECLARE(Bcc);
+MOIRA_DECLARE(BitDxEa);
+MOIRA_DECLARE(BitImEa);
+MOIRA_DECLARE(Bsr);
 
-DASM(dasmChk);
-DASM(dasmClr);
-DASM(dasmCmp);
-DASM(dasmCmpa);
-DASM(dasmCmpiRg);
-DASM(dasmCmpiEa);
-DASM(dasmCmpm);
+MOIRA_DECLARE(Chk);
+MOIRA_DECLARE(Clr);
+MOIRA_DECLARE(Cmp);
+MOIRA_DECLARE(Cmpa);
+MOIRA_DECLARE(CmpiRg);
+MOIRA_DECLARE(CmpiEa);
+MOIRA_DECLARE(Cmpm);
 
-DASM(dasmDbcc);
+MOIRA_DECLARE(Dbcc);
 
-DASM(dasmExgDxDy);
-DASM(dasmExgAxDy);
-DASM(dasmExgAxAy);
-DASM(dasmExt);
+MOIRA_DECLARE(ExgDxDy);
+MOIRA_DECLARE(ExgAxDy);
+MOIRA_DECLARE(ExgAxAy);
+MOIRA_DECLARE(Ext);
 
-DASM(dasmJmp);
-DASM(dasmJsr);
+MOIRA_DECLARE(Jmp);
+MOIRA_DECLARE(Jsr);
 
-DASM(dasmLea);
-DASM(dasmLink);
+MOIRA_DECLARE(Lea);
+MOIRA_DECLARE(Link);
 
-DASM(dasmMove0);
-DASM(dasmMove2);
-DASM(dasmMove3);
-DASM(dasmMove4);
-DASM(dasmMove5);
-DASM(dasmMove6);
-DASM(dasmMove7);
-DASM(dasmMove8);
-DASM(dasmMovea);
-DASM(dasmMovemEaRg);
-DASM(dasmMovemRgEa);
-DASM(dasmMovepDxEa);
-DASM(dasmMovepEaDx);
-DASM(dasmMoveq);
-DASM(dasmMoveToCcr);
-DASM(dasmMoveFromSrRg);
-DASM(dasmMoveFromSrEa);
-DASM(dasmMoveToSr);
-DASM(dasmMoveUspAn);
-DASM(dasmMoveAnUsp);
-DASM(dasmMul);
-DASM(dasmDiv);
+MOIRA_DECLARE(Move0);
+MOIRA_DECLARE(Move2);
+MOIRA_DECLARE(Move3);
+MOIRA_DECLARE(Move4);
+MOIRA_DECLARE(Move5);
+MOIRA_DECLARE(Move6);
+MOIRA_DECLARE(Move7);
+MOIRA_DECLARE(Move8);
+MOIRA_DECLARE(Movea);
+MOIRA_DECLARE(MovemEaRg);
+MOIRA_DECLARE(MovemRgEa);
+MOIRA_DECLARE(MovepDxEa);
+MOIRA_DECLARE(MovepEaDx);
+MOIRA_DECLARE(Moveq);
+MOIRA_DECLARE(MoveToCcr);
+MOIRA_DECLARE(MoveFromSrRg);
+MOIRA_DECLARE(MoveFromSrEa);
+MOIRA_DECLARE(MoveToSr);
+MOIRA_DECLARE(MoveUspAn);
+MOIRA_DECLARE(MoveAnUsp);
+MOIRA_DECLARE(Mul);
+MOIRA_DECLARE(Div);
 
-DASM(dasmNbcd);
-DASM(dasmNegRg);
-DASM(dasmNegEa);
-DASM(dasmNop);
+MOIRA_DECLARE(Nbcd);
+MOIRA_DECLARE(NegRg);
+MOIRA_DECLARE(NegEa);
+MOIRA_DECLARE(Nop);
 
-DASM(dasmPea);
+MOIRA_DECLARE(Pea);
 
-DASM(dasmReset);
-DASM(dasmRte);
-DASM(dasmRtr);
-DASM(dasmRts);
+MOIRA_DECLARE(Reset);
+MOIRA_DECLARE(Rte);
+MOIRA_DECLARE(Rtr);
+MOIRA_DECLARE(Rts);
 
-DASM(dasmSccRg);
-DASM(dasmSccEa);
-DASM(dasmStop);
-DASM(dasmSwap);
+MOIRA_DECLARE(SccRg);
+MOIRA_DECLARE(SccEa);
+MOIRA_DECLARE(Stop);
+MOIRA_DECLARE(Swap);
 
-DASM(dasmTasRg);
-DASM(dasmTasEa);
-DASM(dasmTrap);
-DASM(dasmTrapv);
-DASM(dasmTst);
+MOIRA_DECLARE(TasRg);
+MOIRA_DECLARE(TasEa);
+MOIRA_DECLARE(Trap);
+MOIRA_DECLARE(Trapv);
+MOIRA_DECLARE(Tst);
 
-DASM(dasmUnlk);
+MOIRA_DECLARE(Unlk);
