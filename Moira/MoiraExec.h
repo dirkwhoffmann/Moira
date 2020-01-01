@@ -18,9 +18,6 @@ void execAddressError(u32 addr);
 
 // Emulates the execution of unimplemented and illegal instructions
 void execUnimplemented(int nr);
-void execLineA(u16 opcode) { execUnimplemented(10); }
-void execLineF(u16 opcode) { execUnimplemented(11); }
-void execIllegal(u16 opcode);
 
 // Emulates a trap or priviledge exception
 void execTrapException(int nr);

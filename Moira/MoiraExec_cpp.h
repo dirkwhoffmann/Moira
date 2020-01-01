@@ -102,6 +102,18 @@ Moira::execUnimplemented(int nr)
 }
 
 void
+Moira::execLineA(u16 opcode)
+{
+    execUnimplemented(10);
+}
+
+void
+Moira::execLineF(u16 opcode)
+{
+    execUnimplemented(11);
+}
+
+void
 Moira::execIllegal(u16 opcode)
 {
     u16 status = getSR();

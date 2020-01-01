@@ -7,9 +7,24 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+/* This file declares all instruction handlers. All handlers follow a common
+ * naming scheme:
+ *
+ *    execXXX : Handler for executing an instruction
+ *    dasmXXX : Handler for disassembling an instruction
+ */
+
+#define MOIRA_DECLARE_SIMPLE(x) \
+void dasm##x(StrWriter &str, u32 &addr, u16 op); \
+void exec##x(u16 op);
+
 #define MOIRA_DECLARE(x) \
 template<Instr I, Mode M, Size S> void dasm##x(StrWriter &str, u32 &addr, u16 op); \
 template<Instr I, Mode M, Size S> void exec##x(u16 op);
+
+MOIRA_DECLARE_SIMPLE(LineA)
+MOIRA_DECLARE_SIMPLE(LineF)
+MOIRA_DECLARE_SIMPLE(Illegal)
 
 MOIRA_DECLARE(ShiftRg)
 MOIRA_DECLARE(ShiftIm)
