@@ -9,7 +9,8 @@
 
 #include <math.h>
 
-static const char *instrLower[] {
+static const char *instrLower[]
+{
     "abcd" , "add",   "adda",  "addi",  "addq",  "addx",  "and",    "andi",
     "andi" , "andi",  "asl",   "asr",
     "bcc",   "bcs",   "beq",   "bge",   "bgt",   "bhi",   "ble",    "bls",
@@ -35,7 +36,8 @@ static const char *instrLower[] {
     "tas",   "trap",  "trapv", "tst",   "unlk"
 };
 
-static const char *instrUpper[] {
+static const char *instrUpper[]
+{
     "ABCD" , "ADD",   "ADDA",  "ADDI",  "ADDQ",  "ADDX",  "AND",    "ANDI",
     "ANDI" , "ANDI",  "ASL",   "ASR",
     "BCC",   "BCS",   "BEQ",   "BGE",   "BGT",   "BHI",   "BLE",    "BLS",

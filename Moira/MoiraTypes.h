@@ -187,9 +187,9 @@ inline bool isImmMode(Mode M) { return M == 11; }
 
 typedef enum
 {
-    Byte = 1,  // .b (Byte addressing mode)
-    Word = 2,  // .w (Word addressing mode)
-    Long = 4   // .l (Long word addressing mode)
+    Byte = 1,  // .b : Byte addressing
+    Word = 2,  // .w : Word addressing
+    Long = 4   // .l : Long word addressing
 }
 Size;
 
@@ -201,26 +201,6 @@ typedef enum
     IRQ_UNINITIALIZED
 }
 IrqMode;
-
-/*
-typedef enum
-{
-    BUS_ERROR           = 2,
-    ADDRESS_ERROR       = 3,
-    ILLEGAL_INSTRUCTION = 4,
-    ZERO_DIVIDE         = 5,
-    CHK_INSTRUCTION     = 6,
-    TRAPV_INSTRUCTION   = 7,
-    PRIVILEGE_VIOLATION = 8,
-    TRACE_EXCEPTION     = 9,
-    LINE_A_INSTRUCTION  = 10,
-    LINE_F_INSTRUCTION  = 11,
-    UNINITIALIZED_IRQ   = 15,
-    SPURIOUS_IRQ        = 24,
-    TRAP_BASE           = 32
-}
-Exception;
-*/
 
 }
 #endif

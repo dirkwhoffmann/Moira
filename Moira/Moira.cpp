@@ -29,12 +29,9 @@ Moira::Moira()
 void
 Moira::reset()
 {
-    clock = -40;
+    clock = -40; // REMOVE ASAP
 
-    for(int i = 0; i < 8; i++) {
-        reg.d[i] = 0;
-        reg.a[i] = 0;
-    }
+    for(int i = 0; i < 8; i++) reg.d[i] = reg.a[i] = 0;
     reg.usp = 0;
     reg.ipl = 0;
 
@@ -201,6 +198,7 @@ Moira::disassemble(u32 addr, char *str)
     return pc - addr + 2;
 }
 
+// Make sure the compiler generates certain instances of template functions
 template u32 Moira::readD <Long> (int n);
 template u32 Moira::readA <Long> (int n);
 template void Moira::writeD <Long> (int n, u32 v);

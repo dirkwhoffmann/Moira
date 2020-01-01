@@ -42,7 +42,7 @@ struct Finish     { };
 
 class StrWriter
 {
-    char comment[32];  // Appended at the end of the disassembled instruction
+    char comment[32];  // Appended to the end of the disassembled string
     char *base;        // Start address of the destination string
     char *ptr;         // Current writing position
     bool hex;          // Number format: Hexadecimal / Decimal
@@ -50,7 +50,8 @@ class StrWriter
 
 public:
 
-    StrWriter(char *p, bool h, bool u) : base(p), ptr(p), hex(h), upper(u) {
+    StrWriter(char *p, bool h, bool u) : base(p), ptr(p), hex(h), upper(u)
+    {
         comment[0] = 0;
     };
 
