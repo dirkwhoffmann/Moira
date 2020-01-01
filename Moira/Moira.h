@@ -82,7 +82,7 @@ class Moira {
 
 
     //
-    // Internal state
+    // Internals
     //
 
     // Number of elapsed cycles since powerup
@@ -113,6 +113,7 @@ public:
     Moira();
     void createJumpTables();
 
+    // Configures the output format of the disassembler
     void configDasm(bool h, bool u) { hex = h; upper = u; }
 
 
@@ -122,30 +123,40 @@ public:
 
 public:
 
+    // Performs a hard reset (power up)
     void reset();
 
     // Executes the next instruction
     void execute();
 
-    // Disassembles a single instruction
-    // Returns the instruction size in bytes
+    // Disassembles a single instruction and returns the instruction size
     int disassemble(u32 addr, char *str);
 
 
     //
-    // Interfacing with the outside world
+    // Interfacing with other components
     //
 
 private:
 
+    // Reads a byte or a word from memory
     u8 read8(u32 addr);
     u16 read16(u32 addr);
+
+    // Special variants used by the reset routine and the disassembler
     u16 read16OnReset(u32 addr);
     u16 read16Dasm(u32 addr);
-    u8 readIPL();
+
+    // Writes a byte or word into memory
     void write8  (u32 addr, u8  val);
     void write16 (u32 addr, u16 val);
+
+    // Reads the current interrupt level from the IPL pins
+    u8 readIPL();
+
+    // Provides the interrupt level in IRQ_USER mode
     int readIrqUserVector(u8 level) { return 0; }
+
 
     //
     // Accessing the clock
@@ -198,13 +209,13 @@ public:
     u16 getSR();
     void setSR(u16 val);
 
-    void setSupervisorMode(bool enable);
-
     u32 getSSP() { return reg.ssp; }
     void setSSP(u32 val) { reg.ssp = val; }
 
     u32 getUSP() { return reg.usp; }
     void setUSP(u32 val) { reg.usp = val; }
+
+    void setSupervisorMode(bool enable);
 
 
     //
@@ -214,6 +225,7 @@ public:
     int getIrqVector(int level);
 
 
+    //
     // Analyzing instructions
     //
 
@@ -223,7 +235,6 @@ public:
     bool isLineAInstr(u16 op)   { return exec[op] == &Moira::execLineA; }
     bool isLineFInstr(u16 op)   { return exec[op] == &Moira::execLineF; }
 
-    
 
 private:
 

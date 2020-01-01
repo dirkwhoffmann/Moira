@@ -63,16 +63,6 @@ Moira::read16OnReset(u32 addr)
     }
 }
 
-u8
-Moira::readIPL()
-{
-    if (MUSASHI) {
-        return 0;
-    } else {
-        return sandbox.replayPoll(getClock());
-    }
-}
-
 void
 Moira::write8(u32 addr, u8  val)
 {
@@ -83,4 +73,14 @@ void
 Moira::write16 (u32 addr, u16 val)
 {
     sandbox.replayPoke(POKE16, addr, moiracpu->getClock(), val);
+}
+
+u8
+Moira::readIPL()
+{
+    if (MUSASHI) {
+        return 0;
+    } else {
+        return sandbox.replayPoll(getClock());
+    }
 }
