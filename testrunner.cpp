@@ -287,6 +287,7 @@ void runSingleTest(Setup &s)
     mur.cycles = m68k_execute(1);
     muclk += clock() - now;
 
+
     // Record the result
     mur.pc = m68k_get_reg(NULL, M68K_REG_PC);
     mur.sr = m68k_get_reg(NULL, M68K_REG_SR);
@@ -368,8 +369,9 @@ void compare(Setup &s, Result &r1, Result &r2)
         printf("\n\nADDRESS REGISTER MISMATCH FOUND\n");
         error = true;
     }
-    if (!compareIRD(s, r1, r2)) {
-        printf("\n\nWRONG VALUE IN IRD REGISTER: %x\n", moiracpu->getIRD());
+    if (!compareIRCD(s, r1, r2)) {
+        printf("\n\nWRONG VALUE IN PREFETCH QUEUE (IRD: %x IRC: %x)\n",
+               moiracpu->getIRD(), moiracpu->getIRC());
         error = true;
     }
 
@@ -428,7 +430,7 @@ bool compareSR(Setup &s, Result &r1, Result &r2)
     return r1.sr == r2.sr;
 }
 
-bool compareIRD(Setup &s, Result &r1, Result &r2)
+bool compareIRCD(Setup &s, Result &r1, Result &r2)
 {
     if (isStop(s.opcode))
     {
@@ -436,7 +438,10 @@ bool compareIRD(Setup &s, Result &r1, Result &r2)
         return true;
     }
 
-    return moiracpu->getIRD() == memWord(r2.pc);
+    if (moiracpu->getIRD() != memWord(r2.pc)) return false;
+    if (moiracpu->getIRC() != memWord(r2.pc + 2)) return false;
+
+    return true;
 }
 
 bool compareCycles(Setup &s, Result &r1, Result &r2)

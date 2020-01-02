@@ -125,7 +125,7 @@ bool compareD(Setup &s, Result &r1, Result &r2);
 bool compareA(Setup &s, Result &r1, Result &r2);
 bool comparePC(Setup &s, Result &r1, Result &r2);
 bool compareSR(Setup &s, Result &r1, Result &r2);
-bool compareIRD(Setup &s, Result &r1, Result &r2);
+bool compareIRCD(Setup &s, Result &r1, Result &r2);
 bool compareCycles(Setup &s, Result &r1, Result &r2);
 void compare(int c1, int c2, char *s1, char *s2);
 void bugReport();
