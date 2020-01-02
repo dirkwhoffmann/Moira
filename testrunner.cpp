@@ -115,6 +115,11 @@ bool isBcd(uint16_t opcode)
     return isAbcd(opcode) || isSbcd(opcode) || isNbcd(opcode);
 }
 
+bool isStop(uint16_t opcode)
+{
+    return opcode == 0b0100111001110010;
+}
+
 uint32 smartRandom()
 {
     switch (rand() % 16) {
@@ -363,6 +368,10 @@ void compare(Setup &s, Result &r1, Result &r2)
         printf("\n\nADDRESS REGISTER MISMATCH FOUND\n");
         error = true;
     }
+    if (!compareIRD(s, r1, r2)) {
+        printf("\n\nWRONG VALUE IN IRD REGISTER: %x\n", moiracpu->getIRD());
+        error = true;
+    }
 
     error |= (sandbox.getErrors() != 0);
 
@@ -417,6 +426,17 @@ bool compareSR(Setup &s, Result &r1, Result &r2)
     }
 
     return r1.sr == r2.sr;
+}
+
+bool compareIRD(Setup &s, Result &r1, Result &r2)
+{
+    if (isStop(s.opcode))
+    {
+        // No prefetch is performed. Values won't match
+        return true;
+    }
+
+    return moiracpu->getIRD() == memWord(r2.pc);
 }
 
 bool compareCycles(Setup &s, Result &r1, Result &r2)

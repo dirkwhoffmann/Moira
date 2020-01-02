@@ -69,6 +69,8 @@ Moira::execute()
     // Check for interrupts
     if (reg.ipl >= sr.ipl) {
         if (reg.ipl > sr.ipl || reg.ipl == 7) {
+
+            assert(false); 
             execIrqException(reg.ipl);
         }
     }

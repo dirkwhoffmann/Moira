@@ -1491,11 +1491,10 @@ Moira::execRte(u16 opcode)
     u32 newpc = readM<Long>(reg.sp);
     reg.sp += 4;
 
-    readExt();
     setPC(newpc);
     setSR(newsr);
 
-    prefetch<LAST_BUS_CYCLE>();
+    fullPrefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1507,11 +1506,10 @@ Moira::execRtr(u16 opcode)
     u32 newpc = readM<Long>(reg.sp);
     reg.sp += 4;
 
-    readExt();
     setPC(newpc);
     setCCR(newccr);
 
-    prefetch<LAST_BUS_CYCLE>();
+    fullPrefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1520,10 +1518,8 @@ Moira::execRts(u16 opcode)
     u32 newpc = readM<Long>(reg.sp);
     reg.sp += 4;
 
-    readExt();
     setPC(newpc);
-
-    prefetch<LAST_BUS_CYCLE>();
+    fullPrefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void

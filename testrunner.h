@@ -42,6 +42,10 @@ extern class Tester_68k *tester;
 extern uint8_t mem[0x10000];
 extern Sandbox sandbox;
 
+inline u32 memHi(u32 addr) { return mem[addr & 0xFFFF]; }
+inline u32 memLo(u32 addr) { return mem[(addr + 1) & 0xFFFF]; }
+inline u32 memWord(u32 addr) { return memHi(addr) << 8 | memLo(addr); }
+
 // A test setup
 struct Setup {
 
@@ -82,6 +86,7 @@ bool isNbcd(uint16_t opcode);
 bool isAbcd(uint16_t opcode);
 bool isSbcd(uint16_t opcode);
 bool isBcd(uint16_t opcode);
+bool isStop(uint16_t opcode);
 
 // Create smart random numbers
 uint32 smartRandom();
@@ -120,6 +125,7 @@ bool compareD(Setup &s, Result &r1, Result &r2);
 bool compareA(Setup &s, Result &r1, Result &r2);
 bool comparePC(Setup &s, Result &r1, Result &r2);
 bool compareSR(Setup &s, Result &r1, Result &r2);
+bool compareIRD(Setup &s, Result &r1, Result &r2);
 bool compareCycles(Setup &s, Result &r1, Result &r2);
 void compare(int c1, int c2, char *s1, char *s2);
 void bugReport();
