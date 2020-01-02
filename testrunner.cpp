@@ -369,9 +369,12 @@ void compare(Setup &s, Result &r1, Result &r2)
         printf("\n\nADDRESS REGISTER MISMATCH FOUND\n");
         error = true;
     }
-    if (!compareIRCD(s, r1, r2)) {
-        printf("\n\nWRONG VALUE IN PREFETCH QUEUE (IRD: %x IRC: %x)\n",
-               moiracpu->getIRD(), moiracpu->getIRC());
+    if (!compareIRD(s, r1, r2)) {
+        printf("\n\nWRONG IRD VALUE: %x\n", moiracpu->getIRD());
+        error = true;
+    }
+    if (!compareIRC(s, r1, r2)) {
+        printf("\n\nWRONG IRC VALUE: %x\n", moiracpu->getIRC());
         error = true;
     }
 
@@ -430,18 +433,20 @@ bool compareSR(Setup &s, Result &r1, Result &r2)
     return r1.sr == r2.sr;
 }
 
-bool compareIRCD(Setup &s, Result &r1, Result &r2)
+bool compareIRD(Setup &s, Result &r1, Result &r2)
 {
-    if (isStop(s.opcode))
-    {
-        // No prefetch is performed. Values won't match
-        return true;
-    }
+    // Exclude STOP command which doesn't perform a prefetch
+    if (isStop(s.opcode)) return true;
 
-    if (moiracpu->getIRD() != memWord(r2.pc)) return false;
-    if (moiracpu->getIRC() != memWord(r2.pc + 2)) return false;
+    return moiracpu->getIRD() == memWord(r2.pc);
+}
 
-    return true;
+bool compareIRC(Setup &s, Result &r1, Result &r2)
+{
+    // Exclude STOP command which doesn't perform a prefetch
+    if (isStop(s.opcode)) return true;
+
+    return moiracpu->getIRC() == memWord(r2.pc + 2);
 }
 
 bool compareCycles(Setup &s, Result &r1, Result &r2)
