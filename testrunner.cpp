@@ -170,12 +170,6 @@ void runSingleTest(Setup &s)
 {
     Result mur, mor;
 
-    // Skip illegal instructions
-    moira::Instr instr = moiracpu->getInfo(s.opcode).I;
-    if (instr == moira::ILLEGAL) return;
-    if (instr == moira::LINE_A) return;
-    if (instr == moira::LINE_F) return;
-
     // Prepare Musashi
     resetMusashi(s);
 
@@ -201,9 +195,12 @@ clock_t runMusashi(Setup &s, Result &r)
 
     // Skip some instructions that are likely to be broken in Musashi
     bool skip =
-    i == moira::ABCD ||
-    i == moira::SBCD ||
-    i == moira::NBCD;
+    i == moira::ABCD    ||
+    i == moira::SBCD    ||
+    i == moira::NBCD    ||
+    i == moira::ILLEGAL ||
+    i == moira::LINE_A  ||
+    i == moira::LINE_F;
 
     if (!skip) {
         elapsed = clock();
@@ -236,10 +233,13 @@ clock_t runMoira(Setup &s, Result &r)
     moira::Instr i = moiracpu->getInfo(op).I;
 
     // Skip some instructions that are likely to be broken in Musashi
-     bool skip =
-     i == moira::ABCD ||
-     i == moira::SBCD ||
-     i == moira::NBCD;
+    bool skip =
+    i == moira::ABCD    ||
+    i == moira::SBCD    ||
+    i == moira::NBCD    ||
+    i == moira::ILLEGAL ||
+    i == moira::LINE_A  ||
+    i == moira::LINE_F;
 
     int64_t cycles = moiracpu->getClock();
     if (!skip) {
