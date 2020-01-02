@@ -171,9 +171,10 @@ void runSingleTest(Setup &s)
     Result mur, mor;
 
     // Skip illegal instructions
-    if (moiracpu->isIllegalInstr(s.opcode)) return;
-    if (moiracpu->isLineAInstr(s.opcode)) return;
-    if (moiracpu->isLineFInstr(s.opcode)) return;
+    moira::Instr instr = moiracpu->getInfo(s.opcode).I;
+    if (instr == moira::ILLEGAL) return;
+    if (instr == moira::LINE_A) return;
+    if (instr == moira::LINE_F) return;
 
     // Prepare Musashi
     resetMusashi(s);

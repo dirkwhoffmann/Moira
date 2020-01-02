@@ -247,18 +247,7 @@ private:
     // Selects the IRQ vector to branch to
     int getIrqVector(int level);
 
-
-    //
-    // Analyzing instructions
-    //
-
-public:
-
-    bool isIllegalInstr(u16 op) { return exec[op] == &Moira::execIllegal; }
-    bool isLineAInstr(u16 op)   { return exec[op] == &Moira::execLineA; }
-    bool isLineFInstr(u16 op)   { return exec[op] == &Moira::execLineF; }
-
-
+    
 private:
 
     #include "MoiraInit.h"
