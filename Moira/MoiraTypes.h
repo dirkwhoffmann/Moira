@@ -193,6 +193,14 @@ typedef enum
 }
 Size;
 
+typedef struct
+{
+    Instr I;
+    Mode  M;
+    Size  S;
+}
+InstrInfo;
+
 typedef enum
 {
     IRQ_AUTO,

@@ -9,13 +9,14 @@
 
 // Adds a single entry to the instruction jump table
 
-#define __ ,
-#define register(id, name) { \
-if (exec[id] != &Moira::execIllegal) printf("id = %x\n", id); \
+#define TPARAM(x,y,z) <x,y,z>
+#define register(id, name, I, M, S) { \
 assert(exec[id] == &Moira::execIllegal); \
 assert(dasm[id] == &Moira::dasmIllegal); \
-exec[id] = &Moira::exec##name; \
-dasm[id] = &Moira::dasm##name; }
+exec[id] = &Moira::exec##name TPARAM(I, M, S); \
+dasm[id] = &Moira::dasm##name TPARAM(I, M, S); \
+info[id] = InstrInfo { I, M, S }; \
+}
 
 // Registers an instruction in one of the standard instruction formats:
 //
@@ -35,13 +36,13 @@ dasm[id] = &Moira::dasm##name; }
 //     __SS XXX_ __MM MXXX
 
 #define _____________XXX(op,I,M,S,f) { \
-for (int j = 0; j < 8; j++) register((op) | j, f<I __ M __ S>); }
+for (int j = 0; j < 8; j++) register((op) | j, f, I, M, S); }
 
 #define ____________XXXX(op,I,M,S,f) { \
-for (int j = 0; j < 16; j++) register((op) | j, f<I __ M __ S>); }
+for (int j = 0; j < 16; j++) register((op) | j, f, I, M, S); }
 
 #define ________XXXXXXXX(op,I,M,S,f) { \
-for (int j = 0; j < 256; j++) register((op) | j, f<I __ M __ S>); }
+for (int j = 0; j < 256; j++) register((op) | j, f, I, M, S); }
 
 #define ____XXX______XXX(op,I,M,S,f) { \
 for (int i = 0; i < 8; i++) _____________XXX((op) | i << 9, I, M, S, f); }
@@ -51,19 +52,19 @@ for (int i = 0; i < 8; i++) ________XXXXXXXX((op) | i << 9, I, M, S, f); }
 
 #define __________MMMXXX(op,I,m,S,f) { \
 for (int j = 0; j < 8; j++) { \
-if ((m) & 0b100000000000) register((op) | 0 << 3 | j, f<I __  (Mode)0 __ S>); \
-if ((m) & 0b010000000000) register((op) | 1 << 3 | j, f<I __  (Mode)1 __ S>); \
-if ((m) & 0b001000000000) register((op) | 2 << 3 | j, f<I __  (Mode)2 __ S>); \
-if ((m) & 0b000100000000) register((op) | 3 << 3 | j, f<I __  (Mode)3 __ S>); \
-if ((m) & 0b000010000000) register((op) | 4 << 3 | j, f<I __  (Mode)4 __ S>); \
-if ((m) & 0b000001000000) register((op) | 5 << 3 | j, f<I __  (Mode)5 __ S>); \
-if ((m) & 0b000000100000) register((op) | 6 << 3 | j, f<I __  (Mode)6 __ S>); \
+if ((m) & 0b100000000000) register((op) | 0 << 3 | j, f, I,  (Mode)0, S); \
+if ((m) & 0b010000000000) register((op) | 1 << 3 | j, f, I,  (Mode)1, S); \
+if ((m) & 0b001000000000) register((op) | 2 << 3 | j, f, I,  (Mode)2, S); \
+if ((m) & 0b000100000000) register((op) | 3 << 3 | j, f, I,  (Mode)3, S); \
+if ((m) & 0b000010000000) register((op) | 4 << 3 | j, f, I,  (Mode)4, S); \
+if ((m) & 0b000001000000) register((op) | 5 << 3 | j, f, I,  (Mode)5, S); \
+if ((m) & 0b000000100000) register((op) | 6 << 3 | j, f, I,  (Mode)6, S); \
 } \
-if ((m) & 0b000000010000) register((op) | 7 << 3 | 0, f<I __  (Mode)7 __ S>); \
-if ((m) & 0b000000001000) register((op) | 7 << 3 | 1, f<I __  (Mode)8 __ S>); \
-if ((m) & 0b000000000100) register((op) | 7 << 3 | 2, f<I __  (Mode)9 __ S>); \
-if ((m) & 0b000000000010) register((op) | 7 << 3 | 3, f<I __ (Mode)10 __ S>); \
-if ((m) & 0b000000000001) register((op) | 7 << 3 | 4, f<I __ (Mode)11 __ S>); }
+if ((m) & 0b000000010000) register((op) | 7 << 3 | 0, f, I,  (Mode)7, S); \
+if ((m) & 0b000000001000) register((op) | 7 << 3 | 1, f, I,  (Mode)8, S); \
+if ((m) & 0b000000000100) register((op) | 7 << 3 | 2, f, I,  (Mode)9, S); \
+if ((m) & 0b000000000010) register((op) | 7 << 3 | 3, f, I, (Mode)10, S); \
+if ((m) & 0b000000000001) register((op) | 7 << 3 | 4, f, I, (Mode)11, S); }
 
 #define ____XXX___MMMXXX(op,I,m,S,f) { \
 for (int i = 0; i < 8; i++) __________MMMXXX((op) | i << 9, I, m, S, f) }
@@ -287,7 +288,7 @@ Moira::createJumpTables()
     //         Size: Byte
     //
 
-    register(parse("0000 0010 0011 1100"), Andiccr<ANDICCR __ MODE_IM __ Byte>);
+    register(parse("0000 0010 0011 1100"), Andiccr, ANDICCR, MODE_IM, Byte);
 
 
     // ANDI to SR
@@ -296,7 +297,7 @@ Moira::createJumpTables()
     //         Size: Byte
     //
 
-    register(parse("0000 0010 0111 1100"), Andisr<ANDISR __ MODE_IM __ Word>);
+    register(parse("0000 0010 0111 1100"), Andisr, ANDISR, MODE_IM, Word);
 
 
     // ASL, ASR
@@ -340,38 +341,38 @@ Moira::createJumpTables()
     // Dn,<label>
     opcode = parse("0110 ---- ---- ----");
 
-    register(opcode | 0x000, Bcc<BRA __ MODE_IP __ Word>);
-    register(opcode | 0x200, Bcc<BHI __ MODE_IP __ Word>);
-    register(opcode | 0x300, Bcc<BLS __ MODE_IP __ Word>);
-    register(opcode | 0x400, Bcc<BCC __ MODE_IP __ Word>);
-    register(opcode | 0x500, Bcc<BCS __ MODE_IP __ Word>);
-    register(opcode | 0x600, Bcc<BNE __ MODE_IP __ Word>);
-    register(opcode | 0x700, Bcc<BEQ __ MODE_IP __ Word>);
-    register(opcode | 0x800, Bcc<BVC __ MODE_IP __ Word>);
-    register(opcode | 0x900, Bcc<BVS __ MODE_IP __ Word>);
-    register(opcode | 0xA00, Bcc<BPL __ MODE_IP __ Word>);
-    register(opcode | 0xB00, Bcc<BMI __ MODE_IP __ Word>);
-    register(opcode | 0xC00, Bcc<BGE __ MODE_IP __ Word>);
-    register(opcode | 0xD00, Bcc<BLT __ MODE_IP __ Word>);
-    register(opcode | 0xE00, Bcc<BGT __ MODE_IP __ Word>);
-    register(opcode | 0xF00, Bcc<BLE __ MODE_IP __ Word>);
+    register(opcode | 0x000, Bcc, BRA, MODE_IP, Word);
+    register(opcode | 0x200, Bcc, BHI, MODE_IP, Word);
+    register(opcode | 0x300, Bcc, BLS, MODE_IP, Word);
+    register(opcode | 0x400, Bcc, BCC, MODE_IP, Word);
+    register(opcode | 0x500, Bcc, BCS, MODE_IP, Word);
+    register(opcode | 0x600, Bcc, BNE, MODE_IP, Word);
+    register(opcode | 0x700, Bcc, BEQ, MODE_IP, Word);
+    register(opcode | 0x800, Bcc, BVC, MODE_IP, Word);
+    register(opcode | 0x900, Bcc, BVS, MODE_IP, Word);
+    register(opcode | 0xA00, Bcc, BPL, MODE_IP, Word);
+    register(opcode | 0xB00, Bcc, BMI, MODE_IP, Word);
+    register(opcode | 0xC00, Bcc, BGE, MODE_IP, Word);
+    register(opcode | 0xD00, Bcc, BLT, MODE_IP, Word);
+    register(opcode | 0xE00, Bcc, BGT, MODE_IP, Word);
+    register(opcode | 0xF00, Bcc, BLE, MODE_IP, Word);
 
     for (int i = 1; i < 255; i++) {
-        register(opcode | 0x000 | i, Bcc<BRA __ MODE_IP __ Byte>);
-        register(opcode | 0x200 | i, Bcc<BHI __ MODE_IP __ Byte>);
-        register(opcode | 0x300 | i, Bcc<BLS __ MODE_IP __ Byte>);
-        register(opcode | 0x400 | i, Bcc<BCC __ MODE_IP __ Byte>);
-        register(opcode | 0x500 | i, Bcc<BCS __ MODE_IP __ Byte>);
-        register(opcode | 0x600 | i, Bcc<BNE __ MODE_IP __ Byte>);
-        register(opcode | 0x700 | i, Bcc<BEQ __ MODE_IP __ Byte>);
-        register(opcode | 0x800 | i, Bcc<BVC __ MODE_IP __ Byte>);
-        register(opcode | 0x900 | i, Bcc<BVS __ MODE_IP __ Byte>);
-        register(opcode | 0xA00 | i, Bcc<BPL __ MODE_IP __ Byte>);
-        register(opcode | 0xB00 | i, Bcc<BMI __ MODE_IP __ Byte>);
-        register(opcode | 0xC00 | i, Bcc<BGE __ MODE_IP __ Byte>);
-        register(opcode | 0xD00 | i, Bcc<BLT __ MODE_IP __ Byte>);
-        register(opcode | 0xE00 | i, Bcc<BGT __ MODE_IP __ Byte>);
-        register(opcode | 0xF00 | i, Bcc<BLE __ MODE_IP __ Byte>);
+        register(opcode | 0x000 | i, Bcc, BRA, MODE_IP, Byte);
+        register(opcode | 0x200 | i, Bcc, BHI, MODE_IP, Byte);
+        register(opcode | 0x300 | i, Bcc, BLS, MODE_IP, Byte);
+        register(opcode | 0x400 | i, Bcc, BCC, MODE_IP, Byte);
+        register(opcode | 0x500 | i, Bcc, BCS, MODE_IP, Byte);
+        register(opcode | 0x600 | i, Bcc, BNE, MODE_IP, Byte);
+        register(opcode | 0x700 | i, Bcc, BEQ, MODE_IP, Byte);
+        register(opcode | 0x800 | i, Bcc, BVC, MODE_IP, Byte);
+        register(opcode | 0x900 | i, Bcc, BVS, MODE_IP, Byte);
+        register(opcode | 0xA00 | i, Bcc, BPL, MODE_IP, Byte);
+        register(opcode | 0xB00 | i, Bcc, BMI, MODE_IP, Byte);
+        register(opcode | 0xC00 | i, Bcc, BGE, MODE_IP, Byte);
+        register(opcode | 0xD00 | i, Bcc, BLT, MODE_IP, Byte);
+        register(opcode | 0xE00 | i, Bcc, BGT, MODE_IP, Byte);
+        register(opcode | 0xF00 | i, Bcc, BLE, MODE_IP, Byte);
     }
 
 
@@ -431,9 +432,9 @@ Moira::createJumpTables()
     //         Size: Byte, Word
 
     opcode = parse("0110 0001 ---- ----");
-    register(opcode, Bsr<BSR __ MODE_IP __ Word>);
+    register(opcode, Bsr, BSR, MODE_IP, Word);
     for (int i = 1; i < 255; i++) {
-        register(opcode | i, Bsr<BSR __ MODE_IP __ Byte>);
+        register(opcode | i, Bsr, BSR, MODE_IP, Byte);
     }
 
     // BTST
@@ -618,7 +619,7 @@ Moira::createJumpTables()
     //         Size: Byte
     //
 
-    register(parse("0000 1010 0011 1100"), Andiccr<EORICCR __ MODE_IM __ Byte>);
+    register(parse("0000 1010 0011 1100"), Andiccr, EORICCR, MODE_IM, Byte);
 
 
     // EORI to SR
@@ -627,7 +628,7 @@ Moira::createJumpTables()
     //         Size: Byte
     //
 
-    register(parse("0000 1010 0111 1100"), Andisr<EORISR __ MODE_IM __ Word>);
+    register(parse("0000 1010 0111 1100"), Andisr, EORISR, MODE_IM, Word);
 
 
     // EXG
@@ -979,7 +980,7 @@ Moira::createJumpTables()
     //        Sizes: Unsized
 
     opcode = parse("0100 1110 0111 0001");
-    register(opcode, Nop<NOP __ MODE_IP __ Long>);
+    register(opcode, Nop, NOP, MODE_IP, Long);
 
 
     // OR
@@ -1026,7 +1027,7 @@ Moira::createJumpTables()
     //         Size: Byte
     //
 
-    register(parse("0000 0000 0011 1100"), Andiccr<ORICCR __ MODE_IM __ Byte>);
+    register(parse("0000 0000 0011 1100"), Andiccr, ORICCR, MODE_IM, Byte);
 
 
     // ORI to SR
@@ -1035,7 +1036,7 @@ Moira::createJumpTables()
     //         Size: Byte
     //
 
-    register(parse("0000 0000 0111 1100"), Andisr<ORISR __ MODE_IM __ Word>);
+    register(parse("0000 0000 0111 1100"), Andisr, ORISR, MODE_IM, Word);
 
 
     // ROL, ROR, ROXL, ROXR
@@ -1108,7 +1109,7 @@ Moira::createJumpTables()
     //       Syntax: RESET
     //        Sizes: Unsized
 
-    register(parse("0100 1110 0111 0000"), Reset<RESET __ MODE_IP __ Long>);
+    register(parse("0100 1110 0111 0000"), Reset, RESET, MODE_IP, Long);
 
 
     // RTE
@@ -1116,7 +1117,7 @@ Moira::createJumpTables()
     //       Syntax: RTE
     //        Sizes: Unsized
 
-    register(parse("0100 1110 0111 0011"), Rte<RTE __ MODE_IP __ Long>);
+    register(parse("0100 1110 0111 0011"), Rte, RTE, MODE_IP, Long);
 
 
     // RTR
@@ -1124,7 +1125,7 @@ Moira::createJumpTables()
     //       Syntax: RTR
     //        Sizes: Unsized
 
-    register(parse("0100 1110 0111 0111"), Rtr<RTR __ MODE_IP __ Long>);
+    register(parse("0100 1110 0111 0111"), Rtr, RTR, MODE_IP, Long);
 
 
     // RTS
@@ -1132,7 +1133,7 @@ Moira::createJumpTables()
     //       Syntax: RTS
     //        Sizes: Unsized
 
-    register(parse("0100 1110 0111 0101"), Rts<RTS __ MODE_IP __ Long>);
+    register(parse("0100 1110 0111 0101"), Rts, RTS, MODE_IP, Long);
 
 
     // SBCD
@@ -1200,7 +1201,7 @@ Moira::createJumpTables()
     //       Syntax: STOP
     //        Sizes: Unsized
 
-    register(parse("0100 1110 0111 0010"), Stop<STOP __ MODE_IP __ Word>);
+    register(parse("0100 1110 0111 0010"), Stop, STOP, MODE_IP, Word);
 
 
     // SUB
@@ -1325,7 +1326,7 @@ Moira::createJumpTables()
     //       Syntax: TRAPV
     //        Sizes: Unsized
 
-    register(parse("0100 1110 0111 0110"), Trapv<TRAPV __ MODE_IP __ Long>);
+    register(parse("0100 1110 0111 0110"), Trapv, TRAPV, MODE_IP, Long);
 
 
     // TST
@@ -1350,6 +1351,3 @@ Moira::createJumpTables()
     opcode = parse("0100 1110 0101 1---");
     _____________XXX(opcode, UNLK, MODE_IP, Word, Unlk);
 }
-
-#undef __
-

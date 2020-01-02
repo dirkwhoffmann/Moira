@@ -70,7 +70,8 @@ Moira::execute()
     if (reg.ipl >= sr.ipl) {
         if (reg.ipl > sr.ipl || reg.ipl == 7) {
 
-            printf("Trigger IRQ (%d)\n", reg.ipl);
+            assert(reg.ipl < 7);
+            printf("%lld: Trigger IRQ (%d)\n", clock, reg.ipl);
             execIrqException(reg.ipl);
         }
     }
