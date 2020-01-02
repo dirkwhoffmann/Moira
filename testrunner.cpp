@@ -175,11 +175,6 @@ void runSingleTest(Setup &s)
     if (moiracpu->isLineAInstr(s.opcode)) return;
     if (moiracpu->isLineFInstr(s.opcode)) return;
 
-    // Skip NBCD, SBCD, ABCD (likely to be broken in Musashi)
-    moira::Instr instr = moiracpu->getInfo(s.opcode).I;
-
-    if (instr == moira::ABCD || instr == moira::SBCD || instr == moira::NBCD) return;
-
     // Prepare Musashi
     resetMusashi(s);
 
@@ -198,16 +193,24 @@ void runSingleTest(Setup &s)
 
 clock_t runMusashi(Setup &s, Result &r)
 {
+    clock_t elapsed = 0;
     u32 pc = m68k_get_reg(NULL, M68K_REG_PC);
     u16 op = memWord(pc);
     moira::Instr i = moiracpu->getInfo(op).I;
 
     // Skip some instructions that are likely to be broken in Musashi
-    // if (i == moira::ABCD || i == moira::SBCD || i == moira::NBCD) return 0;
+    bool skip =
+    i == moira::ABCD ||
+    i == moira::SBCD ||
+    i == moira::NBCD;
 
-    clock_t elapsed = clock();
-    r.cycles = m68k_execute(1);
-    elapsed = clock() - elapsed;
+    if (!skip) {
+        elapsed = clock();
+        r.cycles = m68k_execute(1);
+        elapsed = clock() - elapsed;
+    } else {
+        r.cycles = 0;
+    }
 
     // Record the result
     r.pc = m68k_get_reg(NULL, M68K_REG_PC);
@@ -226,18 +229,23 @@ clock_t runMusashi(Setup &s, Result &r)
 
 clock_t runMoira(Setup &s, Result &r)
 {
+    clock_t elapsed = 0;
     u32 pc = moiracpu->getPC();
     u16 op = memWord(pc);
     moira::Instr i = moiracpu->getInfo(op).I;
 
     // Skip some instructions that are likely to be broken in Musashi
-    // if (i == moira::ABCD || i == moira::SBCD || i == moira::NBCD) return 0;
+     bool skip =
+     i == moira::ABCD ||
+     i == moira::SBCD ||
+     i == moira::NBCD;
 
     int64_t cycles = moiracpu->getClock();
-
-    clock_t now = clock();
-    moiracpu->execute();
-    clock_t elapsed = clock() - now;
+    if (!skip) {
+        elapsed = clock();
+        moiracpu->execute();
+        elapsed = clock() - elapsed;
+    }
 
     // Record the result
     r.cycles = (int)(moiracpu->getClock() - cycles);
