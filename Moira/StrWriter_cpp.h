@@ -11,6 +11,7 @@
 
 static const char *instrLower[]
 {
+    "???",   "???",   "???",
     "abcd" , "add",   "adda",  "addi",  "addq",  "addx",  "and",    "andi",
     "andi" , "andi",  "asl",   "asr",
     "bcc",   "bcs",   "beq",   "bge",   "bgt",   "bhi",   "ble",    "bls",
@@ -21,7 +22,6 @@ static const char *instrLower[]
     "dblt",  "dbmi",  "dbne",  "dbpl",  "dbvc",  "dbvs",  "dbra",   "dbt",
     "divs",  "divu",
     "eor",   "eori",  "eori",  "eori",  "exg",   "ext",
-    "???",
     "jmp",   "jsr",
     "lea",   "link",  "lsl",   "lsr",
     "move" , "movea", "move",  "move",  "move",  "move",  "movem",  "movep",
@@ -38,6 +38,7 @@ static const char *instrLower[]
 
 static const char *instrUpper[]
 {
+    "???",   "???",   "???",
     "ABCD" , "ADD",   "ADDA",  "ADDI",  "ADDQ",  "ADDX",  "AND",    "ANDI",
     "ANDI" , "ANDI",  "ASL",   "ASR",
     "BCC",   "BCS",   "BEQ",   "BGE",   "BGT",   "BHI",   "BLE",    "BLS",
@@ -48,7 +49,6 @@ static const char *instrUpper[]
     "DBLT",  "DBMI",  "DBNE",  "DBPL",  "DBVC",  "DBVS",  "DBRA",   "DBT",
     "DIVS",  "DIVU",
     "EOR",   "EORI",  "EORI",  "EORI",  "EXG",   "EXT",
-    "???",
     "JMP",   "JSR",
     "LEA",   "LINK",  "LSL",   "LSR",
     "MOVE" , "MOVEA", "MOVE",  "MOVE",  "MOVE",  "MOVE",  "MOVEM",  "MOVEP",

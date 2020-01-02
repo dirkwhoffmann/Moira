@@ -31,6 +31,10 @@ CPUModel;
 
 typedef enum
 {
+    ILLEGAL,   // Illegal instruction
+    LINE_A,    // Unused instruction (line A)
+    LINE_F,    // Unused instruction (line F)
+
     ABCD,      // Add decimal with extend
     ADD,       // Add binary
     ADDA,      // Add address
@@ -93,7 +97,6 @@ typedef enum
     EORISR,    // Exclusive OR immediate to status register
     EXG,       // Exchange registers
     EXT,       // Sign-extend a data register
-    ILLEGAL,   // Illegal instruction
     JMP,       // Jump
     JSR,       // Jump to subroutine
     LEA,       // Load effective address
