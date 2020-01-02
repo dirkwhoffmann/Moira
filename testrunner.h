@@ -72,22 +72,6 @@ struct Result {
     int cycles;
 };
 
-// Checks for certain instruction types
-bool isTas(uint16_t opcode);
-bool isChk(uint16_t opcode);
-bool isBclr(uint16_t opcode);
-bool isBset(uint16_t opcode);
-bool isBchg(uint16_t opcode);
-bool isMovem(uint16_t opcode);
-bool isTrap(uint16_t opcode);
-bool isMul(uint16_t opcode);
-bool isDiv(uint16_t opcode);
-bool isNbcd(uint16_t opcode);
-bool isAbcd(uint16_t opcode);
-bool isSbcd(uint16_t opcode);
-bool isBcd(uint16_t opcode);
-bool isStop(uint16_t opcode);
-
 // Create smart random numbers
 uint32 smartRandom();
 

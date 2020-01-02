@@ -14,122 +14,6 @@ Tester_68k *tester;
 uint8_t mem[0x10000];
 Sandbox sandbox;
 
-bool isTas(uint16_t opcode)
-{
-    bool result = false;
-
-    if ((opcode & 0b1111111111000000) == 0b0100101011000000) result = true;
-
-    assert(result == (moiracpu->getInfo(opcode).I == moira::TAS));
-    return result;
-}
-
-bool isChk(uint16_t opcode)
-{
-    bool result = false;
-    
-    if ((opcode & 0b1111000111000000) == 0b0100000110000000) result = true;
-
-    assert(result == (moiracpu->getInfo(opcode).I == moira::CHK));
-    return result;
-}
-
-bool isBclr(uint16_t opcode)
-{
-    return moiracpu->getInfo(opcode).I == moira::BCLR;
-}
-
-bool isBset(uint16_t opcode)
-{
-    return moiracpu->getInfo(opcode).I == moira::BSET;
-}
-
-bool isBchg(uint16_t opcode)
-{
-    return moiracpu->getInfo(opcode).I == moira::BCHG;
-}
-
-bool isMovem(uint16_t opcode)
-{
-    bool result = false;
-
-    if ((opcode & 0b1111111110000000) == 0b0100110010000000) result = true;
-    if ((opcode & 0b1111111110000000) == 0b0100100010000000) result = true;
-
-    assert(result == (moiracpu->getInfo(opcode).I == moira::MOVEM));
-    return result;
-}
-
-bool isTrap(uint16_t opcode)
-{
-    bool result = false;
-
-    if ((opcode & 0b1111111111110000) == 0b0100111001000000) result = true;
-
-    assert(result == (moiracpu->getInfo(opcode).I == moira::TRAP));
-    return result;
-}
-
-bool isMul(uint16_t opcode)
-{
-    bool result = false;
-
-    if ((opcode & 0b1111000111000000) == 0b1100000111000000) result = true;
-    if ((opcode & 0b1111000111000000) == 0b1100000011000000) result = true;
-
-    bool isMul =
-    moiracpu->getInfo(opcode).I == moira::MULU ||
-    moiracpu->getInfo(opcode).I == moira::MULS;
-
-    assert(result == isMul);
-    return result;
-}
-
-bool isDiv(uint16_t opcode)
-{
-    bool result = false;
-
-    if ((opcode & 0b1111000111000000) == 0b1000000111000000) result = true;
-    if ((opcode & 0b1111000111000000) == 0b1000000011000000) result = true;
-
-    bool isDiv =
-    moiracpu->getInfo(opcode).I == moira::DIVU ||
-    moiracpu->getInfo(opcode).I == moira::DIVS;
-
-    assert(result == isDiv);
-    return result;
-}
-
-bool isAbcd(uint16_t opcode)
-{
-    return moiracpu->getInfo(opcode).I == moira::ABCD;
-}
-
-bool isSbcd(uint16_t opcode)
-{
-    return moiracpu->getInfo(opcode).I == moira::SBCD;
-}
-
-bool isNbcd(uint16_t opcode)
-{
-    return moiracpu->getInfo(opcode).I == moira::NBCD;
-}
-
-bool isBcd(uint16_t opcode)
-{
-    return isAbcd(opcode) || isSbcd(opcode) || isNbcd(opcode);
-}
-
-bool isStop(uint16_t opcode)
-{
-    bool result = false;
-
-    if (opcode == 0b0100111001110010) result = true;
-
-    assert(result == (moiracpu->getInfo(opcode).I == moira::STOP));
-    return result;
-}
-
 uint32 smartRandom()
 {
     switch (rand() % 16) {
@@ -278,7 +162,9 @@ void runSingleTest(Setup &s)
     if (moiracpu->isLineFInstr(s.opcode)) return;
 
     // Skip NBCD, SBCD, ABCD (likely to be broken in Musashi)
-    if (isBcd(s.opcode)) return;
+    moira::Instr instr = moiracpu->getInfo(s.opcode).I;
+
+    if (instr == moira::ABCD || instr == moira::SBCD || instr == moira::NBCD) return;
 
     // Reset the sandbox (memory accesses observer)
     sandbox.prepare();
@@ -411,7 +297,8 @@ void compare(Setup &s, Result &r1, Result &r2)
 
 bool compareD(Setup &s, Result &r1, Result &r2)
 {
-    if (isDiv(s.opcode))
+    moira::Instr instr = moiracpu->getInfo(s.opcode).I;
+    if (instr == moira::DIVU || instr == moira::DIVS)
     {
         // Musashi differs in some corner cases
         return true;
@@ -434,8 +321,9 @@ bool comparePC(Setup &s, Result &r1, Result &r2)
 
 bool compareSR(Setup &s, Result &r1, Result &r2)
 {
-    if (isDiv(s.opcode))
-    {
+    moira::Instr instr = moiracpu->getInfo(s.opcode).I;
+    if (instr == moira::DIVU || instr == moira::DIVS) {
+
         // Musashi differs (and is likely wrong). Ignore it
         return true;
     }
@@ -446,7 +334,7 @@ bool compareSR(Setup &s, Result &r1, Result &r2)
 bool compareIRD(Setup &s, Result &r1, Result &r2)
 {
     // Exclude STOP command which doesn't perform a prefetch
-    if (isStop(s.opcode)) return true;
+    if (moiracpu->getInfo(s.opcode).I == moira::STOP) return true;
 
     return moiracpu->getIRD() == memWord(r2.pc);
 }
@@ -454,21 +342,25 @@ bool compareIRD(Setup &s, Result &r1, Result &r2)
 bool compareIRC(Setup &s, Result &r1, Result &r2)
 {
     // Exclude STOP command which doesn't perform a prefetch
-    if (isStop(s.opcode)) return true;
+    if (moiracpu->getInfo(s.opcode).I == moira::STOP) return true;
 
     return moiracpu->getIRC() == memWord(r2.pc + 2);
 }
 
 bool compareCycles(Setup &s, Result &r1, Result &r2)
 {
+    moira::Instr instr = moiracpu->getInfo(s.opcode).I;
+
     // Ignore instruction that are wrong in Musashi
-    if (isMul(s.opcode)  ||
-        isDiv(s.opcode)  ||
-        isBclr(s.opcode) ||
-        isBset(s.opcode) ||
-        isBchg(s.opcode) ||
-        isChk(s.opcode)  ||
-        isTas(s.opcode)) return true;
+    if (instr == moira::MULS ||
+        instr == moira::MULU ||
+        instr == moira::DIVS ||
+        instr == moira::DIVU ||
+        instr == moira::BCLR ||
+        instr == moira::BSET ||
+        instr == moira::BCHG ||
+        instr == moira::CHK  ||
+        instr == moira::TAS) return true;
 
     return r1.cycles == r2.cycles;
 }
