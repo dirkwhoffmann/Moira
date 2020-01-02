@@ -198,6 +198,13 @@ void runSingleTest(Setup &s)
 
 clock_t runMusashi(Setup &s, Result &r)
 {
+    u32 pc = m68k_get_reg(NULL, M68K_REG_PC);
+    u16 op = memWord(pc);
+    moira::Instr i = moiracpu->getInfo(op).I;
+
+    // Skip some instructions that are likely to be broken in Musashi
+    // if (i == moira::ABCD || i == moira::SBCD || i == moira::NBCD) return 0;
+
     clock_t elapsed = clock();
     r.cycles = m68k_execute(1);
     elapsed = clock() - elapsed;
@@ -219,6 +226,13 @@ clock_t runMusashi(Setup &s, Result &r)
 
 clock_t runMoira(Setup &s, Result &r)
 {
+    u32 pc = moiracpu->getPC();
+    u16 op = memWord(pc);
+    moira::Instr i = moiracpu->getInfo(op).I;
+
+    // Skip some instructions that are likely to be broken in Musashi
+    // if (i == moira::ABCD || i == moira::SBCD || i == moira::NBCD) return 0;
+
     int64_t cycles = moiracpu->getClock();
 
     clock_t now = clock();

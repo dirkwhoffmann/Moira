@@ -110,9 +110,6 @@ clock_t runMoira(Setup &s, Result &r);
 void recordMusashiResult(Result &r);
 void recordMoiraResult(Result &r);
 
-// void dumpSetup(Setup &s);
-// void dumpResult(Result &r);
-
 void compare(Setup &s, Result &r1, Result &r2);
 bool compareD(Setup &s, Result &r1, Result &r2);
 bool compareA(Setup &s, Result &r1, Result &r2);
