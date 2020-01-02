@@ -122,17 +122,28 @@ void run()
 
     for (long round = 1 ;; round++) {
 
-        createTestCase(setup);
-
         printf("Round %ld ", round); fflush(stdout);
-        clock_t start = clock();
+        createTestCase(setup);
 
         // Iterate through all opcodes
         for (int opcode = 0x0000; opcode < 65536; opcode++) {
 
             if ((opcode & 0xFFF) == 0) { printf("."); fflush(stdout); }
 
+            // Prepare the test case with the selected instruction
             setupInstruction(setup, pc, opcode);
+            if (VERBOSE) {
+                char mos[128];
+                moiracpu->disassemble(setup.pc, mos);
+                printf("$%04x: %s\n", setup.opcode, mos);
+            }
+
+            // Test the disassembler
+            runDasmTest(setup);
+
+            // Reset the sandbox (memory accesses observer)
+            sandbox.prepare();
+
             runSingleTest(setup);
         }
 
@@ -142,10 +153,8 @@ void run()
     }
 }
 
-void runSingleTest(Setup &s)
+void runDasmTest(Setup &s)
 {
-    Result mur, mor;
-
     if (TEST_DASM) {
 
         int muc, moc;
@@ -155,6 +164,11 @@ void runSingleTest(Setup &s)
         moc = moiracpu->disassemble(s.pc, mos);
         compare(muc, moc, mus, mos);
     }
+}
+
+void runSingleTest(Setup &s)
+{
+    Result mur, mor;
 
     // Skip illegal instructions
     if (moiracpu->isIllegalInstr(s.opcode)) return;
@@ -166,52 +180,59 @@ void runSingleTest(Setup &s)
 
     if (instr == moira::ABCD || instr == moira::SBCD || instr == moira::NBCD) return;
 
-    // Reset the sandbox (memory accesses observer)
-    sandbox.prepare();
-
     // Prepare Musashi
     resetMusashi(s);
 
-    if (VERBOSE) {
-         char mos[128];
-         moiracpu->disassemble(s.pc, mos);
-         printf("$%04x: %s\n", s.opcode, mos);
-     }
-
     // Run Musashi
-    clock_t now = clock();
-    mur.cycles = m68k_execute(1);
-    muclk += clock() - now;
-
-
-    // Record the result
-    mur.pc = m68k_get_reg(NULL, M68K_REG_PC);
-    mur.sr = m68k_get_reg(NULL, M68K_REG_SR);
-    mur.usp = m68k_get_reg(NULL, M68K_REG_USP);
-    mur.ssp = m68k_get_reg(NULL, M68K_REG_ISP);
-    for (int i = 0; i < 8; i++) {
-        mur.d[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_D0 + i));
-        mur.a[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_A0 + i));
-    }
+    muclk += runMusashi(s, mur);
 
     // Prepare Moira
     resetMoira(s);
 
     // Run Moira
-    int64_t cycles = moiracpu->getClock();
-    now = clock();
-    moiracpu->execute();
-    moclk += clock() - now;
-
-    // Record the result
-    mor.cycles = (int)(moiracpu->getClock() - cycles);
-    mor.pc = moiracpu->getPC();
-    mor.sr = moiracpu->getSR();
-    for (int i = 0; i < 8; i++) mor.d[i] = moiracpu->getD(i);
-    for (int i = 0; i < 8; i++) mor.a[i] = moiracpu->getA(i);
+    moclk += runMoira(s, mor);
 
     // Compare
     compare(s, mur, mor);
+}
+
+clock_t runMusashi(Setup &s, Result &r)
+{
+    clock_t elapsed = clock();
+    r.cycles = m68k_execute(1);
+    elapsed = clock() - elapsed;
+
+    // Record the result
+    r.pc = m68k_get_reg(NULL, M68K_REG_PC);
+    r.sr = m68k_get_reg(NULL, M68K_REG_SR);
+    r.usp = m68k_get_reg(NULL, M68K_REG_USP);
+    r.ssp = m68k_get_reg(NULL, M68K_REG_ISP);
+    for (int i = 0; i < 8; i++) {
+        r.d[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_D0 + i));
+        r.a[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_A0 + i));
+    }
+
+    // Post-process the result to make it comparable with Moira
+
+    return elapsed;
+}
+
+clock_t runMoira(Setup &s, Result &r)
+{
+    int64_t cycles = moiracpu->getClock();
+
+    clock_t now = clock();
+    moiracpu->execute();
+    clock_t elapsed = clock() - now;
+
+    // Record the result
+    r.cycles = (int)(moiracpu->getClock() - cycles);
+    r.pc = moiracpu->getPC();
+    r.sr = moiracpu->getSR();
+    for (int i = 0; i < 8; i++) r.d[i] = moiracpu->getD(i);
+    for (int i = 0; i < 8; i++) r.a[i] = moiracpu->getA(i);
+
+    return elapsed;
 }
 
 void dumpSetup(Setup &s)

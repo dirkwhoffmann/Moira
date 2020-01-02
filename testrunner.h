@@ -96,14 +96,23 @@ void resetMoira(Setup &s);
 //
 
 void run();
+
+void runDasmTest(Setup &s);
 void runSingleTest(Setup &s);
+
+clock_t runMusashi(Setup &s, Result &r);
+clock_t runMoira(Setup &s, Result &r);
 
 //
 // Analysing a test result
 //
 
-void dumpSetup(Setup &s);
-void dumpResult(Result &r);
+void recordMusashiResult(Result &r);
+void recordMoiraResult(Result &r);
+
+// void dumpSetup(Setup &s);
+// void dumpResult(Result &r);
+
 void compare(Setup &s, Result &r1, Result &r2);
 bool compareD(Setup &s, Result &r1, Result &r2);
 bool compareA(Setup &s, Result &r1, Result &r2);
@@ -113,6 +122,7 @@ bool compareIRD(Setup &s, Result &r1, Result &r2);
 bool compareIRC(Setup &s, Result &r1, Result &r2);
 bool compareCycles(Setup &s, Result &r1, Result &r2);
 void compare(int c1, int c2, char *s1, char *s2);
+
 void bugReport();
 
 #endif
