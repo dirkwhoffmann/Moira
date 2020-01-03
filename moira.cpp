@@ -24,8 +24,7 @@ u8
 Moira::read8(u32 addr)
 {
     if (MUSASHI) {
-        assert(get8(moiraMem, addr) == mem[addr & 0xFFFF]);
-        return mem[addr & 0xFFFF];
+        return get8(moiraMem, addr);
     } else {
         return sandbox.replayPeek(PEEK8, addr, getClock());
     }
@@ -35,8 +34,7 @@ u16
 Moira::read16(u32 addr)
 {
     if (MUSASHI) {
-        assert(get16(moiraMem, addr) == mem[addr & 0xFFFF] << 8 | mem[(addr + 1) & 0xFFFF]);
-        return mem[addr & 0xFFFF] << 8 | mem[(addr + 1) & 0xFFFF];
+        return get16(moiraMem, addr);
     } else {
         return sandbox.replayPeek(PEEK16, addr, moiracpu->getClock());
     }
@@ -46,7 +44,7 @@ u16
 Moira::read16Dasm(u32 addr)
 {
     assert(MUSASHI);
-    return mem[addr & 0xFFFF] << 8 | mem[(addr + 1) & 0xFFFF];
+    return get16(moiraMem, addr);
 }
 
 u16
@@ -59,7 +57,7 @@ Moira::read16OnReset(u32 addr)
             case 4: return 0x0000;
             case 6: return 0x1000;
         }
-        return mem[addr & 0xFFFF] << 8 | mem[(addr + 1) & 0xFFFF];
+        return get16(moiraMem, addr);
     } else {
         return sandbox.replayPeek(PEEK16, addr, getClock());
     }
@@ -69,12 +67,14 @@ void
 Moira::write8(u32 addr, u8  val)
 {
     sandbox.replayPoke(POKE8, addr, getClock(), val);
+    set8(moiraMem, addr, val);
 }
 
 void
 Moira::write16 (u32 addr, u16 val)
 {
     sandbox.replayPoke(POKE16, addr, moiracpu->getClock(), val);
+    set16(moiraMem, addr, val);
 }
 
 u8

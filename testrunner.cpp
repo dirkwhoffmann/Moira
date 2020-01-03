@@ -313,6 +313,7 @@ void compare(Setup &s, Result &r1, Result &r2)
         printf("\n\nADDRESS REGISTER MISMATCH FOUND\n");
         error = true;
     }
+    /*
     if (!compareIRD(s, r1, r2)) {
         printf("\n\nWRONG IRD VALUE: %x\n", moiracpu->getIRD());
         error = true;
@@ -321,6 +322,7 @@ void compare(Setup &s, Result &r1, Result &r2)
         printf("\n\nWRONG IRC VALUE: %x\n", moiracpu->getIRC());
         error = true;
     }
+    */
 
     error |= (sandbox.getErrors() != 0);
 
