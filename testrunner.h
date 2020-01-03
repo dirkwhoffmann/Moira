@@ -45,17 +45,19 @@ extern uint8_t moiraMem[0x10000];
 extern Sandbox sandbox;
 
 inline u8 get8(u8 *p, u32 addr) {
-    return mem[addr & 0xFFFF]; }
+    return p[addr & 0xFFFF]; }
 inline u16 get16(u8 *p, u32 addr) {
     return get8(p, addr) << 8 | get8(p, addr + 1); }
 inline void set8(u8 *p, u32 addr, u8 val) {
-    mem[addr & 0xFFFF] = val; }
+    p[addr & 0xFFFF] = val; }
 inline void set16(u8 *p, u32 addr, u16 val) {
     set8(p, addr, val >> 8); set8(p, addr + 1, val & 0xFF); }
 
+/*
 inline u32 memHi(u32 addr) { return mem[addr & 0xFFFF]; }
 inline u32 memLo(u32 addr) { return mem[(addr + 1) & 0xFFFF]; }
 inline u32 memWord(u32 addr) { return memHi(addr) << 8 | memLo(addr); }
+*/
 
 // A test setup
 struct Setup {

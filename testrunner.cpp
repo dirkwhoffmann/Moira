@@ -194,7 +194,7 @@ clock_t runMusashi(Setup &s, Result &r)
 {
     clock_t elapsed = 0;
     u32 pc = m68k_get_reg(NULL, M68K_REG_PC);
-    u16 op = memWord(pc);
+    u16 op = get16(mem, pc);
     moira::Instr i = moiracpu->getInfo(op).I;
 
     // Skip some instructions that are likely to be broken in Musashi
@@ -233,7 +233,7 @@ clock_t runMoira(Setup &s, Result &r)
 {
     clock_t elapsed = 0;
     u32 pc = moiracpu->getPC();
-    u16 op = memWord(pc);
+    u16 op = get16(mem, pc);
     moira::Instr i = moiracpu->getInfo(op).I;
 
     // Skip some instructions that are likely to be broken in Musashi
@@ -386,7 +386,7 @@ bool compareIRD(Setup &s, Result &r1, Result &r2)
     // Exclude STOP command which doesn't perform a prefetch
     if (moiracpu->getInfo(s.opcode).I == moira::STOP) return true;
 
-    return moiracpu->getIRD() == memWord(r2.pc);
+    return moiracpu->getIRD() == get16(moiraMem, r2.pc);
 }
 
 bool compareIRC(Setup &s, Result &r1, Result &r2)
@@ -394,7 +394,7 @@ bool compareIRC(Setup &s, Result &r1, Result &r2)
     // Exclude STOP command which doesn't perform a prefetch
     if (moiracpu->getInfo(s.opcode).I == moira::STOP) return true;
 
-    return moiracpu->getIRC() == memWord(r2.pc + 2);
+    return moiracpu->getIRC() == get16(moiraMem, r2.pc + 2);
 }
 
 bool compareCycles(Setup &s, Result &r1, Result &r2)
