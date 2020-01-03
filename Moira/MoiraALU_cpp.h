@@ -504,9 +504,9 @@ Moira::cyclesBit(u8 bit)
     switch (I)
     {
         case BTST: return 2;
-        case BCLR: return (bit > 15 ? 6 : 4);
+        case BCLR: return MIMIC_MUSASHI ? 6 : (bit > 15 ? 6 : 4);
         case BSET:
-        case BCHG: return (bit > 15 ? 4 : 2);
+        case BCHG: return MIMIC_MUSASHI ? 4 : (bit > 15 ? 4 : 2);
     }
 
     assert(false);
