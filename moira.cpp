@@ -24,6 +24,7 @@ u8
 Moira::read8(u32 addr)
 {
     if (MUSASHI) {
+        assert(get8(moiraMem, addr) == mem[addr & 0xFFFF]);
         return mem[addr & 0xFFFF];
     } else {
         return sandbox.replayPeek(PEEK8, addr, getClock());
@@ -34,6 +35,7 @@ u16
 Moira::read16(u32 addr)
 {
     if (MUSASHI) {
+        assert(get16(moiraMem, addr) == mem[addr & 0xFFFF] << 8 | mem[(addr + 1) & 0xFFFF]);
         return mem[addr & 0xFFFF] << 8 | mem[(addr + 1) & 0xFFFF];
     } else {
         return sandbox.replayPeek(PEEK16, addr, moiracpu->getClock());

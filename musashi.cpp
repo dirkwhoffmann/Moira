@@ -12,6 +12,7 @@
 extern "C" unsigned int m68k_read_memory_8(unsigned int addr)
 {
     int result = mem[addr & 0xFFFF];
+    assert(result == get8(musashiMem, addr));
     return result;
 }
 
@@ -20,6 +21,7 @@ extern "C" unsigned int m68k_read_memory_16(unsigned int addr)
     int hi = mem[addr & 0xFFFF];
     int lo = mem[(addr + 1) & 0xFFFF];
     int result = hi << 8 | lo;
+    assert(result == get16(musashiMem, addr));
 
     return result;
 }
@@ -29,7 +31,7 @@ extern "C" unsigned int m68k_read_memory_32(unsigned int addr)
     int hi = m68k_read_memory_16(addr);
     int lo = m68k_read_memory_16(addr + 2);
     int result = hi << 16 | lo;
-    
+
     return result;
 }
 

@@ -12,6 +12,8 @@
 moira::Moira *moiracpu;
 Tester_68k *tester;
 uint8_t mem[0x10000];
+uint8_t musashiMem[0x10000];
+uint8_t moiraMem[0x10000];
 Sandbox sandbox;
 
 uint32 smartRandom()
@@ -73,6 +75,7 @@ void setupInstruction(Setup &s, uint32_t pc, uint16_t opcode)
 void resetMusashi(Setup &s)
 {
     memcpy(mem, s.mem, sizeof(mem));
+    memcpy(musashiMem, s.mem, sizeof(musashiMem));
 
     m68k_set_reg(M68K_REG_USP, 0);
     m68k_set_reg(M68K_REG_ISP, 0);
@@ -93,6 +96,7 @@ void resetMusashi(Setup &s)
 void resetMoira(Setup &s)
 {
     memcpy(mem, s.mem, sizeof(mem));
+    memcpy(moiraMem, s.mem, sizeof(moiraMem));
 
     moiracpu->reset();
 
