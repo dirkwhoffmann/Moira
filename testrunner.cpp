@@ -177,7 +177,7 @@ clock_t runMusashi(int i, Setup &s, Result &r)
 
     r.oldpc = m68k_get_reg(NULL, M68K_REG_PC);
     r.opcode = get16(musashiMem, r.oldpc);
-    m68k_disassemble(r.str, r.oldpc, M68K_CPU_TYPE_68000);
+    r.dasmCnt = m68k_disassemble(r.dasm, r.oldpc, M68K_CPU_TYPE_68000);
 
     moira::Instr instr = moiracpu->getInfo(r.opcode).I;
 
@@ -193,7 +193,7 @@ clock_t runMusashi(int i, Setup &s, Result &r)
     if (!skip) {
         
         if (VERBOSE)
-            printf("%d: $%04x ($%04x): %s (Musashi)\n", i, r.oldpc, r.opcode, r.str);
+            printf("%d: $%04x ($%04x): %s (Musashi)\n", i, r.oldpc, r.opcode, r.dasm);
 
         elapsed = clock();
         r.cycles = m68k_execute(1);
@@ -215,7 +215,7 @@ clock_t runMoira(int i, Setup &s, Result &r)
 
     r.oldpc = moiracpu->getPC();
     r.opcode = get16(moiraMem, r.oldpc);
-    moiracpu->disassemble(r.oldpc, r.str);
+    r.dasmCnt = moiracpu->disassemble(r.oldpc, r.dasm);
 
     u32 pc = moiracpu->getPC();
     u16 op = get16(moiraMem, pc);
@@ -234,7 +234,7 @@ clock_t runMoira(int i, Setup &s, Result &r)
     if (!skip) {
 
         if (VERBOSE)
-            printf("%d: $%04x ($%04x): %s (Moira)\n", i, r.oldpc, r.opcode, r.str);
+            printf("%d: $%04x ($%04x): %s (Moira)\n", i, r.oldpc, r.opcode, r.dasm);
 
         elapsed = clock();
         moiracpu->execute();
@@ -310,47 +310,45 @@ void compare(Setup &s, Result &r1, Result &r2)
         printf("\nDISASSEMBLER MISMATCH FOUND");
         error = true;
     }
-    if (!comparePC(s, r1, r2)) {
+    if (!comparePC(r1, r2)) {
         printf("\nPROGRAM COUNTER MISMATCH FOUND");
         error = true;
     }
-    if (!compareSR(s, r1, r2)) {
+    if (!compareSR(r1, r2)) {
         printf("\nSTATUS REGISTER MISMATCH FOUND");
         error = true;
     }
-    if (!compareSP(s, r1, r2)) {
+    if (!compareSP(r1, r2)) {
         printf("\nSTACK POINTER MISMATCH FOUND");
         error = true;
     }
-    if (!compareCycles(s, r1, r2)) {
+    if (!compareCycles(r1, r2)) {
         printf("\nCLOCK MISMATCH FOUND");
         error = true;
     }
-    if (!compareD(s, r1, r2)) {
+    if (!compareD(r1, r2)) {
         printf("\nDATA REGISTER MISMATCH FOUND");
         error = true;
     }
-    if (!compareA(s, r1, r2)) {
+    if (!compareA(r1, r2)) {
         printf("\nADDRESS REGISTER MISMATCH FOUND");
         error = true;
     }
-    /*
-    if (!compareIRD(s, r1, r2)) {
+    if (!compareIRD(r1, r2)) {
         printf("\n\nWRONG IRD VALUE: %x\n", moiracpu->getIRD());
         error = true;
     }
-    if (!compareIRC(s, r1, r2)) {
+    if (!compareIRC(r1, r2)) {
         printf("\n\nWRONG IRC VALUE: %x\n", moiracpu->getIRC());
         error = true;
     }
-    */
 
     error |= (sandbox.getErrors() != 0);
 
     if (error) {
 
-        printf("\n\nInstruction: %s (Musashi)", r1.str);
-        printf(  "\n             %s (Moira)\n\n", r2.str);
+        printf("\n\nInstruction: %s (Musashi)", r1.dasm);
+        printf(  "\n             %s (Moira)\n\n", r2.dasm);
 
         printf("Setup:   ");
         dumpSetup(s);
@@ -367,10 +365,11 @@ void compare(Setup &s, Result &r1, Result &r2)
 
 bool compareDasm(Result &r1, Result &r2)
 {
-    return strcmp(r1.str, r2.str) == 0;
+    if (r1.dasmCnt != r2.dasmCnt) return false;
+    return strcmp(r1.dasm, r2.dasm) == 0;
 }
 
-bool compareD(Setup &s, Result &r1, Result &r2)
+bool compareD(Result &r1, Result &r2)
 {
     assert(r1.opcode == r2.opcode);
     moira::Instr instr = moiracpu->getInfo(r1.opcode).I;
@@ -384,18 +383,18 @@ bool compareD(Setup &s, Result &r1, Result &r2)
     return true;
 }
 
-bool compareA(Setup &s, Result &r1, Result &r2)
+bool compareA(Result &r1, Result &r2)
 {
     for (int i = 0; i < 8; i++) if (r1.a[i] != r2.a[i]) return false;
     return true;
 }
 
-bool comparePC(Setup &s, Result &r1, Result &r2)
+bool comparePC(Result &r1, Result &r2)
 {
     return r1.pc == r2.pc;
 }
 
-bool compareSR(Setup &s, Result &r1, Result &r2)
+bool compareSR(Result &r1, Result &r2)
 {
     assert(r1.opcode == r2.opcode);
     moira::Instr instr = moiracpu->getInfo(r1.opcode).I;
@@ -408,7 +407,7 @@ bool compareSR(Setup &s, Result &r1, Result &r2)
     return r1.sr == r2.sr;
 }
 
-bool compareSP(Setup &s, Result &r1, Result &r2)
+bool compareSP(Result &r1, Result &r2)
 {
     if (r1.ssp != r2.ssp) return false;
     if (r1.usp != r2.usp) return false;
@@ -416,7 +415,7 @@ bool compareSP(Setup &s, Result &r1, Result &r2)
     return true;
 }
 
-bool compareIRD(Setup &s, Result &r1, Result &r2)
+bool compareIRD(Result &r1, Result &r2)
 {
     assert(r1.opcode == r2.opcode);
 
@@ -426,7 +425,7 @@ bool compareIRD(Setup &s, Result &r1, Result &r2)
     return moiracpu->getIRD() == get16(moiraMem, r2.pc);
 }
 
-bool compareIRC(Setup &s, Result &r1, Result &r2)
+bool compareIRC(Result &r1, Result &r2)
 {
     // Exclude STOP command which doesn't perform a prefetch
     if (moiracpu->getInfo(r1.opcode).I == moira::STOP) return true;
@@ -434,7 +433,7 @@ bool compareIRC(Setup &s, Result &r1, Result &r2)
     return moiracpu->getIRC() == get16(moiraMem, r2.pc + 2);
 }
 
-bool compareCycles(Setup &s, Result &r1, Result &r2)
+bool compareCycles(Result &r1, Result &r2)
 {
     assert(r1.opcode == r2.opcode);
     moira::Instr instr = moiracpu->getInfo(r1.opcode).I;
@@ -451,19 +450,6 @@ bool compareCycles(Setup &s, Result &r1, Result &r2)
         instr == moira::TAS) return true;
 
     return r1.cycles == r2.cycles;
-}
-
-void compare(int c1, int c2, char *s1, char *s2)
-{
-    if (c1 != c2 || strcmp(s1, s2) != 0) {
-
-        printf("\nDISASSEMBLER MISMATCH FOUND:\n\n");
-        printf("    Musashi: %s\n", s1);
-        printf("      Moira: %s\n", s2);
-        printf("      Bytes: %d / %d\n\n", c1, c2);
-
-        bugReport();
-    }
 }
 
 void bugReport()

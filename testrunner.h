@@ -70,7 +70,7 @@ struct Setup {
 // A test result
 struct Result {
 
-    char str[64];
+    uint16_t dasmResult;
     uint32_t oldpc;
     uint16_t opcode;
     uint32_t pc;
@@ -79,7 +79,7 @@ struct Result {
     uint32_t d[8];
     uint32_t a[8];
     uint16_t sr;
-    char dasm[128];
+    char dasm[64];
     int dasmCnt;
     int cycles;
 };
@@ -123,15 +123,14 @@ void recordMoiraRegisters(Result &r);
 
 void compare(Setup &s, Result &r1, Result &r2);
 bool compareDasm(Result &r1, Result &r2);
-bool compareD(Setup &s, Result &r1, Result &r2);
-bool compareA(Setup &s, Result &r1, Result &r2);
-bool comparePC(Setup &s, Result &r1, Result &r2);
-bool compareSR(Setup &s, Result &r1, Result &r2);
-bool compareSP(Setup &s, Result &r1, Result &r2);
-bool compareIRD(Setup &s, Result &r1, Result &r2);
-bool compareIRC(Setup &s, Result &r1, Result &r2);
-bool compareCycles(Setup &s, Result &r1, Result &r2);
-void compare(int c1, int c2, char *s1, char *s2);
+bool compareD(Result &r1, Result &r2);
+bool compareA(Result &r1, Result &r2);
+bool comparePC(Result &r1, Result &r2);
+bool compareSR(Result &r1, Result &r2);
+bool compareSP(Result &r1, Result &r2);
+bool compareIRD(Result &r1, Result &r2);
+bool compareIRC(Result &r1, Result &r2);
+bool compareCycles(Result &r1, Result &r2);
 
 void bugReport();
 
