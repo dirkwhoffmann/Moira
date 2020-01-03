@@ -67,7 +67,7 @@ void createTestCase(Setup &s)
 void setupInstruction(Setup &s, uint32_t pc, uint16_t opcode)
 {
     s.pc = pc;
-    s.opcode = opcode;
+    // s.opcode = opcode;
 
     set16(s.mem, pc, opcode);
     set16(s.mem, pc + 2, s.ext1);
@@ -136,9 +136,6 @@ void run()
             // Prepare the test case with the selected instruction
             setupInstruction(setup, pc, opcode);
 
-            // Test the disassembler
-            runDasmTest(setup);
-
             // Reset the sandbox (memory accesses observer)
             sandbox.prepare();
 
@@ -149,19 +146,6 @@ void run()
         printf(" PASSED (Musashi: %.2fs Moira: %.2fs)\n",
                muclk / double(CLOCKS_PER_SEC),
                moclk / double(CLOCKS_PER_SEC));
-    }
-}
-
-void runDasmTest(Setup &s)
-{
-    if (TEST_DASM) {
-
-        int muc, moc;
-        char mus[128], mos[128];
-
-        muc = m68k_disassemble(mus, s.pc, M68K_CPU_TYPE_68000);
-        moc = moiracpu->disassemble(s.pc, mos);
-        compare(muc, moc, mus, mos);
     }
 }
 
@@ -190,9 +174,12 @@ void runSingleTest(Setup &s)
 clock_t runMusashi(int i, Setup &s, Result &r)
 {
     clock_t elapsed = 0;
-    u32 pc = m68k_get_reg(NULL, M68K_REG_PC);
-    u16 op = get16(musashiMem, pc);
-    moira::Instr instr = moiracpu->getInfo(op).I;
+
+    r.oldpc = m68k_get_reg(NULL, M68K_REG_PC);
+    r.opcode = get16(musashiMem, r.oldpc);
+    m68k_disassemble(r.str, r.oldpc, M68K_CPU_TYPE_68000);
+
+    moira::Instr instr = moiracpu->getInfo(r.opcode).I;
 
     // Skip some instructions that are likely to be broken in Musashi
     bool skip =
@@ -204,12 +191,9 @@ clock_t runMusashi(int i, Setup &s, Result &r)
     instr == moira::LINE_F;
 
     if (!skip) {
-
-        if (VERBOSE) {
-            char str[128];
-            m68k_disassemble(str, pc, M68K_CPU_TYPE_68000);
-            printf("%d: $%04x ($%04x): %s (Musashi)\n", i, pc, op, str);
-        }
+        
+        if (VERBOSE)
+            printf("%d: $%04x ($%04x): %s (Musashi)\n", i, r.oldpc, r.opcode, r.str);
 
         elapsed = clock();
         r.cycles = m68k_execute(1);
@@ -220,7 +204,6 @@ clock_t runMusashi(int i, Setup &s, Result &r)
     }
 
     // Record the result
-    r.opcode = op;
     recordMusashiRegisters(r);
 
     return elapsed;
@@ -229,6 +212,11 @@ clock_t runMusashi(int i, Setup &s, Result &r)
 clock_t runMoira(int i, Setup &s, Result &r)
 {
     clock_t elapsed = 0;
+
+    r.oldpc = moiracpu->getPC();
+    r.opcode = get16(moiraMem, r.oldpc);
+    moiracpu->disassemble(r.oldpc, r.str);
+
     u32 pc = moiracpu->getPC();
     u16 op = get16(moiraMem, pc);
     moira::Instr instr = moiracpu->getInfo(op).I;
@@ -245,11 +233,8 @@ clock_t runMoira(int i, Setup &s, Result &r)
     int64_t cycles = moiracpu->getClock();
     if (!skip) {
 
-        if (VERBOSE) {
-             char str[128];
-             moiracpu->disassemble(pc, str);
-             printf("%d: $%04x ($%04x): %s (Moira)\n", i, pc, op, str);
-         }
+        if (VERBOSE)
+            printf("%d: $%04x ($%04x): %s (Moira)\n", i, r.oldpc, r.opcode, r.str);
 
         elapsed = clock();
         moiracpu->execute();
@@ -258,6 +243,7 @@ clock_t runMoira(int i, Setup &s, Result &r)
 
     // Record the result
     r.cycles = (int)(moiracpu->getClock() - cycles);
+    r.oldpc = pc;
     r.opcode = op;
     recordMoiraRegisters(r);
 
@@ -300,7 +286,8 @@ void dumpSetup(Setup &s)
 
 void dumpResult(Result &r)
 {
-    printf("PC: %4x ", r.pc);
+    printf("Old PC: %4x (opcode %x)", r.oldpc, r.opcode);
+    printf("New PC: %4x ", r.pc);
     printf("SR: %2x ", r.sr);
     printf("SSP: %2x ", r.ssp);
     printf("USP: %2x ", r.usp);
@@ -317,8 +304,12 @@ void dumpResult(Result &r)
 void compare(Setup &s, Result &r1, Result &r2)
 {
     bool error = false;
-    char str[128];
+    char mus[128], mos[128];
 
+    if (!compareDasm(r1, r2)) {
+        printf("\nDISASSEMBLER MISMATCH FOUND");
+        error = true;
+    }
     if (!comparePC(s, r1, r2)) {
         printf("\nPROGRAM COUNTER MISMATCH FOUND");
         error = true;
@@ -358,9 +349,8 @@ void compare(Setup &s, Result &r1, Result &r2)
 
     if (error) {
 
-        moiracpu->disassemble(s.pc, str);
-        printf("\n\nInstruction: %s ", str);
-        printf("(opcode $%x out of $FFFF)\n\n", s.opcode);
+        printf("\n\nInstruction: %s (Musashi)", r1.str);
+        printf(  "\n             %s (Moira)\n\n", r2.str);
 
         printf("Setup:   ");
         dumpSetup(s);
@@ -373,6 +363,11 @@ void compare(Setup &s, Result &r1, Result &r2)
 
         bugReport();
     }
+}
+
+bool compareDasm(Result &r1, Result &r2)
+{
+    return strcmp(r1.str, r2.str) == 0;
 }
 
 bool compareD(Setup &s, Result &r1, Result &r2)

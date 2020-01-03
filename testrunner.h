@@ -29,9 +29,6 @@ extern "C" {
 // Set to true to compare Moira against Musashi
 #define MUSASHI true
 
-// Set to true to compare the disassemblers, too
-#define TEST_DASM true
-
 // Set to true for verbose output
 #define VERBOSE false
 
@@ -62,7 +59,7 @@ struct Setup {
     uint8_t  ccr;
     bool     supervisor;
     uint32_t pc;
-    uint16_t opcode;
+    // uint16_t opcode;
     uint16_t ext1;
     uint16_t ext2;
     uint32_t d[8];
@@ -73,8 +70,10 @@ struct Setup {
 // A test result
 struct Result {
 
-    uint32_t pc;
+    char str[64];
+    uint32_t oldpc;
     uint16_t opcode;
+    uint32_t pc;
     uint32_t usp;
     uint32_t ssp;
     uint32_t d[8];
@@ -110,7 +109,6 @@ void resetMoira(Setup &s);
 
 void run();
 
-void runDasmTest(Setup &s);
 void runSingleTest(Setup &s);
 
 clock_t runMusashi(int i, Setup &s, Result &r);
@@ -124,6 +122,7 @@ void recordMusashiRegisters(Result &r);
 void recordMoiraRegisters(Result &r);
 
 void compare(Setup &s, Result &r1, Result &r2);
+bool compareDasm(Result &r1, Result &r2);
 bool compareD(Setup &s, Result &r1, Result &r2);
 bool compareA(Setup &s, Result &r1, Result &r2);
 bool comparePC(Setup &s, Result &r1, Result &r2);
