@@ -11,7 +11,7 @@
 
 moira::Moira *moiracpu;
 Tester_68k *tester;
-uint8_t mem[0x10000];
+// uint8_t mem[0x10000];
 uint8_t musashiMem[0x10000];
 uint8_t moiraMem[0x10000];
 Sandbox sandbox;
@@ -74,7 +74,6 @@ void setupInstruction(Setup &s, uint32_t pc, uint16_t opcode)
 
 void resetMusashi(Setup &s)
 {
-    memcpy(mem, s.mem, sizeof(mem));
     memcpy(musashiMem, s.mem, sizeof(musashiMem));
 
     m68k_set_reg(M68K_REG_USP, 0);
@@ -95,7 +94,7 @@ void resetMusashi(Setup &s)
 
 void resetMoira(Setup &s)
 {
-    memcpy(mem, s.mem, sizeof(mem));
+    // memcpy(mem, s.mem, sizeof(mem));
     memcpy(moiraMem, s.mem, sizeof(moiraMem));
 
     moiracpu->reset();
@@ -194,7 +193,7 @@ clock_t runMusashi(Setup &s, Result &r)
 {
     clock_t elapsed = 0;
     u32 pc = m68k_get_reg(NULL, M68K_REG_PC);
-    u16 op = get16(mem, pc);
+    u16 op = get16(musashiMem, pc);
     moira::Instr i = moiracpu->getInfo(op).I;
 
     // Skip some instructions that are likely to be broken in Musashi
@@ -233,7 +232,7 @@ clock_t runMoira(Setup &s, Result &r)
 {
     clock_t elapsed = 0;
     u32 pc = moiracpu->getPC();
-    u16 op = get16(mem, pc);
+    u16 op = get16(musashiMem, pc);
     moira::Instr i = moiracpu->getInfo(op).I;
 
     // Skip some instructions that are likely to be broken in Musashi

@@ -11,19 +11,12 @@
 
 extern "C" unsigned int m68k_read_memory_8(unsigned int addr)
 {
-    int result = mem[addr & 0xFFFF];
-    assert(result == get8(musashiMem, addr));
-    return result;
+    return get8(musashiMem, addr);
 }
 
 extern "C" unsigned int m68k_read_memory_16(unsigned int addr)
 {
-    int hi = mem[addr & 0xFFFF];
-    int lo = mem[(addr + 1) & 0xFFFF];
-    int result = hi << 8 | lo;
-    assert(result == get16(musashiMem, addr));
-
-    return result;
+    return get16(musashiMem, addr);
 }
 
 extern "C" unsigned int m68k_read_memory_32(unsigned int addr)
@@ -48,14 +41,13 @@ extern "C" unsigned int m68k_read_disassembler_32 (unsigned int addr)
 extern "C" void m68k_write_memory_8(unsigned int addr, unsigned int value)
 {
     sandbox.record(POKE8, addr & 0xFFFFFF, 0, value);
-    mem[addr & 0xFFFF] = value;
+    set8(musashiMem, addr, value);
 }
 
 extern "C" void m68k_write_memory_16(unsigned int addr, unsigned int value)
 {
-    mem[addr & 0xFFFF] = (value >> 8) & 0xFF;
-    mem[(addr + 1) & 0xFFFF] = value & 0xFF;
     sandbox.record(POKE16, addr & 0xFFFFFF, 0, value);
+    set16(musashiMem, addr, value);
 }
 
 extern "C" void m68k_write_memory_32(unsigned int addr, unsigned int value)
