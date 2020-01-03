@@ -644,6 +644,7 @@ Moira::execChk(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
+    i64 c = clock;
     u32 ea, data, dy;
     if (!readOp<M,S>(src, ea, data)) return;
     dy = readD<S>(dst);
@@ -657,7 +658,7 @@ Moira::execChk(u16 opcode)
 
     if ((i16)dy > (i16)data) {
 
-        sync(4);
+        sync(MIMIC_MUSASHI ? 10 - (int)(clock - c) : 4);
         sr.n = NBIT<S>(dy);
         execTrapException(6);
 
@@ -668,7 +669,7 @@ Moira::execChk(u16 opcode)
 
     if ((i16)dy < 0) {
 
-        sync(4);
+        sync(MIMIC_MUSASHI ? 10 - (int)(clock - c) : 4);
         sr.n = NBIT<S>(dy);
         execTrapException(6);
     }

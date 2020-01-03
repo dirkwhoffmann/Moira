@@ -444,11 +444,8 @@ bool compareCycles(Result &r1, Result &r2)
     assert(r1.opcode == r2.opcode);
     moira::Instr instr = moiracpu->getInfo(r1.opcode).I;
 
-    // Ignore instruction that are wrong in Musashi
-    if (
-        instr == moira::BCHG ||
-        instr == moira::CHK  ||
-        instr == moira::TAS) return true;
+    // Exclude some instructions
+    if (instr == moira::TAS) return true;
 
     return r1.cycles == r2.cycles;
 }
