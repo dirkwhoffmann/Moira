@@ -121,3 +121,7 @@ MOIRA_DECLARE(Trapv);
 MOIRA_DECLARE(Tst);
 
 MOIRA_DECLARE(Unlk);
+
+// Musashi compatibility mode
+template<Instr I, Mode M, Size S> void execMulMusashi(u16 op);
+template<Instr I, Mode M, Size S> void execDivMusashi(u16 op);

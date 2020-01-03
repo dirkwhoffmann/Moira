@@ -876,17 +876,10 @@ Moira::execJsr(u16 opcode)
     u32 oldpc = reg.pc;
     reg.pc = ea;
 
-    if (MIMIC_MUSASHI) {
-        if (addressError<Word>(ea)) return;
-        push<Long>(oldpc);
-        queue.irc = readM<Word>(ea);
-        prefetch<LAST_BUS_CYCLE>();
-    } else {
-        if (addressError<Word>(ea)) return;
-        queue.irc = readM<Word>(ea);
-        push<Long>(oldpc);
-        prefetch<LAST_BUS_CYCLE>();
-    }
+    if (addressError<Word>(ea)) return;
+    queue.irc = readM<Word>(ea);
+    push<Long>(oldpc);
+    prefetch<LAST_BUS_CYCLE>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1362,6 +1355,11 @@ Moira::execMoveAnUsp(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execMul(u16 opcode)
 {
+    if (MIMIC_MUSASHI) {
+        execMulMusashi<I, M, S>(opcode);
+        return;
+    }
+
     u32 ea, data, result;
 
     int src = _____________xxx(opcode);
@@ -1376,8 +1374,31 @@ Moira::execMul(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+Moira::execMulMusashi(u16 op)
+{
+    u32 ea, data, result;
+
+    int src = _____________xxx(op);
+    int dst = ____xxx_________(op);
+
+    if (!readOp<M, Word>(src, ea, data)) return;
+
+    prefetch<LAST_BUS_CYCLE>();
+    result = mulMusashi<I>(data, readD<Word>(dst));
+
+    sync(50);
+    writeD(dst, result);
+}
+
+
+template<Instr I, Mode M, Size S> void
 Moira::execDiv(u16 opcode)
 {
+    if (MIMIC_MUSASHI) {
+        execDivMusashi<I, M, S>(opcode);
+        return;
+    }
+
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
@@ -1394,6 +1415,30 @@ Moira::execDiv(u16 opcode)
 
     u32 dividend = readD(dst);
     result = div<I>(dividend, divisor);
+
+    writeD(dst, result);
+    prefetch<LAST_BUS_CYCLE>();
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::execDivMusashi(u16 opcode)
+{
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    i64 c = clock;
+    u32 ea, divisor, result;
+    if (!readOp<M, Word>(src, ea, divisor)) return;
+
+    // Check for division by zero
+    if (divisor == 0) {
+        sync(8 - (int)(clock - c));
+        execTrapException(5);
+        return;
+    }
+
+    u32 dividend = readD(dst);
+    result = divMusashi<I>(dividend, divisor);
 
     writeD(dst, result);
     prefetch<LAST_BUS_CYCLE>();

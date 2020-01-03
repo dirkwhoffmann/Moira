@@ -590,3 +590,98 @@ Moira::cyclesDiv(u32 op1, u16 op2)
         }
     }
 }
+
+template <Instr I> u32
+Moira::mulMusashi(u32 op1, u32 op2)
+{
+    u32 result;
+
+    switch (I) {
+
+        case MULS:
+        {
+            result = (i16)op1 * (i16)op2;
+            break;
+        }
+        case MULU:
+        {
+            result = op1 * op2;
+            break;
+        }
+        default: assert(false);
+    }
+
+    sr.n = NBIT<Long>(result);
+    sr.z = ZERO<Long>(result);
+    sr.v = 0;
+    sr.c = 0;
+
+    return result;
+}
+
+template <Instr I> u32
+Moira::divMusashi(u32 op1, u32 op2)
+{
+    u32 result;
+
+    switch (I) {
+
+        case DIVS:
+        {
+            sync(154);
+
+            if (op1 == 0x80000000 && (i32)op2 == -1) {
+
+                sr.z = 0;
+                sr.n = 0;
+                sr.v = 0;
+                sr.c = 0;
+                result = 0;
+                break;
+            }
+
+            i64 quotient  = (i64)(i32)op1 / (i16)op2;
+            i16 remainder = (i64)(i32)op1 % (i16)op2;
+
+            if (quotient == (i16)quotient) {
+
+                sr.z = quotient;
+                sr.n = NBIT<Word>(quotient);
+                sr.v = 0;
+                sr.c = 0;
+                result = (quotient & 0xffff) | remainder << 16;
+
+            } else {
+
+                result = op1;
+                sr.v = 1;
+            }
+            break;
+        }
+        case DIVU:
+        {
+            sync(136);
+
+            i64 quotient  = op1 / op2;
+            u16 remainder = op1 % op2;
+
+            if(quotient < 0x10000) {
+
+                sr.z = quotient;
+                sr.n = NBIT<Word>(quotient);
+                sr.v = 0;
+                sr.c = 0;
+
+                result = (quotient & 0xffff) | remainder << 16;
+
+            } else {
+
+                result = op1;
+                sr.v = 1;
+            }
+            break;
+        }
+    }
+
+    return result;
+}
