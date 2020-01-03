@@ -70,12 +70,13 @@ void setupInstruction(Setup &s, uint32_t pc, uint16_t opcode)
 
     s.mem[pc] = opcode >> 8;
     s.mem[pc + 1] = opcode & 0xFF;
+
+    memcpy(musashiMem, s.mem, sizeof(musashiMem));
+    memcpy(moiraMem, s.mem, sizeof(moiraMem));
 }
 
 void resetMusashi(Setup &s)
 {
-    memcpy(musashiMem, s.mem, sizeof(musashiMem));
-
     m68k_set_reg(M68K_REG_USP, 0);
     m68k_set_reg(M68K_REG_ISP, 0);
     m68k_set_reg(M68K_REG_MSP, 0);
@@ -94,9 +95,6 @@ void resetMusashi(Setup &s)
 
 void resetMoira(Setup &s)
 {
-    // memcpy(mem, s.mem, sizeof(mem));
-    memcpy(moiraMem, s.mem, sizeof(moiraMem));
-
     moiracpu->reset();
 
     for (int i = 0; i < 8; i++) {
