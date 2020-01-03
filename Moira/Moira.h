@@ -221,11 +221,11 @@ public:
     u32 getSP() { return reg.sp; }
     void setSP(u32 val) { reg.sp = val; }
 
-    u32 getSSP() { return reg.ssp; }
-    void setSSP(u32 val) { reg.ssp = val; }
+    u32 getSSP() { return sr.s ? reg.sp : reg.ssp; }
+    void setSSP(u32 val) { if (sr.s) reg.sp = val; else reg.ssp = val; }
 
-    u32 getUSP() { return reg.usp; }
-    void setUSP(u32 val) { reg.usp = val; }
+    u32 getUSP() { return sr.s ? reg.usp : reg.sp; }
+    void setUSP(u32 val) { if (sr.s) reg.usp = val; else reg.sp = val; }
 
     void setSupervisorMode(bool enable);
 
@@ -247,7 +247,7 @@ private:
     // Selects the IRQ vector to branch to
     int getIrqVector(int level);
 
-    
+
 private:
 
     #include "MoiraInit.h"

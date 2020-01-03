@@ -876,10 +876,17 @@ Moira::execJsr(u16 opcode)
     u32 oldpc = reg.pc;
     reg.pc = ea;
 
-    if (addressError<Word>(ea)) return;
-    queue.irc = readM<Word>(ea);
-    push<Long>(oldpc);
-    prefetch<LAST_BUS_CYCLE>();
+    if (MIMIC_MUSASHI) {
+        if (addressError<Word>(ea)) return;
+        push<Long>(oldpc);
+        queue.irc = readM<Word>(ea);
+        prefetch<LAST_BUS_CYCLE>();
+    } else {
+        if (addressError<Word>(ea)) return;
+        queue.irc = readM<Word>(ea);
+        push<Long>(oldpc);
+        prefetch<LAST_BUS_CYCLE>();
+    }
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1339,7 +1346,7 @@ Moira::execMoveUspAn(u16 opcode)
 
     int an = _____________xxx(opcode);
     prefetch<LAST_BUS_CYCLE>();
-    writeA(an, reg.usp);
+    writeA(an, getUSP());
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1349,7 +1356,7 @@ Moira::execMoveAnUsp(u16 opcode)
 
     int an = _____________xxx(opcode);
     prefetch<LAST_BUS_CYCLE>();
-    reg.usp = readA(an);
+    setUSP(readA(an));
 }
 
 template<Instr I, Mode M, Size S> void
