@@ -220,7 +220,8 @@ clock_t runMusashi(int i, Setup &s, Result &r)
     }
 
     // Record the result
-     recordMusashiRegisters(r);
+    r.opcode = op;
+    recordMusashiRegisters(r);
 
     return elapsed;
 }
@@ -257,6 +258,7 @@ clock_t runMoira(int i, Setup &s, Result &r)
 
     // Record the result
     r.cycles = (int)(moiracpu->getClock() - cycles);
+    r.opcode = op;
     recordMoiraRegisters(r);
 
     return elapsed;
@@ -375,7 +377,8 @@ void compare(Setup &s, Result &r1, Result &r2)
 
 bool compareD(Setup &s, Result &r1, Result &r2)
 {
-    moira::Instr instr = moiracpu->getInfo(s.opcode).I;
+    assert(r1.opcode == r2.opcode);
+    moira::Instr instr = moiracpu->getInfo(r1.opcode).I;
     if (instr == moira::DIVU || instr == moira::DIVS)
     {
         // Musashi differs in some corner cases
@@ -399,7 +402,8 @@ bool comparePC(Setup &s, Result &r1, Result &r2)
 
 bool compareSR(Setup &s, Result &r1, Result &r2)
 {
-    moira::Instr instr = moiracpu->getInfo(s.opcode).I;
+    assert(r1.opcode == r2.opcode);
+    moira::Instr instr = moiracpu->getInfo(r1.opcode).I;
     if (instr == moira::DIVU || instr == moira::DIVS) {
 
         // Musashi differs (and is likely wrong). Ignore it
@@ -419,8 +423,10 @@ bool compareSP(Setup &s, Result &r1, Result &r2)
 
 bool compareIRD(Setup &s, Result &r1, Result &r2)
 {
+    assert(r1.opcode == r2.opcode);
+
     // Exclude STOP command which doesn't perform a prefetch
-    if (moiracpu->getInfo(s.opcode).I == moira::STOP) return true;
+    if (moiracpu->getInfo(r1.opcode).I == moira::STOP) return true;
 
     return moiracpu->getIRD() == get16(moiraMem, r2.pc);
 }
@@ -428,14 +434,15 @@ bool compareIRD(Setup &s, Result &r1, Result &r2)
 bool compareIRC(Setup &s, Result &r1, Result &r2)
 {
     // Exclude STOP command which doesn't perform a prefetch
-    if (moiracpu->getInfo(s.opcode).I == moira::STOP) return true;
+    if (moiracpu->getInfo(r1.opcode).I == moira::STOP) return true;
 
     return moiracpu->getIRC() == get16(moiraMem, r2.pc + 2);
 }
 
 bool compareCycles(Setup &s, Result &r1, Result &r2)
 {
-    moira::Instr instr = moiracpu->getInfo(s.opcode).I;
+    assert(r1.opcode == r2.opcode);
+    moira::Instr instr = moiracpu->getInfo(r1.opcode).I;
 
     // Ignore instruction that are wrong in Musashi
     if (instr == moira::MULS ||

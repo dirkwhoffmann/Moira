@@ -74,6 +74,7 @@ struct Setup {
 struct Result {
 
     uint32_t pc;
+    uint16_t opcode;
     uint32_t usp;
     uint32_t ssp;
     uint32_t d[8];
