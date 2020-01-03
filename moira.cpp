@@ -77,12 +77,10 @@ Moira::write16 (u32 addr, u16 val)
     set16(moiraMem, addr, val);
 }
 
-u8
-Moira::readIPL()
+void
+Moira::willPollIrq()
 {
-    if (MUSASHI) {
-        return 0;
-    } else {
-        return sandbox.replayPoll(getClock());
+    if (!MUSASHI) {
+        (void)sandbox.replayPoll(getClock());
     }
 }

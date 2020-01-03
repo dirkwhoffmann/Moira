@@ -160,8 +160,8 @@ private:
     void write8  (u32 addr, u8  val);
     void write16 (u32 addr, u16 val);
 
-    // Reads the current interrupt level from the IPL pins
-    u8 readIPL(); // DEPRECATED
+    // Called by Moira before the IPL lines are polled
+    void willPollIrq();
 
     // Provides the interrupt level in IRQ_USER mode
     int readIrqUserVector(u8 level) { return 0; }
@@ -242,7 +242,7 @@ public:
 private:
 
     // Polls the IPL pins
-    void pollIrq() { reg.ipl = ipl; }
+    void pollIrq() { willPollIrq(); reg.ipl = ipl; }
     
     // Selects the IRQ vector to branch to
     int getIrqVector(int level);
