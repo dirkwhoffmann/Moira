@@ -37,7 +37,7 @@ Moira::saveToStackDetailed(u16 sr, u32 addr, u16 code)
     // Push SR and IRD
     push<Word>(sr);
     push<Word>(queue.ird);
-    
+
     // Push address
     push<Word>((u16)addr);
     push<Word>(addr >> 16);
@@ -79,7 +79,7 @@ Moira::execAddressError(u32 addr)
     sync(8);
     saveToStackDetailed(getSR(), addr, code);
     sync(2);
-    
+
     jumpToVector(3);
 }
 
@@ -122,10 +122,15 @@ Moira::execIllegal(u16 opcode)
     setSupervisorMode(true);
     sr.t = 0;
 
+    // Illegal instructions are detected during instructon decoding.
+    // At that time, the progam counter hasn't advanced yet.
+    reg.pc -= 2;
+
     // Write exception information to stack
     sync(4);
     saveToStackBrief(status);
 
+    reg.pc += 2;
     jumpToVector(4);
 }
 
@@ -169,6 +174,9 @@ Moira::execIrqException(int level)
 
     // Remember the current value of the status register
     u16 status = getSR();
+
+    // Recover from stop state
+    flags &= ~FLAG_STOP;
 
     // Clear the polled IPL value
     reg.ipl = 0;
@@ -313,7 +321,6 @@ Moira::execAdda(u16 opcode)
 
     sync(2);
     if (S == Word || isRegMode(M) || isImmMode(M)) sync(2);
-    // if (S == Word || !isMemMode(M)) sync(2); 
     writeA(dst, result);
 }
 
@@ -466,7 +473,7 @@ Moira::execAndiRg(u16 opcode)
 {
     u32 src = readI<S>();
     int dst = _____________xxx(opcode);
-    
+
     u32 result = logic<I,S>(src, readD<S>(dst));
     prefetch<LAST_BUS_CYCLE>();
 
@@ -483,7 +490,7 @@ Moira::execAndiEa(u16 opcode)
     int dst = _____________xxx(opcode);
 
     if (!readOp<M,S>(dst, ea, data)) return;
-    
+
     result = logic<I,S>(src, data);
     prefetch();
 
@@ -514,7 +521,7 @@ Moira::execAndisr(u16 opcode)
     u16 dst = getSR();
 
     sync(8);
-    
+
     u32 result = logic<I,S>(src, dst);
     setSR(result);
 
@@ -925,7 +932,7 @@ Moira::execMove0(u16 opcode)
     sr.c = 0;
 
     if (!writeOp<MODE_DN,S>(dst, data)) return;
-    
+
     prefetch<LAST_BUS_CYCLE>();
 }
 
@@ -1612,6 +1619,8 @@ Moira::execStop(u16 opcode)
     u16 src = readI<Word>();
 
     setSR(src | (MIMIC_MUSASHI ? 0 : 1 << 13));
+    flags |= FLAG_STOP;
+
     pollIrq();
 }
 

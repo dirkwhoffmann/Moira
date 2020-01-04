@@ -186,7 +186,6 @@ clock_t runMusashi(int i, Setup &s, Result &r)
     instr == moira::ABCD    ||
     instr == moira::SBCD    ||
     instr == moira::NBCD    ||
-    instr == moira::ILLEGAL ||
     instr == moira::LINE_A  ||
     instr == moira::LINE_F;
 
@@ -226,7 +225,6 @@ clock_t runMoira(int i, Setup &s, Result &r)
     instr == moira::ABCD    ||
     instr == moira::SBCD    ||
     instr == moira::NBCD    ||
-    instr == moira::ILLEGAL ||
     instr == moira::LINE_A  ||
     instr == moira::LINE_F;
 
@@ -304,7 +302,6 @@ void dumpResult(Result &r)
 void compare(Setup &s, Result &r1, Result &r2)
 {
     bool error = false;
-    char mus[128], mos[128];
 
     if (!compareDasm(r1, r2)) {
         printf("\nDISASSEMBLER MISMATCH FOUND");
