@@ -23909,17 +23909,23 @@ static void m68k_op_moveq_32(void)
 
 static void m68k_op_move16_32(void)
 {
-	uint16 w2 = OPER_I_16();
-	int ax = REG_IR & 7;
-	int ay = (w2 >> 12) & 7;
+    if(CPU_TYPE_IS_040_PLUS(CPU_TYPE))
+    {
+        uint16 w2 = OPER_I_16();
+        int ax = REG_IR & 7;
+        int ay = (w2 >> 12) & 7;
 
-	m68ki_write_32(REG_A[ay],    m68ki_read_32(REG_A[ax]));
-	m68ki_write_32(REG_A[ay]+4,  m68ki_read_32(REG_A[ax]+4));
-	m68ki_write_32(REG_A[ay]+8,  m68ki_read_32(REG_A[ax]+8));
-	m68ki_write_32(REG_A[ay]+12, m68ki_read_32(REG_A[ax]+12));
+        m68ki_write_32(REG_A[ay],    m68ki_read_32(REG_A[ax]));
+        m68ki_write_32(REG_A[ay]+4,  m68ki_read_32(REG_A[ax]+4));
+        m68ki_write_32(REG_A[ay]+8,  m68ki_read_32(REG_A[ax]+8));
+        m68ki_write_32(REG_A[ay]+12, m68ki_read_32(REG_A[ax]+12));
 
-	REG_A[ax] += 16;
-	REG_A[ay] += 16;
+        REG_A[ax] += 16;
+        REG_A[ay] += 16;
+        return;
+    }
+
+    m68ki_exception_1111();
 }
 
 
@@ -28368,7 +28374,7 @@ static void m68k_op_pflush_32(void)
 		// Nothing to do, unless address translation cache is emulated
 		return;
 	}
-	m68ki_exception_illegal();
+    m68ki_exception_1111();
 }
 
 

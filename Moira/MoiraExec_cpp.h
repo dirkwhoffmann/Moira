@@ -47,19 +47,19 @@ Moira::saveToStackDetailed(u16 sr, u32 addr, u16 code)
 }
 
 void
-Moira::saveToStackBrief(u16 sr)
+Moira::saveToStackBrief(u16 sr, u32 pc)
 {
     if (MIMIC_MUSASHI) {
 
-        push<Long>(reg.pc);
+        push<Long>(pc);
         push<Word>(sr);
 
     } else {
 
         reg.sp -= 6;
-        writeM<Word>(reg.sp + 4, reg.pc & 0xFFFF);
+        writeM<Word>(reg.sp + 4, pc & 0xFFFF);
         writeM<Word>(reg.sp + 0, sr);
-        writeM<Word>(reg.sp + 2, reg.pc >> 16);
+        writeM<Word>(reg.sp + 2, pc >> 16);
     }
 }
 
@@ -92,11 +92,8 @@ Moira::execUnimplemented(int nr)
     setSupervisorMode(true);
     sr.t = 0;
 
-    saveToStackBrief(status);
-
-    // Update the prefetch queue
-    readExt();
-    prefetch();
+    sync(4);
+    saveToStackBrief(status, reg.pc - 2);
 
     jumpToVector(nr);
 }
@@ -122,15 +119,10 @@ Moira::execIllegal(u16 opcode)
     setSupervisorMode(true);
     sr.t = 0;
 
-    // Illegal instructions are detected during instructon decoding.
-    // At that time, the progam counter hasn't advanced yet.
-    reg.pc -= 2;
-
     // Write exception information to stack
     sync(4);
-    saveToStackBrief(status);
+    saveToStackBrief(status, reg.pc - 2);
 
-    reg.pc += 2;
     jumpToVector(4);
 }
 

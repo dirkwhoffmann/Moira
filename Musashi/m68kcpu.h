@@ -1754,6 +1754,7 @@ static inline void m68ki_exception_trace(void)
 			CPU_INSTR_MODE = INSTRUCTION_NO;
 		}
 		#endif /* M68K_EMULATE_ADDRESS_ERROR */
+        printf("m68ki_exception_trace\n");
 		m68ki_stack_frame_0000(REG_PC, sr, EXCEPTION_TRACE);
 	}
 	else
@@ -1859,6 +1860,7 @@ static inline void m68ki_exception_illegal(void)
 static inline void m68ki_exception_format_error(void)
 {
 	uint sr = m68ki_init_exception();
+    printf("m68ki_exception_format_error\n");
 	m68ki_stack_frame_0000(REG_PC, sr, EXCEPTION_FORMAT_ERROR);
 	m68ki_jump_vector(EXCEPTION_FORMAT_ERROR);
 

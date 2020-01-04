@@ -185,9 +185,7 @@ clock_t runMusashi(int i, Setup &s, Result &r)
     bool skip =
     instr == moira::ABCD    ||
     instr == moira::SBCD    ||
-    instr == moira::NBCD    ||
-    instr == moira::LINE_A  ||
-    instr == moira::LINE_F;
+    instr == moira::NBCD;
 
     if (!skip) {
         
@@ -224,9 +222,7 @@ clock_t runMoira(int i, Setup &s, Result &r)
     bool skip =
     instr == moira::ABCD    ||
     instr == moira::SBCD    ||
-    instr == moira::NBCD    ||
-    instr == moira::LINE_A  ||
-    instr == moira::LINE_F;
+    instr == moira::NBCD;
 
     int64_t cycles = moiracpu->getClock();
     if (!skip) {
