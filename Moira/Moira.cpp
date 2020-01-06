@@ -36,6 +36,7 @@ Moira::reset()
     for(int i = 0; i < 8; i++) reg.d[i] = reg.a[i] = 0;
     reg.usp = 0;
     reg.ipl = 0;
+    ipl = 0;
 
     sr.t = 0;
     sr.s = 1;
@@ -219,4 +220,3 @@ template void Moira::writeD <Long> (int n, u32 v);
 template void Moira::writeA <Long> (int n, u32 v);
 
 }
-

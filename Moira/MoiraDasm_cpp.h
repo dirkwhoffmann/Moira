@@ -313,7 +313,7 @@ Moira::dasmBsr(StrWriter &str, u32 &addr, u16 op)
         dasmIllegal(str, addr, op);
         return;
     }
-    
+
     u32 dst = addr + 2;
     dst += (S == Byte) ? (i8)op : (i16)dasmRead<S>(addr);
 
@@ -826,4 +826,6 @@ Moira::dasmUnlk(StrWriter &str, u32 &addr, u16 op)
 
     str << Ins<I>{} << tab << reg;
 }
+
+
 

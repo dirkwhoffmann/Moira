@@ -654,6 +654,7 @@ Moira::execChk(u16 opcode)
     sr.z = ZERO<S>(dy);
     sr.v = 0;
     sr.c = 0;
+    sr.n = MIMIC_MUSASHI ? sr.n : 0;
 
     if ((i16)dy > (i16)data) {
 
@@ -669,7 +670,7 @@ Moira::execChk(u16 opcode)
     if ((i16)dy < 0) {
 
         sync(MIMIC_MUSASHI ? 10 - (int)(clock - c) : 4);
-        sr.n = NBIT<S>(dy);
+        sr.n = MIMIC_MUSASHI ? NBIT<S>(dy) : 1;
         execTrapException(6);
     }
 }
@@ -900,7 +901,11 @@ Moira::execLink(u16 opcode)
     int ax   = _____________xxx(opcode);
     i16 disp = (i16)readI<S>();
 
-    push<Long>(readA(ax) - (ax == 7 ? 4 : 0));
+    if (MIMIC_MUSASHI) {
+        push<Long>(readA(ax) - (ax == 7 ? 4 : 0));
+    } else {
+        push<Long>(readA(ax));
+    }
 
     writeA(ax, reg.sp);
     reg.sp += (i32)disp;
@@ -1405,15 +1410,28 @@ Moira::execDiv(u16 opcode)
     u32 ea, divisor, result;
     if (!readOp<M, Word>(src, ea, divisor)) return;
 
+    u32 dividend = readD(dst);
+
     // Check for division by zero
     if (divisor == 0) {
-        if (!MIMIC_MUSASHI) sr.n = sr.z = sr.v = sr.c = 0;
+
+        if (I == DIVU) {
+            sr.n = NBIT<Long>(dividend);
+            sr.z = (dividend & 0xFFFF0000) == 0;
+            sr.v = 0;
+            sr.c = 0;
+        } else {
+            sr.n = 0;
+            sr.z = 1;
+            sr.v = 0;
+            sr.c = 0;
+        }
+
         sync(8);
         execTrapException(5);
         return;
     }
 
-    u32 dividend = readD(dst);
     result = div<I>(dividend, divisor);
 
     writeD(dst, result);
@@ -1717,4 +1735,3 @@ Moira::execUnlk(u16 opcode)
     if (an != 7) reg.sp += 4;
     prefetch<LAST_BUS_CYCLE>();
 }
-
