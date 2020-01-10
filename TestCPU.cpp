@@ -7,7 +7,6 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#include "TestCPU.h"
 #include "testrunner.h"
 
 /* Signals the CPU clock to advance.
@@ -32,11 +31,7 @@ TestCPU::sync(int cycles)
 u8
 TestCPU::read8(u32 addr)
 {
-    if (MUSASHI) {
-        return get8(moiraMem, addr);
-    } else {
-        return sandbox.replayPeek(PEEK8, addr, getClock());
-    }
+    return get8(moiraMem, addr);
 }
 
 /* Reads a word from memory.
@@ -47,11 +42,7 @@ TestCPU::read8(u32 addr)
 u16
 TestCPU::read16(u32 addr)
 {
-    if (MUSASHI) {
-        return get16(moiraMem, addr);
-    } else {
-        return sandbox.replayPeek(PEEK16, addr, moiracpu->getClock());
-    }
+    return get16(moiraMem, addr);
 }
 
 /* Reads a word from memory.
@@ -62,7 +53,6 @@ TestCPU::read16(u32 addr)
 u16
 TestCPU::read16Dasm(u32 addr)
 {
-    assert(MUSASHI);
     return get16(moiraMem, addr);
 }
 
@@ -74,17 +64,13 @@ TestCPU::read16Dasm(u32 addr)
 u16
 TestCPU::read16OnReset(u32 addr)
 {
-    if (MUSASHI) {
-        switch (addr) {
-            case 0: return 0x0000;
-            case 2: return 0x2000;
-            case 4: return 0x0000;
-            case 6: return 0x1000;
-        }
-        return get16(moiraMem, addr);
-    } else {
-        return sandbox.replayPeek(PEEK16, addr, getClock());
+    switch (addr) {
+        case 0: return 0x0000;
+        case 2: return 0x2000;
+        case 4: return 0x0000;
+        case 6: return 0x1000;
     }
+    return get16(moiraMem, addr);
 }
 
 /* Writes a byte into memory.
@@ -109,16 +95,6 @@ TestCPU::write16 (u32 addr, u16 val)
 {
     sandbox.replayPoke(POKE16, addr, moiracpu->getClock(), val);
     set16(moiraMem, addr, val);
-}
-
-/* DEPRECATED
- */
-void
-TestCPU::willPollIrq()
-{
-    if (!MUSASHI) {
-        (void)sandbox.replayPoll(getClock());
-    }
 }
 
 /* Returns the interrupt vector in IRQ_USER mode

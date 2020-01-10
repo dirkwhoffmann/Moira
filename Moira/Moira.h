@@ -197,9 +197,6 @@ protected:
     virtual void write8  (u32 addr, u8  val) = 0;
     virtual void write16 (u32 addr, u16 val) = 0;
 
-    // DEPRECATED
-    virtual void willPollIrq() { };
-
     // Provides the interrupt level in IRQ_USER mode
     virtual int readIrqUserVector(u8 level) { return 0; }
 
@@ -292,7 +289,7 @@ public:
 private:
 
     // Polls the IPL pins
-    void pollIrq() { willPollIrq(); reg.ipl = ipl; }
+    void pollIrq() { reg.ipl = ipl; }
 
     // Selects the IRQ vector to branch to
     int getIrqVector(int level);

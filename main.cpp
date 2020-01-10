@@ -9,30 +9,10 @@
 
 #include "testrunner.h"
 
-#include "Moira.h"
-
 int main()
 {
     moiracpu = new TestCPU();
-    tester = new Tester_68k();
-
-    if (MIMIC_MUSASHI) {
-
-        // Run Moira against Musashi
-        run();
-
-    } else {
-
-        // Run the portable68000 unit tests
-
-        try {
-            tester->runTestCases();
-            tester->printErrorCounter();
-
-        } catch(Exception& exception) {
-            exception.handle();
-        }
-    }
+    run();
 
     return 0;
 }

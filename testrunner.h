@@ -14,10 +14,10 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
+#include <assert.h>
 
-// Portable 68000
-#include "tester.h"
-#include "exception.h"
+#include "Sandbox.h"
+#include "TestCPU.h"
 
 // Musashi
 extern "C" {
@@ -26,22 +26,14 @@ extern "C" {
 #include "m68kops.h"
 }
 
-// Set to true to compare Moira against Musashi
-#define MUSASHI true
-
 // Set to true for verbose output
 #define VERBOSE false
 
 // Number of instructions that are executed in a row
 #define RUNS 1
 
-// Forward declarations
-// namespace moira { class Moira; }
-// extern class moira::Moira *moiracpu;
 extern class TestCPU *moiracpu;
-extern class Tester_68k *tester;
 extern Sandbox sandbox;
-
 extern uint8_t musashiMem[0x10000];
 extern uint8_t moiraMem[0x10000];
 
@@ -60,7 +52,6 @@ struct Setup {
     uint8_t  ccr;
     bool     supervisor;
     uint32_t pc;
-    // uint16_t opcode;
     uint16_t ext1;
     uint16_t ext2;
     uint32_t d[8];
@@ -85,11 +76,12 @@ struct Result {
     int cycles;
 };
 
-// Create smart random numbers
-uint32 smartRandom();
-
 // Location of the tested instruction in memory
 const uint32_t pc = 0x1000;
+
+// Creates a smart random number
+uint32 smartRandom();
+
 
 //
 // Preparing a test

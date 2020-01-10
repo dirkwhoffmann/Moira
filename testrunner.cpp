@@ -10,7 +10,6 @@
 #include "testrunner.h"
 
 TestCPU *moiracpu;
-Tester_68k *tester;
 uint8_t musashiMem[0x10000];
 uint8_t moiraMem[0x10000];
 Sandbox sandbox;
@@ -157,9 +156,6 @@ void runSingleTest(Setup &s)
     resetMoira(s);
 
     for (int i = 0; i < RUNS; i++) {
-
-        // Compare
-        // compare(s, mur, mor);
 
         // Run
         muclk += runMusashi(i, s, mur);

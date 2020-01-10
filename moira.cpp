@@ -10,7 +10,4 @@
 #include "testrunner.h"
 
 #include "Moira.h"
-#include "tester.h"
-
-
 
