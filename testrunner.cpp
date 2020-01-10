@@ -114,7 +114,7 @@ void run()
 {
     Setup setup;
 
-    printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019\n\n");
+    printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2020\n\n");
     printf("The test program runs Moira agains Musashi with randomly generated data.\n");
     printf("It runs until a bug has been found.\n\n");
 

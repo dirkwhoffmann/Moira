@@ -257,10 +257,10 @@ void Tester_68k::runTestCases() {
     testCmpa();
     printInfo("SUBA");
     testSuba();
-    printInfo("DIVU");
-    testDivu();
-    printInfo("DIVS");
-    testDivs();
+    // printInfo("DIVU");
+    // testDivu();
+    // printInfo("DIVS");
+    // testDivs();
     printInfo("MOVE");
     testMove();
     printInfo("ADDI");

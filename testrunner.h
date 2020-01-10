@@ -27,7 +27,7 @@ extern "C" {
 }
 
 // Set to true to compare Moira against Musashi
-#define MUSASHI true
+#define MUSASHI false
 
 // Set to true for verbose output
 #define VERBOSE false
