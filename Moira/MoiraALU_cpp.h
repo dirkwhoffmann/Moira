@@ -649,7 +649,7 @@ Moira::divMusashi(u32 op1, u32 op2)
                 reg.sr.n = NBIT<Word>(quotient);
                 reg.sr.v = 0;
                 reg.sr.c = 0;
-                result = (quotient & 0xffff) | remainder << 16;
+                result = (quotient & 0xffff) | (u16)remainder << 16;
 
             } else {
 
