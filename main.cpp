@@ -13,7 +13,7 @@
 
 int main()
 {
-    moiracpu = new moira::Moira();
+    moiracpu = new TestCPU();
     tester = new Tester_68k();
 
     if (MIMIC_MUSASHI) {

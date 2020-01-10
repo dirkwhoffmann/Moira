@@ -29,7 +29,7 @@ Moira::Moira()
 void
 Moira::reset()
 {
-    flags = 0;
+    flags = CPU_CHECK_IRQ;
 
     clock = -40; // REMOVE ASAP
 
@@ -38,14 +38,14 @@ Moira::reset()
     reg.ipl = 0;
     ipl = 0;
 
-    sr.t = 0;
-    sr.s = 1;
-    sr.x = 0;
-    sr.n = 0;
-    sr.z = 0;
-    sr.v = 0;
-    sr.c = 0;
-    sr.ipl = 7;
+    reg.sr.t = 0;
+    reg.sr.s = 1;
+    reg.sr.x = 0;
+    reg.sr.n = 0;
+    reg.sr.z = 0;
+    reg.sr.v = 0;
+    reg.sr.c = 0;
+    reg.sr.ipl = 7;
 
     sync(16);
 
@@ -69,27 +69,70 @@ Moira::reset()
 void
 Moira::execute()
 {
-    // Check for interrupts
-    if (reg.ipl >= sr.ipl) {
-        if (reg.ipl > sr.ipl || reg.ipl == 7) {
+    // Check integrity of the CPU_CHECK_IRQ flag
+    if (reg.ipl > reg.sr.ipl || reg.ipl == 7) assert(flags & CPU_CHECK_IRQ);
 
-            assert(reg.ipl < 7);
-            execIrqException(reg.ipl);
-        }
-    }
+    // Check integrity of the CPU_TRACE_FLAG flag
+    assert(!!(flags & CPU_TRACE_FLAG) == reg.sr.t);
 
-    // Check if the CPU is stopped or halted
+    // Process execution flags (if any)
     if (flags) {
 
-        if (flags & FLAG_STOP) {
+        // Process pending trace exception (if any)
+        if (flags & CPU_TRACE_EXCEPTION) {
+            execTraceException();
+        }
+
+        // Check if the T flag is set inside the status register
+        if (flags & CPU_TRACE_FLAG) {
+            flags |= CPU_TRACE_EXCEPTION;
+        }
+
+        // Process pending interrupt (if any)
+        if (flags & CPU_CHECK_IRQ) {
+            checkForIrq();
+        }
+
+        // If the CPU is stopped, poll the IPL lines and return
+        if (flags & CPU_IS_STOPPED) {
             pollIrq();
             sync(MIMIC_MUSASHI ? 1 : 2);
             return;
         }
+
+        // If logging is enabled, record the executed instruction
+        if (flags & CPU_LOG_INSTRUCTION) {
+            debugger.logInstruction();
+        }
     }
 
+    // Execute the instruction
     reg.pc += 2;
     (this->*exec[queue.ird])(queue.ird);
+
+    // Check if a breakpoint has been reached
+    if (debugger.breakpoints.needsCheck)
+        if (debugger.breakpointMatches(reg.pc)) breakpointReached(reg.pc);
+}
+
+void
+Moira::checkForIrq()
+{
+    if (reg.ipl > reg.sr.ipl || reg.ipl == 7) {
+
+        // Trigger interrupt
+        assert(reg.ipl < 7);
+        execIrqException(reg.ipl);
+
+    } else {
+
+        // If the polled IPL is up to date, we disable interrupt checking for
+        // the time being, because no interrupt can occur as long as the
+        // external IPL or the IPL mask inside the status register keep the
+        // same. If one of these variables changes, we reenable interrupt
+        // checking.
+        if (reg.ipl == ipl) flags &= ~CPU_CHECK_IRQ;
+    }
 }
 
 template<Size S> u32
@@ -129,25 +172,31 @@ Moira::writeR(int n, u32 v)
 }
 
 u8
-Moira::getCCR()
+Moira::getCCR(const StatusRegister &sr)
 {
-    return sr.c << 0 | sr.v << 1 | sr.z << 2 | sr.n << 3 | sr.x << 4;
+    return
+    sr.c << 0 |
+    sr.v << 1 |
+    sr.z << 2 |
+    sr.n << 3 |
+    sr.x << 4;
 }
 
 void
 Moira::setCCR(u8 val)
 {
-    sr.c = (val >> 0) & 1;
-    sr.v = (val >> 1) & 1;
-    sr.z = (val >> 2) & 1;
-    sr.n = (val >> 3) & 1;
-    sr.x = (val >> 4) & 1;
+    reg.sr.c = (val >> 0) & 1;
+    reg.sr.v = (val >> 1) & 1;
+    reg.sr.z = (val >> 2) & 1;
+    reg.sr.n = (val >> 3) & 1;
+    reg.sr.x = (val >> 4) & 1;
 }
 
 u16
-Moira::getSR()
+Moira::getSR(const StatusRegister &sr)
 {
-    return sr.t << 15 | sr.s << 13 | sr.ipl << 8 | getCCR();
+    return
+    sr.t << 15 | sr.s << 13 | sr.ipl << 8 | getCCR();
 }
 
 void
@@ -157,8 +206,9 @@ Moira::setSR(u16 val)
     bool s = (val >> 13) & 1;
     u8 ipl = (val >>  8) & 7;
 
-    sr.ipl = ipl;
-    sr.t = t;
+    reg.sr.ipl = ipl;
+    flags |= CPU_CHECK_IRQ;
+    t ? setTraceFlag() : clearTraceFlag();
 
     setCCR((u8)val);
     setSupervisorMode(s);
@@ -167,16 +217,25 @@ Moira::setSR(u16 val)
 void
 Moira::setSupervisorMode(bool enable)
 {
-    if (sr.s == enable) return;
+    if (reg.sr.s == enable) return;
 
     if (enable) {
-        sr.s = 1;
+        reg.sr.s = 1;
         reg.usp = reg.a[7];
         reg.a[7] = reg.ssp;
     } else {
-        sr.s = 0;
+        reg.sr.s = 0;
         reg.ssp = reg.a[7];
         reg.a[7] = reg.usp;
+    }
+}
+
+void
+Moira::setIPL(u8 val)
+{
+    if (ipl != val) {
+        ipl = val;
+        flags |= CPU_CHECK_IRQ;
     }
 }
 
@@ -211,6 +270,72 @@ Moira::disassemble(u32 addr, char *str)
     writer << Finish{};
 
     return pc - addr + 2;
+}
+
+void
+Moira::disassembleWord(u32 value, char *str)
+{
+    sprintx(str, value, true, 0, 4); // Upper case, no '$' prefix, 4 digits
+}
+
+void
+Moira::disassembleMemory(u32 addr, int cnt, char *str)
+{
+    for (int i = 0; i < cnt; i++, addr += 2) {
+        u32 value = dasmRead<Word>(addr);
+        sprintx(str, value, true, 0, 4);
+        *str++ = (i == cnt - 1) ? 0 : ' ';
+    }
+}
+
+void
+Moira::disassemblePC(u32 pc, char *str)
+{
+    sprintx(str, pc, true, 0, 6); // Upper case, no '$' prefix, 6 digits
+}
+
+void
+Moira::disassembleSR(const StatusRegister &sr, char *str)
+{
+    str[0]  = sr.t ? 'T' : 't';
+    str[1]  = '-';
+    str[2]  = sr.s ? 'S' : 's';
+    str[3]  = '-';
+    str[4]  = '-';
+    str[5]  = (sr.ipl & 0b100) ? '1' : '0';
+    str[6]  = (sr.ipl & 0b010) ? '1' : '0';
+    str[7]  = (sr.ipl & 0b001) ? '1' : '0';
+    str[8]  = '-';
+    str[9]  = '-';
+    str[10] = '-';
+    str[11] = sr.x ? 'X' : 'x';
+    str[12] = sr.n ? 'N' : 'n';
+    str[13] = sr.z ? 'Z' : 'z';
+    str[14] = sr.v ? 'V' : 'v';
+    str[15] = sr.c ? 'C' : 'c';
+    str[16] = 0;
+}
+
+void
+Moira::disassembleSR(u16 sr, char *str)
+{
+    str[0]  = (sr & 0b1000000000000000) ? 'T' : 't';
+    str[1]  = '-';
+    str[2]  = (sr & 0b0010000000000000) ? 'S' : 's';
+    str[3]  = '-';
+    str[4]  = '-';
+    str[5]  = (sr & 0b0000010000000000) ? '1' : '0';
+    str[6]  = (sr & 0b0000001000000000) ? '1' : '0';
+    str[7]  = (sr & 0b0000000100000000) ? '1' : '0';
+    str[8]  = '-';
+    str[9]  = '-';
+    str[10] = '-';
+    str[11] = (sr & 0b0000000000010000) ? 'X' : 'x';
+    str[12] = (sr & 0b0000000000001000) ? 'N' : 'n';
+    str[13] = (sr & 0b0000000000000100) ? 'Z' : 'z';
+    str[14] = (sr & 0b0000000000000010) ? 'V' : 'v';
+    str[15] = (sr & 0b0000000000000001) ? 'C' : 'c';
+    str[16] = 0;
 }
 
 // Make sure the compiler generates certain instances of template functions

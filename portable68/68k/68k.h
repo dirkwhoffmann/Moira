@@ -7,11 +7,12 @@
 
 #include "dataTypes.h"
 #include "Moira.h"
+#include "TestCPU.h"
 #include "Sandbox.h"
 #include <stdio.h>
 
 extern Sandbox sandbox;
-extern moira::Moira *moiracpu;
+extern TestCPU *moiracpu;
 
 class Core_68k {
 

@@ -36,8 +36,9 @@ extern "C" {
 #define RUNS 1
 
 // Forward declarations
-namespace moira { class Moira; }
-extern class moira::Moira *moiracpu;
+// namespace moira { class Moira; }
+// extern class moira::Moira *moiracpu;
+extern class TestCPU *moiracpu;
 extern class Tester_68k *tester;
 extern Sandbox sandbox;
 

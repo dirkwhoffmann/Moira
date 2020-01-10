@@ -9,9 +9,8 @@
 
 #include "testrunner.h"
 
-moira::Moira *moiracpu;
+TestCPU *moiracpu;
 Tester_68k *tester;
-// uint8_t mem[0x10000];
 uint8_t musashiMem[0x10000];
 uint8_t moiraMem[0x10000];
 Sandbox sandbox;
