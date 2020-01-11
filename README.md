@@ -38,6 +38,24 @@ Round 5 ................ PASSED (Musashi: 0.23s Moira: 0.22s)
 
 I also tested Moira extensively with cputester, a tool written by Toni Wilen which is now part of the Amiga emulator UAE. With cputester you can create a large number of test programs that run on the Amiga platform and test the CPU "from the inside".  With cputester I created a large number of test programs that were then executed inside vAmiga.
 
+## Feature Overview
+
+Besides the emulation core Moira comes with an integrated disassembler and a debugger.
+
+Its debugging capabilities include setting breakpoints and watchpoints as well as logging the instruction stream. vAmiga makes extensive use of these functions by making them accessible in its CPU inspector panel. It is a nice example of how Moira can be utilized in a real-world application:
+
+![alt Inspector](http://www.dirkwhoffmann.de/vAMIGA/pics/MoiraPanel.jpg)
+
+## Credits
+
+I am grateful to 
+
+- Karl Stenerud for writing Musashi,
+- „PiCiJi“ for writing Denise and portable68000,
+- Toni Wilen for writing cputester.
+
+*Nanos gigantum humeris insidentes*.
+
 ## Where to go from here?
 
 - [Denise m680x0 on BitBucket](https://bitbucket.org/piciji/denise/src/master/emulation/processor)
