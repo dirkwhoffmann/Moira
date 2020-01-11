@@ -914,8 +914,8 @@ void m68k_init(void)
 	m68k_set_instr_hook_callback(NULL);
 }
 
-extern uint32_t read_sp_on_reset(void);
-extern uint32_t read_pc_on_reset(void);
+extern int read_sp_on_reset(void);
+extern int read_pc_on_reset(void);
 
 /* Pulse the RESET line on the CPU */
 void m68k_pulse_reset(void)

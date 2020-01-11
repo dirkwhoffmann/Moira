@@ -81,7 +81,8 @@ TestCPU::read16OnReset(u32 addr)
 void
 TestCPU::write8(u32 addr, u8  val)
 {
-    sandbox.replayPoke(POKE8, addr, getClock(), val);
+    if (CHECK_MEM_WRITES)
+        sandbox.replayPoke(POKE8, addr, getClock(), val);
     set8(moiraMem, addr, val);
 }
 
@@ -93,7 +94,8 @@ TestCPU::write8(u32 addr, u8  val)
 void
 TestCPU::write16 (u32 addr, u16 val)
 {
-    sandbox.replayPoke(POKE16, addr, moiracpu->getClock(), val);
+    if (CHECK_MEM_WRITES)
+        sandbox.replayPoke(POKE16, addr, moiracpu->getClock(), val);
     set16(moiraMem, addr, val);
 }
 

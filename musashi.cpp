@@ -40,13 +40,15 @@ extern "C" unsigned int m68k_read_disassembler_32 (unsigned int addr)
 
 extern "C" void m68k_write_memory_8(unsigned int addr, unsigned int value)
 {
-    sandbox.record(POKE8, addr & 0xFFFFFF, 0, value);
+    if (CHECK_MEM_WRITES)
+        sandbox.record(POKE8, addr & 0xFFFFFF, 0, value);
     set8(musashiMem, addr, value);
 }
 
 extern "C" void m68k_write_memory_16(unsigned int addr, unsigned int value)
 {
-    sandbox.record(POKE16, addr & 0xFFFFFF, 0, value);
+    if (CHECK_MEM_WRITES)
+        sandbox.record(POKE16, addr & 0xFFFFFF, 0, value);
     set16(musashiMem, addr, value);
 }
 
