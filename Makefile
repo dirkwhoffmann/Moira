@@ -21,7 +21,7 @@ clean:
 	make -C Moira clean
 	rm -f *.o
 
-testRunner: $(OBJECTS)
+testrunner: $(OBJECTS)
 	$(CC) -o testrunner $(CFLAGS) $(OBJECTS) Musashi/*.o Moira/*.o
 
 $(OBJECTS): %.o: %.cpp
