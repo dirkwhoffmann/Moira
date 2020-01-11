@@ -1,4 +1,4 @@
-![alt Logo](http://www.dirkwhoffmann.de/vAMIGA/pics/MoiraBanner1.png)
+![alt Logo](http://www.dirkwhoffmann.de/vAMIGA/pics/MoiraBanner2.png)
 
 # About
 
@@ -6,10 +6,10 @@ Moira is a Motorola 68000 emulator written in C++. The emulator was written with
 
 - A high emulation accuracy, both functionally and temporally
 - A high emulation speed
-- The ability to easily port the code to other platforms.
+- The ability to easily port the code to other platforms
 - The ability to emulate multiple CPU instances simultaneously
 
-Moira is the CPU being used in the Amiga emulator vAmiga. It is used there with great success so far. 
+Moira is the CPU that powers the Amiga emulator vAmiga. It is used there with great success so far. 
 
 ## History
 
@@ -19,7 +19,9 @@ In order to emulate the memory bus of the Amiga with high precision, I needed to
 
 My search for a new CPU core had drawn my attention to the Portable68000 emulator and its successor Denise m680x0, both written by "PiCiJi". These emulators offer inter-instruction timing and thus exactly what I needed to take vAmiga to the next level. However, Denise wasn't thoroughly tested back then, but  already far superior to portable68000 from a software-architectural point of view.  At this point I decided to implement my own CPU based on the three CPU cores I already knew. In fact Musashi, Portable68000 and Denise m680x0 can be considered the intellectual ancestors of my CPU implementation: Moira imitates much of the concepts the three other emulators are based on. Externally, Moira might appear a bit like a clone of Musashi, because it mimics Musashi’s disassembler output down to the last character. Internally, Moira exhibits  many similarities with Denise m680x0. For example, it provides exactly the same sync function that is being used by Portable68000 and Denise to count the number elapsed cycles between bus accesses. 
   
-## Status
+## Accuracy
+
+To achieve a high emulation accuracy, I have applied two different test strategies. Firstly, I developed an automated test- runner, which is also part of this repository. After downloading, compiling, and running the code from this repository, the test-runner starts automatically. It iterates over all opcodes, runs Moira and Musashi in parallel, and compares the calculated results afterwards. It executes in an infinite loop and only aborts if a discrepancy between the two CPUs is detected.
 
    
 ## Where to go from here?
