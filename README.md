@@ -1,5 +1,7 @@
-![alt Logo](http://www.dirkwhoffmann.de/vAMIGA/pics/MoiraBanner2.png)
+![](https://github.com/dirkwhoffmann/Moira/workflows/C%2FC++%20CI/badge.svg)
 
+![alt Logo](http://www.dirkwhoffmann.de/vAMIGA/pics/MoiraBanner2.png)
+  
 ## About
 
 Moira is a Motorola 68000 emulator written in C++. The emulator was written with four goals in mind: 
