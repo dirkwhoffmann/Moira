@@ -1,6 +1,6 @@
 OBJECTS   = main.o testRunner.o musashi.o TestCPU.o Sandbox.o
 CC        = g++
-INCLUDE   =-IMoira -IMusashi
+INCLUDE   = -IMoira -IMusashi
 WARNINGS  = -Wall -Wno-unused-variable
 STD       = -std=c++14
 OPTIMIZE  = -flto -O3
