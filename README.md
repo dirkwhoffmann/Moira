@@ -50,15 +50,12 @@ Its debugging capabilities include setting breakpoints and watchpoints as well a
 
 I am grateful to 
 
-- Karl Stenerud for writing Musashi,
-- „PiCiJi“ for writing Denise and portable68000,
+- Karl Stenerud for writing [Musashi](https://github.com/kstenerud/Musashi),
+- „PiCiJi“ for writing [Denise m680x0](https://bitbucket.org/piciji/denise/src/master/emulation/processor) and [Portable68000](https://sourceforge.net/projects/portable68000),
 - Toni Wilen for writing cputester.
 
 *Nanos gigantum humeris insidentes*.
 
 ## Where to go from here?
 
-- [Denise m680x0 on BitBucket](https://bitbucket.org/piciji/denise/src/master/emulation/processor)
-- [Portable68000 on SourceForge](https://sourceforge.net/projects/portable68000)
-- [Musashi on GitHub](https://github.com/kstenerud/Musashi)
 - [vAmiga on GitHub](https://github.com/dirkwhoffmann/vAMIGA)
