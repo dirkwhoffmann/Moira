@@ -1,23 +1,16 @@
-MUSASHICFILES = \
-m68kfpu.c \
-m68kcpu.c \
-m68kdasm.c \
-m68kops.c
-
-MUSASHIHFILES = \
-m68k.h \
-m68kcpu.h \
-m68kconf.h \
-m68kops.h \
-
+OBJECTS   = m68kfpu.o m68kcpu.o m68kdasm.o m68kops.o
 CC        = gcc
-WARNINGS  = -Wall -Wno-strict-aliasing
-STD       = 
-OPTIMIZE  = -O3
-CFLAGS    = $(WARNINGS) $(STD) $(OPTIMIZE)
+WARNINGS  = -Wall -Wextra -pedantic -Wno-strict-aliasing
+OPTIMIZE  = -flto -O3
+CFLAGS    = $(WARNINGS) $(OPTIMIZE)
 
-all: $(MUSASHIHFILES) $(MUSASHICFILES)
-	$(CC) -c $(CFLAGS) $(MUSASHICFILES)
+.PHONY: all clean
+
+all: $(OBJECTS)
 
 clean:
 	rm -f *.o
+
+$(OBJECTS): %.o: %.c *.h
+	$(CC) -c $(CFLAGS) $<
+

@@ -1,33 +1,16 @@
-MOIRACFILES = \
-Moira.cpp \
-MoiraDebugger.cpp
-
-MOIRAHFILES = \
-Moira.h \
-MoiraDataflow.h \
-MoiraInit_cpp.h \
-MoiraALU.h \
-MoiraDataflow_cpp.h \
-MoiraTypes.h \
-MoiraALU_cpp.h \
-MoiraDebugger.h \
-StrWriter.h \
-MoiraConfig.h \
-MoiraExec.h \
-StrWriter_cpp.h \
-MoiraDasm.h \
-MoiraExec_cpp.h \
-MoiraDasm_cpp.h \
-MoiraInit.h
-
+OBJECTS   = Moira.o MoiraDebugger.o
 CC        = g++
-WARNINGS  = -Wall -Wno-nested-anon-types -Wno-gnu-anonymous-struct
+WARNINGS  = -Wall
 STD       = -std=c++14
-OPTIMIZE  = -O3
+OPTIMIZE  = -flto -O3
 CFLAGS    = $(WARNINGS) $(STD) $(OPTIMIZE)
 
-all: $(MOIRAHFILES) $(MOIRACFILES)
-	$(CC) -c $(CFLAGS) $(MOIRACFILES)
+.PHONY: all clean
+
+all: $(OBJECTS)
 
 clean:
 	rm -f *.o
+
+$(OBJECTS): %.o: %.cpp
+	$(CC) -c $(CFLAGS) $<

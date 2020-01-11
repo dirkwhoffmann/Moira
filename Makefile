@@ -1,26 +1,28 @@
-# Pretty naive Makefile for compiling the test runner application
-
-CFILES    = main.cpp testrunner.cpp musashi.cpp TestCPU.cpp Sandbox.cpp
-
+OBJECTS   = main.o testRunner.o musashi.o TestCPU.o Sandbox.o
 CC        = g++
 INCLUDE   =-IMoira -IMusashi
-WARNINGS  = -Wall -Wno-unused-variable
+WARNINGS  = -Wall
 STD       = -std=c++14
-OPTIMIZE  = -O3
+OPTIMIZE  = -flto -O3
 CFLAGS    = $(INCLUDE) $(WARNINGS) $(STD) $(OPTIMIZE)
 
-.PHONY: clean musashi moira
+.PHONY: all musashi moira clean
 
-all: testRunner
-
-clean:
-	rm -f *.o
-
-testRunner: musashi moira
-	$(CC) -o testRunner $(CFLAGS) $(CFILES) Musashi/*.o Moira/*.o
+all: musashi moira testRunner
 
 musashi:
 	make -C Musashi
 
 moira:
 	make -C Moira
+
+clean:
+	# make -C Musashi clean
+	# make -C Moira clean
+	rm -f *.o
+
+testRunner: $(OBJECTS)
+	$(CC) -o testRunner $(CFLAGS) $(OBJECTS) Musashi/*.o Moira/*.o
+
+$(OBJECTS): %.o: %.cpp
+	$(CC) -c $(CFLAGS) $<
