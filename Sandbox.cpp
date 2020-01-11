@@ -111,7 +111,7 @@ Sandbox::error(AccessType type, u32 addr, u64 cycle, u16 value)
     printf("i: %2d  ", replayCnt);
     printf("Type: %s  ", accessTypeStr[type]);
     printf("Addr: %4x  ", addr);
-    printf("Cycle: %ld  ", (long)cycle);
+    printf("Cycle: %lud  ", (long)cycle);
     if (type == POKE8 || type == POKE16) printf("Value: %4x  ", value);
     printf("\n\n");
     printf("ACCESS RECORD:\n");
@@ -119,7 +119,7 @@ Sandbox::error(AccessType type, u32 addr, u64 cycle, u16 value)
         printf("i: %2d  ", i);
         printf("Type: %s  ", accessTypeStr[access[i].type]);
         printf("Addr: %4x  ", access[i].addr);
-        printf("Cycle: %3ld  ", (long)access[i].cycle);
+        printf("Cycle: %3lud  ", (long)access[i].cycle);
         printf("Value: %4x  ", access[i].value);
         printf("\n");
     }
