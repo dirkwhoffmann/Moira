@@ -1,6 +1,6 @@
 ![alt Logo](http://www.dirkwhoffmann.de/vAMIGA/pics/MoiraBanner2.png)
 
-# About
+## About
 
 Moira is a Motorola 68000 emulator written in C++. The emulator was written with four goals in mind: 
 
@@ -23,7 +23,21 @@ My search for a new CPU core had drawn my attention to the Portable68000 emulato
 
 To achieve a high emulation accuracy, I have applied two different test strategies. Firstly, I developed an automated test- runner, which is also part of this repository. After downloading, compiling, and running the code from this repository, the test-runner starts automatically. It iterates over all opcodes, runs Moira and Musashi in parallel, and compares the calculated results afterwards. It executes in an infinite loop and only aborts if a discrepancy between the two CPUs is detected.
 
-   
+```   
+Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2020
+
+The test program runs Moira agains Musashi with randomly generated data.
+It runs until a bug has been found.
+
+Round 1 ................ PASSED (Musashi: 0.04s Moira: 0.04s)
+Round 2 ................ PASSED (Musashi: 0.09s Moira: 0.09s)
+Round 3 ................ PASSED (Musashi: 0.14s Moira: 0.14s)
+Round 4 ................ PASSED (Musashi: 0.19s Moira: 0.18s)
+Round 5 ................ PASSED (Musashi: 0.23s Moira: 0.22s)
+```
+
+I also tested Moira extensively with cputester, a tool written by Toni Wilen which is now part of the Amiga emulator UAE. With cputester you can create a large number of test programs that run on the Amiga platform and test the CPU "from the inside".  With cputester I created a large number of test programs that were then executed inside vAmiga.
+
 ## Where to go from here?
 
 - [Denise m680x0 on BitBucket](https://bitbucket.org/piciji/denise/src/master/emulation/processor)
