@@ -1,7 +1,15 @@
-# Moira
+![alt Logo](http://www.dirkwhoffmann.de/vAMIGA/pics/MoiraBanner1.png)
 
-Moira is an experimental Motorola 68k core that is going to be used in my Amiga emulator vAmiga. I started this project because none of the existing CPU cores met my functional requirements and temporal requirements at the same time.
+# Moira: A Motorola 68000 emulator
 
+Moira is a Motorola 68000 emulator written in C++. The emulator was written with four goals in mind: 
+
+- A high emulation accuracy, both functionally and temporally
+- A high emulation speed
+- The ability to easily port the code to other platforms.
+- The ability to emulate multiple CPU instances simultaneously
+
+Moira is the CPU being used in the Amiga emulator vAmiga. It is used there with great success so far. 
 
 ## Anchestors
 
