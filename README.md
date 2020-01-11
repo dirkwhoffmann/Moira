@@ -1,6 +1,6 @@
 ![alt Logo](http://www.dirkwhoffmann.de/vAMIGA/pics/MoiraBanner1.png)
 
-# Moira: A Motorola 68000 emulator
+# About
 
 Moira is a Motorola 68000 emulator written in C++. The emulator was written with four goals in mind: 
 
@@ -11,38 +11,20 @@ Moira is a Motorola 68000 emulator written in C++. The emulator was written with
 
 Moira is the CPU being used in the Amiga emulator vAmiga. It is used there with great success so far. 
 
-## Anchestors
+## History
 
-Because many good CPU cores are already out there, Moira is not developed from scratch. It will imitate much of what other authors do in their own emulators with great success. The following CPU cores can be considered the intellectual ancestors of Moira: 
+Before I started the vAmiga project in early 2019, I informed myself about the existing Motorola 68k emulators at the time. What I was looking for was a throughly tested emulator with high emulation speed and good code quality. I did find such an emulator in the form of Musashi, written by Karl Stenerud, which is being used successfully in the Mame project for many years now. I had been using Musashi in vAmiga for roughly a year until I realized that it lacks one important feature: Precise inter-instruction timing information.
 
-- Denise m680x0
+In order to emulate the memory bus of the Amiga with high precision, I needed to know the number of cycles that had elapsed, for example, between the beginning of a command execution and the first or second access of the memory bus. Like most 68k emulators, Musashi only provides the total number of CPU cycles that has been consumed by the execution of a single instruction. Because cycle-exact bus timing is a crucial aspect for Amiga emulation, I came to the conclusion that more sophisticated timing control was needed to bring vAmiga to the next level.
 
-  https://bitbucket.org/piciji/denise/src/master/emulation/processor/
-
-
-  This CPU core is part of the Denise Retro emulator written by PiCiJi. Due to its remarkable software architecture, I decided to use it as a blueprint for Moira. I have taken many design decisions from this core. It also serves as a temporal reference implementation for Moira, since unlike most other cores it emulates bus timing with high precision.
-
+My search for a new CPU core had drawn my attention to the Portable68000 emulator and its successor Denise m680x0, both written by "PiCiJi". These emulators offer inter-instruction timing and thus exactly what I needed to take vAmiga to the next level. However, Denise wasn't thoroughly tested back then, but  already far superior to portable68000 from a software-architectural point of view.  At this point I decided to implement my own CPU based on the three CPU cores I already knew. In fact Musashi, Portable68000 and Denise m680x0 can be considered the intellectual ancestors of my CPU implementation: Moira imitates much of the concepts the three other emulators are based on. Externally, Moira might appear a bit like a clone of Musashi, because it mimics Musashi’s disassembler output down to the last character. Internally, Moira exhibits  many similarities with Denise m680x0. For example, it provides exactly the same sync function that is being used by Portable68000 and Denise to count the number elapsed cycles between bus accesses. 
   
-- Portable68000
-
-  https://sourceforge.net/projects/portable68000/
-
-  This core is the predecessor of Denise m680x0, also authored by PiCiJi. It contains an extensive set of unit tests which I am going to use in my project.
-  
-- Musashi
-
-  https://github.com/kstenerud/Musashi
-
-  Musashi is a CPU core written in C by Karl Stenerud. It is well known for its high speed and remarkable software quality. It is being used in many emulators, including the current version of vAmiga. Due to its wide distribution, this core has achieved a high degree of functional accuracy and is therefore beeing uses as a functional reference implementation for Moira. 
-  
- ## Goal
- 
-With Moira I want to implement a Motorola 68000 CPU core that is functionally equivalent to Musashi and temporally equivalent to Denise 680x0. 
- 
 ## Status
 
-Development has started in November 2019. There is no working prototype yet. 
    
 ## Where to go from here?
 
-- [vAmiga](https://github.com/dirkwhoffmann/vAMIGA)
+- [Denise m680x0 on BitBucket](https://bitbucket.org/piciji/denise/src/master/emulation/processor)
+- [Portable68000 on SourceForge](https://sourceforge.net/projects/portable68000)
+- [Musashi on GitHub](https://github.com/kstenerud/Musashi)
+- [vAmiga on GitHub](https://github.com/dirkwhoffmann/vAMIGA)
