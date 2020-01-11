@@ -1,4 +1,4 @@
-OBJECTS   = main.o testRunner.o musashi.o TestCPU.o Sandbox.o
+OBJECTS   = main.o testrunner.o musashi.o TestCPU.o Sandbox.o
 CC        = g++
 INCLUDE   = -IMoira -IMusashi
 WARNINGS  = -Wall -Wno-unused-variable
