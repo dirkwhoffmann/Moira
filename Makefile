@@ -8,7 +8,7 @@ CFLAGS    = $(INCLUDE) $(WARNINGS) $(STD) $(OPTIMIZE)
 
 .PHONY: all musashi moira clean
 
-all: musashi moira testRunner
+all: musashi moira testrunner
 
 musashi:
 	make -C Musashi
@@ -22,7 +22,7 @@ clean:
 	rm -f *.o
 
 testRunner: $(OBJECTS)
-	$(CC) -o testRunner $(CFLAGS) $(OBJECTS) Musashi/*.o Moira/*.o
+	$(CC) -o testrunner $(CFLAGS) $(OBJECTS) Musashi/*.o Moira/*.o
 
 $(OBJECTS): %.o: %.cpp
 	$(CC) -c $(CFLAGS) $<
