@@ -42,6 +42,8 @@ Round 5 ................ PASSED (Musashi: 0.23s Moira: 0.22s)
 
 I also tested Moira extensively with cputester, a tool written by Toni Wilen which is now part of the Amiga emulator UAE. With cputester you can create a large number of test programs that run on the Amiga platform and test the CPU "from the inside".  With cputester I created a large number of test programs that were then executed inside vAmiga.
 
+Based on the testing results, all Amiga features of Moira can be considered to be thoroughly tested. Please note that all features that are not used by the Amiga (such as non-autovectored interrupts or the special behaviour of the TAS command) are either unimplemented or untested yet. If you plan to use the emulation core and need these features, please let me know. I am eager to add the yet missing features to the emulator.
+
 ## Feature Overview
 
 Besides the emulation core Moira comes with an integrated disassembler and a debugger.
