@@ -72,7 +72,7 @@ Sandbox::replayPoll(u64 cycle)
 
         replayCnt++;
         if (replayCnt > recordCnt) { break; }
-        return access[i].value;
+        return (u8)access[i].value;
     }
 
     error(POLL, 0, cycle);

@@ -1599,7 +1599,7 @@ Moira::execRtr(u16 opcode)
     reg.sp += 4;
 
     setPC(newpc);
-    setCCR(newccr);
+    setCCR((u8)newccr);
 
     fullPrefetch<LAST_BUS_CYCLE>();
 }
