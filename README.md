@@ -66,4 +66,5 @@ I am grateful to
 
 ## Where to go from here?
 
+- [The Moira wiki pages](https://github.com/dirkwhoffmann/Moira/wiki)
 - [vAmiga on GitHub](https://github.com/dirkwhoffmann/vAMIGA)
