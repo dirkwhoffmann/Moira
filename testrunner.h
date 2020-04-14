@@ -40,6 +40,7 @@ extern class TestCPU *moiracpu;
 extern Sandbox sandbox;
 extern uint8_t musashiMem[0x10000];
 extern uint8_t moiraMem[0x10000];
+extern u32 musashiFC;
 
 inline u8 get8(u8 *p, u32 addr) {
     return p[addr & 0xFFFF]; }
@@ -75,6 +76,7 @@ struct Result {
     uint32_t d[8];
     uint32_t a[8];
     uint16_t sr;
+    uint32_t fc;
     char dasm[64];
     int dasmCnt;
     int cycles;

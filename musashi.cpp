@@ -41,14 +41,14 @@ extern "C" unsigned int m68k_read_disassembler_32 (unsigned int addr)
 extern "C" void m68k_write_memory_8(unsigned int addr, unsigned int value)
 {
     if (CHECK_MEM_WRITES)
-        sandbox.record(POKE8, addr & 0xFFFFFF, 0, value);
+        sandbox.record(POKE8, addr & 0xFFFFFF, 0, musashiFC, value);
     set8(musashiMem, addr, value);
 }
 
 extern "C" void m68k_write_memory_16(unsigned int addr, unsigned int value)
 {
     if (CHECK_MEM_WRITES)
-        sandbox.record(POKE16, addr & 0xFFFFFF, 0, value);
+        sandbox.record(POKE16, addr & 0xFFFFFF, 0, musashiFC, value);
     set16(musashiMem, addr, value);
 }
 
@@ -63,6 +63,10 @@ extern "C" int interrupt_handler(int irqLevel)
     return M68K_INT_ACK_AUTOVECTOR;
 }
 
+extern "C" void my_fc_handler(unsigned int fc)
+{
+    musashiFC = fc;
+}
+
 extern "C" int read_sp_on_reset(void) { return 0x2000; }
 extern "C" int read_pc_on_reset(void) { return 0x1000; }
-

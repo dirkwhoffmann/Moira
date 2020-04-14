@@ -12,6 +12,7 @@
 TestCPU *moiracpu;
 uint8_t musashiMem[0x10000];
 uint8_t moiraMem[0x10000];
+u32 musashiFC = 0;
 Sandbox sandbox;
 
 uint32 smartRandom()
@@ -245,6 +246,7 @@ void recordMusashiRegisters(Result &r)
     r.sr = m68k_get_reg(NULL, M68K_REG_SR);
     r.usp = m68k_get_reg(NULL, M68K_REG_USP);
     r.ssp = m68k_get_reg(NULL, M68K_REG_ISP);
+    r.fc = musashiFC;
     for (int i = 0; i < 8; i++) {
         r.d[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_D0 + i));
         r.a[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_A0 + i));
@@ -257,6 +259,7 @@ void recordMoiraRegisters(Result &r)
     r.sr = moiracpu->getSR();
     r.usp = moiracpu->getUSP();
     r.ssp = moiracpu->getSSP();
+    r.fc = moiracpu->readFC();
     for (int i = 0; i < 8; i++) r.d[i] = moiracpu->getD(i);
     for (int i = 0; i < 8; i++) r.a[i] = moiracpu->getA(i);
 }
@@ -264,7 +267,7 @@ void recordMoiraRegisters(Result &r)
 void dumpSetup(Setup &s)
 {
     printf("PC: %4x ", s.pc);
-    printf("CCR: %2x\n", s.ccr);
+    printf("CCR: %2x %s\n", s.ccr, s.supervisor ? "SUPERVISOR MODE" : "");
     printf("         Dn: ");
     for (int i = 0; i < 8; i++) printf("%8x ", s.d[i]);
     printf("\n");
@@ -280,6 +283,7 @@ void dumpResult(Result &r)
     printf("SR: %2x ", r.sr);
     printf("SSP: %2x ", r.ssp);
     printf("USP: %2x ", r.usp);
+    printf("FC: %2x ", r.fc);
     printf("Elapsed cycles: %d\n" , r.cycles);
 
     printf("         Dn: ");

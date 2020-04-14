@@ -24,22 +24,22 @@ Sandbox::prepare()
 }
 
 void
-Sandbox::record(AccessType type, u32 addr, u64 cycle, u16 value)
+Sandbox::record(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
 {
-    access[recordCnt] = AccessRecord { type, addr, value, cycle };
+    access[recordCnt] = AccessRecord { type, addr, value, cycle, fc };
 
     recordCnt++;
     assert(recordCnt < 64);
 }
 
 void
-Sandbox::recordPoll(u64 cycle, u8 value)
+Sandbox::recordPoll(u64 cycle, u32 fc, u8 value)
 {
-    record(POLL, 0, cycle, value);
+    record(POLL, 0, cycle, value, fc);
 }
 
 u32
-Sandbox::replayPeek(AccessType type, u32 addr, u64 cycle)
+Sandbox::replayPeek(AccessType type, u32 addr, u64 cycle, u32 fc)
 {
     for (int i = 0; i < recordCnt; i++) {
 
@@ -49,6 +49,7 @@ Sandbox::replayPeek(AccessType type, u32 addr, u64 cycle)
         // Check for a matching entry
         if (access[i].type != type) continue;
         if (access[i].addr != addr) continue;
+        if (access[i].fc != fc) continue;
         // if (access[i].cycle != cycle) continue;
 
         replayCnt++;
@@ -56,12 +57,12 @@ Sandbox::replayPeek(AccessType type, u32 addr, u64 cycle)
         return access[i].value;
     }
 
-    error(type, addr, cycle);
+    error(type, addr, cycle, fc);
     return 0;
 }
 
 u8
-Sandbox::replayPoll(u64 cycle)
+Sandbox::replayPoll(u64 cycle, u32 fc)
 {
     for (int i = 0; i < recordCnt; i++) {
 
@@ -71,18 +72,19 @@ Sandbox::replayPoll(u64 cycle)
         // Check for a matching entry
         if (access[i].type != POLL) continue;
         if (access[i].cycle != cycle) continue;
+        if (access[i].fc != fc) continue;
 
         replayCnt++;
         if (replayCnt > recordCnt) { break; }
         return (u8)access[i].value;
     }
 
-    error(POLL, 0, cycle);
+    error(POLL, 0, cycle, fc);
     return 0;
 }
 
 void
-Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u16 value)
+Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
 {
     for (int i = 0; i < recordCnt; i++) {
 
@@ -93,6 +95,7 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u16 value)
         if (access[i].type != type) continue;
         if (access[i].addr != addr) continue;
         if (access[i].value != value) continue;
+        if (access[i].fc != fc) continue;
         if (!MIMIC_MUSASHI) {
             if (access[i].cycle != cycle) continue;
         }
@@ -103,17 +106,18 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u16 value)
         return;
     }
 
-    error(type, addr, cycle, value);
+    error(type, addr, cycle, fc, value);
 }
 
 void
-Sandbox::error(AccessType type, u32 addr, u64 cycle, u16 value)
+Sandbox::error(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
 {
     printf("\nACCESS %d DOESN'T MATCH:\n", replayCnt);
     printf("i: %2d  ", replayCnt);
     printf("Type: %s  ", accessTypeStr[type]);
     printf("Addr: %4x  ", addr);
     printf("Cycle: %lud  ", (long)cycle);
+    printf("FC: %d  ", fc);
     if (type == POKE8 || type == POKE16) printf("Value: %4x  ", value);
     printf("\n\n");
     printf("ACCESS RECORD:\n");
@@ -122,6 +126,7 @@ Sandbox::error(AccessType type, u32 addr, u64 cycle, u16 value)
         printf("Type: %s  ", accessTypeStr[access[i].type]);
         printf("Addr: %4x  ", access[i].addr);
         printf("Cycle: %3lud  ", (long)access[i].cycle);
+        printf("FC: %d  ", access[i].fc);
         printf("Value: %4x  ", access[i].value);
         printf("\n");
     }

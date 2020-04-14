@@ -146,8 +146,8 @@
  * want to properly emulate the m68010 or higher. (moves uses function codes
  * to read/write data from different address spaces)
  */
-#define M68K_EMULATE_FC             OPT_OFF
-#define M68K_SET_FC_CALLBACK(A)     your_set_fc_handler_function(A)
+#define M68K_EMULATE_FC             OPT_SPECIFY_HANDLER
+#define M68K_SET_FC_CALLBACK(A)     my_fc_handler(A)
 
 /* If ON, CPU will call the pc changed callback when it changes the PC by a
  * large value.  This allows host programs to be nicer when it comes to

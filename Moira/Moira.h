@@ -292,6 +292,8 @@ protected:
     // Accessing the function code pins
     //
 
+public:
+    
     // Returns the current value on the function code pins
     FunctionCode readFC() { return (FunctionCode)((reg.sr.s ? 4 : 0) | fcl); }
 

@@ -37,6 +37,7 @@ struct AccessRecord {
     u32 addr;
     u16 value;
     u64 cycle;
+    u32 fc;
 };
 
 class Sandbox {
@@ -51,13 +52,13 @@ public:
     Sandbox(); 
     void prepare();
     long getErrors() { return errors; }
-    void record(AccessType type, u32 addr, u64 cycle, u16 value);
-    void recordPoll(u64 cycle, u8 value);
-    u32  replayPeek(AccessType type, u32 addr, u64 cycle);
-    void replayPoke(AccessType type, u32 addr, u64 cycle, u16 value);
-    u8   replayPoll(u64 cycle);
+    void record(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value);
+    void recordPoll(u64 cycle, u32 fc, u8 value);
+    u32  replayPeek(AccessType type, u32 addr, u64 cycle, u32 fc);
+    void replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value);
+    u8   replayPoll(u64 cycle, u32 fc);
 
-    void error(AccessType type, u32 addr, u64 cycle, u16 value = 0);
+    void error(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value = 0);
 };
 
 #endif
