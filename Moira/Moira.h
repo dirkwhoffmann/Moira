@@ -10,7 +10,6 @@
 #ifndef MOIRA_H
 #define MOIRA_H
 
-#include "MoiraConfig.h"
 #include "MoiraTypes.h"
 #include "MoiraDebugger.h"
 #include "StrWriter.h"
@@ -95,14 +94,14 @@ protected:
      *    This flag indicates whether the CPU should check fo watchpoints.
      */
     int flags;
-    static const int CPU_IS_HALTED         = 0b00000001;
-    static const int CPU_IS_STOPPED        = 0b00000010;
-    static const int CPU_LOG_INSTRUCTION   = 0b00000100;
-    static const int CPU_CHECK_IRQ         = 0b00001000;
-    static const int CPU_TRACE_EXCEPTION   = 0b00010000;
-    static const int CPU_TRACE_FLAG        = 0b00100000;
-    static const int CPU_CHECK_BP          = 0b01000000;
-    static const int CPU_CHECK_WP          = 0b10000000;
+    static const int CPU_IS_HALTED         = (1 << 8);
+    static const int CPU_IS_STOPPED        = (1 << 9);
+    static const int CPU_LOG_INSTRUCTION   = (1 << 10);
+    static const int CPU_CHECK_IRQ         = (1 << 11);
+    static const int CPU_TRACE_EXCEPTION   = (1 << 12);
+    static const int CPU_TRACE_FLAG        = (1 << 13);
+    static const int CPU_CHECK_BP          = (1 << 14);
+    static const int CPU_CHECK_WP          = (1 << 15);
 
     // Number of elapsed cycles since powerup
     i64 clock;
@@ -116,6 +115,9 @@ protected:
     // Current value on the IPL pins (Interrupt Priority Level)
     u8 ipl;
 
+    // Value on the lower two function code pins (FC1|FC0)
+    u8 fcl;
+    
     // Jump table holding the instruction handlers
     void (Moira::*exec[65536])(u16);
 
@@ -206,6 +208,9 @@ protected:
     // Provides the interrupt level in IRQ_USER mode
     virtual int readIrqUserVector(u8 level) { return 0; }
 
+    // Called when an interrupt is initiated
+    virtual void irqOccurred(u8 level) { };
+
     // Called when a breakpoint is reached
     virtual void breakpointReached(u32 addr) { };
 
@@ -282,6 +287,14 @@ protected:
     template<Size S = Long> void writeD(int n, u32 v);
     template<Size S = Long> void writeA(int n, u32 v);
     template<Size S = Long> void writeR(int n, u32 v);
+
+    //
+    // Accessing the function code pins
+    //
+
+    // Returns the current value on the function code pins
+    FunctionCode readFC() { return (FunctionCode)((reg.sr.s ? 4 : 0) | fcl); }
+
 
     //
     // Handling interrupts

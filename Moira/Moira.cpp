@@ -12,6 +12,7 @@
 #include <algorithm>
 
 #include "Moira.h"
+#include "MoiraConfig.h"
 
 namespace moira {
 
@@ -38,7 +39,8 @@ Moira::reset()
     reg.usp = 0;
     reg.ipl = 0;
     ipl = 0;
-
+    fcl = 0;
+    
     reg.sr.t = 0;
     reg.sr.s = 1;
     reg.sr.x = 0;
@@ -65,6 +67,8 @@ Moira::reset()
     queue.irc = read16OnReset(reg.pc & 0xFFFFFF);
     sync(2);
     prefetch();
+
+    debugger.reset();
 }
 
 void
@@ -126,8 +130,11 @@ Moira::execute()
 done:
 
     // Check if a breakpoint has been reached
-    if (flags & CPU_CHECK_BP)
-        if (debugger.breakpointMatches(reg.pc)) breakpointReached(reg.pc);
+    if (flags & CPU_CHECK_BP) {
+        if (debugger.breakpointMatches(reg.pc)) {
+            breakpointReached(reg.pc);
+        }
+    }
 }
 
 bool
@@ -135,8 +142,11 @@ Moira::checkForIrq()
 {
     if (reg.ipl > reg.sr.ipl || reg.ipl == 7) {
 
-        // Trigger interrupt
+        // Notify delegate
         assert(reg.ipl < 7);
+        irqOccurred(reg.ipl);
+
+        // Trigger interrupt
         execIrqException(reg.ipl);
         return true;
 

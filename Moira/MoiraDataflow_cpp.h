@@ -20,15 +20,24 @@ Moira::readOp(int n, u32 &ea, u32 &result)
     // Compute effective address
     ea = computeEA<M,S>(n);
 
+    // Update the function code pins
+    if (EMULATE_FC) fcl = (M == MODE_DIPC || M == MODE_PCIX) ? 2 : 1;
+    assert(isPrgMode(M) == (fcl == 2));
+    assert(!isPrgMode(M) == (fcl == 1));
+
     // Read from effective address
     bool error; result = readM<S>(ea, error);
+
+    // Emulate -(An) register modification
+    updateAnPD<M,S>(n);
 
     // Exit if an address error has occurred
     if (error) return false;
 
-    // Emulate (An)+ or -(An) register modification
-    updateAn<M,S>(n);
-    return true;
+    // Emulate (An)+ register modification
+    updateAnPI<M,S>(n);
+
+    return !error;
 }
 
 template<Mode M, Size S, bool last> bool
@@ -42,15 +51,24 @@ Moira::writeOp(int n, u32 val)
     // Compute effective address
     u32 ea = computeEA<M,S>(n);
 
+    // Update the function code pins
+    if (EMULATE_FC) fcl = (M == MODE_DIPC || M == MODE_PCIX) ? 2 : 1;
+    assert(isPrgMode(M) == (fcl == 2));
+    assert(!isPrgMode(M) == (fcl == 1));
+
     // Write to effective address
     bool error; writeM<S,last>(ea, val, error);
+
+    // Emulate -(An) register modification
+    updateAnPD<M,S>(n);
 
     // Early exit in case of an address error
     if (error) return false;
 
-    // Emulate (An)+ or -(An) register modification
-    updateAn<M,S>(n);
-    return true;
+    // Emulate (An)+ register modification
+      updateAnPI<M,S>(n);
+
+     return !error;
 }
 
 template<Mode M, Size S, bool last> void
@@ -162,6 +180,21 @@ Moira::computeEA(u32 n) {
 }
 
 template<Mode M, Size S> void
+Moira::updateAnPD(int n)
+{
+    // -(An)
+    if (M == 4) reg.a[n] -= (n == 7 && S == Byte) ? 2 : S;
+}
+
+template<Mode M, Size S> void
+Moira::updateAnPI(int n)
+{
+    // (An)+
+    if (M == 3) reg.a[n] += (n == 7 && S == Byte) ? 2 : S;
+
+}
+
+template<Mode M, Size S> void
 Moira::updateAn(int n)
 {
     // (An)+
@@ -207,7 +240,7 @@ Moira::readM(u32 addr)
 template<Size S, bool last> u32
 Moira::readM(u32 addr, bool &error)
 {
-    if ((error = addressError<S,2>(addr))) { return 0; }
+    if ((error = addressReadError<S,2>(addr))) { return 0; }
     return readM<S,last>(addr);
 }
 
@@ -219,6 +252,8 @@ Moira::writeM(u32 addr, u32 val)
         writeM<Word,last>(addr + 2, val & 0xFFFF);
         return;
     }
+
+    if (EMULATE_FC) fcl = 1;
 
     // Check if a watchpoint is being accessed
     if ((flags & CPU_CHECK_WP) && debugger.watchpointMatches(addr)) {
@@ -243,7 +278,7 @@ Moira::writeM(u32 addr, u32 val)
 template<Size S, bool last> void
 Moira::writeM(u32 addr, u32 val, bool &error)
 {
-    if ((error = addressError<S,2>(addr))) { return; }
+    if ((error = addressWriteError<S,2>(addr))) { return; }
     writeM<S,last>(addr, val);
 }
 
@@ -270,7 +305,7 @@ Moira::writeMrev(u32 addr, u32 val)
 template<Size S, bool last> void
 Moira::writeMrev(u32 addr, u32 val, bool &error)
 {
-    if ((error = addressError<S,2>(addr))) { return; }
+    if ((error = addressWriteError<S,2>(addr))) { return; }
     writeMrev<S,last>(addr, val);
 }
 
@@ -307,13 +342,27 @@ Moira::push(u32 val)
 }
 
 template <Size S, int delay> bool
-Moira::addressError(u32 addr)
+Moira::addressReadError(u32 addr)
 {
-    if (MOIRA_EMULATE_ADDRESS_ERROR) {
+    if (EMULATE_ADDRESS_ERROR) {
 
         if ((addr & 1) && S != Byte) {
             sync(delay);
-            execAddressError(addr);
+            execAddressError(addr, true);
+            return true;
+        }
+    }
+    return false;
+}
+
+template <Size S, int delay> bool
+Moira::addressWriteError(u32 addr)
+{
+    if (EMULATE_ADDRESS_ERROR) {
+
+        if ((addr & 1) && S != Byte) {
+            sync(delay);
+            execAddressError(addr, false);
             return true;
         }
     }
@@ -323,6 +372,7 @@ Moira::addressError(u32 addr)
 template<bool last> void
 Moira::prefetch()
 {
+    if (EMULATE_FC) fcl = 2;
     queue.ird = queue.irc;
     queue.irc = readM<Word,last>(reg.pc + 2);
 }
@@ -330,6 +380,9 @@ Moira::prefetch()
 template<bool last> void
 Moira::fullPrefetch()
 {
+    if (EMULATE_FC) fcl = 2;
+    if (addressReadError<Word,2>(reg.pc)) return;
+
     queue.irc = readM<Word>(reg.pc);
     prefetch<last>();
 }
@@ -338,12 +391,18 @@ template<bool skip> void
 Moira::readExt()
 {
     reg.pc += 2;
-    if (!skip) queue.irc = readM<Word>(reg.pc);
+    if (!skip) {
+        if (EMULATE_FC) fcl = 2;
+        if (addressReadError<Word>(reg.pc)) return;
+        queue.irc = readM<Word>(reg.pc);
+    }
 }
 
 void
 Moira::jumpToVector(int nr)
 {
+    if (EMULATE_FC) fcl = 1;
+    
     // Update the program counter
     reg.pc = readM<Long>(4 * nr);
 

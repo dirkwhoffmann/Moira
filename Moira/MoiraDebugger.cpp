@@ -102,7 +102,7 @@ Guards::remove(long nr)
 }
 
 void
-Guards::removeAt(uint32_t addr)
+Guards::removeAt(u32 addr)
 {
     for (int i = 0; i < count; i++) {
 
@@ -129,7 +129,7 @@ Guards::setEnable(long nr, bool val)
 }
 
 void
-Guards::setEnableAt(uint32_t addr, bool value)
+Guards::setEnableAt(u32 addr, bool value)
 {
     Guard *guard = guardAtAddr(addr);
     if (guard) guard->enabled = value;
@@ -162,6 +162,13 @@ Watchpoints::setNeedsCheck(bool value)
     } else {
         moira.flags &= ~Moira::CPU_CHECK_WP;
     }
+}
+
+void
+Debugger::reset()
+{
+    breakpoints.setNeedsCheck(breakpoints.elements() != 0);
+    watchpoints.setNeedsCheck(watchpoints.elements() != 0);
 }
 
 void
@@ -216,13 +223,13 @@ Debugger::disableLogging()
 int
 Debugger::loggedInstructions()
 {
-    return logCnt < LOG_BUFFER_CAPACITY ? (int)logCnt : LOG_BUFFER_CAPACITY;
+    return logCnt < logBufferCapacity ? (int)logCnt : logBufferCapacity;
 }
 
 void
 Debugger::logInstruction()
 {
-    logBuffer[logCnt % LOG_BUFFER_CAPACITY] = moira.reg;
+    logBuffer[logCnt % logBufferCapacity] = moira.reg;
     logCnt++;
 }
 
@@ -232,7 +239,7 @@ Debugger::logEntry(int n)
     assert(n < loggedInstructions());
 
     // n == 0 returns the most recently recorded entry
-    int offset = (logCnt - 1 - n) % LOG_BUFFER_CAPACITY;
+    int offset = (logCnt - 1 - n) % logBufferCapacity;
 
     return logBuffer[offset];
 }

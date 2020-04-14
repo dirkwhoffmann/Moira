@@ -8,6 +8,8 @@
 // -----------------------------------------------------------------------------
 
 #include "testrunner.h"
+#include "MoiraConfig.h"
+#include "Sandbox.h"
 
 Sandbox::Sandbox()
 {

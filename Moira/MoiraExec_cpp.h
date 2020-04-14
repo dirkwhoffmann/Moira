@@ -64,20 +64,24 @@ Moira::saveToStackBrief(u16 sr, u32 pc)
 }
 
 void
-Moira::execAddressError(u32 addr)
+Moira::execAddressError(u32 addr, bool read)
 {
     assert(addr & 1);
 
-    // Memory access type and function code (TODO: THIS IS INCOMPLETE)
-    u16 code = 0x11 | (reg.sr.s ? 4 : 0);
+    u16 status = getSR();
+
+    // Memory access type and function code
+    u16 code = (queue.ird & 0xFFE0) | readFC();
+    if (read) code |= 0x10;
 
     // Enter supervisor mode and update the status register
     setSupervisorMode(true);
     clearTraceFlag();
+    flags &= ~CPU_TRACE_EXCEPTION;
 
     // Write exception information to stack
     sync(8);
-    saveToStackDetailed(getSR(), addr, code);
+    saveToStackDetailed(status, addr, code);
     sync(2);
 
     jumpToVector(3);
@@ -91,6 +95,7 @@ Moira::execUnimplemented(int nr)
     // Enter supervisor mode and update the status register
     setSupervisorMode(true);
     clearTraceFlag();
+    flags &= ~CPU_TRACE_EXCEPTION;
 
     sync(4);
     saveToStackBrief(status, reg.pc - 2);
@@ -115,9 +120,12 @@ Moira::execIllegal(u16 opcode)
 {
     u16 status = getSR();
 
-    // Enter supervisor mode and update the status register
+    // Enter supervisor mode
     setSupervisorMode(true);
+
+    // Disable tracing
     clearTraceFlag();
+    flags &= ~CPU_TRACE_EXCEPTION;
 
     // Write exception information to stack
     sync(4);
@@ -131,15 +139,15 @@ Moira::execTraceException()
 {
     u16 status = getSR();
 
-    // Acknowledge
-    flags &= ~CPU_TRACE_EXCEPTION;
-
     // Recover from stop state
     flags &= ~CPU_IS_STOPPED;
 
-    // Enter supervisor mode and update the status register
+    // Enter supervisor mode
     setSupervisorMode(true);
+
+    // Disable tracing
     clearTraceFlag();
+    flags &= ~CPU_TRACE_EXCEPTION;
 
     // Write exception information to stack
     sync(4);
@@ -153,9 +161,12 @@ Moira::execTrapException(int nr)
 {
     u16 status = getSR();
 
-    // Enter supervisor mode and update the status register
+    // Enter supervisor mode
     setSupervisorMode(true);
-    clearTraceFlag();
+
+    // Disable tracing
+    // clearTraceFlag();
+    // flags &= ~CPU_TRACE_EXCEPTION;
 
     // Write exception information to stack
     saveToStackBrief(status);
@@ -168,9 +179,12 @@ Moira::execPrivilegeException()
 {
     u16 status = getSR();
 
-    // Enter supervisor mode and update the status register
+    // Enter supervisor mode
     setSupervisorMode(true);
+
+    // Disable tracing
     clearTraceFlag();
+    flags &= ~CPU_TRACE_EXCEPTION;
 
     reg.pc -= 2;
 
@@ -680,18 +694,17 @@ Moira::execChk(u16 opcode)
 
     if ((i16)dy > (i16)data) {
 
-        sync(MIMIC_MUSASHI ? 10 - (int)(clock - c) : 4);
+        sync(MIMIC_MUSASHI ? 10 - (int)(clock - c) : 0);
         reg.sr.n = NBIT<S>(dy);
         execTrapException(6);
-
         return;
     }
 
-    sync(2);
-
+    if (MIMIC_MUSASHI) sync(2);
+    
     if ((i16)dy < 0) {
 
-        sync(MIMIC_MUSASHI ? 10 - (int)(clock - c) : 4);
+        sync(MIMIC_MUSASHI ? 10 - (int)(clock - c) : 0);
         reg.sr.n = MIMIC_MUSASHI ? NBIT<S>(dy) : 1;
         execTrapException(6);
     }
@@ -899,7 +912,7 @@ Moira::execJsr(u16 opcode)
     u32 oldpc = reg.pc;
     reg.pc = ea;
 
-    if (addressError<Word>(ea)) return;
+    if (addressReadError<Word>(ea)) return;
     queue.irc = readM<Word>(ea);
     push<Long>(oldpc);
     prefetch<LAST_BUS_CYCLE>();
@@ -1155,7 +1168,7 @@ Moira::execMovemEaRg(u16 opcode)
     u16 mask = readI<Word>();
 
     u32 ea = computeEA<M,S>(src);
-    if (addressError<S>(ea)) return;
+    if (mask && addressReadError<S>(ea)) return;
     if (S == Long) (void)readM<Word>(ea);
 
     switch (M) {
@@ -1199,7 +1212,7 @@ Moira::execMovemRgEa(u16 opcode)
         case 4: // -(An)
         {
             u32 ea = readA(dst);
-            if (addressError<S>(ea)) return;
+            if (mask && addressReadError<S>(ea)) return;
 
             for(int i = 15; i >= 0; i--) {
 
@@ -1214,7 +1227,7 @@ Moira::execMovemRgEa(u16 opcode)
         default:
         {
             u32 ea = computeEA<M,S>(dst);
-            if (addressError<S>(ea)) return;
+            if (mask && addressReadError<S>(ea)) return;
 
             for(int i = 0; i < 16; i++) {
 
@@ -1236,8 +1249,6 @@ Moira::execMovepDxEa(u16 opcode)
     int dst = _____________xxx(opcode);
 
     u32 ea = computeEA<M,S>(dst);
-    if (addressError<S>(ea)) return;
-
     u32 dx = readD(src);
 
     switch (S) {
@@ -1263,8 +1274,6 @@ Moira::execMovepEaDx(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     u32 ea = computeEA<M,S>(src);
-    if (addressError<S>(ea)) return;
-
     u32 dx = 0;
 
     switch (S) {
@@ -1577,6 +1586,8 @@ Moira::execRte(u16 opcode)
 {
     SUPERVISOR_MODE_ONLY
 
+    if (EMULATE_FC) fcl = 1;
+
     u16 newsr = readM<Word>(reg.sp);
     reg.sp += 2;
 
@@ -1592,6 +1603,8 @@ Moira::execRte(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execRtr(u16 opcode)
 {
+    if (EMULATE_FC) fcl = 1;
+
     u16 newccr = readM<Word>(reg.sp);
     reg.sp += 2;
 
@@ -1607,6 +1620,8 @@ Moira::execRtr(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execRts(u16 opcode)
 {
+    if (EMULATE_FC) fcl = 1;
+    
     u32 newpc = readM<Long>(reg.sp);
     reg.sp += 4;
 
