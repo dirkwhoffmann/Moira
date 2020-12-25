@@ -164,21 +164,21 @@ typedef enum
 }
 Instr;
 
-typedef enum {
-
-    MODE_DN,   //           Dn : Data register direct
-    MODE_AN,   //           An : Address register direct
-    MODE_AI,   //         (An) : Register indirect
-    MODE_PI,   //        (An)+ : Postincrement register indirect
-    MODE_PD,   //        -(An) : Predecrement register indirect
-    MODE_DI,   //       (d,An) : Register indirect with displacement
-    MODE_IX,   //    (d,An,Xi) : Indexed register indirect with displacement
-    MODE_AW,   //     (####).w : Absolute addressing short
-    MODE_AL,   //     (####).l : Absolute addressing long
-    MODE_DIPC, //       (d,PC) : PC relative with displacement
-    MODE_PCIX, //    (d,An,Xi) : Indexed PC relative with displacement
-    MODE_IM,   //         #### : Immediate data addressing
-    MODE_IP    //         ---- : Implied addressing
+typedef enum
+{
+    MODE_DN,   //  0         Dn : Data register direct
+    MODE_AN,   //  1         An : Address register direct
+    MODE_AI,   //  2       (An) : Register indirect
+    MODE_PI,   //  3      (An)+ : Postincrement register indirect
+    MODE_PD,   //  4      -(An) : Predecrement register indirect
+    MODE_DI,   //  5     (d,An) : Register indirect with displacement
+    MODE_IX,   //  6  (d,An,Xi) : Indexed register indirect with displacement
+    MODE_AW,   //  7   (####).w : Absolute addressing short
+    MODE_AL,   //  8   (####).l : Absolute addressing long
+    MODE_DIPC, //  9     (d,PC) : PC relative with displacement
+    MODE_IXPC, // 10  (d,PC,Xi) : Indexed PC relative with displacement
+    MODE_IM,   // 11       #### : Immediate data addressing
+    MODE_IP    // 12       ---- : Implied addressing
 }
 Mode;
 
@@ -187,6 +187,7 @@ inline bool isAbsMode(Mode M) { return M == 7 || M == 8;  }
 inline bool isIdxMode(Mode M) { return M == 6 || M == 10; }
 inline bool isMemMode(Mode M) { return M >= 2 && M <= 10; }
 inline bool isPrgMode(Mode M) { return M == 9 || M == 10; }
+inline bool isDspMode(Mode M) { return M == 5 || M == 6 || M == 9 || M == 10; }
 inline bool isImmMode(Mode M) { return M == 11; }
 
 typedef enum
@@ -223,6 +224,23 @@ typedef enum
 }
 FunctionCode;
 
+typedef enum
+{
+    MEM_DATA = 1,
+    MEM_PROG = 2
+}
+MemSpace;
+
+typedef struct
+{
+    u16 code;
+    u32 addr;
+    u16 ird;
+    u16 sr;
+    u32 pc;
+}
+AEStackFrame;
+
 struct StatusRegister {
 
     bool t;               // Trace flag
@@ -239,6 +257,7 @@ struct StatusRegister {
 struct Registers {
 
     u32 pc;               // Program counter
+    u32 pc0;              // Beginning of the currently executed instruction
     StatusRegister sr;    // Status register
 
     union {
@@ -261,5 +280,41 @@ struct Registers {
     u8 ipl;               // Polled Interrupt Priority Level
 };
 
+struct PrefetchQueue {    // http://pasti.fxatari.com/68kdocs/68kPrefetch.html
+
+    u16 irc;              // The most recent word prefetched from memory
+    u16 ird;              // The instruction currently being executed
+};
+
+/* Execution flags
+ *
+ * The Motorola 68000 is a well organized processor that utilizes the same
+ * general execution scheme for many instructions. However, the schemes
+ * slighty differ between instruction. To take care of the subtle differences,
+ * some execution functions take an dditional 'flags' argument which allows to
+ * alter their behavior. All flags are passed as a template parameter for
+ * efficiency.
+ */
+ 
+typedef u64 Flags;
+
+// Memory access flags
+static const u64 REVERSE        (1 << 0);  // Reverse the long word access order
+static const u64 SKIP_LAST_READ (1 << 1);  // Reverse the long word access order
+
+// Interrupt flags
+static const u64 POLLIPL        (1 << 2);  // Poll the interrupt lines
+                           
+// Address error stack frame flags
+static const u64 AE_WRITE       (1 << 3);  // Clear read flag in code word
+static const u64 AE_PROG        (1 << 4);  // Set FC pins to program space
+static const u64 AE_DATA        (1 << 5);  // Set FC pins to user space
+static const u64 AE_INC_PC      (1 << 6);  // Increment PC by 2 in stack frame
+static const u64 AE_DEC_PC      (1 << 7);  // Decrement PC by 2 in stack frame
+static const u64 AE_INC_ADDR    (1 << 8);  // Increment ADDR by 2 in stack frame
+static const u64 AE_DEC_ADDR    (1 << 9);  // Decrement ADDR by 2 in stack frame
+static const u64 AE_SET_CB3     (1 << 10); // Set bit 3 in CODE segment
+
 }
 #endif
+

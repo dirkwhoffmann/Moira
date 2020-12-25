@@ -14,23 +14,19 @@
 #include "MoiraDebugger.h"
 #include "StrWriter.h"
 
+// REMOVE ASAP
+static const int CHECK_SANITIZER_FIXES = 1;
+
 namespace moira {
 
-struct PrefetchQueue {    // http://pasti.fxatari.com/68kdocs/68kPrefetch.html
+// Execution control flags
 
-    u16 irc;              // The most recent word prefetched from memory
-    u16 ird;              // The instruction currently being executed
-};
 
 class Moira {
 
     friend class Debugger;
     friend class Breakpoints;
     friend class Watchpoints;
-
-    //
-    // Configuration
-    //
 
 protected:
 
@@ -64,7 +60,7 @@ protected:
     /* State flags
      *
      * CPU_IS_HALTED:
-     *     Set when the CPU is in "halted" state (not implemented yet)
+     *     Set when the CPU is in "halted" state.
      *
      * CPU_IS_STOPPED:
      *     Set when the CPU is in "stopped" state. This state is entered when
@@ -117,24 +113,33 @@ protected:
 
     // Value on the lower two function code pins (FC1|FC0)
     u8 fcl;
-    
+            
+    // Remembers the number of the last processed exception
+    int exception;
+
     // Jump table holding the instruction handlers
-    void (Moira::*exec[65536])(u16);
+    typedef void (Moira::*ExecPtr)(u16);
+    ExecPtr exec[65536];
 
     // Jump table holding the disassebler handlers
-    void (Moira::*dasm[65536])(StrWriter&, u32&, u16);
-
+    typedef void (Moira::*DasmPtr)(StrWriter&, u32&, u16);
+    DasmPtr *dasm = nullptr;
+    
+private:
+    
     // Table holding instruction infos
-    InstrInfo info[65536];
+    InstrInfo *info = nullptr;
 
 
     //
-    // Constructing and configuring
+    // Constructing
     //
 
 public:
 
     Moira();
+    virtual ~Moira();
+
     void createJumpTables();
 
     // Configures the output format of the disassembler
@@ -152,15 +157,21 @@ public:
 
     // Executes the next instruction
     void execute();
-
+    
+    // Returns true if the CPU is in HALT state
+    bool isHalted() { return flags & CPU_IS_HALTED; }
+    
 private:
 
     // Invoked inside execute() to check for a pending interrupt
     bool checkForIrq();
 
+    // Puts the CPU into HALT state
+    void halt();
+    
 
     //
-    // Running the disassembler
+    // Running the Disassembler
     //
 
 public:
@@ -181,12 +192,11 @@ public:
     // Returns a textual representation for the status register
     void disassembleSR(char *str) { disassembleSR(reg.sr, str); }
     void disassembleSR(const StatusRegister &sr, char *str);
-    void disassembleSR(u16 sr, char *str); // DEPRECATED
 
     // Return an info struct for a certain opcode
-    InstrInfo getInfo(u16 op) { return info[op]; }
+    InstrInfo getInfo(u16 op);
 
-
+    
     //
     // Interfacing with other components
     //
@@ -208,9 +218,28 @@ protected:
     // Provides the interrupt level in IRQ_USER mode
     virtual int readIrqUserVector(u8 level) { return 0; }
 
-    // Called when an interrupt is initiated
-    virtual void irqOccurred(u8 level) { };
+    // Instrution delegates
+    virtual void signalReset() { };
+    virtual void signalStop(u16 op) { };
+    virtual void signalTAS() { };
 
+    // State delegates
+    virtual void signalHalt() { };
+
+    // Exception delegates
+    virtual void signalAddressError(AEStackFrame &frame) { };
+    virtual void signalLineAException(u16 opcode) { };
+    virtual void signalLineFException(u16 opcode) { };
+    virtual void signalIllegalOpcodeException(u16 opcode) { };
+    virtual void signalTraceException() { };
+    virtual void signalTrapException() { };
+    virtual void signalPrivilegeViolation() { };
+    virtual void signalInterrupt(u8 level) { };
+    virtual void signalJumpToVector(int nr, u32 addr) { };
+
+    // Exception delegates
+    virtual void addressErrorHandler() { };
+    
     // Called when a breakpoint is reached
     virtual void breakpointReached(u32 addr) { };
 
@@ -224,8 +253,8 @@ protected:
 
 public:
 
-    virtual i64 getClock() { return clock; }
-    virtual void setClock(i64 val) { clock = val; }
+    i64 getClock() { return clock; }
+    void setClock(i64 val) { clock = val; }
 
 protected:
 
@@ -247,6 +276,9 @@ public:
 
     u32 getPC() { return reg.pc; }
     void setPC(u32 val) { reg.pc = val; }
+
+    u32 getPC0() { return reg.pc0; }
+    void setPC0(u32 val) { reg.pc0 = val; }
 
     u16 getIRC() { return queue.irc; }
     void setIRC(u16 val) { queue.irc = val; }
@@ -289,13 +321,21 @@ protected:
     template<Size S = Long> void writeR(int n, u32 v);
 
     //
-    // Accessing the function code pins
+    // Managing the function code pins
     //
-
+    
 public:
     
     // Returns the current value on the function code pins
     FunctionCode readFC() { return (FunctionCode)((reg.sr.s ? 4 : 0) | fcl); }
+
+    private:
+    
+    // Sets the function code pins to a specific value
+    void setFC(FunctionCode value);
+
+    // Sets the function code pins according the the provided addressing mode
+    template<Mode M> void setFC();
 
 
     //
@@ -306,21 +346,20 @@ public:
 
     u8 getIPL() { return ipl; }
     void setIPL(u8 val);
-
+    
 private:
-
+    
     // Polls the IPL pins
     void pollIrq() { reg.ipl = ipl; }
-
+    
     // Selects the IRQ vector to branch to
     int getIrqVector(int level);
-
-
-    #include "MoiraInit.h"
-    #include "MoiraALU.h"
-    #include "MoiraDataflow.h"
-    #include "MoiraExec.h"
-    #include "MoiraDasm.h"
+    
+#include "MoiraInit.h"
+#include "MoiraALU.h"
+#include "MoiraDataflow.h"
+#include "MoiraExceptions.h"
+#include "MoiraDasm.h"
 };
 
 }

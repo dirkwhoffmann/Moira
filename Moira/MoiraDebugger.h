@@ -7,11 +7,12 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#ifndef MOIRA_GUARD_H
-#define MOIRA_GUARD_H
+#ifndef MOIRA_DEBUGGER_H
+#define MOIRA_DEBUGGER_H
 
 namespace moira {
 
+// Base structure for a single breakpoint or watchpoint
 struct Guard {
 
     // The observed address
@@ -29,14 +30,19 @@ struct Guard {
 public:
 
     // Returns true if the guard hits
-    bool eval(u32 addr);
+    bool eval(u32 addr, Size S = Byte);
 
 };
 
+// Base class for a collection of guards
 class Guards {
 
     friend class Debugger;
 
+public:
+    
+    virtual ~Guards() { };
+    
 protected:
 
     // Reference to the connected CPU
@@ -56,7 +62,7 @@ protected:
 
 
     //
-    // Constructing and destructing
+    // Constructing
     //
 
 public:
@@ -88,6 +94,8 @@ public:
     void remove(long nr);
     void removeAll() { count = 0; setNeedsCheck(false); }
 
+    void replace(long nr, u32 addr);
+
     //
     // Enabling or disabling guards
     //
@@ -109,7 +117,7 @@ public:
 
 private:
 
-    bool eval(u32 addr);
+    bool eval(u32 addr, Size S = Byte);
 };
 
 class Breakpoints : public Guards {
@@ -162,7 +170,7 @@ private:
 
 
     //
-    // Constructing and destructing
+    // Constructing
     //
 
 public:
@@ -185,7 +193,7 @@ public:
     bool breakpointMatches(u32 addr);
 
     // Returns true if a watchpoint hits at the provides address
-    bool watchpointMatches(u32 addr);
+    bool watchpointMatches(u32 addr, Size S);
 
     //
     // Working with the log buffer
@@ -200,13 +208,21 @@ public:
 
     // Logs an instruction
     void logInstruction();
-
-    // Reads an entry from the log buffer
-    Registers logEntry(int n);
-    Registers logEntryAbs(int n);
-
+    
+    /* Reads an item from the log buffer
+     *
+     *    xxxRel: n == 0 returns the most recently recorded entry
+     *    xxxAbs: n == 0 returns the oldest entry
+     */
+    Registers &logEntryRel(int n);
+    Registers &logEntryAbs(int n);
+    // u32 loggedPC0Rel(int n);
+    // u32 loggedPC0Abs(int n);
+    
     // Clears the log buffer
     void clearLog() { logCnt = 0; }
+    
+    
 };
 
 }

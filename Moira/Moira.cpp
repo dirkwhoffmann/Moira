@@ -19,13 +19,23 @@ namespace moira {
 #include "MoiraInit_cpp.h"
 #include "MoiraALU_cpp.h"
 #include "MoiraDataflow_cpp.h"
+#include "MoiraExceptions_cpp.h"
 #include "MoiraExec_cpp.h"
 #include "StrWriter_cpp.h"
 #include "MoiraDasm_cpp.h"
 
 Moira::Moira()
 {
+    if (BUILD_INSTR_INFO_TABLE) info = new InstrInfo[65536];
+    if (ENABLE_DASM) dasm = new DasmPtr[65536];
+
     createJumpTables();
+}
+
+Moira::~Moira()
+{
+    if (info) delete [] info;
+    if (dasm) delete [] dasm;
 }
 
 void
@@ -33,9 +43,7 @@ Moira::reset()
 {
     flags = CPU_CHECK_IRQ;
 
-    clock = -40; // REMOVE ASAP
-
-    for(int i = 0; i < 8; i++) reg.d[i] = reg.a[i] = 0;
+    for(int i = 0; i < 8; i++) reg.d[i] = reg.a[i] = 0xFFFFFFFF;
     reg.usp = 0;
     reg.ipl = 0;
     ipl = 0;
@@ -56,30 +64,31 @@ Moira::reset()
     sync(2);
     reg.sp = read16OnReset(0);
     sync(4);
-    reg.ssp = reg.sp = read16OnReset(2) | reg.sp << 16;
+    reg.ssp = reg.sp = (read16OnReset(2) & ~0x1) | reg.sp << 16;
     sync(4);
     reg.pc = read16OnReset(4);
     sync(4);
-    reg.pc = read16OnReset(6) | reg.pc << 16;
+    reg.pc = (read16OnReset(6) & ~0x1) | reg.pc << 16;
 
     // Fill the prefetch queue
     sync(4);
     queue.irc = read16OnReset(reg.pc & 0xFFFFFF);
     sync(2);
     prefetch();
-
+    
     debugger.reset();
 }
 
 void
 Moira::execute()
 {
-    // Check integrity of the CPU_CHECK_IRQ flag
+    // Check the integrity of the CPU flags
     if (reg.ipl > reg.sr.ipl || reg.ipl == 7) assert(flags & CPU_CHECK_IRQ);
-
-    // Check integrity of the CPU_TRACE_FLAG flag
     assert(!!(flags & CPU_TRACE_FLAG) == reg.sr.t);
 
+    // Check the integrity of the program counter
+    assert(reg.pc0 == reg.pc);
+    
     //
     // The quick execution path: Call the instruction handler and return
     //
@@ -88,6 +97,7 @@ Moira::execute()
 
         reg.pc += 2;
         (this->*exec[queue.ird])(queue.ird);
+        assert(reg.pc0 == reg.pc);
         return;
     }
 
@@ -95,6 +105,12 @@ Moira::execute()
     // The slow execution path: Process flags one by one
     //
 
+    // Only continue if the CPU is not halted
+    if (flags & CPU_IS_HALTED) {
+        sync(2);
+        return;
+    }
+        
     // Process pending trace exception (if any)
     if (flags & CPU_TRACE_EXCEPTION) {
         execTraceException();
@@ -113,6 +129,16 @@ Moira::execute()
 
     // If the CPU is stopped, poll the IPL lines and return
     if (flags & CPU_IS_STOPPED) {
+        
+        // Initiate a privilege exception if the supervisor bit is cleared
+        if (!reg.sr.s) {
+            sync(4);
+            reg.pc -= 2;
+            flags &= ~CPU_IS_STOPPED;
+            execPrivilegeException();
+            return;
+        }
+        
         pollIrq();
         sync(MIMIC_MUSASHI ? 1 : 2);
         return;
@@ -126,25 +152,30 @@ Moira::execute()
     // Execute the instruction
     reg.pc += 2;
     (this->*exec[queue.ird])(queue.ird);
+    assert(reg.pc0 == reg.pc);
 
 done:
-
+    
     // Check if a breakpoint has been reached
     if (flags & CPU_CHECK_BP) {
-        if (debugger.breakpointMatches(reg.pc)) {
-            breakpointReached(reg.pc);
-        }
+        
+        // Don't break if the instruction won't be executed due to tracing
+        if (flags & CPU_TRACE_EXCEPTION) return;
+        
+        // Compare breakpoint addresses with instruction address
+        if (debugger.breakpointMatches(reg.pc0)) breakpointReached(reg.pc0);
     }
 }
 
 bool
 Moira::checkForIrq()
 {
+    // pollIrq();
+    
     if (reg.ipl > reg.sr.ipl || reg.ipl == 7) {
 
         // Notify delegate
         assert(reg.ipl < 7);
-        irqOccurred(reg.ipl);
 
         // Trigger interrupt
         execIrqException(reg.ipl);
@@ -160,6 +191,17 @@ Moira::checkForIrq()
         if (reg.ipl == ipl) flags &= ~CPU_CHECK_IRQ;
         return false;
     }
+}
+
+void
+Moira::halt()
+{
+    // Halt the CPU
+    flags |= CPU_IS_HALTED;
+    reg.pc = reg.pc0;
+
+    // Inform the delegate
+    signalHalt();
 }
 
 template<Size S> u32
@@ -258,6 +300,20 @@ Moira::setSupervisorMode(bool enable)
 }
 
 void
+Moira::setFC(FunctionCode value)
+{
+    if (!EMULATE_FC) return;
+    fcl = value;
+}
+
+template<Mode M> void
+Moira::setFC()
+{
+    if (!EMULATE_FC) return;
+    fcl = (M == MODE_DIPC || M == MODE_IXPC) ? FC_USER_PROG : FC_USER_DATA;
+}
+
+void
 Moira::setIPL(u8 val)
 {
     if (ipl != val) {
@@ -288,6 +344,13 @@ Moira::getIrqVector(int level) {
 int
 Moira::disassemble(u32 addr, char *str)
 {
+    if (ENABLE_DASM == false) {
+
+        printf("This feature requires ENABLE_DASM = true\n");
+        assert(false);
+        return 0;
+    }
+
     u32 pc     = addr;
     u16 opcode = read16Dasm(pc);
 
@@ -308,7 +371,8 @@ Moira::disassembleWord(u32 value, char *str)
 void
 Moira::disassembleMemory(u32 addr, int cnt, char *str)
 {
-    for (int i = 0; i < cnt; i++, addr += 2) {
+    addr -= 2; // because dasmRead increases addr first
+    for (int i = 0; i < cnt; i++) {
         u32 value = dasmRead<Word>(addr);
         sprintx(str, value, true, 0, 4);
         *str++ = (i == cnt - 1) ? 0 : ' ';
@@ -343,6 +407,7 @@ Moira::disassembleSR(const StatusRegister &sr, char *str)
     str[16] = 0;
 }
 
+/*
 void
 Moira::disassembleSR(u16 sr, char *str)
 {
@@ -364,6 +429,20 @@ Moira::disassembleSR(u16 sr, char *str)
     str[15] = (sr & 0b0000000000000001) ? 'C' : 'c';
     str[16] = 0;
 }
+*/
+
+InstrInfo
+Moira::getInfo(u16 op)
+{
+    if (BUILD_INSTR_INFO_TABLE == false) {
+
+        printf("This feature requires BUILD_INSTR_INFO_TABLE = true\n");
+        assert(false);
+        return InstrInfo { ILLEGAL, MODE_IP, (Size)0 };
+    }
+        
+    return info[op];
+}
 
 // Make sure the compiler generates certain instances of template functions
 template u32 Moira::readD <Long> (int n);
@@ -372,3 +451,4 @@ template void Moira::writeD <Long> (int n, u32 v);
 template void Moira::writeA <Long> (int n, u32 v);
 
 }
+

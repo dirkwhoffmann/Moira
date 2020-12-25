@@ -14,10 +14,14 @@
 
 namespace moira {
 
+//
+// Guard
+//
+
 bool
-Guard::eval(u32 addr)
+Guard::eval(u32 addr, Size S)
 {
-    if (this->addr == addr && this->enabled) {
+    if (this->addr >= addr && this->addr < addr + S && this->enabled) {
         if (++hits > skip) {
             return true;
         }
@@ -25,10 +29,15 @@ Guard::eval(u32 addr)
     return false;
 }
 
+
+//
+// Guards
+//
+
 Guard *
 Guards::guardWithNr(long nr)
 {
-    return nr < count ? &guards[nr] : NULL;
+    return nr < count ? &guards[nr] : nullptr;
 }
 
 Guard *
@@ -38,7 +47,7 @@ Guards::guardAtAddr(u32 addr)
         if (guards[i].addr == addr) return &guards[i];
     }
 
-    return NULL;
+    return nullptr;
 }
 
 bool
@@ -46,7 +55,7 @@ Guards::isSetAt(u32 addr)
 {
     Guard *guard = guardAtAddr(addr);
 
-    return guard != NULL;
+    return guard != nullptr;
 }
 
 bool
@@ -54,7 +63,7 @@ Guards::isSetAndEnabledAt(u32 addr)
 {
     Guard *guard = guardAtAddr(addr);
 
-    return guard != NULL && guard->enabled;
+    return guard != nullptr && guard->enabled;
 }
 
 bool
@@ -62,7 +71,7 @@ Guards::isSetAndDisabledAt(u32 addr)
 {
     Guard *guard = guardAtAddr(addr);
 
-    return guard != NULL && !guard->enabled;
+    return guard != nullptr && !guard->enabled;
 }
 
 bool
@@ -70,7 +79,7 @@ Guards::isSetAndConditionalAt(u32 addr)
 {
     Guard *guard = guardAtAddr(addr);
 
-    return guard != NULL && guard->skip != 0;
+    return guard != nullptr && guard->skip != 0;
 }
 
 void
@@ -116,6 +125,15 @@ Guards::removeAt(u32 addr)
     setNeedsCheck(count != 0);
 }
 
+void
+Guards::replace(long nr, u32 addr)
+{
+    if (nr >= count || isSetAt(addr)) return;
+    
+    guards[nr].addr = addr;
+    guards[nr].hits = 0;
+}
+
 bool
 Guards::isEnabled(long nr)
 {
@@ -136,10 +154,10 @@ Guards::setEnableAt(u32 addr, bool value)
 }
 
 bool
-Guards::eval(u32 addr)
+Guards::eval(u32 addr, Size S)
 {
     for (int i = 0; i < count; i++)
-        if (guards[i].eval(addr)) return true;
+        if (guards[i].eval(addr, S)) return true;
 
     return false;
 }
@@ -203,9 +221,9 @@ Debugger::breakpointMatches(u32 addr)
 }
 
 bool
-Debugger::watchpointMatches(u32 addr)
+Debugger::watchpointMatches(u32 addr, Size S)
 {
-    return watchpoints.eval(addr);
+    return watchpoints.eval(addr, S);
 }
 
 void
@@ -233,24 +251,18 @@ Debugger::logInstruction()
     logCnt++;
 }
 
-Registers
-Debugger::logEntry(int n)
+Registers &
+Debugger::logEntryRel(int n)
 {
     assert(n < loggedInstructions());
-
-    // n == 0 returns the most recently recorded entry
-    int offset = (logCnt - 1 - n) % logBufferCapacity;
-
-    return logBuffer[offset];
+    return logBuffer[(logCnt - 1 - n) % logBufferCapacity];
 }
 
-Registers
+Registers &
 Debugger::logEntryAbs(int n)
 {
     assert(n < loggedInstructions());
-
-    // n == 0 returns the oldest entry
-    return logEntry(loggedInstructions() - n - 1);
+    return logEntryRel(loggedInstructions() - n - 1);
 }
 
 }

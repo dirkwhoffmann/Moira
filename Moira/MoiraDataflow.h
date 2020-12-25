@@ -59,7 +59,7 @@
  * If the source is a register or an immediate value, variable ea remains
  * untouched.
  */
-template<Mode M, Size S> bool readOp(int n, u32 &ea, u32 &result);
+template<Mode M, Size S, Flags F = 0> bool readOp(int n, u32 &ea, u32 &result);
 
 /* Writes an operand
  *
@@ -67,51 +67,57 @@ template<Mode M, Size S> bool readOp(int n, u32 &ea, u32 &result);
  * by the addressing mode M. Parameter 'last' indicates if this function is
  * initiates the last memory bus cycle of an instruction.
  */
-template<Mode M, Size S, bool last = false> bool writeOp(int n, u32 val);
-template<Mode M, Size S, bool last = false> void writeOp(int n, u32 ea, u32 val);
+template<Mode M, Size S, Flags F = 0> bool writeOp(int n, u32 val);
+template<Mode M, Size S, Flags F = 0> void writeOp(int n, u32 ea, u32 val);
 
 // Computes an effective address
-template<Mode M, Size S, bool skip = false> u32 computeEA(u32 n);
+template<Mode M, Size S, Flags F = 0> u32 computeEA(u32 n);
 
 // Emulates the address register modification for modes (An)+, (An)-
 template<Mode M, Size S> void updateAn(int n);
 template<Mode M, Size S> void updateAnPD(int n);
+template<Mode M, Size S> void undoAnPD(int n);
 template<Mode M, Size S> void updateAnPI(int n);
 
-// Reads an operand from memory (without or with address error checking)
-template<Size S, bool last = false> u32 readM(u32 addr);
-template<Size S, bool last = false> u32 readM(u32 addr, bool &error);
+// Reads a value from a specific memory space
+template<MemSpace M, Size S, Flags F = 0> u32 readM(u32 addr);
+template<MemSpace M, Size S, Flags F = 0> u32 readM(u32 addr, bool &error);
+
+// Reads a value from program or data space, depending on the addressing mode
+template<Mode M, Size S, Flags F = 0> u32 readM(u32 addr);
+template<Mode M, Size S, Flags F = 0> u32 readM(u32 addr, bool &error);
+
+// Writes a value to a specific memory space
+template<MemSpace M, Size S, Flags F = 0> void writeM(u32 addr, u32 val);
+template<MemSpace M, Size S, Flags F = 0> void writeM(u32 addr, u32 val, bool &error);
 
 // Writes an operand to memory (without or with address error checking)
-template<Size S, bool last = false> void writeM(u32 addr, u32 val);
-template<Size S, bool last = false> void writeM(u32 addr, u32 val, bool &error);
-
-// Writes an operand to memory in reversed memory access order
-template<Size S, bool last = false> void writeMrev(u32 addr, u32 val);
-template<Size S, bool last = false> void writeMrev(u32 addr, u32 val, bool &error);
+template<Mode M, Size S, Flags F = 0> void writeM(u32 addr, u32 val);
+template<Mode M, Size S, Flags F = 0> void writeM(u32 addr, u32 val, bool &error);
 
 // Reads an immediate value from memory
- template<Size S> u32 readI();
+template<Size S> u32 readI();
 
 // Pushes a value onto the stack
- template<Size S, bool last = false> void push(u32 value);
+template<Size S, Flags F = 0> void push(u32 value);
+template<Size S, Flags F = 0> void push(u32 value, bool &error);
 
-/* Checks for an address error
- * An address error occurs if the CPU tries to access a word or a long word
- * that is located at an odd address. If an address error is encountered,
- * the function calls execAddressError to initiate exception processing.
- */
-template<Size S, int delay = 0> bool addressReadError(u32 addr);
-template<Size S, int delay = 0> bool addressWriteError(u32 addr);
+// Checks whether the provided address should trigger an address error
+template<Size S = Word> bool misaligned(u32 addr);
+
+// Creates an address error stack frame
+template<Flags F = 0> AEStackFrame makeFrame(u32 addr, u32 pc, u16 sr, u16 ird);
+template<Flags F = 0> AEStackFrame makeFrame(u32 addr, u32 pc);
+template<Flags F = 0> AEStackFrame makeFrame(u32 addr);
 
 // Prefetches the next instruction
-template<bool last = false> void prefetch();
+template<Flags F = 0> void prefetch();
 
 // Performs a full prefetch cycle
-template<bool last = false> void fullPrefetch();
+template<Flags F = 0, int delay = 0> void fullPrefetch();
 
 // Reads an extension word from memory
-template<bool skip = false> void readExt();
+void readExt();
 
 // Jumps to an exception vector
-void jumpToVector(int nr);
+template<Flags F = 0> void jumpToVector(int nr);
