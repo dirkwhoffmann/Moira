@@ -28434,7 +28434,7 @@ static void m68k_op_ror_32_s(void)
 
 	FLAG_N = NFLAG_32(res);
 	FLAG_Z = res;
-	FLAG_C = src << (9-shift);
+	FLAG_C = (uint)(src << (9-shift));
 	FLAG_V = VFLAG_CLEAR;
 }
 
@@ -28506,7 +28506,7 @@ static void m68k_op_ror_32_r(void)
 		USE_CYCLES(orig_shift<<CYC_SHIFT);
 
 		*r_dst = res;
-		FLAG_C = (src >> ((shift - 1) & 31)) << 8;
+		FLAG_C = (uint)((src >> ((shift - 1) & 31)) << 8);
 		FLAG_N = NFLAG_32(res);
 		FLAG_Z = res;
 		FLAG_V = VFLAG_CLEAR;
@@ -28514,8 +28514,8 @@ static void m68k_op_ror_32_r(void)
 	}
 
 	FLAG_C = CFLAG_CLEAR;
-	FLAG_N = NFLAG_32(src);
-	FLAG_Z = src;
+	FLAG_N = (uint)(NFLAG_32(src));
+	FLAG_Z = (uint)(src);
 	FLAG_V = VFLAG_CLEAR;
 }
 
@@ -28669,7 +28669,7 @@ static void m68k_op_rol_32_s(void)
 
 	FLAG_N = NFLAG_32(res);
 	FLAG_Z = res;
-	FLAG_C = src >> (24-shift);
+	FLAG_C = (uint)(src >> (24-shift));
 	FLAG_V = VFLAG_CLEAR;
 }
 
@@ -28758,7 +28758,7 @@ static void m68k_op_rol_32_r(void)
 
 		*r_dst = res;
 
-		FLAG_C = (src >> ((32 - shift) & 0x1f)) << 8;
+		FLAG_C = (uint)((src >> ((32 - shift) & 0x1f)) << 8);
 		FLAG_N = NFLAG_32(res);
 		FLAG_Z = res;
 		FLAG_V = VFLAG_CLEAR;
@@ -28766,8 +28766,8 @@ static void m68k_op_rol_32_r(void)
 	}
 
 	FLAG_C = CFLAG_CLEAR;
-	FLAG_N = NFLAG_32(src);
-	FLAG_Z = src;
+	FLAG_N = (uint)(NFLAG_32(src));
+	FLAG_Z = (uint)(src);
 	FLAG_V = VFLAG_CLEAR;
 }
 
@@ -28924,13 +28924,13 @@ static void m68k_op_roxr_32_s(void)
 
 	res = ROR_33_64(res, shift);
 
-	FLAG_C = FLAG_X = res >> 24;
+	FLAG_C = FLAG_X = (uint)(res >> 24);
 	res = MASK_OUT_ABOVE_32(res);
 
-	*r_dst =  res;
+	*r_dst = (uint)(res);
 
-	FLAG_N = NFLAG_32(res);
-	FLAG_Z = res;
+	FLAG_N = (uint)(NFLAG_32(res));
+	FLAG_Z = (uint)(res);
 	FLAG_V = VFLAG_CLEAR;
 
 #else
@@ -29029,12 +29029,12 @@ static void m68k_op_roxr_32_r(void)
 
 		USE_CYCLES(orig_shift<<CYC_SHIFT);
 
-		FLAG_C = FLAG_X = res >> 24;
+		FLAG_C = FLAG_X = (uint)(res >> 24);
 		res = MASK_OUT_ABOVE_32(res);
 
-		*r_dst = res;
-		FLAG_N = NFLAG_32(res);
-		FLAG_Z = res;
+		*r_dst = (uint)(res);
+		FLAG_N = (uint)(NFLAG_32(res));
+		FLAG_Z = (uint)res;
 		FLAG_V = VFLAG_CLEAR;
 		return;
 	}
@@ -29238,14 +29238,14 @@ static void m68k_op_roxl_32_s(void)
 
 	res = ROL_33_64(res, shift);
 
-	FLAG_C = FLAG_X = res >> 24;
+	FLAG_C = FLAG_X = (uint)(res >> 24);
 	res = MASK_OUT_ABOVE_32(res);
 
-	*r_dst = res;
+	*r_dst = (uint)(res);
 
-	FLAG_N = NFLAG_32(res);
-	FLAG_Z = res;
-	FLAG_V = VFLAG_CLEAR;
+	FLAG_N = (uint)(NFLAG_32(res));
+	FLAG_Z = (uint)(res);
+	FLAG_V = (uint)(VFLAG_CLEAR);
 
 #else
 
@@ -29344,12 +29344,12 @@ static void m68k_op_roxl_32_r(void)
 
 		USE_CYCLES(orig_shift<<CYC_SHIFT);
 
-		FLAG_C = FLAG_X = res >> 24;
+		FLAG_C = FLAG_X = (uint)(res >> 24);
 		res = MASK_OUT_ABOVE_32(res);
 
-		*r_dst = res;
-		FLAG_N = NFLAG_32(res);
-		FLAG_Z = res;
+		*r_dst = (uint)(res);
+		FLAG_N = (uint)NFLAG_32(res);
+		FLAG_Z = (uint)(res);
 		FLAG_V = VFLAG_CLEAR;
 		return;
 	}
