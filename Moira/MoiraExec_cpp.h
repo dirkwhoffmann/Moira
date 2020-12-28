@@ -360,7 +360,7 @@ Moira::execAndiccr(u16 opcode)
     sync(8);
 
     u32 result = logic<I,S>(src, dst);
-    setCCR(result);
+    setCCR((u8)result);
 
     (void)readM<MEM_DATA, Word>(reg.pc+2);
     prefetch<POLLIPL>();
@@ -377,7 +377,7 @@ Moira::execAndisr(u16 opcode)
     sync(8);
 
     u32 result = logic<I,S>(src, dst);
-    setSR(result);
+    setSR((u16)result);
 
     (void)readM<MEM_DATA, Word>(reg.pc+2);
     prefetch<POLLIPL>();
@@ -791,7 +791,7 @@ Moira::execJsr(u16 opcode)
     // Jump to new address
     reg.pc = ea;
 
-    queue.irc = readM<MEM_PROG, Word>(ea);
+    queue.irc = (u16)readM<MEM_PROG, Word>(ea);
     prefetch<POLLIPL>();
 }
 
@@ -1110,7 +1110,7 @@ template<Instr I, Mode M, Size S> void
 Moira::execMovemEaRg(u16 opcode)
 {
     int src  = _____________xxx(opcode);
-    u16 mask = readI<Word>();
+    u16 mask = (u16)readI<Word>();
     u32 ea   = computeEA<M,S>(src);
     
     // Check for address error
@@ -1161,7 +1161,7 @@ template<Instr I, Mode M, Size S> void
 Moira::execMovemRgEa(u16 opcode)
 {
     int dst  = _____________xxx(opcode);
-    u16 mask = readI<Word>();
+    u16 mask = (u16)readI<Word>();
 
     switch (M) {
 
@@ -1288,7 +1288,7 @@ Moira::execMoveToCcr(u16 opcode)
     if (!readOp <M,S, STD_AE_FRAME> (src, ea, data)) return;
 
     sync(4);
-    setCCR(data);
+    setCCR((u8)data);
 
     (void)readM <MEM_PROG, Word> (reg.pc + 2);
     prefetch<POLLIPL>();
@@ -1330,7 +1330,7 @@ Moira::execMoveToSr(u16 opcode)
     if (!readOp <M,S, STD_AE_FRAME> (src, ea, data)) return;
 
     sync(4);
-    setSR(data);
+    setSR((u16)data);
 
     (void)readM <MEM_PROG, Word> (reg.pc + 2);
     prefetch<POLLIPL>();
@@ -1564,7 +1564,7 @@ Moira::execRte(u16 opcode)
 {
     SUPERVISOR_MODE_ONLY
 
-    u16 newsr = readM<MEM_DATA, Word>(reg.sp);
+    u16 newsr = (u16)readM<MEM_DATA, Word>(reg.sp);
     reg.sp += 2;
 
     u32 newpc = readM<MEM_DATA, Long>(reg.sp);
@@ -1658,7 +1658,7 @@ Moira::execStop(u16 opcode)
 {
     SUPERVISOR_MODE_ONLY
 
-    u16 src = readI<Word>();
+    u16 src = (u16)readI<Word>();
 
     setSR(src);
     flags |= CPU_IS_STOPPED;

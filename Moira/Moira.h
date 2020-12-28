@@ -231,7 +231,7 @@ protected:
     virtual void signalTraceException() { };
     virtual void signalTrapException() { };
     virtual void signalPrivilegeViolation() { };
-    virtual void signalInterrupt(u8 level) { };
+    virtual void signalInterrupt(int level) { };
     virtual void signalJumpToVector(int nr, u32 addr) { };
 
     // Exception delegates

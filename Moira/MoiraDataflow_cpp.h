@@ -432,7 +432,7 @@ Moira::fullPrefetch()
         return;
     }
 
-    queue.irc = readM<MEM_PROG, Word>(reg.pc);
+    queue.irc = (u16)readM<MEM_PROG, Word>(reg.pc);
     if (delay) sync(delay);
     prefetch<F>();
 }
@@ -448,7 +448,7 @@ Moira::readExt()
         return;
     }
     
-    queue.irc = readM<MEM_PROG, Word>(reg.pc);
+    queue.irc = (u16)readM<MEM_PROG, Word>(reg.pc);
 }
 
 template<Flags F> void
@@ -472,7 +472,7 @@ Moira::jumpToVector(int nr)
     }
     
     // Update the prefetch queue
-    queue.irc = readM<MEM_PROG, Word>(reg.pc);
+    queue.irc = (u16)readM<MEM_PROG, Word>(reg.pc);
     sync(2);
     prefetch<POLLIPL>();
     
