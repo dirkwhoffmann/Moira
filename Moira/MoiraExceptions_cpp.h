@@ -195,7 +195,7 @@ Moira::execIrqException(int level)
     reg.ipl = 0;
 
     // Temporarily raise the interrupt threshold
-    reg.sr.ipl = level;
+    reg.sr.ipl = (u8)level;
     
     // Enter supervisor mode
     setSupervisorMode(true);

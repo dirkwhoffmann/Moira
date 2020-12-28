@@ -9,8 +9,8 @@
 
 #define SUPERVISOR_MODE_ONLY if (!reg.sr.s) { execPrivilegeException(); return; }
 
-#define REVERSE_8(x) (((x) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
-#define REVERSE_16(x) ((REVERSE_8((x) & 0xFF) << 8) | REVERSE_8(((x) >> 8) & 0xFF))
+#define REVERSE_8(x) (u8)(((x) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
+#define REVERSE_16(x) (u16)((REVERSE_8((x) & 0xFF) << 8) | REVERSE_8(((x) >> 8) & 0xFF))
 
 #define ______________xx(opcode) (u8)((opcode >> 0)  & 0b11)
 #define _____________xxx(opcode) (u8)((opcode >> 0)  & 0b111)

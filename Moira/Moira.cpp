@@ -322,7 +322,7 @@ Moira::setIPL(u8 val)
     }
 }
 
-int
+u16
 Moira::getIrqVector(int level) {
 
     assert(level < 8);

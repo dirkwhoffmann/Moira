@@ -101,7 +101,7 @@ TestCPU::write16 (u32 addr, u16 val)
 
 /* Returns the interrupt vector in IRQ_USER mode
  */
-int
+u16
 TestCPU::readIrqUserVector(moira::u8 level) { return 0; }
 
 /* Breakpoint handler

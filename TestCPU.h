@@ -23,7 +23,7 @@ class TestCPU : public Moira {
     u16 read16Dasm(u32 addr) override;
     void write8 (u32 addr, u8  val) override;
     void write16 (u32 addr, u16 val) override;
-    int readIrqUserVector(u8 level) override;
+    u16 readIrqUserVector(u8 level) override;
     void breakpointReached(u32 addr) override;
     void watchpointReached(u32 addr) override;
 };
