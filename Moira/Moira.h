@@ -231,7 +231,7 @@ protected:
     virtual void signalTraceException() { };
     virtual void signalTrapException() { };
     virtual void signalPrivilegeViolation() { };
-    virtual void signalInterrupt(int level) { };
+    virtual void signalInterrupt(u8 level) { };
     virtual void signalJumpToVector(int nr, u32 addr) { };
 
     // Exception delegates
@@ -350,7 +350,7 @@ private:
     void pollIrq() { reg.ipl = ipl; }
     
     // Selects the IRQ vector to branch to
-    u16 getIrqVector(int level);
+    u16 getIrqVector(u8 level);
     
 #include "MoiraInit.h"
 #include "MoiraALU.h"

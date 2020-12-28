@@ -180,7 +180,7 @@ Moira::execPrivilegeException()
 }
 
 void
-Moira::execIrqException(int level)
+Moira::execIrqException(u8 level)
 {
     assert(level < 8);
     signalInterrupt(level);
@@ -195,7 +195,7 @@ Moira::execIrqException(int level)
     reg.ipl = 0;
 
     // Temporarily raise the interrupt threshold
-    reg.sr.ipl = (u8)level;
+    reg.sr.ipl = level;
     
     // Enter supervisor mode
     setSupervisorMode(true);

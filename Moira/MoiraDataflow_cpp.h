@@ -420,7 +420,7 @@ Moira::prefetch()
     reg.pc0 = reg.pc;
     
     queue.ird = queue.irc;
-    queue.irc = readM<MEM_PROG, Word, F>(reg.pc + 2);
+    queue.irc = (u16)readM<MEM_PROG, Word, F>(reg.pc + 2);
 }
 
 template<Flags F, int delay> void

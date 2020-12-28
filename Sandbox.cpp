@@ -35,7 +35,7 @@ Sandbox::record(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
 void
 Sandbox::recordPoll(u64 cycle, u32 fc, u8 value)
 {
-    record(POLL, 0, cycle, value, fc);
+    record(POLL, 0, cycle, fc, value);
 }
 
 u32

@@ -87,17 +87,17 @@ static uint8 READ_EA_8(int ea)
 	{
 		case 0:		// Dn
 		{
-			return REG_D[reg];
+			return (uint8)REG_D[reg];
 		}
 		case 5:		// (d16, An)
 		{
 			uint32 ea = EA_AY_DI_8();
-			return m68ki_read_8(ea);
+			return (uint8)m68ki_read_8(ea);
 		}
 		case 6:		// (An) + (Xn) + d8
 		{
 			uint32 ea = EA_AY_IX_8();
-			return m68ki_read_8(ea);
+			return (uint8)m68ki_read_8(ea);
 		}
 		case 7:
 		{
@@ -108,11 +108,11 @@ static uint8 READ_EA_8(int ea)
 					uint32 d1 = OPER_I_16();
 					uint32 d2 = OPER_I_16();
 					uint32 ea = (d1 << 16) | d2;
-					return m68ki_read_8(ea);
+					return (uint8)m68ki_read_8(ea);
 				}
 				case 4:		// #<data>
 				{
-					return  OPER_I_8();
+					return  (uint8)OPER_I_8();
 				}
 				default:	fatalerror("MC68040: READ_EA_8: unhandled mode %d, reg %d at %08X\n", mode, reg, REG_PC);
 			}
@@ -138,17 +138,17 @@ static uint16 READ_EA_16(int ea)
 		case 2:		// (An)
 		{
 			uint32 ea = REG_A[reg];
-			return m68ki_read_16(ea);
+			return (uint16)m68ki_read_16(ea);
 		}
 		case 5:		// (d16, An)
 		{
 			uint32 ea = EA_AY_DI_16();
-			return m68ki_read_16(ea);
+			return (uint16)m68ki_read_16(ea);
 		}
 		case 6:		// (An) + (Xn) + d8
 		{
 			uint32 ea = EA_AY_IX_16();
-			return m68ki_read_16(ea);
+			return (uint16)m68ki_read_16(ea);
 		}
 		case 7:
 		{
@@ -159,11 +159,11 @@ static uint16 READ_EA_16(int ea)
 					uint32 d1 = OPER_I_16();
 					uint32 d2 = OPER_I_16();
 					uint32 ea = (d1 << 16) | d2;
-					return m68ki_read_16(ea);
+					return (uint16)m68ki_read_16(ea);
 				}
 				case 4:		// #<data>
 				{
-					return OPER_I_16();
+					return (uint16)OPER_I_16();
 				}
 
 				default:	fatalerror("MC68040: READ_EA_16: unhandled mode %d, reg %d at %08X\n", mode, reg, REG_PC);
@@ -763,7 +763,7 @@ void m68040_fpu_op0(void)
 	{
 		case 0:
 		{
-			uint16 w2 = OPER_I_16();
+			uint16 w2 = (uint16)OPER_I_16();
 			switch ((w2 >> 13) & 0x7)
 			{
 				case 0x0:	// FPU ALU FP, FP

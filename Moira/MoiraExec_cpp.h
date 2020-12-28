@@ -452,7 +452,7 @@ Moira::execBitDxEa(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execBitImEa(u16 opcode)
 {
-    u8  src = readI<S>();
+    u8  src = (u8)readI<S>();
     int dst = _____________xxx(opcode);
 
     switch (M)
@@ -1586,7 +1586,7 @@ template<Instr I, Mode M, Size S> void
 Moira::execRtr(u16 opcode)
 {
     bool error;
-    u16 newccr = readM<M, Word>(reg.sp, error);
+    u16 newccr = (u16)readM<M, Word>(reg.sp, error);
     if (error) return;
     
     reg.sp += 2;

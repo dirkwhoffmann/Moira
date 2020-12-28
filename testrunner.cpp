@@ -52,14 +52,14 @@ void setupMoira()
 void createTestCase(Setup &s)
 {
     s.supervisor = smartRandom() % 2;
-    s.ccr = smartRandom();
-    s.ext1 = smartRandom();
-    s.ext2 = smartRandom();
+    s.ccr = (uint8_t)smartRandom();
+    s.ext1 = (uint16_t)smartRandom();
+    s.ext2 = (uint16_t)smartRandom();
     for (int i = 0; i < 8; i++) s.d[i] = smartRandom();
     for (int i = 0; i < 8; i++) s.a[i] = smartRandom();
 
     for (unsigned i = 0; i < sizeof(s.mem); i++) {
-        s.mem[i] = smartRandom();
+        s.mem[i] = (uint8_t)smartRandom();
     }
 }
 
@@ -133,7 +133,7 @@ void run()
             if ((opcode & 0xFFF) == 0) { printf("."); fflush(stdout); }
 
             // Prepare the test case with the selected instruction
-            setupInstruction(setup, pc, opcode);
+            setupInstruction(setup, pc, (uint16_t)opcode);
 
             // Reset the sandbox (memory accesses observer)
             sandbox.prepare();
@@ -243,7 +243,7 @@ clock_t runMoira(int i, Setup &s, Result &r)
 void recordMusashiRegisters(Result &r)
 {
     r.pc = m68k_get_reg(NULL, M68K_REG_PC);
-    r.sr = m68k_get_reg(NULL, M68K_REG_SR);
+    r.sr = (uint16_t)m68k_get_reg(NULL, M68K_REG_SR);
     r.usp = m68k_get_reg(NULL, M68K_REG_USP);
     r.ssp = m68k_get_reg(NULL, M68K_REG_ISP);
     r.fc = musashiFC;

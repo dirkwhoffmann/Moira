@@ -23911,7 +23911,7 @@ static void m68k_op_move16_32(void)
 {
     if(CPU_TYPE_IS_040_PLUS(CPU_TYPE))
     {
-        uint16 w2 = OPER_I_16();
+        uint16 w2 = (uint16)OPER_I_16();
         int ax = REG_IR & 7;
         int ay = (w2 >> 12) & 7;
 
