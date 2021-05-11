@@ -425,7 +425,7 @@ Moira::prefetch()
 
 template<Flags F, int delay> void
 Moira::fullPrefetch()
-{
+{    
     // Check for address error
     if (misaligned(reg.pc)) {
         execAddressError(makeFrame(reg.pc), 2);

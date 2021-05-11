@@ -1354,4 +1354,3 @@ Moira::createJumpTables()
     opcode = parse("0100 1110 0101 1---");
     _____________XXX(opcode, UNLK, MODE_IP, Word, Unlk);
 }
-

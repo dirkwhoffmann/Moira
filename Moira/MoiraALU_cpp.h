@@ -201,7 +201,7 @@ Moira::addsub(u32 op1, u32 op2)
         case ADDQ:
         {
             result = U64_ADD(op1, op2);
-            
+
             reg.sr.x = reg.sr.c = CARRY<S>(result);
             reg.sr.v = NBIT<S>((op1 ^ result) & (op2 ^ result));
             reg.sr.z = ZERO<S>(result);
@@ -707,4 +707,3 @@ Moira::divMusashi(u32 op1, u32 op2)
 
     return result;
 }
-

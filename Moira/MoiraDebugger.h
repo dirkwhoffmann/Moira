@@ -7,8 +7,7 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#ifndef MOIRA_DEBUGGER_H
-#define MOIRA_DEBUGGER_H
+#pragma once
 
 namespace moira {
 
@@ -216,9 +215,7 @@ public:
      */
     Registers &logEntryRel(int n);
     Registers &logEntryAbs(int n);
-    // u32 loggedPC0Rel(int n);
-    // u32 loggedPC0Abs(int n);
-    
+
     // Clears the log buffer
     void clearLog() { logCnt = 0; }
     
@@ -226,4 +223,3 @@ public:
 };
 
 }
-#endif

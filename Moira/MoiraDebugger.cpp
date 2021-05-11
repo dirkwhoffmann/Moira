@@ -8,9 +8,9 @@
 // -----------------------------------------------------------------------------
 
 #include "Moira.h"
+
 #include <string.h>
 #include <stdio.h>
-#include <assert.h>
 
 namespace moira {
 

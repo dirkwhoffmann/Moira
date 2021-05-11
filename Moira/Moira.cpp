@@ -7,12 +7,10 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#include <stdio.h>
-#include <assert.h>
-#include <algorithm>
-
 #include "Moira.h"
-#include "MoiraConfig.h"
+
+#include <stdio.h>
+#include <algorithm>
 
 namespace moira {
 
@@ -118,7 +116,7 @@ Moira::execute()
     }
 
     // Check if the T flag is set inside the status register
-    if (flags & CPU_TRACE_FLAG) {
+    if ((flags & CPU_TRACE_FLAG) && !(flags & CPU_IS_STOPPED)) {
         flags |= CPU_TRACE_EXCEPTION;
     }
 
@@ -195,7 +193,7 @@ Moira::checkForIrq()
 
 void
 Moira::halt()
-{
+{    
     // Halt the CPU
     flags |= CPU_IS_HALTED;
     reg.pc = reg.pc0;
@@ -205,19 +203,19 @@ Moira::halt()
 }
 
 template<Size S> u32
-Moira::readD(int n)
+Moira::readD(int n) const
 {
     return CLIP<S>(reg.d[n]);
 }
 
 template<Size S> u32
-Moira::readA(int n)
+Moira::readA(int n) const
 {
     return CLIP<S>(reg.a[n]);
 }
 
 template<Size S> u32
-Moira::readR(int n)
+Moira::readR(int n) const
 {
     return CLIP<S>(reg.r[n]);
 }
@@ -241,9 +239,9 @@ Moira::writeR(int n, u32 v)
 }
 
 u8
-Moira::getCCR(const StatusRegister &sr)
+Moira::getCCR(const StatusRegister &sr) const
 {
-    return (u8)(sr.c << 0 | sr.v << 1 | sr.z << 2 | sr.n << 3 | sr.x << 4 );
+    return (u8)(sr.c << 0 | sr.v << 1 | sr.z << 2 | sr.n << 3 | sr.x << 4);
 }
 
 void
@@ -257,7 +255,7 @@ Moira::setCCR(u8 val)
 }
 
 u16
-Moira::getSR(const StatusRegister &sr)
+Moira::getSR(const StatusRegister &sr) const
 {
     return (u16)(sr.t << 15 | sr.s << 13 | sr.ipl << 8 | getCCR());
 }
@@ -317,11 +315,9 @@ Moira::setIPL(u8 val)
 }
 
 u16
-Moira::getIrqVector(u8 level) {
+Moira::getIrqVector(u8 level) const {
 
     assert(level < 8);
-
-    sync(4);
 
     switch (irqMode) {
 
@@ -435,14 +431,13 @@ Moira::getInfo(u16 op)
         return InstrInfo { ILLEGAL, MODE_IP, (Size)0 };
     }
         
-    return info[op];
+    return info[op];    
 }
 
 // Make sure the compiler generates certain instances of template functions
-template u32 Moira::readD <Long> (int n);
-template u32 Moira::readA <Long> (int n);
+template u32 Moira::readD <Long> (int n) const;
+template u32 Moira::readA <Long> (int n) const;
 template void Moira::writeD <Long> (int n, u32 v);
 template void Moira::writeA <Long> (int n, u32 v);
 
 }
-
