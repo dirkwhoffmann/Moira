@@ -16,7 +16,7 @@ Moira::readOp(int n, u32 &ea, u32 &result)
     if (M == MODE_IM) { result = readI<S>();  return true; }
 
     // Compute effective address
-    ea = computeEA<M,S>(n);
+    ea = computeEA<M,S,F>(n);
 
     // Read from effective address
     bool error; result = readM<M,S,F>(ea, error);
@@ -29,7 +29,7 @@ Moira::readOp(int n, u32 &ea, u32 &result)
 
     // Emulate (An)+ register modification
     updateAnPI<M,S>(n);
-
+    
     return !error;
 }
 
@@ -97,7 +97,7 @@ Moira::computeEA(u32 n) {
         }
         case 4:  // -(An)
         {
-            sync(2);
+            if ((F & IMPLICIT_DECR) == 0) sync(2);
             result = readA(n) - ((n == 7 && S == Byte) ? 2 : S);
             break;
         }
@@ -234,7 +234,7 @@ Moira::readM(u32 addr)
     
     // Perform the read operation
     sync(2);
-    if (F & POLLIPL) pollIrq();
+    if (F & POLLIPL) pollIpl();
     result = (S == Byte) ? read8(addr & 0xFFFFFF) : read16(addr & 0xFFFFFF);
     sync(2);
     
@@ -299,7 +299,7 @@ Moira::writeM(u32 addr, u32 val)
 
     // Perform the write operation
     sync(2);
-    if (F & POLLIPL) pollIrq();
+    if (F & POLLIPL) pollIpl();
     S == Byte ? write8(addr & 0xFFFFFF, (u8)val) : write16(addr & 0xFFFFFF, (u16)val);
     sync(2);
 }
