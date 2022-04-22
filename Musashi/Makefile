@@ -1,6 +1,6 @@
 OBJECTS   = m68kfpu.o m68kcpu.o m68kdasm.o m68kops.o
 CC        = gcc
-WARNINGS  = -Wall -Wextra -pedantic -Wno-strict-aliasing
+WARNINGS  = -Wall -Wextra -pedantic -Wno-strict-aliasing -Wno-string-concatenation
 OPTIMIZE  = -flto -O3
 CFLAGS    = $(WARNINGS) $(OPTIMIZE)
 

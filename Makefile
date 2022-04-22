@@ -2,7 +2,7 @@ OBJECTS   = main.o testrunner.o musashi.o TestCPU.o Sandbox.o
 CC        = g++
 INCLUDE   = -IMoira -IMusashi
 WARNINGS  = -Wall -Wno-unused-variable
-STD       = -std=c++14
+STD       = -std=c++17
 OPTIMIZE  = -flto -O3
 CFLAGS    = $(INCLUDE) $(WARNINGS) $(STD) $(OPTIMIZE)
 
@@ -19,6 +19,7 @@ moira:
 clean:
 	make -C Musashi clean
 	make -C Moira clean
+	rm -f testrunner
 	rm -f *.o
 
 testrunner: $(OBJECTS)
