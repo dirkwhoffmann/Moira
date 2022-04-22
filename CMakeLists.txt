@@ -1,0 +1,44 @@
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+
+# Set the project name
+project(testRunner)
+
+# Set the build type
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-flto -O3")
+
+# Set the C++ standard
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_EXTENSIONS False)
+  
+# Add sub directories
+add_subdirectory(musashi)
+add_subdirectory(moira)
+
+# Add the executable
+add_executable(testRunner main.cpp testrunner.cpp musashi.cpp TestCPU.cpp Sandbox.cpp)
+target_link_libraries(testRunner musashi)
+target_link_libraries(testRunner moira)
+
+# Add compile options
+target_compile_options(testRunner PUBLIC -Wno-unused-parameter)
+target_compile_options(testRunner PUBLIC -Wno-gnu-anonymous-struct)
+target_compile_options(testRunner PUBLIC -Wno-nested-anon-types)
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  target_compile_options(testRunner PUBLIC -fconcepts)
+else()
+endif()
+
+# Add include paths
+target_include_directories(testRunner PUBLIC
+
+${CMAKE_CURRENT_SOURCE_DIR}/.
+${CMAKE_CURRENT_SOURCE_DIR}/Musashi
+${CMAKE_CURRENT_SOURCE_DIR}/Moira
+)

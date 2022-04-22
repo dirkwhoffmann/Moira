@@ -114,13 +114,13 @@ void run()
 {
     Setup setup;
 
-    printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2021\n\n");
+    printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2022\n\n");
     printf("The test program runs Moira agains Musashi with randomly generated data.\n");
     printf("It runs until a bug has been found.\n\n");
 
     setupMusashi();
     setupMoira();
-    srand(0); // (int)time(NULL));
+    srand(0);
 
     for (long round = 1 ;; round++) {
 

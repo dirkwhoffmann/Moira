@@ -73,9 +73,9 @@
 		50BF14CA23BB4D2700EDFB9C /* MoiraALU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraALU.h; sourceTree = "<group>"; };
 		50CECEC523A924B000E07C65 /* Sandbox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Sandbox.cpp; sourceTree = "<group>"; };
 		50CECEC623A924B000E07C65 /* Sandbox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sandbox.h; sourceTree = "<group>"; };
-		50F80AA723C9E4EC00F21D80 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
-		50F80AA923C9EDE100F21D80 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
-		50F80AAB23C9F16900F21D80 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		50F80AA723C9E4EC00F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		50F80AA923C9EDE100F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		50F80AAB23C9F16900F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,6 +92,7 @@
 		505580DB23AFA04C0009F77F /* Musashi */ = {
 			isa = PBXGroup;
 			children = (
+				50F80AA923C9EDE100F21D80 /* CMakeLists.txt */,
 				505580DC23AFA04C0009F77F /* m68kfpu.c */,
 				505580DD23AFA04C0009F77F /* m68k.h */,
 				505580DE23AFA04C0009F77F /* m68kcpu.c */,
@@ -102,7 +103,6 @@
 				505580E323AFA04C0009F77F /* readme.txt */,
 				505580E423AFA04C0009F77F /* history.txt */,
 				505580E523AFA04C0009F77F /* m68kops.h */,
-				50F80AA923C9EDE100F21D80 /* Makefile */,
 			);
 			path = Musashi;
 			sourceTree = "<group>";
@@ -110,6 +110,7 @@
 		50804DFD2386A4CE004D3EC2 = {
 			isa = PBXGroup;
 			children = (
+				50F80AAB23C9F16900F21D80 /* CMakeLists.txt */,
 				50804E8C2386A72C004D3EC2 /* main.cpp */,
 				507BE4AE23B66456000B37D2 /* testrunner.h */,
 				507BE4AD23B66456000B37D2 /* testrunner.cpp */,
@@ -118,7 +119,6 @@
 				502C09E023C8E16600A179E1 /* TestCPU.cpp */,
 				50CECEC623A924B000E07C65 /* Sandbox.h */,
 				50CECEC523A924B000E07C65 /* Sandbox.cpp */,
-				50F80AAB23C9F16900F21D80 /* Makefile */,
 				505580DB23AFA04C0009F77F /* Musashi */,
 				50804E082386A4CE004D3EC2 /* Moira */,
 				50804E072386A4CE004D3EC2 /* Products */,
@@ -136,6 +136,7 @@
 		50804E082386A4CE004D3EC2 /* Moira */ = {
 			isa = PBXGroup;
 			children = (
+				50F80AA723C9E4EC00F21D80 /* CMakeLists.txt */,
 				509ABE1323BA356E00BD91A8 /* MoiraConfig.h */,
 				50B99DAB23B24E0C00D8A89A /* MoiraTypes.h */,
 				50804F342386A7DD004D3EC2 /* Moira.h */,
@@ -155,7 +156,6 @@
 				50804F4B23891893004D3EC2 /* MoiraInit_cpp.h */,
 				5010BDAD238A897400CFD010 /* StrWriter.h */,
 				5010BDAC238A897400CFD010 /* StrWriter_cpp.h */,
-				50F80AA723C9E4EC00F21D80 /* Makefile */,
 			);
 			path = Moira;
 			sourceTree = "<group>";
