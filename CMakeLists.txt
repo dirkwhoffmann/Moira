@@ -27,13 +27,9 @@ target_link_libraries(testRunner musashi)
 
 # Add compile options
 target_compile_options(testRunner PUBLIC -Wno-unused-parameter)
+target_compile_options(testRunner PUBLIC -Wno-unused-variable)
 target_compile_options(testRunner PUBLIC -Wno-gnu-anonymous-struct)
 target_compile_options(testRunner PUBLIC -Wno-nested-anon-types)
-
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  target_compile_options(testRunner PUBLIC -fconcepts)
-else()
-endif()
 
 # Add include paths
 target_include_directories(testRunner PUBLIC
