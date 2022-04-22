@@ -1,13 +1,25 @@
-name: C/C++ CI
+name: CMake
 
 on: [push]
 
+env:
+  BUILD_TYPE: Release
+
 jobs:
   build:
-
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v1
-    - name: make
-      run: make
+    - uses: actions/checkout@v2
+
+    - name: Configure CMake
+      working-directory: .
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Build
+      working-directory: .
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Test
+      working-directory: .
+      run: ctest -C ${{env.BUILD_TYPE}}
