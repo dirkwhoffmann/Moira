@@ -29,7 +29,7 @@ Moira::saveToStack(AEStackFrame &frame)
 void
 Moira::saveToStackBrief(u16 sr, u32 pc)
 {
-    if (MIMIC_MUSASHI) {
+    if constexpr (MIMIC_MUSASHI) {
 
         push <Long> (pc);
         push <Word> (sr);
@@ -37,15 +37,17 @@ Moira::saveToStackBrief(u16 sr, u32 pc)
     } else {
 
         reg.sp -= 6;
-        writeM <MEM_DATA, Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
-        writeM <MEM_DATA, Word> ((reg.sp + 0) & ~1, sr);
-        writeM <MEM_DATA, Word> ((reg.sp + 2) & ~1, pc >> 16);
+        writeMS <MEM_DATA, Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
+        writeMS <MEM_DATA, Word> ((reg.sp + 0) & ~1, sr);
+        writeMS <MEM_DATA, Word> ((reg.sp + 2) & ~1, pc >> 16);
     }
 }
 
 void
 Moira::execAddressError(AEStackFrame frame, int delay)
 {
+    EXEC_DEBUG
+
     assert(frame.addr & 1);
     
     // Emulate additional delay
@@ -59,10 +61,12 @@ Moira::execAddressError(AEStackFrame frame, int delay)
     flags &= ~CPU_TRACE_EXCEPTION;
     sync(8);
 
-    // Write stack frame
-    bool doubleFault;
-    if (!(doubleFault = misaligned<Word>(reg.sp))) {
+    // A misaligned stack pointer will cause a "double fault"
+    bool doubleFault = misaligned<Word>(reg.sp);
+
+    if (!doubleFault) {
         
+        // Write stack frame
         saveToStack(frame);
         sync(2);
         jumpToVector(3);
@@ -78,6 +82,8 @@ Moira::execAddressError(AEStackFrame frame, int delay)
 void
 Moira::execUnimplemented(int nr)
 {
+    EXEC_DEBUG
+
     u16 status = getSR();
     
     // Enter supervisor mode
@@ -97,6 +103,24 @@ Moira::execUnimplemented(int nr)
 void
 Moira::execLineA(u16 opcode)
 {
+    EXEC_DEBUG
+
+    // Check if a software trap is set for this instruction
+    if (debugger.swTraps.traps.contains(opcode)) {
+
+        auto &trap = debugger.swTraps.traps[opcode];
+        
+        // Smuggle the original instruction back into the CPU
+        reg.pc = reg.pc0;
+        queue.irc = trap.instruction;
+        prefetch();
+        
+        // Call the delegates
+        signalSoftwareTrap(opcode, debugger.swTraps.traps[opcode]);
+        swTrapReached(reg.pc0);
+        return;
+    }
+    
     signalLineAException(opcode);
     execUnimplemented(10);
 }
@@ -104,6 +128,8 @@ Moira::execLineA(u16 opcode)
 void
 Moira::execLineF(u16 opcode)
 {
+    EXEC_DEBUG
+
     signalLineFException(opcode);
     execUnimplemented(11);
 }
@@ -111,6 +137,8 @@ Moira::execLineF(u16 opcode)
 void
 Moira::execIllegal(u16 opcode)
 {
+    EXEC_DEBUG
+
     signalIllegalOpcodeException(opcode);
     execUnimplemented(4);
 }
@@ -118,6 +146,8 @@ Moira::execIllegal(u16 opcode)
 void
 Moira::execTraceException()
 {
+    EXEC_DEBUG
+
     signalTraceException();
     
     u16 status = getSR();
@@ -142,6 +172,8 @@ Moira::execTraceException()
 void
 Moira::execTrapException(int nr)
 {
+    EXEC_DEBUG
+
     signalTrapException();
     
     u16 status = getSR();
@@ -161,6 +193,8 @@ Moira::execTrapException(int nr)
 void
 Moira::execPrivilegeException()
 {
+    EXEC_DEBUG
+
     signalPrivilegeViolation();
     
     u16 status = getSR();
@@ -182,6 +216,8 @@ Moira::execPrivilegeException()
 void
 Moira::execIrqException(u8 level)
 {
+    EXEC_DEBUG
+    
     assert(level < 8);
     
     // Notify delegate
@@ -208,14 +244,14 @@ Moira::execIrqException(u8 level)
         
     sync(6);
     reg.sp -= 6;
-    writeM <MEM_DATA, Word> (reg.sp + 4, reg.pc & 0xFFFF);
+    writeMS <MEM_DATA, Word> (reg.sp + 4, reg.pc & 0xFFFF);
 
     sync(4);
     queue.ird = getIrqVector(level);
     
     sync(4);
-    writeM <MEM_DATA, Word> (reg.sp + 0, status);
-    writeM <MEM_DATA, Word> (reg.sp + 2, reg.pc >> 16);
+    writeMS <MEM_DATA, Word> (reg.sp + 0, status);
+    writeMS <MEM_DATA, Word> (reg.sp + 2, reg.pc >> 16);
 
     jumpToVector<AE_SET_CB3>(queue.ird);
 }

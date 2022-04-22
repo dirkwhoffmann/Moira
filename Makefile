@@ -2,7 +2,7 @@ OBJECTS   = main.o testrunner.o musashi.o TestCPU.o Sandbox.o
 CC        = g++
 INCLUDE   = -IMoira -IMusashi
 WARNINGS  = -Wall -Wno-unused-variable
-STD       = -std=c++17
+STD       = -std=c++20
 OPTIMIZE  = -flto -O3
 CFLAGS    = $(INCLUDE) $(WARNINGS) $(STD) $(OPTIMIZE)
 

@@ -14,18 +14,23 @@
 #include "MoiraDebugger.h"
 #include "StrWriter.h"
 
-#include <assert.h>
+#include <cassert>
 
 namespace moira {
 
-// Execution control flags
-
+#ifdef _MSC_VER
+#define unreachable    __assume(false)
+#else
+#define unreachable    __builtin_unreachable()
+#endif
+#define fatalError     assert(false); unreachable
 
 class Moira {
 
     friend class Debugger;
     friend class Breakpoints;
     friend class Watchpoints;
+    friend class Catchpoints;
 
 protected:
 
@@ -51,7 +56,7 @@ protected:
 
 public:
 
-    // Breakpoints, watchpoints, instruction tracing
+    // Breakpoints, watchpoints, catchpoints, instruction tracing
     Debugger debugger = Debugger(*this);
 
 protected:
@@ -97,6 +102,7 @@ protected:
     static const int CPU_TRACE_FLAG        = (1 << 13);
     static const int CPU_CHECK_BP          = (1 << 14);
     static const int CPU_CHECK_WP          = (1 << 15);
+    static const int CPU_CHECK_CP          = (1 << 16);
 
     // Number of elapsed cycles since powerup
     i64 clock;
@@ -195,7 +201,7 @@ public:
     // Return an info struct for a certain opcode
     InstrInfo getInfo(u16 op); 
 
-    
+        
     //
     // Interfacing with other components
     //
@@ -218,11 +224,14 @@ protected:
     virtual u16 readIrqUserVector(u8 level) const { return 0; }
 
     // Instrution delegates
-    virtual void signalReset() { };
-    virtual void signalStop(u16 op) { };
-    virtual void signalTAS() { };
+    virtual void signalResetInstr() { };
+    virtual void signalStopInstr(u16 op) { };
+    virtual void signalTasInstr() { };
+    virtual void signalJsrBsrInstr(u16 opcode, u32 oldPC, u32 newPC) { };
+    virtual void signalRtsInstr() { };
 
     // State delegates
+    virtual void signalHardReset() { };
     virtual void signalHalt() { };
 
     // Exception delegates
@@ -235,16 +244,21 @@ protected:
     virtual void signalPrivilegeViolation() { };
     virtual void signalInterrupt(u8 level) { };
     virtual void signalJumpToVector(int nr, u32 addr) { };
+    virtual void signalSoftwareTrap(u16 opcode, SoftwareTrap trap) { };
 
     // Exception delegates
     virtual void addressErrorHandler() { };
     
-    // Called when a breakpoint is reached
-    virtual void breakpointReached(u32 addr) { };
+	// Called when a debug point is reached
+	virtual void softstopReached(u32 addr) { };
+	virtual void breakpointReached(u32 addr) { };
+	virtual void watchpointReached(u32 addr) { };
+	virtual void catchpointReached(u8 vector) { };
+	virtual void swTrapReached(u32 addr) { };
 
-    // Called when a breakpoint is reached
-    virtual void watchpointReached(u32 addr) { };
-
+    // Called at the beginning of each instruction handler (see EXEC_DEBUG)
+    virtual void execDebug(const char *cmd) { };
+    
 
     //
     // Accessing the clock

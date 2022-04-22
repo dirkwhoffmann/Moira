@@ -21,51 +21,51 @@
 
 
 template<Size S> u32 MSBIT() {
-    if (S == Byte) return 0x00000080;
-    if (S == Word) return 0x00008000;
-    if (S == Long) return 0x80000000;
+    if constexpr (S == Byte) return 0x00000080;
+    if constexpr (S == Word) return 0x00008000;
+    if constexpr (S == Long) return 0x80000000;
 }
 
 template<Size S> u32 CLIP(u64 data) {
-    if (S == Byte) return data & 0x000000FF;
-    if (S == Word) return data & 0x0000FFFF;
-    if (S == Long) return data & 0xFFFFFFFF;
+    if constexpr (S == Byte) return data & 0x000000FF;
+    if constexpr (S == Word) return data & 0x0000FFFF;
+    if constexpr (S == Long) return data & 0xFFFFFFFF;
 }
 
 template<Size S> u32 CLEAR(u64 data) {
-    if (S == Byte) return data & 0xFFFFFF00;
-    if (S == Word) return data & 0xFFFF0000;
-    if (S == Long) return data & 0x00000000;
+    if constexpr (S == Byte) return data & 0xFFFFFF00;
+    if constexpr (S == Word) return data & 0xFFFF0000;
+    if constexpr (S == Long) return data & 0x00000000;
 }
 
 template<Size S> i32 SEXT(u64 data) {
-    if (S == Byte) return (i8)data;
-    if (S == Word) return (i16)data;
-    if (S == Long) return (i32)data;
+    if constexpr (S == Byte) return (i8)data;
+    if constexpr (S == Word) return (i16)data;
+    if constexpr (S == Long) return (i32)data;
 }
 
 template<Size S> bool NBIT(u64 data) {
-    if (S == Byte) return (data & 0x00000080) != 0;
-    if (S == Word) return (data & 0x00008000) != 0;
-    if (S == Long) return (data & 0x80000000) != 0;
+    if constexpr (S == Byte) return (data & 0x00000080) != 0;
+    if constexpr (S == Word) return (data & 0x00008000) != 0;
+    if constexpr (S == Long) return (data & 0x80000000) != 0;
 }
 
 template<Size S> bool CARRY(u64 data) {
-    if (S == Byte) return data & 0x000000100;
-    if (S == Word) return data & 0x000010000;
-    if (S == Long) return data & 0x100000000;
+    if constexpr (S == Byte) return data & 0x000000100;
+    if constexpr (S == Word) return data & 0x000010000;
+    if constexpr (S == Long) return data & 0x100000000;
 }
 
 template<Size S> bool ZERO(u64 data) {
-    if (S == Byte) return !(data & 0x000000FF);
-    if (S == Word) return !(data & 0x0000FFFF);
-    if (S == Long) return !(data & 0xFFFFFFFF);
+    if constexpr (S == Byte) return !(data & 0x000000FF);
+    if constexpr (S == Word) return !(data & 0x0000FFFF);
+    if constexpr (S == Long) return !(data & 0xFFFFFFFF);
 }
 
 template<Size S> u32 WRITE(u32 d1, u32 d2) {
-    if (S == Byte) return (d1 & 0xFFFFFF00) | (d2 & 0x000000FF);
-    if (S == Word) return (d1 & 0xFFFF0000) | (d2 & 0x0000FFFF);
-    if (S == Long) return d2;
+    if constexpr (S == Byte) return (d1 & 0xFFFFFF00) | (d2 & 0x000000FF);
+    if constexpr (S == Word) return (d1 & 0xFFFF0000) | (d2 & 0x0000FFFF);
+    if constexpr (S == Long) return d2;
 }
 
 template<Instr I, Size S> u32
@@ -180,10 +180,9 @@ Moira::shift(int cnt, u64 data) {
             break;
         }
         default:
-        {
-            assert(false);
-        }
+            fatalError;
     }
+    
     reg.sr.n = NBIT<S>(data);
     reg.sr.z = ZERO<S>(data);
     return CLIP<S>(data);
@@ -238,7 +237,7 @@ Moira::addsub(u32 op1, u32 op2)
         }
         default:
         {
-            assert(false);
+            fatalError;
         }
     }
     reg.sr.n = NBIT<S>(result);
@@ -262,7 +261,8 @@ Moira::mul(u32 op1, u32 op2)
              result = op1 * op2;
              break;
          }
-        default: assert(false);
+        default:
+            fatalError;
      }
 
     reg.sr.n = NBIT<Long>(result);
@@ -303,6 +303,10 @@ Moira::div(u32 op1, u32 op2)
             result = (u32)((quotient & 0xffff) | remainder << 16);
             overflow = quotient > 0xFFFF;
             break;
+        }
+        default:
+        {
+            fatalError;
         }
     }
     reg.sr.v = overflow ? 1        : reg.sr.v;
@@ -365,7 +369,7 @@ Moira::bcd(u32 op1, u32 op2)
         }
         default:
         {
-            assert(false);
+            fatalError;
         }
     }
     reg.sr.n = NBIT<S>(result);
@@ -410,9 +414,7 @@ Moira::logic(u32 op)
             break;
         }
         default:
-        {
-            assert(false);
-        }
+            fatalError;
     }
     return result;
 }
@@ -441,7 +443,7 @@ Moira::logic(u32 op1, u32 op2)
         }
         default:
         {
-            assert(false);
+            fatalError;
         }
     }
 
@@ -481,7 +483,7 @@ Moira::bit(u32 op, u8 bit)
         }
         default:
         {
-            assert(false);
+            fatalError;
         }
     }
     return op;
@@ -510,8 +512,7 @@ Moira::cond() {
         case BLE: case DBLE: case SLE: return reg.sr.n != reg.sr.v || reg.sr.z;
     }
 
-    assert(false);
-    return 0;
+    fatalError;
 }
 
 template <Instr I> int
@@ -525,8 +526,7 @@ Moira::cyclesBit(u8 bit)
         case BCHG: return MIMIC_MUSASHI ? 4 : (bit > 15 ? 4 : 2);
     }
 
-    assert(false);
-    return 0;
+    fatalError;
 }
 
 template <Instr I> int
@@ -549,8 +549,7 @@ Moira::cyclesMul(u16 data)
         }
     }
 
-    assert(false);
-    return 0;
+    fatalError;
 }
 
 template <Instr I> int
@@ -570,10 +569,12 @@ Moira::cyclesDiv(u32 op1, u16 op2)
 
             for (int i = 0; i < 15; i++) {
                 if ((i32)dividend < 0) {
-                    dividend <<= 1;
+                    // dividend <<= 1;
+                    dividend = (u32)((u64)dividend << 1);
                     dividend = U32_SUB(dividend, hdivisor);
                 } else {
-                    dividend <<= 1;
+                    // dividend <<= 1;
+                    dividend = (u32)((u64)dividend << 1);
                     if (dividend >= hdivisor) {
                         dividend = U32_SUB(dividend, hdivisor);
                         mcycles += 1;
@@ -609,8 +610,7 @@ Moira::cyclesDiv(u32 op1, u16 op2)
         }
     }
 
-    assert(false);
-    return 0;
+    fatalError;
 }
 
 template <Instr I> u32
@@ -630,7 +630,8 @@ Moira::mulMusashi(u32 op1, u32 op2)
             result = op1 * op2;
             break;
         }
-        default: assert(false);
+        default:
+            fatalError;
     }
 
     reg.sr.n = NBIT<Long>(result);

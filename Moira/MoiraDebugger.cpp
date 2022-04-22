@@ -9,8 +9,8 @@
 
 #include "Moira.h"
 
-#include <string.h>
-#include <stdio.h>
+#include <cstring>
+#include <cstdio>
 
 namespace moira {
 
@@ -22,9 +22,9 @@ bool
 Guard::eval(u32 addr, Size S)
 {
     if (this->addr >= addr && this->addr < addr + S && this->enabled) {
-        if (++hits > skip) {
-            return true;
-        }
+        
+        if (!ignore) return true;
+        ignore--;
     }
     return false;
 }
@@ -34,14 +34,20 @@ Guard::eval(u32 addr, Size S)
 // Guards
 //
 
+Guards::~Guards()
+{
+    assert(guards);
+    delete [] guards;
+}
+
 Guard *
-Guards::guardWithNr(long nr)
+Guards::guardNr(long nr)const
 {
     return nr < count ? &guards[nr] : nullptr;
 }
 
 Guard *
-Guards::guardAtAddr(u32 addr)
+Guards::guardAt(u32 addr) const
 {
     for (int i = 0; i < count; i++) {
         if (guards[i].addr == addr) return &guards[i];
@@ -50,40 +56,15 @@ Guards::guardAtAddr(u32 addr)
     return nullptr;
 }
 
-bool
-Guards::isSetAt(u32 addr)
+std::optional<u32>
+Guards::guardAddr(long nr) const
 {
-    Guard *guard = guardAtAddr(addr);
-
-    return guard != nullptr;
-}
-
-bool
-Guards::isSetAndEnabledAt(u32 addr)
-{
-    Guard *guard = guardAtAddr(addr);
-
-    return guard != nullptr && guard->enabled;
-}
-
-bool
-Guards::isSetAndDisabledAt(u32 addr)
-{
-    Guard *guard = guardAtAddr(addr);
-
-    return guard != nullptr && !guard->enabled;
-}
-
-bool
-Guards::isSetAndConditionalAt(u32 addr)
-{
-    Guard *guard = guardAtAddr(addr);
-
-    return guard != nullptr && guard->skip != 0;
+    if (nr < count) return guards[nr].addr;
+    return { };
 }
 
 void
-Guards::addAt(u32 addr, long skip)
+Guards::setAt(u32 addr)
 {
     if (isSetAt(addr)) return;
 
@@ -96,11 +77,7 @@ Guards::addAt(u32 addr, long skip)
         capacity *= 2;
     }
 
-    guards[count].addr = addr;
-    guards[count].enabled = true;
-    guards[count].hits = 0;
-    guards[count].skip = skip;
-    count++;
+    guards[count++].addr = addr;
     setNeedsCheck(true);
 }
 
@@ -131,34 +108,68 @@ Guards::replace(long nr, u32 addr)
     if (nr >= count || isSetAt(addr)) return;
     
     guards[nr].addr = addr;
-    guards[nr].hits = 0;
 }
 
 bool
-Guards::isEnabled(long nr)
+Guards::isEnabled(long nr) const
 {
-    return nr < count ? guards[nr].enabled : false;
+    Guard *guard = guardNr(nr);
+    return guard != nullptr && guard->enabled;
+}
+
+bool
+Guards::isEnabledAt(u32 addr) const
+{
+    Guard *guard = guardAt(addr);
+    return guard != nullptr && guard->enabled;
+}
+
+bool
+Guards::isDisabled(long nr) const
+{
+    Guard *guard = guardNr(nr);
+    return guard != nullptr && !guard->enabled;
+}
+
+bool
+Guards::isDisabledAt(u32 addr) const
+{
+    Guard *guard = guardAt(addr);
+    return guard != nullptr && !guard->enabled;
 }
 
 void
 Guards::setEnable(long nr, bool val)
 {
-    if (nr < count) guards[nr].enabled = val;
+    Guard *guard = guardNr(nr);
+    if (guard) guard->enabled = val;
 }
 
 void
-Guards::setEnableAt(u32 addr, bool value)
+Guards::setEnableAt(u32 addr, bool val)
 {
-    Guard *guard = guardAtAddr(addr);
-    if (guard) guard->enabled = value;
+    Guard *guard = guardAt(addr);
+    if (guard) guard->enabled = val;
+}
+
+void
+Guards::ignore(long nr, long count)
+{
+    Guard *guard = guardNr(nr);
+    if (guard) guard->ignore = count;
 }
 
 bool
 Guards::eval(u32 addr, Size S)
 {
-    for (int i = 0; i < count; i++)
-        if (guards[i].eval(addr, S)) return true;
-
+    for (int i = 0; i < count; i++) {
+        
+        if (guards[i].eval(addr, S)) {
+            
+            hit = guards[i];
+            return true;
+        }
+    }
     return false;
 }
 
@@ -183,6 +194,43 @@ Watchpoints::setNeedsCheck(bool value)
 }
 
 void
+Catchpoints::setNeedsCheck(bool value)
+{
+    if (value) {
+        moira.flags |= Moira::CPU_CHECK_CP;
+    } else {
+        moira.flags &= ~Moira::CPU_CHECK_CP;
+    }
+}
+
+u16
+SoftwareTraps::create(u16 instr)
+{
+    // Seek an unsed LINE-A instruction
+    u16 key = 0xA000;
+    while (traps.contains(key)) key++;
+    
+    return create(key, instr);
+}
+
+u16
+SoftwareTraps::create(u16 key, u16 instr)
+{
+    assert(Debugger::isLineAInstr(key));
+    assert(traps.size() < 512);
+    assert(!traps.contains(key));
+    
+    traps[key] = SoftwareTrap { .instruction = instr };
+    return key;
+}
+
+u16
+SoftwareTraps::resolve(u16 instr)
+{
+    return traps.contains(instr) ? traps[instr].instruction : instr;
+}
+
+void
 Debugger::reset()
 {
     breakpoints.setNeedsCheck(breakpoints.elements() != 0);
@@ -192,7 +240,7 @@ Debugger::reset()
 void
 Debugger::stepInto()
 {
-    softStop = UINT64_MAX;
+    softStop = -1;
     breakpoints.setNeedsCheck(true);
 }
 
@@ -205,32 +253,34 @@ Debugger::stepOver()
 }
 
 bool
-Debugger::breakpointMatches(u32 addr)
+Debugger::softstopMatches(u32 addr)
 {
-    // Check if a soft breakpoint has been reached
-    if (addr == softStop || softStop == UINT64_MAX) {
-
-        // Soft breakpoints are deleted when reached
-        softStop = UINT64_MAX - 1;
-        breakpoints.setNeedsCheck(breakpoints.elements() != 0);
-        breakpointPC = -1;
+    if (softStop && (*softStop < 0 || *softStop == addr)) {
         
+        // Soft breakpoints are deleted when reached
+        softStop = { };
+        breakpoints.setNeedsCheck(breakpoints.elements() != 0);
         return true;
     }
+    return false;
+}
 
-    if (!breakpoints.eval(addr)) return false;
-        
-    breakpointPC = moira.reg.pc;
-    return true;
+bool
+Debugger::breakpointMatches(u32 addr)
+{
+    return breakpoints.eval(addr);
 }
 
 bool
 Debugger::watchpointMatches(u32 addr, Size S)
 {
-    if (!watchpoints.eval(addr, S)) return false;
-    
-    watchpointPC = moira.reg.pc0;
-    return true;
+    return watchpoints.eval(addr, S);
+}
+
+bool
+Debugger::catchpointMatches(u32 vectorNr)
+{
+    return catchpoints.eval(vectorNr);
 }
 
 void
@@ -270,6 +320,56 @@ Debugger::logEntryAbs(int n)
 {
     assert(n < loggedInstructions());
     return logEntryRel(loggedInstructions() - n - 1);
+}
+
+std::string
+Debugger::vectorName(u8 vectorNr)
+{
+    if (vectorNr >= 12 && vectorNr <= 14) {
+        return "Reserved";
+    }
+    if (vectorNr >= 16 && vectorNr <= 23) {
+        return "Reserved";
+    }
+    if (vectorNr >= 48 && vectorNr <= 63) {
+        return "Reserved";
+    }
+    if (vectorNr >= 25 && vectorNr <= 31) {
+        return "Level " + std::to_string(vectorNr - 24) + " interrupt";
+    }
+    if (vectorNr >= 32 && vectorNr <= 47) {
+        return "Trap #" + std::to_string(vectorNr - 32);
+    }
+    if (vectorNr >= 64 && vectorNr <= 255) {
+        return "User interrupt vector";
+    }
+    switch (vectorNr) {
+    
+        case 0:     return "Reset SP";
+        case 1:     return "Reset PC";
+        case 2:     return "Bus error";
+        case 3:     return "Address error";
+        case 4:     return "Illegal instruction";
+        case 5:     return "Division by zero";
+        case 6:     return "CHK instruction";
+        case 7:     return "TRAPV instruction";
+        case 8:     return "Privilege violation";
+        case 9:     return "Trace";
+        case 10:    return "Line A instruction";
+        case 11:    return "Line F instruction";
+        case 15:    return "Uninitialized IRQ vector";
+        case 24:    return "Spurious interrupt";
+
+        default:
+            fatalError;
+    }
+}
+
+void
+Debugger::jump(u32 addr)
+{
+    moira.reg.pc = addr;
+    moira.fullPrefetch<POLLIPL>();
 }
 
 }

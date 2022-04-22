@@ -1,7 +1,7 @@
 OBJECTS   = Moira.o MoiraDebugger.o
 CC        = g++
 WARNINGS  = -Wall
-STD       = -std=c++17
+STD       = -std=c++20
 OPTIMIZE  = -flto -O3
 CFLAGS    = $(WARNINGS) $(STD) $(OPTIMIZE)
 

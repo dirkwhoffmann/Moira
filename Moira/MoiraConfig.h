@@ -53,3 +53,11 @@
  * Disable to improve emulation compatibility.
  */
 #define MIMIC_MUSASHI true
+
+/* Execution debugging
+ *
+ * This macro is evaluated at the beginning of the execution handlers of all
+ * instructions. It is intended to invoke debug code. Make sure to define it
+ * as an empty macro in release builds.
+ */
+#define EXEC_DEBUG { /* execDebug(__func__); */ }

@@ -10,14 +10,14 @@
 template <> u32
 Moira::dasmRead<Byte>(u32 &addr)
 {
-    addr += 2;
+    U32_INC(addr, 2);
     return read16Dasm(addr) & 0xFF;
 }
 
 template <> u32
 Moira::dasmRead<Word>(u32 &addr)
 {
-    addr += 2;
+    U32_INC(addr, 2);
     return read16Dasm(addr);
 }
 
@@ -309,13 +309,18 @@ Moira::dasmAndisr(StrWriter &str, u32 &addr, u16 op)
 template<Instr I, Mode M, Size S> void
 Moira::dasmBsr(StrWriter &str, u32 &addr, u16 op)
 {
-    if (MIMIC_MUSASHI && S == Byte && (u8)op == 0xFF) {
-        dasmIllegal(str, addr, op);
-        return;
+    if constexpr (MIMIC_MUSASHI && S == Byte) {
+        if ((u8)op == 0xFF) {
+            dasmIllegal(str, addr, op);
+            return;
+        }
     }
 
-    u32 dst = addr + 2;
-    dst += (S == Byte) ? (i8)op : (i16)dasmRead<S>(addr);
+    u32 dst = addr;
+    U32_INC(dst, 2);
+    U32_INC(dst, S == Byte ? (i8)op : (i16)dasmRead<S>(addr));
+    // u32 dst = U32_ADD(addr, 2);
+    // dst += (S == Byte) ? (i8)op : (i16)dasmRead<S>(addr);
 
     str << Ins<I>{} << tab << UInt(dst);
 }
@@ -385,13 +390,18 @@ Moira::dasmCmpm(StrWriter &str, u32 &addr, u16 op)
 template<Instr I, Mode M, Size S> void
 Moira::dasmBcc(StrWriter &str, u32 &addr, u16 op)
 {
-    if (MIMIC_MUSASHI && S == Byte && (u8)op == 0xFF) {
-        dasmIllegal(str, addr, op);
-        return;
+    if constexpr (MIMIC_MUSASHI && S == Byte) {
+        if ((u8)op == 0xFF) {
+            dasmIllegal(str, addr, op);
+            return;
+        }
     }
 
-    u32 dst = addr + 2;
-    dst += (S == Byte) ? (i8)op : (i16)dasmRead<S>(addr);
+    u32 dst = addr;
+    U32_INC(dst, 2);
+    U32_INC(dst, S == Byte ? (i8)op : (i16)dasmRead<S>(addr));
+    // u32 dst = U32_ADD(addr, 2);
+    // dst += (S == Byte) ? (i8)op : (i16)dasmRead<S>(addr);
 
     str << Ins<I>{} << tab << UInt(dst);
 }
@@ -420,7 +430,7 @@ Moira::dasmDbcc(StrWriter &str, u32 &addr, u16 op)
     auto src = Dn ( _____________xxx(op) );
     auto dst = addr + 2;
 
-    dst += (i16)dasmRead<Word>(addr);
+    U32_INC(dst, (i16)dasmRead<Word>(addr));
 
     str << Ins<I>{} << tab << src << ", " << UInt(dst);
 }
@@ -590,7 +600,7 @@ Moira::dasmMovemRgEa(StrWriter &str, u32 &addr, u16 op)
     auto src = RegRegList ( (u16)dasmRead<Word>(addr)  );
     auto dst = Op <M,S>   ( _____________xxx(op), addr );
 
-    if (M == 4) { src.raw = REVERSE_16(src.raw); }
+    if constexpr (M == 4) { src.raw = REVERSE_16(src.raw); }
     str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
 }
 

@@ -9,7 +9,7 @@
 
 #include "Moira.h"
 
-#include <stdio.h>
+#include <cstdio>
 #include <algorithm>
 
 namespace moira {
@@ -41,7 +41,7 @@ Moira::reset()
 {
     flags = CPU_CHECK_IRQ;
 
-    for(int i = 0; i < 8; i++) reg.d[i] = reg.a[i] = 0xFFFFFFFF;
+    for(int i = 0; i < 8; i++) reg.d[i] = reg.a[i] = 0;
     reg.usp = 0;
     reg.ipl = 0;
     ipl = 0;
@@ -160,7 +160,10 @@ done:
         // Don't break if the instruction won't be executed due to tracing
         if (flags & CPU_TRACE_EXCEPTION) return;
         
-        // Compare breakpoint addresses with instruction address
+        // Check if a softstop has been reached
+        if (debugger.softstopMatches(reg.pc0)) softstopReached(reg.pc0);
+            
+        // Check if a breakpoint has been reached
         if (debugger.breakpointMatches(reg.pc0)) breakpointReached(reg.pc0);
     }
 }
@@ -290,7 +293,7 @@ void
 Moira::setFC(FunctionCode value)
 {
     if (!EMULATE_FC) return;
-    fcl = value;
+    fcl = (u8)value;
 }
 
 template<Mode M> void
@@ -329,7 +332,7 @@ Moira::getIrqVector(u8 level) const {
 int
 Moira::disassemble(u32 addr, char *str)
 {
-    if (ENABLE_DASM == false) {
+    if constexpr (!ENABLE_DASM) {
 
         printf("This feature requires ENABLE_DASM = true\n");
         assert(false);
@@ -356,7 +359,7 @@ Moira::disassembleWord(u32 value, char *str)
 void
 Moira::disassembleMemory(u32 addr, int cnt, char *str)
 {
-    addr -= 2; // because dasmRead increases addr first
+    U32_DEC(addr, 2); // Because dasmRead increases addr first
     for (int i = 0; i < cnt; i++) {
         u32 value = dasmRead<Word>(addr);
         sprintx(str, value, true, 0, 4);
@@ -429,7 +432,6 @@ Moira::getInfo(u16 op)
     return info[op];    
 }
 
-// Make sure the compiler generates certain instances of template functions
 template u32 Moira::readD <Long> (int n) const;
 template u32 Moira::readA <Long> (int n) const;
 template void Moira::writeD <Long> (int n, u32 v);

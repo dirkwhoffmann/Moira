@@ -9,7 +9,9 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
+#include <string>
+#include <optional>
 
 namespace moira {
 
