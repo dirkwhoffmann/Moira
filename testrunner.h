@@ -28,7 +28,7 @@ extern "C" {
 }
 
 // CPU under test
-#define CPUTYPE M68K_CPU_TYPE_68000
+#define CPUTYPE M68K_CPU_TYPE_68010
 
 // Set to true for verbose output
 #define VERBOSE false
@@ -80,6 +80,9 @@ struct Result {
     uint32_t a[8];
     uint16_t sr;
     uint32_t fc;
+    uint32_t vbr;
+    uint32_t sfc;
+    uint32_t dfc;
     char dasm[64];
     int dasmCnt;
     int cycles;
@@ -130,8 +133,9 @@ bool compareA(Result &r1, Result &r2);
 bool comparePC(Result &r1, Result &r2);
 bool compareSR(Result &r1, Result &r2);
 bool compareSP(Result &r1, Result &r2);
-bool compareIRD(Result &r1, Result &r2);
-bool compareIRC(Result &r1, Result &r2);
+bool compareVBR(Result &r1, Result &r2);
+bool compareSFC(Result &r1, Result &r2);
+bool compareDFC(Result &r1, Result &r2);
 bool compareCycles(Result &r1, Result &r2);
 
 void bugReport();

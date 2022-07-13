@@ -333,6 +333,15 @@ public:
     u32 getUSP() const { return reg.sr.s ? reg.usp : reg.sp; }
     void setUSP(u32 val) { if (reg.sr.s) reg.usp = val; else reg.sp = val; }
 
+    u32 getVBR() const { return reg.vbr; }
+    void setVBR(u32 val) { reg.vbr = val; }
+
+    u32 getSFC() const { return reg.sfc; }
+    void setSFC(u32 val) { reg.sfc = val; }
+
+    u32 getDFC() const { return reg.dfc; }
+    void setDFC(u32 val) { reg.dfc = val; }
+
     void setSupervisorMode(bool enable);
 
     u8 getCCR(const StatusRegister &sr) const;

@@ -267,6 +267,9 @@ void recordMusashiRegisters(Result &r)
     r.usp = m68k_get_reg(NULL, M68K_REG_USP);
     r.ssp = m68k_get_reg(NULL, M68K_REG_ISP);
     r.fc = musashiFC;
+    r.vbr = m68k_get_reg(NULL, M68K_REG_VBR);
+    r.sfc = m68k_get_reg(NULL, M68K_REG_SFC);
+    r.dfc = m68k_get_reg(NULL, M68K_REG_DFC);
     for (int i = 0; i < 8; i++) {
         r.d[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_D0 + i));
         r.a[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_A0 + i));
@@ -280,6 +283,9 @@ void recordMoiraRegisters(Result &r)
     r.usp = moiracpu->getUSP();
     r.ssp = moiracpu->getSSP();
     r.fc = moiracpu->readFC();
+    r.vbr = moiracpu->getVBR();
+    r.sfc = moiracpu->getSFC();
+    r.dfc = moiracpu->getDFC();
     for (int i = 0; i < 8; i++) r.d[i] = moiracpu->getD(i);
     for (int i = 0; i < 8; i++) r.a[i] = moiracpu->getA(i);
 }
@@ -298,13 +304,21 @@ void dumpSetup(Setup &s)
 
 void dumpResult(Result &r)
 {
-    printf("Old PC: %4x (opcode %x)\n", r.oldpc, r.opcode);
-    printf("         New PC: %4x ", r.pc);
-    printf("SR: %2x ", r.sr);
-    printf("SSP: %2x ", r.ssp);
-    printf("USP: %2x ", r.usp);
-    printf("FC: %2x ", r.fc);
+    printf("Old PC: %4x (opcode %x)  ", r.oldpc, r.opcode);
+    printf("New PC: %4x  ", r.pc);
     printf("Elapsed cycles: %d\n" , r.cycles);
+    printf("         SR: %x  ", r.sr);
+    printf("SSP: %x  ", r.ssp);
+    printf("USP: %x  ", r.usp);
+    printf("FC: %x  ", r.fc);
+
+    if (CPUTYPE >= M68K_CPU_TYPE_68010) {
+
+        printf("SFC: %x  ", r.sfc);
+        printf("DFC: %x  ", r.dfc);
+        printf("VBR: %x  ", r.vbr);
+    }
+    printf("\n");
 
     printf("         Dn: ");
     for (int i = 0; i < 8; i++) printf("%8x ", r.d[i]);
@@ -346,16 +360,22 @@ void compare(Setup &s, Result &r1, Result &r2)
         printf("\nADDRESS REGISTER MISMATCH FOUND");
         error = true;
     }
-    if (!compareIRD(r1, r2)) {
-        printf("\n\nWRONG IRD VALUE: %x\n", moiracpu->getIRD());
+    if (!compareVBR(r1, r2)) {
+        printf("\nVBR REGISTER MISMATCH FOUND\n");
         error = true;
     }
-    if (!compareIRC(r1, r2)) {
-        printf("\n\nWRONG IRC VALUE: %x\n", moiracpu->getIRC());
+    if (!compareSFC(r1, r2)) {
+        printf("\nSFC REGISTER MISMATCH FOUND\n");
         error = true;
     }
-
-    error |= (sandbox.getErrors() != 0);
+    if (!compareDFC(r1, r2)) {
+        printf("\nDFC REGISTER MISMATCH FOUND\n");
+        error = true;
+    }
+    if (sandbox.getErrors()) {
+        printf("\nSANDBOX ERRORS REPORTED\n");
+        error = true;
+    }
 
     if (error) {
 
@@ -427,28 +447,19 @@ bool compareSP(Result &r1, Result &r2)
     return true;
 }
 
-bool compareIRD(Result &r1, Result &r2)
+bool compareVBR(Result &r1, Result &r2)
 {
-    /*
-    assert(r1.opcode == r2.opcode);
-
-    // Exclude STOP command which doesn't perform a prefetch
-    if (moiracpu->getInfo(r1.opcode).I == moira::STOP) return true;
-
-    return moiracpu->getIRD() == get16(moiraMem, r2.pc);
-    */
-    return true;
+    return r1.vbr == r2.vbr;
 }
 
-bool compareIRC(Result &r1, Result &r2)
+bool compareSFC(Result &r1, Result &r2)
 {
-    /*
-    // Exclude STOP command which doesn't perform a prefetch
-    if (moiracpu->getInfo(r1.opcode).I == moira::STOP) return true;
+    return r1.sfc == r2.sfc;
+}
 
-    return moiracpu->getIRC() == get16(moiraMem, r2.pc + 2);
-    */
-    return true;
+bool compareDFC(Result &r1, Result &r2)
+{
+    return r1.dfc == r2.dfc;
 }
 
 bool compareCycles(Result &r1, Result &r2)
@@ -466,5 +477,5 @@ void bugReport()
 {
     printf("Please send a bug report to: dirk.hoffmann@me.com\n");
     printf("Thanks you!\n\n");
-    assert(false);
+    exit(0);
 }

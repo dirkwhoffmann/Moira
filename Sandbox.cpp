@@ -112,23 +112,25 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
 void
 Sandbox::error(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
 {
-    printf("\nACCESS %d DOESN'T MATCH:\n", replayCnt);
-    printf("i: %2d  ", replayCnt);
-    printf("Type: %s  ", accessTypeStr[type]);
-    printf("Addr: %4x  ", addr);
-    printf("Cycle: %lud  ", (long)cycle);
-    printf("FC: %d  ", fc);
-    if (type == POKE8 || type == POKE16) printf("Value: %4x  ", value);
-    printf("\n\n");
-    printf("ACCESS RECORD:\n");
-    for (int i = 0; i < recordCnt; i++) {
-        printf("i: %2d  ", i);
-        printf("Type: %s  ", accessTypeStr[access[i].type]);
-        printf("Addr: %4x  ", access[i].addr);
-        printf("Cycle: %3lud  ", (long)access[i].cycle);
-        printf("FC: %d  ", access[i].fc);
-        printf("Value: %4x  ", access[i].value);
-        printf("\n");
+    if (errors++ == 0) {
+
+        printf("\nACCESS %d DOESN'T MATCH:\n", replayCnt);
+        printf("i: %2d  ", replayCnt);
+        printf("Type: %s  ", accessTypeStr[type]);
+        printf("Addr: %4x  ", addr);
+        printf("Cycle: %lud  ", (long)cycle);
+        printf("FC: %d  ", fc);
+        if (type == POKE8 || type == POKE16) printf("Value: %4x  ", value);
+        printf("\n\n");
+        printf("ACCESS RECORD:\n");
+        for (int i = 0; i < recordCnt; i++) {
+            printf("i: %2d  ", i);
+            printf("Type: %s  ", accessTypeStr[access[i].type]);
+            printf("Addr: %4x  ", access[i].addr);
+            printf("Cycle: %3lud  ", (long)access[i].cycle);
+            printf("FC: %d  ", access[i].fc);
+            printf("Value: %4x  ", access[i].value);
+            printf("\n");
+        }
     }
-    errors++;
 }
