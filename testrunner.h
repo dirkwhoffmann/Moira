@@ -31,7 +31,7 @@ extern "C" {
 #define CPUTYPE M68K_CPU_TYPE_68010
 
 // Set to true for verbose output
-#define VERBOSE false
+#define VERBOSE true
 
 // Set to true to verify all memory write operations
 #define CHECK_MEM_WRITES true
@@ -108,6 +108,7 @@ void setupInstruction(Setup &s, uint32_t pc, uint16_t opcode);
 void resetMusashi(Setup &s);
 void resetMoira(Setup &s);
 
+
 //
 // Performing a test
 //
@@ -118,6 +119,9 @@ void runSingleTest(Setup &s);
 
 clock_t runMusashi(int i, Setup &s, Result &r);
 clock_t runMoira(int i, Setup &s, Result &r);
+
+bool skip(u16 op);
+
 
 //
 // Analysing a test result

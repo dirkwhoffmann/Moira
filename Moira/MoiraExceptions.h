@@ -11,8 +11,10 @@
 void saveToStack(AEStackFrame &frame);
 
 // Saves information to stack for group 1 and group 2 exceptions
-void saveToStackBrief(u16 sr, u32 pc);
-void saveToStackBrief(u16 sr) { saveToStackBrief(sr, reg.pc); }
+void saveToStackBrief(u16 nr, u16 sr) { saveToStackBrief(nr, sr, reg.pc); }
+void saveToStackBrief(u16 nr, u16 sr, u32 pc);
+void saveToStackBrief68000(u16 nr, u16 sr, u32 pc);
+void saveToStackBrief68010(u16 nr, u16 sr, u32 pc);
 
 // Emulates an address error
 // void execAddressError(u32 addr, u32 pc, bool read); // DEPRECATED

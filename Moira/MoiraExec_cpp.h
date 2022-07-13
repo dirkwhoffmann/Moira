@@ -192,7 +192,7 @@ Moira::execAddiRg(u16 opcode)
     result = addsub<I,S>(src, data);
     prefetch<POLLIPL>();
 
-    if constexpr (S == Long) sync(4);
+    if constexpr (S == Long) sync(4, 2);
     writeD<S>(dst, result);
 }
 
@@ -369,7 +369,7 @@ Moira::execAndiRg(u16 opcode)
     u32 result = logic<I,S>(src, readD<S>(dst));
     prefetch<POLLIPL>();
 
-    if constexpr (S == Long) sync(4);
+    if constexpr (S == Long) sync(4, 2);
     writeD<S>(dst, result);
 }
 
@@ -403,7 +403,7 @@ Moira::execAndiccr(u16 opcode)
     u32 src = readI<S>();
     u8  dst = getCCR();
 
-    sync(8);
+    sync(8, 4);
 
     u32 result = logic<I,S>(src, dst);
     setCCR((u8)result);
@@ -490,6 +490,8 @@ Moira::execBitDxEa(u16 opcode)
             if (!readOp<M, Byte>(dst, ea, data)) return;
 
             data = bit<I>(data, b);
+
+            if (I == BCLR && model == M68010) sync(2);
 
             prefetch<POLLIPL>();
             if (I != BTST) writeM<M, Byte>(ea, data);
@@ -674,7 +676,7 @@ Moira::execCmpiRg(u16 opcode)
 
     prefetch<POLLIPL>();
 
-    if constexpr (S == Long) sync(2);
+    if constexpr (S == Long) sync(2, 0);
     cmp<S>(src, readD<S>(dst));
 }
 
@@ -1593,8 +1595,8 @@ Moira::execMulMusashi(u16 op)
 
     switch (I) {
 
-        case MULU: model == M68000 ? sync(50) : sync(26); break;
-        case MULS: model == M68000 ? sync(50) : sync(28); break;
+        case MULU: sync(50, 26); break;
+        case MULS: sync(50, 28); break;
 
         default:
             fatalError;

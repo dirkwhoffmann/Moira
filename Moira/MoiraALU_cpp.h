@@ -666,7 +666,7 @@ Moira::divMusashi(u32 op1, u32 op2)
 
         case DIVS:
         {
-            sync(model == M68000 ? 154 : 118);
+            sync(154, 118);
 
             if (op1 == 0x80000000 && (i32)op2 == -1) {
 
@@ -698,7 +698,7 @@ Moira::divMusashi(u32 op1, u32 op2)
         }
         case DIVU:
         {
-            sync(model == M68000 ? 136 : 104);
+            sync(136, 104);
 
             i64 quotient  = op1 / op2;
             u16 remainder = (u16)(op1 % op2);

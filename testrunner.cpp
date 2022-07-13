@@ -193,17 +193,9 @@ clock_t runMusashi(int i, Setup &s, Result &r)
 
     r.oldpc = m68k_get_reg(NULL, M68K_REG_PC);
     r.opcode = get16(musashiMem, r.oldpc);
-    r.dasmCnt = m68k_disassemble(r.dasm, r.oldpc, M68K_CPU_TYPE_68000);
+    r.dasmCnt = m68k_disassemble(r.dasm, r.oldpc, CPUTYPE);
 
-    moira::Instr instr = moiracpu->getInfo(r.opcode).I;
-
-    // Skip some instructions that are likely to be broken in Musashi
-    bool skip =
-    instr == moira::ABCD    ||
-    instr == moira::SBCD    ||
-    instr == moira::NBCD;
-
-    if (!skip) {
+    if (!skip(r.opcode)) {
         
         if (VERBOSE)
             printf("%d: $%04x ($%04x): %s (Musashi)\n", i, r.oldpc, r.opcode, r.dasm);
@@ -232,16 +224,9 @@ clock_t runMoira(int i, Setup &s, Result &r)
 
     u32 pc = moiracpu->getPC();
     u16 op = get16(moiraMem, pc);
-    moira::Instr instr = moiracpu->getInfo(op).I;
-
-    // Skip some instructions that are likely to be broken in Musashi
-    bool skip =
-    instr == moira::ABCD    ||
-    instr == moira::SBCD    ||
-    instr == moira::NBCD;
 
     int64_t cycles = moiracpu->getClock();
-    if (!skip) {
+    if (!skip(op)) {
 
         if (VERBOSE)
             printf("%d: $%04x ($%04x): %s (Moira)\n", i, r.oldpc, r.opcode, r.dasm);
@@ -258,6 +243,21 @@ clock_t runMoira(int i, Setup &s, Result &r)
     recordMoiraRegisters(r);
 
     return elapsed;
+}
+
+bool skip(u16 op)
+{
+    bool result;
+
+    moira::Instr instr = moiracpu->getInfo(op).I;
+
+    // Skip some instructions that are broken in Musashi
+    result =
+    instr == moira::ABCD    ||
+    instr == moira::SBCD    ||
+    instr == moira::NBCD;
+
+    return result;
 }
 
 void recordMusashiRegisters(Result &r)

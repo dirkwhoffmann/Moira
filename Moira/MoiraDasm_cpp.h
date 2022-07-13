@@ -373,6 +373,7 @@ Moira::dasmCmpiRg(StrWriter &str, u32 &addr, u16 op)
     auto dst = Dn  ( _____________xxx(op)       );
 
     str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+    if constexpr (isPrgMode(M)) str << "; (1+)";
 }
 
 template<Instr I, Mode M, Size S> void
@@ -382,6 +383,7 @@ Moira::dasmCmpiEa(StrWriter &str, u32 &addr, u16 op)
     auto dst = Op <M,S> ( _____________xxx(op), addr );
 
     str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+    if constexpr (isPrgMode(M)) str << "; (1+)";
 }
 
 template<Instr I, Mode M, Size S> void
