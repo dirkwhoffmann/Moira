@@ -662,10 +662,15 @@ Moira::dasmMoveq(StrWriter &str, u32 &addr, u16 op)
 template<Instr I, Mode M, Size S> void
 Moira::dasmMoves(StrWriter &str, u32 &addr, u16 op)
 {
-    // auto src = Dn       ( ____xxx_________(op)       );
-    // auto dst = Op <M,S> ( _____________xxx(op), addr );
+    auto ext = (u16)dasmRead<Word>(addr);
+    auto ea = Op <M,S> ( _____________xxx(op), addr );
+    auto reg = Rn ( xxxx____________(ext) );
 
-    str << Ins<I>{} << "?????"; // Sz<S>{} << tab << src << ", " << dst;
+    if (ext & 0x800) {      // Rg -> Ea
+        str << Ins<I>{} << Sz<S>{} << tab << reg << ", " << ea << "; (1+)";
+    } else {                // Ea -> Rg
+        str << Ins<I>{} << Sz<S>{} << tab << ea << ", " << reg << "; (1+)";
+    }
 }
 
 template<Instr I, Mode M, Size S> void

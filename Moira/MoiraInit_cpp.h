@@ -999,12 +999,12 @@ Moira::createJumpTable()
     //               -------------------------------------------------
     // Dx,<ea>       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
     //               -------------------------------------------------
-    //                             X   X           X   X
+    //                         X   X   X           X   X
 
     if (model == M68010) {
 
         opcode = parse("0000 1110 ---- ----");
-        ________SSMMMXXX(bind, opcode, MOVES, 0b000110011000, Byte | Word | Long, Moves);
+        ________SSMMMXXX(bind, opcode, MOVES, 0b001111111000, Byte | Word | Long, Moves);
     }
 
 
