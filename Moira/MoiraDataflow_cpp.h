@@ -446,7 +446,7 @@ Moira::prefetch()
      * executed instruction.
      */
     reg.pc0 = reg.pc;
-    
+
     queue.ird = queue.irc;
     queue.irc = (u16)readMS <MEM_PROG, Word, F> (reg.pc + 2);
 }
@@ -466,6 +466,15 @@ Moira::fullPrefetch()
 }
 
 void
+Moira::noPrefetch()
+{
+    assert(flags & CPU_IS_LOOPING);
+
+    reg.pc0 = reg.pc;
+    std::swap(queue.irc, queue.ird);
+}
+
+void
 Moira::readExt()
 {
     reg.pc += 2;
@@ -482,7 +491,7 @@ Moira::readExt()
 template<Flags F> void
 Moira::jumpToVector(int nr)
 {
-    u32 vectorAddr = 4 * nr;
+    u32 vectorAddr = reg.vbr + 4 * nr;
 
     exception = nr;
     

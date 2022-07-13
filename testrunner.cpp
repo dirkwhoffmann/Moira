@@ -41,12 +41,30 @@ uint32 smartRandom()
 void setupMusashi()
 {
     m68k_init();
-    m68k_set_cpu_type(M68K_CPU_TYPE_68000);
+    m68k_set_cpu_type(CPUTYPE);
 }
 
 void setupMoira()
 {
+    switch (CPUTYPE) {
 
+        case M68K_CPU_TYPE_68000:
+
+            printf("Emulated CPU: Motorola 68000\n");
+            moiracpu->setModel(M68000);
+            break;
+
+        case M68K_CPU_TYPE_68010:
+
+            printf("Emulated CPU: Motorola 68010\n");
+            moiracpu->setModel(M68010);
+            break;
+
+        default:
+
+            printf("Unsupported CPU model (%d)\n", CPUTYPE);
+            break;
+    }
 }
 
 void createTestCase(Setup &s)
@@ -120,6 +138,8 @@ void run()
 
     setupMusashi();
     setupMoira();
+
+    printf("\n");
     srand(0);
 
     for (long round = 1 ;; round++) {

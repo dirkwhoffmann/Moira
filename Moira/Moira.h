@@ -34,7 +34,7 @@ class Moira {
 
 protected:
 
-    // Emulated CPU model (68000 is the only supported model yet)
+    // Emulated CPU model
     CPUModel model = M68000;
 
     // Interrupt mode of this CPU
@@ -71,6 +71,10 @@ protected:
      *     the STOP instruction has been executed. The state is left when the
      *     next interrupt occurs.
      *
+     * CPU_IS_LOOPING:
+     *     Set when the CPU is running in "loop mode". This mode is a 68010
+     *     feature to speed up the execution of certain loops.
+     *
      * CPU_LOG_INSTRUCTION:
      *     This flag is set if instruction logging is enabled. If set, the
      *     CPU records the current register contents in a log buffer.
@@ -94,19 +98,20 @@ protected:
      *    This flag indicates whether the CPU should check fo watchpoints.
      */
     int flags;
-    static const int CPU_IS_HALTED         = (1 << 8);
-    static const int CPU_IS_STOPPED        = (1 << 9);
-    static const int CPU_LOG_INSTRUCTION   = (1 << 10);
-    static const int CPU_CHECK_IRQ         = (1 << 11);
-    static const int CPU_TRACE_EXCEPTION   = (1 << 12);
-    static const int CPU_TRACE_FLAG        = (1 << 13);
-    static const int CPU_CHECK_BP          = (1 << 14);
-    static const int CPU_CHECK_WP          = (1 << 15);
-    static const int CPU_CHECK_CP          = (1 << 16);
+    static constexpr int CPU_IS_HALTED         = (1 << 8);
+    static constexpr int CPU_IS_STOPPED        = (1 << 9);
+    static constexpr int CPU_IS_LOOPING        = (1 << 10);
+    static constexpr int CPU_LOG_INSTRUCTION   = (1 << 11);
+    static constexpr int CPU_CHECK_IRQ         = (1 << 12);
+    static constexpr int CPU_TRACE_EXCEPTION   = (1 << 13);
+    static constexpr int CPU_TRACE_FLAG        = (1 << 14);
+    static constexpr int CPU_CHECK_BP          = (1 << 15);
+    static constexpr int CPU_CHECK_WP          = (1 << 16);
+    static constexpr int CPU_CHECK_CP          = (1 << 17);
 
     // Number of elapsed cycles since powerup
     i64 clock;
-
+    
     // The data and address registers
     Registers reg;
 
@@ -125,6 +130,9 @@ protected:
     // Jump table holding the instruction handlers
     typedef void (Moira::*ExecPtr)(u16);
     ExecPtr exec[65536];
+
+    // Jump table holding the instruction handlers for the 68010 loop mode
+    ExecPtr loop[65536];
 
     // Jump table holding the disassebler handlers
     typedef void (Moira::*DasmPtr)(StrWriter&, u32&, u16);
@@ -145,10 +153,19 @@ public:
     Moira();
     virtual ~Moira();
 
-    void createJumpTables();
+    // Selects the emulated CPU model
+    void setModel(CPUModel model);
 
     // Configures the output format of the disassembler
     void configDasm(bool h, bool u) { hex = h; upper = u; }
+
+protected:
+
+    // Creates the generic jump table (all models)
+    void createJumpTable();
+
+    // Adjusts the jump table for a specific model
+    void modifyJumpTableFor68010();
 
 
     //
@@ -229,6 +246,7 @@ protected:
     virtual void signalTasInstr() { };
     virtual void signalJsrBsrInstr(u16 opcode, u32 oldPC, u32 newPC) { };
     virtual void signalRtsInstr() { };
+    virtual void signalRtdInstr() { };
 
     // State delegates
     virtual void signalHardReset() { };
@@ -245,7 +263,8 @@ protected:
     virtual void signalInterrupt(u8 level) { };
     virtual void signalJumpToVector(int nr, u32 addr) { };
     virtual void signalSoftwareTrap(u16 opcode, SoftwareTrap trap) { };
-
+    virtual void signalBkptInstruction(int nr) { };
+    
     // Exception delegates
     virtual void addressErrorHandler() { };
     

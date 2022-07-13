@@ -19,6 +19,7 @@ namespace moira {
 #include "MoiraDataflow_cpp.h"
 #include "MoiraExceptions_cpp.h"
 #include "MoiraExec_cpp.h"
+#include "Moira68010_cpp.h"
 #include "StrWriter_cpp.h"
 #include "MoiraDasm_cpp.h"
 
@@ -27,7 +28,7 @@ Moira::Moira()
     if (BUILD_INSTR_INFO_TABLE) info = new InstrInfo[65536];
     if (ENABLE_DASM) dasm = new DasmPtr[65536];
 
-    createJumpTables();
+    createJumpTable();
 }
 
 Moira::~Moira()
@@ -37,25 +38,28 @@ Moira::~Moira()
 }
 
 void
+Moira::setModel(CPUModel model)
+{
+    if (this->model != model) {
+
+        this->model = model;
+        createJumpTable();
+        flags &= ~CPU_IS_LOOPING;
+    }
+}
+
+void
 Moira::reset()
 {
     flags = CPU_CHECK_IRQ;
 
-    for(int i = 0; i < 8; i++) reg.d[i] = reg.a[i] = 0;
-    reg.usp = 0;
-    reg.ipl = 0;
+    reg = { };
+    reg.sr.s = 1;
+    reg.sr.ipl = 7;
+
     ipl = 0;
     fcl = 0;
     
-    reg.sr.t = 0;
-    reg.sr.s = 1;
-    reg.sr.x = 0;
-    reg.sr.n = 0;
-    reg.sr.z = 0;
-    reg.sr.v = 0;
-    reg.sr.c = 0;
-    reg.sr.ipl = 7;
-
     sync(16);
 
     // Read the initial (supervisor) stack pointer from memory
@@ -148,9 +152,22 @@ Moira::execute()
     }
 
     // Execute the instruction
-    reg.pc += 2;
-    (this->*exec[queue.ird])(queue.ird);
-    assert(reg.pc0 == reg.pc);
+    if (flags & CPU_IS_LOOPING) {
+
+        reg.pc += 2;
+        if (loop[queue.ird] == nullptr) {
+            printf("Callback missing\n");
+            breakpointReached(reg.pc0);
+        } else {
+            (this->*loop[queue.ird])(queue.ird);
+            assert(reg.pc0 == reg.pc);
+        }
+    } else {
+
+        reg.pc += 2;
+        (this->*exec[queue.ird])(queue.ird);
+        assert(reg.pc0 == reg.pc);
+    }
 
 done:
     
@@ -172,6 +189,12 @@ bool
 Moira::checkForIrq()
 {
     if (reg.ipl > reg.sr.ipl || reg.ipl == 7) {
+
+        // Exit loop mode if necessary
+        if (flags & CPU_IS_LOOPING) {
+            // printf("INTERRUPT IN LOOP MODE\n");
+            flags &= ~CPU_IS_LOOPING;
+        }
 
         // Trigger interrupt
         execIrqException(reg.ipl);

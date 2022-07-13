@@ -27,6 +27,9 @@ extern "C" {
 #include "m68kops.h"
 }
 
+// CPU under test
+#define CPUTYPE M68K_CPU_TYPE_68000
+
 // Set to true for verbose output
 #define VERBOSE false
 

@@ -74,6 +74,7 @@ Moira::shift(int cnt, u64 data) {
     switch(I) {
 
         case ASL:
+        case ASL_LOOP:
         {
             bool carry = false;
             u32 changed = 0;
@@ -89,6 +90,7 @@ Moira::shift(int cnt, u64 data) {
             break;
         }
         case ASR:
+        case ASR_LOOP:
         {
             bool carry = false;
             u32 changed = 0;
@@ -104,6 +106,7 @@ Moira::shift(int cnt, u64 data) {
             break;
         }
         case LSL:
+        case LSL_LOOP:
         {
             bool carry = false;
             for (int i = 0; i < cnt; i++) {
@@ -116,6 +119,7 @@ Moira::shift(int cnt, u64 data) {
             break;
         }
         case LSR:
+        case LSR_LOOP:
         {
             bool carry = false;
             for (int i = 0; i < cnt; i++) {
@@ -128,6 +132,7 @@ Moira::shift(int cnt, u64 data) {
             break;
         }
         case ROL:
+        case ROL_LOOP:
         {
             bool carry = false;
             for (int i = 0; i < cnt; i++) {
@@ -139,6 +144,7 @@ Moira::shift(int cnt, u64 data) {
             break;
         }
         case ROR:
+        case ROR_LOOP:
         {
             bool carry = false;
             for (int i = 0; i < cnt; i++) {
@@ -151,6 +157,7 @@ Moira::shift(int cnt, u64 data) {
             break;
         }
         case ROXL:
+        case ROXL_LOOP:
         {
             bool carry = reg.sr.x;
             for (int i = 0; i < cnt; i++) {
@@ -165,6 +172,7 @@ Moira::shift(int cnt, u64 data) {
             break;
         }
         case ROXR:
+        case ROXR_LOOP:
         {
             bool carry = reg.sr.x;
             for (int i = 0; i < cnt; i++) {
@@ -196,6 +204,7 @@ Moira::addsub(u32 op1, u32 op2)
     switch(I) {
 
         case ADD:
+        case ADD_LOOP:
         case ADDI:
         case ADDQ:
         {
@@ -207,6 +216,7 @@ Moira::addsub(u32 op1, u32 op2)
             break;
         }
         case ADDX:
+        case ADDX_LOOP:
         {
             result = U64_ADD3(op1, op2, reg.sr.x);
 
@@ -216,6 +226,7 @@ Moira::addsub(u32 op1, u32 op2)
             break;
         }
         case SUB:
+        case SUB_LOOP:
         case SUBI:
         case SUBQ:
         {
@@ -227,6 +238,7 @@ Moira::addsub(u32 op1, u32 op2)
             break;
         }
         case SUBX:
+        case SUBX_LOOP:
         {
             result = U64_SUB3(op2, op1, reg.sr.x);
 
@@ -395,6 +407,7 @@ Moira::logic(u32 op)
     switch(I) {
 
         case NOT:
+        case NOT_LOOP:
         {
             result = ~op;
             reg.sr.n = NBIT<S>(result);
@@ -404,11 +417,13 @@ Moira::logic(u32 op)
             break;
         }
         case NEG:
+        case NEG_LOOP:
         {
             result = addsub<SUB,S>(op, 0);
             break;
         }
         case NEGX:
+        case NEGX_LOOP:
         {
             result = addsub<SUBX,S>(op, 0);
             break;
@@ -651,7 +666,7 @@ Moira::divMusashi(u32 op1, u32 op2)
 
         case DIVS:
         {
-            sync(154);
+            sync(model == M68000 ? 154 : 118);
 
             if (op1 == 0x80000000 && (i32)op2 == -1) {
 
@@ -683,7 +698,7 @@ Moira::divMusashi(u32 op1, u32 op2)
         }
         case DIVU:
         {
-            sync(136);
+            sync(model == M68000 ? 136 : 104);
 
             i64 quotient  = op1 / op2;
             u16 remainder = (u16)(op1 % op2);
