@@ -579,7 +579,7 @@ Moira::execChk(u16 opcode)
     if (!readOp<M,S, STD_AE_FRAME>(src, ea, data)) return;
     dy = readD<S>(dst);
 
-    sync(6);
+    sync(6, 4);
 
     reg.sr.z = ZERO<S>(dy);
     reg.sr.v = 0;
@@ -615,8 +615,9 @@ Moira::execClr(u16 opcode)
     u32 ea, data;
     if (!readOp<M,S, STD_AE_FRAME>(dst, ea, data)) return;
 
-     looping<I>() ? noPrefetch() : prefetch <POLLIPL> ();
-    
+    // looping<I>() ? noPrefetch() : prefetch <POLLIPL> ();
+    prefetch <POLLIPL> ();
+
     if constexpr (S == Long && isRegMode(M)) sync(2);
     
     if constexpr (MIMIC_MUSASHI) {
@@ -1068,7 +1069,9 @@ Moira::execMove4(u16 opcode)
         if constexpr (S != Long) updateAn <MODE_PD, S> (dst);
         return;
     }
-    
+
+    if (model == M68010 && S == Long) sync(2);
+
     writeM<MODE_PD, S, REVERSE>(ea, data);
     updateAn<MODE_PD, S>(dst);
 }
@@ -1448,7 +1451,6 @@ Moira::execMoveFromCcrRg(u16 opcode)
     if (!readOp <M,S> (dst, ea, data)) return;
     prefetch<POLLIPL>();
 
-    sync(2);
     writeD <S> (dst, getCCR());
 }
 

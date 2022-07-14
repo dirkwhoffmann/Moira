@@ -968,7 +968,7 @@ static void d68000_bclr_s(void)
 static void d68010_bkpt(void)
 {
 	LIMIT_CPU_TYPES(M68010_PLUS);
-	sprintf(g_dasm_str, "bkpt #%d; (1+)", g_cpu_ir&7);
+	sprintf(g_dasm_str, "bkpt    #%d; (1+)", g_cpu_ir&7);
 }
 
 static void d68020_bfchg(void)
@@ -2019,9 +2019,9 @@ static void d68010_movec(void)
 	}
 
 	if(BIT_0(g_cpu_ir))
-		sprintf(g_dasm_str, "movec %c%d, %s; (%s)", BIT_F(extension) ? 'A' : 'D', (extension>>12)&7, reg_name, processor);
+		sprintf(g_dasm_str, "movec   %c%d, %s; (%s)", BIT_F(extension) ? 'A' : 'D', (extension>>12)&7, reg_name, processor);
 	else
-		sprintf(g_dasm_str, "movec %s, %c%d; (%s)", reg_name, BIT_F(extension) ? 'A' : 'D', (extension>>12)&7, processor);
+		sprintf(g_dasm_str, "movec   %s, %c%d; (%s)", reg_name, BIT_F(extension) ? 'A' : 'D', (extension>>12)&7, processor);
 }
 
 static void d68000_movem_pd_16(void)

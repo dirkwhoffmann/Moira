@@ -309,9 +309,9 @@ Moira::dasmAndisr(StrWriter &str, u32 &addr, u16 op)
 template<Instr I, Mode M, Size S> void
 Moira::dasmBkpt(StrWriter &str, u32 &addr, u16 op)
 {
-    auto nr = Imu ( _____________xxx(op) );
+    auto nr = Imd ( _____________xxx(op) );
 
-    str << Ins<I>{} << tab << nr;
+    str << Ins<I>{} << tab << nr << "; (1+)";
 }
 
 template<Instr I, Mode M, Size S> void
@@ -596,10 +596,23 @@ Moira::dasmMovea(StrWriter &str, u32 &addr, u16 op)
 template<Instr I, Mode M, Size S> void
 Moira::dasmMovecRcRx(StrWriter &str, u32 &addr, u16 op)
 {
-    auto dst = "???";
-    // auto arg = u16(dasmRead<Word>(addr));
+    auto arg = u16(dasmRead<Word>(addr));
+    auto src = arg & 0x0FFF;
+    auto dst = Dn(xxxx____________(arg));
 
-    str << Ins<I>{} << tab << "???, " << dst;
+    str << Ins<I>{} << tab;
+
+    switch(src) {
+
+        case 0x000: str << "SFC"; break;
+        case 0x001: str << "DFC"; break;
+        case 0x800: str << "USP"; break;
+        case 0x801: str << "VBR"; break;
+
+        default:
+            str << "???";
+    }
+    str << ", " << dst << "; (1+)";
 }
 
 template<Instr I, Mode M, Size S> void
@@ -678,7 +691,7 @@ Moira::dasmMoveFromCcrRg(StrWriter &str, u32 &addr, u16 op)
 {
     auto dst = Dn ( _____________xxx(op) );
 
-    str << Ins<I>{} << tab << "CCR, " << dst;
+    str << Ins<I>{} << tab << "CCR, " << dst << "; (1+)";
 }
 
 template<Instr I, Mode M, Size S> void
@@ -686,7 +699,7 @@ Moira::dasmMoveFromCcrEa(StrWriter &str, u32 &addr, u16 op)
 {
     auto dst = Op <M,S> ( _____________xxx(op), addr );
 
-    str << Ins<I>{} << tab << "CCR, " << dst;
+    str << Ins<I>{} << tab << "CCR, " << dst << "; (1+)";
 }
 
 template<Instr I, Mode M, Size S> void
@@ -786,7 +799,9 @@ Moira::dasmReset(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmRtd(StrWriter &str, u32 &addr, u16 op)
 {
-    str << Ins<I>{};
+    auto disp = Ims ( dasmRead<Word>(addr) );
+
+    str << Ins<I>{} << tab << disp << "; (1+)";
 }
 
 template <Instr I, Mode M, Size S> void

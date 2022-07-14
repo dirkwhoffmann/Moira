@@ -557,7 +557,9 @@ Moira::createJumpTable()
     ________SSMMMXXX(bind, opcode, CLR, 0b101111111000, Byte | Word | Long, Clr);
 
     if (model == M68010) {
-        ________SSMMMXXX(bindLoop, opcode, CLR_LOOP, 0b001110000000, Byte | Word | Long, Clr);
+
+        ________SSMMMXXX(bindExec, opcode, CLR, 0b101111111000, Byte | Word | Long, Clr68010);
+        ________SSMMMXXX(bindLoop, opcode, CLR_LOOP, 0b001110000000, Byte | Word | Long, Clr68010);
     }
 
 
@@ -934,8 +936,8 @@ Moira::createJumpTable()
 
     if (model == M68010) {
 
-        // bind(parse("0100 1110 0111 1010"), MovecRcRx, MOVEC, MODE_IP, Long);
-        // bind(parse("0100 1110 0111 1011"), MovecRxRc, MOVEC, MODE_IP, Long);
+        bind(parse("0100 1110 0111 1010"), MovecRcRx, MOVEC, MODE_IP, Long);
+        bind(parse("0100 1110 0111 1011"), MovecRxRc, MOVEC, MODE_IP, Long);
     }
 
 

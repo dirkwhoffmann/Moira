@@ -276,7 +276,7 @@ protected:
 	virtual void swTrapReached(u32 addr) { };
 
     // Called at the beginning of each instruction handler (see EXEC_DEBUG)
-    virtual void execDebug(const char *cmd) { };
+    virtual void execDebug(const char *cmd) { printf("%s\n", cmd); }
     
 
     //

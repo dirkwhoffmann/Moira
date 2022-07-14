@@ -293,7 +293,8 @@ void recordMoiraRegisters(Result &r)
 void dumpSetup(Setup &s)
 {
     printf("PC: %4x ", s.pc);
-    printf("CCR: %2x %s\n", s.ccr, s.supervisor ? "SUPERVISOR MODE" : "");
+    printf("CCR: %2x %s ", s.ccr, s.supervisor ? "SUPERVISOR MODE" : "");
+    printf("Ext1: %04x Ext2: %04x\n", s.ext1, s.ext2);
     printf("         Dn: ");
     for (int i = 0; i < 8; i++) printf("%8x ", s.d[i]);
     printf("\n");
@@ -465,10 +466,18 @@ bool compareDFC(Result &r1, Result &r2)
 bool compareCycles(Result &r1, Result &r2)
 {
     assert(r1.opcode == r2.opcode);
-    moira::Instr instr = moiracpu->getInfo(r1.opcode).I;
+    auto I = moiracpu->getInfo(r1.opcode).I;
+    auto S = moiracpu->getInfo(r1.opcode).S;
+    auto M = moiracpu->getInfo(r1.opcode).M;
 
     // Exclude some instructions
-    if (instr == moira::TAS) return true;
+    if (I == moira::TAS) return true;
+    if (CPUTYPE == M68K_CPU_TYPE_68010) {
+
+        if (I == moira::CLR && S == Byte && M == MODE_AL) return true;
+        if (I == moira::CLR && S == Word && M == MODE_AL) return true;
+        if (I == moira::TRAPV) return true;
+    }
 
     return r1.cycles == r2.cycles;
 }
