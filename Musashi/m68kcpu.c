@@ -209,9 +209,11 @@ const uint8 m68ki_exception_cycle_table[4][256] =
 		 34, /*  7: TRAPV                                              */
 		 38, /*  8: Privilege Violation                                */
 		 38, /*  9: Trace                                              */
-		  4, /* 10: 1010                                               */
-		  4, /* 11: 1111                                               */
-		  4, /* 12: RESERVED                                           */
+          // 4, /* 10: 1010                                               */
+		  // 4, /* 11: 1111                                               */
+         38, /* 10: 1010                                               */
+         38, /* 11: 1111                                               */
+          4, /* 12: RESERVED                                           */
 		  4, /* 13: Coprocessor Protocol Violation        (unemulated) */
 		  4, /* 14: Format Error                                       */
 		 44, /* 15: Uninitialized Interrupt                            */

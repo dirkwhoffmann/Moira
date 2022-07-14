@@ -135,7 +135,11 @@ Moira::execAddEaRg(u16 opcode)
 
     looping<I>() ? noPrefetch() : prefetch <POLLIPL> ();
 
-    if constexpr (S == Long) sync(2 + (isMemMode(M) ? 0 : 2));
+    if (model == M68000) {
+        if constexpr (S == Long) sync(2 + (isMemMode(M) ? 0 : 2));
+    } else {
+        if constexpr (S == Long) sync(2);
+    }
     writeD<S>(dst, result);
 }
 
@@ -174,7 +178,12 @@ Moira::execAdda(u16 opcode)
     looping<I>() ? noPrefetch() : prefetch <POLLIPL> ();
 
     sync(2);
-    if constexpr (S == Word || isRegMode(M) || isImmMode(M)) sync(2);
+    if (model == M68000) {
+        if constexpr (S == Word || isRegMode(M) || isImmMode(M)) sync(2);
+    } else {
+        if constexpr (S == Word) sync(2);
+    }
+
     writeA(dst, result);
 }
 
@@ -274,7 +283,12 @@ Moira::execAddxRg(u16 opcode)
     u32 result = addsub<I,S>(readD<S>(src), readD<S>(dst));
     prefetch<POLLIPL>();
 
-    if constexpr (S == Long) sync(4);
+    if (model == M68000) {
+        if constexpr (S == Long) sync(4);
+    } else {
+        if constexpr (S == Long) sync(2);
+    }
+
     writeD<S>(dst, result);
 }
 
@@ -353,8 +367,12 @@ Moira::execAndRgEa(u16 opcode)
 
     u32 result = logic<I,S>(readD<S>(src), data);
     looping<I>() ? noPrefetch() : prefetch <POLLIPL> ();
-    
-    if constexpr (S == Long && isRegMode(M)) sync(4);
+
+    if (model == M68000) {
+        if constexpr (S == Long && isRegMode(M)) sync(4);
+    } else {
+        if constexpr (S == Long && isRegMode(M)) sync(2);
+    }
     
     if constexpr (MIMIC_MUSASHI) {
         writeOp <M,S> (dst, ea, result);
@@ -427,7 +445,7 @@ Moira::execAndisr(u16 opcode)
     u32 src = readI<S>();
     u16 dst = getSR();
 
-    sync(8);
+    sync(8, 4);
 
     u32 result = logic<I,S>(src, dst);
     setSR((u16)result);
@@ -1669,7 +1687,11 @@ Moira::execDivMusashi(u16 opcode)
 
     // Check for division by zero
     if (divisor == 0) {
-        sync(8 - (int)(clock - c));
+        if (model == M68000) {
+            sync(8 - (int)(clock - c));
+        } else {
+            sync(10 - (int)(clock - c));
+        }
         execTrapException(5);
         return;
     }
