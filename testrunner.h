@@ -60,6 +60,7 @@ struct Setup {
     uint8_t  ccr;
     bool     supervisor;
     uint32_t pc;
+    uint16_t opcode;
     uint16_t ext1;
     uint16_t ext2;
     uint32_t d[8];

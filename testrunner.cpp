@@ -84,7 +84,7 @@ void createTestCase(Setup &s)
 void setupInstruction(Setup &s, uint32_t pc, uint16_t opcode)
 {
     s.pc = pc;
-    // s.opcode = opcode;
+    s.opcode = opcode;
 
     set16(s.mem, pc, opcode);
     set16(s.mem, pc + 2, s.ext1);
@@ -292,9 +292,9 @@ void recordMoiraRegisters(Result &r)
 
 void dumpSetup(Setup &s)
 {
-    printf("PC: %4x ", s.pc);
-    printf("CCR: %2x %s ", s.ccr, s.supervisor ? "SUPERVISOR MODE" : "");
-    printf("Ext1: %04x Ext2: %04x\n", s.ext1, s.ext2);
+    printf("PC: %04x ", s.pc);
+    printf("Opcode: %04x Ext1: %04x Ext2: %04x ", s.opcode, s.ext1, s.ext2);
+    printf("CCR: %02x %s", s.ccr, s.supervisor ? "SUPERVISOR MODE\n" : "\n");
     printf("         Dn: ");
     for (int i = 0; i < 8; i++) printf("%8x ", s.d[i]);
     printf("\n");

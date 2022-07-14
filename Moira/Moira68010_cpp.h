@@ -44,6 +44,7 @@ template<Instr I, Mode M, Size S> void
 Moira::execMovecRcRx(u16 opcode)
 {
     EXEC_DEBUG
+    SUPERVISOR_MODE_ONLY
 
     auto arg = readI<Word>();
     int dst = xxxx____________(arg);
@@ -67,6 +68,7 @@ template<Instr I, Mode M, Size S> void
 Moira::execMovecRxRc(u16 opcode)
 {
     EXEC_DEBUG
+    SUPERVISOR_MODE_ONLY
 
     auto arg = readI<Word>();
     int src = xxxx____________(arg);
@@ -149,9 +151,6 @@ Moira::execDbcc68010(u16 opcode)
 {
     EXEC_DEBUG
 
-    // printf("execDbcc68010(%x)\n", opcode);
-    // softstopReached(reg.pc0);
-
     sync(2);
     if (!cond<I>()) {
 
@@ -184,10 +183,13 @@ Moira::execDbcc68010(u16 opcode)
                 queue.irc = opcode;
                 // printf("Entering loop mode (IRD: %x IRC: %x)\n", queue.ird, queue.irc);
             }
+
+            if (MIMIC_MUSASHI) sync(2);
             return;
 
         } else {
 
+            if (model == M68010) sync(MIMIC_MUSASHI ? 4 : 2);
             (void)readMS <MEM_PROG, Word> (reg.pc + 2);
         }
 

@@ -241,7 +241,7 @@ Moira::execAddqAn(u16 opcode)
     u32 result = (I == ADDQ) ? readA(dst) + src : readA(dst) - src;
     prefetch<POLLIPL>();
 
-    sync(4);
+    if (model == M68000 || S == Long) sync(4);
     writeA(dst, result);
 }
 
@@ -331,7 +331,12 @@ Moira::execAndEaRg(u16 opcode)
     u32 result = logic<I,S>(data, readD<S>(dst));
     prefetch<POLLIPL>();
 
-    if constexpr (S == Long) sync(isRegMode(M) || isImmMode(M) ? 4 : 2);
+    if (model == M68000) {
+        if constexpr (S == Long) sync(isRegMode(M) || isImmMode(M) ? 4 : 2);
+    } else {
+        if constexpr (S == Long) sync(2);
+    }
+
     writeD<S>(dst, result);
 }
 
@@ -454,7 +459,7 @@ Moira::execBcc(u16 opcode)
     } else {
 
         // Fall through to next instruction
-        sync(2);
+        if (model == M68000) sync(2);
         if constexpr (S == Word) readExt();
         prefetch<POLLIPL>();
     }
@@ -1885,7 +1890,12 @@ Moira::execSccRg(u16 opcode)
     data = cond<I>() ? 0xFF : 0;
     prefetch<POLLIPL>();
 
-    if (data) sync(2);
+    if (model == M68010) {
+        // if (data) sync(2);
+    } else {
+        if (data) sync(2);
+    }
+
     writeD<Byte>(dst, data);
 }
 

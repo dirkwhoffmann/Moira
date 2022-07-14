@@ -618,10 +618,23 @@ Moira::dasmMovecRcRx(StrWriter &str, u32 &addr, u16 op)
 template<Instr I, Mode M, Size S> void
 Moira::dasmMovecRxRc(StrWriter &str, u32 &addr, u16 op)
 {
-    auto src = "???";
-    // auto arg = u16(dasmRead<Word>(addr));
+    auto arg = u16(dasmRead<Word>(addr));
+    auto dst = arg & 0x0FFF;
+    auto src = Dn(xxxx____________(arg));
 
-    str << Ins<I>{} << tab << src << ", ???";
+    str << Ins<I>{} << tab << src << ", ";
+
+    switch(dst) {
+
+        case 0x000: str << "SFC"; break;
+        case 0x001: str << "DFC"; break;
+        case 0x800: str << "USP"; break;
+        case 0x801: str << "VBR"; break;
+
+        default:
+            str << "???";
+    }
+    str << "; (1+)";
 }
 
 template<Instr I, Mode M, Size S> void
