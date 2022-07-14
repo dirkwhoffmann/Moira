@@ -208,7 +208,7 @@ typedef enum
 {
     MODE_DN,   //  0         Dn : Data register direct
     MODE_AN,   //  1         An : Address register direct
-    MODE_AI,   //  2       (An) : Register indirect
+    MODE_AI,   //  2       (An) : Address register indirect
     MODE_PI,   //  3      (An)+ : Postincrement register indirect
     MODE_PD,   //  4      -(An) : Predecrement register indirect
     MODE_DI,   //  5     (d,An) : Register indirect with displacement

@@ -96,7 +96,7 @@ Moira::execMoves(u16 opcode)
 
     u32 ea, data;
 
-    if (queue.irc & 0x800) {      // Rg -> Ea
+    if (queue.irc & 0x800) {    // Rg -> Ea
 
         auto arg = readI<Word>();
         int src = xxxx____________(arg);
@@ -106,14 +106,33 @@ Moira::execMoves(u16 opcode)
         bool error;
         writeM <M,S> (ea, readR<S>(src), error);
 
-    } else {                // Ea -> Rg
+    } else {                    // Ea -> Rg
 
         auto arg = readI<Word>();
         int src = _____________xxx(opcode);
         int dst = xxxx____________(arg);
 
         if (!readOp<M,S, STD_AE_FRAME>(src, ea, data)) return;
-        writeR<S>(dst, data);
+
+        if (dst < 8) {
+            writeR<S>(dst, data);
+        } else {
+            writeR<Long>(dst, SEXT<S>(data));
+        }
+
+        switch(M) {
+
+            case MODE_AI: sync(6); break;
+            case MODE_PD: sync(S == Long ? 10 : 6); break;
+            case MODE_IX: sync(S == Long ? 14 : 12); break;
+            case MODE_PI: sync(6); break;
+            case MODE_DI: sync(S == Long ? 12 : 10); break;
+            case MODE_AW: sync(S == Long ? 12 : 10); break;
+            case MODE_AL: sync(S == Long ? 12 : 10); break;
+
+            default:
+                fatalError;
+        }
     }
 
     prefetch<POLLIPL>();

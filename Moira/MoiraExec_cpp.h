@@ -1520,7 +1520,7 @@ Moira::execMoveFromSrRg(u16 opcode)
     if (!readOp <M,S> (dst, ea, data)) return;
     prefetch<POLLIPL>();
 
-    sync(2);
+    if (model == M68000) sync(2);
     writeD <S> (dst, getSR());
 }
 
@@ -1561,10 +1561,12 @@ template<Instr I, Mode M, Size S> void
 Moira::execMoveUspAn(u16 opcode)
 {
     EXEC_DEBUG
-
     SUPERVISOR_MODE_ONLY
 
     int an = _____________xxx(opcode);
+
+    if (model == M68010) sync(2);
+
     prefetch<POLLIPL>();
     writeA(an, getUSP());
 }
@@ -1573,10 +1575,12 @@ template<Instr I, Mode M, Size S> void
 Moira::execMoveAnUsp(u16 opcode)
 {
     EXEC_DEBUG
-
     SUPERVISOR_MODE_ONLY
 
     int an = _____________xxx(opcode);
+
+    if (model == M68010) sync(2);
+
     prefetch<POLLIPL>();
     setUSP(readA(an));
 }
@@ -1822,7 +1826,7 @@ Moira::execReset(u16 opcode)
     
     signalResetInstr();
     
-    sync(128);
+    sync(128, 126);
     prefetch<POLLIPL>();
 }
 
