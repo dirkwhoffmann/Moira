@@ -115,6 +115,7 @@ void resetMusashi(Setup &s)
 void resetMoira(Setup &s)
 {
     moiracpu->reset();
+    moiracpu->setClock(0);
 
     for (int i = 0; i < 8; i++) {
         moiracpu->setD(i,s.d[i]);

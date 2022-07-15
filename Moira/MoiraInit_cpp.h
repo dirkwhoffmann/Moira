@@ -1341,6 +1341,10 @@ Moira::createJumpTable()
 
     bind(parse("0100 1110 0111 0011"), Rte, RTE, MODE_IP, Long);
 
+    if (model == M68010) {
+        bindExec(parse("0100 1110 0111 0011"), Rte68010, RTE, MODE_IP, Long);
+    }
+
 
     // RTR
     //

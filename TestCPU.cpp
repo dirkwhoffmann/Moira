@@ -95,7 +95,7 @@ void
 TestCPU::write16 (u32 addr, u16 val)
 {
     if (CHECK_MEM_WRITES)
-        sandbox.replayPoke(POKE16, addr, moiracpu->getClock(), readFC(), val);
+        sandbox.replayPoke(POKE16, addr, getClock(), readFC(), val);
     set16(moiraMem, addr, val);
 }
 

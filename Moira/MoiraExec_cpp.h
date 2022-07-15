@@ -1834,7 +1834,6 @@ template<Instr I, Mode M, Size S> void
 Moira::execRte(u16 opcode)
 {
     EXEC_DEBUG
-
     SUPERVISOR_MODE_ONLY
 
     u16 newsr = (u16)readMS <MEM_DATA, Word> (reg.sp);

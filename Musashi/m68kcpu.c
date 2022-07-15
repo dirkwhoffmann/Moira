@@ -215,7 +215,8 @@ const uint8 m68ki_exception_cycle_table[4][256] =
          38, /* 11: 1111                                               */
           4, /* 12: RESERVED                                           */
 		  4, /* 13: Coprocessor Protocol Violation        (unemulated) */
-		  4, /* 14: Format Error                                       */
+		  // 4, /* 14: Format Error                                       */
+          54, /* 14: Format Error                                       */
 		 44, /* 15: Uninitialized Interrupt                            */
 		  4, /* 16: RESERVED                                           */
 		  4, /* 17: RESERVED                                           */

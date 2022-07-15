@@ -112,6 +112,27 @@ Moira::execAddressError(AEStackFrame frame, int delay)
 }
 
 void
+Moira::execFormatError()
+{
+    EXEC_DEBUG
+
+    u16 status = getSR();
+
+    // Enter supervisor mode
+    setSupervisorMode(true);
+
+    // Disable tracing
+    clearTraceFlag();
+    flags &= ~CPU_TRACE_EXCEPTION;
+
+    // Write exception information to stack
+    sync(4);
+    saveToStackBrief(14, status, reg.pc);
+
+    jumpToVector<AE_SET_CB3>(14);
+}
+
+void
 Moira::execUnimplemented(int nr)
 {
     EXEC_DEBUG

@@ -269,8 +269,8 @@ template<Instr I, Mode M, Size S> void
 Moira::execMoveFromSrRg68010(u16 opcode)
 {
     EXEC_DEBUG
-
     SUPERVISOR_MODE_ONLY
+
     execMoveFromSrRg <I,M,S> (opcode);
 }
 
@@ -278,7 +278,43 @@ template<Instr I, Mode M, Size S> void
 Moira::execMoveFromSrEa68010(u16 opcode)
 {
     EXEC_DEBUG
-
     SUPERVISOR_MODE_ONLY
+
     execMoveFromSrEa <I,M,S> (opcode);
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::execRte68010(u16 opcode)
+{
+    EXEC_DEBUG
+    SUPERVISOR_MODE_ONLY
+
+    u16 newsr = (u16)readMS <MEM_DATA, Word> (reg.sp);
+    reg.sp += 2;
+
+    u32 newpc = readMS <MEM_DATA, Long> (reg.sp);
+    reg.sp += 4;
+
+    u16 format = (u16)(readMS <MEM_DATA, Word> (reg.sp) >> 12);
+    reg.sp += 2;
+
+    // Check for format errors
+    if (format != 0 && format != 8) {
+
+        printf("PC = %x SR = %x SSP = %x USP = %x\n", reg.pc, reg.sr, reg.ssp, reg.usp);
+        reg.sp -= 8;
+        execFormatError();
+        return;
+    }
+
+    setSR(newsr);
+
+    if (misaligned(newpc)) {
+        execAddressError(makeFrame<AE_PROG>(newpc, reg.pc));
+        return;
+    }
+
+    setPC(newpc);
+
+    fullPrefetch<POLLIPL>();
 }
