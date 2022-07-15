@@ -29,7 +29,7 @@ typedef enum
     M68000,         // Fully supported
     M68010          // Work on progress (don't use!)
 }
-CPUModel;
+CPU;
 
 typedef enum
 {

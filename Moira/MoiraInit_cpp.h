@@ -10,9 +10,21 @@
 // Adds an entry to the instruction jump table
 
 #define TPARAM(x,y,z) <x,y,z>
+#define TPARAM4(c,x,y,z) <c,x,y,z>
 
 #define bindExec(id, name, I, M, S) { \
 exec[id] = &Moira::exec##name TPARAM(I, M, S); \
+}
+
+#define bindCIMS(id, name, I, M, S) { \
+if (model == M68000) { \
+exec[id] = &Moira::exec##name TPARAM4(M68000, I, M, S); \
+if (dasm) dasm[id] = &Moira::dasm##name TPARAM4(M68000, I, M, S); \
+} else if (model == M68010) { \
+exec[id] = &Moira::exec##name TPARAM4(M68010, I, M, S); \
+if (dasm) dasm[id] = &Moira::dasm##name TPARAM4(M68010, I, M, S); \
+} \
+if (info) info[id] = InstrInfo { I, M, S }; \
 }
 
 #define bindLoop(id, name, I, M, S) { \
@@ -1054,14 +1066,16 @@ Moira::createJumpTable()
 
     opcode = parse("0100 0000 11-- ----");
 
-    __________MMMXXX(bind, opcode, MOVEFSR, 0b100000000000, Word, MoveFromSrRg);
-    __________MMMXXX(bind, opcode, MOVEFSR, 0b001111111000, Word, MoveFromSrEa);
+    __________MMMXXX(bindCIMS, opcode, MOVEFSR, 0b100000000000, Word, MoveFromSrRg);
+    __________MMMXXX(bindCIMS, opcode, MOVEFSR, 0b001111111000, Word, MoveFromSrEa);
 
+    /*
     if (model == M68010) {
 
         __________MMMXXX(bindExec, opcode, MOVEFSR, 0b100000000000, Word, MoveFromSrRg68010);
         __________MMMXXX(bindExec, opcode, MOVEFSR, 0b001111111000, Word, MoveFromSrEa68010);
     }
+    */
 
 
     // MOVE to SR
@@ -1339,13 +1353,9 @@ Moira::createJumpTable()
     //       Syntax: RTE
     //        Sizes: Unsized
 
-    bind(parse("0100 1110 0111 0011"), Rte, RTE, MODE_IP, Long);
+    bindCIMS(parse("0100 1110 0111 0011"), Rte, RTE, MODE_IP, Long);
 
-    if (model == M68010) {
-        bindExec(parse("0100 1110 0111 0011"), Rte68010, RTE, MODE_IP, Long);
-    }
-
-
+    
     // RTR
     //
     //       Syntax: RTR

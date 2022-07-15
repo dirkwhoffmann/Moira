@@ -17,12 +17,22 @@
 #define MOIRA_DECLARE_EXEC(x) \
 template<Instr I, Mode M, Size S> void exec##x(u16 op);
 
+#define MOIRA_DECLARE_EXEC4(x) \
+template<CPU C, Instr I, Mode M, Size S> void exec##x(u16 op);
+
 #define MOIRA_DECLARE_DASM(x) \
 template<Instr I, Mode M, Size S> void dasm##x(StrWriter &str, u32 &addr, u16 op);
+
+#define MOIRA_DECLARE_DASM4(x) \
+template<CPU C, Instr I, Mode M, Size S> void dasm##x(StrWriter &str, u32 &addr, u16 op);
 
 #define MOIRA_DECLARE(x) \
 MOIRA_DECLARE_EXEC(x) \
 MOIRA_DECLARE_DASM(x)
+
+#define MOIRA_DECLARE4(x) \
+MOIRA_DECLARE_EXEC4(x) \
+MOIRA_DECLARE_DASM4(x)
 
 #define MOIRA_DECLARE_SIMPLE(x) \
 void dasm##x(StrWriter &str, u32 &addr, u16 op); \
@@ -102,8 +112,8 @@ MOIRA_DECLARE(Moveq)
 MOIRA_DECLARE(MoveFromCcrRg)
 MOIRA_DECLARE(MoveFromCcrEa)
 MOIRA_DECLARE(MoveToCcr)
-MOIRA_DECLARE(MoveFromSrRg)
-MOIRA_DECLARE(MoveFromSrEa)
+MOIRA_DECLARE4(MoveFromSrRg)
+MOIRA_DECLARE4(MoveFromSrEa)
 MOIRA_DECLARE(MoveToSr)
 MOIRA_DECLARE(MoveUspAn)
 MOIRA_DECLARE(MoveAnUsp)
@@ -118,7 +128,8 @@ MOIRA_DECLARE(Nop)
 MOIRA_DECLARE(Pea)
 
 MOIRA_DECLARE(Reset)
-MOIRA_DECLARE(Rte)
+// MOIRA_DECLARE(Rte)
+MOIRA_DECLARE4(Rte)
 MOIRA_DECLARE(Rtr)
 MOIRA_DECLARE(Rts)
 
@@ -147,9 +158,6 @@ MOIRA_DECLARE(Rtd)
 
 MOIRA_DECLARE_EXEC(Clr68010)
 MOIRA_DECLARE_EXEC(Dbcc68010)
-MOIRA_DECLARE(MoveFromSrRg68010)
-MOIRA_DECLARE(MoveFromSrEa68010)
-MOIRA_DECLARE(Rte68010)
 
 // Musashi compatibility mode
 template<Instr I, Mode M, Size S> void execMulMusashi(u16 op);

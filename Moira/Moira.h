@@ -35,7 +35,7 @@ class Moira {
 protected:
 
     // Emulated CPU model
-    CPUModel model = M68000;
+    CPU model = M68000;
 
     // Interrupt mode of this CPU
     IrqMode irqMode = IRQ_AUTO;
@@ -157,7 +157,7 @@ public:
     virtual ~Moira();
 
     // Selects the emulated CPU model
-    void setModel(CPUModel model);
+    void setModel(CPU model);
 
     // Configures the output format of the disassembler
     void configDasm(bool h, bool u) { hex = h; upper = u; }

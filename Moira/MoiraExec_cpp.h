@@ -1509,10 +1509,11 @@ Moira::execMoveToCcr(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Instr I, Mode M, Size S> void
+template<CPU C, Instr I, Mode M, Size S> void
 Moira::execMoveFromSrRg(u16 opcode)
 {
     EXEC_DEBUG
+    if constexpr (C == M68010) SUPERVISOR_MODE_ONLY
 
     int dst = _____________xxx(opcode);
 
@@ -1520,14 +1521,15 @@ Moira::execMoveFromSrRg(u16 opcode)
     if (!readOp <M,S> (dst, ea, data)) return;
     prefetch<POLLIPL>();
 
-    if (model == M68000) sync(2);
+    if constexpr (C == M68000) sync(2);
     writeD <S> (dst, getSR());
 }
 
-template<Instr I, Mode M, Size S> void
+template<CPU C, Instr I, Mode M, Size S> void
 Moira::execMoveFromSrEa(u16 opcode)
 {
     EXEC_DEBUG
+    if constexpr (C == M68010) SUPERVISOR_MODE_ONLY
 
     int dst = _____________xxx(opcode);
     u32 ea, data;
@@ -1830,17 +1832,43 @@ Moira::execReset(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Instr I, Mode M, Size S> void
+template<CPU C, Instr I, Mode M, Size S> void
 Moira::execRte(u16 opcode)
 {
     EXEC_DEBUG
     SUPERVISOR_MODE_ONLY
 
-    u16 newsr = (u16)readMS <MEM_DATA, Word> (reg.sp);
-    reg.sp += 2;
+    u16 newsr;
+    u32 newpc;
 
-    u32 newpc = readMS <MEM_DATA, Long> (reg.sp);
-    reg.sp += 4;
+    if (C == M68000) {
+
+        newsr = (u16)readMS <MEM_DATA, Word> (reg.sp);
+        reg.sp += 2;
+
+        newpc = readMS <MEM_DATA, Long> (reg.sp);
+        reg.sp += 4;
+    }
+    
+    if (C == M68010) {
+
+        newsr = (u16)readMS <MEM_DATA, Word> (reg.sp);
+        reg.sp += 2;
+
+        newpc = readMS <MEM_DATA, Long> (reg.sp);
+        reg.sp += 4;
+
+        u16 format = (u16)(readMS <MEM_DATA, Word> (reg.sp) >> 12);
+        reg.sp += 2;
+
+        // Check for format errors
+        if (format != 0) {
+
+            reg.sp -= 8;
+            execFormatError();
+            return;
+        }
+    }
 
     setSR(newsr);
 
@@ -1850,7 +1878,6 @@ Moira::execRte(u16 opcode)
     }
 
     setPC(newpc);
-
     fullPrefetch<POLLIPL>();
 }
 
