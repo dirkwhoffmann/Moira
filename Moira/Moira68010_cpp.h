@@ -7,6 +7,7 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+/*
 template<Instr I, Mode M, Size S> void
 Moira::execBkpt(u16 opcode)
 {
@@ -17,28 +18,8 @@ Moira::execBkpt(u16 opcode)
     signalIllegalOpcodeException(opcode);
     execUnimplemented(4);
 }
+*/
 
-template<Instr I, Mode M, Size S> void
-Moira::execRtd(u16 opcode)
-{
-    EXEC_DEBUG
-
-    signalRtdInstr();
-
-    bool error;
-    u32 newpc = readM<M, Long>(reg.sp, error);
-    if (error) return;
-
-    reg.sp += 4 + i16(queue.irc);
-
-    if (misaligned(newpc)) {
-        execAddressError(makeFrame<AE_PROG>(newpc, reg.pc));
-        return;
-    }
-
-    setPC(newpc);
-    fullPrefetch<POLLIPL>();
-}
 
 template<Instr I, Mode M, Size S> void
 Moira::execMovecRcRx(u16 opcode)
