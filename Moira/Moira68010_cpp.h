@@ -29,7 +29,7 @@ Moira::execRtd(u16 opcode)
     u32 newpc = readM<M, Long>(reg.sp, error);
     if (error) return;
 
-    reg.sp += 4 + queue.irc;
+    reg.sp += 4 + i16(queue.irc);
 
     if (misaligned(newpc)) {
         execAddressError(makeFrame<AE_PROG>(newpc, reg.pc));
@@ -50,7 +50,7 @@ Moira::execMovecRcRx(u16 opcode)
     int dst = xxxx____________(arg);
     int src = arg & 0x0FFF;
 
-    prefetch<POLLIPL>();
+    sync(4);
 
     switch(src) {
 
@@ -60,8 +60,12 @@ Moira::execMovecRcRx(u16 opcode)
         case 0x801: reg.r[dst] = reg.vbr; break;
 
         default:
+            reg.pc -= 2;
             execIllegal(opcode);
+            return;
     }
+
+    prefetch<POLLIPL>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -70,11 +74,22 @@ Moira::execMovecRxRc(u16 opcode)
     EXEC_DEBUG
     SUPERVISOR_MODE_ONLY
 
+    switch(queue.irc) {
+
+        case 0x000:
+        case 0x001:
+        case 0x800:
+        case 0x801: break;
+
+        default:
+            execIllegal(opcode);
+    }
+
+    sync(2);
+
     auto arg = readI<Word>();
     int src = xxxx____________(arg);
     int dst = arg & 0x0FFF;
-
-    prefetch<POLLIPL>();
 
     switch(dst) {
 
@@ -82,10 +97,9 @@ Moira::execMovecRxRc(u16 opcode)
         case 0x001: reg.dfc = reg.r[src] & 0b111; break;
         case 0x800: reg.usp = reg.r[src]; break;
         case 0x801: reg.vbr = reg.r[src]; break;
-
-        default:
-            execIllegal(opcode);
     }
+
+    prefetch<POLLIPL>();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -301,7 +315,6 @@ Moira::execRte68010(u16 opcode)
     // Check for format errors
     if (format != 0 && format != 8) {
 
-        printf("PC = %x SR = %x SSP = %x USP = %x\n", reg.pc, reg.sr, reg.ssp, reg.usp);
         reg.sp -= 8;
         execFormatError();
         return;

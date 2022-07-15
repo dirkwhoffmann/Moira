@@ -598,21 +598,20 @@ Moira::dasmMovecRcRx(StrWriter &str, u32 &addr, u16 op)
 {
     auto arg = u16(dasmRead<Word>(addr));
     auto src = arg & 0x0FFF;
-    auto dst = Dn(xxxx____________(arg));
+    auto dst = Rn(xxxx____________(arg));
 
     str << Ins<I>{} << tab;
 
     switch(src) {
 
-        case 0x000: str << "SFC"; break;
-        case 0x001: str << "DFC"; break;
-        case 0x800: str << "USP"; break;
-        case 0x801: str << "VBR"; break;
+        case 0x000: str << "SFC" << ", " << dst << "; (1+)"; break;
+        case 0x001: str << "DFC" << ", " << dst << "; (1+)"; break;
+        case 0x800: str << "USP" << ", " << dst << "; (1+)"; break;
+        case 0x801: str << "VBR" << ", " << dst << "; (1+)"; break;
 
         default:
-            str << "???";
+            str << UInt(src) << ", " << dst << "; (?)";
     }
-    str << ", " << dst << "; (1+)";
 }
 
 template<Instr I, Mode M, Size S> void
@@ -620,7 +619,7 @@ Moira::dasmMovecRxRc(StrWriter &str, u32 &addr, u16 op)
 {
     auto arg = u16(dasmRead<Word>(addr));
     auto dst = arg & 0x0FFF;
-    auto src = Dn(xxxx____________(arg));
+    auto src = Rn(xxxx____________(arg));
 
     str << Ins<I>{} << tab << src << ", ";
 
@@ -812,7 +811,7 @@ Moira::dasmReset(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmRtd(StrWriter &str, u32 &addr, u16 op)
 {
-    auto disp = Ims ( dasmRead<Word>(addr) );
+    auto disp = Ims ( i16(dasmRead<Word>(addr)) );
 
     str << Ins<I>{} << tab << disp << "; (1+)";
 }
