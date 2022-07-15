@@ -123,7 +123,10 @@ protected:
 
     // Value on the lower two function code pins (FC1|FC0)
     u8 fcl;
-            
+
+    // Determines the source of the function code pins
+    FCSource fcSource;
+
     // Remembers the number of the last processed exception
     int exception;
 
@@ -346,10 +349,10 @@ public:
     void setVBR(u32 val) { reg.vbr = val; }
 
     u32 getSFC() const { return reg.sfc; }
-    void setSFC(u32 val) { reg.sfc = val; }
+    void setSFC(u32 val) { reg.sfc = val & 0b111; }
 
     u32 getDFC() const { return reg.dfc; }
-    void setDFC(u32 val) { reg.dfc = val; }
+    void setDFC(u32 val) { reg.dfc = val & 0b111; }
 
     void setSupervisorMode(bool enable);
 
@@ -377,7 +380,7 @@ protected:
 public:
     
     // Returns the current value on the function code pins
-    FunctionCode readFC() { return (FunctionCode)((reg.sr.s ? 4 : 0) | fcl); }
+    FunctionCode readFC();
 
     private:
     

@@ -70,14 +70,17 @@ void setupMoira()
 void createTestCase(Setup &s)
 {
     s.supervisor = smartRandom() % 2;
-    s.ccr = (uint8_t)smartRandom();
-    s.ext1 = (uint16_t)smartRandom();
-    s.ext2 = (uint16_t)smartRandom();
+    s.ccr = uint8_t(smartRandom());
+    s.ext1 = uint16_t(smartRandom());
+    s.ext2 = uint16_t(smartRandom());
+    s.vbr = uint16_t(smartRandom());
+    s.sfc = uint16_t(smartRandom());
+    s.dfc = uint16_t(smartRandom());
     for (int i = 0; i < 8; i++) s.d[i] = smartRandom();
     for (int i = 0; i < 8; i++) s.a[i] = smartRandom();
 
     for (unsigned i = 0; i < sizeof(s.mem); i++) {
-        s.mem[i] = (uint8_t)smartRandom();
+        s.mem[i] = uint8_t(smartRandom());
     }
 }
 
@@ -108,6 +111,9 @@ void resetMusashi(Setup &s)
     for (int i = 0; i < 7; i++) {
         m68k_set_reg((m68k_register_t)(M68K_REG_A0 + i), s.a[i]);
     }
+    m68k_set_reg(M68K_REG_VBR, s.vbr);
+    m68k_set_reg(M68K_REG_SFC, s.sfc);
+    m68k_set_reg(M68K_REG_DFC, s.dfc);
     m68ki_set_ccr(s.ccr);
     s.supervisor ? m68ki_set_sm_flag(SFLAG_SET) : m68ki_set_sm_flag(SFLAG_CLEAR);
 }
@@ -123,6 +129,9 @@ void resetMoira(Setup &s)
     for (int i = 0; i < 7; i++) {
         moiracpu->setA(i,s.a[i]);
     }
+    moiracpu->setVBR(s.vbr);
+    moiracpu->setSFC(s.sfc);
+    moiracpu->setDFC(s.dfc);
     moiracpu->setCCR(s.ccr);
     moiracpu->setSupervisorMode(s.supervisor);
 }
@@ -293,33 +302,36 @@ void recordMoiraRegisters(Result &r)
 
 void dumpSetup(Setup &s)
 {
-    printf("PC: %04x ", s.pc);
-    printf("Opcode: %04x Ext1: %04x Ext2: %04x ", s.opcode, s.ext1, s.ext2);
-    printf("CCR: %02x %s", s.ccr, s.supervisor ? "SUPERVISOR MODE\n" : "\n");
-    printf("         Dn: ");
+    printf("PC: %04x  Opcode: %04x  ", s.pc, s.opcode);
+    printf("Ext1: %04x  Ext2: %04x  ", s.ext1, s.ext2);
+    printf("%s\n", s.supervisor ? "(SUPERVISOR MODE)" : "");
+    printf("         ");
+    printf("CCR: %02x  ", s.ccr);
+    printf("VBR: %02x  ", s.vbr);
+    printf("SFC: %02x  ", s.sfc);
+    printf("DFC: %02x\n", s.dfc);
+    printf("         ");
+    printf("Dn: ");
     for (int i = 0; i < 8; i++) printf("%8x ", s.d[i]);
     printf("\n");
-    printf("         An: ");
+    printf("         ");
+    printf("An: ");
     for (int i = 0; i < 8; i++) printf("%8x ", s.a[i]);
     printf("\n\n");
 }
 
 void dumpResult(Result &r)
 {
-    printf("Old PC: %4x (opcode %x)  ", r.oldpc, r.opcode);
-    printf("New PC: %4x  ", r.pc);
-    printf("Elapsed cycles: %d\n" , r.cycles);
-    printf("         SR: %x  ", r.sr);
+    // printf("Old PC: %4x (opcode %x)  ", r.oldpc, r.opcode);
+    printf("PC: %04x  Elapsed cycles: %d\n", r.pc, r.cycles);
+    printf("         ");
+    printf("SR: %x  ", r.sr);
     printf("SSP: %x  ", r.ssp);
     printf("USP: %x  ", r.usp);
     printf("FC: %x  ", r.fc);
-
-    if (CPUTYPE >= M68K_CPU_TYPE_68010) {
-
-        printf("SFC: %x  ", r.sfc);
-        printf("DFC: %x  ", r.dfc);
-        printf("VBR: %x  ", r.vbr);
-    }
+    printf("VBR: %x  ", r.vbr);
+    printf("SFC: %x  ", r.sfc);
+    printf("DFC: %x  ", r.dfc);
     printf("\n");
 
     printf("         Dn: ");
@@ -363,19 +375,19 @@ void compare(Setup &s, Result &r1, Result &r2)
         error = true;
     }
     if (!compareVBR(r1, r2)) {
-        printf("\nVBR REGISTER MISMATCH FOUND\n");
+        printf("\nVBR REGISTER MISMATCH FOUND");
         error = true;
     }
     if (!compareSFC(r1, r2)) {
-        printf("\nSFC REGISTER MISMATCH FOUND\n");
+        printf("\nSFC REGISTER MISMATCH FOUND");
         error = true;
     }
     if (!compareDFC(r1, r2)) {
-        printf("\nDFC REGISTER MISMATCH FOUND\n");
+        printf("\nDFC REGISTER MISMATCH FOUND");
         error = true;
     }
     if (sandbox.getErrors()) {
-        printf("\nSANDBOX ERRORS REPORTED\n");
+        printf("\nSANDBOX ERRORS REPORTED");
         error = true;
     }
 
@@ -473,7 +485,7 @@ bool compareCycles(Result &r1, Result &r2)
 
     // Exclude some instructions
     if (I == moira::TAS) return true;
-    if (CPUTYPE == M68K_CPU_TYPE_68010) {
+    if constexpr (CPUTYPE == M68K_CPU_TYPE_68010) {
 
         if (I == moira::CLR && S == Byte && M == MODE_AL) return true;
         if (I == moira::CLR && S == Word && M == MODE_AL) return true;

@@ -266,6 +266,14 @@ FunctionCode;
 
 typedef enum
 {
+    FC_FROM_FCL,
+    FC_FROM_SFC,
+    FC_FROM_DFC
+}
+FCSource;
+
+typedef enum
+{
     MEM_DATA = 1,
     MEM_PROG = 2
 }

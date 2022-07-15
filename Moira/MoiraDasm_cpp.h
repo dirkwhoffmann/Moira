@@ -625,15 +625,14 @@ Moira::dasmMovecRxRc(StrWriter &str, u32 &addr, u16 op)
 
     switch(dst) {
 
-        case 0x000: str << "SFC"; break;
-        case 0x001: str << "DFC"; break;
-        case 0x800: str << "USP"; break;
-        case 0x801: str << "VBR"; break;
+        case 0x000: str << "SFC" << "; (1+)"; break;
+        case 0x001: str << "DFC" << "; (1+)"; break;
+        case 0x800: str << "USP" << "; (1+)"; break;
+        case 0x801: str << "VBR" << "; (1+)"; break;
 
         default:
-            str << "???";
+            str << UInt(dst) << "; (?)";
     }
-    str << "; (1+)";
 }
 
 template<Instr I, Mode M, Size S> void

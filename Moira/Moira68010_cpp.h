@@ -46,23 +46,29 @@ Moira::execMovecRcRx(u16 opcode)
     EXEC_DEBUG
     SUPERVISOR_MODE_ONLY
 
-    auto arg = readI<Word>();
-    int dst = xxxx____________(arg);
-    int src = arg & 0x0FFF;
+    switch(queue.irc & 0x0FFF) {
+
+        case 0x000:
+        case 0x001:
+        case 0x800:
+        case 0x801: break;
+
+        default:
+            execIllegal(opcode);
+            return;
+    }
 
     sync(4);
 
-    switch(src) {
+    auto arg = readI<Word>();
+    int dst = xxxx____________(arg);
+
+    switch(arg & 0x0FFF) {
 
         case 0x000: reg.r[dst] = reg.sfc & 0b111; break;
         case 0x001: reg.r[dst] = reg.dfc & 0b111; break;
         case 0x800: reg.r[dst] = reg.usp; break;
         case 0x801: reg.r[dst] = reg.vbr; break;
-
-        default:
-            reg.pc -= 2;
-            execIllegal(opcode);
-            return;
     }
 
     prefetch<POLLIPL>();
@@ -74,7 +80,7 @@ Moira::execMovecRxRc(u16 opcode)
     EXEC_DEBUG
     SUPERVISOR_MODE_ONLY
 
-    switch(queue.irc) {
+    switch(queue.irc & 0xFFF) {
 
         case 0x000:
         case 0x001:
@@ -83,15 +89,15 @@ Moira::execMovecRxRc(u16 opcode)
 
         default:
             execIllegal(opcode);
+            return;
     }
 
     sync(2);
 
     auto arg = readI<Word>();
     int src = xxxx____________(arg);
-    int dst = arg & 0x0FFF;
 
-    switch(dst) {
+    switch(arg & 0x0FFF) {
 
         case 0x000: reg.sfc = reg.r[src] & 0b111; break;
         case 0x001: reg.dfc = reg.r[src] & 0b111; break;
@@ -115,10 +121,42 @@ Moira::execMoves(u16 opcode)
         auto arg = readI<Word>();
         int src = xxxx____________(arg);
         int dst = _____________xxx(opcode);
-        u32 ea  = computeEA <M,Long, SKIP_LAST_READ> (dst);
 
-        bool error;
-        writeM <M,S> (ea, readR<S>(src), error);
+        // Make the DFC register visible on the FC pins
+        fcSource = FC_FROM_DFC;
+
+        auto value = readR<S>(src);
+
+        // Take care of some special cases
+        if (M == MODE_PI && src == (dst | 0x8)) {
+
+            // MOVES A7,(A7)+
+            value += dst == 7 ? (S == Long ? 4 : 2) : S;
+        }
+        if (M == MODE_PD && src == (dst | 0x8)) {
+
+            // MOVES A7,-(A7)
+            value -= dst == 7 ? (S == Long ? 4 : 2) : S;
+        }
+
+        writeOp <M,S> (dst, value);
+
+        // Switch back to the old FC pin values
+        fcSource = FC_FROM_FCL;
+
+        switch(M) {
+
+            case MODE_AI: sync(6); break;
+            case MODE_PD: sync(S == Long ? 10 : 6); break;
+            case MODE_IX: sync(S == Long ? 14 : 12); break;
+            case MODE_PI: sync(6); break;
+            case MODE_DI: sync(S == Long ? 12 : 10); break;
+            case MODE_AW: sync(S == Long ? 12 : 10); break;
+            case MODE_AL: sync(S == Long ? 12 : 10); break;
+
+            default:
+                fatalError;
+        }
 
     } else {                    // Ea -> Rg
 
@@ -128,12 +166,18 @@ Moira::execMoves(u16 opcode)
 
         if (!readOp<M,S, STD_AE_FRAME>(src, ea, data)) return;
 
+        // Make the SFC register visible on the FC pins
+        fcSource = FC_FROM_SFC;
+
         if (dst < 8) {
             writeR<S>(dst, data);
         } else {
             writeR<Long>(dst, SEXT<S>(data));
         }
 
+        // Switch back to the old FC pin values
+        fcSource = FC_FROM_FCL;
+        
         switch(M) {
 
             case MODE_AI: sync(6); break;
@@ -313,7 +357,7 @@ Moira::execRte68010(u16 opcode)
     reg.sp += 2;
 
     // Check for format errors
-    if (format != 0 && format != 8) {
+    if (format != 0) { // && format != 8) {
 
         reg.sp -= 8;
         execFormatError();

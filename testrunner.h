@@ -65,6 +65,9 @@ struct Setup {
     uint16_t ext2;
     uint32_t d[8];
     uint32_t a[8];
+    uint16_t vbr;
+    uint16_t sfc;
+    uint16_t dfc;
     uint8_t  mem[0x10000];
 };
 

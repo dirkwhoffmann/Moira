@@ -59,6 +59,7 @@ Moira::reset()
 
     ipl = 0;
     fcl = 0;
+    fcSource = FC_FROM_FCL;
     
     sync(16);
 
@@ -309,6 +310,20 @@ Moira::setSupervisorMode(bool enable)
         reg.sr.s = 0;
         reg.ssp = reg.a[7];
         reg.a[7] = reg.usp;
+    }
+}
+
+FunctionCode
+Moira::readFC()
+{
+    switch (fcSource) {
+
+        case FC_FROM_FCL: return FunctionCode((reg.sr.s ? 4 : 0) | fcl);
+        case FC_FROM_SFC: return FunctionCode(reg.sfc);
+        case FC_FROM_DFC: return FunctionCode(reg.dfc);
+
+        default:
+            fatalError;
     }
 }
 
