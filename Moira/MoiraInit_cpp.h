@@ -7,43 +7,27 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-// Adds an entry to the instruction jump table
-
+// Assembles an instruction handler name
 #define EXEC_IMS(func,I,M,S) &Moira::exec##func <I,M,S>
 #define EXEC_CIMS(func,C,I,M,S) &Moira::exec##func <C,I,M,S>
 #define DASM_IMS(func,I,M,S) &Moira::dasm##func <I,M,S>
 
+// Registers an instruction handler
 #define IMS(id, name, I, M, S) { \
 assert(exec[id] == &Moira::execIllegal); \
 if (dasm) assert(dasm[id] == &Moira::dasmIllegal); \
 exec[id] = EXEC_IMS(name,I,M,S); \
 if (dasm) dasm[id] = DASM_IMS(name,I,M,S); \
-if (info) info[id] = InstrInfo { I, M, S }; \
+if (info) info[id] = InstrInfo {I,M,S}; \
 }
-
 #define CIMS(id,name,I,M,S) { \
 if (model == M68000) { \
-exec[id] = EXEC_CIMS(name,M68000,I,M,S); \
-} else { \
-exec[id] = EXEC_CIMS(name,M68010,I,M,S); \
-} \
+exec[id] = EXEC_CIMS(name,M68000,I,M,S); } else { \
+exec[id] = EXEC_CIMS(name,M68010,I,M,S); } \
 if (dasm) dasm[id] = DASM_IMS(name,I,M,S); \
-if (info) info[id] = InstrInfo { I, M, S }; \
+if (info) info[id] = InstrInfo {I,M,S}; \
 }
 
-
-// DEPRECATED
-/*
-#define bindCIMS(id,name,I,M,S) { \
-if (model == M68000) { \
-exec[id] = EXEC_CIMS(name,M68000,I,M,S); \
-} else { \
-exec[id] = EXEC_CIMS(name,M68010,I,M,S); \
-} \
-if (dasm) dasm[id] = DASM_IMS(name,I,M,S); \
-if (info) info[id] = InstrInfo { I, M, S }; \
-}
-*/
 #define bindLoop(id, name, I, M, S) { \
 assert(loop[id] == nullptr); \
 loop[id] = EXEC_IMS(name,I,M,S); \
@@ -56,6 +40,7 @@ loop[id] = EXEC_CIMS(name,M68010,I,M,S); \
 }
 
 // DEPRECATED
+/*
 #define bind(id, name, I, M, S) { \
 assert(exec[id] == &Moira::execIllegal); \
 if (dasm) assert(dasm[id] == &Moira::dasmIllegal); \
@@ -63,7 +48,7 @@ exec[id] = EXEC_IMS(name,I,M,S); \
 if (dasm) dasm[id] = DASM_IMS(name,I,M,S); \
 if (info) info[id] = InstrInfo { I, M, S }; \
 }
-
+*/
 
 // Registers an instruction in one of the standard instruction formats:
 //
@@ -257,7 +242,7 @@ Moira::createJumpTable()
     //                 X   X   X   X   X   X   X   X   X   X   X   X
 
     opcode = parse("1101 ---- 11-- ----");
-    ____XXXS__MMMXXX(opcode, ADDA, 0b111111111111, Word | Long, Adda, bind)
+    ____XXXS__MMMXXX(opcode, ADDA, 0b111111111111, Word | Long, Adda, IMS)
 
     if (model == M68010) {
         ____XXXS__MMMXXX(opcode, ADDA_LOOP, 0b001110000000, Word | Long, Adda, bindLoop)
@@ -534,10 +519,11 @@ Moira::createJumpTable()
     //         Size: Byte, Word
 
     opcode = parse("0110 0001 ---- ----");
-    bind(opcode, Bsr, BSR, MODE_IP, Word);
+    ________________(opcode, BSR, MODE_IP, Word, Bsr, IMS);
     for (int i = 1; i <= 0xFF; i++) {
-        bind(opcode | i, Bsr, BSR, MODE_IP, Byte);
+        ________________(opcode | i, BSR, MODE_IP, Byte, Bsr, IMS);
     }
+
 
     // BTST
     //
@@ -974,8 +960,8 @@ Moira::createJumpTable()
 
     opcode = parse("001- ---0 01-- ----");
 
-    ____XXX___MMMXXX(opcode | 0 << 12, MOVEA, 0b111111111111, Long, Movea, bind)
-    ____XXX___MMMXXX(opcode | 1 << 12, MOVEA, 0b111111111111, Word, Movea, bind)
+    ____XXX___MMMXXX(opcode | 0 << 12, MOVEA, 0b111111111111, Long, Movea, IMS)
+    ____XXX___MMMXXX(opcode | 1 << 12, MOVEA, 0b111111111111, Word, Movea, IMS)
 
 
     // MOVEC
@@ -986,8 +972,9 @@ Moira::createJumpTable()
 
     if (model == M68010) {
 
-        bind(parse("0100 1110 0111 1010"), MovecRcRx, MOVEC, MODE_IP, Long);
-        bind(parse("0100 1110 0111 1011"), MovecRxRc, MOVEC, MODE_IP, Long);
+        opcode = parse("0100 1110 0111 101-");
+        ________________(opcode | 0, MOVEC, MODE_IP, Long, MovecRcRx, IMS);
+        ________________(opcode | 1, MOVEC, MODE_IP, Long, MovecRxRc, IMS);
     }
 
 
@@ -1209,7 +1196,7 @@ Moira::createJumpTable()
     //        Sizes: Unsized
 
     opcode = parse("0100 1110 0111 0001");
-    bind(opcode, Nop, NOP, MODE_IP, Long);
+    ________________(opcode, NOP, MODE_IP, Long, Nop, IMS);
 
 
     // OR
@@ -1377,7 +1364,8 @@ Moira::createJumpTable()
 
     if (model == M68010) {
 
-        bind(parse("0100 1110 0111 0100"), Rtd, RTD, MODE_IP, Long);
+        opcode = parse("0100 1110 0111 0100");
+        ________________(opcode, RTD, MODE_IP, Long, Rtd, IMS);
     }
 
 
@@ -1395,7 +1383,8 @@ Moira::createJumpTable()
     //       Syntax: RTR
     //        Sizes: Unsized
 
-    bind(parse("0100 1110 0111 0111"), Rtr, RTR, MODE_IP, Long);
+    opcode = parse("0100 1110 0111 0111");
+    ________________(opcode, RTR, MODE_IP, Long, Rtr, IMS);
 
 
     // RTS
@@ -1403,7 +1392,8 @@ Moira::createJumpTable()
     //       Syntax: RTS
     //        Sizes: Unsized
 
-    bind(parse("0100 1110 0111 0101"), Rts, RTS, MODE_IP, Long);
+    opcode = parse("0100 1110 0111 0101");
+    ________________(opcode, RTS, MODE_IP, Long, Rts, IMS);
 
 
     // SBCD
@@ -1475,7 +1465,8 @@ Moira::createJumpTable()
     //       Syntax: STOP
     //        Sizes: Unsized
 
-    bind(parse("0100 1110 0111 0010"), Stop, STOP, MODE_IP, Word);
+    opcode = parse("0100 1110 0111 0010");
+    ________________(opcode, STOP, MODE_IP, Word, Stop, IMS);
 
 
     // SUB
@@ -1523,7 +1514,7 @@ Moira::createJumpTable()
     //                 X   X   X   X   X   X   X   X   X   X   X   X
 
     opcode = parse("1001 ---- 11-- ----");
-    ____XXXS__MMMXXX(opcode, SUBA, 0b111111111111, Word | Long, Adda, bind)
+    ____XXXS__MMMXXX(opcode, SUBA, 0b111111111111, Word | Long, Adda, IMS)
 
     if (model == M68010) {
         ____XXXS__MMMXXX(opcode, SUBA_LOOP, 0b001110000000, Word | Long, Adda, bindLoop)
@@ -1617,7 +1608,8 @@ Moira::createJumpTable()
     //       Syntax: TRAPV
     //        Sizes: Unsized
 
-    bind(parse("0100 1110 0111 0110"), Trapv, TRAPV, MODE_IP, Long);
+    opcode = parse("0100 1110 0111 0110");
+    ________________(opcode, TRAPV, MODE_IP, Long, Trapv, IMS);
 
 
     // TST
