@@ -261,7 +261,7 @@ Moira::createJumpTable()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0000 0110 ---- ----");
-    ________SSMMMXXX(bind, opcode, ADDI, 0b100000000000, Byte | Word | Long, AddiRg);
+    ________SSMMMXXX(bindCIMS, opcode, ADDI, 0b100000000000, Byte | Word | Long, AddiRg);
     ________SSMMMXXX(bind, opcode, ADDI, 0b001111111000, Byte | Word | Long, AddiEa);
 
 
@@ -343,7 +343,7 @@ Moira::createJumpTable()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0000 0010 ---- ----");
-    ________SSMMMXXX(bind, opcode, ANDI, 0b100000000000, Byte | Word | Long, AndiRg);
+    ________SSMMMXXX(bindCIMS, opcode, ANDI, 0b100000000000, Byte | Word | Long, AndiRg);
     ________SSMMMXXX(bind, opcode, ANDI, 0b001111111000, Byte | Word | Long, AndiEa);
 
 
@@ -353,7 +353,7 @@ Moira::createJumpTable()
     //         Size: Byte
     //
 
-    bind(parse("0000 0010 0011 1100"), Andiccr, ANDICCR, MODE_IM, Byte);
+    bindCIMS(parse("0000 0010 0011 1100"), Andiccr, ANDICCR, MODE_IM, Byte);
 
 
     // ANDI to SR
@@ -362,7 +362,7 @@ Moira::createJumpTable()
     //         Size: Byte
     //
 
-    bind(parse("0000 0010 0111 1100"), Andisr, ANDISR, MODE_IM, Word);
+    bindCIMS(parse("0000 0010 0111 1100"), Andisr, ANDISR, MODE_IM, Word);
 
 
     // ASL, ASR
@@ -556,7 +556,7 @@ Moira::createJumpTable()
     //                 X       X   X   X   X   X   X   X   X   X   X?
 
     opcode = parse("0100 ---1 10-- ----");
-    ____XXX___MMMXXX(bind, opcode, CHK, 0b101111111111, Word, Chk);
+    ____XXX___MMMXXX(bindCIMS, opcode, CHK, 0b101111111111, Word, Chk);
 
 
     // CLR
@@ -621,7 +621,7 @@ Moira::createJumpTable()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0000 1100 ---- ----");
-    ________SSMMMXXX(bind, opcode, CMPI, 0b100000000000, Byte | Word | Long, CmpiRg);
+    ________SSMMMXXX(bindCIMS, opcode, CMPI, 0b100000000000, Byte | Word | Long, CmpiRg);
     ________SSMMMXXX(bind, opcode, CMPI, 0b001111111000, Byte | Word | Long, CmpiEa);
 
     if (model == M68010) {
@@ -693,10 +693,10 @@ Moira::createJumpTable()
     //                 X       X   X   X   X   X   X   X   X   X   X
 
     opcode = parse("1000 ---1 11-- ----");
-    ____XXX___MMMXXX(bind, opcode, DIVS, 0b101111111111, Word, Div);
+    ____XXX___MMMXXX(bindCIMS, opcode, DIVS, 0b101111111111, Word, Div);
 
     opcode = parse("1000 ---0 11-- ----");
-    ____XXX___MMMXXX(bind, opcode, DIVU, 0b101111111111, Word, Div);
+    ____XXX___MMMXXX(bindCIMS, opcode, DIVU, 0b101111111111, Word, Div);
 
 
     // EOR
@@ -728,7 +728,7 @@ Moira::createJumpTable()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0000 1010 ---- ----");
-    ________SSMMMXXX(bind, opcode, EORI, 0b100000000000, Byte | Word | Long, AndiRg);
+    ________SSMMMXXX(bindCIMS, opcode, EORI, 0b100000000000, Byte | Word | Long, AndiRg);
     ________SSMMMXXX(bind, opcode, EORI, 0b001111111000, Byte | Word | Long, AndiEa);
 
 
@@ -738,7 +738,7 @@ Moira::createJumpTable()
     //         Size: Byte
     //
 
-    bind(parse("0000 1010 0011 1100"), Andiccr, EORICCR, MODE_IM, Byte);
+    bindCIMS(parse("0000 1010 0011 1100"), Andiccr, EORICCR, MODE_IM, Byte);
 
 
     // EORI to SR
@@ -747,7 +747,7 @@ Moira::createJumpTable()
     //         Size: Byte
     //
 
-    bind(parse("0000 1010 0111 1100"), Andisr, EORISR, MODE_IM, Word);
+    bindCIMS(parse("0000 1010 0111 1100"), Andisr, EORISR, MODE_IM, Word);
 
 
     // EXG
@@ -1125,10 +1125,10 @@ Moira::createJumpTable()
     //                 X       X   X   X   X   X   X   X   X   X   X
 
     opcode = parse("1100 ---1 11-- ----");
-    ____XXX___MMMXXX(bind, opcode, MULS, 0b101111111111, Word, Mul);
+    ____XXX___MMMXXX(bindCIMS, opcode, MULS, 0b101111111111, Word, Mul);
 
     opcode = parse("1100 ---0 11-- ----");
-    ____XXX___MMMXXX(bind, opcode, MULU, 0b101111111111, Word, Mul);
+    ____XXX___MMMXXX(bindCIMS, opcode, MULU, 0b101111111111, Word, Mul);
 
 
     // NBCD
@@ -1237,7 +1237,7 @@ Moira::createJumpTable()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0000 0000 ---- ----");
-    ________SSMMMXXX(bind, opcode, ORI, 0b100000000000, Byte | Word | Long, AndiRg);
+    ________SSMMMXXX(bindCIMS, opcode, ORI, 0b100000000000, Byte | Word | Long, AndiRg);
     ________SSMMMXXX(bind, opcode, ORI, 0b001111111000, Byte | Word | Long, AndiEa);
 
 
@@ -1247,7 +1247,7 @@ Moira::createJumpTable()
     //         Size: Byte
     //
 
-    bind(parse("0000 0000 0011 1100"), Andiccr, ORICCR, MODE_IM, Byte);
+    bindCIMS(parse("0000 0000 0011 1100"), Andiccr, ORICCR, MODE_IM, Byte);
 
 
     // ORI to SR
@@ -1256,7 +1256,7 @@ Moira::createJumpTable()
     //         Size: Byte
     //
 
-    bind(parse("0000 0000 0111 1100"), Andisr, ORISR, MODE_IM, Word);
+    bindCIMS(parse("0000 0000 0111 1100"), Andisr, ORISR, MODE_IM, Word);
 
 
     // ROL, ROR, ROXL, ROXR
@@ -1345,7 +1345,7 @@ Moira::createJumpTable()
     //       Syntax: RESET
     //        Sizes: Unsized
 
-    bind(parse("0100 1110 0111 0000"), Reset, RESET, MODE_IP, Long);
+    bindCIMS(parse("0100 1110 0111 0000"), Reset, RESET, MODE_IP, Long);
 
 
     // RTD
@@ -1517,7 +1517,7 @@ Moira::createJumpTable()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0000 0100 ---- ----");
-    ________SSMMMXXX(bind, opcode, SUBI, 0b100000000000, Byte | Word | Long, AddiRg);
+    ________SSMMMXXX(bindCIMS, opcode, SUBI, 0b100000000000, Byte | Word | Long, AddiRg);
     ________SSMMMXXX(bind, opcode, SUBI, 0b001111111000, Byte | Word | Long, AddiEa);
 
 
