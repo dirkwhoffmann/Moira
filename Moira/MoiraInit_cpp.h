@@ -20,6 +20,7 @@ exec[id] = EXEC_IMS(name,I,M,S); \
 if (dasm) dasm[id] = DASM_IMS(name,I,M,S); \
 if (info) info[id] = InstrInfo {I,M,S}; \
 }
+
 #define CIMS(id,name,I,M,S) { \
 if (model == M68000) { \
 exec[id] = EXEC_CIMS(name,M68000,I,M,S); } else { \
@@ -28,27 +29,16 @@ if (dasm) dasm[id] = DASM_IMS(name,I,M,S); \
 if (info) info[id] = InstrInfo {I,M,S}; \
 }
 
-#define bindLoop(id, name, I, M, S) { \
+// Registers a special loop-mode instruction handler
+#define loopIMS(id, name, I, M, S) { \
 assert(loop[id] == nullptr); \
 loop[id] = EXEC_IMS(name,I,M,S); \
 }
 
-// DEPRECATED
-#define bindLoop4(id, name, I, M, S) { \
+#define loopCIMS(id, name, I, M, S) { \
 assert(loop[id] == nullptr); \
 loop[id] = EXEC_CIMS(name,M68010,I,M,S); \
 }
-
-// DEPRECATED
-/*
-#define bind(id, name, I, M, S) { \
-assert(exec[id] == &Moira::execIllegal); \
-if (dasm) assert(dasm[id] == &Moira::dasmIllegal); \
-exec[id] = EXEC_IMS(name,I,M,S); \
-if (dasm) dasm[id] = DASM_IMS(name,I,M,S); \
-if (info) info[id] = InstrInfo { I, M, S }; \
-}
-*/
 
 // Registers an instruction in one of the standard instruction formats:
 //
@@ -191,10 +181,7 @@ Moira::createJumpTable()
     // -(Ax),-(Ay)
     opcode = parse("1100 ---1 0000 1---");
     ____XXX______XXX(opcode, ABCD, MODE_PD, Byte, Abcd, IMS);
-
-    if (model == M68010) {
-        ____XXX______XXX(opcode, ABCD_LOOP, MODE_PD, Byte, Abcd, bindLoop);
-    }
+    ____XXX______XXX(opcode, ABCD_LOOP, MODE_PD, Byte, Abcd, loopIMS);
 
 
     // ADD
@@ -211,12 +198,9 @@ Moira::createJumpTable()
     opcode = parse("1101 ---0 ---- ----");
     ____XXX_SSMMMXXX(opcode, ADD, 0b101111111111, Byte,        AddEaRg, IMS);
     ____XXX_SSMMMXXX(opcode, ADD, 0b111111111111, Word | Long, AddEaRg, IMS);
+    ____XXX_SSMMMXXX(opcode, ADD_LOOP, 0b001110000000, Byte,        AddEaRg, loopIMS);
+    ____XXX_SSMMMXXX(opcode, ADD_LOOP, 0b001110000000, Word | Long, AddEaRg, loopIMS);
 
-    if (model == M68010) {
-
-        ____XXX_SSMMMXXX(opcode, ADD_LOOP, 0b001110000000, Byte,        AddEaRg, bindLoop);
-        ____XXX_SSMMMXXX(opcode, ADD_LOOP, 0b001110000000, Word | Long, AddEaRg, bindLoop);
-    }
 
     //               -------------------------------------------------
     // Dx,<ea>       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
@@ -225,10 +209,7 @@ Moira::createJumpTable()
 
      opcode = parse("1101 ---1 ---- ----");
      ____XXX_SSMMMXXX(opcode, ADD, 0b001111111000, Byte | Word | Long, AddRgEa, IMS);
-
-    if (model == M68010) {
-        ____XXX_SSMMMXXX(opcode, ADD_LOOP, 0b001110000000, Byte | Word | Long, AddRgEa, bindLoop);
-    }
+    ____XXX_SSMMMXXX(opcode, ADD_LOOP, 0b001110000000, Byte | Word | Long, AddRgEa, loopIMS);
 
 
     // ADDA
@@ -243,10 +224,7 @@ Moira::createJumpTable()
 
     opcode = parse("1101 ---- 11-- ----");
     ____XXXS__MMMXXX(opcode, ADDA, 0b111111111111, Word | Long, Adda, IMS)
-
-    if (model == M68010) {
-        ____XXXS__MMMXXX(opcode, ADDA_LOOP, 0b001110000000, Word | Long, Adda, bindLoop)
-    }
+    ____XXXS__MMMXXX(opcode, ADDA_LOOP, 0b001110000000, Word | Long, Adda, loopIMS)
 
 
     // ADDI
@@ -293,10 +271,8 @@ Moira::createJumpTable()
     // -(Ax),-(Ay)
     opcode = parse("1101 ---1 --00 1---");
     ____XXX_SS___XXX(opcode, ADDX, MODE_PD, Byte | Word | Long, AddxEa, IMS);
+    ____XXX_SS___XXX(opcode, ADDX_LOOP, MODE_PD, Byte | Word | Long, AddxEa, loopIMS);
 
-    if (model == M68010) {
-        ____XXX_SS___XXX(opcode, ADDX_LOOP, MODE_PD, Byte | Word | Long, AddxEa, bindLoop);
-    }
 
     // AND
     //
@@ -311,12 +287,9 @@ Moira::createJumpTable()
 
     opcode = parse("1100 ---0 ---- ----");
     ____XXX_SSMMMXXX(opcode, AND, 0b101111111111, Byte | Word | Long, AndEaRg, IMS);
+    ____XXX_SSMMMXXX(opcode, AND_LOOP, 0b001110000000, Byte,        AddEaRg, loopIMS);
+    ____XXX_SSMMMXXX(opcode, AND_LOOP, 0b001110000000, Word | Long, AddEaRg, loopIMS);
 
-    if (model == M68010) {
-
-        ____XXX_SSMMMXXX(opcode, AND_LOOP, 0b001110000000, Byte,        AddEaRg, bindLoop);
-        ____XXX_SSMMMXXX(opcode, AND_LOOP, 0b001110000000, Word | Long, AddEaRg, bindLoop);
-    }
 
     //               -------------------------------------------------
     // Dx,<ea>       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
@@ -325,10 +298,7 @@ Moira::createJumpTable()
 
     opcode = parse("1100 ---1 ---- ----");
     ____XXX_SSMMMXXX(opcode, AND, 0b001111111000, Byte | Word | Long, AndRgEa, IMS);
-
-    if (model == M68010) {
-        ____XXX_SSMMMXXX(opcode, AND_LOOP, 0b001110000000, Byte | Word | Long, AndRgEa, bindLoop);
-    }
+    ____XXX_SSMMMXXX(opcode, AND_LOOP, 0b001110000000, Byte | Word | Long, AndRgEa, loopIMS);
 
 
     // ANDI
@@ -394,17 +364,11 @@ Moira::createJumpTable()
 
     opcode = parse("1110 0001 11-- ----");
     __________MMMXXX(opcode, ASL, 0b001111111000, Word, ShiftEa, IMS);
-
-    if (model == M68010) {
-        __________MMMXXX(opcode, ASL_LOOP, 0b001110000000, Word, ShiftEa, bindLoop);
-    }
+    __________MMMXXX(opcode, ASL_LOOP, 0b001110000000, Word, ShiftEa, loopIMS);
 
     opcode = parse("1110 0000 11-- ----");
     __________MMMXXX(opcode, ASR, 0b001111111000, Word, ShiftEa, IMS);
-
-    if (model == M68010) {
-        __________MMMXXX(opcode, ASR_LOOP, 0b001110000000, Word, ShiftEa, bindLoop);
-    }
+    __________MMMXXX(opcode, ASR_LOOP, 0b001110000000, Word, ShiftEa, loopIMS);
 
 
     // Bcc
@@ -574,10 +538,7 @@ Moira::createJumpTable()
 
     opcode = parse("0100 0010 ---- ----");
     ________SSMMMXXX(opcode, CLR, 0b101111111000, Byte | Word | Long, Clr, CIMS);
-
-    if (model == M68010) {
-        ________SSMMMXXX(opcode, CLR_LOOP, 0b001110000000, Byte | Word | Long, Clr, bindLoop4);
-    }
+    ________SSMMMXXX(opcode, CLR_LOOP, 0b001110000000, Byte | Word | Long, Clr, loopCIMS);
 
 
     // CMP
@@ -607,10 +568,7 @@ Moira::createJumpTable()
 
     opcode = parse("1011 ---- 11-- ----");
     ____XXXS__MMMXXX(opcode, CMPA, 0b111111111111, Word | Long, Cmpa, IMS);
-
-    if (model == M68010) {
-        ____XXXS__MMMXXX(opcode, CMPA_LOOP, 0b001110000000, Word | Long, Cmpa, bindLoop)
-    }
+    ____XXXS__MMMXXX(opcode, CMPA_LOOP, 0b001110000000, Word | Long, Cmpa, loopIMS)
 
 
     // CMPI
@@ -667,22 +625,22 @@ Moira::createJumpTable()
     _____________XXX(opcode | 0xE00, DBGT, MODE_IP, Word, Dbcc, CIMS);
     _____________XXX(opcode | 0xF00, DBLE, MODE_IP, Word, Dbcc, CIMS);
 
-    _____________XXX(opcode | 0x000, DBT,  MODE_IP, Word, Dbcc, bindLoop4);
-    _____________XXX(opcode | 0x100, DBF,  MODE_IP, Word, Dbcc, bindLoop4);
-    _____________XXX(opcode | 0x200, DBHI, MODE_IP, Word, Dbcc, bindLoop4);
-    _____________XXX(opcode | 0x300, DBLS, MODE_IP, Word, Dbcc, bindLoop4);
-    _____________XXX(opcode | 0x400, DBCC, MODE_IP, Word, Dbcc, bindLoop4);
-    _____________XXX(opcode | 0x500, DBCS, MODE_IP, Word, Dbcc, bindLoop4);
-    _____________XXX(opcode | 0x600, DBNE, MODE_IP, Word, Dbcc, bindLoop4);
-    _____________XXX(opcode | 0x700, DBEQ, MODE_IP, Word, Dbcc, bindLoop4);
-    _____________XXX(opcode | 0x800, DBVC, MODE_IP, Word, Dbcc, bindLoop4);
-    _____________XXX(opcode | 0x900, DBVS, MODE_IP, Word, Dbcc, bindLoop4);
-    _____________XXX(opcode | 0xA00, DBPL, MODE_IP, Word, Dbcc, bindLoop4);
-    _____________XXX(opcode | 0xB00, DBMI, MODE_IP, Word, Dbcc, bindLoop4);
-    _____________XXX(opcode | 0xC00, DBGE, MODE_IP, Word, Dbcc, bindLoop4);
-    _____________XXX(opcode | 0xD00, DBLT, MODE_IP, Word, Dbcc, bindLoop4);
-    _____________XXX(opcode | 0xE00, DBGT, MODE_IP, Word, Dbcc, bindLoop4);
-    _____________XXX(opcode | 0xF00, DBLE, MODE_IP, Word, Dbcc, bindLoop4);
+    _____________XXX(opcode | 0x000, DBT,  MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0x100, DBF,  MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0x200, DBHI, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0x300, DBLS, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0x400, DBCC, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0x500, DBCS, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0x600, DBNE, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0x700, DBEQ, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0x800, DBVC, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0x900, DBVS, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0xA00, DBPL, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0xB00, DBMI, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0xC00, DBGE, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0xD00, DBLT, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0xE00, DBGT, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0xF00, DBLE, MODE_IP, Word, Dbcc, loopCIMS);
 
 
     // DIVS, DIVU
@@ -714,10 +672,7 @@ Moira::createJumpTable()
 
     opcode = parse("1011 ---1 ---- ----");
     ____XXX_SSMMMXXX(opcode, EOR, 0b101111111000, Byte | Word | Long, AndRgEa, IMS);
-
-    if (model == M68010) {
-        ____XXX_SSMMMXXX(opcode, EOR_LOOP, 0b001110000000, Byte | Word | Long, AndRgEa, bindLoop);
-    }
+    ____XXX_SSMMMXXX(opcode, EOR_LOOP, 0b001110000000, Byte | Word | Long, AndRgEa, loopIMS);
 
 
     // EORI
@@ -861,17 +816,11 @@ Moira::createJumpTable()
 
     opcode = parse("1110 0011 11-- ----");
     __________MMMXXX(opcode, LSL, 0b001111111000, Word, ShiftEa, IMS);
-
-    if (model == M68010) {
-        __________MMMXXX(opcode, LSL_LOOP, 0b001110000000, Word, ShiftEa, bindLoop);
-    }
+    __________MMMXXX(opcode, LSL_LOOP, 0b001110000000, Word, ShiftEa, loopIMS);
 
     opcode = parse("1110 0010 11-- ----");
     __________MMMXXX(opcode, LSR, 0b001111111000, Word, ShiftEa, IMS);
-
-    if (model == M68010) {
-        __________MMMXXX(opcode, LSR_LOOP, 0b001110000000, Word, ShiftEa, bindLoop);
-    }
+    __________MMMXXX(opcode, LSR_LOOP, 0b001110000000, Word, ShiftEa, loopIMS);
 
 
     // MOVE
@@ -898,34 +847,22 @@ Moira::createJumpTable()
     opcode = parse("00-- ---0 10-- ----");
     __SSXXX___MMMXXX(opcode, MOVE, 0b101111111111, Byte,        Move2, IMS);
     __SSXXX___MMMXXX(opcode, MOVE, 0b111111111111, Word | Long, Move2, IMS);
-
-    if (model == M68010) {
-
-        __SSXXX___MMMXXX(opcode, MOVE_LOOP, 0b101110000000, Byte,        Move2, bindLoop);
-        __SSXXX___MMMXXX(opcode, MOVE_LOOP, 0b111110000000, Word | Long, Move2, bindLoop);
-    }
+    __SSXXX___MMMXXX(opcode, MOVE_LOOP, 0b101110000000, Byte,        Move2, loopIMS);
+    __SSXXX___MMMXXX(opcode, MOVE_LOOP, 0b111110000000, Word | Long, Move2, loopIMS);
 
     // <ea>,(Ay)+
     opcode = parse("00-- ---0 11-- ----");
     __SSXXX___MMMXXX(opcode, MOVE, 0b101111111111, Byte,        Move3, IMS);
     __SSXXX___MMMXXX(opcode, MOVE, 0b111111111111, Word | Long, Move3, IMS);
-
-    if (model == M68010) {
-
-        __SSXXX___MMMXXX(opcode, MOVE_LOOP, 0b101110000000, Byte,        Move3, bindLoop);
-        __SSXXX___MMMXXX(opcode, MOVE_LOOP, 0b111110000000, Word | Long, Move3, bindLoop);
-    }
+    __SSXXX___MMMXXX(opcode, MOVE_LOOP, 0b101110000000, Byte,        Move3, loopIMS);
+    __SSXXX___MMMXXX(opcode, MOVE_LOOP, 0b111110000000, Word | Long, Move3, loopIMS);
 
     // <ea>,-(Ay)
     opcode = parse("00-- ---1 00-- ----");
     __SSXXX___MMMXXX(opcode, MOVE, 0b101111111111, Byte,        Move4, IMS);
     __SSXXX___MMMXXX(opcode, MOVE, 0b111111111111, Word | Long, Move4, IMS);
-
-    if (model == M68010) {
-
-        __SSXXX___MMMXXX(opcode, MOVE_LOOP, 0b101110000000, Byte,        Move4, bindLoop);
-        __SSXXX___MMMXXX(opcode, MOVE_LOOP, 0b111110000000, Word | Long, Move4, bindLoop);
-    }
+    __SSXXX___MMMXXX(opcode, MOVE_LOOP, 0b101110000000, Byte,        Move4, loopIMS);
+    __SSXXX___MMMXXX(opcode, MOVE_LOOP, 0b111110000000, Word | Long, Move4, loopIMS);
 
     // <ea>,(d,Ay)
     opcode = parse("00-- ---1 01-- ----");
@@ -1149,10 +1086,7 @@ Moira::createJumpTable()
 
     opcode = parse("0100 1000 00-- ----");
     __________MMMXXX(opcode, NBCD, 0b101111111000, Byte, Nbcd, IMS);
-
-    if (model == M68010) {
-        __________MMMXXX(opcode, NBCD_LOOP, 0b001110000000, Byte, Nbcd, bindLoop);
-    }
+    __________MMMXXX(opcode, NBCD_LOOP, 0b001110000000, Byte, Nbcd, loopIMS);
 
     
     // NEG, NEGX, NOT
@@ -1168,26 +1102,17 @@ Moira::createJumpTable()
     opcode = parse("0100 0100 ---- ----");
     ________SSMMMXXX(opcode, NEG, 0b100000000000, Byte | Word | Long, NegRg, IMS);
     ________SSMMMXXX(opcode, NEG, 0b001111111000, Byte | Word | Long, NegEa, IMS);
-
-    if (model == M68010) {
-        ________SSMMMXXX(opcode, NEG_LOOP, 0b001110000000, Byte | Word | Long, NegEa, bindLoop);
-    }
+    ________SSMMMXXX(opcode, NEG_LOOP, 0b001110000000, Byte | Word | Long, NegEa, loopIMS);
 
     opcode = parse("0100 0000 ---- ----");
     ________SSMMMXXX(opcode, NEGX, 0b100000000000, Byte | Word | Long, NegRg, IMS);
     ________SSMMMXXX(opcode, NEGX, 0b001111111000, Byte | Word | Long, NegEa, IMS);
-
-    if (model == M68010) {
-        ________SSMMMXXX(opcode, NEGX_LOOP, 0b001110000000, Byte | Word | Long, NegEa, bindLoop);
-    }
+    ________SSMMMXXX(opcode, NEGX_LOOP, 0b001110000000, Byte | Word | Long, NegEa, loopIMS);
 
     opcode = parse("0100 0110 ---- ----");
     ________SSMMMXXX(opcode, NOT, 0b100000000000, Byte | Word | Long, NegRg, IMS);
     ________SSMMMXXX(opcode, NOT, 0b001111111000, Byte | Word | Long, NegEa, IMS);
-
-    if (model == M68010) {
-        ________SSMMMXXX(opcode, NOT_LOOP, 0b001110000000, Byte | Word | Long, NegEa, bindLoop);
-    }
+    ________SSMMMXXX(opcode, NOT_LOOP, 0b001110000000, Byte | Word | Long, NegEa, loopIMS);
 
 
     // NOP
@@ -1212,12 +1137,9 @@ Moira::createJumpTable()
 
      opcode = parse("1000 ---0 ---- ----");
     ____XXX_SSMMMXXX(opcode, OR, 0b101111111111, Byte | Word | Long, AndEaRg, IMS);
+    ____XXX_SSMMMXXX(opcode, OR_LOOP, 0b001110000000, Byte,        AddEaRg, loopIMS);
+    ____XXX_SSMMMXXX(opcode, OR_LOOP, 0b001110000000, Word | Long, AddEaRg, loopIMS);
 
-    if (model == M68010) {
-
-        ____XXX_SSMMMXXX(opcode, OR_LOOP, 0b001110000000, Byte,        AddEaRg, bindLoop);
-        ____XXX_SSMMMXXX(opcode, OR_LOOP, 0b001110000000, Word | Long, AddEaRg, bindLoop);
-    }
 
     //               -------------------------------------------------
     // Dx,<ea>       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
@@ -1226,10 +1148,7 @@ Moira::createJumpTable()
 
     opcode = parse("1000 ---1 ---- ----");
     ____XXX_SSMMMXXX(opcode, OR, 0b001111111000, Byte | Word | Long, AndRgEa, IMS);
-
-    if (model == M68010) {
-        ____XXX_SSMMMXXX(opcode, OR_LOOP, 0b001110000000, Byte | Word | Long, AndRgEa, bindLoop);
-    }
+    ____XXX_SSMMMXXX(opcode, OR_LOOP, 0b001110000000, Byte | Word | Long, AndRgEa, loopIMS);
 
 
     // ORI
@@ -1307,31 +1226,19 @@ Moira::createJumpTable()
 
     opcode = parse("1110 0111 11-- ----");
     __________MMMXXX(opcode, ROL, 0b001111111000, Word, ShiftEa, IMS);
-
-    if (model == M68010) {
-        __________MMMXXX(opcode, ROL_LOOP, 0b001110000000, Word, ShiftEa, bindLoop);
-    }
+    __________MMMXXX(opcode, ROL_LOOP, 0b001110000000, Word, ShiftEa, loopIMS);
 
     opcode = parse("1110 0110 11-- ----");
     __________MMMXXX(opcode, ROR, 0b001111111000, Word, ShiftEa, IMS);
-
-    if (model == M68010) {
-        __________MMMXXX(opcode, ROR_LOOP, 0b001110000000, Word, ShiftEa, bindLoop);
-    }
+    __________MMMXXX(opcode, ROR_LOOP, 0b001110000000, Word, ShiftEa, loopIMS);
 
     opcode = parse("1110 0101 11-- ----");
     __________MMMXXX(opcode, ROXL, 0b001111111000, Word, ShiftEa, IMS);
-
-    if (model == M68010) {
-        __________MMMXXX(opcode, ROXL_LOOP, 0b001110000000, Word, ShiftEa, bindLoop);
-    }
+    __________MMMXXX(opcode, ROXL_LOOP, 0b001110000000, Word, ShiftEa, loopIMS);
 
     opcode = parse("1110 0100 11-- ----");
     __________MMMXXX(opcode, ROXR, 0b001111111000, Word, ShiftEa, IMS);
-
-    if (model == M68010) {
-        __________MMMXXX(opcode, ROXR_LOOP, 0b001110000000, Word, ShiftEa, bindLoop);
-    }
+    __________MMMXXX(opcode, ROXR_LOOP, 0b001110000000, Word, ShiftEa, loopIMS);
 
 
     // PEA
@@ -1409,10 +1316,7 @@ Moira::createJumpTable()
     // -(Ax),-(Ay)
     opcode = parse("1000 ---1 0000 1---");
     ____XXX______XXX(opcode, SBCD, MODE_PD, Byte, Abcd, IMS);
-
-    if (model == M68010) {
-        ____XXX______XXX(opcode, SBCD_LOOP, MODE_PD, Byte, Abcd, bindLoop);
-    }
+    ____XXX______XXX(opcode, SBCD_LOOP, MODE_PD, Byte, Abcd, loopIMS);
 
 
     // Scc
@@ -1483,12 +1387,9 @@ Moira::createJumpTable()
     opcode = parse("1001 ---0 ---- ----");
     ____XXX_SSMMMXXX(opcode, SUB, 0b101111111111, Byte,        AddEaRg, IMS);
     ____XXX_SSMMMXXX(opcode, SUB, 0b111111111111, Word | Long, AddEaRg, IMS);
+    ____XXX_SSMMMXXX(opcode, SUB_LOOP, 0b001110000000, Byte,        AddEaRg, loopIMS);
+    ____XXX_SSMMMXXX(opcode, SUB_LOOP, 0b001110000000, Word | Long, AddEaRg, loopIMS);
 
-    if (model == M68010) {
-
-        ____XXX_SSMMMXXX(opcode, SUB_LOOP, 0b001110000000, Byte,        AddEaRg, bindLoop);
-        ____XXX_SSMMMXXX(opcode, SUB_LOOP, 0b001110000000, Word | Long, AddEaRg, bindLoop);
-    }
 
     //               -------------------------------------------------
     // Dx,<ea>       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
@@ -1497,10 +1398,7 @@ Moira::createJumpTable()
 
     opcode = parse("1001 ---1 ---- ----");
     ____XXX_SSMMMXXX(opcode, SUB, 0b001111111000, Byte | Word | Long, AddRgEa, IMS);
-
-    if (model == M68010) {
-        ____XXX_SSMMMXXX(opcode, SUB_LOOP, 0b001110000000, Byte | Word | Long, AddRgEa, bindLoop);
-    }
+    ____XXX_SSMMMXXX(opcode, SUB_LOOP, 0b001110000000, Byte | Word | Long, AddRgEa, loopIMS);
 
 
     // SUBA
@@ -1515,10 +1413,8 @@ Moira::createJumpTable()
 
     opcode = parse("1001 ---- 11-- ----");
     ____XXXS__MMMXXX(opcode, SUBA, 0b111111111111, Word | Long, Adda, IMS)
+    ____XXXS__MMMXXX(opcode, SUBA_LOOP, 0b001110000000, Word | Long, Adda, loopIMS)
 
-    if (model == M68010) {
-        ____XXXS__MMMXXX(opcode, SUBA_LOOP, 0b001110000000, Word | Long, Adda, bindLoop)
-    }
 
     // SUBI
     //
@@ -1564,10 +1460,7 @@ Moira::createJumpTable()
     // -(Ax),-(Ay)
     opcode = parse("1001 ---1 --00 1---");
     ____XXX_SS___XXX(opcode, SUBX, MODE_PD, Byte | Word | Long, AddxEa, IMS);
-
-    if (model == M68010) {
-        ____XXX_SS___XXX(opcode, SUBX_LOOP, MODE_PD, Byte | Word | Long, AddxEa, bindLoop);
-    }
+    ____XXX_SS___XXX(opcode, SUBX_LOOP, MODE_PD, Byte | Word | Long, AddxEa, loopIMS);
 
 
     // SWAP
@@ -1624,10 +1517,7 @@ Moira::createJumpTable()
 
     opcode = parse("0100 1010 ---- ----");
     ________SSMMMXXX(opcode, TST, 0b101111111000, Byte | Word | Long, Tst, IMS);
-
-    if (model == M68010) {
-        ________SSMMMXXX(opcode, TST_LOOP, 0b001110000000, Byte | Word | Long, Tst, bindLoop);
-    }
+    ________SSMMMXXX(opcode, TST_LOOP, 0b001110000000, Byte | Word | Long, Tst, loopIMS);
 
 
     // UNLK
