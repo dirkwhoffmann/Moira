@@ -639,31 +639,54 @@ Moira::execChk(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Instr I, Mode M, Size S> void
+template<CPU C, Instr I, Mode M, Size S> void
 Moira::execClr(u16 opcode)
 {
     EXEC_DEBUG
 
-    int dst = _____________xxx(opcode);
+    if (C == M68000) {
 
-    u32 ea, data;
-    if (!readOp<M,S, STD_AE_FRAME>(dst, ea, data)) return;
+        int dst = _____________xxx(opcode);
 
-    // looping<I>() ? noPrefetch() : prefetch <POLLIPL> ();
-    prefetch <POLLIPL> ();
+        u32 ea, data;
+        if (!readOp<M,S, STD_AE_FRAME>(dst, ea, data)) return;
 
-    if constexpr (S == Long && isRegMode(M)) sync(2);
-    
-    if constexpr (MIMIC_MUSASHI) {
-        writeOp <M,S> (dst, ea, 0);
-    } else {
-        writeOp <M,S, REVERSE> (dst, ea, 0);
+        prefetch <POLLIPL> ();
+
+        if constexpr (S == Long && isRegMode(M)) sync(2);
+
+        if constexpr (MIMIC_MUSASHI) {
+            writeOp <M,S> (dst, ea, 0);
+        } else {
+            writeOp <M,S, REVERSE> (dst, ea, 0);
+        }
+
+        reg.sr.n = 0;
+        reg.sr.z = 1;
+        reg.sr.v = 0;
+        reg.sr.c = 0;
     }
-    
-    reg.sr.n = 0;
-    reg.sr.z = 1;
-    reg.sr.v = 0;
-    reg.sr.c = 0;
+
+    if (C == M68010) {
+
+        int dst = _____________xxx(opcode);
+
+        if constexpr (S == Long && isRegMode(M)) sync(2);
+        if constexpr (S == Long && isIdxMode(M)) sync(2);
+
+        if constexpr (MIMIC_MUSASHI) {
+            writeOp <M,S> (dst, 0);
+        } else {
+            writeOp <M,S, REVERSE> (dst, 0);
+        }
+
+        looping<I>() ? noPrefetch() : prefetch <POLLIPL> ();
+
+        reg.sr.n = 0;
+        reg.sr.z = 1;
+        reg.sr.v = 0;
+        reg.sr.c = 0;
+    }
 }
 
 template<Instr I, Mode M, Size S> void

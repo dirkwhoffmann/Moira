@@ -340,7 +340,7 @@ Moira::dasmChk(StrWriter &str, u32 &addr, u16 op)
     str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
 }
 
-template<Instr I, Mode M, Size S> void
+template<CPU C, Instr I, Mode M, Size S> void
 Moira::dasmClr(StrWriter &str, u32 &addr, u16 op)
 {
     auto dst = Op <M,S> ( _____________xxx(op), addr );

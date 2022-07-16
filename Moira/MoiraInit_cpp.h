@@ -32,6 +32,11 @@ assert(loop[id] == nullptr); \
 loop[id] = &Moira::exec##name TPARAM(I, M, S); \
 }
 
+#define bindLoop4(id, name, I, M, S) { \
+assert(loop[id] == nullptr); \
+loop[id] = &Moira::exec##name TPARAM4(M68010, I, M, S); \
+}
+
 #define bindDasm(id, name, I, M, S) { \
 if (dasm) dasm[id] = &Moira::dasm##name TPARAM(I, M, S); \
 if (info) info[id] = InstrInfo { I, M, S }; \
@@ -566,12 +571,10 @@ Moira::createJumpTable()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0100 0010 ---- ----");
-    ________SSMMMXXX(bind, opcode, CLR, 0b101111111000, Byte | Word | Long, Clr);
+    ________SSMMMXXX(bindCIMS, opcode, CLR, 0b101111111000, Byte | Word | Long, Clr);
 
     if (model == M68010) {
-
-        ________SSMMMXXX(bindExec, opcode, CLR, 0b101111111000, Byte | Word | Long, Clr68010);
-        ________SSMMMXXX(bindLoop, opcode, CLR_LOOP, 0b001110000000, Byte | Word | Long, Clr68010);
+        ________SSMMMXXX(bindLoop4, opcode, CLR_LOOP, 0b001110000000, Byte | Word | Long, Clr);
     }
 
 
@@ -1068,14 +1071,6 @@ Moira::createJumpTable()
 
     __________MMMXXX(bindCIMS, opcode, MOVEFSR, 0b100000000000, Word, MoveFromSrRg);
     __________MMMXXX(bindCIMS, opcode, MOVEFSR, 0b001111111000, Word, MoveFromSrEa);
-
-    /*
-    if (model == M68010) {
-
-        __________MMMXXX(bindExec, opcode, MOVEFSR, 0b100000000000, Word, MoveFromSrRg68010);
-        __________MMMXXX(bindExec, opcode, MOVEFSR, 0b001111111000, Word, MoveFromSrEa68010);
-    }
-    */
 
 
     // MOVE to SR

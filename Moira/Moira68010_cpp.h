@@ -7,20 +7,6 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-/*
-template<Instr I, Mode M, Size S> void
-Moira::execBkpt(u16 opcode)
-{
-    EXEC_DEBUG
-
-    if (!MIMIC_MUSASHI) sync(4);
-
-    signalIllegalOpcodeException(opcode);
-    execUnimplemented(4);
-}
-*/
-
-
 template<Instr I, Mode M, Size S> void
 Moira::execMovecRcRx(u16 opcode)
 {
@@ -175,33 +161,6 @@ Moira::execMoves(u16 opcode)
     }
 
     prefetch<POLLIPL>();
-}
-
-template<Instr I, Mode M, Size S> void
-Moira::execClr68010(u16 opcode)
-{
-    EXEC_DEBUG
-
-    int dst = _____________xxx(opcode);
-
-    // u32 ea, data;
-    // if (!readOp<M,S, STD_AE_FRAME>(dst, ea, data)) return;
-
-    if constexpr (S == Long && isRegMode(M)) sync(2);
-    if constexpr (S == Long && isIdxMode(M)) sync(2);
-
-    if constexpr (MIMIC_MUSASHI) {
-        writeOp <M,S> (dst, 0);
-    } else {
-        writeOp <M,S, REVERSE> (dst, 0);
-    }
-
-    looping<I>() ? noPrefetch() : prefetch <POLLIPL> ();
-
-    reg.sr.n = 0;
-    reg.sr.z = 1;
-    reg.sr.v = 0;
-    reg.sr.c = 0;
 }
 
 template<Instr I, Mode M, Size S> void
