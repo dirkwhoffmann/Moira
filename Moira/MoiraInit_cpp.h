@@ -65,7 +65,7 @@ bindDasm(id, name, I, M, S) \
 //     __SS ____ __MM MXXX
 //     __SS XXX_ __MM MXXX
 
-#define _____________XXX(func,op,I,M,S,f) { \
+#define _____________XXX(op,I,M,S,f,func) { \
 for (int j = 0; j < 8; j++) func((op) | j, f, I, M, S); }
 
 #define ____________XXXX(func,op,I,M,S,f) { \
@@ -75,7 +75,7 @@ for (int j = 0; j < 16; j++) func((op) | j, f, I, M, S); }
 for (int j = 0; j < 256; j++) func((op) | j, f, I, M, S); }
 
 #define ____XXX______XXX(func,op,I,M,S,f) { \
-for (int i = 0; i < 8; i++) _____________XXX(func, (op) | i << 9, I, M, S, f); }
+for (int i = 0; i < 8; i++) _____________XXX((op) | i << 9, I, M, S, f, func); }
 
 #define ____XXX_XXXXXXXX(func,op,I,M,S,f) { \
 for (int i = 0; i < 8; i++) ________XXXXXXXX(func, (op) | i << 9, I, M, S, f); }
@@ -484,7 +484,7 @@ Moira::createJumpTable()
     if (model == M68010) {
 
         opcode = parse("0100 1000 0100 1---");
-        _____________XXX(bind, opcode, BKPT, MODE_IP, Long, Bkpt);
+        _____________XXX(opcode, BKPT, MODE_IP, Long, Bkpt, bind);
     }
 
 
@@ -647,39 +647,39 @@ Moira::createJumpTable()
 
     // Dn,<label>
     opcode = parse("0101 ---- 1100 1---");
-    _____________XXX(bindCIMS, opcode | 0x000, DBT,  MODE_IP, Word, Dbcc);
-    _____________XXX(bindCIMS, opcode | 0x100, DBF,  MODE_IP, Word, Dbcc);
-    _____________XXX(bindCIMS, opcode | 0x200, DBHI, MODE_IP, Word, Dbcc);
-    _____________XXX(bindCIMS, opcode | 0x300, DBLS, MODE_IP, Word, Dbcc);
-    _____________XXX(bindCIMS, opcode | 0x400, DBCC, MODE_IP, Word, Dbcc);
-    _____________XXX(bindCIMS, opcode | 0x500, DBCS, MODE_IP, Word, Dbcc);
-    _____________XXX(bindCIMS, opcode | 0x600, DBNE, MODE_IP, Word, Dbcc);
-    _____________XXX(bindCIMS, opcode | 0x700, DBEQ, MODE_IP, Word, Dbcc);
-    _____________XXX(bindCIMS, opcode | 0x800, DBVC, MODE_IP, Word, Dbcc);
-    _____________XXX(bindCIMS, opcode | 0x900, DBVS, MODE_IP, Word, Dbcc);
-    _____________XXX(bindCIMS, opcode | 0xA00, DBPL, MODE_IP, Word, Dbcc);
-    _____________XXX(bindCIMS, opcode | 0xB00, DBMI, MODE_IP, Word, Dbcc);
-    _____________XXX(bindCIMS, opcode | 0xC00, DBGE, MODE_IP, Word, Dbcc);
-    _____________XXX(bindCIMS, opcode | 0xD00, DBLT, MODE_IP, Word, Dbcc);
-    _____________XXX(bindCIMS, opcode | 0xE00, DBGT, MODE_IP, Word, Dbcc);
-    _____________XXX(bindCIMS, opcode | 0xF00, DBLE, MODE_IP, Word, Dbcc);
+    _____________XXX(opcode | 0x000, DBT,  MODE_IP, Word, Dbcc, bindCIMS);
+    _____________XXX(opcode | 0x100, DBF,  MODE_IP, Word, Dbcc, bindCIMS);
+    _____________XXX(opcode | 0x200, DBHI, MODE_IP, Word, Dbcc, bindCIMS);
+    _____________XXX(opcode | 0x300, DBLS, MODE_IP, Word, Dbcc, bindCIMS);
+    _____________XXX(opcode | 0x400, DBCC, MODE_IP, Word, Dbcc, bindCIMS);
+    _____________XXX(opcode | 0x500, DBCS, MODE_IP, Word, Dbcc, bindCIMS);
+    _____________XXX(opcode | 0x600, DBNE, MODE_IP, Word, Dbcc, bindCIMS);
+    _____________XXX(opcode | 0x700, DBEQ, MODE_IP, Word, Dbcc, bindCIMS);
+    _____________XXX(opcode | 0x800, DBVC, MODE_IP, Word, Dbcc, bindCIMS);
+    _____________XXX(opcode | 0x900, DBVS, MODE_IP, Word, Dbcc, bindCIMS);
+    _____________XXX(opcode | 0xA00, DBPL, MODE_IP, Word, Dbcc, bindCIMS);
+    _____________XXX(opcode | 0xB00, DBMI, MODE_IP, Word, Dbcc, bindCIMS);
+    _____________XXX(opcode | 0xC00, DBGE, MODE_IP, Word, Dbcc, bindCIMS);
+    _____________XXX(opcode | 0xD00, DBLT, MODE_IP, Word, Dbcc, bindCIMS);
+    _____________XXX(opcode | 0xE00, DBGT, MODE_IP, Word, Dbcc, bindCIMS);
+    _____________XXX(opcode | 0xF00, DBLE, MODE_IP, Word, Dbcc, bindCIMS);
 
-    _____________XXX(bindLoop4, opcode | 0x000, DBT,  MODE_IP, Word, Dbcc);
-    _____________XXX(bindLoop4, opcode | 0x100, DBF,  MODE_IP, Word, Dbcc);
-    _____________XXX(bindLoop4, opcode | 0x200, DBHI, MODE_IP, Word, Dbcc);
-    _____________XXX(bindLoop4, opcode | 0x300, DBLS, MODE_IP, Word, Dbcc);
-    _____________XXX(bindLoop4, opcode | 0x400, DBCC, MODE_IP, Word, Dbcc);
-    _____________XXX(bindLoop4, opcode | 0x500, DBCS, MODE_IP, Word, Dbcc);
-    _____________XXX(bindLoop4, opcode | 0x600, DBNE, MODE_IP, Word, Dbcc);
-    _____________XXX(bindLoop4, opcode | 0x700, DBEQ, MODE_IP, Word, Dbcc);
-    _____________XXX(bindLoop4, opcode | 0x800, DBVC, MODE_IP, Word, Dbcc);
-    _____________XXX(bindLoop4, opcode | 0x900, DBVS, MODE_IP, Word, Dbcc);
-    _____________XXX(bindLoop4, opcode | 0xA00, DBPL, MODE_IP, Word, Dbcc);
-    _____________XXX(bindLoop4, opcode | 0xB00, DBMI, MODE_IP, Word, Dbcc);
-    _____________XXX(bindLoop4, opcode | 0xC00, DBGE, MODE_IP, Word, Dbcc);
-    _____________XXX(bindLoop4, opcode | 0xD00, DBLT, MODE_IP, Word, Dbcc);
-    _____________XXX(bindLoop4, opcode | 0xE00, DBGT, MODE_IP, Word, Dbcc);
-    _____________XXX(bindLoop4, opcode | 0xF00, DBLE, MODE_IP, Word, Dbcc);
+    _____________XXX(opcode | 0x000, DBT,  MODE_IP, Word, Dbcc, bindLoop4);
+    _____________XXX(opcode | 0x100, DBF,  MODE_IP, Word, Dbcc, bindLoop4);
+    _____________XXX(opcode | 0x200, DBHI, MODE_IP, Word, Dbcc, bindLoop4);
+    _____________XXX(opcode | 0x300, DBLS, MODE_IP, Word, Dbcc, bindLoop4);
+    _____________XXX(opcode | 0x400, DBCC, MODE_IP, Word, Dbcc, bindLoop4);
+    _____________XXX(opcode | 0x500, DBCS, MODE_IP, Word, Dbcc, bindLoop4);
+    _____________XXX(opcode | 0x600, DBNE, MODE_IP, Word, Dbcc, bindLoop4);
+    _____________XXX(opcode | 0x700, DBEQ, MODE_IP, Word, Dbcc, bindLoop4);
+    _____________XXX(opcode | 0x800, DBVC, MODE_IP, Word, Dbcc, bindLoop4);
+    _____________XXX(opcode | 0x900, DBVS, MODE_IP, Word, Dbcc, bindLoop4);
+    _____________XXX(opcode | 0xA00, DBPL, MODE_IP, Word, Dbcc, bindLoop4);
+    _____________XXX(opcode | 0xB00, DBMI, MODE_IP, Word, Dbcc, bindLoop4);
+    _____________XXX(opcode | 0xC00, DBGE, MODE_IP, Word, Dbcc, bindLoop4);
+    _____________XXX(opcode | 0xD00, DBLT, MODE_IP, Word, Dbcc, bindLoop4);
+    _____________XXX(opcode | 0xE00, DBGT, MODE_IP, Word, Dbcc, bindLoop4);
+    _____________XXX(opcode | 0xF00, DBLE, MODE_IP, Word, Dbcc, bindLoop4);
 
 
     // DIVS, DIVU
@@ -773,8 +773,8 @@ Moira::createJumpTable()
     //        Sizes: Word, Longword
 
     opcode = parse("0100 1000 --00 0---");
-    _____________XXX(bind, opcode | 2 << 6, EXT, MODE_DN, Word, Ext);
-    _____________XXX(bind, opcode | 3 << 6, EXT, MODE_DN, Long, Ext);
+    _____________XXX(opcode | 2 << 6, EXT, MODE_DN, Word, Ext, bind);
+    _____________XXX(opcode | 3 << 6, EXT, MODE_DN, Long, Ext, bind);
 
 
     // LINK
@@ -783,7 +783,7 @@ Moira::createJumpTable()
     //        Sizes: Word
 
     opcode = parse("0100 1110 0101 0---");
-    _____________XXX(bind, opcode, LINK, MODE_IP, Word, Link);
+    _____________XXX(opcode, LINK, MODE_IP, Word, Link, bind);
 
 
     // JMP
@@ -1110,8 +1110,8 @@ Moira::createJumpTable()
     //        Sizes: Longword
 
     opcode = parse("0100 1110 0110 ----");
-    _____________XXX(bind, opcode | 1 << 3, MOVEUSP, MODE_IP, Long, MoveUspAn);
-    _____________XXX(bind, opcode | 0 << 3, MOVEUSP, MODE_IP, Long, MoveAnUsp);
+    _____________XXX(opcode | 1 << 3, MOVEUSP, MODE_IP, Long, MoveUspAn, bind);
+    _____________XXX(opcode | 0 << 3, MOVEUSP, MODE_IP, Long, MoveAnUsp, bind);
 
 
     // MULS, MULU
@@ -1562,7 +1562,7 @@ Moira::createJumpTable()
     //         Size: Word
 
     opcode = parse("0100 1000 0100 0---");
-    _____________XXX(bind, opcode, SWAP, MODE_DN, Word, Swap);
+    _____________XXX(opcode, SWAP, MODE_DN, Word, Swap, bind);
 
 
     // TAS
@@ -1621,5 +1621,5 @@ Moira::createJumpTable()
     //        Sizes: Word
 
     opcode = parse("0100 1110 0101 1---");
-    _____________XXX(bind, opcode, UNLK, MODE_IP, Word, Unlk);
+    _____________XXX(opcode, UNLK, MODE_IP, Word, Unlk, bind);
 }
