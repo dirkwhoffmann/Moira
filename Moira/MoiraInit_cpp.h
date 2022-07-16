@@ -625,22 +625,22 @@ Moira::createJumpTable()
     _____________XXX(opcode | 0xE00, DBGT, MODE_IP, Word, Dbcc, CIMS);
     _____________XXX(opcode | 0xF00, DBLE, MODE_IP, Word, Dbcc, CIMS);
 
-    _____________XXX(opcode | 0x000, DBT,  MODE_IP, Word, Dbcc, loopCIMS);
-    _____________XXX(opcode | 0x100, DBF,  MODE_IP, Word, Dbcc, loopCIMS);
-    _____________XXX(opcode | 0x200, DBHI, MODE_IP, Word, Dbcc, loopCIMS);
-    _____________XXX(opcode | 0x300, DBLS, MODE_IP, Word, Dbcc, loopCIMS);
-    _____________XXX(opcode | 0x400, DBCC, MODE_IP, Word, Dbcc, loopCIMS);
-    _____________XXX(opcode | 0x500, DBCS, MODE_IP, Word, Dbcc, loopCIMS);
-    _____________XXX(opcode | 0x600, DBNE, MODE_IP, Word, Dbcc, loopCIMS);
-    _____________XXX(opcode | 0x700, DBEQ, MODE_IP, Word, Dbcc, loopCIMS);
-    _____________XXX(opcode | 0x800, DBVC, MODE_IP, Word, Dbcc, loopCIMS);
-    _____________XXX(opcode | 0x900, DBVS, MODE_IP, Word, Dbcc, loopCIMS);
-    _____________XXX(opcode | 0xA00, DBPL, MODE_IP, Word, Dbcc, loopCIMS);
-    _____________XXX(opcode | 0xB00, DBMI, MODE_IP, Word, Dbcc, loopCIMS);
-    _____________XXX(opcode | 0xC00, DBGE, MODE_IP, Word, Dbcc, loopCIMS);
-    _____________XXX(opcode | 0xD00, DBLT, MODE_IP, Word, Dbcc, loopCIMS);
-    _____________XXX(opcode | 0xE00, DBGT, MODE_IP, Word, Dbcc, loopCIMS);
-    _____________XXX(opcode | 0xF00, DBLE, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0x000, DBT_LOOP,  MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0x100, DBF_LOOP,  MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0x200, DBHI_LOOP, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0x300, DBLS_LOOP, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0x400, DBCC_LOOP, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0x500, DBCS_LOOP, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0x600, DBNE_LOOP, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0x700, DBEQ_LOOP, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0x800, DBVC_LOOP, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0x900, DBVS_LOOP, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0xA00, DBPL_LOOP, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0xB00, DBMI_LOOP, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0xC00, DBGE_LOOP, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0xD00, DBLT_LOOP, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0xE00, DBGT_LOOP, MODE_IP, Word, Dbcc, loopCIMS);
+    _____________XXX(opcode | 0xF00, DBLE_LOOP, MODE_IP, Word, Dbcc, loopCIMS);
 
 
     // DIVS, DIVU

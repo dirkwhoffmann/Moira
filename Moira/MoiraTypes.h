@@ -169,7 +169,6 @@ typedef enum
     TST,            // Test an operand
     UNLK,           // Unlink
 
-    // 68010 additions
     ABCD_LOOP,
     ADD_LOOP,
     ADDA_LOOP,
@@ -180,6 +179,22 @@ typedef enum
     CLR_LOOP,
     CMP_LOOP,
     CMPA_LOOP,
+    DBCC_LOOP,
+    DBCS_LOOP,
+    DBEQ_LOOP,
+    DBGE_LOOP,
+    DBGT_LOOP,
+    DBHI_LOOP,
+    DBLE_LOOP,
+    DBLS_LOOP,
+    DBLT_LOOP,
+    DBMI_LOOP,
+    DBNE_LOOP,
+    DBPL_LOOP,
+    DBVC_LOOP,
+    DBVS_LOOP,
+    DBF_LOOP,
+    DBT_LOOP,
     EOR_LOOP,
     LSL_LOOP,
     LSR_LOOP,

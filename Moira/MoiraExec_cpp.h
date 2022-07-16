@@ -909,15 +909,8 @@ Moira::execDbcc(u16 opcode)
     
     switch (C) {
 
-        case M68000:
-
-            exec68000();
-            return;
-
-        case M68010:
-
-            (flags & CPU_IS_LOOPING) ? execLoop() : exec68010();
-            return;
+        case M68000: exec68000(); return;
+        case M68010: looping<I>() ? execLoop() : exec68010(); return;
 
         default:
             fatalError;
