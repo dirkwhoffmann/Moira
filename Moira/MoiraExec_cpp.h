@@ -1693,12 +1693,12 @@ Moira::execMoves(u16 opcode)
         // Take care of some special cases
         if (M == MODE_PI && src == (dst | 0x8)) {
 
-            // MOVES A7,(A7)+
+            // MOVES An,(An)+
             value += dst == 7 ? (S == Long ? 4 : 2) : S;
         }
         if (M == MODE_PD && src == (dst | 0x8)) {
 
-            // MOVES A7,-(A7)
+            // MOVES An,-(An)
             value -= dst == 7 ? (S == Long ? 4 : 2) : S;
         }
 

@@ -46,13 +46,17 @@ extern uint8_t moiraMem[0x10000];
 extern u32 musashiFC;
 
 inline u8 get8(u8 *p, u32 addr) {
-    return p[addr & 0xFFFF]; }
+    return p[addr & 0xFFFF];
+}
 inline u16 get16(u8 *p, u32 addr) {
-    return (u16)(get8(p, addr) << 8 | get8(p, addr + 1)); }
+    return (u16)(get8(p, addr) << 8 | get8(p, addr + 1));
+}
 inline void set8(u8 *p, u32 addr, u8 val) {
-    p[addr & 0xFFFF] = val; }
+    p[addr & 0xFFFF] = val;
+}
 inline void set16(u8 *p, u32 addr, u16 val) {
-    set8(p, addr, val >> 8); set8(p, addr + 1, val & 0xFF); }
+    set8(p, addr, val >> 8); set8(p, addr + 1, val & 0xFF);
+}
 
 // A test setup
 struct Setup {

@@ -69,7 +69,7 @@ void setupMoira()
 
 void createTestCase(Setup &s)
 {
-    s.supervisor = smartRandom() % 2;
+    s.supervisor = !s.supervisor;
     s.ccr = uint8_t(smartRandom());
     s.ext1 = uint16_t(smartRandom());
     s.ext2 = uint16_t(smartRandom());
@@ -86,6 +86,16 @@ void createTestCase(Setup &s)
 
 void setupInstruction(Setup &s, uint32_t pc, uint16_t opcode)
 {
+    if (opcode == 0x4E7A || opcode == 0x4E7B) { // MOVEC
+
+        switch (smartRandom() & 5) {
+            case 0: s.ext1 = (s.ext1 & 0xF000) | 0x000; break;
+            case 1: s.ext1 = (s.ext1 & 0xF000) | 0x001; break;
+            case 2: s.ext1 = (s.ext1 & 0xF000) | 0x800; break;
+            case 3: s.ext1 = (s.ext1 & 0xF000) | 0x801; break;
+        }
+    }
+
     s.pc = pc;
     s.opcode = opcode;
 
