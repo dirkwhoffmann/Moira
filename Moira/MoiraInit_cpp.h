@@ -9,43 +9,39 @@
 
 // Adds an entry to the instruction jump table
 
-#define TPARAM(x,y,z) <x,y,z>
-#define TPARAM4(c,x,y,z) <c,x,y,z>
+#define EXEC_IMS(func,I,M,S) &Moira::exec##func <I,M,S>
+#define EXEC_CIMS(func,C,I,M,S) &Moira::exec##func <C,I,M,S>
+#define DASM_IMS(func,I,M,S) &Moira::dasm##func <I,M,S>
 
-#define bindExec(id, name, I, M, S) { \
-exec[id] = &Moira::exec##name TPARAM(I, M, S); \
-}
+#define _IMS(i,m,s) <i,m,s>
+#define _CIMS(c,i,m,s) <c,i,m,s>
 
-#define bindCIMS(id, name, I, M, S) { \
+#define bindCIMS(id,name,I,M,S) { \
 if (model == M68000) { \
-exec[id] = &Moira::exec##name TPARAM4(M68000, I, M, S); \
+exec[id] = EXEC_CIMS(name,M68000,I,M,S); \
 } else { \
-exec[id] = &Moira::exec##name TPARAM4(M68010, I, M, S); \
+exec[id] = EXEC_CIMS(name,M68010,I,M,S); \
 } \
-if (dasm) dasm[id] = &Moira::dasm##name TPARAM(I, M, S); \
+if (dasm) dasm[id] = DASM_IMS(name,I,M,S); \
 if (info) info[id] = InstrInfo { I, M, S }; \
 }
 
 #define bindLoop(id, name, I, M, S) { \
 assert(loop[id] == nullptr); \
-loop[id] = &Moira::exec##name TPARAM(I, M, S); \
+loop[id] = &Moira::exec##name _IMS(I,M,S); \
 }
 
 #define bindLoop4(id, name, I, M, S) { \
 assert(loop[id] == nullptr); \
-loop[id] = &Moira::exec##name TPARAM4(M68010, I, M, S); \
-}
-
-#define bindDasm(id, name, I, M, S) { \
-if (dasm) dasm[id] = &Moira::dasm##name TPARAM(I, M, S); \
-if (info) info[id] = InstrInfo { I, M, S }; \
+loop[id] = &Moira::exec##name _CIMS(M68010,I,M,S); \
 }
 
 #define bind(id, name, I, M, S) { \
 assert(exec[id] == &Moira::execIllegal); \
 if (dasm) assert(dasm[id] == &Moira::dasmIllegal); \
-bindExec(id, name, I, M, S) \
-bindDasm(id, name, I, M, S) \
+exec[id] = EXEC_IMS(name,I,M,S); \
+if (dasm) dasm[id] = &Moira::dasm##name _IMS(I,M,S); \
+if (info) info[id] = InstrInfo { I, M, S }; \
 }
 
 // Registers an instruction in one of the standard instruction formats:
@@ -60,7 +56,6 @@ bindDasm(id, name, I, M, S) \
 //     ____ XXX_ SS__ _XXX
 //     ____ ____ SSMM MXXX
 //     ____ XXX_ SSMM MXXX
-//     ____ ___S __MM MXXX
 //     ____ XXXS __MM MXXX
 //     __SS ____ __MM MXXX
 //     __SS XXX_ __MM MXXX
@@ -114,13 +109,6 @@ if ((s) & 0b100) ____XXX___MMMXXX((op) | 2 << 6, I, m, Long, f, func); \
 if ((s) & 0b010) ____XXX___MMMXXX((op) | 1 << 6, I, m, Word, f, func); \
 if ((s) & 0b001) ____XXX___MMMXXX((op) | 0 << 6, I, m, Byte, f, func); }
 
-/*
-#define _______S__MMMXXX(func,op,I,m,s,f) { \
-if ((s) & 0b100) __________MMMXXX((op) | 1 << 8, I, m, Long, f, func); \
-if ((s) & 0b010) __________MMMXXX((op) | 0 << 8, I, m, Word, f, func); \
-if ((s) & 0b001) assert(false); }
-*/
-
 #define ____XXXS__MMMXXX(op,I,m,s,f,func) { \
 if ((s) & 0b100) ____XXX___MMMXXX((op) | 1 << 8, I, m, Long, f, func); \
 if ((s) & 0b010) ____XXX___MMMXXX((op) | 0 << 8, I, m, Word, f, func); \
@@ -137,7 +125,7 @@ if ((s) & 0b010) ____XXX___MMMXXX((op) | 3 << 12, I, m, Word, f, func); \
 if ((s) & 0b001) ____XXX___MMMXXX((op) | 1 << 12, I, m, Byte, f, func); }
 
 
-static u16
+static consteval u16
 parse(const char *s, int sum = 0)
 {
     return
