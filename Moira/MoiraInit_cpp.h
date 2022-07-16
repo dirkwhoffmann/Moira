@@ -19,11 +19,10 @@ exec[id] = &Moira::exec##name TPARAM(I, M, S); \
 #define bindCIMS(id, name, I, M, S) { \
 if (model == M68000) { \
 exec[id] = &Moira::exec##name TPARAM4(M68000, I, M, S); \
-if (dasm) dasm[id] = &Moira::dasm##name TPARAM4(M68000, I, M, S); \
-} else if (model == M68010) { \
+} else { \
 exec[id] = &Moira::exec##name TPARAM4(M68010, I, M, S); \
-if (dasm) dasm[id] = &Moira::dasm##name TPARAM4(M68010, I, M, S); \
 } \
+if (dasm) dasm[id] = &Moira::dasm##name TPARAM(I, M, S); \
 if (info) info[id] = InstrInfo { I, M, S }; \
 }
 
@@ -648,22 +647,39 @@ Moira::createJumpTable()
 
     // Dn,<label>
     opcode = parse("0101 ---- 1100 1---");
-    _____________XXX(bind, opcode | 0x000, DBT,  MODE_IP, Word, Dbcc);
-    _____________XXX(bind, opcode | 0x100, DBF,  MODE_IP, Word, Dbcc);
-    _____________XXX(bind, opcode | 0x200, DBHI, MODE_IP, Word, Dbcc);
-    _____________XXX(bind, opcode | 0x300, DBLS, MODE_IP, Word, Dbcc);
-    _____________XXX(bind, opcode | 0x400, DBCC, MODE_IP, Word, Dbcc);
-    _____________XXX(bind, opcode | 0x500, DBCS, MODE_IP, Word, Dbcc);
-    _____________XXX(bind, opcode | 0x600, DBNE, MODE_IP, Word, Dbcc);
-    _____________XXX(bind, opcode | 0x700, DBEQ, MODE_IP, Word, Dbcc);
-    _____________XXX(bind, opcode | 0x800, DBVC, MODE_IP, Word, Dbcc);
-    _____________XXX(bind, opcode | 0x900, DBVS, MODE_IP, Word, Dbcc);
-    _____________XXX(bind, opcode | 0xA00, DBPL, MODE_IP, Word, Dbcc);
-    _____________XXX(bind, opcode | 0xB00, DBMI, MODE_IP, Word, Dbcc);
-    _____________XXX(bind, opcode | 0xC00, DBGE, MODE_IP, Word, Dbcc);
-    _____________XXX(bind, opcode | 0xD00, DBLT, MODE_IP, Word, Dbcc);
-    _____________XXX(bind, opcode | 0xE00, DBGT, MODE_IP, Word, Dbcc);
-    _____________XXX(bind, opcode | 0xF00, DBLE, MODE_IP, Word, Dbcc);
+    _____________XXX(bindCIMS, opcode | 0x000, DBT,  MODE_IP, Word, Dbcc);
+    _____________XXX(bindCIMS, opcode | 0x100, DBF,  MODE_IP, Word, Dbcc);
+    _____________XXX(bindCIMS, opcode | 0x200, DBHI, MODE_IP, Word, Dbcc);
+    _____________XXX(bindCIMS, opcode | 0x300, DBLS, MODE_IP, Word, Dbcc);
+    _____________XXX(bindCIMS, opcode | 0x400, DBCC, MODE_IP, Word, Dbcc);
+    _____________XXX(bindCIMS, opcode | 0x500, DBCS, MODE_IP, Word, Dbcc);
+    _____________XXX(bindCIMS, opcode | 0x600, DBNE, MODE_IP, Word, Dbcc);
+    _____________XXX(bindCIMS, opcode | 0x700, DBEQ, MODE_IP, Word, Dbcc);
+    _____________XXX(bindCIMS, opcode | 0x800, DBVC, MODE_IP, Word, Dbcc);
+    _____________XXX(bindCIMS, opcode | 0x900, DBVS, MODE_IP, Word, Dbcc);
+    _____________XXX(bindCIMS, opcode | 0xA00, DBPL, MODE_IP, Word, Dbcc);
+    _____________XXX(bindCIMS, opcode | 0xB00, DBMI, MODE_IP, Word, Dbcc);
+    _____________XXX(bindCIMS, opcode | 0xC00, DBGE, MODE_IP, Word, Dbcc);
+    _____________XXX(bindCIMS, opcode | 0xD00, DBLT, MODE_IP, Word, Dbcc);
+    _____________XXX(bindCIMS, opcode | 0xE00, DBGT, MODE_IP, Word, Dbcc);
+    _____________XXX(bindCIMS, opcode | 0xF00, DBLE, MODE_IP, Word, Dbcc);
+
+    _____________XXX(bindLoop4, opcode | 0x000, DBT,  MODE_IP, Word, Dbcc);
+    _____________XXX(bindLoop4, opcode | 0x100, DBF,  MODE_IP, Word, Dbcc);
+    _____________XXX(bindLoop4, opcode | 0x200, DBHI, MODE_IP, Word, Dbcc);
+    _____________XXX(bindLoop4, opcode | 0x300, DBLS, MODE_IP, Word, Dbcc);
+    _____________XXX(bindLoop4, opcode | 0x400, DBCC, MODE_IP, Word, Dbcc);
+    _____________XXX(bindLoop4, opcode | 0x500, DBCS, MODE_IP, Word, Dbcc);
+    _____________XXX(bindLoop4, opcode | 0x600, DBNE, MODE_IP, Word, Dbcc);
+    _____________XXX(bindLoop4, opcode | 0x700, DBEQ, MODE_IP, Word, Dbcc);
+    _____________XXX(bindLoop4, opcode | 0x800, DBVC, MODE_IP, Word, Dbcc);
+    _____________XXX(bindLoop4, opcode | 0x900, DBVS, MODE_IP, Word, Dbcc);
+    _____________XXX(bindLoop4, opcode | 0xA00, DBPL, MODE_IP, Word, Dbcc);
+    _____________XXX(bindLoop4, opcode | 0xB00, DBMI, MODE_IP, Word, Dbcc);
+    _____________XXX(bindLoop4, opcode | 0xC00, DBGE, MODE_IP, Word, Dbcc);
+    _____________XXX(bindLoop4, opcode | 0xD00, DBLT, MODE_IP, Word, Dbcc);
+    _____________XXX(bindLoop4, opcode | 0xE00, DBGT, MODE_IP, Word, Dbcc);
+    _____________XXX(bindLoop4, opcode | 0xF00, DBLE, MODE_IP, Word, Dbcc);
 
 
     // DIVS, DIVU
@@ -1606,56 +1622,4 @@ Moira::createJumpTable()
 
     opcode = parse("0100 1110 0101 1---");
     _____________XXX(bind, opcode, UNLK, MODE_IP, Word, Unlk);
-
-
-    // Apply changes for the 68010
-    if (model == M68010) modifyJumpTableFor68010();
-}
-
-void
-Moira::modifyJumpTableFor68010()
-{
-    assert(model == M68010);
-
-    u16 opcode;
-    
-    //
-    // DBcc
-    //
-
-    // Dn,<label>
-    opcode = parse("0101 ---- 1100 1---");
-    _____________XXX(bindExec, opcode | 0x000, DBT,  MODE_IP, Word, Dbcc68010);
-    _____________XXX(bindExec, opcode | 0x100, DBF,  MODE_IP, Word, Dbcc68010);
-    _____________XXX(bindExec, opcode | 0x200, DBHI, MODE_IP, Word, Dbcc68010);
-    _____________XXX(bindExec, opcode | 0x300, DBLS, MODE_IP, Word, Dbcc68010);
-    _____________XXX(bindExec, opcode | 0x400, DBCC, MODE_IP, Word, Dbcc68010);
-    _____________XXX(bindExec, opcode | 0x500, DBCS, MODE_IP, Word, Dbcc68010);
-    _____________XXX(bindExec, opcode | 0x600, DBNE, MODE_IP, Word, Dbcc68010);
-    _____________XXX(bindExec, opcode | 0x700, DBEQ, MODE_IP, Word, Dbcc68010);
-    _____________XXX(bindExec, opcode | 0x800, DBVC, MODE_IP, Word, Dbcc68010);
-    _____________XXX(bindExec, opcode | 0x900, DBVS, MODE_IP, Word, Dbcc68010);
-    _____________XXX(bindExec, opcode | 0xA00, DBPL, MODE_IP, Word, Dbcc68010);
-    _____________XXX(bindExec, opcode | 0xB00, DBMI, MODE_IP, Word, Dbcc68010);
-    _____________XXX(bindExec, opcode | 0xC00, DBGE, MODE_IP, Word, Dbcc68010);
-    _____________XXX(bindExec, opcode | 0xD00, DBLT, MODE_IP, Word, Dbcc68010);
-    _____________XXX(bindExec, opcode | 0xE00, DBGT, MODE_IP, Word, Dbcc68010);
-    _____________XXX(bindExec, opcode | 0xF00, DBLE, MODE_IP, Word, Dbcc68010);
-
-    _____________XXX(bindLoop, opcode | 0x000, DBT,  MODE_IP, Word, DbccLoop);
-    _____________XXX(bindLoop, opcode | 0x100, DBF,  MODE_IP, Word, DbccLoop);
-    _____________XXX(bindLoop, opcode | 0x200, DBHI, MODE_IP, Word, DbccLoop);
-    _____________XXX(bindLoop, opcode | 0x300, DBLS, MODE_IP, Word, DbccLoop);
-    _____________XXX(bindLoop, opcode | 0x400, DBCC, MODE_IP, Word, DbccLoop);
-    _____________XXX(bindLoop, opcode | 0x500, DBCS, MODE_IP, Word, DbccLoop);
-    _____________XXX(bindLoop, opcode | 0x600, DBNE, MODE_IP, Word, DbccLoop);
-    _____________XXX(bindLoop, opcode | 0x700, DBEQ, MODE_IP, Word, DbccLoop);
-    _____________XXX(bindLoop, opcode | 0x800, DBVC, MODE_IP, Word, DbccLoop);
-    _____________XXX(bindLoop, opcode | 0x900, DBVS, MODE_IP, Word, DbccLoop);
-    _____________XXX(bindLoop, opcode | 0xA00, DBPL, MODE_IP, Word, DbccLoop);
-    _____________XXX(bindLoop, opcode | 0xB00, DBMI, MODE_IP, Word, DbccLoop);
-    _____________XXX(bindLoop, opcode | 0xC00, DBGE, MODE_IP, Word, DbccLoop);
-    _____________XXX(bindLoop, opcode | 0xD00, DBLT, MODE_IP, Word, DbccLoop);
-    _____________XXX(bindLoop, opcode | 0xE00, DBGT, MODE_IP, Word, DbccLoop);
-    _____________XXX(bindLoop, opcode | 0xF00, DBLE, MODE_IP, Word, DbccLoop);
 }

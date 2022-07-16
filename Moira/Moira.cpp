@@ -19,7 +19,6 @@ namespace moira {
 #include "MoiraDataflow_cpp.h"
 #include "MoiraExceptions_cpp.h"
 #include "MoiraExec_cpp.h"
-#include "Moira68010_cpp.h"
 #include "StrWriter_cpp.h"
 #include "MoiraDasm_cpp.h"
 

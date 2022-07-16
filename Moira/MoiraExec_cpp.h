@@ -772,43 +772,149 @@ Moira::execCmpm(u16 opcode)
     prefetch();
 }
 
-template<Instr I, Mode M, Size S> void
+template<CPU C, Instr I, Mode M, Size S> void
 Moira::execDbcc(u16 opcode)
 {
     EXEC_DEBUG
 
-    sync(2);
-    if (!cond<I>()) {
+    auto exec68000 = [&]() {
 
-        int dn = _____________xxx(opcode);
-        u32 newpc = U32_ADD(reg.pc, (i16)queue.irc);
-        
-        bool takeBranch = readD<Word>(dn) != 0;
-        
-        // Check for address error
-        if (misaligned<S>(newpc)) {
-            execAddressError(makeFrame(newpc, newpc + 2));
-            return;
-        }
-        
-        // Decrement loop counter
-        writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
-
-        // Branch
-        if (takeBranch) {
-            reg.pc = newpc;
-            fullPrefetch<POLLIPL>();
-            return;
-        } else {
-            (void)readMS <MEM_PROG, Word> (reg.pc + 2);
-        }
-    } else {
         sync(2);
-    }
+        if (!cond<I>()) {
 
-    // Fall through to next instruction
-    reg.pc += 2;
-    fullPrefetch<POLLIPL>();
+            int dn = _____________xxx(opcode);
+            u32 newpc = U32_ADD(reg.pc, (i16)queue.irc);
+
+            bool takeBranch = readD<Word>(dn) != 0;
+
+            // Check for address error
+            if (misaligned<S>(newpc)) {
+                execAddressError(makeFrame(newpc, newpc + 2));
+                return;
+            }
+
+            // Decrement loop counter
+            writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+
+            // Branch
+            if (takeBranch) {
+                reg.pc = newpc;
+                fullPrefetch<POLLIPL>();
+                return;
+            } else {
+                (void)readMS <MEM_PROG, Word> (reg.pc + 2);
+            }
+        } else {
+            sync(2);
+        }
+
+        // Fall through to next instruction
+        reg.pc += 2;
+        fullPrefetch<POLLIPL>();
+    };
+
+    auto exec68010 = [&]() {
+
+        sync(2);
+        if (!cond<I>()) {
+
+            int dn = _____________xxx(opcode);
+            i16 disp = (i16)queue.irc;
+
+            u32 newpc = U32_ADD(reg.pc, disp);
+
+            bool takeBranch = readD<Word>(dn) != 0;
+
+            // Check for address error
+            if (misaligned<S>(newpc)) {
+                execAddressError(makeFrame(newpc, newpc + 2));
+                return;
+            }
+
+            // Decrement loop counter
+            writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+
+            // Branch
+            if (takeBranch) {
+
+                reg.pc = newpc;
+                fullPrefetch<POLLIPL>();
+
+                if (loop[queue.ird] && disp == -4) {
+
+                    // Enter loop mode
+                    flags |= CPU_IS_LOOPING;
+                    queue.irc = opcode;
+                    // printf("Entering loop mode (IRD: %x IRC: %x)\n", queue.ird, queue.irc);
+                }
+
+                if (MIMIC_MUSASHI) sync(2);
+                return;
+
+            } else {
+
+                if (model == M68010) sync(MIMIC_MUSASHI ? 4 : 2);
+                (void)readMS <MEM_PROG, Word> (reg.pc + 2);
+            }
+
+        } else {
+
+            sync(2);
+        }
+
+        // Fall through to next instruction
+        reg.pc += 2;
+        fullPrefetch<POLLIPL>();
+    };
+
+    auto execLoop = [&]() {
+
+        sync(2);
+        if (!cond<I>()) {
+
+            int dn = _____________xxx(opcode);
+            u32 newpc = U32_ADD(reg.pc, -4);
+
+            bool takeBranch = readD<Word>(dn) != 0;
+
+            // Check for address error
+            if (misaligned<S>(newpc)) {
+                execAddressError(makeFrame(newpc, newpc + 2));
+                return;
+            }
+
+            // Decrement loop counter
+            writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+
+            // Branch
+            if (takeBranch) {
+                reg.pc = newpc;
+                reg.pc0 = reg.pc;
+                queue.ird = queue.irc;
+                queue.irc = opcode;
+                return;
+            } else {
+                (void)readMS <MEM_PROG, Word> (reg.pc + 2);
+            }
+        } else {
+            sync(2);
+        }
+
+        // Fall through to next instruction
+        reg.pc += 2;
+        fullPrefetch<POLLIPL>();
+        flags &= ~CPU_IS_LOOPING;
+        // printf("Exiting loop mode (IRD: %x IRC: %x)\n", queue.ird, queue.irc);
+    };
+    
+    switch (C) {
+
+        case M68000: exec68000(); return;
+        case M68010: looping<I>() ? execLoop() : exec68010(); return;
+
+        default:
+            fatalError;
+    }
 }
 
 template<Instr I, Mode M, Size S> void

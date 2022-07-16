@@ -167,9 +167,6 @@ protected:
     // Creates the generic jump table (all models)
     void createJumpTable();
 
-    // Adjusts the jump table for a specific model
-    void modifyJumpTableFor68010();
-
 
     //
     // Running the CPU
