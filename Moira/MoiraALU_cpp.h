@@ -510,7 +510,7 @@ Moira::cond() {
     switch(I) {
 
         case BRA: case ST:  case DBT:  case DBT_LOOP:  return true;
-        case DBF: case SF:                             return false;
+        case SF:            case DBF:  case DBF_LOOP:  return false;
         case BHI: case SHI: case DBHI: case DBHI_LOOP: return !reg.sr.c && !reg.sr.z;
         case BLS: case SLS: case DBLS: case DBLS_LOOP: return reg.sr.c || reg.sr.z;
         case BCC: case SCC: case DBCC: case DBCC_LOOP: return !reg.sr.c;

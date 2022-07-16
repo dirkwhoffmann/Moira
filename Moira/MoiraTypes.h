@@ -217,7 +217,7 @@ typedef enum
 Instr;
 
 template <Instr I>
-consteval bool looping() { return I >= ABCD_LOOP; }
+constexpr bool looping() { return I >= ABCD_LOOP; }
 
 typedef enum
 {

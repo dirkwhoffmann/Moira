@@ -124,7 +124,7 @@ if ((s) & 0b010) ____XXX___MMMXXX((op) | 3 << 12, I, m, Word, f, func); \
 if ((s) & 0b001) ____XXX___MMMXXX((op) | 1 << 12, I, m, Byte, f, func); }
 
 
-static consteval u16
+static constexpr u16
 parse(const char *s, int sum = 0)
 {
     return

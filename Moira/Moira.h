@@ -293,10 +293,10 @@ protected:
     // Advances the clock (called before each memory access)
     virtual void sync(int cycles) { clock += cycles; }
 
-    template <CPU C> void sync(int cycles68000, int cycles68010) {
+    template <CPU C> void sync([[maybe_unused]] int c1, [[maybe_unused]] int c2) {
 
-        if constexpr (C == M68000) sync(cycles68000);
-        if constexpr (C == M68010) sync(cycles68010);
+        if constexpr (C == M68000) sync(c1);
+        if constexpr (C == M68010) sync(c2);
     }
 
 
