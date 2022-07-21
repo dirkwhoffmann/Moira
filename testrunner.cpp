@@ -60,6 +60,12 @@ void setupMoira()
             moiracpu->setModel(M68010);
             break;
 
+        case M68K_CPU_TYPE_68020:
+
+            printf("Emulated CPU: Motorola 68020 (Disassembler only)\n");
+            moiracpu->setModel(M68020);
+            break;
+
         default:
 
             printf("Unsupported CPU model (%d)\n", CPUTYPE);
@@ -360,45 +366,49 @@ void compare(Setup &s, Result &r1, Result &r2)
         printf("\nDISASSEMBLER MISMATCH FOUND");
         error = true;
     }
-    if (!comparePC(r1, r2)) {
-        printf("\nPROGRAM COUNTER MISMATCH FOUND");
-        error = true;
-    }
-    if (!compareSR(r1, r2)) {
-        printf("\nSTATUS REGISTER MISMATCH FOUND");
-        error = true;
-    }
-    if (!compareSP(r1, r2)) {
-        printf("\nSTACK POINTER MISMATCH FOUND");
-        error = true;
-    }
-    if (!compareCycles(r1, r2)) {
-        printf("\nCLOCK MISMATCH FOUND");
-        error = true;
-    }
-    if (!compareD(r1, r2)) {
-        printf("\nDATA REGISTER MISMATCH FOUND");
-        error = true;
-    }
-    if (!compareA(r1, r2)) {
-        printf("\nADDRESS REGISTER MISMATCH FOUND");
-        error = true;
-    }
-    if (!compareVBR(r1, r2)) {
-        printf("\nVBR REGISTER MISMATCH FOUND");
-        error = true;
-    }
-    if (!compareSFC(r1, r2)) {
-        printf("\nSFC REGISTER MISMATCH FOUND");
-        error = true;
-    }
-    if (!compareDFC(r1, r2)) {
-        printf("\nDFC REGISTER MISMATCH FOUND");
-        error = true;
-    }
-    if (sandbox.getErrors()) {
-        printf("\nSANDBOX ERRORS REPORTED");
-        error = true;
+
+    if constexpr (CPUTYPE != M68K_CPU_TYPE_68020) {
+
+        if (!comparePC(r1, r2)) {
+            printf("\nPROGRAM COUNTER MISMATCH FOUND");
+            error = true;
+        }
+        if (!compareSR(r1, r2)) {
+            printf("\nSTATUS REGISTER MISMATCH FOUND");
+            error = true;
+        }
+        if (!compareSP(r1, r2)) {
+            printf("\nSTACK POINTER MISMATCH FOUND");
+            error = true;
+        }
+        if (!compareCycles(r1, r2)) {
+            printf("\nCLOCK MISMATCH FOUND");
+            error = true;
+        }
+        if (!compareD(r1, r2)) {
+            printf("\nDATA REGISTER MISMATCH FOUND");
+            error = true;
+        }
+        if (!compareA(r1, r2)) {
+            printf("\nADDRESS REGISTER MISMATCH FOUND");
+            error = true;
+        }
+        if (!compareVBR(r1, r2)) {
+            printf("\nVBR REGISTER MISMATCH FOUND");
+            error = true;
+        }
+        if (!compareSFC(r1, r2)) {
+            printf("\nSFC REGISTER MISMATCH FOUND");
+            error = true;
+        }
+        if (!compareDFC(r1, r2)) {
+            printf("\nDFC REGISTER MISMATCH FOUND");
+            error = true;
+        }
+        if (sandbox.getErrors()) {
+            printf("\nSANDBOX ERRORS REPORTED");
+            error = true;
+        }
     }
 
     if (error) {
