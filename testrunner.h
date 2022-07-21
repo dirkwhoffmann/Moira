@@ -34,6 +34,7 @@ extern Sandbox sandbox;
 extern uint8_t musashiMem[0x10000];
 extern uint8_t moiraMem[0x10000];
 extern u32 musashiFC;
+extern long testrun;
 
 inline u8 get8(u8 *p, u32 addr) {
     return p[addr & 0xFFFF];

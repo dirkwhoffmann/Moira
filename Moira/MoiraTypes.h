@@ -72,6 +72,7 @@ typedef enum
     BSR,            // Branch to subroutine
     BTST,           // Test a bit
     CHK,            // Check register against bounds
+    CHK2,           // 68020+: Check register against bounds
     CLR,            // Clear an operand
     CMP,            // Compare
     CMPA,           // Compare address

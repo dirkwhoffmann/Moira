@@ -684,6 +684,13 @@ Moira::execChk(u16 opcode)
 }
 
 template<Type CPU, Instr I, Mode M, Size S> void
+Moira::execChk2(u16 opcode)
+{
+    // TODO
+    prefetch<POLLIPL>();
+}
+
+template<Type CPU, Instr I, Mode M, Size S> void
 Moira::execClr(u16 opcode)
 {
     EXEC_DEBUG
@@ -1807,7 +1814,7 @@ Moira::execMoves(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execMoveFromCcrRg(u16 opcode)
 {
-    assert(model == M68010);
+    assert(model >= M68010);
     EXEC_DEBUG
 
     int dst = _____________xxx(opcode);
@@ -1822,7 +1829,7 @@ Moira::execMoveFromCcrRg(u16 opcode)
 template<Instr I, Mode M, Size S> void
 Moira::execMoveFromCcrEa(u16 opcode)
 {
-    assert(model == M68010);
+    assert(model >= M68010);
     EXEC_DEBUG
 
     int dst = _____________xxx(opcode);
@@ -1909,7 +1916,7 @@ Moira::execMoveUspAn(u16 opcode)
 
     int an = _____________xxx(opcode);
 
-    if (model == M68010) sync(2);
+    if (model >= M68010) sync(2);
 
     prefetch<POLLIPL>();
     writeA(an, getUSP());
@@ -1923,7 +1930,7 @@ Moira::execMoveAnUsp(u16 opcode)
 
     int an = _____________xxx(opcode);
 
-    if (model == M68010) sync(2);
+    if (model >= M68010) sync(2);
 
     prefetch<POLLIPL>();
     setUSP(readA(an));
@@ -2300,7 +2307,7 @@ Moira::execSccRg(u16 opcode)
     data = cond<I>() ? 0xFF : 0;
     prefetch<POLLIPL>();
 
-    if (model == M68010) {
+    if (model >= M68010) {
         // if (data) sync(2);
     } else {
         if (data) sync(2);

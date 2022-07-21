@@ -14,6 +14,7 @@ Moira::saveToStack(AEStackFrame &frame)
 
         case M68000: saveToStack <M68000> (frame); break;
         case M68010: saveToStack <M68010> (frame); break;
+        case M68020: saveToStack <M68020> (frame); break;
 
         default:
             assert(false);
@@ -46,6 +47,7 @@ Moira::saveToStackBrief(u16 nr, u16 sr, u32 pc)
 
         case M68000: saveToStackBrief <M68000> (nr, sr, pc); break;
         case M68010: saveToStackBrief <M68010> (nr, sr, pc); break;
+        case M68020: saveToStackBrief <M68020> (nr, sr, pc); break;
 
         default:
             assert(false);
@@ -97,6 +99,7 @@ Moira::execAddressError(AEStackFrame frame, int delay)
 
         case M68000: execAddressError <M68000> (frame, delay); break;
         case M68010: execAddressError <M68010> (frame, delay); break;
+        case M68020: execAddressError <M68020> (frame, delay); break;
 
         default:
             assert(false);
@@ -146,6 +149,7 @@ Moira::execFormatError()
 
         case M68000: assert(false); break;
         case M68010: execFormatError <M68010> (); break;
+        case M68020: execFormatError <M68020> (); break;
 
         default:
             assert(false);
@@ -180,6 +184,7 @@ Moira::execUnimplemented(int nr)
 
         case M68000: execUnimplemented <M68000> (nr); break;
         case M68010: execUnimplemented <M68010> (nr); break;
+        case M68020: execUnimplemented <M68020> (nr); break;
 
         default:
             assert(false);
@@ -214,6 +219,7 @@ Moira::execTraceException()
 
         case M68000: execTraceException <M68000> (); break;
         case M68010: execTraceException <M68010> (); break;
+        case M68020: execTraceException <M68020> (); break;
 
         default:
             assert(false);
@@ -253,6 +259,7 @@ Moira::execTrapException(int nr)
 
         case M68000: execTrapException <M68000> (nr); break;
         case M68010: execTrapException <M68010> (nr); break;
+        case M68020: execTrapException <M68020> (nr); break;
 
         default:
             assert(false);
@@ -287,6 +294,7 @@ Moira::execPrivilegeException()
 
         case M68000: execPrivilegeException <M68000> (); break;
         case M68010: execPrivilegeException <M68010> (); break;
+        case M68020: execPrivilegeException <M68020> (); break;
 
         default:
             assert(false);
@@ -323,6 +331,7 @@ Moira::execIrqException(u8 level)
 
         case M68000: execIrqException <M68000> (level); break;
         case M68010: execIrqException <M68010> (level); break;
+        case M68020: execIrqException <M68020> (level); break;
 
         default:
             assert(false);

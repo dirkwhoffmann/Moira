@@ -123,6 +123,10 @@ Moira::availability(u16 opcode, u16 ext)
 
             return isPrgMode(M) ? "; (1+)" : "";
 
+        case CHK2:
+
+            return "; (2+)";
+
         case MOVEC:
 
             switch (ext & 0x0FFF) {
@@ -383,6 +387,18 @@ Moira::dasmChk(StrWriter &str, u32 &addr, u16 op)
     auto dst = Dn       ( ____xxx_________(op)       );
 
     str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmChk2(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = dasmRead <Word> (addr);
+
+    auto src = Op <M,S> ( _____________xxx(op), addr );
+    auto dst = Rn       ( xxxx____________(ext)      );
+
+    str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+    str << availability <I, M, S> (op);
 }
 
 template<Instr I, Mode M, Size S> void

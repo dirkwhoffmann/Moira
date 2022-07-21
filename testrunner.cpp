@@ -13,6 +13,7 @@ TestCPU *moiracpu;
 uint8_t musashiMem[0x10000];
 uint8_t moiraMem[0x10000];
 u32 musashiFC = 0;
+long testrun = 0;
 Sandbox sandbox;
 
 uint32 smartRandom()
@@ -75,7 +76,7 @@ void setupMoira()
 
 void createTestCase(Setup &s)
 {
-    s.supervisor = !s.supervisor;
+    s.supervisor = testrun % 2;
     s.ccr = uint8_t(smartRandom());
     s.ext1 = uint16_t(smartRandom());
     s.ext2 = uint16_t(smartRandom());
@@ -168,9 +169,9 @@ void run()
     printf("\n");
     srand(0);
 
-    for (long round = 1 ;; round++) {
+    for (testrun = 1 ;; testrun++) {
 
-        printf("Round %ld ", round); fflush(stdout);
+        printf("Round %ld ", testrun); fflush(stdout);
         createTestCase(setup);
 
         // Iterate through all opcodes
