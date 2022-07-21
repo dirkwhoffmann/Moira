@@ -557,13 +557,13 @@ Moira::createJumpTable()
     if (model >= M68020) {
 
         opcode = parse("0000 0000 11-- ----");
-        ____XXX___MMMXXX(opcode, CHK2, 0b001001111111, Byte, Chk2, CIMS);
+        ____XXX___MMMXXX(opcode, CHK2, 0b001001111110, Byte, Chk2, CIMS);
 
         opcode = parse("0000 0010 11-- ----");
-        ____XXX___MMMXXX(opcode, CHK2, 0b001001111111, Word, Chk2, CIMS);
+        ____XXX___MMMXXX(opcode, CHK2, 0b001001111110, Word, Chk2, CIMS);
 
         opcode = parse("0000 0100 11-- ----");
-        ____XXX___MMMXXX(opcode, CHK2, 0b001001111111, Long, Chk2, CIMS);
+        ____XXX___MMMXXX(opcode, CHK2, 0b001001111110, Long, Chk2, CIMS);
     }
 
 

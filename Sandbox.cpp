@@ -38,54 +38,11 @@ Sandbox::recordPoll(u64 cycle, u32 fc, u8 value)
     record(POLL, 0, cycle, fc, value);
 }
 
-u32
-Sandbox::replayPeek(AccessType type, u32 addr, u64 cycle, u32 fc)
-{
-    for (int i = 0; i < recordCnt; i++) {
-
-        // Enable for strict checking
-        if (i != replayCnt) continue;
-
-        // Check for a matching entry
-        if (access[i].type != type) continue;
-        if (access[i].addr != addr) continue;
-        if (access[i].fc != fc) continue;
-        // if (access[i].cycle != cycle) continue;
-
-        replayCnt++;
-        if (replayCnt > recordCnt) { break; }
-        return access[i].value;
-    }
-
-    error(type, addr, cycle, fc);
-    return 0;
-}
-
-u8
-Sandbox::replayPoll(u64 cycle, u32 fc)
-{
-    for (int i = 0; i < recordCnt; i++) {
-
-        // Enable for strict checking
-        if (i != replayCnt) continue;
-
-        // Check for a matching entry
-        if (access[i].type != POLL) continue;
-        if (access[i].cycle != cycle) continue;
-        if (access[i].fc != fc) continue;
-
-        replayCnt++;
-        if (replayCnt > recordCnt) { break; }
-        return (u8)access[i].value;
-    }
-
-    error(POLL, 0, cycle, fc);
-    return 0;
-}
-
 void
 Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
 {
+    if (CPUTYPE == M68K_CPU_TYPE_68020) return;
+
     for (int i = 0; i < recordCnt; i++) {
 
         // Enable for strict checking
