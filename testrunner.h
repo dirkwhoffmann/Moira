@@ -27,17 +27,7 @@ extern "C" {
 #include "m68kops.h"
 }
 
-// CPU under test
-#define CPUTYPE M68K_CPU_TYPE_68010
-
-// Set to true for verbose output
-#define VERBOSE false
-
-// Set to true to verify all memory write operations
-#define CHECK_MEM_WRITES true
-
-// Number of instructions that are executed in a row
-#define RUNS 1
+#include "config.h"
 
 extern class TestCPU *moiracpu;
 extern Sandbox sandbox;

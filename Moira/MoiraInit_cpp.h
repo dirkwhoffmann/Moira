@@ -9,13 +9,11 @@
 
 // Assembles an instruction handler name
 #define EXEC_IMS(func,I,M,S) &Moira::exec##func <I,M,S>
-#define EXEC_CIMS(func,C,I,M,S) &Moira::exec##func <C,I,M,S>
+#define EXEC_CIMS(func,T,I,M,S) &Moira::exec##func <T,I,M,S>
 #define DASM_IMS(func,I,M,S) &Moira::dasm##func <I,M,S>
 
 // Registers an instruction handler
-#define IMS(id, name, I, M, S) { \
-assert(exec[id] == &Moira::execIllegal); \
-if (dasm) assert(dasm[id] == &Moira::dasmIllegal); \
+#define IMS(id,name,I,M,S) { \
 exec[id] = EXEC_IMS(name,I,M,S); \
 if (dasm) dasm[id] = DASM_IMS(name,I,M,S); \
 if (info) info[id] = InstrInfo {I,M,S}; \
@@ -30,12 +28,12 @@ if (info) info[id] = InstrInfo {I,M,S}; \
 }
 
 // Registers a special loop-mode instruction handler
-#define IMSloop(id, name, I, M, S) { \
+#define IMSloop(id,name,I,M,S) { \
 assert(loop[id] == nullptr); \
 loop[id] = EXEC_IMS(name,I##_LOOP,M,S); \
 }
 
-#define CIMSloop(id, name, I, M, S) { \
+#define CIMSloop(id,name,I,M,S) { \
 assert(loop[id] == nullptr); \
 loop[id] = EXEC_CIMS(name,M68010,I##_LOOP,M,S); \
 }
@@ -67,6 +65,12 @@ for (int j = 0; j < 16; j++) func((op) | j, f, I, M, S); }
 
 #define ________XXXXXXXX(op,I,M,S,f,func) { \
 for (int j = 0; j < 256; j++) func((op) | j, f, I, M, S); }
+
+#define ____XXXXXXXXXXXX(op,I,M,S,f,func) { \
+for (int j = 0; j < 4096; j++) func((op) | j, f, I, M, S); }
+
+#define XXXXXXXXXXXXXXXX(I,M,S,f,func) { \
+for (int j = 0; j < 65536; j++) func(j, f, I, M, S); }
 
 #define ____XXX______XXX(op,I,M,S,f,func) { \
 for (int i = 0; i < 8; i++) _____________XXX((op) | i << 9, I, M, S, f, func); }
@@ -143,11 +147,10 @@ Moira::createJumpTable()
     // Start with clean tables
     //
 
+    XXXXXXXXXXXXXXXX(ILLEGAL, MODE_IP, (Size)0, Illegal, CIMS);
+
     for (int i = 0; i < 0x10000; i++) {
-        exec[i] = &Moira::execIllegal;
         loop[i] = nullptr;
-        if (dasm) dasm[i] = &Moira::dasmIllegal;
-        if (info) info[i] = InstrInfo { ILLEGAL, MODE_IP, (Size)0 };
     }
 
 
@@ -156,6 +159,13 @@ Moira::createJumpTable()
     //       Format: 1010 ---- ---- ---- (Line A instructions)
     //               1111 ---- ---- ---- (Line F instructions)
 
+    opcode = parse("1010 ---- ---- ----");
+    ____XXXXXXXXXXXX(opcode, LINE_A, MODE_IP, (Size)0, LineA, CIMS);
+
+    opcode = parse("1111 ---- ---- ----");
+    ____XXXXXXXXXXXX(opcode, LINE_F, MODE_IP, (Size)0, LineF, CIMS);
+
+    /*
     for (int i = 0; i < 0x1000; i++) {
 
         exec[0b1010 << 12 | i] = &Moira::execLineA;
@@ -166,6 +176,7 @@ Moira::createJumpTable()
         if (dasm) dasm[0b1111 << 12 | i] = &Moira::dasmLineF;
         if (info) info[0b1111 << 12 | i] = InstrInfo { LINE_F, MODE_IP, (Size)0 };
     }
+    */
 
 
     // ABCD
@@ -756,8 +767,8 @@ Moira::createJumpTable()
     //               -------------------------------------------------
     //                         X           X   X   X   X   X   X
 
-     opcode = parse("0100 1110 11-- ----");
-     __________MMMXXX(opcode, JMP, 0b001001111110, Long, Jmp, IMS);
+    opcode = parse("0100 1110 11-- ----");
+    __________MMMXXX(opcode, JMP, 0b001001111110, Long, Jmp, IMS);
 
 
     // JSR
@@ -770,8 +781,8 @@ Moira::createJumpTable()
     //               -------------------------------------------------
     //                         X           X   X   X   X   X   X
 
-     opcode = parse("0100 1110 10-- ----");
-     __________MMMXXX(opcode, JSR, 0b001001111110, Long, Jsr, IMS);
+    opcode = parse("0100 1110 10-- ----");
+    __________MMMXXX(opcode, JSR, 0b001001111110, Long, Jsr, IMS);
 
 
     // LEA
@@ -797,10 +808,10 @@ Moira::createJumpTable()
 
     // Dx,Dy
     opcode = parse("1110 ---1 --10 1---");
-     ____XXX_SS___XXX(opcode, LSL, MODE_DN, Byte | Word | Long, ShiftRg, IMS);
+    ____XXX_SS___XXX(opcode, LSL, MODE_DN, Byte | Word | Long, ShiftRg, IMS);
 
     opcode = parse("1110 ---0 --10 1---");
-     ____XXX_SS___XXX(opcode, LSR, MODE_DN, Byte | Word | Long, ShiftRg, IMS);
+    ____XXX_SS___XXX(opcode, LSR, MODE_DN, Byte | Word | Long, ShiftRg, IMS);
 
     // #<data>,Dy
     opcode = parse("1110 ---1 --00 1---");
@@ -870,9 +881,9 @@ Moira::createJumpTable()
     __SSXXX___MMMXXX(opcode, MOVE, 0b111111111111, Word | Long, Move5, IMS);
 
     // <ea>,(d,Ay,Xi)
-     opcode = parse("00-- ---1 10-- ----");
-     __SSXXX___MMMXXX(opcode, MOVE, 0b101111111111, Byte,        Move6, IMS);
-     __SSXXX___MMMXXX(opcode, MOVE, 0b111111111111, Word | Long, Move6, IMS);
+    opcode = parse("00-- ---1 10-- ----");
+    __SSXXX___MMMXXX(opcode, MOVE, 0b101111111111, Byte,        Move6, IMS);
+    __SSXXX___MMMXXX(opcode, MOVE, 0b111111111111, Word | Long, Move6, IMS);
 
     // <ea>,ABS.w
     opcode = parse("00-- 0001 11-- ----");
@@ -1088,7 +1099,7 @@ Moira::createJumpTable()
     __________MMMXXX(opcode, NBCD, 0b101111111000, Byte, Nbcd, IMS);
     __________MMMXXX(opcode, NBCD, 0b001110000000, Byte, Nbcd, IMSloop);
 
-    
+
     // NEG, NEGX, NOT
     //
     //       Syntax: Nxx <ea>
@@ -1135,7 +1146,7 @@ Moira::createJumpTable()
     //               -------------------------------------------------
     //                 X       X   X   X   X   X   X   X   X   X   X
 
-     opcode = parse("1000 ---0 ---- ----");
+    opcode = parse("1000 ---0 ---- ----");
     ____XXX_SSMMMXXX(opcode, OR, 0b101111111111, Byte | Word | Long, AndEaRg, IMS);
     ____XXX_SSMMMXXX(opcode, OR, 0b001110000000, Byte,        AddEaRg, IMSloop);
     ____XXX_SSMMMXXX(opcode, OR, 0b001110000000, Word | Long, AddEaRg, IMSloop);
@@ -1284,7 +1295,7 @@ Moira::createJumpTable()
     opcode = parse("0100 1110 0111 0011");
     ________________(opcode, RTE, MODE_IP, Long, Rte, CIMS);
 
-    
+
     // RTR
     //
     //       Syntax: RTR
@@ -1528,3 +1539,4 @@ Moira::createJumpTable()
     opcode = parse("0100 1110 0101 1---");
     _____________XXX(opcode, UNLK, MODE_IP, Word, Unlk, IMS);
 }
+
