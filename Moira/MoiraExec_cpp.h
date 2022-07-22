@@ -2172,6 +2172,14 @@ Moira::execNop(u16 opcode)
     prefetch<POLLIPL>();
 }
 
+template<Type CPU, Instr I, Mode M, Size S> void
+Moira::execPack(u16 opcode)
+{
+    EXEC_DEBUG
+
+    prefetch();
+}
+
 template<Instr I, Mode M, Size S> void
 Moira::execPea(u16 opcode)
 {
@@ -2546,3 +2554,10 @@ Moira::execUnlk(u16 opcode)
     prefetch();
 }
 
+template<Type CPU, Instr I, Mode M, Size S> void
+Moira::execUnpk(u16 opcode)
+{
+    EXEC_DEBUG
+
+    prefetch();
+}

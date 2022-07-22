@@ -137,6 +137,7 @@ typedef enum
     ORI,            // OR immediate
     ORICCR,         // OR immediate to condition code register
     ORISR,          // OR immediate to status register
+    PACK,           // 68020+: Pack BCD
     PEA,            // Push effective address
     RESET,          // Reset external devices
     ROL,            // Rotate left
@@ -193,6 +194,7 @@ typedef enum
     TRAPT,          // 68020+: Trap on true (always)
     TST,            // Test an operand
     UNLK,           // Unlink
+    UNPK,           // 68020+: Unpack BCD
 
     ABCD_LOOP,
     ADD_LOOP,

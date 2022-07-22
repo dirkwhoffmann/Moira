@@ -1387,6 +1387,19 @@ Moira::createJumpTable()
     __________MMMXXX(opcode, ROXR, 0b001110000000, Word, ShiftEa, IMSloop);
 
 
+    // PACK
+    //
+    //       Syntax: PACK -(Ax),-(Ay),#<adjustment>
+    //               PACK DX,Dy,#<adjustment>
+    //        Sizes: Unsized
+
+    opcode = parse("1000 ---1 0100 0---");
+    ____XXX______XXX(opcode, PACK, MODE_DN, Size(0), Pack, CIMS);
+
+    opcode = parse("1000 ---1 0100 1---");
+    ____XXX______XXX(opcode, PACK, MODE_PD, Size(0), Pack, CIMS);
+
+
     // PEA
     //
     //       Syntax: PEA <ea>,Ay
@@ -1719,5 +1732,19 @@ Moira::createJumpTable()
 
     opcode = parse("0100 1110 0101 1---");
     _____________XXX(opcode, UNLK, MODE_IP, Word, Unlk, IMS);
+
+
+    // UNPK
+    //
+    //       Syntax: UNPK -(Ax),-(Ay),#<adjustment>
+    //               UNPK DX,Dy,#<adjustment>
+    //        Sizes: Unsized
+
+    opcode = parse("1000 ---1 1000 0---");
+    ____XXX______XXX(opcode, UNPK, MODE_DN, Size(0), Unpk, CIMS);
+
+    opcode = parse("1000 ---1 1000 1---");
+    ____XXX______XXX(opcode, UNPK, MODE_PD, Size(0), Unpk, CIMS);
+
 }
 

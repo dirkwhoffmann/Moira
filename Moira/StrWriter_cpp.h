@@ -29,7 +29,7 @@ static const char *instrLower[]
     "movem", "movep", "moveq", "moves", "mull",  "muls",  "mulu",
     "nbcd",  "neg",   "negx",  "nop",   "not",
     "or"   , "ori",   "ori",   "ori",
-    "pea",
+    "pack",  "pea",
     "reset", "rol",   "ror",   "roxl",  "roxr",  "rtd",   "rte",   "rtm",
     "rtr",   "rts",
     "sbcd",  "scc",   "scs",   "seq",   "sge",   "sgt",   "shi",   "sle",
@@ -38,7 +38,7 @@ static const char *instrLower[]
     "tas",   "trap",  "trapv",
     "trapcc","trapcs","trapeq","trapge","trapgt","traphi","traple","trapls",
     "traplt","trapmi","trapne","trappl","trapvc","trapvs","trapf", "trapt",
-    "tst",   "unlk"
+    "tst",   "unlk",  "unpk"
 };
 
 static const char *instrUpper[]
@@ -61,7 +61,7 @@ static const char *instrUpper[]
     "MOVEM", "MOVEP", "MOVEQ", "MOVES", "MULL",  "MULS",  "MULU",
     "NBCD",  "NEG",   "NEGX",  "NOP",   "NOT",
     "OR"   , "ORI",   "ORI",   "ORI",
-    "PEA",
+    "PACK",  "PEA",
     "RESET", "ROL",   "ROR",   "ROXL",  "ROXR",  "RTD",   "RTE",   "RTM",
     "RTR",   "RTS",
     "SBCD",  "SCC",   "SCS",   "SEQ",   "SGE",   "SGT",   "SHI",   "SLE",
@@ -70,7 +70,7 @@ static const char *instrUpper[]
     "TAS",   "TRAP",  "TRAPV",
     "TRAPCC","TRAPCS","TRAPEQ","TRAPGE","TRAPGT","TRAPHI","TRAPLE","TRAPLS",
     "TRAPLT","TRAPMI","TRAPNE","TRAPPL","TRAPVC","TRAPVS","TRAPF", "TRAPT",
-    "TST",   "UNLK"
+    "TST",   "UNLK",  "UNPK"
 };
 
 static int decDigits(u64 value) { return value ? 1 + (int)log10(value) : 1; }

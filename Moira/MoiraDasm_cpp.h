@@ -134,6 +134,7 @@ Moira::availability(u16 opcode, u16 ext)
         case DIVL:
         case EXTB:
         case MULL:
+        case PACK:
         case TRAPCC:
         case TRAPCS:
         case TRAPEQ:
@@ -150,6 +151,7 @@ Moira::availability(u16 opcode, u16 ext)
         case TRAPVS:
         case TRAPF:
         case TRAPT:
+        case UNPK:
             
             return "; (2+)";
 
@@ -970,6 +972,17 @@ Moira::dasmNop(StrWriter &str, u32 &addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
+Moira::dasmPack(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = dasmRead <Word> (addr);
+    auto rx = Op <M,S> ( _____________xxx(op), addr );
+    auto ry = Op <M,S> ( ____xxx_________(op), addr );
+
+    str << Ins<I>{} << tab << rx << ", " << ry << ", " << Imu(ext);
+    str << availability <I, M, S> ();
+}
+
+template <Instr I, Mode M, Size S> void
 Moira::dasmPea(StrWriter &str, u32 &addr, u16 op)
 {
     auto src = Op <M,S> ( _____________xxx(op), addr );
@@ -988,7 +1001,8 @@ Moira::dasmRtd(StrWriter &str, u32 &addr, u16 op)
 {
     auto disp = Ims ( i16(dasmRead<Word>(addr)) );
 
-    str << Ins<I>{} << tab << disp << availability <I, M, S> ();
+    str << Ins<I>{} << tab << disp;
+    str << availability <I, M, S> ();
 }
 
 template <Instr I, Mode M, Size S> void
@@ -1134,4 +1148,15 @@ Moira::dasmUnlk(StrWriter &str, u32 &addr, u16 op)
     auto reg = An ( _____________xxx(op) );
 
     str << Ins<I>{} << tab << reg;
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmUnpk(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = dasmRead <Word> (addr);
+    auto rx = Op <M,S> ( _____________xxx(op), addr );
+    auto ry = Op <M,S> ( ____xxx_________(op), addr );
+
+    str << Ins<I>{} << tab << rx << ", " << ry << ", " << Imu(ext);
+    str << availability <I, M, S> ();
 }
