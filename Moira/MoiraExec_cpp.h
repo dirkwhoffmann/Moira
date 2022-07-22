@@ -30,6 +30,7 @@
 #define _____xx_________(opcode) (u8)((opcode >> 9)  & 0b11)
 #define ____xxx_________(opcode) (u8)((opcode >> 9)  & 0b111)
 #define ____x___________(opcode) (u8)((opcode >> 11) & 0b1)
+#define _xxx____________(opcode) (u8)((opcode >> 12) & 0b111)
 #define xxxx____________(opcode) (u8)((opcode >> 12) & 0b1111)
 
 #define STD_AE_FRAME \
@@ -1989,6 +1990,15 @@ Moira::execMul(u16 opcode)
 }
 
 template<Type CPU, Instr I, Mode M, Size S> void
+Moira::execMull(u16 opcode)
+{
+    EXEC_DEBUG
+
+    // TODO
+    prefetch<POLLIPL>();
+}
+
+template<Type CPU, Instr I, Mode M, Size S> void
 Moira::execMulMusashi(u16 op)
 {
     EXEC_DEBUG
@@ -2049,6 +2059,15 @@ Moira::execDiv(u16 opcode)
 
     result = div<I>(dividend, divisor);
     writeD(dst, result);
+    prefetch<POLLIPL>();
+}
+
+template<Type CPU, Instr I, Mode M, Size S> void
+Moira::execDivl(u16 opcode)
+{
+    EXEC_DEBUG
+
+    // TODO
     prefetch<POLLIPL>();
 }
 

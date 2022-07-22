@@ -97,6 +97,7 @@ typedef enum
     DBVS,           // Test, decrement, and branch on overflow set
     DBF,            // Test, decrement, and branch on false (never)
     DBT,            // Test, decrement, and branch on true (always)
+    DIVL,           // 68020+: Long divide
     DIVS,           // Signed divide
     DIVU,           // Unsigned divide
     EOR,            // Exclusive OR logical
@@ -124,6 +125,7 @@ typedef enum
     MOVEP,          // Move peripheral data
     MOVEQ,          // Move quick
     MOVES,          // 68010+: Move address space
+    MULL,           // 68020+: Long multiply
     MULS,           // Signed multiply
     MULU,           // Unsigned multiply
     NBCD,           // Negate decimal with sign extend

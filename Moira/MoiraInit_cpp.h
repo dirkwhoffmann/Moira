@@ -751,6 +751,12 @@ Moira::createJumpTable()
     opcode = parse("1000 ---0 11-- ----");
     ____XXX___MMMXXX(opcode, DIVU, 0b101111111111, Word, Div, CIMS);
 
+    if (model >= M68020) {
+
+        opcode = parse("0100 1100 01-- ----");
+        __________MMMXXX(opcode, DIVL, 0b101111111111, Long, Divl, CIMS);
+    }
+
 
     // EOR
     //
@@ -1182,6 +1188,12 @@ Moira::createJumpTable()
 
     opcode = parse("1100 ---0 11-- ----");
     ____XXX___MMMXXX(opcode, MULU, 0b101111111111, Word, Mul, CIMS);
+
+    if (model >= M68020) {
+
+        opcode = parse("0100 1100 00-- ----");
+        __________MMMXXX(opcode, MULL, 0b101111111111, Long, Mull, CIMS);
+    }
 
 
     // NBCD
@@ -1632,11 +1644,17 @@ Moira::createJumpTable()
     //               -------------------------------------------------
     // <ea>          | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
     //               -------------------------------------------------
-    //                 X       X   X   X   X   X   X   X
+    //                 X  (X)  X   X   X   X   X   X   X  (X) (X) (X)
 
     opcode = parse("0100 1010 ---- ----");
     ________SSMMMXXX(opcode, TST, 0b101111111000, Byte | Word | Long, Tst, IMS);
     ________SSMMMXXX(opcode, TST, 0b001110000000, Byte | Word | Long, Tst, IMSloop);
+
+    if (model >= M68010) {
+
+        ________SSMMMXXX(opcode, TST, 0b000000000111, Byte, Tst, IMS);
+        ________SSMMMXXX(opcode, TST, 0b010000000111, Word | Long, Tst, IMS);
+    }
 
 
     // UNLK
