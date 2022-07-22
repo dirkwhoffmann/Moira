@@ -430,6 +430,25 @@ Moira::createJumpTable()
         ________________(opcode | 0xF00 | i, BLE, MODE_IP, Byte, Bcc, IMS);
     }
 
+    if (model >= M68020) {
+
+        ________________(opcode | 0x000 | 0xFF, BRA, MODE_IP, Long, Bcc, IMS);
+        ________________(opcode | 0x200 | 0xFF, BHI, MODE_IP, Long, Bcc, IMS);
+        ________________(opcode | 0x300 | 0xFF, BLS, MODE_IP, Long, Bcc, IMS);
+        ________________(opcode | 0x400 | 0xFF, BCC, MODE_IP, Long, Bcc, IMS);
+        ________________(opcode | 0x500 | 0xFF, BCS, MODE_IP, Long, Bcc, IMS);
+        ________________(opcode | 0x600 | 0xFF, BNE, MODE_IP, Long, Bcc, IMS);
+        ________________(opcode | 0x700 | 0xFF, BEQ, MODE_IP, Long, Bcc, IMS);
+        ________________(opcode | 0x800 | 0xFF, BVC, MODE_IP, Long, Bcc, IMS);
+        ________________(opcode | 0x900 | 0xFF, BVS, MODE_IP, Long, Bcc, IMS);
+        ________________(opcode | 0xA00 | 0xFF, BPL, MODE_IP, Long, Bcc, IMS);
+        ________________(opcode | 0xB00 | 0xFF, BMI, MODE_IP, Long, Bcc, IMS);
+        ________________(opcode | 0xC00 | 0xFF, BGE, MODE_IP, Long, Bcc, IMS);
+        ________________(opcode | 0xD00 | 0xFF, BLT, MODE_IP, Long, Bcc, IMS);
+        ________________(opcode | 0xE00 | 0xFF, BGT, MODE_IP, Long, Bcc, IMS);
+        ________________(opcode | 0xF00 | 0xFF, BLE, MODE_IP, Long, Bcc, IMS);
+    }
+
 
     // BCHG, BCLR
     //
@@ -500,8 +519,13 @@ Moira::createJumpTable()
 
     opcode = parse("0110 0001 ---- ----");
     ________________(opcode, BSR, MODE_IP, Word, Bsr, IMS);
+
     for (int i = 1; i <= 0xFF; i++) {
         ________________(opcode | i, BSR, MODE_IP, Byte, Bsr, IMS);
+    }
+
+    if (model >= M68020) {
+        ________________(opcode | 0xFF, BSR, MODE_IP, Long, Bsr, IMS);
     }
 
 
@@ -1625,6 +1649,37 @@ Moira::createJumpTable()
 
     opcode = parse("0100 1110 0100 ----");
     ____________XXXX(opcode, TRAP, MODE_IP, Long, Trap, IMS);
+
+
+    // TRAPcc
+    //
+    //       Syntax: TRAPcc #<vector>
+    //        Sizes: Unsized
+
+    if (model >= M68020) {
+
+        opcode = parse("0101 ---- 1111 1---");
+
+        for (int m = 2; m <= 4; m++) {
+
+            ________________(opcode | 0x000 | m, TRAPT,  MODE_IP, Word, Trapcc, CIMS);
+            ________________(opcode | 0x100 | m, TRAPF,  MODE_IP, Word, Trapcc, CIMS);
+            ________________(opcode | 0x200 | m, TRAPHI, MODE_IP, Word, Trapcc, CIMS);
+            ________________(opcode | 0x300 | m, TRAPLS, MODE_IP, Word, Trapcc, CIMS);
+            ________________(opcode | 0x400 | m, TRAPCC, MODE_IP, Word, Trapcc, CIMS);
+            ________________(opcode | 0x500 | m, TRAPCS, MODE_IP, Word, Trapcc, CIMS);
+            ________________(opcode | 0x600 | m, TRAPNE, MODE_IP, Word, Trapcc, CIMS);
+            ________________(opcode | 0x700 | m, TRAPEQ, MODE_IP, Word, Trapcc, CIMS);
+            ________________(opcode | 0x800 | m, TRAPVC, MODE_IP, Word, Trapcc, CIMS);
+            ________________(opcode | 0x900 | m, TRAPVS, MODE_IP, Word, Trapcc, CIMS);
+            ________________(opcode | 0xA00 | m, TRAPPL, MODE_IP, Word, Trapcc, CIMS);
+            ________________(opcode | 0xB00 | m, TRAPMI, MODE_IP, Word, Trapcc, CIMS);
+            ________________(opcode | 0xC00 | m, TRAPGE, MODE_IP, Word, Trapcc, CIMS);
+            ________________(opcode | 0xD00 | m, TRAPLT, MODE_IP, Word, Trapcc, CIMS);
+            ________________(opcode | 0xE00 | m, TRAPGT, MODE_IP, Word, Trapcc, CIMS);
+            ________________(opcode | 0xF00 | m, TRAPLE, MODE_IP, Word, Trapcc, CIMS);
+        }
+    }
 
 
     // TRAPV

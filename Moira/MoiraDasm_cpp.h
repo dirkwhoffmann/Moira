@@ -134,11 +134,44 @@ Moira::availability(u16 opcode, u16 ext)
         case DIVL:
         case EXTB:
         case MULL:
-
+        case TRAPCC:
+        case TRAPCS:
+        case TRAPEQ:
+        case TRAPGE:
+        case TRAPGT:
+        case TRAPHI:
+        case TRAPLE:
+        case TRAPLS:
+        case TRAPLT:
+        case TRAPMI:
+        case TRAPNE:
+        case TRAPPL:
+        case TRAPVC:
+        case TRAPVS:
+        case TRAPF:
+        case TRAPT:
+            
             return "; (2+)";
 
         case CHK:
         case LINK:
+        case BRA:
+        case BHI:
+        case BLS:
+        case BCC:
+        case BCS:
+        case BNE:
+        case BEQ:
+        case BVC:
+        case BVS:
+        case BPL:
+        case BMI:
+        case BGE:
+        case BLT:
+        case BGT:
+        case BLE:
+        case BSR:
+
             return S == Long ? "; (2+)" : "";
 
         case TST:
@@ -169,7 +202,7 @@ Moira::availability(u16 opcode, u16 ext)
             }
 
         default:
-            fatalError;
+            return "";
     }
 }
 
@@ -384,7 +417,9 @@ template<Instr I, Mode M, Size S> void
 Moira::dasmBsr(StrWriter &str, u32 &addr, u16 op)
 {
     if constexpr (MIMIC_MUSASHI && S == Byte) {
+
         if ((u8)op == 0xFF) {
+
             dasmIllegal <I,M,S> (str, addr, op);
             return;
         }
@@ -392,9 +427,10 @@ Moira::dasmBsr(StrWriter &str, u32 &addr, u16 op)
 
     u32 dst = addr;
     U32_INC(dst, 2);
-    U32_INC(dst, S == Byte ? (i8)op : (i16)dasmRead<S>(addr));
+    U32_INC(dst, S == Byte ? (i8)op : SEXT<S>(dasmRead<S>(addr)));
 
     str << Ins<I>{} << tab << UInt(dst);
+    str << availability <I, M, S> ();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -517,7 +553,9 @@ template<Instr I, Mode M, Size S> void
 Moira::dasmBcc(StrWriter &str, u32 &addr, u16 op)
 {
     if constexpr (MIMIC_MUSASHI && S == Byte) {
+
         if ((u8)op == 0xFF) {
+
             dasmIllegal <I,M,S> (str, addr, op);
             return;
         }
@@ -525,11 +563,10 @@ Moira::dasmBcc(StrWriter &str, u32 &addr, u16 op)
 
     u32 dst = addr;
     U32_INC(dst, 2);
-    U32_INC(dst, S == Byte ? (i8)op : (i16)dasmRead<S>(addr));
-    // u32 dst = U32_ADD(addr, 2);
-    // dst += (S == Byte) ? (i8)op : (i16)dasmRead<S>(addr);
+    U32_INC(dst, S == Byte ? (i8)op : SEXT<S>(dasmRead<S>(addr)));
 
     str << Ins<I>{} << tab << UInt(dst);
+    str << availability <I, M, S> ();
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1059,11 +1096,36 @@ Moira::dasmTrapv(StrWriter &str, u32 &addr, u16 op)
 }
 
 template<Instr I, Mode M, Size S> void
+Moira::dasmTrapcc(StrWriter &str, u32 &addr, u16 op)
+{
+    str << Ins<I>{} << tab;
+
+    switch (op & 0b111) {
+
+        case 0b010:
+        {
+            auto ext = dasmRead <Word> (addr);
+            str << Imu(ext);
+            break;
+        }
+        case 0b011:
+        {
+            auto ext = dasmRead <Long> (addr);
+            str << Imu(ext);
+            break;
+        }
+    }
+
+    str << availability <I, M, S> ();
+}
+
+template<Instr I, Mode M, Size S> void
 Moira::dasmTst(StrWriter &str, u32 &addr, u16 op)
 {
     auto ea = Op <M,S> ( _____________xxx(op), addr );
 
-    str << Ins<I>{} << Sz<S>{} << tab << ea << availability <I, M, S> ();
+    str << Ins<I>{} << Sz<S>{} << tab << ea;
+    str << availability <I, M, S> ();
 }
 
 template <Instr I, Mode M, Size S> void

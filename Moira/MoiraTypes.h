@@ -175,6 +175,22 @@ typedef enum
     TAS,            // Test and set an operand
     TRAP,           // Trap
     TRAPV,          // Trap on overflow
+    TRAPCC,         // 68020+: Trap on carry clear
+    TRAPCS,         // 68020+: Trap on carry set
+    TRAPEQ,         // 68020+: Trap on equal
+    TRAPGE,         // 68020+: Trap on greater than or equal
+    TRAPGT,         // 68020+: Trap on greater than
+    TRAPHI,         // 68020+: Trap on higher than
+    TRAPLE,         // 68020+: Trap on less than or equal
+    TRAPLS,         // 68020+: Trap on lower than or same
+    TRAPLT,         // 68020+: Trap on less than
+    TRAPMI,         // 68020+: Trap on minus
+    TRAPNE,         // 68020+: Trap on not equal
+    TRAPPL,         // 68020+: Trap on on plus
+    TRAPVC,         // 68020+: Trap on overflow clear
+    TRAPVS,         // 68020+: Trap on overflow set
+    TRAPF,          // 68020+: Trap on false (never)
+    TRAPT,          // 68020+: Trap on true (always)
     TST,            // Test an operand
     UNLK,           // Unlink
 

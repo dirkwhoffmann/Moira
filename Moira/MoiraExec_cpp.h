@@ -2496,6 +2496,15 @@ Moira::execTrapv(u16 opcode)
     }
 }
 
+template<Type CPU, Instr I, Mode M, Size S> void
+Moira::execTrapcc(u16 opcode)
+{
+    EXEC_DEBUG
+
+    // TODO
+    prefetch<POLLIPL>();
+}
+
 template<Instr I, Mode M, Size S> void
 Moira::execTst(u16 opcode)
 {

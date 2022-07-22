@@ -25,8 +25,8 @@ static const char *instrLower[]
     "eor",   "eori",  "eori",  "eori",  "exg",   "ext",   "extb",
     "jmp",   "jsr",
     "lea",   "link",  "lsl",   "lsr",
-    "move" , "movea", "movec", "move",  "move",  "move",  "move",  "move",  "movem",
-    "movep", "moveq", "moves", "mull",  "muls",  "mulu",
+    "move" , "movea", "movec", "move",  "move",  "move",  "move",  "move",
+    "movem", "movep", "moveq", "moves", "mull",  "muls",  "mulu",
     "nbcd",  "neg",   "negx",  "nop",   "not",
     "or"   , "ori",   "ori",   "ori",
     "pea",
@@ -35,7 +35,10 @@ static const char *instrLower[]
     "sbcd",  "scc",   "scs",   "seq",   "sge",   "sgt",   "shi",   "sle",
     "sls",   "slt",   "smi",   "sne",   "spl",   "svc",   "svs",   "sf",
     "st",    "stop",  "sub",   "suba",  "subi",  "subq",  "subx",  "swap",
-    "tas",   "trap",  "trapv", "tst",   "unlk"
+    "tas",   "trap",  "trapv",
+    "trapcc","trapcs","trapeq","trapge","trapgt","traphi","traple","trapls",
+    "traplt","trapmi","trapne","trappl","trapvc","trapvs","trapf", "trapt",
+    "tst",   "unlk"
 };
 
 static const char *instrUpper[]
@@ -54,8 +57,8 @@ static const char *instrUpper[]
     "EOR",   "EORI",  "EORI",  "EORI",  "EXG",   "EXT",   "EXTB",
     "JMP",   "JSR",
     "LEA",   "LINK",  "LSL",   "LSR",
-    "MOVE" , "MOVEA", "MOVEC", "MOVE",  "MOVE",  "MOVE",  "MOVE",  "MOVE",  "MOVEM",
-    "MOVEP", "MOVEQ", "MOVES", "MULL",  "MULS",  "MULU",
+    "MOVE" , "MOVEA", "MOVEC", "MOVE",  "MOVE",  "MOVE",  "MOVE",  "MOVE",
+    "MOVEM", "MOVEP", "MOVEQ", "MOVES", "MULL",  "MULS",  "MULU",
     "NBCD",  "NEG",   "NEGX",  "NOP",   "NOT",
     "OR"   , "ORI",   "ORI",   "ORI",
     "PEA",
@@ -64,7 +67,10 @@ static const char *instrUpper[]
     "SBCD",  "SCC",   "SCS",   "SEQ",   "SGE",   "SGT",   "SHI",   "SLE",
     "SLS",   "SLT",   "SMI",   "SNE",   "SPL",   "SVC",   "SVS",   "SF",
     "ST",    "STOP",  "SUB",   "SUBA",  "SUBI",  "SUBQ",  "SUBX",  "SWAP",
-    "TAS",   "TRAP",  "TRAPV", "TST",   "UNLK"
+    "TAS",   "TRAP",  "TRAPV",
+    "TRAPCC","TRAPCS","TRAPEQ","TRAPGE","TRAPGT","TRAPHI","TRAPLE","TRAPLS",
+    "TRAPLT","TRAPMI","TRAPNE","TRAPPL","TRAPVC","TRAPVS","TRAPF", "TRAPT",
+    "TST",   "UNLK"
 };
 
 static int decDigits(u64 value) { return value ? 1 + (int)log10(value) : 1; }

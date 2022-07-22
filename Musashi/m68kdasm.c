@@ -2886,7 +2886,7 @@ static void d68000_trap(void)
 static void d68020_trapcc_0(void)
 {
 	LIMIT_CPU_TYPES(M68020_PLUS);
-	sprintf(g_dasm_str, "trap%-2s; (2+)", g_cc[(g_cpu_ir>>8)&0xf]);
+	sprintf(g_dasm_str, "trap%-2s  ; (2+)", g_cc[(g_cpu_ir>>8)&0xf]);
 	SET_OPCODE_FLAGS(DASMFLAG_STEP_OVER);
 }
 
