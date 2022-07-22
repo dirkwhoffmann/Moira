@@ -1052,6 +1052,15 @@ Moira::execExt(u16 opcode)
 }
 
 template<Instr I, Mode M, Size S> void
+Moira::execExtb(u16 opcode)
+{
+    EXEC_DEBUG
+
+    // TODO
+    prefetch<POLLIPL>();
+}
+
+template<Instr I, Mode M, Size S> void
 Moira::execJmp(u16 opcode)
 {
     EXEC_DEBUG

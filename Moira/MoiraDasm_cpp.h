@@ -131,8 +131,13 @@ Moira::availability(u16 opcode, u16 ext)
         case CAS:
         case CAS2:
         case CHK2:
+        case EXTB:
 
             return "; (2+)";
+
+        case CHK:
+        case LINK:
+            return S == Long ? "; (2+)" : "";
 
         case MOVEC:
 
@@ -400,14 +405,29 @@ Moira::dasmCallm(StrWriter &str, u32 &addr, u16 op)
 template<Instr I, Mode M, Size S> void
 Moira::dasmCas(StrWriter &str, u32 &addr, u16 op)
 {
-    str << Ins<I>{} << tab;
+    auto ext = dasmRead <Word> (addr);
+    auto dc  = Dn ( _____________xxx(ext) );
+    auto du  = Dn ( _______xxx______(ext) );
+    auto dst = Op <M,S> ( _____________xxx(op), addr );
+
+    str << Ins<I>{} << Sz<S>{} << tab << dc << ", " << du << ", " << dst;
     str << availability <I, M, S> (op);
 }
 
 template<Instr I, Mode M, Size S> void
 Moira::dasmCas2(StrWriter &str, u32 &addr, u16 op)
 {
-    str << Ins<I>{} << tab;
+    auto ext = dasmRead <Long> (addr);
+    auto dc1 = Dn ( (ext >> 16) & 0b111  );
+    auto dc2 = Dn ( (ext >> 0)  & 0b111  );
+    auto du1 = Dn ( (ext >> 22) & 0b111  );
+    auto du2 = Dn ( (ext >> 6)  & 0b111  );
+    auto rn1 = Rn ( (ext >> 28) & 0b1111 );
+    auto rn2 = Rn ( (ext >> 12) & 0b1111 );
+
+    str << Ins<I>{} << Sz<S>{} << tab;
+    str << dc1 << ":" << dc2 << ", " << du1 << ":" << du2 << ", ";
+    str << "(" << rn1 << "):(" << rn2 << ")";
     str << availability <I, M, S> (op);
 }
 
@@ -418,6 +438,7 @@ Moira::dasmChk(StrWriter &str, u32 &addr, u16 op)
     auto dst = Dn       ( ____xxx_________(op)       );
 
     str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+    str << availability <I, M, S> (op);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -570,6 +591,15 @@ Moira::dasmExt(StrWriter &str, u32 &addr, u16 op)
     str << Ins<I>{} << Sz<S>{} << tab << Dn{src};
 }
 
+template<Instr I, Mode M, Size S> void
+Moira::dasmExtb(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = Dn ( _____________xxx(op) );
+
+    str << Ins<I>{} << Sz<S>{} << tab << Dn{src};
+    str << availability <I, M, S> (op);
+}
+
 template <Instr I, Mode M, Size S> void
 Moira::dasmJmp(StrWriter &str, u32 &addr, u16 op)
 {
@@ -598,10 +628,11 @@ Moira::dasmLea(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmLink(StrWriter &str, u32 &addr, u16 op)
 {
-    auto src = An  ( _____________xxx(op)          );
-    auto dsp = Ims ( SEXT<S>(dasmRead<Word>(addr)) );
+    auto src = An  ( _____________xxx(op)           );
+    auto dsp = Ims ( SEXT <S> (dasmRead <S> (addr)) );
 
     str << Ins<I>{} << tab << src << ", " << dsp;
+    str << availability <I, M, S> (op);
 }
 
 template<Instr I, Mode M, Size S> void

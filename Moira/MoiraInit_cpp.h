@@ -559,22 +559,26 @@ Moira::createJumpTable()
     if (model >= M68020) {
 
         // CAS
-        opcode = parse("0000 1--0 11-- ----");
-        _____SS___MMMXXX(opcode, CAS, 0b001111111000, Byte | Word | Long, Cas, CIMS);
+        opcode = parse("0000 1010 11-- ----");
+        __________MMMXXX(opcode, CAS, 0b001111111000, Byte, Cas, CIMS);
+        opcode = parse("0000 1100 11-- ----");
+        __________MMMXXX(opcode, CAS, 0b001111111000, Word, Cas, CIMS);
+        opcode = parse("0000 1110 11-- ----");
+        __________MMMXXX(opcode, CAS, 0b001111111000, Long, Cas, CIMS);
 
         // CAS2
         opcode = parse("0000 1100 1111 1100");
-        ________________(opcode, CAS, MODE_IM, Word, Cas2, CIMS);
+        ________________(opcode, CAS2, MODE_IM, Word, Cas2, CIMS);
 
         opcode = parse("0000 1110 1111 1100");
-        ________________(opcode, CAS, MODE_IM, Long, Cas2, CIMS);
+        ________________(opcode, CAS2, MODE_IM, Long, Cas2, CIMS);
     }
 
 
     // CHK
     //
     //       Syntax: CHK <ea>,Dy
-    //         Size: Word
+    //         Size: Word, (Longword)
 
     //               -------------------------------------------------
     // <ea>,Ay       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
@@ -583,6 +587,12 @@ Moira::createJumpTable()
 
     opcode = parse("0100 ---1 10-- ----");
     ____XXX___MMMXXX(opcode, CHK, 0b101111111111, Word, Chk, CIMS);
+
+    if (model >= M68020) {
+
+        opcode = parse("0100 ---1 00-- ----");
+        ____XXX___MMMXXX(opcode, CHK, 0b101111111111, Long, Chk, CIMS);
+    }
 
 
     // CHK2
@@ -819,13 +829,31 @@ Moira::createJumpTable()
     _____________XXX(opcode | 3 << 6, EXT, MODE_DN, Long, Ext, IMS);
 
 
+    // EXTB
+    //
+    //       Syntax: EXTB Dx
+    //        Sizes: Longword
+
+    if (model >= M68020) {
+
+        opcode = parse("0100 1001 --00 0---");
+        _____________XXX(opcode | 3 << 6, EXTB, MODE_DN, Long, Extb, IMS);
+    }
+
+
     // LINK
     //
     //       Syntax: LINK An,#<displacement>
-    //        Sizes: Word
+    //        Sizes: Word, (Longword)
 
     opcode = parse("0100 1110 0101 0---");
     _____________XXX(opcode, LINK, MODE_IP, Word, Link, IMS);
+
+    if (model >= M68020) {
+
+        opcode = parse("0100 1000 0000 1---");
+        _____________XXX(opcode, LINK, MODE_IP, Long, Link, IMS);
+    }
 
 
     // JMP

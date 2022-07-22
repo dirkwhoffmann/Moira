@@ -105,6 +105,7 @@ typedef enum
     EORISR,         // Exclusive OR immediate to status register
     EXG,            // Exchange registers
     EXT,            // Sign-extend a data register
+    EXTB,           // 68020+: Sign-extend a data register
     JMP,            // Jump
     JSR,            // Jump to subroutine
     LEA,            // Load effective address
