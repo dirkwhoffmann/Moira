@@ -71,6 +71,9 @@ typedef enum
     BSET,           // Test a bit and set
     BSR,            // Branch to subroutine
     BTST,           // Test a bit
+    CALLM,          // 68020+: Call module
+    CAS,            // 68020+: Compare and swap with operand
+    CAS2,           // 68020+: Compare and swap with operand
     CHK,            // Check register against bounds
     CHK2,           // 68020+: Check register against bounds
     CLR,            // Clear an operand
@@ -139,6 +142,7 @@ typedef enum
     ROXR,           // Rotate righ with extend
     RTD,            // 68010+: Return and deallocate
     RTE,            // Return from exception
+    RTM,            // 68020+: Return from module
     RTR,            // Return and restore condition codes
     RTS,            // Return from subroutine
     SBCD,           // Subtract decimal with extend

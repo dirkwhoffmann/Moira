@@ -10,13 +10,17 @@
 #pragma once
 
 // CPU under test
-#define CPUTYPE M68K_CPU_TYPE_68020
+// #define CPUTYPE M68K_CPU_TYPE_68020
+static constexpr int CPUTYPE = M68K_CPU_TYPE_68020;
 
 // Set to true for verbose output
-#define VERBOSE false
+// #define VERBOSE false
+static constexpr bool VERBOSE = false;
 
 // Set to true to verify all memory write operations
-#define CHECK_MEM_WRITES true
+// #define CHECK_MEM_WRITES true
+static constexpr bool CHECK_MEM_WRITES = true;
 
 // Number of instructions that are executed in a row
-#define RUNS 1
+// #define RUNS 1
+static constexpr int RUNS = 1;

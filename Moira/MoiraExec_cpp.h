@@ -645,6 +645,27 @@ Moira::execBsr(u16 opcode)
 }
 
 template<Type CPU, Instr I, Mode M, Size S> void
+Moira::execCallm(u16 opcode)
+{
+    // TODO
+    prefetch<POLLIPL>();
+}
+
+template<Type CPU, Instr I, Mode M, Size S> void
+Moira::execCas(u16 opcode)
+{
+    // TODO
+    prefetch<POLLIPL>();
+}
+
+template<Type CPU, Instr I, Mode M, Size S> void
+Moira::execCas2(u16 opcode)
+{
+    // TODO
+    prefetch<POLLIPL>();
+}
+
+template<Type CPU, Instr I, Mode M, Size S> void
 Moira::execChk(u16 opcode)
 {
     EXEC_DEBUG
@@ -2243,6 +2264,12 @@ Moira::execRte(u16 opcode)
     }
 
     setPC(newpc);
+    fullPrefetch<POLLIPL>();
+}
+
+template<Type CPU, Instr I, Mode M, Size S> void
+Moira::execRtm(u16 opcode)
+{
     fullPrefetch<POLLIPL>();
 }
 

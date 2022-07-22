@@ -123,6 +123,13 @@ Moira::availability(u16 opcode, u16 ext)
 
             return isPrgMode(M) ? "; (1+)" : "";
 
+        case CALLM:
+        case RTM:
+
+            return "; (2)";
+
+        case CAS:
+        case CAS2:
         case CHK2:
 
             return "; (2+)";
@@ -378,6 +385,30 @@ Moira::dasmBsr(StrWriter &str, u32 &addr, u16 op)
     U32_INC(dst, S == Byte ? (i8)op : (i16)dasmRead<S>(addr));
 
     str << Ins<I>{} << tab << UInt(dst);
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmCallm(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = Ims      ( dasmRead <Byte> (addr)     );
+    auto dst = Op <M,S> ( _____________xxx(op), addr );
+
+    str << Ins<I>{} << tab << src << ", " << dst;
+    str << availability <I, M, S> (op);
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmCas(StrWriter &str, u32 &addr, u16 op)
+{
+    str << Ins<I>{} << tab;
+    str << availability <I, M, S> (op);
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmCas2(StrWriter &str, u32 &addr, u16 op)
+{
+    str << Ins<I>{} << tab;
+    str << availability <I, M, S> (op);
 }
 
 template<Instr I, Mode M, Size S> void
@@ -861,6 +892,14 @@ template <Instr I, Mode M, Size S> void
 Moira::dasmRte(StrWriter &str, u32 &addr, u16 op)
 {
     str << Ins<I>{};
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmRtm(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = Rn ( ____________xxxx(op) );
+
+    str << Ins<I>{} << tab << src << availability <I, M, S> (op);
 }
 
 template <Instr I, Mode M, Size S> void
