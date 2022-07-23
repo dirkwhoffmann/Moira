@@ -80,6 +80,7 @@ void createTestCase(Setup &s)
     s.ccr = uint8_t(smartRandom());
     s.ext1 = uint16_t(smartRandom());
     s.ext2 = uint16_t(smartRandom());
+    s.ext3 = uint16_t(smartRandom());
     s.vbr = uint16_t(smartRandom());
     s.sfc = uint16_t(smartRandom());
     s.dfc = uint16_t(smartRandom());
@@ -109,6 +110,7 @@ void setupInstruction(Setup &s, uint32_t pc, uint16_t opcode)
     set16(s.mem, pc, opcode);
     set16(s.mem, pc + 2, s.ext1);
     set16(s.mem, pc + 4, s.ext2);
+    set16(s.mem, pc + 6, s.ext3);
 
     memcpy(musashiMem, s.mem, sizeof(musashiMem));
     memcpy(moiraMem, s.mem, sizeof(moiraMem));
@@ -320,7 +322,7 @@ void recordMoiraRegisters(Result &r)
 void dumpSetup(Setup &s)
 {
     printf("PC: %04x  Opcode: %04x  ", s.pc, s.opcode);
-    printf("Ext1: %04x  Ext2: %04x  ", s.ext1, s.ext2);
+    printf("Ext1: %04x  Ext2: %04x  Ext3: %04x ", s.ext1, s.ext2, s.ext3);
     printf("%s\n", s.supervisor ? "(SUPERVISOR MODE)" : "");
     printf("         ");
     printf("CCR: %02x  ", s.ccr);

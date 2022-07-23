@@ -115,6 +115,13 @@ typedef enum
     EXG,            // Exchange registers
     EXT,            // Sign-extend a data register
     EXTB,           // 68020+: Sign-extend a data register
+    cpBcc,          // 68020+: Coprocessor branch conditionally
+    cpDBcc,         // 68020+: Test coprocessor condition and count
+    cpGEN,          // 68020+: Coprocessor general function
+    cpRESTORE,      // 68020+: Coprocessor restore function
+    cpSAVE,         // 68020+: Save internal state of coprocessor
+    cpScc,          // 68020+: Coprocessor set according to condition
+    cpTRAPcc,       // 68020+: Trap on coprocessor condition
     JMP,            // Jump
     JSR,            // Jump to subroutine
     LEA,            // Load effective address

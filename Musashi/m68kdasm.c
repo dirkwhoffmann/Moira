@@ -230,8 +230,8 @@ static const char *const g_cpcc[64] =
 {/* 000    001    010    011    100    101    110    111 */
 	  "f",  "eq", "ogt", "oge", "olt", "ole", "ogl",  "or", /* 000 */
 	 "un", "ueq", "ugt", "uge", "ult", "ule",  "ne",   "t", /* 001 */
-	 "sf", "seq",  "gt",  "ge",  "lt",  "le",  "gl"  "gle", /* 010 */
-  "ngle", "ngl", "nle", "nlt", "nge", "ngt", "sne",  "st", /* 011 */
+	 "sf", "seq",  "gt",  "ge",  "lt",  "le",  "gl",  "gle", /* 010 */
+   "ngle", "ngl", "nle", "nlt", "nge", "ngt", "sne",  "st", /* 011 */
 	  "?",   "?",   "?",   "?",   "?",   "?",   "?",   "?", /* 100 */
 	  "?",   "?",   "?",   "?",   "?",   "?",   "?",   "?", /* 101 */
 	  "?",   "?",   "?",   "?",   "?",   "?",   "?",   "?", /* 110 */
@@ -1450,7 +1450,10 @@ static void d68020_cpbcc_16(void)
 	LIMIT_CPU_TYPES(M68020_PLUS);
 	extension = read_imm_16();
 	new_pc += make_int_16(read_imm_16());
-	sprintf(g_dasm_str, "%db%-4s  %s; %x (extension = %x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[g_cpu_ir&0x3f], get_imm_str_s16(), new_pc, extension);
+
+    printf("d68020_cpbcc_16: %x %x %x\n", g_cpu_ir, extension, new_pc);
+
+	sprintf(g_dasm_str, "%db%-4s  %s; $%x (extension = $%x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[g_cpu_ir&0x3f], get_imm_str_s16(), new_pc, extension);
 }
 
 static void d68020_cpbcc_32(void)
@@ -1460,7 +1463,10 @@ static void d68020_cpbcc_32(void)
 	LIMIT_CPU_TYPES(M68020_PLUS);
 	extension = read_imm_16();
 	new_pc += read_imm_32();
-	sprintf(g_dasm_str, "%db%-4s  %s; %x (extension = %x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[g_cpu_ir&0x3f], get_imm_str_s16(), new_pc, extension);
+
+    printf("d68020_cpbcc_32: %x %x %x\n", g_cpu_ir, extension, new_pc);
+
+    sprintf(g_dasm_str, "%db%-4s  %s; $%x (extension = $%x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[g_cpu_ir&0x3f], get_imm_str_s16(), new_pc, extension);
 }
 
 static void d68020_cpdbcc(void)
@@ -1472,7 +1478,7 @@ static void d68020_cpdbcc(void)
 	extension1 = read_imm_16();
 	extension2 = read_imm_16();
 	new_pc += make_int_16(read_imm_16());
-	sprintf(g_dasm_str, "%ddb%-4s D%d,%s; %x (extension = %x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[extension1&0x3f], g_cpu_ir&7, get_imm_str_s16(), new_pc, extension2);
+	sprintf(g_dasm_str, "%ddb%-4s D%d,%s; $%x (extension = $%x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[extension1&0x3f], g_cpu_ir&7, get_imm_str_s16(), new_pc, extension2);
 }
 
 static void d68020_cpgen(void)

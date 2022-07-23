@@ -19,6 +19,7 @@
 #define ______________xx(opcode) (u8)((opcode >> 0)  & 0b11)
 #define _____________xxx(opcode) (u8)((opcode >> 0)  & 0b111)
 #define ____________xxxx(opcode) (u8)((opcode >> 0)  & 0b1111)
+#define __________xxxxxx(opcode) (u8)((opcode >> 0)  & 0b111111)
 #define ________xxxxxxxx(opcode) (u8)((opcode >> 0)  & 0b11111111)
 #define ____xxxxxxxxxxxx(opcode) (u16)((opcode >> 0) & 0b111111111111)
 #define __________xxx___(opcode) (u8)((opcode >> 3)  & 0b111)
@@ -850,6 +851,69 @@ Moira::execCmpm(u16 opcode)
     if (!readOp<M,S, AE_INC_PC>(dst, ea2, data2)) return;
 
     cmp<S>(data1, data2);
+    prefetch();
+}
+
+template<Type CPU, Instr I, Mode M, Size S> void
+Moira::execCpBcc(u16 opcode)
+{
+    EXEC_DEBUG
+
+    // TODO
+    prefetch();
+}
+
+template<Type CPU, Instr I, Mode M, Size S> void
+Moira::execCpDbcc(u16 opcode)
+{
+    EXEC_DEBUG
+
+    // TODO
+    prefetch();
+}
+
+template<Type CPU, Instr I, Mode M, Size S> void
+Moira::execCpGen(u16 opcode)
+{
+    EXEC_DEBUG
+
+    // TODO
+    prefetch();
+}
+
+template<Type CPU, Instr I, Mode M, Size S> void
+Moira::execCpRestore(u16 opcode)
+{
+    EXEC_DEBUG
+
+    // TODO
+    prefetch();
+}
+
+template<Type CPU, Instr I, Mode M, Size S> void
+Moira::execCpSave(u16 opcode)
+{
+    EXEC_DEBUG
+
+    // TODO
+    prefetch();
+}
+
+template<Type CPU, Instr I, Mode M, Size S> void
+Moira::execCpScc(u16 opcode)
+{
+    EXEC_DEBUG
+
+    // TODO
+    prefetch();
+}
+
+template<Type CPU, Instr I, Mode M, Size S> void
+Moira::execCpTrapcc(u16 opcode)
+{
+    EXEC_DEBUG
+
+    // TODO
     prefetch();
 }
 

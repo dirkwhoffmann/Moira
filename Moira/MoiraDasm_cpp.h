@@ -128,6 +128,14 @@ Moira::availability(u16 opcode, u16 ext)
 
             return "; (2)";
 
+        case cpGEN:
+        case cpRESTORE:
+        case cpSAVE:
+        case cpScc:
+        case cpTRAPcc:
+            
+            return "; (2-3)";
+
         case BFCHG:
         case BFCLR:
         case BFEXTS:
@@ -591,6 +599,116 @@ Moira::dasmCmpm(StrWriter &str, u32 &addr, u16 op)
     auto dst = Op <M,S> ( ____xxx_________(op), addr );
 
     str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmCpBcc(StrWriter &str, u32 &addr, u16 op)
+{
+    auto pc   = addr + 2;
+    auto ext1 = dasmRead<Word>(addr);
+    auto disp = dasmRead<S>(addr);
+    auto ext2 = dasmRead<Word>(addr);
+    auto id   = ( ____xxx_________(op) );
+    auto cnd  = ( __________xxxxxx(op) );
+
+    pc += i32(disp);
+
+    str << id << Ins<I>{} << Cpcc{cnd} << tab << Ims{ i16(ext2) };
+    str << "; " << UInt(pc) << " (extension = " << Int(ext1) << ") (2-3)";
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmCpDbcc(StrWriter &str, u32 &addr, u16 op)
+{
+    auto pc   = addr + 2;
+    auto ext1 = dasmRead<Word>(addr);
+    auto ext2 = dasmRead<Word>(addr);
+    auto ext3 = dasmRead<Word>(addr);
+    auto ext4 = dasmRead<Word>(addr);
+    auto dn   = ( _____________xxx(op)   );
+    auto id   = ( ____xxx_________(op)   );
+    auto cnd  = ( __________xxxxxx(ext1) );
+    auto ea   = Op <M,S> (dn, addr);
+
+    pc += i16(ext3);
+
+    printf("%x %x %x %x\n", ext1, ext2, ext3, ext4);
+
+    str << id << Ins<I>{} << Cpcc{cnd} << tab << Dn{dn} << "," << Ims{i16(ext4)};
+    str << "; " << UInt(pc) << " (extension = " << Int(ext2) << ") (2-3)";
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmCpGen(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = Imu ( dasmRead<Long>(addr) );
+    auto id =      ( ____xxx_________(op) );
+
+    str << id << Ins<I>{} << tab << ext;
+    str << availability <I, M, S> ();
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmCpRestore(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = Imu ( dasmRead<Long>(addr) );
+    auto id =      ( ____xxx_________(op) );
+
+    str << id << Ins<I>{} << tab;
+    str << availability <I, M, S> ();
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmCpSave(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = Imu ( dasmRead<Long>(addr) );
+    auto id =      ( ____xxx_________(op) );
+
+    str << id << Ins<I>{} << tab;
+    str << availability <I, M, S> ();
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmCpScc(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext1 = dasmRead<Word>(addr);
+    auto ext2 = dasmRead<Word>(addr);
+    auto dn   = ( _____________xxx(op)   );
+    auto id   = ( ____xxx_________(op)   );
+    auto cnd  = ( __________xxxxxx(ext1) );
+    auto ea   = Op <M,S> (dn, addr);
+
+    str << id << Ins<I>{} << Cpcc{cnd} << tab << ea;
+    str << "; (extension = " << ext2 << ") (2-3)";
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmCpTrapcc(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext1 = dasmRead<Word>(addr);
+    auto ext2 = dasmRead<Word>(addr);
+    auto id   = ( ____xxx_________(op)   );
+    auto cnd  = ( __________xxxxxx(ext1) );
+
+    str << id << Ins<I>{} << Cpcc{cnd} << Align{9};
+    
+    switch (op & 0b111) {
+
+        case 0b010:
+        {
+            auto ext = dasmRead <Word> (addr);
+            str << Align{10} << Imu(ext);
+            break;
+        }
+        case 0b011:
+        {
+            auto ext = dasmRead <Long> (addr);
+            str << Align{10} << Imu(ext);
+            break;
+        }
+    }
+
+    str << "; (extension = " << ext2 << ") (2-3)";
 }
 
 template<Instr I, Mode M, Size S> void

@@ -58,6 +58,7 @@ struct Setup {
     uint16_t opcode;
     uint16_t ext1;
     uint16_t ext2;
+    uint16_t ext3;
     uint32_t d[8];
     uint32_t a[8];
     uint16_t vbr;

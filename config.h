@@ -11,7 +11,7 @@
 
 // CPU under test
 // #define CPUTYPE M68K_CPU_TYPE_68020
-static constexpr int CPUTYPE = M68K_CPU_TYPE_68000;
+static constexpr int CPUTYPE = M68K_CPU_TYPE_68020;
 
 // Set to true for verbose output
 // #define VERBOSE false

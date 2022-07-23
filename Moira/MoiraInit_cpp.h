@@ -63,6 +63,9 @@ for (int j = 0; j < 8; j++) func((op) | j, f, I, M, S); }
 #define ____________XXXX(op,I,M,S,f,func) { \
 for (int j = 0; j < 16; j++) func((op) | j, f, I, M, S); }
 
+#define __________XXXXXX(op,I,M,S,f,func) { \
+for (int j = 0; j < 64; j++) func((op) | j, f, I, M, S); }
+
 #define ________XXXXXXXX(op,I,M,S,f,func) { \
 for (int j = 0; j < 256; j++) func((op) | j, f, I, M, S); }
 
@@ -72,8 +75,17 @@ for (int j = 0; j < 4096; j++) func((op) | j, f, I, M, S); }
 #define XXXXXXXXXXXXXXXX(I,M,S,f,func) { \
 for (int j = 0; j < 65536; j++) func(j, f, I, M, S); }
 
+#define __________XXX___(op,I,M,S,f,func) { \
+for (int j = 0; j < 8; j++) func((op) | j << 3, f, I, M, S); }
+
 #define ____XXX______XXX(op,I,M,S,f,func) { \
 for (int i = 0; i < 8; i++) _____________XXX((op) | i << 9, I, M, S, f, func); }
+
+#define ____XXX___XXX___(op,I,M,S,f,func) { \
+for (int i = 0; i < 8; i++) __________XXX___((op) | i << 9, I, M, S, f, func); }
+
+#define ____XXX___XXXXXX(op,I,M,S,f,func) { \
+for (int i = 0; i < 8; i++) __________XXXXXX((op) | i << 9, I, M, S, f, func); }
 
 #define ____XXX_XXXXXXXX(op,I,M,S,f,func) { \
 for (int i = 0; i < 8; i++) ________XXXXXXXX((op) | i << 9, I, M, S, f, func); }
@@ -170,18 +182,34 @@ Moira::createJumpTable()
     opcode = parse("1111 ---- ---- ----");
     ____XXXXXXXXXXXX(opcode, LINE_F, MODE_IP, (Size)0, LineF, CIMS);
 
-    /*
-    for (int i = 0; i < 0x1000; i++) {
+    if (model >= M68020) {
 
-        exec[0b1010 << 12 | i] = &Moira::execLineA;
-        if (dasm) dasm[0b1010 << 12 | i] = &Moira::dasmLineA;
-        if (info) info[0b1010 << 12 | i] = InstrInfo { LINE_A, MODE_IP, (Size)0 };
+        opcode = parse("1111 ---0 10-- ----");
+        ____XXX___XXXXXX(opcode, cpBcc, MODE_IP, Word, CpBcc, CIMS);
+        opcode = parse("1111 ---0 11-- ----");
+        ____XXX___XXXXXX(opcode, cpBcc, MODE_IP, Long, CpBcc, CIMS);
 
-        exec[0b1111 << 12 | i] = &Moira::execLineF;
-        if (dasm) dasm[0b1111 << 12 | i] = &Moira::dasmLineF;
-        if (info) info[0b1111 << 12 | i] = InstrInfo { LINE_F, MODE_IP, (Size)0 };
+        opcode = parse("1111 ---0 00-- ----");
+        ____XXX___XXXXXX(opcode, cpGEN, MODE_IP, (Size)0, CpGen, CIMS);
+
+        opcode = parse("1111 ---1 01-- ----");
+        ____XXX___XXXXXX(opcode, cpRESTORE, MODE_IP, (Size)0, CpRestore, CIMS);
+
+        opcode = parse("1111 ---1 00-- ----");
+        ____XXX___XXXXXX(opcode, cpSAVE, MODE_IP, (Size)0, CpSave, CIMS);
+
+        opcode = parse("1111 ---0 0111 1---");
+        ____XXX___XXX___(opcode | 0b010, cpTRAPcc, MODE_IP, (Size)0, CpTrapcc, CIMS);
+        ____XXX___XXX___(opcode | 0b011, cpTRAPcc, MODE_IP, (Size)0, CpTrapcc, CIMS);
+        ____XXX___XXX___(opcode | 0b100, cpTRAPcc, MODE_IP, (Size)0, CpTrapcc, CIMS);
+
+        opcode = parse("1111 ---0 01-- ----");
+        ____XXX___MMMXXX(opcode, cpScc, 0b101111111000, (Size)0, CpScc, CIMS);
+
+        opcode = parse("1111 ---0 0100 1---");
+        ____XXX______XXX(opcode, cpDBcc, MODE_IP, (Size)0, CpDbcc, CIMS);
+
     }
-    */
 
 
     // ABCD
@@ -470,7 +498,7 @@ Moira::createJumpTable()
 
         opcode = parse("1110 1111 11-- ----");
         __________MMMXXX(opcode, BFINS, 0b101001111000, Word, BitField, CIMS);
-        
+
         opcode = parse("1110 1110 11-- ----");
         __________MMMXXX(opcode, BFSET, 0b101001111000, Word, BitField, CIMS);
     }
