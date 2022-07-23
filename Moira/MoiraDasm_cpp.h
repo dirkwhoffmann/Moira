@@ -128,6 +128,14 @@ Moira::availability(u16 opcode, u16 ext)
 
             return "; (2)";
 
+        case BFCHG:
+        case BFCLR:
+        case BFEXTS:
+        case BFEXTU:
+        case BFFFO:
+        case BFINS:
+        case BFSET:
+        case BFTST:
         case CAS:
         case CAS2:
         case CHK2:
@@ -405,6 +413,40 @@ Moira::dasmAndisr(StrWriter &str, u32 &addr, u16 op)
     auto src = Imu ( dasmRead<S>(addr) );
 
     str << Ins<I>{} << tab << src << ", SR";
+}
+
+template<Instr I, Mode M, Size S> void
+Moira::dasmBitField(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = dasmRead <Word> (addr);
+    auto dst = Op <M,S> ( _____________xxx(op), addr );
+
+    str << Ins<I>{} << tab;
+
+    if constexpr (I == BFINS) {
+        str << Dn ( _xxx____________(ext) ) << ", ";
+    }
+
+    str << dst;
+
+    if (ext & 0x0800) {
+        str << " {" << Dn ( _______xxx______(ext) ) << ":";
+    } else {
+        str << " {" << ______xxxx______(ext) << ":";
+    }
+
+    if (ext & 0x0020) {
+        str << Dn ( _____________xxx(ext) ) << "}";
+    } else {
+        auto width = ____________xxxx(ext);
+        str << (width ? width : 32) << "}";
+    }
+
+    if constexpr (I == BFEXTU || I == BFEXTS || I == BFFFO) {
+        str << ", " << Dn ( _xxx____________(ext) );
+    }
+
+    str << availability <I, M, S> ();
 }
 
 template<Instr I, Mode M, Size S> void

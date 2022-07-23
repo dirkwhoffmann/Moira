@@ -64,6 +64,14 @@ typedef enum
     BPL,            // Branch on plus
     BVC,            // Branch on overflow clear
     BVS,            // Branch on overflow set
+    BFCHG,          // 68020+: Test bit field and change
+    BFCLR,          // 68020+: Test bit field and clear
+    BFEXTS,         // 68020+: Extract bit field signed
+    BFEXTU,         // 68020+: Extract bit field unsigned
+    BFFFO,          // 68020+: Find first one in bit field
+    BFINS,          // 68020+: Insert bit field
+    BFSET,          // 68020+: Set bit field
+    BFTST,          // 68020+: Test bit field
     BCHG,           // Test a bit and change
     BCLR,           // Test a bit and clear
     BKPT,           // 68010+: Run breakbpoint cycle

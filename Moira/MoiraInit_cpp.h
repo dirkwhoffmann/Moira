@@ -450,6 +450,52 @@ Moira::createJumpTable()
     }
 
 
+    // BFCHG, BFCLR, BFINS, BFSET
+    //
+    //       Syntax: BFxxx <ea> {offset:width}
+    //         Size: Unsized
+
+    //               -------------------------------------------------
+    // <ea> {:}      | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X           X   X   X   X
+
+    opcode = parse("1110 1010 11-- ----");
+    __________MMMXXX(opcode, BFCHG, 0b101001111000, Word, BitField, CIMS);
+
+    opcode = parse("1110 1100 11-- ----");
+    __________MMMXXX(opcode, BFCLR, 0b101001111000, Word, BitField, CIMS);
+
+    opcode = parse("1110 1111 11-- ----");
+    __________MMMXXX(opcode, BFINS, 0b101001111000, Word, BitField, CIMS);
+
+    opcode = parse("1110 1110 11-- ----");
+    __________MMMXXX(opcode, BFSET, 0b101001111000, Word, BitField, CIMS);
+
+
+    // BFEXTS, BFEXTU, BFFFO, BFTST
+    //
+    //       Syntax: BFxxx <ea> {offset:width}
+    //         Size: Unsized
+
+    //               -------------------------------------------------
+    // <ea> {:}      | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
+    //               -------------------------------------------------
+    //                 X       X           X   X   X   X   X   X   X
+
+    opcode = parse("1110 1011 11-- ----");
+    __________MMMXXX(opcode, BFEXTS, 0b101001111110, Word, BitField, CIMS);
+
+    opcode = parse("1110 1001 11-- ----");
+    __________MMMXXX(opcode, BFEXTU, 0b101001111110, Word, BitField, CIMS);
+
+    opcode = parse("1110 1101 11-- ----");
+    __________MMMXXX(opcode, BFFFO, 0b101001111110, Word, BitField, CIMS);
+
+    opcode = parse("1110 1000 11-- ----");
+    __________MMMXXX(opcode, BFTST, 0b101001111110, Word, BitField, CIMS);
+
+
     // BCHG, BCLR
     //
     //       Syntax: (1) BCxx Dn,<ea>

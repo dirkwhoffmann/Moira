@@ -24,6 +24,7 @@
 #define __________xxx___(opcode) (u8)((opcode >> 3)  & 0b111)
 #define __________xx____(opcode) (u8)((opcode >> 4)  & 0b11)
 #define _______xxx______(opcode) (u8)((opcode >> 6)  & 0b111)
+#define ______xxxx______(opcode) (u8)((opcode >> 6)  & 0b1111)
 #define _________x______(opcode) (u8)((opcode >> 6)  & 0b1)
 #define ________x_______(opcode) (u8)((opcode >> 7)  & 0b1)
 #define _______x________(opcode) (u8)((opcode >> 8)  & 0b1)
@@ -601,6 +602,14 @@ Moira::execBitImEa(u16 opcode)
             if (I != BTST) writeM <M, S> (ea, data);
         }
     }
+}
+
+template<Type CPU, Instr I, Mode M, Size S> void
+Moira::execBitField(u16 opcode)
+{
+    EXEC_DEBUG
+
+    prefetch<POLLIPL>();
 }
 
 template<Instr I, Mode M, Size S> void
