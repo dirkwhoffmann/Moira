@@ -460,17 +460,20 @@ Moira::createJumpTable()
     //               -------------------------------------------------
     //                 X       X           X   X   X   X
 
-    opcode = parse("1110 1010 11-- ----");
-    __________MMMXXX(opcode, BFCHG, 0b101001111000, Word, BitField, CIMS);
+    if (model >= M68020) {
 
-    opcode = parse("1110 1100 11-- ----");
-    __________MMMXXX(opcode, BFCLR, 0b101001111000, Word, BitField, CIMS);
+        opcode = parse("1110 1010 11-- ----");
+        __________MMMXXX(opcode, BFCHG, 0b101001111000, Word, BitField, CIMS);
 
-    opcode = parse("1110 1111 11-- ----");
-    __________MMMXXX(opcode, BFINS, 0b101001111000, Word, BitField, CIMS);
+        opcode = parse("1110 1100 11-- ----");
+        __________MMMXXX(opcode, BFCLR, 0b101001111000, Word, BitField, CIMS);
 
-    opcode = parse("1110 1110 11-- ----");
-    __________MMMXXX(opcode, BFSET, 0b101001111000, Word, BitField, CIMS);
+        opcode = parse("1110 1111 11-- ----");
+        __________MMMXXX(opcode, BFINS, 0b101001111000, Word, BitField, CIMS);
+        
+        opcode = parse("1110 1110 11-- ----");
+        __________MMMXXX(opcode, BFSET, 0b101001111000, Word, BitField, CIMS);
+    }
 
 
     // BFEXTS, BFEXTU, BFFFO, BFTST
@@ -483,17 +486,20 @@ Moira::createJumpTable()
     //               -------------------------------------------------
     //                 X       X           X   X   X   X   X   X   X
 
-    opcode = parse("1110 1011 11-- ----");
-    __________MMMXXX(opcode, BFEXTS, 0b101001111110, Word, BitField, CIMS);
+    if (model >= M68020) {
 
-    opcode = parse("1110 1001 11-- ----");
-    __________MMMXXX(opcode, BFEXTU, 0b101001111110, Word, BitField, CIMS);
+        opcode = parse("1110 1011 11-- ----");
+        __________MMMXXX(opcode, BFEXTS, 0b101001111110, Word, BitField, CIMS);
 
-    opcode = parse("1110 1101 11-- ----");
-    __________MMMXXX(opcode, BFFFO, 0b101001111110, Word, BitField, CIMS);
+        opcode = parse("1110 1001 11-- ----");
+        __________MMMXXX(opcode, BFEXTU, 0b101001111110, Word, BitField, CIMS);
 
-    opcode = parse("1110 1000 11-- ----");
-    __________MMMXXX(opcode, BFTST, 0b101001111110, Word, BitField, CIMS);
+        opcode = parse("1110 1101 11-- ----");
+        __________MMMXXX(opcode, BFFFO, 0b101001111110, Word, BitField, CIMS);
+
+        opcode = parse("1110 1000 11-- ----");
+        __________MMMXXX(opcode, BFTST, 0b101001111110, Word, BitField, CIMS);
+    }
 
 
     // BCHG, BCLR
@@ -1439,11 +1445,14 @@ Moira::createJumpTable()
     //               PACK DX,Dy,#<adjustment>
     //        Sizes: Unsized
 
-    opcode = parse("1000 ---1 0100 0---");
-    ____XXX______XXX(opcode, PACK, MODE_DN, Size(0), Pack, CIMS);
+    if (model >= M68020) {
 
-    opcode = parse("1000 ---1 0100 1---");
-    ____XXX______XXX(opcode, PACK, MODE_PD, Size(0), Pack, CIMS);
+        opcode = parse("1000 ---1 0100 0---");
+        ____XXX______XXX(opcode, PACK, MODE_DN, Size(0), Pack, CIMS);
+
+        opcode = parse("1000 ---1 0100 1---");
+        ____XXX______XXX(opcode, PACK, MODE_PD, Size(0), Pack, CIMS);
+    }
 
 
     // PEA
@@ -1495,8 +1504,11 @@ Moira::createJumpTable()
     //       Syntax: RTM Rn
     //        Sizes: Unsized
 
-    opcode = parse("0000 0110 1100 ----");
-    ____________XXXX(opcode, RTM, MODE_IP, Long, Rtm, CIMS);
+    if (model >= M68020) {
+
+        opcode = parse("0000 0110 1100 ----");
+        ____________XXXX(opcode, RTM, MODE_IP, Long, Rtm, CIMS);
+    }
 
 
     // RTR
@@ -1786,11 +1798,13 @@ Moira::createJumpTable()
     //               UNPK DX,Dy,#<adjustment>
     //        Sizes: Unsized
 
-    opcode = parse("1000 ---1 1000 0---");
-    ____XXX______XXX(opcode, UNPK, MODE_DN, Size(0), Unpk, CIMS);
+    if (model >= M68020) {
 
-    opcode = parse("1000 ---1 1000 1---");
-    ____XXX______XXX(opcode, UNPK, MODE_PD, Size(0), Unpk, CIMS);
+        opcode = parse("1000 ---1 1000 0---");
+        ____XXX______XXX(opcode, UNPK, MODE_DN, Size(0), Unpk, CIMS);
 
+        opcode = parse("1000 ---1 1000 1---");
+        ____XXX______XXX(opcode, UNPK, MODE_PD, Size(0), Unpk, CIMS);
+    }
 }
 

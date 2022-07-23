@@ -18,6 +18,9 @@
  *        cond : Bxx, DBxx, Sx
  */
 
+bool cond(Instr I);
+bool cond(Cond C);
+
 template <Instr I, Size S> u32  shift(int cnt, u64 data);
 template <Instr I, Size S> u32 addsub(u32 op1, u32 op2);
 template <Instr I>         u32    mul(u32 op1, u32 op2);
@@ -27,7 +30,6 @@ template <Size S>          void   cmp(u32 op1, u32 op2);
 template <Instr I, Size S> u32  logic(u32 op1);
 template <Instr I, Size S> u32  logic(u32 op1, u32 op2);
 template <Instr I>         u32    bit(u32 op,  u8 nr);
-template <Instr I>         bool  cond();
 
 template <Instr I>         int  cyclesBit(u8 nr);
 template <Instr I>         int  cyclesMul(u16 data);

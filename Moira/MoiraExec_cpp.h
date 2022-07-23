@@ -506,7 +506,7 @@ Moira::execBcc(u16 opcode)
     EXEC_DEBUG
 
     sync(2);
-    if (cond<I>()) {
+    if (cond(I)) {
 
         u32 newpc = U32_ADD(reg.pc, S == Word ? (i16)queue.irc : (i8)opcode);
 
@@ -861,7 +861,7 @@ Moira::execDbcc(u16 opcode)
     auto exec68000 = [&]() {
 
         sync(2);
-        if (!cond<I>()) {
+        if (!cond(I)) {
 
             int dn = _____________xxx(opcode);
             u32 newpc = U32_ADD(reg.pc, (i16)queue.irc);
@@ -897,7 +897,7 @@ Moira::execDbcc(u16 opcode)
     auto exec68010 = [&]() {
 
         sync(2);
-        if (!cond<I>()) {
+        if (!cond(I)) {
 
             int dn = _____________xxx(opcode);
             i16 disp = (i16)queue.irc;
@@ -953,7 +953,7 @@ Moira::execDbcc(u16 opcode)
     auto execLoop = [&]() {
 
         sync(2);
-        if (!cond<I>()) {
+        if (!cond(I)) {
 
             int dn = _____________xxx(opcode);
             u32 newpc = U32_ADD(reg.pc, -4);
@@ -2376,7 +2376,7 @@ Moira::execSccRg(u16 opcode)
 
     if (!readOp<M,Byte>(dst, ea, data)) return;
 
-    data = cond<I>() ? 0xFF : 0;
+    data = cond(I) ? 0xFF : 0;
     prefetch<POLLIPL>();
 
     if (model >= M68010) {
@@ -2398,7 +2398,7 @@ Moira::execSccEa(u16 opcode)
 
     if (!readOp<M,Byte>(dst, ea, data)) return;
 
-    data = cond<I>() ? 0xFF : 0;
+    data = cond(I) ? 0xFF : 0;
     prefetch<POLLIPL>();
 
     writeOp <M,Byte> (dst, ea, data);

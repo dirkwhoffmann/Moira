@@ -71,7 +71,7 @@ template<Size S> u32 WRITE(u32 d1, u32 d2) {
 template<Instr I, Size S> u32
 Moira::shift(int cnt, u64 data) {
 
-    switch(I) {
+    switch (I) {
 
         case ASL:
         case ASL_LOOP:
@@ -201,7 +201,7 @@ Moira::addsub(u32 op1, u32 op2)
 {
     u64 result;
 
-    switch(I) {
+    switch (I) {
 
         case ADD:
         case ADD_LOOP:
@@ -334,7 +334,7 @@ Moira::bcd(u32 op1, u32 op2)
 {
     u64 result;
 
-    switch(I) {
+    switch (I) {
 
         case ABCD:
         {
@@ -404,7 +404,7 @@ Moira::logic(u32 op)
 {
     u32 result;
 
-    switch(I) {
+    switch (I) {
 
         case NOT:
         case NOT_LOOP:
@@ -439,7 +439,7 @@ Moira::logic(u32 op1, u32 op2)
 {
     u32 result;
 
-    switch(I) {
+    switch (I) {
 
         case AND: case ANDI: case ANDICCR: case ANDISR:
         {
@@ -504,30 +504,58 @@ Moira::bit(u32 op, u8 bit)
     return op;
 }
 
-template <Instr I> bool
-Moira::cond() {
+bool
+Moira::cond(Cond C) {
 
-    switch(I) {
+    switch (C) {
 
-        case BRA: case ST:  case DBT:  case DBT_LOOP:  return true;
-        case SF:            case DBF:  case DBF_LOOP:  return false;
-        case BHI: case SHI: case DBHI: case DBHI_LOOP: return !reg.sr.c && !reg.sr.z;
-        case BLS: case SLS: case DBLS: case DBLS_LOOP: return reg.sr.c || reg.sr.z;
-        case BCC: case SCC: case DBCC: case DBCC_LOOP: return !reg.sr.c;
-        case BCS: case SCS: case DBCS: case DBCS_LOOP: return reg.sr.c;
-        case BNE: case SNE: case DBNE: case DBNE_LOOP: return !reg.sr.z;
-        case BEQ: case SEQ: case DBEQ: case DBEQ_LOOP: return reg.sr.z;
-        case BVC: case SVC: case DBVC: case DBVC_LOOP: return !reg.sr.v;
-        case BVS: case SVS: case DBVS: case DBVS_LOOP: return reg.sr.v;
-        case BPL: case SPL: case DBPL: case DBPL_LOOP: return !reg.sr.n;
-        case BMI: case SMI: case DBMI: case DBMI_LOOP: return reg.sr.n;
-        case BGE: case SGE: case DBGE: case DBGE_LOOP: return reg.sr.n == reg.sr.v;
-        case BLT: case SLT: case DBLT: case DBLT_LOOP: return reg.sr.n != reg.sr.v;
-        case BGT: case SGT: case DBGT: case DBGT_LOOP: return reg.sr.n == reg.sr.v && !reg.sr.z;
-        case BLE: case SLE: case DBLE: case DBLE_LOOP: return reg.sr.n != reg.sr.v || reg.sr.z;
+        case COND_BT: return true;
+        case COND_BF: return false;
+        case COND_HI: return !reg.sr.c && !reg.sr.z;
+        case COND_LS: return reg.sr.c || reg.sr.z;
+        case COND_CC: return !reg.sr.c;
+        case COND_CS: return reg.sr.c;
+        case COND_NE: return !reg.sr.z;
+        case COND_EQ: return reg.sr.z;
+        case COND_VC: return !reg.sr.v;
+        case COND_VS: return reg.sr.v;
+        case COND_PL: return !reg.sr.n;
+        case COND_MI: return reg.sr.n;
+        case COND_GE: return reg.sr.n == reg.sr.v;
+        case COND_LT: return reg.sr.n != reg.sr.v;
+        case COND_GT: return reg.sr.n == reg.sr.v && !reg.sr.z;
+        case COND_LE: return reg.sr.n != reg.sr.v || reg.sr.z;
+
+        default:
+            fatalError;
     }
+}
 
-    fatalError;
+bool
+Moira::cond(Instr I) {
+
+    switch (I) {
+
+        case BRA: case ST:  case DBT:  case DBT_LOOP:  return cond(COND_BT);
+        case SF:            case DBF:  case DBF_LOOP:  return cond(COND_BF);
+        case BHI: case SHI: case DBHI: case DBHI_LOOP: return cond(COND_HI);
+        case BLS: case SLS: case DBLS: case DBLS_LOOP: return cond(COND_LS);
+        case BCC: case SCC: case DBCC: case DBCC_LOOP: return cond(COND_CC);
+        case BCS: case SCS: case DBCS: case DBCS_LOOP: return cond(COND_CS);
+        case BNE: case SNE: case DBNE: case DBNE_LOOP: return cond(COND_NE);
+        case BEQ: case SEQ: case DBEQ: case DBEQ_LOOP: return cond(COND_EQ);
+        case BVC: case SVC: case DBVC: case DBVC_LOOP: return cond(COND_VC);
+        case BVS: case SVS: case DBVS: case DBVS_LOOP: return cond(COND_VS);
+        case BPL: case SPL: case DBPL: case DBPL_LOOP: return cond(COND_PL);
+        case BMI: case SMI: case DBMI: case DBMI_LOOP: return cond(COND_MI);
+        case BGE: case SGE: case DBGE: case DBGE_LOOP: return cond(COND_GE);
+        case BLT: case SLT: case DBLT: case DBLT_LOOP: return cond(COND_LT);
+        case BGT: case SGT: case DBGT: case DBGT_LOOP: return cond(COND_GT);
+        case BLE: case SLE: case DBLE: case DBLE_LOOP: return cond(COND_LE);
+
+        default:
+            fatalError;
+    }
 }
 
 template <Instr I> int

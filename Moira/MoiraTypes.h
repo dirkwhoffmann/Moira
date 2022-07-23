@@ -282,11 +282,32 @@ constexpr bool isImmMode(Mode M) { return M == 11; }
 
 typedef enum
 {
-    Byte = 1,  // .b : Byte addressing
-    Word = 2,  // .w : Word addressing
-    Long = 4   // .l : Long word addressing
+    Byte = 1,   // .b : Byte addressing
+    Word = 2,   // .w : Word addressing
+    Long = 4    // .l : Long word addressing
 }
 Size;
+
+typedef enum
+{
+    COND_BT,    // Always true
+    COND_BF,    // Always false
+    COND_HI,    // Higher than
+    COND_LS,    // Lower or same
+    COND_CC,    // Carry clear
+    COND_CS,    // Carry set
+    COND_NE,    // Not equal
+    COND_EQ,    // Equal
+    COND_VC,    // Overflow clear
+    COND_VS,    // Overflow set
+    COND_PL,    // Plus
+    COND_MI,    // Minus
+    COND_GE,    // Greater or equal
+    COND_LT,    // Less than
+    COND_GT,    // Greater than
+    COND_LE     // Less than
+}
+Cond;
 
 typedef struct
 {
