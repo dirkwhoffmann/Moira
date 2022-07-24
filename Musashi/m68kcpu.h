@@ -3,7 +3,7 @@
 /* ======================================================================== */
 /*
  *                                  MUSASHI
- *                                Version 3.32
+ *                                Version 4.5
  *
  * A portable Motorola M680x0 processor emulation engine.
  * Copyright Karl Stenerud.  All rights reserved.
@@ -27,7 +27,7 @@
  * THE SOFTWARE.
  */
 
-#include <stdio.h>
+
 
 
 #ifndef M68KCPU__HEADER
@@ -38,11 +38,10 @@ extern "C" {
 #endif
 
 #include "m68k.h"
+
 #include <limits.h>
 
-#if M68K_EMULATE_ADDRESS_ERROR
 #include <setjmp.h>
-#endif /* M68K_EMULATE_ADDRESS_ERROR */
 
 /* ======================================================================== */
 /* ==================== ARCHITECTURE-DEPENDANT DEFINES ==================== */
@@ -67,26 +66,37 @@ extern "C" {
 #undef sint
 #undef uint
 
-#define sint8  signed   char			/* ASG: changed from char to signed char */
-#define sint16 signed   short
-#define sint32 signed   int			/* AWJ: changed from long to int */
-#define uint8  unsigned char
-#define uint16 unsigned short
-#define uint32 unsigned int			/* AWJ: changed from long to int */
+typedef signed   char  sint8;  		/* ASG: changed from char to signed char */
+typedef signed   short sint16;
+typedef signed   int   sint32; 		/* AWJ: changed from long to int */
+typedef unsigned char  uint8;
+typedef unsigned short uint16;
+typedef unsigned int   uint32; 			/* AWJ: changed from long to int */
 
 /* signed and unsigned int must be at least 32 bits wide */
-#define sint   signed   int
-#define uint   unsigned int
+typedef signed   int sint;
+typedef unsigned int uint;
 
 
 #if M68K_USE_64_BIT
-#define sint64 signed   long long
-#define uint64 unsigned long long
+typedef signed   long long sint64;
+typedef unsigned long long uint64;
 #else
-#define sint64 sint32
-#define uint64 uint32
+typedef sint32 sint64;
+typedef uint32 uint64;
 #endif /* M68K_USE_64_BIT */
 
+/* U64 and S64 are used to wrap long integer constants. */
+#ifdef __GNUC__
+#define U64(val) val##ULL
+#define S64(val) val##LL
+#else
+#define U64(val) val
+#define S64(val) val
+#endif
+
+#include "softfloat/milieu.h"
+#include "softfloat/softfloat.h"
 
 
 /* Allow for architectures that don't have 8-bit sizes */
@@ -141,6 +151,7 @@ extern "C" {
 /* ======================================================================== */
 
 /* Exception Vectors handled by emulation */
+#define EXCEPTION_RESET                    0
 #define EXCEPTION_BUS_ERROR                2 /* This one is not emulated! */
 #define EXCEPTION_ADDRESS_ERROR            3 /* This one is partially emulated (doesn't stack a proper frame yet) */
 #define EXCEPTION_ILLEGAL_INSTRUCTION      4
@@ -165,12 +176,17 @@ extern "C" {
 #define FUNCTION_CODE_CPU_SPACE          7
 
 /* CPU types for deciding what to emulate */
-#define CPU_TYPE_000   1
-#define CPU_TYPE_008   2
-#define CPU_TYPE_010   4
-#define CPU_TYPE_EC020 8
-#define CPU_TYPE_020   16
-#define CPU_TYPE_040   32
+#define CPU_TYPE_000	(0x00000001)
+#define CPU_TYPE_008    (0x00000002)
+#define CPU_TYPE_010    (0x00000004)
+#define CPU_TYPE_EC020  (0x00000008)
+#define CPU_TYPE_020    (0x00000010)
+#define CPU_TYPE_EC030  (0x00000020)
+#define CPU_TYPE_030    (0x00000040)
+#define CPU_TYPE_EC040  (0x00000080)
+#define CPU_TYPE_LC040  (0x00000100)
+#define CPU_TYPE_040    (0x00000200)
+#define CPU_TYPE_SCC070 (0x00000400)
 
 /* Different ways to stop the CPU */
 #define STOP_LEVEL_STOP 1
@@ -182,8 +198,9 @@ extern "C" {
 #define MODE_READ       0x10
 #define MODE_WRITE      0
 
-#define RUN_MODE_NORMAL          0
-#define RUN_MODE_BERR_AERR_RESET 1
+#define RUN_MODE_NORMAL              0
+#define RUN_MODE_BERR_AERR_RESET_WSF 1 /* writing stack frame */
+#define RUN_MODE_BERR_AERR_RESET     2 /* stack frame done */
 
 #ifndef NULL
 #define NULL ((void*)0)
@@ -311,6 +328,7 @@ extern "C" {
 #define CPU_TYPE         m68ki_cpu.cpu_type
 
 #define REG_DA           m68ki_cpu.dar /* easy access to data and address regs */
+#define REG_DA_SAVE           m68ki_cpu.dar_save
 #define REG_D            m68ki_cpu.dar
 #define REG_A            (m68ki_cpu.dar+8)
 #define REG_PPC 		 m68ki_cpu.ppc
@@ -363,6 +381,9 @@ extern "C" {
 #define CYC_MOVEM_L      m68ki_cpu.cyc_movem_l
 #define CYC_SHIFT        m68ki_cpu.cyc_shift
 #define CYC_RESET        m68ki_cpu.cyc_reset
+#define HAS_PMMU	 m68ki_cpu.has_pmmu
+#define PMMU_ENABLED	 m68ki_cpu.pmmu_enabled
+#define RESET_CYCLES	 m68ki_cpu.reset_cycles
 
 
 #define CALLBACK_INT_ACK     m68ki_cpu.int_ack_callback
@@ -384,15 +405,23 @@ extern "C" {
 
 /* Disable certain comparisons if we're not using all CPU types */
 #if M68K_EMULATE_040
-	#define CPU_TYPE_IS_040_PLUS(A)    ((A) & CPU_TYPE_040)
+#define CPU_TYPE_IS_040_PLUS(A)    ((A) & (CPU_TYPE_040 | CPU_TYPE_EC040))
 	#define CPU_TYPE_IS_040_LESS(A)    1
 #else
 	#define CPU_TYPE_IS_040_PLUS(A)    0
 	#define CPU_TYPE_IS_040_LESS(A)    1
 #endif
 
+#if M68K_EMULATE_030
+#define CPU_TYPE_IS_030_PLUS(A)    ((A) & (CPU_TYPE_030 | CPU_TYPE_EC030 | CPU_TYPE_040 | CPU_TYPE_EC040))
+#define CPU_TYPE_IS_030_LESS(A)    1
+#else
+#define CPU_TYPE_IS_030_PLUS(A)	0
+#define CPU_TYPE_IS_030_LESS(A)    1
+#endif
+
 #if M68K_EMULATE_020
-	#define CPU_TYPE_IS_020_PLUS(A)    ((A) & (CPU_TYPE_020 | CPU_TYPE_040))
+#define CPU_TYPE_IS_020_PLUS(A)    ((A) & (CPU_TYPE_020 | CPU_TYPE_030 | CPU_TYPE_EC030 | CPU_TYPE_040 | CPU_TYPE_EC040))
 	#define CPU_TYPE_IS_020_LESS(A)    1
 #else
 	#define CPU_TYPE_IS_020_PLUS(A)    0
@@ -400,7 +429,7 @@ extern "C" {
 #endif
 
 #if M68K_EMULATE_EC020
-	#define CPU_TYPE_IS_EC020_PLUS(A)  ((A) & (CPU_TYPE_EC020 | CPU_TYPE_020 | CPU_TYPE_040))
+#define CPU_TYPE_IS_EC020_PLUS(A)  ((A) & (CPU_TYPE_EC020 | CPU_TYPE_020 | CPU_TYPE_030 | CPU_TYPE_EC030 | CPU_TYPE_040 | CPU_TYPE_EC040))
 	#define CPU_TYPE_IS_EC020_LESS(A)  ((A) & (CPU_TYPE_000 | CPU_TYPE_010 | CPU_TYPE_EC020))
 #else
 	#define CPU_TYPE_IS_EC020_PLUS(A)  CPU_TYPE_IS_020_PLUS(A)
@@ -409,8 +438,8 @@ extern "C" {
 
 #if M68K_EMULATE_010
 	#define CPU_TYPE_IS_010(A)         ((A) == CPU_TYPE_010)
-	#define CPU_TYPE_IS_010_PLUS(A)    ((A) & (CPU_TYPE_010 | CPU_TYPE_EC020 | CPU_TYPE_020 | CPU_TYPE_040))
-	#define CPU_TYPE_IS_010_LESS(A)    ((A) & (CPU_TYPE_000 | CPU_TYPE_010))
+#define CPU_TYPE_IS_010_PLUS(A)    ((A) & (CPU_TYPE_010 | CPU_TYPE_EC020 | CPU_TYPE_020 | CPU_TYPE_EC030 | CPU_TYPE_030 | CPU_TYPE_040 | CPU_TYPE_EC040))
+#define CPU_TYPE_IS_010_LESS(A)    ((A) & (CPU_TYPE_000 | CPU_TYPE_008 | CPU_TYPE_010))
 #else
 	#define CPU_TYPE_IS_010(A)         0
 	#define CPU_TYPE_IS_010_PLUS(A)    CPU_TYPE_IS_EC020_PLUS(A)
@@ -573,8 +602,32 @@ extern "C" {
 /* Address error */
 #if M68K_EMULATE_ADDRESS_ERROR
 	#include <setjmp.h>
-	extern jmp_buf m68ki_aerr_trap;
 
+/* sigjmp() on Mac OS X and *BSD in general saves signal contexts and is super-slow, use sigsetjmp() to tell it not to */
+#ifdef _BSD_SETJMP_H
+extern sigjmp_buf m68ki_aerr_trap;
+#define m68ki_set_address_error_trap(m68k) \
+	if(sigsetjmp(m68ki_aerr_trap, 0) != 0) \
+	{ \
+		m68ki_exception_address_error(m68k); \
+		if(CPU_STOPPED) \
+		{ \
+			if (m68ki_remaining_cycles > 0) \
+				m68ki_remaining_cycles = 0; \
+			return m68ki_initial_cycles; \
+		} \
+	}
+
+#define m68ki_check_address_error(ADDR, WRITE_MODE, FC) \
+	if((ADDR)&1) \
+	{ \
+		m68ki_aerr_address = ADDR; \
+		m68ki_aerr_write_mode = WRITE_MODE; \
+		m68ki_aerr_fc = FC; \
+		siglongjmp(m68ki_aerr_trap, 1); \
+	}
+#else
+extern jmp_buf m68ki_aerr_trap;
 	#define m68ki_set_address_error_trap() \
 		if(setjmp(m68ki_aerr_trap) != 0) \
 		{ \
@@ -601,6 +654,7 @@ extern "C" {
 			m68ki_aerr_fc = FC; \
 			longjmp(m68ki_aerr_trap, 1); \
 		}
+#endif
 
 	#define m68ki_check_address_error_010_less(ADDR, WRITE_MODE, FC) \
 		if (CPU_TYPE_IS_010_LESS(CPU_TYPE)) \
@@ -871,8 +925,10 @@ typedef union
 
 typedef struct
 {
-	uint cpu_type;     /* CPU Type: 68000, 68010, 68EC020, or 68020 */
+	uint cpu_type;     /* CPU Type: 68000, 68008, 68010, 68EC020, 68020, 68EC030, 68030, 68EC040, or 68040 */
 	uint dar[16];      /* Data and Address Registers */
+	uint dar_save[16];  /* Saved Data and Address Registers (pushed onto the
+						   stack when a bus error occurs)*/
 	uint ppc;		   /* Previous program counter */
 	uint pc;           /* Program Counter */
 	uint sp[7];        /* User, Interrupt, and Master Stack Pointers */
@@ -882,7 +938,7 @@ typedef struct
 	uint cacr;         /* Cache Control Register (m68020, unemulated) */
 	uint caar;         /* Cache Address Register (m68020, unemulated) */
 	uint ir;           /* Instruction Register */
-    fp_reg fpr[8];     /* FPU Data Register (m68040) */
+	floatx80 fpr[8];     /* FPU Data Register (m68030/040) */
 	uint fpiar;        /* FPU Instruction Address Register (m68040) */
 	uint fpsr;         /* FPU Status Register (m68040) */
 	uint fpcr;         /* FPU Control Register (m68040) */
@@ -904,6 +960,10 @@ typedef struct
 	uint sr_mask;      /* Implemented status register bits */
 	uint instr_mode;   /* Stores whether we are in instruction mode or group 0/1 exception mode */
 	uint run_mode;     /* Stores whether we are processing a reset, bus error, address error, or something else */
+	int    has_pmmu;     /* Indicates if a PMMU available (yes on 030, 040, no on EC030) */
+	int    pmmu_enabled; /* Indicates if the PMMU is enabled */
+	int    fpu_just_reset; /* Indicates the FPU was just reset */
+	uint reset_cycles;
 
 	/* Clocks required for instructions / exceptions */
 	uint cyc_bcc_notake_b;
@@ -919,6 +979,12 @@ typedef struct
 	/* Virtual IRQ lines state */
 	uint virq_state;
 	uint nmi_pending;
+
+	/* PMMU registers */
+	uint mmu_crp_aptr, mmu_crp_limit;
+	uint mmu_srp_aptr, mmu_srp_limit;
+	uint mmu_tc;
+	uint16 mmu_sr;
 
 	const uint8* cyc_instruction;
 	const uint8* cyc_exception;
@@ -958,8 +1024,6 @@ static inline uint m68ki_read_32_fc (uint address, uint fc);
 static inline uint m68ki_get_ea_ix(uint An);
 static inline void m68ki_check_interrupts(void);            /* ASG: check for interrupts */
 
-void my_fc_handler(unsigned int fc);
-
 /* quick disassembly (used for logging) */
 char* m68ki_disassemble_quick(unsigned int pc, unsigned int cpu_type);
 
@@ -971,6 +1035,8 @@ char* m68ki_disassemble_quick(unsigned int pc, unsigned int cpu_type);
 
 /* ---------------------------- Read Immediate ---------------------------- */
 
+extern uint pmmu_translate_addr(uint addr_in);
+
 /* Handles all immediate reads, does address error check, function code setting,
  * and prefetching if they are enabled in m68kconf.h
  */
@@ -978,6 +1044,14 @@ static inline uint m68ki_read_imm_16(void)
 {
 	m68ki_set_fc(FLAG_S | FUNCTION_CODE_USER_PROGRAM); /* auto-disable (see m68kcpu.h) */
 	m68ki_check_address_error(REG_PC, MODE_READ, FLAG_S | FUNCTION_CODE_USER_PROGRAM); /* auto-disable (see m68kcpu.h) */
+
+#if M68K_SEPARATE_READS
+#if M68K_EMULATE_PMMU
+	if (PMMU_ENABLED)
+	    address = pmmu_translate_addr(address);
+#endif
+#endif
+
 #if M68K_EMULATE_PREFETCH
 {
 	uint result;
@@ -1006,6 +1080,13 @@ static inline uint m68ki_read_imm_8(void)
 
 static inline uint m68ki_read_imm_32(void)
 {
+#if M68K_SEPARATE_READS
+#if M68K_EMULATE_PMMU
+	if (PMMU_ENABLED)
+	    address = pmmu_translate_addr(address);
+#endif
+#endif
+
 #if M68K_EMULATE_PREFETCH
 	uint temp_val;
 
@@ -1036,8 +1117,6 @@ static inline uint m68ki_read_imm_32(void)
 #endif /* M68K_EMULATE_PREFETCH */
 }
 
-
-
 /* ------------------------- Top level read/write ------------------------- */
 
 /* Handles all memory accesses (except for immediate reads if they are
@@ -1050,6 +1129,12 @@ static inline uint m68ki_read_8_fc(uint address, uint fc)
 {
 	(void)fc;
 	m68ki_set_fc(fc); /* auto-disable (see m68kcpu.h) */
+
+#if M68K_EMULATE_PMMU
+	if (PMMU_ENABLED)
+	    address = pmmu_translate_addr(address);
+#endif
+
 	return m68k_read_memory_8(ADDRESS_68K(address));
 }
 static inline uint m68ki_read_16_fc(uint address, uint fc)
@@ -1057,6 +1142,12 @@ static inline uint m68ki_read_16_fc(uint address, uint fc)
 	(void)fc;
 	m68ki_set_fc(fc); /* auto-disable (see m68kcpu.h) */
 	m68ki_check_address_error_010_less(address, MODE_READ, fc); /* auto-disable (see m68kcpu.h) */
+
+#if M68K_EMULATE_PMMU
+	if (PMMU_ENABLED)
+	    address = pmmu_translate_addr(address);
+#endif
+
 	return m68k_read_memory_16(ADDRESS_68K(address));
 }
 static inline uint m68ki_read_32_fc(uint address, uint fc)
@@ -1064,6 +1155,12 @@ static inline uint m68ki_read_32_fc(uint address, uint fc)
 	(void)fc;
 	m68ki_set_fc(fc); /* auto-disable (see m68kcpu.h) */
 	m68ki_check_address_error_010_less(address, MODE_READ, fc); /* auto-disable (see m68kcpu.h) */
+
+#if M68K_EMULATE_PMMU
+	if (PMMU_ENABLED)
+	    address = pmmu_translate_addr(address);
+#endif
+
 	return m68k_read_memory_32(ADDRESS_68K(address));
 }
 
@@ -1071,6 +1168,12 @@ static inline void m68ki_write_8_fc(uint address, uint fc, uint value)
 {
 	(void)fc;
 	m68ki_set_fc(fc); /* auto-disable (see m68kcpu.h) */
+
+#if M68K_EMULATE_PMMU
+	if (PMMU_ENABLED)
+	    address = pmmu_translate_addr(address);
+#endif
+
 	m68k_write_memory_8(ADDRESS_68K(address), value);
 }
 static inline void m68ki_write_16_fc(uint address, uint fc, uint value)
@@ -1078,6 +1181,12 @@ static inline void m68ki_write_16_fc(uint address, uint fc, uint value)
 	(void)fc;
 	m68ki_set_fc(fc); /* auto-disable (see m68kcpu.h) */
 	m68ki_check_address_error_010_less(address, MODE_WRITE, fc); /* auto-disable (see m68kcpu.h) */
+
+#if M68K_EMULATE_PMMU
+	if (PMMU_ENABLED)
+	    address = pmmu_translate_addr(address);
+#endif
+
 	m68k_write_memory_16(ADDRESS_68K(address), value);
 }
 static inline void m68ki_write_32_fc(uint address, uint fc, uint value)
@@ -1085,6 +1194,12 @@ static inline void m68ki_write_32_fc(uint address, uint fc, uint value)
 	(void)fc;
 	m68ki_set_fc(fc); /* auto-disable (see m68kcpu.h) */
 	m68ki_check_address_error_010_less(address, MODE_WRITE, fc); /* auto-disable (see m68kcpu.h) */
+
+#if M68K_EMULATE_PMMU
+	if (PMMU_ENABLED)
+	    address = pmmu_translate_addr(address);
+#endif
+
 	m68k_write_memory_32(ADDRESS_68K(address), value);
 }
 
@@ -1094,10 +1209,15 @@ static inline void m68ki_write_32_pd_fc(uint address, uint fc, uint value)
 	(void)fc;
 	m68ki_set_fc(fc); /* auto-disable (see m68kcpu.h) */
 	m68ki_check_address_error_010_less(address, MODE_WRITE, fc); /* auto-disable (see m68kcpu.h) */
+
+#if M68K_EMULATE_PMMU
+	if (PMMU_ENABLED)
+	    address = pmmu_translate_addr(address);
+#endif
+
 	m68k_write_memory_32_pd(ADDRESS_68K(address), value);
 }
 #endif
-
 
 /* --------------------- Effective Address Calculation -------------------- */
 
@@ -1375,8 +1495,6 @@ static inline void m68ki_branch_32(uint offset)
 	REG_PC += offset;
 	m68ki_pc_changed(REG_PC);
 }
-
-
 
 /* ---------------------------- Status Register --------------------------- */
 
@@ -1756,7 +1874,6 @@ static inline void m68ki_exception_trace(void)
 			CPU_INSTR_MODE = INSTRUCTION_NO;
 		}
 		#endif /* M68K_EMULATE_ADDRESS_ERROR */
-        printf("m68ki_exception_trace\n");
 		m68ki_stack_frame_0000(REG_PC, sr, EXCEPTION_TRACE);
 	}
 	else
@@ -1789,6 +1906,48 @@ static inline void m68ki_exception_privilege_violation(void)
 	/* Use up some clock cycles and undo the instruction's cycles */
 	USE_CYCLES(CYC_EXCEPTION[EXCEPTION_PRIVILEGE_VIOLATION] - CYC_INSTRUCTION[REG_IR]);
 }
+
+extern jmp_buf m68ki_bus_error_jmp_buf;
+
+#define m68ki_check_bus_error_trap() setjmp(m68ki_bus_error_jmp_buf)
+
+/* Exception for bus error */
+static inline void m68ki_exception_bus_error(void)
+{
+	int i;
+
+	/* If we were processing a bus error, address error, or reset,
+	 * while writing the stack frame, this is a catastrophic failure.
+	 * Halt the CPU
+	 */
+	if(CPU_RUN_MODE == RUN_MODE_BERR_AERR_RESET_WSF)
+	{
+		m68k_read_memory_8(0x00ffff01);
+		CPU_STOPPED = STOP_LEVEL_HALT;
+		return;
+	}
+	CPU_RUN_MODE = RUN_MODE_BERR_AERR_RESET_WSF;
+
+	/* Use up some clock cycles and undo the instruction's cycles */
+	USE_CYCLES(CYC_EXCEPTION[EXCEPTION_BUS_ERROR] - CYC_INSTRUCTION[REG_IR]);
+
+	for (i = 15; i >= 0; i--){
+		REG_DA[i] = REG_DA_SAVE[i];
+	}
+
+	uint sr = m68ki_init_exception();
+
+	/* Note: This is implemented for 68010 only! */
+	m68ki_stack_frame_1000(REG_PPC, sr, EXCEPTION_BUS_ERROR);
+
+	m68ki_jump_vector(EXCEPTION_BUS_ERROR);
+
+	CPU_RUN_MODE = RUN_MODE_BERR_AERR_RESET;
+
+	longjmp(m68ki_bus_error_jmp_buf, 1);
+}
+
+extern int cpu_log_enabled;
 
 /* Exception for A-Line instructions */
 static inline void m68ki_exception_1010(void)
@@ -1875,21 +2034,23 @@ static inline void m68ki_exception_address_error(void)
 	uint sr = m68ki_init_exception();
 
 	/* If we were processing a bus error, address error, or reset,
-	 * this is a catastrophic failure.
+	 * while writing the stack frame, this is a catastrophic failure.
 	 * Halt the CPU
 	 */
-	if(CPU_RUN_MODE == RUN_MODE_BERR_AERR_RESET)
+	if(CPU_RUN_MODE == RUN_MODE_BERR_AERR_RESET_WSF)
 	{
-m68k_read_memory_8(0x00ffff01);
+		m68k_read_memory_8(0x00ffff01);
 		CPU_STOPPED = STOP_LEVEL_HALT;
 		return;
 	}
-	CPU_RUN_MODE = RUN_MODE_BERR_AERR_RESET;
+	CPU_RUN_MODE = RUN_MODE_BERR_AERR_RESET_WSF;
 
 	/* Note: This is implemented for 68000 only! */
 	m68ki_stack_frame_buserr(sr);
 
 	m68ki_jump_vector(EXCEPTION_ADDRESS_ERROR);
+
+	CPU_RUN_MODE = RUN_MODE_BERR_AERR_RESET;
 
 	/* Use up some clock cycles. Note that we don't need to undo the
 	instruction's cycles here as we've longjmp:ed directly from the

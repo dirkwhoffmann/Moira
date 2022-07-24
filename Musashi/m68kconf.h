@@ -65,9 +65,10 @@
 
 /* Turn ON if you want to use the following M68K variants */
 #define M68K_EMULATE_010            OPT_ON
-#define M68K_EMULATE_EC020          OPT_OFF
-#define M68K_EMULATE_020            OPT_OFF
-#define M68K_EMULATE_040            OPT_OFF
+#define M68K_EMULATE_EC020          OPT_ON
+#define M68K_EMULATE_020            OPT_ON
+#define M68K_EMULATE_030            OPT_ON
+#define M68K_EMULATE_040            OPT_ON
 
 
 /* If ON, the CPU will call m68k_read_immediate_xx() for immediate addressing
@@ -88,7 +89,7 @@
  * If off, all interrupts will be autovectored and all interrupt requests will
  * auto-clear when the interrupt is serviced.
  */
-#define M68K_EMULATE_INT_ACK        OPT_ON
+#define M68K_EMULATE_INT_ACK        OPT_OFF
 #define M68K_INT_ACK_CALLBACK(A)    your_int_ack_handler_function(A)
 
 
@@ -101,7 +102,7 @@
 
 /* If ON, the CPU will monitor the trace flags and take trace exceptions
  */
-#define M68K_EMULATE_TRACE          OPT_ON
+#define M68K_EMULATE_TRACE          OPT_OFF
 
 
 /* If ON, CPU will call the output reset callback when it encounters a reset
@@ -146,8 +147,8 @@
  * want to properly emulate the m68010 or higher. (moves uses function codes
  * to read/write data from different address spaces)
  */
-#define M68K_EMULATE_FC             OPT_SPECIFY_HANDLER
-#define M68K_SET_FC_CALLBACK(A)     my_fc_handler(A)
+#define M68K_EMULATE_FC             OPT_OFF
+#define M68K_SET_FC_CALLBACK(A)     your_set_fc_handler_function(A)
 
 /* If ON, CPU will call the pc changed callback when it changes the PC by a
  * large value.  This allows host programs to be nicer when it comes to
@@ -183,6 +184,9 @@
 #define M68K_LOG_1010_1111          OPT_OFF
 #define M68K_LOG_FILEHANDLE         some_file_handle
 
+/* Emulate PMMU : if you enable this, there will be a test to see if the current chip has some enabled pmmu added to every memory access,
+ * so enable this only if it's useful */
+#define M68K_EMULATE_PMMU   OPT_ON
 
 /* ----------------------------- COMPATIBILITY ---------------------------- */
 
@@ -197,18 +201,7 @@
 #define M68K_USE_64_BIT  OPT_ON
 
 
-/* Set to your compiler's static inline keyword to enable it, or
- * set it to blank to disable it.
- * If you define INLINE in the makefile, it will override this value.
- * NOTE: not enabling inline functions will SEVERELY slow down emulation.
- */
-#ifndef INLINE
-// #define INLINE static __inline__
-#define INLINE static inline
-#endif /* INLINE */
-
 #endif /* M68K_COMPILE_FOR_MAME */
-
 
 /* ======================================================================== */
 /* ============================== END OF FILE ============================= */

@@ -7,12 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5028B10A288D9EC000047C20 /* softfloat.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B103288D9EC000047C20 /* softfloat.c */; };
+		5028B10B288D9EC000047C20 /* softfloat.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 5028B108288D9EC000047C20 /* softfloat.o */; };
+		5028B10E288D9ECD00047C20 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B10D288D9ECD00047C20 /* m68kops.c */; };
+		5028B11A288D9EDC00047C20 /* m68k_in.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B111288D9EDC00047C20 /* m68k_in.c */; };
+		5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B114288D9EDC00047C20 /* m68kdasm.c */; };
+		5028B11C288D9EDC00047C20 /* m68kcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B116288D9EDC00047C20 /* m68kcpu.c */; };
+		5028B11D288D9EDC00047C20 /* m68kfpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B118288D9EDC00047C20 /* m68kfpu.c */; };
+		5028B11E288D9EDC00047C20 /* m68kmake.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B119288D9EDC00047C20 /* m68kmake.c */; };
 		502C09DF23C8D82600A179E1 /* MoiraDebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */; };
 		502C09E223C8E16600A179E1 /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; };
-		505580E623AFA04C0009F77F /* m68kfpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 505580DC23AFA04C0009F77F /* m68kfpu.c */; };
-		505580E723AFA04C0009F77F /* m68kcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 505580DE23AFA04C0009F77F /* m68kcpu.c */; };
-		505580E823AFA04C0009F77F /* m68kdasm.c in Sources */ = {isa = PBXBuildFile; fileRef = 505580DF23AFA04C0009F77F /* m68kdasm.c */; };
-		505580E923AFA04C0009F77F /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 505580E023AFA04C0009F77F /* m68kops.c */; };
 		505580EC23AFA14D0009F77F /* musashi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505580EA23AFA14D0009F77F /* musashi.cpp */; };
 		505580EF23AFC2360009F77F /* StrWriter_cpp.h in Sources */ = {isa = PBXBuildFile; fileRef = 5010BDAC238A897400CFD010 /* StrWriter_cpp.h */; };
 		507BE4AF23B66456000B37D2 /* testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* testrunner.cpp */; };
@@ -38,20 +42,31 @@
 		50032B4823BCA8D600959BEC /* MoiraInit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraInit.h; sourceTree = "<group>"; };
 		5010BDAC238A897400CFD010 /* StrWriter_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StrWriter_cpp.h; sourceTree = "<group>"; };
 		5010BDAD238A897400CFD010 /* StrWriter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StrWriter.h; sourceTree = "<group>"; };
+		5028B102288D9EC000047C20 /* mamesf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mamesf.h; sourceTree = "<group>"; };
+		5028B103288D9EC000047C20 /* softfloat.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = softfloat.c; sourceTree = "<group>"; };
+		5028B104288D9EC000047C20 /* softfloat-macros */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "softfloat-macros"; sourceTree = "<group>"; };
+		5028B105288D9EC000047C20 /* milieu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = milieu.h; sourceTree = "<group>"; };
+		5028B106288D9EC000047C20 /* README.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
+		5028B107288D9EC000047C20 /* softfloat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = softfloat.h; sourceTree = "<group>"; };
+		5028B108288D9EC000047C20 /* softfloat.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = softfloat.o; sourceTree = "<group>"; };
+		5028B109288D9EC000047C20 /* softfloat-specialize */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "softfloat-specialize"; sourceTree = "<group>"; };
+		5028B10C288D9ECD00047C20 /* m68kops.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kops.h; sourceTree = "<group>"; };
+		5028B10D288D9ECD00047C20 /* m68kops.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kops.c; sourceTree = "<group>"; };
+		5028B10F288D9EDC00047C20 /* history.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = history.txt; sourceTree = "<group>"; };
+		5028B110288D9EDC00047C20 /* m68kcpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kcpu.h; sourceTree = "<group>"; };
+		5028B111288D9EDC00047C20 /* m68k_in.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68k_in.c; sourceTree = "<group>"; };
+		5028B112288D9EDC00047C20 /* m68kmmu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kmmu.h; sourceTree = "<group>"; };
+		5028B113288D9EDC00047C20 /* readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
+		5028B114288D9EDC00047C20 /* m68kdasm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kdasm.c; sourceTree = "<group>"; };
+		5028B115288D9EDC00047C20 /* m68k.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68k.h; sourceTree = "<group>"; };
+		5028B116288D9EDC00047C20 /* m68kcpu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kcpu.c; sourceTree = "<group>"; };
+		5028B117288D9EDC00047C20 /* m68kconf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kconf.h; sourceTree = "<group>"; };
+		5028B118288D9EDC00047C20 /* m68kfpu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kfpu.c; sourceTree = "<group>"; };
+		5028B119288D9EDC00047C20 /* m68kmake.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kmake.c; sourceTree = "<group>"; };
 		502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraDebugger.cpp; sourceTree = "<group>"; };
 		502C09DE23C8D82600A179E1 /* MoiraDebugger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraDebugger.h; sourceTree = "<group>"; };
 		502C09E023C8E16600A179E1 /* TestCPU.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TestCPU.cpp; sourceTree = "<group>"; };
 		502C09E123C8E16600A179E1 /* TestCPU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestCPU.h; sourceTree = "<group>"; };
-		505580DC23AFA04C0009F77F /* m68kfpu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kfpu.c; sourceTree = "<group>"; };
-		505580DD23AFA04C0009F77F /* m68k.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68k.h; sourceTree = "<group>"; };
-		505580DE23AFA04C0009F77F /* m68kcpu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kcpu.c; sourceTree = "<group>"; };
-		505580DF23AFA04C0009F77F /* m68kdasm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kdasm.c; sourceTree = "<group>"; };
-		505580E023AFA04C0009F77F /* m68kops.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kops.c; sourceTree = "<group>"; };
-		505580E123AFA04C0009F77F /* m68kcpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kcpu.h; sourceTree = "<group>"; };
-		505580E223AFA04C0009F77F /* m68kconf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kconf.h; sourceTree = "<group>"; };
-		505580E323AFA04C0009F77F /* readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
-		505580E423AFA04C0009F77F /* history.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = history.txt; sourceTree = "<group>"; };
-		505580E523AFA04C0009F77F /* m68kops.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kops.h; sourceTree = "<group>"; };
 		505580EA23AFA14D0009F77F /* musashi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = musashi.cpp; sourceTree = "<group>"; };
 		507BE4AD23B66456000B37D2 /* testrunner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = testrunner.cpp; sourceTree = "<group>"; };
 		507BE4AE23B66456000B37D2 /* testrunner.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = testrunner.h; sourceTree = "<group>"; };
@@ -75,7 +90,6 @@
 		50CECEC523A924B000E07C65 /* Sandbox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Sandbox.cpp; sourceTree = "<group>"; };
 		50CECEC623A924B000E07C65 /* Sandbox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sandbox.h; sourceTree = "<group>"; };
 		50F80AA723C9E4EC00F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
-		50F80AA923C9EDE100F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F80AAB23C9F16900F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -84,28 +98,47 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5028B10B288D9EC000047C20 /* softfloat.o in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		505580DB23AFA04C0009F77F /* Musashi */ = {
+		5028B100288D9EA600047C20 /* Musashi */ = {
 			isa = PBXGroup;
 			children = (
-				50F80AA923C9EDE100F21D80 /* CMakeLists.txt */,
-				505580DC23AFA04C0009F77F /* m68kfpu.c */,
-				505580DD23AFA04C0009F77F /* m68k.h */,
-				505580DE23AFA04C0009F77F /* m68kcpu.c */,
-				505580DF23AFA04C0009F77F /* m68kdasm.c */,
-				505580E023AFA04C0009F77F /* m68kops.c */,
-				505580E123AFA04C0009F77F /* m68kcpu.h */,
-				505580E223AFA04C0009F77F /* m68kconf.h */,
-				505580E323AFA04C0009F77F /* readme.txt */,
-				505580E423AFA04C0009F77F /* history.txt */,
-				505580E523AFA04C0009F77F /* m68kops.h */,
+				5028B10D288D9ECD00047C20 /* m68kops.c */,
+				5028B10C288D9ECD00047C20 /* m68kops.h */,
+				5028B10F288D9EDC00047C20 /* history.txt */,
+				5028B111288D9EDC00047C20 /* m68k_in.c */,
+				5028B115288D9EDC00047C20 /* m68k.h */,
+				5028B117288D9EDC00047C20 /* m68kconf.h */,
+				5028B116288D9EDC00047C20 /* m68kcpu.c */,
+				5028B110288D9EDC00047C20 /* m68kcpu.h */,
+				5028B114288D9EDC00047C20 /* m68kdasm.c */,
+				5028B118288D9EDC00047C20 /* m68kfpu.c */,
+				5028B119288D9EDC00047C20 /* m68kmake.c */,
+				5028B112288D9EDC00047C20 /* m68kmmu.h */,
+				5028B113288D9EDC00047C20 /* readme.txt */,
+				5028B101288D9EC000047C20 /* softfloat */,
 			);
 			path = Musashi;
+			sourceTree = "<group>";
+		};
+		5028B101288D9EC000047C20 /* softfloat */ = {
+			isa = PBXGroup;
+			children = (
+				5028B102288D9EC000047C20 /* mamesf.h */,
+				5028B103288D9EC000047C20 /* softfloat.c */,
+				5028B104288D9EC000047C20 /* softfloat-macros */,
+				5028B105288D9EC000047C20 /* milieu.h */,
+				5028B106288D9EC000047C20 /* README.txt */,
+				5028B107288D9EC000047C20 /* softfloat.h */,
+				5028B108288D9EC000047C20 /* softfloat.o */,
+				5028B109288D9EC000047C20 /* softfloat-specialize */,
+			);
+			path = softfloat;
 			sourceTree = "<group>";
 		};
 		50804DFD2386A4CE004D3EC2 = {
@@ -121,7 +154,7 @@
 				502C09E023C8E16600A179E1 /* TestCPU.cpp */,
 				50CECEC623A924B000E07C65 /* Sandbox.h */,
 				50CECEC523A924B000E07C65 /* Sandbox.cpp */,
-				505580DB23AFA04C0009F77F /* Musashi */,
+				5028B100288D9EA600047C20 /* Musashi */,
 				50804E082386A4CE004D3EC2 /* Moira */,
 				50804E072386A4CE004D3EC2 /* Products */,
 			);
@@ -221,17 +254,20 @@
 			files = (
 				505580EF23AFC2360009F77F /* StrWriter_cpp.h in Sources */,
 				505580EC23AFA14D0009F77F /* musashi.cpp in Sources */,
-				505580E823AFA04C0009F77F /* m68kdasm.c in Sources */,
+				5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */,
 				50804EE22386A72C004D3EC2 /* main.cpp in Sources */,
-				505580E923AFA04C0009F77F /* m68kops.c in Sources */,
+				5028B11D288D9EDC00047C20 /* m68kfpu.c in Sources */,
 				50804F352386A7DD004D3EC2 /* Moira.cpp in Sources */,
-				505580E723AFA04C0009F77F /* m68kcpu.c in Sources */,
 				502C09E223C8E16600A179E1 /* TestCPU.cpp in Sources */,
-				505580E623AFA04C0009F77F /* m68kfpu.c in Sources */,
 				502C09DF23C8D82600A179E1 /* MoiraDebugger.cpp in Sources */,
 				509D631C25964F5C00E9DD0C /* MoiraExceptions_cpp.h in Sources */,
+				5028B11C288D9EDC00047C20 /* m68kcpu.c in Sources */,
 				50CECEC723A924B000E07C65 /* Sandbox.cpp in Sources */,
+				5028B10A288D9EC000047C20 /* softfloat.c in Sources */,
+				5028B10E288D9ECD00047C20 /* m68kops.c in Sources */,
+				5028B11A288D9EDC00047C20 /* m68k_in.c in Sources */,
 				507BE4AF23B66456000B37D2 /* testrunner.cpp in Sources */,
+				5028B11E288D9EDC00047C20 /* m68kmake.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

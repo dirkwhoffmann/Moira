@@ -48,8 +48,11 @@ extern "C" {
 /* ======================================================================== */
 
 /* Import the configuration for this build */
+#ifdef MUSASHI_CNF
+#include MUSASHI_CNF
+#else
 #include "m68kconf.h"
-
+#endif
 
 /* ======================================================================== */
 /* ============================ GENERAL DEFINES =========================== */
@@ -95,8 +98,12 @@ enum
 	M68K_CPU_TYPE_68010,
 	M68K_CPU_TYPE_68EC020,
 	M68K_CPU_TYPE_68020,
-	M68K_CPU_TYPE_68030,	/* Supported by disassembler ONLY */
-	M68K_CPU_TYPE_68040		/* Supported by disassembler ONLY */
+	M68K_CPU_TYPE_68EC030,
+	M68K_CPU_TYPE_68030,
+	M68K_CPU_TYPE_68EC040,
+	M68K_CPU_TYPE_68LC040,
+	M68K_CPU_TYPE_68040,
+	M68K_CPU_TYPE_SCC68070
 };
 
 /* Registers used by m68k_get_reg() and m68k_set_reg() */
@@ -339,6 +346,10 @@ unsigned int m68k_get_virq(unsigned int level);
 
 /* Halt the CPU as if you pulsed the HALT pin. */
 void m68k_pulse_halt(void);
+
+
+/* Trigger a bus error exception */
+void m68k_pulse_bus_error(void);
 
 
 /* Context switching to allow multiple CPUs */
