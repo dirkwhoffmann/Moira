@@ -7,6 +7,7 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+#include "config.h"
 #include "testrunner.h"
 
 TestCPU *moiracpu;
@@ -42,41 +43,29 @@ uint32 smartRandom()
 void setupMusashi()
 {
     m68k_init();
-    m68k_set_cpu_type(CPUTYPE);
+
+    switch (CPUTYPE) {
+
+        case 68000: m68k_set_cpu_type(M68K_CPU_TYPE_68000); break;
+        case 68010: m68k_set_cpu_type(M68K_CPU_TYPE_68010); break;
+        case 68020: m68k_set_cpu_type(M68K_CPU_TYPE_68020); break;
+
+        default:
+            assert(false);
+    }
 }
 
 void setupMoira()
 {
     switch (CPUTYPE) {
 
-        case M68K_CPU_TYPE_68000:
-
-            printf("Emulated CPU: Motorola 68000\n");
-            moiracpu->setModel(M68000);
-            break;
-
-        case M68K_CPU_TYPE_68010:
-
-            printf("Emulated CPU: Motorola 68010\n");
-            moiracpu->setModel(M68010);
-            break;
-
-        case M68K_CPU_TYPE_68020:
-
-            printf("Emulated CPU: Motorola 68020\n");
-            moiracpu->setModel(M68020);
-            break;
+        case 68000: moiracpu->setModel(M68000); break;
+        case 68010: moiracpu->setModel(M68010); break;
+        case 68020: moiracpu->setModel(M68020); break;
 
         default:
-
-            printf("Unsupported CPU model (%d)\n", CPUTYPE);
-            break;
+            assert(false);
     }
-
-    if constexpr (DASM_ONLY) {
-        printf(" (Disassembler only)");
-    }
-    printf("\n");
 }
 
 void createTestCase(Setup &s)
@@ -170,6 +159,14 @@ void run()
     printf("The test program runs Moira agains Musashi with randomly generated data.\n");
     printf("It runs until a bug has been found.\n\n");
 
+    switch (CPUTYPE) {
+
+        case 68000: printf("Emulated CPU: Motorola 68000"); break;
+        case 68010: printf("Emulated CPU: Motorola 68010"); break;
+        case 68020: printf("Emulated CPU: Motorola 68020"); break;
+    }
+    printf("%s\n", DASM_ONLY ? " (Disassembler only)" : "");
+
     setupMusashi();
     setupMoira();
 
@@ -227,14 +224,19 @@ clock_t runMusashi(int i, Setup &s, Result &r)
 
     r.oldpc = m68k_get_reg(NULL, M68K_REG_PC);
     r.opcode = get16(musashiMem, r.oldpc);
-    r.dasmCnt = m68k_disassemble(r.dasm, r.oldpc, CPUTYPE);
-    /*
-    if ((r.opcode & 0xFF000000) == 0xFF000000 && CPUTYPE == M68K_CPU_TYPE_68020) {
-        r.dasmCnt = m68k_disassemble(r.dasm, r.oldpc, M68K_CPU_TYPE_68040);
-    } else {
-        r.dasmCnt = m68k_disassemble(r.dasm, r.oldpc, CPUTYPE);
+
+    switch (CPUTYPE) {
+
+        case 68000:
+            r.dasmCnt = m68k_disassemble(r.dasm, r.oldpc, M68K_CPU_TYPE_68000);
+            break;
+        case 68010:
+            r.dasmCnt = m68k_disassemble(r.dasm, r.oldpc, M68K_CPU_TYPE_68010);
+            break;
+        case 68020:
+            r.dasmCnt = m68k_disassemble(r.dasm, r.oldpc, M68K_CPU_TYPE_68020);
+            break;
     }
-    */
 
     if (!skip(r.opcode)) {
         
@@ -520,7 +522,7 @@ bool compareCycles(Result &r1, Result &r2)
 
     // Exclude some instructions
     if (I == moira::TAS) return true;
-    if constexpr (CPUTYPE == M68K_CPU_TYPE_68010) {
+    if constexpr (CPUTYPE == 68010) {
 
         if (I == moira::CLR && S == Byte && M == MODE_AL) return true;
         if (I == moira::CLR && S == Word && M == MODE_AL) return true;

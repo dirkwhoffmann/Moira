@@ -1667,6 +1667,7 @@ static void d68020_extb_32(void)
 	sprintf(g_dasm_str, "extb.l  D%d; (2+)", g_cpu_ir&7);
 }
 
+/*
 static void d68040_fpu(void)
 {
 	char float_data_format[8][3] =
@@ -1784,6 +1785,7 @@ static void d68040_fpu(void)
 		}
 	}
 }
+*/
 
 static void d68000_jmp(void)
 {

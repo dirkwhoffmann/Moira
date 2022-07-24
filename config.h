@@ -10,14 +10,13 @@
 #pragma once
 
 // CPU under test
-// #define CPUTYPE M68K_CPU_TYPE_68020
-static constexpr int CPUTYPE = M68K_CPU_TYPE_68020;
+static constexpr int CPUTYPE = 68020;
 
 // Set to true for verbose output
 static constexpr bool VERBOSE = false;
 
 // Set to true to verify the disassembler output only
-static constexpr bool DASM_ONLY = false;
+static constexpr bool DASM_ONLY = true;
 
 // Set to true to verify all memory write operations
 static constexpr bool CHECK_MEM_WRITES = true;

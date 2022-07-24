@@ -633,7 +633,6 @@ Moira::dasmCpDbcc(StrWriter &str, u32 &addr, u16 op)
     auto dn   = ( _____________xxx(op)   );
     auto id   = ( ____xxx_________(op)   );
     auto cnd  = ( __________xxxxxx(ext1) );
-    auto ea   = Op <M,S> (dn, addr);
 
     pc += i16(ext3);
 

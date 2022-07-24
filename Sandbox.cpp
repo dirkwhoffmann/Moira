@@ -7,6 +7,7 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+#include "config.h"
 #include "testrunner.h"
 #include "MoiraConfig.h"
 #include "Sandbox.h"
@@ -41,7 +42,7 @@ Sandbox::recordPoll(u64 cycle, u32 fc, u8 value)
 void
 Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
 {
-    if (CPUTYPE == M68K_CPU_TYPE_68020) return;
+    if constexpr (DASM_ONLY) return;
 
     for (int i = 0; i < recordCnt; i++) {
 
