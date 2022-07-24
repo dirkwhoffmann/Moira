@@ -63,7 +63,7 @@ void setupMoira()
 
         case M68K_CPU_TYPE_68020:
 
-            printf("Emulated CPU: Motorola 68020 (Disassembler only)\n");
+            printf("Emulated CPU: Motorola 68020\n");
             moiracpu->setModel(M68020);
             break;
 
@@ -72,6 +72,11 @@ void setupMoira()
             printf("Unsupported CPU model (%d)\n", CPUTYPE);
             break;
     }
+
+    if constexpr (DASM_ONLY) {
+        printf(" (Disassembler only)");
+    }
+    printf("\n");
 }
 
 void createTestCase(Setup &s)
@@ -377,7 +382,7 @@ void compare(Setup &s, Result &r1, Result &r2)
         error = true;
     }
 
-    if constexpr (CPUTYPE != M68K_CPU_TYPE_68020) {
+    if constexpr (DASM_ONLY == false) {
 
         if (!comparePC(r1, r2)) {
             printf("\nPROGRAM COUNTER MISMATCH FOUND");
