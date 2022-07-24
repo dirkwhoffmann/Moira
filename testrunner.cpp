@@ -228,13 +228,13 @@ clock_t runMusashi(int i, Setup &s, Result &r)
     switch (CPUTYPE) {
 
         case 68000:
-            r.dasmCnt = m68k_disassemble(r.dasm, r.oldpc, M68K_CPU_TYPE_68000);
+            r.dasmCnt = m68k_disassemble(r.dasm, s.pc, M68K_CPU_TYPE_68000);
             break;
         case 68010:
-            r.dasmCnt = m68k_disassemble(r.dasm, r.oldpc, M68K_CPU_TYPE_68010);
+            r.dasmCnt = m68k_disassemble(r.dasm, s.pc, M68K_CPU_TYPE_68010);
             break;
         case 68020:
-            r.dasmCnt = m68k_disassemble(r.dasm, r.oldpc, M68K_CPU_TYPE_68020);
+            r.dasmCnt = m68k_disassemble(r.dasm, s.pc, M68K_CPU_TYPE_68020);
             break;
     }
 

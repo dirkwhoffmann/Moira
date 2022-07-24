@@ -488,7 +488,7 @@ StrWriter::operator<<(Finish)
 }
 
 template <Mode M, Size S> void
-StrWriter::briefExtension(const Ea<M,S> &ea)
+StrWriter::briefExtension(const Ea <M,S> &ea)
 {
     assert(M == 6 || M == 10);
 
@@ -511,7 +511,7 @@ StrWriter::briefExtension(const Ea<M,S> &ea)
 }
 
 template <Mode M, Size S> void
-StrWriter::fullExtension(const Ea<M,S> &ea)
+StrWriter::fullExtension(const Ea <M,S> &ea)
 {
     assert(M == 6 || M == 10);
 
@@ -525,6 +525,7 @@ StrWriter::fullExtension(const Ea<M,S> &ea)
     u16  scale = _____xx_________ (ea.ext1);
     u16  bs    = ________x_______ (ea.ext1);
     u16  is    = _________x______ (ea.ext1);
+    u16  size  = __________xx____ (ea.ext1);
     u16  iis   = _____________xxx (ea.ext1);
     u32  base  = ea.ext2;
     u32  outer = ea.ext3;
@@ -547,7 +548,7 @@ StrWriter::fullExtension(const Ea<M,S> &ea)
     }
     if (base)
     {
-        *this << Int{(i16)base};
+        size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
         comma = true;
     }
     if (!bs)
