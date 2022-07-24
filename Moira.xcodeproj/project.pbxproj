@@ -8,13 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		5028B10A288D9EC000047C20 /* softfloat.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B103288D9EC000047C20 /* softfloat.c */; };
-		5028B10B288D9EC000047C20 /* softfloat.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 5028B108288D9EC000047C20 /* softfloat.o */; };
 		5028B10E288D9ECD00047C20 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B10D288D9ECD00047C20 /* m68kops.c */; };
-		5028B11A288D9EDC00047C20 /* m68k_in.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B111288D9EDC00047C20 /* m68k_in.c */; };
 		5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B114288D9EDC00047C20 /* m68kdasm.c */; };
 		5028B11C288D9EDC00047C20 /* m68kcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B116288D9EDC00047C20 /* m68kcpu.c */; };
-		5028B11D288D9EDC00047C20 /* m68kfpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B118288D9EDC00047C20 /* m68kfpu.c */; };
-		5028B11E288D9EDC00047C20 /* m68kmake.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B119288D9EDC00047C20 /* m68kmake.c */; };
 		502C09DF23C8D82600A179E1 /* MoiraDebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */; };
 		502C09E223C8E16600A179E1 /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; };
 		505580EC23AFA14D0009F77F /* musashi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505580EA23AFA14D0009F77F /* musashi.cpp */; };
@@ -54,7 +50,6 @@
 		5028B10D288D9ECD00047C20 /* m68kops.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kops.c; sourceTree = "<group>"; };
 		5028B10F288D9EDC00047C20 /* history.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = history.txt; sourceTree = "<group>"; };
 		5028B110288D9EDC00047C20 /* m68kcpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kcpu.h; sourceTree = "<group>"; };
-		5028B111288D9EDC00047C20 /* m68k_in.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68k_in.c; sourceTree = "<group>"; };
 		5028B112288D9EDC00047C20 /* m68kmmu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kmmu.h; sourceTree = "<group>"; };
 		5028B113288D9EDC00047C20 /* readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
 		5028B114288D9EDC00047C20 /* m68kdasm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kdasm.c; sourceTree = "<group>"; };
@@ -62,7 +57,6 @@
 		5028B116288D9EDC00047C20 /* m68kcpu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kcpu.c; sourceTree = "<group>"; };
 		5028B117288D9EDC00047C20 /* m68kconf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kconf.h; sourceTree = "<group>"; };
 		5028B118288D9EDC00047C20 /* m68kfpu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kfpu.c; sourceTree = "<group>"; };
-		5028B119288D9EDC00047C20 /* m68kmake.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kmake.c; sourceTree = "<group>"; };
 		502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraDebugger.cpp; sourceTree = "<group>"; };
 		502C09DE23C8D82600A179E1 /* MoiraDebugger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraDebugger.h; sourceTree = "<group>"; };
 		502C09E023C8E16600A179E1 /* TestCPU.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TestCPU.cpp; sourceTree = "<group>"; };
@@ -98,7 +92,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5028B10B288D9EC000047C20 /* softfloat.o in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -111,14 +104,12 @@
 				5028B10D288D9ECD00047C20 /* m68kops.c */,
 				5028B10C288D9ECD00047C20 /* m68kops.h */,
 				5028B10F288D9EDC00047C20 /* history.txt */,
-				5028B111288D9EDC00047C20 /* m68k_in.c */,
 				5028B115288D9EDC00047C20 /* m68k.h */,
 				5028B117288D9EDC00047C20 /* m68kconf.h */,
 				5028B116288D9EDC00047C20 /* m68kcpu.c */,
 				5028B110288D9EDC00047C20 /* m68kcpu.h */,
 				5028B114288D9EDC00047C20 /* m68kdasm.c */,
 				5028B118288D9EDC00047C20 /* m68kfpu.c */,
-				5028B119288D9EDC00047C20 /* m68kmake.c */,
 				5028B112288D9EDC00047C20 /* m68kmmu.h */,
 				5028B113288D9EDC00047C20 /* readme.txt */,
 				5028B101288D9EC000047C20 /* softfloat */,
@@ -256,7 +247,6 @@
 				505580EC23AFA14D0009F77F /* musashi.cpp in Sources */,
 				5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */,
 				50804EE22386A72C004D3EC2 /* main.cpp in Sources */,
-				5028B11D288D9EDC00047C20 /* m68kfpu.c in Sources */,
 				50804F352386A7DD004D3EC2 /* Moira.cpp in Sources */,
 				502C09E223C8E16600A179E1 /* TestCPU.cpp in Sources */,
 				502C09DF23C8D82600A179E1 /* MoiraDebugger.cpp in Sources */,
@@ -265,9 +255,7 @@
 				50CECEC723A924B000E07C65 /* Sandbox.cpp in Sources */,
 				5028B10A288D9EC000047C20 /* softfloat.c in Sources */,
 				5028B10E288D9ECD00047C20 /* m68kops.c in Sources */,
-				5028B11A288D9EDC00047C20 /* m68k_in.c in Sources */,
 				507BE4AF23B66456000B37D2 /* testrunner.cpp in Sources */,
-				5028B11E288D9EDC00047C20 /* m68kmake.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
