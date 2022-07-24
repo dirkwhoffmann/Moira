@@ -147,6 +147,7 @@ Moira::availability(u16 opcode, u16 ext)
         case CAS:
         case CAS2:
         case CHK2:
+        case CMP2:
         case DIVL:
         case EXTB:
         case MULL:
@@ -440,13 +441,13 @@ Moira::dasmBitField(StrWriter &str, u32 &addr, u16 op)
     if (ext & 0x0800) {
         str << " {" << Dn ( _______xxx______(ext) ) << ":";
     } else {
-        str << " {" << ______xxxx______(ext) << ":";
+        str << " {" << _____xxxxx______(ext) << ":";
     }
 
     if (ext & 0x0020) {
         str << Dn ( _____________xxx(ext) ) << "}";
     } else {
-        auto width = ____________xxxx(ext);
+        auto width = ___________xxxxx(ext);
         str << (width ? width : 32) << "}";
     }
 
@@ -542,7 +543,11 @@ Moira::dasmChk2(StrWriter &str, u32 &addr, u16 op)
     auto src = Op <M,S> ( _____________xxx(op), addr );
     auto dst = Rn       ( xxxx____________(ext)      );
 
-    str << Ins<I>{} << Sz<S>{} << tab << src << ", " << dst;
+    if (ext & 0x0800) {
+        str << Ins<CHK2>{} << Sz<S>{} << tab << src << ", " << dst;
+    } else {
+        str << Ins<CMP2>{} << Sz<S>{} << tab << src << ", " << dst;
+    }
     str << availability <I, M, S> ();
 }
 
@@ -611,7 +616,7 @@ Moira::dasmCpBcc(StrWriter &str, u32 &addr, u16 op)
     auto id   = ( ____xxx_________(op) );
     auto cnd  = ( __________xxxxxx(op) );
 
-    pc += i32(disp);
+    pc += SEXT<S>(disp);
 
     str << id << Ins<I>{} << Cpcc{cnd} << tab << Ims{ i16(ext2) };
     str << "; " << UInt(pc) << " (extension = " << Int(ext1) << ") (2-3)";
@@ -632,8 +637,6 @@ Moira::dasmCpDbcc(StrWriter &str, u32 &addr, u16 op)
 
     pc += i16(ext3);
 
-    printf("%x %x %x %x\n", ext1, ext2, ext3, ext4);
-
     str << id << Ins<I>{} << Cpcc{cnd} << tab << Dn{dn} << "," << Ims{i16(ext4)};
     str << "; " << UInt(pc) << " (extension = " << Int(ext2) << ") (2-3)";
 }
@@ -651,20 +654,22 @@ Moira::dasmCpGen(StrWriter &str, u32 &addr, u16 op)
 template<Instr I, Mode M, Size S> void
 Moira::dasmCpRestore(StrWriter &str, u32 &addr, u16 op)
 {
-    auto ext = Imu ( dasmRead<Long>(addr) );
-    auto id =      ( ____xxx_________(op) );
+    auto dn = ( _____________xxx(op) );
+    auto id = ( ____xxx_________(op) );
+    auto ea = Op <M,S> (dn, addr);
 
-    str << id << Ins<I>{} << tab;
+    str << id << Ins<I>{} << " " << ea;
     str << availability <I, M, S> ();
 }
 
 template<Instr I, Mode M, Size S> void
 Moira::dasmCpSave(StrWriter &str, u32 &addr, u16 op)
 {
-    auto ext = Imu ( dasmRead<Long>(addr) );
-    auto id =      ( ____xxx_________(op) );
+    auto dn = ( _____________xxx(op) );
+    auto id = ( ____xxx_________(op) );
+    auto ea = Op <M,S> (dn, addr);
 
-    str << id << Ins<I>{} << tab;
+    str << id << Ins<I>{} << tab << ea;
     str << availability <I, M, S> ();
 }
 
@@ -679,7 +684,7 @@ Moira::dasmCpScc(StrWriter &str, u32 &addr, u16 op)
     auto ea   = Op <M,S> (dn, addr);
 
     str << id << Ins<I>{} << Cpcc{cnd} << tab << ea;
-    str << "; (extension = " << ext2 << ") (2-3)";
+    str << "; (extension = " << Int(ext2) << ") (2-3)";
 }
 
 template<Instr I, Mode M, Size S> void
@@ -708,7 +713,7 @@ Moira::dasmCpTrapcc(StrWriter &str, u32 &addr, u16 op)
         }
     }
 
-    str << "; (extension = " << ext2 << ") (2-3)";
+    str << "; (extension = " << Int(ext2) << ") (2-3)";
 }
 
 template<Instr I, Mode M, Size S> void
@@ -1083,13 +1088,12 @@ Moira::dasmMull(StrWriter &str, u32 &addr, u16 op)
 {
     auto ext = dasmRead <Word> (addr);
     auto src = Op <M,S> ( _____________xxx(op), addr );
-    auto dh  = Dn       ( _xxx____________(ext)      );
-    auto dl  = Dn       ( _____________xxx(ext)      );
+    auto dl  = Dn       ( _xxx____________(ext)      );
+    auto dh  = Dn       ( _____________xxx(ext)      );
 
     (ext & 1 << 11) ? str << Ins<MULS>{} : str << Ins<MULU>{};
-    (ext & 1 << 10) ? str << Sz<Long>{} : str << Sz<Word>{};
-
-    str << tab << src << ", " << dh << ":" << dl;
+    str << Sz<S>{} << tab << src << ", ";
+    (ext & 1 << 10) ? str << dh << ":" << dl : str << dl;
     str << availability <I, M, S> ();
 }
 
@@ -1107,13 +1111,19 @@ Moira::dasmDivl(StrWriter &str, u32 &addr, u16 op)
 {
     auto ext = dasmRead <Word> (addr);
     auto src = Op <M,S> ( _____________xxx(op), addr );
-    auto dh  = Dn       ( _xxx____________(ext)      );
-    auto dl  = Dn       ( _____________xxx(ext)      );
+    auto dl  = Dn       ( _xxx____________(ext)      );
+    auto dh  = Dn       ( _____________xxx(ext)      );
 
     (ext & 1 << 11) ? str << Ins<DIVS>{} : str << Ins<DIVU>{};
-    (ext & 1 << 10) ? str << Sz<Long>{} : str << Sz<Word>{};
 
-    str << tab << src << ", " << dh << ":" << dl;
+    if (ext & 1 << 10) {
+        str << Sz<S>{} << tab << src << ", " << dh << ":" << dl;
+    } else if (dl.raw == dh.raw) {
+        str << Sz<S>{} << tab << src << ", " << dl;
+    } else {
+        str << "l" << Sz<S>{} << tab << src << ", " << dh << ":" << dl;
+    }
+    
     str << availability <I, M, S> ();
 }
 

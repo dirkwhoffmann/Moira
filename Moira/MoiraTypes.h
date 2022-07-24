@@ -86,6 +86,7 @@ typedef enum
     CHK2,           // 68020+: Check register against bounds
     CLR,            // Clear an operand
     CMP,            // Compare
+    CMP2,           // 68020+: Compare register against bounds
     CMPA,           // Compare address
     CMPI,           // Compare immediate
     CMPM,           // Compare memory with memory

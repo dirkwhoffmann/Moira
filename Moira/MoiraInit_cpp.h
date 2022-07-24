@@ -193,10 +193,10 @@ Moira::createJumpTable()
         ____XXX___XXXXXX(opcode, cpGEN, MODE_IP, (Size)0, CpGen, CIMS);
 
         opcode = parse("1111 ---1 01-- ----");
-        ____XXX___XXXXXX(opcode, cpRESTORE, MODE_IP, (Size)0, CpRestore, CIMS);
+        ____XXX___MMMXXX(opcode, cpRESTORE, 0b001101111000, Word, CpRestore, CIMS);
 
         opcode = parse("1111 ---1 00-- ----");
-        ____XXX___XXXXXX(opcode, cpSAVE, MODE_IP, (Size)0, CpSave, CIMS);
+        ____XXX___MMMXXX(opcode, cpSAVE, 0b001011111000, Word, CpSave, CIMS);
 
         opcode = parse("1111 ---0 0111 1---");
         ____XXX___XXX___(opcode | 0b010, cpTRAPcc, MODE_IP, (Size)0, CpTrapcc, CIMS);
@@ -699,7 +699,7 @@ Moira::createJumpTable()
     }
 
 
-    // CHK2
+    // CHK2 / CMP2
     //
     //       Syntax: CHK2 <ea>,Dy
     //         Size: Word
@@ -1804,7 +1804,7 @@ Moira::createJumpTable()
     ________SSMMMXXX(opcode, TST, 0b101111111000, Byte | Word | Long, Tst, IMS);
     ________SSMMMXXX(opcode, TST, 0b001110000000, Byte | Word | Long, Tst, IMSloop);
 
-    if (model >= M68010) {
+    if (model >= M68020) {
 
         ________SSMMMXXX(opcode, TST, 0b000000000111, Byte, Tst, IMS);
         ________SSMMMXXX(opcode, TST, 0b010000000111, Word | Long, Tst, IMS);

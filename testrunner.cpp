@@ -223,6 +223,13 @@ clock_t runMusashi(int i, Setup &s, Result &r)
     r.oldpc = m68k_get_reg(NULL, M68K_REG_PC);
     r.opcode = get16(musashiMem, r.oldpc);
     r.dasmCnt = m68k_disassemble(r.dasm, r.oldpc, CPUTYPE);
+    /*
+    if ((r.opcode & 0xFF000000) == 0xFF000000 && CPUTYPE == M68K_CPU_TYPE_68020) {
+        r.dasmCnt = m68k_disassemble(r.dasm, r.oldpc, M68K_CPU_TYPE_68040);
+    } else {
+        r.dasmCnt = m68k_disassemble(r.dasm, r.oldpc, CPUTYPE);
+    }
+    */
 
     if (!skip(r.opcode)) {
         
