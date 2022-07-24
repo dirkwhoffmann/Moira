@@ -60,4 +60,4 @@
  * instructions. It is intended to invoke debug code. Make sure to define it
  * as an empty macro in release builds.
  */
-#define EXEC_DEBUG { /* execDebug(__func__); */ }
+#define EXEC_DEBUG(CPU,I,M,S) { execDebug(__func__, CPU, I, M, S); }

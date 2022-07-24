@@ -275,9 +275,11 @@ protected:
 	virtual void catchpointReached(u8 vector) { };
 	virtual void swTrapReached(u32 addr) { };
 
+    int removeAsap = 0;
+
     // Called at the beginning of each instruction handler (see EXEC_DEBUG)
-    virtual void execDebug(const char *cmd) { printf("%s\n", cmd); }
-    
+    virtual void execDebug(const char *func, Type CPU, Instr I, Mode M, Size S) { }
+
 
     //
     // Accessing the clock

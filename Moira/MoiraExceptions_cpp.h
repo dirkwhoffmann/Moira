@@ -109,8 +109,6 @@ Moira::execAddressError(AEStackFrame frame, int delay)
 template <Type CPU> void
 Moira::execAddressError(AEStackFrame frame, int delay)
 {
-    EXEC_DEBUG
-
     assert(frame.addr & 1);
     
     // Emulate additional delay
@@ -159,8 +157,6 @@ Moira::execFormatError()
 template <Type CPU> void
 Moira::execFormatError()
 {
-    EXEC_DEBUG
-
     u16 status = getSR();
 
     // Enter supervisor mode
@@ -194,8 +190,6 @@ Moira::execUnimplemented(int nr)
 template <Type CPU> void
 Moira::execUnimplemented(int nr)
 {
-    EXEC_DEBUG
-
     u16 status = getSR();
     
     // Enter supervisor mode
@@ -229,8 +223,6 @@ Moira::execTraceException()
 template <Type CPU> void
 Moira::execTraceException()
 {
-    EXEC_DEBUG
-
     signalTraceException();
     
     u16 status = getSR();
@@ -269,8 +261,6 @@ Moira::execTrapException(int nr)
 template <Type CPU> void
 Moira::execTrapException(int nr)
 {
-    EXEC_DEBUG
-
     signalTrapException();
     
     u16 status = getSR();
@@ -304,8 +294,6 @@ Moira::execPrivilegeException()
 template <Type CPU> void
 Moira::execPrivilegeException()
 {
-    EXEC_DEBUG
-
     signalPrivilegeViolation();
     
     u16 status = getSR();
@@ -341,8 +329,6 @@ Moira::execIrqException(u8 level)
 template <Type CPU> void
 Moira::execIrqException(u8 level)
 {
-    EXEC_DEBUG
-    
     assert(level < 8);
     
     // Notify delegate
