@@ -23,3 +23,8 @@ static constexpr bool CHECK_MEM_WRITES = true;
 
 // Number of instructions that are executed in a row
 static constexpr int RUNS = 1;
+
+// Uncomment to enable assertion checking
+#define NDEBUG true
+
+#include <assert.h>

@@ -15,7 +15,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
-#include <assert.h>
 
 #include "Sandbox.h"
 #include "TestCPU.h"
