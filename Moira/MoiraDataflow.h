@@ -123,4 +123,4 @@ void noPrefetch();
 void readExt();
 
 // Jumps to an exception vector
-template<Flags F = 0> void jumpToVector(int nr);
+template<Core C, Flags F = 0> void jumpToVector(int nr);

@@ -130,7 +130,7 @@ Moira::execAddressError(AEStackFrame frame, int delay)
         // Write stack frame
         saveToStack(frame);
         sync<C>(2);
-        jumpToVector(3);
+        jumpToVector<C>(3);
     }
     
     // Inform the delegate
@@ -170,7 +170,7 @@ Moira::execFormatError()
     sync<C>(4);
     saveToStackBrief(14, status, reg.pc);
 
-    jumpToVector<AE_SET_CB3>(14);
+    jumpToVector <C, AE_SET_CB3> (14);
 }
 
 void
@@ -203,7 +203,7 @@ Moira::execUnimplemented(int nr)
     sync<C>(4);
     saveToStackBrief(u16(nr), status, reg.pc - 2);
 
-    jumpToVector<AE_SET_CB3>(nr);
+    jumpToVector <C, AE_SET_CB3> (nr);
 }
 
 void
@@ -241,7 +241,7 @@ Moira::execTraceException()
     sync<C>(4);
     saveToStackBrief(9, status, reg.pc);
 
-    jumpToVector(9);
+    jumpToVector<C>(9);
 }
 
 void
@@ -274,7 +274,7 @@ Moira::execTrapException(int nr)
     // Write exception information to stack
     saveToStackBrief(u16(nr), status, reg.pc);
 
-    jumpToVector(nr);
+    jumpToVector<C>(nr);
 }
 
 void
@@ -309,7 +309,7 @@ Moira::execPrivilegeException()
     sync<C>(4);
     saveToStackBrief(8, status, reg.pc - 2);
 
-    jumpToVector<AE_SET_CB3>(8);
+    jumpToVector <C,AE_SET_CB3> (8);
 }
 
 void
@@ -383,5 +383,5 @@ Moira::execIrqException(u8 level)
         writeMS <MEM_DATA, Word> (reg.sp + 6, 4 * queue.ird);
     }
 
-    jumpToVector<AE_SET_CB3>(queue.ird);
+    jumpToVector <C,AE_SET_CB3> (queue.ird);
 }

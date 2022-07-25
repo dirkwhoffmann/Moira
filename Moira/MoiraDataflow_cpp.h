@@ -488,7 +488,7 @@ Moira::readExt()
     queue.irc = (u16)readMS <MEM_PROG, Word> (reg.pc);
 }
 
-template<Flags F> void
+template<Core C, Flags F> void
 Moira::jumpToVector(int nr)
 {
     u32 vectorAddr = reg.vbr + 4 * nr;
