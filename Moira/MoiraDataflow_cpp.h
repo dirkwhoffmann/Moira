@@ -15,7 +15,7 @@ Moira::readOp(int n, u32 &ea, u32 &result)
         // Handle non-memory modes
         case MODE_DN: result = readD <S> (n); return true;
         case MODE_AN: result = readA <S> (n); return true;
-        case MODE_IM: result = readI <S> ();  return true;
+        case MODE_IM: result = readI <C,S> ();  return true;
             
         default:
             
@@ -121,7 +121,7 @@ Moira::computeEA(u32 n) {
             i16  d = (i16)queue.irc;
             
             result = U32_ADD(an, d);
-            if ((F & SKIP_LAST_READ) == 0) readExt();
+            if ((F & SKIP_LAST_READ) == 0) readExt<C>();
             break;
         }
         case 6: // (d,An,Xi)
@@ -133,21 +133,21 @@ Moira::computeEA(u32 n) {
             result = U32_ADD3(an, d, ((queue.irc & 0x800) ? xi : SEXT<Word>(xi)));
 
             sync<C>(2);
-            if ((F & SKIP_LAST_READ) == 0) readExt();
+            if ((F & SKIP_LAST_READ) == 0) readExt<C>();
             break;
         }
         case 7: // ABS.W
         {
             result = (i16)queue.irc;
-            if ((F & SKIP_LAST_READ) == 0) readExt();
+            if ((F & SKIP_LAST_READ) == 0) readExt<C>();
             break;
         }
         case 8: // ABS.L
         {
             result = queue.irc << 16;
-            readExt();
+            readExt<C>();
             result |= queue.irc;
-            if ((F & SKIP_LAST_READ) == 0) readExt();
+            if ((F & SKIP_LAST_READ) == 0) readExt<C>();
             break;
         }
         case 9: // (d,PC)
@@ -155,7 +155,7 @@ Moira::computeEA(u32 n) {
             i16  d = (i16)queue.irc;
 
             result = U32_ADD(reg.pc, d);
-            if ((F & SKIP_LAST_READ) == 0) readExt();
+            if ((F & SKIP_LAST_READ) == 0) readExt<C>();
             break;
         }
         case 10: // (d,PC,Xi)
@@ -165,12 +165,12 @@ Moira::computeEA(u32 n) {
             
             result = U32_ADD3(reg.pc, d, ((queue.irc & 0x800) ? xi : SEXT<Word>(xi)));
             sync<C>(2);
-            if ((F & SKIP_LAST_READ) == 0) readExt();
+            if ((F & SKIP_LAST_READ) == 0) readExt<C>();
             break;
         }
         case 11: // Im
         {
-            result = readI<S>();
+            result = readI <C,S> ();
             break;
         }
         default:
@@ -343,7 +343,7 @@ Moira::writeMS(u32 addr, u32 val)
     }
 }
 
-template<Size S> u32
+template<Core C, Size S> u32
 Moira::readI()
 {
     u32 result;
@@ -353,21 +353,21 @@ Moira::readI()
         case Byte:
             
             result = (u8)queue.irc;
-            readExt();
+            readExt<C>();
             break;
             
         case Word:
             
             result = queue.irc;
-            readExt();
+            readExt<C>();
             break;
             
         case Long:
             
             result = queue.irc << 16;
-            readExt();
+            readExt<C>();
             result |= queue.irc;
-            readExt();
+            readExt<C>();
             break;
             
         default:
@@ -451,7 +451,7 @@ Moira::prefetch()
     queue.irc = (u16)readMS <MEM_PROG, Word, F> (reg.pc + 2);
 }
 
-template<Flags F, int delay> void
+template<Core C, Flags F, int delay> void
 Moira::fullPrefetch()
 {    
     // Check for address error
@@ -461,7 +461,7 @@ Moira::fullPrefetch()
     }
 
     queue.irc = (u16)readMS <MEM_PROG, Word> (reg.pc);
-    if (delay) sync(delay);
+    if (delay) sync<C>(delay);
     prefetch<F>();
 }
 
@@ -474,7 +474,7 @@ Moira::noPrefetch()
     std::swap(queue.irc, queue.ird);
 }
 
-void
+template<Core C> void
 Moira::readExt()
 {
     reg.pc += 2;

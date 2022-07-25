@@ -27,8 +27,8 @@ namespace moira {
 #ifdef PRECISE_TIMING
 
 #define SYNC(x)         sync(x)
-#define SYNC_68000(x)   if constexpr (C == M68000) sync(x)
-#define SYNC_68010(x)   if constexpr (C == M68010) sync(x)
+#define SYNC_68000(x)   if constexpr (C == M68000) sync <M68000> (x)
+#define SYNC_68010(x)   if constexpr (C == M68010) sync <M68010> (x)
 
 #define CYCLES(c0,c1,c2)
 #define CYCLES_MBWL(m,b0,b1,b2,w0,w1,w2,l0,l1,l2)
@@ -333,7 +333,7 @@ protected:
     // Advances the clock (called before each memory access)
     [[deprecated]] virtual void sync(int cycles) { clock += cycles; }
 
-    template <Core C> void sync(int cycles) { sync(cycles); }
+    template <Core C> void sync(int cycles) { clock += cycles; } // sync(cycles); }
 
 
     //

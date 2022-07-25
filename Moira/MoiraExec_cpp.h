@@ -241,7 +241,7 @@ Moira::execAddiRg(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
-    u32 src = readI<S>();
+    u32 src = readI <C,S> ();
     int dst = _____________xxx(opcode);
 
     u32 ea, data, result;
@@ -259,7 +259,7 @@ Moira::execAddiEa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
-    u32 src = readI<S>();
+    u32 src = readI <C,S> ();
     int dst = _____________xxx(opcode);
 
     u32 ea, data, result;
@@ -435,7 +435,7 @@ Moira::execAndiRg(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
-    u32 src = readI<S>();
+    u32 src = readI <C,S> ();
     int dst = _____________xxx(opcode);
 
     u32 result = logic<C, I, S>(src, readD<S>(dst));
@@ -452,7 +452,7 @@ Moira::execAndiEa(u16 opcode)
 
     u32 ea, data, result;
 
-    u32 src = readI<S>();
+    u32 src = readI <C,S> ();
     int dst = _____________xxx(opcode);
 
     if (!readOp<C, M, S, STD_AE_FRAME>(dst, ea, data)) return;
@@ -472,7 +472,7 @@ Moira::execAndiccr(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
-    u32 src = readI<S>();
+    u32 src = readI <C,S> ();
     u8  dst = getCCR();
 
     SYNC_68000(8);
@@ -492,7 +492,7 @@ Moira::execAndisr(u16 opcode)
 
     SUPERVISOR_MODE_ONLY
 
-    u32 src = readI<S>();
+    u32 src = readI <C,S> ();
     u16 dst = getSR();
 
     SYNC_68000(8);
@@ -523,13 +523,13 @@ Moira::execBcc(u16 opcode)
 
         // Take branch
         reg.pc = newpc;
-        fullPrefetch<POLLIPL>();
+        fullPrefetch <C, POLLIPL> ();
 
     } else {
 
         // Fall through to next instruction
         if (core == M68000) sync<C>(2);
-        if constexpr (S == Word) readExt();
+        if constexpr (S == Word) readExt<C>();
         prefetch<POLLIPL>();
     }
 }
@@ -578,7 +578,7 @@ Moira::execBitImEa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
-    u8  src = (u8)readI<S>();
+    u8  src = (u8)readI <C,S> ();
     int dst = _____________xxx(opcode);
 
     switch (M)
@@ -654,7 +654,7 @@ Moira::execBsr(u16 opcode)
     auto oldpc = reg.pc;
     reg.pc = newpc;
 
-    fullPrefetch<POLLIPL>();
+    fullPrefetch <C, POLLIPL> ();
 
     signalJsrBsrInstr(opcode, oldpc, reg.pc);
 }
@@ -817,7 +817,7 @@ Moira::execCmpiRg(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
-    u32 src = readI<S>();
+    u32 src = readI <C,S> ();
     int dst = _____________xxx(opcode);
 
     prefetch<POLLIPL>();
@@ -831,7 +831,7 @@ Moira::execCmpiEa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
-    u32 src = readI<S>();
+    u32 src = readI <C,S> ();
     int dst = _____________xxx(opcode);
 
     u32 ea, data;
@@ -949,7 +949,7 @@ Moira::execDbcc(u16 opcode)
             // Branch
             if (takeBranch) {
                 reg.pc = newpc;
-                fullPrefetch<POLLIPL>();
+                fullPrefetch <C, POLLIPL> ();
                 return;
             } else {
                 (void)readMS <MEM_PROG, Word> (reg.pc + 2);
@@ -960,7 +960,7 @@ Moira::execDbcc(u16 opcode)
 
         // Fall through to next instruction
         reg.pc += 2;
-        fullPrefetch<POLLIPL>();
+        fullPrefetch <C, POLLIPL> ();
     };
 
     auto exec68010 = [&]() {
@@ -988,7 +988,7 @@ Moira::execDbcc(u16 opcode)
             if (takeBranch) {
 
                 reg.pc = newpc;
-                fullPrefetch<POLLIPL>();
+                fullPrefetch <C, POLLIPL> ();
 
                 /*
                 if (loop[queue.ird] && disp == -4) {
@@ -1016,7 +1016,7 @@ Moira::execDbcc(u16 opcode)
 
         // Fall through to next instruction
         reg.pc += 2;
-        fullPrefetch<POLLIPL>();
+        fullPrefetch <C, POLLIPL> ();
     };
 
     auto execLoop = [&]() {
@@ -1054,7 +1054,7 @@ Moira::execDbcc(u16 opcode)
 
         // Fall through to next instruction
         reg.pc += 2;
-        fullPrefetch<POLLIPL>();
+        fullPrefetch <C, POLLIPL> ();
         flags &= ~CPU_IS_LOOPING;
         // printf("Exiting loop mode (IRD: %x IRC: %x)\n", queue.ird, queue.irc);
     };
@@ -1162,7 +1162,7 @@ Moira::execJmp(u16 opcode)
     reg.pc = ea;
 
     // Fill the prefetch queue
-    fullPrefetch<POLLIPL>();
+    fullPrefetch <C, POLLIPL> ();
 }
 
 template<Core C, Instr I, Mode M, Size S> void
@@ -1229,7 +1229,7 @@ Moira::execLink(u16 opcode)
     u32 sp   = getSP() - 4;
 
     int ax   = _____________xxx(opcode);
-    i16 disp = (i16)readI<S>();
+    i16 disp = (i16)readI <C,S> ();
 
     // Check for address error
     if (misaligned<Long>(sp)) {
@@ -1533,7 +1533,7 @@ Moira::execMove8(u16 opcode)
         reg.sr.c = 0;
 
         u32 ea2 = queue.irc << 16;
-        readExt();
+        readExt<C>();
         ea2 |= queue.irc;
 
         if (misaligned<S>(ea2)) {
@@ -1547,7 +1547,7 @@ Moira::execMove8(u16 opcode)
         reg.sr.c = 0;
 
         writeM <C,MODE_AL,S> (ea2, data);
-        readExt();
+        readExt<C>();
 
     } else {
 
@@ -1599,7 +1599,7 @@ Moira::execMovecRcRx(u16 opcode)
 
     sync<C>(4);
 
-    auto arg = readI<Word>();
+    auto arg = readI <C,Word> ();
     int dst = xxxx____________(arg);
 
     switch(arg & 0x0FFF) {
@@ -1633,7 +1633,7 @@ Moira::execMovecRxRc(u16 opcode)
 
     sync<C>(2);
 
-    auto arg = readI<Word>();
+    auto arg = readI <C,Word> ();
     int src = xxxx____________(arg);
 
     switch(arg & 0x0FFF) {
@@ -1653,7 +1653,7 @@ Moira::execMovemEaRg(u16 opcode)
     EXEC_DEBUG(C,I,M,S)
 
     int src  = _____________xxx(opcode);
-    u16 mask = (u16)readI<Word>();
+    u16 mask = (u16)readI <C,Word> ();
     u32 ea   = computeEA <C,M,S> (src);
 
     // Check for address error
@@ -1706,7 +1706,7 @@ Moira::execMovemRgEa(u16 opcode)
     EXEC_DEBUG(C,I,M,S)
 
     int dst  = _____________xxx(opcode);
-    u16 mask = (u16)readI<Word>();
+    u16 mask = (u16)readI <C,Word> ();
 
     switch (M) {
 
@@ -1842,7 +1842,7 @@ Moira::execMoves(u16 opcode)
 
     if (queue.irc & 0x800) {    // Rg -> Ea
 
-        auto arg = readI<Word>();
+        auto arg = readI <C,Word> ();
         int src = xxxx____________(arg);
         int dst = _____________xxx(opcode);
 
@@ -1884,7 +1884,7 @@ Moira::execMoves(u16 opcode)
 
     } else {                    // Ea -> Rg
 
-        auto arg = readI<Word>();
+        auto arg = readI <C,Word> ();
         int src = _____________xxx(opcode);
         int dst = xxxx____________(arg);
 
@@ -2331,7 +2331,7 @@ Moira::execRtd(u16 opcode)
     }
 
     setPC(newpc);
-    fullPrefetch<POLLIPL>();
+    fullPrefetch <C, POLLIPL> ();
 }
 
 template<Core C, Instr I, Mode M, Size S> void
@@ -2380,13 +2380,13 @@ Moira::execRte(u16 opcode)
     }
 
     setPC(newpc);
-    fullPrefetch<POLLIPL>();
+    fullPrefetch <C, POLLIPL> ();
 }
 
 template<Core C, Instr I, Mode M, Size S> void
 Moira::execRtm(u16 opcode)
 {
-    fullPrefetch<POLLIPL>();
+    fullPrefetch <C, POLLIPL> ();
 }
 
 template<Core C, Instr I, Mode M, Size S> void
@@ -2412,7 +2412,7 @@ Moira::execRtr(u16 opcode)
 
     setPC(newpc);
 
-    fullPrefetch<POLLIPL>();
+    fullPrefetch <C, POLLIPL> ();
 }
 
 template<Core C, Instr I, Mode M, Size S> void
@@ -2434,7 +2434,7 @@ Moira::execRts(u16 opcode)
     }
 
     setPC(newpc);
-    fullPrefetch<POLLIPL>();
+    fullPrefetch <C, POLLIPL> ();
 }
 
 template<Core C, Instr I, Mode M, Size S> void
@@ -2482,7 +2482,7 @@ Moira::execStop(u16 opcode)
 
     SUPERVISOR_MODE_ONLY
 
-    u16 src = (u16)readI<Word>();
+    u16 src = (u16)readI <C,Word> ();
 
     setSR(src);
     flags |= CPU_IS_STOPPED;

@@ -369,7 +369,7 @@ void
 Debugger::jump(u32 addr)
 {
     moira.reg.pc = addr;
-    moira.fullPrefetch<POLLIPL>();
+    moira.fullPrefetch <M68000,POLLIPL> ();
 }
 
 }

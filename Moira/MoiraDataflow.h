@@ -96,7 +96,7 @@ template<MemSpace MS, Size S, Flags F = 0> void writeMS(u32 addr, u32 val);
 template<MemSpace MS, Size S, Flags F = 0> void writeMS(u32 addr, u32 val, bool &error);
 
 // Reads an immediate value from memory
-template<Size S> u32 readI();
+template<Core C, Size S> u32 readI();
 
 // Pushes a value onto the stack
 template<Size S, Flags F = 0> void push(u32 value);
@@ -114,13 +114,13 @@ template<Flags F = 0> AEStackFrame makeFrame(u32 addr);
 template<Flags F = 0> void prefetch();
 
 // Performs a full prefetch cycle
-template<Flags F = 0, int delay = 0> void fullPrefetch();
+template<Core C, Flags F = 0, int delay = 0> void fullPrefetch();
 
 // prefetch replacement if loop mode is active
 void noPrefetch();
 
 // Reads an extension word from memory
-void readExt();
+template<Core C> void readExt();
 
 // Jumps to an exception vector
 template<Core C, Flags F = 0> void jumpToVector(int nr);
