@@ -54,7 +54,7 @@ Moira::writeOp(int n, u32 val)
             u32 ea = computeEA <C,M,S> (n);
             
             // Write to effective address
-            bool error; writeM <M,S,F> (ea, val, error);
+            bool error; writeM <C,M,S,F> (ea, val, error);
             
             // Emulate -(An) register modification
             updateAnPD <M,S> (n);
@@ -80,7 +80,7 @@ Moira::writeOp(int n, u32 ea, u32 val)
         case MODE_IM: fatalError;
 
         default:
-            writeM <M,S,F> (ea, val);
+            writeM <C,M,S,F> (ea, val);
     }
 }
 
@@ -278,7 +278,7 @@ Moira::readMS(u32 addr)
     return result;
 }
 
-template<Mode M, Size S, Flags F> void
+template<Core C, Mode M, Size S, Flags F> void
 Moira::writeM(u32 addr, u32 val, bool &error)
 {
     if (isPrgMode(M)) {
@@ -288,7 +288,7 @@ Moira::writeM(u32 addr, u32 val, bool &error)
     }
 }
 
-template<Mode M, Size S, Flags F> void
+template<Core C, Mode M, Size S, Flags F> void
 Moira::writeM(u32 addr, u32 val)
 {
     if (isPrgMode(M)) {

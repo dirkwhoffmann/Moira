@@ -129,7 +129,7 @@ Moira::execShiftEa(u16 op)
 
     looping<I>() ? noPrefetch() : prefetch<POLLIPL>();
 
-    writeM<M,S>(ea, shift<C, I, S>(1, data));
+    writeM <C,M,S> (ea, shift<C, I, S>(1, data));
 }
 
 template<Core C, Instr I, Mode M, Size S> void
@@ -162,7 +162,7 @@ Moira::execAbcd(u16 opcode)
             u32 result = bcd<C, I, Byte>(data1, data2);
             looping<I>() ? noPrefetch() : prefetch();
 
-            writeM<M, Byte>(ea2, result);
+            writeM <C,M,Byte> (ea2, result);
             break;
         }
     }
@@ -207,7 +207,7 @@ Moira::execAddRgEa(u16 opcode)
 
     looping<I>() ? noPrefetch() : prefetch <POLLIPL> ();
 
-    writeM <M, S> (ea, result);
+    writeM <C,M,S> (ea, result);
 }
 
 template<Core C, Instr I, Mode M, Size S> void
@@ -369,14 +369,14 @@ Moira::execAddxEa(u16 opcode)
 
     if constexpr (S == Long && !MIMIC_MUSASHI) {
 
-        writeM <M, Word, POLLIPL> (ea2 + 2, result & 0xFFFF);
+        writeM <C, M, Word, POLLIPL> (ea2 + 2, result & 0xFFFF);
         looping<I>() ? noPrefetch() : prefetch();
-        writeM<M, Word>(ea2, result >> 16);
+        writeM <C, M, Word> (ea2, result >> 16);
 
     } else {
 
         looping<I>() ? noPrefetch() : prefetch();
-        writeM<M, S>(ea2, result);
+        writeM <C,M,S> (ea2, result);
     }
 }
 
@@ -568,7 +568,7 @@ Moira::execBitDxEa(u16 opcode)
             if (I == BCLR && core == M68010) sync<C>(2);
 
             prefetch<POLLIPL>();
-            if (I != BTST) writeM<M, Byte>(ea, data);
+            if (I != BTST) writeM <C,M,Byte> (ea, data);
         }
     }
 }
@@ -604,7 +604,7 @@ Moira::execBitImEa(u16 opcode)
             data = bit<C, I>(data, src);
 
             prefetch<POLLIPL>();
-            if (I != BTST) writeM <M, S> (ea, data);
+            if (I != BTST) writeM <C,M,S> (ea, data);
         }
     }
 }
@@ -1397,8 +1397,8 @@ Moira::execMove4(u16 opcode)
 
     if (core == M68010 && S == Long) sync<C>(2);
 
-    writeM<MODE_PD, S, REVERSE>(ea, data);
-    updateAn<MODE_PD, S>(dst);
+    writeM <C, MODE_PD, S, REVERSE> (ea, data);
+    updateAn <MODE_PD, S> (dst);
 }
 
 template<Core C, Instr I, Mode M, Size S> void
@@ -1546,7 +1546,7 @@ Moira::execMove8(u16 opcode)
         reg.sr.v = 0;
         reg.sr.c = 0;
 
-        writeM <MODE_AL,S> (ea2, data);
+        writeM <C,MODE_AL,S> (ea2, data);
         readExt();
 
     } else {
@@ -1725,7 +1725,7 @@ Moira::execMovemRgEa(u16 opcode)
 
                 if (mask & (0x8000 >> i)) {
                     ea -= S;
-                    writeM <M, S, MIMIC_MUSASHI ? REVERSE : 0> (ea, reg.r[i]);
+                    writeM <C, M, S, MIMIC_MUSASHI ? REVERSE : 0> (ea, reg.r[i]);
                 }
             }
             writeA(dst, ea);
@@ -1745,7 +1745,7 @@ Moira::execMovemRgEa(u16 opcode)
             for(int i = 0; i < 16; i++) {
 
                 if (mask & (1 << i)) {
-                    writeM <M, S> (ea, reg.r[i]);
+                    writeM <C,M,S> (ea, reg.r[i]);
                     ea += S;
                 }
             }
@@ -1770,14 +1770,14 @@ Moira::execMovepDxEa(u16 opcode)
 
         case Long:
         {
-            writeM <M,Byte> (ea, (dx >> 24) & 0xFF); ea += 2;
-            writeM <M,Byte> (ea, (dx >> 16) & 0xFF); ea += 2;
+            writeM <C, M, Byte> (ea, (dx >> 24) & 0xFF); ea += 2;
+            writeM <C, M, Byte> (ea, (dx >> 16) & 0xFF); ea += 2;
             [[fallthrough]];
         }
         case Word:
         {
-            writeM <M,Byte> (ea, (dx >>  8) & 0xFF); ea += 2;
-            writeM <M,Byte> (ea, (dx >>  0) & 0xFF);
+            writeM <C, M, Byte> (ea, (dx >>  8) & 0xFF); ea += 2;
+            writeM <C, M, Byte> (ea, (dx >>  0) & 0xFF);
         }
     }
     prefetch<POLLIPL>();
@@ -2197,9 +2197,9 @@ Moira::execNbcd(u16 opcode)
         default: // Ea
         {
             u32 ea, data;
-            if (!readOp<C, M, Byte>(reg, ea, data)) return;
+            if (!readOp <C, M, Byte> (reg, ea, data)) return;
             prefetch<POLLIPL>();
-            writeM<M, Byte>(ea, bcd<C, SBCD, Byte>(data, 0));
+            writeM <C, M, Byte> (ea, bcd<C, SBCD, Byte>(data, 0));
             break;
         }
     }
