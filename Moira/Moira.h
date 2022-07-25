@@ -333,14 +333,7 @@ protected:
     // Advances the clock (called before each memory access)
     virtual void sync(int cycles) { clock += cycles; }
 
-    template <Core C>
-    void sync([[maybe_unused]] int c1, [[maybe_unused]] int c2) {
-
-        if constexpr (C == M68000) sync(c1);
-        if constexpr (C == M68010) sync(c2);
-    }
-
-
+    
     //
     // Accessing registers
     //

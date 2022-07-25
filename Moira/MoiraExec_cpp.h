@@ -250,7 +250,7 @@ Moira::execAddiRg(u16 opcode)
     result = addsub<C, I, S>(src, data);
     prefetch<POLLIPL>();
 
-    if constexpr (S == Long) sync <C> (4, 2);
+    if constexpr (S == Long) { SYNC_68000(4); SYNC_68010(2); }
     writeD<S>(dst, result);
 }
 
@@ -441,7 +441,7 @@ Moira::execAndiRg(u16 opcode)
     u32 result = logic<C, I, S>(src, readD<S>(dst));
     prefetch<POLLIPL>();
 
-    if constexpr (S == Long) sync <C> (4, 2);
+    if constexpr (S == Long) { SYNC_68000(4); SYNC_68010(2); }
     writeD<S>(dst, result);
 }
 
@@ -475,7 +475,8 @@ Moira::execAndiccr(u16 opcode)
     u32 src = readI<S>();
     u8  dst = getCCR();
 
-    sync <C> (8, 4);
+    SYNC_68000(8);
+    SYNC_68010(4);
 
     u32 result = logic<C, I, S>(src, dst);
     setCCR((u8)result);
@@ -494,7 +495,8 @@ Moira::execAndisr(u16 opcode)
     u32 src = readI<S>();
     u16 dst = getSR();
 
-    sync <C> (8, 4);
+    SYNC_68000(8);
+    SYNC_68010(4);
 
     u32 result = logic<C, I, S>(src, dst);
     setSR((u16)result);
@@ -691,7 +693,8 @@ Moira::execChk(u16 opcode)
     if (!readOp<C, M, S, STD_AE_FRAME>(src, ea, data)) return;
     dy = readD<S>(dst);
 
-    sync <C> (6, 4);
+    SYNC_68000(6);
+    SYNC_68010(4);
 
     reg.sr.z = ZERO<S>(dy);
     reg.sr.v = 0;
@@ -2088,8 +2091,8 @@ Moira::execMulMusashi(u16 op)
     prefetch<POLLIPL>();
     result = mulMusashi <C, I> (data, readD<Word>(dst));
 
-    if constexpr (I == MULU) sync <C> (50, 26);
-    if constexpr (I == MULS) sync <C> (50, 28);
+    if constexpr (I == MULU) { SYNC_68000(50); SYNC_68010(26); }
+    if constexpr (I == MULS) { SYNC_68000(50); SYNC_68010(28); }
 
     writeD(dst, result);
 }
@@ -2303,7 +2306,9 @@ Moira::execReset(u16 opcode)
 
     signalResetInstr();
 
-    sync <C> (128, 126);
+    SYNC_68000(128);
+    SYNC_68010(126);
+
     prefetch<POLLIPL>();
 }
 
