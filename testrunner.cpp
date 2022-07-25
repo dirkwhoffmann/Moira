@@ -165,7 +165,6 @@ void run()
         printf("              Exec range: %s\n", TOSTRING(doExec(opcode)));
         printf("              Dasm range: %s\n\n", TOSTRING(doDasm(opcode)));
     }
-    // printf("\n");
 
     setupMusashi();
     setupMoira();

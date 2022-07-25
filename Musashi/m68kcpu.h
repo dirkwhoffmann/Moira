@@ -1024,6 +1024,8 @@ static inline uint m68ki_read_32_fc (uint address, uint fc);
 static inline uint m68ki_get_ea_ix(uint An);
 static inline void m68ki_check_interrupts(void);            /* ASG: check for interrupts */
 
+void my_fc_handler(unsigned int fc);
+
 /* quick disassembly (used for logging) */
 char* m68ki_disassemble_quick(unsigned int pc, unsigned int cpu_type);
 

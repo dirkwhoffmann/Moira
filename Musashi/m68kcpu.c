@@ -946,6 +946,7 @@ void m68k_set_cpu_type(unsigned int cpu_type)
 int m68k_execute(int num_cycles)
 {
 	/* eat up any reset cycles */
+    /*
 	if (RESET_CYCLES) {
 	    int rc = RESET_CYCLES;
 	    RESET_CYCLES = 0;
@@ -953,7 +954,8 @@ int m68k_execute(int num_cycles)
 	    if (num_cycles <= 0)
 		return rc;
 	}
-
+    */
+    
 	/* Set our pool of clock cycles available */
 	SET_CYCLES(num_cycles);
 	m68ki_initial_cycles = num_cycles;
@@ -1134,8 +1136,11 @@ void m68k_pulse_reset(void)
 
 	/* Read the initial stack pointer and program counter */
 	m68ki_jump(0);
-	REG_SP = m68ki_read_imm_32();
-	REG_PC = m68ki_read_imm_32();
+	// REG_SP = m68ki_read_imm_32();
+	// REG_PC = m68ki_read_imm_32();
+    REG_SP = read_sp_on_reset();
+    REG_PC = read_pc_on_reset();
+
 	m68ki_jump(REG_PC);
 
 	CPU_RUN_MODE = RUN_MODE_NORMAL;

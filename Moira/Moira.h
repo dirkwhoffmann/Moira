@@ -28,8 +28,8 @@ namespace moira {
 #ifdef PRECISE_TIMING
 
 #define SYNC(x)         sync(x)
-#define SYNC_68000(x)   if constexpr (CPU == M68000) sync(x)
-#define SYNC_68010(x)   if constexpr (CPU == M68010) sync(x)
+#define SYNC_68000(x)   if constexpr (C == M68000) sync(x)
+#define SYNC_68010(x)   if constexpr (C == M68010) sync(x)
 
 #define CYCLES(c0,c1,c2)
 #define CYCLES_MBWL(m,b0,b1,b2,w0,w1,w2,l0,l1,l2)
@@ -317,7 +317,7 @@ protected:
     int removeAsap = 0;
 
     // Called at the beginning of each instruction handler (see EXEC_DEBUG)
-    virtual void execDebug(const char *func, Type CPU, Instr I, Mode M, Size S) { }
+    virtual void execDebug(const char *func, Type C, Instr I, Mode M, Size S) { }
 
 
     //
@@ -334,11 +334,11 @@ protected:
     // Advances the clock (called before each memory access)
     virtual void sync(int cycles) { clock += cycles; }
 
-    template <Type CPU>
-    [[deprecated]] void sync([[maybe_unused]] int c1, [[maybe_unused]] int c2) {
+    template <Type C>
+    void sync([[maybe_unused]] int c1, [[maybe_unused]] int c2) {
 
-        if constexpr (CPU == M68000) sync(c1);
-        if constexpr (CPU == M68010) sync(c2);
+        if constexpr (C == M68000) sync(c1);
+        if constexpr (C == M68010) sync(c2);
     }
 
 

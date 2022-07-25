@@ -10,7 +10,7 @@
 #pragma once
 
 // The CPU under test
-static constexpr int CPUTYPE = 68020;
+static constexpr int CPUTYPE = 68000;
 
 // Set to true for verbose output
 static constexpr bool VERBOSE = false;
@@ -19,7 +19,7 @@ static constexpr bool VERBOSE = false;
 static constexpr bool CHECK_MEM_WRITES = true;
 
 // Change to limit the range of executed instructions
-#define doExec(opcode) (opcode > 0xFFFFFFFF)
+#define doExec(opcode) (opcode >= 0x0000 && opcode <= 0xEFFF)
 
 // Change to limit the range of disassembled instructions
 #define doDasm(opcode) (opcode >= 0x0000 && opcode <= 0xEFFF)

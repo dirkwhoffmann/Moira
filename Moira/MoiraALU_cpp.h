@@ -656,7 +656,7 @@ Moira::cyclesDiv(u32 op1, u16 op2)
     fatalError;
 }
 
-template <Type CPU, Instr I> u32
+template <Type C, Instr I> u32
 Moira::mulMusashi(u32 op1, u32 op2)
 {
     u32 result;
@@ -685,7 +685,7 @@ Moira::mulMusashi(u32 op1, u32 op2)
     return result;
 }
 
-template <Type CPU, Instr I> u32
+template <Type C, Instr I> u32
 Moira::divMusashi(u32 op1, u32 op2)
 {
     u32 result;
@@ -694,7 +694,7 @@ Moira::divMusashi(u32 op1, u32 op2)
 
         case DIVS:
         {
-            sync <CPU> (154, 118);
+            sync <C> (154, 118);
 
             if (op1 == 0x80000000 && (i32)op2 == -1) {
 
@@ -726,7 +726,7 @@ Moira::divMusashi(u32 op1, u32 op2)
         }
         case DIVU:
         {
-            sync <CPU> (136, 104);
+            sync <C> (136, 104);
 
             i64 quotient  = op1 / op2;
             u16 remainder = (u16)(op1 % op2);

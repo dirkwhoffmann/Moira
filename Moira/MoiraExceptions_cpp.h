@@ -21,7 +21,7 @@ Moira::saveToStack(AEStackFrame &frame)
     }
 }
 
-template <Type CPU> void
+template <Type C> void
 Moira::saveToStack(AEStackFrame &frame)
 {
     // Push PC
@@ -54,10 +54,10 @@ Moira::saveToStackBrief(u16 nr, u16 sr, u32 pc)
     }
 }
 
-template <Type CPU> void
+template <Type C> void
 Moira::saveToStackBrief(u16 nr, u16 sr, u32 pc)
 {
-    if constexpr (CPU == M68000) {
+    if constexpr (C == M68000) {
 
         if constexpr (MIMIC_MUSASHI) {
 
@@ -73,7 +73,7 @@ Moira::saveToStackBrief(u16 nr, u16 sr, u32 pc)
         }
     }
 
-    if constexpr (CPU == M68010) {
+    if constexpr (C == M68010) {
 
         if constexpr (MIMIC_MUSASHI) {
 
@@ -106,7 +106,7 @@ Moira::execAddressError(AEStackFrame frame, int delay)
     }
 }
 
-template <Type CPU> void
+template <Type C> void
 Moira::execAddressError(AEStackFrame frame, int delay)
 {
     assert(frame.addr & 1);
@@ -154,7 +154,7 @@ Moira::execFormatError()
     }
 }
 
-template <Type CPU> void
+template <Type C> void
 Moira::execFormatError()
 {
     u16 status = getSR();
@@ -187,7 +187,7 @@ Moira::execUnimplemented(int nr)
     }
 }
 
-template <Type CPU> void
+template <Type C> void
 Moira::execUnimplemented(int nr)
 {
     u16 status = getSR();
@@ -220,7 +220,7 @@ Moira::execTraceException()
     }
 }
 
-template <Type CPU> void
+template <Type C> void
 Moira::execTraceException()
 {
     signalTraceException();
@@ -258,7 +258,7 @@ Moira::execTrapException(int nr)
     }
 }
 
-template <Type CPU> void
+template <Type C> void
 Moira::execTrapException(int nr)
 {
     signalTrapException();
@@ -291,7 +291,7 @@ Moira::execPrivilegeException()
     }
 }
 
-template <Type CPU> void
+template <Type C> void
 Moira::execPrivilegeException()
 {
     signalPrivilegeViolation();
@@ -326,7 +326,7 @@ Moira::execIrqException(u8 level)
     }
 }
 
-template <Type CPU> void
+template <Type C> void
 Moira::execIrqException(u8 level)
 {
     assert(level < 8);
@@ -353,7 +353,7 @@ Moira::execIrqException(u8 level)
     clearTraceFlag();
     flags &= ~CPU_TRACE_EXCEPTION;
 
-    if constexpr (CPU == M68000) {
+    if constexpr (C == M68000) {
 
         sync(6);
         reg.sp -= 6;
@@ -367,7 +367,7 @@ Moira::execIrqException(u8 level)
         writeMS <MEM_DATA, Word> (reg.sp + 2, reg.pc >> 16);
     }
 
-    if constexpr (CPU == M68010) {
+    if constexpr (C == M68010) {
 
         sync(6);
         reg.sp -= 8;
