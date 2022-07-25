@@ -59,9 +59,9 @@ void setupMoira()
 {
     switch (CPUTYPE) {
 
-        case 68000: moiracpu->setModel(M68000); break;
-        case 68010: moiracpu->setModel(M68010); break;
-        case 68020: moiracpu->setModel(M68020); break;
+        case 68000: moiracpu->setCore(M68000); break;
+        case 68010: moiracpu->setCore(M68010); break;
+        case 68020: moiracpu->setCore(M68020); break;
 
         default:
             assert(false);

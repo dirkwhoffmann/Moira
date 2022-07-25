@@ -39,11 +39,11 @@ Moira::~Moira()
 }
 
 void
-Moira::setModel(Type model)
+Moira::setCore(Core core)
 {
-    if (this->model != model) {
+    if (this->core != core) {
 
-        this->model = model;
+        this->core = core;
         createJumpTable();
         flags &= ~CPU_IS_LOOPING;
     }

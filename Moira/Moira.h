@@ -73,8 +73,8 @@ class Moira {
 
 protected:
 
-    // Emulated CPU model
-    Type model = M68000;
+    // Emulated CPU core
+    Core core = M68000;
 
     // Interrupt mode of this CPU
     IrqMode irqMode = IRQ_AUTO;
@@ -195,8 +195,8 @@ public:
     Moira();
     virtual ~Moira();
 
-    // Selects the emulated CPU model
-    void setModel(Type model);
+    // Selects the emulated CPU core
+    void setCore(Core core);
 
     // Configures the output format of the disassembler
     void configDasm(bool h, bool u) { hex = h; upper = u; }
@@ -317,7 +317,7 @@ protected:
     int removeAsap = 0;
 
     // Called at the beginning of each instruction handler (see EXEC_DEBUG)
-    virtual void execDebug(const char *func, Type C, Instr I, Mode M, Size S) { }
+    virtual void execDebug(const char *func, Core C, Instr I, Mode M, Size S) { }
 
 
     //
@@ -334,7 +334,7 @@ protected:
     // Advances the clock (called before each memory access)
     virtual void sync(int cycles) { clock += cycles; }
 
-    template <Type C>
+    template <Core C>
     void sync([[maybe_unused]] int c1, [[maybe_unused]] int c2) {
 
         if constexpr (C == M68000) sync(c1);

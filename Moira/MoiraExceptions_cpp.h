@@ -10,7 +10,7 @@
 void
 Moira::saveToStack(AEStackFrame &frame)
 {
-    switch (model) {
+    switch (core) {
 
         case M68000: saveToStack <M68000> (frame); break;
         case M68010: saveToStack <M68010> (frame); break;
@@ -21,7 +21,7 @@ Moira::saveToStack(AEStackFrame &frame)
     }
 }
 
-template <Type C> void
+template <Core C> void
 Moira::saveToStack(AEStackFrame &frame)
 {
     // Push PC
@@ -43,7 +43,7 @@ Moira::saveToStack(AEStackFrame &frame)
 void
 Moira::saveToStackBrief(u16 nr, u16 sr, u32 pc)
 {
-    switch (model) {
+    switch (core) {
 
         case M68000: saveToStackBrief <M68000> (nr, sr, pc); break;
         case M68010: saveToStackBrief <M68010> (nr, sr, pc); break;
@@ -54,7 +54,7 @@ Moira::saveToStackBrief(u16 nr, u16 sr, u32 pc)
     }
 }
 
-template <Type C> void
+template <Core C> void
 Moira::saveToStackBrief(u16 nr, u16 sr, u32 pc)
 {
     if constexpr (C == M68000) {
@@ -95,7 +95,7 @@ Moira::saveToStackBrief(u16 nr, u16 sr, u32 pc)
 void
 Moira::execAddressError(AEStackFrame frame, int delay)
 {
-    switch (model) {
+    switch (core) {
 
         case M68000: execAddressError <M68000> (frame, delay); break;
         case M68010: execAddressError <M68010> (frame, delay); break;
@@ -106,7 +106,7 @@ Moira::execAddressError(AEStackFrame frame, int delay)
     }
 }
 
-template <Type C> void
+template <Core C> void
 Moira::execAddressError(AEStackFrame frame, int delay)
 {
     assert(frame.addr & 1);
@@ -143,7 +143,7 @@ Moira::execAddressError(AEStackFrame frame, int delay)
 void
 Moira::execFormatError()
 {
-    switch (model) {
+    switch (core) {
 
         case M68000: assert(false); break;
         case M68010: execFormatError <M68010> (); break;
@@ -154,7 +154,7 @@ Moira::execFormatError()
     }
 }
 
-template <Type C> void
+template <Core C> void
 Moira::execFormatError()
 {
     u16 status = getSR();
@@ -176,7 +176,7 @@ Moira::execFormatError()
 void
 Moira::execUnimplemented(int nr)
 {
-    switch (model) {
+    switch (core) {
 
         case M68000: execUnimplemented <M68000> (nr); break;
         case M68010: execUnimplemented <M68010> (nr); break;
@@ -187,7 +187,7 @@ Moira::execUnimplemented(int nr)
     }
 }
 
-template <Type C> void
+template <Core C> void
 Moira::execUnimplemented(int nr)
 {
     u16 status = getSR();
@@ -209,7 +209,7 @@ Moira::execUnimplemented(int nr)
 void
 Moira::execTraceException()
 {
-    switch (model) {
+    switch (core) {
 
         case M68000: execTraceException <M68000> (); break;
         case M68010: execTraceException <M68010> (); break;
@@ -220,7 +220,7 @@ Moira::execTraceException()
     }
 }
 
-template <Type C> void
+template <Core C> void
 Moira::execTraceException()
 {
     signalTraceException();
@@ -247,7 +247,7 @@ Moira::execTraceException()
 void
 Moira::execTrapException(int nr)
 {
-    switch (model) {
+    switch (core) {
 
         case M68000: execTrapException <M68000> (nr); break;
         case M68010: execTrapException <M68010> (nr); break;
@@ -258,7 +258,7 @@ Moira::execTrapException(int nr)
     }
 }
 
-template <Type C> void
+template <Core C> void
 Moira::execTrapException(int nr)
 {
     signalTrapException();
@@ -280,7 +280,7 @@ Moira::execTrapException(int nr)
 void
 Moira::execPrivilegeException()
 {
-    switch (model) {
+    switch (core) {
 
         case M68000: execPrivilegeException <M68000> (); break;
         case M68010: execPrivilegeException <M68010> (); break;
@@ -291,7 +291,7 @@ Moira::execPrivilegeException()
     }
 }
 
-template <Type C> void
+template <Core C> void
 Moira::execPrivilegeException()
 {
     signalPrivilegeViolation();
@@ -315,7 +315,7 @@ Moira::execPrivilegeException()
 void
 Moira::execIrqException(u8 level)
 {
-    switch (model) {
+    switch (core) {
 
         case M68000: execIrqException <M68000> (level); break;
         case M68010: execIrqException <M68010> (level); break;
@@ -326,7 +326,7 @@ Moira::execIrqException(u8 level)
     }
 }
 
-template <Type C> void
+template <Core C> void
 Moira::execIrqException(u8 level)
 {
     assert(level < 8);

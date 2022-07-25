@@ -656,7 +656,7 @@ Moira::cyclesDiv(u32 op1, u16 op2)
     fatalError;
 }
 
-template <Type C, Instr I> u32
+template <Core C, Instr I> u32
 Moira::mulMusashi(u32 op1, u32 op2)
 {
     u32 result;
@@ -685,7 +685,7 @@ Moira::mulMusashi(u32 op1, u32 op2)
     return result;
 }
 
-template <Type C, Instr I> u32
+template <Core C, Instr I> u32
 Moira::divMusashi(u32 op1, u32 op2)
 {
     u32 result;

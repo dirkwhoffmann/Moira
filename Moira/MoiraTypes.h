@@ -30,7 +30,7 @@ typedef enum
     M68010,         // Experimental
     M68020          // Disassembler only
 }
-Type;
+Core;
 
 typedef enum
 {
