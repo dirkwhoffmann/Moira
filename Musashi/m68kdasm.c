@@ -1009,7 +1009,7 @@ static void d68000_bclr_s(void)
 static void d68010_bkpt(void)
 {
 	LIMIT_CPU_TYPES(M68010_PLUS);
-	sprintf(g_dasm_str, "bkpt #%d; (1+)", g_cpu_ir&7);
+	sprintf(g_dasm_str, "bkpt    #%d; (1+)", g_cpu_ir&7);
 }
 
 static void d68020_bfchg(void)
@@ -1412,7 +1412,7 @@ static void d68020_cmpi_pcdi_8(void)
 	char* str;
 	LIMIT_CPU_TYPES(M68010_PLUS);
 	str = get_imm_str_s8();
-	sprintf(g_dasm_str, "cmpi.b  %s, %s; (2+)", str, get_ea_mode_str_8(g_cpu_ir));
+	sprintf(g_dasm_str, "cmpi.b  %s, %s; (1+)", str, get_ea_mode_str_8(g_cpu_ir));
 }
 
 static void d68020_cmpi_pcix_8(void)
@@ -1420,7 +1420,7 @@ static void d68020_cmpi_pcix_8(void)
 	char* str;
 	LIMIT_CPU_TYPES(M68010_PLUS);
 	str = get_imm_str_s8();
-	sprintf(g_dasm_str, "cmpi.b  %s, %s; (2+)", str, get_ea_mode_str_8(g_cpu_ir));
+	sprintf(g_dasm_str, "cmpi.b  %s, %s; (1+)", str, get_ea_mode_str_8(g_cpu_ir));
 }
 
 static void d68000_cmpi_16(void)
@@ -1435,7 +1435,7 @@ static void d68020_cmpi_pcdi_16(void)
 	char* str;
 	LIMIT_CPU_TYPES(M68010_PLUS);
 	str = get_imm_str_s16();
-	sprintf(g_dasm_str, "cmpi.w  %s, %s; (2+)", str, get_ea_mode_str_16(g_cpu_ir));
+	sprintf(g_dasm_str, "cmpi.w  %s, %s; (1+)", str, get_ea_mode_str_16(g_cpu_ir));
 }
 
 static void d68020_cmpi_pcix_16(void)
@@ -1443,7 +1443,7 @@ static void d68020_cmpi_pcix_16(void)
 	char* str;
 	LIMIT_CPU_TYPES(M68010_PLUS);
 	str = get_imm_str_s16();
-	sprintf(g_dasm_str, "cmpi.w  %s, %s; (2+)", str, get_ea_mode_str_16(g_cpu_ir));
+	sprintf(g_dasm_str, "cmpi.w  %s, %s; (1+)", str, get_ea_mode_str_16(g_cpu_ir));
 }
 
 static void d68000_cmpi_32(void)
@@ -1458,7 +1458,7 @@ static void d68020_cmpi_pcdi_32(void)
 	char* str;
 	LIMIT_CPU_TYPES(M68010_PLUS);
 	str = get_imm_str_s32();
-	sprintf(g_dasm_str, "cmpi.l  %s, %s; (2+)", str, get_ea_mode_str_32(g_cpu_ir));
+	sprintf(g_dasm_str, "cmpi.l  %s, %s; (1+)", str, get_ea_mode_str_32(g_cpu_ir));
 }
 
 static void d68020_cmpi_pcix_32(void)
@@ -1466,7 +1466,7 @@ static void d68020_cmpi_pcix_32(void)
 	char* str;
 	LIMIT_CPU_TYPES(M68010_PLUS);
 	str = get_imm_str_s32();
-	sprintf(g_dasm_str, "cmpi.l  %s, %s; (2+)", str, get_ea_mode_str_32(g_cpu_ir));
+	sprintf(g_dasm_str, "cmpi.l  %s, %s; (1+)", str, get_ea_mode_str_32(g_cpu_ir));
 }
 
 static void d68000_cmpm_8(void)
@@ -1491,7 +1491,7 @@ static void d68020_cpbcc_16(void)
 	LIMIT_CPU_TYPES(M68020_PLUS);
 	extension = read_imm_16();
 	new_pc += make_int_16(read_imm_16());
-	sprintf(g_dasm_str, "%db%-4s  %s; %x (extension = %x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[g_cpu_ir&0x3f], get_imm_str_s16(), new_pc, extension);
+	sprintf(g_dasm_str, "%db%-4s  %s; $%x (extension = $%x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[g_cpu_ir&0x3f], get_imm_str_s16(), new_pc, extension);
 }
 
 static void d68020_cpbcc_32(void)
@@ -1501,7 +1501,7 @@ static void d68020_cpbcc_32(void)
 	LIMIT_CPU_TYPES(M68020_PLUS);
 	extension = read_imm_16();
 	new_pc += read_imm_32();
-	sprintf(g_dasm_str, "%db%-4s  %s; %x (extension = %x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[g_cpu_ir&0x3f], get_imm_str_s16(), new_pc, extension);
+	sprintf(g_dasm_str, "%db%-4s  %s; $%x (extension = $%x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[g_cpu_ir&0x3f], get_imm_str_s16(), new_pc, extension);
 }
 
 static void d68020_cpdbcc(void)
@@ -1513,7 +1513,7 @@ static void d68020_cpdbcc(void)
 	extension1 = read_imm_16();
 	extension2 = read_imm_16();
 	new_pc += make_int_16(read_imm_16());
-	sprintf(g_dasm_str, "%ddb%-4s D%d,%s; %x (extension = %x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[extension1&0x3f], g_cpu_ir&7, get_imm_str_s16(), new_pc, extension2);
+	sprintf(g_dasm_str, "%ddb%-4s D%d,%s; $%x (extension = $%x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[extension1&0x3f], g_cpu_ir&7, get_imm_str_s16(), new_pc, extension2);
 }
 
 static void d68020_cpgen(void)
@@ -1555,7 +1555,7 @@ static void d68020_cpscc(void)
 	LIMIT_CPU_TYPES(M68020_PLUS);
 	extension1 = read_imm_16();
 	extension2 = read_imm_16();
-	sprintf(g_dasm_str, "%ds%-4s  %s; (extension = %x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[extension1&0x3f], get_ea_mode_str_8(g_cpu_ir), extension2);
+	sprintf(g_dasm_str, "%ds%-4s  %s; (extension = $%x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[extension1&0x3f], get_ea_mode_str_8(g_cpu_ir), extension2);
 }
 
 static void d68020_cptrapcc_0(void)
@@ -1565,7 +1565,7 @@ static void d68020_cptrapcc_0(void)
 	LIMIT_CPU_TYPES(M68020_PLUS);
 	extension1 = read_imm_16();
 	extension2 = read_imm_16();
-	sprintf(g_dasm_str, "%dtrap%-4s; (extension = %x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[extension1&0x3f], extension2);
+	sprintf(g_dasm_str, "%dtrap%-4s; (extension = $%x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[extension1&0x3f], extension2);
 }
 
 static void d68020_cptrapcc_16(void)
@@ -1575,7 +1575,7 @@ static void d68020_cptrapcc_16(void)
 	LIMIT_CPU_TYPES(M68020_PLUS);
 	extension1 = read_imm_16();
 	extension2 = read_imm_16();
-	sprintf(g_dasm_str, "%dtrap%-4s %s; (extension = %x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[extension1&0x3f], get_imm_str_u16(), extension2);
+	sprintf(g_dasm_str, "%dtrap%-4s %s; (extension = $%x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[extension1&0x3f], get_imm_str_u16(), extension2);
 }
 
 static void d68020_cptrapcc_32(void)
@@ -1585,7 +1585,7 @@ static void d68020_cptrapcc_32(void)
 	LIMIT_CPU_TYPES(M68020_PLUS);
 	extension1 = read_imm_16();
 	extension2 = read_imm_16();
-	sprintf(g_dasm_str, "%dtrap%-4s %s; (extension = %x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[extension1&0x3f], get_imm_str_u32(), extension2);
+	sprintf(g_dasm_str, "%dtrap%-4s %s; (extension = $%x) (2-3)", (g_cpu_ir>>9)&7, g_cpcc[extension1&0x3f], get_imm_str_u32(), extension2);
 }
 
 static void d68040_cpush(void)
@@ -2170,9 +2170,9 @@ static void d68010_movec(void)
 	}
 
 	if(BIT_0(g_cpu_ir))
-		sprintf(g_dasm_str, "movec %c%d, %s; (%s)", BIT_F(extension) ? 'A' : 'D', (extension>>12)&7, reg_name, processor);
+		sprintf(g_dasm_str, "movec   %c%d, %s; (%s)", BIT_F(extension) ? 'A' : 'D', (extension>>12)&7, reg_name, processor);
 	else
-		sprintf(g_dasm_str, "movec %s, %c%d; (%s)", reg_name, BIT_F(extension) ? 'A' : 'D', (extension>>12)&7, processor);
+		sprintf(g_dasm_str, "movec   %s, %c%d; (%s)", reg_name, BIT_F(extension) ? 'A' : 'D', (extension>>12)&7, processor);
 }
 
 static void d68000_movem_pd_16(void)
@@ -2568,7 +2568,7 @@ static void d68020_mull(void)
 	extension = read_imm_16();
 
 	if(BIT_A(extension))
-		sprintf(g_dasm_str, "mul%c.l %s, D%d:D%d; (2+)", BIT_B(extension) ? 's' : 'u', get_ea_mode_str_32(g_cpu_ir), extension&7, (extension>>12)&7);
+		sprintf(g_dasm_str, "mul%c.l  %s, D%d:D%d; (2+)", BIT_B(extension) ? 's' : 'u', get_ea_mode_str_32(g_cpu_ir), extension&7, (extension>>12)&7);
 	else
 		sprintf(g_dasm_str, "mul%c.l  %s, D%d; (2+)", BIT_B(extension) ? 's' : 'u', get_ea_mode_str_32(g_cpu_ir), (extension>>12)&7);
 }
@@ -2880,7 +2880,7 @@ static void d68000_rte(void)
 static void d68020_rtm(void)
 {
 	LIMIT_CPU_TYPES(M68020_ONLY);
-	sprintf(g_dasm_str, "rtm     %c%d; (2+)", BIT_3(g_cpu_ir) ? 'A' : 'D', g_cpu_ir&7);
+	sprintf(g_dasm_str, "rtm     %c%d; (2)", BIT_3(g_cpu_ir) ? 'A' : 'D', g_cpu_ir&7);
 	SET_OPCODE_FLAGS(DASMFLAG_STEP_OUT);
 }
 
@@ -3037,7 +3037,7 @@ static void d68000_trap(void)
 static void d68020_trapcc_0(void)
 {
 	LIMIT_CPU_TYPES(M68020_PLUS);
-	sprintf(g_dasm_str, "trap%-2s; (2+)", g_cc[(g_cpu_ir>>8)&0xf]);
+	sprintf(g_dasm_str, "trap%-2s  ; (2+)", g_cc[(g_cpu_ir>>8)&0xf]);
 	SET_OPCODE_FLAGS(DASMFLAG_STEP_OVER);
 }
 
@@ -3400,7 +3400,7 @@ static const opcode_struct g_opcode_info[] =
 	{d68020_chk2_cmp2_8  , 0xffc0, 0x00c0, 0x27b},
 	{d68020_chk2_cmp2_16 , 0xffc0, 0x02c0, 0x27b},
 	{d68020_chk2_cmp2_32 , 0xffc0, 0x04c0, 0x27b},
-	{d68040_cinv         , 0xff20, 0xf400, 0x000},
+	// {d68040_cinv         , 0xff20, 0xf400, 0x000},
 	{d68000_clr_8        , 0xffc0, 0x4200, 0xbf8},
 	{d68000_clr_16       , 0xffc0, 0x4240, 0xbf8},
 	{d68000_clr_32       , 0xffc0, 0x4280, 0xbf8},
@@ -3425,13 +3425,14 @@ static const opcode_struct g_opcode_info[] =
 	{d68020_cpbcc_32     , 0xf1c0, 0xf0c0, 0x000},
 	{d68020_cpdbcc       , 0xf1f8, 0xf048, 0x000},
 	{d68020_cpgen        , 0xf1c0, 0xf000, 0x000},
-	{d68020_cprestore    , 0xf1c0, 0xf140, 0x37f},
+	// {d68020_cprestore    , 0xf1c0, 0xf140, 0x37f},
+    {d68020_cprestore    , 0xf1c0, 0xf140, 0x378},
 	{d68020_cpsave       , 0xf1c0, 0xf100, 0x2f8},
 	{d68020_cpscc        , 0xf1c0, 0xf040, 0xbf8},
 	{d68020_cptrapcc_0   , 0xf1ff, 0xf07c, 0x000},
 	{d68020_cptrapcc_16  , 0xf1ff, 0xf07a, 0x000},
 	{d68020_cptrapcc_32  , 0xf1ff, 0xf07b, 0x000},
-	{d68040_cpush        , 0xff20, 0xf420, 0x000},
+	// {d68040_cpush        , 0xff20, 0xf420, 0x000},
 	{d68000_dbcc         , 0xf0f8, 0x50c8, 0x000},
 	{d68000_dbra         , 0xfff8, 0x51c8, 0x000},
 	{d68000_divs         , 0xf1c0, 0x81c0, 0xbff},
@@ -3451,7 +3452,7 @@ static const opcode_struct g_opcode_info[] =
 	{d68020_extb_32      , 0xfff8, 0x49c0, 0x000},
 	{d68000_ext_16       , 0xfff8, 0x4880, 0x000},
 	{d68000_ext_32       , 0xfff8, 0x48c0, 0x000},
-	{d68040_fpu          , 0xffc0, 0xf200, 0x000},
+	// {d68040_fpu          , 0xffc0, 0xf200, 0x000},
 	{d68000_illegal      , 0xffff, 0x4afc, 0x000},
 	{d68000_jmp          , 0xffc0, 0x4ec0, 0x27b},
 	{d68000_jsr          , 0xffc0, 0x4e80, 0x27b},
@@ -3498,11 +3499,11 @@ static const opcode_struct g_opcode_info[] =
 	{d68010_moves_16     , 0xffc0, 0x0e40, 0x3f8},
 	{d68010_moves_32     , 0xffc0, 0x0e80, 0x3f8},
 	{d68000_moveq        , 0xf100, 0x7000, 0x000},
-	{d68040_move16_pi_pi , 0xfff8, 0xf620, 0x000},
-	{d68040_move16_pi_al , 0xfff8, 0xf600, 0x000},
-	{d68040_move16_al_pi , 0xfff8, 0xf608, 0x000},
-	{d68040_move16_ai_al , 0xfff8, 0xf610, 0x000},
-	{d68040_move16_al_ai , 0xfff8, 0xf618, 0x000},
+	// {d68040_move16_pi_pi , 0xfff8, 0xf620, 0x000},
+	// {d68040_move16_pi_al , 0xfff8, 0xf600, 0x000},
+	// {d68040_move16_al_pi , 0xfff8, 0xf608, 0x000},
+	// {d68040_move16_ai_al , 0xfff8, 0xf610, 0x000},
+	// {d68040_move16_al_ai , 0xfff8, 0xf618, 0x000},
 	{d68000_muls         , 0xf1c0, 0xc1c0, 0xbff},
 	{d68000_mulu         , 0xf1c0, 0xc0c0, 0xbff},
 	{d68020_mull         , 0xffc0, 0x4c00, 0xbff},
@@ -3531,7 +3532,7 @@ static const opcode_struct g_opcode_info[] =
 	{d68020_pack_rr      , 0xf1f8, 0x8140, 0x000},
 	{d68020_pack_mm      , 0xf1f8, 0x8148, 0x000},
 	{d68000_pea          , 0xffc0, 0x4840, 0x27b},
-	{d68040_pflush       , 0xffe0, 0xf500, 0x000},
+	// {d68040_pflush       , 0xffe0, 0xf500, 0x000},
 	{d68000_reset        , 0xffff, 0x4e70, 0x000},
 	{d68000_ror_s_8      , 0xf1f8, 0xe018, 0x000},
 	{d68000_ror_s_16     , 0xf1f8, 0xe058, 0x000},
