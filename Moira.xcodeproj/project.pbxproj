@@ -7,18 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5028B10A288D9EC000047C20 /* softfloat.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B103288D9EC000047C20 /* softfloat.c */; };
-		5028B10E288D9ECD00047C20 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B10D288D9ECD00047C20 /* m68kops.c */; };
-		5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B114288D9EDC00047C20 /* m68kdasm.c */; };
-		5028B11C288D9EDC00047C20 /* m68kcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B116288D9EDC00047C20 /* m68kcpu.c */; };
+		5028B10A288D9EC000047C20 /* softfloat.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B103288D9EC000047C20 /* softfloat.c */; settings = {COMPILER_FLAGS = "-w"; }; };
+		5028B10E288D9ECD00047C20 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B10D288D9ECD00047C20 /* m68kops.c */; settings = {COMPILER_FLAGS = "-w"; }; };
+		5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B114288D9EDC00047C20 /* m68kdasm.c */; settings = {COMPILER_FLAGS = "-w"; }; };
+		5028B11C288D9EDC00047C20 /* m68kcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B116288D9EDC00047C20 /* m68kcpu.c */; settings = {COMPILER_FLAGS = "-w"; }; };
 		502C09DF23C8D82600A179E1 /* MoiraDebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */; };
 		502C09E223C8E16600A179E1 /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; };
-		505580EC23AFA14D0009F77F /* musashi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505580EA23AFA14D0009F77F /* musashi.cpp */; };
-		505580EF23AFC2360009F77F /* StrWriter_cpp.h in Sources */ = {isa = PBXBuildFile; fileRef = 5010BDAC238A897400CFD010 /* StrWriter_cpp.h */; };
+		505580EC23AFA14D0009F77F /* musashi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505580EA23AFA14D0009F77F /* musashi.cpp */; settings = {COMPILER_FLAGS = "-w"; }; };
 		507BE4AF23B66456000B37D2 /* testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* testrunner.cpp */; };
 		50804EE22386A72C004D3EC2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E8C2386A72C004D3EC2 /* main.cpp */; };
 		50804F352386A7DD004D3EC2 /* Moira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F332386A7DD004D3EC2 /* Moira.cpp */; };
-		509D631C25964F5C00E9DD0C /* MoiraExceptions_cpp.h in Sources */ = {isa = PBXBuildFile; fileRef = 509D631A25964F5C00E9DD0C /* MoiraExceptions_cpp.h */; };
 		50CECEC723A924B000E07C65 /* Sandbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50CECEC523A924B000E07C65 /* Sandbox.cpp */; };
 /* End PBXBuildFile section */
 
@@ -83,6 +81,7 @@
 		50BF14CA23BB4D2700EDFB9C /* MoiraALU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraALU.h; sourceTree = "<group>"; };
 		50CECEC523A924B000E07C65 /* Sandbox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Sandbox.cpp; sourceTree = "<group>"; };
 		50CECEC623A924B000E07C65 /* Sandbox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sandbox.h; sourceTree = "<group>"; };
+		50F549DE288E817600D5D559 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F80AA723C9E4EC00F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F80AAB23C9F16900F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -101,6 +100,7 @@
 		5028B100288D9EA600047C20 /* Musashi */ = {
 			isa = PBXGroup;
 			children = (
+				50F549DE288E817600D5D559 /* CMakeLists.txt */,
 				5028B10D288D9ECD00047C20 /* m68kops.c */,
 				5028B10C288D9ECD00047C20 /* m68kops.h */,
 				5028B10F288D9EDC00047C20 /* history.txt */,
@@ -243,19 +243,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				505580EF23AFC2360009F77F /* StrWriter_cpp.h in Sources */,
 				505580EC23AFA14D0009F77F /* musashi.cpp in Sources */,
-				5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */,
-				50804EE22386A72C004D3EC2 /* main.cpp in Sources */,
-				50804F352386A7DD004D3EC2 /* Moira.cpp in Sources */,
-				502C09E223C8E16600A179E1 /* TestCPU.cpp in Sources */,
-				502C09DF23C8D82600A179E1 /* MoiraDebugger.cpp in Sources */,
-				509D631C25964F5C00E9DD0C /* MoiraExceptions_cpp.h in Sources */,
 				5028B11C288D9EDC00047C20 /* m68kcpu.c in Sources */,
-				50CECEC723A924B000E07C65 /* Sandbox.cpp in Sources */,
-				5028B10A288D9EC000047C20 /* softfloat.c in Sources */,
+				5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */,
 				5028B10E288D9ECD00047C20 /* m68kops.c in Sources */,
+				5028B10A288D9EC000047C20 /* softfloat.c in Sources */,
+				50804F352386A7DD004D3EC2 /* Moira.cpp in Sources */,
+				502C09DF23C8D82600A179E1 /* MoiraDebugger.cpp in Sources */,
+				502C09E223C8E16600A179E1 /* TestCPU.cpp in Sources */,
+				50CECEC723A924B000E07C65 /* Sandbox.cpp in Sources */,
 				507BE4AF23B66456000B37D2 /* testrunner.cpp in Sources */,
+				50804EE22386A72C004D3EC2 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -19,11 +19,50 @@
 namespace moira {
 
 #ifdef _MSC_VER
-#define unreachable    __assume(false)
+#define unreachable     __assume(false)
 #else
-#define unreachable    __builtin_unreachable()
+#define unreachable     __builtin_unreachable()
 #endif
-#define fatalError     assert(false); unreachable
+#define fatalError      assert(false); unreachable
+
+#ifdef PRECISE_TIMING
+
+#define SYNC(x)         sync(x)
+#define SYNC_68000(x)   if constexpr (CPU == M68000) sync(x)
+#define SYNC_68010(x)   if constexpr (CPU == M68010) sync(x)
+
+#define CYCLES(c0,c1,c2)
+#define CYCLES_MBWL(m,b0,b1,b2,w0,w1,w2,l0,l1,l2)
+
+#else
+
+#define SYNC(x)
+#define SYNC_68000(x)
+#define SYNC_68010(x)
+
+#define CYCLES_00(m,c) if constexpr (C == M68000) { sync(); }
+#define CYCLES_10(m,c) if constexpr (C == M68010) { sync(); }
+#define CYCLES_20(m,c) if constexpr (C == M68020) { sync(); }
+
+#define CYCLES(c0,c1,c2) \
+CYCLES_00(m,c0) \
+CYCLES_10(m,c1) \
+CYCLES_20(m,c2) }
+
+#define CYCLES_MBWL_00(m,b,w,l) \
+if constexpr (M == m && C == M68000) { sync(S == Byte ? b : S == Word ? w : l); }
+#define CYCLES_MBWL_10(m,b,w,l) \
+if constexpr (M == m && C == M68010) { sync(S == Byte ? b : S == Word ? w : l); }
+#define CYCLES_MBWL_20(m,b,w,l) \
+if constexpr (M == m && C == M68020) { sync(S == Byte ? b : S == Word ? w : l); }
+
+#define CYCLES_MBWL(m,b0,b1,b2,w0,w1,w2,l0,l1,l2) \
+CYCLES_MBWL_00(m,b0,w0,l0) \
+CYCLES_MBWL_10(m,b1,w1,l1) \
+CYCLES_MBWL_20(m,b2,w2,l2) }
+
+#endif
+
 
 class Moira {
 
@@ -296,7 +335,7 @@ protected:
     virtual void sync(int cycles) { clock += cycles; }
 
     template <Type CPU>
-    void sync([[maybe_unused]] int c1, [[maybe_unused]] int c2) {
+    [[deprecated]] void sync([[maybe_unused]] int c1, [[maybe_unused]] int c2) {
 
         if constexpr (CPU == M68000) sync(c1);
         if constexpr (CPU == M68010) sync(c2);

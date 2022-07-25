@@ -9,6 +9,18 @@
 
 #pragma once
 
+/* Set to true to enable precise timing mode (68000 and 68010 only)
+ *
+ * If disabled, Moira calls function 'sync' at the end of each instruction
+ * with the number of elapsed cycles as a parameter. In precise timing mode,
+ * 'sync' is called prior to each memory access. This enables to client to
+ * emulate the surrounding hardware up the point where the memory access
+ * actually happens.
+ *
+ * Enable to improve emulation compatibility, disable to gain speed.
+ */
+#define PRECISE_TIMING true
+
 /* Set to true to enable address error checking.
  *
  * The Motorola 68k signals an address error violation if a odd memory location

@@ -11,12 +11,6 @@
 #include "testrunner.h"
 
 /* Signals the CPU clock to advance.
- *
- * Moira calls this function prior to each memory access and provides the
- * number of CPU cycles that have been elapsed since the previous call.
- * The demo application simply advances the CPU clock. A real-life would
- * emulate the surrounding hardware up the current CPU cycle to make sure
- * that the memory is up-to-date when the CPU accesses it.
  */
 void
 TestCPU::sync(int cycles)
