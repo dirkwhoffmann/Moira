@@ -7,7 +7,7 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-template<Mode M, Size S, Flags F> bool
+template<Core C, Mode M, Size S, Flags F> bool
 Moira::readOp(int n, u32 &ea, u32 &result)
 {
     switch (M) {
