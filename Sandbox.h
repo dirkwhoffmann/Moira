@@ -42,6 +42,8 @@ struct AccessRecord {
 
 class Sandbox {
 
+    bool enabled;
+
     AccessRecord access[64];
     int recordCnt;
     int replayCnt;
@@ -50,7 +52,7 @@ class Sandbox {
 public:
 
     Sandbox(); 
-    void prepare();
+    void prepare(u32 opcode = 0);
     long getErrors() { return errors; }
     void record(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value);
     void recordPoll(u64 cycle, u32 fc, u8 value);

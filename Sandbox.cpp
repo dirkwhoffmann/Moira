@@ -18,8 +18,9 @@ Sandbox::Sandbox()
 }
 
 void
-Sandbox::prepare()
+Sandbox::prepare(u32 opcode)
 {
+    enabled = doExec(opcode);
     recordCnt = replayCnt = 0;
     errors = 0;
 }
@@ -42,7 +43,7 @@ Sandbox::recordPoll(u64 cycle, u32 fc, u8 value)
 void
 Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
 {
-    if constexpr (DASM_ONLY) return;
+    if (!enabled) return;
 
     for (int i = 0; i < recordCnt; i++) {
 

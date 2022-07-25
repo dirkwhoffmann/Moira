@@ -159,18 +159,16 @@ void run()
     printf("The test program runs Moira agains Musashi with randomly generated data.\n");
     printf("It runs until a bug has been found.\n\n");
 
-    switch (CPUTYPE) {
+    printf("Emulated CPU: Motorola %d\n\n", CPUTYPE);
 
-        case 68000: printf("Emulated CPU: Motorola 68000"); break;
-        case 68010: printf("Emulated CPU: Motorola 68010"); break;
-        case 68020: printf("Emulated CPU: Motorola 68020"); break;
+    if (!doExec(0) || !doExec(0xFFFF) || !doDasm(0) || !doDasm(0xFFFF)) {
+        printf("              Exec range: %s\n", TOSTRING(doExec(opcode)));
+        printf("              Dasm range: %s\n\n", TOSTRING(doDasm(opcode)));
     }
-    printf("%s\n", DASM_ONLY ? " (Disassembler only)" : "");
+    // printf("\n");
 
     setupMusashi();
     setupMoira();
-
-    printf("\n");
     srand(0);
 
     for (testrun = 1 ;; testrun++) {
@@ -187,7 +185,7 @@ void run()
             setupInstruction(setup, pc, (uint16_t)opcode);
 
             // Reset the sandbox (memory accesses observer)
-            sandbox.prepare();
+            sandbox.prepare(opcode);
 
             // Execute both CPU cores
             runSingleTest(setup);
@@ -379,12 +377,15 @@ void compare(Setup &s, Result &r1, Result &r2)
 {
     bool error = false;
 
-    if (!compareDasm(r1, r2)) {
-        printf("\nDISASSEMBLER MISMATCH FOUND");
-        error = true;
+    if (doDasm(s.opcode)) {
+
+        if (!compareDasm(r1, r2)) {
+            printf("\nDISASSEMBLER MISMATCH FOUND");
+            error = true;
+        }
     }
 
-    if constexpr (DASM_ONLY == false) {
+    if (doExec(s.opcode)) {
 
         if (!comparePC(r1, r2)) {
             printf("\nPROGRAM COUNTER MISMATCH FOUND");

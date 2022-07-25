@@ -28,6 +28,9 @@ extern "C" {
 
 #include "config.h"
 
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+
 extern class TestCPU *moiracpu;
 extern Sandbox sandbox;
 extern uint8_t musashiMem[0x10000];
