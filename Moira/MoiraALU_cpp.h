@@ -68,7 +68,7 @@ template<Size S> u32 WRITE(u32 d1, u32 d2) {
     if constexpr (S == Long) return d2;
 }
 
-template<Instr I, Size S> u32
+template<Core C, Instr I, Size S> u32
 Moira::shift(int cnt, u64 data) {
 
     switch (I) {
@@ -196,7 +196,7 @@ Moira::shift(int cnt, u64 data) {
     return CLIP<S>(data);
 }
 
-template<Instr I, Size S> u32
+template<Core C, Instr I, Size S> u32
 Moira::addsub(u32 op1, u32 op2)
 {
     u64 result;
@@ -256,7 +256,7 @@ Moira::addsub(u32 op1, u32 op2)
     return (u32)result;
 }
 
-template <Instr I> u32
+template <Core C, Instr I> u32
 Moira::mul(u32 op1, u32 op2)
 {
     u32 result;
@@ -282,11 +282,11 @@ Moira::mul(u32 op1, u32 op2)
     reg.sr.v = 0;
     reg.sr.c = 0;
 
-    sync(cyclesMul<I>((u16)op1));
+    sync(cyclesMul<C, I>((u16)op1));
     return result;
 }
 
-template <Instr I> u32
+template <Core C, Instr I> u32
 Moira::div(u32 op1, u32 op2)
 {
     u32 result;
@@ -325,11 +325,11 @@ Moira::div(u32 op1, u32 op2)
     reg.sr.n = overflow ? 1        : NBIT<Word>(result);
     reg.sr.z = overflow ? reg.sr.z : ZERO<Word>(result);
 
-    sync(cyclesDiv<I>(op1, (u16)op2) - 4);
+    sync(cyclesDiv<C, I>(op1, (u16)op2) - 4);
     return overflow ? op1 : result;
 }
 
-template<Instr I, Size S> u32
+template<Core C, Instr I, Size S> u32
 Moira::bcd(u32 op1, u32 op2)
 {
     u64 result;
@@ -388,7 +388,7 @@ Moira::bcd(u32 op1, u32 op2)
     return (u32)result;
 }
 
-template <Size S> void
+template <Core C, Size S> void
 Moira::cmp(u32 op1, u32 op2)
 {
     u64 result = U64_SUB(op2, op1);
@@ -399,7 +399,7 @@ Moira::cmp(u32 op1, u32 op2)
     reg.sr.n = NBIT<S>(result);
 }
 
-template<Instr I, Size S> u32
+template<Core C, Instr I, Size S> u32
 Moira::logic(u32 op)
 {
     u32 result;
@@ -419,13 +419,13 @@ Moira::logic(u32 op)
         case NEG:
         case NEG_LOOP:
         {
-            result = addsub<SUB,S>(op, 0);
+            result = addsub<C, SUB, S>(op, 0);
             break;
         }
         case NEGX:
         case NEGX_LOOP:
         {
-            result = addsub<SUBX,S>(op, 0);
+            result = addsub<C, SUBX, S>(op, 0);
             break;
         }
         default:
@@ -434,7 +434,7 @@ Moira::logic(u32 op)
     return result;
 }
 
-template<Instr I, Size S> u32
+template<Core C, Instr I, Size S> u32
 Moira::logic(u32 op1, u32 op2)
 {
     u32 result;
@@ -469,7 +469,7 @@ Moira::logic(u32 op1, u32 op2)
     return result;
 }
 
-template <Instr I> u32
+template <Core C, Instr I> u32
 Moira::bit(u32 op, u8 bit)
 {
     switch (I) {
@@ -558,7 +558,7 @@ Moira::cond(Instr I) {
     }
 }
 
-template <Instr I> int
+template <Core C, Instr I> int
 Moira::cyclesBit(u8 bit)
 {
     switch (I)
@@ -572,7 +572,7 @@ Moira::cyclesBit(u8 bit)
     fatalError;
 }
 
-template <Instr I> int
+template <Core C, Instr I> int
 Moira::cyclesMul(u16 data)
 {
     int mcycles = 17;
@@ -595,7 +595,7 @@ Moira::cyclesMul(u16 data)
     fatalError;
 }
 
-template <Instr I> int
+template <Core C, Instr I> int
 Moira::cyclesDiv(u32 op1, u16 op2)
 {
     switch (I)

@@ -21,19 +21,19 @@
 bool cond(Instr I);
 bool cond(Cond C);
 
-template <Instr I, Size S> u32  shift(int cnt, u64 data);
-template <Instr I, Size S> u32 addsub(u32 op1, u32 op2);
-template <Instr I>         u32    mul(u32 op1, u32 op2);
-template <Instr I>         u32    div(u32 op1, u32 op2);
-template <Instr I, Size S> u32    bcd(u32 op1, u32 op2);
-template <Size S>          void   cmp(u32 op1, u32 op2);
-template <Instr I, Size S> u32  logic(u32 op1);
-template <Instr I, Size S> u32  logic(u32 op1, u32 op2);
-template <Instr I>         u32    bit(u32 op,  u8 nr);
+template <Core C, Instr I, Size S> u32  shift(int cnt, u64 data);
+template <Core C, Instr I, Size S> u32 addsub(u32 op1, u32 op2);
+template <Core C, Instr I>         u32    mul(u32 op1, u32 op2);
+template <Core C, Instr I>         u32    div(u32 op1, u32 op2);
+template <Core C, Instr I, Size S> u32    bcd(u32 op1, u32 op2);
+template <Core C,          Size S> void   cmp(u32 op1, u32 op2);
+template <Core C, Instr I, Size S> u32  logic(u32 op1);
+template <Core C, Instr I, Size S> u32  logic(u32 op1, u32 op2);
+template <Core C, Instr I>         u32    bit(u32 op,  u8 nr);
 
-template <Instr I>         int  cyclesBit(u8 nr);
-template <Instr I>         int  cyclesMul(u16 data);
-template <Instr I>         int  cyclesDiv(u32 dividend, u16 divisor);
+template <Core C, Instr I>         int  cyclesBit(u8 nr);
+template <Core C, Instr I>         int  cyclesMul(u16 data);
+template <Core C, Instr I>         int  cyclesDiv(u32 dividend, u16 divisor);
 
 // Musashi compatibility mode
 template <Core C, Instr I>  u32  mulMusashi(u32 op1, u32 op2);
