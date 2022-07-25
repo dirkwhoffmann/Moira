@@ -20,7 +20,7 @@ Moira::readOp(int n, u32 &ea, u32 &result)
         default:
             
             // Compute effective address
-            ea = computeEA <M,S,F> (n);
+            ea = computeEA <C,M,S,F> (n);
 
             // Read from effective address
             bool error; result = readM <M,S,F> (ea, error);
@@ -51,7 +51,7 @@ Moira::writeOp(int n, u32 val)
         default:
             
             // Compute effective address
-            u32 ea = computeEA <M,S> (n);
+            u32 ea = computeEA <C,M,S> (n);
             
             // Write to effective address
             bool error; writeM <M,S,F> (ea, val, error);
@@ -84,7 +84,7 @@ Moira::writeOp(int n, u32 ea, u32 val)
     }
 }
 
-template<Mode M, Size S, Flags F> u32
+template<Core C, Mode M, Size S, Flags F> u32
 Moira::computeEA(u32 n) {
 
     assert(n < 8);

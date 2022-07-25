@@ -1144,7 +1144,7 @@ Moira::execJmp(u16 opcode)
     u32 oldpc = reg.pc;
 
     int src = _____________xxx(opcode);
-    u32 ea  = computeEA <M,Long, SKIP_LAST_READ> (src);
+    u32 ea  = computeEA <C, M, Long, SKIP_LAST_READ> (src);
 
     const int delay[] = { 0,0,0,0,0,2,4,2,0,2,4,0 };
     sync(delay[M]);
@@ -1168,7 +1168,7 @@ Moira::execJsr(u16 opcode)
     EXEC_DEBUG(C,I,M,S)
 
     int src = _____________xxx(opcode);
-    u32 ea  = computeEA<M, Long, SKIP_LAST_READ>(src);
+    u32 ea  = computeEA <C, M, Long, SKIP_LAST_READ> (src);
 
     const int delay[] = { 0,0,0,0,0,2,4,2,0,2,4,0 };
     sync(delay[M]);
@@ -1211,7 +1211,7 @@ Moira::execLea(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    reg.a[dst] = computeEA<M,S>(src);
+    reg.a[dst] = computeEA <C,M,S> (src);
     if (isIdxMode(M)) sync(2);
 
     prefetch<POLLIPL>();
@@ -1381,7 +1381,7 @@ Moira::execMove4(u16 opcode)
 
     looping<I>() ? noPrefetch() : prefetch <POLLIPL> ();
 
-    ea = computeEA <MODE_PD, S, IMPLICIT_DECR> (dst);
+    ea = computeEA <C, MODE_PD, S, IMPLICIT_DECR> (dst);
 
     // Check for address error
     if (misaligned<S>(ea)) {
@@ -1651,7 +1651,7 @@ Moira::execMovemEaRg(u16 opcode)
 
     int src  = _____________xxx(opcode);
     u16 mask = (u16)readI<Word>();
-    u32 ea   = computeEA<M,S>(src);
+    u32 ea   = computeEA <C,M,S> (src);
 
     // Check for address error
     if (misaligned<S>(ea)) {
@@ -1730,7 +1730,7 @@ Moira::execMovemRgEa(u16 opcode)
         }
         default:
         {
-            u32 ea = computeEA<M,S>(dst);
+            u32 ea = computeEA <C,M,S> (dst);
 
             // Check for address error
             if (mask && misaligned<S>(ea)) {
@@ -1760,7 +1760,7 @@ Moira::execMovepDxEa(u16 opcode)
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
 
-    u32 ea = computeEA<M,S>(dst);
+    u32 ea = computeEA <C,M,S> (dst);
     u32 dx = readD(src);
 
     switch (S) {
@@ -1788,7 +1788,7 @@ Moira::execMovepEaDx(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    u32 ea = computeEA<M,S>(src);
+    u32 ea = computeEA <C,M,S> (src);
     u32 dx = 0;
 
     switch (S) {
@@ -2262,7 +2262,7 @@ Moira::execPea(u16 opcode)
 
     int src = _____________xxx(opcode);
 
-    u32 ea = computeEA<M,Long>(src);
+    u32 ea = computeEA <C,M,Long> (src);
 
     if (isIdxMode(M)) sync(2);
 

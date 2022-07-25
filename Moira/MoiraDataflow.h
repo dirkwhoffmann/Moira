@@ -71,7 +71,7 @@ template<Core C, Mode M, Size S, Flags F = 0> bool writeOp(int n, u32 val);
 template<Core C, Mode M, Size S, Flags F = 0> void writeOp(int n, u32 ea, u32 val);
 
 // Computes an effective address
-template<Mode M, Size S, Flags F = 0> u32 computeEA(u32 n);
+template<Core C, Mode M, Size S, Flags F = 0> u32 computeEA(u32 n);
 
 // Emulates the address register modification for modes (An)+, (An)-
 template<Mode M, Size S> void updateAn(int n);
