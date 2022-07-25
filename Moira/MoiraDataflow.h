@@ -67,8 +67,8 @@ template<Core C, Mode M, Size S, Flags F = 0> bool readOp(int n, u32 &ea, u32 &r
  * by the addressing mode M. Parameter 'last' indicates if this function is
  * initiates the last memory bus cycle of an instruction.
  */
-template<Mode M, Size S, Flags F = 0> bool writeOp(int n, u32 val);
-template<Mode M, Size S, Flags F = 0> void writeOp(int n, u32 ea, u32 val);
+template<Core C, Mode M, Size S, Flags F = 0> bool writeOp(int n, u32 val);
+template<Core C, Mode M, Size S, Flags F = 0> void writeOp(int n, u32 ea, u32 val);
 
 // Computes an effective address
 template<Mode M, Size S, Flags F = 0> u32 computeEA(u32 n);

@@ -38,7 +38,7 @@ Moira::readOp(int n, u32 &ea, u32 &result)
     }
 }
 
-template<Mode M, Size S, Flags F> bool
+template<Core C, Mode M, Size S, Flags F> bool
 Moira::writeOp(int n, u32 val)
 {
     switch (M) {
@@ -69,7 +69,7 @@ Moira::writeOp(int n, u32 val)
     }
 }
 
-template<Mode M, Size S, Flags F> void
+template<Core C, Mode M, Size S, Flags F> void
 Moira::writeOp(int n, u32 ea, u32 val)
 {
     switch (M) {
