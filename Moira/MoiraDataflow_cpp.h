@@ -111,7 +111,7 @@ Moira::computeEA(u32 n) {
         }
         case 4:  // -(An)
         {
-            if ((F & IMPLICIT_DECR) == 0) sync(2);
+            if ((F & IMPLICIT_DECR) == 0) sync<C>(2);
             result = readA(n) - ((n == 7 && S == Byte) ? 2 : S);
             break;
         }
@@ -132,7 +132,7 @@ Moira::computeEA(u32 n) {
 
             result = U32_ADD3(an, d, ((queue.irc & 0x800) ? xi : SEXT<Word>(xi)));
 
-            sync(2);
+            sync<C>(2);
             if ((F & SKIP_LAST_READ) == 0) readExt();
             break;
         }
@@ -164,7 +164,7 @@ Moira::computeEA(u32 n) {
             u32 xi = readR((queue.irc >> 12) & 0b1111);
             
             result = U32_ADD3(reg.pc, d, ((queue.irc & 0x800) ? xi : SEXT<Word>(xi)));
-            sync(2);
+            sync<C>(2);
             if ((F & SKIP_LAST_READ) == 0) readExt();
             break;
         }

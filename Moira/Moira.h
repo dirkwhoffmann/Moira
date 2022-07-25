@@ -331,9 +331,11 @@ public:
 protected:
 
     // Advances the clock (called before each memory access)
-    virtual void sync(int cycles) { clock += cycles; }
+    [[deprecated]] virtual void sync(int cycles) { clock += cycles; }
 
-    
+    template <Core C> void sync(int cycles) { sync(cycles); }
+
+
     //
     // Accessing registers
     //

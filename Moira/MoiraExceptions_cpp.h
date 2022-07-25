@@ -120,7 +120,7 @@ Moira::execAddressError(AEStackFrame frame, int delay)
     // Disable tracing
     clearTraceFlag();
     flags &= ~CPU_TRACE_EXCEPTION;
-    sync(8);
+    sync<C>(8);
 
     // A misaligned stack pointer will cause a "double fault"
     bool doubleFault = misaligned<Word>(reg.sp);
@@ -129,7 +129,7 @@ Moira::execAddressError(AEStackFrame frame, int delay)
         
         // Write stack frame
         saveToStack(frame);
-        sync(2);
+        sync<C>(2);
         jumpToVector(3);
     }
     
@@ -167,7 +167,7 @@ Moira::execFormatError()
     flags &= ~CPU_TRACE_EXCEPTION;
 
     // Write exception information to stack
-    sync(4);
+    sync<C>(4);
     saveToStackBrief(14, status, reg.pc);
 
     jumpToVector<AE_SET_CB3>(14);
@@ -200,7 +200,7 @@ Moira::execUnimplemented(int nr)
     flags &= ~CPU_TRACE_EXCEPTION;
 
     // Write exception information to stack
-    sync(4);
+    sync<C>(4);
     saveToStackBrief(u16(nr), status, reg.pc - 2);
 
     jumpToVector<AE_SET_CB3>(nr);
@@ -238,7 +238,7 @@ Moira::execTraceException()
     flags &= ~CPU_TRACE_EXCEPTION;
 
     // Write exception information to stack
-    sync(4);
+    sync<C>(4);
     saveToStackBrief(9, status, reg.pc);
 
     jumpToVector(9);
@@ -306,7 +306,7 @@ Moira::execPrivilegeException()
     flags &= ~CPU_TRACE_EXCEPTION;
 
     // Write exception information to stack
-    sync(4);
+    sync<C>(4);
     saveToStackBrief(8, status, reg.pc - 2);
 
     jumpToVector<AE_SET_CB3>(8);
@@ -355,28 +355,28 @@ Moira::execIrqException(u8 level)
 
     if constexpr (C == M68000) {
 
-        sync(6);
+        sync<C>(6);
         reg.sp -= 6;
         writeMS <MEM_DATA, Word> (reg.sp + 4, reg.pc & 0xFFFF);
 
-        sync(4);
+        sync<C>(4);
         queue.ird = getIrqVector(level);
 
-        sync(4);
+        sync<C>(4);
         writeMS <MEM_DATA, Word> (reg.sp + 0, status);
         writeMS <MEM_DATA, Word> (reg.sp + 2, reg.pc >> 16);
     }
 
     if constexpr (C == M68010) {
 
-        sync(6);
+        sync<C>(6);
         reg.sp -= 8;
         writeMS <MEM_DATA, Word> (reg.sp + 4, reg.pc & 0xFFFF);
 
-        sync(4);
+        sync<C>(4);
         queue.ird = getIrqVector(level);
 
-        sync(4);
+        sync<C>(4);
         writeMS <MEM_DATA, Word> (reg.sp + 0, status);
         writeMS <MEM_DATA, Word> (reg.sp + 2, reg.pc >> 16);
 

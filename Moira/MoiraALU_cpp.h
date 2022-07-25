@@ -277,12 +277,12 @@ Moira::mul(u32 op1, u32 op2)
             fatalError;
      }
 
-    reg.sr.n = NBIT<Long>(result);
-    reg.sr.z = ZERO<Long>(result);
+    reg.sr.n = NBIT <Long> (result);
+    reg.sr.z = ZERO <Long> (result);
     reg.sr.v = 0;
     reg.sr.c = 0;
 
-    sync(cyclesMul<C, I>((u16)op1));
+    sync<C>(cyclesMul <C,I> ((u16)op1));
     return result;
 }
 
