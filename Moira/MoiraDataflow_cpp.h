@@ -23,7 +23,7 @@ Moira::readOp(int n, u32 &ea, u32 &result)
             ea = computeEA <C,M,S,F> (n);
 
             // Read from effective address
-            bool error; result = readM <M,S,F> (ea, error);
+            bool error; result = readM <C,M,S,F> (ea, error);
 
             // Emulate -(An) register modification
             updateAnPD <M,S> (n);
@@ -213,7 +213,7 @@ Moira::updateAn(int n)
     if constexpr (M == 4) reg.a[n] -= (n == 7 && S == Byte) ? 2 : S;
 }
 
-template<Mode M, Size S, Flags F> u32
+template<Core C, Mode M, Size S, Flags F> u32
 Moira::readM(u32 addr, bool &error)
 {
     if (isPrgMode(M)) {
@@ -223,7 +223,7 @@ Moira::readM(u32 addr, bool &error)
     }
 }
 
-template<Mode M, Size S, Flags F> u32
+template<Core C, Mode M, Size S, Flags F> u32
 Moira::readM(u32 addr)
 {
     if (isPrgMode(M)) {

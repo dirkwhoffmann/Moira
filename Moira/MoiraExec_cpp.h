@@ -1676,7 +1676,7 @@ Moira::execMovemEaRg(u16 opcode)
             for(int i = 0; i <= 15; i++) {
 
                 if (mask & (1 << i)) {
-                    writeR(i, SEXT<S>(readM<M,S>(ea)));
+                    writeR(i, SEXT<S>(readM <C,M,S> (ea)));
                     ea += S;
                 }
             }
@@ -1688,7 +1688,7 @@ Moira::execMovemEaRg(u16 opcode)
             for(int i = 0; i <= 15; i++) {
 
                 if (mask & (1 << i)) {
-                    writeR(i, SEXT<S>(readM<M,S>(ea)));
+                    writeR(i, SEXT<S>(readM <C,M,S> (ea)));
                     ea += S;
                 }
             }
@@ -2320,7 +2320,7 @@ Moira::execRtd(u16 opcode)
     signalRtdInstr();
 
     bool error;
-    u32 newpc = readM<M, Long>(reg.sp, error);
+    u32 newpc = readM <C,M,Long> (reg.sp, error);
     if (error) return;
 
     reg.sp += 4 + i16(queue.irc);
@@ -2395,7 +2395,7 @@ Moira::execRtr(u16 opcode)
     EXEC_DEBUG(C,I,M,S)
 
     bool error;
-    u16 newccr = (u16)readM<M, Word>(reg.sp, error);
+    u16 newccr = (u16)readM <C, M, Word> (reg.sp, error);
     if (error) return;
 
     reg.sp += 2;
@@ -2423,7 +2423,7 @@ Moira::execRts(u16 opcode)
     signalRtsInstr();
 
     bool error;
-    u32 newpc = readM<M, Long>(reg.sp, error);
+    u32 newpc = readM <C, M, Long> (reg.sp, error);
     if (error) return;
 
     reg.sp += 4;
