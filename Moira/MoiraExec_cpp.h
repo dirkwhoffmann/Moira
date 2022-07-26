@@ -443,6 +443,8 @@ Moira::execAndiRg(u16 opcode)
 
     if constexpr (S == Long) { SYNC_68000(4); SYNC_68010(2); }
     writeD<S>(dst, result);
+
+    CYCLES_MBWL(MODE_DN,    8,  8,  2,      8,  8,  2,      16,  14,   2)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -465,6 +467,14 @@ Moira::execAndiEa(u16 opcode)
     } else {
         writeOp <C,M,S,REVERSE> (dst, ea, result);
     }
+
+    CYCLES_AI (16, 16,  8,      16, 16,  8,     28, 28,  8)
+    CYCLES_PI (16, 16,  8,      16, 16,  8,     28, 28,  8)
+    CYCLES_PD (18, 18,  9,      18, 18,  9,     30, 30,  9)
+    CYCLES_DI (20, 20,  9,      20, 20,  9,     32, 32,  9)
+    CYCLES_IX (22, 22, 11,      22, 22, 11,     34, 34, 11)
+    CYCLES_AW (20, 20,  8,      20, 20,  8,     32, 32,  8)
+    CYCLES_AL (24, 24,  8,      24, 24,  8,     36, 36,  8)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -483,6 +493,8 @@ Moira::execAndiccr(u16 opcode)
 
     (void)readMS <C,MEM_DATA,Word> (reg.pc+2);
     prefetch <C,POLLIPL> ();
+
+    CYCLES(20, 16, 12);
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -503,6 +515,8 @@ Moira::execAndisr(u16 opcode)
 
     (void)readMS <C,MEM_DATA,Word> (reg.pc+2);
     prefetch <C,POLLIPL> ();
+
+    CYCLES(20, 16, 12);
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -548,13 +562,15 @@ Moira::execBitDxEa(u16 opcode)
         {
             u8 b = readD(src) & 0b11111;
             u32 data = readD(dst);
-            data = bit<C, I>(data, b);
+            data = bit <C,I> (data, b);
 
             prefetch <C,POLLIPL> ();
 
-            auto cycles = cyclesBit<C,I>(b);
+            [[maybe_unused]] auto cycles = cyclesBit<C,I>(b);
             SYNC(cycles);
             if (I != BTST) writeD(dst, data);
+
+            CYCLES(4 + cycles, 4 + cycles, 2 + cycles);
             break;
         }
         default:
@@ -564,12 +580,23 @@ Moira::execBitDxEa(u16 opcode)
             u32 ea, data;
             if (!readOp<C, M, Byte>(dst, ea, data)) return;
 
-            data = bit<C, I>(data, b);
+            data = bit <C,I> (data, b);
 
             if (I == BCLR && core == M68010) SYNC(2);
 
             prefetch <C,POLLIPL> ();
             if (I != BTST) writeM <C,M,Byte> (ea, data);
+
+            CYCLES_AI   ( 8,  8,  6,     0,  0,  0,     0,  0,  0)
+            CYCLES_PD   (10, 10,  9,     0,  0,  0,     0,  0,  0)
+            CYCLES_PI   ( 8,  8,  8,     0,  0,  0,     0,  0,  0)
+            CYCLES_DI   (12, 12,  9,     0,  0,  0,     0,  0,  0)
+            CYCLES_IX   (14, 14, 11,     0,  0,  0,     0,  0,  0)
+            CYCLES_AW   (12, 12,  8,     0,  0,  0,     0,  0,  0)
+            CYCLES_AL   (16, 16,  8,     0,  0,  0,     0,  0,  0)
+            CYCLES_DIPC (12, 12,  9,     0,  0,  0,     0,  0,  0)
+            CYCLES_IXPC (14, 14, 11,     0,  0,  0,     0,  0,  0)
+            CYCLES_IM   ( 8,  8,  6,     0,  0,  0,     0,  0,  0)
         }
     }
 }
@@ -592,7 +619,7 @@ Moira::execBitImEa(u16 opcode)
 
             prefetch <C,POLLIPL> ();
 
-            auto cycles = cyclesBit <C,I> (src);
+            [[maybe_unused]] auto cycles = cyclesBit <C,I> (src);
             SYNC(cycles);
             if (I != BTST) writeD(dst, data);
             break;
@@ -690,7 +717,7 @@ Moira::execChk(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    i64 c = clock;
+    [[maybe_unused]] i64 c = clock;
     u32 ea, data, dy;
     if (!readOp<C, M, S, STD_AE_FRAME>(src, ea, data)) return;
     dy = readD<S>(dst);
@@ -1151,7 +1178,7 @@ Moira::execJmp(u16 opcode)
     int src = _____________xxx(opcode);
     u32 ea  = computeEA <C, M, Long, SKIP_LAST_READ> (src);
 
-    const int delay[] = { 0,0,0,0,0,2,4,2,0,2,4,0 };
+    [[maybe_unused]] const int delay[] = { 0,0,0,0,0,2,4,2,0,2,4,0 };
     SYNC(delay[M]);
 
     // Check for address error
@@ -1175,7 +1202,7 @@ Moira::execJsr(u16 opcode)
     int src = _____________xxx(opcode);
     u32 ea  = computeEA <C, M, Long, SKIP_LAST_READ> (src);
 
-    const int delay[] = { 0,0,0,0,0,2,4,2,0,2,4,0 };
+    [[maybe_unused]] const int delay[] = { 0,0,0,0,0,2,4,2,0,2,4,0 };
     SYNC(delay[M]);
 
     // Check for address error in displacement modes
@@ -1783,6 +1810,8 @@ Moira::execMovepDxEa(u16 opcode)
         }
     }
     prefetch <C,POLLIPL> ();
+
+    CYCLES_DI (16, 16, 11,      16, 16, 11,     24, 24, 17)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1814,6 +1843,8 @@ Moira::execMovepEaDx(u16 opcode)
     }
     writeD <S> (dst, dx);
     prefetch <C> ();
+
+    CYCLES_DI (16, 16, 11,      16, 16, 11,     24, 24, 17)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -2067,7 +2098,7 @@ Moira::execMul(u16 opcode)
     prefetch <C,POLLIPL> ();
     result = mul <C,I> (data, readD<Word>(dst));
 
-    auto cycles = cyclesMul <C,I> (u16(data));
+    [[maybe_unused]] auto cycles = cyclesMul <C,I> (u16(data));
     SYNC(cycles);
 
     writeD(dst, result);
@@ -2143,7 +2174,7 @@ Moira::execDiv(u16 opcode)
 
     result = div <C,I> (dividend, divisor);
 
-    auto cycles = cyclesDiv <C,I> (dividend, (u16)divisor) - 4;
+    [[maybe_unused]] auto cycles = cyclesDiv <C,I> (dividend, (u16)divisor) - 4;
     SYNC(cycles);
 
     writeD(dst, result);
@@ -2167,7 +2198,7 @@ Moira::execDivMusashi(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    i64 c = clock;
+    [[maybe_unused]] i64 c = clock;
     u32 ea, divisor, result;
     if (!readOp <C,M,Word> (src, ea, divisor)) return;
 

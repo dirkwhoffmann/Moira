@@ -24,7 +24,7 @@ namespace moira {
 #endif
 #define fatalError      assert(false); unreachable
 
-#ifdef PRECISE_TIMING
+#if PRECISE_TIMING == true
 
 #define SYNC(x)         if constexpr (C != M68020) sync(x)
 #define SYNC_68000(x)   if constexpr (C == M68000) sync(x)
@@ -39,14 +39,14 @@ namespace moira {
 #define SYNC_68000(x)
 #define SYNC_68010(x)
 
-#define CYCLES_00(m,c) if constexpr (C == M68000) { sync(); }
-#define CYCLES_10(m,c) if constexpr (C == M68010) { sync(); }
-#define CYCLES_20(m,c) if constexpr (C == M68020) { sync(); }
+#define CYCLES_00(c) if constexpr (C == M68000) { sync(c); }
+#define CYCLES_10(c) if constexpr (C == M68010) { sync(c); }
+#define CYCLES_20(c) if constexpr (C == M68020) { sync(c); }
 
 #define CYCLES(c0,c1,c2) \
-CYCLES_00(m,c0) \
-CYCLES_10(m,c1) \
-CYCLES_20(m,c2) }
+CYCLES_00(c0) \
+CYCLES_10(c1) \
+CYCLES_20(c2)
 
 #define CYCLES_MBWL_00(m,b,w,l) \
 if constexpr (M == m && C == M68000) { sync(S == Byte ? b : S == Word ? w : l); }
@@ -58,8 +58,21 @@ if constexpr (M == m && C == M68020) { sync(S == Byte ? b : S == Word ? w : l); 
 #define CYCLES_MBWL(m,b0,b1,b2,w0,w1,w2,l0,l1,l2) \
 CYCLES_MBWL_00(m,b0,w0,l0) \
 CYCLES_MBWL_10(m,b1,w1,l1) \
-CYCLES_MBWL_20(m,b2,w2,l2) }
+CYCLES_MBWL_20(m,b2,w2,l2)
 
+#define CYCLES_DN(...)      CYCLES_MBWL(MODE_DN,    ##__VA_ARGS__)
+#define CYCLES_AN(...)      CYCLES_MBWL(MODE_AN,    ##__VA_ARGS__)
+#define CYCLES_AI(...)      CYCLES_MBWL(MODE_AI,    ##__VA_ARGS__)
+#define CYCLES_PI(...)      CYCLES_MBWL(MODE_PI,    ##__VA_ARGS__)
+#define CYCLES_PD(...)      CYCLES_MBWL(MODE_PD,    ##__VA_ARGS__)
+#define CYCLES_DI(...)      CYCLES_MBWL(MODE_DI,    ##__VA_ARGS__)
+#define CYCLES_IX(...)      CYCLES_MBWL(MODE_IX,    ##__VA_ARGS__)
+#define CYCLES_AW(...)      CYCLES_MBWL(MODE_AW,    ##__VA_ARGS__)
+#define CYCLES_AL(...)      CYCLES_MBWL(MODE_AL,    ##__VA_ARGS__)
+#define CYCLES_DIPC(...)    CYCLES_MBWL(MODE_DIPC,  ##__VA_ARGS__)
+#define CYCLES_IXPC(...)    CYCLES_MBWL(MODE_IXPC,  ##__VA_ARGS__)
+#define CYCLES_IM(...)      CYCLES_MBWL(MODE_IM,    ##__VA_ARGS__)
+#define CYCLES_IP(...)      CYCLES_MBWL(MODE_IP,    ##__VA_ARGS__)
 #endif
 
 
@@ -319,7 +332,9 @@ protected:
     int removeAsap = 0;
 
     // Called at the beginning of each instruction handler (see EXEC_DEBUG)
-    virtual void execDebug(const char *func, Core C, Instr I, Mode M, Size S) { }
+    virtual void execDebug(const char *func, Core C, Instr I, Mode M, Size S) {
+        printf("%s(%d,%d,%d,%d)\n", func, C, I, M, S);
+    }
 
 
     //

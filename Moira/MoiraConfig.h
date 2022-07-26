@@ -19,7 +19,7 @@
  *
  * Enable to improve emulation compatibility, disable to gain speed.
  */
-#define PRECISE_TIMING true
+#define PRECISE_TIMING false
 
 /* Set to true to enable address error checking.
  *
