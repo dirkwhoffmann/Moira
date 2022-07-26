@@ -2065,7 +2065,11 @@ Moira::execMul(u16 opcode)
     if (!readOp <C, M, Word, STD_AE_FRAME> (src, ea, data)) return;
 
     prefetch <C,POLLIPL> ();
-    result = mul<C, I>(data, readD<Word>(dst));
+    result = mul <C,I> (data, readD<Word>(dst));
+
+    auto cycles = cyclesMul <C,I> (u16(data));
+    SYNC(cycles);
+
     writeD(dst, result);
 }
 
@@ -2137,7 +2141,11 @@ Moira::execDiv(u16 opcode)
         return;
     }
 
-    result = div<C, I>(dividend, divisor);
+    result = div <C,I> (dividend, divisor);
+
+    auto cycles = cyclesDiv <C,I> (dividend, (u16)divisor) - 4;
+    SYNC(cycles);
+
     writeD(dst, result);
     prefetch <C,POLLIPL> ();
 }
@@ -2161,7 +2169,7 @@ Moira::execDivMusashi(u16 opcode)
 
     i64 c = clock;
     u32 ea, divisor, result;
-    if (!readOp <C, M, Word> (src, ea, divisor)) return;
+    if (!readOp <C,M,Word> (src, ea, divisor)) return;
 
     // Check for division by zero
     if (divisor == 0) {
@@ -2175,7 +2183,11 @@ Moira::execDivMusashi(u16 opcode)
     }
 
     u32 dividend = readD(dst);
-    result = divMusashi <C, I> (dividend, divisor);
+    result = divMusashi <C,I> (dividend, divisor);
+
+    if constexpr (I == DIVU) { SYNC_68000(136); SYNC_68010(104); }
+    if constexpr (I == DIVS) { SYNC_68000(154); SYNC_68010(118); }
+
     writeD(dst, result);
     prefetch <C,POLLIPL> ();
 }

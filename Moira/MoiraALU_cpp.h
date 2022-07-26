@@ -282,9 +282,6 @@ Moira::mul(u32 op1, u32 op2)
     reg.sr.v = 0;
     reg.sr.c = 0;
 
-    auto cycles = cyclesMul<C,I>((u16)op1);
-    SYNC(cycles);
-
     return result;
 }
 
@@ -327,8 +324,6 @@ Moira::div(u32 op1, u32 op2)
     reg.sr.n = overflow ? 1        : NBIT<Word>(result);
     reg.sr.z = overflow ? reg.sr.z : ZERO<Word>(result);
 
-    auto cycles = cyclesDiv <C,I> (op1, (u16)op2) - 4;
-    sync(cycles);
     return overflow ? op1 : result;
 }
 
@@ -697,9 +692,6 @@ Moira::divMusashi(u32 op1, u32 op2)
 
         case DIVS:
         {
-            SYNC_68000(154);
-            SYNC_68010(118);
-
             if (op1 == 0x80000000 && (i32)op2 == -1) {
 
                 reg.sr.z = 0;
@@ -730,9 +722,6 @@ Moira::divMusashi(u32 op1, u32 op2)
         }
         case DIVU:
         {
-            SYNC_68000(136);
-            SYNC_68010(104);
-
             i64 quotient  = op1 / op2;
             u16 remainder = (u16)(op1 % op2);
 
