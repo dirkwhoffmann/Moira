@@ -233,12 +233,6 @@ Moira::readM(u32 addr)
     }
 }
 
-template <MemSpace MS, Size S, Flags F> u32
-Moira::readMS(u32 addr, bool &error)
-{
-    return readMS <M68000,MS,S,F> (addr, error);
-}
-
 template <Core C, MemSpace MS, Size S, Flags F> u32
 Moira::readMS(u32 addr, bool &error)
 {
@@ -250,13 +244,7 @@ Moira::readMS(u32 addr, bool &error)
         return 0;
     }
     
-    return readMS <MS,S,F> (addr);
-}
-
-template <MemSpace MS, Size S, Flags F> u32
-Moira::readMS(u32 addr)
-{
-    return readMS <M68000,MS,S,F> (addr);
+    return readMS <C,MS,S,F> (addr);
 }
 
 template <Core C, MemSpace MS, Size S, Flags F> u32
@@ -460,7 +448,7 @@ Moira::prefetch()
     reg.pc0 = reg.pc;
 
     queue.ird = queue.irc;
-    queue.irc = (u16)readMS <MEM_PROG, Word, F> (reg.pc + 2);
+    queue.irc = (u16)readMS <C,MEM_PROG,Word,F> (reg.pc + 2);
 }
 
 template <Core C, Flags F, int delay> void
