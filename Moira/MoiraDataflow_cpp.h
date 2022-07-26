@@ -269,10 +269,10 @@ Moira::readMS(u32 addr)
         }
         
         // Perform the read operation
-        sync(2);
+        SYNC(2);
         if (F & POLLIPL) pollIpl();
         result = (S == Byte) ? read8(addr & 0xFFFFFF) : read16(addr & 0xFFFFFF);
-        sync(2);
+        SYNC(2);
     }
     
     return result;
@@ -336,10 +336,10 @@ Moira::writeMS(u32 addr, u32 val)
         }
         
         // Perform the write operation
-        sync(2);
+        SYNC(2);
         if (F & POLLIPL) pollIpl();
         S == Byte ? write8(addr & 0xFFFFFF, (u8)val) : write16(addr & 0xFFFFFF, (u16)val);
-        sync(2);
+        SYNC(2);
     }
 }
 
@@ -510,7 +510,7 @@ Moira::jumpToVector(int nr)
     
     // Update the prefetch queue
     queue.irc = (u16)readMS <C,MEM_PROG,Word> (reg.pc);
-    sync(2);
+    SYNC(2);
     prefetch <C,POLLIPL> ();
     
     // Stop emulation if the exception should be catched
