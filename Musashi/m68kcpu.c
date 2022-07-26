@@ -1097,6 +1097,9 @@ void m68k_init(void)
 	m68k_set_instr_hook_callback(NULL);
 }
 
+extern int read_sp_on_reset(void);
+extern int read_pc_on_reset(void);
+
 /* Trigger a Bus Error exception */
 void m68k_pulse_bus_error(void)
 {
