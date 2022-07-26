@@ -578,7 +578,7 @@ Moira::createJumpTable()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0000 ---1 11-- ----");
-    ____XXX___MMMXXX(opcode, BSET, 0b101111111000, Long, BitDxEa, CIMS)
+    ____XXX___MMMXXX(opcode, BSET, 0b101111111000, Byte, BitDxEa, CIMS)
 
     //               -------------------------------------------------
     // #<data>,<ea>  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
