@@ -26,9 +26,9 @@ namespace moira {
 
 #ifdef PRECISE_TIMING
 
-#define SYNC(x)         sync(x)
-#define SYNC_68000(x)   if constexpr (C == M68000) sync <M68000> (x)
-#define SYNC_68010(x)   if constexpr (C == M68010) sync <M68010> (x)
+#define SYNC(x)         if constexpr (C != M68020) sync(x)
+#define SYNC_68000(x)   if constexpr (C == M68000) sync(x)
+#define SYNC_68010(x)   if constexpr (C == M68010) sync(x)
 
 #define CYCLES(c0,c1,c2)
 #define CYCLES_MBWL(m,b0,b1,b2,w0,w1,w2,l0,l1,l2)
@@ -223,6 +223,9 @@ public:
     
 private:
 
+    // Called by reset()
+    template <Core C> void reset();
+
     // Invoked inside execute() to check for a pending interrupt
     bool checkForIrq();
 
@@ -331,9 +334,7 @@ public:
 protected:
 
     // Advances the clock (called before each memory access)
-    [[deprecated]] virtual void sync(int cycles) { clock += cycles; }
-
-    template <Core C> void sync(int cycles) { clock += cycles; } // sync(cycles); }
+    virtual void sync(int cycles) { clock += cycles; }
 
 
     //
@@ -396,12 +397,12 @@ private:
 
 protected:
 
-    template<Size S = Long> u32 readD(int n) const;
-    template<Size S = Long> u32 readA(int n) const;
-    template<Size S = Long> u32 readR(int n) const;
-    template<Size S = Long> void writeD(int n, u32 v);
-    template<Size S = Long> void writeA(int n, u32 v);
-    template<Size S = Long> void writeR(int n, u32 v);
+    template <Size S = Long> u32 readD(int n) const;
+    template <Size S = Long> u32 readA(int n) const;
+    template <Size S = Long> u32 readR(int n) const;
+    template <Size S = Long> void writeD(int n, u32 v);
+    template <Size S = Long> void writeA(int n, u32 v);
+    template <Size S = Long> void writeR(int n, u32 v);
 
     //
     // Managing the function code pins
@@ -418,7 +419,7 @@ public:
     void setFC(FunctionCode value);
 
     // Sets the function code pins according the the provided addressing mode
-    template<Mode M> void setFC();
+    template <Mode M> void setFC();
 
 
     //

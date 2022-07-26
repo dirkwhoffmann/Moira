@@ -44,7 +44,7 @@
 (M == MODE_DIPC)            ? AE_DEC_PC : \
 (M == MODE_IXPC)            ? AE_DEC_PC : 0
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execLineA(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -66,28 +66,28 @@ Moira::execLineA(u16 opcode)
     }
 
     signalLineAException(opcode);
-    execUnimplemented(10);
+    execUnimplemented<C>(10);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execLineF(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
     signalLineFException(opcode);
-    execUnimplemented(11);
+    execUnimplemented<C>(11);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execIllegal(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
     signalIllegalOpcodeException(opcode);
-    execUnimplemented(4);
+    execUnimplemented<C>(4);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execShiftRg(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -97,12 +97,12 @@ Moira::execShiftRg(u16 opcode)
     int cnt = readD(src) & 0x3F;
 
     prefetch<POLLIPL>();
-    sync<C>((S == Long ? 4 : 2) + 2 * cnt);
+    SYNC((S == Long ? 4 : 2) + 2 * cnt);
 
     writeD<S>(dst, shift<C, I, S>(cnt, readD<S>(dst)));
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execShiftIm(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -112,12 +112,12 @@ Moira::execShiftIm(u16 opcode)
     int cnt = src ? src : 8;
 
     prefetch<POLLIPL>();
-    sync<C>((S == Long ? 4 : 2) + 2 * cnt);
+    SYNC((S == Long ? 4 : 2) + 2 * cnt);
 
     writeD<S>(dst, shift<C, I, S>(cnt, readD<S>(dst)));
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execShiftEa(u16 op)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -132,7 +132,7 @@ Moira::execShiftEa(u16 op)
     writeM <C,M,S> (ea, shift<C, I, S>(1, data));
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execAbcd(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -148,7 +148,7 @@ Moira::execAbcd(u16 opcode)
         {
             u32 result = bcd<C, I, Byte>(readD<Byte>(src), readD<Byte>(dst));
             prefetch<POLLIPL>();
-            sync<C>(2);
+            SYNC(2);
             writeD<Byte>(dst, result);
             break;
         }
@@ -168,7 +168,7 @@ Moira::execAbcd(u16 opcode)
     }
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execAddEaRg(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -185,14 +185,14 @@ Moira::execAddEaRg(u16 opcode)
     looping<I>() ? noPrefetch() : prefetch <POLLIPL> ();
 
     if (core == M68000) {
-        if constexpr (S == Long) sync<C>(2 + (isMemMode(M) ? 0 : 2));
+        if constexpr (S == Long) SYNC(2 + (isMemMode(M) ? 0 : 2));
     } else {
-        if constexpr (S == Long) sync<C>(2);
+        if constexpr (S == Long) SYNC(2);
     }
     writeD<S>(dst, result);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execAddRgEa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -210,7 +210,7 @@ Moira::execAddRgEa(u16 opcode)
     writeM <C,M,S> (ea, result);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execAdda(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -226,17 +226,17 @@ Moira::execAdda(u16 opcode)
     result = (I == ADDA) ? U32_ADD(readA(dst), data) : U32_SUB(readA(dst), data);
     looping<I>() ? noPrefetch() : prefetch <POLLIPL> ();
 
-    sync<C>(2);
+    SYNC(2);
     if (core == M68000) {
-        if constexpr (S == Word || isRegMode(M) || isImmMode(M)) sync<C>(2);
+        if constexpr (S == Word || isRegMode(M) || isImmMode(M)) SYNC(2);
     } else {
-        if constexpr (S == Word) sync<C>(2);
+        if constexpr (S == Word) SYNC(2);
     }
 
     writeA(dst, result);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execAddiRg(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -254,7 +254,7 @@ Moira::execAddiRg(u16 opcode)
     writeD<S>(dst, result);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execAddiEa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -271,7 +271,7 @@ Moira::execAddiEa(u16 opcode)
     writeOp<C, M, S, POLLIPL>(dst, ea, result);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execAddqDn(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -283,11 +283,11 @@ Moira::execAddqDn(u16 opcode)
     u32 result = addsub<C, I, S>(src, readD<S>(dst));
     prefetch<POLLIPL>();
 
-    if constexpr (S == Long) sync<C>(4);
+    if constexpr (S == Long) SYNC(4);
     writeD<S>(dst, result);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execAddqAn(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -299,11 +299,11 @@ Moira::execAddqAn(u16 opcode)
     u32 result = (I == ADDQ) ? readA(dst) + src : readA(dst) - src;
     prefetch<POLLIPL>();
 
-    if (core == M68000 || S == Long) sync<C>(4);
+    if (core == M68000 || S == Long) SYNC(4);
     writeA(dst, result);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execAddqEa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -321,7 +321,7 @@ Moira::execAddqEa(u16 opcode)
     writeOp<C, M, S>(dst, ea, result);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execAddxRg(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -333,15 +333,15 @@ Moira::execAddxRg(u16 opcode)
     prefetch<POLLIPL>();
 
     if (core == M68000) {
-        if constexpr (S == Long) sync<C>(4);
+        if constexpr (S == Long) SYNC(4);
     } else {
-        if constexpr (S == Long) sync<C>(2);
+        if constexpr (S == Long) SYNC(2);
     }
 
     writeD<S>(dst, result);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execAddxEa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -380,7 +380,7 @@ Moira::execAddxEa(u16 opcode)
     }
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execAndEaRg(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -395,15 +395,15 @@ Moira::execAndEaRg(u16 opcode)
     prefetch<POLLIPL>();
 
     if (core == M68000) {
-        if constexpr (S == Long) sync<C>(isRegMode(M) || isImmMode(M) ? 4 : 2);
+        if constexpr (S == Long) SYNC(isRegMode(M) || isImmMode(M) ? 4 : 2);
     } else {
-        if constexpr (S == Long) sync<C>(2);
+        if constexpr (S == Long) SYNC(2);
     }
 
     writeD<S>(dst, result);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execAndRgEa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -418,9 +418,9 @@ Moira::execAndRgEa(u16 opcode)
     looping<I>() ? noPrefetch() : prefetch <POLLIPL> ();
 
     if (core == M68000) {
-        if constexpr (S == Long && isRegMode(M)) sync<C>(4);
+        if constexpr (S == Long && isRegMode(M)) SYNC(4);
     } else {
-        if constexpr (S == Long && isRegMode(M)) sync<C>(2);
+        if constexpr (S == Long && isRegMode(M)) SYNC(2);
     }
 
     if constexpr (MIMIC_MUSASHI) {
@@ -430,7 +430,7 @@ Moira::execAndRgEa(u16 opcode)
     }
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execAndiRg(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -445,7 +445,7 @@ Moira::execAndiRg(u16 opcode)
     writeD<S>(dst, result);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execAndiEa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -467,7 +467,7 @@ Moira::execAndiEa(u16 opcode)
     }
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execAndiccr(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -485,7 +485,7 @@ Moira::execAndiccr(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execAndisr(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -505,12 +505,12 @@ Moira::execAndisr(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execBcc(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
-    sync<C>(2);
+    SYNC(2);
     if (cond(I)) {
 
         u32 newpc = U32_ADD(reg.pc, S == Word ? (i16)queue.irc : (i8)opcode);
@@ -528,13 +528,13 @@ Moira::execBcc(u16 opcode)
     } else {
 
         // Fall through to next instruction
-        if (core == M68000) sync<C>(2);
+        if (core == M68000) SYNC(2);
         if constexpr (S == Word) readExt<C>();
         prefetch<POLLIPL>();
     }
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execBitDxEa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -552,7 +552,8 @@ Moira::execBitDxEa(u16 opcode)
 
             prefetch<POLLIPL>();
 
-            sync<C>(cyclesBit<C, I>(b));
+            auto cycles = cyclesBit<C,I>(b);
+            SYNC(cycles);
             if (I != BTST) writeD(dst, data);
             break;
         }
@@ -565,7 +566,7 @@ Moira::execBitDxEa(u16 opcode)
 
             data = bit<C, I>(data, b);
 
-            if (I == BCLR && core == M68010) sync<C>(2);
+            if (I == BCLR && core == M68010) SYNC(2);
 
             prefetch<POLLIPL>();
             if (I != BTST) writeM <C,M,Byte> (ea, data);
@@ -573,7 +574,7 @@ Moira::execBitDxEa(u16 opcode)
     }
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execBitImEa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -591,7 +592,8 @@ Moira::execBitImEa(u16 opcode)
 
             prefetch<POLLIPL>();
 
-            sync<C>(cyclesBit<C, I>(src));
+            auto cycles = cyclesBit <C,I> (src);
+            SYNC(cycles);
             if (I != BTST) writeD(dst, data);
             break;
         }
@@ -609,7 +611,7 @@ Moira::execBitImEa(u16 opcode)
     }
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execBitField(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -617,18 +619,18 @@ Moira::execBitField(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execBkpt(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
-    if (!MIMIC_MUSASHI) sync<C>(4);
+    if (!MIMIC_MUSASHI) SYNC(4);
 
     signalIllegalOpcodeException(opcode);
-    execUnimplemented(4);
+    execUnimplemented<C>(4);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execBsr(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -645,7 +647,7 @@ Moira::execBsr(u16 opcode)
     }
 
     // Save return address on stack
-    sync<C>(2);
+    SYNC(2);
     bool error;
     push <Long> (retpc, error);
     if (error) return;
@@ -659,28 +661,28 @@ Moira::execBsr(u16 opcode)
     signalJsrBsrInstr(opcode, oldpc, reg.pc);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execCallm(u16 opcode)
 {
     // TODO
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execCas(u16 opcode)
 {
     // TODO
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execCas2(u16 opcode)
 {
     // TODO
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execChk(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -703,7 +705,7 @@ Moira::execChk(u16 opcode)
 
     if ((i16)dy > (i16)data) {
 
-        sync<C>(MIMIC_MUSASHI ? 10 - (int)(clock - c) : 2);
+        SYNC(MIMIC_MUSASHI ? 10 - (int)(clock - c) : 2);
         reg.sr.n = NBIT<S>(dy);
         execTrapException(6);
         return;
@@ -711,7 +713,7 @@ Moira::execChk(u16 opcode)
 
     if ((i16)dy < 0) {
 
-        sync<C>(MIMIC_MUSASHI ? 10 - (int)(clock - c) : 4);
+        SYNC(MIMIC_MUSASHI ? 10 - (int)(clock - c) : 4);
         reg.sr.n = MIMIC_MUSASHI ? NBIT<S>(dy) : 1;
         execTrapException(6);
         return;
@@ -720,14 +722,14 @@ Moira::execChk(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execChk2(u16 opcode)
 {
     // TODO
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execClr(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -741,7 +743,7 @@ Moira::execClr(u16 opcode)
 
         prefetch <POLLIPL> ();
 
-        if constexpr (S == Long && isRegMode(M)) sync<C>(2);
+        if constexpr (S == Long && isRegMode(M)) SYNC(2);
 
         if constexpr (MIMIC_MUSASHI) {
             writeOp <C, M, S> (dst, ea, 0);
@@ -759,8 +761,8 @@ Moira::execClr(u16 opcode)
 
         int dst = _____________xxx(opcode);
 
-        if constexpr (S == Long && isRegMode(M)) sync<C>(2);
-        if constexpr (S == Long && isIdxMode(M)) sync<C>(2);
+        if constexpr (S == Long && isRegMode(M)) SYNC(2);
+        if constexpr (S == Long && isIdxMode(M)) SYNC(2);
 
         if constexpr (MIMIC_MUSASHI) {
             writeOp <C, M, S> (dst, 0);
@@ -777,7 +779,7 @@ Moira::execClr(u16 opcode)
     }
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execCmp(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -791,10 +793,10 @@ Moira::execCmp(u16 opcode)
     cmp<C, S>(data, readD<S>(dst));
     prefetch<POLLIPL>();
 
-    if constexpr (S == Long) sync<C>(2);
+    if constexpr (S == Long) SYNC(2);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execCmpa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -809,10 +811,10 @@ Moira::execCmpa(u16 opcode)
     cmp<C, Long>(data, readA(dst));
     looping<I>() ? noPrefetch() : prefetch<POLLIPL>();
 
-    sync<C>(2);
+    SYNC(2);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execCmpiRg(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -822,11 +824,11 @@ Moira::execCmpiRg(u16 opcode)
 
     prefetch<POLLIPL>();
 
-    if constexpr (S == Long && C == M68000) sync<C>(2);
+    if constexpr (S == Long && C == M68000) SYNC(2);
     cmp<C, S>(src, readD<S>(dst));
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execCmpiEa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -841,7 +843,7 @@ Moira::execCmpiEa(u16 opcode)
     cmp<C, S>(src, data);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execCmpm(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -859,7 +861,7 @@ Moira::execCmpm(u16 opcode)
     prefetch();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execCpBcc(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -868,7 +870,7 @@ Moira::execCpBcc(u16 opcode)
     prefetch();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execCpDbcc(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -877,7 +879,7 @@ Moira::execCpDbcc(u16 opcode)
     prefetch();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execCpGen(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -886,7 +888,7 @@ Moira::execCpGen(u16 opcode)
     prefetch();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execCpRestore(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -895,7 +897,7 @@ Moira::execCpRestore(u16 opcode)
     prefetch();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execCpSave(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -904,7 +906,7 @@ Moira::execCpSave(u16 opcode)
     prefetch();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execCpScc(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -913,7 +915,7 @@ Moira::execCpScc(u16 opcode)
     prefetch();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execCpTrapcc(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -922,14 +924,14 @@ Moira::execCpTrapcc(u16 opcode)
     prefetch();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execDbcc(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
     auto exec68000 = [&]() {
 
-        sync<C>(2);
+        SYNC(2);
         if (!cond(I)) {
 
             int dn = _____________xxx(opcode);
@@ -955,7 +957,7 @@ Moira::execDbcc(u16 opcode)
                 (void)readMS <MEM_PROG, Word> (reg.pc + 2);
             }
         } else {
-            sync<C>(2);
+            SYNC(2);
         }
 
         // Fall through to next instruction
@@ -965,7 +967,7 @@ Moira::execDbcc(u16 opcode)
 
     auto exec68010 = [&]() {
 
-        sync<C>(2);
+        SYNC(2);
         if (!cond(I)) {
 
             int dn = _____________xxx(opcode);
@@ -1000,18 +1002,18 @@ Moira::execDbcc(u16 opcode)
                 }
                 */
 
-                if (MIMIC_MUSASHI) sync<C>(2);
+                if (MIMIC_MUSASHI) SYNC(2);
                 return;
 
             } else {
 
-                if (core == M68010) sync<C>(MIMIC_MUSASHI ? 4 : 2);
+                if (core == M68010) SYNC(MIMIC_MUSASHI ? 4 : 2);
                 (void)readMS <MEM_PROG, Word> (reg.pc + 2);
             }
 
         } else {
 
-            sync<C>(2);
+            SYNC(2);
         }
 
         // Fall through to next instruction
@@ -1021,7 +1023,7 @@ Moira::execDbcc(u16 opcode)
 
     auto execLoop = [&]() {
 
-        sync<C>(2);
+        SYNC(2);
         if (!cond(I)) {
 
             int dn = _____________xxx(opcode);
@@ -1049,7 +1051,7 @@ Moira::execDbcc(u16 opcode)
                 (void)readMS <MEM_PROG, Word> (reg.pc + 2);
             }
         } else {
-            sync<C>(2);
+            SYNC(2);
         }
 
         // Fall through to next instruction
@@ -1069,7 +1071,7 @@ Moira::execDbcc(u16 opcode)
     }
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execExgDxDy(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1080,10 +1082,10 @@ Moira::execExgDxDy(u16 opcode)
     std::swap(reg.d[src], reg.d[dst]);
     prefetch<POLLIPL>();
 
-    sync<C>(2);
+    SYNC(2);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execExgAxDy(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1094,10 +1096,10 @@ Moira::execExgAxDy(u16 opcode)
     std::swap(reg.a[src], reg.d[dst]);
 
     prefetch<POLLIPL>();
-    sync<C>(2);
+    SYNC(2);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execExgAxAy(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1108,10 +1110,10 @@ Moira::execExgAxAy(u16 opcode)
     std::swap(reg.a[src], reg.a[dst]);
 
     prefetch<POLLIPL>();
-    sync<C>(2);
+    SYNC(2);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execExt(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1130,7 +1132,7 @@ Moira::execExt(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execExtb(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1139,7 +1141,7 @@ Moira::execExtb(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execJmp(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1150,7 +1152,7 @@ Moira::execJmp(u16 opcode)
     u32 ea  = computeEA <C, M, Long, SKIP_LAST_READ> (src);
 
     const int delay[] = { 0,0,0,0,0,2,4,2,0,2,4,0 };
-    sync<C>(delay[M]);
+    SYNC(delay[M]);
 
     // Check for address error
     if (misaligned<Word>(ea)) {
@@ -1165,7 +1167,7 @@ Moira::execJmp(u16 opcode)
     fullPrefetch <C, POLLIPL> ();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execJsr(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1174,7 +1176,7 @@ Moira::execJsr(u16 opcode)
     u32 ea  = computeEA <C, M, Long, SKIP_LAST_READ> (src);
 
     const int delay[] = { 0,0,0,0,0,2,4,2,0,2,4,0 };
-    sync<C>(delay[M]);
+    SYNC(delay[M]);
 
     // Check for address error in displacement modes
     if (isDspMode(M) && misaligned<Word>(ea)) {
@@ -1206,7 +1208,7 @@ Moira::execJsr(u16 opcode)
     signalJsrBsrInstr(opcode, oldpc, reg.pc);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execLea(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1215,12 +1217,12 @@ Moira::execLea(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     reg.a[dst] = computeEA <C,M,S> (src);
-    if (isIdxMode(M)) sync<C>(2);
+    if (isIdxMode(M)) SYNC(2);
 
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execLink(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1250,7 +1252,7 @@ Moira::execLink(u16 opcode)
     prefetch();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMove0(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1272,7 +1274,7 @@ Moira::execMove0(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMove2(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1311,7 +1313,7 @@ Moira::execMove2(u16 opcode)
     }
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMove3(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1350,7 +1352,7 @@ Moira::execMove3(u16 opcode)
     }
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMove4(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1395,13 +1397,13 @@ Moira::execMove4(u16 opcode)
         return;
     }
 
-    if (core == M68010 && S == Long) sync<C>(2);
+    if (core == M68010 && S == Long) SYNC(2);
 
     writeM <C, MODE_PD, S, REVERSE> (ea, data);
     updateAn <MODE_PD, S> (dst);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMove5(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1440,7 +1442,7 @@ Moira::execMove5(u16 opcode)
     }
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMove6(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1479,7 +1481,7 @@ Moira::execMove6(u16 opcode)
     }
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMove7(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1501,7 +1503,7 @@ Moira::execMove7(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMove8(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1564,7 +1566,7 @@ Moira::execMove8(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMovea(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1579,7 +1581,7 @@ Moira::execMovea(u16 opcode)
     writeA(dst, SEXT<S>(data));
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMovecRcRx(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1597,7 +1599,7 @@ Moira::execMovecRcRx(u16 opcode)
             return;
     }
 
-    sync<C>(4);
+    SYNC(4);
 
     auto arg = readI <C,Word> ();
     int dst = xxxx____________(arg);
@@ -1613,7 +1615,7 @@ Moira::execMovecRcRx(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMovecRxRc(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1631,7 +1633,7 @@ Moira::execMovecRxRc(u16 opcode)
             return;
     }
 
-    sync<C>(2);
+    SYNC(2);
 
     auto arg = readI <C,Word> ();
     int src = xxxx____________(arg);
@@ -1647,7 +1649,7 @@ Moira::execMovecRxRc(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMovemEaRg(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1700,7 +1702,7 @@ Moira::execMovemEaRg(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMovemRgEa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1755,7 +1757,7 @@ Moira::execMovemRgEa(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMovepDxEa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1783,7 +1785,7 @@ Moira::execMovepDxEa(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMovepEaDx(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1814,7 +1816,7 @@ Moira::execMovepEaDx(u16 opcode)
     prefetch();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMoveq(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1832,7 +1834,7 @@ Moira::execMoveq(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMoves(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1870,13 +1872,13 @@ Moira::execMoves(u16 opcode)
 
         switch(M) {
 
-            case MODE_AI: sync<C>(6); break;
-            case MODE_PD: sync<C>(S == Long ? 10 : 6); break;
-            case MODE_IX: sync<C>(S == Long ? 14 : 12); break;
-            case MODE_PI: sync<C>(6); break;
-            case MODE_DI: sync<C>(S == Long ? 12 : 10); break;
-            case MODE_AW: sync<C>(S == Long ? 12 : 10); break;
-            case MODE_AL: sync<C>(S == Long ? 12 : 10); break;
+            case MODE_AI: SYNC(6); break;
+            case MODE_PD: SYNC(S == Long ? 10 : 6); break;
+            case MODE_IX: SYNC(S == Long ? 14 : 12); break;
+            case MODE_PI: SYNC(6); break;
+            case MODE_DI: SYNC(S == Long ? 12 : 10); break;
+            case MODE_AW: SYNC(S == Long ? 12 : 10); break;
+            case MODE_AL: SYNC(S == Long ? 12 : 10); break;
 
             default:
                 fatalError;
@@ -1904,13 +1906,13 @@ Moira::execMoves(u16 opcode)
 
         switch(M) {
 
-            case MODE_AI: sync<C>(6); break;
-            case MODE_PD: sync<C>(S == Long ? 10 : 6); break;
-            case MODE_IX: sync<C>(S == Long ? 14 : 12); break;
-            case MODE_PI: sync<C>(6); break;
-            case MODE_DI: sync<C>(S == Long ? 12 : 10); break;
-            case MODE_AW: sync<C>(S == Long ? 12 : 10); break;
-            case MODE_AL: sync<C>(S == Long ? 12 : 10); break;
+            case MODE_AI: SYNC(6); break;
+            case MODE_PD: SYNC(S == Long ? 10 : 6); break;
+            case MODE_IX: SYNC(S == Long ? 14 : 12); break;
+            case MODE_PI: SYNC(6); break;
+            case MODE_DI: SYNC(S == Long ? 12 : 10); break;
+            case MODE_AW: SYNC(S == Long ? 12 : 10); break;
+            case MODE_AL: SYNC(S == Long ? 12 : 10); break;
 
             default:
                 fatalError;
@@ -1920,7 +1922,7 @@ Moira::execMoves(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMoveFromCcrRg(u16 opcode)
 {
     assert(core >= M68010);
@@ -1935,7 +1937,7 @@ Moira::execMoveFromCcrRg(u16 opcode)
     writeD <S> (dst, getCCR());
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMoveFromCcrEa(u16 opcode)
 {
     assert(core >= M68010);
@@ -1950,7 +1952,7 @@ Moira::execMoveFromCcrEa(u16 opcode)
     writeOp <C, M, S, POLLIPL> (dst, ea, getCCR());
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMoveToCcr(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1960,14 +1962,14 @@ Moira::execMoveToCcr(u16 opcode)
 
     if (!readOp <C, M, S, STD_AE_FRAME> (src, ea, data)) return;
 
-    sync<C>(4);
+    SYNC(4);
     setCCR((u8)data);
 
     (void)readMS <MEM_PROG, Word> (reg.pc + 2);
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMoveFromSrRg(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1979,11 +1981,11 @@ Moira::execMoveFromSrRg(u16 opcode)
     if (!readOp <C, M, S> (dst, ea, data)) return;
     prefetch<POLLIPL>();
 
-    if constexpr (C == M68000) sync<C>(2);
+    if constexpr (C == M68000) SYNC(2);
     writeD <S> (dst, getSR());
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMoveFromSrEa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -1998,7 +2000,7 @@ Moira::execMoveFromSrEa(u16 opcode)
     writeOp <C, M, S, POLLIPL> (dst, ea, getSR());
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMoveToSr(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2010,14 +2012,14 @@ Moira::execMoveToSr(u16 opcode)
     u32 ea, data;
     if (!readOp <C, M, S, STD_AE_FRAME> (src, ea, data)) return;
 
-    sync<C>(4);
+    SYNC(4);
     setSR((u16)data);
 
     (void)readMS <MEM_PROG, Word> (reg.pc + 2);
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMoveUspAn(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2025,13 +2027,13 @@ Moira::execMoveUspAn(u16 opcode)
 
     int an = _____________xxx(opcode);
 
-    if (core >= M68010) sync<C>(2);
+    if (core >= M68010) SYNC(2);
 
     prefetch<POLLIPL>();
     writeA(an, getUSP());
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMoveAnUsp(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2039,13 +2041,13 @@ Moira::execMoveAnUsp(u16 opcode)
 
     int an = _____________xxx(opcode);
 
-    if (core >= M68010) sync<C>(2);
+    if (core >= M68010) SYNC(2);
 
     prefetch<POLLIPL>();
     setUSP(readA(an));
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMul(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2067,7 +2069,7 @@ Moira::execMul(u16 opcode)
     writeD(dst, result);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMull(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2076,7 +2078,7 @@ Moira::execMull(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execMulMusashi(u16 op)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2098,7 +2100,7 @@ Moira::execMulMusashi(u16 op)
 }
 
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execDiv(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2130,7 +2132,7 @@ Moira::execDiv(u16 opcode)
             reg.sr.c = 0;
         }
 
-        sync<C>(8);
+        SYNC(8);
         execTrapException(5);
         return;
     }
@@ -2140,7 +2142,7 @@ Moira::execDiv(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execDivl(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2149,7 +2151,7 @@ Moira::execDivl(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execDivMusashi(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2164,9 +2166,9 @@ Moira::execDivMusashi(u16 opcode)
     // Check for division by zero
     if (divisor == 0) {
         if (core == M68000) {
-            sync<C>(8 - (int)(clock - c));
+            SYNC(8 - (int)(clock - c));
         } else {
-            sync<C>(10 - (int)(clock - c));
+            SYNC(10 - (int)(clock - c));
         }
         execTrapException(5);
         return;
@@ -2178,7 +2180,7 @@ Moira::execDivMusashi(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execNbcd(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2190,7 +2192,7 @@ Moira::execNbcd(u16 opcode)
         case 0: // Dn
         {
             prefetch<POLLIPL>();
-            sync<C>(2);
+            SYNC(2);
             writeD<Byte>(reg, bcd<C, SBCD, Byte>(readD<Byte>(reg), 0));
             break;
         }
@@ -2205,7 +2207,7 @@ Moira::execNbcd(u16 opcode)
     }
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execNegRg(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2218,11 +2220,11 @@ Moira::execNegRg(u16 opcode)
     data = logic<C, I, S>(data);
     prefetch<POLLIPL>();
 
-    if constexpr (S == Long) sync<C>(2);
+    if constexpr (S == Long) SYNC(2);
     writeD<S>(dst, data);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execNegEa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2242,7 +2244,7 @@ Moira::execNegEa(u16 opcode)
     }
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execNop(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2250,7 +2252,7 @@ Moira::execNop(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execPack(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2258,7 +2260,7 @@ Moira::execPack(u16 opcode)
     prefetch();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execPea(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2267,7 +2269,7 @@ Moira::execPea(u16 opcode)
 
     u32 ea = computeEA <C,M,Long> (src);
 
-    if (isIdxMode(M)) sync<C>(2);
+    if (isIdxMode(M)) SYNC(2);
 
     if (misaligned(reg.sp)) {
         reg.sp -= S;
@@ -2297,7 +2299,7 @@ Moira::execPea(u16 opcode)
     }
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execReset(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2312,7 +2314,7 @@ Moira::execReset(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execRtd(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2334,7 +2336,7 @@ Moira::execRtd(u16 opcode)
     fullPrefetch <C, POLLIPL> ();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execRte(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2383,13 +2385,13 @@ Moira::execRte(u16 opcode)
     fullPrefetch <C, POLLIPL> ();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execRtm(u16 opcode)
 {
     fullPrefetch <C, POLLIPL> ();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execRtr(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2415,7 +2417,7 @@ Moira::execRtr(u16 opcode)
     fullPrefetch <C, POLLIPL> ();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execRts(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2437,7 +2439,7 @@ Moira::execRts(u16 opcode)
     fullPrefetch <C, POLLIPL> ();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execSccRg(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2451,15 +2453,15 @@ Moira::execSccRg(u16 opcode)
     prefetch<POLLIPL>();
 
     if (core >= M68010) {
-        // if (data) sync<C>(2);
+        // if (data) SYNC(2);
     } else {
-        if (data) sync<C>(2);
+        if (data) SYNC(2);
     }
 
     writeD<Byte>(dst, data);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execSccEa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2475,7 +2477,7 @@ Moira::execSccEa(u16 opcode)
     writeOp <C, M, Byte> (dst, ea, data);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execStop(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2491,7 +2493,7 @@ Moira::execStop(u16 opcode)
     signalStopInstr(src);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execSwap(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2510,7 +2512,7 @@ Moira::execSwap(u16 opcode)
     reg.sr.c = 0;
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execTasRg(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2533,7 +2535,7 @@ Moira::execTasRg(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execTasEa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2551,24 +2553,24 @@ Moira::execTasEa(u16 opcode)
     reg.sr.c = 0;
     data |= 0x80;
 
-    if (!isRegMode(M)) sync<C>(2);
+    if (!isRegMode(M)) SYNC(2);
     writeOp <C, M, S> (dst, ea, data);
 
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execTrap(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
     int nr = ____________xxxx(opcode);
 
-    sync<C>(4);
+    SYNC(4);
     execTrapException(32 + nr);
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execTrapv(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2584,7 +2586,7 @@ Moira::execTrapv(u16 opcode)
     }
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execTrapcc(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2593,7 +2595,7 @@ Moira::execTrapcc(u16 opcode)
     prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execTst(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2611,7 +2613,7 @@ Moira::execTst(u16 opcode)
     looping<I>() ? noPrefetch() : prefetch<POLLIPL>();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execUnlk(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
@@ -2634,7 +2636,7 @@ Moira::execUnlk(u16 opcode)
     prefetch();
 }
 
-template<Core C, Instr I, Mode M, Size S> void
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execUnpk(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)

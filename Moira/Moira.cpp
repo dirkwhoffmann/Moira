@@ -14,8 +14,6 @@
 
 namespace moira {
 
-
-
 #include "MoiraInit_cpp.h"
 #include "MoiraALU_cpp.h"
 #include "MoiraDataflow_cpp.h"
@@ -52,6 +50,20 @@ Moira::setCore(Core core)
 void
 Moira::reset()
 {
+    switch (core) {
+
+        case M68000: reset <M68000> (); break;
+        case M68010: reset <M68010> (); break;
+        case M68020: reset <M68020> (); break;
+
+        default:
+            assert(false);
+    }
+}
+
+template <Core C> void
+Moira::reset()
+{
     flags = CPU_CHECK_IRQ;
 
     reg = { };
@@ -61,25 +73,25 @@ Moira::reset()
     ipl = 0;
     fcl = 0;
     fcSource = FC_FROM_FCL;
-    
-    sync(16);
+
+    SYNC(16);
 
     // Read the initial (supervisor) stack pointer from memory
-    sync(2);
+    SYNC(2);
     reg.sp = read16OnReset(0);
-    sync(4);
+    SYNC(4);
     reg.ssp = reg.sp = (read16OnReset(2) & ~0x1) | reg.sp << 16;
-    sync(4);
+    SYNC(4);
     reg.pc = read16OnReset(4);
-    sync(4);
+    SYNC(4);
     reg.pc = (read16OnReset(6) & ~0x1) | reg.pc << 16;
 
     // Fill the prefetch queue
-    sync(4);
+    SYNC(4);
     queue.irc = read16OnReset(reg.pc & 0xFFFFFF);
-    sync(2);
+    SYNC(2);
     prefetch();
-    
+
     debugger.reset();
 }
 
@@ -225,37 +237,37 @@ Moira::halt()
     signalHalt();
 }
 
-template<Size S> u32
+template <Size S> u32
 Moira::readD(int n) const
 {
     return CLIP<S>(reg.d[n]);
 }
 
-template<Size S> u32
+template <Size S> u32
 Moira::readA(int n) const
 {
     return CLIP<S>(reg.a[n]);
 }
 
-template<Size S> u32
+template <Size S> u32
 Moira::readR(int n) const
 {
     return CLIP<S>(reg.r[n]);
 }
 
-template<Size S> void
+template <Size S> void
 Moira::writeD(int n, u32 v)
 {
     reg.d[n] = WRITE<S>(reg.d[n], v);
 }
 
-template<Size S> void
+template <Size S> void
 Moira::writeA(int n, u32 v)
 {
     reg.a[n] = WRITE<S>(reg.a[n], v);
 }
 
-template<Size S> void
+template <Size S> void
 Moira::writeR(int n, u32 v)
 {
     reg.r[n] = WRITE<S>(reg.r[n], v);
@@ -335,7 +347,7 @@ Moira::setFC(FunctionCode value)
     fcl = (u8)value;
 }
 
-template<Mode M> void
+template <Mode M> void
 Moira::setFC()
 {
     if (!EMULATE_FC) return;

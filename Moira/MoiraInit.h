@@ -15,13 +15,13 @@
  */
 
 #define MOIRA_DECLARE_EXEC_IMS(x) \
-template<Instr I, Mode M, Size S> void exec##x(u16 op);
+template <Instr I, Mode M, Size S> void exec##x(u16 op);
 
 #define MOIRA_DECLARE_EXEC_CIMS(x) \
-template<Core C, Instr I, Mode M, Size S> void exec##x(u16 op);
+template <Core C, Instr I, Mode M, Size S> void exec##x(u16 op);
 
 #define MOIRA_DECLARE_DASM_IMS(x) \
-template<Instr I, Mode M, Size S> void dasm##x(StrWriter &str, u32 &addr, u16 op);
+template <Instr I, Mode M, Size S> void dasm##x(StrWriter &str, u32 &addr, u16 op);
 
 #define MOIRA_DECLARE_CIMS(x) \
 MOIRA_DECLARE_EXEC_CIMS(x) \
@@ -160,5 +160,5 @@ MOIRA_DECLARE_CIMS(Unpk)
 
 
 // Musashi compatibility mode
-template<Core C, Instr I, Mode M, Size S> void execMulMusashi(u16 op);
-template<Core C, Instr I, Mode M, Size S> void execDivMusashi(u16 op);
+template <Core C, Instr I, Mode M, Size S> void execMulMusashi(u16 op);
+template <Core C, Instr I, Mode M, Size S> void execDivMusashi(u16 op);

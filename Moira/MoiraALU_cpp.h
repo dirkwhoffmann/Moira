@@ -20,55 +20,55 @@
 #define U64_SUB3(x,y,z) (u64)((i64)(x) - (i64)(y) - (i64)(z))
 
 
-template<Size S> u32 MSBIT() {
+template <Size S> u32 MSBIT() {
     if constexpr (S == Byte) return 0x00000080;
     if constexpr (S == Word) return 0x00008000;
     if constexpr (S == Long) return 0x80000000;
 }
 
-template<Size S> u32 CLIP(u64 data) {
+template <Size S> u32 CLIP(u64 data) {
     if constexpr (S == Byte) return data & 0x000000FF;
     if constexpr (S == Word) return data & 0x0000FFFF;
     if constexpr (S == Long) return data & 0xFFFFFFFF;
 }
 
-template<Size S> u32 CLEAR(u64 data) {
+template <Size S> u32 CLEAR(u64 data) {
     if constexpr (S == Byte) return data & 0xFFFFFF00;
     if constexpr (S == Word) return data & 0xFFFF0000;
     if constexpr (S == Long) return data & 0x00000000;
 }
 
-template<Size S> i32 SEXT(u64 data) {
+template <Size S> i32 SEXT(u64 data) {
     if constexpr (S == Byte) return (i8)data;
     if constexpr (S == Word) return (i16)data;
     if constexpr (S == Long) return (i32)data;
 }
 
-template<Size S> bool NBIT(u64 data) {
+template <Size S> bool NBIT(u64 data) {
     if constexpr (S == Byte) return (data & 0x00000080) != 0;
     if constexpr (S == Word) return (data & 0x00008000) != 0;
     if constexpr (S == Long) return (data & 0x80000000) != 0;
 }
 
-template<Size S> bool CARRY(u64 data) {
+template <Size S> bool CARRY(u64 data) {
     if constexpr (S == Byte) return data & 0x000000100;
     if constexpr (S == Word) return data & 0x000010000;
     if constexpr (S == Long) return data & 0x100000000;
 }
 
-template<Size S> bool ZERO(u64 data) {
+template <Size S> bool ZERO(u64 data) {
     if constexpr (S == Byte) return !(data & 0x000000FF);
     if constexpr (S == Word) return !(data & 0x0000FFFF);
     if constexpr (S == Long) return !(data & 0xFFFFFFFF);
 }
 
-template<Size S> u32 WRITE(u32 d1, u32 d2) {
+template <Size S> u32 WRITE(u32 d1, u32 d2) {
     if constexpr (S == Byte) return (d1 & 0xFFFFFF00) | (d2 & 0x000000FF);
     if constexpr (S == Word) return (d1 & 0xFFFF0000) | (d2 & 0x0000FFFF);
     if constexpr (S == Long) return d2;
 }
 
-template<Core C, Instr I, Size S> u32
+template <Core C, Instr I, Size S> u32
 Moira::shift(int cnt, u64 data) {
 
     switch (I) {
@@ -196,7 +196,7 @@ Moira::shift(int cnt, u64 data) {
     return CLIP<S>(data);
 }
 
-template<Core C, Instr I, Size S> u32
+template <Core C, Instr I, Size S> u32
 Moira::addsub(u32 op1, u32 op2)
 {
     u64 result;
@@ -282,7 +282,9 @@ Moira::mul(u32 op1, u32 op2)
     reg.sr.v = 0;
     reg.sr.c = 0;
 
-    sync<C>(cyclesMul <C,I> ((u16)op1));
+    auto cycles = cyclesMul<C,I>((u16)op1);
+    SYNC(cycles);
+
     return result;
 }
 
@@ -329,7 +331,7 @@ Moira::div(u32 op1, u32 op2)
     return overflow ? op1 : result;
 }
 
-template<Core C, Instr I, Size S> u32
+template <Core C, Instr I, Size S> u32
 Moira::bcd(u32 op1, u32 op2)
 {
     u64 result;
@@ -399,7 +401,7 @@ Moira::cmp(u32 op1, u32 op2)
     reg.sr.n = NBIT<S>(result);
 }
 
-template<Core C, Instr I, Size S> u32
+template <Core C, Instr I, Size S> u32
 Moira::logic(u32 op)
 {
     u32 result;
@@ -434,7 +436,7 @@ Moira::logic(u32 op)
     return result;
 }
 
-template<Core C, Instr I, Size S> u32
+template <Core C, Instr I, Size S> u32
 Moira::logic(u32 op1, u32 op2)
 {
     u32 result;

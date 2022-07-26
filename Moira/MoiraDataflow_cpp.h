@@ -7,7 +7,7 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-template<Core C, Mode M, Size S, Flags F> bool
+template <Core C, Mode M, Size S, Flags F> bool
 Moira::readOp(int n, u32 &ea, u32 &result)
 {
     switch (M) {
@@ -38,7 +38,7 @@ Moira::readOp(int n, u32 &ea, u32 &result)
     }
 }
 
-template<Core C, Mode M, Size S, Flags F> bool
+template <Core C, Mode M, Size S, Flags F> bool
 Moira::writeOp(int n, u32 val)
 {
     switch (M) {
@@ -69,7 +69,7 @@ Moira::writeOp(int n, u32 val)
     }
 }
 
-template<Core C, Mode M, Size S, Flags F> void
+template <Core C, Mode M, Size S, Flags F> void
 Moira::writeOp(int n, u32 ea, u32 val)
 {
     switch (M) {
@@ -84,7 +84,7 @@ Moira::writeOp(int n, u32 ea, u32 val)
     }
 }
 
-template<Core C, Mode M, Size S, Flags F> u32
+template <Core C, Mode M, Size S, Flags F> u32
 Moira::computeEA(u32 n) {
 
     assert(n < 8);
@@ -111,7 +111,7 @@ Moira::computeEA(u32 n) {
         }
         case 4:  // -(An)
         {
-            if ((F & IMPLICIT_DECR) == 0) sync<C>(2);
+            if ((F & IMPLICIT_DECR) == 0) SYNC(2);
             result = readA(n) - ((n == 7 && S == Byte) ? 2 : S);
             break;
         }
@@ -132,7 +132,7 @@ Moira::computeEA(u32 n) {
 
             result = U32_ADD3(an, d, ((queue.irc & 0x800) ? xi : SEXT<Word>(xi)));
 
-            sync<C>(2);
+            SYNC(2);
             if ((F & SKIP_LAST_READ) == 0) readExt<C>();
             break;
         }
@@ -164,7 +164,7 @@ Moira::computeEA(u32 n) {
             u32 xi = readR((queue.irc >> 12) & 0b1111);
             
             result = U32_ADD3(reg.pc, d, ((queue.irc & 0x800) ? xi : SEXT<Word>(xi)));
-            sync<C>(2);
+            SYNC(2);
             if ((F & SKIP_LAST_READ) == 0) readExt<C>();
             break;
         }
@@ -181,21 +181,21 @@ Moira::computeEA(u32 n) {
     return result;
 }
 
-template<Mode M, Size S> void
+template <Mode M, Size S> void
 Moira::updateAnPD(int n)
 {
     // -(An)
     if constexpr (M == 4) reg.a[n] -= (n == 7 && S == Byte) ? 2 : S;
 }
 
-template<Mode M, Size S> void
+template <Mode M, Size S> void
 Moira::undoAnPD(int n)
 {
     // -(An)
     if constexpr (M == 4) reg.a[n] += (n == 7 && S == Byte) ? 2 : S;
 }
 
-template<Mode M, Size S> void
+template <Mode M, Size S> void
 Moira::updateAnPI(int n)
 {
     // (An)+
@@ -203,7 +203,7 @@ Moira::updateAnPI(int n)
 
 }
 
-template<Mode M, Size S> void
+template <Mode M, Size S> void
 Moira::updateAn(int n)
 {
     // (An)+
@@ -213,7 +213,7 @@ Moira::updateAn(int n)
     if constexpr (M == 4) reg.a[n] -= (n == 7 && S == Byte) ? 2 : S;
 }
 
-template<Core C, Mode M, Size S, Flags F> u32
+template <Core C, Mode M, Size S, Flags F> u32
 Moira::readM(u32 addr, bool &error)
 {
     if (isPrgMode(M)) {
@@ -223,7 +223,7 @@ Moira::readM(u32 addr, bool &error)
     }
 }
 
-template<Core C, Mode M, Size S, Flags F> u32
+template <Core C, Mode M, Size S, Flags F> u32
 Moira::readM(u32 addr)
 {
     if (isPrgMode(M)) {
@@ -233,7 +233,7 @@ Moira::readM(u32 addr)
     }
 }
 
-template<MemSpace MS, Size S, Flags F> u32
+template <MemSpace MS, Size S, Flags F> u32
 Moira::readMS(u32 addr, bool &error)
 {
     // Check for address errors
@@ -247,7 +247,7 @@ Moira::readMS(u32 addr, bool &error)
     return readMS <MS,S,F> (addr);
 }
 
-template<MemSpace MS, Size S, Flags F> u32
+template <MemSpace MS, Size S, Flags F> u32
 Moira::readMS(u32 addr)
 {
     u32 result;
@@ -278,7 +278,7 @@ Moira::readMS(u32 addr)
     return result;
 }
 
-template<Core C, Mode M, Size S, Flags F> void
+template <Core C, Mode M, Size S, Flags F> void
 Moira::writeM(u32 addr, u32 val, bool &error)
 {
     if (isPrgMode(M)) {
@@ -288,7 +288,7 @@ Moira::writeM(u32 addr, u32 val, bool &error)
     }
 }
 
-template<Core C, Mode M, Size S, Flags F> void
+template <Core C, Mode M, Size S, Flags F> void
 Moira::writeM(u32 addr, u32 val)
 {
     if (isPrgMode(M)) {
@@ -298,7 +298,7 @@ Moira::writeM(u32 addr, u32 val)
     }
 }
 
-template<MemSpace MS, Size S, Flags F> void
+template <MemSpace MS, Size S, Flags F> void
 Moira::writeMS(u32 addr, u32 val, bool &error)
 {
     // Check for address errors
@@ -311,7 +311,7 @@ Moira::writeMS(u32 addr, u32 val, bool &error)
     writeMS <MS,S,F> (addr, val);
 }
 
-template<MemSpace MS, Size S, Flags F> void
+template <MemSpace MS, Size S, Flags F> void
 Moira::writeMS(u32 addr, u32 val)
 {
     if constexpr (S == Long) {
@@ -343,7 +343,7 @@ Moira::writeMS(u32 addr, u32 val)
     }
 }
 
-template<Core C, Size S> u32
+template <Core C, Size S> u32
 Moira::readI()
 {
     u32 result;
@@ -377,21 +377,21 @@ Moira::readI()
     return result;
 }
 
-template<Size S, Flags F> void
+template <Size S, Flags F> void
 Moira::push(u32 val)
 {
     reg.sp -= S;
     writeMS <MEM_DATA,S,F> (reg.sp, val);
 }
 
-template<Size S, Flags F> void
+template <Size S, Flags F> void
 Moira::push(u32 val, bool &error)
 {
     reg.sp -= S;
     writeMS <MEM_DATA,S,F> (reg.sp, val, error);
 }
 
-template<Size S> bool
+template <Size S> bool
 Moira::misaligned(u32 addr)
 {
     return EMULATE_ADDRESS_ERROR ? ((addr & 1) && S != Byte) : false;
@@ -437,7 +437,7 @@ Moira::makeFrame(u32 addr)
     return makeFrame <F> (addr, getPC(), getSR(), getIRD());
 }
 
-template<Flags F> void
+template <Flags F> void
 Moira::prefetch()
 {
     /* Whereas pc is a moving target (it moves forward while an instruction is
@@ -451,7 +451,7 @@ Moira::prefetch()
     queue.irc = (u16)readMS <MEM_PROG, Word, F> (reg.pc + 2);
 }
 
-template<Core C, Flags F, int delay> void
+template <Core C, Flags F, int delay> void
 Moira::fullPrefetch()
 {    
     // Check for address error
@@ -461,7 +461,7 @@ Moira::fullPrefetch()
     }
 
     queue.irc = (u16)readMS <MEM_PROG, Word> (reg.pc);
-    if (delay) sync<C>(delay);
+    if (delay) SYNC(delay);
     prefetch<F>();
 }
 
@@ -474,7 +474,7 @@ Moira::noPrefetch()
     std::swap(queue.irc, queue.ird);
 }
 
-template<Core C> void
+template <Core C> void
 Moira::readExt()
 {
     reg.pc += 2;
@@ -488,7 +488,7 @@ Moira::readExt()
     queue.irc = (u16)readMS <MEM_PROG, Word> (reg.pc);
 }
 
-template<Core C, Flags F> void
+template <Core C, Flags F> void
 Moira::jumpToVector(int nr)
 {
     u32 vectorAddr = reg.vbr + 4 * nr;
