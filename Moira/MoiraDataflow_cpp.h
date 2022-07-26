@@ -310,12 +310,6 @@ Moira::writeM(u32 addr, u32 val)
     }
 }
 
-template <MemSpace MS, Size S, Flags F> void
-Moira::writeMS(u32 addr, u32 val, bool &error)
-{
-    writeMS <M68000,MS,S,F> (addr, val, error);
-}
-
 template <Core C, MemSpace MS, Size S, Flags F> void
 Moira::writeMS(u32 addr, u32 val, bool &error)
 {
@@ -327,12 +321,6 @@ Moira::writeMS(u32 addr, u32 val, bool &error)
     }
     
     writeMS <C,MS,S,F> (addr, val);
-}
-
-template <MemSpace MS, Size S, Flags F> void
-Moira::writeMS(u32 addr, u32 val)
-{
-    writeMS<M68000,MS,S,F>(addr, val);
 }
 
 template <Core C, MemSpace MS, Size S, Flags F> void
@@ -461,7 +449,7 @@ Moira::makeFrame(u32 addr)
     return makeFrame <F> (addr, getPC(), getSR(), getIRD());
 }
 
-template <Flags F> void
+template <Core C, Flags F> void
 Moira::prefetch()
 {
     /* Whereas pc is a moving target (it moves forward while an instruction is
@@ -486,7 +474,7 @@ Moira::fullPrefetch()
 
     queue.irc = (u16)readMS <C,MEM_PROG,Word> (reg.pc);
     if (delay) SYNC(delay);
-    prefetch<F>();
+    prefetch <C,F> ();
 }
 
 void
@@ -535,7 +523,7 @@ Moira::jumpToVector(int nr)
     // Update the prefetch queue
     queue.irc = (u16)readMS <C,MEM_PROG,Word> (reg.pc);
     sync(2);
-    prefetch<POLLIPL>();
+    prefetch <C,POLLIPL> ();
     
     // Stop emulation if the exception should be catched
     if (debugger.catchpointMatches(nr)) catchpointReached(u8(nr));

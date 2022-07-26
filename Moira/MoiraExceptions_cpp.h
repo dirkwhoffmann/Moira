@@ -67,9 +67,9 @@ Moira::saveToStackBrief(u16 nr, u16 sr, u32 pc)
         } else {
 
             reg.sp -= 6;
-            writeMS <MEM_DATA, Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
-            writeMS <MEM_DATA, Word> ((reg.sp + 0) & ~1, sr);
-            writeMS <MEM_DATA, Word> ((reg.sp + 2) & ~1, pc >> 16);
+            writeMS <C,MEM_DATA,Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
+            writeMS <C,MEM_DATA,Word> ((reg.sp + 0) & ~1, sr);
+            writeMS <C,MEM_DATA,Word> ((reg.sp + 2) & ~1, pc >> 16);
         }
     }
 
@@ -84,10 +84,10 @@ Moira::saveToStackBrief(u16 nr, u16 sr, u32 pc)
         } else {
 
             reg.sp -= 8;
-            writeMS <MEM_DATA, Word> ((reg.sp + 6) & ~1, 4 * nr);
-            writeMS <MEM_DATA, Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
-            writeMS <MEM_DATA, Word> ((reg.sp + 0) & ~1, sr);
-            writeMS <MEM_DATA, Word> ((reg.sp + 2) & ~1, pc >> 16);
+            writeMS <C,MEM_DATA,Word> ((reg.sp + 6) & ~1, 4 * nr);
+            writeMS <C,MEM_DATA,Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
+            writeMS <C,MEM_DATA,Word> ((reg.sp + 0) & ~1, sr);
+            writeMS <C,MEM_DATA,Word> ((reg.sp + 2) & ~1, pc >> 16);
         }
     }
 }
@@ -357,30 +357,30 @@ Moira::execIrqException(u8 level)
 
         SYNC(6);
         reg.sp -= 6;
-        writeMS <MEM_DATA, Word> (reg.sp + 4, reg.pc & 0xFFFF);
+        writeMS <C,MEM_DATA,Word> (reg.sp + 4, reg.pc & 0xFFFF);
 
         SYNC(4);
         queue.ird = getIrqVector(level);
 
         SYNC(4);
-        writeMS <MEM_DATA, Word> (reg.sp + 0, status);
-        writeMS <MEM_DATA, Word> (reg.sp + 2, reg.pc >> 16);
+        writeMS <C,MEM_DATA,Word> (reg.sp + 0, status);
+        writeMS <C,MEM_DATA,Word> (reg.sp + 2, reg.pc >> 16);
     }
 
     if constexpr (C == M68010) {
 
         SYNC(6);
         reg.sp -= 8;
-        writeMS <MEM_DATA, Word> (reg.sp + 4, reg.pc & 0xFFFF);
+        writeMS <C,MEM_DATA,Word> (reg.sp + 4, reg.pc & 0xFFFF);
 
         SYNC(4);
         queue.ird = getIrqVector(level);
 
         SYNC(4);
-        writeMS <MEM_DATA, Word> (reg.sp + 0, status);
-        writeMS <MEM_DATA, Word> (reg.sp + 2, reg.pc >> 16);
+        writeMS <C,MEM_DATA,Word> (reg.sp + 0, status);
+        writeMS <C,MEM_DATA,Word> (reg.sp + 2, reg.pc >> 16);
 
-        writeMS <MEM_DATA, Word> (reg.sp + 6, 4 * queue.ird);
+        writeMS <C,MEM_DATA,Word> (reg.sp + 6, 4 * queue.ird);
     }
 
     jumpToVector <C,AE_SET_CB3> (queue.ird);

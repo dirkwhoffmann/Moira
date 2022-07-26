@@ -94,8 +94,6 @@ template <Core C, Mode M, Size S, Flags F = 0> void writeM(u32 addr, u32 val);
 template <Core C, Mode M, Size S, Flags F = 0> void writeM(u32 addr, u32 val, bool &error);
 
 // Writes a value to a specific memory space
-template <MemSpace MS, Size S, Flags F = 0> void writeMS(u32 addr, u32 val);
-template <MemSpace MS, Size S, Flags F = 0> void writeMS(u32 addr, u32 val, bool &error);
 template <Core C, MemSpace MS, Size S, Flags F = 0> void writeMS(u32 addr, u32 val);
 template <Core C, MemSpace MS, Size S, Flags F = 0> void writeMS(u32 addr, u32 val, bool &error);
 
@@ -115,7 +113,7 @@ template <Flags F = 0> AEStackFrame makeFrame(u32 addr, u32 pc);
 template <Flags F = 0> AEStackFrame makeFrame(u32 addr);
 
 // Prefetches the next instruction
-template <Flags F = 0> void prefetch();
+template <Core C, Flags F = 0> void prefetch();
 
 // Performs a full prefetch cycle
 template <Core C, Flags F = 0, int delay = 0> void fullPrefetch();
