@@ -327,7 +327,8 @@ Moira::div(u32 op1, u32 op2)
     reg.sr.n = overflow ? 1        : NBIT<Word>(result);
     reg.sr.z = overflow ? reg.sr.z : ZERO<Word>(result);
 
-    sync(cyclesDiv<C, I>(op1, (u16)op2) - 4);
+    auto cycles = cyclesDiv <C,I> (op1, (u16)op2) - 4;
+    sync(cycles);
     return overflow ? op1 : result;
 }
 

@@ -217,9 +217,9 @@ template <Core C, Mode M, Size S, Flags F> u32
 Moira::readM(u32 addr, bool &error)
 {
     if (isPrgMode(M)) {
-        return readMS <MEM_PROG, S, F> (addr, error);
+        return readMS <C,MEM_PROG,S,F> (addr, error);
     } else {
-        return readMS <MEM_DATA, S, F> (addr, error);
+        return readMS <C,MEM_DATA,S,F> (addr, error);
     }
 }
 
@@ -227,13 +227,19 @@ template <Core C, Mode M, Size S, Flags F> u32
 Moira::readM(u32 addr)
 {
     if (isPrgMode(M)) {
-        return readMS <MEM_PROG, S, F> (addr);
+        return readMS <C,MEM_PROG,S,F> (addr);
     } else {
-        return readMS <MEM_DATA, S, F> (addr);
+        return readMS <C,MEM_DATA,S,F> (addr);
     }
 }
 
 template <MemSpace MS, Size S, Flags F> u32
+Moira::readMS(u32 addr, bool &error)
+{
+    return readMS <M68000,MS,S,F> (addr, error);
+}
+
+template <Core C, MemSpace MS, Size S, Flags F> u32
 Moira::readMS(u32 addr, bool &error)
 {
     // Check for address errors
@@ -250,13 +256,19 @@ Moira::readMS(u32 addr, bool &error)
 template <MemSpace MS, Size S, Flags F> u32
 Moira::readMS(u32 addr)
 {
+    return readMS <M68000,MS,S,F> (addr);
+}
+
+template <Core C, MemSpace MS, Size S, Flags F> u32
+Moira::readMS(u32 addr)
+{
     u32 result;
         
     if constexpr (S == Long) {
 
         // Break down the long word access into two word accesses
-        result = readMS <MS, Word> (addr) << 16;
-        result |= readMS <MS, Word, F> (addr + 2);
+        result = readMS <C,MS,Word> (addr) << 16;
+        result |= readMS <C,MS,Word,F> (addr + 2);
 
     } else {
         
@@ -460,7 +472,7 @@ Moira::fullPrefetch()
         return;
     }
 
-    queue.irc = (u16)readMS <MEM_PROG, Word> (reg.pc);
+    queue.irc = (u16)readMS <C,MEM_PROG,Word> (reg.pc);
     if (delay) SYNC(delay);
     prefetch<F>();
 }
@@ -485,7 +497,7 @@ Moira::readExt()
         return;
     }
     
-    queue.irc = (u16)readMS <MEM_PROG, Word> (reg.pc);
+    queue.irc = (u16)readMS <C,MEM_PROG,Word> (reg.pc);
 }
 
 template <Core C, Flags F> void
@@ -496,12 +508,12 @@ Moira::jumpToVector(int nr)
     exception = nr;
     
     // Update the program counter
-    reg.pc = readMS <MEM_DATA, Long> (vectorAddr);
+    reg.pc = readMS <C,MEM_DATA,Long> (vectorAddr);
     
     // Check for address error
     if (misaligned(reg.pc)) {
         if (nr != 3) {
-            execAddressError(makeFrame<F|AE_PROG>(reg.pc, vectorAddr));
+            execAddressError(makeFrame <F|AE_PROG> (reg.pc, vectorAddr));
         } else {
             halt(); // Double fault
         }
@@ -509,7 +521,7 @@ Moira::jumpToVector(int nr)
     }
     
     // Update the prefetch queue
-    queue.irc = (u16)readMS <MEM_PROG, Word> (reg.pc);
+    queue.irc = (u16)readMS <C,MEM_PROG,Word> (reg.pc);
     sync(2);
     prefetch<POLLIPL>();
     
