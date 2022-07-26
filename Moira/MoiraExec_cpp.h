@@ -587,16 +587,29 @@ Moira::execBitDxEa(u16 opcode)
             prefetch <C,POLLIPL> ();
             if (I != BTST) writeM <C,M,Byte> (ea, data);
 
-            CYCLES_AI   ( 8,  8,  6,     0,  0,  0,     0,  0,  0)
-            CYCLES_PD   (10, 10,  9,     0,  0,  0,     0,  0,  0)
-            CYCLES_PI   ( 8,  8,  8,     0,  0,  0,     0,  0,  0)
-            CYCLES_DI   (12, 12,  9,     0,  0,  0,     0,  0,  0)
-            CYCLES_IX   (14, 14, 11,     0,  0,  0,     0,  0,  0)
-            CYCLES_AW   (12, 12,  8,     0,  0,  0,     0,  0,  0)
-            CYCLES_AL   (16, 16,  8,     0,  0,  0,     0,  0,  0)
-            CYCLES_DIPC (12, 12,  9,     0,  0,  0,     0,  0,  0)
-            CYCLES_IXPC (14, 14, 11,     0,  0,  0,     0,  0,  0)
-            CYCLES_IM   ( 8,  8,  6,     0,  0,  0,     0,  0,  0)
+            auto c = I == BTST ? 0 : 4;
+            /*
+            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     8,  8,  6)
+            CYCLES_PD   ( 0,  0,  0,     0,  0,  0,    10, 10,  9)
+            CYCLES_PI   ( 0,  0,  0,     0,  0,  0,     8,  8,  8)
+            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,    12, 12,  9)
+            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,    14, 14, 11)
+            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,    12, 12,  8)
+            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,    16, 16,  8)
+            CYCLES_DIPC ( 0,  0,  0,     0,  0,  0,    12, 12,  9)
+            CYCLES_IXPC ( 0,  0,  0,     0,  0,  0,    14, 14, 11)
+            CYCLES_IM   ( 0,  0,  0,     0,  0,  0,     8,  8,  6)
+            */
+            CYCLES_AI   ( 8 + c,  8,  6,     0,  0,  0,     0,  0,  0)
+            CYCLES_PD   (10 + c, 10,  9,     0,  0,  0,     0,  0,  0)
+            CYCLES_PI   ( 8 + c,  8,  8,     0,  0,  0,     0,  0,  0)
+            CYCLES_DI   (12 + c, 12,  9,     0,  0,  0,     0,  0,  0)
+            CYCLES_IX   (14 + c, 14, 11,     0,  0,  0,     0,  0,  0)
+            CYCLES_AW   (12 + c, 12,  8,     0,  0,  0,     0,  0,  0)
+            CYCLES_AL   (16 + c, 16,  8,     0,  0,  0,     0,  0,  0)
+            CYCLES_DIPC (12 + c, 12,  9,     0,  0,  0,     0,  0,  0)
+            CYCLES_IXPC (14 + c, 14, 11,     0,  0,  0,     0,  0,  0)
+            CYCLES_IM   ( 8 + c,  8,  6,     0,  0,  0,     0,  0,  0)
         }
     }
 }
