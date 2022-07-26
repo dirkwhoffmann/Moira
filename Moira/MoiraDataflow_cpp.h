@@ -294,9 +294,9 @@ template <Core C, Mode M, Size S, Flags F> void
 Moira::writeM(u32 addr, u32 val, bool &error)
 {
     if (isPrgMode(M)) {
-        writeMS <MEM_PROG, S, F> (addr, val, error);
+        writeMS <C,MEM_PROG,S,F> (addr, val, error);
     } else {
-        writeMS <MEM_DATA, S, F> (addr, val, error);
+        writeMS <C,MEM_DATA,S,F> (addr, val, error);
     }
 }
 
@@ -304,13 +304,19 @@ template <Core C, Mode M, Size S, Flags F> void
 Moira::writeM(u32 addr, u32 val)
 {
     if (isPrgMode(M)) {
-        writeMS <MEM_PROG, S, F> (addr, val);
+        writeMS <C,MEM_PROG,S,F> (addr, val);
     } else {
-        writeMS <MEM_DATA, S, F> (addr, val);
+        writeMS <C,MEM_DATA,S,F> (addr, val);
     }
 }
 
 template <MemSpace MS, Size S, Flags F> void
+Moira::writeMS(u32 addr, u32 val, bool &error)
+{
+    writeMS <M68000,MS,S,F> (addr, val, error);
+}
+
+template <Core C, MemSpace MS, Size S, Flags F> void
 Moira::writeMS(u32 addr, u32 val, bool &error)
 {
     // Check for address errors
@@ -320,21 +326,27 @@ Moira::writeMS(u32 addr, u32 val, bool &error)
         return;
     }
     
-    writeMS <MS,S,F> (addr, val);
+    writeMS <C,MS,S,F> (addr, val);
 }
 
 template <MemSpace MS, Size S, Flags F> void
+Moira::writeMS(u32 addr, u32 val)
+{
+    writeMS<M68000,MS,S,F>(addr, val);
+}
+
+template <Core C, MemSpace MS, Size S, Flags F> void
 Moira::writeMS(u32 addr, u32 val)
 {
     if constexpr (S == Long) {
 
         // Break down the long word access into two word accesses
         if (F & REVERSE) {
-            writeMS <MS, Word>    (addr + 2, val & 0xFFFF);
-            writeMS <MS, Word, F> (addr,     val >> 16   );
+            writeMS <C,MS,Word>   (addr + 2, val & 0xFFFF);
+            writeMS <C,MS,Word,F> (addr,     val >> 16   );
         } else {
-            writeMS <MS, Word>    (addr,     val >> 16   );
-            writeMS <MS, Word, F> (addr + 2, val & 0xFFFF);
+            writeMS <C,MS,Word>   (addr,     val >> 16   );
+            writeMS <C,MS,Word,F> (addr + 2, val & 0xFFFF);
         }
 
     } else {
@@ -389,18 +401,18 @@ Moira::readI()
     return result;
 }
 
-template <Size S, Flags F> void
+template <Core C, Size S, Flags F> void
 Moira::push(u32 val)
 {
     reg.sp -= S;
-    writeMS <MEM_DATA,S,F> (reg.sp, val);
+    writeMS <C,MEM_DATA,S,F> (reg.sp, val);
 }
 
-template <Size S, Flags F> void
+template <Core C, Size S, Flags F> void
 Moira::push(u32 val, bool &error)
 {
     reg.sp -= S;
-    writeMS <MEM_DATA,S,F> (reg.sp, val, error);
+    writeMS <C,MEM_DATA,S,F> (reg.sp, val, error);
 }
 
 template <Size S> bool

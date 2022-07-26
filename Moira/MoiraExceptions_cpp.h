@@ -25,19 +25,19 @@ template <Core C> void
 Moira::saveToStack(AEStackFrame &frame)
 {
     // Push PC
-    push <Word> ((u16)frame.pc);
-    push <Word> (frame.pc >> 16);
+    push <C,Word> ((u16)frame.pc);
+    push <C,Word> (frame.pc >> 16);
     
     // Push SR and IRD
-    push <Word> (frame.sr);
-    push <Word> (frame.ird);
+    push <C,Word> (frame.sr);
+    push <C,Word> (frame.ird);
     
     // Push address
-    push <Word> ((u16)frame.addr);
-    push <Word> (frame.addr >> 16);
+    push <C,Word> ((u16)frame.addr);
+    push <C,Word> (frame.addr >> 16);
     
     // Push memory access type and function code
-    push <Word> (frame.code);
+    push <C,Word> (frame.code);
 }
 
 void
@@ -61,8 +61,8 @@ Moira::saveToStackBrief(u16 nr, u16 sr, u32 pc)
 
         if constexpr (MIMIC_MUSASHI) {
 
-            push <Long> (pc);
-            push <Word> (sr);
+            push <C,Long> (pc);
+            push <C,Word> (sr);
 
         } else {
 
@@ -77,9 +77,9 @@ Moira::saveToStackBrief(u16 nr, u16 sr, u32 pc)
 
         if constexpr (MIMIC_MUSASHI) {
 
-            push <Word> (4 * nr);
-            push <Long> (pc);
-            push <Word> (sr);
+            push <C,Word> (4 * nr);
+            push <C,Long> (pc);
+            push <C,Word> (sr);
 
         } else {
 

@@ -86,7 +86,6 @@ template <Core C, Mode M, Size S, Flags F = 0> u32 readM(u32 addr, bool &error);
 // Reads a value from a specific memory space
 template <MemSpace MS, Size S, Flags F = 0> u32 readMS(u32 addr);
 template <MemSpace MS, Size S, Flags F = 0> u32 readMS(u32 addr, bool &error);
-
 template <Core C, MemSpace MS, Size S, Flags F = 0> u32 readMS(u32 addr);
 template <Core C, MemSpace MS, Size S, Flags F = 0> u32 readMS(u32 addr, bool &error);
 
@@ -97,13 +96,15 @@ template <Core C, Mode M, Size S, Flags F = 0> void writeM(u32 addr, u32 val, bo
 // Writes a value to a specific memory space
 template <MemSpace MS, Size S, Flags F = 0> void writeMS(u32 addr, u32 val);
 template <MemSpace MS, Size S, Flags F = 0> void writeMS(u32 addr, u32 val, bool &error);
+template <Core C, MemSpace MS, Size S, Flags F = 0> void writeMS(u32 addr, u32 val);
+template <Core C, MemSpace MS, Size S, Flags F = 0> void writeMS(u32 addr, u32 val, bool &error);
 
 // Reads an immediate value from memory
 template <Core C, Size S> u32 readI();
 
 // Pushes a value onto the stack
-template <Size S, Flags F = 0> void push(u32 value);
-template <Size S, Flags F = 0> void push(u32 value, bool &error);
+template <Core C, Size S, Flags F = 0> void push(u32 value);
+template <Core C, Size S, Flags F = 0> void push(u32 value, bool &error);
 
 // Checks whether the provided address should trigger an address error
 template <Size S = Word> bool misaligned(u32 addr);

@@ -649,7 +649,7 @@ Moira::execBsr(u16 opcode)
     // Save return address on stack
     SYNC(2);
     bool error;
-    push <Long> (retpc, error);
+    push <C,Long> (retpc, error);
     if (error) return;
 
     // Jump to new address
@@ -1195,7 +1195,7 @@ Moira::execJsr(u16 opcode)
 
     // Save return address on stack
     bool error;
-    push <Long> (reg.pc, error);
+    push <C,Long> (reg.pc, error);
     if (error) return;
 
     // Jump to new address
@@ -1243,7 +1243,7 @@ Moira::execLink(u16 opcode)
     pollIpl();
 
     // Write to stack
-    push <Long> (readA(ax) - ((MIMIC_MUSASHI && ax == 7) ? 4 : 0));
+    push <C,Long> (readA(ax) - ((MIMIC_MUSASHI && ax == 7) ? 4 : 0));
 
     // Modify address register and stack pointer
     writeA(ax, sp);
@@ -2283,19 +2283,19 @@ Moira::execPea(u16 opcode)
 
     if (isAbsMode(M)) {
 
-        push<Long>(ea);
-        prefetch<POLLIPL>();
+        push <C,Long> (ea);
+        prefetch <POLLIPL> ();
 
     } else if (isIdxMode(M)) {
 
         pollIpl();
         prefetch();
-        push<Long>(ea);
+        push <C,Long> (ea);
 
     } else {
 
-        prefetch<POLLIPL>();
-        push<Long>(ea);
+        prefetch <POLLIPL> ();
+        push <C,Long> (ea);
     }
 }
 
