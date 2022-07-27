@@ -1365,7 +1365,7 @@ Moira::execMove0(u16 opcode)
     CYCLES_DI   (12, 12,  7,      12, 12,  7,     16, 16,  7)
     CYCLES_IX   (14, 14,  9,      14, 14,  9,     18, 18,  9)
     CYCLES_AW   (12, 12,  6,      12, 12,  6,     16, 16,  6)
-    CYCLES_AL   (16, 16,  6,      16, 16,  6,     18, 18,  6)
+    CYCLES_AL   (16, 16,  6,      16, 16,  6,     20, 20,  6)
     CYCLES_DIPC (12, 12,  7,      12, 12,  7,     16, 16,  7)
     CYCLES_IXPC (14, 14,  9,      14, 14,  9,     18, 18,  9)
     CYCLES_IM   ( 8,  8,  4,       8,  8,  4,     12, 12,  6)
@@ -1408,6 +1408,20 @@ Moira::execMove2(u16 opcode)
 
         looping<I>() ? noPrefetch() : prefetch <C,POLLIPL> ();
     }
+
+    printf("***\n");
+    CYCLES_DN   ( 8,  8,  4,       8,  8,  4,     12, 12,  4)
+    CYCLES_AN   ( 8,  8,  4,       8,  8,  4,     12, 12,  4)
+    CYCLES_AI   (12, 12,  8,      12, 12,  8,     20, 20,  8)
+    CYCLES_PI   (12, 12,  8,      12, 12,  8,     20, 20,  8)
+    CYCLES_PD   (14, 14,  9,      14, 14,  9,     22, 22,  9)
+    CYCLES_DI   (16, 16,  9,      16, 16,  9,     24, 24,  9)
+    CYCLES_IX   (18, 18, 11,      18, 18, 11,     26, 26, 11)
+    CYCLES_AW   (16, 16,  8,      16, 16,  8,     24, 24,  8)
+    CYCLES_AL   (20, 20,  8,      20, 20,  8,     28, 28,  8)
+    CYCLES_DIPC (16, 16,  9,      16, 16,  9,     24, 24,  9)
+    CYCLES_IXPC (18, 18, 11,      18, 18, 11,     26, 26, 11)
+    CYCLES_IM   (12, 12,  6,      12, 12,  6,     20, 20,  8)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1447,6 +1461,19 @@ Moira::execMove3(u16 opcode)
 
         looping<I>() ? noPrefetch() : prefetch <C> ();
     }
+
+    CYCLES_DN   ( 8,  8,  4,       8,  8,  4,     12, 12,  4)
+    CYCLES_AN   ( 8,  8,  4,       8,  8,  4,     12, 12,  4)
+    CYCLES_AI   (12, 12,  8,      12, 12,  8,     20, 20,  8)
+    CYCLES_PI   (12, 12,  8,      12, 12,  8,     20, 20,  8)
+    CYCLES_PD   (14, 14,  9,      14, 14,  9,     22, 22,  9)
+    CYCLES_DI   (16, 16,  9,      16, 16,  9,     24, 24,  9)
+    CYCLES_IX   (18, 18, 11,      18, 18, 11,     26, 26, 11)
+    CYCLES_AW   (16, 16,  8,      16, 16,  8,     24, 24,  8)
+    CYCLES_AL   (20, 20,  8,      20, 20,  8,     28, 28,  8)
+    CYCLES_DIPC (16, 16,  9,      16, 16,  9,     24, 24,  9)
+    CYCLES_IXPC (18, 18, 11,      18, 18, 11,     26, 26, 11)
+    CYCLES_IM   (12, 12,  6,      12, 12,  6,     20, 20,  8)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1498,6 +1525,19 @@ Moira::execMove4(u16 opcode)
 
     writeM <C, MODE_PD, S, REVERSE> (ea, data);
     updateAn <MODE_PD, S> (dst);
+
+    CYCLES_DN   ( 8,  8,  4,       8,  8,  4,     12, 12,  4)
+    CYCLES_AN   ( 8,  8,  4,       8,  8,  4,     12, 12,  4)
+    CYCLES_AI   (12, 12,  8,      12, 12,  8,     20, 20,  8)
+    CYCLES_PI   (12, 12,  8,      12, 12,  8,     20, 20,  8)
+    CYCLES_PD   (14, 14,  9,      14, 14,  9,     22, 22,  9)
+    CYCLES_DI   (16, 16,  9,      16, 16,  9,     24, 24,  9)
+    CYCLES_IX   (18, 18, 11,      18, 18, 11,     26, 26, 11)
+    CYCLES_AW   (16, 16,  9,      16, 16,  9,     24, 24,  8)
+    CYCLES_AL   (20, 20,  9,      20, 20,  9,     28, 28,  8)
+    CYCLES_DIPC (16, 16,  9,      16, 16,  9,     24, 24,  9)
+    CYCLES_IXPC (18, 18, 10,      18, 18, 10,     26, 26, 10)
+    CYCLES_IM   (12, 12, 12,      12, 12, 12,     20, 20, 12)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1537,6 +1577,19 @@ Moira::execMove5(u16 opcode)
 
         prefetch <C,POLLIPL> ();
     }
+
+    CYCLES_DN   (12, 12,  5,      12, 12,  5,     16, 16,  5)
+    CYCLES_AN   (12, 12,  5,      12, 12,  5,     16, 16,  5)
+    CYCLES_AI   (16, 16,  9,      16, 16,  9,     24, 24,  9)
+    CYCLES_PI   (16, 16,  9,      16, 16,  9,     24, 24,  9)
+    CYCLES_PD   (18, 18, 10,      18, 18, 10,     26, 26, 10)
+    CYCLES_DI   (20, 20, 10,      20, 20, 10,     28, 28, 10)
+    CYCLES_IX   (22, 22, 12,      22, 22, 12,     30, 30, 12)
+    CYCLES_AW   (20, 20,  9,      20, 20,  9,     24, 24,  8)
+    CYCLES_AL   (24, 24,  9,      24, 24,  9,     28, 28,  8)
+    CYCLES_DIPC (20, 20, 10,      20, 20, 10,     28, 28,  9)
+    CYCLES_IXPC (22, 22, 12,      22, 22, 12,     32, 32,  9)
+    CYCLES_IM   (16, 16,  7,      16, 16,  7,     24, 24,  9)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1576,6 +1629,19 @@ Moira::execMove6(u16 opcode)
 
         prefetch <C,POLLIPL> ();
     }
+
+    CYCLES_DN   (14, 14,  7,      14, 14,  7,     18, 18,  7)
+    CYCLES_AN   (14, 14,  7,      14, 14,  7,     18, 18,  7)
+    CYCLES_AI   (18, 18, 11,      18, 18, 11,     26, 26, 11)
+    CYCLES_PI   (18, 18, 11,      18, 18, 11,     26, 26, 11)
+    CYCLES_PD   (20, 20, 12,      20, 20, 12,     28, 28, 12)
+    CYCLES_DI   (22, 22, 12,      22, 22, 12,     30, 30, 12)
+    CYCLES_IX   (24, 24, 14,      24, 24, 14,     32, 32, 14)
+    CYCLES_AW   (22, 22, 11,      22, 22, 11,     28, 28, 10)
+    CYCLES_AL   (26, 26, 11,      26, 26, 11,     30, 30, 12)
+    CYCLES_DIPC (22, 22, 12,      22, 22, 12,     30, 30, 11)
+    CYCLES_IXPC (24, 24, 14,      24, 24, 14,     34, 34, 11)
+    CYCLES_IM   (18, 18,  9,      18, 18,  9,     24, 24,  9)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1598,6 +1664,19 @@ Moira::execMove7(u16 opcode)
     if (!writeOp <C, MODE_AW, S> (dst, data)) return;
 
     prefetch <C,POLLIPL> ();
+
+    CYCLES_DN   (12, 12,  4,      12, 12,  4,     16, 16,  4)
+    CYCLES_AN   (12, 12,  4,      12, 12,  4,     16, 16,  4)
+    CYCLES_AI   (16, 16,  8,      16, 16,  8,     24, 24,  8)
+    CYCLES_PI   (16, 16,  8,      16, 16,  8,     24, 24,  8)
+    CYCLES_PD   (18, 18,  9,      18, 18,  9,     26, 26,  9)
+    CYCLES_DI   (20, 20,  9,      20, 20,  9,     28, 28,  9)
+    CYCLES_IX   (22, 22, 11,      22, 22, 11,     30, 30, 11)
+    CYCLES_AW   (20, 20,  8,      20, 20,  8,     28, 28,  8)
+    CYCLES_AL   (24, 24,  8,      24, 24,  8,     32, 32,  8)
+    CYCLES_DIPC (20, 20,  9,      20, 20,  9,     28, 28,  9)
+    CYCLES_IXPC (22, 22, 11,      22, 22, 11,     30, 30, 11)
+    CYCLES_IM   (16, 16,  6,      16, 16,  6,     24, 24,  8)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1624,7 +1703,7 @@ Moira::execMove8(u16 opcode)
      */
     if (isMemMode(M)) {
 
-        if (!readOp <C, M, S, STD_AE_FRAME> (src, ea, data)) return;
+        if (!readOp <C,M,S,STD_AE_FRAME> (src, ea, data)) return;
 
         reg.sr.n = NBIT<Word>(data);
         reg.sr.z = ZERO<Word>(data);
@@ -1636,7 +1715,7 @@ Moira::execMove8(u16 opcode)
         ea2 |= queue.irc;
 
         if (misaligned<S>(ea2)) {
-            execAddressError(makeFrame<AE_WRITE|AE_DATA>(ea2));
+            execAddressError(makeFrame <AE_WRITE|AE_DATA> (ea2));
             return;
         }
 
@@ -1650,17 +1729,30 @@ Moira::execMove8(u16 opcode)
 
     } else {
 
-        if (!readOp <C, M, S> (src, ea, data)) return;
+        if (!readOp <C,M,S> (src, ea, data)) return;
 
         reg.sr.n = NBIT<S>(data);
         reg.sr.z = ZERO<S>(data);
         reg.sr.v = 0;
         reg.sr.c = 0;
 
-        if (!writeOp <C, MODE_AL, S> (dst, data)) return;
+        if (!writeOp <C,MODE_AL,S> (dst, data)) return;
     }
 
     prefetch <C,POLLIPL> ();
+
+    CYCLES_DN   (16, 16,  6,      16, 16,  6,     20, 20,  6)
+    CYCLES_AN   (16, 16,  6,      16, 16,  6,     20, 20,  6)
+    CYCLES_AI   (20, 20, 10,      20, 20, 10,     28, 28, 10)
+    CYCLES_PI   (20, 20, 10,      20, 20, 10,     28, 28, 10)
+    CYCLES_PD   (22, 22, 11,      22, 22, 11,     30, 30, 11)
+    CYCLES_DI   (24, 24, 11,      24, 24, 11,     32, 32, 11)
+    CYCLES_IX   (26, 26, 13,      26, 26, 13,     34, 34, 13)
+    CYCLES_AW   (24, 24, 10,      20, 20,  8,     32, 32, 10)
+    CYCLES_AL   (28, 28, 10,      24, 24,  8,     36, 36, 10)
+    CYCLES_DIPC (24, 24, 11,      28, 28,  8,     32, 32, 11)
+    CYCLES_IXPC (26, 26, 13,      32, 32,  8,     34, 34, 13)
+    CYCLES_IM   (20, 20,  8,      16, 16,  6,     28, 28, 10)
 }
 
 template <Core C, Instr I, Mode M, Size S> void

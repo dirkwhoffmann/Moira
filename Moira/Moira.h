@@ -35,9 +35,9 @@ namespace moira {
 
 #else
 
-#define SYNC(x)
-#define SYNC_68000(x)
-#define SYNC_68010(x)
+#define SYNC(x) { }
+#define SYNC_68000(x) { }
+#define SYNC_68010(x) { }
 
 #define CYCLES_00(c) if constexpr (C == M68000) { sync(c); }
 #define CYCLES_10(c) if constexpr (C == M68010) { sync(c); }
@@ -74,7 +74,6 @@ CYCLES_MBWL_20(m,b2,w2,l2)
 #define CYCLES_IM(...)      CYCLES_MBWL(MODE_IM,    ##__VA_ARGS__)
 #define CYCLES_IP(...)      CYCLES_MBWL(MODE_IP,    ##__VA_ARGS__)
 #endif
-
 
 class Moira {
 
