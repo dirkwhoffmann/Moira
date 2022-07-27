@@ -1902,6 +1902,8 @@ Moira::execMovemEaRg(u16 opcode)
     u16 mask = (u16)readI <C,Word> ();
     u32 ea   = computeEA <C,M,S> (src);
 
+    int cnt = 0;
+
     // Check for address error
     if (misaligned<S>(ea)) {
         setFC<M>();
@@ -1922,8 +1924,10 @@ Moira::execMovemEaRg(u16 opcode)
             for(int i = 0; i <= 15; i++) {
 
                 if (mask & (1 << i)) {
+
                     writeR(i, SEXT<S>(readM <C,M,S> (ea)));
                     ea += S;
+                    cnt++;
                 }
             }
             writeA(src, ea);
@@ -1934,8 +1938,10 @@ Moira::execMovemEaRg(u16 opcode)
             for(int i = 0; i <= 15; i++) {
 
                 if (mask & (1 << i)) {
+
                     writeR(i, SEXT<S>(readM <C,M,S> (ea)));
                     ea += S;
+                    cnt++;
                 }
             }
             break;
@@ -1944,6 +1950,16 @@ Moira::execMovemEaRg(u16 opcode)
     if constexpr (S == Word) (void)readMS <C,MEM_DATA,Word> (ea);
 
     prefetch <C,POLLIPL> ();
+
+    auto c = (C == M68020 || S == Word) ? 4 * cnt : 8 * cnt;
+    CYCLES_AI   ( 0,  0,  0,      12+c, 12+c, 12+c,     12+c, 12+c, 12+c)
+    CYCLES_PI   ( 0,  0,  0,      12+c, 12+c,  8+c,     12+c, 12+c,  8+c)
+    CYCLES_DI   ( 0,  0,  0,      16+c, 16+c, 13+c,     16+c, 16+c, 13+c)
+    CYCLES_IX   ( 0,  0,  0,      18+c, 18+c, 15+c,     18+c, 18+c, 15+c)
+    CYCLES_AW   ( 0,  0,  0,      16+c, 16+c, 12+c,     16+c, 16+c, 12+c)
+    CYCLES_AL   ( 0,  0,  0,      20+c, 20+c, 12+c,     20+c, 20+c, 12+c)
+    CYCLES_DIPC ( 0,  0,  0,      16+c, 16+c,  9+c,     16+c, 16+c,  9+c)
+    CYCLES_IXPC ( 0,  0,  0,      18+c, 18+c, 11+c,     18+c, 18+c, 11+c)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
