@@ -39,14 +39,14 @@ namespace moira {
 #define SYNC_68000(x) { }
 #define SYNC_68010(x) { }
 
-#define CYCLES_6800(c) if constexpr (C == M68000) { sync(c); }
-#define CYCLES_6810(c) if constexpr (C == M68010) { sync(c); }
-#define CYCLES_6820(c) if constexpr (C == M68020) { sync(c); }
+#define CYCLES_68000(c) if constexpr (C == M68000) { sync(c); }
+#define CYCLES_68010(c) if constexpr (C == M68010) { sync(c); }
+#define CYCLES_68020(c) if constexpr (C == M68020) { sync(c); }
 
 #define CYCLES(c0,c1,c2) \
-CYCLES_6800(c0) \
-CYCLES_6810(c1) \
-CYCLES_6820(c2)
+CYCLES_68000(c0) \
+CYCLES_68010(c1) \
+CYCLES_68020(c2)
 
 #define CYCLES_MBWL_00(m,b,w,l) \
 if constexpr (M == m && C == M68000) { sync(S == Byte ? b : S == Word ? w : l); }
