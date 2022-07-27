@@ -670,7 +670,6 @@ Moira::execBitImEa(u16 opcode)
     CYCLES_AL   (20 + c, 20 + c,  0,     0,  0,  0,     0,  0,  0)
     CYCLES_DIPC (16 + c, 16 + c,  0,     0,  0,  0,     0,  0,  0)
     CYCLES_IXPC (18 + c, 18 + c,  0,     0,  0,  0,     0,  0,  0)
-    // CYCLES_IM   ( 8,  8,  6,     0,  0,  0,     0,  0,  0)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -859,6 +858,15 @@ Moira::execClr(u16 opcode)
         reg.sr.v = 0;
         reg.sr.c = 0;
     }
+
+    CYCLES_DN   ( 4,  4,  2,       4,  4,  2,      6,  6,  2)
+    CYCLES_AI   (12,  8,  8,      12,  8,  8,     20, 12,  8)
+    CYCLES_PI   (12,  8,  8,      12,  8,  8,     20, 12,  8)
+    CYCLES_PD   (14, 10,  9,      14, 10,  9,     22, 14,  9)
+    CYCLES_DI   (16, 12,  9,      16, 12,  9,     24, 16,  9)
+    CYCLES_IX   (18, 14, 11,      18, 14, 11,     26, 20, 11)
+    CYCLES_AW   (16, 12,  8,      16, 12,  8,     24, 16,  8)
+    CYCLES_AL   (20, 14,  8,      20, 14,  8,     28, 20,  8)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1234,6 +1242,8 @@ Moira::execExt(u16 opcode)
     reg.sr.c = 0;
 
     prefetch <C,POLLIPL> ();
+
+    CYCLES_DN   ( 0,  0,  0,       4,  4,  4,      4,  4,  4)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1944,6 +1954,8 @@ Moira::execMovemRgEa(u16 opcode)
     int dst  = _____________xxx(opcode);
     u16 mask = (u16)readI <C,Word> ();
 
+    int cnt = 0;
+
     switch (M) {
 
         case 4: // -(An)
@@ -1952,6 +1964,7 @@ Moira::execMovemRgEa(u16 opcode)
 
             // Check for address error
             if (mask && misaligned<S>(ea)) {
+
                 setFC<M>();
                 execAddressError(makeFrame <AE_INC_PC|AE_WRITE> (ea - S));
                 return;
@@ -1960,8 +1973,10 @@ Moira::execMovemRgEa(u16 opcode)
             for(int i = 15; i >= 0; i--) {
 
                 if (mask & (0x8000 >> i)) {
+
                     ea -= S;
                     writeM <C, M, S, MIMIC_MUSASHI ? REVERSE : 0> (ea, reg.r[i]);
+                    cnt++;
                 }
             }
             writeA(dst, ea);
@@ -1973,6 +1988,7 @@ Moira::execMovemRgEa(u16 opcode)
 
             // Check for address error
             if (mask && misaligned<S>(ea)) {
+
                 setFC<M>();
                 execAddressError(makeFrame <AE_INC_PC|AE_WRITE> (ea));
                 return;
@@ -1981,14 +1997,24 @@ Moira::execMovemRgEa(u16 opcode)
             for(int i = 0; i < 16; i++) {
 
                 if (mask & (1 << i)) {
+
                     writeM <C,M,S> (ea, reg.r[i]);
                     ea += S;
+                    cnt++;
                 }
             }
             break;
         }
     }
     prefetch <C,POLLIPL> ();
+
+    auto c = (C == M68020 || S == Word) ? 4 * cnt : 8 * cnt;
+    CYCLES_AI   ( 0,  0,  0,       8+c,  8+c,  8+c,      8+c,  8+c,  8+c)
+    CYCLES_PD   ( 0,  0,  0,       8+c,  8+c,  4+c,      8+c,  8+c,  4+c)
+    CYCLES_DI   ( 0,  0,  0,      12+c, 12+c,  9+c,     12+c, 12+c,  9+c)
+    CYCLES_IX   ( 0,  0,  0,      14+c, 14+c, 11+c,     14+c, 14+c, 14+c)
+    CYCLES_AW   ( 0,  0,  0,      12+c, 12+c,  8+c,     12+c, 12+c,  8+c)
+    CYCLES_AL   ( 0,  0,  0,      16+c, 16+c,  8+c,     16+c, 16+c,  8+c)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -2205,6 +2231,18 @@ Moira::execMoveToCcr(u16 opcode)
 
     (void)readMS <C,MEM_PROG,Word> (reg.pc + 2);
     prefetch <C,POLLIPL> ();
+
+    CYCLES_DN   ( 0,  0,  0,      12, 12,  4,      0,  0,  0)
+    CYCLES_AI   ( 0,  0,  0,      16, 16,  8,      0,  0,  0)
+    CYCLES_PI   ( 0,  0,  0,      16, 16,  8,      0,  0,  0)
+    CYCLES_PD   ( 0,  0,  0,      18, 18,  9,      0,  0,  0)
+    CYCLES_DI   ( 0,  0,  0,      20, 20,  9,      0,  0,  0)
+    CYCLES_IX   ( 0,  0,  0,      22, 22, 11,      0,  0,  0)
+    CYCLES_AW   ( 0,  0,  0,      20, 20,  8,      0,  0,  0)
+    CYCLES_AL   ( 0,  0,  0,      24, 24,  8,      0,  0,  0)
+    CYCLES_DIPC ( 0,  0,  0,      20, 20,  9,      0,  0,  0)
+    CYCLES_IXPC ( 0,  0,  0,      22, 22, 11,      0,  0,  0)
+    CYCLES_IM   ( 0,  0,  0,      16, 16,  6,      0,  0,  0)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -2266,6 +2304,18 @@ Moira::execMoveToSr(u16 opcode)
 
     (void)readMS <C,MEM_PROG,Word> (reg.pc + 2);
     prefetch <C,POLLIPL> ();
+
+    CYCLES_DN   ( 0,  0,  0,      12, 12,  8,      0,  0,  0)
+    CYCLES_AI   ( 0,  0,  0,      16, 16, 12,      0,  0,  0)
+    CYCLES_PI   ( 0,  0,  0,      16, 16, 12,      0,  0,  0)
+    CYCLES_PD   ( 0,  0,  0,      18, 18, 13,      0,  0,  0)
+    CYCLES_DI   ( 0,  0,  0,      20, 20, 13,      0,  0,  0)
+    CYCLES_IX   ( 0,  0,  0,      22, 22, 15,      0,  0,  0)
+    CYCLES_AW   ( 0,  0,  0,      20, 20, 12,      0,  0,  0)
+    CYCLES_AL   ( 0,  0,  0,      24, 24, 12,      0,  0,  0)
+    CYCLES_DIPC ( 0,  0,  0,      20, 20, 13,      0,  0,  0)
+    CYCLES_IXPC ( 0,  0,  0,      22, 22, 15,      0,  0,  0)
+    CYCLES_IM   ( 0,  0,  0,      16, 16, 10,      0,  0,  0)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -2568,6 +2618,14 @@ Moira::execPea(u16 opcode)
         prefetch <C,POLLIPL> ();
         push <C,Long> (ea);
     }
+
+    CYCLES_AI   ( 0,  0,  0,       0,  0,  0,     12, 12,  9)
+    CYCLES_DI   ( 0,  0,  0,       0,  0,  0,     16, 16, 10)
+    CYCLES_IX   ( 0,  0,  0,       0,  0,  0,     20, 20, 12)
+    CYCLES_AW   ( 0,  0,  0,       0,  0,  0,     16, 16,  9)
+    CYCLES_AL   ( 0,  0,  0,       0,  0,  0,     20, 20,  9)
+    CYCLES_DIPC ( 0,  0,  0,       0,  0,  0,     16, 16, 10)
+    CYCLES_IXPC ( 0,  0,  0,       0,  0,  0,     20, 20, 12)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -2781,6 +2839,8 @@ Moira::execSwap(u16 opcode)
     reg.sr.z = ZERO<Long>(dat);
     reg.sr.v = 0;
     reg.sr.c = 0;
+
+    CYCLES(4,4,4);
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -2874,7 +2934,7 @@ Moira::execTst(u16 opcode)
     int rg = _____________xxx(opcode);
 
     u32 ea, data;
-    if (!readOp<C, M, S, STD_AE_FRAME>(rg, ea, data)) return;
+    if (!readOp <C,M,S,STD_AE_FRAME> (rg, ea, data)) return;
 
     reg.sr.n = NBIT<S>(data);
     reg.sr.z = ZERO<S>(data);
@@ -2882,6 +2942,19 @@ Moira::execTst(u16 opcode)
     reg.sr.c = 0;
 
     looping<I>() ? noPrefetch() : prefetch <C,POLLIPL> ();
+
+    CYCLES_DN   ( 4,  4,  2,     4,  4,  2,     4,  4,  2)
+    CYCLES_AN   ( 0,  0,  0,     0,  0,  2,     4,  4,  2)
+    CYCLES_AI   ( 8,  8,  6,     8,  8,  6,    12, 12,  6)
+    CYCLES_PI   ( 8,  8,  6,     8,  8,  6,    12, 12,  6)
+    CYCLES_PD   (10, 10,  7,    10, 10,  7,    14, 14,  7)
+    CYCLES_DI   (12, 12,  7,    12, 12,  7,    16, 16,  7)
+    CYCLES_IX   (14, 14,  9,    14, 14,  9,    18, 18,  9)
+    CYCLES_AW   (12, 12,  6,    12, 12,  6,    16, 16,  6)
+    CYCLES_AL   (16, 16,  6,    16, 16,  6,    20, 20,  6)
+    CYCLES_DIPC ( 0,  0,  7,     0,  0,  7,     0,  0,  7)
+    CYCLES_IXPC ( 0,  0,  9,     0,  0,  9,     0,  0,  9)
+    CYCLES_IM   ( 0,  0,  6,     0,  0,  6,     0,  0,  6)
 }
 
 template <Core C, Instr I, Mode M, Size S> void

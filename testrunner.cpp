@@ -160,11 +160,8 @@ void run()
     printf("It runs until a bug has been found.\n\n");
 
     printf("Emulated CPU: Motorola %d\n\n", CPUTYPE);
-
-    if (!doExec(0) || !doExec(0xFFFF) || !doDasm(0) || !doDasm(0xFFFF)) {
-        printf("              Exec range: %s\n", TOSTRING(doExec(opcode)));
-        printf("              Dasm range: %s\n\n", TOSTRING(doDasm(opcode)));
-    }
+    printf("              Exec range: %s\n", TOSTRING(doExec(opcode)));
+    printf("              Dasm range: %s\n\n", TOSTRING(doDasm(opcode)));
 
     setupMusashi();
     setupMoira();
@@ -376,7 +373,7 @@ void compare(Setup &s, Result &r1, Result &r2)
 {
     bool error = false;
 
-    if (doDasm(s.opcode)) {
+    if (doDasm((int)s.opcode)) {
 
         if (!compareDasm(r1, r2)) {
             printf("\nDISASSEMBLER MISMATCH FOUND");
@@ -384,7 +381,7 @@ void compare(Setup &s, Result &r1, Result &r2)
         }
     }
 
-    if (doExec(s.opcode)) {
+    if (doExec((int)s.opcode)) {
 
         if (!comparePC(r1, r2)) {
             printf("\nPROGRAM COUNTER MISMATCH FOUND");

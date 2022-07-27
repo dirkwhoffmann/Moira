@@ -20,7 +20,7 @@ Sandbox::Sandbox()
 void
 Sandbox::prepare(u32 opcode)
 {
-    enabled = doExec(opcode);
+    enabled = doExec((int)opcode);
     recordCnt = replayCnt = 0;
     errors = 0;
 }
