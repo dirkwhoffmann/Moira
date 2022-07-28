@@ -136,6 +136,14 @@ Moira::execShiftEa(u16 op)
     looping<I>() ? noPrefetch() : prefetch <C,POLLIPL> ();
 
     writeM <C,M,S> (ea, shift <C,I,S> (1, data));
+
+    CYCLES_AI   ( 0,  0,  0,      12, 12,  9,      0,  0,  0)
+    CYCLES_PI   ( 0,  0,  0,      12, 12,  9,      0,  0,  0)
+    CYCLES_PD   ( 0,  0,  0,      14, 14, 10,      0,  0,  0)
+    CYCLES_DI   ( 0,  0,  0,      16, 16, 10,      0,  0,  0)
+    CYCLES_IX   ( 0,  0,  0,      18, 18, 12,      0,  0,  0)
+    CYCLES_AW   ( 0,  0,  0,      16, 16,  9,      0,  0,  0)
+    CYCLES_AL   ( 0,  0,  0,      20, 20,  9,      0,  0,  0)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -636,7 +644,6 @@ Moira::execBcc(u16 opcode)
         // Take branch
         reg.pc = newpc;
         fullPrefetch <C, POLLIPL> ();
-        printf("Branch taken\n");
         CYCLES_IP (10, 10, 10,     10, 10, 10,      4,  4,  4);
 
     } else {
@@ -645,7 +652,6 @@ Moira::execBcc(u16 opcode)
         if (core == M68000) SYNC(2);
         if constexpr (S == Word) readExt<C>();
         prefetch <C,POLLIPL> ();
-        printf("Not taken\n");
         CYCLES_IP ( 8,  8,  8,     12, 12, 12,      4,  4,  4);
     }
 }
@@ -1595,7 +1601,6 @@ Moira::execMove2(u16 opcode)
         looping<I>() ? noPrefetch() : prefetch <C,POLLIPL> ();
     }
 
-    printf("***\n");
     CYCLES_DN   ( 8,  8,  4,       8,  8,  4,     12, 12,  4)
     CYCLES_AN   ( 8,  8,  4,       8,  8,  4,     12, 12,  4)
     CYCLES_AI   (12, 12,  8,      12, 12,  8,     20, 20,  8)
