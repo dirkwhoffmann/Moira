@@ -10,7 +10,7 @@
 #pragma once
 
 // The CPU under test
-static constexpr int CPUTYPE = 68000;
+static constexpr int CPUTYPE = 68010;
 
 // Set to true for verbose output
 static constexpr bool VERBOSE = false;

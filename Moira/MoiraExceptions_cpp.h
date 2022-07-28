@@ -205,7 +205,7 @@ Moira::execUnimplemented(int nr)
 
     jumpToVector <C, AE_SET_CB3> (nr);
 
-    CYCLES(34,34,34);
+    CYCLES(34, 38, 34);
 }
 
 void
