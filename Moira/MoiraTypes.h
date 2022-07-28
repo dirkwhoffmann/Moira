@@ -370,8 +370,10 @@ AEStackFrame;
 
 struct StatusRegister {
 
-    bool t;               // Trace flag
+    bool t1;              // Trace flag
+    bool t0;              // Trace flag         (68020 only)
     bool s;               // Supervisor flag
+    bool m;               // Master flag        (68020 only)
     bool x;               // Extend flag
     bool n;               // Negative flag
     bool z;               // Zero flag

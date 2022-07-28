@@ -292,22 +292,38 @@ Moira::setCCR(u8 val)
 u16
 Moira::getSR(const StatusRegister &sr) const
 {
-    return (u16)(sr.t << 15 | sr.s << 13 | sr.ipl << 8 | getCCR());
+    auto flags =
+    sr.t1  << 15 |
+    sr.t0  << 14 |
+    sr.s   << 13 |
+    sr.m   << 12 |
+    sr.ipl <<  8 | getCCR();
+
+    return u16(flags);
 }
 
 void
 Moira::setSR(u16 val)
 {
-    bool t = (val >> 15) & 1;
+    bool t1 = (val >> 15) & 1;
     bool s = (val >> 13) & 1;
     u8 ipl = (val >>  8) & 7;
 
     reg.sr.ipl = ipl;
     flags |= CPU_CHECK_IRQ;
-    t ? setTraceFlag() : clearTraceFlag();
+    t1 ? setTraceFlag() : clearTraceFlag();
 
     setCCR((u8)val);
     setSupervisorMode(s);
+
+    if (core == M68020) {
+
+        bool t0 = (val >> 14) & 1;
+        bool m = (val >> 12) & 1;
+
+        t0 ? setTrace0Flag() : clearTrace0Flag();
+        setMasterMode(m);
+    }
 }
 
 void
@@ -324,6 +340,12 @@ Moira::setSupervisorMode(bool enable)
         reg.ssp = reg.a[7];
         reg.a[7] = reg.usp;
     }
+}
+
+void
+Moira::setMasterMode(bool enable)
+{
+    reg.sr.m = enable;
 }
 
 FunctionCode
@@ -427,10 +449,10 @@ Moira::disassemblePC(u32 pc, char *str)
 void
 Moira::disassembleSR(const StatusRegister &sr, char *str)
 {
-    str[0]  = sr.t ? 'T' : 't';
-    str[1]  = '-';
+    str[0]  = sr.t1 ? 'T' : 't';
+    str[1]  = sr.t1 ? 'T' : 't';
     str[2]  = sr.s ? 'S' : 's';
-    str[3]  = '-';
+    str[3]  = sr.m ? 'M' : 'm';
     str[4]  = '-';
     str[5]  = (sr.ipl & 0b100) ? '1' : '0';
     str[6]  = (sr.ipl & 0b010) ? '1' : '0';

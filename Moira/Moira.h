@@ -400,14 +400,18 @@ public:
     void setDFC(u32 val) { reg.dfc = val & 0b111; }
 
     void setSupervisorMode(bool enable);
+    void setMasterMode(bool enable);
 
     u8 getCCR(const StatusRegister &sr) const;
     u16 getSR(const StatusRegister &sr) const;
 
 private:
 
-    void setTraceFlag() { reg.sr.t = true; flags |= CPU_TRACE_FLAG; }
-    void clearTraceFlag() { reg.sr.t = false; flags &= ~CPU_TRACE_FLAG; }
+    void setTraceFlag() { reg.sr.t1 = true; flags |= CPU_TRACE_FLAG; }
+    void clearTraceFlag() { reg.sr.t1 = false; flags &= ~CPU_TRACE_FLAG; }
+
+    void setTrace0Flag() { reg.sr.t0 = true; }
+    void clearTrace0Flag() { reg.sr.t0 = false; }
 
 protected:
 
