@@ -88,7 +88,7 @@ Moira::execIllegal(u16 opcode)
 
     signalIllegalOpcodeException(opcode);
     execUnimplemented<C>(4);
-    CYCLES(34, 38, 34);
+    CYCLES(34, 38, 20);
 }
 
 template <Core C, Instr I, Mode M, Size S> void

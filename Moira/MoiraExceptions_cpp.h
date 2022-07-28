@@ -73,7 +73,7 @@ Moira::saveToStackBrief(u16 nr, u16 sr, u32 pc)
         }
     }
 
-    if constexpr (C == M68010) {
+    if constexpr (C == M68010 || C == M68020) {
 
         if constexpr (MIMIC_MUSASHI) {
 
@@ -201,9 +201,9 @@ Moira::execUnimplemented(int nr)
 
     // Write exception information to stack
     SYNC(4);
-    saveToStackBrief(u16(nr), status, reg.pc - 2);
+    saveToStackBrief <C> (u16(nr), status, reg.pc - 2);
 
-    jumpToVector <C, AE_SET_CB3> (nr);
+    jumpToVector <C,AE_SET_CB3> (nr);
 }
 
 void
