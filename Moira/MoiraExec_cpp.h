@@ -68,6 +68,7 @@ Moira::execLineA(u16 opcode)
 
     signalLineAException(opcode);
     execUnimplemented<C>(10);
+    CYCLES(34, 4, 4);
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -77,6 +78,7 @@ Moira::execLineF(u16 opcode)
 
     signalLineFException(opcode);
     execUnimplemented<C>(11);
+    CYCLES(34, 38, 34);
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -86,6 +88,7 @@ Moira::execIllegal(u16 opcode)
 
     signalIllegalOpcodeException(opcode);
     execUnimplemented<C>(4);
+    CYCLES(34, 38, 34);
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -653,7 +656,8 @@ Moira::execBcc(u16 opcode)
         if (core == M68000) SYNC(2);
         if constexpr (S == Word) readExt<C>();
         prefetch <C,POLLIPL> ();
-        CYCLES_IP ( 8,  8,  8,     12, 12, 12,      4,  4,  4);
+        // CYCLES_IP ( 8,  8,  8,     12, 12, 12,      4,  4,  4);
+        CYCLES_IP ( 8,  6,  6,     12, 10, 10,      4,  4,  4);
     }
 }
 
@@ -778,6 +782,7 @@ Moira::execBkpt(u16 opcode)
 
     signalIllegalOpcodeException(opcode);
     execUnimplemented<C>(4);
+    CYCLES(34, 38, 34);
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1184,19 +1189,19 @@ Moira::execDbcc(u16 opcode)
                 reg.pc = newpc;
                 fullPrefetch <C,POLLIPL> ();
                 // printf("Branch taken\n");
-                CYCLES(10, 10, 10);
+                CYCLES_68000(10);
                 return;
             } else {
 
                 (void)readMS <C,MEM_PROG,Word> (reg.pc + 2);
                 // printf("Not taken\n");
-                CYCLES(4, 4, 4);
+                CYCLES_68000(4);
             }
         } else {
 
             SYNC(2);
             // printf("Condition met\n");
-            CYCLES(2, 2, 2);
+            CYCLES_68000(2);
         }
 
         // Fall through to next instruction
@@ -1245,7 +1250,7 @@ Moira::execDbcc(u16 opcode)
 
                 if (MIMIC_MUSASHI) SYNC(2);
                 printf("Branch taken\n");
-                CYCLES(10, 10, 10);
+                CYCLES_68010(12);
                 return;
 
             } else {
@@ -1253,21 +1258,21 @@ Moira::execDbcc(u16 opcode)
                 SYNC(MIMIC_MUSASHI ? 4 : 2);
                 (void)readMS <C,MEM_PROG,Word> (reg.pc + 2);
                 printf("Not taken\n");
-                CYCLES(4, 4, 4);
+                CYCLES_68010(8);
             }
 
         } else {
 
             SYNC(2);
             printf("Condition met\n");
-            CYCLES(2, 2, 2);
+            CYCLES_68010(2);
         }
 
         // Fall through to next instruction
         reg.pc += 2;
         fullPrefetch <C, POLLIPL> ();
 
-        CYCLES(10, 10, 10);
+        CYCLES_68010(10);
     };
 
     auto execLoop = [&]() {
@@ -2710,7 +2715,7 @@ Moira::execDivMusashi(u16 opcode)
             SYNC(10 - (int)(clock - c));
         }
         execTrapException(5);
-        CYCLES(38, 38, 38);
+        CYCLES(38, 44, 44);
         return;
     }
 
@@ -3058,7 +3063,7 @@ Moira::execSccRg(u16 opcode)
     prefetch <C,POLLIPL> ();
 
     if (C >= M68010) {
-        if (data && I != ST) SYNC(2);
+        // if (data && I != ST) SYNC(2);
     } else {
         if (data) SYNC(2);
     }
@@ -3066,7 +3071,8 @@ Moira::execSccRg(u16 opcode)
     writeD<Byte>(dst, data);
 
     auto c = data ? 2 : 0;
-    if constexpr (C >= M68010 && I == ST) c = 0;
+    if constexpr (C >= M68010) c = 0;
+
     CYCLES_DN   ( 0,  0,  0,       4+c,  4+c,  2+c,      0,  0,  0)
 }
 

@@ -204,8 +204,6 @@ Moira::execUnimplemented(int nr)
     saveToStackBrief(u16(nr), status, reg.pc - 2);
 
     jumpToVector <C, AE_SET_CB3> (nr);
-
-    CYCLES(34, 38, 34);
 }
 
 void
