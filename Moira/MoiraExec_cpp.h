@@ -7,7 +7,8 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#define SUPERVISOR_MODE_ONLY if (!reg.sr.s) { execPrivilegeException(); return; }
+#define SUPERVISOR_MODE_ONLY \
+if (!reg.sr.s) { execPrivilegeException(); CYCLES(34,34,34); return; }
 
 #define REVERSE_8(x) (u8)(((x) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
 #define REVERSE_16(x) (u16)((REVERSE_8((x) & 0xFF) << 8) | REVERSE_8(((x) >> 8) & 0xFF))
@@ -3169,12 +3170,11 @@ Moira::execTrapv(u16 opcode)
 
         (void)readMS <C,MEM_PROG,Word> (reg.pc + 2);
         execTrapException(7);
-
-    } else {
-
-        prefetch <C,POLLIPL> ();
+        CYCLES(34, 34, 34);
+        return;
     }
 
+    prefetch <C,POLLIPL> ();
     CYCLES(4, 4, 4);
 }
 
