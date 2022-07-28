@@ -72,6 +72,6 @@
  * instructions. It is intended to invoke debug code. Make sure to define it
  * as an empty macro in release builds.
  */
-#define EXEC_DEBUG(C,I,M,S) { execDebug(__func__, C, I, M, S); }
+#define EXEC_DEBUG(C,I,M,S) { } // { execDebug(__func__, C, I, M, S); }
 
 #define NDEBUG true

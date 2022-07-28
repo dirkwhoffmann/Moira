@@ -11,7 +11,6 @@ extern void m68881_mmu_ops(void);
 
 static void m68k_op_1010(void)
 {
-    printf("m68k_op_1010\n");
 	m68ki_exception_1010();
 }
 

@@ -8,7 +8,7 @@
 // -----------------------------------------------------------------------------
 
 #define SUPERVISOR_MODE_ONLY \
-if (!reg.sr.s) { execPrivilegeException(); CYCLES(34,34,34); return; }
+if (!reg.sr.s) { execPrivilegeException(); CYCLES(34,38,38); return; }
 
 #define REVERSE_8(x) (u8)(((x) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
 #define REVERSE_16(x) (u16)((REVERSE_8((x) & 0xFF) << 8) | REVERSE_8(((x) >> 8) & 0xFF))
@@ -1249,7 +1249,7 @@ Moira::execDbcc(u16 opcode)
                 */
 
                 if (MIMIC_MUSASHI) SYNC(2);
-                printf("Branch taken\n");
+                // printf("Branch taken\n");
                 CYCLES_68010(12);
                 return;
 
@@ -1257,14 +1257,14 @@ Moira::execDbcc(u16 opcode)
 
                 SYNC(MIMIC_MUSASHI ? 4 : 2);
                 (void)readMS <C,MEM_PROG,Word> (reg.pc + 2);
-                printf("Not taken\n");
+                // printf("Not taken\n");
                 CYCLES_68010(8);
             }
 
         } else {
 
             SYNC(2);
-            printf("Condition met\n");
+            // printf("Condition met\n");
             CYCLES_68010(2);
         }
 
@@ -2626,11 +2626,11 @@ Moira::execMulMusashi(u16 op)
     if constexpr (I == MULS) {
 
         CYCLES_DN   ( 0,  0,  0,      54,  32,  27,    0,  0,  0)
-        CYCLES_AI   ( 0,  0,  0,      58,  34,  31,    0,  0,  0)
-        CYCLES_PI   ( 0,  0,  0,      58,  34,  31,    0,  0,  0)
-        CYCLES_PD   ( 0,  0,  0,      60,  36,  32,    0,  0,  0)
-        CYCLES_DI   ( 0,  0,  0,      62,  38,  32,    0,  0,  0)
-        CYCLES_IX   ( 0,  0,  0,      64,  40,  34,    0,  0,  0)
+        CYCLES_AI   ( 0,  0,  0,      58,  36,  31,    0,  0,  0)
+        CYCLES_PI   ( 0,  0,  0,      58,  36,  31,    0,  0,  0)
+        CYCLES_PD   ( 0,  0,  0,      60,  38,  32,    0,  0,  0)
+        CYCLES_DI   ( 0,  0,  0,      62,  40,  32,    0,  0,  0)
+        CYCLES_IX   ( 0,  0,  0,      64,  42,  34,    0,  0,  0)
         CYCLES_AW   ( 0,  0,  0,      62,  40,  31,    0,  0,  0)
         CYCLES_AL   ( 0,  0,  0,      66,  44,  31,    0,  0,  0)
         CYCLES_DIPC ( 0,  0,  0,      62,  40,  32,    0,  0,  0)
@@ -2969,12 +2969,48 @@ Moira::execRte(u16 opcode)
         reg.sp += 2;
 
         // Check for format errors
-        if (format != 0) {
+        if (format != 0 && format != 8) {
 
             reg.sp -= 8;
             execFormatError();
             CYCLES(0, 4, 4)
             return;
+        }
+
+        if (format == 8) {
+
+            (void)readMS <C,MEM_DATA,Word> (reg.sp); // special status word
+            reg.sp += 2;
+            (void)readMS <C,MEM_DATA,Long> (reg.sp); // fault address
+            reg.sp += 4;
+            (void)readMS <C,MEM_DATA,Word> (reg.sp); // unused/reserved
+            reg.sp += 2;
+            (void)readMS <C,MEM_DATA,Word> (reg.sp); // data output buffer
+            reg.sp += 2;
+            (void)readMS <C,MEM_DATA,Word> (reg.sp); // unused/reserved
+            reg.sp += 2;
+            (void)readMS <C,MEM_DATA,Word> (reg.sp); // data input buffer
+            reg.sp += 2;
+            (void)readMS <C,MEM_DATA,Word> (reg.sp); // unused/reserved
+            reg.sp += 2;
+            (void)readMS <C,MEM_DATA,Word> (reg.sp); // instruction input buffer
+            reg.sp += 2;
+            (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
+            reg.sp += 4;
+            (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
+            reg.sp += 4;
+            (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
+            reg.sp += 4;
+            (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
+            reg.sp += 4;
+            (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
+            reg.sp += 4;
+            (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
+            reg.sp += 4;
+            (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
+            reg.sp += 4;
+            (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
+            reg.sp += 4;
         }
     }
 

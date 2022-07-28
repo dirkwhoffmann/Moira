@@ -88,6 +88,10 @@ void createTestCase(Setup &s)
 
 void setupInstruction(Setup &s, uint32_t pc, uint16_t opcode)
 {
+    if (opcode == 0x4E73) {                     // RTE
+
+    }
+
     if (opcode == 0x4E7A || opcode == 0x4E7B) { // MOVEC
 
         switch (smartRandom() & 5) {
