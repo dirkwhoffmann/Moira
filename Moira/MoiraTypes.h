@@ -404,7 +404,8 @@ struct Registers {
     };
 
     u32 usp;                // User Stack Pointer
-    u32 ssp;                // Supervisor Stack Pointer
+    u32 ssp;                // Interrupt Stack Pointer
+    u32 msp;                // Master Stack Pointer
 
     u8 ipl;                 // Polled Interrupt Priority Level
 

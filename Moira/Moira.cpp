@@ -307,7 +307,7 @@ Moira::setSR(u16 val)
 {
     bool t1 = (val >> 15) & 1;
     bool s = (val >> 13) & 1;
-    u8 ipl = (val >>  8) & 7;
+    u8 ipl = (val >> 8) & 7;
 
     reg.sr.ipl = ipl;
     flags |= CPU_CHECK_IRQ;
@@ -327,25 +327,38 @@ Moira::setSR(u16 val)
 }
 
 void
-Moira::setSupervisorMode(bool enable)
+Moira::setSupervisorMode(bool s)
 {
-    if (reg.sr.s == enable) return;
-
-    if (enable) {
-        reg.sr.s = 1;
-        reg.usp = reg.a[7];
-        reg.a[7] = reg.ssp;
-    } else {
-        reg.sr.s = 0;
-        reg.ssp = reg.a[7];
-        reg.a[7] = reg.usp;
-    }
+    if (s != reg.sr.s) setSupervisorFlags(s, reg.sr.m);
 }
 
 void
-Moira::setMasterMode(bool enable)
+Moira::setMasterMode(bool m)
 {
-    reg.sr.m = enable;
+    if (m != reg.sr.m) setSupervisorFlags(reg.sr.s, m);
+}
+
+void
+Moira::setSupervisorFlags(bool s, bool m)
+{
+    bool uspWasVisible = !reg.sr.s;
+    bool ispWasVisible =  reg.sr.s && !reg.sr.m;
+    bool mspWasVisible =  reg.sr.s &&  reg.sr.m;
+
+    if (uspWasVisible) reg.usp = reg.sp;
+    if (ispWasVisible) reg.ssp = reg.sp;
+    if (mspWasVisible) reg.msp = reg.sp;
+
+    reg.sr.s = s;
+    reg.sr.m = m;
+
+    bool uspIsVisible  = !reg.sr.s;
+    bool ispIsVisible  =  reg.sr.s && !reg.sr.m;
+    bool mspIsVisible  =  reg.sr.s &&  reg.sr.m;
+
+    if (uspIsVisible)  reg.sp = reg.usp;
+    if (ispIsVisible)  reg.sp = reg.ssp;
+    if (mspIsVisible)  reg.sp = reg.msp;
 }
 
 FunctionCode

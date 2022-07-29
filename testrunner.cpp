@@ -307,6 +307,7 @@ void recordMusashiRegisters(Result &r)
     r.sr = (uint16_t)m68k_get_reg(NULL, M68K_REG_SR);
     r.usp = m68k_get_reg(NULL, M68K_REG_USP);
     r.ssp = m68k_get_reg(NULL, M68K_REG_ISP);
+    r.msp = m68k_get_reg(NULL, M68K_REG_MSP);
     r.fc = musashiFC;
     r.vbr = m68k_get_reg(NULL, M68K_REG_VBR);
     r.sfc = m68k_get_reg(NULL, M68K_REG_SFC);
@@ -323,6 +324,7 @@ void recordMoiraRegisters(Result &r)
     r.sr = moiracpu->getSR();
     r.usp = moiracpu->getUSP();
     r.ssp = moiracpu->getSSP();
+    r.msp = moiracpu->getMSP();
     r.fc = moiracpu->readFC();
     r.vbr = moiracpu->getVBR();
     r.sfc = moiracpu->getSFC();
@@ -359,6 +361,7 @@ void dumpResult(Result &r)
     printf("SR: %x  ", r.sr);
     printf("SSP: %x  ", r.ssp);
     printf("USP: %x  ", r.usp);
+    printf("MSP: %x  ", r.msp);
     printf("FC: %x  ", r.fc);
     printf("VBR: %x  ", r.vbr);
     printf("SFC: %x  ", r.sfc);
@@ -495,6 +498,7 @@ bool compareSP(Result &r1, Result &r2)
 {
     if (r1.ssp != r2.ssp) return false;
     if (r1.usp != r2.usp) return false;
+    if (r1.msp != r2.msp) return false;
 
     return true;
 }

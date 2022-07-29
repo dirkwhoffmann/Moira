@@ -384,11 +384,14 @@ public:
     u32 getSP() const { return reg.sp; }
     void setSP(u32 val) { reg.sp = val; }
 
-    u32 getSSP() const { return reg.sr.s ? reg.sp : reg.ssp; }
-    void setSSP(u32 val) { if (reg.sr.s) reg.sp = val; else reg.ssp = val; }
+    u32 getUSP() const { return !reg.sr.s ? reg.sp : reg.usp; }
+    void setUSP(u32 val) { if (!reg.sr.s) reg.sp = val; else reg.usp = val; }
 
-    u32 getUSP() const { return reg.sr.s ? reg.usp : reg.sp; }
-    void setUSP(u32 val) { if (reg.sr.s) reg.usp = val; else reg.sp = val; }
+    u32 getSSP() const { return (reg.sr.s && !reg.sr.m) ? reg.sp : reg.ssp; }
+    void setSSP(u32 val) { if (reg.sr.s && !reg.sr.m) reg.sp = val; else reg.ssp = val; }
+
+    u32 getMSP() const { return (reg.sr.s && reg.sr.m) ? reg.sp : reg.msp; }
+    void setMSP(u32 val) { if (reg.sr.s && reg.sr.m) reg.sp = val; else reg.msp = val; }
 
     u32 getVBR() const { return reg.vbr; }
     void setVBR(u32 val) { reg.vbr = val; }
@@ -399,8 +402,9 @@ public:
     u32 getDFC() const { return reg.dfc; }
     void setDFC(u32 val) { reg.dfc = val & 0b111; }
 
-    void setSupervisorMode(bool enable);
-    void setMasterMode(bool enable);
+    void setSupervisorMode(bool value);
+    void setMasterMode(bool value);
+    void setSupervisorFlags(bool s, bool m);
 
     u8 getCCR(const StatusRegister &sr) const;
     u16 getSR(const StatusRegister &sr) const;
