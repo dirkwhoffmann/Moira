@@ -8,13 +8,13 @@
 // -----------------------------------------------------------------------------
 
 void
-Moira::saveToStack(AEStackFrame &frame)
+Moira::saveToStack0(AEStackFrame &frame)
 {
     switch (core) {
 
-        case M68000: saveToStack <M68000> (frame); break;
-        case M68010: saveToStack <M68010> (frame); break;
-        case M68020: saveToStack <M68020> (frame); break;
+        case M68000: saveToStack0 <M68000> (frame); break;
+        case M68010: saveToStack0 <M68010> (frame); break;
+        case M68020: saveToStack0 <M68020> (frame); break;
 
         default:
             assert(false);
@@ -22,7 +22,7 @@ Moira::saveToStack(AEStackFrame &frame)
 }
 
 template <Core C> void
-Moira::saveToStack(AEStackFrame &frame)
+Moira::saveToStack0(AEStackFrame &frame)
 {
     // Push PC
     push <C,Word> ((u16)frame.pc);
@@ -41,13 +41,13 @@ Moira::saveToStack(AEStackFrame &frame)
 }
 
 void
-Moira::saveToStackBrief(u16 nr, u16 sr, u32 pc)
+Moira::saveToStack1(u16 nr, u16 sr, u32 pc)
 {
     switch (core) {
 
-        case M68000: saveToStackBrief <M68000> (nr, sr, pc); break;
-        case M68010: saveToStackBrief <M68010> (nr, sr, pc); break;
-        case M68020: saveToStackBrief <M68020> (nr, sr, pc); break;
+        case M68000: saveToStack1 <M68000> (nr, sr, pc); break;
+        case M68010: saveToStack1 <M68010> (nr, sr, pc); break;
+        case M68020: saveToStack1 <M68020> (nr, sr, pc); break;
 
         default:
             assert(false);
@@ -55,7 +55,7 @@ Moira::saveToStackBrief(u16 nr, u16 sr, u32 pc)
 }
 
 template <Core C> void
-Moira::saveToStackBrief(u16 nr, u16 sr, u32 pc)
+Moira::saveToStack1(u16 nr, u16 sr, u32 pc)
 {
     switch (C) {
 
@@ -76,7 +76,65 @@ Moira::saveToStackBrief(u16 nr, u16 sr, u32 pc)
             break;
 
         case M68010:
+        case M68020:
 
+            if constexpr (MIMIC_MUSASHI) {
+
+                push <C,Word> (4 * nr);
+                push <C,Long> (pc);
+                push <C,Word> (sr);
+
+            } else {
+
+                reg.sp -= 8;
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 6) & ~1, 4 * nr);
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 0) & ~1, sr);
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 2) & ~1, pc >> 16);
+            }
+            break;
+    }
+}
+
+void
+Moira::saveToStack2(u16 nr, u16 sr, u32 pc)
+{
+    switch (core) {
+
+        case M68000: saveToStack2 <M68000> (nr, sr, pc); break;
+        case M68010: saveToStack2 <M68010> (nr, sr, pc); break;
+        case M68020: saveToStack2 <M68020> (nr, sr, pc); break;
+
+        default:
+            assert(false);
+    }
+}
+
+template <Core C> void
+Moira::saveToStack2(u16 nr, u16 sr, u32 pc)
+{
+    switch (C) {
+
+        case M68000:
+
+            // SAME AS saveToStack2? IF YES, CALL IT
+            if constexpr (MIMIC_MUSASHI) {
+
+                push <C,Long> (pc);
+                push <C,Word> (sr);
+
+            } else {
+
+                reg.sp -= 6;
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 0) & ~1, sr);
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 2) & ~1, pc >> 16);
+            }
+            break;
+
+        case M68010:
+
+            // SAME AS saveToStack2? IF YES, CALL IT
             if constexpr (MIMIC_MUSASHI) {
 
                 push <C,Word> (4 * nr);
@@ -153,7 +211,7 @@ Moira::execAddressError(AEStackFrame frame, int delay)
     if (!doubleFault) {
         
         // Write stack frame
-        saveToStack(frame);
+        saveToStack0(frame);
         SYNC(2);
         jumpToVector<C>(3);
     }
@@ -193,7 +251,7 @@ Moira::execFormatError()
 
     // Write exception information to stack
     SYNC(4);
-    saveToStackBrief(14, status, reg.pc);
+    saveToStack1(14, status, reg.pc);
 
     jumpToVector <C, AE_SET_CB3> (14);
 }
@@ -226,9 +284,9 @@ Moira::execUnimplemented(int nr)
 
     // Write exception information to stack
     SYNC(4);
-    saveToStackBrief <C> (u16(nr), status, reg.pc - 2);
+    saveToStack1<C>(u16(nr), status, reg.pc - 2);
 
-    jumpToVector <C,AE_SET_CB3> (nr);
+    jumpToVector<C,AE_SET_CB3>(nr);
 }
 
 void
@@ -264,7 +322,7 @@ Moira::execTraceException()
 
     // Write exception information to stack
     SYNC(4);
-    saveToStackBrief(9, status, reg.pc);
+    saveToStack1<C>(9, status, reg.pc);
 
     jumpToVector<C>(9);
 }
@@ -297,7 +355,7 @@ Moira::execTrapException(int nr)
     clearTraceFlag();
 
     // Write exception information to stack
-    saveToStackBrief<C>(u16(nr), status, reg.pc);
+    saveToStack2<C>(u16(nr), status, reg.pc);
 
     jumpToVector<C>(nr);
 }
@@ -307,9 +365,9 @@ Moira::execPrivilegeException()
 {
     switch (core) {
 
-        case M68000: execPrivilegeException <M68000> (); break;
-        case M68010: execPrivilegeException <M68010> (); break;
-        case M68020: execPrivilegeException <M68020> (); break;
+        case M68000: execPrivilegeException<M68000>(); break;
+        case M68010: execPrivilegeException<M68010>(); break;
+        case M68020: execPrivilegeException<M68020>(); break;
 
         default:
             assert(false);
@@ -332,9 +390,9 @@ Moira::execPrivilegeException()
 
     // Write exception information to stack
     SYNC(4);
-    saveToStackBrief(8, status, reg.pc - 2);
+    saveToStack1<C>(8, status, reg.pc - 2);
 
-    jumpToVector <C,AE_SET_CB3> (8);
+    jumpToVector<C,AE_SET_CB3>(8);
 }
 
 void

@@ -8,12 +8,16 @@
 // -----------------------------------------------------------------------------
 
 // Emulates a group 0 exception
-void saveToStack(AEStackFrame &frame);
-template <Core C> void saveToStack(AEStackFrame &frame);
+void saveToStack0(AEStackFrame &frame);
+template <Core C> void saveToStack0(AEStackFrame &frame);
 
-// Emulates a group 1 or group 2 exception
-void saveToStackBrief(u16 nr, u16 sr, u32 pc);
-template <Core C> void saveToStackBrief(u16 nr, u16 sr, u32 pc);
+// Emulates a group 1 exception
+void saveToStack1(u16 nr, u16 sr, u32 pc);
+template <Core C> void saveToStack1(u16 nr, u16 sr, u32 pc);
+
+// Emulates a group 2 exception
+void saveToStack2(u16 nr, u16 sr, u32 pc);
+template <Core C> void saveToStack2(u16 nr, u16 sr, u32 pc);
 
 // Emulates an address error
 void execAddressError(AEStackFrame frame, int delay = 0);
