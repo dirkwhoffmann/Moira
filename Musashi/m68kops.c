@@ -9958,15 +9958,24 @@ static void m68k_op_chk2cmp2_8_ai(void)
 		sint lower_bound = (int8)m68ki_read_8(ea);
 		sint upper_bound = (int8)m68ki_read_8(ea + 1);
 
-		if(!BIT_F(word2))
-			compare = (int32)(int8)compare;
+        printf("ea = %x\n", ea);
+        printf("Musashi: reg = %d [reg] = %x ea = %x lower_bound = %d upper_bound = %d compare = %d\n", (word2 >> 12) & 15, REG_DA[(word2 >> 12) & 15], ea, lower_bound, upper_bound, compare);
+
+        if(!BIT_F(word2)) {
+            printf("Casting\n");
+            compare = (int32)(int8)compare;
+        }
       
  		FLAG_Z = !((upper_bound==compare) || (lower_bound==compare));  // JFF: | => ||
 
     FLAG_C = (lower_bound <= upper_bound ? compare < lower_bound || compare > upper_bound : compare > upper_bound || compare < lower_bound) << 8;
 
-		if(COND_CS() && BIT_B(word2))
-				m68ki_exception_trap(EXCEPTION_CHK);
+        printf("Musashi: z = %d c = %d\n", FLAG_Z, FLAG_C);
+
+        if(COND_CS() && BIT_B(word2)) {
+            printf("Exception trap\n");
+            m68ki_exception_trap(EXCEPTION_CHK);
+        }
 		return;
 	}
 	m68ki_exception_illegal();

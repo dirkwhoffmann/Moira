@@ -306,7 +306,7 @@ void recordMusashiRegisters(Result &r)
     r.pc = m68k_get_reg(NULL, M68K_REG_PC);
     r.sr = (uint16_t)m68k_get_reg(NULL, M68K_REG_SR);
     r.usp = m68k_get_reg(NULL, M68K_REG_USP);
-    r.ssp = m68k_get_reg(NULL, M68K_REG_ISP);
+    r.isp = m68k_get_reg(NULL, M68K_REG_ISP);
     r.msp = m68k_get_reg(NULL, M68K_REG_MSP);
     r.fc = musashiFC;
     r.vbr = m68k_get_reg(NULL, M68K_REG_VBR);
@@ -323,7 +323,7 @@ void recordMoiraRegisters(Result &r)
     r.pc = moiracpu->getPC();
     r.sr = moiracpu->getSR();
     r.usp = moiracpu->getUSP();
-    r.ssp = moiracpu->getSSP();
+    r.isp = moiracpu->getISP();
     r.msp = moiracpu->getMSP();
     r.fc = moiracpu->readFC();
     r.vbr = moiracpu->getVBR();
@@ -359,8 +359,8 @@ void dumpResult(Result &r)
     printf("PC: %04x  Elapsed cycles: %d\n", r.pc, r.cycles);
     printf("         ");
     printf("SR: %x  ", r.sr);
-    printf("SSP: %x  ", r.ssp);
     printf("USP: %x  ", r.usp);
+    printf("ISP: %x  ", r.isp);
     printf("MSP: %x  ", r.msp);
     printf("FC: %x  ", r.fc);
     printf("VBR: %x  ", r.vbr);
@@ -398,8 +398,16 @@ void compare(Setup &s, Result &r1, Result &r2)
             printf("\nSTATUS REGISTER MISMATCH FOUND");
             error = true;
         }
-        if (!compareSP(r1, r2)) {
-            printf("\nSTACK POINTER MISMATCH FOUND");
+        if (!compareUSP(r1, r2)) {
+            printf("\nUSP MISMATCH FOUND");
+            error = true;
+        }
+        if (!compareISP(r1, r2)) {
+            printf("\nISP MISMATCH FOUND");
+            error = true;
+        }
+        if (!compareMSP(r1, r2)) {
+            printf("\nMSP MISMATCH FOUND");
             error = true;
         }
         if (!compareCycles(r1, r2)) {
@@ -494,13 +502,19 @@ bool compareSR(Result &r1, Result &r2)
     return r1.sr == r2.sr;
 }
 
-bool compareSP(Result &r1, Result &r2)
+bool compareUSP(Result &r1, Result &r2)
 {
-    if (r1.ssp != r2.ssp) return false;
-    if (r1.usp != r2.usp) return false;
-    if (r1.msp != r2.msp) return false;
+    return r1.usp == r2.usp;
+}
 
-    return true;
+bool compareISP(Result &r1, Result &r2)
+{
+    return r1.isp == r2.isp;
+}
+
+bool compareMSP(Result &r1, Result &r2)
+{
+    return r1.msp == r2.msp;
 }
 
 bool compareVBR(Result &r1, Result &r2)

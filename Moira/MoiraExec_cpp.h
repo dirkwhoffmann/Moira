@@ -691,7 +691,7 @@ Moira::execBitDxEa(u16 opcode)
             u8 b = readD(src) & 0b111;
 
             u32 ea, data;
-            if (!readOp<C, M, Byte>(dst, ea, data)) return;
+            if (!readOp <C,M,Byte> (dst, ea, data)) return;
 
             data = bit <C,I> (data, b);
 
@@ -902,8 +902,46 @@ Moira::execChk(u16 opcode)
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execChk2(u16 opcode)
 {
-    // TODO
+    u32 ext = queue.irc;
+    int src = _____________xxx(opcode);
+    int dst = xxxx____________(ext);
+
+    readExt<C>();
+
+    u32 ea, data1, data2;
+
+    if (!readOp <C,M,S> (src, ea, data1)) return;
+    data2 = readM <C,M,S> (ea + S);
+
+    auto lowerBound = SEXT<S>(data1);
+    auto upperBound = SEXT<S>(data2);
+
+    i32 compare = readR<S>(dst);
+
+    printf("Moira: src = %d dst = %d lowerBound = %d upperBound = %d compare = %d\n", src, dst, lowerBound, upperBound, compare);
+
+    reg.sr.z = lowerBound == compare || upperBound == compare;
+    reg.sr.c = compare < lowerBound || compare > upperBound;
+
+    printf("Moira: z = %d c = %d\n", reg.sr.z, reg.sr.c);
+
+    if (reg.sr.c) {
+
+        printf("Moira: execTrapException\n");
+        execTrapException<C>(6);
+        CYCLES_68020(0);
+        return;
+    }
+
     prefetch <C,POLLIPL> ();
+
+    CYCLES_AI   ( 0,  0, 22,       0,  0, 22,      0,  0, 22)
+    CYCLES_DI   ( 0,  0, 23,       0,  0, 23,      0,  0, 23)
+    CYCLES_IX   ( 0,  0, 25,       0,  0, 25,      0,  0, 25)
+    CYCLES_AW   ( 0,  0, 22,       0,  0, 22,      0,  0, 22)
+    CYCLES_AL   ( 0,  0, 22,       0,  0, 22,      0,  0, 22)
+    CYCLES_DIPC ( 0,  0, 23,       0,  0, 23,      0,  0, 23)
+    CYCLES_IXPC ( 0,  0, 23,       0,  0, 23,      0,  0, 23)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -916,16 +954,16 @@ Moira::execClr(u16 opcode)
         int dst = _____________xxx(opcode);
 
         u32 ea, data;
-        if (!readOp<C, M, S, STD_AE_FRAME>(dst, ea, data)) return;
+        if (!readOp <C,M,S,STD_AE_FRAME> (dst, ea, data)) return;
 
         prefetch <C,POLLIPL> ();
 
         if constexpr (S == Long && isRegMode(M)) SYNC(2);
 
         if constexpr (MIMIC_MUSASHI) {
-            writeOp <C, M, S> (dst, ea, 0);
+            writeOp <C,M,S> (dst, ea, 0);
         } else {
-            writeOp <C, M, S, REVERSE> (dst, ea, 0);
+            writeOp <C,M,S,REVERSE> (dst, ea, 0);
         }
 
         reg.sr.n = 0;
@@ -942,9 +980,9 @@ Moira::execClr(u16 opcode)
         if constexpr (S == Long && isIdxMode(M)) SYNC(2);
 
         if constexpr (MIMIC_MUSASHI) {
-            writeOp <C, M, S> (dst, 0);
+            writeOp <C,M,S> (dst, 0);
         } else {
-            writeOp <C, M, S, REVERSE> (dst, 0);
+            writeOp <C,M,S,REVERSE> (dst, 0);
         }
 
         looping<I>() ? noPrefetch() : prefetch <C,POLLIPL> ();

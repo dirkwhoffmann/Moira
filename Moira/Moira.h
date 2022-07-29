@@ -387,8 +387,8 @@ public:
     u32 getUSP() const { return !reg.sr.s ? reg.sp : reg.usp; }
     void setUSP(u32 val) { if (!reg.sr.s) reg.sp = val; else reg.usp = val; }
 
-    u32 getSSP() const { return (reg.sr.s && !reg.sr.m) ? reg.sp : reg.ssp; }
-    void setSSP(u32 val) { if (reg.sr.s && !reg.sr.m) reg.sp = val; else reg.ssp = val; }
+    u32 getISP() const { return (reg.sr.s && !reg.sr.m) ? reg.sp : reg.isp; }
+    void setISP(u32 val) { if (reg.sr.s && !reg.sr.m) reg.sp = val; else reg.isp = val; }
 
     u32 getMSP() const { return (reg.sr.s && reg.sr.m) ? reg.sp : reg.msp; }
     void setMSP(u32 val) { if (reg.sr.s && reg.sr.m) reg.sp = val; else reg.msp = val; }

@@ -57,38 +57,63 @@ Moira::saveToStackBrief(u16 nr, u16 sr, u32 pc)
 template <Core C> void
 Moira::saveToStackBrief(u16 nr, u16 sr, u32 pc)
 {
-    if constexpr (C == M68000) {
+    switch (C) {
 
-        if constexpr (MIMIC_MUSASHI) {
+        case M68000:
 
-            push <C,Long> (pc);
-            push <C,Word> (sr);
+            if constexpr (MIMIC_MUSASHI) {
 
-        } else {
+                push <C,Long> (pc);
+                push <C,Word> (sr);
 
-            reg.sp -= 6;
-            writeMS <C,MEM_DATA,Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
-            writeMS <C,MEM_DATA,Word> ((reg.sp + 0) & ~1, sr);
-            writeMS <C,MEM_DATA,Word> ((reg.sp + 2) & ~1, pc >> 16);
-        }
-    }
+            } else {
 
-    if constexpr (C == M68010 || C == M68020) {
+                reg.sp -= 6;
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 0) & ~1, sr);
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 2) & ~1, pc >> 16);
+            }
+            break;
 
-        if constexpr (MIMIC_MUSASHI) {
+        case M68010:
 
-            push <C,Word> (4 * nr);
-            push <C,Long> (pc);
-            push <C,Word> (sr);
+            if constexpr (MIMIC_MUSASHI) {
 
-        } else {
+                push <C,Word> (4 * nr);
+                push <C,Long> (pc);
+                push <C,Word> (sr);
 
-            reg.sp -= 8;
-            writeMS <C,MEM_DATA,Word> ((reg.sp + 6) & ~1, 4 * nr);
-            writeMS <C,MEM_DATA,Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
-            writeMS <C,MEM_DATA,Word> ((reg.sp + 0) & ~1, sr);
-            writeMS <C,MEM_DATA,Word> ((reg.sp + 2) & ~1, pc >> 16);
-        }
+            } else {
+
+                reg.sp -= 8;
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 6) & ~1, 4 * nr);
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 0) & ~1, sr);
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 2) & ~1, pc >> 16);
+            }
+            break;
+
+        case M68020:
+
+            if constexpr (MIMIC_MUSASHI) {
+
+                printf("Pushing %x %x %x %x\n", pc, 0x2000 | nr << 2, reg.pc, sr);
+                push <C,Long> (pc);
+                push <C,Word> (0x2000 | nr << 2);
+                push <C,Long> (reg.pc);
+                push <C,Word> (sr);
+
+            } else {
+
+                // TODO
+                assert(false);
+                reg.sp -= 8;
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 6) & ~1, 4 * nr);
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 0) & ~1, sr);
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 2) & ~1, pc >> 16);
+            }
+            break;
     }
 }
 
@@ -272,7 +297,7 @@ Moira::execTrapException(int nr)
     clearTraceFlag();
 
     // Write exception information to stack
-    saveToStackBrief(u16(nr), status, reg.pc);
+    saveToStackBrief<C>(u16(nr), status, reg.pc);
 
     jumpToVector<C>(nr);
 }

@@ -404,14 +404,14 @@ struct Registers {
     };
 
     u32 usp;                // User Stack Pointer
-    u32 ssp;                // Interrupt Stack Pointer
-    u32 msp;                // Master Stack Pointer
+    u32 isp;                // Interrupt Stack Pointer
+    u32 msp;                // Master Stack Pointer             (68020+)
 
     u8 ipl;                 // Polled Interrupt Priority Level
 
-    u32 vbr;                // Vector Base Register (68010+)
-    u32 sfc;                // Source Function Code (68010+)
-    u32 dfc;                // Destination Function Code (68010+)
+    u32 vbr;                // Vector Base Register             (68010+)
+    u32 sfc;                // Source Function Code             (68010+)
+    u32 dfc;                // Destination Function Code        (68010+)
 };
 
 struct PrefetchQueue {    // http://pasti.fxatari.com/68kdocs/68kPrefetch.html

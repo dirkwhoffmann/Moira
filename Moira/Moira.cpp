@@ -80,7 +80,7 @@ Moira::reset()
     SYNC(2);
     reg.sp = read16OnReset(0);
     SYNC(4);
-    reg.ssp = reg.sp = (read16OnReset(2) & ~0x1) | reg.sp << 16;
+    reg.isp = reg.sp = (read16OnReset(2) & ~0x1) | reg.sp << 16;
     SYNC(4);
     reg.pc = read16OnReset(4);
     SYNC(4);
@@ -346,7 +346,7 @@ Moira::setSupervisorFlags(bool s, bool m)
     bool mspWasVisible =  reg.sr.s &&  reg.sr.m;
 
     if (uspWasVisible) reg.usp = reg.sp;
-    if (ispWasVisible) reg.ssp = reg.sp;
+    if (ispWasVisible) reg.isp = reg.sp;
     if (mspWasVisible) reg.msp = reg.sp;
 
     reg.sr.s = s;
@@ -357,7 +357,7 @@ Moira::setSupervisorFlags(bool s, bool m)
     bool mspIsVisible  =  reg.sr.s &&  reg.sr.m;
 
     if (uspIsVisible)  reg.sp = reg.usp;
-    if (ispIsVisible)  reg.sp = reg.ssp;
+    if (ispIsVisible)  reg.sp = reg.isp;
     if (mspIsVisible)  reg.sp = reg.msp;
 }
 
@@ -463,7 +463,7 @@ void
 Moira::disassembleSR(const StatusRegister &sr, char *str)
 {
     str[0]  = sr.t1 ? 'T' : 't';
-    str[1]  = sr.t1 ? 'T' : 't';
+    str[1]  = sr.t0 ? 'T' : 't';
     str[2]  = sr.s ? 'S' : 's';
     str[3]  = sr.m ? 'M' : 'm';
     str[4]  = '-';
