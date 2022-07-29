@@ -846,9 +846,8 @@ Moira::execChk(u16 opcode)
 
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
-
-    [[maybe_unused]] i64 c = clock;
     u32 ea, data, dy;
+
     if (!readOp<C, M, S, STD_AE_FRAME>(src, ea, data)) return;
     dy = readD<S>(dst);
 
@@ -866,9 +865,7 @@ Moira::execChk(u16 opcode)
         reg.sr.n = NBIT<S>(dy);
         execTrapException(6);
 
-        CYCLES_68000(40 - (int)(clock - c))
-        CYCLES_68010(44 - (int)(clock - c))
-        CYCLES_68020(40 - (int)(clock - c))
+        CYCLES(40, 44, 40)
         return;
     }
 
@@ -878,9 +875,7 @@ Moira::execChk(u16 opcode)
         reg.sr.n = MIMIC_MUSASHI ? NBIT<S>(dy) : 1;
         execTrapException(6);
 
-        CYCLES_68000(40 - (int)(clock - c))
-        CYCLES_68010(44 - (int)(clock - c))
-        CYCLES_68020(40 - (int)(clock - c))
+        CYCLES(40, 44, 40)
         return;
     }
 
@@ -905,10 +900,9 @@ Moira::execChk2(u16 opcode)
     u32 ext = queue.irc;
     int src = _____________xxx(opcode);
     int dst = xxxx____________(ext);
+    u32 ea, data1, data2;
 
     readExt<C>();
-
-    u32 ea, data1, data2;
 
     if (!readOp <C,M,S> (src, ea, data1)) return;
     data2 = readM <C,M,S> (ea + S);
@@ -929,7 +923,7 @@ Moira::execChk2(u16 opcode)
 
         printf("Moira: execTrapException\n");
         execTrapException<C>(6);
-        CYCLES_68020(0);
+        CYCLES_68020(40)
         return;
     }
 
