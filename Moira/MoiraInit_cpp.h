@@ -642,7 +642,7 @@ Moira::createJumpTable()
     if (core >= M68020) {
 
         opcode = parse("0000 0110 11-- ----");
-        __________MMMXXX(opcode, CALLM, 0b001001111110, Byte, Callm, CIMS)
+        __________MMMXXX(opcode, CALLM, 0b001001111110, Long, Callm, CIMS)
     }
 
 

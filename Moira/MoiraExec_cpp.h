@@ -742,7 +742,8 @@ Moira::execBitImEa(u16 opcode)
             [[maybe_unused]] auto cycles = cyclesBit <C,I> (src);
             SYNC(cycles);
             if (I != BTST) writeD(dst, data);
-            CYCLES(8 + cycles, 8 + cycles, 6 + cycles)
+
+            CYCLES(8 + cycles, 8 + cycles, 4)
             break;
         }
         default:
@@ -759,15 +760,15 @@ Moira::execBitImEa(u16 opcode)
     }
 
     auto c = I == BTST ? 0 : 4;
-    CYCLES_AI   (12 + c, 12 + c,  0,     0,  0,  0,     0,  0,  0)
-    CYCLES_PD   (14 + c, 14 + c,  0,     0,  0,  0,     0,  0,  0)
-    CYCLES_PI   (12 + c, 12 + c,  0,     0,  0,  0,     0,  0,  0)
-    CYCLES_DI   (16 + c, 16 + c,  0,     0,  0,  0,     0,  0,  0)
-    CYCLES_IX   (18 + c, 18 + c,  0,     0,  0,  0,     0,  0,  0)
-    CYCLES_AW   (16 + c, 16 + c,  0,     0,  0,  0,     0,  0,  0)
-    CYCLES_AL   (20 + c, 20 + c,  0,     0,  0,  0,     0,  0,  0)
-    CYCLES_DIPC (16 + c, 16 + c,  0,     0,  0,  0,     0,  0,  0)
-    CYCLES_IXPC (18 + c, 18 + c,  0,     0,  0,  0,     0,  0,  0)
+    CYCLES_AI   (12 + c, 12 + c,  8,     0,  0,  0,     0,  0,  0)
+    CYCLES_PD   (14 + c, 14 + c,  9,     0,  0,  0,     0,  0,  0)
+    CYCLES_PI   (12 + c, 12 + c,  8,     0,  0,  0,     0,  0,  0)
+    CYCLES_DI   (16 + c, 16 + c,  9,     0,  0,  0,     0,  0,  0)
+    CYCLES_IX   (18 + c, 18 + c, 11,     0,  0,  0,     0,  0,  0)
+    CYCLES_AW   (16 + c, 16 + c,  8,     0,  0,  0,     0,  0,  0)
+    CYCLES_AL   (20 + c, 20 + c,  8,     0,  0,  0,     0,  0,  0)
+    CYCLES_DIPC (16 + c, 16 + c,  9,     0,  0,  0,     0,  0,  0)
+    CYCLES_IXPC (18 + c, 18 + c, 11,     0,  0,  0,     0,  0,  0)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -826,8 +827,23 @@ Moira::execBsr(u16 opcode)
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execCallm(u16 opcode)
 {
-    // TODO
+    EXEC_DEBUG(C,I,M,S)
+
+    int dst = ( _____________xxx(opcode) );
+    u32 ea, data;
+
+    if (!readOp<C, M, Byte>(dst, ea, data)) return;
+    readExt<C>();
     prefetch <C,POLLIPL> ();
+
+    auto p = cyclePenalty<C,M,S>(_ext);
+    CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 64 + p)
+    CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 65 + p)
+    CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 67 + p)
+    CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 64 + p)
+    CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 64 + p)
+    CYCLES_DIPC ( 0,  0,  0,     0,  0,  0,     0,  0, 65 + p)
+    CYCLES_IXPC ( 0,  0,  0,     0,  0,  0,     0,  0, 67 + p)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -3068,6 +3084,8 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execRtm(u16 opcode)
 {
     fullPrefetch <C, POLLIPL> ();
+
+    CYCLES_68020(19)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
