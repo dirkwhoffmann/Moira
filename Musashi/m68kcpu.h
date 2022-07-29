@@ -1331,19 +1331,21 @@ static inline uint m68ki_get_ea_ix(uint An)
 	/* Check if index is present */
 	if(!BIT_6(extension))               /* IS */
 	{
-        printf("Musashi: (2)\n");
 		Xn = REG_DA[extension>>12];     /* Xn */
+        printf("Musashi: (2) Xn = %x\n", Xn);
         if(!BIT_B(extension)) {          /* W/L */
-            printf("Musashi: (3)\n");
 			Xn = MAKE_INT_16(Xn);
+            printf("Musashi: (3) Xn = %x\n", Xn);
         }
 		Xn <<= (extension>>9) & 3;      /* SCALE */
+        printf("Musashi: Scaled: Xn = %x\n", Xn);
 	}
 
 	/* Check if base displacement is present */
     if(BIT_5(extension)) {               /* BD SIZE */
         printf("Musashi: (4)\n");
         bd = BIT_4(extension) ? m68ki_read_imm_32() : (uint32)MAKE_INT_16(m68ki_read_imm_16());
+        printf("bd = %x\n", bd);
     }
 
 	/* If no indirect action, we are done */
@@ -1356,12 +1358,14 @@ static inline uint m68ki_get_ea_ix(uint An)
     if(BIT_1(extension)) {               /* I/IS:  od */
         printf("Musashi: (6)\n");
         od = BIT_0(extension) ? m68ki_read_imm_32() : (uint32)MAKE_INT_16(m68ki_read_imm_16());
+        printf("od = %x\n", od);
     }
 
 	/* Postindex */
     if(BIT_2(extension)) {                /* I/IS:  0 = preindex, 1 = postindex */
-        printf("Musashi: (7)\n");
-        return m68ki_read_32(An + bd) + Xn + od;
+        uint result = m68ki_read_32(An + bd) + Xn + od;
+        printf("Musashi: (7) result = %x\n", result);
+        return result;
     }
 
 	/* Preindex */

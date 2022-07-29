@@ -683,7 +683,9 @@ Moira::execBitDxEa(u16 opcode)
             SYNC(cycles);
             if (I != BTST) writeD(dst, data);
 
-            CYCLES(4 + cycles, 4 + cycles, 2 + cycles);
+            CYCLES_68000(4 + cycles);
+            CYCLES_68010(4 + cycles);
+            CYCLES_68020(I == BCHG ? 4 : 4);
             break;
         }
         default:

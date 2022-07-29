@@ -242,13 +242,14 @@ Moira::computeEAfe(u32 an)
     /* Check if index is present */
     if(!(extension & 0x40))
     {
-        printf("Moira: (2)\n");
         xn = readR(extension>>12);     /* Xn */
+        printf("Moira: (2) xn = %x\n", xn);
         if(!(extension & 0x800)) {     /* W/L */
-            printf("Moira: (3)\n");
             xn = SEXT<Word>(xn);
+            printf("Moira: (3) xn = %x\n", xn);
         }
         xn <<= (extension>>9) & 3;      /* SCALE */
+        printf("Moira: Scaled: xn = %x\n", xn);
     }
 
     /* Check if base displacement is present */
@@ -260,10 +261,13 @@ Moira::computeEAfe(u32 an)
             readExt<C>();
             bd |= queue.irc;
             readExt<C>();
+            printf("bd = %x\n", bd);
         } else {
             printf("Moira: (4.2)\n");
             bd = queue.irc;
             readExt<C>();
+            printf("bd = %x\n", bd);
+
         }
     }
 
@@ -282,17 +286,20 @@ Moira::computeEAfe(u32 an)
             readExt<C>();
             od |= queue.irc;
             readExt<C>();
+            printf("od = %x\n", od);
         } else {
             printf("Moira: (6.2)\n");
             od = queue.irc;
             readExt<C>();
+            printf("od = %x\n", od);
         }
     }
 
     /* Postindex */
     if (extension & 0x4) {   /* I/IS:  0 = preindex, 1 = postindex */
-        printf("Moira: (7)\n");
-        return readM<C,M,S>(an + bd) + xn + od;
+        u32 result = readM<C,M,Long>(an + bd) + xn + od;
+        printf("Moira: (7) result = %x\n", result);
+        return result;
     }
 
     /* Preindex */
