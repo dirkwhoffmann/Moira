@@ -39,8 +39,8 @@ extern "C" {
 
 #include "m68k.h"
 
+#include <stdio.h>
 #include <limits.h>
-
 #include <setjmp.h>
 
 /* ======================================================================== */
@@ -1304,6 +1304,7 @@ static inline uint m68ki_get_ea_ix(uint An)
 	/* Brief extension format */
 	if(!BIT_8(extension))
 	{
+        printf("Musashi: Brief extension format\n");
 		/* Calculate index */
 		Xn = REG_DA[extension>>12];     /* Xn */
 		if(!BIT_B(extension))           /* W/L */
@@ -1318,38 +1319,53 @@ static inline uint m68ki_get_ea_ix(uint An)
 
 	/* Full extension format */
 
+    printf("Musashi: Full extension format\n");
 	USE_CYCLES(m68ki_ea_idx_cycle_table[extension&0x3f]);
 
 	/* Check if base register is present */
-	if(BIT_7(extension))                /* BS */
-		An = 0;                         /* An */
+    if(BIT_7(extension)) {                /* BS */
+        printf("Musashi: (1)\n");
+        An = 0;                         /* An */
+    }
 
 	/* Check if index is present */
 	if(!BIT_6(extension))               /* IS */
 	{
+        printf("Musashi: (2)\n");
 		Xn = REG_DA[extension>>12];     /* Xn */
-		if(!BIT_B(extension))           /* W/L */
+        if(!BIT_B(extension)) {          /* W/L */
+            printf("Musashi: (3)\n");
 			Xn = MAKE_INT_16(Xn);
+        }
 		Xn <<= (extension>>9) & 3;      /* SCALE */
 	}
 
 	/* Check if base displacement is present */
-	if(BIT_5(extension))                /* BD SIZE */
-		bd = BIT_4(extension) ? m68ki_read_imm_32() : (uint32)MAKE_INT_16(m68ki_read_imm_16());
+    if(BIT_5(extension)) {               /* BD SIZE */
+        printf("Musashi: (4)\n");
+        bd = BIT_4(extension) ? m68ki_read_imm_32() : (uint32)MAKE_INT_16(m68ki_read_imm_16());
+    }
 
 	/* If no indirect action, we are done */
-	if(!(extension&7))                  /* No Memory Indirect */
-		return An + bd + Xn;
+    if(!(extension&7)) {                 /* No Memory Indirect */
+        printf("Musashi: (5)\n");
+        return An + bd + Xn;
+    }
 
 	/* Check if outer displacement is present */
-	if(BIT_1(extension))                /* I/IS:  od */
-		od = BIT_0(extension) ? m68ki_read_imm_32() : (uint32)MAKE_INT_16(m68ki_read_imm_16());
+    if(BIT_1(extension)) {               /* I/IS:  od */
+        printf("Musashi: (6)\n");
+        od = BIT_0(extension) ? m68ki_read_imm_32() : (uint32)MAKE_INT_16(m68ki_read_imm_16());
+    }
 
 	/* Postindex */
-	if(BIT_2(extension))                /* I/IS:  0 = preindex, 1 = postindex */
-		return m68ki_read_32(An + bd) + Xn + od;
+    if(BIT_2(extension)) {                /* I/IS:  0 = preindex, 1 = postindex */
+        printf("Musashi: (7)\n");
+        return m68ki_read_32(An + bd) + Xn + od;
+    }
 
 	/* Preindex */
+    printf("Musashi: (8)\n");
 	return m68ki_read_32(An + bd + Xn) + od;
 }
 

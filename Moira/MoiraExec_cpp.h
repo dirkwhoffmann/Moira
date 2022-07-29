@@ -702,16 +702,19 @@ Moira::execBitDxEa(u16 opcode)
 
             auto c = I == BTST ? 0 : 4;
             if constexpr (I == BCLR && C == M68010) c += 2;
-            CYCLES_AI   ( 8 + c,  8 + c,  6,     0,  0,  0,     0,  0,  0)
-            CYCLES_PD   (10 + c, 10 + c,  9,     0,  0,  0,     0,  0,  0)
-            CYCLES_PI   ( 8 + c,  8 + c,  8,     0,  0,  0,     0,  0,  0)
-            CYCLES_DI   (12 + c, 12 + c,  9,     0,  0,  0,     0,  0,  0)
-            CYCLES_IX   (14 + c, 14 + c, 11,     0,  0,  0,     0,  0,  0)
-            CYCLES_AW   (12 + c, 12 + c,  8,     0,  0,  0,     0,  0,  0)
-            CYCLES_AL   (16 + c, 16 + c,  8,     0,  0,  0,     0,  0,  0)
-            CYCLES_DIPC (12 + c, 12 + c,  9,     0,  0,  0,     0,  0,  0)
-            CYCLES_IXPC (14 + c, 14 + c, 11,     0,  0,  0,     0,  0,  0)
-            CYCLES_IM   ( 8 + c,  8 + c,  6,     0,  0,  0,     0,  0,  0)
+            printf("Penalty c = %d\n", c);
+            auto p = cyclePenalty<C,M,S>(_ext);
+            printf("68020 penalty = %d\n", p);
+            CYCLES_AI   ( 8 + c,  8 + c,  8 + p,     0,  0,  0,     0,  0,  0)
+            CYCLES_PD   (10 + c, 10 + c,  9 + p,     0,  0,  0,     0,  0,  0)
+            CYCLES_PI   ( 8 + c,  8 + c,  8 + p,     0,  0,  0,     0,  0,  0)
+            CYCLES_DI   (12 + c, 12 + c,  9 + p,     0,  0,  0,     0,  0,  0)
+            CYCLES_IX   (14 + c, 14 + c, 11 + p,     0,  0,  0,     0,  0,  0)
+            CYCLES_AW   (12 + c, 12 + c,  8 + p,     0,  0,  0,     0,  0,  0)
+            CYCLES_AL   (16 + c, 16 + c,  8 + p,     0,  0,  0,     0,  0,  0)
+            CYCLES_DIPC (12 + c, 12 + c,  9 + p,     0,  0,  0,     0,  0,  0)
+            CYCLES_IXPC (14 + c, 14 + c, 11 + p,     0,  0,  0,     0,  0,  0)
+            CYCLES_IM   ( 8 + c,  8 + c,  6 + p,     0,  0,  0,     0,  0,  0)
         }
     }
 }
@@ -2261,7 +2264,7 @@ Moira::execMovepDxEa(u16 opcode)
     }
     prefetch <C,POLLIPL> ();
 
-    CYCLES_DI (16, 16, 11,      16, 16, 11,     24, 24, 17)
+    CYCLES_DI ( 0,  0,  0,      16, 16, 11,     24, 24, 17)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -2279,22 +2282,22 @@ Moira::execMovepEaDx(u16 opcode)
 
         case Long:
         {
-            dx |= readMS <C,MEM_DATA,Byte> (ea) << 24; ea += 2;
-            dx |= readMS <C,MEM_DATA,Byte> (ea) << 16; ea += 2;
+            dx |= readMS<C,MEM_DATA,Byte>(ea) << 24; ea += 2;
+            dx |= readMS<C,MEM_DATA,Byte>(ea) << 16; ea += 2;
             [[fallthrough]];
         }
         case Word:
         {
-            dx |= readMS <C,MEM_DATA,Byte> (ea) << 8; ea += 2;
+            dx |= readMS<C,MEM_DATA,Byte>(ea) << 8; ea += 2;
             pollIpl();
-            dx |= readMS <C,MEM_DATA,Byte> (ea) << 0;
+            dx |= readMS<C,MEM_DATA,Byte>(ea) << 0;
         }
 
     }
-    writeD <S> (dst, dx);
-    prefetch <C> ();
+    writeD<S>(dst, dx);
+    prefetch<C>();
 
-    CYCLES_DI (16, 16, 11,      16, 16, 11,     24, 24, 17)
+    CYCLES_DI ( 0,  0,  0,      16, 16, 12,     24, 24, 18)
 }
 
 template <Core C, Instr I, Mode M, Size S> void

@@ -126,6 +126,16 @@ Moira::computeEA(u32 n) {
         }
         case 6: // (d,An,Xi)
         {
+            if constexpr (C == M68020) {
+
+                if (queue.irc & 0x100) {
+                    result = computeEAfe<C,M,S>(readA(n));
+                } else {
+                    result = computeEAbe<C,M,S>(readA(n));
+                }
+                break;
+            }
+
             i8   d = (i8)queue.irc;
             u32 an = readA(n);
             u32 xi = readR((queue.irc >> 12) & 0b1111);
@@ -160,6 +170,16 @@ Moira::computeEA(u32 n) {
         }
         case 10: // (d,PC,Xi)
         {
+            if constexpr (C == M68020) {
+
+                if (queue.irc & 0x100) {
+                    result = computeEAfe<C,M,S>(reg.pc);
+                } else {
+                    result = computeEAbe<C,M,S>(reg.pc);
+                }
+                break;
+            }
+
             i8   d = (i8)queue.irc;
             u32 xi = readR((queue.irc >> 12) & 0b1111);
             
@@ -179,6 +199,105 @@ Moira::computeEA(u32 n) {
         }
     }
     return result;
+}
+
+template <Core C, Mode M, Size S, Flags F> u32
+Moira::computeEAbe(u32 an)
+{
+    i32 result;
+
+    printf("Moira: computeEAbe\n");
+
+    i8   d = (i8)queue.irc;
+    u32 xi = readR((queue.irc >> 12) & 0b1111);
+    int scale = (queue.irc >> 9) & 0b11;
+    u32 offset = (queue.irc & 0x800) ? xi : SEXT<Word>(xi);
+    offset = u32(offset << scale);
+    result = U32_ADD3(an, d, offset);
+
+    SYNC(2);
+    if ((F & SKIP_LAST_READ) == 0) readExt<C>();
+
+    return result;
+}
+
+template <Core C, Mode M, Size S, Flags F> u32
+Moira::computeEAfe(u32 an)
+{
+    printf("Moira: computeEAfe\n");
+
+    u32 xn = 0;                        /* Index register */
+    u32 bd = 0;                        /* Base Displacement */
+    u32 od = 0;
+
+    u16 extension = queue.irc;
+    readExt<C>();
+
+    /* Check if base register is present */
+    if(extension & 0x80) {                /* BS */
+        printf("Moira: (1)\n");
+        an = 0;                           /* An */
+    }
+
+    /* Check if index is present */
+    if(!(extension & 0x40))
+    {
+        printf("Moira: (2)\n");
+        xn = readR(extension>>12);     /* Xn */
+        if(!(extension & 0x800)) {     /* W/L */
+            printf("Moira: (3)\n");
+            xn = SEXT<Word>(xn);
+        }
+        xn <<= (extension>>9) & 3;      /* SCALE */
+    }
+
+    /* Check if base displacement is present */
+    if (extension & 0x20) {       /* BD SIZE */
+        printf("Moira: (4)\n");
+        if (extension & 0x10) {
+            printf("Moira: (4.1)\n");
+            bd = (queue.irc << 16);
+            readExt<C>();
+            bd |= queue.irc;
+            readExt<C>();
+        } else {
+            printf("Moira: (4.2)\n");
+            bd = queue.irc;
+            readExt<C>();
+        }
+    }
+
+    /* If no indirect action, we are done */
+    if(!(extension & 7)) {                  /* No Memory Indirect */
+        printf("Moira: (5)\n");
+        return an + bd + xn;
+    }
+
+    /* Check if outer displacement is present */
+    if(extension & 0x2) {
+        printf("Moira: (6)\n");
+        if (extension & 0x1) {
+            printf("Moira: (6.1)\n");
+            od = (queue.irc << 16);
+            readExt<C>();
+            od |= queue.irc;
+            readExt<C>();
+        } else {
+            printf("Moira: (6.2)\n");
+            od = queue.irc;
+            readExt<C>();
+        }
+    }
+
+    /* Postindex */
+    if (extension & 0x4) {   /* I/IS:  0 = preindex, 1 = postindex */
+        printf("Moira: (7)\n");
+        return readM<C,M,S>(an + bd) + xn + od;
+    }
+
+    /* Preindex */
+    printf("Moira: (8)\n");
+    return readM<C,M,S>(an + bd+ xn) + od;
 }
 
 template <Mode M, Size S> void
@@ -517,4 +636,42 @@ Moira::jumpToVector(int nr)
     if (debugger.catchpointMatches(nr)) catchpointReached(u8(nr));
 
     signalJumpToVector(nr, reg.pc);
+}
+
+template <Core C, Mode M, Size S> int
+Moira::cyclePenalty(u16 ext)
+{
+    if constexpr (C != M68020) return 0;
+    
+    const u8 delay[64] =
+    {
+        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+        0, /* ..01.000 no memory indirect, base NULL             */
+        5, /* ..01..01 memory indirect,    base NULL, outer NULL */
+        7, /* ..01..10 memory indirect,    base NULL, outer 16   */
+        7, /* ..01..11 memory indirect,    base NULL, outer 32   */
+        0,  5,  7,  7,  0,  5,  7,  7,  0,  5,  7,  7,
+        2, /* ..10.000 no memory indirect, base 16               */
+        7, /* ..10..01 memory indirect,    base 16,   outer NULL */
+        9, /* ..10..10 memory indirect,    base 16,   outer 16   */
+        9, /* ..10..11 memory indirect,    base 16,   outer 32   */
+        0,  7,  9,  9,  0,  7,  9,  9,  0,  7,  9,  9,
+        6, /* ..11.000 no memory indirect, base 32               */
+        11, /* ..11..01 memory indirect,    base 32,   outer NULL */
+        13, /* ..11..10 memory indirect,    base 32,   outer 16   */
+        13, /* ..11..11 memory indirect,    base 32,   outer 32   */
+        0, 11, 13, 13,  0, 11, 13, 13,  0, 11, 13, 13
+    };
+
+    switch (M) {
+
+        case MODE_IX:
+        case MODE_IXPC:
+
+            return delay[ext & 0x3F];
+
+        default:
+
+            return 0;
+    }
 }

@@ -995,6 +995,7 @@ int m68k_execute(int num_cycles)
 			/* Read an instruction and call its handler */
 			REG_IR = m68ki_read_imm_16();
 			m68ki_instruction_jump_table[REG_IR]();
+            printf("REG_IR = %x cycles = %d\n", REG_IR, CYC_INSTRUCTION[REG_IR]);
 			USE_CYCLES(CYC_INSTRUCTION[REG_IR]);
 
 			/* Trace m68k_exception, if necessary */
