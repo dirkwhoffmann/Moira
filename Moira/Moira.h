@@ -180,6 +180,9 @@ protected:
     // Remembers the number of the last processed exception
     int exception;
 
+    // EXPERIMENTAL (Cycle penalty)
+    int cp;
+
     // Jump table holding the instruction handlers
     typedef void (Moira::*ExecPtr)(u16);
     ExecPtr exec[65536];

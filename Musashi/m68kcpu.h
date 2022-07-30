@@ -1304,7 +1304,7 @@ static inline uint m68ki_get_ea_ix(uint An)
 	/* Brief extension format */
 	if(!BIT_8(extension))
 	{
-        printf("Musashi: Brief extension format\n");
+        printf("Musashi: Brief extension format (%x)\n", extension);
 		/* Calculate index */
 		Xn = REG_DA[extension>>12];     /* Xn */
 		if(!BIT_B(extension))           /* W/L */
@@ -1319,7 +1319,7 @@ static inline uint m68ki_get_ea_ix(uint An)
 
 	/* Full extension format */
 
-    printf("Musashi: Full extension format\n");
+    printf("Musashi: Full extension format (%x, penalty cycles: %d)\n", extension, m68ki_ea_idx_cycle_table[extension&0x3f]);
 	USE_CYCLES(m68ki_ea_idx_cycle_table[extension&0x3f]);
 
 	/* Check if base register is present */

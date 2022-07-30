@@ -74,6 +74,7 @@
  */
 #define EXEC_DEBUG(C,I,M,S) \
 execDebug(__func__, C, I, M, S); \
-[[maybe_unused]] auto _ext = queue.irc;
+[[maybe_unused]] auto _ext = queue.irc; \
+cp = 0;
 
 #define NDEBUG true

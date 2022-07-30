@@ -18494,7 +18494,9 @@ static void m68k_op_move_8_ix_pd7(void)
 
 static void m68k_op_move_8_ix_di(void)
 {
+    printf("m68k_op_move_8_ix_di: Calling OPER_AY_DI_8");
 	uint res = OPER_AY_DI_8();
+    printf("m68k_op_move_8_ix_di: Calling EA_AX_IX_8");
 	uint ea = EA_AX_IX_8();
 
 	m68ki_write_8(ea, res);

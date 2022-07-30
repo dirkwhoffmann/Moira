@@ -128,6 +128,7 @@ Moira::computeEA(u32 n) {
         {
             if constexpr (C == M68020) {
 
+                printf("compteEA: irc = %x\n", queue.irc);
                 if (queue.irc & 0x100) {
                     result = computeEAfe<C,M,S>(readA(n));
                 } else {
@@ -206,7 +207,7 @@ Moira::computeEAbe(u32 an)
 {
     i32 result;
 
-    printf("Moira: computeEAbe\n");
+    printf("Moira: computeEAbe (%x)\n", queue.irc);
 
     i8   d = (i8)queue.irc;
     u32 xi = readR((queue.irc >> 12) & 0b1111);
@@ -224,13 +225,17 @@ Moira::computeEAbe(u32 an)
 template <Core C, Mode M, Size S, Flags F> u32
 Moira::computeEAfe(u32 an)
 {
-    printf("Moira: computeEAfe\n");
+    printf("Moira: computeEAfe<%d,%d,%d> (%x)\n", C, M, S, queue.irc);
 
     u32 xn = 0;                        /* Index register */
     u32 bd = 0;                        /* Base Displacement */
     u32 od = 0;
 
     u16 extension = queue.irc;
+
+    // EXPERIMENTAL
+    cp += cyclePenalty<C, M, S>(extension);
+
     readExt<C>();
 
     /* Check if base register is present */
@@ -649,7 +654,11 @@ template <Core C, Mode M, Size S> int
 Moira::cyclePenalty(u16 ext)
 {
     if constexpr (C != M68020) return 0;
-    
+
+    if ((ext & 0x100) == 0) {
+        printf("cyclePenalty(%x): 0 (brief extension format)\n", ext);
+        return 0; // Brief extension format
+    }
     const u8 delay[64] =
     {
         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -675,6 +684,7 @@ Moira::cyclePenalty(u16 ext)
         case MODE_IX:
         case MODE_IXPC:
 
+            printf("cyclePenalty(%x): %d\n", ext, delay[ext & 0x3F]);
             return delay[ext & 0x3F];
 
         default:

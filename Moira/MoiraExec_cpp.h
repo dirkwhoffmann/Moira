@@ -865,7 +865,7 @@ Moira::execCas(u16 opcode)
 
     // Set flags
     cmp <C,S> (CLIP<S>(compare), data);
-    
+
     printf("Moira: dst = %d dc = %d ext = %x data = %x compare = %x diff = %x n = %d z = %d v = %d c = %d\n", dst, dc, _ext, data, compare, diff, reg.sr.n, reg.sr.z, reg.sr.v, reg.sr.c);
     if (!reg.sr.z) {
 
@@ -1737,17 +1737,18 @@ Moira::execMove0(u16 opcode)
 
     prefetch <C,POLLIPL> ();
 
+    auto p = cyclePenalty<C,M,S>(_ext);
     CYCLES_DN   ( 4,  4,  2,       4,  4,  2,      4,  4,  2)
     CYCLES_AN   ( 4,  4,  2,       4,  4,  2,      4,  4,  2)
     CYCLES_AI   ( 8,  8,  6,       8,  8,  6,     12, 12,  6)
     CYCLES_PI   ( 8,  8,  6,       8,  8,  6,     12, 12,  6)
     CYCLES_PD   (10, 10,  7,      10, 10,  7,     14, 14,  7)
     CYCLES_DI   (12, 12,  7,      12, 12,  7,     16, 16,  7)
-    CYCLES_IX   (14, 14,  9,      14, 14,  9,     18, 18,  9)
+    CYCLES_IX   (14, 14,  9+p,    14, 14,  9+p,   18, 18,  9+p)
     CYCLES_AW   (12, 12,  6,      12, 12,  6,     16, 16,  6)
     CYCLES_AL   (16, 16,  6,      16, 16,  6,     20, 20,  6)
     CYCLES_DIPC (12, 12,  7,      12, 12,  7,     16, 16,  7)
-    CYCLES_IXPC (14, 14,  9,      14, 14,  9,     18, 18,  9)
+    CYCLES_IXPC (14, 14,  9+p,    14, 14,  9+p,   18, 18,  9+p)
     CYCLES_IM   ( 8,  8,  4,       8,  8,  4,     12, 12,  6)
 }
 
@@ -1789,17 +1790,18 @@ Moira::execMove2(u16 opcode)
         looping<I>() ? noPrefetch() : prefetch <C,POLLIPL> ();
     }
 
+    auto p = cyclePenalty<C,M,S>(_ext);
     CYCLES_DN   ( 8,  8,  4,       8,  8,  4,     12, 12,  4)
     CYCLES_AN   ( 8,  8,  4,       8,  8,  4,     12, 12,  4)
     CYCLES_AI   (12, 12,  8,      12, 12,  8,     20, 20,  8)
     CYCLES_PI   (12, 12,  8,      12, 12,  8,     20, 20,  8)
     CYCLES_PD   (14, 14,  9,      14, 14,  9,     22, 22,  9)
     CYCLES_DI   (16, 16,  9,      16, 16,  9,     24, 24,  9)
-    CYCLES_IX   (18, 18, 11,      18, 18, 11,     26, 26, 11)
+    CYCLES_IX   (18, 18, 11+p,    18, 18, 11+p,   26, 26, 11+p)
     CYCLES_AW   (16, 16,  8,      16, 16,  8,     24, 24,  8)
     CYCLES_AL   (20, 20,  8,      20, 20,  8,     28, 28,  8)
     CYCLES_DIPC (16, 16,  9,      16, 16,  9,     24, 24,  9)
-    CYCLES_IXPC (18, 18, 11,      18, 18, 11,     26, 26, 11)
+    CYCLES_IXPC (18, 18, 11+p,    18, 18, 11+p,   26, 26, 11+p)
     CYCLES_IM   (12, 12,  6,      12, 12,  6,     20, 20,  8)
 }
 
@@ -1841,17 +1843,18 @@ Moira::execMove3(u16 opcode)
         looping<I>() ? noPrefetch() : prefetch <C> ();
     }
 
+    auto p = cyclePenalty<C,M,S>(_ext);
     CYCLES_DN   ( 8,  8,  4,       8,  8,  4,     12, 12,  4)
     CYCLES_AN   ( 8,  8,  4,       8,  8,  4,     12, 12,  4)
     CYCLES_AI   (12, 12,  8,      12, 12,  8,     20, 20,  8)
     CYCLES_PI   (12, 12,  8,      12, 12,  8,     20, 20,  8)
     CYCLES_PD   (14, 14,  9,      14, 14,  9,     22, 22,  9)
     CYCLES_DI   (16, 16,  9,      16, 16,  9,     24, 24,  9)
-    CYCLES_IX   (18, 18, 11,      18, 18, 11,     26, 26, 11)
+    CYCLES_IX   (18, 18, 11+p,    18, 18, 11+p,   26, 26, 11+p)
     CYCLES_AW   (16, 16,  8,      16, 16,  8,     24, 24,  8)
     CYCLES_AL   (20, 20,  8,      20, 20,  8,     28, 28,  8)
     CYCLES_DIPC (16, 16,  9,      16, 16,  9,     24, 24,  9)
-    CYCLES_IXPC (18, 18, 11,      18, 18, 11,     26, 26, 11)
+    CYCLES_IXPC (18, 18, 11+p,    18, 18, 11+p,   26, 26, 11+p)
     CYCLES_IM   (12, 12,  6,      12, 12,  6,     20, 20,  8)
 }
 
@@ -1905,18 +1908,19 @@ Moira::execMove4(u16 opcode)
     writeM <C, MODE_PD, S, REVERSE> (ea, data);
     updateAn <MODE_PD, S> (dst);
 
-    CYCLES_DN   ( 8,  8,  4,       8,  8,  4,     12, 14,  4)
-    CYCLES_AN   ( 8,  8,  4,       8,  8,  4,     12, 14,  4)
-    CYCLES_AI   (12, 12,  8,      12, 12,  8,     20, 22,  8)
-    CYCLES_PI   (12, 12,  8,      12, 12,  8,     20, 22,  8)
-    CYCLES_PD   (14, 14,  9,      14, 14,  9,     22, 24,  9)
-    CYCLES_DI   (16, 16,  9,      16, 16,  9,     24, 26,  9)
-    CYCLES_IX   (18, 18, 11,      18, 18, 11,     26, 28, 11)
+    auto p = cyclePenalty<C,M,S>(_ext);
+    CYCLES_DN   ( 8,  8,  5,       8,  8,  5,     12, 14,  5)
+    CYCLES_AN   ( 0,  0,  0,       8,  8,  5,     12, 14,  5)
+    CYCLES_AI   (12, 12,  9,      12, 12,  9,     20, 22,  9)
+    CYCLES_PI   (12, 12,  9,      12, 12,  9,     20, 22,  9)
+    CYCLES_PD   (14, 14, 10,      14, 14, 10,     22, 24, 10)
+    CYCLES_DI   (16, 16, 10,      16, 16, 10,     24, 26, 10)
+    CYCLES_IX   (18, 18, 12+p,    18, 18, 12+p,   26, 28, 12+p)
     CYCLES_AW   (16, 16,  9,      16, 16,  9,     24, 26,  8)
     CYCLES_AL   (20, 20,  9,      20, 20,  9,     28, 30,  8)
-    CYCLES_DIPC (16, 16,  9,      16, 16,  9,     24, 26,  9)
-    CYCLES_IXPC (18, 18, 10,      18, 18, 10,     26, 28, 10)
-    CYCLES_IM   (12, 12, 12,      12, 12, 12,     20, 22, 12)
+    CYCLES_DIPC (16, 16, 10,      16, 16, 10,     24, 26, 10)
+    CYCLES_IXPC (18, 18, 12+p,    18, 18, 12+p,   26, 28, 12+p)
+    CYCLES_IM   (12, 12,  7,      12, 12,  7,     20, 22,  7)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1957,17 +1961,18 @@ Moira::execMove5(u16 opcode)
         prefetch <C,POLLIPL> ();
     }
 
+    auto p = cyclePenalty<C,M,S>(_ext);
     CYCLES_DN   (12, 12,  5,      12, 12,  5,     16, 16,  5)
     CYCLES_AN   (12, 12,  5,      12, 12,  5,     16, 16,  5)
     CYCLES_AI   (16, 16,  9,      16, 16,  9,     24, 24,  9)
     CYCLES_PI   (16, 16,  9,      16, 16,  9,     24, 24,  9)
     CYCLES_PD   (18, 18, 10,      18, 18, 10,     26, 26, 10)
     CYCLES_DI   (20, 20, 10,      20, 20, 10,     28, 28, 10)
-    CYCLES_IX   (22, 22, 12,      22, 22, 12,     30, 30, 12)
+    CYCLES_IX   (22, 22, 12+p,    22, 22, 12+p,   30, 30, 12+p)
     CYCLES_AW   (20, 20,  9,      20, 20,  9,     28, 28,  9)
     CYCLES_AL   (24, 24,  9,      24, 24,  9,     32, 32,  9)
     CYCLES_DIPC (20, 20, 10,      20, 20, 10,     28, 28, 10)
-    CYCLES_IXPC (22, 22, 12,      22, 22, 12,     30, 30, 12)
+    CYCLES_IXPC (22, 22, 12+p,    22, 22, 12+p,   30, 30, 12+p)
     CYCLES_IM   (16, 16,  7,      16, 16,  7,     24, 24,  9)
 }
 
@@ -1983,12 +1988,16 @@ Moira::execMove6(u16 opcode)
 
     if (!readOp <C, M, S, STD_AE_FRAME> (src, ea, data)) return;
 
+    u16 ext2 = queue.irc;
+    u16 ext3 = 0;
+
     if constexpr (S == Long && !isMemMode(M)) {
 
         reg.sr.n = NBIT<Word>(data >> 16);
         reg.sr.z = ZERO<Word>(data >> 16) && reg.sr.z;
 
         if (!writeOp <C, MODE_IX, S, POLLIPL> (dst, data)) return;
+        ext3 = queue.irc;
 
         reg.sr.n = NBIT<S>(data);
         reg.sr.z = ZERO<S>(data);
@@ -2006,21 +2015,28 @@ Moira::execMove6(u16 opcode)
 
         if (!writeOp <C, MODE_IX, S> (dst, data)) return;
 
+        ext3 = queue.irc;
+
         prefetch <C,POLLIPL> ();
     }
 
-    CYCLES_DN   (14, 14,  7,      14, 14,  7,     18, 18,  7)
-    CYCLES_AN   (14, 14,  7,      14, 14,  7,     18, 18,  7)
-    CYCLES_AI   (18, 18, 11,      18, 18, 11,     26, 26, 11)
-    CYCLES_PI   (18, 18, 11,      18, 18, 11,     26, 26, 11)
-    CYCLES_PD   (20, 20, 12,      20, 20, 12,     28, 28, 12)
-    CYCLES_DI   (22, 22, 12,      22, 22, 12,     30, 30, 12)
-    CYCLES_IX   (24, 24, 14,      24, 24, 14,     32, 32, 14)
-    CYCLES_AW   (22, 22, 11,      22, 22, 11,     30, 30, 11)
-    CYCLES_AL   (26, 26, 11,      26, 26, 11,     34, 34, 11)
-    CYCLES_DIPC (22, 22, 12,      22, 22, 12,     30, 30, 12)
-    CYCLES_IXPC (24, 24, 14,      24, 24, 14,     32, 32, 14)
-    CYCLES_IM   (18, 18,  9,      18, 18,  9,     26, 26, 11)
+    auto p = cyclePenalty <C,MODE_IX,S> (ext2);
+    auto p2 = cyclePenalty <C,M,S> (ext3);
+    printf("Move 6 penalties = %d/%d (ext = %x ext2 = %x ext3 = %x)\n", p, p2, _ext, ext2, ext3);
+    printf("Moira: cyclePenalty = %d\n", cp);
+
+    CYCLES_DN   (14, 14,  7+cp,    14, 14,  7+cp,   18, 18,  7+cp)
+    CYCLES_AN   (14, 14,  7+cp,    14, 14,  7+cp,   18, 18,  7+cp)
+    CYCLES_AI   (18, 18, 11+cp,    18, 18, 11+cp,   26, 26, 11+cp)
+    CYCLES_PI   (18, 18, 11+cp,    18, 18, 11+cp,   26, 26, 11+cp)
+    CYCLES_PD   (20, 20, 12+cp,    20, 20, 12+cp,   28, 28, 12+cp)
+    CYCLES_DI   (22, 22, 12+cp,    22, 22, 12+cp,   30, 30, 12+cp)
+    CYCLES_IX   (24, 24, 14+cp,    24, 24, 14+cp,   32, 32, 14+cp)
+    CYCLES_AW   (22, 22, 11+cp,    22, 22, 11+cp,   30, 30, 11+cp)
+    CYCLES_AL   (26, 26, 11+cp,    26, 26, 11+cp,   34, 34, 11+cp)
+    CYCLES_DIPC (22, 22, 12+cp,    22, 22, 12+cp,   30, 30, 12+cp)
+    CYCLES_IXPC (24, 24, 14+cp,    24, 24, 14+cp,   32, 32, 14+cp)
+    CYCLES_IM   (18, 18,  9+cp,    18, 18,  9+cp,   26, 26, 11+cp)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -2044,17 +2060,18 @@ Moira::execMove7(u16 opcode)
 
     prefetch <C,POLLIPL> ();
 
+    auto p = cyclePenalty<C,M,S>(_ext);
     CYCLES_DN   (12, 12,  4,      12, 12,  4,     16, 16,  4)
     CYCLES_AN   (12, 12,  4,      12, 12,  4,     16, 16,  4)
     CYCLES_AI   (16, 16,  8,      16, 16,  8,     24, 24,  8)
     CYCLES_PI   (16, 16,  8,      16, 16,  8,     24, 24,  8)
     CYCLES_PD   (18, 18,  9,      18, 18,  9,     26, 26,  9)
     CYCLES_DI   (20, 20,  9,      20, 20,  9,     28, 28,  9)
-    CYCLES_IX   (22, 22, 11,      22, 22, 11,     30, 30, 11)
+    CYCLES_IX   (22, 22, 11+p,    22, 22, 11+p,   30, 30, 11+p)
     CYCLES_AW   (20, 20,  8,      20, 20,  8,     28, 28,  8)
     CYCLES_AL   (24, 24,  8,      24, 24,  8,     32, 32,  8)
     CYCLES_DIPC (20, 20,  9,      20, 20,  9,     28, 28,  9)
-    CYCLES_IXPC (22, 22, 11,      22, 22, 11,     30, 30, 11)
+    CYCLES_IXPC (22, 22, 11+p,    22, 22, 11+p,   30, 30, 11+p)
     CYCLES_IM   (16, 16,  6,      16, 16,  6,     24, 24,  8)
 }
 
@@ -2120,17 +2137,18 @@ Moira::execMove8(u16 opcode)
 
     prefetch <C,POLLIPL> ();
 
+    auto p = cyclePenalty<C,M,S>(_ext);
     CYCLES_DN   (16, 16,  6,      16, 16,  6,     20, 20,  6)
     CYCLES_AN   (16, 16,  6,      16, 16,  6,     20, 20,  6)
     CYCLES_AI   (20, 20, 10,      20, 20, 10,     28, 28, 10)
     CYCLES_PI   (20, 20, 10,      20, 20, 10,     28, 28, 10)
     CYCLES_PD   (22, 22, 11,      22, 22, 11,     30, 30, 11)
     CYCLES_DI   (24, 24, 11,      24, 24, 11,     32, 32, 11)
-    CYCLES_IX   (26, 26, 13,      26, 26, 13,     34, 34, 13)
+    CYCLES_IX   (26, 26, 13+p,    26, 26, 13+p,   34, 34, 13+p)
     CYCLES_AW   (24, 24, 10,      24, 24, 10,     32, 32, 10)
     CYCLES_AL   (28, 28, 10,      28, 28, 10,     36, 36, 10)
     CYCLES_DIPC (24, 24, 11,      24, 24, 11,     32, 32, 11)
-    CYCLES_IXPC (26, 26, 13,      26, 26, 13,     34, 34, 13)
+    CYCLES_IXPC (26, 26, 13+p,    26, 26, 13+p,   34, 34, 13+p)
     CYCLES_IM   (20, 20,  8,      20, 20,  8,     28, 28, 10)
 }
 
