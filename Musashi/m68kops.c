@@ -8705,12 +8705,17 @@ static void m68k_op_cas_8_ai(void)
 		FLAG_V = VFLAG_SUB_8(*compare, dest, res);
 		FLAG_C = CFLAG_8(res);
 
-		if(COND_NE())
+        printf("Musashi: rg = %d ext = %x data/dest = %x compare = %x res = %x n = %d z = %d v = %d c = %d\n", word2 & 7, word2, dest, *compare, res, FLAG_N, FLAG_Z, FLAG_V, FLAG_C);
+
+        if(COND_NE()) {
 			*compare = MASK_OUT_BELOW_8(*compare) | dest;
-		else
+            printf("result(COND_NE) = %x\n", *compare);
+        }
+        else
 		{
 			USE_CYCLES(3);
 			m68ki_write_8(ea, MASK_OUT_ABOVE_8(REG_D[(word2 >> 6) & 7]));
+            printf("result: Write %x\n", MASK_OUT_ABOVE_8(REG_D[(word2 >> 6) & 7]));
 		}
 		return;
 	}
@@ -9370,32 +9375,71 @@ static void m68k_op_cas2_16(void)
 		uint dest2 = m68ki_read_16(ea2);
 		uint res2;
 
+        printf("Musashi CAS2: dc1=%d, rn1=%d, dc2=%d, rn2=%d ea1=%x/%x ea2=%x/%x\n",
+               (word2 >> 16) & 7,
+               (word2 >> 28) & 15,
+               word2 & 7,
+               (word2 >> 12) & 15, ea1, dest1, ea2, dest2);
+
+        printf("Musashi CAS2: dest1=%x compare1=%x compare2=%x diff1/res1=%x\n",
+               dest1, *compare1, *compare2, res1);
+
+
 		m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
 		FLAG_N = NFLAG_16(res1);
 		FLAG_Z = MASK_OUT_ABOVE_16(res1);
 		FLAG_V = VFLAG_SUB_16(*compare1, dest1, res1);
 		FLAG_C = CFLAG_16(res1);
 
+        printf("Musashi CAS2: n=%d z=%d v=%d c=%d\n", FLAG_N, FLAG_Z, FLAG_V, FLAG_C);
+
 		if(COND_EQ())
 		{
 			res2 = dest2 - MASK_OUT_ABOVE_16(*compare2);
+
+            printf("Musashi CAS2: diff2/res2=%x\n", res2);
 
 			FLAG_N = NFLAG_16(res2);
 			FLAG_Z = MASK_OUT_ABOVE_16(res2);
 			FLAG_V = VFLAG_SUB_16(*compare2, dest2, res2);
 			FLAG_C = CFLAG_16(res2);
 
+            printf("Musashi CAS2: n=%d z=%d v=%d c=%d\n", FLAG_N, FLAG_Z, FLAG_V, FLAG_C);
+
 			if(COND_EQ())
 			{
 				USE_CYCLES(3);
 				m68ki_write_16(ea1, REG_D[(word2 >> 22) & 7]);
 				m68ki_write_16(ea2, REG_D[(word2 >> 6) & 7]);
+
+                printf("Musashi CAS2: Writing %x %x\n",
+                       REG_D[(word2 >> 22) & 7], REG_D[(word2 >> 6) & 7]);
+
 				return;
 			}
 		}
-		*compare1 = BIT_1F(word2) ? (uint)MAKE_INT_16(dest1) : MASK_OUT_BELOW_16(*compare1) | dest1;
+        if (BIT_1F(word2)) {
+            printf("Musashi: compare1 case 1\n");
+            *compare1 = (uint)MAKE_INT_16(dest1);
+        } else {
+            printf("Musashi: compare1 case 2\n");
+            *compare1 = MASK_OUT_BELOW_16(*compare1) | dest1;
+        }
+        if (BIT_1(word2)) {
+            printf("Musashi: compare2 case 1\n");
+            *compare2 = (uint)MAKE_INT_16(dest2);
+        } else {
+            printf("Musashi: compare2 case 2\n");
+            *compare2 = MASK_OUT_BELOW_16(*compare2) | dest2;
+        }
+/*
+        *compare1 = BIT_1F(word2) ? (uint)MAKE_INT_16(dest1) : MASK_OUT_BELOW_16(*compare1) | dest1;
 		*compare2 = BIT_F(word2) ? (uint)MAKE_INT_16(dest2) : MASK_OUT_BELOW_16(*compare2) | dest2;
-		return;
+*/
+
+        printf("Musashi CAS2: *compare1=%x *compare2=%x\n", *compare1, *compare2);
+
+        return;
 	}
 	m68ki_exception_illegal();
 }
