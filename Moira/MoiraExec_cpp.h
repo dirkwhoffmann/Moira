@@ -958,6 +958,7 @@ Moira::execChk(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
     u32 ea, data, dy;
+    [[maybe_unused]] int c = clock;
 
     if (!readOp<C, M, S, STD_AE_FRAME>(src, ea, data)) return;
     dy = readD<S>(dst);
@@ -970,7 +971,7 @@ Moira::execChk(u16 opcode)
     reg.sr.c = 0;
     reg.sr.n = MIMIC_MUSASHI ? reg.sr.n : 0;
 
-    if ((i16)dy > (i16)data) {
+    if (SEXT<S>(dy) > SEXT<S>(data)) {
 
         SYNC(MIMIC_MUSASHI ? 10 - (int)(clock - c) : 2);
         reg.sr.n = NBIT<S>(dy);
@@ -980,7 +981,7 @@ Moira::execChk(u16 opcode)
         return;
     }
 
-    if ((i16)dy < 0) {
+    if (SEXT<S>(dy) < 0) {
 
         SYNC(MIMIC_MUSASHI ? 10 - (int)(clock - c) : 4);
         reg.sr.n = MIMIC_MUSASHI ? NBIT<S>(dy) : 1;
@@ -1054,7 +1055,7 @@ Moira::execClr(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
-    if constexpr (C == M68000) {
+    if constexpr (C == M68000 || C == M68020) {
 
         int dst = _____________xxx(opcode);
 

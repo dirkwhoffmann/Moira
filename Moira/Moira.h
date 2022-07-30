@@ -30,8 +30,9 @@ namespace moira {
 #define SYNC_68000(x)   if constexpr (C == M68000) sync(x)
 #define SYNC_68010(x)   if constexpr (C == M68010) sync(x)
 
-#define CYCLES(c0,c1,c2)
-#define CYCLES_MBWL(m,b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_68000(c)
+#define CYCLES_68010(c)
+#define CYCLES_68020(c) if constexpr (C == M68020) { sync((c) + cp); }
 
 #else
 
@@ -41,24 +42,20 @@ namespace moira {
 
 #define CYCLES_68000(c) if constexpr (C == M68000) { sync(c); }
 #define CYCLES_68010(c) if constexpr (C == M68010) { sync(c); }
-#define CYCLES_68020(c) if constexpr (C == M68020) { sync(c); }
+#define CYCLES_68020(c) if constexpr (C == M68020) { sync((c) + cp); }
 
-#define CYCLES(c0,c1,c2) \
-CYCLES_68000(c0) \
-CYCLES_68010(c1) \
-CYCLES_68020(c2)
+#endif
 
-#define CYCLES_MBWL_00(m,b,w,l) \
-if constexpr (M == m && C == M68000) { sync(S == Byte ? b : S == Word ? w : l); }
-#define CYCLES_MBWL_10(m,b,w,l) \
-if constexpr (M == m && C == M68010) { sync(S == Byte ? b : S == Word ? w : l); }
-#define CYCLES_MBWL_20(m,b,w,l) \
-if constexpr (M == m && C == M68020) { sync(S == Byte ? b : S == Word ? w : l); }
+#define CYCLES(c0,c1,c2) CYCLES_68000(c0) CYCLES_68010(c1) CYCLES_68020(c2)
+
+#define CYCLES_BWL_00(m,b,w,l) CYCLES_68000(S == Byte ? b : S == Word ? w : l)
+#define CYCLES_BWL_10(m,b,w,l) CYCLES_68010(S == Byte ? b : S == Word ? w : l)
+#define CYCLES_BWL_20(m,b,w,l) CYCLES_68020(S == Byte ? b : S == Word ? w : l)
 
 #define CYCLES_MBWL(m,b0,b1,b2,w0,w1,w2,l0,l1,l2) \
-CYCLES_MBWL_00(m,b0,w0,l0) \
-CYCLES_MBWL_10(m,b1,w1,l1) \
-CYCLES_MBWL_20(m,(b2)+cp,(w2)+cp,(l2)+cp)
+if constexpr (M == m) { CYCLES_BWL_00(m,b0,w0,l0) } \
+if constexpr (M == m) { CYCLES_BWL_10(m,b1,w1,l1) } \
+if constexpr (M == m) { CYCLES_BWL_20(m,b2,w2,l2) }
 
 #define CYCLES_DN(...)      CYCLES_MBWL(MODE_DN,    ##__VA_ARGS__)
 #define CYCLES_AN(...)      CYCLES_MBWL(MODE_AN,    ##__VA_ARGS__)
@@ -73,7 +70,6 @@ CYCLES_MBWL_20(m,(b2)+cp,(w2)+cp,(l2)+cp)
 #define CYCLES_IXPC(...)    CYCLES_MBWL(MODE_IXPC,  ##__VA_ARGS__)
 #define CYCLES_IM(...)      CYCLES_MBWL(MODE_IM,    ##__VA_ARGS__)
 #define CYCLES_IP(...)      CYCLES_MBWL(MODE_IP,    ##__VA_ARGS__)
-#endif
 
 class Moira {
 
