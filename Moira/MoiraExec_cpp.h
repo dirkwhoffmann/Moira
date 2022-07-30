@@ -857,16 +857,14 @@ Moira::execCas(u16 opcode)
     if (!readOp <C,M,S,STD_AE_FRAME> (dst, ea, data)) return;
 
     auto compare = readD(dc);
-    auto diff = data - CLIP<S>(compare);
+    // auto diff = data - CLIP<S>(compare);
 
     // Set flags
     cmp <C,S> (CLIP<S>(compare), data);
 
-    printf("Moira: dst = %d dc = %d ext = %x data = %x compare = %x diff = %x n = %d z = %d v = %d c = %d\n", dst, dc, _ext, data, compare, diff, reg.sr.n, reg.sr.z, reg.sr.v, reg.sr.c);
     if (!reg.sr.z) {
 
         writeD(dc, CLEAR<S>(compare) | data);
-        printf("result(d[%d]) = %x\n", dc, reg.d[dc]);
 
         CYCLES_AI   ( 0,  0, 16,       0,  0, 16,      0,  0, 16)
         CYCLES_PI   ( 0,  0, 16,       0,  0, 16,      0,  0, 16)
@@ -878,9 +876,7 @@ Moira::execCas(u16 opcode)
 
     } else {
 
-        // USE_CYCLES(3);
         writeM <C,M,S> (ea, CLEAR<S>(du));
-        printf("result: Write %x\n", CLEAR<S>(du));
 
         CYCLES_AI   ( 0,  0, 19,       0,  0, 19,      0,  0, 19)
         CYCLES_PI   ( 0,  0, 19,       0,  0, 19,      0,  0, 19)
@@ -911,66 +907,46 @@ Moira::execCas2(u16 opcode)
 
     readExt<C>();
 
-    printf("Moira CAS2: dc1=%d, du1=%d, rn1=%d dc2=%d, du2=%d, rn2=%d\n", dc1,du1,rn1,dc2,du2,rn2);
-
     u32 ea1 = 0, ea2 = 0, data1, data2;
     data1 = readM<C, M, S>(reg.r[rn1]);
     data2 = readM<C, M, S>(reg.r[rn2]);
-    printf("Moira CAS2: ea1=%x, ea2=%x data1=%x data2=%x\n", ea1,ea2,data1,data2);
 
     auto compare1 = readD(dc1);
     auto diff1 = data1 - CLIP<S>(compare1);
     auto compare2 = readD(dc2);
     auto diff2 = data2 - CLIP<S>(compare2);
 
-    printf("Moira CAS2: compare1=%x compare2=%x\n", compare1, compare2);
-    printf("Moira CAS2: diff1=%x diff2=%x\n", diff1, diff2);
-
     reg.sr.n = NBIT<S>(diff1);
     reg.sr.z = ZERO<S>(diff1);
-    reg.sr.v = 0; // ???
+    reg.sr.v = 0; // ???  TODO
     reg.sr.c = CARRY<S>(diff1);
-
-    printf("Moira CAS2: n=%d z=%d v=%d c=%d\n", reg.sr.n, reg.sr.z, reg.sr.v, reg.sr.c);
 
     if (reg.sr.z) {
 
         reg.sr.n = NBIT<S>(diff2);
         reg.sr.z = ZERO<S>(diff2);
-        reg.sr.v = 0; // ???
+        reg.sr.v = 0; // ???  TODO
         reg.sr.c = CARRY<S>(diff2);
-
-        printf("Moira CAS2: n2=%d z2=%d v2=%d c2=%d\n", reg.sr.n, reg.sr.z, reg.sr.v, reg.sr.c);
 
         if (reg.sr.z) {
 
-            printf("Moira CAS2: Writing %x %x\n", reg.d[du1], reg.d[du2]);
             writeM <C,M,S> (ea1, reg.d[du1]);
             writeM <C,M,S> (ea2, reg.d[du2]);
         }
     }
-    /* ???
-    *compare1 = BIT_1F(word2) ? (uint)MAKE_INT_16(dest1) : MASK_OUT_BELOW_16(*compare1) | dest1;
-    *compare2 = BIT_F(word2) ? (uint)MAKE_INT_16(dest2) : MASK_OUT_BELOW_16(*compare2) | dest2;
-    */
+
     if (rn1 & 0x8) {
-        printf("Moira: compare1 case 1\n");
         writeD(dc1, SEXT<S>(data1));
     } else {
-        printf("Moira: compare1 case 2\n");
         writeD(dc1, CLEAR<S>(compare1) | data1);
     }
     if (rn2 & 0x8) {
-        printf("Moira: compare2 case 1\n");
         writeD(dc2, SEXT<S>(data2));
     } else {
-        printf("Moira: compare2 case 2\n");
         writeD(dc2, CLEAR<S>(compare2) | data2);
     }
-    printf("Moira CAS2: *compare1=%x *compare2=%x\n", reg.d[dc1], reg.d[dc2]);
 
     prefetch <C,POLLIPL> ();
-
     CYCLES_68020 (12)
 }
 
@@ -1979,16 +1955,12 @@ Moira::execMove6(u16 opcode)
 
     if (!readOp <C, M, S, STD_AE_FRAME> (src, ea, data)) return;
 
-    u16 ext2 = queue.irc;
-    u16 ext3 = 0;
-
     if constexpr (S == Long && !isMemMode(M)) {
 
         reg.sr.n = NBIT<Word>(data >> 16);
         reg.sr.z = ZERO<Word>(data >> 16) && reg.sr.z;
 
         if (!writeOp <C, MODE_IX, S, POLLIPL> (dst, data)) return;
-        ext3 = queue.irc;
 
         reg.sr.n = NBIT<S>(data);
         reg.sr.z = ZERO<S>(data);
@@ -2005,8 +1977,6 @@ Moira::execMove6(u16 opcode)
         reg.sr.c = 0;
 
         if (!writeOp <C, MODE_IX, S> (dst, data)) return;
-
-        ext3 = queue.irc;
 
         prefetch <C,POLLIPL> ();
     }
