@@ -58,7 +58,7 @@ if constexpr (M == m && C == M68020) { sync(S == Byte ? b : S == Word ? w : l); 
 #define CYCLES_MBWL(m,b0,b1,b2,w0,w1,w2,l0,l1,l2) \
 CYCLES_MBWL_00(m,b0,w0,l0) \
 CYCLES_MBWL_10(m,b1,w1,l1) \
-CYCLES_MBWL_20(m,b2,w2,l2)
+CYCLES_MBWL_20(m,(b2)+cp,(w2)+cp,(l2)+cp)
 
 #define CYCLES_DN(...)      CYCLES_MBWL(MODE_DN,    ##__VA_ARGS__)
 #define CYCLES_AN(...)      CYCLES_MBWL(MODE_AN,    ##__VA_ARGS__)
