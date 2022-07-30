@@ -861,13 +861,11 @@ Moira::execCas(u16 opcode)
     if (!readOp <C,M,S,STD_AE_FRAME> (dst, ea, data)) return;
 
     auto compare = readD(dc);
-    auto diff = data - u8(compare);
+    auto diff = data - CLIP<S>(compare);
 
-    reg.sr.n = NBIT<S>(diff);
-    reg.sr.z = ZERO<S>(diff);
-    reg.sr.v = 0; // ???
-    reg.sr.c = CARRY<S>(diff);
-
+    // Set flags
+    cmp <C,S> (CLIP<S>(compare), data);
+    
     printf("Moira: dst = %d dc = %d ext = %x data = %x compare = %x diff = %x n = %d z = %d v = %d c = %d\n", dst, dc, _ext, data, compare, diff, reg.sr.n, reg.sr.z, reg.sr.v, reg.sr.c);
     if (!reg.sr.z) {
 
