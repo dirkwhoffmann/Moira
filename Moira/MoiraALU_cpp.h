@@ -683,6 +683,55 @@ Moira::mulMusashi(u32 op1, u32 op2)
     return result;
 }
 
+template <Size S> u64
+Moira::mullsMusashi(u32 op1, u32 op2)
+{
+    u64 result = u64(i64(i32(op1)) * i64(i32(op2)));
+    printf("Moira ALU: %lld %lld %lld\n", i64(i32(op1)), i64(i32(op2)), i64(i32(op1)) * i64(i32(op2)));
+
+    if constexpr (S == Word) {
+
+        printf("Moira ALU: mulls WORD: %llx\n", result);
+        reg.sr.n = NBIT<Long>(result);
+        reg.sr.z = ZERO<Long>(result);
+        reg.sr.v = result != i32(result);
+        reg.sr.c = 0;
+
+    } else {
+
+        printf("Moira ALU: mulls LONG: %llx\n", result);
+        reg.sr.n = NBIT<Long>(result >> 32);
+        reg.sr.z = result == 0;
+        reg.sr.v = 0;
+        reg.sr.c = 0;
+    }
+
+    return result;
+}
+
+template <Size S> u64
+Moira::mulluMusashi(u32 op1, u32 op2)
+{
+    u64 result = u64(op1) * u64(op2);
+
+    if constexpr (S == Word) {
+
+        reg.sr.n = NBIT<Long>(result);
+        reg.sr.z = ZERO<Long>(result);
+        reg.sr.v = 0;
+        reg.sr.c = 0;
+
+    } else {
+
+        reg.sr.n = NBIT<Long>(result >> 32);
+        reg.sr.z = result == 0;
+        reg.sr.v = (result >> 32) != 0;
+        reg.sr.c = 0;
+    }
+
+    return result;
+}
+
 template <Core C, Instr I> u32
 Moira::divMusashi(u32 op1, u32 op2)
 {

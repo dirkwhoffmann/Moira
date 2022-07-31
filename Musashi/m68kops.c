@@ -24191,17 +24191,23 @@ static void m68k_op_mull_32_d(void)
 		uint64 dst = REG_D[(word2 >> 12) & 7];
 		uint64 res;
 
+        printf("Musashi: word2 = %x\n", word2);
+        
 		FLAG_C = CFLAG_CLEAR;
 
 		if(BIT_B(word2))			   /* signed */
 		{
 			res = (sint64)((sint32)src) * (sint64)((sint32)dst);
+
+            printf("Musashi ALU: %lld %lld %lld\n", (sint64)((sint32)src), (sint64)((sint32)dst), res);
+
 			if(!BIT_A(word2))
 			{
 				FLAG_Z = MASK_OUT_ABOVE_32(res);
 				FLAG_N = NFLAG_32(res);
 				FLAG_V = ((sint64)res != (sint32)res)<<7;
 				REG_D[(word2 >> 12) & 7] = FLAG_Z;
+                printf("Musashi: Signed Word\n");
 				return;
 			}
 			FLAG_Z = MASK_OUT_ABOVE_32(res) | (res>>32);
@@ -24209,6 +24215,7 @@ static void m68k_op_mull_32_d(void)
 			FLAG_V = VFLAG_CLEAR;
 			REG_D[word2 & 7] = (res >> 32);
 			REG_D[(word2 >> 12) & 7] = MASK_OUT_ABOVE_32(res);
+            printf("Musashi: Signed Long: res = %llx\n", res);
 			return;
 		}
 
@@ -24219,6 +24226,7 @@ static void m68k_op_mull_32_d(void)
 			FLAG_N = NFLAG_32(res);
 			FLAG_V = (res > 0xffffffff)<<7;
 			REG_D[(word2 >> 12) & 7] = FLAG_Z;
+            printf("Musashi: Unsigned Word\n");
 			return;
 		}
 		FLAG_Z = MASK_OUT_ABOVE_32(res) | (res>>32);
@@ -24226,6 +24234,7 @@ static void m68k_op_mull_32_d(void)
 		FLAG_V = VFLAG_CLEAR;
 		REG_D[word2 & 7] = (res >> 32);
 		REG_D[(word2 >> 12) & 7] = MASK_OUT_ABOVE_32(res);
+        printf("Musashi: Unsigned Long\n");
 		return;
 	}
 	m68ki_exception_illegal();

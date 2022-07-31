@@ -34,6 +34,7 @@ if (!reg.sr.s) { execPrivilegeException(); CYCLES(34,38,38); return; }
 #define _______x________(opcode) (u8)((opcode >> 8)  & 0b1)
 #define _____xx_________(opcode) (u8)((opcode >> 9)  & 0b11)
 #define ____xxx_________(opcode) (u8)((opcode >> 9)  & 0b111)
+#define ____xx__________(opcode) (u8)((opcode >> 10) & 0b11)
 #define ____x___________(opcode) (u8)((opcode >> 11) & 0b1)
 #define _xxx____________(opcode) (u8)((opcode >> 12) & 0b111)
 #define xxxx____________(opcode) (u8)((opcode >> 12) & 0b1111)
@@ -756,7 +757,7 @@ Moira::execBitImEa(u16 opcode)
         }
     }
 
-    auto c = I == BTST ? 0 : 4;
+    [[maybe_unused]] auto c = I == BTST ? 0 : 4;
     CYCLES_AI   (12 + c, 12 + c,  8,     0,  0,  0,     0,  0,  0)
     CYCLES_PD   (14 + c, 14 + c,  9,     0,  0,  0,     0,  0,  0)
     CYCLES_PI   (12 + c, 12 + c,  8,     0,  0,  0,     0,  0,  0)
@@ -785,7 +786,8 @@ Moira::execBkpt(u16 opcode)
 
     signalIllegalOpcodeException(opcode);
     execUnimplemented<C>(4);
-    CYCLES(34, 38, 34);
+
+    CYCLES_IP ( 0,  0,  0,     0,  0,  0,     0, 38, 20 );
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1543,8 +1545,20 @@ Moira::execExtb(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
-    // TODO
+    int n = _____________xxx(opcode);
+
+    u32 dn = readD(n);
+    dn = SEXT<Byte>(dn);
+
+    writeD(n, dn);
+    reg.sr.n = NBIT<S>(dn);
+    reg.sr.z = ZERO<S>(dn);
+    reg.sr.v = 0;
+    reg.sr.c = 0;
+
     prefetch <C,POLLIPL> ();
+
+    CYCLES_DN   ( 0,  0,  0,       0,  0,  0,      0,  0,  4)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1665,7 +1679,7 @@ Moira::execLink(u16 opcode)
     u32 sp   = getSP() - 4;
 
     int ax   = _____________xxx(opcode);
-    i16 disp = (i16)readI <C,S> ();
+    i32 disp = SEXT <S> (readI <C,S> ());
 
     // Check for address error
     if (misaligned<Long>(sp)) {
@@ -1686,7 +1700,7 @@ Moira::execLink(u16 opcode)
 
     prefetch<C>();
 
-    CYCLES(16, 16, 5);
+    CYCLES_IP ( 0,  0,  0,    16, 16, 5,      0,  0,  6 );
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -2341,7 +2355,7 @@ Moira::execMovemRgEa(u16 opcode)
     CYCLES_AI   ( 0,  0,  0,       8+c,  8+c,  8+c,      8+c,  8+c,  8+c)
     CYCLES_PD   ( 0,  0,  0,       8+c,  8+c,  4+c,      8+c,  8+c,  4+c)
     CYCLES_DI   ( 0,  0,  0,      12+c, 12+c,  9+c,     12+c, 12+c,  9+c)
-    CYCLES_IX   ( 0,  0,  0,      14+c, 14+c, 11+c,     14+c, 14+c, 14+c)
+    CYCLES_IX   ( 0,  0,  0,      14+c, 14+c, 11+c,     14+c, 14+c, 11+c)
     CYCLES_AW   ( 0,  0,  0,      12+c, 12+c,  8+c,     12+c, 12+c,  8+c)
     CYCLES_AL   ( 0,  0,  0,      16+c, 16+c,  8+c,     16+c, 16+c,  8+c)
 }
@@ -2728,8 +2742,7 @@ Moira::execMull(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
-    // TODO
-    prefetch <C,POLLIPL> ();
+    execMullMusashi<C, I, M, S>(opcode);
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -2781,6 +2794,72 @@ Moira::execMulMusashi(u16 op)
         CYCLES_IXPC ( 0,  0,  0,      64,  42,  34,    0,  0,  0)
         CYCLES_IM   ( 0,  0,  0,      58,  36,  29,    0,  0,  0)
     }
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execMullMusashi(u16 op)
+{
+    EXEC_DEBUG(C,I,M,S)
+
+    u64 result;
+    u32 ea, data;
+    u16 ext = (u16)readI <C,Word> ();
+
+    int src = _____________xxx(op);
+    int dh  = _____________xxx(ext);
+    int dl  = _xxx____________(ext);
+
+    if (!readOp <C, M, S> (src, ea, data)) return;
+
+    prefetch <C,POLLIPL> ();
+
+    printf("Moira: Ext = %x\n", ext);
+
+    // switch ((ext >> 10) & 0b11) {
+    switch (____xx__________(ext)) {
+
+        case 0b00:
+
+            result = mulluMusashi<Word>(data, readD(dl));
+            printf("Moira MULL: Unsigned Word (%x,%x) = %llx\n", data, readD(dl), result);
+            writeD(dl, u32(result));
+            break;
+
+        case 0b01:
+
+            result = mulluMusashi<Long>(data, readD(dl));
+            printf("Moira MULL: Unsigned Long (%x,%x) = %llx\n", data, readD(dl), result);
+            writeD(dh, u32(result >> 32));
+            writeD(dl, u32(result));
+            break;
+
+        case 0b10:
+
+            result = mullsMusashi<Word>(data, readD(dl));
+            printf("Moira MULL: Signed Word (%x,%x) = %llx\n", data, readD(dl), result);
+            writeD(dl, u32(result));
+            break;
+
+        case 0b11:
+
+            result = mullsMusashi<Long>(data, readD(dl));
+            printf("Moira MULL: Signed Long (%x,%x) = %llx\n", data, readD(dl), result);
+            writeD(dh, u32(result >> 32));
+            writeD(dl, u32(result));
+            break;
+    }
+
+    CYCLES_DN   ( 0,  0,  0,       0,   0,  43,    0,  0, 43)
+    CYCLES_AI   ( 0,  0,  0,       0,   0,  47,    0,  0, 47)
+    CYCLES_PI   ( 0,  0,  0,       0,   0,  47,    0,  0, 47)
+    CYCLES_PD   ( 0,  0,  0,       0,   0,  48,    0,  0, 48)
+    CYCLES_DI   ( 0,  0,  0,       0,   0,  48,    0,  0, 48)
+    CYCLES_IX   ( 0,  0,  0,       0,   0,  50,    0,  0, 50)
+    CYCLES_AW   ( 0,  0,  0,       0,   0,  47,    0,  0, 47)
+    CYCLES_AL   ( 0,  0,  0,       0,   0,  47,    0,  0, 47)
+    CYCLES_DIPC ( 0,  0,  0,       0,   0,  48,    0,  0, 48)
+    CYCLES_IXPC ( 0,  0,  0,       0,   0,  50,    0,  0, 50)
+    CYCLES_IM   ( 0,  0,  0,       0,   0,  47,    0,  0, 47)
 }
 
 template <Core C, Instr I, Mode M, Size S> void

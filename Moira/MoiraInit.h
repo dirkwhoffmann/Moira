@@ -161,4 +161,5 @@ MOIRA_DECLARE_CIMS(Unpk)
 
 // Musashi compatibility mode
 template <Core C, Instr I, Mode M, Size S> void execMulMusashi(u16 op);
+template <Core C, Instr I, Mode M, Size S> void execMullMusashi(u16 op);
 template <Core C, Instr I, Mode M, Size S> void execDivMusashi(u16 op);
