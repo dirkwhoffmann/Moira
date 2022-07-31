@@ -175,6 +175,92 @@ Moira::saveToStack2(u16 nr, u16 sr, u32 pc)
     }
 }
 
+template <Core C> void
+Moira::writeStackFrame0000(u16 sr, u32 pc, u16 nr)
+{
+    switch (C) {
+
+        case M68000:
+
+            if constexpr (MIMIC_MUSASHI) {
+
+                push <C,Long> (pc);
+                push <C,Word> (sr);
+
+            } else {
+
+                reg.sp -= 6;
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 0) & ~1, sr);
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 2) & ~1, pc >> 16);
+            }
+            break;
+
+        case M68010:
+        case M68020:
+
+            if constexpr (MIMIC_MUSASHI) {
+
+                push <C,Word> (nr << 2);
+                push <C,Long> (pc);
+                push <C,Word> (sr);
+
+            } else {
+
+                reg.sp -= 8;
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 6) & ~1, 4 * nr);
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 0) & ~1, sr);
+                writeMS <C,MEM_DATA,Word> ((reg.sp + 2) & ~1, pc >> 16);
+            }
+            break;
+    }
+}
+
+template <Core C> void
+Moira::writeStackFrame0001(u16 sr, u32 pc, u16 nr)
+{
+    assert(C == M68020);
+
+    push <C,Word> (0x1000 | nr << 2);
+    push <C,Long> (pc);
+    push <C,Word> (sr);
+}
+
+template <Core C> void
+Moira::writeStackFrame0010(u16 sr, u32 pc, u32 ia, u16 nr)
+{
+    assert(C == M68020);
+
+    push <C,Long> (ia);
+    push <C,Word> (0x2000 | nr << 2);
+    push <C,Long> (pc);
+    push <C,Word> (sr);
+}
+
+template <Core C> void
+Moira::writeStackFrame1000(u16 sr, u32 pc, u16 nr)
+{
+
+}
+
+template <Core C> void
+Moira::writeStackFrame1001(u16 sr, u32 pc, u32 ia, u16 nr)
+{
+
+}
+
+template <Core C> void
+Moira::writeStackFrame1010(u16 sr, u32 pc, u16 nr){
+
+}
+
+template <Core C> void
+Moira::writeStackFrame1011(u16 sr, u32 pc, u16 nr)
+{
+
+}
+
 void
 Moira::execAddressError(AEStackFrame frame, int delay)
 {
