@@ -58,6 +58,8 @@ template <Core C> void execTraceException();
 // Emulates a trap exception
 void execTrapException(int nr);
 template <Core C> void execTrapException(int nr);
+void execTrapNException(int nr);
+template <Core C> void execTrapNException(int nr);
 
 // Emulates a priviledge exception
 void execPrivilegeException();

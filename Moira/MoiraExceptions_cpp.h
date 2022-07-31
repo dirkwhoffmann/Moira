@@ -447,6 +447,46 @@ Moira::execTrapException(int nr)
 }
 
 void
+Moira::execTrapNException(int nr)
+{
+    switch (core) {
+
+        case M68000: execTrapNException <M68000> (nr); break;
+        case M68010: execTrapNException <M68010> (nr); break;
+        case M68020: execTrapNException <M68020> (nr); break;
+
+        default:
+            assert(false);
+    }
+}
+
+template <Core C> void
+Moira::execTrapNException(int nr)
+{
+    signalTrapException();
+
+    u16 status = getSR();
+
+    // Enter supervisor mode
+    setSupervisorMode(true);
+
+    // Disable tracing, but keep the CPU_TRACE_EXCEPTION flag
+    clearTraceFlag();
+
+    // Write exception information to stack
+    writeStackFrame0000<C>(status, reg.pc, u16(nr));
+    /*
+    if constexpr (C == M68020) {
+        writeStackFrame0010<C>(status, reg.pc, reg.pc0, u16(nr));
+    } else {
+        writeStackFrame0000<C>(status, reg.pc, u16(nr));
+    }
+    */
+
+    jumpToVector<C>(nr);
+}
+
+void
 Moira::execPrivilegeException()
 {
     switch (core) {

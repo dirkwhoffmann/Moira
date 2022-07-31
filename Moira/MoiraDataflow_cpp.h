@@ -130,9 +130,9 @@ Moira::computeEA(u32 n) {
 
                 printf("compteEA: irc = %x\n", queue.irc);
                 if (queue.irc & 0x100) {
-                    result = computeEAfe<C,M,S>(readA(n));
+                    result = computeEAfe<C,M,S,F>(readA(n));
                 } else {
-                    result = computeEAbe<C,M,S>(readA(n));
+                    result = computeEAbe<C,M,S,F>(readA(n));
                 }
                 break;
             }
@@ -174,9 +174,9 @@ Moira::computeEA(u32 n) {
             if constexpr (C == M68020) {
 
                 if (queue.irc & 0x100) {
-                    result = computeEAfe<C,M,S>(reg.pc);
+                    result = computeEAfe<C,M,S,F>(reg.pc);
                 } else {
-                    result = computeEAbe<C,M,S>(reg.pc);
+                    result = computeEAbe<C,M,S,F>(reg.pc);
                 }
                 break;
             }

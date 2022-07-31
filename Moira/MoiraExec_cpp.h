@@ -1334,27 +1334,30 @@ Moira::execDbcc(u16 opcode)
             if (takeBranch) {
                 reg.pc = newpc;
                 fullPrefetch <C,POLLIPL> ();
-                // printf("Branch taken\n");
+                printf("execDbcc: Branch taken\n");
                 CYCLES_68000(10);
+                CYCLES_68020(10);
                 return;
             } else {
 
                 (void)readMS <C,MEM_PROG,Word> (reg.pc + 2);
-                // printf("Not taken\n");
+                printf("execDbcc: Not taken\n");
                 CYCLES_68000(4);
+                CYCLES_68020(4);
             }
         } else {
 
             SYNC(2);
-            // printf("Condition met\n");
+            printf("execDbcc: Condition met\n");
             CYCLES_68000(2);
+            CYCLES_68020(2);
         }
 
         // Fall through to next instruction
         reg.pc += 2;
         fullPrefetch <C, POLLIPL> ();
 
-        CYCLES(10, 10, 10);
+        CYCLES(10, 10, 4);
     };
 
     auto exec68010 = [&]() {
@@ -1463,8 +1466,9 @@ Moira::execDbcc(u16 opcode)
 
     switch (C) {
 
-        case M68000: exec68000(); return;
-        case M68010: looping<I>() ? execLoop() : exec68010(); return;
+        case M68000: exec68000(); break;
+        case M68010: looping<I>() ? execLoop() : exec68010(); break;
+        case M68020: exec68000(); break;
 
         default:
             fatalError;
@@ -1608,15 +1612,21 @@ Moira::execJsr(u16 opcode)
 
     // Check for address error in displacement modes
     if (isDspMode(M) && misaligned<Word>(ea)) {
+
+        printf("execJsr: isDspMode(M) && misaligned<Word>(ea)\n");
         execAddressError(makeFrame(ea));
         return;
     }
 
     // Update program counter
-    if (isAbsMode(M) || isDspMode(M)) reg.pc += 2;
+    if (isAbsMode(M) || isDspMode(M)) {
+        printf("Adding 2 to PC %x (%x)\n", reg.pc, reg.pc0);
+        reg.pc += 2;
+    }
 
     // Check for address error in all other modes
     if (misaligned<Word>(ea)) {
+        printf("execJsr: misaligned<Word>(ea)\n");
         execAddressError(makeFrame(ea));
         return;
     }
@@ -3262,69 +3272,114 @@ Moira::execRte(u16 opcode)
     u16 newsr = 0;
     u32 newpc = 0;
 
-    if constexpr (C == M68000) {
+    switch (C) {
 
-        newsr = (u16)readMS <C,MEM_DATA,Word> (reg.sp);
-        reg.sp += 2;
+        case M68000:
+        {
+            newsr = (u16)readMS <C,MEM_DATA,Word> (reg.sp);
+            reg.sp += 2;
 
-        newpc = readMS <C,MEM_DATA,Long> (reg.sp);
-        reg.sp += 4;
-    }
-
-    if constexpr (C == M68010) {
-
-        newsr = (u16)readMS <C,MEM_DATA,Word> (reg.sp);
-        reg.sp += 2;
-
-        newpc = readMS <C,MEM_DATA,Long> (reg.sp);
-        reg.sp += 4;
-
-        u16 format = (u16)(readMS <C,MEM_DATA,Word> (reg.sp) >> 12);
-        reg.sp += 2;
-
-        // Check for format errors
-        if (format != 0 && format != 8) {
-
-            reg.sp -= 8;
-            execFormatError();
-            CYCLES(0, 4, 4)
-            return;
+            newpc = readMS <C,MEM_DATA,Long> (reg.sp);
+            reg.sp += 4;
+            break;
         }
+        case M68010:
+        {
+            newsr = (u16)readMS <C,MEM_DATA,Word> (reg.sp);
+            reg.sp += 2;
 
-        if (format == 8) {
+            newpc = readMS <C,MEM_DATA,Long> (reg.sp);
+            reg.sp += 4;
 
-            (void)readMS <C,MEM_DATA,Word> (reg.sp); // special status word
+            u16 format = (u16)(readMS <C,MEM_DATA,Word> (reg.sp) >> 12);
             reg.sp += 2;
-            (void)readMS <C,MEM_DATA,Long> (reg.sp); // fault address
-            reg.sp += 4;
-            (void)readMS <C,MEM_DATA,Word> (reg.sp); // unused/reserved
-            reg.sp += 2;
-            (void)readMS <C,MEM_DATA,Word> (reg.sp); // data output buffer
-            reg.sp += 2;
-            (void)readMS <C,MEM_DATA,Word> (reg.sp); // unused/reserved
-            reg.sp += 2;
-            (void)readMS <C,MEM_DATA,Word> (reg.sp); // data input buffer
-            reg.sp += 2;
-            (void)readMS <C,MEM_DATA,Word> (reg.sp); // unused/reserved
-            reg.sp += 2;
-            (void)readMS <C,MEM_DATA,Word> (reg.sp); // instruction input buffer
-            reg.sp += 2;
-            (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
-            reg.sp += 4;
-            (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
-            reg.sp += 4;
-            (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
-            reg.sp += 4;
-            (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
-            reg.sp += 4;
-            (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
-            reg.sp += 4;
-            (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
-            reg.sp += 4;
-            (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
-            reg.sp += 4;
-            (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
-            reg.sp += 4;
+
+            // Check for format errors
+            if (format != 0 && format != 8) {
+
+                reg.sp -= 8;
+                execFormatError();
+                CYCLES(0, 4, 4)
+                return;
+            }
+
+            if (format == 8) {
+
+                (void)readMS <C,MEM_DATA,Word> (reg.sp); // special status word
+                reg.sp += 2;
+                (void)readMS <C,MEM_DATA,Long> (reg.sp); // fault address
+                reg.sp += 4;
+                (void)readMS <C,MEM_DATA,Word> (reg.sp); // unused/reserved
+                reg.sp += 2;
+                (void)readMS <C,MEM_DATA,Word> (reg.sp); // data output buffer
+                reg.sp += 2;
+                (void)readMS <C,MEM_DATA,Word> (reg.sp); // unused/reserved
+                reg.sp += 2;
+                (void)readMS <C,MEM_DATA,Word> (reg.sp); // data input buffer
+                reg.sp += 2;
+                (void)readMS <C,MEM_DATA,Word> (reg.sp); // unused/reserved
+                reg.sp += 2;
+                (void)readMS <C,MEM_DATA,Word> (reg.sp); // instruction input buffer
+                reg.sp += 2;
+                (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
+                reg.sp += 4;
+                (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
+                reg.sp += 4;
+                (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
+                reg.sp += 4;
+                (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
+                reg.sp += 4;
+                (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
+                reg.sp += 4;
+                (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
+                reg.sp += 4;
+                (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
+                reg.sp += 4;
+                (void)readMS <C,MEM_DATA,Long> (reg.sp); // internal information, 16 words
+                reg.sp += 4;
+            }
+            break;
+        }
+        case M68020:
+        {
+            while (1) {
+
+                newsr = (u16)readMS <C,MEM_DATA,Word> (reg.sp);
+                reg.sp += 2;
+
+                newpc = readMS <C,MEM_DATA,Long> (reg.sp);
+                reg.sp += 4;
+
+                u16 format = (u16)(readMS <C,MEM_DATA,Word> (reg.sp) >> 12);
+                reg.sp += 2;
+
+                printf("68020 RTE: newsr=%x newpc=%x format=%x\n", newsr, newpc, format);
+                if (format == 0b000) {  // Standard frame
+
+                    printf("68020 RTE: Standard frame\n");
+                    break;
+
+                } else if (format == 0b001) {  // Throwaway frame
+
+                    printf("68020 RTE: Throwaway frame\n");
+                    continue;
+
+                } else if (format == 0b001) {  // Trap
+
+                    printf("68020 RTE: Trap\n");
+                    (void)readMS <C,MEM_DATA,Long> (reg.sp);
+                    reg.sp += 4;
+                    break;
+
+                } else {
+
+                    reg.sp -= 8;
+                    execFormatError();
+                    CYCLES(0, 4, 4)
+                    return;
+                }
+            }
+            break;
         }
     }
 
@@ -3423,7 +3478,7 @@ Moira::execSccRg(u16 opcode)
     writeD<Byte>(dst, data);
 
     auto c = data ? 2 : 0;
-    if constexpr (C >= M68010) c = 0;
+    // if constexpr (C == M68010) c = 0; ????
 
     CYCLES_DN   ( 0,  0,  0,       4+c,  4+c,  2+c,      0,  0,  0)
 }
@@ -3546,9 +3601,9 @@ Moira::execTrap(u16 opcode)
     int nr = ____________xxxx(opcode);
 
     SYNC(4);
-    execTrapException<C>(32 + nr);
+    execTrapNException<C>(32 + nr);
 
-    CYCLES(34, 38, 34);
+    CYCLES(34, 38, 20);
 }
 
 template <Core C, Instr I, Mode M, Size S> void
