@@ -37,7 +37,10 @@ template <Core C, Instr I>         int  cyclesDiv(u32 dividend, u16 divisor);
 
 // Musashi compatibility mode
 template <Core C, Instr I> u32 mulMusashi(u32 op1, u32 op2);
-template <Core C, Instr I> u32 divMusashi(u32 op1, u32 op2);
-
 template <Size S> u64 mullsMusashi(u32 op1, u32 op2);
 template <Size S> u64 mulluMusashi(u32 op1, u32 op2);
+
+template <Core C, Instr I> u32 divMusashi(u32 op1, u32 op2);
+template <Size S> std::pair<u32,u32> divlsMusashi(u64 op1, u32 op2);
+template <Size S> u64 divluMusashi(u64 op1, u32 op2);
+

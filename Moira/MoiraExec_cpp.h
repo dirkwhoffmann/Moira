@@ -2914,8 +2914,7 @@ Moira::execDivl(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
-    // TODO
-    prefetch <C,POLLIPL> ();
+    execDivlMusashi<C, I, M, S>(opcode);
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -2980,6 +2979,98 @@ Moira::execDivMusashi(u16 opcode)
         CYCLES_IXPC ( 0,  0,  0,     168, 132,  63,    0,  0,  0)
         CYCLES_IM   ( 0,  0,  0,     162, 126,  58,    0,  0,  0)
     }
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execDivlMusashi(u16 op)
+{
+    EXEC_DEBUG(C,I,M,S)
+
+    u64 dividend, result;
+    u32 ea, divisor;
+    u16 ext = (u16)readI <C,Word> ();
+
+    int src = _____________xxx(op);
+    int dh  = _____________xxx(ext);
+    int dl  = _xxx____________(ext);
+
+    if (!readOp <C, M, S> (src, ea, divisor)) return;
+
+    if (divisor == 0) {
+
+        printf("Moira: Divisor = 0\n");
+        execTrapException(5);
+        CYCLES_68020(38);
+        return;
+    }
+
+    prefetch <C,POLLIPL> ();
+
+    printf("Moira DIVL: Ext = %x\n", ext);
+
+    switch (____xx__________(ext)) {
+
+        case 0b00:
+
+            dividend = readD(dl);
+            printf("Moira DIVL: dividend = %llx, divisor = %llx\n", dividend, (u64)divisor);
+
+            result = divluMusashi<Word>(dividend, divisor);
+            printf("Moira DIVL: Unsigned Word (%x,%x) = %llx\n", divisor, readD(dl), result);
+            writeD(dl, u32(result));
+            break;
+
+        case 0b01:
+
+            dividend = (u64)readD(dh) << 32 | readD(dl);
+            printf("Moira DIVL: dividend = %llx, divisor = %llx\n", dividend, (u64)divisor);
+
+            result = divluMusashi<Long>(dividend, divisor);
+            printf("Moira DIVL: Unsigned Long (%x,%x) = %llx\n", divisor, readD(dl), result);
+            writeD(dh, u32(result >> 32));
+            writeD(dl, u32(result));
+            break;
+
+        case 0b10: {
+
+            dividend = readD(dl);
+            printf("Moira DIVL: dividend = %llx, divisor = %llx\n", dividend, (u64)divisor);
+
+            auto result = divlsMusashi<Word>(dividend, divisor);
+            printf("Moira DIVL: Signed Word = (%x,%x)\n", result.first, result.second);
+            writeD(dh, result.second);
+            writeD(dl, result.first);
+            break;
+        }
+        case 0b11: {
+
+            dividend = (u64)readD(dh) << 32 | readD(dl);
+            printf("Moira DIVL: dividend = %llx, divisor = %llx\n", dividend, (u64)divisor);
+
+            auto result = divlsMusashi<Long>(dividend, divisor);
+            printf("Moira DIVL: Signed long = (%x,%x)\n", result.first, result.second);
+
+            if(!reg.sr.v) {
+
+                writeD(dh, result.second);
+                writeD(dl, result.first);
+            }
+
+            break;
+        }
+    }
+
+    CYCLES_DN   ( 0,  0,  0,       0,   0,   0,    0,  0, 84)
+    CYCLES_AI   ( 0,  0,  0,       0,   0,   0,    0,  0, 88)
+    CYCLES_PI   ( 0,  0,  0,       0,   0,   0,    0,  0, 88)
+    CYCLES_PD   ( 0,  0,  0,       0,   0,   0,    0,  0, 89)
+    CYCLES_DI   ( 0,  0,  0,       0,   0,   0,    0,  0, 89)
+    CYCLES_IX   ( 0,  0,  0,       0,   0,   0,    0,  0, 91)
+    CYCLES_AW   ( 0,  0,  0,       0,   0,   0,    0,  0, 88)
+    CYCLES_AL   ( 0,  0,  0,       0,   0,   0,    0,  0, 88)
+    CYCLES_DIPC ( 0,  0,  0,       0,   0,   0,    0,  0, 89)
+    CYCLES_IXPC ( 0,  0,  0,       0,   0,   0,    0,  0, 91)
+    CYCLES_IM   ( 0,  0,  0,       0,   0,   0,    0,  0, 88)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -3455,7 +3546,7 @@ Moira::execTrap(u16 opcode)
     int nr = ____________xxxx(opcode);
 
     SYNC(4);
-    execTrapException(32 + nr);
+    execTrapException<C>(32 + nr);
 
     CYCLES(34, 38, 34);
 }

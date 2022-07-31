@@ -117,7 +117,7 @@ Moira::saveToStack2(u16 nr, u16 sr, u32 pc)
 
         case M68000:
 
-            // SAME AS saveToStack2? IF YES, CALL IT
+            // SAME AS saveToStack1? IF YES, CALL IT
             if constexpr (MIMIC_MUSASHI) {
 
                 push <C,Long> (pc);
@@ -134,7 +134,7 @@ Moira::saveToStack2(u16 nr, u16 sr, u32 pc)
 
         case M68010:
 
-            // SAME AS saveToStack2? IF YES, CALL IT
+            // SAME AS saveToStack1? IF YES, CALL IT
             if constexpr (MIMIC_MUSASHI) {
 
                 push <C,Word> (4 * nr);

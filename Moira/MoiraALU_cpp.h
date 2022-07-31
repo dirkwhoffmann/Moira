@@ -794,3 +794,48 @@ Moira::divMusashi(u32 op1, u32 op2)
 
     return result;
 }
+
+template <Size S> std::pair<u32,u32>
+Moira::divlsMusashi(u64 op1, u32 op2)
+{
+    u64 quotient  = u64(i64(op1) / i64(i32(op2)));
+    u64 remainder = u64(i64(op1) % i64(i32(op2)));
+    printf("Moira signed 64: %llx %llx\n", quotient, remainder);
+
+    if(i64(quotient) == i64(i32(quotient))) {
+
+        reg.sr.n = NBIT<Long>(quotient);
+        reg.sr.z = ZERO<Long>(quotient);
+        reg.sr.v = 0;
+        reg.sr.c = 0;
+
+    } else {
+
+        reg.sr.v = 1;
+    }
+
+    return { quotient, remainder };
+}
+
+template <Size S> u64
+Moira::divluMusashi(u64 op1, u32 op2)
+{
+    u64 result = 0; // TODO
+
+    if constexpr (S == Word) {
+
+        reg.sr.n = NBIT<Long>(result);
+        reg.sr.z = ZERO<Long>(result);
+        reg.sr.v = 0;
+        reg.sr.c = 0;
+
+    } else {
+
+        reg.sr.n = NBIT<Long>(result >> 32);
+        reg.sr.z = result == 0;
+        reg.sr.v = (result >> 32) != 0;
+        reg.sr.c = 0;
+    }
+
+    return result;
+}

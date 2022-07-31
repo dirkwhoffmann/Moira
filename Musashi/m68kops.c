@@ -13223,6 +13223,8 @@ static void m68k_op_divl_32_d(void)
 		uint64 quotient  = 0;
 		uint64 remainder = 0;
 
+        printf("m68k_op_divl_32_d: word2 = %x\n", word2);
+
 		if(divisor != 0)
 		{
 			if(BIT_A(word2))	/* 64 bit */
@@ -13231,11 +13233,15 @@ static void m68k_op_divl_32_d(void)
 				dividend <<= 32;
 				dividend |= REG_D[(word2 >> 12) & 7];
 
+                printf("Musashi DIVL: dividend = %llx divisor = %llx\n", dividend, divisor);
+
 				if(BIT_B(word2))	   /* signed */
 				{
 					quotient  = (uint64)((sint64)dividend / (sint64)((sint32)divisor));
 					remainder = (uint64)((sint64)dividend % (sint64)((sint32)divisor));
-					if((sint64)quotient != (sint64)((sint32)quotient))
+                    printf("Musashi signed 64: %llx %llx\n", quotient, remainder);
+
+                    if((sint64)quotient != (sint64)((sint32)quotient))
 					{
 						FLAG_V = VFLAG_SET;
 						return;
@@ -13250,20 +13256,26 @@ static void m68k_op_divl_32_d(void)
 						return;
 					}
 					remainder = dividend % divisor;
+                    printf("Musashi unsigned 64: %llx %llx\n", quotient, remainder);
 				}
 			}
 			else	/* 32 bit */
 			{
-				dividend = REG_D[(word2 >> 12) & 7];
+                dividend = REG_D[(word2 >> 12) & 7];
+
+                printf("Musashi DIVL: dividend = %x\n", dividend);
+
 				if(BIT_B(word2))	   /* signed */
 				{
 					quotient  = (uint64)((sint64)((sint32)dividend) / (sint64)((sint32)divisor));
 					remainder = (uint64)((sint64)((sint32)dividend) % (sint64)((sint32)divisor));
-				}
+                    printf("Musashi signed 32: %llx %llx\n", quotient, remainder);
+                }
 				else					/* unsigned */
 				{
 					quotient = dividend / divisor;
 					remainder = dividend % divisor;
+                    printf("Musashi unsigned 32: %llx %llx\n", quotient, remainder);
 				}
 			}
 
@@ -13276,6 +13288,7 @@ static void m68k_op_divl_32_d(void)
 			FLAG_C = CFLAG_CLEAR;
 			return;
 		}
+        printf("Musashi: Divisor = 0\n");
 		m68ki_exception_trap(EXCEPTION_ZERO_DIVIDE);
 		return;
 	}
