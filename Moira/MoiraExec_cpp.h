@@ -635,10 +635,20 @@ Moira::execBcc(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
+    u32 oldpc = reg.pc;
+
     SYNC(2);
     if (cond(I)) {
 
-        u32 newpc = U32_ADD(reg.pc, S == Word ? (i16)queue.irc : (i8)opcode);
+        u32 disp = S == Byte ? (u8)opcode : queue.irc;
+
+        if (S == Long) {
+
+            readExt<C>();
+            disp = disp << 16 | queue.irc;
+        }
+
+        u32 newpc = U32_ADD(oldpc, SEXT<S>(disp));
 
         // Check for address error
         if (misaligned<Word>(newpc)) {
@@ -647,18 +657,29 @@ Moira::execBcc(u16 opcode)
         }
 
         // Take branch
+        printf("execBcc: Take branch\n");
         reg.pc = newpc;
         fullPrefetch <C, POLLIPL> ();
-        CYCLES_IP (10, 10, 10,     10, 10, 10,      4,  4,  4);
+        if (I == BRA) {
+            CYCLES_IP (10, 10, 10,     10, 10, 10,     10, 10, 10);
+        } else {
+            CYCLES_IP (10, 10,  6,     10, 10,  6,     10, 10,  6);
+        }
 
     } else {
 
         // Fall through to next instruction
+        printf("execBcc: Fallthrough\n");
         if (core == M68000) SYNC(2);
-        if constexpr (S == Word) readExt<C>();
+        if constexpr (S == Word || S == Long) readExt<C>();
+        if constexpr (S == Long) readExt<C>();
         prefetch <C,POLLIPL> ();
-        // CYCLES_IP ( 8,  8,  8,     12, 12, 12,      4,  4,  4);
-        CYCLES_IP ( 8,  6,  6,     12, 10, 10,      4,  4,  4);
+        // CYCLES_IP ( 8,  6,  6,     12, 10, 10,      4,  4,  4);
+        if (I == BRA) {
+            CYCLES_IP (10, 10, 10,     10, 10, 10,     10, 10, 10);
+        } else {
+            CYCLES_IP (10, 10,  4,     10, 10,  6,     10, 10,  6);
+        }
     }
 }
 
@@ -795,10 +816,17 @@ Moira::execBsr(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
-    i16 offset = S == Word ? (i16)queue.irc : (i8)opcode;
+    u32 oldpc = reg.pc;
+    u32 disp = S == Byte ? (u8)opcode : queue.irc;
 
-    u32 newpc = U32_ADD(reg.pc, offset);
-    u32 retpc = U32_ADD(reg.pc, S == Word ? 2 : 0);
+    if (S == Long) {
+
+        readExt<C>();
+        disp = disp << 16 | queue.irc;
+    }
+
+    u32 newpc = U32_ADD(oldpc, SEXT<S>(disp));
+    u32 retpc = U32_ADD(reg.pc, S == Long || S == Word ? 2 : 0);
 
     // Check for address error
     if (misaligned<Word>(newpc)) {
@@ -813,7 +841,6 @@ Moira::execBsr(u16 opcode)
     if (error) return;
 
     // Jump to new address
-    auto oldpc = reg.pc;
     reg.pc = newpc;
 
     fullPrefetch <C, POLLIPL> ();
@@ -1337,31 +1364,37 @@ Moira::execDbcc(u16 opcode)
                 printf("execDbcc: Branch taken\n");
                 CYCLES_68000(10);
                 CYCLES_68020(6);
-                return;
+
             } else {
 
                 (void)readMS <C,MEM_PROG,Word> (reg.pc + 2);
                 printf("execDbcc: Not taken\n");
                 CYCLES_68000(4);
-                CYCLES_68020(4);
+                CYCLES_68020(10);
+
+                reg.pc += 2;
+                fullPrefetch <C, POLLIPL> ();
             }
+
         } else {
 
             SYNC(2);
             printf("execDbcc: Condition met\n");
             CYCLES_68000(2);
-            CYCLES_68020(2);
+            CYCLES_68020(6);
+
+            // Fall through to next instruction
+            reg.pc += 2;
+            fullPrefetch <C, POLLIPL> ();
         }
 
-        // Fall through to next instruction
-        reg.pc += 2;
-        fullPrefetch <C, POLLIPL> ();
-
+        /*
         if (I == DBT) {
             CYCLES(10, 10, 4);
         } else {
             CYCLES(10, 10, 6);
         }
+        */
     };
 
     auto exec68010 = [&]() {
@@ -3484,7 +3517,7 @@ Moira::execSccRg(u16 opcode)
     auto c = data ? 2 : 0;
     // if constexpr (C == M68010) c = 0; ????
 
-    if (I == SF) {
+    if (I == SF || I == SLS || I == SCS || I == SEQ || I == SVS || I == SMI || I == SLT || I == SLE) {
         CYCLES_DN   ( 0,  0,  0,       4+c,  4+c,  4+c,      0,  0,  0)
     } else {
         CYCLES_DN   ( 0,  0,  0,       4+c,  4+c,  2+c,      0,  0,  0)
