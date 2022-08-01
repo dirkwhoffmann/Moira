@@ -3628,7 +3628,19 @@ Moira::execTrapcc(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
-    // TODO
+    switch (opcode & 0b111) {
+
+        case 0b010: (void)readI <C,Word> (); break;
+        case 0b011: (void)readI <C,Long> (); break;
+    }
+
+    if (cond(I)) {
+
+        execTrapException(7);
+        CYCLES(34, 34, 20);
+        return;
+    }
+
     prefetch <C,POLLIPL> ();
 }
 

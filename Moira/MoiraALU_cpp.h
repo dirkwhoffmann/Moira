@@ -534,22 +534,22 @@ Moira::cond(Instr I) {
 
     switch (I) {
 
-        case BRA: case ST:  case DBT:  case DBT_LOOP:  return cond(COND_BT);
-        case SF:            case DBF:  case DBF_LOOP:  return cond(COND_BF);
-        case BHI: case SHI: case DBHI: case DBHI_LOOP: return cond(COND_HI);
-        case BLS: case SLS: case DBLS: case DBLS_LOOP: return cond(COND_LS);
-        case BCC: case SCC: case DBCC: case DBCC_LOOP: return cond(COND_CC);
-        case BCS: case SCS: case DBCS: case DBCS_LOOP: return cond(COND_CS);
-        case BNE: case SNE: case DBNE: case DBNE_LOOP: return cond(COND_NE);
-        case BEQ: case SEQ: case DBEQ: case DBEQ_LOOP: return cond(COND_EQ);
-        case BVC: case SVC: case DBVC: case DBVC_LOOP: return cond(COND_VC);
-        case BVS: case SVS: case DBVS: case DBVS_LOOP: return cond(COND_VS);
-        case BPL: case SPL: case DBPL: case DBPL_LOOP: return cond(COND_PL);
-        case BMI: case SMI: case DBMI: case DBMI_LOOP: return cond(COND_MI);
-        case BGE: case SGE: case DBGE: case DBGE_LOOP: return cond(COND_GE);
-        case BLT: case SLT: case DBLT: case DBLT_LOOP: return cond(COND_LT);
-        case BGT: case SGT: case DBGT: case DBGT_LOOP: return cond(COND_GT);
-        case BLE: case SLE: case DBLE: case DBLE_LOOP: return cond(COND_LE);
+        case BRA: case ST:  case DBT:  case DBT_LOOP:  case TRAPT:  return cond(COND_BT);
+        case SF:            case DBF:  case DBF_LOOP:  case TRAPF:  return cond(COND_BF);
+        case BHI: case SHI: case DBHI: case DBHI_LOOP: case TRAPHI: return cond(COND_HI);
+        case BLS: case SLS: case DBLS: case DBLS_LOOP: case TRAPLS: return cond(COND_LS);
+        case BCC: case SCC: case DBCC: case DBCC_LOOP: case TRAPCC: return cond(COND_CC);
+        case BCS: case SCS: case DBCS: case DBCS_LOOP: case TRAPCS: return cond(COND_CS);
+        case BNE: case SNE: case DBNE: case DBNE_LOOP: case TRAPNE: return cond(COND_NE);
+        case BEQ: case SEQ: case DBEQ: case DBEQ_LOOP: case TRAPEQ: return cond(COND_EQ);
+        case BVC: case SVC: case DBVC: case DBVC_LOOP: case TRAPVC: return cond(COND_VC);
+        case BVS: case SVS: case DBVS: case DBVS_LOOP: case TRAPVS: return cond(COND_VS);
+        case BPL: case SPL: case DBPL: case DBPL_LOOP: case TRAPPL: return cond(COND_PL);
+        case BMI: case SMI: case DBMI: case DBMI_LOOP: case TRAPMI: return cond(COND_MI);
+        case BGE: case SGE: case DBGE: case DBGE_LOOP: case TRAPGE: return cond(COND_GE);
+        case BLT: case SLT: case DBLT: case DBLT_LOOP: case TRAPLT: return cond(COND_LT);
+        case BGT: case SGT: case DBGT: case DBGT_LOOP: case TRAPGT: return cond(COND_GT);
+        case BLE: case SLE: case DBLE: case DBLE_LOOP: case TRAPLE: return cond(COND_LE);
 
         default:
             fatalError;
@@ -694,7 +694,7 @@ Moira::mullsMusashi(u32 op1, u32 op2)
         printf("Moira ALU: mulls WORD: %llx\n", result);
         reg.sr.n = NBIT<Long>(result);
         reg.sr.z = ZERO<Long>(result);
-        reg.sr.v = result != i32(result);
+        reg.sr.v = result != u64(i32(result));
         reg.sr.c = 0;
 
     } else {
