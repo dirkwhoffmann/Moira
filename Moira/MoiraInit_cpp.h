@@ -1473,10 +1473,10 @@ Moira::createJumpTable()
     if (core >= M68020) {
 
         opcode = parse("1000 ---1 0100 0---");
-        ____XXX______XXX(opcode, PACK, MODE_DN, Size(0), Pack, CIMS)
+        ____XXX______XXX(opcode, PACK, MODE_DN, Word, PackDn, CIMS)
 
         opcode = parse("1000 ---1 0100 1---");
-        ____XXX______XXX(opcode, PACK, MODE_PD, Size(0), Pack, CIMS)
+        ____XXX______XXX(opcode, PACK, MODE_PD, Word, PackPd, CIMS)
     }
 
 

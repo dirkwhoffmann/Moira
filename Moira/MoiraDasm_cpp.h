@@ -1141,7 +1141,7 @@ Moira::dasmNop(StrWriter &str, u32 &addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
-Moira::dasmPack(StrWriter &str, u32 &addr, u16 op)
+Moira::dasmPackDn(StrWriter &str, u32 &addr, u16 op)
 {
     auto ext = dasmRead <Word> (addr);
     auto rx = Op <M,S> ( _____________xxx(op), addr );
@@ -1149,6 +1149,12 @@ Moira::dasmPack(StrWriter &str, u32 &addr, u16 op)
 
     str << Ins<I>{} << tab << rx << ", " << ry << ", " << Imu(ext);
     str << availability <I, M, S> ();
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmPackPd(StrWriter &str, u32 &addr, u16 op)
+{
+    dasmPackDn <I, M, S> (str, addr, op);
 }
 
 template <Instr I, Mode M, Size S> void

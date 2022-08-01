@@ -2984,7 +2984,7 @@ Moira::execDivMusashi(u16 opcode)
             SYNC(10 - (int)(clock - c));
         }
         execTrapException(5);
-        CYCLES(38, 44, 44);
+        CYCLES(38, 44, 38);
         return;
     }
 
@@ -3205,11 +3205,41 @@ Moira::execNop(u16 opcode)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execPack(u16 opcode)
+Moira::execPackDn(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
 
+    int dx  = ____xxx_________(opcode);
+    int dy  = _____________xxx(opcode);
+    
+    u16 adj = (u16)readI <C,Word> ();
+    u32 src = readD(dy) + adj;
+    u32 dst = readD(dx);
+
+    dst = CLEAR<Byte>(dst) | (src >> 4 & 0xF0) | (src & 0x0F);
+
+    writeD(dx, dst);
     prefetch <C> ();
+    
+    CYCLES( 0,  0,  6)
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execPackPd(u16 opcode)
+{
+    EXEC_DEBUG(C,I,M,S)
+
+    /*
+    uint ea_src = EA_AY_PD_8();
+    uint src = m68ki_read_8(ea_src);
+    ea_src = EA_AY_PD_8();
+    src = ((src << 8) | m68ki_read_8(ea_src)) + OPER_I_16();
+
+    m68ki_write_8(EA_AX_PD_8(), ((src >> 4) & 0x00f0) | (src & 0x000f));
+    */
+    prefetch <C> ();
+
+    CYCLES( 0,  0, 13)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
