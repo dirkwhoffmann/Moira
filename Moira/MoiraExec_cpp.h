@@ -1336,7 +1336,7 @@ Moira::execDbcc(u16 opcode)
                 fullPrefetch <C,POLLIPL> ();
                 printf("execDbcc: Branch taken\n");
                 CYCLES_68000(10);
-                CYCLES_68020(10);
+                CYCLES_68020(6);
                 return;
             } else {
 
@@ -1357,7 +1357,11 @@ Moira::execDbcc(u16 opcode)
         reg.pc += 2;
         fullPrefetch <C, POLLIPL> ();
 
-        CYCLES(10, 10, 4);
+        if (I == DBT) {
+            CYCLES(10, 10, 4);
+        } else {
+            CYCLES(10, 10, 6);
+        }
     };
 
     auto exec68010 = [&]() {
@@ -3480,7 +3484,11 @@ Moira::execSccRg(u16 opcode)
     auto c = data ? 2 : 0;
     // if constexpr (C == M68010) c = 0; ????
 
-    CYCLES_DN   ( 0,  0,  0,       4+c,  4+c,  2+c,      0,  0,  0)
+    if (I == SF) {
+        CYCLES_DN   ( 0,  0,  0,       4+c,  4+c,  4+c,      0,  0,  0)
+    } else {
+        CYCLES_DN   ( 0,  0,  0,       4+c,  4+c,  2+c,      0,  0,  0)
+    }
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -3637,8 +3645,15 @@ Moira::execTrapcc(u16 opcode)
     if (cond(I)) {
 
         execTrapException(7);
-        CYCLES(34, 34, 20);
+        CYCLES( 0,  0, 20);
         return;
+    }
+
+    switch (opcode & 0b111) {
+
+        case 0b100: CYCLES( 0,  0,  4); break;
+        case 0b010: CYCLES( 0,  0,  6); break;
+        case 0b011: CYCLES( 0,  0,  8); break;
     }
 
     prefetch <C,POLLIPL> ();

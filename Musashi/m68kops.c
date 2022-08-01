@@ -12133,13 +12133,16 @@ static void m68k_op_cptrapcc_32(void)
 
 static void m68k_op_dbt_16(void)
 {
+    printf("m68k_op_dbt_16\n");
 	REG_PC += 2;
 }
 
 
 static void m68k_op_dbf_16(void)
 {
-	uint* r_dst = &DY;
+    printf("m68k_op_dbf_16\n");
+
+    uint* r_dst = &DY;
 	uint res = MASK_OUT_ABOVE_16(*r_dst - 1);
 
 	*r_dst = MASK_OUT_BELOW_16(*r_dst) | res;
@@ -12149,10 +12152,12 @@ static void m68k_op_dbf_16(void)
 		REG_PC -= 2;
 		m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
 		m68ki_branch_16(offset);
+        printf("m68k_op_dbf_16: Using cycles (1): %d\n", CYC_DBCC_F_NOEXP);
 		USE_CYCLES(CYC_DBCC_F_NOEXP);
 		return;
 	}
 	REG_PC += 2;
+    printf("m68k_op_dbf_16: Using cycles (2): %d\n", CYC_DBCC_F_EXP);
 	USE_CYCLES(CYC_DBCC_F_EXP);
 }
 
