@@ -6280,6 +6280,9 @@ static void m68k_op_bfextu_32_d(void)
 
 		data = ROL_32(data, offset);
 		FLAG_N = NFLAG_32(data);
+
+        printf("Musashi m68k_op_bfextu_32_d: data = %x\n", data);
+
 		data >>= 32 - width;
 
 		FLAG_Z = data;

@@ -881,6 +881,31 @@ Moira::execBitField(u16 opcode)
             CYCLES_IXPC ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
             break;
 
+        case BFEXTU:
+        {
+            int dn = _xxx____________ (ext);
+
+            data = std::rotl(data, offset);
+            printf("Moira BFEXTU: data = %x\n", data);
+            reg.sr.n = NBIT<S>(data);
+            data >>= 32 - width;
+            reg.sr.z = ZERO<S>(data);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+
+            writeD(dn, data);
+
+            CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0,  8)
+            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 19)
+            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
+            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 22)
+            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 19)
+            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 19)
+            CYCLES_DIPC ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
+            CYCLES_IXPC ( 0,  0,  0,     0,  0,  0,     0,  0, 22)
+            break;
+        }
+
         default:
             break;
     }
