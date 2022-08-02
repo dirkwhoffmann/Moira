@@ -1326,7 +1326,7 @@ Moira::dasmUnlk(StrWriter &str, u32 &addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
-Moira::dasmUnpk(StrWriter &str, u32 &addr, u16 op)
+Moira::dasmUnpkDn(StrWriter &str, u32 &addr, u16 op)
 {
     auto ext = dasmRead <Word> (addr);
     auto rx = Op <M,S> ( _____________xxx(op), addr );
@@ -1334,4 +1334,10 @@ Moira::dasmUnpk(StrWriter &str, u32 &addr, u16 op)
 
     str << Ins<I>{} << tab << rx << ", " << ry << ", " << Imu(ext);
     str << availability <I, M, S> ();
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmUnpkPd(StrWriter &str, u32 &addr, u16 op)
+{
+    dasmUnpkDn<I, M, S>(str, addr, op);
 }

@@ -3509,6 +3509,7 @@ static void m68k_op_asr_8_r(void)
 
 	if(shift != 0)
 	{
+        printf("m68k_op_asr_8_r: Using cycles %d\n", shift<<CYC_SHIFT);
 		USE_CYCLES(shift<<CYC_SHIFT);
 
 		if(shift < 8)
