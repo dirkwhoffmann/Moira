@@ -29,6 +29,7 @@ if (!reg.sr.s) { execPrivilegeException(); CYCLES(34,38,38); return; }
 #define _______xxx______(opcode) (u8)((opcode >> 6)  & 0b111)
 #define ______xxxx______(opcode) (u8)((opcode >> 6)  & 0b1111)
 #define _____xxxxx______(opcode) (u8)((opcode >> 6)  & 0b11111)
+#define __________x_____(opcode) (u8)((opcode >> 5)  & 0b1)
 #define _________x______(opcode) (u8)((opcode >> 6)  & 0b1)
 #define ________x_______(opcode) (u8)((opcode >> 7)  & 0b1)
 #define _______x________(opcode) (u8)((opcode >> 8)  & 0b1)
@@ -110,17 +111,15 @@ Moira::execShiftRg(u16 opcode)
 
     printf("Moira: execShiftRg  cnt = %d\n", cnt);
 
-    if constexpr (I == LSR) {
+    if constexpr (I == LSL || I == LSR) {
         CYCLES_DN ( 6+c,  6+c,  6+c,     6+c,  6+c,  6+c,    8+c,  8+c,  6+c)
-    } else if constexpr (I == ROR) {
+    } else if constexpr (I == ROL || I == ROR || I == ASL) {
         CYCLES_DN ( 6+c,  6+c,  8+c,     6+c,  6+c,  8+c,    8+c,  8+c,  8+c)
-    } else if constexpr (I == ROXR) {
+    } else if constexpr (I == ROXL || I == ROXR) {
         CYCLES_DN ( 6+c,  6+c, 12+c,     6+c,  6+c, 12+c,    8+c,  8+c, 12+c)
     } else {
         CYCLES_DN ( 6+c,  6+c,  6+c,     6+c,  6+c,  6+c,    8+c,  8+c,  6+c)
     }
-
-    // CYCLES_DN ( 6+c,  6+c,  6+c,       6+c,  6+c,  6+c,      8+c,  8+c,  6+c)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -139,11 +138,11 @@ Moira::execShiftIm(u16 opcode)
 
     [[maybe_unused]] auto c = 2 * cnt;
 
-    if constexpr (I == LSR) {
+    if constexpr (I == LSL || I == LSR) {
         CYCLES_IM ( 6+c,  6+c,  4,       6+c,  6+c,  4,      8+c,  8+c,  4)
-    } else if constexpr (I == ROR) {
+    } else if constexpr (I == ROL || I == ROR || I == ASL) {
         CYCLES_IM ( 6+c,  6+c,  8,       6+c,  6+c,  8,      8+c,  8+c,  8)
-    } else if constexpr (I == ROXR) {
+    } else if constexpr (I == ROXL || I == ROXR) {
         CYCLES_IM ( 6+c,  6+c, 12,       6+c,  6+c, 12,      8+c,  8+c, 12)
     } else {
         CYCLES_IM ( 6+c,  6+c,  6,       6+c,  6+c,  6,      8+c,  8+c,  6)
@@ -164,13 +163,36 @@ Moira::execShiftEa(u16 op)
 
     writeM <C,M,S> (ea, shift <C,I,S> (1, data));
 
-    CYCLES_AI   ( 0,  0,  0,      12, 12,  9,      0,  0,  0)
-    CYCLES_PI   ( 0,  0,  0,      12, 12,  9,      0,  0,  0)
-    CYCLES_PD   ( 0,  0,  0,      14, 14, 10,      0,  0,  0)
-    CYCLES_DI   ( 0,  0,  0,      16, 16, 10,      0,  0,  0)
-    CYCLES_IX   ( 0,  0,  0,      18, 18, 12,      0,  0,  0)
-    CYCLES_AW   ( 0,  0,  0,      16, 16,  9,      0,  0,  0)
-    CYCLES_AL   ( 0,  0,  0,      20, 20,  9,      0,  0,  0)
+    if constexpr (I == ROR || I == ROL) {
+
+        CYCLES_AI   ( 0,  0,  0,      12, 12, 11,      0,  0,  0)
+        CYCLES_PI   ( 0,  0,  0,      12, 12, 11,      0,  0,  0)
+        CYCLES_PD   ( 0,  0,  0,      14, 14, 12,      0,  0,  0)
+        CYCLES_DI   ( 0,  0,  0,      16, 16, 12,      0,  0,  0)
+        CYCLES_IX   ( 0,  0,  0,      18, 18, 14,      0,  0,  0)
+        CYCLES_AW   ( 0,  0,  0,      16, 16, 11,      0,  0,  0)
+        CYCLES_AL   ( 0,  0,  0,      20, 20, 11,      0,  0,  0)
+
+    } else if constexpr (I == ASL) {
+
+        CYCLES_AI   ( 0,  0,  0,      12, 12, 10,      0,  0,  0)
+        CYCLES_PI   ( 0,  0,  0,      12, 12, 10,      0,  0,  0)
+        CYCLES_PD   ( 0,  0,  0,      14, 14, 11,      0,  0,  0)
+        CYCLES_DI   ( 0,  0,  0,      16, 16, 11,      0,  0,  0)
+        CYCLES_IX   ( 0,  0,  0,      18, 18, 13,      0,  0,  0)
+        CYCLES_AW   ( 0,  0,  0,      16, 16, 10,      0,  0,  0)
+        CYCLES_AL   ( 0,  0,  0,      20, 20, 10,      0,  0,  0)
+
+    } else {
+
+        CYCLES_AI   ( 0,  0,  0,      12, 12,  9,      0,  0,  0)
+        CYCLES_PI   ( 0,  0,  0,      12, 12,  9,      0,  0,  0)
+        CYCLES_PD   ( 0,  0,  0,      14, 14, 10,      0,  0,  0)
+        CYCLES_DI   ( 0,  0,  0,      16, 16, 10,      0,  0,  0)
+        CYCLES_IX   ( 0,  0,  0,      18, 18, 12,      0,  0,  0)
+        CYCLES_AW   ( 0,  0,  0,      16, 16,  9,      0,  0,  0)
+        CYCLES_AL   ( 0,  0,  0,      20, 20,  9,      0,  0,  0)
+    }
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -816,6 +838,52 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execBitField(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
+
+    u16 ext = (u16)readI <C,Word> ();
+
+    int dy     = _____________xxx (opcode);
+    int offset = _____xxxxx______ (ext);
+    int doBit  = ____x___________ (ext);
+    int width  = ___________xxxxx (ext);
+    int dwBit  = __________x_____ (ext);
+
+    u32 ea, data;
+    readOp<C, M, S>(dy, ea, data);
+
+    u32 mask;
+
+    if (doBit) offset = reg.d[offset & 0b111];
+    if (dwBit) offset = reg.d[width  & 0b111];
+
+    width = ((width - 1) & 0b11111) + 1;
+
+    mask = u32(0xFFFFFFFF00000000 >> width);
+    mask = std::rotr(mask, offset);
+
+    printf("Moira execBitField: offsrt = %d width = %d mask = %x\n", offset, width, mask);
+
+    switch (I) {
+
+        case BFTST:
+
+            reg.sr.n = NBIT<S>(data << offset);
+            reg.sr.z = ZERO<S>(data & mask);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+
+            CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0,  6)
+            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)
+            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 18)
+            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
+            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)
+            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)
+            CYCLES_DIPC ( 0,  0,  0,     0,  0,  0,     0,  0, 18)
+            CYCLES_IXPC ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
+            break;
+
+        default:
+            break;
+    }
 
     prefetch <C,POLLIPL> ();
 }

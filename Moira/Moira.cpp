@@ -11,6 +11,7 @@
 
 #include <cstdio>
 #include <algorithm>
+#include <bit>
 
 namespace moira {
 

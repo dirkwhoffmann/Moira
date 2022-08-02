@@ -7704,9 +7704,10 @@ static void m68k_op_bftst_32_d(void)
 		offset &= 31;
 		width = ((width-1) & 31) + 1;
 
-
 		mask = MASK_OUT_ABOVE_32(0xffffffff << (32 - width));
 		mask = ROR_32(mask, offset);
+
+        printf("Musashi execBitField: offsrt = %d width = %d mask = %llx\n", offset, width, mask);
 
 		FLAG_N = NFLAG_32(*data<<offset);
 		FLAG_Z = *data & mask;

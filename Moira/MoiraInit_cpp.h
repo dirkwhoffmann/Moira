@@ -488,16 +488,16 @@ Moira::createJumpTable()
     if (core >= M68020) {
 
         opcode = parse("1110 1010 11-- ----");
-        __________MMMXXX(opcode, BFCHG, 0b101001111000, Word, BitField, CIMS)
+        __________MMMXXX(opcode, BFCHG, 0b101001111000, Long, BitField, CIMS)
 
         opcode = parse("1110 1100 11-- ----");
-        __________MMMXXX(opcode, BFCLR, 0b101001111000, Word, BitField, CIMS)
+        __________MMMXXX(opcode, BFCLR, 0b101001111000, Long, BitField, CIMS)
 
         opcode = parse("1110 1111 11-- ----");
-        __________MMMXXX(opcode, BFINS, 0b101001111000, Word, BitField, CIMS)
+        __________MMMXXX(opcode, BFINS, 0b101001111000, Long, BitField, CIMS)
 
         opcode = parse("1110 1110 11-- ----");
-        __________MMMXXX(opcode, BFSET, 0b101001111000, Word, BitField, CIMS)
+        __________MMMXXX(opcode, BFSET, 0b101001111000, Long, BitField, CIMS)
     }
 
 
@@ -514,16 +514,16 @@ Moira::createJumpTable()
     if (core >= M68020) {
 
         opcode = parse("1110 1011 11-- ----");
-        __________MMMXXX(opcode, BFEXTS, 0b101001111110, Word, BitField, CIMS)
+        __________MMMXXX(opcode, BFEXTS, 0b101001111110, Long, BitField, CIMS)
 
         opcode = parse("1110 1001 11-- ----");
-        __________MMMXXX(opcode, BFEXTU, 0b101001111110, Word, BitField, CIMS)
+        __________MMMXXX(opcode, BFEXTU, 0b101001111110, Long, BitField, CIMS)
 
         opcode = parse("1110 1101 11-- ----");
-        __________MMMXXX(opcode, BFFFO, 0b101001111110, Word, BitField, CIMS)
+        __________MMMXXX(opcode, BFFFO, 0b101001111110, Long, BitField, CIMS)
 
         opcode = parse("1110 1000 11-- ----");
-        __________MMMXXX(opcode, BFTST, 0b101001111110, Word, BitField, CIMS)
+        __________MMMXXX(opcode, BFTST, 0b101001111110, Long, BitField, CIMS)
     }
 
 
