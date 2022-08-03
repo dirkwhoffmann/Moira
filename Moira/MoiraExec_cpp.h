@@ -988,15 +988,12 @@ Moira::execBitField(u16 opcode)
         }
         case BFINS:
         {
-            if (M == MODE_DN) {
+            int dn = _xxx____________ (ext);
 
-                int dn = _xxx____________ (ext);
+            if (M == MODE_DN) {
 
                 u32 insert = readD(dn);
                 insert = u32(insert << (32 - width));
-
-                printf("insert = %x mask = %x\n", insert, mask);
-                printf("Result = %x\n", (readD(dn) & ~mask) | insert);
 
                 reg.sr.n = NBIT<S>(insert);
                 reg.sr.z = ZERO<S>(insert);
@@ -1018,6 +1015,28 @@ Moira::execBitField(u16 opcode)
                 }
 
                 data = readM<C, M, S>(ea);
+
+                u32 insert = readD(dn);
+                insert = u32(insert << (32 - width));
+
+                reg.sr.n = NBIT<S>(insert);
+                reg.sr.z = ZERO<S>(insert);
+                reg.sr.v = 0;
+                reg.sr.c = 0;
+
+                printf("Moira: insert = %x mask = %x\n", insert, mask);
+                printf("Moira: Write(%x) = %x\n", ea, (data & mask) | insert);
+
+                writeM<C, M, S>(ea, (data & ~mask) | insert);
+
+                if((width + offset) > 32) {
+
+                    u8 mask2 = u8(0xFFFFFFFF00000000 >> width);
+                    u8 data2 = readM<C, M, Byte>(ea + 4);
+                    reg.sr.z |= ZERO<Byte>(data2 & mask2);
+
+                    writeM<C, M, S>(ea, (data & ~mask) | insert);
+                }
             }
 
             CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0, 10)

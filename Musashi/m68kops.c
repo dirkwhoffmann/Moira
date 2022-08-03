@@ -7115,7 +7115,12 @@ static void m68k_op_bfins_32_ai(void)
 		insert_long = insert_base >> offset;
 
 		data_long = m68ki_read_32(ea);
-		FLAG_V = VFLAG_CLEAR;
+
+        printf("Musashi: insert = %x mask = %x\n", insert_long, mask_long);
+        printf("Musashi: Write(%x) = %x\n", ea, (data_long & ~mask_long) | insert_long);
+        printf("Musashi: Data = %x\n", data_long);
+
+        FLAG_V = VFLAG_CLEAR;
 		FLAG_C = CFLAG_CLEAR;
 
 		m68ki_write_32(ea, (data_long & ~mask_long) | insert_long);
