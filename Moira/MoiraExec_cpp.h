@@ -761,6 +761,8 @@ Moira::execBitDxEa(u16 opcode)
             u32 ea, data;
             if (!readOp <C,M,Byte> (dst, ea, data)) return;
 
+            printf("ea = %x data = %x\n", ea, data);
+            
             data = bit <C,I> (data, b);
 
             if constexpr (I == BCLR && C == M68010) { SYNC(2); }
