@@ -8,7 +8,7 @@
 // -----------------------------------------------------------------------------
 
 #define SUPERVISOR_MODE_ONLY \
-if (!reg.sr.s) { execPrivilegeException(); CYCLES(34,38,38); return; }
+if (!reg.sr.s) { execPrivilegeException(); CYCLES(34,38,34); return; }
 
 #define REVERSE_8(x) (u8)(((x) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
 #define REVERSE_16(x) (u16)((REVERSE_8((x) & 0xFF) << 8) | REVERSE_8(((x) >> 8) & 0xFF))
@@ -933,9 +933,9 @@ Moira::execBitField(u16 opcode)
             reg.sr.n = NBIT<S>(data);
 
             if (I == BFEXTS) {
-                data >>= 32 - width;
-            } else {
                 data = SEXT<S>(data) >> (32 - width);
+            } else {
+                data >>= 32 - width;
             }
             reg.sr.z = ZERO<S>(data);
             reg.sr.v = 0;
@@ -1313,6 +1313,8 @@ Moira::execChk(u16 opcode)
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execChk2(u16 opcode)
 {
+    EXEC_DEBUG(C,I,M,S)
+
     u32 ext = queue.irc;
     int src = _____________xxx(opcode);
     int dst = xxxx____________(ext);
@@ -1323,19 +1325,21 @@ Moira::execChk2(u16 opcode)
     if (!readOp <C,M,S> (src, ea, data1)) return;
     data2 = readM <C,M,S> (ea + S);
 
-    auto lowerBound = SEXT<S>(data1);
-    auto upperBound = SEXT<S>(data2);
+    auto lowerBound = (M == 9 || M == 10) ? (i32)data1 : SEXT<S>(data1);
+    auto upperBound = (M == 9 || M == 10) ? (i32)data2 : SEXT<S>(data2);
 
     i32 compare = readR<S>(dst);
+    if (dst < 8) compare = SEXT<S>(compare);
 
     printf("Moira: src = %d dst = %d lowerBound = %d upperBound = %d compare = %d\n", src, dst, lowerBound, upperBound, compare);
 
     reg.sr.z = lowerBound == compare || upperBound == compare;
-    reg.sr.c = compare < lowerBound || compare > upperBound;
+    // reg.sr.c = compare < lowerBound || compare > upperBound;
+    reg.sr.c = (lowerBound <= upperBound ? compare < lowerBound || compare > upperBound : compare > upperBound || compare < lowerBound) << 8; // Wtf???
 
     printf("Moira: z = %d c = %d\n", reg.sr.z, reg.sr.c);
 
-    if (reg.sr.c) {
+    if ((ext & 0x100) && reg.sr.c) {
 
         printf("Moira: execTrapException\n");
         execTrapException<C>(6);
@@ -2815,6 +2819,14 @@ Moira::execMoves(u16 opcode)
                 fatalError;
         }
 
+        CYCLES_AI   ( 0, 18,  9,       0, 18,  9,      0, 22, 11)
+        CYCLES_PI   ( 0, 18,  9,       0, 18,  9,      0, 22, 11)
+        CYCLES_PD   ( 0, 20, 10,       0, 20, 10,      0, 28, 12)
+        CYCLES_DI   ( 0, 26, 10,       0, 26, 10,      0, 32, 12)
+        CYCLES_IX   ( 0, 30, 12,       0, 30, 12,      0, 36, 14)
+        CYCLES_AW   ( 0, 26,  9,       0, 26,  9,      0, 32, 11)
+        CYCLES_AL   ( 0, 30,  9,       0, 30,  9,      0, 36, 11)
+
     } else {                    // Ea -> Rg
 
         auto arg = readI <C,Word> ();
@@ -2848,17 +2860,17 @@ Moira::execMoves(u16 opcode)
             default:
                 fatalError;
         }
+
+        CYCLES_AI   ( 0, 18, 11,       0, 18, 11,      0, 22, 11)
+        CYCLES_PI   ( 0, 18, 11,       0, 18, 11,      0, 22, 11)
+        CYCLES_PD   ( 0, 20, 12,       0, 20, 12,      0, 28, 12)
+        CYCLES_DI   ( 0, 26, 12,       0, 26, 12,      0, 32, 12)
+        CYCLES_IX   ( 0, 30, 14,       0, 30, 14,      0, 36, 14)
+        CYCLES_AW   ( 0, 26, 11,       0, 26, 11,      0, 32, 11)
+        CYCLES_AL   ( 0, 30, 11,       0, 30, 11,      0, 36, 11)
     }
 
     prefetch <C,POLLIPL> ();
-
-    CYCLES_AI   ( 0, 18,  9,       0, 18,  9,      0, 22, 11)
-    CYCLES_PI   ( 0, 18,  9,       0, 18,  9,      0, 22, 11)
-    CYCLES_PD   ( 0, 20, 10,       0, 20, 10,      0, 28, 12)
-    CYCLES_DI   ( 0, 26, 10,       0, 26, 10,      0, 32, 12)
-    CYCLES_IX   ( 0, 30, 12,       0, 30, 12,      0, 36, 14)
-    CYCLES_AW   ( 0, 26,  9,       0, 26,  9,      0, 32, 11)
-    CYCLES_AL   ( 0, 30,  9,       0, 30,  9,      0, 36, 11)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -2932,7 +2944,7 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execMoveFromSrRg(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
-    if constexpr (C == M68010) SUPERVISOR_MODE_ONLY
+    if constexpr (C != M68000) SUPERVISOR_MODE_ONLY
 
         int dst = _____________xxx(opcode);
 
@@ -2950,7 +2962,7 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execMoveFromSrEa(u16 opcode)
 {
     EXEC_DEBUG(C,I,M,S)
-    if constexpr (C == M68010) SUPERVISOR_MODE_ONLY
+    if constexpr (C != M68000) SUPERVISOR_MODE_ONLY
 
         int dst = _____________xxx(opcode);
     u32 ea, data;
@@ -4067,9 +4079,9 @@ Moira::execUnpkDn(u16 opcode)
     int dy  = _____________xxx(opcode);
 
     u16 adj = (u16)readI <C,Word> ();
-    u32 src = readD(dy) + adj;
+    u32 src = readD(dy);
 
-    u32 dst = ((src << 4 & 0x0F00) | (src & 0x000f)) + adj;
+    u32 dst = ((src << 4 & 0x0F00) | (src & 0x000F)) + adj;
     writeD<Word>(dx, dst);
 
     prefetch<C>();

@@ -9964,6 +9964,7 @@ static void m68k_op_chk2cmp2_8_pcdi(void)
 		sint lower_bound = m68ki_read_pcrel_8(ea);
 		sint upper_bound = m68ki_read_pcrel_8(ea + 1);
 
+        printf("m68k_op_chk2cmp2_8_pcdi %d %d %d\n", lower_bound, upper_bound, compare);
 		if(!BIT_F(word2))
 			compare = (int32)(int8)compare;
       
@@ -10198,6 +10199,8 @@ static void m68k_op_chk2cmp2_16_ai(void)
 		sint lower_bound = (int16)m68ki_read_16(ea);
 		sint upper_bound = (int16)m68ki_read_16(ea + 2);
 
+        printf("Musashi: reg = %d [reg] = %x ea = %x lower_bound = %d upper_bound = %d compare = %d\n", (word2 >> 12) & 15, REG_DA[(word2 >> 12) & 15], ea, lower_bound, upper_bound, compare);
+
 		if(!BIT_F(word2))
 			compare = (int32)(int16)compare;
  		FLAG_Z = !((upper_bound==compare) || (lower_bound==compare));  // JFF: | => ||
@@ -10222,8 +10225,12 @@ static void m68k_op_chk2cmp2_16_di(void)
 		sint lower_bound = (int16)m68ki_read_16(ea);
 		sint upper_bound = (int16)m68ki_read_16(ea + 2);
 
+        printf("Musashi: compare before (%d) = %d\n", BIT_F(word2), compare);
 		if(!BIT_F(word2))
 			compare = (int32)(int16)compare;
+
+        printf("Musashi: reg = %d [reg] = %x ea = %x lower_bound = %d upper_bound = %d compare = %d\n", (word2 >> 12) & 15, REG_DA[(word2 >> 12) & 15], ea, lower_bound, upper_bound, compare);
+
  		FLAG_Z = !((upper_bound==compare) || (lower_bound==compare));  // JFF: | => ||
 
         FLAG_C = (lower_bound <= upper_bound ? compare < lower_bound || compare > upper_bound : compare > upper_bound || compare < lower_bound) << 8;
@@ -10245,6 +10252,8 @@ static void m68k_op_chk2cmp2_16_ix(void)
 		uint ea = EA_AY_IX_16();
 		sint lower_bound = (int16)m68ki_read_16(ea);
 		sint upper_bound = (int16)m68ki_read_16(ea + 2);
+
+        printf("Musashi: reg = %d [reg] = %x ea = %x lower_bound = %d upper_bound = %d compare = %d\n", (word2 >> 12) & 15, REG_DA[(word2 >> 12) & 15], ea, lower_bound, upper_bound, compare);
 
 		if(!BIT_F(word2))
 			compare = (int32)(int16)compare;
