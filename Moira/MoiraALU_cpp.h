@@ -390,7 +390,7 @@ template <Core C, Size S> void
 Moira::cmp(u32 op1, u32 op2)
 {
     u64 result = U64_SUB(op2, op1);
-    
+    // printf("ALU cmp: %x %x %llx\n", op1, op2, result);
     reg.sr.c = NBIT<S>(result >> 1);
     reg.sr.v = NBIT<S>((op2 ^ op1) & (op2 ^ result));
     reg.sr.z = ZERO<S>(result);
@@ -687,11 +687,11 @@ template <Size S> u64
 Moira::mullsMusashi(u32 op1, u32 op2)
 {
     u64 result = u64(i64(i32(op1)) * i64(i32(op2)));
-    printf("Moira ALU: %lld %lld %lld\n", i64(i32(op1)), i64(i32(op2)), i64(i32(op1)) * i64(i32(op2)));
+    // printf("Moira ALU: %lld %lld %lld\n", i64(i32(op1)), i64(i32(op2)), i64(i32(op1)) * i64(i32(op2)));
 
     if constexpr (S == Word) {
 
-        printf("Moira ALU: mulls WORD: %llx\n", result);
+        // printf("Moira ALU: mulls WORD: %llx\n", result);
         reg.sr.n = NBIT<Long>(result);
         reg.sr.z = ZERO<Long>(result);
         reg.sr.v = result != u64(i32(result));
@@ -699,7 +699,7 @@ Moira::mullsMusashi(u32 op1, u32 op2)
 
     } else {
 
-        printf("Moira ALU: mulls LONG: %llx\n", result);
+        // printf("Moira ALU: mulls LONG: %llx\n", result);
         reg.sr.n = NBIT<Long>(result >> 32);
         reg.sr.z = result == 0;
         reg.sr.v = 0;
@@ -718,14 +718,15 @@ Moira::mulluMusashi(u32 op1, u32 op2)
 
         reg.sr.n = NBIT<Long>(result);
         reg.sr.z = ZERO<Long>(result);
-        reg.sr.v = 0;
+        reg.sr.v = (result >> 32) != 0;
         reg.sr.c = 0;
+    }
 
-    } else {
+    if constexpr (S == Long) {
 
         reg.sr.n = NBIT<Long>(result >> 32);
         reg.sr.z = result == 0;
-        reg.sr.v = (result >> 32) != 0;
+        reg.sr.v = 0;
         reg.sr.c = 0;
     }
 
@@ -798,9 +799,20 @@ Moira::divMusashi(u32 op1, u32 op2)
 template <Size S> std::pair<u32,u32>
 Moira::divlsMusashi(u64 op1, u32 op2)
 {
-    u64 quotient  = u64(i64(op1) / i64(i32(op2)));
-    u64 remainder = u64(i64(op1) % i64(i32(op2)));
-    printf("Moira signed 64: %llx %llx\n", quotient, remainder);
+    u64 quotient, remainder;
+
+    if (S == Word) {
+
+        quotient  = (u64)((i64)((i32)op1) / (i64)((i32)op2));
+        remainder = (u64)((i64)((i32)op1) % (i64)((i32)op2));
+
+    } else {
+
+        quotient  = u64(i64(op1) / i64(i32(op2)));
+        remainder = u64(i64(op1) % i64(i32(op2)));
+    }
+
+    // printf("Moira signed 64: %llx %llx\n", quotient, remainder);
 
     if(i64(quotient) == i64(i32(quotient))) {
 
@@ -817,25 +829,36 @@ Moira::divlsMusashi(u64 op1, u32 op2)
     return { quotient, remainder };
 }
 
-template <Size S> u64
+template <Size S> std::pair<u32,u32>
 Moira::divluMusashi(u64 op1, u32 op2)
 {
-    u64 result = 0; // TODO
+    u64 quotient, remainder;
+
+    if (S == Word) {
+
+        quotient  = op1 / op2;
+        remainder = op1 % op2;
+
+    } else {
+
+        quotient  = op1 / op2;
+        remainder = op1 % op2;
+    }
 
     if constexpr (S == Word) {
 
-        reg.sr.n = NBIT<Long>(result);
-        reg.sr.z = ZERO<Long>(result);
+        reg.sr.n = NBIT<Long>(quotient);
+        reg.sr.z = ZERO<Long>(quotient);
         reg.sr.v = 0;
         reg.sr.c = 0;
 
     } else {
 
-        reg.sr.n = NBIT<Long>(result >> 32);
-        reg.sr.z = result == 0;
-        reg.sr.v = (result >> 32) != 0;
+        reg.sr.n = NBIT<Long>(quotient >> 32);
+        reg.sr.z = quotient == 0;
+        reg.sr.v = (quotient >> 32) != 0;
         reg.sr.c = 0;
     }
 
-    return result;
+    return { quotient, remainder };
 }

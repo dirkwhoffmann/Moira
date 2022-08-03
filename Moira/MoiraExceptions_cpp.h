@@ -155,7 +155,7 @@ Moira::saveToStack2(u16 nr, u16 sr, u32 pc)
 
             if constexpr (MIMIC_MUSASHI) {
 
-                printf("Pushing %x %x %x %x\n", pc, 0x2000 | nr << 2, reg.pc, sr);
+                // printf("Pushing %x %x %x %x\n", pc, 0x2000 | nr << 2, reg.pc, sr);
                 push <C,Long> (reg.pc0);
                 push <C,Word> (0x2000 | nr << 2);
                 push <C,Long> (pc);

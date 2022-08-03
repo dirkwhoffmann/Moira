@@ -128,7 +128,7 @@ Moira::computeEA(u32 n) {
         {
             if constexpr (C == M68020) {
 
-                printf("compteEA: irc = %x\n", queue.irc);
+                // printf("compteEA: irc = %x\n", queue.irc);
                 if (queue.irc & 0x100) {
                     result = computeEAfe<C,M,S,F>(readA(n));
                 } else {
@@ -207,7 +207,7 @@ Moira::computeEAbe(u32 an)
 {
     i32 result;
 
-    printf("Moira: computeEAbe (%x)\n", queue.irc);
+    // printf("Moira: computeEAbe (%x)\n", queue.irc);
 
     i8   d = (i8)queue.irc;
     u32 xi = readR((queue.irc >> 12) & 0b1111);
@@ -225,7 +225,7 @@ Moira::computeEAbe(u32 an)
 template <Core C, Mode M, Size S, Flags F> u32
 Moira::computeEAfe(u32 an)
 {
-    printf("Moira: computeEAfe<%d,%d,%d> (%x)\n", C, M, S, queue.irc);
+    // printf("Moira: computeEAfe<%d,%d,%d> (%x)\n", C, M, S, queue.irc);
 
     u32 xn = 0;                        /* Index register */
     u32 bd = 0;                        /* Base Displacement */
@@ -240,7 +240,7 @@ Moira::computeEAfe(u32 an)
 
     /* Check if base register is present */
     if(extension & 0x80) {                /* BS */
-        printf("Moira: (1)\n");
+        // printf("Moira: (1)\n");
         an = 0;                           /* An */
     }
 
@@ -248,67 +248,67 @@ Moira::computeEAfe(u32 an)
     if(!(extension & 0x40))
     {
         xn = readR(extension>>12);     /* Xn */
-        printf("Moira: (2) xn = %x\n", xn);
+        // printf("Moira: (2) xn = %x\n", xn);
         if(!(extension & 0x800)) {     /* W/L */
             xn = SEXT<Word>(xn);
-            printf("Moira: (3) xn = %x\n", xn);
+            // printf("Moira: (3) xn = %x\n", xn);
         }
         xn <<= (extension>>9) & 3;      /* SCALE */
-        printf("Moira: Scaled: xn = %x\n", xn);
+        // printf("Moira: Scaled: xn = %x\n", xn);
     }
 
     /* Check if base displacement is present */
     if (extension & 0x20) {       /* BD SIZE */
-        printf("Moira: (4)\n");
+        // printf("Moira: (4)\n");
         if (extension & 0x10) {
-            printf("Moira: (4.1)\n");
+            // printf("Moira: (4.1)\n");
             bd = (queue.irc << 16);
             readExt<C>();
             bd |= queue.irc;
             readExt<C>();
-            printf("bd = %x\n", bd);
+            // printf("bd = %x\n", bd);
         } else {
-            printf("Moira: (4.2)\n");
+            // printf("Moira: (4.2)\n");
             bd = queue.irc;
             readExt<C>();
-            printf("bd = %x\n", bd);
+            // printf("bd = %x\n", bd);
 
         }
     }
 
     /* If no indirect action, we are done */
     if(!(extension & 7)) {                  /* No Memory Indirect */
-        printf("Moira: (5)\n");
+        // printf("Moira: (5)\n");
         return an + bd + xn;
     }
 
     /* Check if outer displacement is present */
     if(extension & 0x2) {
-        printf("Moira: (6)\n");
+        // printf("Moira: (6)\n");
         if (extension & 0x1) {
-            printf("Moira: (6.1)\n");
+            // printf("Moira: (6.1)\n");
             od = (queue.irc << 16);
             readExt<C>();
             od |= queue.irc;
             readExt<C>();
-            printf("od = %x\n", od);
+            // printf("od = %x\n", od);
         } else {
-            printf("Moira: (6.2)\n");
+            // printf("Moira: (6.2)\n");
             od = queue.irc;
             readExt<C>();
-            printf("od = %x\n", od);
+            // printf("od = %x\n", od);
         }
     }
 
     /* Postindex */
     if (extension & 0x4) {   /* I/IS:  0 = preindex, 1 = postindex */
         u32 result = readM<C,M,Long>(an + bd) + xn + od;
-        printf("Moira: (7) result = %x\n", result);
+        // printf("Moira: (7) result = %x\n", result);
         return result;
     }
 
     /* Preindex */
-    printf("Moira: (8)\n");
+    // printf("Moira: (8)\n");
     return readM<C,M,S>(an + bd+ xn) + od;
 }
 
@@ -656,7 +656,7 @@ Moira::cyclePenalty(u16 ext)
     if constexpr (C != M68020) return 0;
 
     if ((ext & 0x100) == 0) {
-        printf("cyclePenalty(%x): 0 (brief extension format)\n", ext);
+        // printf("cyclePenalty(%x): 0 (brief extension format)\n", ext);
         return 0; // Brief extension format
     }
     const u8 delay[64] =
@@ -684,7 +684,7 @@ Moira::cyclePenalty(u16 ext)
         case MODE_IX:
         case MODE_IXPC:
 
-            printf("cyclePenalty(%x): %d\n", ext, delay[ext & 0x3F]);
+            // printf("cyclePenalty(%x): %d\n", ext, delay[ext & 0x3F]);
             return delay[ext & 0x3F];
 
         default:
