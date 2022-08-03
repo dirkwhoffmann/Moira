@@ -5307,6 +5307,7 @@ static void m68k_op_bfchg_32_d(void)
 
 		*data ^= mask;
 
+        printf("Musashi m68k_op_bfchg_32_d: offset = %d width = %d mask = %x data = %x\n", offset, width, mask, *data);
 		return;
 	}
 	m68ki_exception_illegal();
@@ -7063,6 +7064,8 @@ static void m68k_op_bfins_32_d(void)
 
 		*data &= ~mask;
 		*data |= insert;
+
+        printf("Musashi: insert = %x mask = %x data = %x\n", insert, mask, (*data & ~mask) | insert);
 
 		return;
 	}

@@ -848,8 +848,6 @@ Moira::execBitField(u16 opcode)
     int dwBit  = __________x_____ (ext);
 
     u32 ea, data;
-    readOp<C, M, S>(dy, ea, data);
-
     u32 mask;
 
     if (doBit) offset = reg.d[offset & 0b111];
@@ -864,31 +862,81 @@ Moira::execBitField(u16 opcode)
 
     switch (I) {
 
-        case BFTST:
+        case BFCHG:
+        case BFCLR:
+        case BFSET:
 
-            reg.sr.n = NBIT<S>(data << offset);
-            reg.sr.z = ZERO<S>(data & mask);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            if (M == MODE_DN) {
 
-            CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0,  6)
-            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)
-            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 18)
-            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
-            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)
-            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)
-            CYCLES_DIPC ( 0,  0,  0,     0,  0,  0,     0,  0, 18)
-            CYCLES_IXPC ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
+                readOp<C, M, S>(dy, ea, data);
+
+                reg.sr.n = NBIT<S>(readD(dy) << offset);
+                reg.sr.z = ZERO<S>(readD(dy) & mask);
+                reg.sr.v = 0;
+                reg.sr.c = 0;
+
+                if (I == BFCHG) writeD(dy, data ^ mask);
+                if (I == BFCLR) writeD(dy, data & ~mask);
+                if (I == BFSET) writeD(dy, data | mask);
+
+            } else {
+
+                ea = computeEA<C, M, S>(dy);
+
+                ea += offset / 8;
+                offset %= 8;
+                if(offset < 0) {
+
+                    offset += 8;
+                    ea--;
+                }
+
+                data = readM<C, M, S>(ea);
+
+                reg.sr.n = NBIT<S>(data << offset);
+                reg.sr.z = ZERO<S>(data & mask);
+                reg.sr.v = 0;
+                reg.sr.c = 0;
+
+                if (I == BFCHG) writeM<C, M, S>(ea, data ^ mask);
+                if (I == BFCLR) writeM<C, M, S>(ea, data & ~mask);
+                if (I == BFSET) writeM<C, M, S>(ea, data | mask);
+
+                if((width + offset) > 32) {
+
+                    u8 mask2 = u8(0xFFFFFFFF00000000 >> width);
+                    u8 data2 = readM<C, M, Byte>(ea + 4);
+                    reg.sr.z |= ZERO<Byte>(data2 & mask2);
+
+                    if (I == BFCHG) writeM<C, M, S>(ea + 4, data ^ mask);
+                    if (I == BFCLR) writeM<C, M, S>(ea + 4, data & ~mask);
+                    if (I == BFSET) writeM<C, M, S>(ea + 4, data | mask);
+                }
+            }
+
+            CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0, 12)
+            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 24)
+            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 25)
+            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 27)
+            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 24)
+            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 24)
             break;
 
+        case BFEXTS:
         case BFEXTU:
         {
+            readOp<C, M, S>(dy, ea, data);
+
             int dn = _xxx____________ (ext);
 
             data = std::rotl(data, offset);
-            printf("Moira BFEXTU: data = %x\n", data);
             reg.sr.n = NBIT<S>(data);
-            data >>= 32 - width;
+
+            if (I == BFEXTS) {
+                data >>= 32 - width;
+            } else {
+                data = SEXT<S>(data) >> (32 - width);
+            }
             reg.sr.z = ZERO<S>(data);
             reg.sr.v = 0;
             reg.sr.c = 0;
@@ -905,6 +953,99 @@ Moira::execBitField(u16 opcode)
             CYCLES_IXPC ( 0,  0,  0,     0,  0,  0,     0,  0, 22)
             break;
         }
+        case BFFFO:
+        {
+            readOp<C, M, S>(dy, ea, data);
+
+            int dn = _xxx____________ (ext);
+
+            data = std::rotl(data, offset);
+            reg.sr.n = NBIT<S>(data);
+
+            if (I == BFEXTS) {
+                data >>= 32 - width;
+            } else {
+                data = SEXT<S>(data) >> (32 - width);
+            }
+            reg.sr.z = ZERO<S>(data);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+
+            for(u32 bit = 1<<(width-1); bit && !(data & bit); bit>>= 1) {
+                offset++;
+            }
+            writeD(dn, offset);
+
+            CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0, 18)
+            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 32)
+            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 33)
+            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 35)
+            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 32)
+            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 32)
+            CYCLES_DIPC ( 0,  0,  0,     0,  0,  0,     0,  0, 33)
+            CYCLES_IXPC ( 0,  0,  0,     0,  0,  0,     0,  0, 35)
+            break;
+        }
+        case BFINS:
+        {
+            if (M == MODE_DN) {
+
+                int dn = _xxx____________ (ext);
+
+                u32 insert = readD(dn);
+                insert = u32(insert << (32 - width));
+
+                printf("insert = %x mask = %x\n", insert, mask);
+                printf("Result = %x\n", (readD(dn) & ~mask) | insert);
+
+                reg.sr.n = NBIT<S>(insert);
+                reg.sr.z = ZERO<S>(insert);
+                reg.sr.v = 0;
+                reg.sr.c = 0;
+
+                writeD(dy, (readD(dy) & ~mask) | insert);
+
+            } else {
+
+                ea = computeEA<C, M, S>(dy);
+
+                ea += offset / 8;
+                offset %= 8;
+                if(offset < 0) {
+
+                    offset += 8;
+                    ea--;
+                }
+
+                data = readM<C, M, S>(ea);
+            }
+
+            CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0, 10)
+            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 21)
+            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 22)
+            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 24)
+            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 21)
+            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 21)
+            break;
+        }
+        case BFTST:
+
+            readOp<C, M, S>(dy, ea, data);
+
+            reg.sr.n = NBIT<S>(data << offset);
+            reg.sr.z = ZERO<S>(data & mask);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+
+            CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0,  6)
+            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)
+            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 18)
+            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
+            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)
+            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)
+            CYCLES_DIPC ( 0,  0,  0,     0,  0,  0,     0,  0, 18)
+            CYCLES_IXPC ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
+            break;
 
         default:
             break;
