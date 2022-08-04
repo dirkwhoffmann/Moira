@@ -8441,7 +8441,6 @@ static void m68k_op_btst_8_r_di(void)
 static void m68k_op_btst_8_r_ix(void)
 {
     auto tmp = OPER_AY_IX_8();
-    printf("m68k_op_btst_8_r_ix: %d %d\n", tmp, 1 << (DX & 7));
 	FLAG_Z = tmp & (1 << (DX & 7));
 }
 

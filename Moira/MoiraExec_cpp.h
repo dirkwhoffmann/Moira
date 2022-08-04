@@ -760,8 +760,6 @@ Moira::execBitDxEa(u16 opcode)
 
             u32 ea, data;
             if (!readOp <C,M,Byte> (dst, ea, data)) return;
-
-            printf("ea = %x data = %x\n", ea, data);
             
             data = bit <C,I> (data, b);
 
@@ -1167,8 +1165,6 @@ Moira::execCas(u16 opcode)
 
     // Set flags
     cmp <C,S> (CLIP<S>(compare), data);
-
-    printf("Moira cas: data = %x z = %d\n", data, reg.sr.z);
 
     if (!reg.sr.z) {
 
@@ -1941,7 +1937,7 @@ Moira::execJsr(u16 opcode)
     }
 
     // Update program counter
-    if (isAbsMode(M) || isDspMode(M)) {
+    if ((isAbsMode(M) || isDspMode(M)) && cp == 0) {
         // printf("Adding 2 to PC %x (%x)\n", reg.pc, reg.pc0);
         reg.pc += 2;
     }

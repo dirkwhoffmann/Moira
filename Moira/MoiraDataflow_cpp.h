@@ -286,14 +286,12 @@ Moira::computeEAfe(u32 an)
     if(extension & 0x2) {
         // printf("Moira: (6)\n");
         if (extension & 0x1) {
-            printf("Moira: (6.1)\n");
             od = (queue.irc << 16);
             readExt<C>();
             od |= queue.irc;
             readExt<C>();
             // printf("od = %x\n", od);
         } else {
-            printf("Moira: (6.2)\n");
             od = SEXT<Word>(queue.irc);
             readExt<C>();
             // printf("od = %x\n", od);
