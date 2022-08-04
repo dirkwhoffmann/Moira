@@ -8723,7 +8723,7 @@ static void m68k_op_cas_8_ai(void)
 
         if(COND_NE()) {
 			*compare = MASK_OUT_BELOW_8(*compare) | dest;
-            // printf("result(COND_NE) = %x\n", *compare);
+            // printf("result(COND_NE): compare = %x dest = %x\n", *compare, dest);
         }
         else
 		{

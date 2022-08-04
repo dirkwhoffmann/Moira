@@ -1358,7 +1358,7 @@ static inline uint m68ki_get_ea_ix(uint An)
     if(BIT_1(extension)) {               /* I/IS:  od */
         // printf("Musashi: (6)\n");
         od = BIT_0(extension) ? m68ki_read_imm_32() : (uint32)MAKE_INT_16(m68ki_read_imm_16());
-        // printf("od = %x\n", od);
+        // printf("Musashi (%s) od = %x\n", BIT_0(extension) ? "64 bit" : "32 bit", od);
     }
 
 	/* Postindex */
@@ -1370,6 +1370,13 @@ static inline uint m68ki_get_ea_ix(uint An)
 
 	/* Preindex */
     // printf("Musashi: (8)\n");
+    /*
+    printf("Musashi Full format: %x %x %x %x\n", An, bd, Xn, od);
+    printf("                     %d %d %d %d\n", An, bd, Xn, od);
+    printf("Reading from         %x\n", (uint)(An + bd + Xn));
+    printf("Result               %x\n", m68ki_read_32(An + bd + Xn));
+    printf("Result2              %x\n", m68ki_read_32(An + bd + Xn) + od);
+    */
 	return m68ki_read_32(An + bd + Xn) + od;
 }
 

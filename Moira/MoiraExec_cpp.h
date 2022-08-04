@@ -1168,6 +1168,8 @@ Moira::execCas(u16 opcode)
     // Set flags
     cmp <C,S> (CLIP<S>(compare), data);
 
+    printf("Moira cas: data = %x z = %d\n", data, reg.sr.z);
+
     if (!reg.sr.z) {
 
         writeD(dc, CLEAR<S>(compare) | data);
@@ -1182,7 +1184,7 @@ Moira::execCas(u16 opcode)
 
     } else {
 
-        writeM <C,M,S> (ea, CLEAR<S>(du));
+        writeM <C,M,S> (ea, readD<S>(du));
 
         CYCLES_AI   ( 0,  0, 19,       0,  0, 19,      0,  0, 19)
         CYCLES_PI   ( 0,  0, 19,       0,  0, 19,      0,  0, 19)

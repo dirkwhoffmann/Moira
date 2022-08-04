@@ -286,15 +286,15 @@ Moira::computeEAfe(u32 an)
     if(extension & 0x2) {
         // printf("Moira: (6)\n");
         if (extension & 0x1) {
-            // printf("Moira: (6.1)\n");
+            printf("Moira: (6.1)\n");
             od = (queue.irc << 16);
             readExt<C>();
             od |= queue.irc;
             readExt<C>();
             // printf("od = %x\n", od);
         } else {
-            // printf("Moira: (6.2)\n");
-            od = queue.irc;
+            printf("Moira: (6.2)\n");
+            od = SEXT<Word>(queue.irc);
             readExt<C>();
             // printf("od = %x\n", od);
         }
@@ -309,7 +309,14 @@ Moira::computeEAfe(u32 an)
 
     /* Preindex */
     // printf("Moira: (8)\n");
-    return readM<C,M,S>(an + bd+ xn) + od;
+    /*
+    printf("Moira Full format: %x %x %x %x\n", an, bd, xn, od);
+    printf("                   %d %d %d %d\n", an, bd, xn, od);
+    printf("Reading from       %x\n", u32(an + bd + xn));
+    printf("Result             %x\n", readM<C,M,S>(an + bd + xn));
+    printf("Result2            %x\n", readM<C,M,S>(an + bd + xn) + od);
+    */
+    return readM<C,M,Long>(an + bd + xn) + od;
 }
 
 template <Mode M, Size S> void
