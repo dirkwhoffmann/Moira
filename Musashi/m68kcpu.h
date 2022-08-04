@@ -1369,8 +1369,9 @@ static inline uint m68ki_get_ea_ix(uint An)
     }
 
 	/* Preindex */
-    // printf("Musashi: (8)\n");
     /*
+    printf("Musashi: (8)\n");
+
     printf("Musashi Full format: %x %x %x %x\n", An, bd, Xn, od);
     printf("                     %d %d %d %d\n", An, bd, Xn, od);
     printf("Reading from         %x\n", (uint)(An + bd + Xn));

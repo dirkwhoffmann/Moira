@@ -760,8 +760,10 @@ Moira::execBitDxEa(u16 opcode)
 
             u32 ea, data;
             if (!readOp <C,M,Byte> (dst, ea, data)) return;
-            
+
+            // printf("Moira: data = %x ea = %x mask = %x\n", data, ea, b);
             data = bit <C,I> (data, b);
+            // printf("Moira: data after = %x\n", data);
 
             if constexpr (I == BCLR && C == M68010) { SYNC(2); }
 
@@ -851,14 +853,14 @@ Moira::execBitField(u16 opcode)
     u32 mask;
 
     if (doBit) offset = reg.d[offset & 0b111];
-    if (dwBit) offset = reg.d[width  & 0b111];
+    if (dwBit) width = reg.d[width  & 0b111];
 
     width = ((width - 1) & 0b11111) + 1;
 
     mask = u32(0xFFFFFFFF00000000 >> width);
     mask = std::rotr(mask, offset);
 
-    // printf("Moira execBitField: offsrt = %d width = %d mask = %x\n", offset, width, mask);
+    // printf("Moira execBitField: offset = %d width = %d mask = %x\n", offset, width, mask);
 
     switch (I) {
 
@@ -881,6 +883,9 @@ Moira::execBitField(u16 opcode)
 
             } else {
 
+                mask = u32(0xFFFFFFFF00000000 >> width);
+                mask = mask >> offset;
+
                 ea = computeEA<C, M, S>(dy);
 
                 ea += offset / 8;
@@ -898,7 +903,11 @@ Moira::execBitField(u16 opcode)
                 reg.sr.v = 0;
                 reg.sr.c = 0;
 
-                if (I == BFCHG) writeM<C, M, S>(ea, data ^ mask);
+                if (I == BFCHG) {
+                    // printf("Moira: S = %d data = %x mask = %x\n", S, data, mask);
+                    // printf("Moira: BFCHG: Writing %x to %x\n", data ^ mask, ea);
+                    writeM<C, M, S>(ea, data ^ mask);
+                }
                 if (I == BFCLR) writeM<C, M, S>(ea, data & ~mask);
                 if (I == BFSET) writeM<C, M, S>(ea, data | mask);
 
@@ -906,11 +915,11 @@ Moira::execBitField(u16 opcode)
 
                     u8 mask2 = u8(0xFFFFFFFF00000000 >> width);
                     u8 data2 = readM<C, M, Byte>(ea + 4);
-                    reg.sr.z |= ZERO<Byte>(data2 & mask2);
+                    reg.sr.z &= ZERO<Byte>(data2 & mask2);
 
-                    if (I == BFCHG) writeM<C, M, S>(ea + 4, data ^ mask);
-                    if (I == BFCLR) writeM<C, M, S>(ea + 4, data & ~mask);
-                    if (I == BFSET) writeM<C, M, S>(ea + 4, data | mask);
+                    if (I == BFCHG) writeM<C, M, Byte>(ea + 4, data2 ^ mask2);
+                    if (I == BFCLR) writeM<C, M, Byte>(ea + 4, data2 & ~mask2);
+                    if (I == BFSET) writeM<C, M, Byte>(ea + 4, data2 | mask2);
                 }
             }
 
@@ -927,9 +936,15 @@ Moira::execBitField(u16 opcode)
         {
             readOp<C, M, S>(dy, ea, data);
 
+            // printf("Moira ea = %x data: %x\n", ea, data);
+
             int dn = _xxx____________ (ext);
 
-            data = std::rotl(data, offset);
+            data = CLIP<Long>(data << offset);
+            if((offset + width) > 32) {
+                data |= (readM<C, M, Byte>(ea+4) << offset) >> 8;
+            }
+
             reg.sr.n = NBIT<S>(data);
 
             if (I == BFEXTS) {
@@ -992,7 +1007,7 @@ Moira::execBitField(u16 opcode)
 
             if (M == MODE_DN) {
 
-                u32 insert = readD(dn);
+                u64 insert = readD(dn);
                 insert = u32(insert << (32 - width));
 
                 reg.sr.n = NBIT<S>(insert);
@@ -1000,9 +1015,15 @@ Moira::execBitField(u16 opcode)
                 reg.sr.v = 0;
                 reg.sr.c = 0;
 
+                insert = std::rotr((u32)insert, offset);
+
                 writeD(dy, (readD(dy) & ~mask) | insert);
+                // printf("BFINS (dn): insert = %x mask = %x dy = %x\n", insert, mask, readD(dy));
 
             } else {
+
+                mask = u32(0xFFFFFFFF00000000 >> width);
+                mask = mask >> offset;
 
                 ea = computeEA<C, M, S>(dy);
 
@@ -1024,18 +1045,25 @@ Moira::execBitField(u16 opcode)
                 reg.sr.v = 0;
                 reg.sr.c = 0;
 
+                insert = insert >> offset;
+
                 // printf("Moira: insert = %x mask = %x\n", insert, mask);
-                // printf("Moira: Write(%x) = %x\n", ea, (data & mask) | insert);
+                // printf("Moira: Data = %x Write(%x) = %x\n", data, ea, (data & ~mask) | insert);
 
                 writeM<C, M, S>(ea, (data & ~mask) | insert);
 
                 if((width + offset) > 32) {
 
-                    u8 mask2 = u8(0xFFFFFFFF00000000 >> width);
-                    u8 data2 = readM<C, M, Byte>(ea + 4);
-                    reg.sr.z |= ZERO<Byte>(data2 & mask2);
+                    insert = readD(dn);
+                    insert = u32(insert << (32 - width));
 
-                    writeM<C, M, S>(ea, (data & ~mask) | insert);
+                    u8 mask2 = u8(0xFFFFFFFF00000000 >> width);
+                    u8 insert2 = u8(insert);
+                    u8 data2 = readM<C, M, Byte>(ea + 4);
+                    // printf("Moira: mask2 = %x insert2 = %x data2 = %x\n", mask2, insert2, data2);
+                    reg.sr.z &= ZERO<Byte>(data2 & mask2);
+
+                    writeM<C, M, Byte>(ea + 4, (data2 & ~mask2) | insert2);
                 }
             }
 
@@ -1055,6 +1083,8 @@ Moira::execBitField(u16 opcode)
             reg.sr.z = ZERO<S>(data & mask);
             reg.sr.v = 0;
             reg.sr.c = 0;
+
+            // printf("%x NBit: %d\n", data << offset, reg.sr.n);
 
             CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0,  6)
             CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)

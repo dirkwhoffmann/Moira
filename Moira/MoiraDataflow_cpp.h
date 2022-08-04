@@ -265,14 +265,14 @@ Moira::computeEAfe(u32 an)
             bd = (queue.irc << 16);
             readExt<C>();
             bd |= queue.irc;
+            // bd = SEXT<Word>(bd | queue.irc);
             readExt<C>();
             // printf("bd = %x\n", bd);
         } else {
             // printf("Moira: (4.2)\n");
-            bd = queue.irc;
+            bd = SEXT<Word>(queue.irc);
             readExt<C>();
             // printf("bd = %x\n", bd);
-
         }
     }
 

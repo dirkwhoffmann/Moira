@@ -4924,6 +4924,8 @@ static void m68k_op_bchg_8_r_ix(void)
 	uint src = m68ki_read_8(ea);
 	uint mask = 1 << (DX & 7);
 
+    // printf("Musashi: data = %x ea = %x mask = %x\n", src, ea, mask);
+
 	FLAG_Z = src & mask;
 	m68ki_write_8(ea, src ^ mask);
 }
@@ -5354,6 +5356,8 @@ static void m68k_op_bfchg_32_ai(void)
 		FLAG_C = CFLAG_CLEAR;
 
 		m68ki_write_32(ea, data_long ^ mask_long);
+        // printf("Musashi: data_long = %x mask_long = %x\n", data_long, mask_long);
+        // printf("Musashi: BFCHG: Writing %x to %x\n", data_long ^ mask_long, ea);
 
 		if((width + offset) > 32)
 		{
@@ -6324,8 +6328,12 @@ static void m68k_op_bfextu_32_ai(void)
 		}
 		width = ((width-1) & 31) + 1;
 
+        // printf("Musashi execBitField: offset = %d width = %d ea = %x\n", offset, width, ea);
+
 		data = m68ki_read_32(ea);
 		data = MASK_OUT_ABOVE_32(data<<offset);
+
+        // printf("Musashi data: %x\n", data);
 
 		if((offset+width) > 32)
 			data |= (m68ki_read_8(ea+4) << offset) >> 8;
@@ -7065,6 +7073,8 @@ static void m68k_op_bfins_32_d(void)
 		*data &= ~mask;
 		*data |= insert;
 
+        // printf("Musashi BFINS (dn): insert = %x mask = %x *data = %x\n", insert, mask, *data);
+
         // printf("Musashi: insert = %x mask = %x data = %x\n", insert, mask, (*data & ~mask) | insert);
 
 		return;
@@ -7115,10 +7125,11 @@ static void m68k_op_bfins_32_ai(void)
 		insert_long = insert_base >> offset;
 
 		data_long = m68ki_read_32(ea);
-
-        // printf("Musashi: insert = %x mask = %x\n", insert_long, mask_long);
-        // printf("Musashi: Write(%x) = %x\n", ea, (data_long & ~mask_long) | insert_long);
-        // printf("Musashi: Data = %x\n", data_long);
+/*
+        printf("Musashi: insert = %x mask = %x\n", insert_long, mask_long);
+        printf("Musashi: Write(%x) = %x\n", ea, (data_long & ~mask_long) | insert_long);
+        printf("Musashi: Data = %x\n", data_long);
+*/
 
         FLAG_V = VFLAG_CLEAR;
 		FLAG_C = CFLAG_CLEAR;
@@ -7130,6 +7141,7 @@ static void m68k_op_bfins_32_ai(void)
 			mask_byte = MASK_OUT_ABOVE_8(mask_base);
 			insert_byte = MASK_OUT_ABOVE_8(insert_base);
 			data_byte = m68ki_read_8(ea+4);
+            // printf("Musashi: mask2 = %x insert2 = %x data2 = %x\n", mask_byte, insert_byte, data_byte);
 			FLAG_Z |= (data_byte & mask_byte);
 			m68ki_write_8(ea+4, (data_byte & ~mask_byte) | insert_byte);
 		}
@@ -7710,7 +7722,6 @@ static void m68k_op_bftst_32_d(void)
 			offset = REG_D[offset&7];
 		if(BIT_5(word2))
 			width = REG_D[width&7];
-
 
 		offset &= 31;
 		width = ((width-1) & 31) + 1;
