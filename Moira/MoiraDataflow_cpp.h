@@ -121,7 +121,7 @@ Moira::computeEA(u32 n) {
             i16  d = (i16)queue.irc;
             
             result = U32_ADD(an, d);
-            if ((F & SKIP_LAST_READ) == 0) readExt<C>();
+            if ((F & SKIP_LAST_READ) == 0) { readExt<C>(); } else { reg.pc += 2; }
             break;
         }
         case 6: // (d,An,Xi)
@@ -144,13 +144,13 @@ Moira::computeEA(u32 n) {
             result = U32_ADD3(an, d, ((queue.irc & 0x800) ? xi : SEXT<Word>(xi)));
 
             SYNC(2);
-            if ((F & SKIP_LAST_READ) == 0) readExt<C>();
+            if ((F & SKIP_LAST_READ) == 0) { readExt<C>(); } else { reg.pc += 2; }
             break;
         }
         case 7: // ABS.W
         {
             result = (i16)queue.irc;
-            if ((F & SKIP_LAST_READ) == 0) readExt<C>();
+            if ((F & SKIP_LAST_READ) == 0) { readExt<C>(); } else { reg.pc += 2; }
             break;
         }
         case 8: // ABS.L
@@ -158,7 +158,7 @@ Moira::computeEA(u32 n) {
             result = queue.irc << 16;
             readExt<C>();
             result |= queue.irc;
-            if ((F & SKIP_LAST_READ) == 0) readExt<C>();
+            if ((F & SKIP_LAST_READ) == 0) { readExt<C>(); } else { reg.pc += 2; }
             break;
         }
         case 9: // (d,PC)
@@ -166,7 +166,7 @@ Moira::computeEA(u32 n) {
             i16  d = (i16)queue.irc;
 
             result = U32_ADD(reg.pc, d);
-            if ((F & SKIP_LAST_READ) == 0) readExt<C>();
+            if ((F & SKIP_LAST_READ) == 0) { readExt<C>(); } else { reg.pc += 2; }
             break;
         }
         case 10: // (d,PC,Xi)
@@ -186,7 +186,7 @@ Moira::computeEA(u32 n) {
             
             result = U32_ADD3(reg.pc, d, ((queue.irc & 0x800) ? xi : SEXT<Word>(xi)));
             SYNC(2);
-            if ((F & SKIP_LAST_READ) == 0) readExt<C>();
+            if ((F & SKIP_LAST_READ) == 0) { readExt<C>(); } else { reg.pc += 2; }
             break;
         }
         case 11: // Im
@@ -217,7 +217,7 @@ Moira::computeEAbe(u32 an)
     result = U32_ADD3(an, d, offset);
 
     SYNC(2);
-    if ((F & SKIP_LAST_READ) == 0) readExt<C>();
+    if ((F & SKIP_LAST_READ) == 0) { readExt<C>(); } else { reg.pc += 2; }
 
     return result;
 }

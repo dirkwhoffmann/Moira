@@ -7776,10 +7776,15 @@ static void m68k_op_bftst_32_ai(void)
 		mask_long = mask_base >> offset;
 
 		data_long = m68ki_read_32(ea);
+
+        printf("Musashi: width = %d offset = %d ea = %x data = %x mask = %x\n", width, offset, ea, data_long, mask_long);
+
 		FLAG_N = ((data_long & (0x80000000 >> offset))<<offset)>>24;
 		FLAG_Z = data_long & mask_long;
 		FLAG_V = VFLAG_CLEAR;
 		FLAG_C = CFLAG_CLEAR;
+
+        printf("Musashi data = %x offset = %x NBit: %d\n", data_long, offset, FLAG_N);
 
 		if((width + offset) > 32)
 		{

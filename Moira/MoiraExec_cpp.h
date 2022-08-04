@@ -858,7 +858,11 @@ Moira::execBitField(u16 opcode)
     width = ((width - 1) & 0b11111) + 1;
 
     mask = u32(0xFFFFFFFF00000000 >> width);
-    mask = std::rotr(mask, offset);
+    if (M == MODE_DN) {
+        mask = std::rotr(mask, offset);
+    } else {
+        mask = mask >> offset;
+    }
 
     // printf("Moira execBitField: offset = %d width = %d mask = %x\n", offset, width, mask);
 
@@ -1022,9 +1026,6 @@ Moira::execBitField(u16 opcode)
 
             } else {
 
-                mask = u32(0xFFFFFFFF00000000 >> width);
-                mask = mask >> offset;
-
                 ea = computeEA<C, M, S>(dy);
 
                 ea += offset / 8;
@@ -1034,6 +1035,9 @@ Moira::execBitField(u16 opcode)
                     offset += 8;
                     ea--;
                 }
+
+                mask = u32(0xFFFFFFFF00000000 >> width);
+                mask = mask >> offset;
 
                 data = readM<C, M, S>(ea);
 
@@ -1077,14 +1081,36 @@ Moira::execBitField(u16 opcode)
         }
         case BFTST:
 
-            readOp<C, M, S>(dy, ea, data);
+            if (M == MODE_DN) {
+
+                data = readD(dy);
+
+            } else {
+
+                printf("BFTST: M = %d S = %d width = %d offset = %d\n", M, S, width, offset);
+                ea = computeEA<C, M, S>(dy);
+
+                ea += offset / 8;
+                offset %= 8;
+                if(offset < 0) {
+
+                    offset += 8;
+                    ea--;
+                }
+
+                mask = u32(0xFFFFFFFF00000000 >> width);
+                mask = mask >> offset;
+
+                data = readM<C, M, S>(ea);
+                printf("Moira: dy = %d ea = %x data = %x mask = %x\n", dy, ea, data, mask);
+            }
 
             reg.sr.n = NBIT<S>(data << offset);
             reg.sr.z = ZERO<S>(data & mask);
             reg.sr.v = 0;
             reg.sr.c = 0;
 
-            // printf("%x NBit: %d\n", data << offset, reg.sr.n);
+            printf("Moira data = %x offset = %x NBit: %d\n", data, offset, reg.sr.n);
 
             CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0,  6)
             CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)
@@ -1966,12 +1992,14 @@ Moira::execJsr(u16 opcode)
         return;
     }
 
+    /*
     // Update program counter
     if ((isAbsMode(M) || isDspMode(M)) && cp == 0) {
         // printf("Adding 2 to PC %x (%x)\n", reg.pc, reg.pc0);
         reg.pc += 2;
     }
-
+    */
+    
     // Check for address error in all other modes
     if (misaligned<Word>(ea)) {
         // printf("execJsr: misaligned<Word>(ea)\n");
