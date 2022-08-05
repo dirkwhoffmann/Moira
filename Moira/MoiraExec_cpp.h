@@ -662,6 +662,35 @@ Moira::execAndisr(u16 opcode)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
+Moira::execBra(u16 opcode)
+{
+    AVAILABILITY(S == Long ? M68020 : M68000)
+
+    u32 oldpc = reg.pc;
+    u32 disp = S == Byte ? (u8)opcode : queue.irc;
+
+    SYNC(2);
+
+    if constexpr (S == Long) {
+
+        readExt<C>();
+        disp = disp << 16 | queue.irc;
+    }
+
+    u32 newpc = U32_ADD(oldpc, SEXT<S>(disp));
+
+    // Check for address error
+    if (misaligned<Word>(newpc)) {
+        execAddressError(makeFrame(newpc, reg.pc));
+        return;
+    }
+
+    reg.pc = newpc;
+    fullPrefetch <C, POLLIPL> ();
+    CYCLES_IP (10, 10, 10,     10, 10, 10,     10, 10, 10);
+}
+
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execBcc(u16 opcode)
 {
     AVAILABILITY(S == Long ? M68020 : M68000)

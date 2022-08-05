@@ -714,6 +714,12 @@ Moira::dasmBcc(StrWriter &str, u32 &addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
+Moira::dasmBra(StrWriter &str, u32 &addr, u16 op)
+{
+    dasmBcc<I, M, S>(str, addr, op);
+}
+
+template <Instr I, Mode M, Size S> void
 Moira::dasmBitDxEa(StrWriter &str, u32 &addr, u16 op)
 {
     auto src = Dn       ( ____xxx_________(op)       );

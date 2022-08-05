@@ -419,7 +419,7 @@ Moira::createJumpTable()
     // Dn,<label>
 
     opcode = parse("0110 ---- ---- ----");
-    ________________(opcode | 0x000, BRA, MODE_IP, Word, Bcc, CIMS)
+    ________________(opcode | 0x000, BRA, MODE_IP, Word, Bra, CIMS)
     ________________(opcode | 0x200, BHI, MODE_IP, Word, Bcc, CIMS)
     ________________(opcode | 0x300, BLS, MODE_IP, Word, Bcc, CIMS)
     ________________(opcode | 0x400, BCC, MODE_IP, Word, Bcc, CIMS)
@@ -437,7 +437,7 @@ Moira::createJumpTable()
 
     for (int i = 1; i <= 0xFF; i++) {
 
-        ________________(opcode | 0x000 | i, BRA, MODE_IP, Byte, Bcc, CIMS)
+        ________________(opcode | 0x000 | i, BRA, MODE_IP, Byte, Bra, CIMS)
         ________________(opcode | 0x200 | i, BHI, MODE_IP, Byte, Bcc, CIMS)
         ________________(opcode | 0x300 | i, BLS, MODE_IP, Byte, Bcc, CIMS)
         ________________(opcode | 0x400 | i, BCC, MODE_IP, Byte, Bcc, CIMS)
@@ -456,7 +456,7 @@ Moira::createJumpTable()
 
     if (core >= M68020) {
 
-        ________________(opcode | 0x0FF, BRA, MODE_IP, Long, Bcc, CIMS)
+        ________________(opcode | 0x0FF, BRA, MODE_IP, Long, Bra, CIMS)
         ________________(opcode | 0x2FF, BHI, MODE_IP, Long, Bcc, CIMS)
         ________________(opcode | 0x3FF, BLS, MODE_IP, Long, Bcc, CIMS)
         ________________(opcode | 0x4FF, BCC, MODE_IP, Long, Bcc, CIMS)
