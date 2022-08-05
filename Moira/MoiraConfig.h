@@ -19,7 +19,7 @@
  *
  * Enable to improve emulation compatibility, disable to gain speed.
  */
-#define PRECISE_TIMING true
+#define PRECISE_TIMING false
 
 /* Set to true to enable address error checking.
  *
@@ -72,8 +72,6 @@
  * instructions. It is intended to invoke debug code. Make sure to define it
  * as an empty macro in release builds.
  */
-#define EXEC_DEBUG(C,I,M,S) \
-execDebug(__func__, C, I, M, S); \
-if constexpr (C == M68020) cp = 0;
+#define EXEC_DEBUG { } // { printf("%s(%d,%d,%d,%d)\n", __func__, C, I, M, S); }
 
 #define NDEBUG true

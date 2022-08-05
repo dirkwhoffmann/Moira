@@ -28,6 +28,6 @@ static constexpr bool CHECK_MEM_WRITES = true;
 static constexpr int RUNS = 1;
 
 // Uncomment to enable assertion checking
-#define NDEBUG true
+// #define NDEBUG true
 
 #include <assert.h>

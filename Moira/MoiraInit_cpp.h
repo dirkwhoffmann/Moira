@@ -205,7 +205,6 @@ Moira::createJumpTable()
 
         opcode = parse("1111 ---0 0100 1---");
         ____XXX______XXX(opcode, cpDBcc, MODE_IP, (Size)0, CpDbcc, CIMS)
-
     }
 
 

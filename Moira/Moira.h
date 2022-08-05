@@ -329,11 +329,6 @@ protected:
 
     int removeAsap = 0;
 
-    // Called at the beginning of each instruction handler (see EXEC_DEBUG)
-    virtual void execDebug(const char *func, Core C, Instr I, Mode M, Size S) {
-        // printf("%s(%d,%d,%d,%d)\n", func, C, I, M, S);
-    }
-
 
     //
     // Accessing the clock
