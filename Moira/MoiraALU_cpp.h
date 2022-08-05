@@ -687,11 +687,9 @@ template <Size S> u64
 Moira::mullsMusashi(u32 op1, u32 op2)
 {
     u64 result = u64(i64(i32(op1)) * i64(i32(op2)));
-    // printf("Moira ALU: %lld %lld %lld\n", i64(i32(op1)), i64(i32(op2)), i64(i32(op1)) * i64(i32(op2)));
 
     if constexpr (S == Word) {
 
-        // printf("Moira ALU: mulls WORD: %llx\n", result);
         reg.sr.n = NBIT<Long>(result);
         reg.sr.z = ZERO<Long>(result);
         reg.sr.v = result != u64(i32(result));
@@ -699,7 +697,6 @@ Moira::mullsMusashi(u32 op1, u32 op2)
 
     } else {
 
-        // printf("Moira ALU: mulls LONG: %llx\n", result);
         reg.sr.n = NBIT<Long>(result >> 32);
         reg.sr.z = result == 0;
         reg.sr.v = 0;
@@ -738,58 +735,56 @@ Moira::divMusashi(u32 op1, u32 op2)
 {
     u32 result;
 
-    switch (I) {
+    if constexpr (I == DIVS) {
 
-        case DIVS:
-        {
-            if (op1 == 0x80000000 && (i32)op2 == -1) {
+        if (op1 == 0x80000000 && (i32)op2 == -1) {
 
-                reg.sr.z = 0;
-                reg.sr.n = 0;
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-                result = 0;
-                break;
-            }
+            reg.sr.z = 0;
+            reg.sr.n = 0;
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+            result = 0;
+
+        } else {
 
             i64 quotient  = (i64)(i32)op1 / (i16)op2;
             i16 remainder = (i64)(i32)op1 % (i16)op2;
 
             if (quotient == (i16)quotient) {
 
-                reg.sr.z = quotient;
-                reg.sr.n = NBIT<Word>(quotient);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
                 result = (quotient & 0xffff) | (u16)remainder << 16;
 
-            } else {
-
-                result = op1;
-                reg.sr.v = 1;
-            }
-            break;
-        }
-        case DIVU:
-        {
-            i64 quotient  = op1 / op2;
-            u16 remainder = (u16)(op1 % op2);
-
-            if(quotient < 0x10000) {
-
                 reg.sr.z = quotient;
                 reg.sr.n = NBIT<Word>(quotient);
                 reg.sr.v = 0;
                 reg.sr.c = 0;
 
-                result = (quotient & 0xffff) | remainder << 16;
-
             } else {
 
                 result = op1;
                 reg.sr.v = 1;
             }
-            break;
+        }
+    }
+
+    if constexpr (I == DIVU) {
+
+        i64 quotient  = op1 / op2;
+        u16 remainder = (u16)(op1 % op2);
+
+        if(quotient < 0x10000) {
+
+            result = (quotient & 0xffff) | remainder << 16;
+
+            reg.sr.z = quotient;
+            reg.sr.n = NBIT<Word>(quotient);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+
+        } else {
+
+            result = op1;
+            reg.sr.v = 1;
         }
     }
 
