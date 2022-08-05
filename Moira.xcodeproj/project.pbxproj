@@ -85,6 +85,7 @@
 		50EC62E9289D8D9500398CBD /* m68k_disasm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68k_disasm.h; sourceTree = "<group>"; };
 		50EC62EA289D8D9500398CBD /* m68k_disasm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = m68k_disasm.cpp; sourceTree = "<group>"; };
 		50EC62ED289D8E1E00398CBD /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		50EC62EE289DB14500398CBD /* MoiraMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraMacros.h; sourceTree = "<group>"; };
 		50F549DE288E817600D5D559 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F80AA723C9E4EC00F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F80AAB23C9F16900F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -169,6 +170,7 @@
 			children = (
 				50F80AA723C9E4EC00F21D80 /* CMakeLists.txt */,
 				50B99DAB23B24E0C00D8A89A /* MoiraTypes.h */,
+				50EC62EE289DB14500398CBD /* MoiraMacros.h */,
 				50804F342386A7DD004D3EC2 /* Moira.h */,
 				50804F332386A7DD004D3EC2 /* Moira.cpp */,
 				50BF14CA23BB4D2700EDFB9C /* MoiraALU.h */,

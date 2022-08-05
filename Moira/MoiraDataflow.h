@@ -127,5 +127,9 @@ template <Core C> void readExt();
 // Jumps to an exception vector
 template <Core C, Flags F = 0> void jumpToVector(int nr);
 
+// Computes the number of extension words provided in full extension format
+int baseDispWords(u16 ext);
+int outerDispWords(u16 ext);
+
 // Computes the cycle penalty for extended 68020 addressing modes
 template <Core C, Mode M, Size S> int penaltyCycles(u16 ext);

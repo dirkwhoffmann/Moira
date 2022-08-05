@@ -15,6 +15,7 @@
 
 namespace moira {
 
+#include "MoiraMacros.h"
 #include "MoiraInit_cpp.h"
 #include "MoiraALU_cpp.h"
 #include "MoiraDataflow_cpp.h"

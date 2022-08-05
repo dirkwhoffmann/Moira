@@ -29,28 +29,6 @@ Moira::dasmRead<Long>(u32 &addr)
     return result;
 }
 
-int
-Moira::baseDispWords(u16 ext)
-{
-    u16 xx = __________xx____ (ext);
-
-    bool base_disp      = (xx >= 2);
-    bool base_disp_long = (xx == 3);
-
-    return base_disp ? (base_disp_long ? 2 : 1) : 0;
-}
-
-int
-Moira::outerDispWords(u16 ext)
-{
-    u16 xx = ______________xx (ext);
-
-    bool outer_disp      = (xx >= 2) && (ext & 0x47) < 0x44;
-    bool outer_disp_long = (xx == 3) && (ext & 0x47) < 0x44;
-
-    return outer_disp ? (outer_disp_long ? 2 : 1) : 0;
-}
-
 template <Mode M, Size S> Ea<M,S>
 Moira::Op(u16 reg, u32 &pc)
 {
