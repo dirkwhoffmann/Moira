@@ -48,9 +48,9 @@ namespace moira {
 
 #define CYCLES(c) { CYCLES_68000(c) CYCLES_68010(c) CYCLES_68020(c) }
 
-#define CYCLES_BWL_00(m,b,w,l) CYCLES_68000(S == Byte ? b : S == Word ? w : l)
-#define CYCLES_BWL_10(m,b,w,l) CYCLES_68010(S == Byte ? b : S == Word ? w : l)
-#define CYCLES_BWL_20(m,b,w,l) CYCLES_68020(S == Byte ? b : S == Word ? w : l)
+#define CYCLES_BWL_00(m,b,w,l) CYCLES_68000(S == Byte ? (b) : S == Word ? (w) : (l))
+#define CYCLES_BWL_10(m,b,w,l) CYCLES_68010(S == Byte ? (b) : S == Word ? (w) : (l))
+#define CYCLES_BWL_20(m,b,w,l) CYCLES_68020(S == Byte ? (b) : S == Word ? (w) : (l))
 
 #define CYCLES_MBWL(m,b0,b1,b2,w0,w1,w2,l0,l1,l2) \
 if constexpr (M == m) { CYCLES_BWL_00(m,b0,w0,l0) } \

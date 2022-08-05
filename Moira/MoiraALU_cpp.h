@@ -622,25 +622,28 @@ Moira::cyclesMul(u16 data)
 template <Core C, Instr I> int
 Moira::cyclesDiv(u32 op1, u16 op2)
 {
-    switch (I)
-    {
-        case DIVU:
-        {
-            u32 dividend = op1;
-            u16 divisor  = op2;
-            int mcycles  = 38;
+    int result;
 
-            // Check if quotient is larger than 16 bit
-            if ((dividend >> 16) >= divisor) return 10;
+    if constexpr (I == DIVU) {
+
+        u32 dividend = op1;
+        u16 divisor  = op2;
+        int mcycles  = 38;
+
+        if ((dividend >> 16) >= divisor) {
+
+            // Quotient is larger than 16 bit
+            result = 10;
+
+        } else {
+
             u32 hdivisor = divisor << 16;
 
             for (int i = 0; i < 15; i++) {
                 if ((i32)dividend < 0) {
-                    // dividend <<= 1;
                     dividend = (u32)((u64)dividend << 1);
                     dividend = U32_SUB(dividend, hdivisor);
                 } else {
-                    // dividend <<= 1;
                     dividend = (u32)((u64)dividend << 1);
                     if (dividend >= hdivisor) {
                         dividend = U32_SUB(dividend, hdivisor);
@@ -650,17 +653,22 @@ Moira::cyclesDiv(u32 op1, u16 op2)
                     }
                 }
             }
-            return 2 * mcycles;
+            result = 2 * mcycles;
         }
-        case DIVS:
-        {
-            i32 dividend = (i32)op1;
-            i16 divisor  = (i16)op2;
-            int mcycles  = (dividend < 0) ? 7 : 6;
+    }
 
-            // Check if quotient is larger than 16 bit
-            if ((abs(dividend) >> 16) >= abs(divisor))
-                return (mcycles + 2) * 2;
+    if constexpr (I == DIVS) {
+
+        i32 dividend = (i32)op1;
+        i16 divisor  = (i16)op2;
+        int mcycles  = (dividend < 0) ? 7 : 6;
+
+        // Check if quotient is larger than 16 bit
+        if ((abs(dividend) >> 16) >= abs(divisor)) {
+
+            result = (mcycles + 2) * 2;
+
+        } else {
 
             mcycles += 55;
 
@@ -673,12 +681,11 @@ Moira::cyclesDiv(u32 op1, u16 op2)
                 if ( (i16)aquot >= 0) mcycles++;
                 aquot <<= 1;
             }
-            return 2 * mcycles;
+            result = 2 * mcycles;
         }
-
-        default:
-            fatalError;
     }
+
+    return result;
 }
 
 template <Core C, Instr I> u32

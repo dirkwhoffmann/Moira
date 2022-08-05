@@ -169,12 +169,12 @@
 			isa = PBXGroup;
 			children = (
 				50F80AA723C9E4EC00F21D80 /* CMakeLists.txt */,
+				509ABE1323BA356E00BD91A8 /* MoiraConfig.h */,
 				50B99DAB23B24E0C00D8A89A /* MoiraTypes.h */,
 				50EC62EE289DB14500398CBD /* MoiraMacros.h */,
 				50804F342386A7DD004D3EC2 /* Moira.h */,
 				50804F332386A7DD004D3EC2 /* Moira.cpp */,
 				50BF14CA23BB4D2700EDFB9C /* MoiraALU.h */,
-				509ABE1323BA356E00BD91A8 /* MoiraConfig.h */,
 				50804F4923891480004D3EC2 /* MoiraALU_cpp.h */,
 				50804F3A2387B466004D3EC2 /* MoiraDasm.h */,
 				50804F392387B466004D3EC2 /* MoiraDasm_cpp.h */,

@@ -3917,25 +3917,11 @@ Moira::execSccRg(u16 opcode)
 
     data = cond(I) ? 0xFF : 0;
     prefetch <C,POLLIPL> ();
-
-    if (C >= M68010) {
-        // if (data && I != ST) SYNC(2);
-    } else {
-        if (data) SYNC(2);
-    }
+    if constexpr (C == M68000) { if (data) SYNC(2); }
 
     writeD<Byte>(dst, data);
 
-    auto c = data ? 2 : 0;
-    /*
-    if constexpr (C == M68010) c = 0;
-    */
-
-    if (I == SF || I == SLS || I == SCS || I == SEQ || I == SVS || I == SMI || I == SLT || I == SLE || I == SHI) {
-        CYCLES_DN   ( 0,  0,  0,       4+c,  4,  4,      0,  0,  0)
-    } else {
-        CYCLES_DN   ( 0,  0,  0,       4+c,  4,  4,      0,  0,  0)
-    }
+    CYCLES_DN   ( 0,  0,  0,       data ? 6 : 4,  4,  4,      0,  0,  0)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
