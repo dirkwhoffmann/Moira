@@ -7,8 +7,7 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#ifndef TESTCPU_H
-#define TESTCPU_H
+#pragma once
 
 #include "Moira.h"
 
@@ -27,5 +26,3 @@ class TestCPU : public Moira {
     void breakpointReached(u32 addr) override;
     void watchpointReached(u32 addr) override;
 };
-
-#endif

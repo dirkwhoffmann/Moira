@@ -7,8 +7,7 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#ifndef TESTRUNNER_H
-#define TESTRUNNER_H
+#pragma once
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,13 +27,15 @@ extern "C" {
 
 #include "config.h"
 
+using namespace moira;
+
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
 
 extern class TestCPU *moiracpu;
 extern Sandbox sandbox;
-extern uint8_t musashiMem[0x10000];
-extern uint8_t moiraMem[0x10000];
+extern u8 musashiMem[0x10000];
+extern u8 moiraMem[0x10000];
 extern u32 musashiFC;
 extern long testrun;
 
@@ -54,48 +55,48 @@ inline void set16(u8 *p, u32 addr, u16 val) {
 // A test setup
 struct Setup {
 
-    uint8_t  ccr;
-    bool     supervisor;
-    uint32_t pc;
-    uint16_t opcode;
-    uint16_t ext1;
-    uint16_t ext2;
-    uint16_t ext3;
-    uint32_t d[8];
-    uint32_t a[8];
-    uint16_t vbr;
-    uint16_t sfc;
-    uint16_t dfc;
-    uint8_t  mem[0x10000];
+    u8      ccr;
+    bool    supervisor;
+    u32     pc;
+    u16     opcode;
+    u16     ext1;
+    u16     ext2;
+    u16     ext3;
+    u32     d[8];
+    u32     a[8];
+    u16     vbr;
+    u16     sfc;
+    u16     dfc;
+    u8      mem[0x10000];
 };
 
 // A test result
 struct Result {
 
-    uint16_t dasmResult;
-    uint32_t oldpc;
-    uint16_t opcode;
-    uint32_t pc;
-    uint32_t usp;
-    uint32_t isp;
-    uint32_t msp;
-    uint32_t d[8];
-    uint32_t a[8];
-    uint16_t sr;
-    uint32_t fc;
-    uint32_t vbr;
-    uint32_t sfc;
-    uint32_t dfc;
-    char dasm[64];
-    int dasmCnt;
-    int cycles;
+    u16     dasmResult;
+    u32     oldpc;
+    u16     opcode;
+    u32     pc;
+    u32     usp;
+    u32     isp;
+    u32     msp;
+    u32     d[8];
+    u32     a[8];
+    u16     sr;
+    u32     fc;
+    u32     vbr;
+    u32     sfc;
+    u32     dfc;
+    char    dasm[64];
+    int     dasmCnt;
+    int     cycles;
 };
 
 // Location of the tested instruction in memory
-const uint32_t pc = 0x1000;
+const u32 pc = 0x1000;
 
 // Creates a smart random number
-uint32 smartRandom();
+u32 smartRandom();
 
 
 //
@@ -106,7 +107,7 @@ void setupMusashi();
 void setupMoira();
 
 void createTestCase(Setup &s);
-void setupInstruction(Setup &s, uint32_t pc, uint16_t opcode);
+void setupInstruction(Setup &s, u32 pc, u16 opcode);
 
 void resetMusashi(Setup &s);
 void resetMoira(Setup &s);
@@ -148,5 +149,3 @@ bool compareDFC(Result &r1, Result &r2);
 bool compareCycles(Result &r1, Result &r2);
 
 void bugReport();
-
-#endif

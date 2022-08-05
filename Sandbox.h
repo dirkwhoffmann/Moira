@@ -7,8 +7,7 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#ifndef SANDBOX_H
-#define SANDBOX_H
+#pragma once
 
 #include "MoiraTypes.h"
 
@@ -60,5 +59,3 @@ public:
 
     void error(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value = 0);
 };
-
-#endif

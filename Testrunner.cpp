@@ -11,8 +11,8 @@
 #include "Testrunner.h"
 
 TestCPU *moiracpu;
-uint8_t musashiMem[0x10000];
-uint8_t moiraMem[0x10000];
+u8 musashiMem[0x10000];
+u8 moiraMem[0x10000];
 u32 musashiFC = 0;
 long testrun = 0;
 Sandbox sandbox;
@@ -71,22 +71,22 @@ void setupMoira()
 void createTestCase(Setup &s)
 {
     s.supervisor = testrun % 2;
-    s.ccr = uint8_t(smartRandom());
-    s.ext1 = uint16_t(smartRandom());
-    s.ext2 = uint16_t(smartRandom());
-    s.ext3 = uint16_t(smartRandom());
-    s.vbr = uint16_t(smartRandom());
-    s.sfc = uint16_t(smartRandom());
-    s.dfc = uint16_t(smartRandom());
+    s.ccr = u8(smartRandom());
+    s.ext1 = u16(smartRandom());
+    s.ext2 = u16(smartRandom());
+    s.ext3 = u16(smartRandom());
+    s.vbr = u16(smartRandom());
+    s.sfc = u16(smartRandom());
+    s.dfc = u16(smartRandom());
     for (int i = 0; i < 8; i++) s.d[i] = smartRandom();
     for (int i = 0; i < 8; i++) s.a[i] = smartRandom();
 
     for (unsigned i = 0; i < sizeof(s.mem); i++) {
-        s.mem[i] = uint8_t(smartRandom());
+        s.mem[i] = u8(smartRandom());
     }
 }
 
-void setupInstruction(Setup &s, uint32_t pc, uint16_t opcode)
+void setupInstruction(Setup &s, u32 pc, u16 opcode)
 {
     if (opcode == 0x4E73) {                     // RTE
 
@@ -184,7 +184,7 @@ void run()
             if ((opcode & 0xFFF) == 0) { printf("."); fflush(stdout); }
 
             // Prepare the test case with the selected instruction
-            setupInstruction(setup, pc, (uint16_t)opcode);
+            setupInstruction(setup, pc, u16(opcode));
 
             // Reset the sandbox (memory accesses observer)
             sandbox.prepare(opcode);
@@ -306,7 +306,7 @@ bool skip(u16 op)
 void recordMusashiRegisters(Result &r)
 {
     r.pc = m68k_get_reg(NULL, M68K_REG_PC);
-    r.sr = (uint16_t)m68k_get_reg(NULL, M68K_REG_SR);
+    r.sr = (u16)m68k_get_reg(NULL, M68K_REG_SR);
     r.usp = m68k_get_reg(NULL, M68K_REG_USP);
     r.isp = m68k_get_reg(NULL, M68K_REG_ISP);
     r.msp = m68k_get_reg(NULL, M68K_REG_MSP);

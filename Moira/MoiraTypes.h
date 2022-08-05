@@ -27,8 +27,8 @@ typedef unsigned long long u64;
 typedef enum
 {
     M68000,         // Fully supported
-    M68010,         // Experimental
-    M68020          // Disassembler only
+    M68010,         // Ongoing work
+    M68020          // Ongoing work
 }
 Core;
 
