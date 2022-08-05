@@ -3509,7 +3509,6 @@ static void m68k_op_asr_8_r(void)
 
 	if(shift != 0)
 	{
-        // printf("m68k_op_asr_8_r: Using cycles %d\n", shift<<CYC_SHIFT);
 		USE_CYCLES(shift<<CYC_SHIFT);
 
 		if(shift < 8)
@@ -4924,8 +4923,6 @@ static void m68k_op_bchg_8_r_ix(void)
 	uint src = m68ki_read_8(ea);
 	uint mask = 1 << (DX & 7);
 
-    // printf("Musashi: data = %x ea = %x mask = %x\n", src, ea, mask);
-
 	FLAG_Z = src & mask;
 	m68ki_write_8(ea, src ^ mask);
 }
@@ -5308,8 +5305,6 @@ static void m68k_op_bfchg_32_d(void)
 		FLAG_C = CFLAG_CLEAR;
 
 		*data ^= mask;
-
-        // printf("Musashi m68k_op_bfchg_32_d: offset = %d width = %d mask = %x data = %x\n", offset, width, mask, *data);
 		return;
 	}
 	m68ki_exception_illegal();
@@ -5356,8 +5351,6 @@ static void m68k_op_bfchg_32_ai(void)
 		FLAG_C = CFLAG_CLEAR;
 
 		m68ki_write_32(ea, data_long ^ mask_long);
-        // printf("Musashi: data_long = %x mask_long = %x\n", data_long, mask_long);
-        // printf("Musashi: BFCHG: Writing %x to %x\n", data_long ^ mask_long, ea);
 
 		if((width + offset) > 32)
 		{
@@ -6286,8 +6279,6 @@ static void m68k_op_bfextu_32_d(void)
 		data = ROL_32(data, offset);
 		FLAG_N = NFLAG_32(data);
 
-        // printf("Musashi m68k_op_bfextu_32_d: data = %x\n", data);
-
 		data >>= 32 - width;
 
 		FLAG_Z = data;
@@ -6328,12 +6319,8 @@ static void m68k_op_bfextu_32_ai(void)
 		}
 		width = ((width-1) & 31) + 1;
 
-        // printf("Musashi execBitField: offset = %d width = %d ea = %x\n", offset, width, ea);
-
 		data = m68ki_read_32(ea);
 		data = MASK_OUT_ABOVE_32(data<<offset);
-
-        // printf("Musashi data: %x\n", data);
 
 		if((offset+width) > 32)
 			data |= (m68ki_read_8(ea+4) << offset) >> 8;
@@ -6662,12 +6649,8 @@ static void m68k_op_bfffo_32_d(void)
 		FLAG_V = VFLAG_CLEAR;
 		FLAG_C = CFLAG_CLEAR;
 
-        // printf("Musashi: data = %x width = %d offset = %d\n", data, width, offset);
-
 		for(bit = 1<<(width-1);bit && !(data & bit);bit>>= 1)
 			offset++;
-
-        // printf("Musashi: offset = %d\n", offset);
 
 		REG_D[(word2>>12)&7] = offset;
 
@@ -6717,8 +6700,6 @@ static void m68k_op_bfffo_32_ai(void)
 		FLAG_Z = data;
 		FLAG_V = VFLAG_CLEAR;
 		FLAG_C = CFLAG_CLEAR;
-
-        // printf("Musashi (ai): data = %x width = %d offset = %d\n", data, width, offset);
 
 		for(bit = 1<<(width-1);bit && !(data & bit);bit>>= 1)
 			offset++;
@@ -7078,11 +7059,6 @@ static void m68k_op_bfins_32_d(void)
 
 		*data &= ~mask;
 		*data |= insert;
-
-        // printf("Musashi BFINS (dn): insert = %x mask = %x *data = %x\n", insert, mask, *data);
-
-        // printf("Musashi: insert = %x mask = %x data = %x\n", insert, mask, (*data & ~mask) | insert);
-
 		return;
 	}
 	m68ki_exception_illegal();
@@ -7131,11 +7107,6 @@ static void m68k_op_bfins_32_ai(void)
 		insert_long = insert_base >> offset;
 
 		data_long = m68ki_read_32(ea);
-/*
-        printf("Musashi: insert = %x mask = %x\n", insert_long, mask_long);
-        printf("Musashi: Write(%x) = %x\n", ea, (data_long & ~mask_long) | insert_long);
-        printf("Musashi: Data = %x\n", data_long);
-*/
 
         FLAG_V = VFLAG_CLEAR;
 		FLAG_C = CFLAG_CLEAR;
@@ -7147,7 +7118,6 @@ static void m68k_op_bfins_32_ai(void)
 			mask_byte = MASK_OUT_ABOVE_8(mask_base);
 			insert_byte = MASK_OUT_ABOVE_8(insert_base);
 			data_byte = m68ki_read_8(ea+4);
-            // printf("Musashi: mask2 = %x insert2 = %x data2 = %x\n", mask_byte, insert_byte, data_byte);
 			FLAG_Z |= (data_byte & mask_byte);
 			m68ki_write_8(ea+4, (data_byte & ~mask_byte) | insert_byte);
 		}
@@ -7735,8 +7705,6 @@ static void m68k_op_bftst_32_d(void)
 		mask = MASK_OUT_ABOVE_32(0xffffffff << (32 - width));
 		mask = ROR_32(mask, offset);
 
-        // printf("Musashi execBitField: offsrt = %d width = %d mask = %llx\n", offset, width, mask);
-
 		FLAG_N = NFLAG_32(*data<<offset);
 		FLAG_Z = *data & mask;
 		FLAG_V = VFLAG_CLEAR;
@@ -7783,14 +7751,10 @@ static void m68k_op_bftst_32_ai(void)
 
 		data_long = m68ki_read_32(ea);
 
-        // printf("Musashi: width = %d offset = %d ea = %x data = %x mask = %x\n", width, offset, ea, data_long, mask_long);
-
 		FLAG_N = ((data_long & (0x80000000 >> offset))<<offset)>>24;
 		FLAG_Z = data_long & mask_long;
 		FLAG_V = VFLAG_CLEAR;
 		FLAG_C = CFLAG_CLEAR;
-
-        // printf("Musashi data = %x offset = %x NBit: %d\n", data_long, offset, FLAG_N);
 
 		if((width + offset) > 32)
 		{
@@ -7882,8 +7846,6 @@ static void m68k_op_bftst_32_ix(void)
 			offset += 8;
 			ea--;
 		}
-        // printf("Musashi: New eq: %x New offset: %d\n", ea, offset);
-
 		width = ((width-1) & 31) + 1;
 
 
@@ -7891,7 +7853,6 @@ static void m68k_op_bftst_32_ix(void)
 		mask_long = mask_base >> offset;
 
 		data_long = m68ki_read_32(ea);
-        // printf("Musashi: ea = %x data_long = %x mask_long = %x\n", ea, data_long, mask_long);
 		FLAG_N = ((data_long & (0x80000000 >> offset))<<offset)>>24;
 		FLAG_Z = data_long & mask_long;
 		FLAG_V = VFLAG_CLEAR;
@@ -8742,17 +8703,13 @@ static void m68k_op_cas_8_ai(void)
 		FLAG_V = VFLAG_SUB_8(*compare, dest, res);
 		FLAG_C = CFLAG_8(res);
 
-        // printf("Musashi: rg = %d ext = %x data/dest = %x compare = %x res = %x n = %d z = %d v = %d c = %d\n", word2 & 7, word2, dest, *compare, res, FLAG_N, FLAG_Z, FLAG_V, FLAG_C);
-
         if(COND_NE()) {
 			*compare = MASK_OUT_BELOW_8(*compare) | dest;
-            // printf("result(COND_NE): compare = %x dest = %x\n", *compare, dest);
         }
         else
 		{
 			USE_CYCLES(3);
 			m68ki_write_8(ea, MASK_OUT_ABOVE_8(REG_D[(word2 >> 6) & 7]));
-            // printf("result: Write %x\n", MASK_OUT_ABOVE_8(REG_D[(word2 >> 6) & 7]));
 		}
 		return;
 	}
@@ -9412,71 +9369,43 @@ static void m68k_op_cas2_16(void)
 		uint dest2 = m68ki_read_16(ea2);
 		uint res2;
 
-        /*
-        printf("Musashi CAS2: dc1=%d, rn1=%d, dc2=%d, rn2=%d ea1=%x/%x ea2=%x/%x\n",
-               (word2 >> 16) & 7,
-               (word2 >> 28) & 15,
-               word2 & 7,
-               (word2 >> 12) & 15, ea1, dest1, ea2, dest2);
-
-        printf("Musashi CAS2: dest1=%x dest2=%x compare1=%x compare2=%x diff1/res1=%x\n",
-               dest1, dest2, *compare1, *compare2, res1);
-        */
-
 		m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
 		FLAG_N = NFLAG_16(res1);
 		FLAG_Z = MASK_OUT_ABOVE_16(res1);
 		FLAG_V = VFLAG_SUB_16(*compare1, dest1, res1);
 		FLAG_C = CFLAG_16(res1);
 
-        // printf("Musashi CAS2: n=%d z=%d v=%d c=%d\n", FLAG_N, FLAG_Z, FLAG_V, FLAG_C);
-
 		if(COND_EQ())
 		{
 			res2 = dest2 - MASK_OUT_ABOVE_16(*compare2);
-
-            // printf("Musashi CAS2: diff2/res2=%x\n", res2);
 
 			FLAG_N = NFLAG_16(res2);
 			FLAG_Z = MASK_OUT_ABOVE_16(res2);
 			FLAG_V = VFLAG_SUB_16(*compare2, dest2, res2);
 			FLAG_C = CFLAG_16(res2);
 
-            // printf("Musashi CAS2: n=%d z=%d v=%d c=%d\n", FLAG_N, FLAG_Z, FLAG_V, FLAG_C);
-
 			if(COND_EQ())
 			{
 				USE_CYCLES(3);
 				m68ki_write_16(ea1, REG_D[(word2 >> 22) & 7]);
 				m68ki_write_16(ea2, REG_D[(word2 >> 6) & 7]);
-
-                // printf("Musashi CAS2: Writing %x %x\n", REG_D[(word2 >> 22) & 7], REG_D[(word2 >> 6) & 7]);
-
 				return;
 			}
 		}
-        // printf("Musashi: %lx\n", word2);
+        /*
         if (BIT_1F(word2)) {
-            // printf("Musashi: compare1 case 1: dest1 = %x\n", dest1);
             *compare1 = (uint)MAKE_INT_16(dest1);
         } else {
-            // printf("Musashi: compare1 case 2: dest1 = %x\n", dest1);
             *compare1 = MASK_OUT_BELOW_16(*compare1) | dest1;
         }
         if (BIT_F(word2)) {
-            // printf("Musashi: compare2 case 1: dest2 = %x\n", dest2);
             *compare2 = (uint)MAKE_INT_16(dest2);
         } else {
-            // printf("Musashi: compare2 case 2: dest2 = %x\n", dest2);
             *compare2 = MASK_OUT_BELOW_16(*compare2) | dest2;
         }
-/*
+        */
         *compare1 = BIT_1F(word2) ? (uint)MAKE_INT_16(dest1) : MASK_OUT_BELOW_16(*compare1) | dest1;
 		*compare2 = BIT_F(word2) ? (uint)MAKE_INT_16(dest2) : MASK_OUT_BELOW_16(*compare2) | dest2;
-*/
-
-        // printf("Musashi CAS2: *compare1=%x *compare2=%x\n", *compare1, *compare2);
-
         return;
 	}
 	m68ki_exception_illegal();
@@ -9989,7 +9918,6 @@ static void m68k_op_chk2cmp2_8_pcdi(void)
 		sint lower_bound = m68ki_read_pcrel_8(ea);
 		sint upper_bound = m68ki_read_pcrel_8(ea + 1);
 
-        // printf("m68k_op_chk2cmp2_8_pcdi %d %d %d\n", lower_bound, upper_bound, compare);
 		if(!BIT_F(word2))
 			compare = (int32)(int8)compare;
       
@@ -10042,11 +9970,7 @@ static void m68k_op_chk2cmp2_8_ai(void)
 		sint lower_bound = (int8)m68ki_read_8(ea);
 		sint upper_bound = (int8)m68ki_read_8(ea + 1);
 
-        // printf("ea = %x\n", ea);
-        // printf("Musashi: reg = %d [reg] = %x ea = %x lower_bound = %d upper_bound = %d compare = %d\n", (word2 >> 12) & 15, REG_DA[(word2 >> 12) & 15], ea, lower_bound, upper_bound, compare);
-
         if(!BIT_F(word2)) {
-            // printf("Casting\n");
             compare = (int32)(int8)compare;
         }
       
@@ -10054,10 +9978,7 @@ static void m68k_op_chk2cmp2_8_ai(void)
 
     FLAG_C = (lower_bound <= upper_bound ? compare < lower_bound || compare > upper_bound : compare > upper_bound || compare < lower_bound) << 8;
 
-        // printf("Musashi: z = %d c = %d\n", FLAG_Z, FLAG_C);
-
         if(COND_CS() && BIT_B(word2)) {
-            // printf("Exception trap\n");
             m68ki_exception_trap(EXCEPTION_CHK);
         }
 		return;
@@ -10176,10 +10097,6 @@ static void m68k_op_chk2cmp2_16_pcdi(void)
 		sint lower_bound = (int16)m68ki_read_pcrel_16(ea);
 		sint upper_bound = (int16)m68ki_read_pcrel_16(ea + 2);
 
-        // printf("ea = %x\n", ea);
-        // printf("Musashi: reg = %d [reg] = %x ea = %x lower_bound = %d upper_bound = %d compare = %d\n", (word2 >> 12) & 15, REG_DA[(word2 >> 12) & 15], ea, lower_bound, upper_bound, compare);
-
-
 		if(!BIT_F(word2))
 			compare = (int32)(int16)compare;
  		FLAG_Z = !((upper_bound==compare) || (lower_bound==compare));  // JFF: | => ||
@@ -10228,8 +10145,6 @@ static void m68k_op_chk2cmp2_16_ai(void)
 		sint lower_bound = (int16)m68ki_read_16(ea);
 		sint upper_bound = (int16)m68ki_read_16(ea + 2);
 
-        // printf("Musashi: reg = %d [reg] = %x ea = %x lower_bound = %d upper_bound = %d compare = %d\n", (word2 >> 12) & 15, REG_DA[(word2 >> 12) & 15], ea, lower_bound, upper_bound, compare);
-
 		if(!BIT_F(word2))
 			compare = (int32)(int16)compare;
  		FLAG_Z = !((upper_bound==compare) || (lower_bound==compare));  // JFF: | => ||
@@ -10254,14 +10169,10 @@ static void m68k_op_chk2cmp2_16_di(void)
 		sint lower_bound = (int16)m68ki_read_16(ea);
 		sint upper_bound = (int16)m68ki_read_16(ea + 2);
 
-        // printf("Musashi: compare before (%d) = %d\n", BIT_F(word2), compare);
 		if(!BIT_F(word2))
 			compare = (int32)(int16)compare;
 
-        // printf("Musashi: reg = %d [reg] = %x ea = %x lower_bound = %d upper_bound = %d compare = %d\n", (word2 >> 12) & 15, REG_DA[(word2 >> 12) & 15], ea, lower_bound, upper_bound, compare);
-
  		FLAG_Z = !((upper_bound==compare) || (lower_bound==compare));  // JFF: | => ||
-
         FLAG_C = (lower_bound <= upper_bound ? compare < lower_bound || compare > upper_bound : compare > upper_bound || compare < lower_bound) << 8;
 
 		if(COND_CS() && BIT_B(word2))
@@ -10281,8 +10192,6 @@ static void m68k_op_chk2cmp2_16_ix(void)
 		uint ea = EA_AY_IX_16();
 		sint lower_bound = (int16)m68ki_read_16(ea);
 		sint upper_bound = (int16)m68ki_read_16(ea + 2);
-
-        // printf("Musashi: reg = %d [reg] = %x ea = %x lower_bound = %d upper_bound = %d compare = %d\n", (word2 >> 12) & 15, REG_DA[(word2 >> 12) & 15], ea, lower_bound, upper_bound, compare);
 
 		if(!BIT_F(word2))
 			compare = (int32)(int16)compare;
@@ -12184,15 +12093,12 @@ static void m68k_op_cptrapcc_32(void)
 
 static void m68k_op_dbt_16(void)
 {
-    // printf("m68k_op_dbt_16\n");
 	REG_PC += 2;
 }
 
 
 static void m68k_op_dbf_16(void)
 {
-    // printf("m68k_op_dbf_16\n");
-
     uint* r_dst = &DY;
 	uint res = MASK_OUT_ABOVE_16(*r_dst - 1);
 
@@ -12203,12 +12109,10 @@ static void m68k_op_dbf_16(void)
 		REG_PC -= 2;
 		m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
 		m68ki_branch_16(offset);
-        // printf("m68k_op_dbf_16: Using cycles (1): %d\n", CYC_DBCC_F_NOEXP);
 		USE_CYCLES(CYC_DBCC_F_NOEXP);
 		return;
 	}
 	REG_PC += 2;
-    // printf("m68k_op_dbf_16: Using cycles (2): %d\n", CYC_DBCC_F_EXP);
 	USE_CYCLES(CYC_DBCC_F_EXP);
 }
 
@@ -13279,8 +13183,6 @@ static void m68k_op_divl_32_d(void)
 		uint64 quotient  = 0;
 		uint64 remainder = 0;
 
-        // printf("m68k_op_divl_32_d: word2 = %x\n", word2);
-
 		if(divisor != 0)
 		{
 			if(BIT_A(word2))	/* 64 bit */
@@ -13289,13 +13191,10 @@ static void m68k_op_divl_32_d(void)
 				dividend <<= 32;
 				dividend |= REG_D[(word2 >> 12) & 7];
 
-                // printf("Musashi DIVL: dividend = %llx divisor = %llx\n", dividend, divisor);
-
 				if(BIT_B(word2))	   /* signed */
 				{
 					quotient  = (uint64)((sint64)dividend / (sint64)((sint32)divisor));
 					remainder = (uint64)((sint64)dividend % (sint64)((sint32)divisor));
-                    // printf("Musashi signed 64: %llx %llx\n", quotient, remainder);
 
                     if((sint64)quotient != (sint64)((sint32)quotient))
 					{
@@ -13308,31 +13207,25 @@ static void m68k_op_divl_32_d(void)
 					quotient = dividend / divisor;
 					if(quotient > 0xffffffff)
 					{
-                        // printf("Musashi unsigned 64: quotient > 0xffffffff\n");
 						FLAG_V = VFLAG_SET;
 						return;
 					}
 					remainder = dividend % divisor;
-                    // printf("Musashi unsigned 64: %llx %llx\n", quotient, remainder);
 				}
 			}
 			else	/* 32 bit */
 			{
                 dividend = REG_D[(word2 >> 12) & 7];
 
-                // printf("Musashi DIVL: dividend = %x\n", dividend);
-
 				if(BIT_B(word2))	   /* signed */
 				{
 					quotient  = (uint64)((sint64)((sint32)dividend) / (sint64)((sint32)divisor));
 					remainder = (uint64)((sint64)((sint32)dividend) % (sint64)((sint32)divisor));
-                    // printf("Musashi signed 32: %llx %llx\n", quotient, remainder);
                 }
 				else					/* unsigned */
 				{
 					quotient = dividend / divisor;
 					remainder = dividend % divisor;
-                    // printf("Musashi unsigned 32: %llx %llx %llx %llx\n", dividend, divisor, quotient, remainder);
 				}
 			}
 
@@ -13345,7 +13238,6 @@ static void m68k_op_divl_32_d(void)
 			FLAG_C = CFLAG_CLEAR;
 			return;
 		}
-        // printf("Musashi: Divisor = 0\n");
 		m68ki_exception_trap(EXCEPTION_ZERO_DIVIDE);
 		return;
 	}
@@ -24259,15 +24151,11 @@ static void m68k_op_mull_32_d(void)
 		uint64 dst = REG_D[(word2 >> 12) & 7];
 		uint64 res;
 
-        // printf("Musashi: word2 = %x\n", word2);
-        
 		FLAG_C = CFLAG_CLEAR;
 
 		if(BIT_B(word2))			   /* signed */
 		{
 			res = (sint64)((sint32)src) * (sint64)((sint32)dst);
-
-            // printf("Musashi ALU: %lld %lld %lld\n", (sint64)((sint32)src), (sint64)((sint32)dst), res);
 
 			if(!BIT_A(word2))
 			{
@@ -24275,7 +24163,6 @@ static void m68k_op_mull_32_d(void)
 				FLAG_N = NFLAG_32(res);
 				FLAG_V = ((sint64)res != (sint32)res)<<7;
 				REG_D[(word2 >> 12) & 7] = FLAG_Z;
-                // printf("Musashi: Signed Word\n");
 				return;
 			}
 			FLAG_Z = MASK_OUT_ABOVE_32(res) | (res>>32);
@@ -24283,7 +24170,6 @@ static void m68k_op_mull_32_d(void)
 			FLAG_V = VFLAG_CLEAR;
 			REG_D[word2 & 7] = (res >> 32);
 			REG_D[(word2 >> 12) & 7] = MASK_OUT_ABOVE_32(res);
-            // printf("Musashi: Signed Long: res = %llx\n", res);
 			return;
 		}
 
@@ -24294,7 +24180,6 @@ static void m68k_op_mull_32_d(void)
 			FLAG_N = NFLAG_32(res);
 			FLAG_V = (res > 0xffffffff)<<7;
 			REG_D[(word2 >> 12) & 7] = FLAG_Z;
-            // printf("Musashi: Unsigned Word\n");
 			return;
 		}
 		FLAG_Z = MASK_OUT_ABOVE_32(res) | (res>>32);
@@ -24302,7 +24187,6 @@ static void m68k_op_mull_32_d(void)
 		FLAG_V = VFLAG_CLEAR;
 		REG_D[word2 & 7] = (res >> 32);
 		REG_D[(word2 >> 12) & 7] = MASK_OUT_ABOVE_32(res);
-        // printf("Musashi: Unsigned Long\n");
 		return;
 	}
 	m68ki_exception_illegal();
@@ -29702,7 +29586,6 @@ rte_loop:
 				m68ki_fake_pull_16();	/* format word */
 				m68ki_jump(new_pc);
 				m68ki_set_sr(new_sr);
-                // printf("Musashi: NORMAL new_sr = %x SP = %x\n", new_sr, REG_SP);
 				CPU_INSTR_MODE = INSTRUCTION_YES;
 				CPU_RUN_MODE = RUN_MODE_NORMAL;
 				return;
@@ -29711,7 +29594,6 @@ rte_loop:
 				m68ki_fake_pull_32();	/* program counter */
 				m68ki_fake_pull_16();	/* format word */
 				m68ki_set_sr_noint(new_sr);
-                // printf("Musashi: THROWAWAY new_sr = %x SP = %x getSR = %x\n", new_sr, REG_SP, m68ki_get_sr());
 				goto rte_loop;
 			case 2: /* Trap */
 				new_sr = m68ki_pull_16();
@@ -29720,12 +29602,10 @@ rte_loop:
 				m68ki_fake_pull_32();	/* address */
 				m68ki_jump(new_pc);
 				m68ki_set_sr(new_sr);
-                // printf("Musashi: TRAP new_sr = %x SP = %x getSR = %x\n", new_sr, REG_SP, m68ki_get_sr());
 				CPU_INSTR_MODE = INSTRUCTION_YES;
 				CPU_RUN_MODE = RUN_MODE_NORMAL;
 				return;
 		}
-        // printf("Musashi: Format error getSR = %x\n", m68ki_get_sr());
 		/* Not handling long or short bus fault */
 		CPU_INSTR_MODE = INSTRUCTION_YES;
 		CPU_RUN_MODE = RUN_MODE_NORMAL;

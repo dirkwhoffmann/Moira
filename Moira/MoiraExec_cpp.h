@@ -109,8 +109,6 @@ Moira::execShiftRg(u16 opcode)
 
     [[maybe_unused]] auto c = C == M68020 ? cnt : 2 * cnt;
 
-    // printf("Moira: execShiftRg  cnt = %d\n", cnt);
-
     if constexpr (I == LSL || I == LSR) {
         CYCLES_DN ( 6+c,  6+c,  6+c,     6+c,  6+c,  6+c,    8+c,  8+c,  6+c)
     } else if constexpr (I == ROL || I == ROR || I == ASL) {
@@ -701,7 +699,6 @@ Moira::execBcc(u16 opcode)
         }
 
         // Take branch
-        // printf("execBcc: Take branch\n");
         reg.pc = newpc;
         fullPrefetch <C, POLLIPL> ();
         if (I == BRA) {
@@ -713,7 +710,6 @@ Moira::execBcc(u16 opcode)
     } else {
 
         // Fall through to next instruction
-        // printf("execBcc: Fallthrough\n");
         if (core == M68000) SYNC(2);
         if constexpr (S == Word || S == Long) readExt<C>();
         if constexpr (S == Long) readExt<C>();
@@ -761,9 +757,7 @@ Moira::execBitDxEa(u16 opcode)
             u32 ea, data;
             if (!readOp <C,M,Byte> (dst, ea, data)) return;
 
-            // printf("Moira: data = %x ea = %x mask = %x\n", data, ea, b);
             data = bit <C,I> (data, b);
-            // printf("Moira: data after = %x\n", data);
 
             if constexpr (I == BCLR && C == M68010) { SYNC(2); }
 
@@ -864,8 +858,6 @@ Moira::execBitField(u16 opcode)
         mask = mask >> offset;
     }
 
-    // printf("Moira execBitField: offset = %d width = %d mask = %x\n", offset, width, mask);
-
     switch (I) {
 
         case BFCHG:
@@ -909,8 +901,6 @@ Moira::execBitField(u16 opcode)
                 reg.sr.c = 0;
 
                 if (I == BFCHG) {
-                    // printf("Moira: S = %d data = %x mask = %x\n", S, data, mask);
-                    // printf("Moira: BFCHG: Writing %x to %x\n", data ^ mask, ea);
                     writeM<C, M, S>(ea, data ^ mask);
                 }
                 if (I == BFCLR) writeM<C, M, S>(ea, data & ~mask);
@@ -976,8 +966,6 @@ Moira::execBitField(u16 opcode)
                 data = readM<C, M, S>(ea);
                 data = CLIP<Long>(data << offset);
 
-                // printf("Moira ea = %x data: %x\n", ea, data);
-
                 if((offset + width) > 32) {
                     data |= (readM<C, M, Byte>(ea+4) << offset) >> 8;
                 }
@@ -1023,11 +1011,9 @@ Moira::execBitField(u16 opcode)
                 reg.sr.v = 0;
                 reg.sr.c = 0;
 
-                // printf("Moira: data = %x width = %d offset = %d\n", data, width, offset);
                 for(u32 bit = 1<<(width-1); bit && !(data & bit); bit>>= 1) {
                     offset++;
                 }
-                // printf("Moira: offset = %d\n", offset);
                 writeD(dn, offset);
 
             } else {
@@ -1055,8 +1041,6 @@ Moira::execBitField(u16 opcode)
                 reg.sr.z = ZERO<S>(data);
                 reg.sr.v = 0;
                 reg.sr.c = 0;
-
-                // printf("Moira (!dn): data = %x width = %d oldOffset = %d\n", data, width, oldOffset);
 
                 for(u32 bit = 1<<(width-1); bit && !(data & bit); bit>>= 1) {
                     oldOffset++;
@@ -1092,7 +1076,6 @@ Moira::execBitField(u16 opcode)
                 insert = std::rotr((u32)insert, offset);
 
                 writeD(dy, (readD(dy) & ~mask) | insert);
-                // printf("BFINS (dn): insert = %x mask = %x dy = %x\n", insert, mask, readD(dy));
 
             } else {
 
@@ -1121,8 +1104,6 @@ Moira::execBitField(u16 opcode)
 
                 insert = insert >> offset;
 
-                // printf("Moira: insert = %x mask = %x\n", insert, mask);
-                // printf("Moira: Data = %x Write(%x) = %x\n", data, ea, (data & ~mask) | insert);
 
                 writeM<C, M, S>(ea, (data & ~mask) | insert);
 
@@ -1134,7 +1115,6 @@ Moira::execBitField(u16 opcode)
                     u8 mask2 = u8(0xFFFFFFFF00000000 >> width);
                     u8 insert2 = u8(insert);
                     u8 data2 = readM<C, M, Byte>(ea + 4);
-                    // printf("Moira: mask2 = %x insert2 = %x data2 = %x\n", mask2, insert2, data2);
                     reg.sr.z &= ZERO<Byte>(data2 & mask2);
 
                     writeM<C, M, Byte>(ea + 4, (data2 & ~mask2) | insert2);
@@ -1163,7 +1143,6 @@ Moira::execBitField(u16 opcode)
 
             } else {
 
-                // printf("BFTST: M = %d S = %d width = %d offset = %d\n", M, S, width, offset);
                 ea = computeEA<C, M, S>(dy);
 
                 ea += offset / 8;
@@ -1173,13 +1152,11 @@ Moira::execBitField(u16 opcode)
                     offset += 8;
                     ea--;
                 }
-                // printf("Moira: New eq: %x New offset: %d\n", ea, offset);
 
                 mask = u32(0xFFFFFFFF00000000 >> width);
                 mask = mask >> offset;
 
                 data = readM<C, M, S>(ea);
-                // printf("Moira: dy = %d ea = %x data = %x mask = %x\n", dy, ea, data, mask);
 
                 reg.sr.n = NBIT<S>(data << offset);
                 reg.sr.z = ZERO<S>(data & mask);
@@ -1193,7 +1170,6 @@ Moira::execBitField(u16 opcode)
                     reg.sr.z &= ZERO<Byte>(data2 & mask2);
                 }
             }
-            // printf("Moira data = %x offset = %x NBit: %d\n", data, offset, reg.sr.n);
 
             CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0,  6)
             CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)
@@ -1358,13 +1334,8 @@ Moira::execCas2(u16 opcode)
     auto compare1 = readD(dc1);
     auto compare2 = readD(dc2);
 
-    // printf("Moira CAS2: dest1=%x dest2=%x compare1=%x compare2=%x\n", data1, data2, compare1, compare2);
-
-
     // Set flags
     cmp <C,S> (CLIP<S>(compare1), data1);
-
-    // printf("Moira CAS2: n=%d z=%d v=%d c=%d\n", reg.sr.n, reg.sr.z, reg.sr.v, reg.sr.c);
 
     if (reg.sr.z) {
 
@@ -1381,19 +1352,14 @@ Moira::execCas2(u16 opcode)
         }
     }
 
-    // printf("Moira: %x %x\n", rn1, rn2);
     if (rn1 & 0x8) {
-        // printf("Moira CAS2 (1): M = %d S = %d data1 = %x \n", M, S, data1);
         writeD(dc1, SEXT<S>(data1));
     } else {
-        // printf("Moira CAS2 (2): M = %d S = %d data1 = %x \n", M, S, data1);
         writeD<S>(dc1, data1);
     }
     if (rn2 & 0x8) {
-        // printf("Moira CAS2 (3): M = %d S = %d data2 = %x \n", M, S, data2);
         writeD(dc2, SEXT<S>(data2));
     } else {
-        // printf("Moira CAS2 (4): M = %d S = %d data2 = %x \n", M, S, data2);
         writeD<S>(dc2, data2);
     }
 
@@ -1478,17 +1444,11 @@ Moira::execChk2(u16 opcode)
     i32 compare = readR<S>(dst);
     if (dst < 8) compare = SEXT<S>(compare);
 
-    // printf("Moira: src = %d dst = %d lowerBound = %d upperBound = %d compare = %d\n", src, dst, lowerBound, upperBound, compare);
-
     reg.sr.z = lowerBound == compare || upperBound == compare;
-    // reg.sr.c = compare < lowerBound || compare > upperBound;
-    reg.sr.c = (lowerBound <= upperBound ? compare < lowerBound || compare > upperBound : compare > upperBound || compare < lowerBound) << 8; // Wtf???
-
-    // printf("Moira: z = %d c = %d\n", reg.sr.z, reg.sr.c);
+    reg.sr.c = (lowerBound <= upperBound ? compare < lowerBound || compare > upperBound : compare > upperBound || compare < lowerBound); // Wtf???
 
     if ((ext & 0x800) && reg.sr.c) {
 
-        // printf("Moira: execTrapException\n");
         execTrapException<C>(6);
         CYCLES_68020(40)
         return;
@@ -1787,14 +1747,12 @@ Moira::execDbcc(u16 opcode)
             if (takeBranch) {
                 reg.pc = newpc;
                 fullPrefetch <C,POLLIPL> ();
-                // printf("execDbcc: Branch taken\n");
                 CYCLES_68000(10);
                 CYCLES_68020(6);
 
             } else {
 
                 (void)readMS <C,MEM_PROG,Word> (reg.pc + 2);
-                // printf("execDbcc: Not taken\n");
                 CYCLES_68000(4);
                 CYCLES_68020(10);
 
@@ -1805,7 +1763,6 @@ Moira::execDbcc(u16 opcode)
         } else {
 
             SYNC(2);
-            // printf("execDbcc: Condition met\n");
             CYCLES_68000(2);
             CYCLES_68020(6);
 
@@ -1861,7 +1818,6 @@ Moira::execDbcc(u16 opcode)
                 */
 
                 if (MIMIC_MUSASHI) SYNC(2);
-                // printf("Branch taken\n");
                 CYCLES_68010(12);
                 return;
 
@@ -1869,14 +1825,12 @@ Moira::execDbcc(u16 opcode)
 
                 SYNC(MIMIC_MUSASHI ? 4 : 2);
                 (void)readMS <C,MEM_PROG,Word> (reg.pc + 2);
-                // printf("Not taken\n");
                 CYCLES_68010(8);
             }
 
         } else {
 
             SYNC(2);
-            // printf("Condition met\n");
             CYCLES_68010(2);
         }
 
@@ -2076,22 +2030,12 @@ Moira::execJsr(u16 opcode)
     // Check for address error in displacement modes
     if (isDspMode(M) && misaligned<Word>(ea)) {
 
-        // printf("execJsr: isDspMode(M) && misaligned<Word>(ea)\n");
         execAddressError(makeFrame(ea));
         return;
     }
 
-    /*
-    // Update program counter
-    if ((isAbsMode(M) || isDspMode(M)) && cp == 0) {
-        // printf("Adding 2 to PC %x (%x)\n", reg.pc, reg.pc0);
-        reg.pc += 2;
-    }
-    */
-    
     // Check for address error in all other modes
     if (misaligned<Word>(ea)) {
-        // printf("execJsr: misaligned<Word>(ea)\n");
         execAddressError(makeFrame(ea));
         return;
     }
@@ -3296,21 +3240,17 @@ Moira::execMullMusashi(u16 op)
 
     prefetch <C,POLLIPL> ();
 
-    // printf("Moira: Ext = %x\n", ext);
-
     switch (____xx__________(ext)) {
 
         case 0b00:
 
             result = mulluMusashi<Word>(data, readD(dl));
-            // printf("Moira MULL: Unsigned Word (%x,%x) = %llx\n", data, readD(dl), result);
             writeD(dl, u32(result));
             break;
 
         case 0b01:
 
             result = mulluMusashi<Long>(data, readD(dl));
-            // printf("Moira MULL: Unsigned Long (%x,%x) = %llx\n", data, readD(dl), result);
             writeD(dh, u32(result >> 32));
             writeD(dl, u32(result));
             break;
@@ -3318,14 +3258,12 @@ Moira::execMullMusashi(u16 op)
         case 0b10:
 
             result = mullsMusashi<Word>(data, readD(dl));
-            // printf("Moira MULL: Signed Word (%x,%x) = %llx\n", data, readD(dl), result);
             writeD(dl, u32(result));
             break;
 
         case 0b11:
 
             result = mullsMusashi<Long>(data, readD(dl));
-            // printf("Moira MULL: Signed Long (%x,%x) = %llx\n", data, readD(dl), result);
             writeD(dh, u32(result >> 32));
             writeD(dl, u32(result));
             break;
@@ -3480,7 +3418,6 @@ Moira::execDivlMusashi(u16 op)
 
     if (divisor == 0) {
 
-        // printf("Moira: Divisor = 0\n");
         execTrapException(5);
         CYCLES_68020(38);
         return;
@@ -3488,17 +3425,13 @@ Moira::execDivlMusashi(u16 op)
 
     prefetch <C,POLLIPL> ();
 
-    // printf("Moira DIVL: Ext = %x\n", ext);
-
     switch (____xx__________(ext)) {
 
         case 0b00:
         {
             dividend = readD(dl);
-            // printf("Moira DIVL: dividend = %llx, divisor = %llx\n", dividend, (u64)divisor);
 
             auto result = divluMusashi<Word>(dividend, divisor);
-            // printf("Moira DIVL: Unsigned 32 bit = (%x,%x)\n", result.first, result.second);
             writeD(dh, result.second);
             writeD(dl, result.first);
             break;
@@ -3506,10 +3439,7 @@ Moira::execDivlMusashi(u16 op)
         case 0b01:
         {
             dividend = (u64)readD(dh) << 32 | readD(dl);
-            // printf("Moira DIVL: dividend = %llx, divisor = %llx\n", dividend, (u64)divisor);
-
             auto result = divluMusashi<Long>(dividend, divisor);
-            // printf("Moira DIVL: Unsigned 64 bit = (%x,%x)\n", result.first, result.second);
             if(!reg.sr.v) {
 
                 writeD(dh, result.second);
@@ -3520,10 +3450,7 @@ Moira::execDivlMusashi(u16 op)
         case 0b10:
         {
             dividend = readD(dl);
-            // printf("Moira DIVL: dividend = %llx, divisor = %llx\n", dividend, (u64)divisor);
-
             auto result = divlsMusashi<Word>(dividend, divisor);
-            // printf("Moira DIVL: Signed 32 bit = (%x,%x)\n", result.first, result.second);
             writeD(dh, result.second);
             writeD(dl, result.first);
             break;
@@ -3531,10 +3458,7 @@ Moira::execDivlMusashi(u16 op)
         case 0b11:
         {
             dividend = (u64)readD(dh) << 32 | readD(dl);
-            // printf("Moira DIVL: dividend = %llx, divisor = %llx\n", dividend, (u64)divisor);
-
             auto result = divlsMusashi<Long>(dividend, divisor);
-            // printf("Moira DIVL: Signed 64 bit = (%x,%x)\n", result.first, result.second);
 
             if(!reg.sr.v) {
 
@@ -3856,7 +3780,6 @@ Moira::execRte(u16 opcode)
 
                 u16 format = (u16)(readMS <C,MEM_DATA,Word> (reg.sp + 6) >> 12);
 
-                // printf("68020 RTE: newsr=%x newpc=%x format=%x\n", newsr, newpc, format);
                 if (format == 0b000) {  // Standard frame
 
                     newsr = (u16)readMS <C,MEM_DATA,Word> (reg.sp);
@@ -3868,12 +3791,9 @@ Moira::execRte(u16 opcode)
                     (void)readMS <C,MEM_DATA,Word> (reg.sp);
                     reg.sp += 2;
 
-                    // printf("68020 RTE: Standard frame\n");
                     break;
 
                 } else if (format == 0b001) {  // Throwaway frame
-
-                    // printf("68020 RTE: Throwaway frame\n");
 
                     newsr = (u16)readMS <C,MEM_DATA,Word> (reg.sp);
                     reg.sp += 2;
@@ -3885,12 +3805,9 @@ Moira::execRte(u16 opcode)
                     reg.sp += 2;
 
                     setSR(newsr);
-                    // printf("68020: Throwaway: reg.sp = %x newsr = %x\n", reg.sp, newsr);
                     continue;
 
                 } else if (format == 0b010) {  // Trap
-
-                    // printf("68020 RTE: Trap\n");
 
                     newsr = (u16)readMS <C,MEM_DATA,Word> (reg.sp);
                     reg.sp += 2;
@@ -3907,7 +3824,6 @@ Moira::execRte(u16 opcode)
 
                 } else {
 
-                    // printf("68020: Format error\n");
                     execFormatError<C>();
                     CYCLES(0, 4, 4)
                     return;
@@ -3920,7 +3836,6 @@ Moira::execRte(u16 opcode)
     setSR(newsr);
 
     if (misaligned(newpc)) {
-        printf("Moira: RTE address error\n");
         execAddressError(makeFrame<AE_PROG>(newpc, reg.pc));
         return;
     }
@@ -4015,7 +3930,6 @@ Moira::execSccRg(u16 opcode)
     auto c = data ? 2 : 0;
     // if constexpr (C == M68010) c = 0; ????
     if (C == 68020 && I == SHI) {
-        printf("Clearing c\n");
         c = 0;
     }
 
