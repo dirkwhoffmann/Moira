@@ -8,13 +8,13 @@
 // -----------------------------------------------------------------------------
 
 #include "config.h"
-#include "testrunner.h"
+#include "Testrunner.h"
 
-int main()
+int main(int argc, char **argv)
 {
     moiracpu = new TestCPU();
+
     run();
 
     return 0;
 }
-

@@ -8,7 +8,7 @@
 // -----------------------------------------------------------------------------
 
 #include "config.h"
-#include "testrunner.h"
+#include "Testrunner.h"
 
 /* Signals the CPU clock to advance.
  */

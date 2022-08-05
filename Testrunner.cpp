@@ -8,7 +8,7 @@
 // -----------------------------------------------------------------------------
 
 #include "config.h"
-#include "testrunner.h"
+#include "Testrunner.h"
 
 TestCPU *moiracpu;
 uint8_t musashiMem[0x10000];

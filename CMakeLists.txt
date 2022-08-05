@@ -21,7 +21,7 @@ add_subdirectory(Moira)
 add_subdirectory(Musashi)
 
 # Add the executable
-add_executable(testRunner main.cpp testrunner.cpp musashi.cpp TestCPU.cpp Sandbox.cpp)
+add_executable(testRunner main.cpp musashi.cpp Testrunner.cpp TestCPU.cpp Sandbox.cpp)
 target_link_libraries(testRunner moira)
 target_link_libraries(testRunner musashi)
 
