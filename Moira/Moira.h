@@ -46,7 +46,7 @@ namespace moira {
 
 #endif
 
-// #define CYCLES(c0,c1,c2) CYCLES_68000(c0) CYCLES_68010(c1) CYCLES_68020(c2)
+#define CYCLES(c) { CYCLES_68000(c) CYCLES_68010(c) CYCLES_68020(c) }
 
 #define CYCLES_BWL_00(m,b,w,l) CYCLES_68000(S == Byte ? b : S == Word ? w : l)
 #define CYCLES_BWL_10(m,b,w,l) CYCLES_68010(S == Byte ? b : S == Word ? w : l)

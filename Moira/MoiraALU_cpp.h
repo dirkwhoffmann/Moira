@@ -801,30 +801,23 @@ Moira::divlsMusashi(u64 op1, u32 op2)
 {
     u64 quotient, remainder;
 
-    if (S == Word) {
+    if constexpr (S == Word) {
 
         quotient  = (u64)((i64)((i32)op1) / (i64)((i32)op2));
         remainder = (u64)((i64)((i32)op1) % (i64)((i32)op2));
 
-    } else {
-
-        quotient  = u64(i64(op1) / i64(i32(op2)));
-        remainder = u64(i64(op1) % i64(i32(op2)));
-    }
-
-    // printf("Moira ALU signed: %llx %llx\n", quotient, remainder);
-
-    if constexpr (S == Word) {
-
-        // printf("Moira: S = WORD quotient = %llx\n", quotient);
         reg.sr.n = NBIT<Long>(quotient);
         reg.sr.z = ZERO<Long>(quotient);
         reg.sr.v = 0;
         reg.sr.c = 0;
+    }
 
-    } else {
+    if constexpr (S == Long) {
 
-        if(i64(quotient) == i64(i32(quotient))) {
+        quotient  = u64(i64(op1) / i64(i32(op2)));
+        remainder = u64(i64(op1) % i64(i32(op2)));
+
+        if (i64(quotient) == i64(i32(quotient))) {
 
             reg.sr.n = NBIT<Long>(quotient);
             reg.sr.z = ZERO<Long>(quotient);
@@ -837,7 +830,7 @@ Moira::divlsMusashi(u64 op1, u32 op2)
         }
     }
 
-    return { quotient, remainder };
+    return { u32(quotient), u32(remainder) };
 }
 
 template <Size S> std::pair<u32,u32>
@@ -850,33 +843,19 @@ Moira::divluMusashi(u64 op1, u32 op2)
         quotient  = op1 / op2;
         remainder = op1 % op2;
 
-    } else {
-
-        quotient  = op1 / op2;
-        remainder = op1 % op2;
-    }
-
-    if constexpr (S == Word) {
-
-        // printf("Moira: S = WORD quotient = %llx\n", quotient);
         reg.sr.n = NBIT<Long>(quotient);
         reg.sr.z = ZERO<Long>(quotient);
         reg.sr.v = 0;
         reg.sr.c = 0;
+    }
 
-    } else {
+    if constexpr (S == Long) {
 
-        // printf("Moira: S = Long\n");
+        quotient  = op1 / op2;
+        remainder = op1 % op2;
 
         if (quotient <= 0xffffffff) {
 
-            // printf("Moira: quotient <= 0xffffffff: quotient = %llx n = %d\n", quotient, reg.sr.n);
-            /*
-            reg.sr.n = NBIT<Long>(quotient >> 32);
-            reg.sr.z = quotient == 0;
-            reg.sr.v = (quotient >> 32) != 0;
-            reg.sr.c = 0;
-            */
             reg.sr.n = NBIT<Long>(quotient);
             reg.sr.z = ZERO<Long>(quotient);
             reg.sr.v = 0;
@@ -888,5 +867,5 @@ Moira::divluMusashi(u64 op1, u32 op2)
         }
     }
 
-    return { quotient, remainder };
+    return { u32(quotient), u32(remainder) };
 }
