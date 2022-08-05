@@ -182,7 +182,7 @@ void run()
             if ((opcode & 0xFFF) == 0) { printf("."); fflush(stdout); }
 
             if constexpr (SKIP_ILLEGAL) {
-                if (moiracpu->getInfo(opcode).I != moira::ILLEGAL) continue;
+                if (moiracpu->getInfo(opcode).I == moira::ILLEGAL) continue;
             }
 
             // Prepare the test case with the selected instruction

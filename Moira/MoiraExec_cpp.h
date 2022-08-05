@@ -703,6 +703,9 @@ Moira::execBcc(u16 opcode)
         if constexpr (S == Word || S == Long) readExt<C>();
         if constexpr (S == Long) readExt<C>();
         prefetch <C,POLLIPL> ();
+
+        assert(I != BRA);
+
         if (I == BRA) {
             CYCLES_IP (10, 10, 10,     10, 10, 10,     10, 10, 10);
         } else {
@@ -1643,7 +1646,7 @@ Moira::execCmpm(u16 opcode)
     if (!readOp<C, M, S, AE_INC_PC>(dst, ea2, data2)) return;
 
     cmp<C, S>(data1, data2);
-    prefetch <C> ();
+    prefetch<C>();
 
     CYCLES_PI   (12, 12,  9,      12, 12,  9,     20, 20,  9)
 }
@@ -1654,7 +1657,7 @@ Moira::execCpBcc(u16 opcode)
     AVAILABILITY(M68020)
 
     // TODO
-    prefetch <C> ();
+    prefetch<C>();
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1663,7 +1666,7 @@ Moira::execCpDbcc(u16 opcode)
     AVAILABILITY(M68020)
 
     // TODO
-    prefetch <C> ();
+    prefetch<C>();
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1672,7 +1675,7 @@ Moira::execCpGen(u16 opcode)
     AVAILABILITY(M68020)
 
     // TODO
-    prefetch <C> ();
+    prefetch<C>();
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1681,7 +1684,7 @@ Moira::execCpRestore(u16 opcode)
     AVAILABILITY(M68020)
 
     // TODO
-    prefetch <C> ();
+    prefetch<C>();
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1690,7 +1693,7 @@ Moira::execCpSave(u16 opcode)
     AVAILABILITY(M68020)
 
     // TODO
-    prefetch <C> ();
+    prefetch<C>();
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1699,7 +1702,7 @@ Moira::execCpScc(u16 opcode)
     AVAILABILITY(M68020)
 
     // TODO
-    prefetch <C> ();
+    prefetch<C>();
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1708,7 +1711,7 @@ Moira::execCpTrapcc(u16 opcode)
     AVAILABILITY(M68020)
 
     // TODO
-    prefetch <C> ();
+    prefetch<C>();
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -1852,7 +1855,7 @@ Moira::execDbcc(u16 opcode)
                 queue.irc = opcode;
                 return;
             } else {
-                (void)readMS <C,MEM_PROG,Word> (reg.pc + 2);
+                (void)readMS<C, MEM_PROG, Word>(reg.pc + 2);
             }
         } else {
             SYNC(2);
@@ -1860,7 +1863,7 @@ Moira::execDbcc(u16 opcode)
 
         // Fall through to next instruction
         reg.pc += 2;
-        fullPrefetch <C, POLLIPL> ();
+        fullPrefetch<C, POLLIPL>();
         flags &= ~CPU_IS_LOOPING;
         // printf("Exiting loop mode (IRD: %x IRC: %x)\n", queue.ird, queue.irc);
     };

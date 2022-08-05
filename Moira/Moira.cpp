@@ -102,7 +102,7 @@ Moira::execute()
 {
     // Check the integrity of the CPU flags
     if (reg.ipl > reg.sr.ipl || reg.ipl == 7) assert(flags & CPU_CHECK_IRQ);
-    assert(!!(flags & CPU_TRACE_FLAG) == reg.sr.t);
+    assert(!!(flags & CPU_TRACE_FLAG) == reg.sr.t1);
 
     // Check the integrity of the program counter
     assert(reg.pc0 == reg.pc);

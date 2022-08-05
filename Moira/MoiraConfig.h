@@ -74,4 +74,4 @@
  */
 #define EXEC_DEBUG { } // { printf("%s(%d,%d,%d,%d)\n", __func__, C, I, M, S); }
 
-#define NDEBUG true
+// #define NDEBUG true
