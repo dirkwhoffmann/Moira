@@ -18,14 +18,14 @@ static constexpr bool VERBOSE = false;
 // Set to true to verify all memory write operations
 static constexpr bool CHECK_MEM_WRITES = true;
 
+// Set to true to true to skip the execution of illegal instructions
+static constexpr bool SKIP_ILLEGAL = true;
+
 // Change to limit the range of executed instructions
 #define doExec(opcode) (opcode >= 0x0000 && opcode <= 0xEFFF)
 
 // Change to limit the range of disassembled instructions
 #define doDasm(opcode) (opcode >= 0x0000 && opcode <= 0xEFFF)
-
-// Number of instructions that are executed in a row
-static constexpr int RUNS = 1;
 
 // Uncomment to enable assertion checking
 // #define NDEBUG true

@@ -179,9 +179,11 @@ void run()
         // Iterate through all opcodes
         for (int opcode = 0x0000; opcode < 65536; opcode++) {
 
-            if (moiracpu->getInfo(opcode).I != moira::DIVU) continue;
-
             if ((opcode & 0xFFF) == 0) { printf("."); fflush(stdout); }
+
+            if constexpr (SKIP_ILLEGAL) {
+                if (moiracpu->getInfo(opcode).I != moira::ILLEGAL) continue;
+            }
 
             // Prepare the test case with the selected instruction
             setupInstruction(setup, pc, u16(opcode));
@@ -207,18 +209,15 @@ void runSingleTest(Setup &s)
     resetMusashi(s);
     resetMoira(s);
 
-    for (int i = 0; i < RUNS; i++) {
+    // Run
+    muclk += runMusashi(s, mur);
+    moclk += runMoira(s, mor);
 
-        // Run
-        muclk += runMusashi(i, s, mur);
-        moclk += runMoira(i, s, mor);
-
-        // Compare
-        compare(s, mur, mor);
-    }
+    // Compare
+    compare(s, mur, mor);
 }
 
-clock_t runMusashi(int i, Setup &s, Result &r)
+clock_t runMusashi(Setup &s, Result &r)
 {
     clock_t elapsed = 0;
 
@@ -241,7 +240,7 @@ clock_t runMusashi(int i, Setup &s, Result &r)
     if (!skip(r.opcode)) {
         
         if (VERBOSE)
-            printf("%d: $%04x ($%04x): %s (Musashi)\n", i, r.oldpc, r.opcode, r.dasm);
+            printf("$%04x ($%04x): %s (Musashi)\n", r.oldpc, r.opcode, r.dasm);
 
         elapsed = clock();
         r.cycles = m68k_execute(1);
@@ -257,7 +256,7 @@ clock_t runMusashi(int i, Setup &s, Result &r)
     return elapsed;
 }
 
-clock_t runMoira(int i, Setup &s, Result &r)
+clock_t runMoira(Setup &s, Result &r)
 {
     clock_t elapsed = 0;
 
@@ -272,7 +271,7 @@ clock_t runMoira(int i, Setup &s, Result &r)
     if (!skip(op)) {
 
         if (VERBOSE)
-            printf("%d: $%04x ($%04x): %s (Moira)\n", i, r.oldpc, r.opcode, r.dasm);
+            printf("$%04x ($%04x): %s (Moira)\n", r.oldpc, r.opcode, r.dasm);
 
         elapsed = clock();
         moiracpu->execute();

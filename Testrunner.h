@@ -121,8 +121,8 @@ void run();
 
 void runSingleTest(Setup &s);
 
-clock_t runMusashi(int i, Setup &s, Result &r);
-clock_t runMoira(int i, Setup &s, Result &r);
+clock_t runMusashi(Setup &s, Result &r);
+clock_t runMoira(Setup &s, Result &r);
 
 bool skip(u16 op);
 

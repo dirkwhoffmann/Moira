@@ -78,12 +78,15 @@ Moira::shift(int cnt, u64 data) {
         {
             bool carry = false;
             u32 changed = 0;
+
             for (int i = 0; i < cnt; i++) {
+
                 carry = NBIT<S>(data);
                 u64 shifted = data << 1;
                 changed |= (u32)(data ^ shifted);
                 data = shifted;
             }
+
             if (cnt) reg.sr.x = carry;
             reg.sr.c = carry;
             reg.sr.v = NBIT<S>(changed);
@@ -94,12 +97,15 @@ Moira::shift(int cnt, u64 data) {
         {
             bool carry = false;
             u32 changed = 0;
+
             for (int i = 0; i < cnt; i++) {
+
                 carry = data & 1;
                 u64 shifted = SEXT<S>(data) >> 1;
                 changed |= (u32)(data ^ shifted);
                 data = shifted;
             }
+
             if (cnt) reg.sr.x = carry;
             reg.sr.c = carry;
             reg.sr.v = NBIT<S>(changed);
@@ -109,10 +115,13 @@ Moira::shift(int cnt, u64 data) {
         case LSL_LOOP:
         {
             bool carry = false;
+
             for (int i = 0; i < cnt; i++) {
+
                 carry = NBIT<S>(data);
                 data = data << 1;
             }
+
             if (cnt) reg.sr.x = carry;
             reg.sr.c = carry;
             reg.sr.v = 0;
@@ -122,10 +131,13 @@ Moira::shift(int cnt, u64 data) {
         case LSR_LOOP:
         {
             bool carry = false;
+
             for (int i = 0; i < cnt; i++) {
+
                 carry = data & 1;
                 data = data >> 1;
             }
+
             if (cnt) reg.sr.x = carry;
             reg.sr.c = carry;
             reg.sr.v = 0;
@@ -135,10 +147,13 @@ Moira::shift(int cnt, u64 data) {
         case ROL_LOOP:
         {
             bool carry = false;
+
             for (int i = 0; i < cnt; i++) {
+
                 carry = NBIT<S>(data);
                 data = data << 1 | (carry ? 1 : 0);
             }
+
             reg.sr.c = carry;
             reg.sr.v = 0;
             break;
@@ -147,11 +162,14 @@ Moira::shift(int cnt, u64 data) {
         case ROR_LOOP:
         {
             bool carry = false;
+
             for (int i = 0; i < cnt; i++) {
+
                 carry = data & 1;
                 data >>= 1;
                 if (carry) data |= MSBIT<S>();
             }
+
             reg.sr.c = carry;
             reg.sr.v = 0;
             break;
@@ -160,7 +178,9 @@ Moira::shift(int cnt, u64 data) {
         case ROXL_LOOP:
         {
             bool carry = reg.sr.x;
+
             for (int i = 0; i < cnt; i++) {
+
                 bool extend = carry;
                 carry = NBIT<S>(data);
                 data = data << 1 | (extend ? 1 : 0);
@@ -175,7 +195,9 @@ Moira::shift(int cnt, u64 data) {
         case ROXR_LOOP:
         {
             bool carry = reg.sr.x;
+
             for (int i = 0; i < cnt; i++) {
+
                 bool extend = carry;
                 carry = data & 1;
                 data >>= 1;
@@ -187,12 +209,14 @@ Moira::shift(int cnt, u64 data) {
             reg.sr.v = 0;
             break;
         }
+
         default:
             fatalError;
     }
     
     reg.sr.n = NBIT<S>(data);
     reg.sr.z = ZERO<S>(data);
+
     return CLIP<S>(data);
 }
 
@@ -247,12 +271,13 @@ Moira::addsub(u32 op1, u32 op2)
             if (CLIP<S>(result)) reg.sr.z = 0;
             break;
         }
+
         default:
-        {
             fatalError;
-        }
     }
+
     reg.sr.n = NBIT<S>(result);
+
     return (u32)result;
 }
 
@@ -264,15 +289,15 @@ Moira::mul(u32 op1, u32 op2)
     switch (I) {
 
          case MULS:
-         {
+
              result = (i16)op1 * (i16)op2;
              break;
-         }
+
          case MULU:
-         {
+
              result = op1 * op2;
              break;
-         }
+
         default:
             fatalError;
      }
@@ -315,11 +340,11 @@ Moira::div(u32 op1, u32 op2)
             overflow = quotient > 0xFFFF;
             break;
         }
+
         default:
-        {
             fatalError;
-        }
     }
+
     reg.sr.v = overflow ? 1        : reg.sr.v;
     reg.sr.n = overflow ? 1        : NBIT<Word>(result);
     reg.sr.z = overflow ? reg.sr.z : ZERO<Word>(result);
@@ -330,7 +355,7 @@ Moira::div(u32 op1, u32 op2)
 template <Core C, Instr I, Size S> u32
 Moira::bcd(u32 op1, u32 op2)
 {
-    u64 result;
+    u64 result, tmp_result;
 
     switch (I) {
 
@@ -343,7 +368,7 @@ Moira::bcd(u32 op1, u32 op2)
             // From portable68000
             u16 resLo = op1_lo + op2_lo + reg.sr.x;
             u16 resHi = op1_hi + op2_hi;
-            u64 tmp_result;
+
             result = tmp_result = resHi + resLo;
             if (resLo > 9) result += 6;
             reg.sr.x = reg.sr.c = (result & 0x3F0) > 0x90;
@@ -362,7 +387,7 @@ Moira::bcd(u32 op1, u32 op2)
             // From portable68000
             u16 resLo = op2_lo - op1_lo - reg.sr.x;
             u16 resHi = op2_hi - op1_hi;
-            u64 tmp_result;
+
             result = tmp_result = resHi + resLo;
             int bcd = 0;
             if (resLo & 0xf0) {
@@ -377,11 +402,11 @@ Moira::bcd(u32 op1, u32 op2)
             reg.sr.v = ((tmp_result & 0x80) == 0x80) && ((result & 0x80) == 0);
             break;
         }
+
         default:
-        {
             fatalError;
-        }
     }
+
     reg.sr.n = NBIT<S>(result);
     return (u32)result;
 }
@@ -390,7 +415,7 @@ template <Core C, Size S> void
 Moira::cmp(u32 op1, u32 op2)
 {
     u64 result = U64_SUB(op2, op1);
-    // printf("ALU cmp: %x %x %llx\n", op1, op2, result);
+
     reg.sr.c = NBIT<S>(result >> 1);
     reg.sr.v = NBIT<S>((op2 ^ op1) & (op2 ^ result));
     reg.sr.z = ZERO<S>(result);
@@ -406,26 +431,26 @@ Moira::logic(u32 op)
 
         case NOT:
         case NOT_LOOP:
-        {
+
             result = ~op;
             reg.sr.n = NBIT<S>(result);
             reg.sr.z = ZERO<S>(result);
             reg.sr.v = 0;
             reg.sr.c = 0;
             break;
-        }
+
         case NEG:
         case NEG_LOOP:
-        {
+
             result = addsub<C, SUB, S>(op, 0);
             break;
-        }
+
         case NEGX:
         case NEGX_LOOP:
-        {
+
             result = addsub<C, SUBX, S>(op, 0);
             break;
-        }
+
         default:
             fatalError;
     }
