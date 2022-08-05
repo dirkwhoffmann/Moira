@@ -8,7 +8,7 @@
 // -----------------------------------------------------------------------------
 
 #include "Moira.h"
-
+#include "MoiraMacros.h"
 #include <cstring>
 #include <cstdio>
 
