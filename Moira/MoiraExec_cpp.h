@@ -687,6 +687,7 @@ Moira::execBra(u16 opcode)
 
     reg.pc = newpc;
     fullPrefetch <C, POLLIPL> ();
+
     CYCLES_IP (10, 10, 10,     10, 10, 10,     10, 10, 10);
 }
 
@@ -719,11 +720,8 @@ Moira::execBcc(u16 opcode)
         // Take branch
         reg.pc = newpc;
         fullPrefetch <C, POLLIPL> ();
-        if (I == BRA) {
-            CYCLES_IP (10, 10, 10,     10, 10, 10,     10, 10, 10);
-        } else {
-            CYCLES_IP (10, 10,  6,     10, 10,  6,     10, 10,  6);
-        }
+
+        CYCLES_IP (10, 10,  6,     10, 10,  6,     10, 10,  6);
 
     } else {
 
@@ -733,13 +731,7 @@ Moira::execBcc(u16 opcode)
         if constexpr (S == Long) readExt<C>();
         prefetch <C,POLLIPL> ();
 
-        assert(I != BRA);
-
-        if (I == BRA) {
-            CYCLES_IP (10, 10, 10,     10, 10, 10,     10, 10, 10);
-        } else {
-            CYCLES_IP (10,  6,  4,     10, 10,  6,     10, 10,  6);
-        }
+        CYCLES_IP (10,  6,  4,     10, 10,  6,     10, 10,  6);
     }
 }
 
