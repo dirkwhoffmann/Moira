@@ -812,10 +812,11 @@ Moira::divlsMusashi(u64 op1, u32 op2)
         remainder = u64(i64(op1) % i64(i32(op2)));
     }
 
-    // printf("Moira signed 64: %llx %llx\n", quotient, remainder);
+    // printf("Moira ALU signed: %llx %llx\n", quotient, remainder);
 
-    if(i64(quotient) == i64(i32(quotient))) {
+    if constexpr (S == Word) {
 
+        // printf("Moira: S = WORD quotient = %llx\n", quotient);
         reg.sr.n = NBIT<Long>(quotient);
         reg.sr.z = ZERO<Long>(quotient);
         reg.sr.v = 0;
@@ -823,7 +824,17 @@ Moira::divlsMusashi(u64 op1, u32 op2)
 
     } else {
 
-        reg.sr.v = 1;
+        if(i64(quotient) == i64(i32(quotient))) {
+
+            reg.sr.n = NBIT<Long>(quotient);
+            reg.sr.z = ZERO<Long>(quotient);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+
+        } else {
+
+            reg.sr.v = 1;
+        }
     }
 
     return { quotient, remainder };
@@ -847,6 +858,7 @@ Moira::divluMusashi(u64 op1, u32 op2)
 
     if constexpr (S == Word) {
 
+        // printf("Moira: S = WORD quotient = %llx\n", quotient);
         reg.sr.n = NBIT<Long>(quotient);
         reg.sr.z = ZERO<Long>(quotient);
         reg.sr.v = 0;
@@ -854,10 +866,26 @@ Moira::divluMusashi(u64 op1, u32 op2)
 
     } else {
 
-        reg.sr.n = NBIT<Long>(quotient >> 32);
-        reg.sr.z = quotient == 0;
-        reg.sr.v = (quotient >> 32) != 0;
-        reg.sr.c = 0;
+        // printf("Moira: S = Long\n");
+
+        if (quotient <= 0xffffffff) {
+
+            // printf("Moira: quotient <= 0xffffffff: quotient = %llx n = %d\n", quotient, reg.sr.n);
+            /*
+            reg.sr.n = NBIT<Long>(quotient >> 32);
+            reg.sr.z = quotient == 0;
+            reg.sr.v = (quotient >> 32) != 0;
+            reg.sr.c = 0;
+            */
+            reg.sr.n = NBIT<Long>(quotient);
+            reg.sr.z = ZERO<Long>(quotient);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+
+        } else {
+
+            reg.sr.v = 1;
+        }
     }
 
     return { quotient, remainder };

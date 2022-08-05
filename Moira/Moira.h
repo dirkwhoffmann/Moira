@@ -416,6 +416,8 @@ private:
     void setTrace0Flag() { reg.sr.t0 = true; }
     void clearTrace0Flag() { reg.sr.t0 = false; }
 
+    void clearTraceFlags() { clearTraceFlag(); clearTrace0Flag(); }
+    
 protected:
 
     template <Size S = Long> u32 readD(int n) const;

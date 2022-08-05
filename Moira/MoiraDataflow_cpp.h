@@ -215,6 +215,7 @@ Moira::computeEAbe(u32 an)
     u32 offset = (queue.irc & 0x800) ? xi : SEXT<Word>(xi);
     offset = u32(offset << scale);
     result = U32_ADD3(an, d, offset);
+    // printf("Moira: d = %d xi = %x offset = %x scale = %d result = %x\n", d, xi, offset, scale, result);
 
     SYNC(2);
     if ((F & SKIP_LAST_READ) == 0) { readExt<C>(); } else { reg.pc += 2; }
@@ -265,7 +266,6 @@ Moira::computeEAfe(u32 an)
             bd = (queue.irc << 16);
             readExt<C>();
             bd |= queue.irc;
-            // bd = SEXT<Word>(bd | queue.irc);
             readExt<C>();
             // printf("bd = %x\n", bd);
         } else {
@@ -306,8 +306,9 @@ Moira::computeEAfe(u32 an)
     }
 
     /* Preindex */
-    // printf("Moira: (8)\n");
     /*
+    printf("Moira: (8)\n");
+
     printf("Moira Full format: %x %x %x %x\n", an, bd, xn, od);
     printf("                   %d %d %d %d\n", an, bd, xn, od);
     printf("Reading from       %x\n", u32(an + bd + xn));

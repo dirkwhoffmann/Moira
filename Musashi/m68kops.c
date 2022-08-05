@@ -6662,8 +6662,12 @@ static void m68k_op_bfffo_32_d(void)
 		FLAG_V = VFLAG_CLEAR;
 		FLAG_C = CFLAG_CLEAR;
 
+        // printf("Musashi: data = %x width = %d offset = %d\n", data, width, offset);
+
 		for(bit = 1<<(width-1);bit && !(data & bit);bit>>= 1)
 			offset++;
+
+        // printf("Musashi: offset = %d\n", offset);
 
 		REG_D[(word2>>12)&7] = offset;
 
@@ -6713,6 +6717,8 @@ static void m68k_op_bfffo_32_ai(void)
 		FLAG_Z = data;
 		FLAG_V = VFLAG_CLEAR;
 		FLAG_C = CFLAG_CLEAR;
+
+        // printf("Musashi (ai): data = %x width = %d offset = %d\n", data, width, offset);
 
 		for(bit = 1<<(width-1);bit && !(data & bit);bit>>= 1)
 			offset++;
@@ -7777,14 +7783,14 @@ static void m68k_op_bftst_32_ai(void)
 
 		data_long = m68ki_read_32(ea);
 
-        printf("Musashi: width = %d offset = %d ea = %x data = %x mask = %x\n", width, offset, ea, data_long, mask_long);
+        // printf("Musashi: width = %d offset = %d ea = %x data = %x mask = %x\n", width, offset, ea, data_long, mask_long);
 
 		FLAG_N = ((data_long & (0x80000000 >> offset))<<offset)>>24;
 		FLAG_Z = data_long & mask_long;
 		FLAG_V = VFLAG_CLEAR;
 		FLAG_C = CFLAG_CLEAR;
 
-        printf("Musashi data = %x offset = %x NBit: %d\n", data_long, offset, FLAG_N);
+        // printf("Musashi data = %x offset = %x NBit: %d\n", data_long, offset, FLAG_N);
 
 		if((width + offset) > 32)
 		{
@@ -7876,6 +7882,8 @@ static void m68k_op_bftst_32_ix(void)
 			offset += 8;
 			ea--;
 		}
+        // printf("Musashi: New eq: %x New offset: %d\n", ea, offset);
+
 		width = ((width-1) & 31) + 1;
 
 
@@ -7883,6 +7891,7 @@ static void m68k_op_bftst_32_ix(void)
 		mask_long = mask_base >> offset;
 
 		data_long = m68ki_read_32(ea);
+        // printf("Musashi: ea = %x data_long = %x mask_long = %x\n", ea, data_long, mask_long);
 		FLAG_N = ((data_long & (0x80000000 >> offset))<<offset)>>24;
 		FLAG_Z = data_long & mask_long;
 		FLAG_V = VFLAG_CLEAR;
@@ -8456,8 +8465,7 @@ static void m68k_op_btst_8_r_di(void)
 
 static void m68k_op_btst_8_r_ix(void)
 {
-    auto tmp = OPER_AY_IX_8();
-	FLAG_Z = tmp & (1 << (DX & 7));
+	FLAG_Z = OPER_AY_IX_8() & (1 << (DX & 7));
 }
 
 
@@ -9447,18 +9455,19 @@ static void m68k_op_cas2_16(void)
 				return;
 			}
 		}
+        // printf("Musashi: %lx\n", word2);
         if (BIT_1F(word2)) {
-            // printf("Musashi: compare1 case 1\n");
+            // printf("Musashi: compare1 case 1: dest1 = %x\n", dest1);
             *compare1 = (uint)MAKE_INT_16(dest1);
         } else {
-            // printf("Musashi: compare1 case 2\n");
+            // printf("Musashi: compare1 case 2: dest1 = %x\n", dest1);
             *compare1 = MASK_OUT_BELOW_16(*compare1) | dest1;
         }
-        if (BIT_1(word2)) {
-            // printf("Musashi: compare2 case 1\n");
+        if (BIT_F(word2)) {
+            // printf("Musashi: compare2 case 1: dest2 = %x\n", dest2);
             *compare2 = (uint)MAKE_INT_16(dest2);
         } else {
-            // printf("Musashi: compare2 case 2\n");
+            // printf("Musashi: compare2 case 2: dest2 = %x\n", dest2);
             *compare2 = MASK_OUT_BELOW_16(*compare2) | dest2;
         }
 /*
@@ -13299,6 +13308,7 @@ static void m68k_op_divl_32_d(void)
 					quotient = dividend / divisor;
 					if(quotient > 0xffffffff)
 					{
+                        // printf("Musashi unsigned 64: quotient > 0xffffffff\n");
 						FLAG_V = VFLAG_SET;
 						return;
 					}
@@ -29692,6 +29702,7 @@ rte_loop:
 				m68ki_fake_pull_16();	/* format word */
 				m68ki_jump(new_pc);
 				m68ki_set_sr(new_sr);
+                // printf("Musashi: NORMAL new_sr = %x SP = %x\n", new_sr, REG_SP);
 				CPU_INSTR_MODE = INSTRUCTION_YES;
 				CPU_RUN_MODE = RUN_MODE_NORMAL;
 				return;
@@ -29700,6 +29711,7 @@ rte_loop:
 				m68ki_fake_pull_32();	/* program counter */
 				m68ki_fake_pull_16();	/* format word */
 				m68ki_set_sr_noint(new_sr);
+                // printf("Musashi: THROWAWAY new_sr = %x SP = %x getSR = %x\n", new_sr, REG_SP, m68ki_get_sr());
 				goto rte_loop;
 			case 2: /* Trap */
 				new_sr = m68ki_pull_16();
@@ -29708,10 +29720,12 @@ rte_loop:
 				m68ki_fake_pull_32();	/* address */
 				m68ki_jump(new_pc);
 				m68ki_set_sr(new_sr);
+                // printf("Musashi: TRAP new_sr = %x SP = %x getSR = %x\n", new_sr, REG_SP, m68ki_get_sr());
 				CPU_INSTR_MODE = INSTRUCTION_YES;
 				CPU_RUN_MODE = RUN_MODE_NORMAL;
 				return;
 		}
+        // printf("Musashi: Format error getSR = %x\n", m68ki_get_sr());
 		/* Not handling long or short bus fault */
 		CPU_INSTR_MODE = INSTRUCTION_YES;
 		CPU_RUN_MODE = RUN_MODE_NORMAL;

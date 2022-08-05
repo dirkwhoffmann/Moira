@@ -287,7 +287,7 @@ Moira::execAddressError(AEStackFrame frame, int delay)
     setSupervisorMode(true);
     
     // Disable tracing
-    clearTraceFlag();
+    clearTraceFlags();
     flags &= ~CPU_TRACE_EXCEPTION;
     SYNC(8);
 
@@ -332,7 +332,7 @@ Moira::execFormatError()
     setSupervisorMode(true);
 
     // Disable tracing
-    clearTraceFlag();
+    clearTraceFlags();
     flags &= ~CPU_TRACE_EXCEPTION;
 
     // Write exception information to stack
@@ -365,7 +365,7 @@ Moira::execUnimplemented(int nr)
     setSupervisorMode(true);
     
     // Disable tracing
-    clearTraceFlag();
+    clearTraceFlags();
     flags &= ~CPU_TRACE_EXCEPTION;
 
     // Write exception information to stack
@@ -403,7 +403,7 @@ Moira::execTraceException()
     setSupervisorMode(true);
 
     // Disable tracing
-    clearTraceFlag();
+    clearTraceFlags();
     flags &= ~CPU_TRACE_EXCEPTION;
 
     // Write exception information to stack
@@ -438,7 +438,7 @@ Moira::execTrapException(int nr)
     setSupervisorMode(true);
 
     // Disable tracing, but keep the CPU_TRACE_EXCEPTION flag
-    clearTraceFlag();
+    clearTraceFlags();
 
     // Write exception information to stack
     saveToStack2<C>(u16(nr), status, reg.pc);
@@ -471,7 +471,7 @@ Moira::execTrapNException(int nr)
     setSupervisorMode(true);
 
     // Disable tracing, but keep the CPU_TRACE_EXCEPTION flag
-    clearTraceFlag();
+    clearTraceFlags();
 
     // Write exception information to stack
     writeStackFrame0000<C>(status, reg.pc, u16(nr));
@@ -511,7 +511,7 @@ Moira::execPrivilegeException()
     setSupervisorMode(true);
 
     // Disable tracing
-    clearTraceFlag();
+    clearTraceFlags();
     flags &= ~CPU_TRACE_EXCEPTION;
 
     // Write exception information to stack
@@ -559,7 +559,7 @@ Moira::execIrqException(u8 level)
     setSupervisorMode(true);
 
     // Disable tracing
-    clearTraceFlag();
+    clearTraceFlags();
     flags &= ~CPU_TRACE_EXCEPTION;
 
     if constexpr (C == M68000) {

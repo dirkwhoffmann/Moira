@@ -1313,6 +1313,8 @@ static inline uint m68ki_get_ea_ix(uint An)
 		if(CPU_TYPE_IS_EC020_PLUS(CPU_TYPE))
 			Xn <<= (extension>>9) & 3;  /* SCALE */
 
+        // printf("Musashi: d = %d xi = %x offset = %x scale = %d result = %x\n", MAKE_INT_8(extension), REG_DA[extension>>12], Xn, (extension>>9) & 3, (uint)(An + Xn + MAKE_INT_8(extension)));
+
 		/* Add base register and displacement and return */
 		return An + Xn + MAKE_INT_8(extension);
 	}

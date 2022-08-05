@@ -179,6 +179,8 @@ void run()
         // Iterate through all opcodes
         for (int opcode = 0x0000; opcode < 65536; opcode++) {
 
+            // if (moiracpu->getInfo(opcode).I != moira::CAS2) continue;
+
             if ((opcode & 0xFFF) == 0) { printf("."); fflush(stdout); }
 
             // Prepare the test case with the selected instruction

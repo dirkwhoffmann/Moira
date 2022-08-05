@@ -876,6 +876,7 @@ Moira::execBitField(u16 opcode)
 
                 readOp<C, M, S>(dy, ea, data);
 
+                offset &= 0b11111;
                 reg.sr.n = NBIT<S>(readD(dy) << offset);
                 reg.sr.z = ZERO<S>(readD(dy) & mask);
                 reg.sr.v = 0;
@@ -887,9 +888,6 @@ Moira::execBitField(u16 opcode)
 
             } else {
 
-                mask = u32(0xFFFFFFFF00000000 >> width);
-                mask = mask >> offset;
-
                 ea = computeEA<C, M, S>(dy);
 
                 ea += offset / 8;
@@ -899,6 +897,9 @@ Moira::execBitField(u16 opcode)
                     offset += 8;
                     ea--;
                 }
+
+                mask = u32(0xFFFFFFFF00000000 >> width);
+                mask = mask >> offset;
 
                 data = readM<C, M, S>(ea);
 
@@ -938,29 +939,62 @@ Moira::execBitField(u16 opcode)
         case BFEXTS:
         case BFEXTU:
         {
-            readOp<C, M, S>(dy, ea, data);
-
-            // printf("Moira ea = %x data: %x\n", ea, data);
-
             int dn = _xxx____________ (ext);
 
-            data = CLIP<Long>(data << offset);
-            if((offset + width) > 32) {
-                data |= (readM<C, M, Byte>(ea+4) << offset) >> 8;
-            }
+            if (M == MODE_DN) {
 
-            reg.sr.n = NBIT<S>(data);
+                readOp<C, M, S>(dy, ea, data);
 
-            if (I == BFEXTS) {
-                data = SEXT<S>(data) >> (32 - width);
+                offset &= 0b11111;
+                data = std::rotl(data, offset);
+
+                reg.sr.n = NBIT<S>(data);
+
+                if (I == BFEXTS) {
+                    data = SEXT<S>(data) >> (32 - width);
+                } else {
+                    data >>= 32 - width;
+                }
+                reg.sr.z = ZERO<S>(data);
+                reg.sr.v = 0;
+                reg.sr.c = 0;
+
+                writeD(dn, data);
+
             } else {
-                data >>= 32 - width;
-            }
-            reg.sr.z = ZERO<S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
 
-            writeD(dn, data);
+                ea = computeEA<C, M, S>(dy);
+
+                ea += offset / 8;
+                offset %= 8;
+                if(offset < 0) {
+
+                    offset += 8;
+                    ea--;
+                }
+
+                data = readM<C, M, S>(ea);
+                data = CLIP<Long>(data << offset);
+
+                // printf("Moira ea = %x data: %x\n", ea, data);
+
+                if((offset + width) > 32) {
+                    data |= (readM<C, M, Byte>(ea+4) << offset) >> 8;
+                }
+
+                reg.sr.n = NBIT<S>(data);
+
+                if (I == BFEXTS) {
+                    data = SEXT<S>(data) >> (32 - width);
+                } else {
+                    data >>= 32 - width;
+                }
+                reg.sr.z = ZERO<S>(data);
+                reg.sr.v = 0;
+                reg.sr.c = 0;
+
+                writeD(dn, data);
+            }
 
             CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0,  8)
             CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 19)
@@ -974,26 +1008,61 @@ Moira::execBitField(u16 opcode)
         }
         case BFFFO:
         {
-            readOp<C, M, S>(dy, ea, data);
-
             int dn = _xxx____________ (ext);
 
-            data = std::rotl(data, offset);
-            reg.sr.n = NBIT<S>(data);
+            if (M == MODE_DN) {
 
-            if (I == BFEXTS) {
+                readOp<C, M, S>(dy, ea, data);
+
+                offset &= 0b11111;
+                data = std::rotl(data, offset);
+
+                reg.sr.n = NBIT<S>(data);
                 data >>= 32 - width;
-            } else {
-                data = SEXT<S>(data) >> (32 - width);
-            }
-            reg.sr.z = ZERO<S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+                reg.sr.z = ZERO<S>(data);
+                reg.sr.v = 0;
+                reg.sr.c = 0;
 
-            for(u32 bit = 1<<(width-1); bit && !(data & bit); bit>>= 1) {
-                offset++;
+                // printf("Moira: data = %x width = %d offset = %d\n", data, width, offset);
+                for(u32 bit = 1<<(width-1); bit && !(data & bit); bit>>= 1) {
+                    offset++;
+                }
+                // printf("Moira: offset = %d\n", offset);
+                writeD(dn, offset);
+
+            } else {
+
+                auto oldOffset = offset;
+                ea = computeEA<C, M, S>(dy);
+
+                ea += offset / 8;
+                offset %= 8;
+                if(offset < 0) {
+
+                    offset += 8;
+                    ea--;
+                }
+
+                data = readM<C, M, S>(ea);
+                data = CLIP<Long>(data << offset);
+
+                if((offset + width) > 32) {
+                    data |= (readM<C, M, Byte>(ea+4) << offset) >> 8;
+                }
+
+                reg.sr.n = NBIT<S>(data);
+                data >>= 32 - width;
+                reg.sr.z = ZERO<S>(data);
+                reg.sr.v = 0;
+                reg.sr.c = 0;
+
+                // printf("Moira (!dn): data = %x width = %d oldOffset = %d\n", data, width, oldOffset);
+
+                for(u32 bit = 1<<(width-1); bit && !(data & bit); bit>>= 1) {
+                    oldOffset++;
+                }
+                writeD(dn, oldOffset);
             }
-            writeD(dn, offset);
 
             CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0, 18)
             CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 32)
@@ -1019,6 +1088,7 @@ Moira::execBitField(u16 opcode)
                 reg.sr.v = 0;
                 reg.sr.c = 0;
 
+                offset &= 0b11111;
                 insert = std::rotr((u32)insert, offset);
 
                 writeD(dy, (readD(dy) & ~mask) | insert);
@@ -1085,9 +1155,15 @@ Moira::execBitField(u16 opcode)
 
                 data = readD(dy);
 
+                offset &= 0b11111;
+                reg.sr.n = NBIT<S>(data << offset);
+                reg.sr.z = ZERO<S>(data & mask);
+                reg.sr.v = 0;
+                reg.sr.c = 0;
+
             } else {
 
-                printf("BFTST: M = %d S = %d width = %d offset = %d\n", M, S, width, offset);
+                // printf("BFTST: M = %d S = %d width = %d offset = %d\n", M, S, width, offset);
                 ea = computeEA<C, M, S>(dy);
 
                 ea += offset / 8;
@@ -1097,20 +1173,27 @@ Moira::execBitField(u16 opcode)
                     offset += 8;
                     ea--;
                 }
+                // printf("Moira: New eq: %x New offset: %d\n", ea, offset);
 
                 mask = u32(0xFFFFFFFF00000000 >> width);
                 mask = mask >> offset;
 
                 data = readM<C, M, S>(ea);
-                printf("Moira: dy = %d ea = %x data = %x mask = %x\n", dy, ea, data, mask);
+                // printf("Moira: dy = %d ea = %x data = %x mask = %x\n", dy, ea, data, mask);
+
+                reg.sr.n = NBIT<S>(data << offset);
+                reg.sr.z = ZERO<S>(data & mask);
+                reg.sr.v = 0;
+                reg.sr.c = 0;
+
+                if((width + offset) > 32) {
+
+                    u8 mask2 = u8(0xFFFFFFFF00000000 >> width);
+                    u8 data2 = readM<C, M, Byte>(ea + 4);
+                    reg.sr.z &= ZERO<Byte>(data2 & mask2);
+                }
             }
-
-            reg.sr.n = NBIT<S>(data << offset);
-            reg.sr.z = ZERO<S>(data & mask);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
-
-            printf("Moira data = %x offset = %x NBit: %d\n", data, offset, reg.sr.n);
+            // printf("Moira data = %x offset = %x NBit: %d\n", data, offset, reg.sr.n);
 
             CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0,  6)
             CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)
@@ -1267,19 +1350,16 @@ Moira::execCas2(u16 opcode)
 
     readExt<C>();
 
-    u32 ea1 = 0, ea2 = 0, data1, data2;
-    data1 = readM<C, M, S>(reg.r[rn1]);
-    data2 = readM<C, M, S>(reg.r[rn2]);
+    u32 ea1 = reg.r[rn1];
+    u32 ea2 = reg.r[rn2];
+    u32 data1 = readM<C, M, S>(ea1);
+    u32 data2 = readM<C, M, S>(ea2);
 
     auto compare1 = readD(dc1);
-    auto diff1 = data1 - CLIP<S>(compare1);
     auto compare2 = readD(dc2);
-    auto diff2 = data2 - CLIP<S>(compare2);
 
-    /*
-    printf("Moira CAS2: dest1=%x dest2=%x compare1=%x compare2=%x diff1/res1=%x\n",
-           data1, data2, compare1, compare2, diff1);
-    */
+    // printf("Moira CAS2: dest1=%x dest2=%x compare1=%x compare2=%x\n", data1, data2, compare1, compare2);
+
 
     // Set flags
     cmp <C,S> (CLIP<S>(compare1), data1);
@@ -1294,18 +1374,27 @@ Moira::execCas2(u16 opcode)
 
             writeM <C,M,S> (ea1, reg.d[du1]);
             writeM <C,M,S> (ea2, reg.d[du2]);
+
+            prefetch <C,POLLIPL> ();
+            CYCLES_68020 (15);
+            return;
         }
     }
 
+    // printf("Moira: %x %x\n", rn1, rn2);
     if (rn1 & 0x8) {
+        // printf("Moira CAS2 (1): M = %d S = %d data1 = %x \n", M, S, data1);
         writeD(dc1, SEXT<S>(data1));
     } else {
-        writeD(dc1, CLEAR<S>(compare1) | data1);
+        // printf("Moira CAS2 (2): M = %d S = %d data1 = %x \n", M, S, data1);
+        writeD<S>(dc1, data1);
     }
     if (rn2 & 0x8) {
+        // printf("Moira CAS2 (3): M = %d S = %d data2 = %x \n", M, S, data2);
         writeD(dc2, SEXT<S>(data2));
     } else {
-        writeD(dc2, CLEAR<S>(compare2) | data2);
+        // printf("Moira CAS2 (4): M = %d S = %d data2 = %x \n", M, S, data2);
+        writeD<S>(dc2, data2);
     }
 
     prefetch <C,POLLIPL> ();
@@ -3421,8 +3510,11 @@ Moira::execDivlMusashi(u16 op)
 
             auto result = divluMusashi<Long>(dividend, divisor);
             // printf("Moira DIVL: Unsigned 64 bit = (%x,%x)\n", result.first, result.second);
-            writeD(dh, result.second);
-            writeD(dl, result.first);
+            if(!reg.sr.v) {
+
+                writeD(dh, result.second);
+                writeD(dl, result.first);
+            }
             break;
         }
         case 0b10:
@@ -3762,17 +3854,19 @@ Moira::execRte(u16 opcode)
         {
             while (1) {
 
-                newsr = (u16)readMS <C,MEM_DATA,Word> (reg.sp);
-                reg.sp += 2;
-
-                newpc = readMS <C,MEM_DATA,Long> (reg.sp);
-                reg.sp += 4;
-
-                u16 format = (u16)(readMS <C,MEM_DATA,Word> (reg.sp) >> 12);
-                reg.sp += 2;
+                u16 format = (u16)(readMS <C,MEM_DATA,Word> (reg.sp + 6) >> 12);
 
                 // printf("68020 RTE: newsr=%x newpc=%x format=%x\n", newsr, newpc, format);
                 if (format == 0b000) {  // Standard frame
+
+                    newsr = (u16)readMS <C,MEM_DATA,Word> (reg.sp);
+                    reg.sp += 2;
+
+                    newpc = readMS <C,MEM_DATA,Long> (reg.sp);
+                    reg.sp += 4;
+
+                    (void)readMS <C,MEM_DATA,Word> (reg.sp);
+                    reg.sp += 2;
 
                     // printf("68020 RTE: Standard frame\n");
                     break;
@@ -3780,19 +3874,41 @@ Moira::execRte(u16 opcode)
                 } else if (format == 0b001) {  // Throwaway frame
 
                     // printf("68020 RTE: Throwaway frame\n");
+
+                    newsr = (u16)readMS <C,MEM_DATA,Word> (reg.sp);
+                    reg.sp += 2;
+
+                    (void)readMS <C,MEM_DATA,Long> (reg.sp);
+                    reg.sp += 4;
+
+                    (void)readMS <C,MEM_DATA,Word> (reg.sp);
+                    reg.sp += 2;
+
+                    setSR(newsr);
+                    // printf("68020: Throwaway: reg.sp = %x newsr = %x\n", reg.sp, newsr);
                     continue;
 
-                } else if (format == 0b001) {  // Trap
+                } else if (format == 0b010) {  // Trap
 
                     // printf("68020 RTE: Trap\n");
+
+                    newsr = (u16)readMS <C,MEM_DATA,Word> (reg.sp);
+                    reg.sp += 2;
+
+                    newpc = readMS <C,MEM_DATA,Long> (reg.sp);
+                    reg.sp += 4;
+
+                    (void)readMS <C,MEM_DATA,Word> (reg.sp);
+                    reg.sp += 2;
+
                     (void)readMS <C,MEM_DATA,Long> (reg.sp);
                     reg.sp += 4;
                     break;
 
                 } else {
 
-                    reg.sp -= 8;
-                    execFormatError();
+                    // printf("68020: Format error\n");
+                    execFormatError<C>();
                     CYCLES(0, 4, 4)
                     return;
                 }
@@ -3804,6 +3920,7 @@ Moira::execRte(u16 opcode)
     setSR(newsr);
 
     if (misaligned(newpc)) {
+        printf("Moira: RTE address error\n");
         execAddressError(makeFrame<AE_PROG>(newpc, reg.pc));
         return;
     }
