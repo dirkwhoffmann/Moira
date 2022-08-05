@@ -234,8 +234,8 @@ Moira::computeEAfe(u32 an)
 
     u16 extension = queue.irc;
 
-    // EXPERIMENTAL
-    cp += cyclePenalty<C, M, S>(extension);
+    // Add the number of extra cycles consumed in this addressing mode
+    cp += penaltyCycles<C, M, S>(extension);
 
     readExt<C>();
 
@@ -657,44 +657,20 @@ Moira::jumpToVector(int nr)
 }
 
 template <Core C, Mode M, Size S> int
-Moira::cyclePenalty(u16 ext)
+Moira::penaltyCycles(u16 ext)
 {
-    if constexpr (C != M68020) return 0;
+    constexpr u8 delay[64] = {
 
-    if ((ext & 0x100) == 0) {
-        // printf("cyclePenalty(%x): 0 (brief extension format)\n", ext);
-        return 0; // Brief extension format
-    }
-    const u8 delay[64] =
-    {
         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-        0, /* ..01.000 no memory indirect, base NULL             */
-        5, /* ..01..01 memory indirect,    base NULL, outer NULL */
-        7, /* ..01..10 memory indirect,    base NULL, outer 16   */
-        7, /* ..01..11 memory indirect,    base NULL, outer 32   */
-        0,  5,  7,  7,  0,  5,  7,  7,  0,  5,  7,  7,
-        2, /* ..10.000 no memory indirect, base 16               */
-        7, /* ..10..01 memory indirect,    base 16,   outer NULL */
-        9, /* ..10..10 memory indirect,    base 16,   outer 16   */
-        9, /* ..10..11 memory indirect,    base 16,   outer 32   */
-        0,  7,  9,  9,  0,  7,  9,  9,  0,  7,  9,  9,
-        6, /* ..11.000 no memory indirect, base 32               */
-        11, /* ..11..01 memory indirect,    base 32,   outer NULL */
-        13, /* ..11..10 memory indirect,    base 32,   outer 16   */
-        13, /* ..11..11 memory indirect,    base 32,   outer 32   */
-        0, 11, 13, 13,  0, 11, 13, 13,  0, 11, 13, 13
+        0,  5,  7,  7,  0,  5,  7,  7,  0,  5,  7,  7,  0,  5,  7,  7,
+        2,  7,  9,  9,  0,  7,  9,  9,  0,  7,  9,  9,  0,  7,  9,  9,
+        6, 11, 13, 13,  0, 11, 13, 13,  0, 11, 13, 13,  0, 11, 13, 13
     };
 
-    switch (M) {
+    if constexpr (C == M68020 && (M == MODE_IX || MODE_IXPC)) {
 
-        case MODE_IX:
-        case MODE_IXPC:
-
-            // printf("cyclePenalty(%x): %d\n", ext, delay[ext & 0x3F]);
-            return delay[ext & 0x3F];
-
-        default:
-
-            return 0;
+        if (ext & 0x100) return delay[ext & 0x3F];
     }
+
+    return 0;
 }

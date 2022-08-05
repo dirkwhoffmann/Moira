@@ -355,7 +355,7 @@ Moira::div(u32 op1, u32 op2)
 template <Core C, Instr I, Size S> u32
 Moira::bcd(u32 op1, u32 op2)
 {
-    u64 result, tmp_result;
+    u64 result, tmpResult;
 
     switch (I) {
 
@@ -369,13 +369,13 @@ Moira::bcd(u32 op1, u32 op2)
             u16 resLo = op1_lo + op2_lo + reg.sr.x;
             u16 resHi = op1_hi + op2_hi;
 
-            result = tmp_result = resHi + resLo;
+            result = tmpResult = resHi + resLo;
             if (resLo > 9) result += 6;
             reg.sr.x = reg.sr.c = (result & 0x3F0) > 0x90;
             if (reg.sr.c) result += 0x60;
             if (CLIP<Byte>(result)) reg.sr.z = 0;
             reg.sr.n = NBIT<Byte>(result);
-            reg.sr.v = ((tmp_result & 0x80) == 0) && ((result & 0x80) == 0x80);
+            reg.sr.v = ((tmpResult & 0x80) == 0) && ((result & 0x80) == 0x80);
             break;
         }
         case SBCD:
@@ -388,7 +388,7 @@ Moira::bcd(u32 op1, u32 op2)
             u16 resLo = op2_lo - op1_lo - reg.sr.x;
             u16 resHi = op2_hi - op1_hi;
 
-            result = tmp_result = resHi + resLo;
+            result = tmpResult = resHi + resLo;
             int bcd = 0;
             if (resLo & 0xf0) {
                 bcd = 6;
@@ -399,7 +399,7 @@ Moira::bcd(u32 op1, u32 op2)
 
             if (CLIP<Byte>(result)) reg.sr.z = 0;
             reg.sr.n = NBIT<Byte>(result);
-            reg.sr.v = ((tmp_result & 0x80) == 0x80) && ((result & 0x80) == 0);
+            reg.sr.v = ((tmpResult & 0x80) == 0x80) && ((result & 0x80) == 0);
             break;
         }
 
@@ -590,9 +590,10 @@ Moira::cyclesBit(u8 bit)
         case BCLR: return MIMIC_MUSASHI ? 6 : (bit > 15 ? 6 : 4);
         case BSET:
         case BCHG: return MIMIC_MUSASHI ? 4 : (bit > 15 ? 4 : 2);
-    }
 
-    fatalError;
+        default:
+            fatalError;
+    }
 }
 
 template <Core C, Instr I> int
@@ -603,19 +604,19 @@ Moira::cyclesMul(u16 data)
     switch (I)
     {
         case MULU:
-        {
+
             for (; data; data >>= 1) if (data & 1) mcycles++;
             return 2 * mcycles;
-        }
+
         case MULS:
-        {
+
             data = ((data << 1) ^ data) & 0xFFFF;
             for (; data; data >>= 1) if (data & 1) mcycles++;
             return 2 * mcycles;
-        }
-    }
 
-    fatalError;
+        default:
+            fatalError;
+    }
 }
 
 template <Core C, Instr I> int
@@ -674,9 +675,10 @@ Moira::cyclesDiv(u32 op1, u16 op2)
             }
             return 2 * mcycles;
         }
-    }
 
-    fatalError;
+        default:
+            fatalError;
+    }
 }
 
 template <Core C, Instr I> u32
@@ -684,21 +686,8 @@ Moira::mulMusashi(u32 op1, u32 op2)
 {
     u32 result;
 
-    switch (I) {
-
-        case MULS:
-        {
-            result = (i16)op1 * (i16)op2;
-            break;
-        }
-        case MULU:
-        {
-            result = op1 * op2;
-            break;
-        }
-        default:
-            fatalError;
-    }
+    if constexpr (I == MULS) result = (i16)op1 * (i16)op2;
+    if constexpr (I == MULU) result = op1 * op2;
 
     reg.sr.n = NBIT<Long>(result);
     reg.sr.z = ZERO<Long>(result);
@@ -719,8 +708,9 @@ Moira::mullsMusashi(u32 op1, u32 op2)
         reg.sr.z = ZERO<Long>(result);
         reg.sr.v = result != u64(i32(result));
         reg.sr.c = 0;
+    }
 
-    } else {
+    if constexpr (S == Long) {
 
         reg.sr.n = NBIT<Long>(result >> 32);
         reg.sr.z = result == 0;

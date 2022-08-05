@@ -127,5 +127,5 @@ template <Core C> void readExt();
 // Jumps to an exception vector
 template <Core C, Flags F = 0> void jumpToVector(int nr);
 
-// EXPERIMENTAL
-template <Core C, Mode M, Size S> int cyclePenalty(u16 ext);
+// Computes the cycle penalty for extended 68020 addressing modes
+template <Core C, Mode M, Size S> int penaltyCycles(u16 ext);
