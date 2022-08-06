@@ -131,23 +131,29 @@ Moira::execShiftIm(u16 opcode)
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
     int cnt = src ? src : 8;
+    int cyc = (S == Long ? 4 : 2) + 2 * cnt;
 
     prefetch<C, POLLIPL>();
-    SYNC((S == Long ? 4 : 2) + 2 * cnt);
+    SYNC(cyc);
 
     writeD<S>(dst, shift <C,I,S> (cnt, readD<S>(dst)));
 
-    [[maybe_unused]] auto c = 2 * cnt;
+    if constexpr (C == M68000 || C == M68010) {
 
-    if constexpr (I == LSL || I == LSR) {
-        CYCLES_IM ( 6+c,  6+c,  4,       6+c,  6+c,  4,      8+c,  8+c,  4)
-    } else if constexpr (I == ROL || I == ROR || I == ASL) {
-        CYCLES_IM ( 6+c,  6+c,  8,       6+c,  6+c,  8,      8+c,  8+c,  8)
-    } else if constexpr (I == ROXL || I == ROXR) {
-        CYCLES_IM ( 6+c,  6+c, 12,       6+c,  6+c, 12,      8+c,  8+c, 12)
+        CYCLES(4 + cyc);
+
     } else {
-        CYCLES_IM ( 6+c,  6+c,  6,       6+c,  6+c,  6,      8+c,  8+c,  6)
+
+        switch (I) {
+
+            case LSL: case LSR:             CYCLES(  4 ); break;
+            case ROL: case ROR: case ASL:   CYCLES(  8 ); break;
+            case ROXL: case ROXR:           CYCLES( 12 ); break;
+            default:                        CYCLES(  6 ); break;
+        }
     }
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
