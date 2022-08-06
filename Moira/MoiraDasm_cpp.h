@@ -253,7 +253,16 @@ Moira::dasmShiftEa(StrWriter &str, u32 &addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
-Moira::dasmAbcd(StrWriter &str, u32 &addr, u16 op)
+Moira::dasmAbcdRg(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = Op <M,S> ( _____________xxx(op), addr );
+    auto dst = Op <M,S> ( ____xxx_________(op), addr );
+
+    str << Ins<I>{} << tab << src << ", " << dst;
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmAbcdEa(StrWriter &str, u32 &addr, u16 op)
 {
     auto src = Op <M,S> ( _____________xxx(op), addr );
     auto dst = Op <M,S> ( ____xxx_________(op), addr );

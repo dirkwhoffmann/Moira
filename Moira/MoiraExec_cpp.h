@@ -168,7 +168,7 @@ Moira::execShiftEa(u16 op)
 
     looping<I>() ? noPrefetch() : prefetch<C, POLLIPL>();
 
-    writeM <C,M,S> (ea, shift <C,I,S> (1, data));
+    writeM<C, M, S>(ea, shift <C,I,S> (1, data));
 
     if constexpr (I == ROR || I == ROL) {
 
@@ -200,42 +200,46 @@ Moira::execShiftEa(u16 op)
         CYCLES_AW   ( 0,  0,  0,      16, 16,  9,      0,  0,  0)
         CYCLES_AL   ( 0,  0,  0,      20, 20,  9,      0,  0,  0)
     }
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execAbcd(u16 opcode)
+Moira::execAbcdRg(u16 opcode)
 {
     AVAILABILITY(M68000)
-
-    assert(S == Byte);
 
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    switch (M) {
+    u32 result = bcd<C, I, Byte>(readD<Byte>(src), readD<Byte>(dst));
 
-        case 0: // Dn
-        {
-            u32 result = bcd <C,I,Byte> (readD<Byte>(src), readD<Byte>(dst));
-            prefetch<C, POLLIPL>();
-            SYNC(2);
-            writeD<Byte>(dst, result);
-            break;
-        }
-        default: // Ea
-        {
-            u32 ea1, ea2, data1, data2;
-            if (!readOp <C,M,S> (src, ea1, data1)) return;
-            pollIpl();
-            if (!readOp <C,M,S,IMPLICIT_DECR> (dst, ea2, data2)) return;
+    prefetch<C, POLLIPL>();
+    SYNC(2);
+    writeD<Byte>(dst, result);
 
-            u32 result = bcd <C,I,Byte> (data1, data2);
-            looping<I>() ? noPrefetch() : prefetch<C>();
+    FINALIZE
+}
 
-            writeM <C,M,Byte> (ea2, result);
-            break;
-        }
-    }
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execAbcdEa(u16 opcode)
+{
+    AVAILABILITY(M68000)
+
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
+
+    u32 ea1, ea2, data1, data2;
+    if (!readOp<C, M, S>(src, ea1, data1)) return;
+    pollIpl();
+    if (!readOp<C, M, S, IMPLICIT_DECR>(dst, ea2, data2)) return;
+
+    u32 result = bcd<C, I, Byte>(data1, data2);
+    looping<I>() ? noPrefetch() : prefetch<C>();
+
+    writeM<C, M, Byte>(ea2, result);
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -349,9 +353,9 @@ Moira::execAddiRg(u16 opcode)
     int dst = _____________xxx(opcode);
 
     u32 ea, data, result;
-    if (!readOp <C,M,S> (dst, ea, data)) return;
+    if (!readOp<C, M, S>(dst, ea, data)) return;
 
-    result = addsub <C,I,S> (src, data);
+    result = addsub<C, I, S>(src, data);
     prefetch<C, POLLIPL>();
 
     if constexpr (S == Long) { SYNC_68000(4); SYNC_68010(2); }
@@ -493,13 +497,13 @@ Moira::execAddxEa(u16 opcode)
 
     u32 ea1, ea2, data1, data2;
 
-    if (!readOp <C,M,S,flags> (src, ea1, data1)) {
+    if (!readOp<C, M, S, flags>(src, ea1, data1)) {
         if constexpr (S == Long) undoAnPD<M,S>(src);
         return;
     }
     if constexpr (S != Long) pollIpl();
 
-    if (!readOp <C,M,S,flags|IMPLICIT_DECR> (dst, ea2, data2)) {
+    if (!readOp<C, M, S, flags|IMPLICIT_DECR> (dst, ea2, data2)) {
         if constexpr (S == Long) undoAnPD<M,S>(dst);
         return;
     }
@@ -508,14 +512,14 @@ Moira::execAddxEa(u16 opcode)
 
     if constexpr (S == Long && !MIMIC_MUSASHI) {
 
-        writeM <C, M, Word, POLLIPL> (ea2 + 2, result & 0xFFFF);
+        writeM<C, M, Word, POLLIPL>(ea2 + 2, result & 0xFFFF);
         looping<I>() ? noPrefetch() : prefetch<C>();
-        writeM <C, M, Word> (ea2, result >> 16);
+        writeM<C, M, Word>(ea2, result >> 16);
 
     } else {
 
         looping<I>() ? noPrefetch() : prefetch<C>();
-        writeM <C,M,S> (ea2, result);
+        writeM<C, M, S>(ea2, result);
     }
 
     CYCLES_PD (18, 18, 12,      18, 18, 12,     30, 30, 12)
@@ -787,14 +791,14 @@ Moira::execBitDxEa(u16 opcode)
             u8 b = readD(src) & 0b111;
 
             u32 ea, data;
-            if (!readOp <C,M,Byte> (dst, ea, data)) return;
+            if (!readOp<C, M, Byte>(dst, ea, data)) return;
 
-            data = bit <C,I> (data, b);
+            data = bit<C, I>(data, b);
 
             if constexpr (I == BCLR && C == M68010) { SYNC(2); }
 
             prefetch<C, POLLIPL>();
-            if (I != BTST) writeM <C,M,Byte> (ea, data);
+            if (I != BTST) writeM<C, M, Byte>(ea, data);
 
             auto c = I == BTST ? 0 : 4;
             if constexpr (I == BCLR && C == M68010) c += 2;
@@ -841,12 +845,12 @@ Moira::execBitImEa(u16 opcode)
         {
             src &= 0b111;
             u32 ea, data;
-            if (!readOp <C,M,S> (dst, ea, data)) return;
+            if (!readOp<C, M, S>(dst, ea, data)) return;
 
-            data = bit <C,I> (data, src);
+            data = bit<C, I>(data, src);
 
             prefetch<C, POLLIPL>();
-            if (I != BTST) writeM <C,M,S> (ea, data);
+            if (I != BTST) writeM<C, M, S>(ea, data);
         }
     }
 
@@ -1269,8 +1273,8 @@ Moira::execCas2(u16 opcode)
         cmp<C, S>(CLIP<S>(compare2), data2);
         if (reg.sr.z) {
 
-            writeM <C,M,S> (ea1, reg.d[du1]);
-            writeM <C,M,S> (ea2, reg.d[du2]);
+            writeM<C, M, S>(ea1, reg.d[du1]);
+            writeM<C, M, S>(ea2, reg.d[du2]);
 
             prefetch<C, POLLIPL>();
             CYCLES_68020 (15);
@@ -2063,14 +2067,14 @@ Moira::execMove0(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    if (!readOp <C, M, S, STD_AE_FRAME> (src, ea, data)) return;
+    if (!readOp<C, M, S, STD_AE_FRAME>(src, ea, data)) return;
 
     reg.sr.n = NBIT<S>(data);
     reg.sr.z = ZERO<S>(data);
     reg.sr.v = 0;
     reg.sr.c = 0;
 
-    if (!writeOp <C, MODE_DN, S> (dst, data)) return;
+    if (!writeOp<C, MODE_DN, S>(dst, data)) return;
 
     prefetch<C, POLLIPL>();
 
@@ -2098,11 +2102,11 @@ Moira::execMove2(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    if (!readOp <C, M, S, STD_AE_FRAME> (src, ea, data)) return;
+    if (!readOp<C, M, S, STD_AE_FRAME>(src, ea, data)) return;
 
     if constexpr (S == Long && !isMemMode(M)) {
 
-        if (!writeOp <C, MODE_AI, S, AE_INC_PC|POLLIPL> (dst, data)) return;
+        if (!writeOp<C, MODE_AI, S, AE_INC_PC|POLLIPL>(dst, data)) return;
 
         reg.sr.n = NBIT<S>(data);
         reg.sr.z = ZERO<S>(data);
@@ -2150,11 +2154,11 @@ Moira::execMove3(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    if (!readOp <C, M, S, STD_AE_FRAME> (src, ea, data)) return;
+    if (!readOp<C, M, S, STD_AE_FRAME>(src, ea, data)) return;
 
     if constexpr (S == Long && !isMemMode(M)) {
 
-        if (!writeOp <C, MODE_PI, S, AE_INC_PC|POLLIPL> (dst, data)) return;
+        if (!writeOp<C, MODE_PI, S, AE_INC_PC|POLLIPL>(dst, data)) return;
 
         reg.sr.n = NBIT<S>(data);
         reg.sr.z = ZERO<S>(data);
@@ -2211,7 +2215,7 @@ Moira::execMove4(u16 opcode)
      *  transfer size (byte, word or long), and disregarding the source
      *  addressing mode."
      */
-    if (!readOp <C, M, S, STD_AE_FRAME> (src, ea, data)) return;
+    if (!readOp<C, M, S, STD_AE_FRAME>(src, ea, data)) return;
 
     // Determine next address error stack frame format
     const u64 flags0 = AE_WRITE | AE_DATA;
@@ -2239,8 +2243,8 @@ Moira::execMove4(u16 opcode)
 
     if (core == M68010 && S == Long) SYNC(2);
 
-    writeM <C, MODE_PD, S, REVERSE> (ea, data);
-    updateAn <MODE_PD, S> (dst);
+    writeM<C, MODE_PD, S, REVERSE>(ea, data);
+    updateAn<MODE_PD, S>(dst);
 
     CYCLES_DN   ( 8,  8,  5,       8,  8,  5,     12, 14,  5)
     CYCLES_AN   ( 0,  0,  0,       8,  8,  5,     12, 14,  5)
@@ -2266,14 +2270,14 @@ Moira::execMove5(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    if (!readOp <C, M, S, STD_AE_FRAME> (src, ea, data)) return;
+    if (!readOp<C, M, S, STD_AE_FRAME>(src, ea, data)) return;
 
     if constexpr (S == Long && !isMemMode(M)) {
 
         reg.sr.n = NBIT<Word>(data >> 16);
         reg.sr.z = ZERO<Word>(data >> 16) && reg.sr.z;
 
-        if (!writeOp <C, MODE_DI, S, POLLIPL> (dst, data)) return;
+        if (!writeOp<C, MODE_DI, S, POLLIPL>(dst, data)) return;
 
         reg.sr.n = NBIT<S>(data);
         reg.sr.z = ZERO<S>(data);
@@ -2318,14 +2322,14 @@ Moira::execMove6(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    if (!readOp <C, M, S, STD_AE_FRAME> (src, ea, data)) return;
+    if (!readOp<C, M, S, STD_AE_FRAME>(src, ea, data)) return;
 
     if constexpr (S == Long && !isMemMode(M)) {
 
         reg.sr.n = NBIT<Word>(data >> 16);
         reg.sr.z = ZERO<Word>(data >> 16) && reg.sr.z;
 
-        if (!writeOp <C, MODE_IX, S, POLLIPL> (dst, data)) return;
+        if (!writeOp<C, MODE_IX, S, POLLIPL>(dst, data)) return;
 
         reg.sr.n = NBIT<S>(data);
         reg.sr.z = ZERO<S>(data);
@@ -2370,14 +2374,14 @@ Moira::execMove7(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    if (!readOp <C, M, S, STD_AE_FRAME> (src, ea, data)) return;
+    if (!readOp<C, M, S, STD_AE_FRAME>(src, ea, data)) return;
 
     reg.sr.n = NBIT<S>(data);
     reg.sr.z = ZERO<S>(data);
     reg.sr.v = 0;
     reg.sr.c = 0;
 
-    if (!writeOp <C, MODE_AW, S> (dst, data)) return;
+    if (!writeOp<C, MODE_AW, S>(dst, data)) return;
 
     prefetch<C, POLLIPL>();
 
@@ -2691,7 +2695,7 @@ Moira::execMovemRgEa(u16 opcode)
 
                 if (mask & (1 << i)) {
 
-                    writeM <C,M,S> (ea, reg.r[i]);
+                    writeM<C, M, S>(ea, reg.r[i]);
                     ea += S;
                     cnt++;
                 }
@@ -2725,14 +2729,14 @@ Moira::execMovepDxEa(u16 opcode)
 
         case Long:
         {
-            writeM <C, M, Byte> (ea, (dx >> 24) & 0xFF); ea += 2;
-            writeM <C, M, Byte> (ea, (dx >> 16) & 0xFF); ea += 2;
+            writeM<C, M, Byte>(ea, (dx >> 24) & 0xFF); ea += 2;
+            writeM<C, M, Byte>(ea, (dx >> 16) & 0xFF); ea += 2;
             [[fallthrough]];
         }
         case Word:
         {
-            writeM <C, M, Byte> (ea, (dx >>  8) & 0xFF); ea += 2;
-            writeM <C, M, Byte> (ea, (dx >>  0) & 0xFF);
+            writeM<C, M, Byte>(ea, (dx >>  8) & 0xFF); ea += 2;
+            writeM<C, M, Byte>(ea, (dx >>  0) & 0xFF);
         }
     }
     prefetch<C, POLLIPL>();
@@ -2905,12 +2909,12 @@ Moira::execMoveFromCcrRg(u16 opcode)
     int dst = _____________xxx(opcode);
 
     u32 ea, data;
-    if (!readOp <C, M, S> (dst, ea, data)) return;
+    if (!readOp<C, M, S>(dst, ea, data)) return;
     prefetch<C, POLLIPL>();
 
     writeD <S> (dst, getCCR());
 
-    CYCLES_DN   ( 0,  0,  0,       0,  4,  4,      0,  0,  0)
+    CYCLES_DN ( 0,  0,  0,       0,  4,  4,      0,  0,  0)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -2921,10 +2925,10 @@ Moira::execMoveFromCcrEa(u16 opcode)
     int dst = _____________xxx(opcode);
     u32 ea, data;
 
-    if (!readOp <C, M, S, STD_AE_FRAME> (dst, ea, data)) return;
+    if (!readOp<C, M, S, STD_AE_FRAME>(dst, ea, data)) return;
     prefetch<C>();
 
-    writeOp <C, M, S, POLLIPL> (dst, ea, getCCR());
+    writeOp<C, M, S, POLLIPL>(dst, ea, getCCR());
 
     CYCLES_AI   ( 0,  0,  0,       0, 12,  8,      0,  0,  0)
     CYCLES_PI   ( 0,  0,  0,       0, 12,  8,      0,  0,  0)
@@ -2943,12 +2947,12 @@ Moira::execMoveToCcr(u16 opcode)
     int src = _____________xxx(opcode);
     u32 ea, data;
 
-    if (!readOp <C, M, S, STD_AE_FRAME> (src, ea, data)) return;
+    if (!readOp<C, M, S, STD_AE_FRAME>(src, ea, data)) return;
 
     SYNC(4);
     setCCR((u8)data);
 
-    (void)readMS <C,MEM_PROG,Word> (reg.pc + 2);
+    (void)readMS<C,MEM_PROG,Word>(reg.pc + 2);
     prefetch<C, POLLIPL>();
 
     CYCLES_DN   ( 0,  0,  0,      12, 12,  4,      0,  0,  0)
@@ -2973,11 +2977,11 @@ Moira::execMoveFromSrRg(u16 opcode)
         int dst = _____________xxx(opcode);
 
     u32 ea, data;
-    if (!readOp <C, M, S> (dst, ea, data)) return;
+    if (!readOp<C, M, S>(dst, ea, data)) return;
     prefetch<C, POLLIPL>();
 
     if constexpr (C == M68000) SYNC(2);
-    writeD <S> (dst, getSR());
+    writeD<S>(dst, getSR());
 
     CYCLES_DN ( 0,  0,  0,       6,  4,  8,      0,  0,  0)
 }
@@ -2991,10 +2995,10 @@ Moira::execMoveFromSrEa(u16 opcode)
         int dst = _____________xxx(opcode);
     u32 ea, data;
 
-    if (!readOp <C, M, S, STD_AE_FRAME> (dst, ea, data)) return;
+    if (!readOp<C, M, S, STD_AE_FRAME>(dst, ea, data)) return;
     prefetch<C>();
 
-    writeOp <C, M, S, POLLIPL> (dst, ea, getSR());
+    writeOp<C, M, S, POLLIPL>(dst, ea, getSR());
 
     CYCLES_DN ( 0,  0,  0,       6,  4,  8,      0,  0,  0)
     CYCLES_AI ( 0,  0,  0,      12, 12, 12,      0,  0,  0)
@@ -3016,12 +3020,12 @@ Moira::execMoveToSr(u16 opcode)
     int src = _____________xxx(opcode);
 
     u32 ea, data;
-    if (!readOp <C, M, S, STD_AE_FRAME> (src, ea, data)) return;
+    if (!readOp<C, M, S, STD_AE_FRAME>(src, ea, data)) return;
 
     SYNC(4);
     setSR((u16)data);
 
-    (void)readMS <C,MEM_PROG,Word> (reg.pc + 2);
+    (void)readMS<C, MEM_PROG,Word>(reg.pc + 2);
     prefetch<C, POLLIPL>();
 
     CYCLES_DN   ( 0,  0,  0,      12, 12,  8,      0,  0,  0)
@@ -3084,12 +3088,12 @@ Moira::execMul(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    if (!readOp <C, M, Word, STD_AE_FRAME> (src, ea, data)) return;
+    if (!readOp<C, M, Word, STD_AE_FRAME>(src, ea, data)) return;
 
     prefetch<C, POLLIPL>();
-    result = mul <C,I> (data, readD<Word>(dst));
+    result = mul<C, I>(data, readD<Word>(dst));
 
-    [[maybe_unused]] auto cycles = cyclesMul <C,I> (u16(data));
+    [[maybe_unused]] auto cycles = cyclesMul<C, I>(u16(data));
     SYNC(cycles);
 
     writeD(dst, result);
@@ -3113,10 +3117,10 @@ Moira::execMulMusashi(u16 op)
     int src = _____________xxx(op);
     int dst = ____xxx_________(op);
 
-    if (!readOp <C, M, Word> (src, ea, data)) return;
+    if (!readOp<C, M, Word>(src, ea, data)) return;
 
     prefetch<C, POLLIPL>();
-    result = mulMusashi <C, I> (data, readD<Word>(dst));
+    result = mulMusashi<C, I>(data, readD<Word>(dst));
 
     if constexpr (I == MULU) { SYNC_68000(50); SYNC_68010(26); }
     if constexpr (I == MULS) { SYNC_68000(50); SYNC_68010(28); }
@@ -3167,7 +3171,7 @@ Moira::execMullMusashi(u16 op)
     int dh  = _____________xxx(ext);
     int dl  = _xxx____________(ext);
 
-    if (!readOp <C, M, S> (src, ea, data)) return;
+    if (!readOp<C, M, S>(src, ea, data)) return;
 
     prefetch<C, POLLIPL>();
 
@@ -3228,7 +3232,7 @@ Moira::execDiv(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     u32 ea, divisor, result;
-    if (!readOp <C,M,Word,STD_AE_FRAME> (src, ea, divisor)) return;
+    if (!readOp<C, M, Word, STD_AE_FRAME>(src, ea, divisor)) return;
     u32 dividend = readD(dst);
 
     // Check for division by zero
@@ -3278,7 +3282,7 @@ Moira::execDivMusashi(u16 opcode)
 
     [[maybe_unused]] i64 c = clock;
     u32 ea, divisor, result;
-    if (!readOp <C,M,Word> (src, ea, divisor)) return;
+    if (!readOp<C, M, Word>(src, ea, divisor)) return;
 
     // Check for division by zero
     if (divisor == 0) {
@@ -3348,7 +3352,7 @@ Moira::execDivlMusashi(u16 op)
     int dh  = _____________xxx(ext);
     int dl  = _xxx____________(ext);
 
-    if (!readOp <C, M, S> (src, ea, divisor)) return;
+    if (!readOp<C, M, S>(src, ea, divisor)) return;
 
     if (divisor == 0) {
 
@@ -3436,9 +3440,9 @@ Moira::execNbcd(u16 opcode)
         default: // Ea
         {
             u32 ea, data;
-            if (!readOp <C, M, Byte> (reg, ea, data)) return;
+            if (!readOp<C, M, Byte>(reg, ea, data)) return;
             prefetch<C, POLLIPL>();
-            writeM <C, M, Byte> (ea, bcd<C, SBCD, Byte>(data, 0));
+            writeM<C, M, Byte>(ea, bcd<C, SBCD, Byte>(data, 0));
             break;
         }
     }
@@ -4047,7 +4051,7 @@ Moira::execTst(u16 opcode)
     int rg = _____________xxx(opcode);
 
     u32 ea, data;
-    if (!readOp <C,M,S,STD_AE_FRAME> (rg, ea, data)) return;
+    if (!readOp<C, M, S, STD_AE_FRAME>(rg, ea, data)) return;
 
     reg.sr.n = NBIT<S>(data);
     reg.sr.z = ZERO<S>(data);
@@ -4086,7 +4090,7 @@ Moira::execUnlk(u16 opcode)
 
     // Update address register
     u32 ea, data;
-    if (!readOp <C,MODE_AI,Long,AE_DATA|AE_INC_PC|POLLIPL> (7, ea, data)) return;
+    if (!readOp<C, MODE_AI, Long, AE_DATA|AE_INC_PC|POLLIPL>(7, ea, data)) return;
     writeA(an, data);
 
     if (an != 7) reg.sp += 4;

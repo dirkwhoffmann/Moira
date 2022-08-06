@@ -216,12 +216,12 @@ Moira::createJumpTable()
 
     // Dx,Dy
     opcode = parse("1100 ---1 0000 0---");
-    ____XXX______XXX(opcode, ABCD, MODE_DN, Byte, Abcd, CIMS)
+    ____XXX______XXX(opcode, ABCD, MODE_DN, Byte, AbcdRg, CIMS)
 
     // -(Ax),-(Ay)
     opcode = parse("1100 ---1 0000 1---");
-    ____XXX______XXX(opcode, ABCD, MODE_PD, Byte, Abcd, CIMS)
-    ____XXX______XXX(opcode, ABCD, MODE_PD, Byte, Abcd, CIMSloop)
+    ____XXX______XXX(opcode, ABCD, MODE_PD, Byte, AbcdEa, CIMS)
+    ____XXX______XXX(opcode, ABCD, MODE_PD, Byte, AbcdEa, CIMSloop)
 
 
     // ADD
@@ -1569,12 +1569,12 @@ Moira::createJumpTable()
 
     // Dx,Dy
     opcode = parse("1000 ---1 0000 0---");
-    ____XXX______XXX(opcode, SBCD, MODE_DN, Byte, Abcd, CIMS)
+    ____XXX______XXX(opcode, SBCD, MODE_DN, Byte, AbcdRg, CIMS)
 
     // -(Ax),-(Ay)
     opcode = parse("1000 ---1 0000 1---");
-    ____XXX______XXX(opcode, SBCD, MODE_PD, Byte, Abcd, CIMS)
-    ____XXX______XXX(opcode, SBCD, MODE_PD, Byte, Abcd, CIMSloop)
+    ____XXX______XXX(opcode, SBCD, MODE_PD, Byte, AbcdEa, CIMS)
+    ____XXX______XXX(opcode, SBCD, MODE_PD, Byte, AbcdEa, CIMSloop)
 
 
     // Scc
