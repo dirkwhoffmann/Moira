@@ -130,9 +130,9 @@ Moira::computeEA(u32 n) {
 
                 // printf("compteEA: irc = %x\n", queue.irc);
                 if (queue.irc & 0x100) {
-                    result = computeEAfull<C,M,S,F>(readA(n));
+                    result = computeEAfull<C, M, S, F>(readA(n));
                 } else {
-                    result = computeEAbrief<C,M,S,F>(readA(n));
+                    result = computeEAbrief<C, M, S, F>(readA(n));
                 }
                 break;
             }
@@ -174,9 +174,9 @@ Moira::computeEA(u32 n) {
             if constexpr (C == M68020) {
 
                 if (queue.irc & 0x100) {
-                    result = computeEAfull<C,M,S,F>(reg.pc);
+                    result = computeEAfull<C, M, S, F>(reg.pc);
                 } else {
-                    result = computeEAbrief<C,M,S,F>(reg.pc);
+                    result = computeEAbrief<C, M, S, F>(reg.pc);
                 }
                 break;
             }
@@ -313,9 +313,9 @@ template <Core C, Mode M, Size S, Flags F> u32
 Moira::readM(u32 addr, bool &error)
 {
     if (isPrgMode(M)) {
-        return readMS <C,MEM_PROG,S,F> (addr, error);
+        return readMS<C, MEM_PROG, S, F>(addr, error);
     } else {
-        return readMS <C,MEM_DATA,S,F> (addr, error);
+        return readMS<C, MEM_DATA, S, F>(addr, error);
     }
 }
 
@@ -323,9 +323,9 @@ template <Core C, Mode M, Size S, Flags F> u32
 Moira::readM(u32 addr)
 {
     if (isPrgMode(M)) {
-        return readMS <C,MEM_PROG,S,F> (addr);
+        return readMS<C, MEM_PROG, S, F> (addr);
     } else {
-        return readMS <C,MEM_DATA,S,F> (addr);
+        return readMS<C, MEM_DATA, S, F> (addr);
     }
 }
 
@@ -340,7 +340,7 @@ Moira::readMS(u32 addr, bool &error)
         return 0;
     }
     
-    return readMS <C,MS,S,F> (addr);
+    return readMS<C, MS, S, F>(addr);
 }
 
 template <Core C, MemSpace MS, Size S, Flags F> u32
@@ -351,8 +351,8 @@ Moira::readMS(u32 addr)
     if constexpr (S == Long) {
 
         // Break down the long word access into two word accesses
-        result = readMS <C,MS,Word> (addr) << 16;
-        result |= readMS <C,MS,Word,F> (addr + 2);
+        result = readMS<C, MS, Word>(addr) << 16;
+        result |= readMS<C, MS, Word, F>(addr + 2);
 
     } else {
         
@@ -378,9 +378,9 @@ template <Core C, Mode M, Size S, Flags F> void
 Moira::writeM(u32 addr, u32 val, bool &error)
 {
     if (isPrgMode(M)) {
-        writeMS <C,MEM_PROG,S,F> (addr, val, error);
+        writeMS<C, MEM_PROG, S, F>(addr, val, error);
     } else {
-        writeMS <C,MEM_DATA,S,F> (addr, val, error);
+        writeMS<C, MEM_DATA, S, F>(addr, val, error);
     }
 }
 
@@ -388,9 +388,9 @@ template <Core C, Mode M, Size S, Flags F> void
 Moira::writeM(u32 addr, u32 val)
 {
     if (isPrgMode(M)) {
-        writeMS <C,MEM_PROG,S,F> (addr, val);
+        writeMS<C, MEM_PROG, S, F>(addr, val);
     } else {
-        writeMS <C,MEM_DATA,S,F> (addr, val);
+        writeMS<C, MEM_DATA, S, F>(addr, val);
     }
 }
 
@@ -404,7 +404,7 @@ Moira::writeMS(u32 addr, u32 val, bool &error)
         return;
     }
     
-    writeMS <C,MS,S,F> (addr, val);
+    writeMS<C, MS, S, F>(addr, val);
 }
 
 template <Core C, MemSpace MS, Size S, Flags F> void
@@ -414,11 +414,11 @@ Moira::writeMS(u32 addr, u32 val)
 
         // Break down the long word access into two word accesses
         if (F & REVERSE) {
-            writeMS <C,MS,Word>   (addr + 2, val & 0xFFFF);
-            writeMS <C,MS,Word,F> (addr,     val >> 16   );
+            writeMS<C, MS, Word>   (addr + 2, val & 0xFFFF);
+            writeMS<C, MS, Word, F>(addr,     val >> 16   );
         } else {
-            writeMS <C,MS,Word>   (addr,     val >> 16   );
-            writeMS <C,MS,Word,F> (addr + 2, val & 0xFFFF);
+            writeMS<C, MS, Word>   (addr,     val >> 16   );
+            writeMS<C, MS, Word, F>(addr + 2, val & 0xFFFF);
         }
 
     } else {
@@ -477,14 +477,14 @@ template <Core C, Size S, Flags F> void
 Moira::push(u32 val)
 {
     reg.sp -= S;
-    writeMS <C,MEM_DATA,S,F> (reg.sp, val);
+    writeMS<C,MEM_DATA,S,F>(reg.sp, val);
 }
 
 template <Core C, Size S, Flags F> void
 Moira::push(u32 val, bool &error)
 {
     reg.sp -= S;
-    writeMS <C,MEM_DATA,S,F> (reg.sp, val, error);
+    writeMS<C, MEM_DATA, S, F>(reg.sp, val, error);
 }
 
 template <Core C, Size S> bool
@@ -548,7 +548,7 @@ Moira::prefetch()
     reg.pc0 = reg.pc;
 
     queue.ird = queue.irc;
-    queue.irc = (u16)readMS <C,MEM_PROG,Word,F> (reg.pc + 2);
+    queue.irc = (u16)readMS<C, MEM_PROG, Word, F>(reg.pc + 2);
 }
 
 template <Core C, Flags F, int delay> void
@@ -560,7 +560,7 @@ Moira::fullPrefetch()
         return;
     }
 
-    queue.irc = (u16)readMS <C,MEM_PROG,Word> (reg.pc);
+    queue.irc = (u16)readMS<C, MEM_PROG, Word>(reg.pc);
     if (delay) SYNC(delay);
     prefetch<C, F>();
 }
@@ -611,7 +611,7 @@ Moira::jumpToVector(int nr)
     exception = nr;
     
     // Update the program counter
-    reg.pc = readMS <C,MEM_DATA,Long> (vectorAddr);
+    reg.pc = readMS<C, MEM_DATA, Long>(vectorAddr);
     
     // Check for address error
     if (misaligned<C>(reg.pc)) {
@@ -624,7 +624,7 @@ Moira::jumpToVector(int nr)
     }
     
     // Update the prefetch queue
-    queue.irc = (u16)readMS <C,MEM_PROG,Word> (reg.pc);
+    queue.irc = (u16)readMS<C, MEM_PROG, Word>(reg.pc);
     SYNC(2);
     prefetch<C, POLLIPL>();
     

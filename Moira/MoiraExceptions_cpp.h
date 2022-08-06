@@ -69,9 +69,9 @@ Moira::saveToStack1(u16 nr, u16 sr, u32 pc)
             } else {
 
                 reg.sp -= 6;
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 0) & ~1, sr);
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 2) & ~1, pc >> 16);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 4) & ~1, pc & 0xFFFF);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 0) & ~1, sr);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 2) & ~1, pc >> 16);
             }
             break;
 
@@ -80,17 +80,17 @@ Moira::saveToStack1(u16 nr, u16 sr, u32 pc)
 
             if constexpr (MIMIC_MUSASHI) {
 
-                push <C,Word> (4 * nr);
-                push <C,Long> (pc);
-                push <C,Word> (sr);
+                push<C, Word>(4 * nr);
+                push<C, Long>(pc);
+                push<C, Word>(sr);
 
             } else {
 
                 reg.sp -= 8;
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 6) & ~1, 4 * nr);
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 0) & ~1, sr);
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 2) & ~1, pc >> 16);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 6) & ~1, 4 * nr);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 4) & ~1, pc & 0xFFFF);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 0) & ~1, sr);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 2) & ~1, pc >> 16);
             }
             break;
     }
@@ -101,9 +101,9 @@ Moira::saveToStack2(u16 nr, u16 sr, u32 pc)
 {
     switch (core) {
 
-        case M68000: saveToStack2 <M68000> (nr, sr, pc); break;
-        case M68010: saveToStack2 <M68010> (nr, sr, pc); break;
-        case M68020: saveToStack2 <M68020> (nr, sr, pc); break;
+        case M68000: saveToStack2<M68000>(nr, sr, pc); break;
+        case M68010: saveToStack2<M68010>(nr, sr, pc); break;
+        case M68020: saveToStack2<M68020>(nr, sr, pc); break;
 
         default:
             assert(false);
@@ -126,9 +126,9 @@ Moira::saveToStack2(u16 nr, u16 sr, u32 pc)
             } else {
 
                 reg.sp -= 6;
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 0) & ~1, sr);
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 2) & ~1, pc >> 16);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 4) & ~1, pc & 0xFFFF);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 0) & ~1, sr);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 2) & ~1, pc >> 16);
             }
             break;
 
@@ -137,17 +137,17 @@ Moira::saveToStack2(u16 nr, u16 sr, u32 pc)
             // SAME AS saveToStack1? IF YES, CALL IT
             if constexpr (MIMIC_MUSASHI) {
 
-                push <C,Word> (4 * nr);
-                push <C,Long> (pc);
-                push <C,Word> (sr);
+                push<C, Word>(4 * nr);
+                push<C, Long>(pc);
+                push<C, Word>(sr);
 
             } else {
 
                 reg.sp -= 8;
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 6) & ~1, 4 * nr);
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 0) & ~1, sr);
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 2) & ~1, pc >> 16);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 6) & ~1, 4 * nr);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 4) & ~1, pc & 0xFFFF);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 0) & ~1, sr);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 2) & ~1, pc >> 16);
             }
             break;
 
@@ -156,20 +156,20 @@ Moira::saveToStack2(u16 nr, u16 sr, u32 pc)
             if constexpr (MIMIC_MUSASHI) {
 
                 // printf("Pushing %x %x %x %x\n", pc, 0x2000 | nr << 2, reg.pc, sr);
-                push <C,Long> (reg.pc0);
-                push <C,Word> (0x2000 | nr << 2);
-                push <C,Long> (pc);
-                push <C,Word> (sr);
+                push<C, Long>(reg.pc0);
+                push<C, Word>(0x2000 | nr << 2);
+                push<C, Long>(pc);
+                push<C, Word>(sr);
 
             } else {
 
                 // TODO
                 assert(false);
                 reg.sp -= 8;
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 6) & ~1, 4 * nr);
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 0) & ~1, sr);
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 2) & ~1, pc >> 16);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 6) & ~1, 4 * nr);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 4) & ~1, pc & 0xFFFF);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 0) & ~1, sr);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 2) & ~1, pc >> 16);
             }
             break;
     }
@@ -184,15 +184,15 @@ Moira::writeStackFrame0000(u16 sr, u32 pc, u16 nr)
 
             if constexpr (MIMIC_MUSASHI) {
 
-                push <C,Long> (pc);
-                push <C,Word> (sr);
+                push<C, Long>(pc);
+                push<C, Word>(sr);
 
             } else {
 
                 reg.sp -= 6;
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 0) & ~1, sr);
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 2) & ~1, pc >> 16);
+                writeMS<C, MEM_DATA,Word>((reg.sp + 4) & ~1, pc & 0xFFFF);
+                writeMS<C, MEM_DATA,Word>((reg.sp + 0) & ~1, sr);
+                writeMS<C, MEM_DATA,Word>((reg.sp + 2) & ~1, pc >> 16);
             }
             break;
 
@@ -201,17 +201,17 @@ Moira::writeStackFrame0000(u16 sr, u32 pc, u16 nr)
 
             if constexpr (MIMIC_MUSASHI) {
 
-                push <C,Word> (nr << 2);
-                push <C,Long> (pc);
-                push <C,Word> (sr);
+                push<C, Word>(nr << 2);
+                push<C, Long>(pc);
+                push<C, Word>(sr);
 
             } else {
 
                 reg.sp -= 8;
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 6) & ~1, 4 * nr);
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 4) & ~1, pc & 0xFFFF);
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 0) & ~1, sr);
-                writeMS <C,MEM_DATA,Word> ((reg.sp + 2) & ~1, pc >> 16);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 6) & ~1, 4 * nr);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 4) & ~1, pc & 0xFFFF);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 0) & ~1, sr);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 2) & ~1, pc >> 16);
             }
             break;
     }
@@ -222,9 +222,9 @@ Moira::writeStackFrame0001(u16 sr, u32 pc, u16 nr)
 {
     assert(C == M68020);
 
-    push <C,Word> (0x1000 | nr << 2);
-    push <C,Long> (pc);
-    push <C,Word> (sr);
+    push<C, Word>(0x1000 | nr << 2);
+    push<C, Long>(pc);
+    push<C, Word>(sr);
 }
 
 template <Core C> void
@@ -232,10 +232,10 @@ Moira::writeStackFrame0010(u16 sr, u32 pc, u32 ia, u16 nr)
 {
     assert(C == M68020);
 
-    push <C,Long> (ia);
-    push <C,Word> (0x2000 | nr << 2);
-    push <C,Long> (pc);
-    push <C,Word> (sr);
+    push<C, Long>(ia);
+    push<C, Word>(0x2000 | nr << 2);
+    push<C, Long>(pc);
+    push<C, Word>(sr);
 }
 
 template <Core C> void
@@ -566,31 +566,31 @@ Moira::execIrqException(u8 level)
 
         SYNC(6);
         reg.sp -= 6;
-        writeMS <C,MEM_DATA,Word> (reg.sp + 4, reg.pc & 0xFFFF);
+        writeMS<C, MEM_DATA, Word>(reg.sp + 4, reg.pc & 0xFFFF);
 
         SYNC(4);
         queue.ird = getIrqVector(level);
 
         SYNC(4);
-        writeMS <C,MEM_DATA,Word> (reg.sp + 0, status);
-        writeMS <C,MEM_DATA,Word> (reg.sp + 2, reg.pc >> 16);
+        writeMS<C, MEM_DATA, Word>(reg.sp + 0, status);
+        writeMS<C, MEM_DATA, Word>(reg.sp + 2, reg.pc >> 16);
     }
 
     if constexpr (C == M68010) {
 
         SYNC(6);
         reg.sp -= 8;
-        writeMS <C,MEM_DATA,Word> (reg.sp + 4, reg.pc & 0xFFFF);
+        writeMS<C, MEM_DATA, Word>(reg.sp + 4, reg.pc & 0xFFFF);
 
         SYNC(4);
         queue.ird = getIrqVector(level);
 
         SYNC(4);
-        writeMS <C,MEM_DATA,Word> (reg.sp + 0, status);
-        writeMS <C,MEM_DATA,Word> (reg.sp + 2, reg.pc >> 16);
+        writeMS<C, MEM_DATA, Word>(reg.sp + 0, status);
+        writeMS<C, MEM_DATA, Word>(reg.sp + 2, reg.pc >> 16);
 
-        writeMS <C,MEM_DATA,Word> (reg.sp + 6, 4 * queue.ird);
+        writeMS<C, MEM_DATA, Word>(reg.sp + 6, 4 * queue.ird);
     }
 
-    jumpToVector <C,AE_SET_CB3> (queue.ird);
+    jumpToVector<C, AE_SET_CB3>(queue.ird);
 }
