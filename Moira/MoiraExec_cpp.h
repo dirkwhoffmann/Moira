@@ -947,22 +947,18 @@ Moira::execBitFieldEa(u16 opcode)
     int width  = ___________xxxxx (ext);
     int dwBit  = __________x_____ (ext);
 
-    u32 ea, data;
-    u32 mask;
-
+    // If Do or Dw is set, offset or width are taken from data registers
     if (doBit) offset = reg.d[offset & 0b111];
     if (dwBit) width = reg.d[width & 0b111];
 
     // Map width to 32, 1 ... 31
     width = ((width - 1) & 0b11111) + 1;
 
-    mask = u32(0xFFFFFFFF00000000 >> width);
-    mask = mask >> offset;
-
     u32 oldOffset = offset;
     u32 result, insert;
 
-    ea = computeEA<C, M, S>(dy);
+    // Compute the effective address
+    u32 ea = computeEA<C, M, S>(dy);
 
     ea += offset / 8;
     offset %= 8;
@@ -972,16 +968,16 @@ Moira::execBitFieldEa(u16 opcode)
         ea--;
     }
 
+    // Create the bit mask
+    u32 mask = u32(0xFFFFFFFF00000000 >> width) >> offset;
+
+    u32 data = readM<C, M, S>(ea);
+
     switch (I) {
 
         case BFCHG:
         case BFCLR:
         case BFSET:
-
-            mask = u32(0xFFFFFFFF00000000 >> width);
-            mask = mask >> offset;
-
-            data = readM<C, M, S>(ea);
 
             reg.sr.n = NBIT<S>(data << offset);
             reg.sr.z = ZERO<S>(data & mask);
@@ -1013,7 +1009,6 @@ Moira::execBitFieldEa(u16 opcode)
         case BFEXTS:
         case BFEXTU:
 
-            data = readM<C, M, S>(ea);
             data = CLIP<Long>(data << offset);
 
             if((offset + width) > 32) {
@@ -1044,7 +1039,6 @@ Moira::execBitFieldEa(u16 opcode)
 
         case BFFFO:
 
-            data = readM<C, M, S>(ea);
             data = CLIP<Long>(data << offset);
 
             if((offset + width) > 32) {
@@ -1064,11 +1058,6 @@ Moira::execBitFieldEa(u16 opcode)
             break;
 
         case BFINS:
-
-            mask = u32(0xFFFFFFFF00000000 >> width);
-            mask = mask >> offset;
-
-            data = readM<C, M, S>(ea);
 
             insert = readD(dn);
             insert = u32(insert << (32 - width));
@@ -1103,11 +1092,6 @@ Moira::execBitFieldEa(u16 opcode)
             break;
 
         case BFTST:
-
-            mask = u32(0xFFFFFFFF00000000 >> width);
-            mask = mask >> offset;
-
-            data = readM<C, M, S>(ea);
 
             (void)bitfield<I>(data, offset, width, mask);
 
