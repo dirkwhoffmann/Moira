@@ -985,12 +985,13 @@ Moira::execBitFieldEa(u16 opcode)
 
             if((width + offset) > 32) {
 
-                u8 data2 = readM<C, M, Byte>(ea + 4);
-                reg.sr.z &= ZERO<Byte>(data2 & mask8);
+                data = readM<C, M, Byte>(ea + 4);
 
-                if (I == BFCHG) writeM<C, M, Byte>(ea + 4, data2 ^ mask8);
-                if (I == BFCLR) writeM<C, M, Byte>(ea + 4, data2 & ~mask8);
-                if (I == BFSET) writeM<C, M, Byte>(ea + 4, data2 | mask8);
+                if (I == BFCHG) writeM<C, M, Byte>(ea + 4, data ^ mask8);
+                if (I == BFCLR) writeM<C, M, Byte>(ea + 4, data & ~mask8);
+                if (I == BFSET) writeM<C, M, Byte>(ea + 4, data | mask8);
+
+                reg.sr.z &= ZERO<Byte>(data & mask8);
             }
 
             CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 24)
@@ -1042,7 +1043,7 @@ Moira::execBitFieldEa(u16 opcode)
             break;
 
         case BFINS:
-
+        {
             insert = readD(dn);
             insert = u32(insert << (32 - width));
 
@@ -1051,20 +1052,14 @@ Moira::execBitFieldEa(u16 opcode)
             reg.sr.v = 0;
             reg.sr.c = 0;
 
-            insert = insert >> offset;
-
-            writeM<C, M, S>(ea, (data & ~mask) | insert);
+            writeM<C, M, S>(ea, (data & ~mask) | insert >> offset);
 
             if((width + offset) > 32) {
 
-                insert = readD(dn);
-                insert = u32(insert << (32 - width));
+                data = readM<C, M, Byte>(ea + 4);
+                reg.sr.z &= ZERO<Byte>(data & mask8);
 
-                u8 insert2 = u8(insert);
-                u8 data2 = readM<C, M, Byte>(ea + 4);
-                reg.sr.z &= ZERO<Byte>(data2 & mask8);
-
-                writeM<C, M, Byte>(ea + 4, (data2 & ~mask8) | insert2);
+                writeM<C, M, Byte>(ea + 4, (data & ~mask8) | (insert & 0xFF));
             }
 
             CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 21)
@@ -1073,7 +1068,7 @@ Moira::execBitFieldEa(u16 opcode)
             CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 21)
             CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 21)
             break;
-
+        }
         case BFTST:
 
             (void)bitfield<I>(data, offset, width, mask);

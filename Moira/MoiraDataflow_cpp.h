@@ -226,8 +226,6 @@ Moira::computeEAbe(u32 an)
 template <Core C, Mode M, Size S, Flags F> u32
 Moira::computeEAfe(u32 an)
 {
-    // printf("Moira: computeEAfe<%d,%d,%d> (%x)\n", C, M, S, queue.irc);
-
     u32 xn = 0;                        /* Index register */
     u32 bd = 0;                        /* Base Displacement */
     u32 od = 0;
@@ -241,7 +239,6 @@ Moira::computeEAfe(u32 an)
 
     /* Check if base register is present */
     if(extension & 0x80) {                /* BS */
-        // printf("Moira: (1)\n");
         an = 0;                           /* An */
     }
 
@@ -689,7 +686,7 @@ Moira::penaltyCycles(u16 ext)
         6, 11, 13, 13,  0, 11, 13, 13,  0, 11, 13, 13,  0, 11, 13, 13
     };
 
-    if constexpr (C == M68020 && (M == MODE_IX || MODE_IXPC)) {
+    if constexpr (C == M68020 && (M == MODE_IX || M == MODE_IXPC)) {
 
         if (ext & 0x100) return delay[ext & 0x3F];
     }
