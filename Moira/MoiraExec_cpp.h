@@ -112,23 +112,11 @@ Moira::execShiftRg(u16 opcode)
 
     } else {
 
-        [[maybe_unused]] auto c = C == M68020 ? cnt : 2 * cnt;
+        switch (I) {
 
-        if constexpr (I == LSL || I == LSR) {
-
-            CYCLES_DN ( 6+c,  6+c,  6+c,     6+c,  6+c,  6+c,    8+c,  8+c,  6+c)
-
-        } else if constexpr (I == ROL || I == ROR || I == ASL) {
-            
-            CYCLES_DN ( 6+c,  6+c,  8+c,     6+c,  6+c,  8+c,    8+c,  8+c,  8+c)
-
-        } else if constexpr (I == ROXL || I == ROXR) {
-
-            CYCLES_DN ( 6+c,  6+c, 12+c,     6+c,  6+c, 12+c,    8+c,  8+c, 12+c)
-
-        } else {
-
-            CYCLES_DN ( 6+c,  6+c,  6+c,     6+c,  6+c,  6+c,    8+c,  8+c,  6+c)
+            case ROL: case ROR: case ASL:   CYCLES(  8 + cnt ); break;
+            case ROXL: case ROXR:           CYCLES( 12 + cnt ); break;
+            default:                        CYCLES(  6 + cnt ); break;
         }
     }
 
@@ -1381,6 +1369,8 @@ Moira::execChkCmp2(u16 opcode)
     if (dst < 8) compare = SEXT<S>(compare);
 
     reg.sr.z = compare == bound1 || compare == bound2;
+
+    // THIS MIMICS MUSASHI AND IS LIKELY WRONG
     if (bound1 < bound2) {
         reg.sr.c = compare < bound1 || compare > bound2;
     } else {
@@ -1391,18 +1381,21 @@ Moira::execChkCmp2(u16 opcode)
 
         execTrapException<C>(6);
         CYCLES_68020(40)
-        return;
+
+    } else {
+
+        prefetch<C, POLLIPL>();
+
+        CYCLES_AI   ( 0,  0, 22,       0,  0, 22,      0,  0, 22)
+        CYCLES_DI   ( 0,  0, 23,       0,  0, 23,      0,  0, 23)
+        CYCLES_IX   ( 0,  0, 25,       0,  0, 25,      0,  0, 25)
+        CYCLES_AW   ( 0,  0, 22,       0,  0, 22,      0,  0, 22)
+        CYCLES_AL   ( 0,  0, 22,       0,  0, 22,      0,  0, 22)
+        CYCLES_DIPC ( 0,  0, 23,       0,  0, 23,      0,  0, 23)
+        CYCLES_IXPC ( 0,  0, 23,       0,  0, 23,      0,  0, 23)
     }
 
-    prefetch<C, POLLIPL>();
-
-    CYCLES_AI   ( 0,  0, 22,       0,  0, 22,      0,  0, 22)
-    CYCLES_DI   ( 0,  0, 23,       0,  0, 23,      0,  0, 23)
-    CYCLES_IX   ( 0,  0, 25,       0,  0, 25,      0,  0, 25)
-    CYCLES_AW   ( 0,  0, 22,       0,  0, 22,      0,  0, 22)
-    CYCLES_AL   ( 0,  0, 22,       0,  0, 22,      0,  0, 22)
-    CYCLES_DIPC ( 0,  0, 23,       0,  0, 23,      0,  0, 23)
-    CYCLES_IXPC ( 0,  0, 23,       0,  0, 23,      0,  0, 23)
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
