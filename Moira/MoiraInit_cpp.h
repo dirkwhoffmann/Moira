@@ -487,16 +487,20 @@ Moira::createJumpTable()
     if (core >= M68020) {
 
         opcode = parse("1110 1010 11-- ----");
-        __________MMMXXX(opcode, BFCHG, 0b101001111000, Long, BitField, CIMS)
+        __________MMMXXX(opcode, BFCHG, 0b100000000000, Long, BitFieldDn, CIMS)
+        __________MMMXXX(opcode, BFCHG, 0b001001111000, Long, BitFieldEa, CIMS)
 
         opcode = parse("1110 1100 11-- ----");
-        __________MMMXXX(opcode, BFCLR, 0b101001111000, Long, BitField, CIMS)
+        __________MMMXXX(opcode, BFCLR, 0b100000000000, Long, BitFieldDn, CIMS)
+        __________MMMXXX(opcode, BFCLR, 0b001001111000, Long, BitFieldEa, CIMS)
 
         opcode = parse("1110 1111 11-- ----");
-        __________MMMXXX(opcode, BFINS, 0b101001111000, Long, BitField, CIMS)
+        __________MMMXXX(opcode, BFINS, 0b100000000000, Long, BitFieldDn, CIMS)
+        __________MMMXXX(opcode, BFINS, 0b001001111000, Long, BitFieldEa, CIMS)
 
         opcode = parse("1110 1110 11-- ----");
-        __________MMMXXX(opcode, BFSET, 0b101001111000, Long, BitField, CIMS)
+        __________MMMXXX(opcode, BFSET, 0b100000000000, Long, BitFieldDn, CIMS)
+        __________MMMXXX(opcode, BFSET, 0b001001111000, Long, BitFieldEa, CIMS)
     }
 
 
@@ -513,16 +517,20 @@ Moira::createJumpTable()
     if (core >= M68020) {
 
         opcode = parse("1110 1011 11-- ----");
-        __________MMMXXX(opcode, BFEXTS, 0b101001111110, Long, BitField, CIMS)
+        __________MMMXXX(opcode, BFEXTS, 0b100000000000, Long, BitFieldDn, CIMS)
+        __________MMMXXX(opcode, BFEXTS, 0b001001111110, Long, BitFieldEa, CIMS)
 
         opcode = parse("1110 1001 11-- ----");
-        __________MMMXXX(opcode, BFEXTU, 0b101001111110, Long, BitField, CIMS)
+        __________MMMXXX(opcode, BFEXTU, 0b100000000000, Long, BitFieldDn, CIMS)
+        __________MMMXXX(opcode, BFEXTU, 0b001001111110, Long, BitFieldEa, CIMS)
 
         opcode = parse("1110 1101 11-- ----");
-        __________MMMXXX(opcode, BFFFO, 0b101001111110, Long, BitField, CIMS)
+        __________MMMXXX(opcode, BFFFO, 0b100000000000, Long, BitFieldDn, CIMS)
+        __________MMMXXX(opcode, BFFFO, 0b001001111110, Long, BitFieldEa, CIMS)
 
         opcode = parse("1110 1000 11-- ----");
-        __________MMMXXX(opcode, BFTST, 0b101001111110, Long, BitField, CIMS)
+        __________MMMXXX(opcode, BFTST, 0b100000000000, Long, BitFieldDn, CIMS)
+        __________MMMXXX(opcode, BFTST, 0b001001111110, Long, BitFieldEa, CIMS)
     }
 
 

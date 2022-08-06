@@ -181,6 +181,9 @@ void run()
 
             if ((opcode & 0xFFF) == 0) { printf("."); fflush(stdout); }
 
+            // REMOVE ASAP
+            if ((opcode >> 12) != 0b1110) continue;
+
             if constexpr (SKIP_ILLEGAL) {
                 if (moiracpu->getInfo(opcode).I == moira::ILLEGAL) continue;
             }

@@ -403,7 +403,7 @@ Moira::dasmAndisr(StrWriter &str, u32 &addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
-Moira::dasmBitField(StrWriter &str, u32 &addr, u16 op)
+Moira::dasmBitFieldDn(StrWriter &str, u32 &addr, u16 op)
 {
     auto ext = dasmRead <Word> (addr);
     auto dst = Op <M,S> ( _____________xxx(op), addr );
@@ -434,6 +434,12 @@ Moira::dasmBitField(StrWriter &str, u32 &addr, u16 op)
     }
 
     str << availability <I, M, S> ();
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmBitFieldEa(StrWriter &str, u32 &addr, u16 op)
+{
+    dasmBitFieldDn<I, M, S>(str, addr, op);
 }
 
 template <Instr I, Mode M, Size S> void
