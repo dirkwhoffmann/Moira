@@ -855,47 +855,35 @@ Moira::execBitFieldDn(u16 opcode)
     int width  = ___________xxxxx (ext);
     int dwBit  = __________x_____ (ext);
 
-    u32 ea, data;
-    u32 mask;
-
-    if (doBit) offset = reg.d[offset & 0b111];
+    // If Do or Dw is set, offset or width are taken from data registers
+    if (doBit) offset = reg.d[offset & 0b111] & 0b11111;
     if (dwBit) width = reg.d[width & 0b111];
 
     // Map width to 32, 1 ... 31
     width = ((width - 1) & 0b11111) + 1;
 
-    mask = u32(0xFFFFFFFF00000000 >> width);
-    mask = std::rotr(mask, offset);
+    // Create the bit mask
+    u32 mask = std::rotr(u32(0xFFFFFFFF00000000 >> width), offset);
+
+    u32 data = readD(dy);
 
     switch (I) {
 
         case BFCHG:
         case BFCLR:
         case BFSET:
-
-            readOp<C, M, S>(dy, ea, data);
-
-            offset &= 0b11111;
-            reg.sr.n = NBIT<S>(readD(dy) << offset);
-            reg.sr.z = ZERO<S>(readD(dy) & mask);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
-
-            if (I == BFCHG) writeD(dy, data ^ mask);
-            if (I == BFCLR) writeD(dy, data & ~mask);
-            if (I == BFSET) writeD(dy, data | mask);
-
+        {
+            u32 result = bitfield<I>(data, offset, mask);
+            writeD(dy, result);
+            
             CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0, 12)
             break;
-
+        }
         case BFEXTS:
         case BFEXTU:
         {
             int dn = _xxx____________ (ext);
 
-            readOp<C, M, S>(dy, ea, data);
-
-            offset &= 0b11111;
             data = std::rotl(data, offset);
 
             reg.sr.n = NBIT<S>(data);
@@ -918,9 +906,6 @@ Moira::execBitFieldDn(u16 opcode)
         {
             int dn = _xxx____________ (ext);
 
-            readOp<C, M, S>(dy, ea, data);
-
-            offset &= 0b11111;
             data = std::rotl(data, offset);
 
             reg.sr.n = NBIT<S>(data);
@@ -941,7 +926,7 @@ Moira::execBitFieldDn(u16 opcode)
         {
             int dn = _xxx____________ (ext);
 
-            u64 insert = readD(dn);
+            u32 insert = readD(dn);
             insert = u32(insert << (32 - width));
 
             reg.sr.n = NBIT<S>(insert);
@@ -949,19 +934,15 @@ Moira::execBitFieldDn(u16 opcode)
             reg.sr.v = 0;
             reg.sr.c = 0;
 
-            offset &= 0b11111;
             insert = std::rotr((u32)insert, offset);
 
-            writeD(dy, (readD(dy) & ~mask) | insert);
+            writeD(dy, (data & ~mask) | insert);
 
             CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0, 10)
             break;
         }
         case BFTST:
 
-            data = readD(dy);
-
-            offset &= 0b11111;
             reg.sr.n = NBIT<S>(data << offset);
             reg.sr.z = ZERO<S>(data & mask);
             reg.sr.v = 0;
@@ -1028,9 +1009,7 @@ Moira::execBitFieldEa(u16 opcode)
             reg.sr.v = 0;
             reg.sr.c = 0;
 
-            if (I == BFCHG) {
-                writeM<C, M, S>(ea, data ^ mask);
-            }
+            if (I == BFCHG) writeM<C, M, S>(ea, data ^ mask);
             if (I == BFCLR) writeM<C, M, S>(ea, data & ~mask);
             if (I == BFSET) writeM<C, M, S>(ea, data | mask);
 
@@ -1166,7 +1145,6 @@ Moira::execBitFieldEa(u16 opcode)
             reg.sr.c = 0;
 
             insert = insert >> offset;
-
 
             writeM<C, M, S>(ea, (data & ~mask) | insert);
 

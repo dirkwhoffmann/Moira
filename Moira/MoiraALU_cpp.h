@@ -465,24 +465,22 @@ Moira::logic(u32 op1, u32 op2)
     switch (I) {
 
         case AND: case ANDI: case ANDICCR: case ANDISR:
-        {
+
             result = op1 & op2;
             break;
-        }
+
         case OR: case ORI: case ORICCR: case ORISR:
-        {
+
             result = op1 | op2;
             break;
-        }
+
         case EOR: case EORI: case EORICCR: case EORISR:
-        {
+
             result = op1 ^ op2;
             break;
-        }
+
         default:
-        {
             fatalError;
-        }
     }
 
     reg.sr.n = NBIT<S>(result);
@@ -492,37 +490,80 @@ Moira::logic(u32 op1, u32 op2)
     return result;
 }
 
+template <Instr I> u32
+Moira::bitfield(u32 data, u32 offset, u32 mask)
+{
+    u32 result;
+
+    switch (I) {
+
+        case BFCHG:
+
+            result = data ^ mask;
+
+            reg.sr.n = NBIT<Long>(data << offset);
+            reg.sr.z = ZERO<Long>(data & mask);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+            break;
+
+        case BFCLR:
+
+            result = data & ~mask;
+
+            reg.sr.n = NBIT<Long>(data << offset);
+            reg.sr.z = ZERO<Long>(data & mask);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+            break;
+
+        case BFSET:
+
+            result = data | mask;
+
+            reg.sr.n = NBIT<Long>(data << offset);
+            reg.sr.z = ZERO<Long>(data & mask);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+            break;
+
+        default:
+            fatalError;
+    }
+
+    return result;
+}
+
 template <Core C, Instr I> u32
 Moira::bit(u32 op, u8 bit)
 {
     switch (I) {
+
         case BCHG:
-        {
+
             reg.sr.z = 1 ^ ((op >> bit) & 1);
             op ^= (1 << bit);
             break;
-        }
+
         case BSET:
-        {
+
             reg.sr.z = 1 ^ ((op >> bit) & 1);
             op |= (1 << bit);
             break;
-        }
+
         case BCLR:
-        {
+
             reg.sr.z = 1 ^ ((op >> bit) & 1);
             op &= ~(1 << bit);
             break;
-        }
+
         case BTST:
-        {
+
             reg.sr.z = 1 ^ ((op >> bit) & 1);
             break;
-        }
+
         default:
-        {
             fatalError;
-        }
     }
     return op;
 }
