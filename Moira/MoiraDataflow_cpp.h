@@ -400,7 +400,7 @@ Moira::writeMS(u32 addr, u32 val, bool &error)
     // Check for address errors
     if ((error = misaligned<C, S>(addr)) == true) {
         setFC(MS == MEM_DATA ? FC_USER_DATA : FC_USER_PROG);
-        execAddressError(makeFrame <F|AE_WRITE> (addr), 2);
+        execAddressError(makeFrame<F|AE_WRITE>(addr), 2);
         return;
     }
     
@@ -528,13 +528,13 @@ Moira::makeFrame(u32 addr, u32 pc, u16 sr, u16 ird)
 template <Flags F> AEStackFrame
 Moira::makeFrame(u32 addr, u32 pc)
 {
-    return makeFrame <F> (addr, pc, getSR(), getIRD());
+    return makeFrame<F>(addr, pc, getSR(), getIRD());
 }
 
 template <Flags F> AEStackFrame
 Moira::makeFrame(u32 addr)
 {
-    return makeFrame <F> (addr, getPC(), getSR(), getIRD());
+    return makeFrame<F>(addr, getPC(), getSR(), getIRD());
 }
 
 template <Core C, Flags F> void
@@ -562,7 +562,7 @@ Moira::fullPrefetch()
 
     queue.irc = (u16)readMS <C,MEM_PROG,Word> (reg.pc);
     if (delay) SYNC(delay);
-    prefetch <C,F> ();
+    prefetch<C, F>();
 }
 
 void
@@ -616,7 +616,7 @@ Moira::jumpToVector(int nr)
     // Check for address error
     if (misaligned<C>(reg.pc)) {
         if (nr != 3) {
-            execAddressError(makeFrame <F|AE_PROG> (reg.pc, vectorAddr));
+            execAddressError(makeFrame<F|AE_PROG>(reg.pc, vectorAddr));
         } else {
             halt(); // Double fault
         }
@@ -626,7 +626,7 @@ Moira::jumpToVector(int nr)
     // Update the prefetch queue
     queue.irc = (u16)readMS <C,MEM_PROG,Word> (reg.pc);
     SYNC(2);
-    prefetch <C,POLLIPL> ();
+    prefetch<C, POLLIPL>();
     
     // Stop emulation if the exception should be catched
     if (debugger.catchpointMatches(nr)) catchpointReached(u8(nr));

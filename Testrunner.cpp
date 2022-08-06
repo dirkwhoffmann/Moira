@@ -178,7 +178,7 @@ void run()
     printf("The test program runs Moira agains Musashi with randomly generated data.\n");
     printf("It runs until a bug has been found.\n");
 
-    selectCore(68000);
+    selectCore(68020);
     srand(0);
 
     for (testrun = 1 ;; testrun++) {
