@@ -706,7 +706,7 @@ Moira::execBra(u16 opcode)
     u32 newpc = U32_ADD(oldpc, SEXT<S>(disp));
 
     // Check for address error
-    if (misaligned<Word>(newpc)) {
+    if (misaligned<C>(newpc)) {
         execAddressError(makeFrame(newpc, reg.pc));
         return;
     }
@@ -738,7 +738,7 @@ Moira::execBcc(u16 opcode)
         u32 newpc = U32_ADD(oldpc, SEXT<S>(disp));
 
         // Check for address error
-        if (misaligned<Word>(newpc)) {
+        if (misaligned<C>(newpc)) {
             execAddressError(makeFrame(newpc, reg.pc));
             return;
         }
@@ -1152,7 +1152,7 @@ Moira::execBsr(u16 opcode)
     u32 retpc = U32_ADD(reg.pc, S == Long || S == Word ? 2 : 0);
 
     // Check for address error
-    if (misaligned<Word>(newpc)) {
+    if (misaligned<C>(newpc)) {
         execAddressError(makeFrame(newpc));
         return;
     }
@@ -1672,7 +1672,7 @@ Moira::execDbcc(u16 opcode)
             bool takeBranch = readD<Word>(dn) != 0;
 
             // Check for address error
-            if (misaligned<S>(newpc)) {
+            if (misaligned<C, S>(newpc)) {
                 execAddressError(makeFrame(newpc, newpc + 2));
                 return;
             }
@@ -1722,7 +1722,7 @@ Moira::execDbcc(u16 opcode)
             bool takeBranch = readD<Word>(dn) != 0;
 
             // Check for address error
-            if (misaligned<S>(newpc)) {
+            if (misaligned<C, S>(newpc)) {
                 execAddressError(makeFrame(newpc, newpc + 2));
                 return;
             }
@@ -1781,7 +1781,7 @@ Moira::execDbcc(u16 opcode)
             bool takeBranch = readD<Word>(dn) != 0;
 
             // Check for address error
-            if (misaligned<S>(newpc)) {
+            if (misaligned<C, S>(newpc)) {
                 execAddressError(makeFrame(newpc, newpc + 2));
                 return;
             }
@@ -1925,7 +1925,7 @@ Moira::execJmp(u16 opcode)
     SYNC(delay[M]);
 
     // Check for address error
-    if (misaligned<Word>(ea)) {
+    if (misaligned<C, Word>(ea)) {
         execAddressError(makeFrame(ea, oldpc));
         return;
     }
@@ -1957,14 +1957,14 @@ Moira::execJsr(u16 opcode)
     SYNC(delay[M]);
 
     // Check for address error in displacement modes
-    if (isDspMode(M) && misaligned<Word>(ea)) {
+    if (isDspMode(M) && misaligned<C>(ea)) {
 
         execAddressError(makeFrame(ea));
         return;
     }
 
     // Check for address error in all other modes
-    if (misaligned<Word>(ea)) {
+    if (misaligned<C>(ea)) {
         execAddressError(makeFrame(ea));
         return;
     }
@@ -2030,7 +2030,7 @@ Moira::execLink(u16 opcode)
     i32 disp = SEXT <S> (readI <C,S> ());
 
     // Check for address error
-    if (misaligned<Long>(sp)) {
+    if (misaligned<C>(sp)) {
 
         writeA(ax, sp);
         execAddressError(makeFrame <AE_DATA|AE_WRITE> (sp, getPC() + 2, getSR(), ird));
@@ -2227,7 +2227,7 @@ Moira::execMove4(u16 opcode)
     ea = computeEA <C, MODE_PD, S, IMPLICIT_DECR> (dst);
 
     // Check for address error
-    if (misaligned<S>(ea)) {
+    if (misaligned<C, S>(ea)) {
         if (format == 0) execAddressError(makeFrame<flags0>(ea + 2, reg.pc + 2, getSR(), ird));
         if (format == 1) execAddressError(makeFrame<flags1>(ea, reg.pc + 2), 2);
         if (format == 2) execAddressError(makeFrame<flags2>(ea, reg.pc + 2), 2);
@@ -2428,7 +2428,7 @@ Moira::execMove8(u16 opcode)
         readExt<C>();
         ea2 |= queue.irc;
 
-        if (misaligned<S>(ea2)) {
+        if (misaligned<C, S>(ea2)) {
             execAddressError(makeFrame <AE_WRITE|AE_DATA> (ea2));
             return;
         }
@@ -2580,7 +2580,7 @@ Moira::execMovemEaRg(u16 opcode)
     int cnt = 0;
 
     // Check for address error
-    if (misaligned<S>(ea)) {
+    if (misaligned<C, S>(ea)) {
         setFC<M>();
         if constexpr (M == MODE_IX || M == MODE_IXPC) {
             execAddressError(makeFrame <AE_DEC_PC> (ea));
@@ -2654,7 +2654,7 @@ Moira::execMovemRgEa(u16 opcode)
             u32 ea = readA(dst);
 
             // Check for address error
-            if (mask && misaligned<S>(ea)) {
+            if (mask && misaligned<C, S>(ea)) {
 
                 setFC<M>();
                 execAddressError(makeFrame <AE_INC_PC|AE_WRITE> (ea - S));
@@ -2678,7 +2678,7 @@ Moira::execMovemRgEa(u16 opcode)
             u32 ea = computeEA <C,M,S> (dst);
 
             // Check for address error
-            if (mask && misaligned<S>(ea)) {
+            if (mask && misaligned<C, S>(ea)) {
 
                 setFC<M>();
                 execAddressError(makeFrame <AE_INC_PC|AE_WRITE> (ea));
@@ -3552,7 +3552,7 @@ Moira::execPea(u16 opcode)
 
     if (isIdxMode(M)) SYNC(2);
 
-    if (misaligned(reg.sp)) {
+    if (misaligned<C>(reg.sp)) {
         reg.sp -= S;
         if (isAbsMode(M)) {
             execAddressError(makeFrame<AE_WRITE|AE_DATA>(reg.sp));
@@ -3618,7 +3618,7 @@ Moira::execRtd(u16 opcode)
 
     reg.sp += 4 + i16(queue.irc);
 
-    if (misaligned(newpc)) {
+    if (misaligned<C>(newpc)) {
         execAddressError(makeFrame<AE_PROG>(newpc, reg.pc));
         return;
     }
@@ -3777,7 +3777,7 @@ Moira::execRte(u16 opcode)
 
     setSR(newsr);
 
-    if (misaligned(newpc)) {
+    if (misaligned<C>(newpc)) {
         execAddressError(makeFrame<AE_PROG>(newpc, reg.pc));
         return;
     }
@@ -3814,7 +3814,7 @@ Moira::execRtr(u16 opcode)
 
     setCCR((u8)newccr);
 
-    if (misaligned(newpc)) {
+    if (misaligned<C>(newpc)) {
         execAddressError(makeFrame<AE_PROG>(newpc, reg.pc));
         return;
     }
@@ -3839,7 +3839,7 @@ Moira::execRts(u16 opcode)
 
     reg.sp += 4;
 
-    if (misaligned(newpc)) {
+    if (misaligned<C>(newpc)) {
         execAddressError(makeFrame<AE_PROG>(newpc, reg.pc));
         return;
     }
@@ -4076,7 +4076,7 @@ Moira::execUnlk(u16 opcode)
     int an = _____________xxx(opcode);
 
     // Move address register to stack pointer
-    if (misaligned(readA(an))) {
+    if (misaligned<C>(readA(an))) {
         execAddressError(makeFrame<AE_DATA|AE_INC_PC>(readA(an)));
         return;
     }

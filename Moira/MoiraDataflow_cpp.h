@@ -333,7 +333,7 @@ template <Core C, MemSpace MS, Size S, Flags F> u32
 Moira::readMS(u32 addr, bool &error)
 {
     // Check for address errors
-    if ((error = misaligned<S>(addr)) == true) {
+    if ((error = misaligned<C, S>(addr)) == true) {
         
         setFC(MS == MEM_DATA ? FC_USER_DATA : FC_USER_PROG);
         execAddressError(makeFrame<F>(addr), 2);
@@ -398,7 +398,7 @@ template <Core C, MemSpace MS, Size S, Flags F> void
 Moira::writeMS(u32 addr, u32 val, bool &error)
 {
     // Check for address errors
-    if ((error = misaligned<S>(addr)) == true) {
+    if ((error = misaligned<C, S>(addr)) == true) {
         setFC(MS == MEM_DATA ? FC_USER_DATA : FC_USER_PROG);
         execAddressError(makeFrame <F|AE_WRITE> (addr), 2);
         return;
@@ -487,10 +487,14 @@ Moira::push(u32 val, bool &error)
     writeMS <C,MEM_DATA,S,F> (reg.sp, val, error);
 }
 
-template <Size S> bool
+template <Core C, Size S> bool
 Moira::misaligned(u32 addr)
 {
-    return EMULATE_ADDRESS_ERROR ? ((addr & 1) && S != Byte) : false;
+    if constexpr (EMULATE_ADDRESS_ERROR && C != M68020 && S != Byte) {
+        return addr & 1;
+    } else {
+        return false;
+    }
 }
 
 template <Flags F> AEStackFrame
@@ -551,7 +555,7 @@ template <Core C, Flags F, int delay> void
 Moira::fullPrefetch()
 {    
     // Check for address error
-    if (misaligned(reg.pc)) {
+    if (misaligned<C>(reg.pc)) {
         execAddressError(makeFrame(reg.pc), 2);
         return;
     }
@@ -576,12 +580,12 @@ Moira::readExt()
     reg.pc += 2;
     
     // Check for address error
-    if (misaligned<Word>(reg.pc)) {
+    if (misaligned<C>(reg.pc)) {
         execAddressError(makeFrame(reg.pc));
         return;
     }
     
-    queue.irc = (u16)readMS <C,MEM_PROG,Word> (reg.pc);
+    queue.irc = (u16)readMS<C, MEM_PROG,Word>(reg.pc);
 }
 
 template <Core C, Size S> u32
@@ -610,7 +614,7 @@ Moira::jumpToVector(int nr)
     reg.pc = readMS <C,MEM_DATA,Long> (vectorAddr);
     
     // Check for address error
-    if (misaligned(reg.pc)) {
+    if (misaligned<C>(reg.pc)) {
         if (nr != 3) {
             execAddressError(makeFrame <F|AE_PROG> (reg.pc, vectorAddr));
         } else {

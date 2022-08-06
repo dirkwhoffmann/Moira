@@ -183,9 +183,9 @@ void run()
 
     for (testrun = 1 ;; testrun++) {
 
+        // Switch the CPU core from time to time
         if (testrun % 16 == 0) {
 
-            // Switch the CPU core from time to time
             selectCore(cpuType == 68000 ? 68010 :
                        cpuType == 68010 ? 68020 : 68000);
         }

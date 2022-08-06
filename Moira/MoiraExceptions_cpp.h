@@ -292,7 +292,7 @@ Moira::execAddressError(AEStackFrame frame, int delay)
     SYNC(8);
 
     // A misaligned stack pointer will cause a "double fault"
-    bool doubleFault = misaligned<Word>(reg.sp);
+    bool doubleFault = misaligned<C>(reg.sp);
 
     if (!doubleFault) {
         
