@@ -865,11 +865,7 @@ Moira::execBitFieldDn(u16 opcode)
     width = ((width - 1) & 0b11111) + 1;
 
     mask = u32(0xFFFFFFFF00000000 >> width);
-    if (M == MODE_DN) {
-        mask = std::rotr(mask, offset);
-    } else {
-        mask = mask >> offset;
-    }
+    mask = std::rotr(mask, offset);
 
     switch (I) {
 
@@ -877,66 +873,19 @@ Moira::execBitFieldDn(u16 opcode)
         case BFCLR:
         case BFSET:
 
-            if (M == MODE_DN) {
+            readOp<C, M, S>(dy, ea, data);
 
-                readOp<C, M, S>(dy, ea, data);
+            offset &= 0b11111;
+            reg.sr.n = NBIT<S>(readD(dy) << offset);
+            reg.sr.z = ZERO<S>(readD(dy) & mask);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
 
-                offset &= 0b11111;
-                reg.sr.n = NBIT<S>(readD(dy) << offset);
-                reg.sr.z = ZERO<S>(readD(dy) & mask);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-
-                if (I == BFCHG) writeD(dy, data ^ mask);
-                if (I == BFCLR) writeD(dy, data & ~mask);
-                if (I == BFSET) writeD(dy, data | mask);
-
-            } else {
-
-                ea = computeEA<C, M, S>(dy);
-
-                ea += offset / 8;
-                offset %= 8;
-                if(offset < 0) {
-
-                    offset += 8;
-                    ea--;
-                }
-
-                mask = u32(0xFFFFFFFF00000000 >> width);
-                mask = mask >> offset;
-
-                data = readM<C, M, S>(ea);
-
-                reg.sr.n = NBIT<S>(data << offset);
-                reg.sr.z = ZERO<S>(data & mask);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-
-                if (I == BFCHG) {
-                    writeM<C, M, S>(ea, data ^ mask);
-                }
-                if (I == BFCLR) writeM<C, M, S>(ea, data & ~mask);
-                if (I == BFSET) writeM<C, M, S>(ea, data | mask);
-
-                if((width + offset) > 32) {
-
-                    u8 mask2 = u8(0xFFFFFFFF00000000 >> width);
-                    u8 data2 = readM<C, M, Byte>(ea + 4);
-                    reg.sr.z &= ZERO<Byte>(data2 & mask2);
-
-                    if (I == BFCHG) writeM<C, M, Byte>(ea + 4, data2 ^ mask2);
-                    if (I == BFCLR) writeM<C, M, Byte>(ea + 4, data2 & ~mask2);
-                    if (I == BFSET) writeM<C, M, Byte>(ea + 4, data2 | mask2);
-                }
-            }
+            if (I == BFCHG) writeD(dy, data ^ mask);
+            if (I == BFCLR) writeD(dy, data & ~mask);
+            if (I == BFSET) writeD(dy, data | mask);
 
             CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0, 12)
-            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 24)
-            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 25)
-            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 27)
-            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 24)
-            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 24)
             break;
 
         case BFEXTS:
@@ -944,258 +893,85 @@ Moira::execBitFieldDn(u16 opcode)
         {
             int dn = _xxx____________ (ext);
 
-            if (M == MODE_DN) {
+            readOp<C, M, S>(dy, ea, data);
 
-                readOp<C, M, S>(dy, ea, data);
+            offset &= 0b11111;
+            data = std::rotl(data, offset);
 
-                offset &= 0b11111;
-                data = std::rotl(data, offset);
+            reg.sr.n = NBIT<S>(data);
 
-                reg.sr.n = NBIT<S>(data);
-
-                if (I == BFEXTS) {
-                    data = SEXT<S>(data) >> (32 - width);
-                } else {
-                    data >>= 32 - width;
-                }
-                reg.sr.z = ZERO<S>(data);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-
-                writeD(dn, data);
-
+            if (I == BFEXTS) {
+                data = SEXT<S>(data) >> (32 - width);
             } else {
-
-                ea = computeEA<C, M, S>(dy);
-
-                ea += offset / 8;
-                offset %= 8;
-                if(offset < 0) {
-
-                    offset += 8;
-                    ea--;
-                }
-
-                data = readM<C, M, S>(ea);
-                data = CLIP<Long>(data << offset);
-
-                if((offset + width) > 32) {
-                    data |= (readM<C, M, Byte>(ea+4) << offset) >> 8;
-                }
-
-                reg.sr.n = NBIT<S>(data);
-
-                if (I == BFEXTS) {
-                    data = SEXT<S>(data) >> (32 - width);
-                } else {
-                    data >>= 32 - width;
-                }
-                reg.sr.z = ZERO<S>(data);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-
-                writeD(dn, data);
+                data >>= 32 - width;
             }
+            reg.sr.z = ZERO<S>(data);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+
+            writeD(dn, data);
 
             CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0,  8)
-            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 19)
-            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
-            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 22)
-            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 19)
-            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 19)
-            CYCLES_DIPC ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
-            CYCLES_IXPC ( 0,  0,  0,     0,  0,  0,     0,  0, 22)
             break;
         }
         case BFFFO:
         {
             int dn = _xxx____________ (ext);
 
-            if (M == MODE_DN) {
+            readOp<C, M, S>(dy, ea, data);
 
-                readOp<C, M, S>(dy, ea, data);
+            offset &= 0b11111;
+            data = std::rotl(data, offset);
 
-                offset &= 0b11111;
-                data = std::rotl(data, offset);
+            reg.sr.n = NBIT<S>(data);
+            data >>= 32 - width;
+            reg.sr.z = ZERO<S>(data);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
 
-                reg.sr.n = NBIT<S>(data);
-                data >>= 32 - width;
-                reg.sr.z = ZERO<S>(data);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-
-                for(u32 bit = 1<<(width-1); bit && !(data & bit); bit>>= 1) {
-                    offset++;
-                }
-                writeD(dn, offset);
-
-            } else {
-
-                auto oldOffset = offset;
-                ea = computeEA<C, M, S>(dy);
-
-                ea += offset / 8;
-                offset %= 8;
-                if(offset < 0) {
-
-                    offset += 8;
-                    ea--;
-                }
-
-                data = readM<C, M, S>(ea);
-                data = CLIP<Long>(data << offset);
-
-                if((offset + width) > 32) {
-                    data |= (readM<C, M, Byte>(ea+4) << offset) >> 8;
-                }
-
-                reg.sr.n = NBIT<S>(data);
-                data >>= 32 - width;
-                reg.sr.z = ZERO<S>(data);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-
-                for(u32 bit = 1<<(width-1); bit && !(data & bit); bit>>= 1) {
-                    oldOffset++;
-                }
-                writeD(dn, oldOffset);
+            for(u32 bit = 1<<(width-1); bit && !(data & bit); bit>>= 1) {
+                offset++;
             }
+            writeD(dn, offset);
 
             CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0, 18)
-            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 32)
-            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 33)
-            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 35)
-            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 32)
-            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 32)
-            CYCLES_DIPC ( 0,  0,  0,     0,  0,  0,     0,  0, 33)
-            CYCLES_IXPC ( 0,  0,  0,     0,  0,  0,     0,  0, 35)
             break;
         }
         case BFINS:
         {
             int dn = _xxx____________ (ext);
 
-            if (M == MODE_DN) {
+            u64 insert = readD(dn);
+            insert = u32(insert << (32 - width));
 
-                u64 insert = readD(dn);
-                insert = u32(insert << (32 - width));
+            reg.sr.n = NBIT<S>(insert);
+            reg.sr.z = ZERO<S>(insert);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
 
-                reg.sr.n = NBIT<S>(insert);
-                reg.sr.z = ZERO<S>(insert);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
+            offset &= 0b11111;
+            insert = std::rotr((u32)insert, offset);
 
-                offset &= 0b11111;
-                insert = std::rotr((u32)insert, offset);
-
-                writeD(dy, (readD(dy) & ~mask) | insert);
-
-            } else {
-
-                ea = computeEA<C, M, S>(dy);
-
-                ea += offset / 8;
-                offset %= 8;
-                if(offset < 0) {
-
-                    offset += 8;
-                    ea--;
-                }
-
-                mask = u32(0xFFFFFFFF00000000 >> width);
-                mask = mask >> offset;
-
-                data = readM<C, M, S>(ea);
-
-                u32 insert = readD(dn);
-                insert = u32(insert << (32 - width));
-
-                reg.sr.n = NBIT<S>(insert);
-                reg.sr.z = ZERO<S>(insert);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-
-                insert = insert >> offset;
-
-
-                writeM<C, M, S>(ea, (data & ~mask) | insert);
-
-                if((width + offset) > 32) {
-
-                    insert = readD(dn);
-                    insert = u32(insert << (32 - width));
-
-                    u8 mask2 = u8(0xFFFFFFFF00000000 >> width);
-                    u8 insert2 = u8(insert);
-                    u8 data2 = readM<C, M, Byte>(ea + 4);
-                    reg.sr.z &= ZERO<Byte>(data2 & mask2);
-
-                    writeM<C, M, Byte>(ea + 4, (data2 & ~mask2) | insert2);
-                }
-            }
+            writeD(dy, (readD(dy) & ~mask) | insert);
 
             CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0, 10)
-            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 21)
-            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 22)
-            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 24)
-            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 21)
-            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 21)
             break;
         }
         case BFTST:
 
-            if (M == MODE_DN) {
+            data = readD(dy);
 
-                data = readD(dy);
-
-                offset &= 0b11111;
-                reg.sr.n = NBIT<S>(data << offset);
-                reg.sr.z = ZERO<S>(data & mask);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-
-            } else {
-
-                ea = computeEA<C, M, S>(dy);
-
-                ea += offset / 8;
-                offset %= 8;
-                if(offset < 0) {
-
-                    offset += 8;
-                    ea--;
-                }
-
-                mask = u32(0xFFFFFFFF00000000 >> width);
-                mask = mask >> offset;
-
-                data = readM<C, M, S>(ea);
-
-                reg.sr.n = NBIT<S>(data << offset);
-                reg.sr.z = ZERO<S>(data & mask);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-
-                if((width + offset) > 32) {
-
-                    u8 mask2 = u8(0xFFFFFFFF00000000 >> width);
-                    u8 data2 = readM<C, M, Byte>(ea + 4);
-                    reg.sr.z &= ZERO<Byte>(data2 & mask2);
-                }
-            }
+            offset &= 0b11111;
+            reg.sr.n = NBIT<S>(data << offset);
+            reg.sr.z = ZERO<S>(data & mask);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
 
             CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0,  6)
-            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)
-            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 18)
-            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
-            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)
-            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)
-            CYCLES_DIPC ( 0,  0,  0,     0,  0,  0,     0,  0, 18)
-            CYCLES_IXPC ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
             break;
 
         default:
-            break;
+            fatalError;
     }
 
     prefetch <C,POLLIPL> ();
@@ -1224,11 +1000,7 @@ Moira::execBitFieldEa(u16 opcode)
     width = ((width - 1) & 0b11111) + 1;
 
     mask = u32(0xFFFFFFFF00000000 >> width);
-    if (M == MODE_DN) {
-        mask = std::rotr(mask, offset);
-    } else {
-        mask = mask >> offset;
-    }
+    mask = mask >> offset;
 
     switch (I) {
 
@@ -1236,61 +1008,43 @@ Moira::execBitFieldEa(u16 opcode)
         case BFCLR:
         case BFSET:
 
-            if (M == MODE_DN) {
+            ea = computeEA<C, M, S>(dy);
 
-                readOp<C, M, S>(dy, ea, data);
+            ea += offset / 8;
+            offset %= 8;
+            if(offset < 0) {
 
-                offset &= 0b11111;
-                reg.sr.n = NBIT<S>(readD(dy) << offset);
-                reg.sr.z = ZERO<S>(readD(dy) & mask);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-
-                if (I == BFCHG) writeD(dy, data ^ mask);
-                if (I == BFCLR) writeD(dy, data & ~mask);
-                if (I == BFSET) writeD(dy, data | mask);
-
-            } else {
-
-                ea = computeEA<C, M, S>(dy);
-
-                ea += offset / 8;
-                offset %= 8;
-                if(offset < 0) {
-
-                    offset += 8;
-                    ea--;
-                }
-
-                mask = u32(0xFFFFFFFF00000000 >> width);
-                mask = mask >> offset;
-
-                data = readM<C, M, S>(ea);
-
-                reg.sr.n = NBIT<S>(data << offset);
-                reg.sr.z = ZERO<S>(data & mask);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-
-                if (I == BFCHG) {
-                    writeM<C, M, S>(ea, data ^ mask);
-                }
-                if (I == BFCLR) writeM<C, M, S>(ea, data & ~mask);
-                if (I == BFSET) writeM<C, M, S>(ea, data | mask);
-
-                if((width + offset) > 32) {
-
-                    u8 mask2 = u8(0xFFFFFFFF00000000 >> width);
-                    u8 data2 = readM<C, M, Byte>(ea + 4);
-                    reg.sr.z &= ZERO<Byte>(data2 & mask2);
-
-                    if (I == BFCHG) writeM<C, M, Byte>(ea + 4, data2 ^ mask2);
-                    if (I == BFCLR) writeM<C, M, Byte>(ea + 4, data2 & ~mask2);
-                    if (I == BFSET) writeM<C, M, Byte>(ea + 4, data2 | mask2);
-                }
+                offset += 8;
+                ea--;
             }
 
-            CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0, 12)
+            mask = u32(0xFFFFFFFF00000000 >> width);
+            mask = mask >> offset;
+
+            data = readM<C, M, S>(ea);
+
+            reg.sr.n = NBIT<S>(data << offset);
+            reg.sr.z = ZERO<S>(data & mask);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+
+            if (I == BFCHG) {
+                writeM<C, M, S>(ea, data ^ mask);
+            }
+            if (I == BFCLR) writeM<C, M, S>(ea, data & ~mask);
+            if (I == BFSET) writeM<C, M, S>(ea, data | mask);
+
+            if((width + offset) > 32) {
+
+                u8 mask2 = u8(0xFFFFFFFF00000000 >> width);
+                u8 data2 = readM<C, M, Byte>(ea + 4);
+                reg.sr.z &= ZERO<Byte>(data2 & mask2);
+
+                if (I == BFCHG) writeM<C, M, Byte>(ea + 4, data2 ^ mask2);
+                if (I == BFCLR) writeM<C, M, Byte>(ea + 4, data2 & ~mask2);
+                if (I == BFSET) writeM<C, M, Byte>(ea + 4, data2 | mask2);
+            }
+
             CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 24)
             CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 25)
             CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 27)
@@ -1302,28 +1056,6 @@ Moira::execBitFieldEa(u16 opcode)
         case BFEXTU:
         {
             int dn = _xxx____________ (ext);
-
-            if (M == MODE_DN) {
-
-                readOp<C, M, S>(dy, ea, data);
-
-                offset &= 0b11111;
-                data = std::rotl(data, offset);
-
-                reg.sr.n = NBIT<S>(data);
-
-                if (I == BFEXTS) {
-                    data = SEXT<S>(data) >> (32 - width);
-                } else {
-                    data >>= 32 - width;
-                }
-                reg.sr.z = ZERO<S>(data);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-
-                writeD(dn, data);
-
-            } else {
 
                 ea = computeEA<C, M, S>(dy);
 
@@ -1354,9 +1086,7 @@ Moira::execBitFieldEa(u16 opcode)
                 reg.sr.c = 0;
 
                 writeD(dn, data);
-            }
 
-            CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0,  8)
             CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 19)
             CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
             CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 22)
@@ -1370,57 +1100,35 @@ Moira::execBitFieldEa(u16 opcode)
         {
             int dn = _xxx____________ (ext);
 
-            if (M == MODE_DN) {
+            auto oldOffset = offset;
+            ea = computeEA<C, M, S>(dy);
 
-                readOp<C, M, S>(dy, ea, data);
+            ea += offset / 8;
+            offset %= 8;
+            if(offset < 0) {
 
-                offset &= 0b11111;
-                data = std::rotl(data, offset);
-
-                reg.sr.n = NBIT<S>(data);
-                data >>= 32 - width;
-                reg.sr.z = ZERO<S>(data);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-
-                for(u32 bit = 1<<(width-1); bit && !(data & bit); bit>>= 1) {
-                    offset++;
-                }
-                writeD(dn, offset);
-
-            } else {
-
-                auto oldOffset = offset;
-                ea = computeEA<C, M, S>(dy);
-
-                ea += offset / 8;
-                offset %= 8;
-                if(offset < 0) {
-
-                    offset += 8;
-                    ea--;
-                }
-
-                data = readM<C, M, S>(ea);
-                data = CLIP<Long>(data << offset);
-
-                if((offset + width) > 32) {
-                    data |= (readM<C, M, Byte>(ea+4) << offset) >> 8;
-                }
-
-                reg.sr.n = NBIT<S>(data);
-                data >>= 32 - width;
-                reg.sr.z = ZERO<S>(data);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-
-                for(u32 bit = 1<<(width-1); bit && !(data & bit); bit>>= 1) {
-                    oldOffset++;
-                }
-                writeD(dn, oldOffset);
+                offset += 8;
+                ea--;
             }
 
-            CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0, 18)
+            data = readM<C, M, S>(ea);
+            data = CLIP<Long>(data << offset);
+
+            if((offset + width) > 32) {
+                data |= (readM<C, M, Byte>(ea+4) << offset) >> 8;
+            }
+
+            reg.sr.n = NBIT<S>(data);
+            data >>= 32 - width;
+            reg.sr.z = ZERO<S>(data);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+
+            for(u32 bit = 1<<(width-1); bit && !(data & bit); bit>>= 1) {
+                oldOffset++;
+            }
+            writeD(dn, oldOffset);
+
             CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 32)
             CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 33)
             CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 35)
@@ -1434,66 +1142,47 @@ Moira::execBitFieldEa(u16 opcode)
         {
             int dn = _xxx____________ (ext);
 
-            if (M == MODE_DN) {
+            ea = computeEA<C, M, S>(dy);
 
-                u64 insert = readD(dn);
-                insert = u32(insert << (32 - width));
+            ea += offset / 8;
+            offset %= 8;
+            if(offset < 0) {
 
-                reg.sr.n = NBIT<S>(insert);
-                reg.sr.z = ZERO<S>(insert);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-
-                offset &= 0b11111;
-                insert = std::rotr((u32)insert, offset);
-
-                writeD(dy, (readD(dy) & ~mask) | insert);
-
-            } else {
-
-                ea = computeEA<C, M, S>(dy);
-
-                ea += offset / 8;
-                offset %= 8;
-                if(offset < 0) {
-
-                    offset += 8;
-                    ea--;
-                }
-
-                mask = u32(0xFFFFFFFF00000000 >> width);
-                mask = mask >> offset;
-
-                data = readM<C, M, S>(ea);
-
-                u32 insert = readD(dn);
-                insert = u32(insert << (32 - width));
-
-                reg.sr.n = NBIT<S>(insert);
-                reg.sr.z = ZERO<S>(insert);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-
-                insert = insert >> offset;
-
-
-                writeM<C, M, S>(ea, (data & ~mask) | insert);
-
-                if((width + offset) > 32) {
-
-                    insert = readD(dn);
-                    insert = u32(insert << (32 - width));
-
-                    u8 mask2 = u8(0xFFFFFFFF00000000 >> width);
-                    u8 insert2 = u8(insert);
-                    u8 data2 = readM<C, M, Byte>(ea + 4);
-                    reg.sr.z &= ZERO<Byte>(data2 & mask2);
-
-                    writeM<C, M, Byte>(ea + 4, (data2 & ~mask2) | insert2);
-                }
+                offset += 8;
+                ea--;
             }
 
-            CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0, 10)
+            mask = u32(0xFFFFFFFF00000000 >> width);
+            mask = mask >> offset;
+
+            data = readM<C, M, S>(ea);
+
+            u32 insert = readD(dn);
+            insert = u32(insert << (32 - width));
+
+            reg.sr.n = NBIT<S>(insert);
+            reg.sr.z = ZERO<S>(insert);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+
+            insert = insert >> offset;
+
+
+            writeM<C, M, S>(ea, (data & ~mask) | insert);
+
+            if((width + offset) > 32) {
+
+                insert = readD(dn);
+                insert = u32(insert << (32 - width));
+
+                u8 mask2 = u8(0xFFFFFFFF00000000 >> width);
+                u8 insert2 = u8(insert);
+                u8 data2 = readM<C, M, Byte>(ea + 4);
+                reg.sr.z &= ZERO<Byte>(data2 & mask2);
+
+                writeM<C, M, Byte>(ea + 4, (data2 & ~mask2) | insert2);
+            }
+
             CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 21)
             CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 22)
             CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 24)
@@ -1503,44 +1192,31 @@ Moira::execBitFieldEa(u16 opcode)
         }
         case BFTST:
 
-            if (M == MODE_DN) {
+            ea = computeEA<C, M, S>(dy);
 
-                data = readD(dy);
+            ea += offset / 8;
+            offset %= 8;
+            if(offset < 0) {
 
-                offset &= 0b11111;
-                reg.sr.n = NBIT<S>(data << offset);
-                reg.sr.z = ZERO<S>(data & mask);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
+                offset += 8;
+                ea--;
+            }
 
-            } else {
+            mask = u32(0xFFFFFFFF00000000 >> width);
+            mask = mask >> offset;
 
-                ea = computeEA<C, M, S>(dy);
+            data = readM<C, M, S>(ea);
 
-                ea += offset / 8;
-                offset %= 8;
-                if(offset < 0) {
+            reg.sr.n = NBIT<S>(data << offset);
+            reg.sr.z = ZERO<S>(data & mask);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
 
-                    offset += 8;
-                    ea--;
-                }
+            if((width + offset) > 32) {
 
-                mask = u32(0xFFFFFFFF00000000 >> width);
-                mask = mask >> offset;
-
-                data = readM<C, M, S>(ea);
-
-                reg.sr.n = NBIT<S>(data << offset);
-                reg.sr.z = ZERO<S>(data & mask);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-
-                if((width + offset) > 32) {
-
-                    u8 mask2 = u8(0xFFFFFFFF00000000 >> width);
-                    u8 data2 = readM<C, M, Byte>(ea + 4);
-                    reg.sr.z &= ZERO<Byte>(data2 & mask2);
-                }
+                u8 mask2 = u8(0xFFFFFFFF00000000 >> width);
+                u8 data2 = readM<C, M, Byte>(ea + 4);
+                reg.sr.z &= ZERO<Byte>(data2 & mask2);
             }
 
             CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0,  6)
@@ -1554,7 +1230,7 @@ Moira::execBitFieldEa(u16 opcode)
             break;
 
         default:
-            break;
+            fatalError;
     }
 
     prefetch <C,POLLIPL> ();
