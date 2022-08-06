@@ -191,7 +191,7 @@ Moira::computeEA(u32 n) {
         }
         case 11: // Im
         {
-            result = readI <C,S> ();
+            result = readI<C, S>();
             break;
         }
         default:
