@@ -491,7 +491,7 @@ Moira::logic(u32 op1, u32 op2)
 }
 
 template <Instr I> u32
-Moira::bitfield(u32 data, u32 offset, u32 mask)
+Moira::bitfield(u32 data, u32 offset, u32 width, u32 mask)
 {
     u32 result;
 
@@ -521,6 +521,50 @@ Moira::bitfield(u32 data, u32 offset, u32 mask)
 
             result = data | mask;
 
+            reg.sr.n = NBIT<Long>(data << offset);
+            reg.sr.z = ZERO<Long>(data & mask);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+            break;
+
+        case BFEXTS:
+
+            result = SEXT<Long>(data) >> (32 - width);
+
+            reg.sr.n = NBIT<Long>(data);
+            reg.sr.z = ZERO<Long>(result);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+            break;
+
+        case BFEXTU:
+
+            result = data >> (32 - width);
+
+            reg.sr.n = NBIT<Long>(data);
+            reg.sr.z = ZERO<Long>(result);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+            break;
+
+        case BFFFO:
+
+            reg.sr.n = NBIT<Long>(data);
+            data >>= 32 - width;
+            reg.sr.z = ZERO<Long>(data);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+
+            result = offset;
+            for(u32 bit = 1 << (width - 1); bit && !(data & bit); bit >>= 1) {
+                result++;
+            }
+            break;
+
+        case BFTST:
+
+            result = 0;
+            
             reg.sr.n = NBIT<Long>(data << offset);
             reg.sr.z = ZERO<Long>(data & mask);
             reg.sr.v = 0;

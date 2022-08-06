@@ -850,6 +850,7 @@ Moira::execBitFieldDn(u16 opcode)
     u16 ext = (u16)readI <C,Word> ();
 
     int dy     = _____________xxx (opcode);
+    int dn     = _xxx____________ (ext);
     int offset = _____xxxxx______ (ext);
     int doBit  = ____x___________ (ext);
     int width  = ___________xxxxx (ext);
@@ -866,67 +867,44 @@ Moira::execBitFieldDn(u16 opcode)
     u32 mask = std::rotr(u32(0xFFFFFFFF00000000 >> width), offset);
 
     u32 data = readD(dy);
+    u32 result, insert;
 
     switch (I) {
 
         case BFCHG:
         case BFCLR:
         case BFSET:
-        {
-            u32 result = bitfield<I>(data, offset, mask);
+
+            result = bitfield<I>(data, offset, width, mask);
             writeD(dy, result);
             
-            CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0, 12)
+            CYCLES_DN ( 0,  0,  0,     0,  0,  0,     0,  0, 12)
             break;
-        }
+
         case BFEXTS:
         case BFEXTU:
-        {
-            int dn = _xxx____________ (ext);
 
             data = std::rotl(data, offset);
 
-            reg.sr.n = NBIT<S>(data);
+            result = bitfield<I>(data, offset, width, mask);
+            writeD(dn, result);
 
-            if (I == BFEXTS) {
-                data = SEXT<S>(data) >> (32 - width);
-            } else {
-                data >>= 32 - width;
-            }
-            reg.sr.z = ZERO<S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
-
-            writeD(dn, data);
-
-            CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0,  8)
+            CYCLES_DN ( 0,  0,  0,     0,  0,  0,     0,  0,  8)
             break;
-        }
+
         case BFFFO:
-        {
-            int dn = _xxx____________ (ext);
 
             data = std::rotl(data, offset);
 
-            reg.sr.n = NBIT<S>(data);
-            data >>= 32 - width;
-            reg.sr.z = ZERO<S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            result = bitfield<I>(data, offset, width, mask);
+            writeD(dn, result);
 
-            for(u32 bit = 1<<(width-1); bit && !(data & bit); bit>>= 1) {
-                offset++;
-            }
-            writeD(dn, offset);
-
-            CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0, 18)
+            CYCLES_DN ( 0,  0,  0,     0,  0,  0,     0,  0, 18)
             break;
-        }
-        case BFINS:
-        {
-            int dn = _xxx____________ (ext);
 
-            u32 insert = readD(dn);
+        case BFINS:
+
+            insert = readD(dn);
             insert = u32(insert << (32 - width));
 
             reg.sr.n = NBIT<S>(insert);
@@ -938,17 +916,14 @@ Moira::execBitFieldDn(u16 opcode)
 
             writeD(dy, (data & ~mask) | insert);
 
-            CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0, 10)
+            CYCLES_DN ( 0,  0,  0,     0,  0,  0,     0,  0, 10)
             break;
-        }
+
         case BFTST:
 
-            reg.sr.n = NBIT<S>(data << offset);
-            reg.sr.z = ZERO<S>(data & mask);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            (void)bitfield<I>(data, offset, width, mask);
 
-            CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0,  6)
+            CYCLES_DN ( 0,  0,  0,     0,  0,  0,     0,  0,  6)
             break;
 
         default:
@@ -966,6 +941,7 @@ Moira::execBitFieldEa(u16 opcode)
     u16 ext = (u16)readI <C,Word> ();
 
     int dy     = _____________xxx (opcode);
+    int dn     = _xxx____________ (ext);
     int offset = _____xxxxx______ (ext);
     int doBit  = ____x___________ (ext);
     int width  = ___________xxxxx (ext);
@@ -983,21 +959,24 @@ Moira::execBitFieldEa(u16 opcode)
     mask = u32(0xFFFFFFFF00000000 >> width);
     mask = mask >> offset;
 
+    u32 oldOffset = offset;
+    u32 result, insert;
+
+    ea = computeEA<C, M, S>(dy);
+
+    ea += offset / 8;
+    offset %= 8;
+    if(offset < 0) {
+
+        offset += 8;
+        ea--;
+    }
+
     switch (I) {
 
         case BFCHG:
         case BFCLR:
         case BFSET:
-
-            ea = computeEA<C, M, S>(dy);
-
-            ea += offset / 8;
-            offset %= 8;
-            if(offset < 0) {
-
-                offset += 8;
-                ea--;
-            }
 
             mask = u32(0xFFFFFFFF00000000 >> width);
             mask = mask >> offset;
@@ -1033,62 +1012,6 @@ Moira::execBitFieldEa(u16 opcode)
 
         case BFEXTS:
         case BFEXTU:
-        {
-            int dn = _xxx____________ (ext);
-
-                ea = computeEA<C, M, S>(dy);
-
-                ea += offset / 8;
-                offset %= 8;
-                if(offset < 0) {
-
-                    offset += 8;
-                    ea--;
-                }
-
-                data = readM<C, M, S>(ea);
-                data = CLIP<Long>(data << offset);
-
-                if((offset + width) > 32) {
-                    data |= (readM<C, M, Byte>(ea+4) << offset) >> 8;
-                }
-
-                reg.sr.n = NBIT<S>(data);
-
-                if (I == BFEXTS) {
-                    data = SEXT<S>(data) >> (32 - width);
-                } else {
-                    data >>= 32 - width;
-                }
-                reg.sr.z = ZERO<S>(data);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-
-                writeD(dn, data);
-
-            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 19)
-            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
-            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 22)
-            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 19)
-            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 19)
-            CYCLES_DIPC ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
-            CYCLES_IXPC ( 0,  0,  0,     0,  0,  0,     0,  0, 22)
-            break;
-        }
-        case BFFFO:
-        {
-            int dn = _xxx____________ (ext);
-
-            auto oldOffset = offset;
-            ea = computeEA<C, M, S>(dy);
-
-            ea += offset / 8;
-            offset %= 8;
-            if(offset < 0) {
-
-                offset += 8;
-                ea--;
-            }
 
             data = readM<C, M, S>(ea);
             data = CLIP<Long>(data << offset);
@@ -1098,15 +1021,38 @@ Moira::execBitFieldEa(u16 opcode)
             }
 
             reg.sr.n = NBIT<S>(data);
-            data >>= 32 - width;
+
+            if (I == BFEXTS) {
+                data = SEXT<S>(data) >> (32 - width);
+            } else {
+                data >>= 32 - width;
+            }
             reg.sr.z = ZERO<S>(data);
             reg.sr.v = 0;
             reg.sr.c = 0;
 
-            for(u32 bit = 1<<(width-1); bit && !(data & bit); bit>>= 1) {
-                oldOffset++;
+            writeD(dn, data);
+
+            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 19)
+            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
+            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 22)
+            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 19)
+            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 19)
+            CYCLES_DIPC ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
+            CYCLES_IXPC ( 0,  0,  0,     0,  0,  0,     0,  0, 22)
+            break;
+
+        case BFFFO:
+
+            data = readM<C, M, S>(ea);
+            data = CLIP<Long>(data << offset);
+
+            if((offset + width) > 32) {
+                data |= (readM<C, M, Byte>(ea+4) << offset) >> 8;
             }
-            writeD(dn, oldOffset);
+
+            result = bitfield<I>(data, oldOffset, width, mask);
+            writeD(dn, result);
 
             CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 32)
             CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 33)
@@ -1116,27 +1062,15 @@ Moira::execBitFieldEa(u16 opcode)
             CYCLES_DIPC ( 0,  0,  0,     0,  0,  0,     0,  0, 33)
             CYCLES_IXPC ( 0,  0,  0,     0,  0,  0,     0,  0, 35)
             break;
-        }
+
         case BFINS:
-        {
-            int dn = _xxx____________ (ext);
-
-            ea = computeEA<C, M, S>(dy);
-
-            ea += offset / 8;
-            offset %= 8;
-            if(offset < 0) {
-
-                offset += 8;
-                ea--;
-            }
 
             mask = u32(0xFFFFFFFF00000000 >> width);
             mask = mask >> offset;
 
             data = readM<C, M, S>(ea);
 
-            u32 insert = readD(dn);
+            insert = readD(dn);
             insert = u32(insert << (32 - width));
 
             reg.sr.n = NBIT<S>(insert);
@@ -1167,28 +1101,15 @@ Moira::execBitFieldEa(u16 opcode)
             CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 21)
             CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 21)
             break;
-        }
+
         case BFTST:
-
-            ea = computeEA<C, M, S>(dy);
-
-            ea += offset / 8;
-            offset %= 8;
-            if(offset < 0) {
-
-                offset += 8;
-                ea--;
-            }
 
             mask = u32(0xFFFFFFFF00000000 >> width);
             mask = mask >> offset;
 
             data = readM<C, M, S>(ea);
 
-            reg.sr.n = NBIT<S>(data << offset);
-            reg.sr.z = ZERO<S>(data & mask);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            (void)bitfield<I>(data, offset, width, mask);
 
             if((width + offset) > 32) {
 
