@@ -218,16 +218,8 @@ Moira::computeEAbrief(u32 an)
     u16 scale = _____xx_________ (ext);
     u16 disp  = ________xxxxxxxx (ext);
 
-
-    // printf("Moira: computeEAbrief (%x)\n", queue.irc);
-
-    i8   d = (i8)queue.irc;
-    u32 xi = readR((queue.irc >> 12) & 0b1111);
-    // int scale = (queue.irc >> 9) & 0b11;
-    u32 offset = (queue.irc & 0x800) ? xi : SEXT<Word>(xi);
-    offset = u32(offset << scale);
-    result = U32_ADD3(an, d, offset);
-    // printf("Moira: d = %d xi = %x offset = %x scale = %d result = %x\n", d, xi, offset, scale, result);
+    u32 xn = (lw ? readR(rn) : SEXT<Word>(readR(rn))) << scale;
+    result = U32_ADD3(an, i8(disp), xn);
 
     SYNC(2);
     if ((F & SKIP_LAST_READ) == 0) { readExt<C>(); } else { reg.pc += 2; }
@@ -253,20 +245,13 @@ Moira::computeEAfull(u32 an)
     u16  is    = _________x______ (ext);
     u16  iis   = _____________xxx (ext);
 
-    u32 xn = 0;                        /* Index register */
-    u32 bd = 0;                        /* Base Displacement */
-    u32 od = 0;
-
-    // Add the number of extra cycles consumed in this addressing mode
-    cp += penaltyCycles<C, M, S>(ext);
+    u32 xn = 0, bd = 0, od = 0;
 
     // Read extension words
     readExt<C>();
-
     auto dw = baseDispWords(ext);
     if (dw == 1) bd = SEXT<Word>(readExt<C, Word>());
     if (dw == 2) bd = readExt<C, Long>();
-
     auto ow = outerDispWords(ext);
     if (ow == 1) od = SEXT<Word>(readExt<C, Word>());
     if (ow == 2) od = readExt<C, Long>();
@@ -277,15 +262,18 @@ Moira::computeEAfull(u32 an)
     // Check if index is present
     if (!is) xn = (lw ? readR(rn) : SEXT<Word>(readR(rn))) << scale;
 
-    if(!iis) {
-        result = an + bd + xn;
+    // Compute effective address
+    if (iis & 0b100) {
+        result = readM<C, M, Long>(an + bd) + xn + od;
+    } else if (iis & 0b011) {
+        result = readM<C, M, Long>(an + bd + xn) + od;
     } else {
-        if (iis & 0b100) {
-            result = readM<C,M,Long>(an + bd) + xn + od;
-        } else {
-            result = readM<C,M,Long>(an + bd + xn) + od;
-        }
+        result = an + bd + xn;
     }
+
+    // Add the number of extra cycles consumed in this addressing mode
+    cp += penaltyCycles<C, M, S>(ext);
+
     return result;
 }
 
