@@ -524,7 +524,7 @@ Moira::dasmChk(StrWriter &str, u32 &addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
-Moira::dasmChk2(StrWriter &str, u32 &addr, u16 op)
+Moira::dasmChkCmp2(StrWriter &str, u32 &addr, u16 op)
 {
     auto ext = dasmRead <Word> (addr);
 

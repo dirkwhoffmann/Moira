@@ -1360,7 +1360,7 @@ Moira::execChk(u16 opcode)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execChk2(u16 opcode)
+Moira::execChkCmp2(u16 opcode)
 {
     AVAILABILITY(M68020)
 
@@ -1371,17 +1371,21 @@ Moira::execChk2(u16 opcode)
 
     readExt<C>();
 
-    if (!readOp <C,M,S> (src, ea, data1)) return;
-    data2 = readM <C,M,S> (ea + S);
+    if (!readOp<C, M, S>(src, ea, data1)) return;
+    data2 = readM<C, M, S>(ea + S);
 
-    auto lowerBound = ((M == 9 || M == 10) && S == Byte) ? (i32)data1 : SEXT<S>(data1);
-    auto upperBound = ((M == 9 || M == 10) && S == Byte) ? (i32)data2 : SEXT<S>(data2);
+    auto bound1 = ((M == 9 || M == 10) && S == Byte) ? (i32)data1 : SEXT<S>(data1);
+    auto bound2 = ((M == 9 || M == 10) && S == Byte) ? (i32)data2 : SEXT<S>(data2);
 
     i32 compare = readR<S>(dst);
     if (dst < 8) compare = SEXT<S>(compare);
 
-    reg.sr.z = lowerBound == compare || upperBound == compare;
-    reg.sr.c = (lowerBound <= upperBound ? compare < lowerBound || compare > upperBound : compare > upperBound || compare < lowerBound); // Wtf???
+    reg.sr.z = compare == bound1 || compare == bound2;
+    if (bound1 < bound2) {
+        reg.sr.c = compare < bound1 || compare > bound2;
+    } else {
+        reg.sr.c = compare > bound2 || compare < bound1;
+    }
 
     if ((ext & 0x800) && reg.sr.c) {
 

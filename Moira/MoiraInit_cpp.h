@@ -716,13 +716,13 @@ Moira::createJumpTable()
     if (core >= M68020) {
 
         opcode = parse("0000 0000 11-- ----");
-        __________MMMXXX(opcode, CHK2, 0b001001111110, Byte, Chk2, CIMS)
+        __________MMMXXX(opcode, CHK2, 0b001001111110, Byte, ChkCmp2, CIMS)
 
         opcode = parse("0000 0010 11-- ----");
-        __________MMMXXX(opcode, CHK2, 0b001001111110, Word, Chk2, CIMS)
+        __________MMMXXX(opcode, CHK2, 0b001001111110, Word, ChkCmp2, CIMS)
 
         opcode = parse("0000 0100 11-- ----");
-        __________MMMXXX(opcode, CHK2, 0b001001111110, Long, Chk2, CIMS)
+        __________MMMXXX(opcode, CHK2, 0b001001111110, Long, ChkCmp2, CIMS)
     }
 
 
