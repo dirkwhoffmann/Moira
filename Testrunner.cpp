@@ -11,11 +11,12 @@
 #include "Testrunner.h"
 
 TestCPU *moiracpu;
+Sandbox sandbox;
 u8 musashiMem[0x10000];
 u8 moiraMem[0x10000];
 u32 musashiFC = 0;
 long testrun = 0;
-Sandbox sandbox;
+int cpuType = 0;
 
 uint32 smartRandom()
 {
@@ -40,11 +41,25 @@ uint32 smartRandom()
     }
 }
 
+void selectCore(int core)
+{
+    cpuType = core;
+
+    setupMusashi();
+    setupMoira();
+
+    printf("\n");
+    printf("Emulated CPU: Motorola %d\n\n", cpuType);
+    printf("              Exec range: %s\n", TOSTRING(doExec(opcode)));
+    printf("              Dasm range: %s\n", TOSTRING(doDasm(opcode)));
+    printf("\n");
+}
+
 void setupMusashi()
 {
     m68k_init();
 
-    switch (CPUTYPE) {
+    switch (cpuType) {
 
         case 68000: m68k_set_cpu_type(M68K_CPU_TYPE_68000); break;
         case 68010: m68k_set_cpu_type(M68K_CPU_TYPE_68010); break;
@@ -57,7 +72,7 @@ void setupMusashi()
 
 void setupMoira()
 {
-    switch (CPUTYPE) {
+    switch (cpuType) {
 
         case 68000: moiracpu->setCore(M68000); break;
         case 68010: moiracpu->setCore(M68010); break;
@@ -161,17 +176,19 @@ void run()
 
     printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2022\n\n");
     printf("The test program runs Moira agains Musashi with randomly generated data.\n");
-    printf("It runs until a bug has been found.\n\n");
+    printf("It runs until a bug has been found.\n");
 
-    printf("Emulated CPU: Motorola %d\n\n", CPUTYPE);
-    printf("              Exec range: %s\n", TOSTRING(doExec(opcode)));
-    printf("              Dasm range: %s\n\n", TOSTRING(doDasm(opcode)));
-
-    setupMusashi();
-    setupMoira();
+    selectCore(68000);
     srand(0);
 
     for (testrun = 1 ;; testrun++) {
+
+        if (testrun % 16 == 0) {
+
+            // Switch the CPU core from time to time
+            selectCore(cpuType == 68000 ? 68010 :
+                       cpuType == 68010 ? 68020 : 68000);
+        }
 
         printf("Round %ld ", testrun); fflush(stdout);
         createTestCase(setup);
@@ -227,7 +244,7 @@ clock_t runMusashi(Setup &s, Result &r)
     r.oldpc = m68k_get_reg(NULL, M68K_REG_PC);
     r.opcode = get16(musashiMem, r.oldpc);
 
-    switch (CPUTYPE) {
+    switch (cpuType) {
 
         case 68000:
             r.dasmCnt = m68k_disassemble(r.dasm, s.pc, M68K_CPU_TYPE_68000);
@@ -545,7 +562,7 @@ bool compareCycles(Result &r1, Result &r2)
 
     // Exclude some instructions
     if (I == moira::TAS) return true;
-    if constexpr (CPUTYPE == 68010) {
+    if (cpuType == 68010) {
 
         if (I == moira::CLR && S == Byte && M == MODE_AL) return true;
         if (I == moira::CLR && S == Word && M == MODE_AL) return true;

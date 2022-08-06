@@ -38,6 +38,7 @@ extern u8 musashiMem[0x10000];
 extern u8 moiraMem[0x10000];
 extern u32 musashiFC;
 extern long testrun;
+extern int cpuType;
 
 inline u8 get8(u8 *p, u32 addr) {
     return p[addr & 0xFFFF];
@@ -102,6 +103,8 @@ u32 smartRandom();
 //
 // Preparing a test
 //
+
+void selectCore(int core);
 
 void setupMusashi();
 void setupMoira();
