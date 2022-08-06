@@ -968,8 +968,9 @@ Moira::execBitFieldEa(u16 opcode)
         ea--;
     }
 
-    // Create the bit mask
+    // Create the bit masks
     u32 mask = u32(0xFFFFFFFF00000000 >> width) >> offset;
+    u8 mask8 = u8(0xFFFFFFFF00000000 >> width);
 
     u32 data = readM<C, M, S>(ea);
 
@@ -979,24 +980,17 @@ Moira::execBitFieldEa(u16 opcode)
         case BFCLR:
         case BFSET:
 
-            reg.sr.n = NBIT<S>(data << offset);
-            reg.sr.z = ZERO<S>(data & mask);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
-
-            if (I == BFCHG) writeM<C, M, S>(ea, data ^ mask);
-            if (I == BFCLR) writeM<C, M, S>(ea, data & ~mask);
-            if (I == BFSET) writeM<C, M, S>(ea, data | mask);
+            result = bitfield<I>(data, offset, width, mask);
+            writeM<C, M, S>(ea, result);
 
             if((width + offset) > 32) {
 
-                u8 mask2 = u8(0xFFFFFFFF00000000 >> width);
                 u8 data2 = readM<C, M, Byte>(ea + 4);
-                reg.sr.z &= ZERO<Byte>(data2 & mask2);
+                reg.sr.z &= ZERO<Byte>(data2 & mask8);
 
-                if (I == BFCHG) writeM<C, M, Byte>(ea + 4, data2 ^ mask2);
-                if (I == BFCLR) writeM<C, M, Byte>(ea + 4, data2 & ~mask2);
-                if (I == BFSET) writeM<C, M, Byte>(ea + 4, data2 | mask2);
+                if (I == BFCHG) writeM<C, M, Byte>(ea + 4, data2 ^ mask8);
+                if (I == BFCLR) writeM<C, M, Byte>(ea + 4, data2 & ~mask8);
+                if (I == BFSET) writeM<C, M, Byte>(ea + 4, data2 | mask8);
             }
 
             CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 24)
@@ -1012,21 +1006,11 @@ Moira::execBitFieldEa(u16 opcode)
             data = CLIP<Long>(data << offset);
 
             if((offset + width) > 32) {
-                data |= (readM<C, M, Byte>(ea+4) << offset) >> 8;
+                data |= (readM<C, M, Byte>(ea + 4) << offset) >> 8;
             }
 
-            reg.sr.n = NBIT<S>(data);
-
-            if (I == BFEXTS) {
-                data = SEXT<S>(data) >> (32 - width);
-            } else {
-                data >>= 32 - width;
-            }
-            reg.sr.z = ZERO<S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
-
-            writeD(dn, data);
+            result = bitfield<I>(data, offset, width, mask);
+            writeD(dn, result);
 
             CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 19)
             CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
@@ -1042,7 +1026,7 @@ Moira::execBitFieldEa(u16 opcode)
             data = CLIP<Long>(data << offset);
 
             if((offset + width) > 32) {
-                data |= (readM<C, M, Byte>(ea+4) << offset) >> 8;
+                data |= (readM<C, M, Byte>(ea + 4) << offset) >> 8;
             }
 
             result = bitfield<I>(data, oldOffset, width, mask);
@@ -1076,12 +1060,11 @@ Moira::execBitFieldEa(u16 opcode)
                 insert = readD(dn);
                 insert = u32(insert << (32 - width));
 
-                u8 mask2 = u8(0xFFFFFFFF00000000 >> width);
                 u8 insert2 = u8(insert);
                 u8 data2 = readM<C, M, Byte>(ea + 4);
-                reg.sr.z &= ZERO<Byte>(data2 & mask2);
+                reg.sr.z &= ZERO<Byte>(data2 & mask8);
 
-                writeM<C, M, Byte>(ea + 4, (data2 & ~mask2) | insert2);
+                writeM<C, M, Byte>(ea + 4, (data2 & ~mask8) | insert2);
             }
 
             CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 21)
@@ -1097,9 +1080,8 @@ Moira::execBitFieldEa(u16 opcode)
 
             if((width + offset) > 32) {
 
-                u8 mask2 = u8(0xFFFFFFFF00000000 >> width);
                 u8 data2 = readM<C, M, Byte>(ea + 4);
-                reg.sr.z &= ZERO<Byte>(data2 & mask2);
+                reg.sr.z &= ZERO<Byte>(data2 & mask8);
             }
 
             CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0,  6)
