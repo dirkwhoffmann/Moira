@@ -205,7 +205,7 @@ Moira::computeEA(u32 n) {
 template <Core C, Mode M, Size S, Flags F> u32
 Moira::computeEAbrief(u32 an)
 {
-    i32 result;
+    u32 result;
 
     //   15 - 12    11   10   09   08   07   06   05   04   03   02   01   00
     // -----------------------------------------------------------------------
@@ -238,6 +238,8 @@ Moira::computeEAbrief(u32 an)
 template <Core C, Mode M, Size S, Flags F> u32
 Moira::computeEAfull(u32 an)
 {
+    u32 result;
+
     //   15 - 12    11   10   09   08   07   06   05   04   03   02   01   00
     // -----------------------------------------------------------------------
     // | REGISTER | LW | SCALE   | 1  | BS | IS | BD SIZE  | 0  | IIS        |
@@ -249,7 +251,6 @@ Moira::computeEAfull(u32 an)
     u16  scale = _____xx_________ (ext);
     u16  bs    = ________x_______ (ext);
     u16  is    = _________x______ (ext);
-    u16  size  = __________xx____ (ext);
     u16  iis   = _____________xxx (ext);
 
     u32 xn = 0;                        /* Index register */
@@ -259,6 +260,7 @@ Moira::computeEAfull(u32 an)
     // Add the number of extra cycles consumed in this addressing mode
     cp += penaltyCycles<C, M, S>(ext);
 
+    // Read extension words
     readExt<C>();
 
     auto dw = baseDispWords(ext);
@@ -269,44 +271,22 @@ Moira::computeEAfull(u32 an)
     if (ow == 1) od = SEXT<Word>(readExt<C, Word>());
     if (ow == 2) od = readExt<C, Long>();
 
-    /* Check if base register is present */
-    // if (extension & 0x80) {                /* BS */
-    if (bs) {
-        an = 0;
-    }
+    // Wipe out an if base register is present
+    if (bs) an = 0;
 
-    /* Check if index is present */
-    if (!is) { //  !(extension & 0x40))
+    // Check if index is present
+    if (!is) xn = (lw ? readR(rn) : SEXT<Word>(readR(rn))) << scale;
 
-        // xn = readR(extension>>12);     /* Xn */
-        xn = readR(rn);     /* Xn */
-        // printf("Moira: (2) xn = %x\n", xn);
-        // if(!(extension & 0x800)) {     /* W/L */
-        if(!lw) {     /* W/L */
-            xn = SEXT<Word>(xn);
-            // printf("Moira: (3) xn = %x\n", xn);
+    if(!iis) {
+        result = an + bd + xn;
+    } else {
+        if (iis & 0b100) {
+            result = readM<C,M,Long>(an + bd) + xn + od;
+        } else {
+            result = readM<C,M,Long>(an + bd + xn) + od;
         }
-        xn <<= scale; //  (extension>>9) & 3;      /* SCALE */
-        // printf("Moira: Scaled: xn = %x\n", xn);
     }
-
-    /* If no indirect action, we are done */
-    // if(!(extension & 7)) {                  /* No Memory Indirect */
-    if(!iis) {                  /* No Memory Indirect */
-        // printf("Moira: (5)\n");
-        return an + bd + xn;
-    }
-
-    /* Postindex */
-    // if (extension & 0x4) {   /* I/IS:  0 = preindex, 1 = postindex */
-    if (iis & 0b100) {   /* I/IS:  0 = preindex, 1 = postindex */
-        u32 result = readM<C,M,Long>(an + bd) + xn + od;
-        // printf("Moira: (7) result = %x\n", result);
-        return result;
-    }
-
-    /* Preindex */
-    return readM<C,M,Long>(an + bd + xn) + od;
+    return result;
 }
 
 template <Mode M, Size S> void
