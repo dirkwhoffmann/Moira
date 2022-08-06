@@ -72,8 +72,8 @@ template <Core C, Mode M, Size S, Flags F = 0> void writeOp(int n, u32 ea, u32 v
 
 // Computes an effective address
 template <Core C, Mode M, Size S, Flags F = 0> u32 computeEA(u32 n);
-template <Core C, Mode M, Size S, Flags F = 0> u32 computeEAbe(u32 an);
-template <Core C, Mode M, Size S, Flags F = 0> u32 computeEAfe(u32 an);
+template <Core C, Mode M, Size S, Flags F = 0> u32 computeEAbrief(u32 an);
+template <Core C, Mode M, Size S, Flags F = 0> u32 computeEAfull(u32 an);
 
 // Emulates the address register modification for modes (An)+, (An)-
 template <Mode M, Size S> void updateAn(int n);
@@ -123,6 +123,7 @@ void noPrefetch();
 
 // Reads an extension word from memory
 template <Core C> void readExt();
+template <Core C, Size S> u32 readExt();
 
 // Jumps to an exception vector
 template <Core C, Flags F = 0> void jumpToVector(int nr);

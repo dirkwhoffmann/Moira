@@ -66,6 +66,10 @@ Moira::Op(u16 reg, u32 &pc)
                 if (dw == 2) result.ext2 = dasmRead<Long>(pc);
 
                 int ow = outerDispWords((u16)result.ext1);
+
+                // Compensate Musashi bug (?)
+                if ((result.ext1 & 0x47) >= 0x44) ow = 0;
+
                 if (ow == 1) result.ext3 = dasmRead<Word>(pc);
                 if (ow == 2) result.ext3 = dasmRead<Long>(pc);
             }

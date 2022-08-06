@@ -130,9 +130,9 @@ Moira::computeEA(u32 n) {
 
                 // printf("compteEA: irc = %x\n", queue.irc);
                 if (queue.irc & 0x100) {
-                    result = computeEAfe<C,M,S,F>(readA(n));
+                    result = computeEAfull<C,M,S,F>(readA(n));
                 } else {
-                    result = computeEAbe<C,M,S,F>(readA(n));
+                    result = computeEAbrief<C,M,S,F>(readA(n));
                 }
                 break;
             }
@@ -174,9 +174,9 @@ Moira::computeEA(u32 n) {
             if constexpr (C == M68020) {
 
                 if (queue.irc & 0x100) {
-                    result = computeEAfe<C,M,S,F>(reg.pc);
+                    result = computeEAfull<C,M,S,F>(reg.pc);
                 } else {
-                    result = computeEAbe<C,M,S,F>(reg.pc);
+                    result = computeEAbrief<C,M,S,F>(reg.pc);
                 }
                 break;
             }
@@ -203,15 +203,27 @@ Moira::computeEA(u32 n) {
 }
 
 template <Core C, Mode M, Size S, Flags F> u32
-Moira::computeEAbe(u32 an)
+Moira::computeEAbrief(u32 an)
 {
     i32 result;
 
-    // printf("Moira: computeEAbe (%x)\n", queue.irc);
+    //   15 - 12    11   10   09   08   07   06   05   04   03   02   01   00
+    // -----------------------------------------------------------------------
+    // | REGISTER | LW | SCALE   | 0  | DISPLACEMENT                         |
+    // -----------------------------------------------------------------------
+
+    u16 ext   = queue.irc;
+    u16 rn    = xxxx____________ (ext);
+    u16 lw    = ____x___________ (ext);
+    u16 scale = _____xx_________ (ext);
+    u16 disp  = ________xxxxxxxx (ext);
+
+
+    // printf("Moira: computeEAbrief (%x)\n", queue.irc);
 
     i8   d = (i8)queue.irc;
     u32 xi = readR((queue.irc >> 12) & 0b1111);
-    int scale = (queue.irc >> 9) & 0b11;
+    // int scale = (queue.irc >> 9) & 0b11;
     u32 offset = (queue.irc & 0x800) ? xi : SEXT<Word>(xi);
     offset = u32(offset << scale);
     result = U32_ADD3(an, d, offset);
@@ -224,94 +236,76 @@ Moira::computeEAbe(u32 an)
 }
 
 template <Core C, Mode M, Size S, Flags F> u32
-Moira::computeEAfe(u32 an)
+Moira::computeEAfull(u32 an)
 {
+    //   15 - 12    11   10   09   08   07   06   05   04   03   02   01   00
+    // -----------------------------------------------------------------------
+    // | REGISTER | LW | SCALE   | 1  | BS | IS | BD SIZE  | 0  | IIS        |
+    // -----------------------------------------------------------------------
+
+    u16  ext   = queue.irc;
+    u16  rn    = xxxx____________ (ext);
+    u16  lw    = ____x___________ (ext);
+    u16  scale = _____xx_________ (ext);
+    u16  bs    = ________x_______ (ext);
+    u16  is    = _________x______ (ext);
+    u16  size  = __________xx____ (ext);
+    u16  iis   = _____________xxx (ext);
+
     u32 xn = 0;                        /* Index register */
     u32 bd = 0;                        /* Base Displacement */
     u32 od = 0;
 
-    u16 extension = queue.irc;
-
     // Add the number of extra cycles consumed in this addressing mode
-    cp += penaltyCycles<C, M, S>(extension);
+    cp += penaltyCycles<C, M, S>(ext);
 
     readExt<C>();
 
+    auto dw = baseDispWords(ext);
+    if (dw == 1) bd = SEXT<Word>(readExt<C, Word>());
+    if (dw == 2) bd = readExt<C, Long>();
+
+    auto ow = outerDispWords(ext);
+    if (ow == 1) od = SEXT<Word>(readExt<C, Word>());
+    if (ow == 2) od = readExt<C, Long>();
+
     /* Check if base register is present */
-    if(extension & 0x80) {                /* BS */
-        an = 0;                           /* An */
+    // if (extension & 0x80) {                /* BS */
+    if (bs) {
+        an = 0;
     }
 
     /* Check if index is present */
-    if(!(extension & 0x40))
-    {
-        xn = readR(extension>>12);     /* Xn */
+    if (!is) { //  !(extension & 0x40))
+
+        // xn = readR(extension>>12);     /* Xn */
+        xn = readR(rn);     /* Xn */
         // printf("Moira: (2) xn = %x\n", xn);
-        if(!(extension & 0x800)) {     /* W/L */
+        // if(!(extension & 0x800)) {     /* W/L */
+        if(!lw) {     /* W/L */
             xn = SEXT<Word>(xn);
             // printf("Moira: (3) xn = %x\n", xn);
         }
-        xn <<= (extension>>9) & 3;      /* SCALE */
+        xn <<= scale; //  (extension>>9) & 3;      /* SCALE */
         // printf("Moira: Scaled: xn = %x\n", xn);
     }
 
-    /* Check if base displacement is present */
-    if (extension & 0x20) {       /* BD SIZE */
-        // printf("Moira: (4)\n");
-        if (extension & 0x10) {
-            // printf("Moira: (4.1)\n");
-            bd = (queue.irc << 16);
-            readExt<C>();
-            bd |= queue.irc;
-            readExt<C>();
-            // printf("bd = %x\n", bd);
-        } else {
-            // printf("Moira: (4.2)\n");
-            bd = SEXT<Word>(queue.irc);
-            readExt<C>();
-            // printf("bd = %x\n", bd);
-        }
-    }
-
     /* If no indirect action, we are done */
-    if(!(extension & 7)) {                  /* No Memory Indirect */
+    // if(!(extension & 7)) {                  /* No Memory Indirect */
+    if(!iis) {                  /* No Memory Indirect */
         // printf("Moira: (5)\n");
         return an + bd + xn;
     }
 
-    /* Check if outer displacement is present */
-    if(extension & 0x2) {
-        // printf("Moira: (6)\n");
-        if (extension & 0x1) {
-            od = (queue.irc << 16);
-            readExt<C>();
-            od |= queue.irc;
-            readExt<C>();
-            // printf("od = %x\n", od);
-        } else {
-            od = SEXT<Word>(queue.irc);
-            readExt<C>();
-            // printf("od = %x\n", od);
-        }
-    }
-
     /* Postindex */
-    if (extension & 0x4) {   /* I/IS:  0 = preindex, 1 = postindex */
+    // if (extension & 0x4) {   /* I/IS:  0 = preindex, 1 = postindex */
+    if (iis & 0b100) {   /* I/IS:  0 = preindex, 1 = postindex */
         u32 result = readM<C,M,Long>(an + bd) + xn + od;
         // printf("Moira: (7) result = %x\n", result);
         return result;
     }
 
     /* Preindex */
-    /*
-    printf("Moira: (8)\n");
-
-    printf("Moira Full format: %x %x %x %x\n", an, bd, xn, od);
-    printf("                   %d %d %d %d\n", an, bd, xn, od);
-    printf("Reading from       %x\n", u32(an + bd + xn));
-    printf("Result             %x\n", readM<C,M,S>(an + bd + xn));
-    printf("Result2            %x\n", readM<C,M,S>(an + bd + xn) + od);
-    */
     return readM<C,M,Long>(an + bd + xn) + od;
 }
 
@@ -622,6 +616,21 @@ Moira::readExt()
     queue.irc = (u16)readMS <C,MEM_PROG,Word> (reg.pc);
 }
 
+template <Core C, Size S> u32
+Moira::readExt()
+{
+    u32 result = queue.irc;
+    readExt<C>();
+
+    if constexpr (S == Long) {
+
+        result = result << 16 | queue.irc;
+        readExt<C>();
+    }
+
+    return result;
+}
+
 template <Core C, Flags F> void
 Moira::jumpToVector(int nr)
 {
@@ -669,8 +678,12 @@ Moira::outerDispWords(u16 ext)
 {
     u16 xx = ______________xx (ext);
 
+    /*
     bool outer_disp      = (xx >= 2) && (ext & 0x47) < 0x44;
     bool outer_disp_long = (xx == 3) && (ext & 0x47) < 0x44;
+    */
+    bool outer_disp      = (xx >= 2);
+    bool outer_disp_long = (xx == 3);
 
     return outer_disp ? (outer_disp_long ? 2 : 1) : 0;
 }
