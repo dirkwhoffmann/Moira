@@ -789,99 +789,107 @@ Moira::execBcc(u16 opcode)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execBitDxEa(u16 opcode)
+Moira::execBitDxDy(u16 opcode)
 {
+    assert(M == MODE_DN);
+
     AVAILABILITY(M68000)
 
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
 
-    switch (M) {
+    u8 b = readD(src) & 0b11111;
+    u32 data = readD(dst);
+    data = bit <C,I> (data, b);
 
-        case 0:
-        {
-            u8 b = readD(src) & 0b11111;
-            u32 data = readD(dst);
-            data = bit <C,I> (data, b);
+    prefetch<C, POLLIPL>();
 
-            prefetch<C, POLLIPL>();
+    [[maybe_unused]] auto cycles = cyclesBit<C,I>(b);
+    SYNC(cycles);
+    if (I != BTST) writeD(dst, data);
 
-            [[maybe_unused]] auto cycles = cyclesBit<C,I>(b);
-            SYNC(cycles);
-            if (I != BTST) writeD(dst, data);
-
-            CYCLES_68000(4 + cycles);
-            CYCLES_68010(4 + cycles);
-            CYCLES_68020(4);
-            break;
-        }
-        default:
-        {
-            u8 b = readD(src) & 0b111;
-
-            u32 ea, data;
-            if (!readOp<C, M, Byte>(dst, ea, data)) return;
-
-            data = bit<C, I>(data, b);
-
-            if constexpr (I == BCLR && C == M68010) { SYNC(2); }
-
-            prefetch<C, POLLIPL>();
-            if (I != BTST) writeM<C, M, Byte>(ea, data);
-
-            auto c = I == BTST ? 0 : 4;
-            if constexpr (I == BCLR && C == M68010) c += 2;
-            CYCLES_AI   ( 8 + c,  8 + c,  8,     0,  0,  0,     0,  0,  0)
-            CYCLES_PD   (10 + c, 10 + c,  9,     0,  0,  0,     0,  0,  0)
-            CYCLES_PI   ( 8 + c,  8 + c,  8,     0,  0,  0,     0,  0,  0)
-            CYCLES_DI   (12 + c, 12 + c,  9,     0,  0,  0,     0,  0,  0)
-            CYCLES_IX   (14 + c, 14 + c, 11,     0,  0,  0,     0,  0,  0)
-            CYCLES_AW   (12 + c, 12 + c,  8,     0,  0,  0,     0,  0,  0)
-            CYCLES_AL   (16 + c, 16 + c,  8,     0,  0,  0,     0,  0,  0)
-            CYCLES_DIPC (12 + c, 12 + c,  9,     0,  0,  0,     0,  0,  0)
-            CYCLES_IXPC (14 + c, 14 + c, 11,     0,  0,  0,     0,  0,  0)
-            CYCLES_IM   ( 8 + c,  8 + c,  6,     0,  0,  0,     0,  0,  0)
-        }
-    }
+    CYCLES_68000(4 + cycles);
+    CYCLES_68010(4 + cycles);
+    CYCLES_68020(4);
 }
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execBitImEa(u16 opcode)
+Moira::execBitDxEa(u16 opcode)
 {
+    assert(M != MODE_DN);
+
+    AVAILABILITY(M68000)
+
+    int src = ____xxx_________(opcode);
+    int dst = _____________xxx(opcode);
+
+    u8 b = readD(src) & 0b111;
+
+    u32 ea, data;
+    if (!readOp<C, M, Byte>(dst, ea, data)) return;
+
+    data = bit<C, I>(data, b);
+
+    if constexpr (I == BCLR && C == M68010) { SYNC(2); }
+
+    prefetch<C, POLLIPL>();
+    if (I != BTST) writeM<C, M, Byte>(ea, data);
+
+    auto c = I == BTST ? 0 : 4;
+    if constexpr (I == BCLR && C == M68010) c += 2;
+    CYCLES_AI   ( 8 + c,  8 + c,  8,     0,  0,  0,     0,  0,  0)
+    CYCLES_PD   (10 + c, 10 + c,  9,     0,  0,  0,     0,  0,  0)
+    CYCLES_PI   ( 8 + c,  8 + c,  8,     0,  0,  0,     0,  0,  0)
+    CYCLES_DI   (12 + c, 12 + c,  9,     0,  0,  0,     0,  0,  0)
+    CYCLES_IX   (14 + c, 14 + c, 11,     0,  0,  0,     0,  0,  0)
+    CYCLES_AW   (12 + c, 12 + c,  8,     0,  0,  0,     0,  0,  0)
+    CYCLES_AL   (16 + c, 16 + c,  8,     0,  0,  0,     0,  0,  0)
+    CYCLES_DIPC (12 + c, 12 + c,  9,     0,  0,  0,     0,  0,  0)
+    CYCLES_IXPC (14 + c, 14 + c, 11,     0,  0,  0,     0,  0,  0)
+    CYCLES_IM   ( 8 + c,  8 + c,  6,     0,  0,  0,     0,  0,  0)
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execBitImDy(u16 opcode)
+{
+    assert(M == MODE_DN);
+
     AVAILABILITY(M68000)
 
     u8  src = (u8)readI<C, S>();
     int dst = _____________xxx(opcode);
 
-    switch (M)
-    {
-        case 0:
-        {
-            src &= 0b11111;
-            u32 data = readD(dst);
-            data = bit <C,I> (data, src);
+    src &= 0b11111;
+    u32 data = readD(dst);
+    data = bit <C,I> (data, src);
 
-            prefetch<C, POLLIPL>();
+    prefetch<C, POLLIPL>();
 
-            [[maybe_unused]] auto cycles = cyclesBit <C,I> (src);
-            SYNC(cycles);
-            if (I != BTST) writeD(dst, data);
+    [[maybe_unused]] auto cycles = cyclesBit <C,I> (src);
+    SYNC(cycles);
+    if (I != BTST) writeD(dst, data);
 
-            CYCLES_DN (8 + cycles, 8 + cycles, 4,     0,  0,  0,     0,  0,  0)
-            break;
-        }
-        default:
-        {
-            src &= 0b111;
-            u32 ea, data;
-            if (!readOp<C, M, S>(dst, ea, data)) return;
+    CYCLES_DN (8 + cycles, 8 + cycles, 4,     0,  0,  0,     0,  0,  0)
+}
 
-            data = bit<C, I>(data, src);
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execBitImEa(u16 opcode)
+{
+    assert(M != MODE_DN);
 
-            prefetch<C, POLLIPL>();
-            if (I != BTST) writeM<C, M, S>(ea, data);
-        }
-    }
+    AVAILABILITY(M68000)
+
+    u8  src = (u8)readI<C, S>();
+    int dst = _____________xxx(opcode);
+
+    src &= 0b111;
+    u32 ea, data;
+    if (!readOp<C, M, S>(dst, ea, data)) return;
+
+    data = bit<C, I>(data, src);
+
+    prefetch<C, POLLIPL>();
+    if (I != BTST) writeM<C, M, S>(ea, data);
 
     [[maybe_unused]] auto c = I == BTST ? 0 : 4;
     CYCLES_AI   (12 + c, 12 + c,  8,     0,  0,  0,     0,  0,  0)
@@ -938,7 +946,6 @@ Moira::execBitFieldDn(u16 opcode)
         case BFEXTU:
 
             data = std::rotl(data, offset);
-
             result = bitfield<I>(data, offset, width, mask);
             writeD(dn, result);
 
@@ -948,7 +955,6 @@ Moira::execBitFieldDn(u16 opcode)
         case BFFFO:
 
             data = std::rotl(data, offset);
-
             result = bitfield<I>(data, offset, width, mask);
             writeD(dn, result);
 
@@ -966,7 +972,6 @@ Moira::execBitFieldDn(u16 opcode)
             reg.sr.c = 0;
 
             insert = std::rotr((u32)insert, offset);
-
             writeD(dy, (data & ~mask) | insert);
 
             CYCLES_DN ( 0,  0,  0,     0,  0,  0,     0,  0, 10)
@@ -1180,6 +1185,7 @@ Moira::execBsr(u16 opcode)
 
     // Check for address error
     if (misaligned<C>(newpc)) {
+
         execAddressError(makeFrame(newpc));
         return;
     }

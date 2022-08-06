@@ -546,9 +546,12 @@ Moira::createJumpTable()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0000 ---1 01-- ----");
-    ____XXX___MMMXXX(opcode, BCHG, 0b101111111000, Byte, BitDxEa, CIMS)
+    ____XXX___MMMXXX(opcode, BCHG, 0b100000000000, Byte, BitDxDy, CIMS)
+    ____XXX___MMMXXX(opcode, BCHG, 0b001111111000, Byte, BitDxEa, CIMS)
+
     opcode = parse("0000 ---1 10-- ----");
-    ____XXX___MMMXXX(opcode, BCLR, 0b101111111000, Byte, BitDxEa, CIMS)
+    ____XXX___MMMXXX(opcode, BCLR, 0b100000000000, Byte, BitDxDy, CIMS)
+    ____XXX___MMMXXX(opcode, BCLR, 0b001111111000, Byte, BitDxEa, CIMS)
 
     //               -------------------------------------------------
     // #<data>,<ea>  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
@@ -556,9 +559,12 @@ Moira::createJumpTable()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0000 1000 01-- ----");
-    __________MMMXXX(opcode, BCHG, 0b101111111000, Byte, BitImEa, CIMS)
+    __________MMMXXX(opcode, BCHG, 0b100000000000, Byte, BitImDy, CIMS)
+    __________MMMXXX(opcode, BCHG, 0b001111111000, Byte, BitImEa, CIMS)
+
     opcode = parse("0000 1000 10-- ----");
-    __________MMMXXX(opcode, BCLR, 0b101111111000, Byte, BitImEa, CIMS)
+    __________MMMXXX(opcode, BCLR, 0b100000000000, Byte, BitImDy, CIMS)
+    __________MMMXXX(opcode, BCLR, 0b001111111000, Byte, BitImEa, CIMS)
 
 
     // BKPT (68010+)
@@ -585,7 +591,8 @@ Moira::createJumpTable()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0000 ---1 11-- ----");
-    ____XXX___MMMXXX(opcode, BSET, 0b101111111000, Byte, BitDxEa, CIMS)
+    ____XXX___MMMXXX(opcode, BSET, 0b100000000000, Byte, BitDxDy, CIMS)
+    ____XXX___MMMXXX(opcode, BSET, 0b001111111000, Byte, BitDxEa, CIMS)
 
     //               -------------------------------------------------
     // #<data>,<ea>  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
@@ -593,7 +600,8 @@ Moira::createJumpTable()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0000 1000 11-- ----");
-    __________MMMXXX(opcode, BSET, 0b101111111000, Byte, BitImEa, CIMS)
+    __________MMMXXX(opcode, BSET, 0b100000000000, Byte, BitImDy, CIMS)
+    __________MMMXXX(opcode, BSET, 0b001111111000, Byte, BitImEa, CIMS)
 
 
     // BSR
@@ -625,7 +633,8 @@ Moira::createJumpTable()
     //                 X       X   X   X   X   X   X   X   X   X   X?
 
     opcode = parse("0000 ---1 00-- ----");
-    ____XXX___MMMXXX(opcode, BTST, 0b101111111111, Byte, BitDxEa, CIMS)
+    ____XXX___MMMXXX(opcode, BTST, 0b100000000000, Byte, BitDxDy, CIMS)
+    ____XXX___MMMXXX(opcode, BTST, 0b001111111111, Byte, BitDxEa, CIMS)
 
     //               -------------------------------------------------
     // #<data>,<ea>  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
@@ -633,7 +642,8 @@ Moira::createJumpTable()
     //                 X       X   X   X   X   X   X   X   X   X
 
     opcode = parse("0000 1000 00-- ----");
-    __________MMMXXX(opcode, BTST, 0b101111111110, Byte, BitImEa, CIMS)
+    __________MMMXXX(opcode, BTST, 0b100000000000, Byte, BitImDy, CIMS)
+    __________MMMXXX(opcode, BTST, 0b001111111110, Byte, BitImEa, CIMS)
 
 
     // CALLM

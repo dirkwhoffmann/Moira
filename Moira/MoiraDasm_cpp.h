@@ -739,12 +739,30 @@ Moira::dasmBra(StrWriter &str, u32 &addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
+Moira::dasmBitDxDy(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = Dn       ( ____xxx_________(op)       );
+    auto dst = Op <M,S> ( _____________xxx(op), addr );
+
+    str << Ins<I>{} << tab << src << ", " << dst;
+}
+
+template <Instr I, Mode M, Size S> void
 Moira::dasmBitDxEa(StrWriter &str, u32 &addr, u16 op)
 {
     auto src = Dn       ( ____xxx_________(op)       );
     auto dst = Op <M,S> ( _____________xxx(op), addr );
 
     str << Ins<I>{} << tab << src << ", " << dst;
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmBitImDy(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = dasmRead<S>(addr);
+    auto dst = Op <M,S> ( _____________xxx(op), addr );
+
+    str << Ins<I>{} << tab << "#" << UInt(src) << ", " << dst;
 }
 
 template <Instr I, Mode M, Size S> void
