@@ -12,6 +12,8 @@ EXEC_DEBUG \
 assert(C >= (cpu)); \
 if constexpr (C == M68020) cp = 0;
 
+#define FINALIZE { } \
+
 #define SUPERVISOR_MODE_ONLY \
 if (!reg.sr.s) { \
 execPrivilegeException(); \
@@ -37,7 +39,7 @@ Moira::execLineA(u16 opcode)
 
         auto &trap = debugger.swTraps.traps[opcode];
 
-        // Smuggle the original instruction back into the CPU
+        // Restore the original instruction
         reg.pc = reg.pc0;
         queue.irc = trap.instruction;
         prefetch <C> ();
@@ -54,6 +56,8 @@ Moira::execLineA(u16 opcode)
     CYCLES_68000(34)
     CYCLES_68010(4)
     CYCLES_68020(20)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -67,6 +71,8 @@ Moira::execLineF(u16 opcode)
     CYCLES_68000(34)
     CYCLES_68010(38)
     CYCLES_68020(34)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -80,6 +86,8 @@ Moira::execIllegal(u16 opcode)
     CYCLES_68000(34)
     CYCLES_68010(38)
     CYCLES_68020(20)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -89,24 +97,42 @@ Moira::execShiftRg(u16 opcode)
 
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
+
     int cnt = readD(src) & 0x3F;
+    int cyc = (S == Long ? 4 : 2) + 2 * cnt;
 
     prefetch <C,POLLIPL> ();
-    SYNC((S == Long ? 4 : 2) + 2 * cnt);
+    SYNC(cyc);
 
     writeD<S>(dst, shift <C,I,S> (cnt, readD<S>(dst)));
 
-    [[maybe_unused]] auto c = C == M68020 ? cnt : 2 * cnt;
+    if constexpr (C == M68000 || C == M68010) {
 
-    if constexpr (I == LSL || I == LSR) {
-        CYCLES_DN ( 6+c,  6+c,  6+c,     6+c,  6+c,  6+c,    8+c,  8+c,  6+c)
-    } else if constexpr (I == ROL || I == ROR || I == ASL) {
-        CYCLES_DN ( 6+c,  6+c,  8+c,     6+c,  6+c,  8+c,    8+c,  8+c,  8+c)
-    } else if constexpr (I == ROXL || I == ROXR) {
-        CYCLES_DN ( 6+c,  6+c, 12+c,     6+c,  6+c, 12+c,    8+c,  8+c, 12+c)
+        CYCLES(4 + cyc);
+
     } else {
-        CYCLES_DN ( 6+c,  6+c,  6+c,     6+c,  6+c,  6+c,    8+c,  8+c,  6+c)
+
+        [[maybe_unused]] auto c = C == M68020 ? cnt : 2 * cnt;
+
+        if constexpr (I == LSL || I == LSR) {
+
+            CYCLES_DN ( 6+c,  6+c,  6+c,     6+c,  6+c,  6+c,    8+c,  8+c,  6+c)
+
+        } else if constexpr (I == ROL || I == ROR || I == ASL) {
+            
+            CYCLES_DN ( 6+c,  6+c,  8+c,     6+c,  6+c,  8+c,    8+c,  8+c,  8+c)
+
+        } else if constexpr (I == ROXL || I == ROXR) {
+
+            CYCLES_DN ( 6+c,  6+c, 12+c,     6+c,  6+c, 12+c,    8+c,  8+c, 12+c)
+
+        } else {
+
+            CYCLES_DN ( 6+c,  6+c,  6+c,     6+c,  6+c,  6+c,    8+c,  8+c,  6+c)
+        }
     }
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -721,7 +747,7 @@ Moira::execBcc(u16 opcode)
         reg.pc = newpc;
         fullPrefetch <C, POLLIPL> ();
 
-        CYCLES_IP (10, 10,  6,     10, 10,  6,     10, 10,  6);
+        CYCLES_IP (10, 10,  6,     10, 10,  6,      0,  0,  6);
 
     } else {
 
@@ -731,7 +757,7 @@ Moira::execBcc(u16 opcode)
         if constexpr (S == Long) readExt<C>();
         prefetch <C,POLLIPL> ();
 
-        CYCLES_IP (10,  6,  4,     10, 10,  6,     10, 10,  6);
+        CYCLES_IP ( 8,  6,  4,     12, 10,  6,      0,  0,  6);
     }
 }
 
@@ -1079,7 +1105,6 @@ Moira::execBitFieldEa(u16 opcode)
                 reg.sr.z &= ZERO<Byte>(data2 & mask8);
             }
 
-            CYCLES_DN   ( 0,  0,  0,     0,  0,  0,     0,  0,  6)
             CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)
             CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 18)
             CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
@@ -1525,7 +1550,7 @@ Moira::execCmpiRg(u16 opcode)
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execCmpiEa(u16 opcode)
 {
-    AVAILABILITY(S == Long ? M68020 : M68000)
+    AVAILABILITY(M68000)
 
     u32 src = readI <C,S> ();
     int dst = _____________xxx(opcode);
@@ -1665,7 +1690,7 @@ Moira::execDbcc(u16 opcode)
             } else {
 
                 (void)readMS <C,MEM_PROG,Word> (reg.pc + 2);
-                CYCLES_68000(4);
+                CYCLES_68000(14);
                 CYCLES_68020(10);
 
                 reg.pc += 2;
@@ -1675,7 +1700,7 @@ Moira::execDbcc(u16 opcode)
         } else {
 
             SYNC(2);
-            CYCLES_68000(2);
+            CYCLES_68000(12);
             CYCLES_68020(6);
 
             // Fall through to next instruction

@@ -159,9 +159,8 @@ MOIRA_DECLARE(Unlk)
 MOIRA_DECLARE(UnpkDn)
 MOIRA_DECLARE(UnpkPd)
 
-
 // Musashi compatibility mode
-template <Core C, Instr I, Mode M, Size S> void execMulMusashi(u16 op);
-template <Core C, Instr I, Mode M, Size S> void execMullMusashi(u16 op);
-template <Core C, Instr I, Mode M, Size S> void execDivMusashi(u16 op);
-template <Core C, Instr I, Mode M, Size S> void execDivlMusashi(u16 op);
+MOIRA_DECLARE_EXEC(MulMusashi)
+MOIRA_DECLARE_EXEC(MullMusashi)
+MOIRA_DECLARE_EXEC(DivMusashi)
+MOIRA_DECLARE_EXEC(DivlMusashi)
