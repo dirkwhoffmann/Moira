@@ -34,6 +34,13 @@ Core;
 
 typedef enum
 {
+    DASM_MUSASHI,
+    DASM_VDA68K
+}
+DasmCore;
+
+typedef enum
+{
     ILLEGAL,        // Illegal instruction
     LINE_A,         // Unused instruction (line A)
     LINE_F,         // Unused instruction (line F)

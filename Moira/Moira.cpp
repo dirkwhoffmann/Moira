@@ -50,6 +50,16 @@ Moira::setCore(Core core)
 }
 
 void
+Moira::setDasmCore(DasmCore dasmCore)
+{
+    if (this->dasmCore != dasmCore) {
+
+        this->dasmCore = dasmCore;
+        createJumpTable();
+    }
+}
+
+void
 Moira::reset()
 {
     switch (core) {
