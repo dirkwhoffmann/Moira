@@ -88,8 +88,10 @@ struct Result {
     u32     vbr;
     u32     sfc;
     u32     dfc;
-    char    dasm[64];
+    char    dasm[128];
     int     dasmCnt;
+    char    dasm2[128];
+    int     dasmCnt2;
     int     cycles;
 };
 
@@ -106,12 +108,14 @@ u32 smartRandom();
 
 void selectCore(int core);
 
+void setupM68k();
 void setupMusashi();
 void setupMoira();
 
 void setupTestEnvironment(Setup &s);
 void setupTestInstruction(Setup &s, u32 pc, u16 opcode);
 
+void resetM68k(Setup &s);
 void resetMusashi(Setup &s);
 void resetMoira(Setup &s);
 
@@ -124,6 +128,7 @@ void run();
 
 void runSingleTest(Setup &s);
 
+void runM68k(Setup &s, Result &r);
 clock_t runMusashi(Setup &s, Result &r);
 clock_t runMoira(Setup &s, Result &r);
 

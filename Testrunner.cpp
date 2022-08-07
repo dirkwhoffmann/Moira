@@ -9,6 +9,7 @@
 
 #include "config.h"
 #include "Testrunner.h"
+#include "m68k_disasm.h"
 
 TestCPU *moiracpu;
 Sandbox sandbox;
@@ -17,6 +18,13 @@ u8 moiraMem[0x10000];
 u32 musashiFC = 0;
 long testrun = 0;
 int cpuType = 0;
+
+// M68k disassembler
+struct vda68k::DisasmPara_68k dp;
+char opcode[16];
+char operands[128];
+char iwordbuf[32];
+char tmpbuf[8];
 
 uint32 smartRandom()
 {
@@ -46,6 +54,7 @@ void selectCore(int core)
     cpuType = core;
 
     setupMusashi();
+    setupM68k();
     setupMoira();
 
     printf("\n");
@@ -53,6 +62,14 @@ void selectCore(int core)
     printf("              Exec range: %s\n", TOSTRING(doExec(opcode)));
     printf("              Dasm range: %s\n", TOSTRING(doDasm(opcode)));
     printf("\n");
+}
+
+void setupM68k()
+{
+    memset(&dp,0,sizeof(struct vda68k::DisasmPara_68k));
+    dp.opcode = opcode;
+    dp.operands = operands;
+    dp.radix = 16;
 }
 
 void setupMusashi()
@@ -137,6 +154,11 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
 
     memcpy(musashiMem, s.mem, sizeof(musashiMem));
     memcpy(moiraMem, s.mem, sizeof(moiraMem));
+}
+
+void resetM68k(Setup &s)
+{
+    dp.instr = dp.iaddr = (u16 *)&musashiMem[s.pc];
 }
 
 void resetMusashi(Setup &s)
@@ -238,14 +260,23 @@ void runSingleTest(Setup &s)
 
     // Prepare
     resetMusashi(s);
+    resetM68k(s);
     resetMoira(s);
 
     // Run
     muclk += runMusashi(s, mur);
     moclk += runMoira(s, mor);
+    runM68k(s, mur);
 
     // Compare
     compare(s, mur, mor);
+}
+
+void runM68k(Setup &s, Result &r)
+{
+    auto n = M68k_Disassemble(&dp) - dp.instr;
+    r.dasmCnt2 = n;
+    sprintf(r.dasm2, "%-7s %s\n", opcode, operands);
 }
 
 clock_t runMusashi(Setup &s, Result &r)
@@ -473,6 +504,7 @@ void compare(Setup &s, Result &r1, Result &r2)
     if (error) {
 
         printf("\n\nInstruction: %s (Musashi)", r1.dasm);
+        printf(  "\n             %s (Vda68k)\n\n", r1.dasm2);
         printf(  "\n             %s (Moira)\n\n", r2.dasm);
 
         printf("Setup:   ");
