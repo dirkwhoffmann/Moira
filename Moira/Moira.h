@@ -30,7 +30,7 @@ protected:
     Core core = M68000;
 
     // Disassembler configuration
-    DasmCore dasmCore = DASM_MUSASHI;
+    DasmStyle dasmStyle = DASM_MUSASHI;
     DasmNumberFormat numberFormat = DASM_HEX;
     DasmInstrFormat instrFormat = DASM_LOWER_CASE;
 
@@ -138,7 +138,7 @@ protected:
     ExecPtr loop[65536];
 
     // Jump table holding the disassebler handlers
-    typedef void (Moira::*DasmPtr)(StrWriter&, u32&, u16);
+    typedef void (Moira::*DasmPtr)(DasmStyle, StrWriter&, u32&, u16);
     DasmPtr *dasm = nullptr;
     
 private:
@@ -160,7 +160,7 @@ public:
     void setCore(Core core);
 
     // Configures the disassembler
-    void setDasmCore(DasmCore core);
+    void setDasmStyle(DasmStyle style);
     void setDasmNumberFormat(DasmNumberFormat format);
     void setDasmInstrFormat(DasmInstrFormat format);
 
@@ -207,7 +207,7 @@ private:
 public:
 
     // Disassembles a single instruction and returns the instruction size
-    int disassemble(u32 addr, char *str);
+    int disassemble(u32 addr, char *str, DasmStyle core = DASM_MUSASHI);
 
     // Returns a textual representation for a single word
     void disassembleWord(u32 value, char *str);

@@ -104,11 +104,12 @@ static void sprintd_signed(char *&s, i64 value)
     sprintd(s, value, decDigits(value));
 }
 
-static void sprintx(char *&s, u64 value, bool upper, char prefix, int digits)
+static void sprintx(char *&s, u64 value, bool upper, const char *prefix, int digits)
 {
     char a = (upper ? 'A' : 'a') - 10;
 
-    if (prefix) *s++ = prefix;
+    if (prefix[0]) { *s++ = prefix[0]; if (prefix[1]) { *s++ = prefix[1]; }}
+
     for (int i = digits - 1; i >= 0; i--) {
         char digit = (char)(value % 16);
         s[i] = (digit <= 9) ? ('0' + digit) : (a + digit);
@@ -117,12 +118,12 @@ static void sprintx(char *&s, u64 value, bool upper, char prefix, int digits)
     s += digits;
 }
 
-static void sprintx(char *&s, u64 value, bool upper, char prefix)
+static void sprintx(char *&s, u64 value, bool upper, const char *prefix)
 {
     sprintx(s, value, upper, prefix, hexDigits(value));
 }
 
-static void sprintx_signed(char *&s, i64 value, bool upper, char prefix)
+static void sprintx_signed(char *&s, i64 value, bool upper, const char *prefix)
 {
     if (value < 0) { *s++ = '-'; value *= -1; }
     sprintx(s, value, upper, prefix, hexDigits(value));
@@ -145,35 +146,65 @@ StrWriter::operator<<(int value)
 StrWriter&
 StrWriter::operator<<(Int i)
 {
-    hex ? sprintx_signed(ptr, i.raw, upper, '$') : sprintd_signed(ptr, i.raw);
+    switch (nf) {
+
+        case DASM_HEX:      sprintx_signed(ptr, i.raw, upper, "$"); break;
+        case DASM_HEX_0X:   sprintx_signed(ptr, i.raw, upper, "0x"); break;
+        case DASM_DEC:      sprintd_signed(ptr, i.raw); break;
+    }
+
     return *this;
 }
 
 StrWriter&
 StrWriter::operator<<(UInt u)
 {
-    hex ? sprintx(ptr, u.raw, upper, '$') : sprintd(ptr, u.raw);
+    switch (nf) {
+
+        case DASM_HEX:      sprintx(ptr, u.raw, upper, "$"); break;
+        case DASM_HEX_0X:   sprintx(ptr, u.raw, upper, "0x"); break;
+        case DASM_DEC:      sprintd(ptr, u.raw); break;
+    }
+
     return *this;
 }
 
 StrWriter&
 StrWriter::operator<<(UInt8 u)
 {
-    hex ? sprintx(ptr, u.raw, upper, '$', 2) : sprintd(ptr, u.raw, 3);
+    switch (nf) {
+
+        case DASM_HEX:      sprintx(ptr, u.raw, upper, "$", 2); break;
+        case DASM_HEX_0X:   sprintx(ptr, u.raw, upper, "0x", 2); break;
+        case DASM_DEC:      sprintd(ptr, u.raw, 3); break;
+    }
+
     return *this;
 }
 
 StrWriter&
 StrWriter::operator<<(UInt16 u)
 {
-    hex ? sprintx(ptr, u.raw, upper, '$', 4) : sprintd(ptr, u.raw, 5);
+    switch (nf) {
+
+        case DASM_HEX:      sprintx(ptr, u.raw, upper, "$", 4); break;
+        case DASM_HEX_0X:   sprintx(ptr, u.raw, upper, "0x", 4); break;
+        case DASM_DEC:      sprintd(ptr, u.raw, 5); break;
+    }
+
     return *this;
 }
 
 StrWriter&
 StrWriter::operator<<(UInt32 u)
 {
-    hex ? sprintx(ptr, u.raw, upper, '$', 8) : sprintd(ptr, u.raw, 10);
+    switch (nf) {
+
+        case DASM_HEX:      sprintx(ptr, u.raw, upper, "$", 8); break;
+        case DASM_HEX_0X:   sprintx(ptr, u.raw, upper, "0x", 8); break;
+        case DASM_DEC:      sprintd(ptr, u.raw, 10); break;
+    }
+
     return *this;
 }
 
@@ -462,7 +493,7 @@ StrWriter::operator<<(const Ea<M,S> &ea)
         {
             *this << "(" << Int{(i16)ea.ext1} << ",PC)";
             auto resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
-            StrWriter(comment, hex, upper) << "; (" << UInt(resolved) << ")" << Finish{};
+            StrWriter(comment, nf, upper) << "; (" << UInt(resolved) << ")" << Finish{};
             break;
         }
         case 10: // (d,PC,Xi)

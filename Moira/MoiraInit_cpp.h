@@ -10,14 +10,7 @@
 // Assembles an instruction handler name
 #define EXEC_IMS(func,I,M,S) &Moira::exec##func<I,M,S>
 #define EXEC_CIMS(func,C,I,M,S) &Moira::exec##func<C,I,M,S>
-#define DASM_DIMS(func,D,I,M,S) &Moira::dasm##func<D,I,M,S>
-
-// Registers an instruction handler
-#define IMS(id,name,I,M,S) { \
-exec[id] = EXEC_IMS(name,I,M,S); \
-if (dasm) dasm[id] = DASM_DIMS(name,0,I,M,S); \
-if (info) info[id] = InstrInfo {I,M,S}; \
-}
+#define DASM_IMS(func,I,M,S) &Moira::dasm##func<I,M,S>
 
 #define CIMS(id,name,I,M,S) { \
 switch (core) { \
@@ -25,10 +18,7 @@ case M68000: exec[id] = EXEC_CIMS(name,M68000,I,M,S); break; \
 case M68010: exec[id] = EXEC_CIMS(name,M68010,I,M,S); break; \
 case M68020: exec[id] = EXEC_CIMS(name,M68020,I,M,S); break; \
 } \
-switch (dasmCore) { \
-case DASM_MUSASHI: if (dasm) dasm[id] = DASM_DIMS(name,DASM_MUSASHI,I,M,S); break; \
-case DASM_VDA68K:  if (dasm) dasm[id] = DASM_DIMS(name,DASM_VDA68K,I,M,S); break; \
-} \
+if (dasm) dasm[id] = DASM_IMS(name,I,M,S); \
 if (info) info[id] = InstrInfo {I,M,S}; \
 }
 

@@ -50,15 +50,11 @@ Moira::setCore(Core core)
 }
 
 void
-Moira::setDasmCore(DasmCore core)
+Moira::setDasmStyle(DasmStyle style)
 {
-    assert(core == DASM_MUSASHI || core == DASM_VDA68K);
+    assert(style == DASM_MUSASHI || style == DASM_VDA68K);
 
-    if (dasmCore != core) {
-
-        dasmCore = core;
-        createJumpTable();
-    }
+    dasmStyle = style;
 }
 
 void
@@ -446,7 +442,7 @@ Moira::getIrqVector(u8 level) const {
 }
 
 int
-Moira::disassemble(u32 addr, char *str)
+Moira::disassemble(u32 addr, char *str, DasmStyle core)
 {
     if constexpr (!ENABLE_DASM) {
 
@@ -458,9 +454,9 @@ Moira::disassemble(u32 addr, char *str)
     u32 pc     = addr;
     u16 opcode = read16Dasm(pc);
 
-    StrWriter writer(str, hex, upper);
+    StrWriter writer(str, numberFormat, upper);
 
-    (this->*dasm[opcode])(writer, pc, opcode);
+    (this->*dasm[opcode])(core, writer, pc, opcode);
     writer << Finish{};
 
     return pc - addr + 2;
@@ -469,7 +465,7 @@ Moira::disassemble(u32 addr, char *str)
 void
 Moira::disassembleWord(u32 value, char *str)
 {
-    sprintx(str, value, true, 0, 4); // Upper case, no '$' prefix, 4 digits
+    sprintx(str, value, true, "", 4); // Upper case, no prefix, 4 digits
 }
 
 void
@@ -478,7 +474,7 @@ Moira::disassembleMemory(u32 addr, int cnt, char *str)
     U32_DEC(addr, 2); // Because dasmRead increases addr first
     for (int i = 0; i < cnt; i++) {
         u32 value = dasmRead<Word>(addr);
-        sprintx(str, value, true, 0, 4);
+        sprintx(str, value, true, "", 4);
         *str++ = (i == cnt - 1) ? 0 : ' ';
     }
 }
@@ -486,7 +482,7 @@ Moira::disassembleMemory(u32 addr, int cnt, char *str)
 void
 Moira::disassemblePC(u32 pc, char *str)
 {
-    sprintx(str, pc, true, 0, 6); // Upper case, no '$' prefix, 6 digits
+    sprintx(str, pc, true, "", 6); // Upper case, no prefix, 6 digits
 }
 
 void

@@ -47,12 +47,12 @@ class StrWriter
     char comment[32];  // Appended to the end of the disassembled string
     char *base;        // Start address of the destination string
     char *ptr;         // Current writing position
-    bool hex;          // Number format: Hexadecimal / Decimal
+    DasmNumberFormat nf; //  bool hex;          // Number format: Hexadecimal / Decimal
     bool upper;        // Text format: Upper case / Lower case
 
 public:
 
-    StrWriter(char *p, bool h, bool u) : base(p), ptr(p), hex(h), upper(u)
+    StrWriter(char *p, DasmNumberFormat n, bool u) : base(p), ptr(p), nf(n), upper(u)
     {
         comment[0] = 0;
     };

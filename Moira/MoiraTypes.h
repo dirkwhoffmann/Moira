@@ -37,7 +37,7 @@ typedef enum
     DASM_MUSASHI,
     DASM_VDA68K
 }
-DasmCore;
+DasmStyle;
 
 typedef enum
 {

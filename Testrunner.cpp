@@ -263,10 +263,12 @@ void runSingleTest(Setup &s)
     resetM68k(s);
     resetMoira(s);
 
-    // Run
+    // Run Musashi and the vda68k disassembler
     muclk += runMusashi(s, mur);
-    moclk += runMoira(s, mor);
     runM68k(s, mur);
+
+    // Run Moira
+    moclk += runMoira(s, mor);
 
     // Compare
     compare(s, mur, mor);
@@ -276,7 +278,7 @@ void runM68k(Setup &s, Result &r)
 {
     auto n = M68k_Disassemble(&dp) - dp.instr;
     r.dasmCnt2 = n;
-    sprintf(r.dasm2, "%-7s %s\n", opcode, operands);
+    sprintf(r.dasm2, "%-7s %s", opcode, operands);
 }
 
 clock_t runMusashi(Setup &s, Result &r)
@@ -319,7 +321,16 @@ clock_t runMoira(Setup &s, Result &r)
 
     r.oldpc = moiracpu->getPC();
     r.opcode = get16(moiraMem, r.oldpc);
+
+    // Disassemble the instruction in Musashi format
+    moiracpu->setDasmStyle(DASM_MUSASHI);
+    moiracpu->setDasmNumberFormat(DASM_HEX);
     r.dasmCnt = moiracpu->disassemble(r.oldpc, r.dasm);
+
+    // Disassemble the instruction in Vda68k format
+    moiracpu->setDasmStyle(DASM_VDA68K);
+    moiracpu->setDasmNumberFormat(DASM_HEX_0X);
+    r.dasmCnt2 = moiracpu->disassemble(r.oldpc, r.dasm2);
 
     u32 pc = moiracpu->getPC();
     u16 op = get16(moiraMem, pc);
@@ -329,7 +340,7 @@ clock_t runMoira(Setup &s, Result &r)
         if (VERBOSE)
             printf("$%04x ($%04x): %s (Moira)\n", r.oldpc, r.opcode, r.dasm);
 
-    // Run Moira
+    // Execute instruction
     elapsed = clock();
     moiracpu->execute();
     elapsed = clock() - elapsed;
@@ -504,7 +515,7 @@ void compare(Setup &s, Result &r1, Result &r2)
     if (error) {
 
         printf("\n\nInstruction: %s (Musashi)", r1.dasm);
-        printf(  "\n             %s (Vda68k)\n\n", r1.dasm2);
+        printf(  "\n             %s (Vda68k)", r1.dasm2);
         printf(  "\n             %s (Moira)\n\n", r2.dasm);
 
         printf("Setup:   ");
@@ -522,8 +533,11 @@ void compare(Setup &s, Result &r1, Result &r2)
 
 bool compareDasm(Result &r1, Result &r2)
 {
-    if (r1.dasmCnt != r2.dasmCnt) return false;
-    return strcmp(r1.dasm, r2.dasm) == 0;
+    return
+    r1.dasmCnt == r2.dasmCnt &&
+    r1.dasmCnt2 == r2.dasmCnt2 &&
+    strcmp(r1.dasm, r2.dasm) == 0 &&
+    strcmp(r1.dasm2, r2.dasm2) == 0;
 }
 
 bool compareD(Result &r1, Result &r2)
