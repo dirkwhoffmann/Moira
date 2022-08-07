@@ -1148,7 +1148,15 @@ Moira::dasmDivl(StrWriter &str, u32 &addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
-Moira::dasmNbcd(StrWriter &str, u32 &addr, u16 op)
+Moira::dasmNbcdRg(StrWriter &str, u32 &addr, u16 op)
+{
+    auto dst = Op <M,S> ( _____________xxx(op), addr );
+
+    str << Ins<NBCD>{} << tab << dst;
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmNbcdEa(StrWriter &str, u32 &addr, u16 op)
 {
     auto dst = Op <M,S> ( _____________xxx(op), addr );
 

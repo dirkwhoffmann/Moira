@@ -1325,8 +1325,9 @@ Moira::createJumpTable()
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("0100 1000 00-- ----");
-    __________MMMXXX(opcode, NBCD, 0b101111111000, Byte, Nbcd, CIMS)
-    __________MMMXXX(opcode, NBCD, 0b001110000000, Byte, Nbcd, CIMSloop)
+    __________MMMXXX(opcode, NBCD, 0b100000000000, Byte, NbcdRg, CIMS)
+    __________MMMXXX(opcode, NBCD, 0b001111111000, Byte, NbcdEa, CIMS)
+    __________MMMXXX(opcode, NBCD, 0b001110000000, Byte, NbcdEa, CIMSloop)
 
 
     // NEG, NEGX, NOT
