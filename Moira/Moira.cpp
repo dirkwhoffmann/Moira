@@ -50,13 +50,31 @@ Moira::setCore(Core core)
 }
 
 void
-Moira::setDasmCore(DasmCore dasmCore)
+Moira::setDasmCore(DasmCore core)
 {
-    if (this->dasmCore != dasmCore) {
+    assert(core == DASM_MUSASHI || core == DASM_VDA68K);
 
-        this->dasmCore = dasmCore;
+    if (dasmCore != core) {
+
+        dasmCore = core;
         createJumpTable();
     }
+}
+
+void
+Moira::setDasmNumberFormat(DasmNumberFormat format)
+{
+    assert(format >= DASM_HEX && format <= DASM_DEC);
+
+    numberFormat = format;
+}
+
+void
+Moira::setDasmInstrFormat(DasmInstrFormat format)
+{
+    assert(format >= DASM_LOWER_CASE && format <= DASM_UPPER_CASE);
+
+    instrFormat = format;
 }
 
 void

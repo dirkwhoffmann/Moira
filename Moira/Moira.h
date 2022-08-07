@@ -29,8 +29,10 @@ protected:
     // Emulated CPU core
     Core core = M68000;
 
-    // Disassembler format
+    // Disassembler configuration
     DasmCore dasmCore = DASM_MUSASHI;
+    DasmNumberFormat numberFormat = DASM_HEX;
+    DasmInstrFormat instrFormat = DASM_LOWER_CASE;
 
     // Interrupt mode of this CPU
     IrqMode irqMode = IRQ_AUTO;
@@ -157,8 +159,10 @@ public:
     // Selects the emulated CPU core
     void setCore(Core core);
 
-    // Selects the disassembler format
-    void setDasmCore(DasmCore dasmCore);
+    // Configures the disassembler
+    void setDasmCore(DasmCore core);
+    void setDasmNumberFormat(DasmNumberFormat format);
+    void setDasmInstrFormat(DasmInstrFormat format);
 
     // Configures the output format of the disassembler
     void configDasm(bool h, bool u) { hex = h; upper = u; }

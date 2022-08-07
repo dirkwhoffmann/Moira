@@ -25,7 +25,10 @@ case M68000: exec[id] = EXEC_CIMS(name,M68000,I,M,S); break; \
 case M68010: exec[id] = EXEC_CIMS(name,M68010,I,M,S); break; \
 case M68020: exec[id] = EXEC_CIMS(name,M68020,I,M,S); break; \
 } \
-if (dasm) dasm[id] = DASM_DIMS(name,DASM_MUSASHI,I,M,S); \
+switch (dasmCore) { \
+case DASM_MUSASHI: if (dasm) dasm[id] = DASM_DIMS(name,DASM_MUSASHI,I,M,S); break; \
+case DASM_VDA68K:  if (dasm) dasm[id] = DASM_DIMS(name,DASM_VDA68K,I,M,S); break; \
+} \
 if (info) info[id] = InstrInfo {I,M,S}; \
 }
 

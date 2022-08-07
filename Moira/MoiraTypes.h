@@ -41,6 +41,22 @@ DasmCore;
 
 typedef enum
 {
+    DASM_HEX,
+    DASM_HEX_0X,
+    DASM_DEC
+}
+DasmNumberFormat;
+
+typedef enum
+{
+    DASM_LOWER_CASE,
+    DASM_MIXED_CASE,
+    DASM_UPPER_CASE
+}
+DasmInstrFormat;
+
+typedef enum
+{
     ILLEGAL,        // Illegal instruction
     LINE_A,         // Unused instruction (line A)
     LINE_F,         // Unused instruction (line F)
