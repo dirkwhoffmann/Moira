@@ -109,8 +109,8 @@ void selectCore(int core);
 void setupMusashi();
 void setupMoira();
 
-void createTestCase(Setup &s);
-void setupInstruction(Setup &s, u32 pc, u16 opcode);
+void setupTestEnvironment(Setup &s);
+void setupTestInstruction(Setup &s, u32 pc, u16 opcode);
 
 void resetMusashi(Setup &s);
 void resetMoira(Setup &s);

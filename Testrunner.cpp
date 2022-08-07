@@ -83,7 +83,7 @@ void setupMoira()
     }
 }
 
-void createTestCase(Setup &s)
+void setupTestEnvironment(Setup &s)
 {
     s.supervisor = testrun % 2;
     s.ccr = u8(smartRandom());
@@ -101,20 +101,30 @@ void createTestCase(Setup &s)
     }
 }
 
-void setupInstruction(Setup &s, u32 pc, u16 opcode)
+void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
 {
-    if (opcode == 0x4E73) {                     // RTE
+    moira::Instr instr = moiracpu->getInfo(opcode).I;
 
-    }
+    // Prepare special extension words for some instructions
+    switch (instr) {
 
-    if (opcode == 0x4E7A || opcode == 0x4E7B) { // MOVEC
+        case RTE:
 
-        switch (smartRandom() & 5) {
-            case 0: s.ext1 = (s.ext1 & 0xF000) | 0x000; break;
-            case 1: s.ext1 = (s.ext1 & 0xF000) | 0x001; break;
-            case 2: s.ext1 = (s.ext1 & 0xF000) | 0x800; break;
-            case 3: s.ext1 = (s.ext1 & 0xF000) | 0x801; break;
-        }
+            break;
+
+        case MOVEC:
+
+            switch (smartRandom() & 5) {
+
+                case 0: s.ext1 = (s.ext1 & 0xF000) | 0x000; break;
+                case 1: s.ext1 = (s.ext1 & 0xF000) | 0x001; break;
+                case 2: s.ext1 = (s.ext1 & 0xF000) | 0x800; break;
+                case 3: s.ext1 = (s.ext1 & 0xF000) | 0x801; break;
+            }
+            break;
+
+        default:
+            break;
     }
 
     s.pc = pc;
@@ -192,7 +202,7 @@ void run()
         }
         
         printf("Round %ld ", testrun); fflush(stdout);
-        createTestCase(setup);
+        setupTestEnvironment(setup);
 
         // Iterate through all opcodes
         for (int opcode = 0x0000; opcode < 65536; opcode++) {
@@ -207,7 +217,7 @@ void run()
             }
 
             // Prepare the test case with the selected instruction
-            setupInstruction(setup, pc, u16(opcode));
+            setupTestInstruction(setup, pc, u16(opcode));
 
             // Reset the sandbox (memory accesses observer)
             sandbox.prepare(u16(opcode));
