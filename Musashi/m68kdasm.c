@@ -2481,7 +2481,7 @@ static void d68000_movep_re_16(void)
 	// sprintf(g_dasm_str, "movep.w D%d, ($%x,A%d)", (g_cpu_ir>>9)&7, read_imm_16(), g_cpu_ir&7);
 
     // FIXED:
-    sprintf(g_dasm_str, "movep.w D%d, ($%s,A%d)", (g_cpu_ir>>9)&7, make_signed_hex_str_16(read_imm_16()), g_cpu_ir&7);
+    sprintf(g_dasm_str, "movep.w D%d, (%s,A%d)", (g_cpu_ir>>9)&7, make_signed_hex_str_16(read_imm_16()), g_cpu_ir&7);
 }
 
 static void d68000_movep_re_32(void)
@@ -2489,7 +2489,7 @@ static void d68000_movep_re_32(void)
 	// sprintf(g_dasm_str, "movep.l D%d, ($%x,A%d)", (g_cpu_ir>>9)&7, read_imm_16(), g_cpu_ir&7);
 
     // FIXED:
-    sprintf(g_dasm_str, "movep.l D%d, ($%s,A%d)", (g_cpu_ir>>9)&7, make_signed_hex_str_16(read_imm_16()), g_cpu_ir&7);
+    sprintf(g_dasm_str, "movep.l D%d, (%s,A%d)", (g_cpu_ir>>9)&7, make_signed_hex_str_16(read_imm_16()), g_cpu_ir&7);
 }
 
 static void d68000_movep_er_16(void)

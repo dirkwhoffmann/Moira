@@ -1235,7 +1235,8 @@ Moira::dasmRtm(DasmStyle style, StrWriter &str, u32 &addr, u16 op)
 {
     auto src = Rn ( ____________xxxx(op) );
 
-    str << Ins<I>{} << tab << src << availability<I, M, S>();
+    str << Ins<I>{} << tab << src;
+    if (style == DASM_MUSASHI) str << availability<I, M, S>();
 }
 
 template <Instr I, Mode M, Size S> void

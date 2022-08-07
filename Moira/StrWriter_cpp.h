@@ -545,7 +545,13 @@ StrWriter::operator<<(const Ea<M,S> &ea)
         }
         case 11: // Imm
         {
-            *this << Imu(ea.ext1);
+            if (style == DASM_MUSASHI) {
+                *this << Imu(ea.ext1);
+            } else {
+                if constexpr (S != 0) {
+                    *this << Ims(SEXT<S>(ea.ext1));
+                }
+            }
             break;
         }
     }
@@ -672,7 +678,8 @@ StrWriter::fullExtension(const Ea <M,S> &ea)
     } else {
         // EXPERIMENTAL
         if (style == DASM_VDA68K) {
-            if (comma) *this << ",0"; comma = true;
+            if (comma) *this << ",0";
+            comma = true;
         }
     }
     if (preindex) {

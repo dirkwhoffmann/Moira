@@ -369,7 +369,8 @@ void opcode_bitmanip(dis_buffer_t *dbuf, ushort opc)
     addstring(dbuf, tmp);
     PRINT_DREG(dbuf, BITFIELD(opc,11,9));
     addchar(',');
-    get_modregstr(dbuf,5,GETMOD_BEFORE,0,0);
+    // get_modregstr(dbuf,5,GETMOD_BEFORE,0,0);
+    get_modregstr(dbuf,5,GETMOD_BEFORE,1,0);  // FIXED: DIRK
     return;
   }
 
@@ -2478,6 +2479,7 @@ void get_modregstr_moto(dis_buffer_t *dbuf, int bit, int mod, int sz, int dd)
       PRINT_AREG(dbuf, reg);
     break;
   case AR_DIS:
+          printf("AR_DIS dd = %d\n", dd);
     print_disp(dbuf, read16s(dbuf->val + 1 + dd), SIZE_WORD, reg, dd);
     dbuf->used++;
     /*FALLTHROUGH*/
@@ -2516,6 +2518,7 @@ void get_modregstr_moto(dis_buffer_t *dbuf, int bit, int mod, int sz, int dd)
       break;
     } else if (reg == 4) {
       /* uses ``sz'' to figure imediate data. */
+        printf("uses ``sz'' to figure imediate data sz = %d\n", sz);
       if (sz == SIZE_BYTE) {
         addchar('#');
         prints(dbuf,
