@@ -149,7 +149,7 @@ StrWriter::operator<<(Int i)
     switch (nf) {
 
         case DASM_HEX:      sprintx_signed(ptr, i.raw, upper, "$"); break;
-        case DASM_HEX_0X:   sprintx_signed(ptr, i.raw, upper, "0x"); break;
+        case DASM_HEX_0X:   sprintx_signed(ptr, i.raw, upper, i.raw ? "0x" : ""); break;
         case DASM_DEC:      sprintd_signed(ptr, i.raw); break;
     }
 
@@ -162,7 +162,7 @@ StrWriter::operator<<(UInt u)
     switch (nf) {
 
         case DASM_HEX:      sprintx(ptr, u.raw, upper, "$"); break;
-        case DASM_HEX_0X:   sprintx(ptr, u.raw, upper, "0x"); break;
+        case DASM_HEX_0X:   sprintx(ptr, u.raw, upper, u.raw ? "0x" : ""); break;
         case DASM_DEC:      sprintd(ptr, u.raw); break;
     }
 
@@ -175,7 +175,7 @@ StrWriter::operator<<(UInt8 u)
     switch (nf) {
 
         case DASM_HEX:      sprintx(ptr, u.raw, upper, "$", 2); break;
-        case DASM_HEX_0X:   sprintx(ptr, u.raw, upper, "0x", 2); break;
+        case DASM_HEX_0X:   sprintx(ptr, u.raw, upper, u.raw ? "0x" : "", 2); break;
         case DASM_DEC:      sprintd(ptr, u.raw, 3); break;
     }
 
@@ -188,7 +188,7 @@ StrWriter::operator<<(UInt16 u)
     switch (nf) {
 
         case DASM_HEX:      sprintx(ptr, u.raw, upper, "$", 4); break;
-        case DASM_HEX_0X:   sprintx(ptr, u.raw, upper, "0x", 4); break;
+        case DASM_HEX_0X:   sprintx(ptr, u.raw, upper, u.raw ? "0x" : "", 4); break;
         case DASM_DEC:      sprintd(ptr, u.raw, 5); break;
     }
 
@@ -201,7 +201,7 @@ StrWriter::operator<<(UInt32 u)
     switch (nf) {
 
         case DASM_HEX:      sprintx(ptr, u.raw, upper, "$", 8); break;
-        case DASM_HEX_0X:   sprintx(ptr, u.raw, upper, "0x", 8); break;
+        case DASM_HEX_0X:   sprintx(ptr, u.raw, upper, u.raw ? "0x" : "", 8); break;
         case DASM_DEC:      sprintd(ptr, u.raw, 10); break;
     }
 
@@ -211,16 +211,42 @@ StrWriter::operator<<(UInt32 u)
 StrWriter&
 StrWriter::operator<<(Dn dn)
 {
-    *ptr++ = 'D';
-    *ptr++ = '0' + (char)dn.raw;
+    if (style == DASM_MUSASHI) {
+
+        *ptr++ = 'D';
+        *ptr++ = '0' + (char)dn.raw;
+
+    } else {
+
+        *ptr++ = 'd';
+        *ptr++ = '0' + (char)dn.raw;
+    }
+
     return *this;
 }
 
 StrWriter&
 StrWriter::operator<<(An an)
 {
-    *ptr++ = 'A';
-    *ptr++ = '0' + (char)an.raw;
+    if (style == DASM_MUSASHI) {
+
+        *ptr++ = 'A';
+        *ptr++ = '0' + (char)an.raw;
+
+    } else {
+
+        if (an.raw == 7) {
+
+            *ptr++ = 's';
+            *ptr++ = 'p';
+
+        } else {
+
+            *ptr++ = 'a';
+            *ptr++ = '0' + (char)an.raw;
+        }
+    }
+
     return *this;
 }
 
@@ -468,8 +494,16 @@ StrWriter::operator<<(const Ea<M,S> &ea)
         }
         case 5: // (d,An)
         {
-            *this << "(" << Int{(i16)ea.ext1};
-            *this << "," << An{ea.reg} << ")";
+            if (style == DASM_MUSASHI) {
+
+                *this << "(" << Int{(i16)ea.ext1};
+                *this << "," << An{ea.reg} << ")";
+
+            } else {
+
+                *this << Int{(i16)ea.ext1};
+                *this << "(" << An{ea.reg} << ")";
+            }
             break;
         }
         case 6: // (d,An,Xi)
@@ -491,9 +525,17 @@ StrWriter::operator<<(const Ea<M,S> &ea)
         }
         case 9: // (d,PC)
         {
-            *this << "(" << Int{(i16)ea.ext1} << ",PC)";
-            auto resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
-            StrWriter(comment, nf, upper) << "; (" << UInt(resolved) << ")" << Finish{};
+            if (style == DASM_MUSASHI) {
+
+                *this << "(" << Int{(i16)ea.ext1} << ",PC)";
+                auto resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
+                StrWriter(moira, comment, style, nf, upper) << "; (" << UInt(resolved) << ")" << Finish{};
+
+            } else {
+
+                auto resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
+                *this << UInt(resolved) << "(pc)";
+            }
             break;
         }
         case 10: // (d,PC,Xi)
@@ -518,6 +560,15 @@ StrWriter::operator<<(Finish)
     return *this;
 }
 
+StrWriter&
+StrWriter::operator<<(Sep)
+{
+    *ptr++ = ',';
+    if (style == DASM_MUSASHI) *ptr++ = ' ';
+
+    return *this;
+}
+
 template <Mode M, Size S> void
 StrWriter::briefExtension(const Ea <M,S> &ea)
 {
@@ -533,12 +584,24 @@ StrWriter::briefExtension(const Ea <M,S> &ea)
     u16 scale = _____xx_________ (ea.ext1);
     u16 disp  = ________xxxxxxxx (ea.ext1);
 
-    *this << "(";
-    if (disp) *this << Int{(i8)disp} << ",";
-    M == 10 ? *this << "PC" : *this << An{ea.reg};
-    *this << "," << Rn{reg};
-    lw ? *this << Sz<Long>{} : *this << Sz<Word>{};
-    *this << Scale{scale} << ")";
+    if (style == DASM_MUSASHI) {
+
+        *this << "(";
+        if (disp) *this << Int{(i8)disp} << ",";
+        M == 10 ? *this << "PC" : *this << An{ea.reg};
+        *this << "," << Rn{reg};
+        lw ? *this << Sz<Long>{} : *this << Sz<Word>{};
+        *this << Scale{scale} << ")";
+
+    } else {
+
+        *this << "(";
+        *this << Int{(i8)disp} << ",";
+        M == 10 ? *this << "pc" : *this << An{ea.reg};
+        *this << "," << Rn{reg};
+        lw ? *this << Sz<Long>{} : *this << Sz<Word>{};
+        *this << Scale{scale} << ")";
+    }
 }
 
 template <Mode M, Size S> void
@@ -573,43 +636,54 @@ StrWriter::fullExtension(const Ea <M,S> &ea)
     *this << "(";
 
     bool comma = false;
-    if (preindex || postindex)
-    {
+    if (preindex || postindex) {
+
         *this << "[";
     }
-    if (base)
-    {
+    if (base) {
+
         size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
         comma = true;
     }
-    if (!bs)
-    {
+    if (style == DASM_VDA68K) {
+
+        if (comma) *this << ",z";
+        M == 10 ? (*this << "pc") : *this << An{ea.reg};
+        comma = true;
+
+    } else if (!bs) {
+
         if (comma) *this << ",";
         M == 10 ? *this << "PC" : *this << An{ea.reg};
         comma = true;
     }
-    if (postindex)
-    {
+    if (postindex) {
+
         *this << "]";
         comma = true;
     }
-    if (!is)
-    {
+    if (!is) {
+
         if (comma) *this << ",";
         *this << Rn{reg};
         lw ? (*this << Sz<Long>{}) : (*this << Sz<Word>{});
         *this << Scale{scale};
         comma = true;
+    } else {
+        // EXPERIMENTAL
+        if (style == DASM_VDA68K) {
+            if (comma) *this << ",0"; comma = true;
+        }
     }
-    if (preindex)
-    {
+    if (preindex) {
+
         *this << "]";
         comma = true;
     }
     if(outer)
     {
         if (comma) *this << ",";
-        *this << Int((i16)outer);
+        *this << Int(outer);
     }
 
     *this << ")";

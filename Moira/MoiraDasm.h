@@ -11,6 +11,9 @@
 // Auxiliary functions
 //
 
+// REMOVE ASAP
+public:
+
 // Reads a word from memory and increments addr
 template <Size S> u32 dasmRead(u32 &addr);
 

@@ -159,6 +159,7 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
 void resetM68k(Setup &s)
 {
     dp.instr = dp.iaddr = (u16 *)&musashiMem[s.pc];
+    dp.iaddr = (vda68k::m68k_word *)pc;
 }
 
 void resetMusashi(Setup &s)
@@ -277,7 +278,7 @@ void runSingleTest(Setup &s)
 void runM68k(Setup &s, Result &r)
 {
     auto n = M68k_Disassemble(&dp) - dp.instr;
-    r.dasmCnt2 = n;
+    r.dasmCnt2 = 2 * n;
     sprintf(r.dasm2, "%-7s %s", opcode, operands);
 }
 
@@ -514,9 +515,10 @@ void compare(Setup &s, Result &r1, Result &r2)
 
     if (error) {
 
-        printf("\n\nInstruction: %s (Musashi)", r1.dasm);
-        printf(  "\n             %s (Vda68k)", r1.dasm2);
-        printf(  "\n             %s (Moira)\n\n", r2.dasm);
+        printf("\n\nInstruction: %-40s (Musashi, %d bytes)", r1.dasm, r1.dasmCnt);
+        printf(  "\n             %-40s (Moira, %d bytes)\n", r2.dasm, r2.dasmCnt);
+        printf(  "\n             %-40s (Vda68k, %d bytes)", r1.dasm2, r1.dasmCnt2);
+        printf(  "\n             %-40s (Moira, %d bytes)\n\n", r2.dasm2, r2.dasmCnt2);
 
         printf("Setup:   ");
         dumpSetup(s);
@@ -533,6 +535,9 @@ void compare(Setup &s, Result &r1, Result &r2)
 
 bool compareDasm(Result &r1, Result &r2)
 {
+    // REMOVE ASAP
+    printf("compareDasm: %s\n", r1.dasm);
+
     return
     r1.dasmCnt == r2.dasmCnt &&
     r1.dasmCnt2 == r2.dasmCnt2 &&

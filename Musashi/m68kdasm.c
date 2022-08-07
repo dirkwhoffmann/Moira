@@ -132,9 +132,14 @@
 #define EXT_BASE_DISPLACEMENT_PRESENT(A)  (((A)&0x30) > 0x10)
 #define EXT_BASE_DISPLACEMENT_WORD(A)     (((A)&0x30) == 0x20)
 #define EXT_BASE_DISPLACEMENT_LONG(A)     (((A)&0x30) == 0x30)
+/*
 #define EXT_OUTER_DISPLACEMENT_PRESENT(A) (((A)&3) > 1 && ((A)&0x47) < 0x44)
 #define EXT_OUTER_DISPLACEMENT_WORD(A)    (((A)&3) == 2 && ((A)&0x47) < 0x44)
 #define EXT_OUTER_DISPLACEMENT_LONG(A)    (((A)&3) == 3 && ((A)&0x47) < 0x44)
+*/
+#define EXT_OUTER_DISPLACEMENT_PRESENT(A) (((A)&3) > 1)
+#define EXT_OUTER_DISPLACEMENT_WORD(A)    (((A)&3) == 2)
+#define EXT_OUTER_DISPLACEMENT_LONG(A)    (((A)&3) == 3)
 
 
 /* Opcode flags */
@@ -542,7 +547,11 @@ static char* get_ea_mode_str(uint instruction, uint size)
 				{
 					if(comma)
 						strcat(mode, ",");
-					strcat(mode, make_signed_hex_str_16(outer));
+                    if (EXT_OUTER_DISPLACEMENT_LONG(extension)) {
+                        strcat(mode, make_signed_hex_str_32(outer));
+                    } else {
+                        strcat(mode, make_signed_hex_str_16(outer));
+                    }
 				}
 				strcat(mode, ")");
 				break;
@@ -641,7 +650,11 @@ static char* get_ea_mode_str(uint instruction, uint size)
 				{
 					if(comma)
 						strcat(mode, ",");
-					strcat(mode, make_signed_hex_str_16(outer));
+                    if (EXT_OUTER_DISPLACEMENT_LONG(extension)) {
+                        strcat(mode, make_signed_hex_str_32(outer));
+                    } else {
+                        strcat(mode, make_signed_hex_str_16(outer));
+                    }
 				}
 				strcat(mode, ")");
 				break;
@@ -2465,22 +2478,33 @@ static void d68000_movem_re_32(void)
 
 static void d68000_movep_re_16(void)
 {
-	sprintf(g_dasm_str, "movep.w D%d, ($%x,A%d)", (g_cpu_ir>>9)&7, read_imm_16(), g_cpu_ir&7);
+	// sprintf(g_dasm_str, "movep.w D%d, ($%x,A%d)", (g_cpu_ir>>9)&7, read_imm_16(), g_cpu_ir&7);
+
+    // FIXED:
+    sprintf(g_dasm_str, "movep.w D%d, ($%s,A%d)", (g_cpu_ir>>9)&7, make_signed_hex_str_16(read_imm_16()), g_cpu_ir&7);
 }
 
 static void d68000_movep_re_32(void)
 {
-	sprintf(g_dasm_str, "movep.l D%d, ($%x,A%d)", (g_cpu_ir>>9)&7, read_imm_16(), g_cpu_ir&7);
+	// sprintf(g_dasm_str, "movep.l D%d, ($%x,A%d)", (g_cpu_ir>>9)&7, read_imm_16(), g_cpu_ir&7);
+
+    // FIXED:
+    sprintf(g_dasm_str, "movep.l D%d, ($%s,A%d)", (g_cpu_ir>>9)&7, make_signed_hex_str_16(read_imm_16()), g_cpu_ir&7);
 }
 
 static void d68000_movep_er_16(void)
 {
-	sprintf(g_dasm_str, "movep.w ($%x,A%d), D%d", read_imm_16(), g_cpu_ir&7, (g_cpu_ir>>9)&7);
+	// sprintf(g_dasm_str, "movep.w ($%x,A%d), D%d", read_imm_16(), g_cpu_ir&7, (g_cpu_ir>>9)&7);
+
+    // FIXED:
+    sprintf(g_dasm_str, "movep.w (%s,A%d), D%d", make_signed_hex_str_16(read_imm_16()), g_cpu_ir&7, (g_cpu_ir>>9)&7);
 }
 
 static void d68000_movep_er_32(void)
 {
-	sprintf(g_dasm_str, "movep.l ($%x,A%d), D%d", read_imm_16(), g_cpu_ir&7, (g_cpu_ir>>9)&7);
+	// sprintf(g_dasm_str, "movep.l ($%x,A%d), D%d", read_imm_16(), g_cpu_ir&7, (g_cpu_ir>>9)&7);
+
+    sprintf(g_dasm_str, "movep.l (%s,A%d), D%d", make_signed_hex_str_16(read_imm_16()), g_cpu_ir&7, (g_cpu_ir>>9)&7);
 }
 
 static void d68010_moves_8(void)

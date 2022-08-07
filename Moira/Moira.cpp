@@ -454,9 +454,9 @@ Moira::disassemble(u32 addr, char *str, DasmStyle core)
     u32 pc     = addr;
     u16 opcode = read16Dasm(pc);
 
-    StrWriter writer(str, numberFormat, upper);
+    StrWriter writer(this, str, dasmStyle, numberFormat, upper);
 
-    (this->*dasm[opcode])(core, writer, pc, opcode);
+    (this->*dasm[opcode])(dasmStyle, writer, pc, opcode);
     writer << Finish{};
 
     return pc - addr + 2;

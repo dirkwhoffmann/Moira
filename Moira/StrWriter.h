@@ -40,20 +40,31 @@ template <Instr I>        struct Ins { };
 template <Size S>         struct Sz  { };
 template <Mode M, Size S> struct Ea  { u32 pc; u16 reg; u32 ext1; u32 ext2; u32 ext3; };
 
+struct Sep        { };
 struct Finish     { };
 
 class StrWriter
 {
-    char comment[32];  // Appended to the end of the disassembled string
-    char *base;        // Start address of the destination string
-    char *ptr;         // Current writing position
-    DasmNumberFormat nf; //  bool hex;          // Number format: Hexadecimal / Decimal
-    bool upper;        // Text format: Upper case / Lower case
+    
+public:
+
+    char comment[32];       // Appended to the end of the disassembled string
+    Moira *moira;
+    char *base;             // Start address of the destination string
+    char *ptr;              // Current writing position
+    DasmStyle style;
+    DasmNumberFormat nf;
+    bool upper;             // Text format: Upper case / Lower case
 
 public:
 
-    StrWriter(char *p, DasmNumberFormat n, bool u) : base(p), ptr(p), nf(n), upper(u)
-    {
+    StrWriter(Moira *m, char *p, DasmStyle s, DasmNumberFormat n, bool u) {
+
+        moira = m;
+        base = ptr = p;
+        style = s;
+        nf = n;
+        upper = u;
         comment[0] = 0;
     };
 
@@ -84,6 +95,7 @@ public:
     template <Instr I> StrWriter& operator<<(Ins<I> i);
     template <Size S> StrWriter& operator<<(Sz<S> sz);
     template <Mode M, Size S> StrWriter& operator<<(const Ea<M,S> &ea);
+    StrWriter& operator<<(Sep sep);
     StrWriter& operator<<(Finish finish);
 
 private:

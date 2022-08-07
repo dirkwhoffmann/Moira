@@ -199,20 +199,20 @@ static ulong read32(ushort *p)
   return ((ulong)*(uchar *)p)<<24 | ((ulong)*((uchar *)p+1))<<16 |
          ((ulong)*((uchar *)p+2))<<8 | (ulong)*((uchar *)p+3);
 }
-static ushort read32(short *p) { return read32((ushort *)p); }
+static ulong read32(short *p) { return read32((ushort *)p); }
 
 static short read16s(ushort *p)
 {
   return (short)((ushort)*(uchar *)p)<<8 | (ushort)*((uchar *)p+1);
 }
-static ushort read16s(short *p) { return read16s((ushort *)p); }
+static short read16s(short *p) { return read16s((ushort *)p); }
 
 static long read32s(ushort *p)
 {
   return (long)((ulong)*(uchar *)p)<<24 | ((ulong)*((uchar *)p+1))<<16 |
                 ((ulong)*((uchar *)p+2))<<8 | (ulong)*((uchar *)p+3);
 }
-static ushort read32s(short *p) { return read32s((ushort *)p); }
+static long read32s(short *p) { return read32s((ushort *)p); }
 
 
 m68k_word *M68k_Disassemble(struct DisasmPara_68k *dp)
@@ -2456,7 +2456,7 @@ void get_modregstr_moto(dis_buffer_t *dbuf, int bit, int mod, int sz, int dd)
   const short *nval;
   ushort ext;
   int disp, odisp, bd, od, reg;
-  
+
   odisp = 0;
 
   /* check to see if we have been given the mod */
@@ -2550,7 +2550,7 @@ void get_modregstr_moto(dis_buffer_t *dbuf, int bit, int mod, int sz, int dd)
     }
     /* standrd PC stuff. */
     /*FALLTHROUGH*/
-  case AR_IDX: 
+  case AR_IDX:
     ext = read16(dbuf->val + 1 + dd);
     dbuf->used++;
     nval = dbuf->val + 2 + dd; /* set to possible displacements */
@@ -2607,7 +2607,7 @@ void get_modregstr_moto(dis_buffer_t *dbuf, int bit, int mod, int sz, int dd)
     addchar(',');
     if (bd && ISBITSET(ext,7)) {
       addchar('z');
-      if (mod != MOD_SPECIAL) 
+      if (mod != MOD_SPECIAL)
         PRINT_AREG(dbuf,reg);
       else {
         addchar('p');
@@ -2890,7 +2890,7 @@ void get_modregstr_mit(dis_buffer_t *dbuf,int bit, int mod, int sz, int dd)
  */
 void get_modregstr(dis_buffer_t *dbuf, int bit, int mod, int sz, int dispdisp)
 {
-  if (dbuf->mit) 
+  if (dbuf->mit)
     get_modregstr_mit(dbuf,bit,mod,sz,dispdisp);
   else 
     get_modregstr_moto(dbuf,bit,mod,sz,dispdisp);
