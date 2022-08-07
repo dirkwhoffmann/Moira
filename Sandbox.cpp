@@ -12,15 +12,10 @@
 #include "MoiraConfig.h"
 #include "Sandbox.h"
 
-Sandbox::Sandbox()
-{
-    prepare();
-}
-
 void
-Sandbox::prepare(u32 opcode)
+Sandbox::prepare(u16 opcode)
 {
-    enabled = doExec((int)opcode);
+    enabled = doExec((int)opcode) && !skip(opcode);
     recordCnt = replayCnt = 0;
     errors = 0;
 }

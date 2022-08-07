@@ -72,6 +72,6 @@
  * instructions. It is intended to invoke debug code. Make sure to define it
  * as an empty macro in release builds.
  */
-#define EXEC_DEBUG { } //  printf("%s(%d,%d,%d,%d)\n", __func__, C, I, M, S); }
+#define EXEC_DEBUG { } // printf("%s(%d,%d,%d,%d)\n", __func__, C, I, M, S); }
 
 // #define NDEBUG true

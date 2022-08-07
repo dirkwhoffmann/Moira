@@ -210,7 +210,7 @@ void run()
             setupInstruction(setup, pc, u16(opcode));
 
             // Reset the sandbox (memory accesses observer)
-            sandbox.prepare(opcode);
+            sandbox.prepare(u16(opcode));
 
             // Execute both CPU cores
             runSingleTest(setup);
@@ -258,18 +258,13 @@ clock_t runMusashi(Setup &s, Result &r)
             break;
     }
 
-    if (!skip(r.opcode)) {
-        
-        if (VERBOSE)
-            printf("$%04x ($%04x): %s (Musashi)\n", r.oldpc, r.opcode, r.dasm);
+    if (VERBOSE)
+        printf("$%04x ($%04x): %s (Musashi)\n", r.oldpc, r.opcode, r.dasm);
 
-        elapsed = clock();
-        r.cycles = m68k_execute(1);
-        elapsed = clock() - elapsed;
-
-    } else {
-        r.cycles = 0;
-    }
+    // Run Musashi
+    elapsed = clock();
+    r.cycles = m68k_execute(1);
+    elapsed = clock() - elapsed;
 
     // Record the result
     recordMusashiRegisters(r);
@@ -289,15 +284,14 @@ clock_t runMoira(Setup &s, Result &r)
     u16 op = get16(moiraMem, pc);
 
     int64_t cycles = moiracpu->getClock();
-    if (!skip(op)) {
 
         if (VERBOSE)
             printf("$%04x ($%04x): %s (Moira)\n", r.oldpc, r.opcode, r.dasm);
 
-        elapsed = clock();
-        moiracpu->execute();
-        elapsed = clock() - elapsed;
-    }
+    // Run Moira
+    elapsed = clock();
+    moiracpu->execute();
+    elapsed = clock() - elapsed;
 
     // Record the result
     r.cycles = (int)(moiracpu->getClock() - cycles);
@@ -416,49 +410,53 @@ void compare(Setup &s, Result &r1, Result &r2)
             printf("\nPROGRAM COUNTER MISMATCH FOUND");
             error = true;
         }
-        if (!compareSR(r1, r2)) {
-            printf("\nSTATUS REGISTER MISMATCH FOUND");
-            error = true;
-        }
-        if (!compareUSP(r1, r2)) {
-            printf("\nUSP MISMATCH FOUND");
-            error = true;
-        }
-        if (!compareISP(r1, r2)) {
-            printf("\nISP MISMATCH FOUND");
-            error = true;
-        }
-        if (!compareMSP(r1, r2)) {
-            printf("\nMSP MISMATCH FOUND");
-            error = true;
-        }
         if (!compareCycles(r1, r2)) {
             printf("\nCLOCK MISMATCH FOUND");
             error = true;
         }
-        if (!compareD(r1, r2)) {
-            printf("\nDATA REGISTER MISMATCH FOUND");
-            error = true;
-        }
-        if (!compareA(r1, r2)) {
-            printf("\nADDRESS REGISTER MISMATCH FOUND");
-            error = true;
-        }
-        if (!compareVBR(r1, r2)) {
-            printf("\nVBR REGISTER MISMATCH FOUND");
-            error = true;
-        }
-        if (!compareSFC(r1, r2)) {
-            printf("\nSFC REGISTER MISMATCH FOUND");
-            error = true;
-        }
-        if (!compareDFC(r1, r2)) {
-            printf("\nDFC REGISTER MISMATCH FOUND");
-            error = true;
-        }
-        if (sandbox.getErrors()) {
-            printf("\nSANDBOX ERRORS REPORTED");
-            error = true;
+
+        if (!skip(s.opcode)) {
+
+            if (!compareSR(r1, r2)) {
+                printf("\nSTATUS REGISTER MISMATCH FOUND");
+                error = true;
+            }
+            if (!compareUSP(r1, r2)) {
+                printf("\nUSP MISMATCH FOUND");
+                error = true;
+            }
+            if (!compareISP(r1, r2)) {
+                printf("\nISP MISMATCH FOUND");
+                error = true;
+            }
+            if (!compareMSP(r1, r2)) {
+                printf("\nMSP MISMATCH FOUND");
+                error = true;
+            }
+            if (!compareD(r1, r2)) {
+                printf("\nDATA REGISTER MISMATCH FOUND");
+                error = true;
+            }
+            if (!compareA(r1, r2)) {
+                printf("\nADDRESS REGISTER MISMATCH FOUND");
+                error = true;
+            }
+            if (!compareVBR(r1, r2)) {
+                printf("\nVBR REGISTER MISMATCH FOUND");
+                error = true;
+            }
+            if (!compareSFC(r1, r2)) {
+                printf("\nSFC REGISTER MISMATCH FOUND");
+                error = true;
+            }
+            if (!compareDFC(r1, r2)) {
+                printf("\nDFC REGISTER MISMATCH FOUND");
+                error = true;
+            }
+            if (sandbox.getErrors()) {
+                printf("\nSANDBOX ERRORS REPORTED");
+                error = true;
+            }
         }
     }
 

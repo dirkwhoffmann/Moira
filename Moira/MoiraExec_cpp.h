@@ -223,6 +223,10 @@ Moira::execAbcdRg(u16 opcode)
     SYNC(2);
     writeD<Byte>(dst, result);
 
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 6,  6,  4,        0,  0,  0,        0,  0,  0)
+
     FINALIZE
 }
 
@@ -243,6 +247,10 @@ Moira::execAbcdEa(u16 opcode)
     looping<I>() ? noPrefetch() : prefetch<C>();
 
     writeM<C, M, Byte>(ea2, result);
+
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_PD   (18, 18, 16,        0,  0,  0,        0,  0,  0)
 
     FINALIZE
 }
@@ -3776,6 +3784,10 @@ Moira::execNbcdRg(u16 opcode)
     SYNC(2);
     writeD<Byte>(reg, bcd<C, SBCD, Byte>(readD<Byte>(reg), 0));
 
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 6,  6,  6,        0,  0,  0,        0,  0,  0)
+
     FINALIZE
 }
 
@@ -3791,6 +3803,16 @@ Moira::execNbcdEa(u16 opcode)
 
     prefetch<C, POLLIPL>();
     writeM<C, M, Byte>(ea, bcd<C, SBCD, Byte>(data, 0));
+
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_AI   (12, 12, 10,        0,  0,  0,        0,  0,  0)
+    CYCLES_PI   (12, 12, 10,        0,  0,  0,        0,  0,  0)
+    CYCLES_PD   (14, 14, 11,        0,  0,  0,        0,  0,  0)
+    CYCLES_DI   (16, 16, 11,        0,  0,  0,        0,  0,  0)
+    CYCLES_IX   (18, 18, 13,        0,  0,  0,        0,  0,  0)
+    CYCLES_AW   (16, 16, 10,        0,  0,  0,        0,  0,  0)
+    CYCLES_AL   (20, 20, 10,        0,  0,  0,        0,  0,  0)
 
     FINALIZE
 }
