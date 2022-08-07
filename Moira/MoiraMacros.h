@@ -49,6 +49,11 @@ if constexpr (M == m) { CYCLES_BWL_00(m,b0,w0,l0) } \
 if constexpr (M == m) { CYCLES_BWL_10(m,b1,w1,l1) } \
 if constexpr (M == m) { CYCLES_BWL_20(m,b2,w2,l2) }
 
+#define CYCLES_IBWL(i,b0,b1,b2,w0,w1,w2,l0,l1,l2) \
+if constexpr (I == i) { CYCLES_BWL_00(m,b0,w0,l0) } \
+if constexpr (I == i) { CYCLES_BWL_10(m,b1,w1,l1) } \
+if constexpr (I == i) { CYCLES_BWL_20(m,b2,w2,l2) }
+
 #define CYCLES_DN(...)      CYCLES_MBWL(MODE_DN,    ##__VA_ARGS__)
 #define CYCLES_AN(...)      CYCLES_MBWL(MODE_AN,    ##__VA_ARGS__)
 #define CYCLES_AI(...)      CYCLES_MBWL(MODE_AI,    ##__VA_ARGS__)

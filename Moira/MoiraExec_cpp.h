@@ -167,38 +167,43 @@ Moira::execShiftEa(u16 op)
     if (!readOp<C, M, S, STD_AE_FRAME>(src, ea, data)) return;
 
     looping<I>() ? noPrefetch() : prefetch<C, POLLIPL>();
-
     writeM<C, M, S>(ea, shift <C,I,S> (1, data));
 
     if constexpr (I == ROR || I == ROL) {
 
-        CYCLES_AI   ( 0,  0,  0,      12, 12, 11,      0,  0,  0)
-        CYCLES_PI   ( 0,  0,  0,      12, 12, 11,      0,  0,  0)
-        CYCLES_PD   ( 0,  0,  0,      14, 14, 12,      0,  0,  0)
-        CYCLES_DI   ( 0,  0,  0,      16, 16, 12,      0,  0,  0)
-        CYCLES_IX   ( 0,  0,  0,      18, 18, 14,      0,  0,  0)
-        CYCLES_AW   ( 0,  0,  0,      16, 16, 11,      0,  0,  0)
-        CYCLES_AL   ( 0,  0,  0,      20, 20, 11,      0,  0,  0)
+        //           00  10  20        00  10  20        00  10  20
+        //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+        CYCLES_AI   ( 0,  0,  0,       12, 12, 11,        0,  0,  0)
+        CYCLES_PI   ( 0,  0,  0,       12, 12, 11,        0,  0,  0)
+        CYCLES_PD   ( 0,  0,  0,       14, 14, 12,        0,  0,  0)
+        CYCLES_DI   ( 0,  0,  0,       16, 16, 12,        0,  0,  0)
+        CYCLES_IX   ( 0,  0,  0,       18, 18, 14,        0,  0,  0)
+        CYCLES_AW   ( 0,  0,  0,       16, 16, 11,        0,  0,  0)
+        CYCLES_AL   ( 0,  0,  0,       20, 20, 11,        0,  0,  0)
 
     } else if constexpr (I == ASL) {
 
-        CYCLES_AI   ( 0,  0,  0,      12, 12, 10,      0,  0,  0)
-        CYCLES_PI   ( 0,  0,  0,      12, 12, 10,      0,  0,  0)
-        CYCLES_PD   ( 0,  0,  0,      14, 14, 11,      0,  0,  0)
-        CYCLES_DI   ( 0,  0,  0,      16, 16, 11,      0,  0,  0)
-        CYCLES_IX   ( 0,  0,  0,      18, 18, 13,      0,  0,  0)
-        CYCLES_AW   ( 0,  0,  0,      16, 16, 10,      0,  0,  0)
-        CYCLES_AL   ( 0,  0,  0,      20, 20, 10,      0,  0,  0)
+        //           00  10  20        00  10  20        00  10  20
+        //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+        CYCLES_AI   ( 0,  0,  0,       12, 12, 10,        0,  0,  0)
+        CYCLES_PI   ( 0,  0,  0,       12, 12, 10,        0,  0,  0)
+        CYCLES_PD   ( 0,  0,  0,       14, 14, 11,        0,  0,  0)
+        CYCLES_DI   ( 0,  0,  0,       16, 16, 11,        0,  0,  0)
+        CYCLES_IX   ( 0,  0,  0,       18, 18, 13,        0,  0,  0)
+        CYCLES_AW   ( 0,  0,  0,       16, 16, 10,        0,  0,  0)
+        CYCLES_AL   ( 0,  0,  0,       20, 20, 10,        0,  0,  0)
 
     } else {
 
-        CYCLES_AI   ( 0,  0,  0,      12, 12,  9,      0,  0,  0)
-        CYCLES_PI   ( 0,  0,  0,      12, 12,  9,      0,  0,  0)
-        CYCLES_PD   ( 0,  0,  0,      14, 14, 10,      0,  0,  0)
-        CYCLES_DI   ( 0,  0,  0,      16, 16, 10,      0,  0,  0)
-        CYCLES_IX   ( 0,  0,  0,      18, 18, 12,      0,  0,  0)
-        CYCLES_AW   ( 0,  0,  0,      16, 16,  9,      0,  0,  0)
-        CYCLES_AL   ( 0,  0,  0,      20, 20,  9,      0,  0,  0)
+        //           00  10  20        00  10  20        00  10  20
+        //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+        CYCLES_AI   ( 0,  0,  0,       12, 12,  9,        0,  0,  0)
+        CYCLES_PI   ( 0,  0,  0,       12, 12,  9,        0,  0,  0)
+        CYCLES_PD   ( 0,  0,  0,       14, 14, 10,        0,  0,  0)
+        CYCLES_DI   ( 0,  0,  0,       16, 16, 10,        0,  0,  0)
+        CYCLES_IX   ( 0,  0,  0,       18, 18, 12,        0,  0,  0)
+        CYCLES_AW   ( 0,  0,  0,       16, 16,  9,        0,  0,  0)
+        CYCLES_AL   ( 0,  0,  0,       20, 20,  9,        0,  0,  0)
     }
 
     FINALIZE
@@ -265,18 +270,20 @@ Moira::execAddEaRg(u16 opcode)
     }
     writeD<S>(dst, result);
 
-    CYCLES_DN   ( 4,  4,  2,       4,  4,  2,      8,  6,  2)
-    CYCLES_AN   ( 0,  0,  0,       4,  4,  2,      8,  6,  2)
-    CYCLES_AI   ( 8,  8,  6,       8,  8,  6,     14, 14,  6)
-    CYCLES_PI   ( 8,  8,  6,       8,  8,  6,     14, 14,  6)
-    CYCLES_PD   (10, 10,  7,      10, 10,  7,     16, 16,  7)
-    CYCLES_DI   (12, 12,  7,      12, 12,  7,     18, 18,  7)
-    CYCLES_IX   (14, 14,  9,      14, 14,  9,     20, 20,  9)
-    CYCLES_AW   (12, 12,  6,      12, 12,  6,     18, 18,  6)
-    CYCLES_AL   (16, 16,  6,      16, 16,  6,     22, 22,  6)
-    CYCLES_DIPC (12, 12,  7,      12, 12,  7,     18, 18,  7)
-    CYCLES_IXPC (14, 14,  9,      14, 14,  9,     20, 20,  9)
-    CYCLES_IM   ( 8,  8,  4,       8,  8,  4,     16, 14,  6)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 4,  4,  2,        4,  4,  2,        8,  6,  2)
+    CYCLES_AN   ( 0,  0,  0,        4,  4,  2,        8,  6,  2)
+    CYCLES_AI   ( 8,  8,  6,        8,  8,  6,       14, 14,  6)
+    CYCLES_PI   ( 8,  8,  6,        8,  8,  6,       14, 14,  6)
+    CYCLES_PD   (10, 10,  7,       10, 10,  7,       16, 16,  7)
+    CYCLES_DI   (12, 12,  7,       12, 12,  7,       18, 18,  7)
+    CYCLES_IX   (14, 14,  9,       14, 14,  9,       20, 20,  9)
+    CYCLES_AW   (12, 12,  6,       12, 12,  6,       18, 18,  6)
+    CYCLES_AL   (16, 16,  6,       16, 16,  6,       22, 22,  6)
+    CYCLES_DIPC (12, 12,  7,       12, 12,  7,       18, 18,  7)
+    CYCLES_IXPC (14, 14,  9,       14, 14,  9,       20, 20,  9)
+    CYCLES_IM   ( 8,  8,  4,        8,  8,  4,       16, 14,  6)
 
     FINALIZE
 }
@@ -298,13 +305,15 @@ Moira::execAddRgEa(u16 opcode)
 
     writeM<C, M, S>(ea, result);
 
-    CYCLES_AI   (12, 12,  8,      12, 12,  8,     20, 20,  8)
-    CYCLES_PI   (12, 12,  8,      12, 12,  8,     20, 20,  8)
-    CYCLES_PD   (14, 14,  9,      14, 14,  9,     22, 22,  9)
-    CYCLES_DI   (16, 16,  9,      16, 16,  9,     24, 24,  9)
-    CYCLES_IX   (18, 18, 11,      18, 18, 11,     26, 26, 11)
-    CYCLES_AW   (16, 16,  8,      16, 16,  8,     24, 24,  8)
-    CYCLES_AL   (20, 20,  8,      20, 20,  8,     28, 28,  8)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_AI   (12, 12,  8,       12, 12,  8,       20, 20,  8)
+    CYCLES_PI   (12, 12,  8,       12, 12,  8,       20, 20,  8)
+    CYCLES_PD   (14, 14,  9,       14, 14,  9,       22, 22,  9)
+    CYCLES_DI   (16, 16,  9,       16, 16,  9,       24, 24,  9)
+    CYCLES_IX   (18, 18, 11,       18, 18, 11,       26, 26, 11)
+    CYCLES_AW   (16, 16,  8,       16, 16,  8,       24, 24,  8)
+    CYCLES_AL   (20, 20,  8,       20, 20,  8,       28, 28,  8)
 
     FINALIZE
 }
@@ -334,18 +343,20 @@ Moira::execAdda(u16 opcode)
 
     writeA(dst, result);
 
-    CYCLES_DN   ( 0,  0,  0,       8,  8,  2,      8,  6,  2)
-    CYCLES_AN   ( 0,  0,  0,       8,  8,  2,      8,  6,  2)
-    CYCLES_AI   ( 0,  0,  0,      12, 12,  6,     14, 14,  6)
-    CYCLES_PI   ( 0,  0,  0,      12, 12,  6,     14, 14,  6)
-    CYCLES_PD   ( 0,  0,  0,      14, 14,  7,     16, 16,  7)
-    CYCLES_DI   ( 0,  0,  0,      16, 16,  7,     18, 18,  7)
-    CYCLES_IX   ( 0,  0,  0,      18, 18,  9,     20, 20,  9)
-    CYCLES_AW   ( 0,  0,  0,      16, 16,  6,     18, 18,  6)
-    CYCLES_AL   ( 0,  0,  0,      20, 20,  6,     22, 22,  6)
-    CYCLES_DIPC ( 0,  0,  0,      16, 16,  7,     18, 18,  7)
-    CYCLES_IXPC ( 0,  0,  0,      18, 18,  9,     20, 20,  9)
-    CYCLES_IM   ( 0,  0,  0,      12, 12,  4,     16, 14,  6)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 0,  0,  0,        8,  8,  2,        8,  6,  2)
+    CYCLES_AN   ( 0,  0,  0,        8,  8,  2,        8,  6,  2)
+    CYCLES_AI   ( 0,  0,  0,       12, 12,  6,       14, 14,  6)
+    CYCLES_PI   ( 0,  0,  0,       12, 12,  6,       14, 14,  6)
+    CYCLES_PD   ( 0,  0,  0,       14, 14,  7,       16, 16,  7)
+    CYCLES_DI   ( 0,  0,  0,       16, 16,  7,       18, 18,  7)
+    CYCLES_IX   ( 0,  0,  0,       18, 18,  9,       20, 20,  9)
+    CYCLES_AW   ( 0,  0,  0,       16, 16,  6,       18, 18,  6)
+    CYCLES_AL   ( 0,  0,  0,       20, 20,  6,       22, 22,  6)
+    CYCLES_DIPC ( 0,  0,  0,       16, 16,  7,       18, 18,  7)
+    CYCLES_IXPC ( 0,  0,  0,       18, 18,  9,       20, 20,  9)
+    CYCLES_IM   ( 0,  0,  0,       12, 12,  4,       16, 14,  6)
 
     FINALIZE
 }
@@ -367,15 +378,17 @@ Moira::execAddiRg(u16 opcode)
     if constexpr (S == Long) { SYNC_68000(4); SYNC_68010(2); }
     writeD<S>(dst, result);
 
-    CYCLES_DN (8,   8,  2,       8,  8,  2,     16, 14,  2)
-    CYCLES_AI (16, 16,  8,      16, 16,  8,     28, 28,  8)
-    CYCLES_PI (16, 16,  8,      16, 16,  8,     28, 28,  8)
-    CYCLES_PD (18, 18,  9,      18, 18,  9,     30, 30,  9)
-    CYCLES_DI (20, 20,  9,      20, 20,  9,     32, 32,  9)
-    CYCLES_IX (22, 22, 11,      22, 22, 11,     34, 34, 11)
-    CYCLES_AW (20, 20,  8,      20, 20,  8,     32, 32,  8)
-    CYCLES_AL (24, 24,  8,      24, 24,  8,     36, 36,  8)
-    CYCLES_IM (22, 22, 11,      22, 22, 11,     34, 34, 11)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   (8,   8,  2,        8,  8,  2,       16, 14,  2)
+    CYCLES_AI   (16, 16,  8,       16, 16,  8,       28, 28,  8)
+    CYCLES_PI   (16, 16,  8,       16, 16,  8,       28, 28,  8)
+    CYCLES_PD   (18, 18,  9,       18, 18,  9,       30, 30,  9)
+    CYCLES_DI   (20, 20,  9,       20, 20,  9,       32, 32,  9)
+    CYCLES_IX   (22, 22, 11,       22, 22, 11,       34, 34, 11)
+    CYCLES_AW   (20, 20,  8,       20, 20,  8,       32, 32,  8)
+    CYCLES_AL   (24, 24,  8,       24, 24,  8,       36, 36,  8)
+    CYCLES_IM   (22, 22, 11,       22, 22, 11,       34, 34, 11)
 
     FINALIZE
 }
@@ -397,15 +410,17 @@ Moira::execAddiEa(u16 opcode)
 
     writeOp<C, M, S, POLLIPL>(dst, ea, result);
 
-    CYCLES_DN (8,   8,  2,       8,  8,  2,     16, 14,  2)
-    CYCLES_AI (16, 16,  8,      16, 16,  8,     28, 28,  8)
-    CYCLES_PI (16, 16,  8,      16, 16,  8,     28, 28,  8)
-    CYCLES_PD (18, 18,  9,      18, 18,  9,     30, 30,  9)
-    CYCLES_DI (20, 20,  9,      20, 20,  9,     32, 32,  9)
-    CYCLES_IX (22, 22, 11,      22, 22, 11,     34, 34, 11)
-    CYCLES_AW (20, 20,  8,      20, 20,  8,     32, 32,  8)
-    CYCLES_AL (24, 24,  8,      24, 24,  8,     36, 36,  8)
-    CYCLES_IM (22, 22, 11,      22, 22, 11,     34, 34, 11)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   (8,   8,  2,        8,  8,  2,       16, 14,  2)
+    CYCLES_AI   (16, 16,  8,       16, 16,  8,       28, 28,  8)
+    CYCLES_PI   (16, 16,  8,       16, 16,  8,       28, 28,  8)
+    CYCLES_PD   (18, 18,  9,       18, 18,  9,       30, 30,  9)
+    CYCLES_DI   (20, 20,  9,       20, 20,  9,       32, 32,  9)
+    CYCLES_IX   (22, 22, 11,       22, 22, 11,       34, 34, 11)
+    CYCLES_AW   (20, 20,  8,       20, 20,  8,       32, 32,  8)
+    CYCLES_AL   (24, 24,  8,       24, 24,  8,       36, 36,  8)
+    CYCLES_IM   (22, 22, 11,       22, 22, 11,       34, 34, 11)
 
     FINALIZE
 }
@@ -425,7 +440,10 @@ Moira::execAddqDn(u16 opcode)
     if constexpr (S == Long) SYNC(4);
     writeD<S>(dst, result);
 
-    CYCLES_DN ( 4,  4,  2,       4,  4,  2,      8,  8,  2)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 4,  4,  2,        4,  4,  2,        8,  8,  2)
+
     FINALIZE
 }
 
@@ -444,7 +462,10 @@ Moira::execAddqAn(u16 opcode)
     if (core == M68000 || S == Long) SYNC(4);
     writeA(dst, result);
 
-    CYCLES_AN ( 0,  0,  0,       8,  4,  2,      8,  8,  2)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_AN   ( 0,  0,  0,        8,  4,  2,        8,  8,  2)
+
     FINALIZE
 }
 
@@ -465,13 +486,15 @@ Moira::execAddqEa(u16 opcode)
 
     writeOp<C, M, S>(dst, ea, result);
 
-    CYCLES_AI (12, 12,  8,      12, 12,  8,     20, 20,  8)
-    CYCLES_PI (12, 12,  8,      12, 12,  8,     20, 20,  8)
-    CYCLES_PD (14, 14,  9,      14, 14,  9,     22, 22,  9)
-    CYCLES_DI (16, 16,  9,      16, 16,  9,     24, 24,  9)
-    CYCLES_IX (18, 18, 11,      18, 18, 11,     26, 26, 11)
-    CYCLES_AW (16, 16,  8,      16, 16,  8,     24, 24,  8)
-    CYCLES_AL (20, 20,  8,      20, 20,  8,     28, 28,  8)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_AI   (12, 12,  8,       12, 12,  8,       20, 20,  8)
+    CYCLES_PI   (12, 12,  8,       12, 12,  8,       20, 20,  8)
+    CYCLES_PD   (14, 14,  9,       14, 14,  9,       22, 22,  9)
+    CYCLES_DI   (16, 16,  9,       16, 16,  9,       24, 24,  9)
+    CYCLES_IX   (18, 18, 11,       18, 18, 11,       26, 26, 11)
+    CYCLES_AW   (16, 16,  8,       16, 16,  8,       24, 24,  8)
+    CYCLES_AL   (20, 20,  8,       20, 20,  8,       28, 28,  8)
 
     FINALIZE
 }
@@ -495,7 +518,10 @@ Moira::execAddxRg(u16 opcode)
 
     writeD<S>(dst, result);
 
-    CYCLES_DN ( 4,  4,  2,       4,  4,  2,      8,  6,  2)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 4,  4,  2,        4,  4,  2,        8,  6,  2)
+
     FINALIZE
 }
 
@@ -537,7 +563,10 @@ Moira::execAddxEa(u16 opcode)
         writeM<C, M, S>(ea2, result);
     }
 
-    CYCLES_PD (18, 18, 12,      18, 18, 12,     30, 30, 12)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_PD   (18, 18, 12,       18, 18, 12,       30, 30, 12)
+
     FINALIZE
 }
 
@@ -563,17 +592,19 @@ Moira::execAndEaRg(u16 opcode)
 
     writeD<S>(dst, result);
 
-    CYCLES_DN   ( 4,  4,  2,       4,  4,  2,      8,  6,  2)
-    CYCLES_AI   ( 8,  8,  6,       8,  8,  6,     14, 14,  6)
-    CYCLES_PI   ( 8,  8,  6,       8,  8,  6,     14, 14,  6)
-    CYCLES_PD   (10, 10,  7,      10, 10,  7,     16, 16,  7)
-    CYCLES_DI   (12, 12,  7,      12, 12,  7,     18, 18,  7)
-    CYCLES_IX   (14, 14,  9,      14, 14,  9,     20, 20,  9)
-    CYCLES_AW   (12, 12,  6,      12, 12,  6,     18, 18,  6)
-    CYCLES_AL   (16, 16,  6,      16, 16,  6,     22, 22,  6)
-    CYCLES_DIPC (12, 12,  7,      12, 12,  7,     18, 18,  7)
-    CYCLES_IXPC (14, 14,  9,      14, 14,  9,     20, 20,  9)
-    CYCLES_IM   ( 8,  8,  4,       8,  8,  4,     16, 14,  6)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 4,  4,  2,        4,  4,  2,        8,  6,  2)
+    CYCLES_AI   ( 8,  8,  6,        8,  8,  6,       14, 14,  6)
+    CYCLES_PI   ( 8,  8,  6,        8,  8,  6,       14, 14,  6)
+    CYCLES_PD   (10, 10,  7,       10, 10,  7,       16, 16,  7)
+    CYCLES_DI   (12, 12,  7,       12, 12,  7,       18, 18,  7)
+    CYCLES_IX   (14, 14,  9,       14, 14,  9,       20, 20,  9)
+    CYCLES_AW   (12, 12,  6,       12, 12,  6,       18, 18,  6)
+    CYCLES_AL   (16, 16,  6,       16, 16,  6,       22, 22,  6)
+    CYCLES_DIPC (12, 12,  7,       12, 12,  7,       18, 18,  7)
+    CYCLES_IXPC (14, 14,  9,       14, 14,  9,       20, 20,  9)
+    CYCLES_IM   ( 8,  8,  4,        8,  8,  4,       16, 14,  6)
 
     FINALIZE
 }
@@ -604,14 +635,16 @@ Moira::execAndRgEa(u16 opcode)
         writeOp<C, M, S, REVERSE>(dst, ea, result);
     }
 
-    CYCLES_DN   ( 4,  4,  2,       4,  4,  2,      8,  6,  2)
-    CYCLES_AI   (12, 12,  8,      12, 12,  8,     20, 20,  8)
-    CYCLES_PI   (12, 12,  8,      12, 12,  8,     20, 20,  8)
-    CYCLES_PD   (14, 14,  9,      14, 14,  9,     22, 22,  9)
-    CYCLES_DI   (16, 16,  9,      16, 16,  9,     24, 24,  9)
-    CYCLES_IX   (18, 18, 11,      18, 18, 11,     26, 26, 11)
-    CYCLES_AW   (16, 16,  8,      16, 16,  8,     24, 24,  8)
-    CYCLES_AL   (20, 20,  8,      20, 20,  8,     28, 28,  8)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 4,  4,  2,        4,  4,  2,        8,  6,  2)
+    CYCLES_AI   (12, 12,  8,       12, 12,  8,       20, 20,  8)
+    CYCLES_PI   (12, 12,  8,       12, 12,  8,       20, 20,  8)
+    CYCLES_PD   (14, 14,  9,       14, 14,  9,       22, 22,  9)
+    CYCLES_DI   (16, 16,  9,       16, 16,  9,       24, 24,  9)
+    CYCLES_IX   (18, 18, 11,       18, 18, 11,       26, 26, 11)
+    CYCLES_AW   (16, 16,  8,       16, 16,  8,       24, 24,  8)
+    CYCLES_AL   (20, 20,  8,       20, 20,  8,       28, 28,  8)
 
     FINALIZE
 }
@@ -630,7 +663,10 @@ Moira::execAndiRg(u16 opcode)
     if constexpr (S == Long) { SYNC_68000(4); SYNC_68010(2); }
     writeD<S>(dst, result);
 
-    CYCLES_DN ( 8,  8,  2,      8,  8,  2,      16, 14, 2)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 8,  8,  2,        8,  8,  2,       16, 14,  2)
+
     FINALIZE
 }
 
@@ -655,13 +691,15 @@ Moira::execAndiEa(u16 opcode)
         writeOp<C, M, S, REVERSE>(dst, ea, result);
     }
 
-    CYCLES_AI (16, 16,  8,      16, 16,  8,     28, 28,  8)
-    CYCLES_PI (16, 16,  8,      16, 16,  8,     28, 28,  8)
-    CYCLES_PD (18, 18,  9,      18, 18,  9,     30, 30,  9)
-    CYCLES_DI (20, 20,  9,      20, 20,  9,     32, 32,  9)
-    CYCLES_IX (22, 22, 11,      22, 22, 11,     34, 34, 11)
-    CYCLES_AW (20, 20,  8,      20, 20,  8,     32, 32,  8)
-    CYCLES_AL (24, 24,  8,      24, 24,  8,     36, 36,  8)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_AI   (16, 16,  8,       16, 16,  8,       28, 28,  8)
+    CYCLES_PI   (16, 16,  8,       16, 16,  8,       28, 28,  8)
+    CYCLES_PD   (18, 18,  9,       18, 18,  9,       30, 30,  9)
+    CYCLES_DI   (20, 20,  9,       20, 20,  9,       32, 32,  9)
+    CYCLES_IX   (22, 22, 11,       22, 22, 11,       34, 34, 11)
+    CYCLES_AW   (20, 20,  8,       20, 20,  8,       32, 32,  8)
+    CYCLES_AL   (24, 24,  8,       24, 24,  8,       36, 36,  8)
 
     FINALIZE
 }
@@ -683,7 +721,10 @@ Moira::execAndiccr(u16 opcode)
     (void)readMS<C, MEM_DATA, Word>(reg.pc+2);
     prefetch<C, POLLIPL>();
 
-    CYCLES_IM (20, 16, 12,      0,  0,  0,      0,  0,  0)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IM   (20, 16, 12,        0,  0,  0,        0,  0,  0)
+
     FINALIZE
 }
 
@@ -706,7 +747,10 @@ Moira::execAndisr(u16 opcode)
     (void)readMS<C, MEM_DATA, Word>(reg.pc+2);
     prefetch<C, POLLIPL>();
 
-    CYCLES_IM ( 0,  0,  0,     20, 16, 12,      0,  0,  0)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IM   ( 0,  0,  0,       20, 16, 12,        0,  0,  0)
+
     FINALIZE
 }
 
@@ -737,7 +781,10 @@ Moira::execBra(u16 opcode)
     reg.pc = newpc;
     fullPrefetch<C, POLLIPL>();
 
-    CYCLES_IP (10, 10, 10,     10, 10, 10,     10, 10, 10)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP   (10, 10, 10,       10, 10, 10,       10, 10, 10)
+
     FINALIZE
 }
 
@@ -772,7 +819,9 @@ Moira::execBcc(u16 opcode)
         reg.pc = newpc;
         fullPrefetch<C, POLLIPL>();
 
-        CYCLES_IP (10, 10,  6,     10, 10,  6,      0,  0,  6);
+        //           00  10  20        00  10  20        00  10  20
+        //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+        CYCLES_IP   (10, 10,  6,       10, 10,  6,        0,  0,  6)
 
     } else {
 
@@ -782,7 +831,9 @@ Moira::execBcc(u16 opcode)
         if constexpr (S == Long) readExt<C>();
         prefetch<C, POLLIPL>();
 
-        CYCLES_IP ( 8,  6,  4,     12, 10,  6,      0,  0,  6);
+        //           00  10  20        00  10  20        00  10  20
+        //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+        CYCLES_IP   ( 8,  6,  4,       12, 10,  6,        0,  0,  6)
     }
 
     FINALIZE
@@ -807,7 +858,9 @@ Moira::execBitDxDy(u16 opcode)
     SYNC(cycles);
     if (I != BTST) writeD(dst, data);
 
-    CYCLES_DN ( 4 + c, 4 + c, 4,     0,  0,  0,     0,  0,  0)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   (4+c,4+c, 4,        0,  0,  0,        0,  0,  0)
     FINALIZE
 }
 
@@ -832,16 +885,19 @@ Moira::execBitDxEa(u16 opcode)
     if (I != BTST) writeM<C, M, Byte>(ea, data);
 
     auto c = I == BTST ? 0 : I == BCLR && C == M68010 ? 6 : 4;
-    CYCLES_AI   ( 8 + c,  8 + c,  8,     0,  0,  0,     0,  0,  0)
-    CYCLES_PD   (10 + c, 10 + c,  9,     0,  0,  0,     0,  0,  0)
-    CYCLES_PI   ( 8 + c,  8 + c,  8,     0,  0,  0,     0,  0,  0)
-    CYCLES_DI   (12 + c, 12 + c,  9,     0,  0,  0,     0,  0,  0)
-    CYCLES_IX   (14 + c, 14 + c, 11,     0,  0,  0,     0,  0,  0)
-    CYCLES_AW   (12 + c, 12 + c,  8,     0,  0,  0,     0,  0,  0)
-    CYCLES_AL   (16 + c, 16 + c,  8,     0,  0,  0,     0,  0,  0)
-    CYCLES_DIPC (12 + c, 12 + c,  9,     0,  0,  0,     0,  0,  0)
-    CYCLES_IXPC (14 + c, 14 + c, 11,     0,  0,  0,     0,  0,  0)
-    CYCLES_IM   ( 8 + c,  8 + c,  6,     0,  0,  0,     0,  0,  0)
+
+    //             00    10    20        00  10  20        00  10  20
+    //             .b    .b    .b        .w  .w  .w        .l  .l  .l
+    CYCLES_AI   ( 8+c,  8+c,    8,        0,  0,  0,        0,  0,  0)
+    CYCLES_PD   (10+c, 10+c,    9,        0,  0,  0,        0,  0,  0)
+    CYCLES_PI   ( 8+c,  8+c,    8,        0,  0,  0,        0,  0,  0)
+    CYCLES_DI   (12+c, 12+c,    9,        0,  0,  0,        0,  0,  0)
+    CYCLES_IX   (14+c, 14+c,   11,        0,  0,  0,        0,  0,  0)
+    CYCLES_AW   (12+c, 12+c,    8,        0,  0,  0,        0,  0,  0)
+    CYCLES_AL   (16+c, 16+c,    8,        0,  0,  0,        0,  0,  0)
+    CYCLES_DIPC (12+c, 12+c,    9,        0,  0,  0,        0,  0,  0)
+    CYCLES_IXPC (14+c, 14+c,   11,        0,  0,  0,        0,  0,  0)
+    CYCLES_IM   ( 8+c,  8+c,    6,        0,  0,  0,        0,  0,  0)
 
     FINALIZE
 }
@@ -860,11 +916,13 @@ Moira::execBitImDy(u16 opcode)
 
     prefetch<C, POLLIPL>();
 
-    [[maybe_unused]] auto cycles = cyclesBit <C,I> (src);
-    SYNC(cycles);
+    auto c = cyclesBit <C,I> (src);
+    SYNC(c);
     if (I != BTST) writeD(dst, data);
 
-    CYCLES_DN (8 + cycles, 8 + cycles, 4,     0,  0,  0,     0,  0,  0)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   (8+c,8+c, 4,        0,  0,  0,        0,  0,  0)
     FINALIZE
 }
 
@@ -886,15 +944,18 @@ Moira::execBitImEa(u16 opcode)
     if (I != BTST) writeM<C, M, S>(ea, data);
 
     auto c = I == BTST ? 0 : 4;
-    CYCLES_AI   (12 + c, 12 + c,  8,     0,  0,  0,     0,  0,  0)
-    CYCLES_PD   (14 + c, 14 + c,  9,     0,  0,  0,     0,  0,  0)
-    CYCLES_PI   (12 + c, 12 + c,  8,     0,  0,  0,     0,  0,  0)
-    CYCLES_DI   (16 + c, 16 + c,  9,     0,  0,  0,     0,  0,  0)
-    CYCLES_IX   (18 + c, 18 + c, 11,     0,  0,  0,     0,  0,  0)
-    CYCLES_AW   (16 + c, 16 + c,  8,     0,  0,  0,     0,  0,  0)
-    CYCLES_AL   (20 + c, 20 + c,  8,     0,  0,  0,     0,  0,  0)
-    CYCLES_DIPC (16 + c, 16 + c,  9,     0,  0,  0,     0,  0,  0)
-    CYCLES_IXPC (18 + c, 18 + c, 11,     0,  0,  0,     0,  0,  0)
+
+    //             00    10    20        00  10  20        00  10  20
+    //             .b    .b    .b        .w  .w  .w        .l  .l  .l
+    CYCLES_AI   (12+c, 12+c,    8,        0,  0,  0,        0,  0,  0)
+    CYCLES_PD   (14+c, 14+c,    9,        0,  0,  0,        0,  0,  0)
+    CYCLES_PI   (12+c, 12+c,    8,        0,  0,  0,        0,  0,  0)
+    CYCLES_DI   (16+c, 16+c,    9,        0,  0,  0,        0,  0,  0)
+    CYCLES_IX   (18+c, 18+c,   11,        0,  0,  0,        0,  0,  0)
+    CYCLES_AW   (16+c, 16+c,    8,        0,  0,  0,        0,  0,  0)
+    CYCLES_AL   (20+c, 20+c,    8,        0,  0,  0,        0,  0,  0)
+    CYCLES_DIPC (16+c, 16+c,    9,        0,  0,  0,        0,  0,  0)
+    CYCLES_IXPC (18+c, 18+c,   11,        0,  0,  0,        0,  0,  0)
     FINALIZE
 }
 
@@ -933,8 +994,10 @@ Moira::execBitFieldDn(u16 opcode)
 
             result = bitfield<I>(data, offset, width, mask);
             writeD(dy, result);
-            
-            CYCLES_DN ( 0,  0,  0,     0,  0,  0,     0,  0, 12)
+
+            //           00  10  20        00  10  20        00  10  20
+            //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+            CYCLES_DN   ( 0,  0,  0,        0,  0,  0,        0,  0, 12)
             break;
 
         case BFEXTS:
@@ -944,7 +1007,9 @@ Moira::execBitFieldDn(u16 opcode)
             result = bitfield<I>(data, offset, width, mask);
             writeD(dn, result);
 
-            CYCLES_DN ( 0,  0,  0,     0,  0,  0,     0,  0,  8)
+            //           00  10  20        00  10  20        00  10  20
+            //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+            CYCLES_DN   ( 0,  0,  0,        0,  0,  0,        0,  0,  8)
             break;
 
         case BFFFO:
@@ -953,7 +1018,9 @@ Moira::execBitFieldDn(u16 opcode)
             result = bitfield<I>(data, offset, width, mask);
             writeD(dn, result);
 
-            CYCLES_DN ( 0,  0,  0,     0,  0,  0,     0,  0, 18)
+            //           00  10  20        00  10  20        00  10  20
+            //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+            CYCLES_DN   ( 0,  0,  0,        0,  0,  0,        0,  0, 18)
             break;
 
         case BFINS:
@@ -969,14 +1036,18 @@ Moira::execBitFieldDn(u16 opcode)
             insert = std::rotr((u32)insert, offset);
             writeD(dy, (data & ~mask) | insert);
 
-            CYCLES_DN ( 0,  0,  0,     0,  0,  0,     0,  0, 10)
+            //           00  10  20        00  10  20        00  10  20
+            //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+            CYCLES_DN   ( 0,  0,  0,        0,  0,  0,        0,  0, 10)
             break;
 
         case BFTST:
 
             (void)bitfield<I>(data, offset, width, mask);
 
-            CYCLES_DN ( 0,  0,  0,     0,  0,  0,     0,  0,  6)
+            //           00  10  20        00  10  20        00  10  20
+            //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+            CYCLES_DN   ( 0,  0,  0,        0,  0,  0,        0,  0,  6)
             break;
 
         default:
@@ -1049,11 +1120,13 @@ Moira::execBitFieldEa(u16 opcode)
                 reg.sr.z &= ZERO<Byte>(data & mask8);
             }
 
-            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 24)
-            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 25)
-            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 27)
-            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 24)
-            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 24)
+            //           00  10  20        00  10  20        00  10  20
+            //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+            CYCLES_AI   ( 0,  0,  0,        0,  0,  0,        0,  0, 24)
+            CYCLES_DI   ( 0,  0,  0,        0,  0,  0,        0,  0, 25)
+            CYCLES_IX   ( 0,  0,  0,        0,  0,  0,        0,  0, 27)
+            CYCLES_AW   ( 0,  0,  0,        0,  0,  0,        0,  0, 24)
+            CYCLES_AL   ( 0,  0,  0,        0,  0,  0,        0,  0, 24)
             break;
 
         case BFEXTS:
@@ -1068,13 +1141,15 @@ Moira::execBitFieldEa(u16 opcode)
             result = bitfield<I>(data, offset, width, mask);
             writeD(dn, result);
 
-            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 19)
-            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
-            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 22)
-            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 19)
-            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 19)
-            CYCLES_DIPC ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
-            CYCLES_IXPC ( 0,  0,  0,     0,  0,  0,     0,  0, 22)
+            //           00  10  20        00  10  20        00  10  20
+            //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+            CYCLES_AI   ( 0,  0,  0,        0,  0,  0,        0,  0, 19)
+            CYCLES_DI   ( 0,  0,  0,        0,  0,  0,        0,  0, 20)
+            CYCLES_IX   ( 0,  0,  0,        0,  0,  0,        0,  0, 22)
+            CYCLES_AW   ( 0,  0,  0,        0,  0,  0,        0,  0, 19)
+            CYCLES_AL   ( 0,  0,  0,        0,  0,  0,        0,  0, 19)
+            CYCLES_DIPC ( 0,  0,  0,        0,  0,  0,        0,  0, 20)
+            CYCLES_IXPC ( 0,  0,  0,        0,  0,  0,        0,  0, 22)
             break;
 
         case BFFFO:
@@ -1088,13 +1163,15 @@ Moira::execBitFieldEa(u16 opcode)
             result = bitfield<I>(data, oldOffset, width, mask);
             writeD(dn, result);
 
-            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 32)
-            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 33)
-            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 35)
-            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 32)
-            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 32)
-            CYCLES_DIPC ( 0,  0,  0,     0,  0,  0,     0,  0, 33)
-            CYCLES_IXPC ( 0,  0,  0,     0,  0,  0,     0,  0, 35)
+            //           00  10  20        00  10  20        00  10  20
+            //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+            CYCLES_AI   ( 0,  0,  0,        0,  0,  0,        0,  0, 32)
+            CYCLES_DI   ( 0,  0,  0,        0,  0,  0,        0,  0, 33)
+            CYCLES_IX   ( 0,  0,  0,        0,  0,  0,        0,  0, 35)
+            CYCLES_AW   ( 0,  0,  0,        0,  0,  0,        0,  0, 32)
+            CYCLES_AL   ( 0,  0,  0,        0,  0,  0,        0,  0, 32)
+            CYCLES_DIPC ( 0,  0,  0,        0,  0,  0,        0,  0, 33)
+            CYCLES_IXPC ( 0,  0,  0,        0,  0,  0,        0,  0, 35)
             break;
 
         case BFINS:
@@ -1117,11 +1194,13 @@ Moira::execBitFieldEa(u16 opcode)
                 writeM<C, M, Byte>(ea + 4, (data & ~mask8) | (insert & 0xFF));
             }
 
-            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 21)
-            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 22)
-            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 24)
-            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 21)
-            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 21)
+            //           00  10  20        00  10  20        00  10  20
+            //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+            CYCLES_AI   ( 0,  0,  0,        0,  0,  0,        0,  0, 21)
+            CYCLES_DI   ( 0,  0,  0,        0,  0,  0,        0,  0, 22)
+            CYCLES_IX   ( 0,  0,  0,        0,  0,  0,        0,  0, 24)
+            CYCLES_AW   ( 0,  0,  0,        0,  0,  0,        0,  0, 21)
+            CYCLES_AL   ( 0,  0,  0,        0,  0,  0,        0,  0, 21)
             break;
         }
         case BFTST:
@@ -1134,13 +1213,15 @@ Moira::execBitFieldEa(u16 opcode)
                 reg.sr.z &= ZERO<Byte>(data2 & mask8);
             }
 
-            CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)
-            CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 18)
-            CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
-            CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)
-            CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 17)
-            CYCLES_DIPC ( 0,  0,  0,     0,  0,  0,     0,  0, 18)
-            CYCLES_IXPC ( 0,  0,  0,     0,  0,  0,     0,  0, 20)
+            //           00  10  20        00  10  20        00  10  20
+            //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+            CYCLES_AI   ( 0,  0,  0,        0,  0,  0,        0,  0, 17)
+            CYCLES_DI   ( 0,  0,  0,        0,  0,  0,        0,  0, 18)
+            CYCLES_IX   ( 0,  0,  0,        0,  0,  0,        0,  0, 20)
+            CYCLES_AW   ( 0,  0,  0,        0,  0,  0,        0,  0, 17)
+            CYCLES_AL   ( 0,  0,  0,        0,  0,  0,        0,  0, 17)
+            CYCLES_DIPC ( 0,  0,  0,        0,  0,  0,        0,  0, 18)
+            CYCLES_IXPC ( 0,  0,  0,        0,  0,  0,        0,  0, 20)
             break;
 
         default:
@@ -1162,7 +1243,9 @@ Moira::execBkpt(u16 opcode)
     signalIllegalOpcodeException(opcode);
     execUnimplemented<C>(4);
 
-    CYCLES_IP ( 0,  0,  0,     0,  0,  0,     0, 38, 20 );
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP   ( 0,  0,  0,        0,  0,  0,        0, 38, 20 );
 
     FINALIZE
 }
@@ -1204,7 +1287,9 @@ Moira::execBsr(u16 opcode)
 
     signalJsrBsrInstr(opcode, oldpc, reg.pc);
 
-    CYCLES_IP (18, 18,  7,      18, 18,  7,     18, 18,  7)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP   (18, 18,  7,       18, 18,  7,       18, 18,  7)
 
     FINALIZE
 }
@@ -1221,13 +1306,15 @@ Moira::execCallm(u16 opcode)
     readExt<C>();
     prefetch<C, POLLIPL>();
 
-    CYCLES_AI   ( 0,  0,  0,     0,  0,  0,     0,  0, 64)
-    CYCLES_DI   ( 0,  0,  0,     0,  0,  0,     0,  0, 65)
-    CYCLES_IX   ( 0,  0,  0,     0,  0,  0,     0,  0, 67)
-    CYCLES_AW   ( 0,  0,  0,     0,  0,  0,     0,  0, 64)
-    CYCLES_AL   ( 0,  0,  0,     0,  0,  0,     0,  0, 64)
-    CYCLES_DIPC ( 0,  0,  0,     0,  0,  0,     0,  0, 65)
-    CYCLES_IXPC ( 0,  0,  0,     0,  0,  0,     0,  0, 67)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_AI   ( 0,  0,  0,        0,  0,  0,        0,  0, 64)
+    CYCLES_DI   ( 0,  0,  0,        0,  0,  0,        0,  0, 65)
+    CYCLES_IX   ( 0,  0,  0,        0,  0,  0,        0,  0, 67)
+    CYCLES_AW   ( 0,  0,  0,        0,  0,  0,        0,  0, 64)
+    CYCLES_AL   ( 0,  0,  0,        0,  0,  0,        0,  0, 64)
+    CYCLES_DIPC ( 0,  0,  0,        0,  0,  0,        0,  0, 65)
+    CYCLES_IXPC ( 0,  0,  0,        0,  0,  0,        0,  0, 67)
 
     FINALIZE
 }
@@ -1255,25 +1342,29 @@ Moira::execCas(u16 opcode)
 
         writeD(dc, CLEAR<S>(compare) | data);
 
-        CYCLES_AI   ( 0,  0, 16,       0,  0, 16,      0,  0, 16)
-        CYCLES_PI   ( 0,  0, 16,       0,  0, 16,      0,  0, 16)
-        CYCLES_PD   ( 0,  0, 17,       0,  0, 17,      0,  0, 17)
-        CYCLES_DI   ( 0,  0, 17,       0,  0, 17,      0,  0, 17)
-        CYCLES_IX   ( 0,  0, 19,       0,  0, 19,      0,  0, 19)
-        CYCLES_AW   ( 0,  0, 16,       0,  0, 16,      0,  0, 16)
-        CYCLES_AL   ( 0,  0, 16,       0,  0, 16,      0,  0, 16)
+        //           00  10  20        00  10  20        00  10  20
+        //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+        CYCLES_AI   ( 0,  0, 16,        0,  0, 16,        0,  0, 16)
+        CYCLES_PI   ( 0,  0, 16,        0,  0, 16,        0,  0, 16)
+        CYCLES_PD   ( 0,  0, 17,        0,  0, 17,        0,  0, 17)
+        CYCLES_DI   ( 0,  0, 17,        0,  0, 17,        0,  0, 17)
+        CYCLES_IX   ( 0,  0, 19,        0,  0, 19,        0,  0, 19)
+        CYCLES_AW   ( 0,  0, 16,        0,  0, 16,        0,  0, 16)
+        CYCLES_AL   ( 0,  0, 16,        0,  0, 16,        0,  0, 16)
 
     } else {
 
         writeM<C, M, S>(ea, readD<S>(du));
 
-        CYCLES_AI   ( 0,  0, 19,       0,  0, 19,      0,  0, 19)
-        CYCLES_PI   ( 0,  0, 19,       0,  0, 19,      0,  0, 19)
-        CYCLES_PD   ( 0,  0, 20,       0,  0, 20,      0,  0, 20)
-        CYCLES_DI   ( 0,  0, 20,       0,  0, 20,      0,  0, 20)
-        CYCLES_IX   ( 0,  0, 22,       0,  0, 22,      0,  0, 22)
-        CYCLES_AW   ( 0,  0, 19,       0,  0, 19,      0,  0, 19)
-        CYCLES_AL   ( 0,  0, 19,       0,  0, 19,      0,  0, 19)
+        //           00  10  20        00  10  20        00  10  20
+        //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+        CYCLES_AI   ( 0,  0, 19,        0,  0, 19,        0,  0, 19)
+        CYCLES_PI   ( 0,  0, 19,        0,  0, 19,        0,  0, 19)
+        CYCLES_PD   ( 0,  0, 20,        0,  0, 20,        0,  0, 20)
+        CYCLES_DI   ( 0,  0, 20,        0,  0, 20,        0,  0, 20)
+        CYCLES_IX   ( 0,  0, 22,        0,  0, 22,        0,  0, 22)
+        CYCLES_AW   ( 0,  0, 19,        0,  0, 19,        0,  0, 19)
+        CYCLES_AL   ( 0,  0, 19,        0,  0, 19,        0,  0, 19)
     }
 
     prefetch<C, POLLIPL>();
@@ -1389,17 +1480,19 @@ Moira::execChk(u16 opcode)
 
     prefetch<C, POLLIPL>();
 
-    CYCLES_DN   ( 0,  0,  0,      10,  8,  8,      0,  0,  8)
-    CYCLES_AI   ( 0,  0,  0,      14, 12, 12,      0,  0, 12)
-    CYCLES_PI   ( 0,  0,  0,      14, 12, 12,      0,  0, 12)
-    CYCLES_PD   ( 0,  0,  0,      16, 14, 13,      0,  0, 13)
-    CYCLES_DI   ( 0,  0,  0,      18, 16, 13,      0,  0, 13)
-    CYCLES_IX   ( 0,  0,  0,      20, 18, 15,      0,  0, 15)
-    CYCLES_AW   ( 0,  0,  0,      18, 16, 12,      0,  0, 12)
-    CYCLES_AL   ( 0,  0,  0,      22, 20, 12,      0,  0, 12)
-    CYCLES_DIPC ( 0,  0,  0,      18, 16, 13,      0,  0, 13)
-    CYCLES_IXPC ( 0,  0,  0,      20, 18, 15,      0,  0, 15)
-    CYCLES_IM   ( 0,  0,  0,      14, 12, 10,      0,  0, 12)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 0,  0,  0,       10,  8,  8,        0,  0,  8)
+    CYCLES_AI   ( 0,  0,  0,       14, 12, 12,        0,  0, 12)
+    CYCLES_PI   ( 0,  0,  0,       14, 12, 12,        0,  0, 12)
+    CYCLES_PD   ( 0,  0,  0,       16, 14, 13,        0,  0, 13)
+    CYCLES_DI   ( 0,  0,  0,       18, 16, 13,        0,  0, 13)
+    CYCLES_IX   ( 0,  0,  0,       20, 18, 15,        0,  0, 15)
+    CYCLES_AW   ( 0,  0,  0,       18, 16, 12,        0,  0, 12)
+    CYCLES_AL   ( 0,  0,  0,       22, 20, 12,        0,  0, 12)
+    CYCLES_DIPC ( 0,  0,  0,       18, 16, 13,        0,  0, 13)
+    CYCLES_IXPC ( 0,  0,  0,       20, 18, 15,        0,  0, 15)
+    CYCLES_IM   ( 0,  0,  0,       14, 12, 10,        0,  0, 12)
 
     FINALIZE
 }
@@ -1443,13 +1536,15 @@ Moira::execChkCmp2(u16 opcode)
 
         prefetch<C, POLLIPL>();
 
-        CYCLES_AI   ( 0,  0, 22,       0,  0, 22,      0,  0, 22)
-        CYCLES_DI   ( 0,  0, 23,       0,  0, 23,      0,  0, 23)
-        CYCLES_IX   ( 0,  0, 25,       0,  0, 25,      0,  0, 25)
-        CYCLES_AW   ( 0,  0, 22,       0,  0, 22,      0,  0, 22)
-        CYCLES_AL   ( 0,  0, 22,       0,  0, 22,      0,  0, 22)
-        CYCLES_DIPC ( 0,  0, 23,       0,  0, 23,      0,  0, 23)
-        CYCLES_IXPC ( 0,  0, 23,       0,  0, 23,      0,  0, 23)
+        //           00  10  20        00  10  20        00  10  20
+        //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+        CYCLES_AI   ( 0,  0, 22,        0,  0, 22,        0,  0, 22)
+        CYCLES_DI   ( 0,  0, 23,        0,  0, 23,        0,  0, 23)
+        CYCLES_IX   ( 0,  0, 25,        0,  0, 25,        0,  0, 25)
+        CYCLES_AW   ( 0,  0, 22,        0,  0, 22,        0,  0, 22)
+        CYCLES_AL   ( 0,  0, 22,        0,  0, 22,        0,  0, 22)
+        CYCLES_DIPC ( 0,  0, 23,        0,  0, 23,        0,  0, 23)
+        CYCLES_IXPC ( 0,  0, 23,        0,  0, 23,        0,  0, 23)
     }
 
     FINALIZE
@@ -1504,14 +1599,16 @@ Moira::execClr(u16 opcode)
         reg.sr.c = 0;
     }
 
-    CYCLES_DN   ( 4,  4,  2,       4,  4,  2,      6,  6,  2)
-    CYCLES_AI   (12,  8,  8,      12,  8,  8,     20, 12,  8)
-    CYCLES_PI   (12,  8,  8,      12,  8,  8,     20, 12,  8)
-    CYCLES_PD   (14, 10,  9,      14, 10,  9,     22, 14,  9)
-    CYCLES_DI   (16, 12,  9,      16, 12,  9,     24, 16,  9)
-    CYCLES_IX   (18, 14, 11,      18, 14, 11,     26, 20, 11)
-    CYCLES_AW   (16, 12,  8,      16, 12,  8,     24, 16,  8)
-    CYCLES_AL   (20, 14,  8,      20, 14,  8,     28, 20,  8)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 4,  4,  2,        4,  4,  2,        6,  6,  2)
+    CYCLES_AI   (12,  8,  8,       12,  8,  8,       20, 12,  8)
+    CYCLES_PI   (12,  8,  8,       12,  8,  8,       20, 12,  8)
+    CYCLES_PD   (14, 10,  9,       14, 10,  9,       22, 14,  9)
+    CYCLES_DI   (16, 12,  9,       16, 12,  9,       24, 16,  9)
+    CYCLES_IX   (18, 14, 11,       18, 14, 11,       26, 20, 11)
+    CYCLES_AW   (16, 12,  8,       16, 12,  8,       24, 16,  8)
+    CYCLES_AL   (20, 14,  8,       20, 14,  8,       28, 20,  8)
 
     FINALIZE
 }
@@ -1532,18 +1629,20 @@ Moira::execCmp(u16 opcode)
 
     if constexpr (S == Long) SYNC(2);
 
-    CYCLES_DN   ( 4,  4,  2,       4,  4,  2,      6,  6,  2)
-    CYCLES_AN   ( 0,  0,  0,       4,  4,  2,      6,  6,  2)
-    CYCLES_AI   ( 8,  8,  6,       8,  8,  6,     14, 14,  6)
-    CYCLES_PI   ( 8,  8,  6,       8,  8,  6,     14, 14,  6)
-    CYCLES_PD   (10, 10,  7,      10, 10,  7,     16, 16,  7)
-    CYCLES_DI   (12, 12,  7,      12, 12,  7,     18, 18,  7)
-    CYCLES_IX   (14, 14,  9,      14, 14,  9,     20, 20,  9)
-    CYCLES_AW   (12, 12,  6,      12, 12,  6,     18, 18,  6)
-    CYCLES_AL   (16, 16,  6,      16, 16,  6,     22, 22,  6)
-    CYCLES_DIPC (12, 12,  7,      12, 12,  7,     18, 18,  7)
-    CYCLES_IXPC (14, 14,  9,      14, 14,  9,     20, 20,  9)
-    CYCLES_IM   ( 8,  8,  4,       8,  8,  4,     14, 14,  6)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 4,  4,  2,        4,  4,  2,        6,  6,  2)
+    CYCLES_AN   ( 0,  0,  0,        4,  4,  2,        6,  6,  2)
+    CYCLES_AI   ( 8,  8,  6,        8,  8,  6,       14, 14,  6)
+    CYCLES_PI   ( 8,  8,  6,        8,  8,  6,       14, 14,  6)
+    CYCLES_PD   (10, 10,  7,       10, 10,  7,       16, 16,  7)
+    CYCLES_DI   (12, 12,  7,       12, 12,  7,       18, 18,  7)
+    CYCLES_IX   (14, 14,  9,       14, 14,  9,       20, 20,  9)
+    CYCLES_AW   (12, 12,  6,       12, 12,  6,       18, 18,  6)
+    CYCLES_AL   (16, 16,  6,       16, 16,  6,       22, 22,  6)
+    CYCLES_DIPC (12, 12,  7,       12, 12,  7,       18, 18,  7)
+    CYCLES_IXPC (14, 14,  9,       14, 14,  9,       20, 20,  9)
+    CYCLES_IM   ( 8,  8,  4,        8,  8,  4,       14, 14,  6)
 
     FINALIZE
 }
@@ -1565,18 +1664,20 @@ Moira::execCmpa(u16 opcode)
 
     SYNC(2);
 
-    CYCLES_DN   ( 0,  0,  0,       6,  6,  4,      6,  6,  4)
-    CYCLES_AN   ( 0,  0,  0,       6,  6,  4,      6,  6,  4)
-    CYCLES_AI   ( 0,  0,  0,      10, 10,  8,     14, 14,  8)
-    CYCLES_PI   ( 0,  0,  0,      10, 10,  8,     14, 14,  8)
-    CYCLES_PD   ( 0,  0,  0,      12, 12,  9,     16, 16,  9)
-    CYCLES_DI   ( 0,  0,  0,      14, 14,  9,     18, 18,  9)
-    CYCLES_IX   ( 0,  0,  0,      16, 16, 11,     20, 20, 11)
-    CYCLES_AW   ( 0,  0,  0,      14, 14,  8,     18, 18,  8)
-    CYCLES_AL   ( 0,  0,  0,      18, 18,  8,     22, 22,  8)
-    CYCLES_DIPC ( 0,  0,  0,      14, 14,  9,     18, 18,  9)
-    CYCLES_IXPC ( 0,  0,  0,      16, 16, 11,     20, 20, 11)
-    CYCLES_IM   ( 0,  0,  0,      10, 10,  6,     14, 14,  8)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 0,  0,  0,        6,  6,  4,        6,  6,  4)
+    CYCLES_AN   ( 0,  0,  0,        6,  6,  4,        6,  6,  4)
+    CYCLES_AI   ( 0,  0,  0,       10, 10,  8,       14, 14,  8)
+    CYCLES_PI   ( 0,  0,  0,       10, 10,  8,       14, 14,  8)
+    CYCLES_PD   ( 0,  0,  0,       12, 12,  9,       16, 16,  9)
+    CYCLES_DI   ( 0,  0,  0,       14, 14,  9,       18, 18,  9)
+    CYCLES_IX   ( 0,  0,  0,       16, 16, 11,       20, 20, 11)
+    CYCLES_AW   ( 0,  0,  0,       14, 14,  8,       18, 18,  8)
+    CYCLES_AL   ( 0,  0,  0,       18, 18,  8,       22, 22,  8)
+    CYCLES_DIPC ( 0,  0,  0,       14, 14,  9,       18, 18,  9)
+    CYCLES_IXPC ( 0,  0,  0,       16, 16, 11,       20, 20, 11)
+    CYCLES_IM   ( 0,  0,  0,       10, 10,  6,       14, 14,  8)
 
     FINALIZE
 }
@@ -1594,16 +1695,18 @@ Moira::execCmpiRg(u16 opcode)
     if constexpr (S == Long && C == M68000) SYNC(2);
     cmp<C, S>(src, readD<S>(dst));
 
-    CYCLES_DN   (8,   8,  2,       8,  8,  2,     14, 12,  2)
-    CYCLES_AI   (12, 12,  6,      12, 12,  6,     20, 20,  6)
-    CYCLES_PI   (12, 12,  6,      12, 12,  6,     20, 20,  6)
-    CYCLES_PD   (14, 14,  7,      14, 14,  7,     22, 22,  7)
-    CYCLES_DI   (16, 16,  7,      16, 16,  7,     24, 24,  7)
-    CYCLES_IX   (18, 18,  9,      18, 18,  9,     26, 26,  9)
-    CYCLES_AW   (16, 16,  6,      16, 16,  6,     24, 24,  6)
-    CYCLES_AL   (20, 20,  6,      20, 20,  6,     28, 28,  6)
-    CYCLES_DIPC ( 0,  0,  7,       0,  0,  7,      0,  0,  7)
-    CYCLES_IXPC ( 0,  0,  9,       0,  0,  9,      0,  0,  9)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   (8,   8,  2,        8,  8,  2,       14, 12,  2)
+    CYCLES_AI   (12, 12,  6,       12, 12,  6,       20, 20,  6)
+    CYCLES_PI   (12, 12,  6,       12, 12,  6,       20, 20,  6)
+    CYCLES_PD   (14, 14,  7,       14, 14,  7,       22, 22,  7)
+    CYCLES_DI   (16, 16,  7,       16, 16,  7,       24, 24,  7)
+    CYCLES_IX   (18, 18,  9,       18, 18,  9,       26, 26,  9)
+    CYCLES_AW   (16, 16,  6,       16, 16,  6,       24, 24,  6)
+    CYCLES_AL   (20, 20,  6,       20, 20,  6,       28, 28,  6)
+    CYCLES_DIPC ( 0,  0,  7,        0,  0,  7,        0,  0,  7)
+    CYCLES_IXPC ( 0,  0,  9,        0,  0,  9,        0,  0,  9)
 
     FINALIZE
 }
@@ -1622,16 +1725,18 @@ Moira::execCmpiEa(u16 opcode)
 
     cmp<C, S>(src, data);
 
-    CYCLES_DN   (8,   8,  2,       8,  8,  2,     14, 12,  2)
-    CYCLES_AI   (12, 12,  6,      12, 12,  6,     20, 20,  6)
-    CYCLES_PI   (12, 12,  6,      12, 12,  6,     20, 20,  6)
-    CYCLES_PD   (14, 14,  7,      14, 14,  7,     22, 22,  7)
-    CYCLES_DI   (16, 16,  7,      16, 16,  7,     24, 24,  7)
-    CYCLES_IX   (18, 18,  9,      18, 18,  9,     26, 26,  9)
-    CYCLES_AW   (16, 16,  6,      16, 16,  6,     24, 24,  6)
-    CYCLES_AL   (20, 20,  6,      20, 20,  6,     28, 28,  6)
-    CYCLES_DIPC ( 0, 16,  7,       0, 16,  7,      0, 24,  7)
-    CYCLES_IXPC ( 0, 18,  9,       0, 18,  9,      0, 26,  9)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   (8,   8,  2,        8,  8,  2,       14, 12,  2)
+    CYCLES_AI   (12, 12,  6,       12, 12,  6,       20, 20,  6)
+    CYCLES_PI   (12, 12,  6,       12, 12,  6,       20, 20,  6)
+    CYCLES_PD   (14, 14,  7,       14, 14,  7,       22, 22,  7)
+    CYCLES_DI   (16, 16,  7,       16, 16,  7,       24, 24,  7)
+    CYCLES_IX   (18, 18,  9,       18, 18,  9,       26, 26,  9)
+    CYCLES_AW   (16, 16,  6,       16, 16,  6,       24, 24,  6)
+    CYCLES_AL   (20, 20,  6,       20, 20,  6,       28, 28,  6)
+    CYCLES_DIPC ( 0, 16,  7,        0, 16,  7,        0, 24,  7)
+    CYCLES_IXPC ( 0, 18,  9,        0, 18,  9,        0, 26,  9)
 
     FINALIZE
 }
@@ -1653,7 +1758,9 @@ Moira::execCmpm(u16 opcode)
     cmp<C, S>(data1, data2);
     prefetch<C>();
 
-    CYCLES_PI   (12, 12,  9,      12, 12,  9,     20, 20,  9)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_PI   (12, 12,  9,       12, 12,  9,       20, 20,  9)
 
     FINALIZE
 }
@@ -1953,7 +2060,9 @@ Moira::execExgAxAy(u16 opcode)
     prefetch<C, POLLIPL>();
     SYNC(2);
 
-    CYCLES_IP ( 0,  0,  0,       0,  0,  0,      6,  6,  2)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP   ( 0,  0,  0,        0,  0,  0,        6,  6,  2)
 
     FINALIZE
 }
@@ -1976,7 +2085,9 @@ Moira::execExt(u16 opcode)
 
     prefetch<C, POLLIPL>();
 
-    CYCLES_DN   ( 0,  0,  0,       4,  4,  4,      4,  4,  4)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 0,  0,  0,        4,  4,  4,        4,  4,  4)
 
     FINALIZE
 }
@@ -1999,7 +2110,9 @@ Moira::execExtb(u16 opcode)
 
     prefetch<C, POLLIPL>();
 
-    CYCLES_DN   ( 0,  0,  0,       0,  0,  0,      0,  0,  4)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 0,  0,  0,        0,  0,  0,        0,  0,  4)
 
     FINALIZE
 }
@@ -2029,13 +2142,15 @@ Moira::execJmp(u16 opcode)
     // Fill the prefetch queue
     fullPrefetch<C, POLLIPL>();
 
-    CYCLES_AI   ( 0,  0,  0,       0,  0,  0,      8,  8,  4)
-    CYCLES_DI   ( 0,  0,  0,       0,  0,  0,     10, 10,  5)
-    CYCLES_IX   ( 0,  0,  0,       0,  0,  0,     14, 14,  7)
-    CYCLES_AW   ( 0,  0,  0,       0,  0,  0,     10, 10,  4)
-    CYCLES_AL   ( 0,  0,  0,       0,  0,  0,     12, 12,  4)
-    CYCLES_DIPC ( 0,  0,  0,       0,  0,  0,     10, 10,  5)
-    CYCLES_IXPC ( 0,  0,  0,       0,  0,  0,     14, 14,  7)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_AI   ( 0,  0,  0,        0,  0,  0,        8,  8,  4)
+    CYCLES_DI   ( 0,  0,  0,        0,  0,  0,       10, 10,  5)
+    CYCLES_IX   ( 0,  0,  0,        0,  0,  0,       14, 14,  7)
+    CYCLES_AW   ( 0,  0,  0,        0,  0,  0,       10, 10,  4)
+    CYCLES_AL   ( 0,  0,  0,        0,  0,  0,       12, 12,  4)
+    CYCLES_DIPC ( 0,  0,  0,        0,  0,  0,       10, 10,  5)
+    CYCLES_IXPC ( 0,  0,  0,        0,  0,  0,       14, 14,  7)
 
     FINALIZE
 }
@@ -2078,13 +2193,15 @@ Moira::execJsr(u16 opcode)
 
     signalJsrBsrInstr(opcode, oldpc, reg.pc);
 
-    CYCLES_AI   ( 0,  0,  0,       0,  0,  0,     16, 16,  4)
-    CYCLES_DI   ( 0,  0,  0,       0,  0,  0,     18, 18,  5)
-    CYCLES_IX   ( 0,  0,  0,       0,  0,  0,     22, 22,  7)
-    CYCLES_AW   ( 0,  0,  0,       0,  0,  0,     18, 18,  4)
-    CYCLES_AL   ( 0,  0,  0,       0,  0,  0,     20, 20,  4)
-    CYCLES_DIPC ( 0,  0,  0,       0,  0,  0,     18, 18,  5)
-    CYCLES_IXPC ( 0,  0,  0,       0,  0,  0,     22, 22,  7)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_AI   ( 0,  0,  0,        0,  0,  0,       16, 16,  4)
+    CYCLES_DI   ( 0,  0,  0,        0,  0,  0,       18, 18,  5)
+    CYCLES_IX   ( 0,  0,  0,        0,  0,  0,       22, 22,  7)
+    CYCLES_AW   ( 0,  0,  0,        0,  0,  0,       18, 18,  4)
+    CYCLES_AL   ( 0,  0,  0,        0,  0,  0,       20, 20,  4)
+    CYCLES_DIPC ( 0,  0,  0,        0,  0,  0,       18, 18,  5)
+    CYCLES_IXPC ( 0,  0,  0,        0,  0,  0,       22, 22,  7)
 
     FINALIZE
 }
@@ -2102,17 +2219,19 @@ Moira::execLea(u16 opcode)
 
     prefetch<C, POLLIPL>();
 
-    CYCLES_DN   ( 0,  0,  0,       0,  0,  0,      0,  0,  0)
-    CYCLES_AN   ( 0,  0,  0,       0,  0,  0,      0,  0,  0)
-    CYCLES_AI   ( 0,  0,  0,       0,  0,  0,      4,  4,  6)
-    CYCLES_PI   ( 0,  0,  0,       0,  0,  0,      0,  0,  0)
-    CYCLES_PD   ( 0,  0,  0,       0,  0,  0,      0,  0,  0)
-    CYCLES_DI   ( 0,  0,  0,       0,  0,  0,      8,  8,  7)
-    CYCLES_IX   ( 0,  0,  0,       0,  0,  0,     12, 12,  9)
-    CYCLES_AW   ( 0,  0,  0,       0,  0,  0,      8,  8,  6)
-    CYCLES_AL   ( 0,  0,  0,       0,  0,  0,     12, 12,  6)
-    CYCLES_DIPC ( 0,  0,  0,       0,  0,  0,      8,  8,  7)
-    CYCLES_IXPC ( 0,  0,  0,       0,  0,  0,     12, 12,  9)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 0,  0,  0,        0,  0,  0,        0,  0,  0)
+    CYCLES_AN   ( 0,  0,  0,        0,  0,  0,        0,  0,  0)
+    CYCLES_AI   ( 0,  0,  0,        0,  0,  0,        4,  4,  6)
+    CYCLES_PI   ( 0,  0,  0,        0,  0,  0,        0,  0,  0)
+    CYCLES_PD   ( 0,  0,  0,        0,  0,  0,        0,  0,  0)
+    CYCLES_DI   ( 0,  0,  0,        0,  0,  0,        8,  8,  7)
+    CYCLES_IX   ( 0,  0,  0,        0,  0,  0,       12, 12,  9)
+    CYCLES_AW   ( 0,  0,  0,        0,  0,  0,        8,  8,  6)
+    CYCLES_AL   ( 0,  0,  0,        0,  0,  0,       12, 12,  6)
+    CYCLES_DIPC ( 0,  0,  0,        0,  0,  0,        8,  8,  7)
+    CYCLES_IXPC ( 0,  0,  0,        0,  0,  0,       12, 12,  9)
 
     FINALIZE
 }
@@ -2147,7 +2266,9 @@ Moira::execLink(u16 opcode)
 
     prefetch<C>();
 
-    CYCLES_IP ( 0,  0,  0,    16, 16, 5,      0,  0,  6 );
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP   ( 0,  0,  0,       16, 16,  5,        0,  0,  6);
 
     FINALIZE
 }
@@ -2173,18 +2294,20 @@ Moira::execMove0(u16 opcode)
 
     prefetch<C, POLLIPL>();
 
-    CYCLES_DN   ( 4,  4,  2,       4,  4,  2,      4,  4,  2)
-    CYCLES_AN   ( 4,  4,  2,       4,  4,  2,      4,  4,  2)
-    CYCLES_AI   ( 8,  8,  6,       8,  8,  6,     12, 12,  6)
-    CYCLES_PI   ( 8,  8,  6,       8,  8,  6,     12, 12,  6)
-    CYCLES_PD   (10, 10,  7,      10, 10,  7,     14, 14,  7)
-    CYCLES_DI   (12, 12,  7,      12, 12,  7,     16, 16,  7)
-    CYCLES_IX   (14, 14,  9,      14, 14,  9,     18, 18,  9)
-    CYCLES_AW   (12, 12,  6,      12, 12,  6,     16, 16,  6)
-    CYCLES_AL   (16, 16,  6,      16, 16,  6,     20, 20,  6)
-    CYCLES_DIPC (12, 12,  7,      12, 12,  7,     16, 16,  7)
-    CYCLES_IXPC (14, 14,  9,      14, 14,  9,     18, 18,  9)
-    CYCLES_IM   ( 8,  8,  4,       8,  8,  4,     12, 12,  6)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 4,  4,  2,        4,  4,  2,        4,  4,  2)
+    CYCLES_AN   ( 4,  4,  2,        4,  4,  2,        4,  4,  2)
+    CYCLES_AI   ( 8,  8,  6,        8,  8,  6,       12, 12,  6)
+    CYCLES_PI   ( 8,  8,  6,        8,  8,  6,       12, 12,  6)
+    CYCLES_PD   (10, 10,  7,       10, 10,  7,       14, 14,  7)
+    CYCLES_DI   (12, 12,  7,       12, 12,  7,       16, 16,  7)
+    CYCLES_IX   (14, 14,  9,       14, 14,  9,       18, 18,  9)
+    CYCLES_AW   (12, 12,  6,       12, 12,  6,       16, 16,  6)
+    CYCLES_AL   (16, 16,  6,       16, 16,  6,       20, 20,  6)
+    CYCLES_DIPC (12, 12,  7,       12, 12,  7,       16, 16,  7)
+    CYCLES_IXPC (14, 14,  9,       14, 14,  9,       18, 18,  9)
+    CYCLES_IM   ( 8,  8,  4,        8,  8,  4,       12, 12,  6)
 
     FINALIZE
 }
@@ -2227,18 +2350,20 @@ Moira::execMove2(u16 opcode)
         looping<I>() ? noPrefetch() : prefetch<C, POLLIPL>();
     }
 
-    CYCLES_DN   ( 8,  8,  4,       8,  8,  4,     12, 12,  4)
-    CYCLES_AN   ( 8,  8,  4,       8,  8,  4,     12, 12,  4)
-    CYCLES_AI   (12, 12,  8,      12, 12,  8,     20, 20,  8)
-    CYCLES_PI   (12, 12,  8,      12, 12,  8,     20, 20,  8)
-    CYCLES_PD   (14, 14,  9,      14, 14,  9,     22, 22,  9)
-    CYCLES_DI   (16, 16,  9,      16, 16,  9,     24, 24,  9)
-    CYCLES_IX   (18, 18, 11,      18, 18, 11,     26, 26, 11)
-    CYCLES_AW   (16, 16,  8,      16, 16,  8,     24, 24,  8)
-    CYCLES_AL   (20, 20,  8,      20, 20,  8,     28, 28,  8)
-    CYCLES_DIPC (16, 16,  9,      16, 16,  9,     24, 24,  9)
-    CYCLES_IXPC (18, 18, 11,      18, 18, 11,     26, 26, 11)
-    CYCLES_IM   (12, 12,  6,      12, 12,  6,     20, 20,  8)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 8,  8,  4,        8,  8,  4,       12, 12,  4)
+    CYCLES_AN   ( 8,  8,  4,        8,  8,  4,       12, 12,  4)
+    CYCLES_AI   (12, 12,  8,       12, 12,  8,       20, 20,  8)
+    CYCLES_PI   (12, 12,  8,       12, 12,  8,       20, 20,  8)
+    CYCLES_PD   (14, 14,  9,       14, 14,  9,       22, 22,  9)
+    CYCLES_DI   (16, 16,  9,       16, 16,  9,       24, 24,  9)
+    CYCLES_IX   (18, 18, 11,       18, 18, 11,       26, 26, 11)
+    CYCLES_AW   (16, 16,  8,       16, 16,  8,       24, 24,  8)
+    CYCLES_AL   (20, 20,  8,       20, 20,  8,       28, 28,  8)
+    CYCLES_DIPC (16, 16,  9,       16, 16,  9,       24, 24,  9)
+    CYCLES_IXPC (18, 18, 11,       18, 18, 11,       26, 26, 11)
+    CYCLES_IM   (12, 12,  6,       12, 12,  6,       20, 20,  8)
 
     FINALIZE
 }
@@ -2281,18 +2406,20 @@ Moira::execMove3(u16 opcode)
         looping<I>() ? noPrefetch() : prefetch<C>();
     }
 
-    CYCLES_DN   ( 8,  8,  4,       8,  8,  4,     12, 12,  4)
-    CYCLES_AN   ( 8,  8,  4,       8,  8,  4,     12, 12,  4)
-    CYCLES_AI   (12, 12,  8,      12, 12,  8,     20, 20,  8)
-    CYCLES_PI   (12, 12,  8,      12, 12,  8,     20, 20,  8)
-    CYCLES_PD   (14, 14,  9,      14, 14,  9,     22, 22,  9)
-    CYCLES_DI   (16, 16,  9,      16, 16,  9,     24, 24,  9)
-    CYCLES_IX   (18, 18, 11,      18, 18, 11,     26, 26, 11)
-    CYCLES_AW   (16, 16,  8,      16, 16,  8,     24, 24,  8)
-    CYCLES_AL   (20, 20,  8,      20, 20,  8,     28, 28,  8)
-    CYCLES_DIPC (16, 16,  9,      16, 16,  9,     24, 24,  9)
-    CYCLES_IXPC (18, 18, 11,      18, 18, 11,     26, 26, 11)
-    CYCLES_IM   (12, 12,  6,      12, 12,  6,     20, 20,  8)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 8,  8,  4,        8,  8,  4,       12, 12,  4)
+    CYCLES_AN   ( 8,  8,  4,        8,  8,  4,       12, 12,  4)
+    CYCLES_AI   (12, 12,  8,       12, 12,  8,       20, 20,  8)
+    CYCLES_PI   (12, 12,  8,       12, 12,  8,       20, 20,  8)
+    CYCLES_PD   (14, 14,  9,       14, 14,  9,       22, 22,  9)
+    CYCLES_DI   (16, 16,  9,       16, 16,  9,       24, 24,  9)
+    CYCLES_IX   (18, 18, 11,       18, 18, 11,       26, 26, 11)
+    CYCLES_AW   (16, 16,  8,       16, 16,  8,       24, 24,  8)
+    CYCLES_AL   (20, 20,  8,       20, 20,  8,       28, 28,  8)
+    CYCLES_DIPC (16, 16,  9,       16, 16,  9,       24, 24,  9)
+    CYCLES_IXPC (18, 18, 11,       18, 18, 11,       26, 26, 11)
+    CYCLES_IM   (12, 12,  6,       12, 12,  6,       20, 20,  8)
 
     FINALIZE
 }
@@ -2347,18 +2474,20 @@ Moira::execMove4(u16 opcode)
     writeM<C, MODE_PD, S, REVERSE>(ea, data);
     updateAn<MODE_PD, S>(dst);
 
-    CYCLES_DN   ( 8,  8,  5,       8,  8,  5,     12, 14,  5)
-    CYCLES_AN   ( 0,  0,  0,       8,  8,  5,     12, 14,  5)
-    CYCLES_AI   (12, 12,  9,      12, 12,  9,     20, 22,  9)
-    CYCLES_PI   (12, 12,  9,      12, 12,  9,     20, 22,  9)
-    CYCLES_PD   (14, 14, 10,      14, 14, 10,     22, 24, 10)
-    CYCLES_DI   (16, 16, 10,      16, 16, 10,     24, 26, 10)
-    CYCLES_IX   (18, 18, 12,      18, 18, 12,     26, 28, 12)
-    CYCLES_AW   (16, 16,  9,      16, 16,  9,     24, 26,  9)
-    CYCLES_AL   (20, 20,  9,      20, 20,  9,     28, 30,  9)
-    CYCLES_DIPC (16, 16, 10,      16, 16, 10,     24, 26, 10)
-    CYCLES_IXPC (18, 18, 12,      18, 18, 12,     26, 28, 12)
-    CYCLES_IM   (12, 12,  7,      12, 12,  7,     20, 22,  9)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 8,  8,  5,        8,  8,  5,       12, 14,  5)
+    CYCLES_AN   ( 0,  0,  0,        8,  8,  5,       12, 14,  5)
+    CYCLES_AI   (12, 12,  9,       12, 12,  9,       20, 22,  9)
+    CYCLES_PI   (12, 12,  9,       12, 12,  9,       20, 22,  9)
+    CYCLES_PD   (14, 14, 10,       14, 14, 10,       22, 24, 10)
+    CYCLES_DI   (16, 16, 10,       16, 16, 10,       24, 26, 10)
+    CYCLES_IX   (18, 18, 12,       18, 18, 12,       26, 28, 12)
+    CYCLES_AW   (16, 16,  9,       16, 16,  9,       24, 26,  9)
+    CYCLES_AL   (20, 20,  9,       20, 20,  9,       28, 30,  9)
+    CYCLES_DIPC (16, 16, 10,       16, 16, 10,       24, 26, 10)
+    CYCLES_IXPC (18, 18, 12,       18, 18, 12,       26, 28, 12)
+    CYCLES_IM   (12, 12,  7,       12, 12,  7,       20, 22,  9)
 
     FINALIZE
 }
@@ -2401,18 +2530,20 @@ Moira::execMove5(u16 opcode)
         prefetch<C, POLLIPL>();
     }
 
-    CYCLES_DN   (12, 12,  5,      12, 12,  5,     16, 16,  5)
-    CYCLES_AN   (12, 12,  5,      12, 12,  5,     16, 16,  5)
-    CYCLES_AI   (16, 16,  9,      16, 16,  9,     24, 24,  9)
-    CYCLES_PI   (16, 16,  9,      16, 16,  9,     24, 24,  9)
-    CYCLES_PD   (18, 18, 10,      18, 18, 10,     26, 26, 10)
-    CYCLES_DI   (20, 20, 10,      20, 20, 10,     28, 28, 10)
-    CYCLES_IX   (22, 22, 12,      22, 22, 12,     30, 30, 12)
-    CYCLES_AW   (20, 20,  9,      20, 20,  9,     28, 28,  9)
-    CYCLES_AL   (24, 24,  9,      24, 24,  9,     32, 32,  9)
-    CYCLES_DIPC (20, 20, 10,      20, 20, 10,     28, 28, 10)
-    CYCLES_IXPC (22, 22, 12,      22, 22, 12,     30, 30, 12)
-    CYCLES_IM   (16, 16,  7,      16, 16,  7,     24, 24,  9)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   (12, 12,  5,       12, 12,  5,       16, 16,  5)
+    CYCLES_AN   (12, 12,  5,       12, 12,  5,       16, 16,  5)
+    CYCLES_AI   (16, 16,  9,       16, 16,  9,       24, 24,  9)
+    CYCLES_PI   (16, 16,  9,       16, 16,  9,       24, 24,  9)
+    CYCLES_PD   (18, 18, 10,       18, 18, 10,       26, 26, 10)
+    CYCLES_DI   (20, 20, 10,       20, 20, 10,       28, 28, 10)
+    CYCLES_IX   (22, 22, 12,       22, 22, 12,       30, 30, 12)
+    CYCLES_AW   (20, 20,  9,       20, 20,  9,       28, 28,  9)
+    CYCLES_AL   (24, 24,  9,       24, 24,  9,       32, 32,  9)
+    CYCLES_DIPC (20, 20, 10,       20, 20, 10,       28, 28, 10)
+    CYCLES_IXPC (22, 22, 12,       22, 22, 12,       30, 30, 12)
+    CYCLES_IM   (16, 16,  7,       16, 16,  7,       24, 24,  9)
 
     FINALIZE
 }
@@ -2455,18 +2586,20 @@ Moira::execMove6(u16 opcode)
         prefetch<C, POLLIPL>();
     }
 
-    CYCLES_DN   (14, 14,  7,    14, 14,  7,   18, 18,  7)
-    CYCLES_AN   (14, 14,  7,    14, 14,  7,   18, 18,  7)
-    CYCLES_AI   (18, 18, 11,    18, 18, 11,   26, 26, 11)
-    CYCLES_PI   (18, 18, 11,    18, 18, 11,   26, 26, 11)
-    CYCLES_PD   (20, 20, 12,    20, 20, 12,   28, 28, 12)
-    CYCLES_DI   (22, 22, 12,    22, 22, 12,   30, 30, 12)
-    CYCLES_IX   (24, 24, 14,    24, 24, 14,   32, 32, 14)
-    CYCLES_AW   (22, 22, 11,    22, 22, 11,   30, 30, 11)
-    CYCLES_AL   (26, 26, 11,    26, 26, 11,   34, 34, 11)
-    CYCLES_DIPC (22, 22, 12,    22, 22, 12,   30, 30, 12)
-    CYCLES_IXPC (24, 24, 14,    24, 24, 14,   32, 32, 14)
-    CYCLES_IM   (18, 18,  9,    18, 18,  9,   26, 26, 11)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   (14, 14,  7,       14, 14,  7,       18, 18,  7)
+    CYCLES_AN   (14, 14,  7,       14, 14,  7,       18, 18,  7)
+    CYCLES_AI   (18, 18, 11,       18, 18, 11,       26, 26, 11)
+    CYCLES_PI   (18, 18, 11,       18, 18, 11,       26, 26, 11)
+    CYCLES_PD   (20, 20, 12,       20, 20, 12,       28, 28, 12)
+    CYCLES_DI   (22, 22, 12,       22, 22, 12,       30, 30, 12)
+    CYCLES_IX   (24, 24, 14,       24, 24, 14,       32, 32, 14)
+    CYCLES_AW   (22, 22, 11,       22, 22, 11,       30, 30, 11)
+    CYCLES_AL   (26, 26, 11,       26, 26, 11,       34, 34, 11)
+    CYCLES_DIPC (22, 22, 12,       22, 22, 12,       30, 30, 12)
+    CYCLES_IXPC (24, 24, 14,       24, 24, 14,       32, 32, 14)
+    CYCLES_IM   (18, 18,  9,       18, 18,  9,       26, 26, 11)
 
     FINALIZE
 }
@@ -2492,18 +2625,20 @@ Moira::execMove7(u16 opcode)
 
     prefetch<C, POLLIPL>();
 
-    CYCLES_DN   (12, 12,  4,      12, 12,  4,     16, 16,  4)
-    CYCLES_AN   (12, 12,  4,      12, 12,  4,     16, 16,  4)
-    CYCLES_AI   (16, 16,  8,      16, 16,  8,     24, 24,  8)
-    CYCLES_PI   (16, 16,  8,      16, 16,  8,     24, 24,  8)
-    CYCLES_PD   (18, 18,  9,      18, 18,  9,     26, 26,  9)
-    CYCLES_DI   (20, 20,  9,      20, 20,  9,     28, 28,  9)
-    CYCLES_IX   (22, 22, 11,      22, 22, 11,     30, 30, 11)
-    CYCLES_AW   (20, 20,  8,      20, 20,  8,     28, 28,  8)
-    CYCLES_AL   (24, 24,  8,      24, 24,  8,     32, 32,  8)
-    CYCLES_DIPC (20, 20,  9,      20, 20,  9,     28, 28,  9)
-    CYCLES_IXPC (22, 22, 11,      22, 22, 11,     30, 30, 11)
-    CYCLES_IM   (16, 16,  6,      16, 16,  6,     24, 24,  8)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   (12, 12,  4,       12, 12,  4,       16, 16,  4)
+    CYCLES_AN   (12, 12,  4,       12, 12,  4,       16, 16,  4)
+    CYCLES_AI   (16, 16,  8,       16, 16,  8,       24, 24,  8)
+    CYCLES_PI   (16, 16,  8,       16, 16,  8,       24, 24,  8)
+    CYCLES_PD   (18, 18,  9,       18, 18,  9,       26, 26,  9)
+    CYCLES_DI   (20, 20,  9,       20, 20,  9,       28, 28,  9)
+    CYCLES_IX   (22, 22, 11,       22, 22, 11,       30, 30, 11)
+    CYCLES_AW   (20, 20,  8,       20, 20,  8,       28, 28,  8)
+    CYCLES_AL   (24, 24,  8,       24, 24,  8,       32, 32,  8)
+    CYCLES_DIPC (20, 20,  9,       20, 20,  9,       28, 28,  9)
+    CYCLES_IXPC (22, 22, 11,       22, 22, 11,       30, 30, 11)
+    CYCLES_IM   (16, 16,  6,       16, 16,  6,       24, 24,  8)
 
     FINALIZE
 }
@@ -2570,18 +2705,20 @@ Moira::execMove8(u16 opcode)
 
     prefetch<C, POLLIPL>();
 
-    CYCLES_DN   (16, 16,  6,      16, 16,  6,     20, 20,  6)
-    CYCLES_AN   (16, 16,  6,      16, 16,  6,     20, 20,  6)
-    CYCLES_AI   (20, 20, 10,      20, 20, 10,     28, 28, 10)
-    CYCLES_PI   (20, 20, 10,      20, 20, 10,     28, 28, 10)
-    CYCLES_PD   (22, 22, 11,      22, 22, 11,     30, 30, 11)
-    CYCLES_DI   (24, 24, 11,      24, 24, 11,     32, 32, 11)
-    CYCLES_IX   (26, 26, 13,      26, 26, 13,     34, 34, 13)
-    CYCLES_AW   (24, 24, 10,      24, 24, 10,     32, 32, 10)
-    CYCLES_AL   (28, 28, 10,      28, 28, 10,     36, 36, 10)
-    CYCLES_DIPC (24, 24, 11,      24, 24, 11,     32, 32, 11)
-    CYCLES_IXPC (26, 26, 13,      26, 26, 13,     34, 34, 13)
-    CYCLES_IM   (20, 20,  8,      20, 20,  8,     28, 28, 10)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   (16, 16,  6,       16, 16,  6,       20, 20,  6)
+    CYCLES_AN   (16, 16,  6,       16, 16,  6,       20, 20,  6)
+    CYCLES_AI   (20, 20, 10,       20, 20, 10,       28, 28, 10)
+    CYCLES_PI   (20, 20, 10,       20, 20, 10,       28, 28, 10)
+    CYCLES_PD   (22, 22, 11,       22, 22, 11,       30, 30, 11)
+    CYCLES_DI   (24, 24, 11,       24, 24, 11,       32, 32, 11)
+    CYCLES_IX   (26, 26, 13,       26, 26, 13,       34, 34, 13)
+    CYCLES_AW   (24, 24, 10,       24, 24, 10,       32, 32, 10)
+    CYCLES_AL   (28, 28, 10,       28, 28, 10,       36, 36, 10)
+    CYCLES_DIPC (24, 24, 11,       24, 24, 11,       32, 32, 11)
+    CYCLES_IXPC (26, 26, 13,       26, 26, 13,       34, 34, 13)
+    CYCLES_IM   (20, 20,  8,       20, 20,  8,       28, 28, 10)
 
     FINALIZE
 }
@@ -2600,18 +2737,20 @@ Moira::execMovea(u16 opcode)
     prefetch<C, POLLIPL>();
     writeA(dst, SEXT<S>(data));
 
-    CYCLES_DN   ( 4,  4,  2,       4,  4,  2,      4,  4,  2)
-    CYCLES_AN   ( 4,  4,  2,       4,  4,  2,      4,  4,  2)
-    CYCLES_AI   ( 8,  8,  6,       8,  8,  6,     12, 12,  6)
-    CYCLES_PI   ( 8,  8,  6,       8,  8,  6,     12, 12,  6)
-    CYCLES_PD   (10, 10,  7,      10, 10,  7,     14, 14,  7)
-    CYCLES_DI   (12, 12,  7,      12, 12,  7,     16, 16,  7)
-    CYCLES_IX   (14, 14,  9,      14, 14,  9,     18, 18,  9)
-    CYCLES_AW   (12, 12,  6,      12, 12,  6,     16, 16,  6)
-    CYCLES_AL   (16, 16,  6,      16, 16,  6,     20, 20,  6)
-    CYCLES_DIPC (12, 12,  7,      12, 12,  7,     16, 16,  7)
-    CYCLES_IXPC (14, 14,  9,      14, 14,  9,     18, 18,  9)
-    CYCLES_IM   ( 8,  8,  4,       8,  8,  4,     12, 12,  6)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 4,  4,  2,        4,  4,  2,        4,  4,  2)
+    CYCLES_AN   ( 4,  4,  2,        4,  4,  2,        4,  4,  2)
+    CYCLES_AI   ( 8,  8,  6,        8,  8,  6,       12, 12,  6)
+    CYCLES_PI   ( 8,  8,  6,        8,  8,  6,       12, 12,  6)
+    CYCLES_PD   (10, 10,  7,       10, 10,  7,       14, 14,  7)
+    CYCLES_DI   (12, 12,  7,       12, 12,  7,       16, 16,  7)
+    CYCLES_IX   (14, 14,  9,       14, 14,  9,       18, 18,  9)
+    CYCLES_AW   (12, 12,  6,       12, 12,  6,       16, 16,  6)
+    CYCLES_AL   (16, 16,  6,       16, 16,  6,       20, 20,  6)
+    CYCLES_DIPC (12, 12,  7,       12, 12,  7,       16, 16,  7)
+    CYCLES_IXPC (14, 14,  9,       14, 14,  9,       18, 18,  9)
+    CYCLES_IM   ( 8,  8,  4,        8,  8,  4,       12, 12,  6)
 
     FINALIZE
 }
@@ -2649,7 +2788,9 @@ Moira::execMovecRcRx(u16 opcode)
 
     prefetch<C, POLLIPL>();
 
-    CYCLES_IP ( 0,  0,  0,      0,  0,  0,      0, 12,  6);
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP (   0,  0,  0,        0,  0,  0,        0, 12,  6);
 
     FINALIZE
 }
@@ -2687,7 +2828,9 @@ Moira::execMovecRxRc(u16 opcode)
 
     prefetch<C, POLLIPL>();
 
-    CYCLES_IP ( 0,  0,  0,      0,  0,  0,      0, 10, 12);
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP   ( 0,  0,  0,        0,  0,  0,        0, 10, 12);
 
     FINALIZE
 }
@@ -2751,14 +2894,17 @@ Moira::execMovemEaRg(u16 opcode)
     prefetch<C, POLLIPL>();
 
     auto c = (C == M68020 || S == Word) ? 4 * cnt : 8 * cnt;
-    CYCLES_AI   ( 0,  0,  0,      12+c, 12+c, 12+c,     12+c, 12+c, 12+c)
-    CYCLES_PI   ( 0,  0,  0,      12+c, 12+c,  8+c,     12+c, 12+c,  8+c)
-    CYCLES_DI   ( 0,  0,  0,      16+c, 16+c, 13+c,     16+c, 16+c, 13+c)
-    CYCLES_IX   ( 0,  0,  0,      18+c, 18+c, 15+c,     18+c, 18+c, 15+c)
-    CYCLES_AW   ( 0,  0,  0,      16+c, 16+c, 12+c,     16+c, 16+c, 12+c)
-    CYCLES_AL   ( 0,  0,  0,      20+c, 20+c, 12+c,     20+c, 20+c, 12+c)
-    CYCLES_DIPC ( 0,  0,  0,      16+c, 16+c,  9+c,     16+c, 16+c,  9+c)
-    CYCLES_IXPC ( 0,  0,  0,      18+c, 18+c, 11+c,     18+c, 18+c, 11+c)
+
+    //           00  10  20        00    10    20        00    10    20
+    //           .b  .b  .b        .w    .w    .w        .l    .l    .l
+    CYCLES_AI   ( 0,  0,  0,     12+c, 12+c, 12+c,     12+c, 12+c, 12+c)
+    CYCLES_PI   ( 0,  0,  0,     12+c, 12+c,  8+c,     12+c, 12+c,  8+c)
+    CYCLES_DI   ( 0,  0,  0,     16+c, 16+c, 13+c,     16+c, 16+c, 13+c)
+    CYCLES_IX   ( 0,  0,  0,     18+c, 18+c, 15+c,     18+c, 18+c, 15+c)
+    CYCLES_AW   ( 0,  0,  0,     16+c, 16+c, 12+c,     16+c, 16+c, 12+c)
+    CYCLES_AL   ( 0,  0,  0,     20+c, 20+c, 12+c,     20+c, 20+c, 12+c)
+    CYCLES_DIPC ( 0,  0,  0,     16+c, 16+c,  9+c,     16+c, 16+c,  9+c)
+    CYCLES_IXPC ( 0,  0,  0,     18+c, 18+c, 11+c,     18+c, 18+c, 11+c)
 
     FINALIZE
 }
@@ -2826,12 +2972,15 @@ Moira::execMovemRgEa(u16 opcode)
     prefetch<C, POLLIPL>();
 
     auto c = (C == M68020 || S == Word) ? 4 * cnt : 8 * cnt;
-    CYCLES_AI   ( 0,  0,  0,       8+c,  8+c,  8+c,      8+c,  8+c,  8+c)
-    CYCLES_PD   ( 0,  0,  0,       8+c,  8+c,  4+c,      8+c,  8+c,  4+c)
-    CYCLES_DI   ( 0,  0,  0,      12+c, 12+c,  9+c,     12+c, 12+c,  9+c)
-    CYCLES_IX   ( 0,  0,  0,      14+c, 14+c, 11+c,     14+c, 14+c, 11+c)
-    CYCLES_AW   ( 0,  0,  0,      12+c, 12+c,  8+c,     12+c, 12+c,  8+c)
-    CYCLES_AL   ( 0,  0,  0,      16+c, 16+c,  8+c,     16+c, 16+c,  8+c)
+
+    //           00  10  20        00    10    20        00    10    20
+    //           .b  .b  .b        .w    .w    .w        .l    .l    .l
+    CYCLES_AI   ( 0,  0,  0,      8+c,  8+c,  8+c,      8+c,  8+c,  8+c)
+    CYCLES_PD   ( 0,  0,  0,      8+c,  8+c,  4+c,      8+c,  8+c,  4+c)
+    CYCLES_DI   ( 0,  0,  0,     12+c, 12+c,  9+c,     12+c, 12+c,  9+c)
+    CYCLES_IX   ( 0,  0,  0,     14+c, 14+c, 11+c,     14+c, 14+c, 11+c)
+    CYCLES_AW   ( 0,  0,  0,     12+c, 12+c,  8+c,     12+c, 12+c,  8+c)
+    CYCLES_AL   ( 0,  0,  0,     16+c, 16+c,  8+c,     16+c, 16+c,  8+c)
 
     FINALIZE
 }
@@ -2863,7 +3012,9 @@ Moira::execMovepDxEa(u16 opcode)
     }
     prefetch<C, POLLIPL>();
 
-    CYCLES_DI ( 0,  0,  0,      16, 16, 11,     24, 24, 17)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DI   ( 0,  0,  0,       16, 16, 11,       24, 24, 17)
 
     FINALIZE
 }
@@ -2898,7 +3049,9 @@ Moira::execMovepEaDx(u16 opcode)
     writeD<S>(dst, dx);
     prefetch<C>();
 
-    CYCLES_DI ( 0,  0,  0,      16, 16, 12,     24, 24, 18)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DI   ( 0,  0,  0,       16, 16, 12,       24, 24, 18)
 
     FINALIZE
 }
@@ -2920,7 +3073,9 @@ Moira::execMoveq(u16 opcode)
 
     prefetch<C, POLLIPL>();
 
-    CYCLES_IM ( 0,  0,  0,       0,  0,  0,      4,  4,  2)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IM   ( 0,  0,  0,        0,  0,  0,        4,  4,  2)
 
     FINALIZE
 }
@@ -2975,13 +3130,15 @@ Moira::execMoves(u16 opcode)
                 fatalError;
         }
 
-        CYCLES_AI   ( 0, 18,  9,       0, 18,  9,      0, 22, 11)
-        CYCLES_PI   ( 0, 18,  9,       0, 18,  9,      0, 22, 11)
-        CYCLES_PD   ( 0, 20, 10,       0, 20, 10,      0, 28, 12)
-        CYCLES_DI   ( 0, 26, 10,       0, 26, 10,      0, 32, 12)
-        CYCLES_IX   ( 0, 30, 12,       0, 30, 12,      0, 36, 14)
-        CYCLES_AW   ( 0, 26,  9,       0, 26,  9,      0, 32, 11)
-        CYCLES_AL   ( 0, 30,  9,       0, 30,  9,      0, 36, 11)
+        //           00  10  20        00  10  20        00  10  20
+        //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+        CYCLES_AI   ( 0, 18,  9,        0, 18,  9,        0, 22, 11)
+        CYCLES_PI   ( 0, 18,  9,        0, 18,  9,        0, 22, 11)
+        CYCLES_PD   ( 0, 20, 10,        0, 20, 10,        0, 28, 12)
+        CYCLES_DI   ( 0, 26, 10,        0, 26, 10,        0, 32, 12)
+        CYCLES_IX   ( 0, 30, 12,        0, 30, 12,        0, 36, 14)
+        CYCLES_AW   ( 0, 26,  9,        0, 26,  9,        0, 32, 11)
+        CYCLES_AL   ( 0, 30,  9,        0, 30,  9,        0, 36, 11)
 
     } else {                    // Ea -> Rg
 
@@ -3017,13 +3174,15 @@ Moira::execMoves(u16 opcode)
                 fatalError;
         }
 
-        CYCLES_AI   ( 0, 18, 11,       0, 18, 11,      0, 22, 11)
-        CYCLES_PI   ( 0, 18, 11,       0, 18, 11,      0, 22, 11)
-        CYCLES_PD   ( 0, 20, 12,       0, 20, 12,      0, 28, 12)
-        CYCLES_DI   ( 0, 26, 12,       0, 26, 12,      0, 32, 12)
-        CYCLES_IX   ( 0, 30, 14,       0, 30, 14,      0, 36, 14)
-        CYCLES_AW   ( 0, 26, 11,       0, 26, 11,      0, 32, 11)
-        CYCLES_AL   ( 0, 30, 11,       0, 30, 11,      0, 36, 11)
+        //           00  10  20        00  10  20        00  10  20
+        //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+        CYCLES_AI   ( 0, 18, 11,        0, 18, 11,        0, 22, 11)
+        CYCLES_PI   ( 0, 18, 11,        0, 18, 11,        0, 22, 11)
+        CYCLES_PD   ( 0, 20, 12,        0, 20, 12,        0, 28, 12)
+        CYCLES_DI   ( 0, 26, 12,        0, 26, 12,        0, 32, 12)
+        CYCLES_IX   ( 0, 30, 14,        0, 30, 14,        0, 36, 14)
+        CYCLES_AW   ( 0, 26, 11,        0, 26, 11,        0, 32, 11)
+        CYCLES_AL   ( 0, 30, 11,        0, 30, 11,        0, 36, 11)
     }
 
     prefetch<C, POLLIPL>();
@@ -3044,7 +3203,9 @@ Moira::execMoveFromCcrRg(u16 opcode)
 
     writeD <S> (dst, getCCR());
 
-    CYCLES_DN ( 0,  0,  0,       0,  4,  4,      0,  0,  0)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 0,  0,  0,        0,  4,  4,        0,  0,  0)
 
     FINALIZE
 }
@@ -3062,13 +3223,15 @@ Moira::execMoveFromCcrEa(u16 opcode)
 
     writeOp<C, M, S, POLLIPL>(dst, ea, getCCR());
 
-    CYCLES_AI   ( 0,  0,  0,       0, 12,  8,      0,  0,  0)
-    CYCLES_PI   ( 0,  0,  0,       0, 12,  8,      0,  0,  0)
-    CYCLES_PD   ( 0,  0,  0,       0, 14,  9,      0,  0,  0)
-    CYCLES_DI   ( 0,  0,  0,       0, 16,  9,      0,  0,  0)
-    CYCLES_IX   ( 0,  0,  0,       0, 18, 11,      0,  0,  0)
-    CYCLES_AW   ( 0,  0,  0,       0, 16,  8,      0,  0,  0)
-    CYCLES_AL   ( 0,  0,  0,       0, 20,  8,      0,  0,  0)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_AI   ( 0,  0,  0,        0, 12,  8,        0,  0,  0)
+    CYCLES_PI   ( 0,  0,  0,        0, 12,  8,        0,  0,  0)
+    CYCLES_PD   ( 0,  0,  0,        0, 14,  9,        0,  0,  0)
+    CYCLES_DI   ( 0,  0,  0,        0, 16,  9,        0,  0,  0)
+    CYCLES_IX   ( 0,  0,  0,        0, 18, 11,        0,  0,  0)
+    CYCLES_AW   ( 0,  0,  0,        0, 16,  8,        0,  0,  0)
+    CYCLES_AL   ( 0,  0,  0,        0, 20,  8,        0,  0,  0)
 
     FINALIZE
 }
@@ -3089,17 +3252,19 @@ Moira::execMoveToCcr(u16 opcode)
     (void)readMS<C, MEM_PROG, Word>(reg.pc + 2);
     prefetch<C, POLLIPL>();
 
-    CYCLES_DN   ( 0,  0,  0,      12, 12,  4,      0,  0,  0)
-    CYCLES_AI   ( 0,  0,  0,      16, 16,  8,      0,  0,  0)
-    CYCLES_PI   ( 0,  0,  0,      16, 16,  8,      0,  0,  0)
-    CYCLES_PD   ( 0,  0,  0,      18, 18,  9,      0,  0,  0)
-    CYCLES_DI   ( 0,  0,  0,      20, 20,  9,      0,  0,  0)
-    CYCLES_IX   ( 0,  0,  0,      22, 22, 11,      0,  0,  0)
-    CYCLES_AW   ( 0,  0,  0,      20, 20,  8,      0,  0,  0)
-    CYCLES_AL   ( 0,  0,  0,      24, 24,  8,      0,  0,  0)
-    CYCLES_DIPC ( 0,  0,  0,      20, 20,  9,      0,  0,  0)
-    CYCLES_IXPC ( 0,  0,  0,      22, 22, 11,      0,  0,  0)
-    CYCLES_IM   ( 0,  0,  0,      16, 16,  6,      0,  0,  0)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 0,  0,  0,       12, 12,  4,        0,  0,  0)
+    CYCLES_AI   ( 0,  0,  0,       16, 16,  8,        0,  0,  0)
+    CYCLES_PI   ( 0,  0,  0,       16, 16,  8,        0,  0,  0)
+    CYCLES_PD   ( 0,  0,  0,       18, 18,  9,        0,  0,  0)
+    CYCLES_DI   ( 0,  0,  0,       20, 20,  9,        0,  0,  0)
+    CYCLES_IX   ( 0,  0,  0,       22, 22, 11,        0,  0,  0)
+    CYCLES_AW   ( 0,  0,  0,       20, 20,  8,        0,  0,  0)
+    CYCLES_AL   ( 0,  0,  0,       24, 24,  8,        0,  0,  0)
+    CYCLES_DIPC ( 0,  0,  0,       20, 20,  9,        0,  0,  0)
+    CYCLES_IXPC ( 0,  0,  0,       22, 22, 11,        0,  0,  0)
+    CYCLES_IM   ( 0,  0,  0,       16, 16,  6,        0,  0,  0)
 
     FINALIZE
 }
@@ -3119,7 +3284,9 @@ Moira::execMoveFromSrRg(u16 opcode)
     if constexpr (C == M68000) SYNC(2);
     writeD<S>(dst, getSR());
 
-    CYCLES_DN ( 0,  0,  0,       6,  4,  8,      0,  0,  0)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 0,  0,  0,        6,  4,  8,        0,  0,  0)
 
     FINALIZE
 }
@@ -3138,14 +3305,16 @@ Moira::execMoveFromSrEa(u16 opcode)
 
     writeOp<C, M, S, POLLIPL>(dst, ea, getSR());
 
-    CYCLES_DN ( 0,  0,  0,       6,  4,  8,      0,  0,  0)
-    CYCLES_AI ( 0,  0,  0,      12, 12, 12,      0,  0,  0)
-    CYCLES_PI ( 0,  0,  0,      12, 12, 12,      0,  0,  0)
-    CYCLES_PD ( 0,  0,  0,      14, 14, 13,      0,  0,  0)
-    CYCLES_DI ( 0,  0,  0,      16, 16, 13,      0,  0,  0)
-    CYCLES_IX ( 0,  0,  0,      18, 18, 15,      0,  0,  0)
-    CYCLES_AW ( 0,  0,  0,      16, 16, 12,      0,  0,  0)
-    CYCLES_AL ( 0,  0,  0,      20, 20, 12,      0,  0,  0)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 0,  0,  0,        6,  4,  8,        0,  0,  0)
+    CYCLES_AI   ( 0,  0,  0,       12, 12, 12,        0,  0,  0)
+    CYCLES_PI   ( 0,  0,  0,       12, 12, 12,        0,  0,  0)
+    CYCLES_PD   ( 0,  0,  0,       14, 14, 13,        0,  0,  0)
+    CYCLES_DI   ( 0,  0,  0,       16, 16, 13,        0,  0,  0)
+    CYCLES_IX   ( 0,  0,  0,       18, 18, 15,        0,  0,  0)
+    CYCLES_AW   ( 0,  0,  0,       16, 16, 12,        0,  0,  0)
+    CYCLES_AL   ( 0,  0,  0,       20, 20, 12,        0,  0,  0)
 
     FINALIZE
 }
@@ -3168,17 +3337,19 @@ Moira::execMoveToSr(u16 opcode)
     (void)readMS<C, MEM_PROG,Word>(reg.pc + 2);
     prefetch<C, POLLIPL>();
 
-    CYCLES_DN   ( 0,  0,  0,      12, 12,  8,      0,  0,  0)
-    CYCLES_AI   ( 0,  0,  0,      16, 16, 12,      0,  0,  0)
-    CYCLES_PI   ( 0,  0,  0,      16, 16, 12,      0,  0,  0)
-    CYCLES_PD   ( 0,  0,  0,      18, 18, 13,      0,  0,  0)
-    CYCLES_DI   ( 0,  0,  0,      20, 20, 13,      0,  0,  0)
-    CYCLES_IX   ( 0,  0,  0,      22, 22, 15,      0,  0,  0)
-    CYCLES_AW   ( 0,  0,  0,      20, 20, 12,      0,  0,  0)
-    CYCLES_AL   ( 0,  0,  0,      24, 24, 12,      0,  0,  0)
-    CYCLES_DIPC ( 0,  0,  0,      20, 20, 13,      0,  0,  0)
-    CYCLES_IXPC ( 0,  0,  0,      22, 22, 15,      0,  0,  0)
-    CYCLES_IM   ( 0,  0,  0,      16, 16, 10,      0,  0,  0)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 0,  0,  0,       12, 12,  8,        0,  0,  0)
+    CYCLES_AI   ( 0,  0,  0,       16, 16, 12,        0,  0,  0)
+    CYCLES_PI   ( 0,  0,  0,       16, 16, 12,        0,  0,  0)
+    CYCLES_PD   ( 0,  0,  0,       18, 18, 13,        0,  0,  0)
+    CYCLES_DI   ( 0,  0,  0,       20, 20, 13,        0,  0,  0)
+    CYCLES_IX   ( 0,  0,  0,       22, 22, 15,        0,  0,  0)
+    CYCLES_AW   ( 0,  0,  0,       20, 20, 12,        0,  0,  0)
+    CYCLES_AL   ( 0,  0,  0,       24, 24, 12,        0,  0,  0)
+    CYCLES_DIPC ( 0,  0,  0,       20, 20, 13,        0,  0,  0)
+    CYCLES_IXPC ( 0,  0,  0,       22, 22, 15,        0,  0,  0)
+    CYCLES_IM   ( 0,  0,  0,       16, 16, 10,        0,  0,  0)
 
     FINALIZE
 }
@@ -3196,7 +3367,9 @@ Moira::execMoveUspAn(u16 opcode)
     prefetch<C, POLLIPL>();
     writeA(an, getUSP());
 
-    CYCLES_IP ( 0,  0,  0,       0,  0,  0,    4,  6,  2)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP   ( 0,  0,  0,        0,  0,  0,        4,  6,  2)
 
     FINALIZE
 }
@@ -3214,7 +3387,9 @@ Moira::execMoveAnUsp(u16 opcode)
     prefetch<C, POLLIPL>();
     setUSP(readA(an));
 
-    CYCLES_IP ( 0,  0,  0,       0,  0,  0,    4,  6,  2)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP   ( 0,  0,  0,        0,  0,  0,        4,  6,  2)
 
     FINALIZE
 }
@@ -3277,32 +3452,36 @@ Moira::execMulMusashi(u16 op)
 
     if constexpr (I == MULU) {
 
-        CYCLES_DN   ( 0,  0,  0,      54,  30,  27,    0,  0,  0)
-        CYCLES_AI   ( 0,  0,  0,      58,  34,  31,    0,  0,  0)
-        CYCLES_PI   ( 0,  0,  0,      58,  34,  31,    0,  0,  0)
-        CYCLES_PD   ( 0,  0,  0,      60,  36,  32,    0,  0,  0)
-        CYCLES_DI   ( 0,  0,  0,      62,  38,  32,    0,  0,  0)
-        CYCLES_IX   ( 0,  0,  0,      64,  40,  34,    0,  0,  0)
-        CYCLES_AW   ( 0,  0,  0,      62,  38,  31,    0,  0,  0)
-        CYCLES_AL   ( 0,  0,  0,      66,  42,  31,    0,  0,  0)
-        CYCLES_DIPC ( 0,  0,  0,      62,  38,  32,    0,  0,  0)
-        CYCLES_IXPC ( 0,  0,  0,      64,  40,  34,    0,  0,  0)
-        CYCLES_IM   ( 0,  0,  0,      58,  34,  29,    0,  0,  0)
+        //           00  10  20        00  10  20        00  10  20
+        //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+        CYCLES_DN   ( 0,  0,  0,       54,  30,  27,      0,  0,  0)
+        CYCLES_AI   ( 0,  0,  0,       58,  34,  31,      0,  0,  0)
+        CYCLES_PI   ( 0,  0,  0,       58,  34,  31,      0,  0,  0)
+        CYCLES_PD   ( 0,  0,  0,       60,  36,  32,      0,  0,  0)
+        CYCLES_DI   ( 0,  0,  0,       62,  38,  32,      0,  0,  0)
+        CYCLES_IX   ( 0,  0,  0,       64,  40,  34,      0,  0,  0)
+        CYCLES_AW   ( 0,  0,  0,       62,  38,  31,      0,  0,  0)
+        CYCLES_AL   ( 0,  0,  0,       66,  42,  31,      0,  0,  0)
+        CYCLES_DIPC ( 0,  0,  0,       62,  38,  32,      0,  0,  0)
+        CYCLES_IXPC ( 0,  0,  0,       64,  40,  34,      0,  0,  0)
+        CYCLES_IM   ( 0,  0,  0,       58,  34,  29,      0,  0,  0)
     }
 
     if constexpr (I == MULS) {
 
-        CYCLES_DN   ( 0,  0,  0,      54,  32,  27,    0,  0,  0)
-        CYCLES_AI   ( 0,  0,  0,      58,  36,  31,    0,  0,  0)
-        CYCLES_PI   ( 0,  0,  0,      58,  36,  31,    0,  0,  0)
-        CYCLES_PD   ( 0,  0,  0,      60,  38,  32,    0,  0,  0)
-        CYCLES_DI   ( 0,  0,  0,      62,  40,  32,    0,  0,  0)
-        CYCLES_IX   ( 0,  0,  0,      64,  42,  34,    0,  0,  0)
-        CYCLES_AW   ( 0,  0,  0,      62,  40,  31,    0,  0,  0)
-        CYCLES_AL   ( 0,  0,  0,      66,  44,  31,    0,  0,  0)
-        CYCLES_DIPC ( 0,  0,  0,      62,  40,  32,    0,  0,  0)
-        CYCLES_IXPC ( 0,  0,  0,      64,  42,  34,    0,  0,  0)
-        CYCLES_IM   ( 0,  0,  0,      58,  36,  29,    0,  0,  0)
+        //           00  10  20        00  10  20        00  10  20
+        //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+        CYCLES_DN   ( 0,  0,  0,       54,  32,  27,      0,  0,  0)
+        CYCLES_AI   ( 0,  0,  0,       58,  36,  31,      0,  0,  0)
+        CYCLES_PI   ( 0,  0,  0,       58,  36,  31,      0,  0,  0)
+        CYCLES_PD   ( 0,  0,  0,       60,  38,  32,      0,  0,  0)
+        CYCLES_DI   ( 0,  0,  0,       62,  40,  32,      0,  0,  0)
+        CYCLES_IX   ( 0,  0,  0,       64,  42,  34,      0,  0,  0)
+        CYCLES_AW   ( 0,  0,  0,       62,  40,  31,      0,  0,  0)
+        CYCLES_AL   ( 0,  0,  0,       66,  44,  31,      0,  0,  0)
+        CYCLES_DIPC ( 0,  0,  0,       62,  40,  32,      0,  0,  0)
+        CYCLES_IXPC ( 0,  0,  0,       64,  42,  34,      0,  0,  0)
+        CYCLES_IM   ( 0,  0,  0,       58,  36,  29,      0,  0,  0)
     }
 }
 
@@ -3352,17 +3531,19 @@ Moira::execMullMusashi(u16 op)
             break;
     }
 
-    CYCLES_DN   ( 0,  0,  0,       0,   0,  43,    0,  0, 43)
-    CYCLES_AI   ( 0,  0,  0,       0,   0,  47,    0,  0, 47)
-    CYCLES_PI   ( 0,  0,  0,       0,   0,  47,    0,  0, 47)
-    CYCLES_PD   ( 0,  0,  0,       0,   0,  48,    0,  0, 48)
-    CYCLES_DI   ( 0,  0,  0,       0,   0,  48,    0,  0, 48)
-    CYCLES_IX   ( 0,  0,  0,       0,   0,  50,    0,  0, 50)
-    CYCLES_AW   ( 0,  0,  0,       0,   0,  47,    0,  0, 47)
-    CYCLES_AL   ( 0,  0,  0,       0,   0,  47,    0,  0, 47)
-    CYCLES_DIPC ( 0,  0,  0,       0,   0,  48,    0,  0, 48)
-    CYCLES_IXPC ( 0,  0,  0,       0,   0,  50,    0,  0, 50)
-    CYCLES_IM   ( 0,  0,  0,       0,   0,  47,    0,  0, 47)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 0,  0,  0,        0,  0, 43,        0,  0, 43)
+    CYCLES_AI   ( 0,  0,  0,        0,  0, 47,        0,  0, 47)
+    CYCLES_PI   ( 0,  0,  0,        0,  0, 47,        0,  0, 47)
+    CYCLES_PD   ( 0,  0,  0,        0,  0, 48,        0,  0, 48)
+    CYCLES_DI   ( 0,  0,  0,        0,  0, 48,        0,  0, 48)
+    CYCLES_IX   ( 0,  0,  0,        0,  0, 50,        0,  0, 50)
+    CYCLES_AW   ( 0,  0,  0,        0,  0, 47,        0,  0, 47)
+    CYCLES_AL   ( 0,  0,  0,        0,  0, 47,        0,  0, 47)
+    CYCLES_DIPC ( 0,  0,  0,        0,  0, 48,        0,  0, 48)
+    CYCLES_IXPC ( 0,  0,  0,        0,  0, 50,        0,  0, 50)
+    CYCLES_IM   ( 0,  0,  0,        0,  0, 47,        0,  0, 47)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -3461,32 +3642,36 @@ Moira::execDivMusashi(u16 opcode)
 
     if constexpr (I == DIVU) {
 
-        CYCLES_DN   ( 0,  0,  0,     140, 108,  44,    0,  0,  0)
-        CYCLES_AI   ( 0,  0,  0,     144, 112,  48,    0,  0,  0)
-        CYCLES_PI   ( 0,  0,  0,     144, 112,  48,    0,  0,  0)
-        CYCLES_PD   ( 0,  0,  0,     146, 114,  49,    0,  0,  0)
-        CYCLES_DI   ( 0,  0,  0,     148, 116,  49,    0,  0,  0)
-        CYCLES_IX   ( 0,  0,  0,     150, 118,  51,    0,  0,  0)
-        CYCLES_AW   ( 0,  0,  0,     148, 116,  48,    0,  0,  0)
-        CYCLES_AL   ( 0,  0,  0,     152, 120,  48,    0,  0,  0)
-        CYCLES_DIPC ( 0,  0,  0,     148, 116,  49,    0,  0,  0)
-        CYCLES_IXPC ( 0,  0,  0,     150, 118,  51,    0,  0,  0)
-        CYCLES_IM   ( 0,  0,  0,     144, 112,  46,    0,  0,  0)
+        //           00  10  20        00  10  20        00  10  20
+        //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+        CYCLES_DN   ( 0,  0,  0,      140,108, 44,       0,  0,  0)
+        CYCLES_AI   ( 0,  0,  0,      144,112, 48,       0,  0,  0)
+        CYCLES_PI   ( 0,  0,  0,      144,112, 48,       0,  0,  0)
+        CYCLES_PD   ( 0,  0,  0,      146,114, 49,       0,  0,  0)
+        CYCLES_DI   ( 0,  0,  0,      148,116, 49,       0,  0,  0)
+        CYCLES_IX   ( 0,  0,  0,      150,118, 51,       0,  0,  0)
+        CYCLES_AW   ( 0,  0,  0,      148,116, 48,       0,  0,  0)
+        CYCLES_AL   ( 0,  0,  0,      152,120, 48,       0,  0,  0)
+        CYCLES_DIPC ( 0,  0,  0,      148,116, 49,       0,  0,  0)
+        CYCLES_IXPC ( 0,  0,  0,      150,118, 51,       0,  0,  0)
+        CYCLES_IM   ( 0,  0,  0,      144,112, 46,       0,  0,  0)
     }
 
     if constexpr (I == DIVS) {
 
-        CYCLES_DN   ( 0,  0,  0,     158, 122,  56,    0,  0,  0)
-        CYCLES_AI   ( 0,  0,  0,     162, 126,  60,    0,  0,  0)
-        CYCLES_PI   ( 0,  0,  0,     162, 126,  60,    0,  0,  0)
-        CYCLES_PD   ( 0,  0,  0,     164, 128,  61,    0,  0,  0)
-        CYCLES_DI   ( 0,  0,  0,     166, 130,  61,    0,  0,  0)
-        CYCLES_IX   ( 0,  0,  0,     168, 132,  63,    0,  0,  0)
-        CYCLES_AW   ( 0,  0,  0,     166, 130,  60,    0,  0,  0)
-        CYCLES_AL   ( 0,  0,  0,     170, 134,  60,    0,  0,  0)
-        CYCLES_DIPC ( 0,  0,  0,     166, 130,  61,    0,  0,  0)
-        CYCLES_IXPC ( 0,  0,  0,     168, 132,  63,    0,  0,  0)
-        CYCLES_IM   ( 0,  0,  0,     162, 126,  58,    0,  0,  0)
+        //           00  10  20        00  10  20        00  10  20
+        //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+        CYCLES_DN   ( 0,  0,  0,      158,122, 56,        0,  0,  0)
+        CYCLES_AI   ( 0,  0,  0,      162,126, 60,        0,  0,  0)
+        CYCLES_PI   ( 0,  0,  0,      162,126, 60,        0,  0,  0)
+        CYCLES_PD   ( 0,  0,  0,      164,128, 61,        0,  0,  0)
+        CYCLES_DI   ( 0,  0,  0,      166,130, 61,        0,  0,  0)
+        CYCLES_IX   ( 0,  0,  0,      168,132, 63,        0,  0,  0)
+        CYCLES_AW   ( 0,  0,  0,      166,130, 60,        0,  0,  0)
+        CYCLES_AL   ( 0,  0,  0,      170,134, 60,        0,  0,  0)
+        CYCLES_DIPC ( 0,  0,  0,      166,130, 61,        0,  0,  0)
+        CYCLES_IXPC ( 0,  0,  0,      168,132, 63,        0,  0,  0)
+        CYCLES_IM   ( 0,  0,  0,      162,126, 58,        0,  0,  0)
     }
 
     FINALIZE
@@ -3563,17 +3748,19 @@ Moira::execDivlMusashi(u16 op)
         }
     }
 
-    CYCLES_DN   ( 0,  0,  0,       0,   0,   0,    0,  0, 84)
-    CYCLES_AI   ( 0,  0,  0,       0,   0,   0,    0,  0, 88)
-    CYCLES_PI   ( 0,  0,  0,       0,   0,   0,    0,  0, 88)
-    CYCLES_PD   ( 0,  0,  0,       0,   0,   0,    0,  0, 89)
-    CYCLES_DI   ( 0,  0,  0,       0,   0,   0,    0,  0, 89)
-    CYCLES_IX   ( 0,  0,  0,       0,   0,   0,    0,  0, 91)
-    CYCLES_AW   ( 0,  0,  0,       0,   0,   0,    0,  0, 88)
-    CYCLES_AL   ( 0,  0,  0,       0,   0,   0,    0,  0, 88)
-    CYCLES_DIPC ( 0,  0,  0,       0,   0,   0,    0,  0, 89)
-    CYCLES_IXPC ( 0,  0,  0,       0,   0,   0,    0,  0, 91)
-    CYCLES_IM   ( 0,  0,  0,       0,   0,   0,    0,  0, 88)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 0,  0,  0,        0,  0,  0,        0,  0, 84)
+    CYCLES_AI   ( 0,  0,  0,        0,  0,  0,        0,  0, 88)
+    CYCLES_PI   ( 0,  0,  0,        0,  0,  0,        0,  0, 88)
+    CYCLES_PD   ( 0,  0,  0,        0,  0,  0,        0,  0, 89)
+    CYCLES_DI   ( 0,  0,  0,        0,  0,  0,        0,  0, 89)
+    CYCLES_IX   ( 0,  0,  0,        0,  0,  0,        0,  0, 91)
+    CYCLES_AW   ( 0,  0,  0,        0,  0,  0,        0,  0, 88)
+    CYCLES_AL   ( 0,  0,  0,        0,  0,  0,        0,  0, 88)
+    CYCLES_DIPC ( 0,  0,  0,        0,  0,  0,        0,  0, 89)
+    CYCLES_IXPC ( 0,  0,  0,        0,  0,  0,        0,  0, 91)
+    CYCLES_IM   ( 0,  0,  0,        0,  0,  0,        0,  0, 88)
 
     FINALIZE
 }
@@ -3604,6 +3791,8 @@ Moira::execNbcdEa(u16 opcode)
 
     prefetch<C, POLLIPL>();
     writeM<C, M, Byte>(ea, bcd<C, SBCD, Byte>(data, 0));
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -3622,7 +3811,11 @@ Moira::execNegRg(u16 opcode)
     if constexpr (S == Long) SYNC(2);
     writeD<S>(dst, data);
 
-    CYCLES_DN ( 4,  4,  2,       4,  4,  2,      6,  6,  2)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 4,  4,  2,        4,  4,  2,        6,  6,  2)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -3644,13 +3837,17 @@ Moira::execNegEa(u16 opcode)
         writeOp<C, M, S, REVERSE>(dst, ea, data);
     }
 
-    CYCLES_AI (12, 12,  8,      12, 12,  8,     20, 20,  8)
-    CYCLES_PI (12, 12,  8,      12, 12,  8,     20, 20,  8)
-    CYCLES_PD (14, 14,  9,      14, 14,  9,     22, 22,  9)
-    CYCLES_DI (16, 16,  9,      16, 16,  9,     24, 24,  9)
-    CYCLES_IX (18, 18, 11,      18, 18, 11,     26, 26, 11)
-    CYCLES_AW (16, 16,  8,      16, 16,  8,     24, 24,  8)
-    CYCLES_AL (20, 20,  8,      20, 20,  8,     28, 28,  8)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_AI   (12, 12,  8,       12, 12,  8,       20, 20,  8)
+    CYCLES_PI   (12, 12,  8,       12, 12,  8,       20, 20,  8)
+    CYCLES_PD   (14, 14,  9,       14, 14,  9,       22, 22,  9)
+    CYCLES_DI   (16, 16,  9,       16, 16,  9,       24, 24,  9)
+    CYCLES_IX   (18, 18, 11,       18, 18, 11,       26, 26, 11)
+    CYCLES_AW   (16, 16,  8,       16, 16,  8,       24, 24,  8)
+    CYCLES_AL   (20, 20,  8,       20, 20,  8,       28, 28,  8)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -3660,7 +3857,11 @@ Moira::execNop(u16 opcode)
 
     prefetch<C, POLLIPL>();
 
-    CYCLES_IP ( 0,  0,  0,     0,  0,  0,     4,  4,  2)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP   ( 0,  0,  0,        0,  0,  0,        4,  4,  2)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -3678,7 +3879,11 @@ Moira::execPackDn(u16 opcode)
     writeD<Byte>(dx, dst);
     prefetch<C>();
 
-    CYCLES_DN ( 0,  0,  0,     0,  0,  6,     0,  0,  0)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 0,  0,  0,        0,  0,  6,        0,  0,  0)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -3702,7 +3907,11 @@ Moira::execPackPd(u16 opcode)
     writeOp<C, M, Byte>(dx, (src >> 4 & 0xF0) | (src & 0x0F));
     prefetch<C>();
 
-    CYCLES_PD ( 0,  0,  0,     0,  0, 13,     0,  0,  0)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_PD   ( 0,  0,  0,        0,  0, 13,        0,  0,  0)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -3743,13 +3952,17 @@ Moira::execPea(u16 opcode)
         push <C,Long> (ea);
     }
 
-    CYCLES_AI   ( 0,  0,  0,       0,  0,  0,     12, 12,  9)
-    CYCLES_DI   ( 0,  0,  0,       0,  0,  0,     16, 16, 10)
-    CYCLES_IX   ( 0,  0,  0,       0,  0,  0,     20, 20, 12)
-    CYCLES_AW   ( 0,  0,  0,       0,  0,  0,     16, 16,  9)
-    CYCLES_AL   ( 0,  0,  0,       0,  0,  0,     20, 20,  9)
-    CYCLES_DIPC ( 0,  0,  0,       0,  0,  0,     16, 16, 10)
-    CYCLES_IXPC ( 0,  0,  0,       0,  0,  0,     20, 20, 12)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_AI   ( 0,  0,  0,        0,  0,  0,       12, 12,  9)
+    CYCLES_DI   ( 0,  0,  0,        0,  0,  0,       16, 16, 10)
+    CYCLES_IX   ( 0,  0,  0,        0,  0,  0,       20, 20, 12)
+    CYCLES_AW   ( 0,  0,  0,        0,  0,  0,       16, 16,  9)
+    CYCLES_AL   ( 0,  0,  0,        0,  0,  0,       20, 20,  9)
+    CYCLES_DIPC ( 0,  0,  0,        0,  0,  0,       16, 16, 10)
+    CYCLES_IXPC ( 0,  0,  0,        0,  0,  0,       20, 20, 12)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -3766,7 +3979,11 @@ Moira::execReset(u16 opcode)
 
     prefetch<C, POLLIPL>();
 
-    CYCLES_IP ( 0,  0,  0,     0,  0,  0,   132, 130, 518)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP   ( 0,  0,  0,        0,  0,  0,      132,130,518)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -3790,7 +4007,11 @@ Moira::execRtd(u16 opcode)
     setPC(newpc);
     fullPrefetch<C, POLLIPL>();
 
-    CYCLES_IP ( 0,  0,  0,     0,  0,  0,     0, 16, 10)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP   ( 0,  0,  0,        0,  0,  0,        0, 16, 10)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -3949,7 +4170,11 @@ Moira::execRte(u16 opcode)
     setPC(newpc);
     fullPrefetch<C, POLLIPL>();
 
-    CYCLES_IP ( 0,  0,  0,     0,  0,  0,    20, 24, 20)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP   ( 0,  0,  0,        0,  0,  0,       20, 24, 20)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -3960,6 +4185,8 @@ Moira::execRtm(u16 opcode)
     fullPrefetch<C, POLLIPL>();
 
     CYCLES_68020(19)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -3987,7 +4214,11 @@ Moira::execRtr(u16 opcode)
 
     fullPrefetch<C, POLLIPL>();
 
-    CYCLES_IP ( 0,  0,  0,     0,  0,  0,    20, 20, 14)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP   ( 0,  0,  0,        0,  0,  0,       20, 20, 14)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -4011,7 +4242,11 @@ Moira::execRts(u16 opcode)
     setPC(newpc);
     fullPrefetch<C, POLLIPL>();
 
-    CYCLES_IP ( 0,  0,  0,     0,  0,  0,    16, 16, 10)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP   ( 0,  0,  0,        0,  0,  0,       16, 16, 10)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -4030,7 +4265,11 @@ Moira::execSccRg(u16 opcode)
 
     writeD<Byte>(dst, data);
 
-    CYCLES_DN   ( 0,  0,  0,       data ? 6 : 4,  4,  4,      0,  0,  0)
+    //           00  10  20           00     10  20        00  10  20
+    //           .b  .b  .b           .w     .w  .w        .l  .l  .l
+    CYCLES_DN   ( 0,  0,  0,       data?6:4,  4,  4,        0,  0,  0)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -4048,13 +4287,17 @@ Moira::execSccEa(u16 opcode)
 
     writeOp<C, M, Byte>(dst, ea, data);
 
-    CYCLES_AI   ( 0,  0,  0,      12, 12, 10,      0,  0,  0)
-    CYCLES_PI   ( 0,  0,  0,      12, 12, 10,      0,  0,  0)
-    CYCLES_PD   ( 0,  0,  0,      14, 14, 11,      0,  0,  0)
-    CYCLES_DI   ( 0,  0,  0,      16, 16, 11,      0,  0,  0)
-    CYCLES_IX   ( 0,  0,  0,      18, 18, 13,      0,  0,  0)
-    CYCLES_AW   ( 0,  0,  0,      16, 16, 10,      0,  0,  0)
-    CYCLES_AL   ( 0,  0,  0,      20, 20, 10,      0,  0,  0)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_AI   ( 0,  0,  0,       12, 12, 10,        0,  0,  0)
+    CYCLES_PI   ( 0,  0,  0,       12, 12, 10,        0,  0,  0)
+    CYCLES_PD   ( 0,  0,  0,       14, 14, 11,        0,  0,  0)
+    CYCLES_DI   ( 0,  0,  0,       16, 16, 11,        0,  0,  0)
+    CYCLES_IX   ( 0,  0,  0,       18, 18, 13,        0,  0,  0)
+    CYCLES_AW   ( 0,  0,  0,       16, 16, 10,        0,  0,  0)
+    CYCLES_AL   ( 0,  0,  0,       20, 20, 10,        0,  0,  0)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -4070,8 +4313,12 @@ Moira::execStop(u16 opcode)
     flags |= CPU_IS_STOPPED;
     reg.pc0 = reg.pc;
 
-    CYCLES_IP ( 0,  0,  0,     4,  4,  8,     0,  0,  0)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP   ( 0,  0,  0,        4,  4,  8,        0,  0,  0)
     signalStopInstr(src);
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -4092,7 +4339,11 @@ Moira::execSwap(u16 opcode)
     reg.sr.v = 0;
     reg.sr.c = 0;
 
-    CYCLES_DN ( 0,  0,  0,     4,  4,  4,     0,  0,  0)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 0,  0,  0,        4,  4,  4,        0,  0,  0)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -4116,6 +4367,8 @@ Moira::execTasRg(u16 opcode)
     writeD<S>(dst, data);
 
     prefetch<C, POLLIPL>();
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -4140,6 +4393,8 @@ Moira::execTasEa(u16 opcode)
     writeOp<C, M, S>(dst, ea, data);
 
     prefetch<C, POLLIPL>();
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -4152,7 +4407,11 @@ Moira::execTrap(u16 opcode)
     SYNC(4);
     execTrapNException<C>(32 + nr);
 
-    CYCLES_IP ( 0,  0,  0,     0,  0,  0,    34, 38, 20)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP   ( 0,  0,  0,        0,  0,  0,       34, 38, 20)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -4164,13 +4423,21 @@ Moira::execTrapv(u16 opcode)
 
         (void)readMS<C, MEM_PROG, Word>(reg.pc + 2);
         execTrapException(7);
-        CYCLES_IP ( 0,  0,  0,     0,  0,  0,    34, 34, 20)
+
+        //           00  10  20        00  10  20        00  10  20
+        //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+        CYCLES_IP   ( 0,  0,  0,        0,  0,  0,       34, 34, 20)
 
     } else {
 
         prefetch<C, POLLIPL>();
-        CYCLES_IP ( 0,  0,  0,     0,  0,  0,     4,  4,  4)
+
+        //           00  10  20        00  10  20        00  10  20
+        //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+        CYCLES_IP   ( 0,  0,  0,        0,  0,  0,        4,  4,  4)
     }
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -4199,6 +4466,8 @@ Moira::execTrapcc(u16 opcode)
     }
 
     prefetch<C, POLLIPL>();
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -4218,18 +4487,22 @@ Moira::execTst(u16 opcode)
 
     looping<I>() ? noPrefetch() : prefetch<C, POLLIPL>();
 
-    CYCLES_DN   ( 4,  4,  2,     4,  4,  2,     4,  4,  2)
-    CYCLES_AN   ( 0,  0,  0,     0,  0,  2,     4,  4,  2)
-    CYCLES_AI   ( 8,  8,  6,     8,  8,  6,    12, 12,  6)
-    CYCLES_PI   ( 8,  8,  6,     8,  8,  6,    12, 12,  6)
-    CYCLES_PD   (10, 10,  7,    10, 10,  7,    14, 14,  7)
-    CYCLES_DI   (12, 12,  7,    12, 12,  7,    16, 16,  7)
-    CYCLES_IX   (14, 14,  9,    14, 14,  9,    18, 18,  9)
-    CYCLES_AW   (12, 12,  6,    12, 12,  6,    16, 16,  6)
-    CYCLES_AL   (16, 16,  6,    16, 16,  6,    20, 20,  6)
-    CYCLES_DIPC ( 0,  0,  7,     0,  0,  7,     0,  0,  7)
-    CYCLES_IXPC ( 0,  0,  9,     0,  0,  9,     0,  0,  9)
-    CYCLES_IM   ( 0,  0,  6,     0,  0,  6,     0,  0,  6)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 4,  4,  2,        4,  4,  2,        4,  4,  2)
+    CYCLES_AN   ( 0,  0,  0,        0,  0,  2,        4,  4,  2)
+    CYCLES_AI   ( 8,  8,  6,        8,  8,  6,       12, 12,  6)
+    CYCLES_PI   ( 8,  8,  6,        8,  8,  6,       12, 12,  6)
+    CYCLES_PD   (10, 10,  7,       10, 10,  7,       14, 14,  7)
+    CYCLES_DI   (12, 12,  7,       12, 12,  7,       16, 16,  7)
+    CYCLES_IX   (14, 14,  9,       14, 14,  9,       18, 18,  9)
+    CYCLES_AW   (12, 12,  6,       12, 12,  6,       16, 16,  6)
+    CYCLES_AL   (16, 16,  6,       16, 16,  6,       20, 20,  6)
+    CYCLES_DIPC ( 0,  0,  7,        0,  0,  7,        0,  0,  7)
+    CYCLES_IXPC ( 0,  0,  9,        0,  0,  9,        0,  0,  9)
+    CYCLES_IM   ( 0,  0,  6,        0,  0,  6,        0,  0,  6)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -4254,7 +4527,11 @@ Moira::execUnlk(u16 opcode)
     if (an != 7) reg.sp += 4;
     prefetch<C>();
 
-    CYCLES_IP ( 0,  0,  0,    12, 12,  6,     0,  0,  0)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP   ( 0,  0,  0,       12, 12,  6,        0,  0,  0)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -4273,7 +4550,11 @@ Moira::execUnpkDn(u16 opcode)
 
     prefetch<C>();
 
-    CYCLES_DN ( 0,  0,  0,     0,  0,  8,     0,  0,  0)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 0,  0,  0,        0,  0,  8,        0,  0,  0)
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -4296,7 +4577,11 @@ Moira::execUnpkPd(u16 opcode)
 
     prefetch<C>();
 
-    CYCLES_PD ( 0,  0,  0,     0,  0, 13,     0,  0,  0)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_PD   ( 0,  0,  0,        0,  0, 13,        0,  0,  0)
+
+    FINALIZE
 }
 
 #undef AVAILABILITY
