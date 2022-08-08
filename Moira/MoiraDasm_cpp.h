@@ -103,13 +103,33 @@ Moira::dasmIllegal(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmLineA(StrWriter &str, u32 &addr, u16 op)
 {
-    str << "dc.w " << tab << UInt16{op} << "; opcode 1010";
+    switch (str.style) {
+
+        case DASM_VDA68K:
+
+            str << "linea";
+            break;
+
+        default:
+
+            str << "dc.w " << tab << UInt16{op} << "; opcode 1010";
+    }
 }
 
 template <Instr I, Mode M, Size S> void
 Moira::dasmLineF(StrWriter &str, u32 &addr, u16 op)
 {
-    str << "dc.w " << tab << UInt16{op} << "; opcode 1111";
+    switch (str.style) {
+
+        case DASM_VDA68K:
+
+            str << "linef";
+            break;
+
+        default:
+
+            str << "dc.w " << tab << UInt16{op} << "; opcode 1111";
+    }
 }
 
 template <Instr I, Mode M, Size S> void
@@ -366,9 +386,11 @@ Moira::dasmBitFieldDn(StrWriter &str, u32 &addr, u16 op)
     str << dst;
 
     if (ext & 0x0800) {
-        str << " {" << Dn ( _______xxx______(ext) ) << ":";
+        if (str.style != DASM_VDA68K) str << " ";
+        str << "{" << Dn ( _______xxx______(ext) ) << ":";
     } else {
-        str << " {" << _____xxxxx______(ext) << ":";
+        if (str.style != DASM_VDA68K) str << " ";
+        str << "{" << _____xxxxx______(ext) << ":";
     }
 
     if (ext & 0x0020) {
@@ -426,7 +448,9 @@ Moira::dasmBsr(StrWriter &str, u32 &addr, u16 op)
     U32_INC(dst, 2);
     U32_INC(dst, S == Byte ? (i8)op : SEXT<S>(dasmRead<S>(addr)));
 
-    str << Ins<I>{} << tab << UInt(dst);
+    str << Ins<I>{};
+    if (str.style == DASM_VDA68K) str << Sz<S>{};
+    str << tab << UInt(dst);
     str << Av<I, M, S>{};
 }
 
@@ -684,7 +708,10 @@ Moira::dasmBcc(StrWriter &str, u32 &addr, u16 op)
     U32_INC(dst, 2);
     U32_INC(dst, S == Byte ? (i8)op : SEXT<S>(dasmRead<S>(addr)));
 
-    str << Ins<I>{} << tab << UInt(dst);
+
+    str << Ins<I>{};
+    if (str.style == DASM_VDA68K) str << Sz<S>{};
+    str << tab << UInt(dst);
     str << Av<I, M, S>{};
 }
 
@@ -1187,8 +1214,18 @@ Moira::dasmPackDn(StrWriter &str, u32 &addr, u16 op)
     auto rx = Op <M,S> ( _____________xxx(op), addr );
     auto ry = Op <M,S> ( ____xxx_________(op), addr );
 
-    str << Ins<I>{} << tab << rx << Sep{} << ry << Sep{} << Imu(ext);
-    str << Av<I, M, S>{};
+    switch (str.style) {
+
+        case DASM_VDA68K:
+
+            str << Ins<I>{} << tab << rx << Sep{} << ry << Sep{} << Ims<S>(ext);
+            break;
+
+        default:
+
+            str << Ins<I>{} << tab << rx << Sep{} << ry << Sep{} << Imu(ext);
+            str << Av<I, M, S>{};
+    }
 }
 
 template <Instr I, Mode M, Size S> void
@@ -1383,8 +1420,18 @@ Moira::dasmUnpkDn(StrWriter &str, u32 &addr, u16 op)
     auto rx = Op <M,S> ( _____________xxx(op), addr );
     auto ry = Op <M,S> ( ____xxx_________(op), addr );
 
-    str << Ins<I>{} << tab << rx << Sep{} << ry << Sep{} << Imu(ext);
-    str << Av<I, M, S>{};
+    switch (str.style) {
+
+        case DASM_VDA68K:
+
+            str << Ins<I>{} << tab << rx << Sep{} << ry << Sep{} << Ims<S>(ext);
+            break;
+
+        default:
+
+            str << Ins<I>{} << tab << rx << Sep{} << ry << Sep{} << Imu(ext);
+            str << Av<I, M, S>{};
+    }
 }
 
 template <Instr I, Mode M, Size S> void

@@ -240,12 +240,9 @@ m68k_word *M68k_Disassemble(struct DisasmPara_68k *dp)
   dp->displacement = 0;
   db_radix = dp->radix;
 
-    printf("Reading from %x\n", dbuf.sval);
-
   opc = read16(dbuf.val);
   dbuf.used++;
 
-    printf("Calling func %x\n", opc);
   func = opcode_map[OPCODE_MAP(opc)];
   func(&dbuf, opc);
 
@@ -1440,7 +1437,7 @@ void opcode_coproc(dis_buffer_t *dbuf, ushort opc)
 void opcode_1010(dis_buffer_t *dbuf, ushort opc)
 {
   addstring(dbuf, "linea");
-  dbuf->used++;
+  // dbuf->used++;
 }
 
 
