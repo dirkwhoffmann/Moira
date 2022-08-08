@@ -251,6 +251,23 @@ StrWriter::operator<<(An an)
 }
 
 StrWriter&
+StrWriter::operator<<(Anr an)
+{
+    if (style == DASM_MUSASHI) {
+
+        *ptr++ = 'A';
+        *ptr++ = '0' + (char)an.raw;
+
+    } else {
+
+        *ptr++ = 'a';
+        *ptr++ = '0' + (char)an.raw;
+    }
+
+    return *this;
+}
+
+StrWriter&
 StrWriter::operator<<(Rn rn)
 {
     if (rn.raw < 8) {
@@ -262,26 +279,39 @@ StrWriter::operator<<(Rn rn)
 }
 
 StrWriter&
+StrWriter::operator<<(Rnr rn)
+{
+    if (rn.raw < 8) {
+        *this << Dn{rn.raw};
+    } else {
+        *this << Anr{rn.raw - 8};
+    }
+    return *this;
+}
+
+StrWriter&
 StrWriter::operator<<(Cn cn)
 {
+    bool upper = style != DASM_VDA68K;
+
     switch (cn.raw) {
 
-        case 0x000: *this << "SFC";   break;
-        case 0x001: *this << "DFC";   break;
-        case 0x800: *this << "USP";   break;
-        case 0x801: *this << "VBR";   break;
-        case 0x002: *this << "CACR";  break;
-        case 0x802: *this << "CAAR";  break;
-        case 0x803: *this << "MSP";   break;
-        case 0x804: *this << "ISP";   break;
-        case 0x003: *this << "TC";    break;
-        case 0x004: *this << "ITT0";  break;
-        case 0x005: *this << "ITT1";  break;
-        case 0x006: *this << "DTT0";  break;
-        case 0x007: *this << "DTT1";  break;
-        case 0x805: *this << "MMUSR"; break;
-        case 0x806: *this << "URP";   break;
-        case 0x807: *this << "SRP";   break;
+        case 0x000: *this << (upper ? "SFC" : "sfc");   break;
+        case 0x001: *this << (upper ? "DFC" : "dfc");   break;
+        case 0x800: *this << (upper ? "USP" : "usp");   break;
+        case 0x801: *this << (upper ? "VBR" : "vbr");   break;
+        case 0x002: *this << (upper ? "CACR" : "cacr");  break;
+        case 0x802: *this << (upper ? "CAAR" : "caar");  break;
+        case 0x803: *this << (upper ? "MSP" : "msp");   break;
+        case 0x804: *this << (upper ? "ISP" : "isp");   break;
+        case 0x003: *this << (upper ? "TC" : "tc");    break;
+        case 0x004: *this << (upper ? "ITT0" : "itt0");  break;
+        case 0x005: *this << (upper ? "ITT1" : "itt1");  break;
+        case 0x006: *this << (upper ? "DTT0" : "dtt0");  break;
+        case 0x007: *this << (upper ? "DTT1" : "dtt1");  break;
+        case 0x805: *this << (upper ? "MMUSR" : "mmusr"); break;
+        case 0x806: *this << (upper ? "URP" : "urp");   break;
+        case 0x807: *this << (upper ? "SRP" : "srp");   break;
 
         default:
             *this << UInt(cn.raw);
@@ -366,11 +396,11 @@ StrWriter::operator<<(Imu im)
     return *this;
 }
 
-StrWriter&
-StrWriter::operator<<(Ims im)
+template <Size S> StrWriter&
+StrWriter::operator<<(Ims<S> im)
 {
     *ptr++ = '#';
-    *this << Int(im.raw);
+    *this << Int(SEXT<S>(im.raw));
     return *this;
 }
 
@@ -395,6 +425,9 @@ StrWriter::operator<<(Scale s)
 StrWriter&
 StrWriter::operator<<(Align align)
 {
+    // Write at least a single space
+    *ptr++ = ' ';
+    
     while (ptr < base + align.raw) *ptr++ = ' ';
     return *this;
 }
@@ -423,11 +456,12 @@ StrWriter::operator<<(RegList l)
         if (first) { first = false; } else { *this << "/"; }
 
         // Format variant 1: Single register
-        if (r[i] == 1) { *this << Rn{i}; }
+        if (r[i] == 1) { *this << Rnr{i}; }
 
         // Format variant 2: Register range
-        else { *this << Rn{i} << "-" << Rn{i+r[i]-1}; }
+        else { *this << Rnr{i} << "-" << Rnr{i+r[i]-1}; }
     }
+
     return *this;
 }
 
@@ -447,7 +481,15 @@ StrWriter::operator<<(RegRegList l)
 template <Instr I> StrWriter&
 StrWriter::operator<<(Ins<I> i)
 {
-    *this << (upper ? instrUpper[I] : instrLower[I]);
+    if constexpr (I == DBF) {
+
+        *this << (style == DASM_VDA68K ? "dbf" : "dbra");
+
+    } else {
+
+        *this << (upper ? instrUpper[I] : instrLower[I]);
+    }
+
     return *this;
 }
 
@@ -549,7 +591,7 @@ StrWriter::operator<<(const Ea<M,S> &ea)
                 *this << Imu(ea.ext1);
             } else {
                 if constexpr (S != 0) {
-                    *this << Ims(SEXT<S>(ea.ext1));
+                    *this << Ims<S>(ea.ext1);
                 }
             }
             break;
@@ -774,22 +816,34 @@ StrWriter::fullExtension(const Ea <M,S> &ea)
 
         *this << "[";
     }
-    if (base) {
+    if (style == DASM_VDA68K) {
+
+        size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
+        comma = true;
+
+    } else if (base) {
 
         size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
         comma = true;
     }
     if (style == DASM_VDA68K) {
 
-        if (comma) *this << ",z";
-        M == 10 ? (*this << "pc") : *this << An{ea.reg};
-        comma = true;
-
-    } else if (!bs) {
-
         if (comma) *this << ",";
-        M == 10 ? *this << "PC" : *this << An{ea.reg};
         comma = true;
+
+        if (bs && size) {
+            M == 10 ? (*this << "zpc") : *this << "z" << An{ea.reg};
+        } else {
+            M == 10 ? (*this << "pc") : *this << An{ea.reg};
+        }
+    } else {
+
+        if (!bs) {
+
+            if (comma) *this << ",";
+            M == 10 ? *this << "PC" : *this << An{ea.reg};
+            comma = true;
+        }
     }
     if (postindex) {
 

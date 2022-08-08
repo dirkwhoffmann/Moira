@@ -158,7 +158,7 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
 
 void resetM68k(Setup &s)
 {
-    dp.instr = dp.iaddr = (u16 *)&musashiMem[s.pc];
+    dp.instr = (u16 *)&musashiMem[s.pc];
     dp.iaddr = (vda68k::m68k_word *)pc;
 }
 
@@ -264,9 +264,11 @@ void runSingleTest(Setup &s)
     resetM68k(s);
     resetMoira(s);
 
-    // Run Musashi and the vda68k disassembler
-    muclk += runMusashi(s, mur);
+    // Run the vda68k disassembler
     runM68k(s, mur);
+
+    // Run Musashi
+    muclk += runMusashi(s, mur);
 
     // Run Moira
     moclk += runMoira(s, mor);
@@ -279,7 +281,11 @@ void runM68k(Setup &s, Result &r)
 {
     auto n = M68k_Disassemble(&dp) - dp.instr;
     r.dasmCnt2 = 2 * n;
-    sprintf(r.dasm2, "%-7s %s", opcode, operands);
+    if (strcmp(operands, "") == 0) {
+        sprintf(r.dasm2, "%s", opcode);
+    } else {
+        sprintf(r.dasm2, "%-7s %s", opcode, operands);
+    }
 }
 
 clock_t runMusashi(Setup &s, Result &r)
