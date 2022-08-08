@@ -456,7 +456,7 @@ Moira::disassemble(u32 addr, char *str, DasmStyle core)
 
     StrWriter writer(this, str, dasmStyle, numberFormat, upper);
 
-    (this->*dasm[opcode])(dasmStyle, writer, pc, opcode);
+    (this->*dasm[opcode])(writer, pc, opcode);
     writer << Finish{};
 
     // Post process disassembler output

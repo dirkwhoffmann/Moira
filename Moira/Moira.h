@@ -138,7 +138,7 @@ protected:
     ExecPtr loop[65536];
 
     // Jump table holding the disassebler handlers
-    typedef void (Moira::*DasmPtr)(DasmStyle, StrWriter&, u32&, u16);
+    typedef void (Moira::*DasmPtr)(StrWriter&, u32&, u16);
     DasmPtr *dasm = nullptr;
     
 private:

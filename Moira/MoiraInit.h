@@ -18,7 +18,7 @@
 template <Core C, Instr I, Mode M, Size S> void exec##x(u16);
 
 #define MOIRA_DECLARE_DASM(x) \
-template <Instr I, Mode M, Size S> void dasm##x(DasmStyle, StrWriter &, u32 &, u16);
+template <Instr I, Mode M, Size S> void dasm##x(StrWriter &, u32 &, u16);
 
 #define MOIRA_DECLARE(x) \
 MOIRA_DECLARE_EXEC(x) \
