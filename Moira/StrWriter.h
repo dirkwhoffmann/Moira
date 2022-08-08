@@ -55,7 +55,7 @@ public:
     char *ptr;              // Current writing position
     DasmStyle style;
     DasmNumberFormat nf;
-    bool upper;             // Text format: Upper case / Lower case
+    bool upper;             // Text format: Upper case / Lower case ( DEPRECATED )
 
 public:
 

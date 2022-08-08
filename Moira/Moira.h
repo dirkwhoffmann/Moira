@@ -30,9 +30,9 @@ protected:
     Core core = M68000;
 
     // Disassembler configuration
-    DasmStyle dasmStyle = DASM_MUSASHI;
+    DasmStyle dasmStyle = DASM_MOIRA;
     DasmNumberFormat numberFormat = DASM_HEX;
-    DasmInstrFormat instrFormat = DASM_LOWER_CASE;
+    DasmInstrFormat instrFormat = DASM_MIXED_CASE;
 
     // Interrupt mode of this CPU
     IrqMode irqMode = IRQ_AUTO;

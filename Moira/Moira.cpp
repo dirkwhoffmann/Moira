@@ -459,6 +459,26 @@ Moira::disassemble(u32 addr, char *str, DasmStyle core)
     (this->*dasm[opcode])(dasmStyle, writer, pc, opcode);
     writer << Finish{};
 
+    // Post process disassembler output
+    switch (instrFormat) {
+
+        case DASM_MIXED_CASE:
+
+            break;
+
+        case DASM_LOWER_CASE:
+
+            for (auto p = writer.base; p < writer.ptr; p++) {
+                *p = char(std::tolower(*p));
+            }
+
+        case DASM_UPPER_CASE:
+
+            for (auto p = writer.base; p < writer.ptr; p++) {
+                *p = char(std::toupper(*p));
+            }
+    }
+
     return pc - addr + 2;
 }
 

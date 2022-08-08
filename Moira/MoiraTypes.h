@@ -43,15 +43,15 @@ DasmStyle;
 typedef enum
 {
     DASM_HEX,
-    DASM_HEX_0X,
+    DASM_HEX_0X, // DEPRECATED
     DASM_DEC
 }
 DasmNumberFormat;
 
 typedef enum
 {
-    DASM_LOWER_CASE,
     DASM_MIXED_CASE,
+    DASM_LOWER_CASE,
     DASM_UPPER_CASE
 }
 DasmInstrFormat;
