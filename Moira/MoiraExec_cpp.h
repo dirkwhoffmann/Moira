@@ -2769,7 +2769,7 @@ Moira::execMovecRcRx(u16 opcode)
     AVAILABILITY(M68000)
     SUPERVISOR_MODE_ONLY
 
-    switch(queue.irc & 0x0FFF) {
+    switch (queue.irc & 0x0FFF) {
 
         case 0x000:
         case 0x001:
@@ -2786,7 +2786,7 @@ Moira::execMovecRcRx(u16 opcode)
     auto arg = readI<C, Word>();
     int dst = xxxx____________(arg);
 
-    switch(arg & 0x0FFF) {
+    switch (arg & 0x0FFF) {
 
         case 0x000: reg.r[dst] = reg.sfc & 0b111; break;
         case 0x001: reg.r[dst] = reg.dfc & 0b111; break;
@@ -2809,7 +2809,7 @@ Moira::execMovecRxRc(u16 opcode)
     AVAILABILITY(M68010)
     SUPERVISOR_MODE_ONLY
 
-    switch(queue.irc & 0xFFF) {
+    switch (queue.irc & 0xFFF) {
 
         case 0x000:
         case 0x001:
@@ -2826,7 +2826,7 @@ Moira::execMovecRxRc(u16 opcode)
     auto arg = readI<C, Word>();
     int src = xxxx____________(arg);
 
-    switch(arg & 0x0FFF) {
+    switch (arg & 0x0FFF) {
 
         case 0x000: setSFC(reg.r[src]); break;
         case 0x001: setDFC(reg.r[src]); break;
@@ -3124,7 +3124,7 @@ Moira::execMoves(u16 opcode)
         // Switch back to the old FC pin values
         fcSource = FC_FROM_FCL;
 
-        switch(M) {
+        switch (M) {
 
             case MODE_AI: SYNC(6); break;
             case MODE_PD: SYNC(S == Long ? 10 : 6); break;
@@ -3168,7 +3168,7 @@ Moira::execMoves(u16 opcode)
         // Switch back to the old FC pin values
         fcSource = FC_FROM_FCL;
 
-        switch(M) {
+        switch (M) {
 
             case MODE_AI: SYNC(6); break;
             case MODE_PD: SYNC(S == Long ? 10 : 6); break;

@@ -36,9 +36,10 @@ struct Align      { int raw;      Align(int v) : raw(v) { } };
 struct RegList    { u16 raw;    RegList(u16 v) : raw(v) { } };
 struct RegRegList { u16 raw; RegRegList(u16 v) : raw(v) { } };
 
-template <Instr I>        struct Ins { };
-template <Size S>         struct Sz  { };
-template <Mode M, Size S> struct Ea  { u32 pc; u16 reg; u32 ext1; u32 ext2; u32 ext3; };
+template <Instr I> struct Ins { };
+template <Size S> struct Sz { };
+template <Mode M, Size S> struct Ea { u32 pc; u16 reg; u32 ext1; u32 ext2; u32 ext3; };
+template <Instr I, Mode M, Size S> struct Av { u32 ext1 = 0; };
 
 struct Sep        { };
 struct Finish     { };
@@ -95,6 +96,7 @@ public:
     template <Instr I> StrWriter& operator<<(Ins<I> i);
     template <Size S> StrWriter& operator<<(Sz<S> sz);
     template <Mode M, Size S> StrWriter& operator<<(const Ea<M,S> &ea);
+    template <Instr I, Mode M, Size S> StrWriter& operator<<(const Av<I,M,S> &av);
     StrWriter& operator<<(Sep sep);
     StrWriter& operator<<(Finish finish);
 

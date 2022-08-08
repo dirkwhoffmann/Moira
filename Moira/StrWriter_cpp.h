@@ -264,7 +264,7 @@ StrWriter::operator<<(Rn rn)
 StrWriter&
 StrWriter::operator<<(Cn cn)
 {
-    switch(cn.raw) {
+    switch (cn.raw) {
 
         case 0x000: *this << "SFC";   break;
         case 0x001: *this << "DFC";   break;
@@ -292,7 +292,7 @@ StrWriter::operator<<(Cn cn)
 StrWriter&
 StrWriter::operator<<(Cnd cnd)
 {
-    switch(Cond(cnd.raw)) {
+    switch (Cond(cnd.raw)) {
 
         case COND_BT: *this << (upper ? "BT" : "t");   break;
         case COND_BF: *this << (upper ? "BF" : "f");   break;
@@ -317,7 +317,7 @@ StrWriter::operator<<(Cnd cnd)
 StrWriter&
 StrWriter::operator<<(Cpcc cpcc)
 {
-    switch(cpcc.raw) {
+    switch (cpcc.raw) {
 
         case 0: *this << (upper ? "F" : "f");           break;
         case 1: *this << (upper ? "EQ" : "eq");         break;
@@ -558,11 +558,131 @@ StrWriter::operator<<(const Ea<M,S> &ea)
     return *this;
 }
 
-StrWriter&
-StrWriter::operator<<(Finish)
+template <Instr I, Mode M, Size S> StrWriter&
+StrWriter::operator<<(const Av<I,M,S> &av)
 {
-    for (int i = 0; comment[i] != 0; i++) *ptr++ = comment[i];
-    *ptr = 0;
+    if (style == DASM_VDA68K) { return *this; }
+
+    switch (I) {
+
+        case BKPT:
+        case MOVES:
+        case MOVEFCCR:
+        case RTD:
+
+            *this << "; (1+)";
+            break;
+
+        case CMPI:
+
+            *this << (isPrgMode(M) ? "; (1+)" : "");
+            break;
+
+        case CALLM:
+        case RTM:
+
+            *this << "; (2)";
+            break;
+
+        case cpGEN:
+        case cpRESTORE:
+        case cpSAVE:
+        case cpScc:
+        case cpTRAPcc:
+
+            *this << "; (2-3)";
+            break;
+
+        case BFCHG:
+        case BFCLR:
+        case BFEXTS:
+        case BFEXTU:
+        case BFFFO:
+        case BFINS:
+        case BFSET:
+        case BFTST:
+        case CAS:
+        case CAS2:
+        case CHK2:
+        case CMP2:
+        case DIVL:
+        case EXTB:
+        case MULL:
+        case PACK:
+        case TRAPCC:
+        case TRAPCS:
+        case TRAPEQ:
+        case TRAPGE:
+        case TRAPGT:
+        case TRAPHI:
+        case TRAPLE:
+        case TRAPLS:
+        case TRAPLT:
+        case TRAPMI:
+        case TRAPNE:
+        case TRAPPL:
+        case TRAPVC:
+        case TRAPVS:
+        case TRAPF:
+        case TRAPT:
+        case UNPK:
+
+            *this << "; (2+)";
+            break;
+
+        case CHK:
+        case LINK:
+        case BRA:
+        case BHI:
+        case BLS:
+        case BCC:
+        case BCS:
+        case BNE:
+        case BEQ:
+        case BVC:
+        case BVS:
+        case BPL:
+        case BMI:
+        case BGE:
+        case BLT:
+        case BGT:
+        case BLE:
+        case BSR:
+
+            *this << (S == Long ? "; (2+)" : "");
+            break;
+
+        case TST:
+            *this << (M == 1 || M >= 9 ? "; (2+)" : "");
+            break;
+
+        case MOVEC:
+
+            switch (av.ext1 & 0x0FFF) {
+
+                case 0x000:
+                case 0x001:
+                case 0x800:
+                case 0x801: *this << "; (1+)"; break;
+                case 0x002:
+                case 0x803:
+                case 0x804: *this << "; (2+)"; break;
+                case 0x802: *this << "; (2,3)"; break;
+                case 0x003:
+                case 0x004:
+                case 0x005:
+                case 0x006:
+                case 0x007:
+                case 0x805:
+                case 0x806:
+                case 0x807: *this << "; (4+)"; break;
+
+                default:    *this << "; (?)";
+            }
+
+        default:
+            break;
+    }
     return *this;
 }
 
@@ -572,6 +692,14 @@ StrWriter::operator<<(Sep)
     *ptr++ = ',';
     if (style == DASM_MUSASHI) *ptr++ = ' ';
 
+    return *this;
+}
+
+StrWriter&
+StrWriter::operator<<(Finish)
+{
+    for (int i = 0; comment[i] != 0; i++) *ptr++ = comment[i];
+    *ptr = 0;
     return *this;
 }
 
