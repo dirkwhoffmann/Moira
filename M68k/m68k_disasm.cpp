@@ -215,7 +215,7 @@ static long read32s(ushort *p)
 static long read32s(short *p) { return read32s((ushort *)p); }
 
 
-m68k_word *M68k_Disassemble(struct DisasmPara_68k *dp)
+m68k_word *M68k_Disassemble(struct DisasmPara_68k *dp, bool mit = false)
 /* Disassemble M68k instruction and return a pointer to the next */
 /* instruction, or NULL if an error occured. */
 {
@@ -233,7 +233,7 @@ m68k_word *M68k_Disassemble(struct DisasmPara_68k *dp)
   dbuf.used = 0;
   dbuf.val = (short *)dp->instr;
   dbuf.sval = (short *)dp->iaddr;
-  dbuf.mit = 0;
+  dbuf.mit = mit; // DIRK
   dbuf.dasm[0] = 0;
   dbuf.info[0] = 0;
   dp->type = dp->flags = 0;

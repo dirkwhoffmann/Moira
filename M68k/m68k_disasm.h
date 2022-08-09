@@ -477,7 +477,7 @@ typedef unsigned long ulong;
 
 /* m68k_disasm.o prototypes */
 #ifndef M68K_DISASM_C
-extern m68k_word *M68k_Disassemble(struct DisasmPara_68k *);
+extern m68k_word *M68k_Disassemble(struct DisasmPara_68k *, bool = false);
 #endif
 
 };

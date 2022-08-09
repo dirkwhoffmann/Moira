@@ -88,10 +88,12 @@ struct Result {
     u32     vbr;
     u32     sfc;
     u32     dfc;
-    char    dasm[128];
-    int     dasmCnt;
-    char    dasm2[128];
-    int     dasmCnt2;
+    char    dasmMusashi[128];
+    int     dasmCntMusashi;
+    char    dasmMoto[128];
+    int     dasmCntMoto;
+    char    dasmMIT[128];
+    int     dasmCntMIT;
     int     cycles;
     clock_t elapsed[2];
 };

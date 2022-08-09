@@ -289,12 +289,22 @@ void runSingleTest(Setup &s)
 
 void runM68k(Setup &s, Result &r)
 {
-    auto n = M68k_Disassemble(&dp) - dp.instr;
-    r.dasmCnt2 = 2 * n;
+    // Run disassembler in Motorola syntax
+    auto n1 = M68k_Disassemble(&dp) - dp.instr;
+    r.dasmCntMoto = 2 * n1;
     if (strcmp(operands, "") == 0) {
-        sprintf(r.dasm2, "%s", opcode);
+        sprintf(r.dasmMoto, "%s", opcode);
     } else {
-        sprintf(r.dasm2, "%-7s %s", opcode, operands);
+        sprintf(r.dasmMoto, "%-7s %s", opcode, operands);
+    }
+
+    // Run disassembler in MIT syntax
+    auto n2 = M68k_Disassemble(&dp, true) - dp.instr;
+    r.dasmCntMIT = 2 * n2;
+    if (strcmp(operands, "") == 0) {
+        sprintf(r.dasmMIT, "%s", opcode);
+    } else {
+        sprintf(r.dasmMIT, "%-7s %s", opcode, operands);
     }
 }
 
@@ -305,29 +315,18 @@ void runMusashi(Setup &s, Result &r)
     r.oldpc = m68k_get_reg(NULL, M68K_REG_PC);
     r.opcode = get16(musashiMem, r.oldpc);
 
-    switch (cpuType) {
-
-        case 68000:
-            elapsed = clock();
-            r.dasmCnt = m68k_disassemble(r.dasm, s.pc, M68K_CPU_TYPE_68000);
-            r.elapsed[1] = clock() - elapsed;
-            break;
-        case 68010:
-            elapsed = clock();
-            r.dasmCnt = m68k_disassemble(r.dasm, s.pc, M68K_CPU_TYPE_68010);
-            r.elapsed[1] = clock() - elapsed;
-            break;
-        case 68020:
-            elapsed = clock();
-            r.dasmCnt = m68k_disassemble(r.dasm, s.pc, M68K_CPU_TYPE_68020);
-            r.elapsed[1] = clock() - elapsed;
-            break;
-    }
+    // Run the Musashi disassembler
+    auto type =
+    cpuType == 68000 ? M68K_CPU_TYPE_68000 :
+    cpuType == 68010 ? M68K_CPU_TYPE_68010 : M68K_CPU_TYPE_68020;
+    elapsed = clock();
+    r.dasmCntMusashi = m68k_disassemble(r.dasmMusashi, s.pc, type);
+    r.elapsed[1] = clock() - elapsed;
 
     if (VERBOSE)
-        printf("$%04x ($%04x): %s (Musashi)\n", r.oldpc, r.opcode, r.dasm);
+        printf("$%04x ($%04x): %s (Musashi)\n", r.oldpc, r.opcode, r.dasmMusashi);
 
-    // Run Musashi
+    // Run the Musashi CPU
     elapsed = clock();
     r.cycles = m68k_execute(1);
     r.elapsed[0] = clock() - elapsed;
@@ -347,13 +346,18 @@ void runMoira(Setup &s, Result &r)
     moiracpu->setDasmStyle(DASM_MUSASHI);
     moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
     elapsed = clock();
-    r.dasmCnt = moiracpu->disassemble(r.oldpc, r.dasm);
+    r.dasmCntMusashi = moiracpu->disassemble(r.oldpc, r.dasmMusashi);
     r.elapsed[1] = clock() - elapsed;
 
-    // Disassemble the instruction in Vda68k format
-    moiracpu->setDasmStyle(DASM_VDA68K);
+    // Disassemble the instruction in Vda68k Motorola format
+    moiracpu->setDasmStyle(DASM_MOTOROLA);
     moiracpu->setDasmNumberFormat({ .prefix="0x", .radix=16, .plainZero=true });
-    r.dasmCnt2 = moiracpu->disassemble(r.oldpc, r.dasm2);
+    r.dasmCntMoto = moiracpu->disassemble(r.oldpc, r.dasmMoto);
+
+    // Disassemble the instruction in Vda68k MIT format
+    moiracpu->setDasmStyle(DASM_MIT);
+    moiracpu->setDasmNumberFormat({ .prefix="0x", .radix=16, .plainZero=true });
+    r.dasmCntMIT = moiracpu->disassemble(r.oldpc, r.dasmMIT);
 
     u32 pc = moiracpu->getPC();
     u16 op = get16(moiraMem, pc);
@@ -361,7 +365,7 @@ void runMoira(Setup &s, Result &r)
     int64_t cycles = moiracpu->getClock();
 
         if (VERBOSE)
-            printf("$%04x ($%04x): %s (Moira)\n", r.oldpc, r.opcode, r.dasm);
+            printf("$%04x ($%04x): %s (Moira)\n", r.oldpc, r.opcode, r.dasmMusashi);
 
     // Execute instruction
     elapsed = clock();
@@ -535,10 +539,15 @@ void compare(Setup &s, Result &r1, Result &r2)
 
     if (error) {
 
-        printf("\n\nInstruction: %-40s (Musashi, %d bytes)", r1.dasm, r1.dasmCnt);
-        printf(  "\n             %-40s (Moira, %d bytes)\n", r2.dasm, r2.dasmCnt);
-        printf(  "\n             %-40s (Vda68k, %d bytes)", r1.dasm2, r1.dasmCnt2);
-        printf(  "\n             %-40s (Moira, %d bytes)\n\n", r2.dasm2, r2.dasmCnt2);
+        printf("\n");
+        printf("\nInstruction: [%d] %-40s (Musashi)", r1.dasmCntMusashi, r1.dasmMusashi);
+        printf("\n             [%d] %-40s (Moira)\n", r2.dasmCntMusashi, r2.dasmMusashi);
+
+        printf("\n             [%d] %-40s (Vda68k, Moto)", r1.dasmCntMoto, r1.dasmMoto);
+        printf("\n             [%d] %-40s (Moira)\n", r2.dasmCntMoto, r2.dasmMoto);
+
+        printf("\n             [%d] %-40s (Vda68k, MIT)", r1.dasmCntMIT, r1.dasmMIT);
+        printf("\n             [%d] %-40s (Moira)\n\n", r2.dasmCntMIT, r2.dasmMIT);
 
         printf("Setup:   ");
         dumpSetup(s);
@@ -561,16 +570,18 @@ bool compareDasm(Result &r1, Result &r2)
     bool isIllegal = moiracpu->getInfo(r1.opcode).I == ILLEGAL;
 
     // Compare with Musashi
-    if (r1.dasmCnt != r2.dasmCnt || strcmp(r1.dasm, r2.dasm) != 0) {
-        return false;
-    }
+    if (r1.dasmCntMusashi != r2.dasmCntMusashi) return false;
+    if (strcmp(r1.dasmMusashi, r2.dasmMusashi) != 0) return false;
 
-    // Compare with M68k
     if (!isIllegal) {
 
-        if (r1.dasmCnt2 != r2.dasmCnt2 || strcmp(r1.dasm2, r2.dasm2) != 0) {
-            return false;
-        }
+        // Compare with M68k (Motorola syntax)
+        if (r1.dasmCntMoto != r2.dasmCntMoto) return false;
+        if (strcmp(r1.dasmMoto, r2.dasmMoto) != 0) return false;
+
+        // Compare with M68k (MIT syntax)
+        if (r1.dasmCntMIT != r2.dasmCntMIT) return false;
+        if (strcmp(r1.dasmMIT, r2.dasmMIT) != 0) return false;
     }
 
     return true;

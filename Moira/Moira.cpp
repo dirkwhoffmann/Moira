@@ -52,10 +52,6 @@ Moira::setCore(Core core)
 void
 Moira::setDasmStyle(DasmStyle value)
 {
-    if (value != DASM_MUSASHI && value != DASM_VDA68K) {
-        throw std::runtime_error("Invalid style: " + std::to_string(value));
-    }
-
     style = value;
 }
 
@@ -75,10 +71,6 @@ Moira::setDasmNumberFormat(DasmNumberFormat value)
 void
 Moira::setDasmLetterCase(DasmLetterCase value)
 {
-    if (value < DASM_LOWER_CASE || value > DASM_UPPER_CASE) {
-        throw std::runtime_error("Invalid letter case: " + std::to_string(value));
-    }
-
     letterCase = value;
 }
 

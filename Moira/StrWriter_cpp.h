@@ -211,6 +211,202 @@ StrWriter::operator<<(Anr an)
     return *this;
 }
 
+template <Mode M, Size S> StrWriter&
+StrWriter::operator<<(Ai<M,S> ea)
+{
+    switch (style) {
+
+        case DASM_MIT:
+
+            *this << An{ea.raw.reg} << "@";
+            return *this;
+
+        default:
+
+            *this << "(" << An{ea.raw.reg} << ")";
+            return *this;
+    }
+}
+
+template <Mode M, Size S> StrWriter&
+StrWriter::operator<<(Pi<M,S> ea)
+{
+    switch (style) {
+
+        case DASM_MIT:
+
+            *this << An{ea.raw.reg} << "@+";
+            return *this;
+
+        default:
+
+            *this << "(" << An{ea.raw.reg} << ")+";
+            return *this;
+    }
+}
+
+template <Mode M, Size S> StrWriter&
+StrWriter::operator<<(Pd<M,S> ea)
+{
+    switch (style) {
+
+        case DASM_MIT:
+
+            *this << An{ea.raw.reg} << "@-";
+            return *this;
+
+        default:
+
+            *this << "-(" << An{ea.raw.reg} << ")";
+            return *this;
+    }
+}
+
+template <Mode M, Size S> StrWriter&
+StrWriter::operator<<(Ix<M,S> ea)
+{
+    return *this;
+
+    switch (style) {
+
+        case DASM_MOTOROLA:
+
+            (ea.raw.ext1 & 0x100) ? fullExtensionVda68k(ea.raw) : briefExtension(ea.raw);
+            return *this;
+
+        case DASM_MIT:
+
+            (ea.raw.ext1 & 0x100) ? fullExtensionVda68k(ea.raw) : briefExtension(ea.raw);
+            return *this;
+
+        default:
+
+            (ea.raw.ext1 & 0x100) ? fullExtension(ea) : briefExtension(ea.raw);
+            return *this;
+    }
+}
+
+template <Mode M, Size S> StrWriter&
+StrWriter::operator<<(Aw<M,S> ea)
+{
+    return *this;
+
+    switch (style) {
+
+        case DASM_MIT:
+
+            *this << UInt(ea.raw.ext1) << Sz<Word>{};
+            return *this;
+
+        default:
+
+            *this << UInt(ea.raw.ext1) << Sz<Word>{};
+            return *this;
+    }
+}
+
+template <Mode M, Size S> StrWriter&
+StrWriter::operator<<(Al<M,S> ea)
+{
+    return *this;
+
+    switch (style) {
+
+        case DASM_MIT:
+
+            *this << UInt(ea.raw.ext1) << Sz<Long>{};
+            return *this;
+
+        default:
+
+            *this << UInt(ea.raw.ext1) << Sz<Long>{};
+            return *this;
+    }
+}
+
+template <Mode M, Size S> StrWriter&
+StrWriter::operator<<(DiPc<M,S> ea)
+{
+    return *this;
+
+    u32 resolved;
+
+    switch (style) {
+
+        case DASM_MUSASHI:
+
+            *this << "(" << Int{(i16)ea.raw.ext1} << ",PC)";
+            resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
+            StrWriter(moira, comment, style, nf) << "; (" << UInt(resolved) << ")" << Finish{};
+            return *this;
+
+        case DASM_MIT:
+
+            resolved = U32_ADD(U32_ADD(ea.raw.pc, (i16)ea.ext1), 2);
+            *this << UInt(resolved) << "(pc)";
+            return *this;
+
+        default:
+
+            resolved = U32_ADD(U32_ADD(ea.raw.pc, (i16)ea.ext1), 2);
+            *this << UInt(resolved) << "(pc)";
+            return *this;
+    }
+}
+
+template <Mode M, Size S> StrWriter&
+StrWriter::operator<<(IxPc<M,S> ea)
+{
+    // NOT NEEDED: Use Ix{...} instead
+    return *this;
+}
+
+template <Mode M, Size S> StrWriter&
+StrWriter::operator<<(Im<M,S> ea)
+{
+    return *this;
+
+    switch (style) {
+
+        case DASM_MUSASHI:
+
+            *this << Imu(ea.raw.ext1);
+            return *this;
+
+        case DASM_MIT:
+
+            *this << "???";
+            return *this;
+
+        default:
+
+            if constexpr (S != 0) {
+                *this << Ims<S>(ea.raw.ext1);
+            }
+            return *this;
+    }
+}
+
+template <Mode M, Size S> StrWriter&
+StrWriter::operator<<(Ip<M,S> ea)
+{
+    return *this;
+
+    switch (style) {
+
+        case DASM_MIT:
+
+            *this << An{ea.raw.reg} << "@-";
+            return *this;
+
+        default:
+
+            *this << "-(" << An{ea.raw.reg} << ")";
+            return *this;
+    }
+
+}
+
 StrWriter&
 StrWriter::operator<<(Rn rn)
 {
@@ -234,9 +430,18 @@ StrWriter::operator<<(Rnr rn)
 }
 
 StrWriter&
+StrWriter::operator<<(Ccr ccr)
+{
+    auto upper = style == DASM_MOTOROLA || style == DASM_MIT;
+
+    *this << (upper ? "CCR" : "ccr");
+    return *this;
+}
+
+StrWriter&
 StrWriter::operator<<(Cn cn)
 {
-    bool upper = style != DASM_VDA68K;
+    bool upper = style == DASM_MOIRA || style == DASM_MUSASHI;
 
     switch (cn.raw) {
 
@@ -368,6 +573,24 @@ StrWriter::operator<<(Scale s)
 }
 
 StrWriter&
+StrWriter::operator<<(Sr _)
+{
+    auto upper = style == DASM_MOTOROLA || style == DASM_MIT;
+
+    *this << (upper ? "SR" : "sr");
+    return *this;
+}
+
+StrWriter&
+StrWriter::operator<<(Usp _)
+{
+    auto upper = style == DASM_MOTOROLA || style == DASM_MIT;
+
+    *this << (upper ? "USP" : "usp");
+    return *this;
+}
+
+StrWriter&
 StrWriter::operator<<(Tabulator align)
 {
     // Write at least a single space
@@ -428,7 +651,11 @@ StrWriter::operator<<(Ins<I> i)
 {
     if constexpr (I == DBF) {
 
-        *this << (style == DASM_VDA68K ? "dbf" : "dbra");
+        if (style == DASM_MOTOROLA || style == DASM_MIT) {
+            *this << "dbf";
+        } else {
+            *this << "dbra";
+        }
 
     } else {
 
@@ -462,17 +689,20 @@ StrWriter::operator<<(const Ea<M,S> &ea)
         }
         case 2: // (An)
         {
-            *this << "(" << An{ea.reg} << ")";
+            *this << Ai<M,S>{ea};
+            // *this << "(" << An{ea.reg} << ")";
             break;
         }
         case 3:  // (An)+
         {
-            *this << "(" << An{ea.reg} << ")+";
+            *this << Pi<M,S>{ea};
+            // *this << "(" << An{ea.reg} << ")+";
             break;
         }
         case 4: // -(An)
         {
-            *this << "-(" << An{ea.reg} << ")";
+            *this << Pd<M,S>{ea};
+            // *this << "-(" << An{ea.reg} << ")";
             break;
         }
         case 5: // (d,An)
@@ -491,7 +721,7 @@ StrWriter::operator<<(const Ea<M,S> &ea)
         }
         case 6: // (d,An,Xi)
         {
-            if (style == DASM_VDA68K) {
+            if (style == DASM_MOTOROLA) {
                 (ea.ext1 & 0x100) ? fullExtensionVda68k(ea) : briefExtension(ea);
             } else {
                 (ea.ext1 & 0x100) ? fullExtension(ea) : briefExtension(ea);
@@ -527,7 +757,7 @@ StrWriter::operator<<(const Ea<M,S> &ea)
         }
         case 10: // (d,PC,Xi)  TODO: Merge with case 6 (d,An,Xi) (?!)
         {
-            if (style == DASM_VDA68K) {
+            if (style == DASM_MOTOROLA) {
                 (ea.ext1 & 0x100) ? fullExtensionVda68k(ea) : briefExtension(ea);
             } else {
                 (ea.ext1 & 0x100) ? fullExtension(ea) : briefExtension(ea);
@@ -552,7 +782,7 @@ StrWriter::operator<<(const Ea<M,S> &ea)
 template <Instr I, Mode M, Size S> StrWriter&
 StrWriter::operator<<(const Av<I,M,S> &av)
 {
-    if (style == DASM_VDA68K) { return *this; }
+    if (style == DASM_MOTOROLA || style == DASM_MIT) { return *this; }
 
     switch (I) {
 
