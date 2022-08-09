@@ -60,9 +60,11 @@ template <Mode M, Size S> struct Ix { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct Aw { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct Al { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct DiPc { const Ea<M,S> &ea; };
-template <Mode M, Size S> struct IxPc { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct Im { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct Ip { const Ea<M,S> &ea; };
+template <Mode M, Size S> struct IxMus { const Ea<M,S> &ea; };
+template <Mode M, Size S> struct IxMot { const Ea<M,S> &ea; };
+template <Mode M, Size S> struct IxMit { const Ea<M,S> &ea; };
 
 struct Scale { int raw; Scale(int v) : raw(v) { } };
 
@@ -124,9 +126,11 @@ public:
     template <Mode M, Size S> StrWriter& operator<<(Aw<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(Al<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(DiPc<M,S>);
-    template <Mode M, Size S> StrWriter& operator<<(IxPc<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(Im<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(Ip<M,S>);
+    template <Mode M, Size S> StrWriter& operator<<(IxMus<M,S>);
+    template <Mode M, Size S> StrWriter& operator<<(IxMot<M,S>);
+    template <Mode M, Size S> StrWriter& operator<<(IxMit<M,S>);
 
     StrWriter& operator<<(Rn);
     StrWriter& operator<<(Rnr);

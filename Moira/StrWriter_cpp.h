@@ -295,25 +295,347 @@ StrWriter::operator<<(Di<M,S> wrapper)
 template <Mode M, Size S> StrWriter&
 StrWriter::operator<<(Ix<M,S> wrapper)
 {
-    auto &ea = wrapper.ea;
-
     switch (style) {
 
-        case DASM_MOTOROLA:
-
-            (ea.ext1 & 0x100) ? fullExtensionVda68k(ea) : briefExtension(ea);
-            return *this;
-
-        case DASM_MIT:
-
-            (ea.ext1 & 0x100) ? fullExtensionVda68k(ea) : briefExtension(ea);
-            return *this;
-
-        default:
-
-            (ea.ext1 & 0x100) ? fullExtension(ea) : briefExtension(ea);
-            return *this;
+        case DASM_MOIRA:
+        case DASM_MUSASHI:  *this << IxMus<M,S>{wrapper.ea}; break;
+        case DASM_MOTOROLA: *this << IxMot<M,S>{wrapper.ea}; break;
+        case DASM_MIT:      *this << IxMit<M,S>{wrapper.ea}; break;
     }
+
+    return *this;
+}
+
+template <Mode M, Size S> StrWriter&
+StrWriter::operator<<(IxMus<M,S> wrapper)
+{
+    assert(M == 6 || M == 10);
+
+    auto &ea = wrapper.ea;
+
+    u16 full = _______x________ (ea.ext1);
+
+    if (!full) {
+
+        //   15-12   11   10   09   08   07   06   05   04   03   02   01   00
+        // --------------------------------------------------------------------
+        // | REG   | LW | SCALE   | 0  | DISPLACEMENT                         |
+        // --------------------------------------------------------------------
+
+        u16 reg   = xxxx____________ (ea.ext1);
+        u16 lw    = ____x___________ (ea.ext1);
+        u16 scale = _____xx_________ (ea.ext1);
+        u16 disp  = ________xxxxxxxx (ea.ext1);
+
+        *this << "(";
+        if (disp) *this << Int{(i8)disp} << ",";
+        M == 10 ? *this << "PC" : *this << An{ea.reg};
+        *this << "," << Rn{reg};
+        lw ? *this << Sz<Long>{} : *this << Sz<Word>{};
+        *this << Scale{scale} << ")";
+
+    } else {
+
+        //   15-12   11   10   09   08   07   06   05   04   03   02   01   00
+        // --------------------------------------------------------------------
+        // | REG   | LW | SCALE   | 1  | BS | IS | BD SIZE  | 0  | IIS        |
+        // --------------------------------------------------------------------
+
+        u16  reg   = xxxx____________ (ea.ext1);
+        u16  lw    = ____x___________ (ea.ext1);
+        u16  scale = _____xx_________ (ea.ext1);
+        u16  bs    = ________x_______ (ea.ext1);
+        u16  is    = _________x______ (ea.ext1);
+        u16  size  = __________xx____ (ea.ext1);
+        u16  iis   = _____________xxx (ea.ext1);
+        u32  base  = ea.ext2;
+        u32  outer = ea.ext3;
+
+        bool preindex = (iis > 0 && iis < 4);
+        bool postindex = (iis > 4);
+        bool effectiveZero = (ea.ext1 & 0xe4) == 0xC4 || (ea.ext1 & 0xe2) == 0xC0;
+        bool comma = false;
+
+        if (effectiveZero) {
+
+            *this << "0";
+            return *this;
+        }
+
+        *this << "(";
+
+        if (preindex || postindex) {
+
+            *this << "[";
+        }
+        if (base) {
+
+            size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
+            comma = true;
+        }
+        if (!bs) {
+
+            if (comma) *this << ",";
+            M == 10 ? *this << "PC" : *this << An{ea.reg};
+            comma = true;
+        }
+        if (postindex) {
+
+            *this << "]";
+            comma = true;
+        }
+        if (!is) {
+
+            if (comma) *this << ",";
+            *this << Rn{reg};
+            lw ? (*this << Sz<Long>{}) : (*this << Sz<Word>{});
+            *this << Scale{scale};
+            comma = true;
+        }
+        if (preindex) {
+
+            *this << "]";
+            comma = true;
+        }
+        if(outer)
+        {
+            if (comma) *this << ",";
+            *this << Int(outer);
+        }
+
+        *this << ")";
+    }
+
+    return *this;
+}
+
+template <Mode M, Size S> StrWriter&
+StrWriter::operator<<(IxMot<M,S> wrapper)
+{
+    assert(M == 6 || M == 10);
+
+    auto &ea = wrapper.ea;
+
+    u16 full = _______x________ (ea.ext1);
+
+    if (!full) {
+
+        //   15-12   11   10   09   08   07   06   05   04   03   02   01   00
+        // --------------------------------------------------------------------
+        // | REG   | LW | SCALE   | 0  | DISPLACEMENT                         |
+        // --------------------------------------------------------------------
+
+        u16 reg   = xxxx____________ (ea.ext1);
+        u16 lw    = ____x___________ (ea.ext1);
+        u16 scale = _____xx_________ (ea.ext1);
+        u16 disp  = ________xxxxxxxx (ea.ext1);
+
+        *this << "(";
+        *this << Int{(i8)disp} << ",";
+        M == 10 ? *this << "pc" : *this << An{ea.reg};
+        *this << "," << Rn{reg};
+        lw ? *this << Sz<Long>{} : *this << Sz<Word>{};
+        *this << Scale{scale} << ")";
+
+    } else {
+
+        //   15-12   11   10   09   08   07   06   05   04   03   02   01   00
+        // --------------------------------------------------------------------
+        // | REG   | LW | SCALE   | 1  | BS | IS | BD SIZE  | 0  | IIS        |
+        // --------------------------------------------------------------------
+
+        u16  reg   = xxxx____________ (ea.ext1);
+        u16  lw    = ____x___________ (ea.ext1);
+        u16  scale = _____xx_________ (ea.ext1);
+        u16  bs    = ________x_______ (ea.ext1);
+        u16  is    = _________x______ (ea.ext1);
+        u16  size  = __________xx____ (ea.ext1);
+        u16  iis   = _____________xxx (ea.ext1);
+        u32  bd    = __________xx____(ea.ext1);   // Take from ea!!
+        u32  od    = ______________xx(ea.ext1);   // Take from ea!!
+        u32  base  = ea.ext2;
+        u32  outer = ea.ext3;
+
+        assert(bd == ea.bd);
+        assert(od == ea.od);
+
+        bool preindex = (iis > 0 && iis < 4);
+        bool postindex = (iis > 4);
+        // bool comma = false;
+
+        *this << "(";
+
+        if (preindex || postindex) {
+
+            *this << "[";
+        }
+
+        size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
+        // comma = true;
+
+        // if (comma) *this << ",";
+        *this << ",";
+        // comma = true;
+
+        if (bs && size) {
+            M == 10 ? (*this << "zpc") : *this << "z" << An{ea.reg};
+        } else {
+            M == 10 ? (*this << "pc") : *this << An{ea.reg};
+        }
+
+        if (postindex) {
+
+            *this << "]";
+            // comma = true;
+        }
+        if (is && bd) {
+
+            // if (comma) *this << ",0";
+            *this << ",0";
+            // comma = true;
+
+        } else {
+
+            // if (comma) *this << ",";
+            *this << ",";
+            *this << Rn{reg};
+            lw ? (*this << Sz<Long>{}) : (*this << Sz<Word>{});
+            *this << Scale{scale};
+            // comma = true;
+        }
+
+        if (preindex) {
+
+            *this << "]";
+            // comma = true;
+        }
+
+        if (od)
+        {
+            // if (comma) *this << ",";
+            *this << ",";
+            *this << Int(outer);
+        }
+
+        *this << ")";
+    }
+
+    return *this;
+}
+
+template <Mode M, Size S> StrWriter&
+StrWriter::operator<<(IxMit<M,S> wrapper)
+{
+    assert(M == 6 || M == 10);
+
+    auto &ea = wrapper.ea;
+
+    u16 full = _______x________ (ea.ext1);
+
+    if (!full) {
+
+        printf("MIT brief format\n");
+
+        //   15-12   11   10   09   08   07   06   05   04   03   02   01   00
+        // --------------------------------------------------------------------
+        // | REG   | LW | SCALE   | 0  | DISPLACEMENT                         |
+        // --------------------------------------------------------------------
+
+        u16 reg   = xxxx____________ (ea.ext1);
+        u16 lw    = ____x___________ (ea.ext1);
+        u16 scale = _____xx_________ (ea.ext1);
+        u16 disp  = ________xxxxxxxx (ea.ext1);
+        
+        M == 10 ? *this << "pc" : *this << An{ea.reg};
+        *this << "@(" << Int{(i8)disp} << "," << Rn{reg};
+        *this << (lw ? ":l" : ":w") << Scale{scale} << ")";
+
+    } else {
+
+        printf("MIT brief format\n");
+
+        //   15-12   11   10   09   08   07   06   05   04   03   02   01   00
+        // --------------------------------------------------------------------
+        // | REG   | LW | SCALE   | 1  | BS | IS | BD SIZE  | 0  | IIS        |
+        // --------------------------------------------------------------------
+
+        u16  reg   = xxxx____________ (ea.ext1);
+        u16  lw    = ____x___________ (ea.ext1);
+        u16  scale = _____xx_________ (ea.ext1);
+        u16  bs    = ________x_______ (ea.ext1);
+        u16  is    = _________x______ (ea.ext1);
+        u16  size  = __________xx____ (ea.ext1);
+        u16  iis   = _____________xxx (ea.ext1);
+        u32  bd    = __________xx____(ea.ext1);   // Take from ea!!
+        u32  od    = ______________xx(ea.ext1);   // Take from ea!!
+        u32  base  = ea.ext2;
+        u32  outer = ea.ext3;
+
+        assert(bd == ea.bd);
+        assert(od == ea.od);
+
+        bool preindex = (iis > 0 && iis < 4);
+        bool postindex = (iis > 4);
+        // bool comma = false;
+
+        *this << "(";
+
+        if (preindex || postindex) {
+
+            *this << "[";
+        }
+
+        size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
+        // comma = true;
+
+        // if (comma) *this << ",";
+        *this << ",";
+        // comma = true;
+
+        if (bs && size) {
+            M == 10 ? (*this << "zpc") : *this << "z" << An{ea.reg};
+        } else {
+            M == 10 ? (*this << "pc") : *this << An{ea.reg};
+        }
+
+        if (postindex) {
+
+            *this << "]";
+            // comma = true;
+        }
+        if (is && bd) {
+
+            // if (comma) *this << ",0";
+            *this << ",0";
+            // comma = true;
+
+        } else {
+
+            // if (comma) *this << ",";
+            *this << ",";
+            *this << Rn{reg};
+            lw ? (*this << Sz<Long>{}) : (*this << Sz<Word>{});
+            *this << Scale{scale};
+            // comma = true;
+        }
+
+        if (preindex) {
+
+            *this << "]";
+            // comma = true;
+        }
+
+        if (od)
+        {
+            // if (comma) *this << ",";
+            *this << ",";
+            *this << Int(outer);
+        }
+
+        *this << ")";
+    }
+
+    return *this;
 }
 
 template <Mode M, Size S> StrWriter&
@@ -325,7 +647,7 @@ StrWriter::operator<<(Aw<M,S> wrapper)
 
         case DASM_MIT:
 
-            *this << UInt(ea.ext1) << Sz<Word>{};
+            *this << UInt(ea.ext1);
             return *this;
 
         default:
@@ -344,7 +666,7 @@ StrWriter::operator<<(Al<M,S> wrapper)
 
         case DASM_MIT:
 
-            *this << UInt(ea.ext1) << Sz<Long>{};
+            *this << UInt(ea.ext1);
             return *this;
 
         default:
@@ -372,7 +694,7 @@ StrWriter::operator<<(DiPc<M,S> wrapper)
         case DASM_MIT:
 
             resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
-            *this << UInt(resolved) << "(pc)";
+            *this << "pc@(" << UInt(resolved) << ")";
             return *this;
 
         default:
@@ -381,13 +703,6 @@ StrWriter::operator<<(DiPc<M,S> wrapper)
             *this << UInt(resolved) << "(pc)";
             return *this;
     }
-}
-
-template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(IxPc<M,S> wrapper)
-{
-    // NOT NEEDED: Use Ix{...} instead
-    return *this;
 }
 
 template <Mode M, Size S> StrWriter&
@@ -697,8 +1012,18 @@ StrWriter::operator<<(Ins<I> i)
 template <Size S> StrWriter&
 StrWriter::operator<<(Sz<S>)
 {
-    *this << ((S == Byte) ? ".b" : (S == Word) ? ".w" : ".l");
-    return *this;
+    switch (style) {
+
+        case DASM_MIT:
+
+            *this << ((S == Byte) ? ".b" : (S == Word) ? ".w" : ".l");
+            return *this;
+
+        default:
+
+            *this << ((S == Byte) ? ".b" : (S == Word) ? ".w" : ".l");
+            return *this;
+    }
 }
 
 template <Mode M, Size S> StrWriter&
@@ -706,34 +1031,12 @@ StrWriter::operator<<(const Ea<M,S> &ea)
 {
     switch (M) {
 
-        case MODE_DN: // Dn
-        {
-            *this << Dn{ea.reg};
-            break;
-        }
-        case MODE_AN: // An
-        {
-            *this << An{ea.reg};
-            break;
-        }
-        case MODE_AI: // (An)
-        {
-            *this << Ai<M,S>{ea};
-            break;
-        }
-        case MODE_PI:  // (An)+
-        {
-            *this << Pi<M,S>{ea};
-            break;
-        }
-        case MODE_PD: // -(An)
-        {
-            *this << Pd<M,S>{ea};
-            break;
-        }
-        case MODE_DI: // (d,An)
-        {
-            *this << Di<M,S>{ea};
+        case MODE_DN:   *this << Dn{ea.reg};  break;
+        case MODE_AN:   *this << An{ea.reg};  break;
+        case MODE_AI:   *this << Ai<M,S>{ea}; break;
+        case MODE_PI:   *this << Pi<M,S>{ea}; break;
+        case MODE_PD:   *this << Pd<M,S>{ea}; break;
+        case MODE_DI:   *this << Di<M,S>{ea}; break;
             /*
             if (style == DASM_MUSASHI) {
 
@@ -747,7 +1050,7 @@ StrWriter::operator<<(const Ea<M,S> &ea)
             }
             */
             break;
-        }
+
         case MODE_IX: // (d,An,Xi)
         {
             *this << Ix<M,S>{ea};
@@ -772,10 +1075,6 @@ StrWriter::operator<<(const Ea<M,S> &ea)
         case MODE_AL: // ABS.L
         {
             *this << Al<M,S>{ea};
-            /*
-            *this << UInt(ea.ext1);
-            *this << Sz<Long>{};
-            */
             break;
         }
         case MODE_DIPC: // (d,PC)
@@ -796,16 +1095,9 @@ StrWriter::operator<<(const Ea<M,S> &ea)
             */
             break;
         }
-        case MODE_IXPC: // (d,PC,Xi)  TODO: Merge with case 6 (d,An,Xi) (?!)
+        case MODE_IXPC: // (d,PC,Xi)
         {
-            *this << IxPc<M,S>{ea};
-            /*
-            if (style == DASM_MOTOROLA) {
-                (ea.ext1 & 0x100) ? fullExtensionVda68k(ea) : briefExtension(ea);
-            } else {
-                (ea.ext1 & 0x100) ? fullExtension(ea) : briefExtension(ea);
-            }
-            */
+            *this << Ix<M,S>{ea};
             break;
         }
         case MODE_IM: // Imm
@@ -971,6 +1263,7 @@ StrWriter::operator<<(Finish)
     return *this;
 }
 
+#if 0
 template <Mode M, Size S> void
 StrWriter::briefExtension(const Ea <M,S> &ea)
 {
@@ -1166,3 +1459,4 @@ StrWriter::fullExtensionVda68k(const Ea <M,S> &ea)
 
     *this << ")";
 }
+#endif
