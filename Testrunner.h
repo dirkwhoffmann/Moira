@@ -93,6 +93,7 @@ struct Result {
     char    dasm2[128];
     int     dasmCnt2;
     int     cycles;
+    clock_t elapsed[2];
 };
 
 // Location of the tested instruction in memory
@@ -129,8 +130,8 @@ void run();
 void runSingleTest(Setup &s);
 
 void runM68k(Setup &s, Result &r);
-clock_t runMusashi(Setup &s, Result &r);
-clock_t runMoira(Setup &s, Result &r);
+void runMusashi(Setup &s, Result &r);
+void runMoira(Setup &s, Result &r);
 
 bool skip(u16 op);
 

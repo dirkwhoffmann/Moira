@@ -15,8 +15,14 @@ static constexpr bool VERBOSE = false;
 // Set to true to verify all memory write operations
 static constexpr bool CHECK_MEM_WRITES = true;
 
-// Set to true to true to skip the execution of illegal instructions
+// Set to true to skip the execution of illegal instructions
 static constexpr bool SKIP_ILLEGAL = true;
+
+// Set to true to profile the CPU speed
+static constexpr bool PROFILE_CPU = true;
+
+// Set to true to profile the disassebler speed
+static constexpr bool PROFILE_DASM = false;
 
 // Change to limit the range of executed instructions
 #define doExec(opcode) (opcode >= 0x0000 && opcode <= 0xEFFF)
@@ -25,6 +31,6 @@ static constexpr bool SKIP_ILLEGAL = true;
 #define doDasm(opcode) (opcode >= 0x0000 && opcode <= 0xEFFF)
 
 // Uncomment to enable assertion checking
-// #define NDEBUG true
+#define NDEBUG false
 
 #include <assert.h>

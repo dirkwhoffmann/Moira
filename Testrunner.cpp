@@ -201,7 +201,7 @@ void resetMoira(Setup &s)
     moiracpu->setSupervisorMode(s.supervisor);
 }
 
-clock_t muclk = 0, moclk = 0;
+clock_t muclk[2] = {0,0}, moclk[2] = {0,0};
 
 void run()
 {
@@ -246,9 +246,18 @@ void run()
             runSingleTest(setup);
         }
 
-        printf(" PASSED (Musashi: %.2fs Moira: %.2fs)\n",
-               muclk / double(CLOCKS_PER_SEC),
-               moclk / double(CLOCKS_PER_SEC));
+        printf(" PASSED ");
+        if (PROFILE_DASM || PROFILE_CPU) {
+
+            clock_t mu = 0, mo = 0;
+            if (PROFILE_CPU) { mu += muclk[0]; mo += moclk[0]; }
+            if (PROFILE_DASM) { mu += muclk[1]; mo += moclk[1]; }
+
+            printf(" PASSED (Musashi: %.2fs  Moira: %.2fs)",
+                   mu / double(CLOCKS_PER_SEC),
+                   mo / double(CLOCKS_PER_SEC));
+        }
+        printf("\n");
     }
 }
 
@@ -265,10 +274,14 @@ void runSingleTest(Setup &s)
     runM68k(s, mur);
 
     // Run Musashi
-    muclk += runMusashi(s, mur);
+    runMusashi(s, mur);
+    muclk[0] += mur.elapsed[0];
+    muclk[1] += mur.elapsed[1];
 
     // Run Moira
-    moclk += runMoira(s, mor);
+    runMoira(s, mor);
+    moclk[0] += mor.elapsed[0];
+    moclk[1] += mor.elapsed[1];
 
     // Compare
     compare(s, mur, mor);
@@ -285,7 +298,7 @@ void runM68k(Setup &s, Result &r)
     }
 }
 
-clock_t runMusashi(Setup &s, Result &r)
+void runMusashi(Setup &s, Result &r)
 {
     clock_t elapsed = 0;
 
@@ -295,13 +308,19 @@ clock_t runMusashi(Setup &s, Result &r)
     switch (cpuType) {
 
         case 68000:
+            elapsed = clock();
             r.dasmCnt = m68k_disassemble(r.dasm, s.pc, M68K_CPU_TYPE_68000);
+            r.elapsed[1] = clock() - elapsed;
             break;
         case 68010:
+            elapsed = clock();
             r.dasmCnt = m68k_disassemble(r.dasm, s.pc, M68K_CPU_TYPE_68010);
+            r.elapsed[1] = clock() - elapsed;
             break;
         case 68020:
+            elapsed = clock();
             r.dasmCnt = m68k_disassemble(r.dasm, s.pc, M68K_CPU_TYPE_68020);
+            r.elapsed[1] = clock() - elapsed;
             break;
     }
 
@@ -311,15 +330,13 @@ clock_t runMusashi(Setup &s, Result &r)
     // Run Musashi
     elapsed = clock();
     r.cycles = m68k_execute(1);
-    elapsed = clock() - elapsed;
+    r.elapsed[0] = clock() - elapsed;
 
     // Record the result
     recordMusashiRegisters(r);
-
-    return elapsed;
 }
 
-clock_t runMoira(Setup &s, Result &r)
+void runMoira(Setup &s, Result &r)
 {
     clock_t elapsed = 0;
 
@@ -329,7 +346,9 @@ clock_t runMoira(Setup &s, Result &r)
     // Disassemble the instruction in Musashi format
     moiracpu->setDasmStyle(DASM_MUSASHI);
     moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
+    elapsed = clock();
     r.dasmCnt = moiracpu->disassemble(r.oldpc, r.dasm);
+    r.elapsed[1] = clock() - elapsed;
 
     // Disassemble the instruction in Vda68k format
     moiracpu->setDasmStyle(DASM_VDA68K);
@@ -347,15 +366,13 @@ clock_t runMoira(Setup &s, Result &r)
     // Execute instruction
     elapsed = clock();
     moiracpu->execute();
-    elapsed = clock() - elapsed;
+    r.elapsed[0] = clock() - elapsed;
 
     // Record the result
     r.cycles = (int)(moiracpu->getClock() - cycles);
     r.oldpc = pc;
     r.opcode = op;
     recordMoiraRegisters(r);
-
-    return elapsed;
 }
 
 bool skip(u16 op)
