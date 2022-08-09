@@ -44,41 +44,6 @@ static const char *instrLower[]
     "tst",   "unlk",  "unpk"
 };
 
-static const char *instrUpper[]
-{
-    "???",   "???",   "???",
-    "ABCD" , "ADD",   "ADDA",  "ADDI",  "ADDQ",  "ADDX",  "AND",    "ANDI",
-    "ANDI" , "ANDI",  "ASL",   "ASR",
-    "BCC",   "BCS",   "BEQ",   "BGE",   "BGT",   "BHI",   "BLE",    "BLS",
-    "BLT",   "BMI",   "BNE",   "BPL",   "BVC",   "BVS",
-    "BFCHG", "BFCLR", "BFEXTS","BFEXTU","BFFFO", "BFINS", "BFSET",  "BFTST",
-    "BCHG",  "BCLR",
-    "BKPT",  "BRA",   "BSET",  "BSR",   "BTST",
-    "CALLM", "CAS",   "CAS2",  "CHK",   "CHK2",  "CLR",   "CMP",    "CMP2",
-    "CMPA",  "CMPI",  "CMPM",
-    "DBCC",  "DBCS",  "DBEQ",  "DBGE",  "DBGT",  "DBHI",  "DBLE",   "DBLS",
-    "DBLT",  "DBMI",  "DBNE",  "DBPL",  "DBVC",  "DBVS",  "DBRA",   "DBT",
-    "DIVL",  "DIVS",  "DIVU",
-    "EOR",   "EORI",  "EORI",  "EORI",  "EXG",   "EXT",   "EXTB",
-    "B",     "DB",    "GEN",   "RESTORE", "SAVE", "S", "TRAP",
-    "JMP",   "JSR",
-    "LEA",   "LINK",  "LSL",   "LSR",
-    "MOVE" , "MOVEA", "MOVEC", "MOVE",  "MOVE",  "MOVE",  "MOVE",  "MOVE",
-    "MOVEM", "MOVEP", "MOVEQ", "MOVES", "MULL",  "MULS",  "MULU",
-    "NBCD",  "NEG",   "NEGX",  "NOP",   "NOT",
-    "OR"   , "ORI",   "ORI",   "ORI",
-    "PACK",  "PEA",
-    "RESET", "ROL",   "ROR",   "ROXL",  "ROXR",  "RTD",   "RTE",   "RTM",
-    "RTR",   "RTS",
-    "SBCD",  "SCC",   "SCS",   "SEQ",   "SGE",   "SGT",   "SHI",   "SLE",
-    "SLS",   "SLT",   "SMI",   "SNE",   "SPL",   "SVC",   "SVS",   "SF",
-    "ST",    "STOP",  "SUB",   "SUBA",  "SUBI",  "SUBQ",  "SUBX",  "SWAP",
-    "TAS",   "TRAP",  "TRAPV",
-    "TRAPCC","TRAPCS","TRAPEQ","TRAPGE","TRAPGT","TRAPHI","TRAPLE","TRAPLS",
-    "TRAPLT","TRAPMI","TRAPNE","TRAPPL","TRAPVC","TRAPVS","TRAPF", "TRAPT",
-    "TST",   "UNLK",  "UNPK"
-};
-
 static int decDigits(u64 value) { return value ? 1 + (int)log10(value) : 1; }
 static int binDigits(u64 value) { return value ? 1 + (int)log2(value) : 1; }
 static int hexDigits(u64 value) { return (binDigits(value) + 3) / 4; }
