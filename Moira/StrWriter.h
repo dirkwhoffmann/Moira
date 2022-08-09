@@ -40,7 +40,9 @@ struct RegList    { u16 raw;    RegList(u16 v) : raw(v) { } };
 struct RegRegList { u16 raw; RegRegList(u16 v) : raw(v) { } };
 template <Instr I> struct Ins { };
 template <Size S> struct Sz { };
-template <Mode M, Size S> struct Ea { u32 pc; u16 reg; u32 ext1; u32 ext2; u32 ext3; };
+template <Mode M, Size S> struct Ea {
+    u32 pc; u16 reg; u8 dw; u8 ow; u32 ext1; i32 ext2; i32 ext3;
+};
 template <Instr I, Mode M, Size S> struct Av { u32 ext1 = 0; };
 
 struct Sep        { };

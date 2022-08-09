@@ -314,7 +314,8 @@ StrWriter::operator<<(Cn cn)
         case 0x807: *this << (upper ? "SRP" : "srp");   break;
 
         default:
-            *this << UInt(cn.raw);
+
+            style == DASM_MUSASHI ? *this << UInt(cn.raw) : *this << "INVALID";
     }
     return *this;
 }
@@ -920,18 +921,20 @@ StrWriter::fullExtensionVda68k(const Ea <M,S> &ea)
         *this << "]";
         comma = true;
     }
-    if (!is) {
+    if (is && bd) {
+
+        if (comma) *this << ",0";
+        comma = true;
+
+    } else {
 
         if (comma) *this << ",";
         *this << Rn{reg};
         lw ? (*this << Sz<Long>{}) : (*this << Sz<Word>{});
         *this << Scale{scale};
         comma = true;
-    } else {
-
-        if (comma) *this << ",0";
-        comma = true;
     }
+
     if (preindex) {
 
         *this << "]";

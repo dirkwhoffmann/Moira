@@ -132,15 +132,15 @@
 #define EXT_BASE_DISPLACEMENT_PRESENT(A)  (((A)&0x30) > 0x10)
 #define EXT_BASE_DISPLACEMENT_WORD(A)     (((A)&0x30) == 0x20)
 #define EXT_BASE_DISPLACEMENT_LONG(A)     (((A)&0x30) == 0x30)
-/*
+
 #define EXT_OUTER_DISPLACEMENT_PRESENT(A) (((A)&3) > 1 && ((A)&0x47) < 0x44)
 #define EXT_OUTER_DISPLACEMENT_WORD(A)    (((A)&3) == 2 && ((A)&0x47) < 0x44)
 #define EXT_OUTER_DISPLACEMENT_LONG(A)    (((A)&3) == 3 && ((A)&0x47) < 0x44)
-*/
+/*
 #define EXT_OUTER_DISPLACEMENT_PRESENT(A) (((A)&3) > 1)
 #define EXT_OUTER_DISPLACEMENT_WORD(A)    (((A)&3) == 2)
 #define EXT_OUTER_DISPLACEMENT_LONG(A)    (((A)&3) == 3)
-
+*/
 
 /* Opcode flags */
 #if M68K_COMPILE_FOR_MAME == OPT_ON

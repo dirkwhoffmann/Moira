@@ -59,24 +59,23 @@ Moira::Op(u16 reg, u32 &pc)
             result.ext2 = 0;
             result.ext3 = 0;
 
-            printf("Moira: Ext = %x\n", result.ext1);
             if (result.ext1 & 0x100) {
 
-                int dw = baseDispWords((u16)result.ext1);
-                if (dw == 1) result.ext2 = dasmRead<Word>(pc);
-                if (dw == 2) result.ext2 = dasmRead<Long>(pc);
-
-                int ow = outerDispWords((u16)result.ext1);
-
-                printf("Moira: FullExt: dw = %d, ow = %d\n", dw, ow);
+                result.dw = baseDispWords((u16)result.ext1);
+                result.ow = outerDispWords((u16)result.ext1);
 
                 // Compensate Musashi bug (?)
-                // if ((result.ext1 & 0x47) >= 0x44) ow = 0;
+                if (dasmStyle == DASM_MUSASHI && (result.ext1 & 0x47) >= 0x44) {
 
-                if (ow == 1) result.ext3 = dasmRead<Word>(pc);
-                if (ow == 2) result.ext3 = dasmRead<Long>(pc);
+                    result.ow = 0;
+                }
 
-                printf("Moira: disp = %x odisp = %x\n", result.ext2, result.ext3);
+                if (result.dw == 1) result.ext2 = (i16)dasmRead<Word>(pc);
+                if (result.dw == 2) result.ext2 = (i32)dasmRead<Long>(pc);
+                if (result.ow == 1) result.ext3 = (i16)dasmRead<Word>(pc);
+                if (result.ow == 2) result.ext3 = (i32)dasmRead<Long>(pc);
+
+                printf("Moira: FullExt: dw = %d, ow = %d disp = %x odisp = %x\n", result.dw, result.ow, result.ext2, result.ext3);
             }
             break;
         }

@@ -672,7 +672,6 @@ void opcode_misc(dis_buffer_t *dbuf, ushort opc)
     break;
   }
   if (tmp) {
-      printf("Adding string '%s'\n", tmp);
     addstring(dbuf, tmp);
     return;
   }
