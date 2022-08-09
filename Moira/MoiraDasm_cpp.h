@@ -74,8 +74,6 @@ Moira::Op(u16 reg, u32 &pc)
                 if (result.dw == 2) result.ext2 = (i32)dasmRead<Long>(pc);
                 if (result.ow == 1) result.ext3 = (i16)dasmRead<Word>(pc);
                 if (result.ow == 2) result.ext3 = (i32)dasmRead<Long>(pc);
-
-                printf("Moira: FullExt: dw = %d, ow = %d disp = %x odisp = %x\n", result.dw, result.ow, result.ext2, result.ext3);
             }
             break;
         }
@@ -434,11 +432,14 @@ Moira::dasmBkpt(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmBsr(StrWriter &str, u32 &addr, u16 op)
 {
-    if constexpr (MIMIC_MUSASHI && S == Byte) {
+    if constexpr (S == Byte) {
 
-        if ((u8)op == 0xFF) {
-
+        if ((u8)op == 0xFF && dasmStyle == DASM_MUSASHI) {
             dasmIllegal<I, M, S>(str, addr, op);
+            return;
+        }
+        if ((u8)op == 0xFF && dasmStyle == DASM_VDA68K) {
+            dasmBsr<I, M, Long>(str, addr, op);
             return;
         }
     }
@@ -694,11 +695,14 @@ Moira::dasmCpTrapcc(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmBcc(StrWriter &str, u32 &addr, u16 op)
 {
-    if constexpr (MIMIC_MUSASHI && S == Byte) {
+    if constexpr (S == Byte) {
 
-        if ((u8)op == 0xFF) {
-
+        if ((u8)op == 0xFF && dasmStyle == DASM_MUSASHI) {
             dasmIllegal<I, M, S>(str, addr, op);
+            return;
+        }
+        if ((u8)op == 0xFF && dasmStyle == DASM_VDA68K) {
+            dasmBcc<I, M, Long>(str, addr, op);
             return;
         }
     }

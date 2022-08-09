@@ -232,9 +232,6 @@ void run()
 
             if ((opcode & 0xFFF) == 0) { printf("."); fflush(stdout); }
 
-            // REMOVE ASAP
-            // if ((opcode >> 12) != 0b1110) continue;
-
             if constexpr (SKIP_ILLEGAL) {
                 if (moiracpu->getInfo(opcode).I == moira::ILLEGAL) continue;
             }
@@ -544,11 +541,22 @@ bool compareDasm(Result &r1, Result &r2)
     // REMOVE ASAP
     // printf("compareDasm: %s\n", r1.dasm);
 
-    return
-    r1.dasmCnt == r2.dasmCnt &&
-    r1.dasmCnt2 == r2.dasmCnt2 &&
-    strcmp(r1.dasm, r2.dasm) == 0 &&
-    strcmp(r1.dasm2, r2.dasm2) == 0;
+    bool isIllegal = moiracpu->getInfo(r1.opcode).I == ILLEGAL;
+
+    // Compare with Musashi
+    if (r1.dasmCnt != r2.dasmCnt || strcmp(r1.dasm, r2.dasm) != 0) {
+        return false;
+    }
+
+    // Compare with M68k
+    if (!isIllegal) {
+
+        if (r1.dasmCnt2 != r2.dasmCnt2 || strcmp(r1.dasm2, r2.dasm2) != 0) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool compareD(Result &r1, Result &r2)

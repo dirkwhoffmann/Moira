@@ -852,8 +852,6 @@ void opcode_0101(dis_buffer_t *dbuf, ushort opc)
 {
   int data;
 
-    printf("opcode_0101: opc = %x\n", opc);
-
   if (IS_INST(TRAPcc, opc) && BITFIELD(opc,2,0) > 1) {
     int opmode;
 
@@ -901,7 +899,6 @@ void opcode_0101(dis_buffer_t *dbuf, ushort opc)
     
     addchar('\t');
     addchar('#');
-      printf("ADDQ: opc = %x\n", opc);
     data = BITFIELD(opc,11,9);
     if (data == 0)
       data = 8;
@@ -2522,7 +2519,6 @@ void get_modregstr_moto(dis_buffer_t *dbuf, int bit, int mod, int sz, int dd)
       break;
     } else if (reg == 4) {
       /* uses ``sz'' to figure imediate data. */
-        printf("uses ``sz'' to figure imediate data sz = %d\n", sz);
       if (sz == SIZE_BYTE) {
         addchar('#');
         prints(dbuf,
@@ -2559,7 +2555,6 @@ void get_modregstr_moto(dis_buffer_t *dbuf, int bit, int mod, int sz, int dd)
     /*FALLTHROUGH*/
   case AR_IDX:
     ext = read16(dbuf->val + 1 + dd);
-          printf("M68k: Ext = %x dd = %d\n", ext, dd);
     dbuf->used++;
     nval = dbuf->val + 2 + dd; /* set to possible displacements */
     scale = BITFIELD(ext,10,9);
@@ -2569,7 +2564,6 @@ void get_modregstr_moto(dis_buffer_t *dbuf, int bit, int mod, int sz, int dd)
       /* either base disp, or memory indirect */
       bd = BITFIELD(ext,5,4);
       od = BITFIELD(ext,1,0);
-        printf("M68K: bd = %d od = %d\n", bd, od);
       if (bd == 1 || bd == 0) // DIRK: Added bd == 0
         disp = 0;
       else if (bd == 2) {
@@ -2580,8 +2574,6 @@ void get_modregstr_moto(dis_buffer_t *dbuf, int bit, int mod, int sz, int dd)
         disp = (int)read32s((ushort *)nval);
         nval += 2;
       }
-
-        printf("M68K: disp = %x\n", disp);
 
       if (od == 1) 
         odisp = 0;
@@ -2594,8 +2586,6 @@ void get_modregstr_moto(dis_buffer_t *dbuf, int bit, int mod, int sz, int dd)
         nval += 2;
       }
 
-        printf("M68K: odisp = %x\n", odisp);
-
     } else {
       /*
        * We set od and bd to zero, these values are
@@ -2607,7 +2597,6 @@ void get_modregstr_moto(dis_buffer_t *dbuf, int bit, int mod, int sz, int dd)
       od = 0; 
       bd = 0;
       disp = (char)BITFIELD(ext,7,0);
-        printf("M68K: disp %d (signed 8 bit, from ext)\n", disp);
     }
     /*
      * write everything into buf
@@ -2648,7 +2637,6 @@ void get_modregstr_moto(dis_buffer_t *dbuf, int bit, int mod, int sz, int dd)
       addchar('.');
       addchar(0x800 & ext ? 'l' : 'w');
       if (scale) {
-          printf("M68k: scale = %d\n", scale);
         addchar('*');
         addchar('0' + (1 << scale));
       }
