@@ -304,22 +304,22 @@ StrWriter::operator<<(Cnd cnd)
 {
     switch (Cond(cnd.raw)) {
 
-        case COND_BT: *this << (upper ? "BT" : "t");   break;
-        case COND_BF: *this << (upper ? "BF" : "f");   break;
-        case COND_HI: *this << (upper ? "HI" : "hi");  break;
-        case COND_LS: *this << (upper ? "LS" : "ls");  break;
-        case COND_CC: *this << (upper ? "CC" : "cc");  break;
-        case COND_CS: *this << (upper ? "CS" : "cs");  break;
-        case COND_NE: *this << (upper ? "NE" : "ne");  break;
-        case COND_EQ: *this << (upper ? "EQ" : "eq");  break;
-        case COND_VC: *this << (upper ? "VC" : "vc");  break;
-        case COND_VS: *this << (upper ? "VS" : "vs");  break;
-        case COND_PL: *this << (upper ? "PL" : "pl");  break;
-        case COND_MI: *this << (upper ? "MI" : "mi");  break;
-        case COND_GE: *this << (upper ? "GE" : "ge");  break;
-        case COND_LT: *this << (upper ? "LT" : "lt");  break;
-        case COND_GT: *this << (upper ? "GT" : "gt");  break;
-        case COND_LE: *this << (upper ? "LE" : "le");  break;
+        case COND_BT: *this << "t";   break;
+        case COND_BF: *this << "f";   break;
+        case COND_HI: *this << "hi";  break;
+        case COND_LS: *this << "ls";  break;
+        case COND_CC: *this << "cc";  break;
+        case COND_CS: *this << "cs";  break;
+        case COND_NE: *this << "ne";  break;
+        case COND_EQ: *this << "eq";  break;
+        case COND_VC: *this << "vc";  break;
+        case COND_VS: *this << "vs";  break;
+        case COND_PL: *this << "pl";  break;
+        case COND_MI: *this << "mi";  break;
+        case COND_GE: *this << "ge";  break;
+        case COND_LT: *this << "lt";  break;
+        case COND_GT: *this << "gt";  break;
+        case COND_LE: *this << "le";  break;
     }
     return *this;
 }
@@ -329,38 +329,38 @@ StrWriter::operator<<(Cpcc cpcc)
 {
     switch (cpcc.raw) {
 
-        case 0: *this << (upper ? "F" : "f");           break;
-        case 1: *this << (upper ? "EQ" : "eq");         break;
-        case 2: *this << (upper ? "OGT" : "ogt");       break;
-        case 3: *this << (upper ? "OGE" : "oge");       break;
-        case 4: *this << (upper ? "OLT" : "olt");       break;
-        case 5: *this << (upper ? "OLE" : "ole");       break;
-        case 6: *this << (upper ? "OGL" : "ogl");       break;
-        case 7: *this << (upper ? "OR" : "or");         break;
-        case 8: *this << (upper ? "UN" : "un");         break;
-        case 9: *this << (upper ? "UEQ" : "ueq");       break;
-        case 10: *this << (upper ? "UGT" : "ugt");      break;
-        case 11: *this << (upper ? "UGE" : "uge");      break;
-        case 12: *this << (upper ? "ULT" : "ult");      break;
-        case 13: *this << (upper ? "ULE" : "ule");      break;
-        case 14: *this << (upper ? "NE" : "ne");        break;
-        case 15: *this << (upper ? "T" : "t");          break;
-        case 16: *this << (upper ? "SF" : "sf");        break;
-        case 17: *this << (upper ? "SEQ" : "seq");      break;
-        case 18: *this << (upper ? "GT" : "gt");        break;
-        case 19: *this << (upper ? "GE" : "ge");        break;
-        case 20: *this << (upper ? "LT" : "lt");        break;
-        case 21: *this << (upper ? "LE" : "le");        break;
-        case 22: *this << (upper ? "GL" : "gl");        break;
-        case 23: *this << (upper ? "GLE" : "gle");      break;
-        case 24: *this << (upper ? "NGLE" : "ngle");    break;
-        case 25: *this << (upper ? "NGL" : "ngl");      break;
-        case 26: *this << (upper ? "NLE" : "nle");      break;
-        case 27: *this << (upper ? "NLT" : "nlt");      break;
-        case 28: *this << (upper ? "NGE" : "nge");      break;
-        case 29: *this << (upper ? "NGT" : "ngt");      break;
-        case 30: *this << (upper ? "SNE" : "sne");      break;
-        case 31: *this << (upper ? "ST" : "st");        break;
+        case 0: *this << "f";       break;
+        case 1: *this << "eq";      break;
+        case 2: *this << "ogt";     break;
+        case 3: *this << "oge";     break;
+        case 4: *this << "olt";     break;
+        case 5: *this << "ole";     break;
+        case 6: *this << "ogl";     break;
+        case 7: *this << "or";      break;
+        case 8: *this << "un";      break;
+        case 9: *this << "ueq";     break;
+        case 10: *this << "ugt";    break;
+        case 11: *this << "uge";    break;
+        case 12: *this << "ult";    break;
+        case 13: *this << "ule";    break;
+        case 14: *this << "ne";     break;
+        case 15: *this << "t";      break;
+        case 16: *this << "sf";     break;
+        case 17: *this << "seq";    break;
+        case 18: *this << "gt";     break;
+        case 19: *this << "ge";     break;
+        case 20: *this << "lt";     break;
+        case 21: *this << "le";     break;
+        case 22: *this << "gl";     break;
+        case 23: *this << "gle";    break;
+        case 24: *this << "ngle";   break;
+        case 25: *this << "ngl";    break;
+        case 26: *this << "nle";    break;
+        case 27: *this << "nlt";    break;
+        case 28: *this << "nge";    break;
+        case 29: *this << "ngt";    break;
+        case 30: *this << "sne";    break;
+        case 31: *this << "st";     break;
 
         default:
             *this << "?";
