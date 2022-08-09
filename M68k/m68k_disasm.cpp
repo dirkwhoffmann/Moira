@@ -772,6 +772,7 @@ void opcode_misc(dis_buffer_t *dbuf, ushort opc)
     break;
   }
   if (tmp) {
+    if(IS_INST(MOVETOCCR,opc)) { sz = SIZE_BYTE; } // DIRK (added)
     addstring(dbuf, tmp);
     get_modregstr(dbuf,5, GETMOD_BEFORE, sz, 0);
     if(IS_INST(MOVETOSR,opc))
@@ -2484,7 +2485,6 @@ void get_modregstr_moto(dis_buffer_t *dbuf, int bit, int mod, int sz, int dd)
       PRINT_AREG(dbuf, reg);
     break;
   case AR_DIS:
-          printf("AR_DIS dd = %d\n", dd);
     print_disp(dbuf, read16s(dbuf->val + 1 + dd), SIZE_WORD, reg, dd);
     dbuf->used++;
     /*FALLTHROUGH*/

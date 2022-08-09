@@ -108,6 +108,7 @@ private:
 
     template <Mode M, Size S> void briefExtension(const Ea<M,S> &ea);
     template <Mode M, Size S> void fullExtension(const Ea<M,S> &ea);
+    template <Mode M, Size S> void fullExtensionVda68k(const Ea<M,S> &ea);
 };
 
 }

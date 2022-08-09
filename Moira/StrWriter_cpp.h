@@ -550,7 +550,11 @@ StrWriter::operator<<(const Ea<M,S> &ea)
         }
         case 6: // (d,An,Xi)
         {
-            (ea.ext1 & 0x100) ? fullExtension(ea) : briefExtension(ea);
+            if (style == DASM_VDA68K) {
+                (ea.ext1 & 0x100) ? fullExtensionVda68k(ea) : briefExtension(ea);
+            } else {
+                (ea.ext1 & 0x100) ? fullExtension(ea) : briefExtension(ea);
+            }
             break;
         }
         case 7: // ABS.W
@@ -580,9 +584,13 @@ StrWriter::operator<<(const Ea<M,S> &ea)
             }
             break;
         }
-        case 10: // (d,PC,Xi)
+        case 10: // (d,PC,Xi)  TODO: Merge with case 6 (d,An,Xi) (?!)
         {
-            (ea.ext1 & 0x100) ? fullExtension(ea) : briefExtension(ea);
+            if (style == DASM_VDA68K) {
+                (ea.ext1 & 0x100) ? fullExtensionVda68k(ea) : briefExtension(ea);
+            } else {
+                (ea.ext1 & 0x100) ? fullExtension(ea) : briefExtension(ea);
+            }
             break;
         }
         case 11: // Imm
@@ -816,34 +824,16 @@ StrWriter::fullExtension(const Ea <M,S> &ea)
 
         *this << "[";
     }
-    if (style == DASM_VDA68K) {
-
-        size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
-        comma = true;
-
-    } else if (base) {
+    if (base) {
 
         size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
         comma = true;
     }
-    if (style == DASM_VDA68K) {
+    if (!bs) {
 
         if (comma) *this << ",";
+        M == 10 ? *this << "PC" : *this << An{ea.reg};
         comma = true;
-
-        if (bs && size) {
-            M == 10 ? (*this << "zpc") : *this << "z" << An{ea.reg};
-        } else {
-            M == 10 ? (*this << "pc") : *this << An{ea.reg};
-        }
-    } else {
-
-        if (!bs) {
-
-            if (comma) *this << ",";
-            M == 10 ? *this << "PC" : *this << An{ea.reg};
-            comma = true;
-        }
     }
     if (postindex) {
 
@@ -857,12 +847,6 @@ StrWriter::fullExtension(const Ea <M,S> &ea)
         lw ? (*this << Sz<Long>{}) : (*this << Sz<Word>{});
         *this << Scale{scale};
         comma = true;
-    } else {
-        // EXPERIMENTAL
-        if (style == DASM_VDA68K) {
-            if (comma) *this << ",0";
-            comma = true;
-        }
     }
     if (preindex) {
 
@@ -870,6 +854,90 @@ StrWriter::fullExtension(const Ea <M,S> &ea)
         comma = true;
     }
     if(outer)
+    {
+        if (comma) *this << ",";
+        *this << Int(outer);
+    }
+
+    *this << ")";
+}
+
+template <Mode M, Size S> void
+StrWriter::fullExtensionVda68k(const Ea <M,S> &ea)
+{
+    assert(M == 6 || M == 10);
+
+    //   15 - 12    11   10   09   08   07   06   05   04   03   02   01   00
+    // -----------------------------------------------------------------------
+    // | REGISTER | LW | SCALE   | 1  | BS | IS | BD SIZE  | 0  | IIS        |
+    // -----------------------------------------------------------------------
+
+    u16  reg   = xxxx____________ (ea.ext1);
+    u16  lw    = ____x___________ (ea.ext1);
+    u16  scale = _____xx_________ (ea.ext1);
+    u16  bs    = ________x_______ (ea.ext1);
+    u16  is    = _________x______ (ea.ext1);
+    u16  size  = __________xx____ (ea.ext1);
+    u16  iis   = _____________xxx (ea.ext1);
+    u32  bd     = __________xx____(ea.ext1);
+    u32  od     = ______________xx(ea.ext1);
+    u32  base  = ea.ext2;
+    u32  outer = ea.ext3;
+
+    bool preindex      = (iis > 0 && iis < 4);
+    bool postindex     = (iis > 4);
+    // bool effectiveZero = (ea.ext1 & 0xe4) == 0xC4 || (ea.ext1 & 0xe2) == 0xC0;
+
+    /*
+    if (effectiveZero) {
+        *this << "0";
+        return;
+    }
+    */
+
+    *this << "(";
+
+    bool comma = false;
+    if (preindex || postindex) {
+
+        *this << "[";
+    }
+
+    size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
+    comma = true;
+
+    if (comma) *this << ",";
+    comma = true;
+
+    if (bs && size) {
+        M == 10 ? (*this << "zpc") : *this << "z" << An{ea.reg};
+    } else {
+        M == 10 ? (*this << "pc") : *this << An{ea.reg};
+    }
+
+    if (postindex) {
+
+        *this << "]";
+        comma = true;
+    }
+    if (!is) {
+
+        if (comma) *this << ",";
+        *this << Rn{reg};
+        lw ? (*this << Sz<Long>{}) : (*this << Sz<Word>{});
+        *this << Scale{scale};
+        comma = true;
+    } else {
+
+        if (comma) *this << ",0";
+        comma = true;
+    }
+    if (preindex) {
+
+        *this << "]";
+        comma = true;
+    }
+    if (od)
     {
         if (comma) *this << ",";
         *this << Int(outer);

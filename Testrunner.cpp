@@ -542,7 +542,7 @@ void compare(Setup &s, Result &r1, Result &r2)
 bool compareDasm(Result &r1, Result &r2)
 {
     // REMOVE ASAP
-    printf("compareDasm: %s\n", r1.dasm);
+    // printf("compareDasm: %s\n", r1.dasm);
 
     return
     r1.dasmCnt == r2.dasmCnt &&
