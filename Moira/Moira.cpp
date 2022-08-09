@@ -471,12 +471,14 @@ Moira::disassemble(u32 addr, char *str, DasmStyle core)
             for (auto p = writer.base; p < writer.ptr; p++) {
                 *p = char(std::tolower(*p));
             }
+            break;
 
         case DASM_UPPER_CASE:
 
             for (auto p = writer.base; p < writer.ptr; p++) {
                 *p = char(std::toupper(*p));
             }
+            break;
     }
 
     return pc - addr + 2;
