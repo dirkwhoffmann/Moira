@@ -212,187 +212,194 @@ StrWriter::operator<<(Anr an)
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(Ai<M,S> ea)
+StrWriter::operator<<(Ai<M,S> wrapper)
 {
+    auto &ea = wrapper.ea;
+
     switch (style) {
 
         case DASM_MIT:
 
-            *this << An{ea.raw.reg} << "@";
+            *this << An{ea.reg} << "@";
             return *this;
 
         default:
 
-            *this << "(" << An{ea.raw.reg} << ")";
+            *this << "(" << An{ea.reg} << ")";
             return *this;
     }
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(Pi<M,S> ea)
+StrWriter::operator<<(Pi<M,S> wrapper)
 {
+    auto &ea = wrapper.ea;
+
     switch (style) {
 
         case DASM_MIT:
 
-            *this << An{ea.raw.reg} << "@+";
+            *this << An{ea.reg} << "@+";
             return *this;
 
         default:
 
-            *this << "(" << An{ea.raw.reg} << ")+";
+            *this << "(" << An{ea.reg} << ")+";
             return *this;
     }
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(Pd<M,S> ea)
+StrWriter::operator<<(Pd<M,S> wrapper)
 {
+    auto &ea = wrapper.ea;
+
     switch (style) {
 
         case DASM_MIT:
 
-            *this << An{ea.raw.reg} << "@-";
+            *this << An{ea.reg} << "@-";
             return *this;
 
         default:
 
-            *this << "-(" << An{ea.raw.reg} << ")";
+            *this << "-(" << An{ea.reg} << ")";
             return *this;
     }
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(Di<M,S> ea)
+StrWriter::operator<<(Di<M,S> wrapper)
 {
+    auto &ea = wrapper.ea;
+
     switch (style) {
 
         case DASM_MUSASHI:
 
-            *this << "(" << Int{(i16)ea.raw.ext1} << "," << An{ea.raw.reg} << ")";
+            *this << "(" << Int{(i16)ea.ext1} << "," << An{ea.reg} << ")";
             return *this;
 
         case DASM_MIT:
 
-            *this << An{ea.raw.reg} << "@(" << Int{(i16)ea.raw.ext1} << ")";
+            *this << An{ea.reg} << "@(" << Int{(i16)ea.ext1} << ")";
             return *this;
 
         default:
 
-            *this << Int{(i16)ea.raw.ext1} << "(" << An{ea.raw.reg} << ")";
+            *this << Int{(i16)ea.ext1} << "(" << An{ea.reg} << ")";
             return *this;
     }
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(Ix<M,S> ea)
+StrWriter::operator<<(Ix<M,S> wrapper)
 {
-    return *this;
+    auto &ea = wrapper.ea;
 
     switch (style) {
 
         case DASM_MOTOROLA:
 
-            (ea.raw.ext1 & 0x100) ? fullExtensionVda68k(ea.raw) : briefExtension(ea.raw);
+            (ea.ext1 & 0x100) ? fullExtensionVda68k(ea) : briefExtension(ea);
             return *this;
 
         case DASM_MIT:
 
-            (ea.raw.ext1 & 0x100) ? fullExtensionVda68k(ea.raw) : briefExtension(ea.raw);
+            (ea.ext1 & 0x100) ? fullExtensionVda68k(ea) : briefExtension(ea);
             return *this;
 
         default:
 
-            (ea.raw.ext1 & 0x100) ? fullExtension(ea.raw) : briefExtension(ea.raw);
+            (ea.ext1 & 0x100) ? fullExtension(ea) : briefExtension(ea);
             return *this;
     }
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(Aw<M,S> ea)
+StrWriter::operator<<(Aw<M,S> wrapper)
 {
-    return *this;
+    auto &ea = wrapper.ea;
 
     switch (style) {
 
         case DASM_MIT:
 
-            *this << UInt(ea.raw.ext1) << Sz<Word>{};
+            *this << UInt(ea.ext1) << Sz<Word>{};
             return *this;
 
         default:
 
-            *this << UInt(ea.raw.ext1) << Sz<Word>{};
+            *this << UInt(ea.ext1) << Sz<Word>{};
             return *this;
     }
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(Al<M,S> ea)
+StrWriter::operator<<(Al<M,S> wrapper)
 {
-    return *this;
+    auto &ea = wrapper.ea;
 
     switch (style) {
 
         case DASM_MIT:
 
-            *this << UInt(ea.raw.ext1) << Sz<Long>{};
+            *this << UInt(ea.ext1) << Sz<Long>{};
             return *this;
 
         default:
 
-            *this << UInt(ea.raw.ext1) << Sz<Long>{};
+            *this << UInt(ea.ext1) << Sz<Long>{};
             return *this;
     }
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(DiPc<M,S> ea)
+StrWriter::operator<<(DiPc<M,S> wrapper)
 {
-    return *this;
-
+    auto &ea = wrapper.ea;
     u32 resolved;
 
     switch (style) {
 
         case DASM_MUSASHI:
 
-            *this << "(" << Int{(i16)ea.raw.ext1} << ",PC)";
-            resolved = U32_ADD(U32_ADD(ea.raw.pc, (i16)ea.raw.ext1), 2);
+            *this << "(" << Int{(i16)ea.ext1} << ",PC)";
+            resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
             StrWriter(moira, comment, style, nf) << "; (" << UInt(resolved) << ")" << Finish{};
             return *this;
 
         case DASM_MIT:
 
-            resolved = U32_ADD(U32_ADD(ea.raw.pc, (i16)ea.raw.ext1), 2);
+            resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
             *this << UInt(resolved) << "(pc)";
             return *this;
 
         default:
 
-            resolved = U32_ADD(U32_ADD(ea.raw.pc, (i16)ea.raw.ext1), 2);
+            resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
             *this << UInt(resolved) << "(pc)";
             return *this;
     }
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(IxPc<M,S> ea)
+StrWriter::operator<<(IxPc<M,S> wrapper)
 {
     // NOT NEEDED: Use Ix{...} instead
     return *this;
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(Im<M,S> ea)
+StrWriter::operator<<(Im<M,S> wrapper)
 {
-    return *this;
+    auto &ea = wrapper.ea;
 
     switch (style) {
 
         case DASM_MUSASHI:
 
-            *this << Imu(ea.raw.ext1);
+            *this << Imu(ea.ext1);
             return *this;
 
         case DASM_MIT:
@@ -403,27 +410,27 @@ StrWriter::operator<<(Im<M,S> ea)
         default:
 
             if constexpr (S != 0) {
-                *this << Ims<S>(ea.raw.ext1);
+                *this << Ims<S>(ea.ext1);
             }
             return *this;
     }
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(Ip<M,S> ea)
+StrWriter::operator<<(Ip<M,S> wrapper)
 {
-    return *this;
+    auto &ea = wrapper.ea;
 
     switch (style) {
 
         case DASM_MIT:
 
-            *this << An{ea.raw.reg} << "@-";
+            *this << An{ea.reg} << "@-";
             return *this;
 
         default:
 
-            *this << "-(" << An{ea.raw.reg} << ")";
+            *this << "-(" << An{ea.reg} << ")";
             return *this;
     }
 
@@ -1019,18 +1026,19 @@ StrWriter::fullExtension(const Ea <M,S> &ea)
     u32  base  = ea.ext2;
     u32  outer = ea.ext3;
 
-    bool preindex      = (iis > 0 && iis < 4);
-    bool postindex     = (iis > 4);
+    bool preindex = (iis > 0 && iis < 4);
+    bool postindex = (iis > 4);
     bool effectiveZero = (ea.ext1 & 0xe4) == 0xC4 || (ea.ext1 & 0xe2) == 0xC0;
+    bool comma = false;
 
     if (effectiveZero) {
+
         *this << "0";
         return;
     }
 
     *this << "(";
 
-    bool comma = false;
     if (preindex || postindex) {
 
         *this << "[";
@@ -1090,35 +1098,31 @@ StrWriter::fullExtensionVda68k(const Ea <M,S> &ea)
     u16  is    = _________x______ (ea.ext1);
     u16  size  = __________xx____ (ea.ext1);
     u16  iis   = _____________xxx (ea.ext1);
-    u32  bd     = __________xx____(ea.ext1);
-    u32  od     = ______________xx(ea.ext1);
+    u32  bd    = __________xx____(ea.ext1);   // Take from ea!!
+    u32  od    = ______________xx(ea.ext1);   // Take from ea!!
     u32  base  = ea.ext2;
     u32  outer = ea.ext3;
 
-    bool preindex      = (iis > 0 && iis < 4);
-    bool postindex     = (iis > 4);
-    // bool effectiveZero = (ea.ext1 & 0xe4) == 0xC4 || (ea.ext1 & 0xe2) == 0xC0;
+    assert(bd == ea.bd);
+    assert(od == ea.od);
 
-    /*
-    if (effectiveZero) {
-        *this << "0";
-        return;
-    }
-    */
+    bool preindex = (iis > 0 && iis < 4);
+    bool postindex = (iis > 4);
+    // bool comma = false;
 
     *this << "(";
 
-    bool comma = false;
     if (preindex || postindex) {
 
         *this << "[";
     }
 
     size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
-    comma = true;
+    // comma = true;
 
-    if (comma) *this << ",";
-    comma = true;
+    // if (comma) *this << ",";
+    *this << ",";
+    // comma = true;
 
     if (bs && size) {
         M == 10 ? (*this << "zpc") : *this << "z" << An{ea.reg};
@@ -1129,30 +1133,34 @@ StrWriter::fullExtensionVda68k(const Ea <M,S> &ea)
     if (postindex) {
 
         *this << "]";
-        comma = true;
+        // comma = true;
     }
     if (is && bd) {
 
-        if (comma) *this << ",0";
-        comma = true;
+        // if (comma) *this << ",0";
+        *this << ",0";
+        // comma = true;
 
     } else {
 
-        if (comma) *this << ",";
+        // if (comma) *this << ",";
+        *this << ",";
         *this << Rn{reg};
         lw ? (*this << Sz<Long>{}) : (*this << Sz<Word>{});
         *this << Scale{scale};
-        comma = true;
+        // comma = true;
     }
 
     if (preindex) {
 
         *this << "]";
-        comma = true;
+        // comma = true;
     }
+
     if (od)
     {
-        if (comma) *this << ",";
+        // if (comma) *this << ",";
+        *this << ",";
         *this << Int(outer);
     }
 

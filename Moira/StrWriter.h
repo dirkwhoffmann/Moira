@@ -52,17 +52,17 @@ struct RegRegList { u16 raw; RegRegList(u16 v) : raw(v) { } };
 template <Mode M, Size S> struct Ea {
     u32 pc; u16 reg; u8 dw; u8 ow; u32 ext1; i32 ext2; i32 ext3;
 };
-template <Mode M, Size S> struct Ai { const Ea<M,S> &raw; };
-template <Mode M, Size S> struct Pi { const Ea<M,S> &raw; };
-template <Mode M, Size S> struct Pd { const Ea<M,S> &raw; };
-template <Mode M, Size S> struct Di { const Ea<M,S> &raw; };
-template <Mode M, Size S> struct Ix { const Ea<M,S> &raw; };
-template <Mode M, Size S> struct Aw { const Ea<M,S> &raw; };
-template <Mode M, Size S> struct Al { const Ea<M,S> &raw; };
-template <Mode M, Size S> struct DiPc { const Ea<M,S> &raw; };
-template <Mode M, Size S> struct IxPc { const Ea<M,S> &raw; };
-template <Mode M, Size S> struct Im { const Ea<M,S> &raw; };
-template <Mode M, Size S> struct Ip { const Ea<M,S> &raw; };
+template <Mode M, Size S> struct Ai { const Ea<M,S> &ea; };
+template <Mode M, Size S> struct Pi { const Ea<M,S> &ea; };
+template <Mode M, Size S> struct Pd { const Ea<M,S> &ea; };
+template <Mode M, Size S> struct Di { const Ea<M,S> &ea; };
+template <Mode M, Size S> struct Ix { const Ea<M,S> &ea; };
+template <Mode M, Size S> struct Aw { const Ea<M,S> &ea; };
+template <Mode M, Size S> struct Al { const Ea<M,S> &ea; };
+template <Mode M, Size S> struct DiPc { const Ea<M,S> &ea; };
+template <Mode M, Size S> struct IxPc { const Ea<M,S> &ea; };
+template <Mode M, Size S> struct Im { const Ea<M,S> &ea; };
+template <Mode M, Size S> struct Ip { const Ea<M,S> &ea; };
 
 struct Scale { int raw; Scale(int v) : raw(v) { } };
 
@@ -152,9 +152,10 @@ public:
 
 private:
 
-    template <Mode M, Size S> void briefExtension(const Ea<M,S> &ea);
-    template <Mode M, Size S> void fullExtension(const Ea<M,S> &ea);
-    template <Mode M, Size S> void fullExtensionVda68k(const Ea<M,S> &ea);
+    // DEPRECATED
+    template <Mode M, Size S> void briefExtension(const Ea<M,S> &);
+    template <Mode M, Size S> void fullExtension(const Ea<M,S> &);
+    template <Mode M, Size S> void fullExtensionVda68k(const Ea<M,S> &);
 };
 
 }
