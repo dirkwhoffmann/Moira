@@ -60,7 +60,12 @@ Moira::setDasmStyle(DasmStyle style)
 void
 Moira::setDasmNumberFormat(DasmNumberFormat format)
 {
-    assert(format >= DASM_HEX && format <= DASM_DEC);
+    if (format.prefix == nullptr) {
+        throw std::runtime_error("prefix must not be NULL");
+    }
+    if (format.radix != 10 && format.radix != 16) {
+        throw std::runtime_error("Invalid radix: " + std::to_string(format.radix));
+    }
 
     numberFormat = format;
 }
@@ -487,7 +492,7 @@ Moira::disassemble(u32 addr, char *str, DasmStyle core)
 void
 Moira::disassembleWord(u32 value, char *str)
 {
-    sprintx(str, value, true, "", 4); // Upper case, no prefix, 4 digits
+    sprintx(str, value, { .prefix = "", .radix = 16, .upperCase = true }, 4);
 }
 
 void
@@ -496,7 +501,7 @@ Moira::disassembleMemory(u32 addr, int cnt, char *str)
     U32_DEC(addr, 2); // Because dasmRead increases addr first
     for (int i = 0; i < cnt; i++) {
         u32 value = dasmRead<Word>(addr);
-        sprintx(str, value, true, "", 4);
+        disassembleWord(value, str);
         *str++ = (i == cnt - 1) ? 0 : ' ';
     }
 }
@@ -504,7 +509,7 @@ Moira::disassembleMemory(u32 addr, int cnt, char *str)
 void
 Moira::disassemblePC(u32 pc, char *str)
 {
-    sprintx(str, pc, true, "", 6); // Upper case, no prefix, 6 digits
+    sprintx(str, pc, { .prefix = "", .radix = 16, .upperCase = true }, 6);
 }
 
 void

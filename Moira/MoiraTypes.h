@@ -40,11 +40,12 @@ typedef enum
 }
 DasmStyle;
 
-typedef enum
+typedef struct
 {
-    DASM_HEX,
-    DASM_HEX_0X, // DEPRECATED
-    DASM_DEC
+    const char *prefix;
+    u8 radix;
+    bool upperCase;
+    bool plainZero;
 }
 DasmNumberFormat;
 

@@ -328,12 +328,12 @@ clock_t runMoira(Setup &s, Result &r)
 
     // Disassemble the instruction in Musashi format
     moiracpu->setDasmStyle(DASM_MUSASHI);
-    moiracpu->setDasmNumberFormat(DASM_HEX);
+    moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
     r.dasmCnt = moiracpu->disassemble(r.oldpc, r.dasm);
 
     // Disassemble the instruction in Vda68k format
     moiracpu->setDasmStyle(DASM_VDA68K);
-    moiracpu->setDasmNumberFormat(DASM_HEX_0X);
+    moiracpu->setDasmNumberFormat({ .prefix="0x", .radix=16, .plainZero=true });
     r.dasmCnt2 = moiracpu->disassemble(r.oldpc, r.dasm2);
 
     u32 pc = moiracpu->getPC();
