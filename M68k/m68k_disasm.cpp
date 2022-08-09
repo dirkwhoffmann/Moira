@@ -2769,7 +2769,7 @@ void get_modregstr_mit(dis_buffer_t *dbuf,int bit, int mod, int sz, int dd)
       /* either base disp, or memory indirect */
       bd = BITFIELD(ext,5,4);
       od = BITFIELD(ext,1,0);
-      if (bd == 1)
+      if (bd == 1 || bd == 0) // DIRK: Added bd == 0
         disp = 0;
       else if (bd == 2) {
         dbuf->used++;
@@ -2806,6 +2806,8 @@ void get_modregstr_mit(dis_buffer_t *dbuf,int bit, int mod, int sz, int dd)
      * write everything into buf
      */
     /* if base register not suppresed */
+          printf("mod == AR_IDX = %d (Mod = %d)\n", mod == AR_IDX, mod);
+          printf("bd = %d ISBITSET(ext,7) = %d\n", bd, ISBITSET(ext,7));
     if (mod == AR_IDX && (!bd || !ISBITSET(ext,7)))
       PRINT_AREG(dbuf, reg);
     else if (mod == MOD_SPECIAL && ISBITSET(ext,7)) {

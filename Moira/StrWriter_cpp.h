@@ -456,8 +456,8 @@ StrWriter::operator<<(IxMot<M,S> wrapper)
         u32  base  = ea.ext2;
         u32  outer = ea.ext3;
 
-        assert(bd == ea.bd);
-        assert(od == ea.od);
+        // assert(bd == ea.dw);
+        // assert(od == ea.ow);
 
         bool preindex = (iis > 0 && iis < 4);
         bool postindex = (iis > 4);
@@ -552,7 +552,7 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
 
     } else {
 
-        printf("MIT brief format\n");
+        printf("MIT full format\n");
 
         //   15-12   11   10   09   08   07   06   05   04   03   02   01   00
         // --------------------------------------------------------------------
@@ -571,36 +571,40 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
         u32  base  = ea.ext2;
         u32  outer = ea.ext3;
 
-        assert(bd == ea.bd);
-        assert(od == ea.od);
+        // assert(bd == ea.dw);
+        // assert(od == ea.ow);
 
         bool preindex = (iis > 0 && iis < 4);
         bool postindex = (iis > 4);
         // bool comma = false;
 
-        *this << "(";
+        if (M == MODE_IX) {
+
+            if (!ea.dw || !bs) { *this << An{ea.reg}; }
+
+        } else {
+
+            if (bs) { *this << "zpc"; } else { *this << "pc"; }
+        }
+
+        *this << "@(";
 
         if (preindex || postindex) {
 
-            *this << "[";
+            // *this << "[";
         }
 
         size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
         // comma = true;
 
         // if (comma) *this << ",";
-        *this << ",";
+        *this << ")";
         // comma = true;
 
-        if (bs && size) {
-            M == 10 ? (*this << "zpc") : *this << "z" << An{ea.reg};
-        } else {
-            M == 10 ? (*this << "pc") : *this << An{ea.reg};
-        }
 
         if (postindex) {
 
-            *this << "]";
+            // *this << "]";
             // comma = true;
         }
         if (is && bd) {

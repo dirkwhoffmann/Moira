@@ -31,6 +31,6 @@ static constexpr bool PROFILE_DASM = false;
 #define doDasm(opcode) (opcode >= 0x0000 && opcode <= 0xEFFF)
 
 // Uncomment to enable assertion checking
-#define NDEBUG false
+// #define NDEBUG false
 
 #include <assert.h>
