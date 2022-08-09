@@ -55,6 +55,7 @@ template <Mode M, Size S> struct Ea {
 template <Mode M, Size S> struct Ai { const Ea<M,S> &raw; };
 template <Mode M, Size S> struct Pi { const Ea<M,S> &raw; };
 template <Mode M, Size S> struct Pd { const Ea<M,S> &raw; };
+template <Mode M, Size S> struct Di { const Ea<M,S> &raw; };
 template <Mode M, Size S> struct Ix { const Ea<M,S> &raw; };
 template <Mode M, Size S> struct Aw { const Ea<M,S> &raw; };
 template <Mode M, Size S> struct Al { const Ea<M,S> &raw; };
@@ -118,6 +119,7 @@ public:
     template <Mode M, Size S> StrWriter& operator<<(Ai<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(Pi<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(Pd<M,S>);
+    template <Mode M, Size S> StrWriter& operator<<(Di<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(Ix<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(Aw<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(Al<M,S>);

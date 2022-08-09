@@ -263,6 +263,28 @@ StrWriter::operator<<(Pd<M,S> ea)
 }
 
 template <Mode M, Size S> StrWriter&
+StrWriter::operator<<(Di<M,S> ea)
+{
+    switch (style) {
+
+        case DASM_MUSASHI:
+
+            *this << "(" << Int{(i16)ea.raw.ext1} << "," << An{ea.raw.reg} << ")";
+            return *this;
+
+        case DASM_MIT:
+
+            *this << An{ea.raw.reg} << "@(" << Int{(i16)ea.raw.ext1} << ")";
+            return *this;
+
+        default:
+
+            *this << Int{(i16)ea.raw.ext1} << "(" << An{ea.raw.reg} << ")";
+            return *this;
+    }
+}
+
+template <Mode M, Size S> StrWriter&
 StrWriter::operator<<(Ix<M,S> ea)
 {
     return *this;
@@ -281,7 +303,7 @@ StrWriter::operator<<(Ix<M,S> ea)
 
         default:
 
-            (ea.raw.ext1 & 0x100) ? fullExtension(ea) : briefExtension(ea.raw);
+            (ea.raw.ext1 & 0x100) ? fullExtension(ea.raw) : briefExtension(ea.raw);
             return *this;
     }
 }
@@ -336,19 +358,19 @@ StrWriter::operator<<(DiPc<M,S> ea)
         case DASM_MUSASHI:
 
             *this << "(" << Int{(i16)ea.raw.ext1} << ",PC)";
-            resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
+            resolved = U32_ADD(U32_ADD(ea.raw.pc, (i16)ea.raw.ext1), 2);
             StrWriter(moira, comment, style, nf) << "; (" << UInt(resolved) << ")" << Finish{};
             return *this;
 
         case DASM_MIT:
 
-            resolved = U32_ADD(U32_ADD(ea.raw.pc, (i16)ea.ext1), 2);
+            resolved = U32_ADD(U32_ADD(ea.raw.pc, (i16)ea.raw.ext1), 2);
             *this << UInt(resolved) << "(pc)";
             return *this;
 
         default:
 
-            resolved = U32_ADD(U32_ADD(ea.raw.pc, (i16)ea.ext1), 2);
+            resolved = U32_ADD(U32_ADD(ea.raw.pc, (i16)ea.raw.ext1), 2);
             *this << UInt(resolved) << "(pc)";
             return *this;
     }
@@ -677,36 +699,35 @@ StrWriter::operator<<(const Ea<M,S> &ea)
 {
     switch (M) {
 
-        case 0: // Dn
+        case MODE_DN: // Dn
         {
             *this << Dn{ea.reg};
             break;
         }
-        case 1: // An
+        case MODE_AN: // An
         {
             *this << An{ea.reg};
             break;
         }
-        case 2: // (An)
+        case MODE_AI: // (An)
         {
             *this << Ai<M,S>{ea};
-            // *this << "(" << An{ea.reg} << ")";
             break;
         }
-        case 3:  // (An)+
+        case MODE_PI:  // (An)+
         {
             *this << Pi<M,S>{ea};
-            // *this << "(" << An{ea.reg} << ")+";
             break;
         }
-        case 4: // -(An)
+        case MODE_PD: // -(An)
         {
             *this << Pd<M,S>{ea};
-            // *this << "-(" << An{ea.reg} << ")";
             break;
         }
-        case 5: // (d,An)
+        case MODE_DI: // (d,An)
         {
+            *this << Di<M,S>{ea};
+            /*
             if (style == DASM_MUSASHI) {
 
                 *this << "(" << Int{(i16)ea.ext1};
@@ -717,31 +738,43 @@ StrWriter::operator<<(const Ea<M,S> &ea)
                 *this << Int{(i16)ea.ext1};
                 *this << "(" << An{ea.reg} << ")";
             }
+            */
             break;
         }
-        case 6: // (d,An,Xi)
+        case MODE_IX: // (d,An,Xi)
         {
+            *this << Ix<M,S>{ea};
+            /*
             if (style == DASM_MOTOROLA) {
                 (ea.ext1 & 0x100) ? fullExtensionVda68k(ea) : briefExtension(ea);
             } else {
                 (ea.ext1 & 0x100) ? fullExtension(ea) : briefExtension(ea);
             }
+            */
             break;
         }
-        case 7: // ABS.W
+        case MODE_AW: // ABS.W
         {
+            *this << Aw<M,S>{ea};
+            /*
             *this << UInt(ea.ext1);
             *this << Sz<Word>{};
+            */
             break;
         }
-        case 8: // ABS.L
+        case MODE_AL: // ABS.L
         {
+            *this << Al<M,S>{ea};
+            /*
             *this << UInt(ea.ext1);
             *this << Sz<Long>{};
+            */
             break;
         }
-        case 9: // (d,PC)
+        case MODE_DIPC: // (d,PC)
         {
+            *this << DiPc<M,S>{ea};
+            /*
             if (style == DASM_MUSASHI) {
 
                 *this << "(" << Int{(i16)ea.ext1} << ",PC)";
@@ -753,19 +786,25 @@ StrWriter::operator<<(const Ea<M,S> &ea)
                 auto resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
                 *this << UInt(resolved) << "(pc)";
             }
+            */
             break;
         }
-        case 10: // (d,PC,Xi)  TODO: Merge with case 6 (d,An,Xi) (?!)
+        case MODE_IXPC: // (d,PC,Xi)  TODO: Merge with case 6 (d,An,Xi) (?!)
         {
+            *this << IxPc<M,S>{ea};
+            /*
             if (style == DASM_MOTOROLA) {
                 (ea.ext1 & 0x100) ? fullExtensionVda68k(ea) : briefExtension(ea);
             } else {
                 (ea.ext1 & 0x100) ? fullExtension(ea) : briefExtension(ea);
             }
+            */
             break;
         }
-        case 11: // Imm
+        case MODE_IM: // Imm
         {
+            *this << Im<M,S>{ea};
+            /*
             if (style == DASM_MUSASHI) {
                 *this << Imu(ea.ext1);
             } else {
@@ -773,6 +812,7 @@ StrWriter::operator<<(const Ea<M,S> &ea)
                     *this << Ims<S>(ea.ext1);
                 }
             }
+            */
             break;
         }
     }
