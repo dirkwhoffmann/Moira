@@ -403,7 +403,7 @@ StrWriter::operator<<(Scale s)
 }
 
 StrWriter&
-StrWriter::operator<<(Align align)
+StrWriter::operator<<(Tabulator align)
 {
     // Write at least a single space
     *ptr++ = ' ';

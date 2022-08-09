@@ -29,22 +29,14 @@ protected:
     // Emulated CPU core
     Core core = M68000;
 
+    // Interrupt mode of this CPU
+    IrqMode irqMode = IRQ_AUTO;
+
     // Disassembler output format
     DasmStyle style = DASM_MOIRA;
     DasmNumberFormat numberFormat { .prefix = "$", .radix = 16 };
     DasmLetterCase letterCase = DASM_MIXED_CASE;
-
-    // Interrupt mode of this CPU
-    IrqMode irqMode = IRQ_AUTO;
-
-    // Number format used by the disassembler (hex or decimal)
-    bool hex = true;
-
-    // Text formatting style used by the disassembler (upper case or lower case)
-    bool upper = false;
-
-    // Tab spacing used by the disassembler
-    Align tab{8};
+    Tabulator tab{8};
 
 
     //
@@ -160,12 +152,10 @@ public:
     void setCore(Core core);
 
     // Configures the disassembler
-    void setDasmStyle(DasmStyle style);
-    void setDasmNumberFormat(DasmNumberFormat format);
-    void setDasmLetterCase(DasmLetterCase format);
-
-    // Configures the output format of the disassembler
-    void configDasm(bool h, bool u) { hex = h; upper = u; }
+    void setDasmStyle(DasmStyle value);
+    void setDasmNumberFormat(DasmNumberFormat value);
+    void setDasmLetterCase(DasmLetterCase value);
+    void setIndentation(int value);
 
 protected:
 

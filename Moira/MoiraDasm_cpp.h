@@ -671,20 +671,20 @@ Moira::dasmCpTrapcc(StrWriter &str, u32 &addr, u16 op)
     auto id   = ( ____xxx_________(op)   );
     auto cnd  = ( __________xxxxxx(ext1) );
 
-    str << id << Ins<I>{} << Cpcc{cnd} << Align{9};
+    str << id << Ins<I>{} << Cpcc{cnd} << Tabulator{9};
     
     switch (op & 0b111) {
 
         case 0b010:
         {
             auto ext = dasmRead <Word> (addr);
-            str << Align{10} << Imu(ext);
+            str << Tabulator{10} << Imu(ext);
             break;
         }
         case 0b011:
         {
             auto ext = dasmRead <Long> (addr);
-            str << Align{10} << Imu(ext);
+            str << Tabulator{10} << Imu(ext);
             break;
         }
     }

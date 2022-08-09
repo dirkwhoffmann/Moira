@@ -83,6 +83,12 @@ Moira::setDasmLetterCase(DasmLetterCase value)
 }
 
 void
+Moira::setIndentation(int value)
+{
+    tab = Tabulator{value};
+}
+
+void
 Moira::reset()
 {
     switch (core) {
