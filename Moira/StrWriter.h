@@ -79,6 +79,7 @@ public:
 
     StrWriter& operator<<(const char *str);
     StrWriter& operator<<(int i);
+    StrWriter& operator<<(unsigned int i);
     StrWriter& operator<<(Int i);
     StrWriter& operator<<(UInt u);
     StrWriter& operator<<(UInt8 value);

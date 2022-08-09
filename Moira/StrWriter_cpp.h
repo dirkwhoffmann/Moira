@@ -141,6 +141,13 @@ StrWriter::operator<<(const char *str)
 StrWriter&
 StrWriter::operator<<(int value)
 {
+    sprintd_signed(ptr, value);
+    return *this;
+}
+
+StrWriter&
+StrWriter::operator<<(unsigned int value)
+{
     sprintd(ptr, value);
     return *this;
 }

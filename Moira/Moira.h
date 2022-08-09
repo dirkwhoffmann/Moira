@@ -31,7 +31,7 @@ protected:
 
     // Disassembler configuration
     DasmStyle dasmStyle = DASM_MOIRA;
-    DasmNumberFormat numberFormat = { .prefix = "$", .radix = 16 };
+    DasmNumberFormat numberFormat { .prefix = "$", .radix = 16 };
     DasmInstrFormat instrFormat = DASM_MIXED_CASE;
 
     // Interrupt mode of this CPU
