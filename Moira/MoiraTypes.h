@@ -55,7 +55,7 @@ typedef enum
     DASM_LOWER_CASE,
     DASM_UPPER_CASE
 }
-DasmInstrFormat;
+DasmLetterCase;
 
 typedef enum
 {

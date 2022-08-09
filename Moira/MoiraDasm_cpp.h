@@ -65,7 +65,7 @@ Moira::Op(u16 reg, u32 &pc)
                 result.ow = outerDispWords((u16)result.ext1);
 
                 // Compensate Musashi bug (?)
-                if (dasmStyle == DASM_MUSASHI && (result.ext1 & 0x47) >= 0x44) {
+                if (style == DASM_MUSASHI && (result.ext1 & 0x47) >= 0x44) {
 
                     result.ow = 0;
                 }
@@ -324,7 +324,7 @@ Moira::dasmAndiRg(StrWriter &str, u32 &addr, u16 op)
     auto src = dasmRead<S>(addr);
     auto dst = _____________xxx(op);
 
-    if (dasmStyle == DASM_MUSASHI) {
+    if (style == DASM_MUSASHI) {
         str << Ins<I>{} << Sz<S>{} << tab << Imu{src} << Sep{} << Dn{dst};
     } else {
         str << Ins<I>{} << Sz<S>{} << tab << Ims<S>(src) << Sep{} << Dn{dst};
@@ -337,7 +337,7 @@ Moira::dasmAndiEa(StrWriter &str, u32 &addr, u16 op)
     auto src = dasmRead<S>(addr);
     auto dst = Op <M,S> ( _____________xxx(op), addr );
 
-    if (dasmStyle == DASM_MUSASHI) {
+    if (style == DASM_MUSASHI) {
         str << Ins<I>{} << Sz<S>{} << tab << Imu{src} << Sep{} << dst;
     } else {
         str << Ins<I>{} << Sz<S>{} << tab << Ims<S>(src) << "," << dst;
@@ -434,11 +434,11 @@ Moira::dasmBsr(StrWriter &str, u32 &addr, u16 op)
 {
     if constexpr (S == Byte) {
 
-        if ((u8)op == 0xFF && dasmStyle == DASM_MUSASHI) {
+        if ((u8)op == 0xFF && style == DASM_MUSASHI) {
             dasmIllegal<I, M, S>(str, addr, op);
             return;
         }
-        if ((u8)op == 0xFF && dasmStyle == DASM_VDA68K) {
+        if ((u8)op == 0xFF && style == DASM_VDA68K) {
             dasmBsr<I, M, Long>(str, addr, op);
             return;
         }
@@ -697,11 +697,11 @@ Moira::dasmBcc(StrWriter &str, u32 &addr, u16 op)
 {
     if constexpr (S == Byte) {
 
-        if ((u8)op == 0xFF && dasmStyle == DASM_MUSASHI) {
+        if ((u8)op == 0xFF && style == DASM_MUSASHI) {
             dasmIllegal<I, M, S>(str, addr, op);
             return;
         }
-        if ((u8)op == 0xFF && dasmStyle == DASM_VDA68K) {
+        if ((u8)op == 0xFF && style == DASM_VDA68K) {
             dasmBcc<I, M, Long>(str, addr, op);
             return;
         }

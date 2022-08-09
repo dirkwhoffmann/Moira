@@ -50,32 +50,36 @@ Moira::setCore(Core core)
 }
 
 void
-Moira::setDasmStyle(DasmStyle style)
+Moira::setDasmStyle(DasmStyle value)
 {
-    assert(style == DASM_MUSASHI || style == DASM_VDA68K);
+    if (value != DASM_MUSASHI && value != DASM_VDA68K) {
+        throw std::runtime_error("Invalid style: " + std::to_string(value));
+    }
 
-    dasmStyle = style;
+    style = value;
 }
 
 void
-Moira::setDasmNumberFormat(DasmNumberFormat format)
+Moira::setDasmNumberFormat(DasmNumberFormat value)
 {
-    if (format.prefix == nullptr) {
+    if (value.prefix == nullptr) {
         throw std::runtime_error("prefix must not be NULL");
     }
-    if (format.radix != 10 && format.radix != 16) {
-        throw std::runtime_error("Invalid radix: " + std::to_string(format.radix));
+    if (value.radix != 10 && value.radix != 16) {
+        throw std::runtime_error("Invalid radix: " + std::to_string(value.radix));
     }
 
-    numberFormat = format;
+    numberFormat = value;
 }
 
 void
-Moira::setDasmInstrFormat(DasmInstrFormat format)
+Moira::setDasmLetterCase(DasmLetterCase value)
 {
-    assert(format >= DASM_LOWER_CASE && format <= DASM_UPPER_CASE);
+    if (value < DASM_LOWER_CASE || value > DASM_UPPER_CASE) {
+        throw std::runtime_error("Invalid letter case: " + std::to_string(value));
+    }
 
-    instrFormat = format;
+    letterCase = value;
 }
 
 void
@@ -459,13 +463,13 @@ Moira::disassemble(u32 addr, char *str, DasmStyle core)
     u32 pc     = addr;
     u16 opcode = read16Dasm(pc);
 
-    StrWriter writer(this, str, dasmStyle, numberFormat, upper);
+    StrWriter writer(this, str, style, numberFormat);
 
     (this->*dasm[opcode])(writer, pc, opcode);
     writer << Finish{};
 
     // Post process disassembler output
-    switch (instrFormat) {
+    switch (letterCase) {
 
         case DASM_MIXED_CASE:
 

@@ -59,17 +59,15 @@ public:
     char *ptr;              // Current writing position
     DasmStyle style;
     DasmNumberFormat nf;
-    bool upper;             // Text format: Upper case / Lower case ( DEPRECATED )
 
 public:
 
-    StrWriter(Moira *m, char *p, DasmStyle s, DasmNumberFormat n, bool u) {
+    StrWriter(Moira *m, char *p, DasmStyle s, DasmNumberFormat n) {
 
         moira = m;
         base = ptr = p;
         style = s;
         nf = n;
-        upper = u;
         comment[0] = 0;
     };
 

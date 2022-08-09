@@ -467,7 +467,7 @@ StrWriter::operator<<(Ins<I> i)
 
     } else {
 
-        *this << (upper ? instrUpper[I] : instrLower[I]);
+        *this << instrLower[I];
     }
 
     return *this;
@@ -476,11 +476,7 @@ StrWriter::operator<<(Ins<I> i)
 template <Size S> StrWriter&
 StrWriter::operator<<(Sz<S>)
 {
-    if (upper) {
-        *this << ((S == Byte) ? ".B" : (S == Word) ? ".W" : ".L");
-    } else {
-        *this << ((S == Byte) ? ".b" : (S == Word) ? ".w" : ".l");
-    }
+    *this << ((S == Byte) ? ".b" : (S == Word) ? ".w" : ".l");
     return *this;
 }
 
@@ -540,13 +536,13 @@ StrWriter::operator<<(const Ea<M,S> &ea)
         case 7: // ABS.W
         {
             *this << UInt(ea.ext1);
-            *this << (upper ? ".W" : ".w");
+            *this << Sz<Word>{};
             break;
         }
         case 8: // ABS.L
         {
             *this << UInt(ea.ext1);
-            *this << (upper ? ".L" : ".l");
+            *this << Sz<Long>{};
             break;
         }
         case 9: // (d,PC)
@@ -555,7 +551,7 @@ StrWriter::operator<<(const Ea<M,S> &ea)
 
                 *this << "(" << Int{(i16)ea.ext1} << ",PC)";
                 auto resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
-                StrWriter(moira, comment, style, nf, upper) << "; (" << UInt(resolved) << ")" << Finish{};
+                StrWriter(moira, comment, style, nf) << "; (" << UInt(resolved) << ")" << Finish{};
 
             } else {
 
