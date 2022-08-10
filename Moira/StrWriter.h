@@ -81,7 +81,6 @@ class StrWriter
 public:
 
     char comment[32];       // Appended to the end of the disassembled string
-    // Moira *moira;
     char *base;             // Start address of the destination string
     char *ptr;              // Current writing position
     DasmStyle style;
@@ -96,10 +95,6 @@ public:
         nf = n;
         comment[0] = 0;
     };
-
-    //
-    // Printing instruction fragments
-    //
 
     StrWriter& operator<<(const char *);
     StrWriter& operator<<(int);
@@ -147,13 +142,6 @@ public:
     template <Instr I, Mode M, Size S> StrWriter& operator<<(const Av<I,M,S> &);
     StrWriter& operator<<(Sep);
     StrWriter& operator<<(Finish);
-
-private:
-
-    // DEPRECATED
-    template <Mode M, Size S> void briefExtension(const Ea<M,S> &);
-    template <Mode M, Size S> void fullExtension(const Ea<M,S> &);
-    template <Mode M, Size S> void fullExtensionVda68k(const Ea<M,S> &);
 };
 
 }

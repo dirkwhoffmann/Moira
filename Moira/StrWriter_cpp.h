@@ -50,6 +50,7 @@ static int hexDigits(u64 value) { return (binDigits(value) + 3) / 4; }
 static void sprintd(char *&s, u64 value, int digits)
 {
     for (int i = digits - 1; i >= 0; i--) {
+
         u8 digit = value % 10;
         s[i] = '0' + digit;
         value /= 10;
@@ -73,11 +74,12 @@ static void sprintx(char *&s, u64 value, const DasmNumberFormat &fmt, int digits
     char a = (fmt.upperCase ? 'A' : 'a') - 10;
 
     if (value || !fmt.plainZero) {
+
         for (int i = 0; fmt.prefix[i]; i++) *s++ = fmt.prefix[i];
     }
-
     for (int i = digits - 1; i >= 0; i--) {
-        char digit = (char)(value % 16);
+
+        auto digit = char(value % 16);
         s[i] = (digit <= 9) ? ('0' + digit) : (a + digit);
         value /= 16;
     }
@@ -154,60 +156,72 @@ StrWriter::operator<<(UInt32 u)
 StrWriter&
 StrWriter::operator<<(Dn dn)
 {
-    if (style == DASM_MUSASHI) {
+    switch (style) {
 
-        *ptr++ = 'D';
-        *ptr++ = '0' + (char)dn.raw;
+        case DASM_MOIRA:
+        case DASM_MUSASHI:
 
-    } else {
+            *ptr++ = 'D';
+            *ptr++ = '0' + (char)dn.raw;
+            return *this;
 
-        *ptr++ = 'd';
-        *ptr++ = '0' + (char)dn.raw;
+        case DASM_MOTOROLA:
+        case DASM_MIT:
+
+            *ptr++ = 'd';
+            *ptr++ = '0' + (char)dn.raw;
+            return *this;
     }
-
-    return *this;
 }
 
 StrWriter&
 StrWriter::operator<<(An an)
 {
-    if (style == DASM_MUSASHI) {
+    switch (style) {
 
-        *ptr++ = 'A';
-        *ptr++ = '0' + (char)an.raw;
+        case DASM_MOIRA:
+        case DASM_MUSASHI:
 
-    } else {
-
-        if (an.raw == 7) {
-
-            *ptr++ = 's';
-            *ptr++ = 'p';
-
-        } else {
-
-            *ptr++ = 'a';
+            *ptr++ = 'A';
             *ptr++ = '0' + (char)an.raw;
-        }
-    }
+            return *this;
 
-    return *this;
+        case DASM_MOTOROLA:
+        case DASM_MIT:
+
+            if (an.raw == 7) {
+
+                *ptr++ = 's';
+                *ptr++ = 'p';
+
+            } else {
+
+                *ptr++ = 'a';
+                *ptr++ = '0' + (char)an.raw;
+            }
+            return *this;
+    }
 }
 
 StrWriter&
 StrWriter::operator<<(Anr an)
 {
-    if (style == DASM_MUSASHI) {
+    switch (style) {
 
-        *ptr++ = 'A';
-        *ptr++ = '0' + (char)an.raw;
+        case DASM_MOIRA:
+        case DASM_MUSASHI:
 
-    } else {
+            *ptr++ = 'A';
+            *ptr++ = '0' + (char)an.raw;
+            return *this;
 
-        *ptr++ = 'a';
-        *ptr++ = '0' + (char)an.raw;
+        case DASM_MOTOROLA:
+        case DASM_MIT:
+
+            *ptr++ = 'a';
+            *ptr++ = '0' + (char)an.raw;
+            return *this;
     }
-
-    return *this;
 }
 
 template <Mode M, Size S> StrWriter&
@@ -217,14 +231,16 @@ StrWriter::operator<<(Ai<M,S> wrapper)
 
     switch (style) {
 
+        case DASM_MOIRA:
+        case DASM_MUSASHI:
+        case DASM_MOTOROLA:
+
+            *this << "(" << An{ea.reg} << ")";
+            return *this;
+
         case DASM_MIT:
 
             *this << An{ea.reg} << "@";
-            return *this;
-
-        default:
-
-            *this << "(" << An{ea.reg} << ")";
             return *this;
     }
 }
@@ -236,14 +252,16 @@ StrWriter::operator<<(Pi<M,S> wrapper)
 
     switch (style) {
 
+        case DASM_MOIRA:
+        case DASM_MUSASHI:
+        case DASM_MOTOROLA:
+
+            *this << "(" << An{ea.reg} << ")+";
+            return *this;
+
         case DASM_MIT:
 
             *this << An{ea.reg} << "@+";
-            return *this;
-
-        default:
-
-            *this << "(" << An{ea.reg} << ")+";
             return *this;
     }
 }
@@ -255,14 +273,16 @@ StrWriter::operator<<(Pd<M,S> wrapper)
 
     switch (style) {
 
+        case DASM_MOIRA:
+        case DASM_MUSASHI:
+        case DASM_MOTOROLA:
+
+            *this << "-(" << An{ea.reg} << ")";
+            return *this;
+
         case DASM_MIT:
 
             *this << An{ea.reg} << "@-";
-            return *this;
-
-        default:
-
-            *this << "-(" << An{ea.reg} << ")";
             return *this;
     }
 }
@@ -274,19 +294,20 @@ StrWriter::operator<<(Di<M,S> wrapper)
 
     switch (style) {
 
+        case DASM_MOIRA:
         case DASM_MUSASHI:
 
             *this << "(" << Int{(i16)ea.ext1} << "," << An{ea.reg} << ")";
             return *this;
 
+        case DASM_MOTOROLA:
+
+            *this << Int{(i16)ea.ext1} << "(" << An{ea.reg} << ")";
+            return *this;
+
         case DASM_MIT:
 
             *this << An{ea.reg} << "@(" << Int{(i16)ea.ext1} << ")";
-            return *this;
-
-        default:
-
-            *this << Int{(i16)ea.ext1} << "(" << An{ea.reg} << ")";
             return *this;
     }
 }
@@ -297,12 +318,21 @@ StrWriter::operator<<(Ix<M,S> wrapper)
     switch (style) {
 
         case DASM_MOIRA:
-        case DASM_MUSASHI:  *this << IxMus<M,S>{wrapper.ea}; break;
-        case DASM_MOTOROLA: *this << IxMot<M,S>{wrapper.ea}; break;
-        case DASM_MIT:      *this << IxMit<M,S>{wrapper.ea}; break;
-    }
+        case DASM_MUSASHI:
 
-    return *this;
+            *this << IxMus<M,S>{wrapper.ea};
+            return *this;
+
+        case DASM_MOTOROLA:
+
+            *this << IxMot<M,S>{wrapper.ea};
+            return *this;
+
+        case DASM_MIT:
+
+            *this << IxMit<M,S>{wrapper.ea};
+            return *this;
+    }
 }
 
 template <Mode M, Size S> StrWriter&
@@ -609,14 +639,16 @@ StrWriter::operator<<(Aw<M,S> wrapper)
 
     switch (style) {
 
+        case DASM_MOIRA:
+        case DASM_MUSASHI:
+        case DASM_MOTOROLA:
+
+            *this << UInt(ea.ext1) << Sz<Word>{};
+            return *this;
+
         case DASM_MIT:
 
             *this << UInt(ea.ext1);
-            return *this;
-
-        default:
-
-            *this << UInt(ea.ext1) << Sz<Word>{};
             return *this;
     }
 }
@@ -628,14 +660,16 @@ StrWriter::operator<<(Al<M,S> wrapper)
 
     switch (style) {
 
+        case DASM_MOIRA:
+        case DASM_MUSASHI:
+        case DASM_MOTOROLA:
+
+            *this << UInt(ea.ext1) << Sz<Long>{};
+            return *this;
+
         case DASM_MIT:
 
             *this << UInt(ea.ext1);
-            return *this;
-
-        default:
-
-            *this << UInt(ea.ext1) << Sz<Long>{};
             return *this;
     }
 }
@@ -648,6 +682,7 @@ StrWriter::operator<<(DiPc<M,S> wrapper)
 
     switch (style) {
 
+        case DASM_MOIRA:
         case DASM_MUSASHI:
 
             *this << "(" << Int{(i16)ea.ext1} << ",PC)";
@@ -655,16 +690,16 @@ StrWriter::operator<<(DiPc<M,S> wrapper)
             StrWriter(comment, style, nf) << "; (" << UInt(resolved) << ")" << Finish{};
             return *this;
 
+        case DASM_MOTOROLA:
+
+            resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
+            *this << UInt(resolved) << "(pc)";
+            return *this;
+
         case DASM_MIT:
 
             resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
             *this << "pc@(" << UInt(resolved) << ")";
-            return *this;
-
-        default:
-
-            resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
-            *this << UInt(resolved) << "(pc)";
             return *this;
     }
 }
@@ -676,16 +711,16 @@ StrWriter::operator<<(Im<M,S> wrapper)
 
     switch (style) {
 
+        case DASM_MOIRA:
+        case DASM_MOTOROLA:
+        case DASM_MIT:
+
+            if constexpr (S != 0) *this << Ims<S>(ea.ext1);
+            return *this;
+
         case DASM_MUSASHI:
 
             *this << Imu(ea.ext1);
-            return *this;
-
-        default:
-
-            if constexpr (S != 0) {
-                *this << Ims<S>(ea.ext1);
-            }
             return *this;
     }
 }
@@ -697,14 +732,16 @@ StrWriter::operator<<(Ip<M,S> wrapper)
 
     switch (style) {
 
+        case DASM_MOIRA:
+        case DASM_MUSASHI:
+        case DASM_MOTOROLA:
+
+            *this << "-(" << An{ea.reg} << ")";
+            return *this;
+
         case DASM_MIT:
 
             *this << An{ea.reg} << "@-";
-            return *this;
-
-        default:
-
-            *this << "-(" << An{ea.reg} << ")";
             return *this;
     }
 
@@ -713,22 +750,14 @@ StrWriter::operator<<(Ip<M,S> wrapper)
 StrWriter&
 StrWriter::operator<<(Rn rn)
 {
-    if (rn.raw < 8) {
-        *this << Dn{rn.raw};
-    } else {
-        *this << An{rn.raw - 8};
-    }
+    rn.raw < 8 ? *this << Dn{rn.raw} : *this << An{rn.raw - 8};
     return *this;
 }
 
 StrWriter&
 StrWriter::operator<<(Rnr rn)
 {
-    if (rn.raw < 8) {
-        *this << Dn{rn.raw};
-    } else {
-        *this << Anr{rn.raw - 8};
-    }
+    rn.raw < 8 ? *this << Dn{rn.raw} : *this << Anr{rn.raw - 8};
     return *this;
 }
 
@@ -736,7 +765,6 @@ StrWriter&
 StrWriter::operator<<(Ccr ccr)
 {
     auto upper = style == DASM_MOIRA || style == DASM_MUSASHI;
-
     *this << (upper ? "CCR" : "ccr");
     return *this;
 }
@@ -766,24 +794,24 @@ StrWriter::operator<<(Cn cn)
 
         switch (cn.raw) {
 
-            case 0x000: *this << (upper ? "SFC" : "sfc");   break;
-            case 0x001: *this << (upper ? "DFC" : "dfc");   break;
-            case 0x002: *this << (upper ? "CACR" : "cacr");  break;
-            case 0x003: *this << (upper ? "TC" : "tc");    break;
-            case 0x004: *this << (upper ? "ITT0" : "itt0");  break;
-            case 0x005: *this << (upper ? "ITT1" : "itt1");  break;
-            case 0x006: *this << (upper ? "DTT0" : "dtt0");  break;
-            case 0x007: *this << (upper ? "DTT1" : "dtt1");  break;
-            case 0x008: *this << (upper ? "BUSCR" : "buscr");  break;
-            case 0x800: *this << (upper ? "USP" : "usp");   break;
-            case 0x801: *this << (upper ? "VBR" : "vbr");   break;
-            case 0x802: *this << (upper ? "CAAR" : "caar");  break;
-            case 0x803: *this << (upper ? "MSP" : "msp");   break;
-            case 0x804: *this << (upper ? "ISP" : "isp");   break;
+            case 0x000: *this << (upper ? "SFC"   : "sfc");   break;
+            case 0x001: *this << (upper ? "DFC"   : "dfc");   break;
+            case 0x002: *this << (upper ? "CACR"  : "cacr");  break;
+            case 0x003: *this << (upper ? "TC"    : "tc");    break;
+            case 0x004: *this << (upper ? "ITT0"  : "itt0");  break;
+            case 0x005: *this << (upper ? "ITT1"  : "itt1");  break;
+            case 0x006: *this << (upper ? "DTT0"  : "dtt0");  break;
+            case 0x007: *this << (upper ? "DTT1"  : "dtt1");  break;
+            case 0x008: *this << (upper ? "BUSCR" : "buscr"); break;
+            case 0x800: *this << (upper ? "USP"   : "usp");   break;
+            case 0x801: *this << (upper ? "VBR"   : "vbr");   break;
+            case 0x802: *this << (upper ? "CAAR"  : "caar");  break;
+            case 0x803: *this << (upper ? "MSP"   : "msp");   break;
+            case 0x804: *this << (upper ? "ISP"   : "isp");   break;
             case 0x805: *this << (upper ? "MMUSR" : "mmusr"); break;
-            case 0x806: *this << (upper ? "URP" : "urp");   break;
-            case 0x807: *this << (upper ? "SRP" : "srp");   break;
-            case 0x808: *this << (upper ? "PCR" : "pcr");   break;
+            case 0x806: *this << (upper ? "URP"   : "urp");   break;
+            case 0x807: *this << (upper ? "SRP"   : "srp");   break;
+            case 0x808: *this << (upper ? "PCR"   : "pcr");   break;
         }
 
     } else {
@@ -823,16 +851,16 @@ StrWriter::operator<<(Cpcc cpcc)
 {
     switch (cpcc.raw) {
 
-        case 0: *this << "f";       break;
-        case 1: *this << "eq";      break;
-        case 2: *this << "ogt";     break;
-        case 3: *this << "oge";     break;
-        case 4: *this << "olt";     break;
-        case 5: *this << "ole";     break;
-        case 6: *this << "ogl";     break;
-        case 7: *this << "or";      break;
-        case 8: *this << "un";      break;
-        case 9: *this << "ueq";     break;
+        case 0:  *this << "f";      break;
+        case 1:  *this << "eq";     break;
+        case 2:  *this << "ogt";    break;
+        case 3:  *this << "oge";    break;
+        case 4:  *this << "olt";    break;
+        case 5:  *this << "ole";    break;
+        case 6:  *this << "ogl";    break;
+        case 7:  *this << "or";     break;
+        case 8:  *this << "un";     break;
+        case 9:  *this << "ueq";    break;
         case 10: *this << "ugt";    break;
         case 11: *this << "uge";    break;
         case 12: *this << "ult";    break;
@@ -889,32 +917,30 @@ StrWriter::operator<<(Imd im)
 StrWriter&
 StrWriter::operator<<(Scale s)
 {
-    if (s.raw) {
+    if (!s.raw) return *this;
 
-        switch (style) {
+    switch (style) {
 
-            case DASM_MIT:
+        case DASM_MOIRA:
+        case DASM_MUSASHI:
+        case DASM_MOTOROLA:
 
-                *ptr++ = ':';
-                *ptr++ = '0' + (char)(1 << s.raw);
-                return *this;
+            *ptr++ = '*';
+            *ptr++ = '0' + (char)(1 << s.raw);
+            return *this;
 
-            default:
+        case DASM_MIT:
 
-                *ptr++ = '*';
-                *ptr++ = '0' + (char)(1 << s.raw);
-                return *this;
-        }
+            *ptr++ = ':';
+            *ptr++ = '0' + (char)(1 << s.raw);
+            return *this;
     }
-
-    return *this;
 }
 
 StrWriter&
 StrWriter::operator<<(Sr _)
 {
     auto upper = style == DASM_MOIRA || style == DASM_MUSASHI;
-
     *this << (upper ? "SR" : "sr");
     return *this;
 }
@@ -923,7 +949,6 @@ StrWriter&
 StrWriter::operator<<(Usp _)
 {
     auto upper = style == DASM_MOIRA || style == DASM_MUSASHI;
-
     *this << (upper ? "USP" : "usp");
     return *this;
 }
@@ -1008,12 +1033,14 @@ StrWriter::operator<<(Sz<S>)
 {
     switch (style) {
 
-        case DASM_MIT:
+        case DASM_MOIRA:
+        case DASM_MUSASHI:
+        case DASM_MOTOROLA:
 
             *this << ((S == Byte) ? ".b" : (S == Word) ? ".w" : ".l");
             return *this;
 
-        default:
+        case DASM_MIT:
 
             *this << ((S == Byte) ? ".b" : (S == Word) ? ".w" : ".l");
             return *this;
@@ -1181,7 +1208,11 @@ StrWriter::operator<<(Sep)
 StrWriter&
 StrWriter::operator<<(Finish)
 {
+    // Append comment
     for (int i = 0; comment[i] != 0; i++) *ptr++ = comment[i];
+
+    // Terminate the string
     *ptr = 0;
+    
     return *this;
 }
