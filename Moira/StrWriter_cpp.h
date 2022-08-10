@@ -182,7 +182,7 @@ StrWriter::operator<<(Ins<I> i)
 {
     if constexpr (I == DBF) {
 
-        if (style == DASM_MOTOROLA || style == DASM_MIT) {
+        if (style == DASM_VDA68K_MOT || style == DASM_VDA68K_MIT) {
             *this << "dbf";
         } else {
             *this << "dbra";
@@ -203,12 +203,12 @@ StrWriter::operator<<(Sz<S>)
 
         case DASM_MOIRA:
         case DASM_MUSASHI:
-        case DASM_MOTOROLA:
+        case DASM_VDA68K_MOT:
 
             *this << ((S == Byte) ? ".b" : (S == Word) ? ".w" : ".l");
             return *this;
 
-        case DASM_MIT:
+        case DASM_VDA68K_MIT:
 
             *this << ((S == Byte) ? ".b" : (S == Word) ? ".w" : ".l");
             return *this;
@@ -296,8 +296,8 @@ StrWriter::operator<<(Dn dn)
             *ptr++ = '0' + (char)dn.raw;
             return *this;
 
-        case DASM_MOTOROLA:
-        case DASM_MIT:
+        case DASM_VDA68K_MOT:
+        case DASM_VDA68K_MIT:
 
             *ptr++ = 'd';
             *ptr++ = '0' + (char)dn.raw;
@@ -317,8 +317,8 @@ StrWriter::operator<<(An an)
             *ptr++ = '0' + (char)an.raw;
             return *this;
 
-        case DASM_MOTOROLA:
-        case DASM_MIT:
+        case DASM_VDA68K_MOT:
+        case DASM_VDA68K_MIT:
 
             if (an.raw == 7) {
 
@@ -346,8 +346,8 @@ StrWriter::operator<<(Anr an)
             *ptr++ = '0' + (char)an.raw;
             return *this;
 
-        case DASM_MOTOROLA:
-        case DASM_MIT:
+        case DASM_VDA68K_MOT:
+        case DASM_VDA68K_MIT:
 
             *ptr++ = 'a';
             *ptr++ = '0' + (char)an.raw;
@@ -521,12 +521,12 @@ StrWriter::operator<<(Ai<M,S> wrapper)
 
         case DASM_MOIRA:
         case DASM_MUSASHI:
-        case DASM_MOTOROLA:
+        case DASM_VDA68K_MOT:
 
             *this << "(" << An{ea.reg} << ")";
             return *this;
 
-        case DASM_MIT:
+        case DASM_VDA68K_MIT:
 
             *this << An{ea.reg} << "@";
             return *this;
@@ -542,12 +542,12 @@ StrWriter::operator<<(Pi<M,S> wrapper)
 
         case DASM_MOIRA:
         case DASM_MUSASHI:
-        case DASM_MOTOROLA:
+        case DASM_VDA68K_MOT:
 
             *this << "(" << An{ea.reg} << ")+";
             return *this;
 
-        case DASM_MIT:
+        case DASM_VDA68K_MIT:
 
             *this << An{ea.reg} << "@+";
             return *this;
@@ -563,12 +563,12 @@ StrWriter::operator<<(Pd<M,S> wrapper)
 
         case DASM_MOIRA:
         case DASM_MUSASHI:
-        case DASM_MOTOROLA:
+        case DASM_VDA68K_MOT:
 
             *this << "-(" << An{ea.reg} << ")";
             return *this;
 
-        case DASM_MIT:
+        case DASM_VDA68K_MIT:
 
             *this << An{ea.reg} << "@-";
             return *this;
@@ -588,12 +588,12 @@ StrWriter::operator<<(Di<M,S> wrapper)
             *this << "(" << Int{(i16)ea.ext1} << "," << An{ea.reg} << ")";
             return *this;
 
-        case DASM_MOTOROLA:
+        case DASM_VDA68K_MOT:
 
             *this << Int{(i16)ea.ext1} << "(" << An{ea.reg} << ")";
             return *this;
 
-        case DASM_MIT:
+        case DASM_VDA68K_MIT:
 
             *this << An{ea.reg} << "@(" << Int{(i16)ea.ext1} << ")";
             return *this;
@@ -611,12 +611,12 @@ StrWriter::operator<<(Ix<M,S> wrapper)
             *this << IxMus<M,S>{wrapper.ea};
             return *this;
 
-        case DASM_MOTOROLA:
+        case DASM_VDA68K_MOT:
 
             *this << IxMot<M,S>{wrapper.ea};
             return *this;
 
-        case DASM_MIT:
+        case DASM_VDA68K_MIT:
 
             *this << IxMit<M,S>{wrapper.ea};
             return *this;
@@ -929,12 +929,12 @@ StrWriter::operator<<(Aw<M,S> wrapper)
 
         case DASM_MOIRA:
         case DASM_MUSASHI:
-        case DASM_MOTOROLA:
+        case DASM_VDA68K_MOT:
 
             *this << UInt(ea.ext1) << Sz<Word>{};
             return *this;
 
-        case DASM_MIT:
+        case DASM_VDA68K_MIT:
 
             *this << UInt(ea.ext1);
             return *this;
@@ -950,12 +950,12 @@ StrWriter::operator<<(Al<M,S> wrapper)
 
         case DASM_MOIRA:
         case DASM_MUSASHI:
-        case DASM_MOTOROLA:
+        case DASM_VDA68K_MOT:
 
             *this << UInt(ea.ext1) << Sz<Long>{};
             return *this;
 
-        case DASM_MIT:
+        case DASM_VDA68K_MIT:
 
             *this << UInt(ea.ext1);
             return *this;
@@ -978,13 +978,13 @@ StrWriter::operator<<(DiPc<M,S> wrapper)
             StrWriter(comment, style, nf) << "; (" << UInt(resolved) << ")" << Finish{};
             return *this;
 
-        case DASM_MOTOROLA:
+        case DASM_VDA68K_MOT:
 
             resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
             *this << UInt(resolved) << "(pc)";
             return *this;
 
-        case DASM_MIT:
+        case DASM_VDA68K_MIT:
 
             resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
             *this << "pc@(" << UInt(resolved) << ")";
@@ -1000,8 +1000,8 @@ StrWriter::operator<<(Im<M,S> wrapper)
     switch (style) {
 
         case DASM_MOIRA:
-        case DASM_MOTOROLA:
-        case DASM_MIT:
+        case DASM_VDA68K_MOT:
+        case DASM_VDA68K_MIT:
 
             if constexpr (S != 0) *this << Ims<S>(ea.ext1);
             return *this;
@@ -1022,12 +1022,12 @@ StrWriter::operator<<(Ip<M,S> wrapper)
 
         case DASM_MOIRA:
         case DASM_MUSASHI:
-        case DASM_MOTOROLA:
+        case DASM_VDA68K_MOT:
 
             *this << "-(" << An{ea.reg} << ")";
             return *this;
 
-        case DASM_MIT:
+        case DASM_VDA68K_MIT:
 
             *this << An{ea.reg} << "@-";
             return *this;
@@ -1044,13 +1044,13 @@ StrWriter::operator<<(Scale s)
 
         case DASM_MOIRA:
         case DASM_MUSASHI:
-        case DASM_MOTOROLA:
+        case DASM_VDA68K_MOT:
 
             *ptr++ = '*';
             *ptr++ = '0' + (char)(1 << s.raw);
             return *this;
 
-        case DASM_MIT:
+        case DASM_VDA68K_MIT:
 
             *ptr++ = ':';
             *ptr++ = '0' + (char)(1 << s.raw);
@@ -1071,7 +1071,7 @@ StrWriter::operator<<(Tab tab)
 template <Instr I, Mode M, Size S> StrWriter&
 StrWriter::operator<<(const Av<I,M,S> &av)
 {
-    if (style == DASM_MOTOROLA || style == DASM_MIT) { return *this; }
+    if (style == DASM_VDA68K_MOT || style == DASM_VDA68K_MIT) { return *this; }
 
     switch (I) {
 

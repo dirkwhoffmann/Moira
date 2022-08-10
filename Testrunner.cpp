@@ -356,12 +356,12 @@ void runMoira(Setup &s, Result &r)
     r.elapsed[1] = clock() - elapsed;
 
     // Disassemble the instruction in Vda68k Motorola format
-    moiracpu->setDasmStyle(DASM_MOTOROLA);
+    moiracpu->setDasmStyle(DASM_VDA68K_MOT);
     moiracpu->setDasmNumberFormat({ .prefix="0x", .radix=16, .plainZero=true });
     r.dasmCntMoto = moiracpu->disassemble(r.oldpc, r.dasmMoto);
 
     // Disassemble the instruction in Vda68k MIT format
-    moiracpu->setDasmStyle(DASM_MIT);
+    moiracpu->setDasmStyle(DASM_VDA68K_MIT);
     moiracpu->setDasmNumberFormat({ .prefix="0x", .radix=16, .plainZero=true });
     r.dasmCntMIT = moiracpu->disassemble(r.oldpc, r.dasmMIT);
 
