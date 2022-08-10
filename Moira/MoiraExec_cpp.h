@@ -2769,12 +2769,16 @@ Moira::execMovecRcRx(u16 opcode)
     AVAILABILITY(M68000)
     SUPERVISOR_MODE_ONLY
 
-    switch (queue.irc & 0x0FFF) {
+    switch (queue.irc & 0xFFF) {
 
         case 0x000:
         case 0x001:
         case 0x800:
-        case 0x801: break;
+        case 0x801: if (C >= M68010) break;
+        case 0x002:
+        case 0x802:
+        case 0x803:
+        case 0x804: if (C >= M68020) break;
 
         default:
             execIllegal<C, I, M, S>(opcode);
@@ -2788,10 +2792,14 @@ Moira::execMovecRcRx(u16 opcode)
 
     switch (arg & 0x0FFF) {
 
-        case 0x000: reg.r[dst] = reg.sfc & 0b111; break;
-        case 0x001: reg.r[dst] = reg.dfc & 0b111; break;
-        case 0x800: reg.r[dst] = reg.usp; break;
-        case 0x801: reg.r[dst] = reg.vbr; break;
+        case 0x000: reg.r[dst] = getSFC(); break;
+        case 0x001: reg.r[dst] = getDFC(); break;
+        case 0x800: reg.r[dst] = getUSP(); break;
+        case 0x801: reg.r[dst] = getVBR(); break;
+        case 0x002: reg.r[dst] = getCACR(); break;
+        case 0x802: reg.r[dst] = getCAAR(); break;
+        case 0x803: reg.r[dst] = reg.sr.m ? getSP() : getMSP(); break;
+        case 0x804: reg.r[dst] = reg.sr.m ? getISP() : getSP(); break;
     }
 
     prefetch<C, POLLIPL>();
@@ -2840,7 +2848,7 @@ Moira::execMovecRxRc(u16 opcode)
         case 0x002: setCACR(val); break;
         case 0x802: setCAAR(val); break;
         case 0x803: reg.sr.m ? setSP(val) : setMSP(val); break;
-        case 0x804: reg.sr.m ? setISP(val) : setSR(val); break;
+        case 0x804: reg.sr.m ? setISP(val) : setSP(val); break;
     }
 
     prefetch<C, POLLIPL>();

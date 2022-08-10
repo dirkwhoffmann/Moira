@@ -22210,7 +22210,7 @@ static void m68k_op_movec_32_cr(void)
 					return;
 				}
 				m68ki_exception_illegal();
-				break;
+                return; // FIXED: DIRK
 			case 0x803:			   /* MSP */
 				if(CPU_TYPE_IS_EC020_PLUS(CPU_TYPE))
 				{

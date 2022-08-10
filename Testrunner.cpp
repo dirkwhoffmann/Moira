@@ -411,8 +411,8 @@ void recordMusashiRegisters(Result &r)
     r.vbr = m68k_get_reg(NULL, M68K_REG_VBR);
     r.sfc = m68k_get_reg(NULL, M68K_REG_SFC);
     r.dfc = m68k_get_reg(NULL, M68K_REG_DFC);
-    r.cacr = m68k_get_reg(NULL, M68K_REG_CACR);
-    r.caar = m68k_get_reg(NULL, M68K_REG_CAAR);
+    r.cacr = m68k_get_reg(NULL, M68K_REG_CACR) & 0xF;
+    r.caar = m68k_get_reg(NULL, M68K_REG_CAAR) & 0xF;
     for (int i = 0; i < 8; i++) {
         r.d[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_D0 + i));
         r.a[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_A0 + i));
