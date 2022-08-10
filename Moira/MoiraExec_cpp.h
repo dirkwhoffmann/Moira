@@ -2774,11 +2774,11 @@ Moira::execMovecRcRx(u16 opcode)
         case 0x000:
         case 0x001:
         case 0x800:
-        case 0x801: if (C >= M68010) break;
+        case 0x801: if constexpr (C >= M68010) break; [[fallthrough]];
         case 0x002:
         case 0x802:
         case 0x803:
-        case 0x804: if (C >= M68020) break;
+        case 0x804: if constexpr (C >= M68020) break; [[fallthrough]];
 
         default:
             execIllegal<C, I, M, S>(opcode);
@@ -2822,11 +2822,11 @@ Moira::execMovecRxRc(u16 opcode)
         case 0x000:
         case 0x001:
         case 0x800:
-        case 0x801: if (C >= M68010) break;
+        case 0x801: if constexpr (C >= M68010) break; [[fallthrough]];
         case 0x002:
         case 0x802:
         case 0x803:
-        case 0x804: if (C >= M68020) break;
+        case 0x804: if constexpr (C >= M68020) break; [[fallthrough]];
 
         default:
             execIllegal<C, I, M, S>(opcode);
