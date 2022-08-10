@@ -259,7 +259,7 @@ void run()
             if (PROFILE_CPU) { mu += muclk[0]; mo += moclk[0]; }
             if (PROFILE_DASM) { mu += muclk[1]; mo += moclk[1]; }
 
-            printf(" PASSED (Musashi: %.2fs  Moira: %.2fs)",
+            printf(" (Musashi: %.2fs  Moira: %.2fs)",
                    mu / double(CLOCKS_PER_SEC),
                    mo / double(CLOCKS_PER_SEC));
         }

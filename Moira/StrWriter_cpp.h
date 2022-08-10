@@ -9,39 +9,38 @@
 
 #include <cmath>
 
-static const char *instrLower[]
+static const char *mnemonics[]
 {
-    "???",   "???",   "???",
-    "abcd" , "add",   "adda",  "addi",  "addq",  "addx",  "and",    "andi",
-    "andi" , "andi",  "asl",   "asr",
-    "bcc",   "bcs",   "beq",   "bge",   "bgt",   "bhi",   "ble",    "bls",
-    "blt",   "bmi",   "bne",   "bpl",   "bvc",   "bvs",
-    "bfchg", "bfclr", "bfexts","bfextu","bfffo", "bfins", "bfset",  "bftst",
-    "bchg",  "bclr",
-    "bkpt",  "bra",   "bset",  "bsr",   "btst",
-    "callm", "cas",   "cas2",  "chk",   "chk2",  "clr",   "cmp",    "cmp2",
-    "cmpa",  "cmpi",  "cmpm",
-    "dbcc",  "dbcs",  "dbeq",  "dbge",  "dbgt",  "dbhi",  "dble",   "dbls",
-    "dblt",  "dbmi",  "dbne",  "dbpl",  "dbvc",  "dbvs",  "dbra",   "dbt",
-    "divl",  "divs",  "divu",
-    "eor",   "eori",  "eori",  "eori",  "exg",   "ext",   "extb",
-    "b",     "db",    "gen",   "restore", "save", "s",    "trap",
-    "jmp",   "jsr",
-    "lea",   "link",  "lsl",   "lsr",
-    "move" , "movea", "movec", "move",  "move",  "move",  "move",  "move",
-    "movem", "movep", "moveq", "moves", "mull",  "muls",  "mulu",
-    "nbcd",  "neg",   "negx",  "nop",   "not",
-    "or"   , "ori",   "ori",   "ori",
-    "pack",  "pea",
-    "reset", "rol",   "ror",   "roxl",  "roxr",  "rtd",   "rte",   "rtm",
-    "rtr",   "rts",
-    "sbcd",  "scc",   "scs",   "seq",   "sge",   "sgt",   "shi",   "sle",
-    "sls",   "slt",   "smi",   "sne",   "spl",   "svc",   "svs",   "sf",
-    "st",    "stop",  "sub",   "suba",  "subi",  "subq",  "subx",  "swap",
-    "tas",   "trap",  "trapv",
-    "trapcc","trapcs","trapeq","trapge","trapgt","traphi","traple","trapls",
-    "traplt","trapmi","trapne","trappl","trapvc","trapvs","trapf", "trapt",
-    "tst",   "unlk",  "unpk"
+    "???",      "???",      "???",      "abcd" ,    "add",      "adda",
+    "addi",     "addq",     "addx",     "and",      "andi",     "andi",
+    "andi",     "asl",      "asr",      "bcc",      "bcs",      "beq",
+    "bge",      "bgt",      "bhi",      "ble",      "bls",      "blt",
+    "bmi",      "bne",      "bpl",      "bvc",      "bvs",      "bfchg",
+    "bfclr",    "bfexts",   "bfextu",   "bfffo",    "bfins",    "bfset",
+    "bftst",    "bchg",     "bclr",     "bkpt",     "bra",      "bset",
+    "bsr",      "btst",     "callm",    "cas",      "cas2",     "chk",
+    "chk2",     "clr",      "cmp",      "cmp2",     "cmpa",     "cmpi",
+    "cmpm",     "dbcc",     "dbcs",     "dbeq",     "dbge",     "dbgt",
+    "dbhi",     "dble",     "dbls",     "dblt",     "dbmi",     "dbne",
+    "dbpl",     "dbvc",     "dbvs",     "dbra",     "dbt",      "divl",
+    "divs",     "divu",     "eor",      "eori",     "eori",     "eori",
+    "exg",      "ext",      "extb",     "b",        "db",       "gen",
+    "restore",  "save",     "s",        "trap",     "jmp",      "jsr",
+    "lea",      "link",     "lsl",      "lsr",      "move" ,    "movea",
+    "movec",    "move",     "move",     "move",     "move",     "move",
+    "movem",    "movep",    "moveq",    "moves",    "mull",     "muls",
+    "mulu",     "nbcd",     "neg",      "negx",     "nop",      "not",
+    "or",       "ori",      "ori",      "ori",      "pack",     "pea",
+    "reset",    "rol",      "ror",      "roxl",     "roxr",     "rtd",
+    "rte",      "rtm",      "rtr",      "rts",      "sbcd",     "scc",
+    "scs",      "seq",      "sge",      "sgt",      "shi",      "sle",
+    "sls",      "slt",      "smi",      "sne",      "spl",      "svc",
+    "svs",      "sf",       "st",       "stop",     "sub",      "suba",
+    "subi",     "subq",     "subx",     "swap",     "tas",      "trap",
+    "trapv",    "trapcc",   "trapcs",   "trapeq",   "trapge",   "trapgt",
+    "traphi",   "traple",   "trapls",   "traplt",   "trapmi",   "trapne",
+    "trappl",   "trapvc",   "trapvs",   "trapf",    "trapt",    "tst",
+    "unlk",     "unpk"
 };
 
 static int decDigits(u64 value) { return value ? 1 + (int)log10(value) : 1; }
@@ -451,17 +450,13 @@ StrWriter::operator<<(IxMot<M,S> wrapper)
         u16  is    = _________x______ (ea.ext1);
         u16  size  = __________xx____ (ea.ext1);
         u16  iis   = _____________xxx (ea.ext1);
-        u32  bd    = __________xx____(ea.ext1);   // Take from ea!!
-        u32  od    = ______________xx(ea.ext1);   // Take from ea!!
+        u32  bd    = __________xx____ (ea.ext1);
+        u32  od    = ______________xx (ea.ext1);
         u32  base  = ea.ext2;
         u32  outer = ea.ext3;
 
-        // assert(bd == ea.dw);
-        // assert(od == ea.ow);
-
         bool preindex = (iis > 0 && iis < 4);
         bool postindex = (iis > 4);
-        // bool comma = false;
 
         *this << "(";
 
@@ -471,52 +466,37 @@ StrWriter::operator<<(IxMot<M,S> wrapper)
         }
 
         size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
-        // comma = true;
-
-        // if (comma) *this << ",";
         *this << ",";
-        // comma = true;
 
         if (bs && size) {
             M == 10 ? (*this << "zpc") : *this << "z" << An{ea.reg};
         } else {
             M == 10 ? (*this << "pc") : *this << An{ea.reg};
         }
-
         if (postindex) {
 
             *this << "]";
-            // comma = true;
         }
         if (is && bd) {
 
-            // if (comma) *this << ",0";
             *this << ",0";
-            // comma = true;
 
         } else {
 
-            // if (comma) *this << ",";
             *this << ",";
             *this << Rn{reg};
             lw ? (*this << Sz<Long>{}) : (*this << Sz<Word>{});
             *this << Scale{scale};
-            // comma = true;
         }
-
         if (preindex) {
 
             *this << "]";
-            // comma = true;
         }
+        if (od) {
 
-        if (od)
-        {
-            // if (comma) *this << ",";
             *this << ",";
             *this << Int(outer);
         }
-
         *this << ")";
     }
 
@@ -571,86 +551,51 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
         bool postindex = (iis > 4);
         bool comma = false;
 
-        // printf("Moira: (0)\n");
         if (M == MODE_IX) {
-
             if (!bd || !bs) { *this << An{ea.reg}; }
-
         } else {
-
             if (bs) { *this << "zpc"; } else { *this << "pc"; }
         }
 
         *this << "@(";
 
         if (size > 1) {
-            // printf("Moira: (1)\n");
+
             size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
             comma = true;
 
             if (postindex) {
 
-                // printf("Moira: (2)\n");
                 *this << ")@(";
                 comma = false;
             }
         } else if (!bd) {
-            // printf("Moira: don't forget simple 8 bit displacement.\n");
-            // *this << Int{(i8)ea.ext1} << ",";
+
             *this << "0,";
         }
-
-        // comma = true;
-
-        // if (comma) *this << ",";
-        // *this << ")";
-        // comma = true;
-
-
         if (postindex) {
 
-            // printf("Moira: (6)\n");
-
             if (od != 1) {
-                // printf("Moira: Post-indexed? Have displacement?\n");
+
                 *this << Int(outer);
                 comma = true;
             }
         }
-        if (is && bd) {
+        if (!is || !bd) {
 
-            // if (comma) *this << ",0";
-            // printf("printing ,0\n");
-            // *this << ",0";
-            // comma = true;
-
-        } else {
-
-            // printf("Moira: (7)\n");
             if (comma) *this << ",";
             *this << Rn{reg};
             lw ? (*this << ":l") : (*this << ":w");
             *this << Scale{scale};
-            // comma = true;
         }
-
         if (preindex) {
 
-            // *this << "]";
-            // comma = true;
-        }
-
-        if (preindex)
-        {
-            // printf("Moira: (8) pre-indexed\n");
-
-            // if (comma) *this << ",";
             if (od != 1) {
+
                 *this << ")@(";
                 *this << Int(outer);
             }
         }
-
         *this << ")";
     }
 
@@ -806,19 +751,13 @@ StrWriter::operator<<(Cn cn)
         case DASM_MOIRA:
         case DASM_MUSASHI:
 
-            valid =
-            (cn.raw >= 0x000 && cn.raw <= 0x007) ||
-            (cn.raw >= 0x800 && cn.raw <= 0x807);
-
+            valid = cn.raw <= 0x007 || (cn.raw >= 0x800 && cn.raw <= 0x807);
             upper = true;
             break;
 
         default:
 
-            valid =
-            (cn.raw >= 0x000 && cn.raw <= 0x008) ||
-            (cn.raw >= 0x800 && cn.raw <= 0x808);
-
+            valid = cn.raw <= 0x008 || (cn.raw >= 0x800 && cn.raw <= 0x808);
             upper = false;
             break;
     }
@@ -1058,7 +997,7 @@ StrWriter::operator<<(Ins<I> i)
 
     } else {
 
-        *this << instrLower[I];
+        *this << mnemonics[I];
     }
 
     return *this;
@@ -1086,89 +1025,18 @@ StrWriter::operator<<(const Ea<M,S> &ea)
 {
     switch (M) {
 
-        case MODE_DN:   *this << Dn{ea.reg};  break;
-        case MODE_AN:   *this << An{ea.reg};  break;
-        case MODE_AI:   *this << Ai<M,S>{ea}; break;
-        case MODE_PI:   *this << Pi<M,S>{ea}; break;
-        case MODE_PD:   *this << Pd<M,S>{ea}; break;
-        case MODE_DI:   *this << Di<M,S>{ea}; break;
-            /*
-            if (style == DASM_MUSASHI) {
-
-                *this << "(" << Int{(i16)ea.ext1};
-                *this << "," << An{ea.reg} << ")";
-
-            } else {
-
-                *this << Int{(i16)ea.ext1};
-                *this << "(" << An{ea.reg} << ")";
-            }
-            */
-            break;
-
-        case MODE_IX: // (d,An,Xi)
-        {
-            *this << Ix<M,S>{ea};
-            /*
-            if (style == DASM_MOTOROLA) {
-                (ea.ext1 & 0x100) ? fullExtensionVda68k(ea) : briefExtension(ea);
-            } else {
-                (ea.ext1 & 0x100) ? fullExtension(ea) : briefExtension(ea);
-            }
-            */
-            break;
-        }
-        case MODE_AW: // ABS.W
-        {
-            *this << Aw<M,S>{ea};
-            /*
-            *this << UInt(ea.ext1);
-            *this << Sz<Word>{};
-            */
-            break;
-        }
-        case MODE_AL: // ABS.L
-        {
-            *this << Al<M,S>{ea};
-            break;
-        }
-        case MODE_DIPC: // (d,PC)
-        {
-            *this << DiPc<M,S>{ea};
-            /*
-            if (style == DASM_MUSASHI) {
-
-                *this << "(" << Int{(i16)ea.ext1} << ",PC)";
-                auto resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
-                StrWriter(moira, comment, style, nf) << "; (" << UInt(resolved) << ")" << Finish{};
-
-            } else {
-
-                auto resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
-                *this << UInt(resolved) << "(pc)";
-            }
-            */
-            break;
-        }
-        case MODE_IXPC: // (d,PC,Xi)
-        {
-            *this << Ix<M,S>{ea};
-            break;
-        }
-        case MODE_IM: // Imm
-        {
-            *this << Im<M,S>{ea};
-            /*
-            if (style == DASM_MUSASHI) {
-                *this << Imu(ea.ext1);
-            } else {
-                if constexpr (S != 0) {
-                    *this << Ims<S>(ea.ext1);
-                }
-            }
-            */
-            break;
-        }
+        case MODE_DN:   *this << Dn{ea.reg};    break;
+        case MODE_AN:   *this << An{ea.reg};    break;
+        case MODE_AI:   *this << Ai<M,S>{ea};   break;
+        case MODE_PI:   *this << Pi<M,S>{ea};   break;
+        case MODE_PD:   *this << Pd<M,S>{ea};   break;
+        case MODE_DI:   *this << Di<M,S>{ea};   break;
+        case MODE_IX:   *this << Ix<M,S>{ea};   break;
+        case MODE_AW:   *this << Aw<M,S>{ea};   break;
+        case MODE_AL:   *this << Al<M,S>{ea};   break;
+        case MODE_DIPC: *this << DiPc<M,S>{ea}; break;
+        case MODE_IXPC: *this << Ix<M,S>{ea};   break;
+        case MODE_IM:   *this << Im<M,S>{ea};   break;
     }
     return *this;
 }
@@ -1317,201 +1185,3 @@ StrWriter::operator<<(Finish)
     *ptr = 0;
     return *this;
 }
-
-#if 0
-template <Mode M, Size S> void
-StrWriter::briefExtension(const Ea <M,S> &ea)
-{
-    assert(M == 6 || M == 10);
-
-    //   15 - 12    11   10   09   08   07   06   05   04   03   02   01   00
-    // -----------------------------------------------------------------------
-    // | REGISTER | LW | SCALE   | 0  | DISPLACEMENT                         |
-    // -----------------------------------------------------------------------
-
-    u16 reg   = xxxx____________ (ea.ext1);
-    u16 lw    = ____x___________ (ea.ext1);
-    u16 scale = _____xx_________ (ea.ext1);
-    u16 disp  = ________xxxxxxxx (ea.ext1);
-
-    if (style == DASM_MUSASHI) {
-
-        *this << "(";
-        if (disp) *this << Int{(i8)disp} << ",";
-        M == 10 ? *this << "PC" : *this << An{ea.reg};
-        *this << "," << Rn{reg};
-        lw ? *this << Sz<Long>{} : *this << Sz<Word>{};
-        *this << Scale{scale} << ")";
-
-    } else {
-
-        *this << "(";
-        *this << Int{(i8)disp} << ",";
-        M == 10 ? *this << "pc" : *this << An{ea.reg};
-        *this << "," << Rn{reg};
-        lw ? *this << Sz<Long>{} : *this << Sz<Word>{};
-        *this << Scale{scale} << ")";
-    }
-}
-
-template <Mode M, Size S> void
-StrWriter::fullExtension(const Ea <M,S> &ea)
-{
-    assert(M == 6 || M == 10);
-
-    //   15 - 12    11   10   09   08   07   06   05   04   03   02   01   00
-    // -----------------------------------------------------------------------
-    // | REGISTER | LW | SCALE   | 1  | BS | IS | BD SIZE  | 0  | IIS        |
-    // -----------------------------------------------------------------------
-
-    u16  reg   = xxxx____________ (ea.ext1);
-    u16  lw    = ____x___________ (ea.ext1);
-    u16  scale = _____xx_________ (ea.ext1);
-    u16  bs    = ________x_______ (ea.ext1);
-    u16  is    = _________x______ (ea.ext1);
-    u16  size  = __________xx____ (ea.ext1);
-    u16  iis   = _____________xxx (ea.ext1);
-    u32  base  = ea.ext2;
-    u32  outer = ea.ext3;
-
-    bool preindex = (iis > 0 && iis < 4);
-    bool postindex = (iis > 4);
-    bool effectiveZero = (ea.ext1 & 0xe4) == 0xC4 || (ea.ext1 & 0xe2) == 0xC0;
-    bool comma = false;
-
-    if (effectiveZero) {
-
-        *this << "0";
-        return;
-    }
-
-    *this << "(";
-
-    if (preindex || postindex) {
-
-        *this << "[";
-    }
-    if (base) {
-
-        size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
-        comma = true;
-    }
-    if (!bs) {
-
-        if (comma) *this << ",";
-        M == 10 ? *this << "PC" : *this << An{ea.reg};
-        comma = true;
-    }
-    if (postindex) {
-
-        *this << "]";
-        comma = true;
-    }
-    if (!is) {
-
-        if (comma) *this << ",";
-        *this << Rn{reg};
-        lw ? (*this << Sz<Long>{}) : (*this << Sz<Word>{});
-        *this << Scale{scale};
-        comma = true;
-    }
-    if (preindex) {
-
-        *this << "]";
-        comma = true;
-    }
-    if(outer)
-    {
-        if (comma) *this << ",";
-        *this << Int(outer);
-    }
-
-    *this << ")";
-}
-
-template <Mode M, Size S> void
-StrWriter::fullExtensionVda68k(const Ea <M,S> &ea)
-{
-    assert(M == 6 || M == 10);
-
-    //   15 - 12    11   10   09   08   07   06   05   04   03   02   01   00
-    // -----------------------------------------------------------------------
-    // | REGISTER | LW | SCALE   | 1  | BS | IS | BD SIZE  | 0  | IIS        |
-    // -----------------------------------------------------------------------
-
-    u16  reg   = xxxx____________ (ea.ext1);
-    u16  lw    = ____x___________ (ea.ext1);
-    u16  scale = _____xx_________ (ea.ext1);
-    u16  bs    = ________x_______ (ea.ext1);
-    u16  is    = _________x______ (ea.ext1);
-    u16  size  = __________xx____ (ea.ext1);
-    u16  iis   = _____________xxx (ea.ext1);
-    u32  bd    = __________xx____(ea.ext1);   // Take from ea!!
-    u32  od    = ______________xx(ea.ext1);   // Take from ea!!
-    u32  base  = ea.ext2;
-    u32  outer = ea.ext3;
-
-    assert(bd == ea.bd);
-    assert(od == ea.od);
-
-    bool preindex = (iis > 0 && iis < 4);
-    bool postindex = (iis > 4);
-    // bool comma = false;
-
-    *this << "(";
-
-    if (preindex || postindex) {
-
-        *this << "[";
-    }
-
-    size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
-    // comma = true;
-
-    // if (comma) *this << ",";
-    *this << ",";
-    // comma = true;
-
-    if (bs && size) {
-        M == 10 ? (*this << "zpc") : *this << "z" << An{ea.reg};
-    } else {
-        M == 10 ? (*this << "pc") : *this << An{ea.reg};
-    }
-
-    if (postindex) {
-
-        *this << "]";
-        // comma = true;
-    }
-    if (is && bd) {
-
-        // if (comma) *this << ",0";
-        *this << ",0";
-        // comma = true;
-
-    } else {
-
-        // if (comma) *this << ",";
-        *this << ",";
-        *this << Rn{reg};
-        lw ? (*this << Sz<Long>{}) : (*this << Sz<Word>{});
-        *this << Scale{scale};
-        // comma = true;
-    }
-
-    if (preindex) {
-
-        *this << "]";
-        // comma = true;
-    }
-
-    if (od)
-    {
-        // if (comma) *this << ",";
-        *this << ",";
-        *this << Int(outer);
-    }
-
-    *this << ")";
-}
-#endif
