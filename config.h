@@ -18,10 +18,10 @@ static constexpr bool CHECK_MEM_WRITES = true;
 // Set to true to skip the execution of illegal instructions
 static constexpr bool SKIP_ILLEGAL = true;
 
-// Set to true to profile the CPU speed
+// Set to true to measure the CPU speed
 static constexpr bool PROFILE_CPU = true;
 
-// Set to true to profile the disassebler speed
+// Set to true to measure the disassembler speed
 static constexpr bool PROFILE_DASM = false;
 
 // Change to limit the range of executed instructions
@@ -30,7 +30,7 @@ static constexpr bool PROFILE_DASM = false;
 // Change to limit the range of disassembled instructions
 #define doDasm(opcode) (opcode >= 0x0000 && opcode <= 0xEFFF)
 
-// Uncomment to enable assertion checking
-// #define NDEBUG false
+// Uncomment to disable assertion checking
+// #define NDEBUG
 
 #include <assert.h>

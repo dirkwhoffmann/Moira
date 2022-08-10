@@ -9,8 +9,6 @@
 
 #pragma once
 
-#include <cmath>
-
 namespace moira {
 
 //
@@ -20,29 +18,31 @@ namespace moira {
 // Numerical values
 struct Int { i32 raw; Int(i32 v) : raw(v) { } };
 struct UInt { u32 raw; UInt(u32 v) : raw(v) { } };
-struct UInt8 { u8  raw; UInt8(u8  v) : raw(v) { } };
+struct UInt8 { u8 raw; UInt8(u8  v) : raw(v) { } };
 struct UInt16 { u16 raw; UInt16(u16 v) : raw(v) { } };
 struct UInt32 { u32 raw; UInt32(u32 v) : raw(v) { } };
 
 // Immediate operands
 struct Imu { u32 raw; Imu(u32 v) : raw(v) { } };
-template <Size S>
-struct Ims { i32 raw; Ims(i32 v) : raw(v) { } };
+template <Size S> struct Ims { i32 raw; Ims(i32 v) : raw(v) { } };
 struct Imd { u32 raw; Imd(u32 v) : raw(v) { } };
 
-// Instruction names
+// Mnemonics
 template <Instr I> struct Ins { };
 template <Size S> struct Sz { };
+struct Cnd { int raw; Cnd(int v) : raw(v) { } };
+struct Cpcc { int raw; Cpcc(int v) : raw(v) { } };
 
 // Registers
 struct Dn { int raw; Dn(int v) : raw(v) { } };
-struct An { int raw; An(int v) : raw(v) { } };  // TODO: Rename to AnPc
-struct Anr { int raw; Anr(int v) : raw(v) { } };  // TODO: Rename to An
-struct Rn { int raw;  Rn(int v) : raw(v) { } };  // TODO: Rename to RnPc
-struct Rnr { int raw; Rnr(int v) : raw(v) { } }; // TODO: Rename to Rn
+struct An { int raw; An(int v) : raw(v) { } };
+struct Anr { int raw; Anr(int v) : raw(v) { } };
+struct Rn { int raw;  Rn(int v) : raw(v) { } };
+struct Rnr { int raw; Rnr(int v) : raw(v) { } };
 struct Ccr { };
 struct Sr { };
 struct Usp { };
+struct Cn { u16 raw; Cn(u16 v) : raw(v) { } };
 
 // Register lists
 struct RegList { u16 raw; RegList(u16 v) : raw(v) { } };
@@ -65,20 +65,15 @@ template <Mode M, Size S> struct Ip { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct IxMus { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct IxMot { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct IxMit { const Ea<M,S> &ea; };
-
 struct Scale { int raw; Scale(int v) : raw(v) { } };
 
-struct Cn { u16 raw; Cn(u16 v) : raw(v) { } };
-struct Cnd { int raw; Cnd(int v) : raw(v) { } };
-struct Cpcc { int raw; Cpcc(int v) : raw(v) { } };
-
 // Indentation
-struct Tabulator { int raw;  Tabulator(int v) : raw(v) { } };
+struct Tab { int raw;  Tab(int v) : raw(v) { } };
+struct Sep { };
 
+// Misc
 template <Instr I, Mode M, Size S> struct Av { u32 ext1 = 0; };
-
-struct Sep        { };
-struct Finish     { };
+struct Finish { };
 
 class StrWriter
 {
@@ -86,7 +81,7 @@ class StrWriter
 public:
 
     char comment[32];       // Appended to the end of the disassembled string
-    Moira *moira;
+    // Moira *moira;
     char *base;             // Start address of the destination string
     char *ptr;              // Current writing position
     DasmStyle style;
@@ -94,9 +89,8 @@ public:
 
 public:
 
-    StrWriter(Moira *m, char *p, DasmStyle s, DasmNumberFormat n) {
+    StrWriter(char *p, DasmStyle s, DasmNumberFormat n) {
 
-        moira = m;
         base = ptr = p;
         style = s;
         nf = n;
@@ -144,7 +138,7 @@ public:
     StrWriter& operator<<(Scale);
     StrWriter& operator<<(Sr);
     StrWriter& operator<<(Usp);
-    StrWriter& operator<<(Tabulator);
+    StrWriter& operator<<(Tab);
     StrWriter& operator<<(RegRegList);
     StrWriter& operator<<(RegList);
     template <Instr I> StrWriter& operator<<(Ins<I>);

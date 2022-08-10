@@ -11,6 +11,7 @@
 
 #include <cstdio>
 #include <algorithm>
+#include <cmath>
 #include <bit>
 
 namespace moira {
@@ -77,7 +78,7 @@ Moira::setDasmLetterCase(DasmLetterCase value)
 void
 Moira::setIndentation(int value)
 {
-    tab = Tabulator{value};
+    tab = Tab{value};
 }
 
 void
@@ -461,7 +462,7 @@ Moira::disassemble(u32 addr, char *str, DasmStyle core)
     u32 pc     = addr;
     u16 opcode = read16Dasm(pc);
 
-    StrWriter writer(this, str, style, numberFormat);
+    StrWriter writer(str, style, numberFormat);
 
     (this->*dasm[opcode])(writer, pc, opcode);
     writer << Finish{};

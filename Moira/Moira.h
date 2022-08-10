@@ -36,7 +36,7 @@ protected:
     DasmStyle style = DASM_MOIRA;
     DasmNumberFormat numberFormat { .prefix = "$", .radix = 16 };
     DasmLetterCase letterCase = DASM_MIXED_CASE;
-    Tabulator tab{8};
+    Tab tab{8};
 
 
     //

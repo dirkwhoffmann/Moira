@@ -652,7 +652,7 @@ StrWriter::operator<<(DiPc<M,S> wrapper)
 
             *this << "(" << Int{(i16)ea.ext1} << ",PC)";
             resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
-            StrWriter(moira, comment, style, nf) << "; (" << UInt(resolved) << ")" << Finish{};
+            StrWriter(comment, style, nf) << "; (" << UInt(resolved) << ")" << Finish{};
             return *this;
 
         case DASM_MIT:
@@ -929,7 +929,7 @@ StrWriter::operator<<(Usp _)
 }
 
 StrWriter&
-StrWriter::operator<<(Tabulator align)
+StrWriter::operator<<(Tab align)
 {
     // Write at least a single space
     *ptr++ = ' ';
