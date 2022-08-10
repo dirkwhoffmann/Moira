@@ -543,7 +543,7 @@ void compare(Setup &s, Result &r1, Result &r2)
         printf("\nInstruction: [%d] %-40s (Musashi)", r1.dasmCntMusashi, r1.dasmMusashi);
         printf("\n             [%d] %-40s (Moira)\n", r2.dasmCntMusashi, r2.dasmMusashi);
 
-        printf("\n             [%d] %-40s (Vda68k, Moto)", r1.dasmCntMoto, r1.dasmMoto);
+        printf("\n             [%d] %-40s (Vda68k, Motorola)", r1.dasmCntMoto, r1.dasmMoto);
         printf("\n             [%d] %-40s (Moira)\n", r2.dasmCntMoto, r2.dasmMoto);
 
         printf("\n             [%d] %-40s (Vda68k, MIT)", r1.dasmCntMIT, r1.dasmMIT);

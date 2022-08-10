@@ -2810,7 +2810,8 @@ void get_modregstr_mit(dis_buffer_t *dbuf,int bit, int mod, int sz, int dd)
     if (mod == AR_IDX && (!bd || !ISBITSET(ext,7)))
       PRINT_AREG(dbuf, reg);
     else if (mod == MOD_SPECIAL && ISBITSET(ext,7)) {
-      addchar('z');
+        if (ISBITSET(ext,8)) addchar('z');  // DIRK
+      // addchar('z'); 
       addchar('p');
       addchar('c');
     } else if (mod == MOD_SPECIAL) {
