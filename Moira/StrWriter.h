@@ -57,14 +57,15 @@ template <Mode M, Size S> struct Pi { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct Pd { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct Di { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct Ix { const Ea<M,S> &ea; };
+template <Mode M, Size S> struct IxMus { const Ea<M,S> &ea; };
+template <Mode M, Size S> struct IxMot { const Ea<M,S> &ea; };
+template <Mode M, Size S> struct IxMit { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct Aw { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct Al { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct DiPc { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct Im { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct Ip { const Ea<M,S> &ea; };
-template <Mode M, Size S> struct IxMus { const Ea<M,S> &ea; };
-template <Mode M, Size S> struct IxMot { const Ea<M,S> &ea; };
-template <Mode M, Size S> struct IxMit { const Ea<M,S> &ea; };
+
 struct Scale { int raw; Scale(int v) : raw(v) { } };
 
 // Indentation
