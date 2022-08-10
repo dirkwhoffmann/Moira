@@ -110,6 +110,9 @@ void setupTestEnvironment(Setup &s)
     s.vbr = u16(smartRandom());
     s.sfc = u16(smartRandom());
     s.dfc = u16(smartRandom());
+    s.cacr = u16(smartRandom()) & 0xF;
+    s.caar = u16(smartRandom()) & 0xF;
+
     for (int i = 0; i < 8; i++) s.d[i] = smartRandom();
     for (int i = 0; i < 8; i++) s.a[i] = smartRandom();
 
@@ -130,16 +133,15 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
             break;
 
         case MOVEC:
-
-            switch (smartRandom() & 5) {
-
-                case 0: s.ext1 = (s.ext1 & 0xF000) | 0x000; break;
-                case 1: s.ext1 = (s.ext1 & 0xF000) | 0x001; break;
-                case 2: s.ext1 = (s.ext1 & 0xF000) | 0x800; break;
-                case 3: s.ext1 = (s.ext1 & 0xF000) | 0x801; break;
+        {
+            auto cnt = testrun & 31;
+            if (cnt < 9) {
+                s.ext1 = (s.ext1 & 0xF000) | (cnt % 9);
+            } else if (cnt < 18) {
+                s.ext1 = (s.ext1 & 0xF000) | 0x800 | (cnt % 9);
             }
             break;
-
+        }
         default:
             break;
     }
@@ -179,6 +181,8 @@ void resetMusashi(Setup &s)
     m68k_set_reg(M68K_REG_VBR, s.vbr);
     m68k_set_reg(M68K_REG_SFC, s.sfc);
     m68k_set_reg(M68K_REG_DFC, s.dfc);
+    m68k_set_reg(M68K_REG_CACR, s.cacr);
+    m68k_set_reg(M68K_REG_CAAR, s.caar);
     m68ki_set_ccr(s.ccr);
     s.supervisor ? m68ki_set_sm_flag(SFLAG_SET) : m68ki_set_sm_flag(SFLAG_CLEAR);
 }
@@ -198,6 +202,8 @@ void resetMoira(Setup &s)
     moiracpu->setSFC(s.sfc);
     moiracpu->setDFC(s.dfc);
     moiracpu->setCCR(s.ccr);
+    moiracpu->setCACR(s.cacr);
+    moiracpu->setCAAR(s.caar);
     moiracpu->setSupervisorMode(s.supervisor);
 }
 
@@ -405,6 +411,8 @@ void recordMusashiRegisters(Result &r)
     r.vbr = m68k_get_reg(NULL, M68K_REG_VBR);
     r.sfc = m68k_get_reg(NULL, M68K_REG_SFC);
     r.dfc = m68k_get_reg(NULL, M68K_REG_DFC);
+    r.cacr = m68k_get_reg(NULL, M68K_REG_CACR);
+    r.caar = m68k_get_reg(NULL, M68K_REG_CAAR);
     for (int i = 0; i < 8; i++) {
         r.d[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_D0 + i));
         r.a[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_A0 + i));
@@ -422,6 +430,8 @@ void recordMoiraRegisters(Result &r)
     r.vbr = moiracpu->getVBR();
     r.sfc = moiracpu->getSFC();
     r.dfc = moiracpu->getDFC();
+    r.cacr = moiracpu->getCACR();
+    r.caar = moiracpu->getCAAR();
     for (int i = 0; i < 8; i++) r.d[i] = moiracpu->getD(i);
     for (int i = 0; i < 8; i++) r.a[i] = moiracpu->getA(i);
 }
@@ -435,7 +445,9 @@ void dumpSetup(Setup &s)
     printf("CCR: %02x  ", s.ccr);
     printf("VBR: %02x  ", s.vbr);
     printf("SFC: %02x  ", s.sfc);
-    printf("DFC: %02x\n", s.dfc);
+    printf("DFC: %02x  ", s.dfc);
+    printf("CACR: %02x ", s.cacr);
+    printf("CAAR: %02x\n", s.caar);
     printf("         ");
     printf("Dn: ");
     for (int i = 0; i < 8; i++) printf("%8x ", s.d[i]);
@@ -459,6 +471,9 @@ void dumpResult(Result &r)
     printf("VBR: %x  ", r.vbr);
     printf("SFC: %x  ", r.sfc);
     printf("DFC: %x  ", r.dfc);
+    printf("CACR: %02x ", r.cacr);
+    printf("CAAR: %02x ", r.caar);
+
     printf("\n");
 
     printf("         Dn: ");
@@ -528,6 +543,10 @@ void compare(Setup &s, Result &r1, Result &r2)
             }
             if (!compareDFC(r1, r2)) {
                 printf("\nDFC REGISTER MISMATCH FOUND");
+                error = true;
+            }
+            if (!compareCAxR(r1, r2)) {
+                printf("\nCACHE REGISTER MISMATCH FOUND");
                 error = true;
             }
             if (sandbox.getErrors()) {
@@ -653,6 +672,11 @@ bool compareSFC(Result &r1, Result &r2)
 bool compareDFC(Result &r1, Result &r2)
 {
     return r1.dfc == r2.dfc;
+}
+
+bool compareCAxR(Result &r1, Result &r2)
+{
+    return r1.cacr == r2.cacr && r1.caar == r2.caar;
 }
 
 bool compareCycles(Result &r1, Result &r2)

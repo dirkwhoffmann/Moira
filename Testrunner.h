@@ -68,6 +68,8 @@ struct Setup {
     u16     vbr;
     u16     sfc;
     u16     dfc;
+    u16     cacr;
+    u16     caar;
     u8      mem[0x10000];
 };
 
@@ -88,6 +90,8 @@ struct Result {
     u32     vbr;
     u32     sfc;
     u32     dfc;
+    u32     cacr;
+    u32     caar;
     char    dasmMusashi[128];
     int     dasmCntMusashi;
     char    dasmMoto[128];
@@ -157,6 +161,7 @@ bool compareMSP(Result &r1, Result &r2);
 bool compareVBR(Result &r1, Result &r2);
 bool compareSFC(Result &r1, Result &r2);
 bool compareDFC(Result &r1, Result &r2);
+bool compareCAxR(Result &r1, Result &r2);
 bool compareCycles(Result &r1, Result &r2);
 
 void bugReport();

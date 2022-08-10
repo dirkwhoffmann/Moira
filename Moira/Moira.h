@@ -342,6 +342,12 @@ public:
     u32 getDFC() const { return reg.dfc; }
     void setDFC(u32 val) { reg.dfc = val & 0b111; }
 
+    u32 getCACR() const { return reg.cacr; }
+    void setCACR(u32 val) { reg.cacr = val & 0b1111; }
+
+    u32 getCAAR() const { return reg.caar; }
+    void setCAAR(u32 val) { reg.caar = val & 0b1111; }
+
     void setSupervisorMode(bool value);
     void setMasterMode(bool value);
     void setSupervisorFlags(bool s, bool m);

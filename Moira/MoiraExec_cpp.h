@@ -2814,7 +2814,11 @@ Moira::execMovecRxRc(u16 opcode)
         case 0x000:
         case 0x001:
         case 0x800:
-        case 0x801: break;
+        case 0x801: if (C >= M68010) break;
+        case 0x002:
+        case 0x802:
+        case 0x803:
+        case 0x804: if (C >= M68020) break;
 
         default:
             execIllegal<C, I, M, S>(opcode);
@@ -2824,14 +2828,19 @@ Moira::execMovecRxRc(u16 opcode)
     SYNC(2);
 
     auto arg = readI<C, Word>();
-    int src = xxxx____________(arg);
+    int  src = xxxx____________(arg);
+    u32  val = readD(src);
 
     switch (arg & 0x0FFF) {
 
-        case 0x000: setSFC(reg.r[src]); break;
-        case 0x001: setDFC(reg.r[src]); break;
-        case 0x800: reg.usp = reg.r[src]; break;
-        case 0x801: setVBR(reg.r[src]); break;
+        case 0x000: setSFC(val); break;
+        case 0x001: setDFC(val); break;
+        case 0x800: setUSP(val); break;
+        case 0x801: setVBR(val); break;
+        case 0x002: setCACR(val); break;
+        case 0x802: setCAAR(val); break;
+        case 0x803: reg.sr.m ? setSP(val) : setMSP(val); break;
+        case 0x804: reg.sr.m ? setISP(val) : setSR(val); break;
     }
 
     prefetch<C, POLLIPL>();

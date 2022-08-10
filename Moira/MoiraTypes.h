@@ -438,6 +438,10 @@ struct Registers {
     u32 vbr;                // Vector Base Register             (68010+)
     u32 sfc;                // Source Function Code             (68010+)
     u32 dfc;                // Destination Function Code        (68010+)
+
+    // Unemulated registers
+    u32 cacr;               // Cache Control Register           (68020+)
+    u32 caar;               // Cache Address Register           (68020+)
 };
 
 struct PrefetchQueue {    // http://pasti.fxatari.com/68kdocs/68kPrefetch.html

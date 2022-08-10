@@ -799,30 +799,57 @@ StrWriter::operator<<(Ccr ccr)
 StrWriter&
 StrWriter::operator<<(Cn cn)
 {
-    bool upper = style == DASM_MOIRA || style == DASM_MUSASHI;
+    bool upper, valid;
 
-    switch (cn.raw) {
+    switch (style) {
 
-        case 0x000: *this << (upper ? "SFC" : "sfc");   break;
-        case 0x001: *this << (upper ? "DFC" : "dfc");   break;
-        case 0x800: *this << (upper ? "USP" : "usp");   break;
-        case 0x801: *this << (upper ? "VBR" : "vbr");   break;
-        case 0x002: *this << (upper ? "CACR" : "cacr");  break;
-        case 0x802: *this << (upper ? "CAAR" : "caar");  break;
-        case 0x803: *this << (upper ? "MSP" : "msp");   break;
-        case 0x804: *this << (upper ? "ISP" : "isp");   break;
-        case 0x003: *this << (upper ? "TC" : "tc");    break;
-        case 0x004: *this << (upper ? "ITT0" : "itt0");  break;
-        case 0x005: *this << (upper ? "ITT1" : "itt1");  break;
-        case 0x006: *this << (upper ? "DTT0" : "dtt0");  break;
-        case 0x007: *this << (upper ? "DTT1" : "dtt1");  break;
-        case 0x805: *this << (upper ? "MMUSR" : "mmusr"); break;
-        case 0x806: *this << (upper ? "URP" : "urp");   break;
-        case 0x807: *this << (upper ? "SRP" : "srp");   break;
+        case DASM_MOIRA:
+        case DASM_MUSASHI:
+
+            valid =
+            (cn.raw >= 0x000 && cn.raw <= 0x007) ||
+            (cn.raw >= 0x800 && cn.raw <= 0x807);
+
+            upper = true;
+            break;
 
         default:
 
-            style == DASM_MUSASHI ? *this << UInt(cn.raw) : *this << "INVALID";
+            valid =
+            (cn.raw >= 0x000 && cn.raw <= 0x008) ||
+            (cn.raw >= 0x800 && cn.raw <= 0x808);
+
+            upper = false;
+            break;
+    }
+
+    if (valid) {
+
+        switch (cn.raw) {
+
+            case 0x000: *this << (upper ? "SFC" : "sfc");   break;
+            case 0x001: *this << (upper ? "DFC" : "dfc");   break;
+            case 0x002: *this << (upper ? "CACR" : "cacr");  break;
+            case 0x003: *this << (upper ? "TC" : "tc");    break;
+            case 0x004: *this << (upper ? "ITT0" : "itt0");  break;
+            case 0x005: *this << (upper ? "ITT1" : "itt1");  break;
+            case 0x006: *this << (upper ? "DTT0" : "dtt0");  break;
+            case 0x007: *this << (upper ? "DTT1" : "dtt1");  break;
+            case 0x008: *this << (upper ? "BUSCR" : "buscr");  break;
+            case 0x800: *this << (upper ? "USP" : "usp");   break;
+            case 0x801: *this << (upper ? "VBR" : "vbr");   break;
+            case 0x802: *this << (upper ? "CAAR" : "caar");  break;
+            case 0x803: *this << (upper ? "MSP" : "msp");   break;
+            case 0x804: *this << (upper ? "ISP" : "isp");   break;
+            case 0x805: *this << (upper ? "MMUSR" : "mmusr"); break;
+            case 0x806: *this << (upper ? "URP" : "urp");   break;
+            case 0x807: *this << (upper ? "SRP" : "srp");   break;
+            case 0x808: *this << (upper ? "PCR" : "pcr");   break;
+        }
+
+    } else {
+
+        style == DASM_MUSASHI ? *this << UInt(cn.raw) : *this << "INVALID";
     }
     return *this;
 }
