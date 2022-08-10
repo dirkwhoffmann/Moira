@@ -1186,9 +1186,11 @@ Moira::dasmMull(StrWriter &str, u32 &addr, u16 op)
     auto dl  = Dn       ( _xxx____________(ext)      );
     auto dh  = Dn       ( _____________xxx(ext)      );
 
+    auto fill = str.style == DASM_MIT ? "," : ":";
+
     (ext & 1 << 11) ? str << Ins<MULS>{} : str << Ins<MULU>{};
     str << Sz<S>{} << tab << src << Sep{};
-    (ext & 1 << 10) ? str << dh << ":" << dl : str << dl;
+    (ext & 1 << 10) ? str << dh << fill << dl : str << dl;
     str << Av<I, M, S>{};
 }
 
@@ -1209,14 +1211,16 @@ Moira::dasmDivl(StrWriter &str, u32 &addr, u16 op)
     auto dl  = Dn       ( _xxx____________(ext)      );
     auto dh  = Dn       ( _____________xxx(ext)      );
 
+    auto fill = str.style == DASM_MIT ? "," : ":";
+
     (ext & 1 << 11) ? str << Ins<DIVS>{} : str << Ins<DIVU>{};
 
     if (ext & 1 << 10) {
-        str << Sz<S>{} << tab << src << Sep{} << dh << ":" << dl;
+        str << Sz<S>{} << tab << src << Sep{} << dh << fill << dl;
     } else if (dl.raw == dh.raw) {
         str << Sz<S>{} << tab << src << Sep{} << dl;
     } else {
-        str << "l" << Sz<S>{} << tab << src << Sep{} << dh << ":" << dl;
+        str << "l" << Sz<S>{} << tab << src << Sep{} << dh << fill << dl;
     }
     str << Av<I, M, S>{};
 }

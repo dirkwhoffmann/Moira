@@ -796,7 +796,7 @@ StrWriter::operator<<(Rnr rn)
 StrWriter&
 StrWriter::operator<<(Ccr ccr)
 {
-    auto upper = style == DASM_MOTOROLA || style == DASM_MIT;
+    auto upper = style == DASM_MOIRA || style == DASM_MUSASHI;
 
     *this << (upper ? "CCR" : "ccr");
     return *this;
@@ -953,7 +953,7 @@ StrWriter::operator<<(Scale s)
 StrWriter&
 StrWriter::operator<<(Sr _)
 {
-    auto upper = style == DASM_MOTOROLA || style == DASM_MIT;
+    auto upper = style == DASM_MOIRA || style == DASM_MUSASHI;
 
     *this << (upper ? "SR" : "sr");
     return *this;
@@ -962,7 +962,7 @@ StrWriter::operator<<(Sr _)
 StrWriter&
 StrWriter::operator<<(Usp _)
 {
-    auto upper = style == DASM_MOTOROLA || style == DASM_MIT;
+    auto upper = style == DASM_MOIRA || style == DASM_MUSASHI;
 
     *this << (upper ? "USP" : "usp");
     return *this;
