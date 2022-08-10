@@ -571,7 +571,7 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
         bool postindex = (iis > 4);
         bool comma = false;
 
-        printf("Moira: (0)\n");
+        // printf("Moira: (0)\n");
         if (M == MODE_IX) {
 
             if (!bd || !bs) { *this << An{ea.reg}; }
@@ -584,18 +584,18 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
         *this << "@(";
 
         if (size > 1) {
-            printf("Moira: (1)\n");
+            // printf("Moira: (1)\n");
             size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
             comma = true;
 
             if (postindex) {
 
-                printf("Moira: (2)\n");
+                // printf("Moira: (2)\n");
                 *this << ")@(";
                 comma = false;
             }
         } else if (!bd) {
-            printf("Moira: don't forget simple 8 bit displacement.\n");
+            // printf("Moira: don't forget simple 8 bit displacement.\n");
             // *this << Int{(i8)ea.ext1} << ",";
             *this << "0,";
         }
@@ -609,10 +609,10 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
 
         if (postindex) {
 
-            printf("Moira: (6)\n");
+            // printf("Moira: (6)\n");
 
             if (od != 1) {
-                printf("Moira: Post-indexed? Have displacement?\n");
+                // printf("Moira: Post-indexed? Have displacement?\n");
                 *this << Int(outer);
                 comma = true;
             }
@@ -626,7 +626,7 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
 
         } else {
 
-            printf("Moira: (7)\n");
+            // printf("Moira: (7)\n");
             if (comma) *this << ",";
             *this << Rn{reg};
             lw ? (*this << ":l") : (*this << ":w");
@@ -642,11 +642,13 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
 
         if (preindex)
         {
-            printf("Moira: (8) pre-indexed\n");
+            // printf("Moira: (8) pre-indexed\n");
 
             // if (comma) *this << ",";
-            *this << ")@(";
-            *this << Int(outer);
+            if (od != 1) {
+                *this << ")@(";
+                *this << Int(outer);
+            }
         }
 
         *this << ")";

@@ -212,7 +212,7 @@ void run()
     printf("It runs until a bug has been found.\n");
 
     selectCore(68020);
-    srand(0);
+    srand(3);
 
     for (testrun = 1 ;; testrun++) {
 
