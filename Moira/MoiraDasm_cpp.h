@@ -516,7 +516,13 @@ Moira::dasmCas2(StrWriter &str, u32 &addr, u16 op)
 
     str << Ins<I>{} << Sz<S>{} << tab;
     str << dc1 << ":" << dc2 << Sep{} << du1 << ":" << du2 << Sep{};
-    str << "(" << rn1 << "):(" << rn2 << ")";
+
+    if (str.style == DASM_MIT) {
+        str << rn1 << "@:" << rn2 << "@";
+    } else {
+        str << "(" << rn1 << "):(" << rn2 << ")";
+    }
+
     str << Av<I, M, S>{};
 }
 

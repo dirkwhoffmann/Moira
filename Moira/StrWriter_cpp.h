@@ -552,7 +552,7 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
 
     } else {
 
-        printf("MIT full format\n");
+        printf("Moira: MIT full format\n");
 
         //   15-12   11   10   09   08   07   06   05   04   03   02   01   00
         // --------------------------------------------------------------------
@@ -610,13 +610,14 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
         if (is && bd) {
 
             // if (comma) *this << ",0";
-            *this << ",0";
+            // printf("printing ,0\n");
+            // *this << ",0";
             // comma = true;
 
         } else {
 
             // if (comma) *this << ",";
-            *this << ",";
+            *this << "@(";
             *this << Rn{reg};
             lw ? (*this << Sz<Long>{}) : (*this << Sz<Word>{});
             *this << Scale{scale};
@@ -632,7 +633,7 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
         if (od)
         {
             // if (comma) *this << ",";
-            *this << ",";
+            *this << "@(";
             *this << Int(outer);
         }
 
@@ -719,11 +720,6 @@ StrWriter::operator<<(Im<M,S> wrapper)
         case DASM_MUSASHI:
 
             *this << Imu(ea.ext1);
-            return *this;
-
-        case DASM_MIT:
-
-            *this << "???";
             return *this;
 
         default:

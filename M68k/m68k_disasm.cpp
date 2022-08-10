@@ -2844,20 +2844,25 @@ void get_modregstr_mit(dis_buffer_t *dbuf,int bit, int mod, int sz, int dd)
           SIZE_BYTE);
       addchar(',');
     }
-    
+
+    bool comma = false; // DIRK
+
     /* Post-indexed? */
     if (od && ISBITSET(ext,2)) {
       /* have displacement? */
       if (od != 1) {
+          printf("Post-indexed? Have displacement?\n");
         prints(dbuf, odisp,
             od == 2 ? SIZE_WORD :
             od == 3 ? SIZE_LONG :
             SIZE_BYTE);
-        addchar(',');
+        // addchar(',');
+        comma = true;
       }
     } 
       
     if (!bd || !ISBITSET(ext,6)) {
+        if (comma) { addchar(','); } // DIRK
       if (ISBITSET(ext,15))
         PRINT_AREG(dbuf,idx);
       else
