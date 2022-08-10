@@ -566,8 +566,8 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
         u16  is    = _________x______ (ea.ext1);
         u16  size  = __________xx____ (ea.ext1);
         u16  iis   = _____________xxx (ea.ext1);
-        u32  bd    = __________xx____(ea.ext1);   // Take from ea!!
-        u32  od    = ______________xx(ea.ext1);   // Take from ea!!
+        u32  bd    = __________xx____ (ea.ext1);  // Replace by size (?)
+        u32  od    = ______________xx (ea.ext1);
         u32  base  = ea.ext2;
         u32  outer = ea.ext3;
 
@@ -576,8 +576,9 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
 
         bool preindex = (iis > 0 && iis < 4);
         bool postindex = (iis > 4);
-        // bool comma = false;
+        bool comma = false;
 
+        printf("Moira: (0)\n");
         if (M == MODE_IX) {
 
             if (!ea.dw || !bs) { *this << An{ea.reg}; }
@@ -589,23 +590,39 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
 
         *this << "@(";
 
-        if (preindex || postindex) {
+        if (size > 1) {
+            printf("Moira: (1)\n");
+            size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
+            comma = true;
 
-            // *this << "[";
+            if (postindex) {
+
+                printf("Moira: (2)\n");
+                *this << ")@(";
+            }
+        } else if (!bd) {
+            printf("Moira: don't forget simple 8 bit displacement.\n");
+            // *this << Int{(i8)ea.ext1} << ",";
+            *this << "0,";
         }
 
-        size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
         // comma = true;
 
         // if (comma) *this << ",";
-        *this << ")";
+        // *this << ")";
         // comma = true;
 
 
         if (postindex) {
 
+            printf("Moira: (6)\n");
+
+            if (od != 1) {
+                printf("Moira: Post-indexed? Have displacement?\n");
+                *this << Int(outer);
+            }
             // *this << "]";
-            // comma = true;
+            comma = true;
         }
         if (is && bd) {
 
@@ -616,22 +633,25 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
 
         } else {
 
-            // if (comma) *this << ",";
-            *this << "@(";
+            printf("Moira: (7)\n");
+            if (comma) *this << ",";
+            // *this << "@(";
             *this << Rn{reg};
-            lw ? (*this << Sz<Long>{}) : (*this << Sz<Word>{});
+            lw ? (*this << ":l") : (*this << ":w");
             *this << Scale{scale};
             // comma = true;
         }
 
         if (preindex) {
 
-            *this << "]";
+            // *this << "]";
             // comma = true;
         }
 
-        if (od)
+        if (preindex)
         {
+            printf("Moira: (8) pre-indexed\n");
+
             // if (comma) *this << ",";
             *this << "@(";
             *this << Int(outer);
@@ -910,9 +930,23 @@ StrWriter&
 StrWriter::operator<<(Scale s)
 {
     if (s.raw) {
-        *ptr++ = '*';
-        *ptr++ = '0' + (char)(1 << s.raw);
+
+        switch (style) {
+
+            case DASM_MIT:
+
+                *ptr++ = ':';
+                *ptr++ = '0' + (char)(1 << s.raw);
+                return *this;
+
+            default:
+
+                *ptr++ = '*';
+                *ptr++ = '0' + (char)(1 << s.raw);
+                return *this;
+        }
     }
+
     return *this;
 }
 

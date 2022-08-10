@@ -2806,8 +2806,7 @@ void get_modregstr_mit(dis_buffer_t *dbuf,int bit, int mod, int sz, int dd)
      * write everything into buf
      */
     /* if base register not suppresed */
-          printf("mod == AR_IDX = %d (Mod = %d)\n", mod == AR_IDX, mod);
-          printf("bd = %d ISBITSET(ext,7) = %d\n", bd, ISBITSET(ext,7));
+          printf("(0): mod == AR_IDX = %d (Mod = %d) bd = %d ISBITSET(ext,7) = %d\n", mod == AR_IDX, mod, bd, ISBITSET(ext,7));
     if (mod == AR_IDX && (!bd || !ISBITSET(ext,7)))
       PRINT_AREG(dbuf, reg);
     else if (mod == MOD_SPECIAL && ISBITSET(ext,7)) {
@@ -2822,6 +2821,7 @@ void get_modregstr_mit(dis_buffer_t *dbuf,int bit, int mod, int sz, int dd)
     addchar('(');
     
     if (bd && bd != 1) {
+        printf("MIT: (1)\n");
       prints(dbuf, disp,
           bd == 2 ? SIZE_WORD :
           bd == 3 ? SIZE_LONG :
@@ -2830,6 +2830,7 @@ void get_modregstr_mit(dis_buffer_t *dbuf,int bit, int mod, int sz, int dd)
         /* Pre-indexed and not supressing index */
         addchar(',');
       else if (od && ISBITSET(ext,2)) {
+          printf("MIT: (2)\n");
         /* Post-indexed */
         addchar(')');
         addchar('@');
@@ -2837,6 +2838,7 @@ void get_modregstr_mit(dis_buffer_t *dbuf,int bit, int mod, int sz, int dd)
       } else if (!od)
         addchar(',');
     } else if (!bd) {
+        printf("MIT: don't forget simple 8 bit displacement.\n");
             /* don't forget simple 8 bit displacement. */
       prints(dbuf, disp,
           bd == 2 ? SIZE_WORD :
@@ -2849,9 +2851,10 @@ void get_modregstr_mit(dis_buffer_t *dbuf,int bit, int mod, int sz, int dd)
 
     /* Post-indexed? */
     if (od && ISBITSET(ext,2)) {
+        printf("MIT: (6)\n");
       /* have displacement? */
       if (od != 1) {
-          printf("Post-indexed? Have displacement?\n");
+          printf("MIT: Post-indexed? Have displacement?\n");
         prints(dbuf, odisp,
             od == 2 ? SIZE_WORD :
             od == 3 ? SIZE_LONG :
@@ -2862,6 +2865,7 @@ void get_modregstr_mit(dis_buffer_t *dbuf,int bit, int mod, int sz, int dd)
     } 
       
     if (!bd || !ISBITSET(ext,6)) {
+        printf("MIT (7)\n");
         if (comma) { addchar(','); } // DIRK
       if (ISBITSET(ext,15))
         PRINT_AREG(dbuf,idx);
@@ -2876,6 +2880,7 @@ void get_modregstr_mit(dis_buffer_t *dbuf,int bit, int mod, int sz, int dd)
     }
     /* pre-indexed? */
     if (od && !ISBITSET(ext,2)) {
+        printf("MIT: (8) pre-indexed\n");
       if (od != 1) {
         addchar(')');
         addchar('@');
