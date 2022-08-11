@@ -10,12 +10,12 @@
 // #include <set>
 
 #define AVAILABILITY(cpu) \
-if (WILL_EXECUTE) willExecute(__func__, I, M, S, opcode); \
+if constexpr (WILL_EXECUTE) willExecute(__func__, I, M, S, opcode); \
 assert(C >= (cpu)); \
 if constexpr (C == M68020) cp = 0;
 
 #define FINALIZE \
-if (DID_EXECUTE) didExecute(__func__, I, M, S, opcode);
+if constexpr (DID_EXECUTE) didExecute(__func__, I, M, S, opcode);
 
 #define SUPERVISOR_MODE_ONLY \
 if (!reg.sr.s) { \
@@ -1296,8 +1296,6 @@ Moira::execBsr(u16 opcode)
 
     fullPrefetch<C, POLLIPL>();
 
-    signalJsrBsrInstr(opcode, oldpc, reg.pc);
-
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
     CYCLES_IP   (18, 18,  7,       18, 18,  7,       18, 18,  7)
@@ -2196,13 +2194,10 @@ Moira::execJsr(u16 opcode)
     if (error) return;
 
     // Jump to new address
-    auto oldpc = reg.pc;
     reg.pc = ea;
 
     queue.irc = (u16)readMS<C, MEM_PROG, Word>(ea);
     prefetch<C, POLLIPL>();
-
-    signalJsrBsrInstr(opcode, oldpc, reg.pc);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -4014,8 +4009,6 @@ Moira::execReset(u16 opcode)
 
     SUPERVISOR_MODE_ONLY
 
-    signalResetInstr();
-
     SYNC_68000(128);
     SYNC_68010(126);
 
@@ -4032,8 +4025,6 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execRtd(u16 opcode)
 {
     AVAILABILITY(M68010)
-
-    signalRtdInstr();
 
     bool error;
     u32 newpc = readM<C, M, Long>(reg.sp, error);
@@ -4268,8 +4259,6 @@ Moira::execRts(u16 opcode)
 {
     AVAILABILITY(M68000)
 
-    signalRtsInstr();
-
     bool error;
     u32 newpc = readM <C, M, Long> (reg.sp, error);
     if (error) return;
@@ -4358,7 +4347,6 @@ Moira::execStop(u16 opcode)
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
     CYCLES_IP   ( 0,  0,  0,        4,  4,  8,        0,  0,  0)
-    signalStopInstr(src);
 
     FINALIZE
 }
@@ -4393,8 +4381,6 @@ Moira::execTasRg(u16 opcode)
 {
     AVAILABILITY(M68000)
 
-    signalTasInstr();
-
     int dst = ( _____________xxx(opcode) );
 
     u32 ea, data;
@@ -4417,8 +4403,6 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execTasEa(u16 opcode)
 {
     AVAILABILITY(M68000)
-
-    signalTasInstr();
 
     int dst = ( _____________xxx(opcode) );
 

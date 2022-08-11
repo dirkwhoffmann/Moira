@@ -238,17 +238,9 @@ protected:
     // Provides the interrupt level in IRQ_USER mode
     virtual u16 readIrqUserVector(u8 level) const { return 0; }
 
-    // Delegates
+    // Instruction delegates
     virtual void willExecute(const char *func, Instr I, Mode M, Size S, u16 opcode) { };
     virtual void didExecute(const char *func, Instr I, Mode M, Size S, u16 opcode) { };
-
-    // Instrution delegates
-    virtual void signalResetInstr() { };
-    virtual void signalStopInstr(u16 op) { };
-    virtual void signalTasInstr() { };
-    virtual void signalJsrBsrInstr(u16 opcode, u32 oldPC, u32 newPC) { };
-    virtual void signalRtsInstr() { };
-    virtual void signalRtdInstr() { };
 
     // State delegates
     virtual void signalHardReset() { };
