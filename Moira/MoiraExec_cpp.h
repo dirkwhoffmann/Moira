@@ -4431,7 +4431,8 @@ Moira::execTrap(u16 opcode)
     int nr = ____________xxxx(opcode);
 
     SYNC(4);
-    execTrapNException<C>(32 + nr);
+    execException<C>(EXC_TRAP, nr);
+    // execTrapNException<C>(32 + nr);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l

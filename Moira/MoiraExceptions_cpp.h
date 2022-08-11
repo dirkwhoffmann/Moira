@@ -382,7 +382,7 @@ Moira::execException(ExceptionType exc, int nr)
             clearTraceFlags();
             flags &= ~CPU_TRACE_EXCEPTION;
 
-            // Write exception information to stack
+            // Write stack frame
             SYNC(4);
             saveToStack1<C>(vector, status, reg.pc);
 
@@ -405,6 +405,20 @@ Moira::execException(ExceptionType exc, int nr)
             jumpToVector<C, AE_SET_CB3>(vector);
             break;
 
+        case EXC_TRAP:
+
+            // Enter supervisor mode
+            setSupervisorMode(true);
+
+            // Disable tracing, but keep the CPU_TRACE_EXCEPTION flag
+            clearTraceFlags();
+
+            // Write stack frame
+            writeStackFrame0000<C>(status, reg.pc, u16(vector));
+
+            jumpToVector<C>(vector);
+            break;
+            
         default:
             break;
     }
@@ -556,6 +570,7 @@ Moira::execTrapException(int nr)
 }
 */
 
+/*
 void
 Moira::execTrapNException(int nr)
 {
@@ -585,16 +600,10 @@ Moira::execTrapNException(int nr)
 
     // Write exception information to stack
     writeStackFrame0000<C>(status, reg.pc, u16(nr));
-    /*
-    if constexpr (C == M68020) {
-        writeStackFrame0010<C>(status, reg.pc, reg.pc0, u16(nr));
-    } else {
-        writeStackFrame0000<C>(status, reg.pc, u16(nr));
-    }
-    */
 
     jumpToVector<C>(nr);
 }
+*/
 
 void
 Moira::execPrivilegeException()
