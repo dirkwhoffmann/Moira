@@ -13,6 +13,7 @@
 		5028B11C288D9EDC00047C20 /* m68kcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B116288D9EDC00047C20 /* m68kcpu.c */; settings = {COMPILER_FLAGS = "-w"; }; };
 		502C09DF23C8D82600A179E1 /* MoiraDebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
 		502C09E223C8E16600A179E1 /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
+		5054686228A4CDDC00028727 /* Randomizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5054686028A4CDDC00028727 /* Randomizer.cpp */; };
 		505580EC23AFA14D0009F77F /* musashi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505580EA23AFA14D0009F77F /* musashi.cpp */; settings = {COMPILER_FLAGS = "-w"; }; };
 		507BE4AF23B66456000B37D2 /* Testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* Testrunner.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
 		50804EE22386A72C004D3EC2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E8C2386A72C004D3EC2 /* main.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
@@ -60,6 +61,8 @@
 		502C09DE23C8D82600A179E1 /* MoiraDebugger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraDebugger.h; sourceTree = "<group>"; };
 		502C09E023C8E16600A179E1 /* TestCPU.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TestCPU.cpp; sourceTree = "<group>"; };
 		502C09E123C8E16600A179E1 /* TestCPU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestCPU.h; sourceTree = "<group>"; };
+		5054686028A4CDDC00028727 /* Randomizer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Randomizer.cpp; sourceTree = "<group>"; };
+		5054686128A4CDDC00028727 /* Randomizer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Randomizer.h; sourceTree = "<group>"; };
 		505580EA23AFA14D0009F77F /* musashi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = musashi.cpp; sourceTree = "<group>"; };
 		507BE4AD23B66456000B37D2 /* Testrunner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Testrunner.cpp; sourceTree = "<group>"; };
 		507BE4AE23B66456000B37D2 /* Testrunner.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Testrunner.h; sourceTree = "<group>"; };
@@ -150,6 +153,8 @@
 				502C09E023C8E16600A179E1 /* TestCPU.cpp */,
 				50CECEC623A924B000E07C65 /* Sandbox.h */,
 				50CECEC523A924B000E07C65 /* Sandbox.cpp */,
+				5054686128A4CDDC00028727 /* Randomizer.h */,
+				5054686028A4CDDC00028727 /* Randomizer.cpp */,
 				50EC62EC289D8DEA00398CBD /* M68k */,
 				5028B100288D9EA600047C20 /* Musashi */,
 				50804E082386A4CE004D3EC2 /* Moira */,
@@ -266,6 +271,7 @@
 				5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */,
 				5028B10E288D9ECD00047C20 /* m68kops.c in Sources */,
 				5028B10A288D9EC000047C20 /* softfloat.c in Sources */,
+				5054686228A4CDDC00028727 /* Randomizer.cpp in Sources */,
 				50804F352386A7DD004D3EC2 /* Moira.cpp in Sources */,
 				502C09DF23C8D82600A179E1 /* MoiraDebugger.cpp in Sources */,
 				502C09E223C8E16600A179E1 /* TestCPU.cpp in Sources */,

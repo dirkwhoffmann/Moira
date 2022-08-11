@@ -13,6 +13,7 @@
 
 TestCPU *moiracpu;
 Sandbox sandbox;
+Randomizer randomizer;
 u8 musashiMem[0x10000];
 u8 moiraMem[0x10000];
 u32 musashiFC = 0;
@@ -25,29 +26,6 @@ char opcode[16];
 char operands[128];
 char iwordbuf[32];
 char tmpbuf[8];
-
-uint32 smartRandom()
-{
-    switch (rand() % 16) {
-
-        case  0: // 8-bit numbers
-        case  1: return rand() & 0xFF;
-        case  2: return 0x80;
-        case  3: return 0xFF;
-
-        case  4: // 16-bit numbers
-        case  5: return rand() & 0xFFFF;
-        case  6: return 0x8000;
-        case  7: return 0xFFFF;
-
-        case  8: // 32-bit numbers
-        case  9: return rand() & 0xFFFFFFFF;
-        case 10: return 0x80000000;
-        case 11: return 0xFFFFFFFF;
-
-        default: return 0;
-    }
-}
 
 void selectCore(int core)
 {
@@ -103,21 +81,21 @@ void setupMoira()
 void setupTestEnvironment(Setup &s)
 {
     s.supervisor = testrun % 2;
-    s.ccr = u8(smartRandom());
-    s.ext1 = u16(smartRandom());
-    s.ext2 = u16(smartRandom());
-    s.ext3 = u16(smartRandom());
-    s.vbr = u16(smartRandom());
-    s.sfc = u16(smartRandom());
-    s.dfc = u16(smartRandom());
-    s.cacr = u16(smartRandom()) & 0xF;
-    s.caar = u16(smartRandom()) & 0xF;
+    s.ccr = u8(rand());
+    s.ext1 = u16(randomizer.rand());
+    s.ext2 = u16(randomizer.rand());
+    s.ext3 = u16(randomizer.rand());
+    s.vbr = u16(randomizer.rand());
+    s.sfc = u16(randomizer.rand());
+    s.dfc = u16(randomizer.rand());
+    s.cacr = u16(randomizer.rand()) & 0xF;
+    s.caar = u16(randomizer.rand()) & 0xF;
 
-    for (int i = 0; i < 8; i++) s.d[i] = smartRandom();
-    for (int i = 0; i < 8; i++) s.a[i] = smartRandom();
+    for (int i = 0; i < 8; i++) s.d[i] = randomizer.rand();
+    for (int i = 0; i < 8; i++) s.a[i] = randomizer.rand();
 
     for (unsigned i = 0; i < sizeof(s.mem); i++) {
-        s.mem[i] = u8(smartRandom());
+        s.mem[i] = u8(randomizer.rand());
     }
 }
 
@@ -222,8 +200,10 @@ void run()
 
     for (testrun = 1 ;; testrun++) {
 
-        // Switch the CPU core from time to time
+        // Initialize the random number generator
+        randomizer.init(testrun);
 
+        // Switch the CPU core from time to time
         if (testrun % 16 == 0) {
 
             selectCore(cpuType == 68000 ? 68010 :

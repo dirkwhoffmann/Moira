@@ -16,6 +16,7 @@
 #include <time.h>
 
 #include "Sandbox.h"
+#include "Randomizer.h"
 #include "TestCPU.h"
 
 // Musashi
@@ -34,6 +35,7 @@ using namespace moira;
 
 extern class TestCPU *moiracpu;
 extern Sandbox sandbox;
+extern Randomizer randomizer;
 extern u8 musashiMem[0x10000];
 extern u8 moiraMem[0x10000];
 extern u32 musashiFC;
@@ -104,9 +106,6 @@ struct Result {
 
 // Location of the tested instruction in memory
 const u32 pc = 0x1000;
-
-// Creates a smart random number
-u32 smartRandom();
 
 
 //
