@@ -189,9 +189,9 @@ Moira::createJumpTable()
         ____XXX___MMMXXX(opcode, cpSAVE, 0b001011111000, Word, CpSave, CIMS)
 
         opcode = parse("1111 ---0 0111 1---");
-        ____XXX___XXX___(opcode | 0b010, cpTRAPcc, MODE_IP, (Size)0, CpTrapcc, CIMS)
-        ____XXX___XXX___(opcode | 0b011, cpTRAPcc, MODE_IP, (Size)0, CpTrapcc, CIMS)
-        ____XXX___XXX___(opcode | 0b100, cpTRAPcc, MODE_IP, (Size)0, CpTrapcc, CIMS)
+        ____XXX___XXX___(opcode | 0b010, cpTRAPcc, MODE_IP, Word, CpTrapcc, CIMS)
+        ____XXX___XXX___(opcode | 0b011, cpTRAPcc, MODE_IP, Long, CpTrapcc, CIMS)
+        ____XXX___XXX___(opcode | 0b100, cpTRAPcc, MODE_IP, Byte, CpTrapcc, CIMS)
 
         opcode = parse("1111 ---0 01-- ----");
         ____XXX___MMMXXX(opcode, cpScc, 0b101111111000, (Size)0, CpScc, CIMS)
@@ -1765,27 +1765,59 @@ Moira::createJumpTable()
 
     if (core >= M68020) {
 
-        opcode = parse("0101 ---- 1111 1---");
+        opcode = parse("0101 ---- 1111 1100");
+        ________________(opcode | 0x000, TRAPT,  MODE_IP, Byte, Trapcc, CIMS)
+        ________________(opcode | 0x100, TRAPF,  MODE_IP, Byte, Trapcc, CIMS)
+        ________________(opcode | 0x200, TRAPHI, MODE_IP, Byte, Trapcc, CIMS)
+        ________________(opcode | 0x300, TRAPLS, MODE_IP, Byte, Trapcc, CIMS)
+        ________________(opcode | 0x400, TRAPCC, MODE_IP, Byte, Trapcc, CIMS)
+        ________________(opcode | 0x500, TRAPCS, MODE_IP, Byte, Trapcc, CIMS)
+        ________________(opcode | 0x600, TRAPNE, MODE_IP, Byte, Trapcc, CIMS)
+        ________________(opcode | 0x700, TRAPEQ, MODE_IP, Byte, Trapcc, CIMS)
+        ________________(opcode | 0x800, TRAPVC, MODE_IP, Byte, Trapcc, CIMS)
+        ________________(opcode | 0x900, TRAPVS, MODE_IP, Byte, Trapcc, CIMS)
+        ________________(opcode | 0xA00, TRAPPL, MODE_IP, Byte, Trapcc, CIMS)
+        ________________(opcode | 0xB00, TRAPMI, MODE_IP, Byte, Trapcc, CIMS)
+        ________________(opcode | 0xC00, TRAPGE, MODE_IP, Byte, Trapcc, CIMS)
+        ________________(opcode | 0xD00, TRAPLT, MODE_IP, Byte, Trapcc, CIMS)
+        ________________(opcode | 0xE00, TRAPGT, MODE_IP, Byte, Trapcc, CIMS)
+        ________________(opcode | 0xF00, TRAPLE, MODE_IP, Byte, Trapcc, CIMS)
 
-        for (int m = 2; m <= 4; m++) {
+        opcode = parse("0101 ---- 1111 1010");
+        ________________(opcode | 0x000, TRAPT,  MODE_IP, Word, Trapcc, CIMS)
+        ________________(opcode | 0x100, TRAPF,  MODE_IP, Word, Trapcc, CIMS)
+        ________________(opcode | 0x200, TRAPHI, MODE_IP, Word, Trapcc, CIMS)
+        ________________(opcode | 0x300, TRAPLS, MODE_IP, Word, Trapcc, CIMS)
+        ________________(opcode | 0x400, TRAPCC, MODE_IP, Word, Trapcc, CIMS)
+        ________________(opcode | 0x500, TRAPCS, MODE_IP, Word, Trapcc, CIMS)
+        ________________(opcode | 0x600, TRAPNE, MODE_IP, Word, Trapcc, CIMS)
+        ________________(opcode | 0x700, TRAPEQ, MODE_IP, Word, Trapcc, CIMS)
+        ________________(opcode | 0x800, TRAPVC, MODE_IP, Word, Trapcc, CIMS)
+        ________________(opcode | 0x900, TRAPVS, MODE_IP, Word, Trapcc, CIMS)
+        ________________(opcode | 0xA00, TRAPPL, MODE_IP, Word, Trapcc, CIMS)
+        ________________(opcode | 0xB00, TRAPMI, MODE_IP, Word, Trapcc, CIMS)
+        ________________(opcode | 0xC00, TRAPGE, MODE_IP, Word, Trapcc, CIMS)
+        ________________(opcode | 0xD00, TRAPLT, MODE_IP, Word, Trapcc, CIMS)
+        ________________(opcode | 0xE00, TRAPGT, MODE_IP, Word, Trapcc, CIMS)
+        ________________(opcode | 0xF00, TRAPLE, MODE_IP, Word, Trapcc, CIMS)
 
-            ________________(opcode | 0x000 | m, TRAPT,  MODE_IP, Word, Trapcc, CIMS)
-            ________________(opcode | 0x100 | m, TRAPF,  MODE_IP, Word, Trapcc, CIMS)
-            ________________(opcode | 0x200 | m, TRAPHI, MODE_IP, Word, Trapcc, CIMS)
-            ________________(opcode | 0x300 | m, TRAPLS, MODE_IP, Word, Trapcc, CIMS)
-            ________________(opcode | 0x400 | m, TRAPCC, MODE_IP, Word, Trapcc, CIMS)
-            ________________(opcode | 0x500 | m, TRAPCS, MODE_IP, Word, Trapcc, CIMS)
-            ________________(opcode | 0x600 | m, TRAPNE, MODE_IP, Word, Trapcc, CIMS)
-            ________________(opcode | 0x700 | m, TRAPEQ, MODE_IP, Word, Trapcc, CIMS)
-            ________________(opcode | 0x800 | m, TRAPVC, MODE_IP, Word, Trapcc, CIMS)
-            ________________(opcode | 0x900 | m, TRAPVS, MODE_IP, Word, Trapcc, CIMS)
-            ________________(opcode | 0xA00 | m, TRAPPL, MODE_IP, Word, Trapcc, CIMS)
-            ________________(opcode | 0xB00 | m, TRAPMI, MODE_IP, Word, Trapcc, CIMS)
-            ________________(opcode | 0xC00 | m, TRAPGE, MODE_IP, Word, Trapcc, CIMS)
-            ________________(opcode | 0xD00 | m, TRAPLT, MODE_IP, Word, Trapcc, CIMS)
-            ________________(opcode | 0xE00 | m, TRAPGT, MODE_IP, Word, Trapcc, CIMS)
-            ________________(opcode | 0xF00 | m, TRAPLE, MODE_IP, Word, Trapcc, CIMS)
-        }
+        opcode = parse("0101 ---- 1111 1011");
+        ________________(opcode | 0x000, TRAPT,  MODE_IP, Long, Trapcc, CIMS)
+        ________________(opcode | 0x100, TRAPF,  MODE_IP, Long, Trapcc, CIMS)
+        ________________(opcode | 0x200, TRAPHI, MODE_IP, Long, Trapcc, CIMS)
+        ________________(opcode | 0x300, TRAPLS, MODE_IP, Long, Trapcc, CIMS)
+        ________________(opcode | 0x400, TRAPCC, MODE_IP, Long, Trapcc, CIMS)
+        ________________(opcode | 0x500, TRAPCS, MODE_IP, Long, Trapcc, CIMS)
+        ________________(opcode | 0x600, TRAPNE, MODE_IP, Long, Trapcc, CIMS)
+        ________________(opcode | 0x700, TRAPEQ, MODE_IP, Long, Trapcc, CIMS)
+        ________________(opcode | 0x800, TRAPVC, MODE_IP, Long, Trapcc, CIMS)
+        ________________(opcode | 0x900, TRAPVS, MODE_IP, Long, Trapcc, CIMS)
+        ________________(opcode | 0xA00, TRAPPL, MODE_IP, Long, Trapcc, CIMS)
+        ________________(opcode | 0xB00, TRAPMI, MODE_IP, Long, Trapcc, CIMS)
+        ________________(opcode | 0xC00, TRAPGE, MODE_IP, Long, Trapcc, CIMS)
+        ________________(opcode | 0xD00, TRAPLT, MODE_IP, Long, Trapcc, CIMS)
+        ________________(opcode | 0xE00, TRAPGT, MODE_IP, Long, Trapcc, CIMS)
+        ________________(opcode | 0xF00, TRAPLE, MODE_IP, Long, Trapcc, CIMS)
     }
 
 

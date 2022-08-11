@@ -1421,55 +1421,43 @@ Moira::dasmTrapcc(StrWriter &str, u32 &addr, u16 op)
 {
     switch (str.style) {
 
-        case DASM_VDA68K_MOT:
-        case DASM_VDA68K_MIT:
+        case DASM_MOIRA:
+        case DASM_MUSASHI:
 
-            switch (op & 0b111) {
+            switch (S) {
 
-                case 0b010:
-                {
-                    auto ext = dasmRead<Word>(addr);
+                case Byte:
 
-                    str << Ins<I>{} << Sz<Word>{} << tab << Ims<Word>(ext);
+                    str << Ins<I>{} << tab;
                     break;
-                }
-                case 0b011:
-                {
-                    auto ext = dasmRead<Long>(addr);
 
-                    str << Ins<I>{} << Sz<Long>{} << tab << Ims<Long>(ext);
+                case Word:
+                case Long:
+
+                    auto ext = dasmRead<S>(addr);
+                    str << Ins<I>{} << tab << Imu(ext);
                     break;
-                }
-                case 0b100:
-                {
-                    str << Ins<I>{} << Sz<Long>{};
-                }
             }
             break;
 
-        default:
+        case DASM_VDA68K_MOT:
+        case DASM_VDA68K_MIT:
 
-            switch (op & 0b111) {
+            switch (S) {
 
-                case 0b010:
-                {
-                    auto ext = dasmRead<Word>(addr);
+                case Byte:
 
-                    str << Ins<I>{} << tab << Imu(ext);
+                    str << Ins<I>{} << Sz<Long>{};
                     break;
-                }
-                case 0b011:
-                {
-                    auto ext = dasmRead<Long>(addr);
 
-                    str << Ins<I>{} << tab << Imu(ext);
+                case Word:
+                case Long:
+
+                    auto ext = dasmRead<S>(addr);
+                    str << Ins<I>{} << Sz<S>{} << tab << Ims<S>(ext);
                     break;
-                }
-                case 0b100:
-                {
-                    str << Ins<I>{} << tab;
-                }
             }
+            break;
     }
 
     str << Av<I, M, S>{};
