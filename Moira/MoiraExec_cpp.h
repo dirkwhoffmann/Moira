@@ -19,7 +19,7 @@ if constexpr (DID_EXECUTE) didExecute(__func__, I, M, S, opcode);
 
 #define SUPERVISOR_MODE_ONLY \
 if (!reg.sr.s) { \
-execPrivilegeException(); \
+execException<C>(EXC_PRIVILEGE_VIOLATION); \
 CYCLES_68000(34) \
 CYCLES_68010(38) \
 CYCLES_68020(34) \

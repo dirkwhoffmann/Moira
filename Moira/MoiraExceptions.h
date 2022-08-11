@@ -74,8 +74,10 @@ template <Core C> void execTrapNException(int nr);
 */
 
 // Emulates a priviledge exception
+/*
 void execPrivilegeException();
 template <Core C> void execPrivilegeException();
+*/
 
 // Emulates an interrupt exception
 void execIrqException(u8 level);

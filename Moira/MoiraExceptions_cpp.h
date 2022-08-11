@@ -370,6 +370,22 @@ Moira::execException(ExceptionType exc, int nr)
             jumpToVector<C>(vector);
             break;
 
+        case EXC_PRIVILEGE_VIOLATION:
+
+            // Enter supervisor mode
+            setSupervisorMode(true);
+
+            // Disable tracing
+            clearTraceFlags();
+            flags &= ~CPU_TRACE_EXCEPTION;
+
+            // Write exception information to stack
+            SYNC(4);
+            saveToStack1<C>(vector, status, reg.pc - 2);
+
+            jumpToVector<C,AE_SET_CB3>(vector);
+            break;
+
         case EXC_TRACE:
 
             // Recover from stop state
@@ -605,6 +621,7 @@ Moira::execTrapNException(int nr)
 }
 */
 
+/*
 void
 Moira::execPrivilegeException()
 {
@@ -639,6 +656,7 @@ Moira::execPrivilegeException()
 
     jumpToVector<C,AE_SET_CB3>(8);
 }
+*/
 
 void
 Moira::execIrqException(u8 level)
