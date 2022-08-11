@@ -58,8 +58,10 @@ void execUnimplemented(int nr);
 template <Core C> void execUnimplemented(int nr);
 
 // Emulates a trace exception
+/*
 void execTraceException();
 template <Core C> void execTraceException();
+*/
 
 // Emulates a trap exception
 void execTrapException(int nr);

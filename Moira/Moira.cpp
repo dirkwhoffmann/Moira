@@ -164,7 +164,8 @@ Moira::execute()
         
     // Process pending trace exception (if any)
     if (flags & CPU_TRACE_EXCEPTION) {
-        execTraceException();
+        execException(EXC_TRACE);
+        // execTraceException();
         goto done;
     }
 
