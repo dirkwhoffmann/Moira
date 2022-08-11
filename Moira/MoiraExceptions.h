@@ -39,11 +39,11 @@ template <Core C> void writeStackFrame1001(u16 sr, u32 pc, u32 ia, u16 nr);
 template <Core C> void writeStackFrame1010(u16 sr, u32 pc, u16 nr);
 template <Core C> void writeStackFrame1011(u16 sr, u32 pc, u16 nr);
 
-// Emulates an address error
+// Emulates an address error exception
 void execAddressError(AEStackFrame frame, int delay = 0);
 template <Core C> void execAddressError(AEStackFrame frame, int delay = 0);
 
-// Emulates an exception of a certain type
+// Emulates an exception
 void execException(ExceptionType exc, int nr = 0);
 template <Core C> void execException(ExceptionType exc, int nr = 0);
 

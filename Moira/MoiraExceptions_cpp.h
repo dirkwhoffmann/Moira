@@ -279,7 +279,10 @@ template <Core C> void
 Moira::execAddressError(AEStackFrame frame, int delay)
 {
     assert(frame.addr & 1);
-    
+
+    // Call the delegate
+    willExecute(EXC_ADDRESS_ERROR, 3);
+
     // Emulate additional delay
     sync(delay);
     
@@ -301,12 +304,12 @@ Moira::execAddressError(AEStackFrame frame, int delay)
         SYNC(2);
         jumpToVector<C>(3);
     }
-    
-    // Inform the delegate
-    signalAddressError(frame);
-    
+
     // Halt the CPU if a double fault occurred
     if (doubleFault) halt();
+
+    // Call the delegate
+    didExecute(EXC_ADDRESS_ERROR, 3);
 }
 
 void
@@ -443,41 +446,6 @@ Moira::execException(ExceptionType exc, int nr)
     didExecute(exc, vector);
 }
 
-/*
-void
-Moira::execFormatError()
-{
-    switch (core) {
-
-        case M68000: assert(false); break;
-        case M68010: execFormatError <M68010> (); break;
-        case M68020: execFormatError <M68020> (); break;
-
-        default:
-            assert(false);
-    }
-}
-
-template <Core C> void
-Moira::execFormatError()
-{
-    u16 status = getSR();
-
-    // Enter supervisor mode
-    setSupervisorMode(true);
-
-    // Disable tracing
-    clearTraceFlags();
-    flags &= ~CPU_TRACE_EXCEPTION;
-
-    // Write exception information to stack
-    SYNC(4);
-    saveToStack1(14, status, reg.pc);
-
-    jumpToVector <C, AE_SET_CB3> (14);
-}
-*/
-
 void
 Moira::execUnimplemented(int nr)
 {
@@ -510,153 +478,6 @@ Moira::execUnimplemented(int nr)
 
     jumpToVector<C,AE_SET_CB3>(nr);
 }
-
-/*
-void
-Moira::execTraceException()
-{
-    switch (core) {
-
-        case M68000: execTraceException <M68000> (); break;
-        case M68010: execTraceException <M68010> (); break;
-        case M68020: execTraceException <M68020> (); break;
-
-        default:
-            assert(false);
-    }
-}
-
-template <Core C> void
-Moira::execTraceException()
-{
-    signalTraceException();
-    
-    u16 status = getSR();
-
-    // Recover from stop state
-    flags &= ~CPU_IS_STOPPED;
-
-    // Enter supervisor mode
-    setSupervisorMode(true);
-
-    // Disable tracing
-    clearTraceFlags();
-    flags &= ~CPU_TRACE_EXCEPTION;
-
-    // Write exception information to stack
-    SYNC(4);
-    saveToStack1<C>(9, status, reg.pc);
-
-    jumpToVector<C>(9);
-}
-*/
-
-/*
-void
-Moira::execTrapException(int nr)
-{
-    switch (core) {
-
-        case M68000: execTrapException <M68000> (nr); break;
-        case M68010: execTrapException <M68010> (nr); break;
-        case M68020: execTrapException <M68020> (nr); break;
-
-        default:
-            assert(false);
-    }
-}
-
-template <Core C> void
-Moira::execTrapException(int nr)
-{
-    signalTrapException();
-    
-    u16 status = getSR();
-
-    // Enter supervisor mode
-    setSupervisorMode(true);
-
-    // Disable tracing, but keep the CPU_TRACE_EXCEPTION flag
-    clearTraceFlags();
-
-    // Write exception information to stack
-    saveToStack2<C>(u16(nr), status, reg.pc);
-
-    jumpToVector<C>(nr);
-}
-*/
-
-/*
-void
-Moira::execTrapNException(int nr)
-{
-    switch (core) {
-
-        case M68000: execTrapNException <M68000> (nr); break;
-        case M68010: execTrapNException <M68010> (nr); break;
-        case M68020: execTrapNException <M68020> (nr); break;
-
-        default:
-            assert(false);
-    }
-}
-
-template <Core C> void
-Moira::execTrapNException(int nr)
-{
-    signalTrapException();
-
-    u16 status = getSR();
-
-    // Enter supervisor mode
-    setSupervisorMode(true);
-
-    // Disable tracing, but keep the CPU_TRACE_EXCEPTION flag
-    clearTraceFlags();
-
-    // Write exception information to stack
-    writeStackFrame0000<C>(status, reg.pc, u16(nr));
-
-    jumpToVector<C>(nr);
-}
-*/
-
-/*
-void
-Moira::execPrivilegeException()
-{
-    switch (core) {
-
-        case M68000: execPrivilegeException<M68000>(); break;
-        case M68010: execPrivilegeException<M68010>(); break;
-        case M68020: execPrivilegeException<M68020>(); break;
-
-        default:
-            assert(false);
-    }
-}
-
-template <Core C> void
-Moira::execPrivilegeException()
-{
-    signalPrivilegeViolation();
-    
-    u16 status = getSR();
-
-    // Enter supervisor mode
-    setSupervisorMode(true);
-
-    // Disable tracing
-    clearTraceFlags();
-    flags &= ~CPU_TRACE_EXCEPTION;
-
-    // Write exception information to stack
-    SYNC(4);
-    saveToStack1<C>(8, status, reg.pc - 2);
-
-    jumpToVector<C,AE_SET_CB3>(8);
-}
-*/
 
 void
 Moira::execIrqException(u8 level)

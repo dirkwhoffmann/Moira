@@ -251,10 +251,6 @@ protected:
     virtual void signalHalt() { };
 
     // Exception delegates
-    [[deprecated]] virtual void signalAddressError(AEStackFrame &frame) { };
-    [[deprecated]] virtual void signalTraceException() { };
-    [[deprecated]] virtual void signalTrapException() { };
-    [[deprecated]] virtual void signalPrivilegeViolation() { };
     virtual void signalInterrupt(u8 level) { };
     virtual void signalJumpToVector(int nr, u32 addr) { };
     virtual void signalSoftwareTrap(u16 opcode, SoftwareTrap trap) { };

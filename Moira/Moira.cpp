@@ -165,7 +165,6 @@ Moira::execute()
     // Process pending trace exception (if any)
     if (flags & CPU_TRACE_EXCEPTION) {
         execException(EXC_TRACE);
-        // execTraceException();
         goto done;
     }
 
@@ -188,7 +187,6 @@ Moira::execute()
             reg.pc -= 2;
             flags &= ~CPU_IS_STOPPED;
             execException(EXC_PRIVILEGE_VIOLATION);
-            // execPrivilegeException();
             return;
         }
         
@@ -243,7 +241,6 @@ Moira::checkForIrq()
 
         // Exit loop mode if necessary
         if (flags & CPU_IS_LOOPING) {
-            // printf("INTERRUPT IN LOOP MODE\n");
             flags &= ~CPU_IS_LOOPING;
         }
 
