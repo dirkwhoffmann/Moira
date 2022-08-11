@@ -343,6 +343,27 @@ typedef enum
 }
 Cond;
 
+typedef enum
+{
+    EXC_RESET,
+    EXC_BUS_ERROR,
+    EXC_ADDRESS_ERROR,
+    EXC_ILLEGAL,
+    EXC_DIVIDE_BY_ZERO,
+    EXC_CHK,
+    EXC_TRAPV,
+    EXC_PRIVILEGE_VIOLATION,
+    EXC_TRACE,
+    EXC_LINEA,
+    EXC_LINEF,
+    EXC_FORMAT_ERROR,
+    EXC_IRQ_UNINITIALIZED,
+    EXC_IRQ_SPURIOUS,
+    EXC_IRQ_AUTOVECTOR,
+    ECX_TRAP
+}
+ExceptionType;
+
 typedef struct
 {
     Instr I;

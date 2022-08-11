@@ -263,7 +263,7 @@ protected:
 	virtual void breakpointReached(u32 addr) { };
 	virtual void watchpointReached(u32 addr) { };
 	virtual void catchpointReached(u8 vector) { };
-    virtual void softwareTrapReached(SoftwareTrap trap) { };
+    virtual void softwareTrapReached(u32 addr) { };
 
 
     //

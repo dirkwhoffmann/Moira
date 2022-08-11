@@ -43,9 +43,15 @@ template <Core C> void writeStackFrame1011(u16 sr, u32 pc, u16 nr);
 void execAddressError(AEStackFrame frame, int delay = 0);
 template <Core C> void execAddressError(AEStackFrame frame, int delay = 0);
 
+// Emulates an exception of a certain type
+void execException(ExceptionType exc, int nr = 0);
+template <Core C> void execException(ExceptionType exc, int nr = 0);
+
 // Emulates a format error (68010+)
+/*
 void execFormatError();
 template <Core C> void execFormatError();
+*/
 
 // Emulates the execution of unimplemented and illegal instructions
 void execUnimplemented(int nr);

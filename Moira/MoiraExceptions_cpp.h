@@ -310,6 +310,49 @@ Moira::execAddressError(AEStackFrame frame, int delay)
 }
 
 void
+Moira::execException(ExceptionType exc, int nr)
+{
+    switch (core) {
+
+        case M68000: execException<M68000>(exc, nr); break;
+        case M68010: execException<M68010>(exc, nr); break;
+        case M68020: execException<M68020>(exc, nr); break;
+
+        default:
+            assert(false);
+    }
+}
+
+template <Core C> void
+Moira::execException(ExceptionType exc, int nr)
+{
+    u16 status = getSR();
+
+    switch (exc) {
+
+        case EXC_FORMAT_ERROR:
+
+            // Enter supervisor mode
+            setSupervisorMode(true);
+
+            // Disable tracing
+            clearTraceFlags();
+            flags &= ~CPU_TRACE_EXCEPTION;
+
+            // Write exception information to stack
+            SYNC(4);
+            saveToStack1(14, status, reg.pc);
+
+            jumpToVector <C, AE_SET_CB3> (14);
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*
+void
 Moira::execFormatError()
 {
     switch (core) {
@@ -341,6 +384,7 @@ Moira::execFormatError()
 
     jumpToVector <C, AE_SET_CB3> (14);
 }
+*/
 
 void
 Moira::execUnimplemented(int nr)

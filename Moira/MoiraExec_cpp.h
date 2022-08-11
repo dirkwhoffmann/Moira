@@ -47,8 +47,8 @@ Moira::execLineA(u16 opcode)
         queue.irc = trap.instruction;
         prefetch<C>();
 
-        // Call the delegates
-        softwareTrapReached(debugger.swTraps.traps[opcode]);
+        // Call the delegate
+        softwareTrapReached(reg.pc0);
         return;
     }
 
@@ -4127,7 +4127,7 @@ Moira::execRte(u16 opcode)
 
             } else {
 
-                execFormatError<C>();
+                execException(EXC_FORMAT_ERROR);
                 CYCLES_68010(4)
                 return;
             }
@@ -4183,7 +4183,7 @@ Moira::execRte(u16 opcode)
 
                 } else {
 
-                    execFormatError<C>();
+                    execException(EXC_FORMAT_ERROR);
                     CYCLES_68020(4)
                     return;
                 }
