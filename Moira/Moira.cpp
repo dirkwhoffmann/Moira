@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cmath>
 #include <bit>
+#include <vector>
 
 namespace moira {
 

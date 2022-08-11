@@ -26,6 +26,6 @@ class TestCPU : public Moira {
     void breakpointReached(u32 addr) override;
     void watchpointReached(u32 addr) override;
 
-    void willExecute(Instr I, Mode M, Size S, u16 opcode) override;
-    void didExecute(Instr I, Mode M, Size S, u16 opcode) override;
+    void willExecute(const char *, Instr, Mode, Size, u16) override;
+    void didExecute(const char *, Instr, Mode, Size, u16) override;
 };

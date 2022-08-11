@@ -239,8 +239,8 @@ protected:
     virtual u16 readIrqUserVector(u8 level) const { return 0; }
 
     // Delegates
-    virtual void willExecute(Instr I, Mode M, Size S, u16 opcode) { };
-    virtual void didExecute(Instr I, Mode M, Size S, u16 opcode) { };
+    virtual void willExecute(const char *func, Instr I, Mode M, Size S, u16 opcode) { };
+    virtual void didExecute(const char *func, Instr I, Mode M, Size S, u16 opcode) { };
 
     // Instrution delegates
     virtual void signalResetInstr() { };

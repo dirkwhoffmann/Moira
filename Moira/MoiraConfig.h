@@ -9,24 +9,24 @@
 
 #pragma once
 
-/* Set to true to enable precise timing mode (68000 and 68010 only)
+/* Set to true to enable precise timing mode (68000 and 68010 only).
  *
  * If disabled, Moira calls function 'sync' at the end of each instruction
- * with the number of elapsed cycles as a parameter. In precise timing mode,
- * 'sync' is called prior to each memory access. This enables to client to
+ * with the number of elapsed cycles as argument. In precise timing mode,
+ * 'sync' is called prior to each memory access. This enables the client to
  * emulate the surrounding hardware up the point where the memory access
  * actually happens.
  *
- * Enable to improve emulation compatibility, disable to gain speed.
+ * Enable to improve accuracy, disable to gain speed.
  */
 #define PRECISE_TIMING false
 
 /* Set to true to enable address error checking.
  *
- * The Motorola 68k signals an address error violation if a odd memory location
- * is addressed in combination with word or long word addressing.
+ * The 68000 and 68010 signal an address error violation if an odd memory
+ * location is accessed in combination with word or long word addressing.
  *
- * Enable to improve emulation compatibility, disable to gain speed.
+ * Enable to improve accuracy, disable to gain speed.
  */
 #define EMULATE_ADDRESS_ERROR false
 
@@ -36,14 +36,14 @@
  * to inspect the access type. If used, these pins are usually connected to an
  * external memory management unit (MMU).
  *
- * Enable to improve emulation compatibility, disable to gain speed.
+ * Enable to improve accuracy, disable to gain speed.
  */
 #define EMULATE_FC true
 
 /* Set to true to enable the disassembler.
  *
  * The disassembler requires a jump table which consumes about 1MB of memory.
- * By disabling the disassembler, you can save this amount of memory.
+ * Disabling the disassembler will decrease the memory footprint.
  */
 #define ENABLE_DASM true
 
@@ -66,12 +66,20 @@
  */
 #define MIMIC_MUSASHI true
 
-/* Execution debugging
+/* Modify the following macros to install instruction hooks.
  *
- * This macro is evaluated at the beginning of the execution handlers of all
+ * The following two macros appear at the beginning and the end of all
+ * instruction handler and determine if a delegation method should be called
+ * for a particular instruction.
+ */
+#define WILL_EXECUTE I == RESET || I == STOP || I == TAS
+#define DID_EXECUTE I == RESET
+
+
+/* This macro is evaluated at the beginning of the execution handlers of all
  * instructions. It is intended to invoke debug code. Make sure to define it
  * as an empty macro in release builds.
  */
-#define EXEC_DEBUG { } // printf("%s(%d,%d,%d,%d)\n", __func__, C, I, M, S); }
+// #define EXEC_DEBUG { } // printf("%s(%d,%d,%d,%d)\n", __func__, C, I, M, S); }
 
 // #define NDEBUG

@@ -7,12 +7,15 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+// #include <set>
+
 #define AVAILABILITY(cpu) \
-EXEC_DEBUG \
+if (WILL_EXECUTE) willExecute(__func__, I, M, S, opcode); \
 assert(C >= (cpu)); \
 if constexpr (C == M68020) cp = 0;
 
-#define FINALIZE { } \
+#define FINALIZE \
+if (DID_EXECUTE) didExecute(__func__, I, M, S, opcode);
 
 #define SUPERVISOR_MODE_ONLY \
 if (!reg.sr.s) { \
@@ -157,11 +160,11 @@ Moira::execShiftIm(u16 opcode)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execShiftEa(u16 op)
+Moira::execShiftEa(u16 opcode)
 {
     AVAILABILITY(M68000)
 
-    int src = _____________xxx(op);
+    int src = _____________xxx(opcode);
 
     u32 ea, data;
     if (!readOp<C, M, S, STD_AE_FRAME>(src, ea, data)) return;
@@ -3456,14 +3459,14 @@ Moira::execMull(u16 opcode)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execMulMusashi(u16 op)
+Moira::execMulMusashi(u16 opcode)
 {
     AVAILABILITY(M68000)
 
     u32 ea, data, result;
 
-    int src = _____________xxx(op);
-    int dst = ____xxx_________(op);
+    int src = _____________xxx(opcode);
+    int dst = ____xxx_________(opcode);
 
     if (!readOp<C, M, Word>(src, ea, data)) return;
 
@@ -3511,7 +3514,7 @@ Moira::execMulMusashi(u16 op)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execMullMusashi(u16 op)
+Moira::execMullMusashi(u16 opcode)
 {
     AVAILABILITY(M68020)
 
@@ -3519,7 +3522,7 @@ Moira::execMullMusashi(u16 op)
     u32 ea, data;
     u16 ext = (u16)readI<C, Word>();
 
-    int src = _____________xxx(op);
+    int src = _____________xxx(opcode);
     int dh  = _____________xxx(ext);
     int dl  = _xxx____________(ext);
 
@@ -3703,7 +3706,7 @@ Moira::execDivMusashi(u16 opcode)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execDivlMusashi(u16 op)
+Moira::execDivlMusashi(u16 opcode)
 {
     AVAILABILITY(M68020)
 
@@ -3711,7 +3714,7 @@ Moira::execDivlMusashi(u16 op)
     u32 ea, divisor;
     u16 ext = (u16)readI<C, Word>();
 
-    int src = _____________xxx(op);
+    int src = _____________xxx(opcode);
     int dh  = _____________xxx(ext);
     int dl  = _xxx____________(ext);
 
