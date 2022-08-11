@@ -52,8 +52,7 @@ Moira::execLineA(u16 opcode)
         return;
     }
 
-    signalLineAException(opcode);
-    execUnimplemented<C>(10);
+    execException<C>(EXC_LINEA);
 
     CYCLES_68000(34)
     CYCLES_68010(4)
@@ -67,8 +66,7 @@ Moira::execLineF(u16 opcode)
 {
     AVAILABILITY(M68000)
 
-    signalLineFException(opcode);
-    execUnimplemented<C>(11);
+    execException<C>(EXC_LINEF);
 
     CYCLES_68000(34)
     CYCLES_68010(38)
@@ -82,8 +80,7 @@ Moira::execIllegal(u16 opcode)
 {
     AVAILABILITY(M68000)
 
-    signalIllegalOpcodeException(opcode);
-    execUnimplemented<C>(4);
+    execException<C>(EXC_ILLEGAL);
 
     CYCLES_68000(34)
     CYCLES_68010(38)
@@ -1249,9 +1246,7 @@ Moira::execBkpt(u16 opcode)
     AVAILABILITY(M68010)
 
     if (!MIMIC_MUSASHI) SYNC(4);
-
-    signalIllegalOpcodeException(opcode);
-    execUnimplemented<C>(4);
+    execException<C>(EXC_ILLEGAL);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l

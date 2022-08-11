@@ -242,15 +242,16 @@ protected:
     virtual void willExecute(const char *func, Instr I, Mode M, Size S, u16 opcode) { };
     virtual void didExecute(const char *func, Instr I, Mode M, Size S, u16 opcode) { };
 
+    // Exception delegates
+    virtual void willExecute(ExceptionType exc, u16 vector) { };
+    virtual void didExecute(ExceptionType exc, u16 vector) { };
+
     // State delegates
     virtual void signalHardReset() { };
     virtual void signalHalt() { };
 
     // Exception delegates
     [[deprecated]] virtual void signalAddressError(AEStackFrame &frame) { };
-    [[deprecated]] virtual void signalLineAException(u16 opcode) { };
-    [[deprecated]] virtual void signalLineFException(u16 opcode) { };
-    [[deprecated]] virtual void signalIllegalOpcodeException(u16 opcode) { };
     [[deprecated]] virtual void signalTraceException() { };
     [[deprecated]] virtual void signalTrapException() { };
     [[deprecated]] virtual void signalPrivilegeViolation() { };

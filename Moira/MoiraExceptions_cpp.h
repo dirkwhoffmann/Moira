@@ -328,7 +328,31 @@ Moira::execException(ExceptionType exc, int nr)
 {
     u16 status = getSR();
 
+    // Determine the exception vector number
+    u16 vector = u16(exc) + (exc == EXC_TRAP ? nr : 0);
+
+    // Call the delegate
+    willExecute(exc, vector);
+
     switch (exc) {
+
+        case EXC_ILLEGAL:
+        case EXC_LINEA:
+        case EXC_LINEF:
+
+            // Enter supervisor mode
+            setSupervisorMode(true);
+
+            // Disable tracing
+            clearTraceFlags();
+            flags &= ~CPU_TRACE_EXCEPTION;
+
+            // Write stack frame
+            SYNC(4);
+            saveToStack1<C>(vector, status, reg.pc - 2);
+
+            jumpToVector<C, AE_SET_CB3>(vector);
+            break;
 
         case EXC_FORMAT_ERROR:
 
@@ -339,16 +363,19 @@ Moira::execException(ExceptionType exc, int nr)
             clearTraceFlags();
             flags &= ~CPU_TRACE_EXCEPTION;
 
-            // Write exception information to stack
+            // Write stack frame
             SYNC(4);
             saveToStack1(14, status, reg.pc);
 
-            jumpToVector <C, AE_SET_CB3> (14);
+            jumpToVector<C, AE_SET_CB3>(vector);
             break;
 
         default:
             break;
     }
+
+    // Call the delegate
+    didExecute(exc, vector);
 }
 
 /*

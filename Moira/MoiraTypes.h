@@ -345,22 +345,21 @@ Cond;
 
 typedef enum
 {
-    EXC_RESET,
-    EXC_BUS_ERROR,
-    EXC_ADDRESS_ERROR,
-    EXC_ILLEGAL,
-    EXC_DIVIDE_BY_ZERO,
-    EXC_CHK,
-    EXC_TRAPV,
-    EXC_PRIVILEGE_VIOLATION,
-    EXC_TRACE,
-    EXC_LINEA,
-    EXC_LINEF,
-    EXC_FORMAT_ERROR,
-    EXC_IRQ_UNINITIALIZED,
-    EXC_IRQ_SPURIOUS,
-    EXC_IRQ_AUTOVECTOR,
-    ECX_TRAP
+    EXC_RESET               = 1,
+    EXC_BUS_ERROR           = 2,
+    EXC_ADDRESS_ERROR       = 3,
+    EXC_ILLEGAL             = 4,
+    EXC_DIVIDE_BY_ZERO      = 5,
+    EXC_CHK                 = 6,
+    EXC_TRAPV               = 7,
+    EXC_PRIVILEGE_VIOLATION = 8,
+    EXC_TRACE               = 9,
+    EXC_LINEA               = 10,
+    EXC_LINEF               = 11,
+    EXC_FORMAT_ERROR        = 14,
+    EXC_IRQ_UNINITIALIZED   = 15,
+    EXC_IRQ_SPURIOUS        = 24,
+    EXC_TRAP                = 32
 }
 ExceptionType;
 
