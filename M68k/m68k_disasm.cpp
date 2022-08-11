@@ -771,7 +771,7 @@ void opcode_misc(dis_buffer_t *dbuf, ushort opc)
     break;
   }
   if (tmp) {
-    if(IS_INST(MOVETOCCR,opc)) { sz = SIZE_BYTE; } // DIRK (added)
+    // if(IS_INST(MOVETOCCR,opc)) { sz = SIZE_BYTE; } // DIRK (added)
     addstring(dbuf, tmp);
     get_modregstr(dbuf,5, GETMOD_BEFORE, sz, 0);
     if(IS_INST(MOVETOSR,opc))

@@ -1028,7 +1028,7 @@ StrWriter::operator<<(Im<M,S> wrapper)
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
 
-            if constexpr (S != 0) *this << Ims<S>(ea.ext1);
+            *this << Ims<S>(ea.ext1);
             break;
 
         case DASM_MUSASHI:

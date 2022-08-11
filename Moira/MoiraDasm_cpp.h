@@ -1102,9 +1102,22 @@ Moira::dasmMoveFromCcrEa(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmMoveToCcr(StrWriter &str, u32 &addr, u16 op)
 {
-    auto src = Op <M,Byte> ( _____________xxx(op), addr );
+    auto src = _____________xxx(op);
 
-    str << Ins<I>{} << tab << src << Sep{} << Ccr{};
+    switch (str.style) {
+
+        case DASM_MOIRA:
+        case DASM_MUSASHI:
+
+            str << Ins<I>{} << tab << Op<M, Byte>(src, addr) << Sep{} << Ccr{};
+            break;
+
+        case DASM_VDA68K_MOT:
+        case DASM_VDA68K_MIT:
+
+            str << Ins<I>{} << tab << Op<M, S>(src, addr) << Sep{} << Ccr{};
+            break;
+    }
 }
 
 template <Instr I, Mode M, Size S> void

@@ -39,6 +39,7 @@ template <Size S> u32 CLEAR(u64 data) {
 }
 
 template <Size S> i32 SEXT(u64 data) {
+    if constexpr (S == 0) return data;
     if constexpr (S == Byte) return (i8)data;
     if constexpr (S == Word) return (i16)data;
     if constexpr (S == Long) return (i32)data;
