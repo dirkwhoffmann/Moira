@@ -247,29 +247,23 @@ protected:
     virtual void signalHalt() { };
 
     // Exception delegates
-    virtual void signalAddressError(AEStackFrame &frame) { };
-    virtual void signalLineAException(u16 opcode) { };
-    virtual void signalLineFException(u16 opcode) { };
-    virtual void signalIllegalOpcodeException(u16 opcode) { };
-    virtual void signalTraceException() { };
-    virtual void signalTrapException() { };
-    virtual void signalPrivilegeViolation() { };
+    [[deprecated]] virtual void signalAddressError(AEStackFrame &frame) { };
+    [[deprecated]] virtual void signalLineAException(u16 opcode) { };
+    [[deprecated]] virtual void signalLineFException(u16 opcode) { };
+    [[deprecated]] virtual void signalIllegalOpcodeException(u16 opcode) { };
+    [[deprecated]] virtual void signalTraceException() { };
+    [[deprecated]] virtual void signalTrapException() { };
+    [[deprecated]] virtual void signalPrivilegeViolation() { };
     virtual void signalInterrupt(u8 level) { };
     virtual void signalJumpToVector(int nr, u32 addr) { };
     virtual void signalSoftwareTrap(u16 opcode, SoftwareTrap trap) { };
-    virtual void signalBkptInstruction(int nr) { };
-    
-    // Exception delegates
-    virtual void addressErrorHandler() { };
-    
+
 	// Called when a debug point is reached
 	virtual void softstopReached(u32 addr) { };
 	virtual void breakpointReached(u32 addr) { };
 	virtual void watchpointReached(u32 addr) { };
 	virtual void catchpointReached(u8 vector) { };
-	virtual void swTrapReached(u32 addr) { };
-
-    int removeAsap = 0;
+    virtual void softwareTrapReached(SoftwareTrap trap) { };
 
 
     //

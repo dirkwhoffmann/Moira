@@ -48,8 +48,7 @@ Moira::execLineA(u16 opcode)
         prefetch<C>();
 
         // Call the delegates
-        signalSoftwareTrap(opcode, debugger.swTraps.traps[opcode]);
-        swTrapReached(reg.pc0);
+        softwareTrapReached(debugger.swTraps.traps[opcode]);
         return;
     }
 
