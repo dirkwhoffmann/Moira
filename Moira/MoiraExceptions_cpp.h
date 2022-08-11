@@ -354,6 +354,22 @@ Moira::execException(ExceptionType exc, int nr)
             jumpToVector<C, AE_SET_CB3>(vector);
             break;
 
+        case EXC_DIVIDE_BY_ZERO:
+        case EXC_CHK:
+        case EXC_TRAPV:
+
+            // Enter supervisor mode
+            setSupervisorMode(true);
+
+            // Disable tracing, but keep the CPU_TRACE_EXCEPTION flag
+            clearTraceFlags();
+
+            // Write exception information to stack
+            saveToStack2<C>(u16(vector), status, reg.pc);
+
+            jumpToVector<C>(vector);
+            break;
+
         case EXC_TRACE:
 
             // Recover from stop state
@@ -505,6 +521,7 @@ Moira::execTraceException()
 }
 */
 
+/*
 void
 Moira::execTrapException(int nr)
 {
@@ -537,6 +554,7 @@ Moira::execTrapException(int nr)
 
     jumpToVector<C>(nr);
 }
+*/
 
 void
 Moira::execTrapNException(int nr)

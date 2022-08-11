@@ -1461,7 +1461,8 @@ Moira::execChk(u16 opcode)
 
         SYNC(MIMIC_MUSASHI ? 10 - (int)(clock - c) : 2);
         reg.sr.n = NBIT<S>(dy);
-        execTrapException(6);
+        execException<C>(EXC_CHK);
+        // execTrapException(6);
 
         CYCLES_68000(40)
         CYCLES_68010(44)
@@ -1473,7 +1474,8 @@ Moira::execChk(u16 opcode)
 
         SYNC(MIMIC_MUSASHI ? 10 - (int)(clock - c) : 4);
         reg.sr.n = MIMIC_MUSASHI ? NBIT<S>(dy) : 1;
-        execTrapException(6);
+        execException<C>(EXC_CHK);
+        // execTrapException(6);
 
         CYCLES_68000(40)
         CYCLES_68010(44)
@@ -1532,7 +1534,8 @@ Moira::execChkCmp2(u16 opcode)
 
     if ((ext & 0x800) && reg.sr.c) {
 
-        execTrapException<C>(6);
+        execException<C>(EXC_CHK);
+        // execTrapException<C>(6);
         CYCLES_68020(40)
 
     } else {
@@ -3597,7 +3600,8 @@ Moira::execDiv(u16 opcode)
         }
 
         SYNC(8);
-        execTrapException(5);
+        execException<C>(EXC_DIVIDE_BY_ZERO);
+        // execTrapException(5);
         FINALIZE
         return;
     }
@@ -3639,7 +3643,8 @@ Moira::execDivMusashi(u16 opcode)
         } else {
             SYNC(10 - (int)(clock - c));
         }
-        execTrapException(5);
+        execException<C>(EXC_DIVIDE_BY_ZERO);
+        // execTrapException(5);
 
         CYCLES_68000(38);
         CYCLES_68010(44);
@@ -3711,7 +3716,8 @@ Moira::execDivlMusashi(u16 opcode)
 
     if (divisor == 0) {
 
-        execTrapException(5);
+        execException<C>(EXC_DIVIDE_BY_ZERO);
+        // execTrapException(5);
         CYCLES_68020(38);
 
         FINALIZE
@@ -4442,7 +4448,8 @@ Moira::execTrapv(u16 opcode)
     if (reg.sr.v) {
 
         (void)readMS<C, MEM_PROG, Word>(reg.pc + 2);
-        execTrapException(7);
+        execException<C>(EXC_TRAPV);
+        // execTrapException(7);
 
         //           00  10  20        00  10  20        00  10  20
         //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -4473,7 +4480,8 @@ Moira::execTrapcc(u16 opcode)
 
     if (cond(I)) {
 
-        execTrapException(7);
+        execException<C>(EXC_TRAPV);
+        // execTrapException(7);
         CYCLES_68020(20);
         return;
     }
