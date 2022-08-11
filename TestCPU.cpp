@@ -112,3 +112,17 @@ TestCPU::breakpointReached(moira::u32 addr) { }
  */
 void
 TestCPU::watchpointReached(moira::u32 addr) { }
+
+/* Instruction handlers
+ */
+void
+TestCPU::willExecute(Instr I, Mode M, Size S, u16 opcode)
+{
+    printf("willExecute: %x (I = %d M = %d S = %d)\n", opcode, I, M, S);
+}
+
+void
+TestCPU::didExecute(Instr I, Mode M, Size S, u16 opcode)
+{
+    printf("didExecute: %x (I = %d M = %d S = %d)\n", opcode, I, M, S);
+}

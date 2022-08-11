@@ -22,7 +22,7 @@ add_subdirectory(Musashi)
 add_subdirectory(M68k)
 
 # Add the executable
-add_executable(testRunner main.cpp musashi.cpp Testrunner.cpp TestCPU.cpp Sandbox.cpp)
+add_executable(testRunner main.cpp musashi.cpp Testrunner.cpp TestCPU.cpp Sandbox.cpp Randomizer.cpp)
 target_link_libraries(testRunner moira)
 target_link_libraries(testRunner musashi)
 target_link_libraries(testRunner m68k)
