@@ -133,7 +133,7 @@ Moira::execAddressError(StackFrame frame, int delay)
 {
     assert(frame.addr & 1);
 
-    // Call the delegate
+    // Inform the delegate
     willExecute(EXC_ADDRESS_ERROR, 3);
 
     // Emulate additional delay
@@ -161,7 +161,7 @@ Moira::execAddressError(StackFrame frame, int delay)
     // Halt the CPU if a double fault occurred
     if (doubleFault) halt();
 
-    // Call the delegate
+    // Inform the delegate
     didExecute(EXC_ADDRESS_ERROR, 3);
 }
 
@@ -187,8 +187,14 @@ Moira::execException(ExceptionType exc, int nr)
     // Determine the exception vector number
     u16 vector = u16(exc) + (exc == EXC_TRAP ? nr : 0);
 
-    // Call the delegate
+    // Inform the delegate
     willExecute(exc, vector);
+
+    // Enter supervisor mode and leave trace mode
+    setSupervisorMode(true);
+    clearTraceFlags();
+
+    // Leave trace mode
 
     switch (exc) {
 
@@ -196,17 +202,15 @@ Moira::execException(ExceptionType exc, int nr)
         case EXC_LINEA:
         case EXC_LINEF:
 
-            // Enter supervisor mode
-            setSupervisorMode(true);
-
-            // Disable tracing
-            clearTraceFlags();
+            // Clear any pending trace event
             flags &= ~CPU_TRACE_EXCEPTION;
 
-            // Write stack frame
             SYNC(4);
+
+            // Write stack frame
             writeStackFrame0000<C>(status, reg.pc - 2, vector);
 
+            // Branch to the exception handler
             jumpToVector<C, AE_SET_CB3>(vector);
             break;
 
@@ -214,82 +218,66 @@ Moira::execException(ExceptionType exc, int nr)
         case EXC_CHK:
         case EXC_TRAPV:
 
-            // Enter supervisor mode
-            setSupervisorMode(true);
-
-            // Disable tracing, but keep the CPU_TRACE_EXCEPTION flag
-            clearTraceFlags();
-
             // Write stack frame
             C == M68020 ?
             writeStackFrame0010<C>(status, reg.pc, reg.pc0, vector) :
             writeStackFrame0000<C>(status, reg.pc, vector);
 
+            // Branch to the exception handler
             jumpToVector<C>(vector);
             break;
 
         case EXC_PRIVILEGE_VIOLATION:
 
-            // Enter supervisor mode
-            setSupervisorMode(true);
-
-            // Disable tracing
-            clearTraceFlags();
+            // Clear any pending trace event
             flags &= ~CPU_TRACE_EXCEPTION;
 
-            // Write stack frame
             SYNC(4);
+
+            // Write stack frame
             writeStackFrame0000<C>(status, reg.pc - 2, vector);
 
+            // Branch to the exception handler
             jumpToVector<C,AE_SET_CB3>(vector);
             break;
 
         case EXC_TRACE:
 
+            // Clear any pending trace event
+            flags &= ~CPU_TRACE_EXCEPTION;
+
             // Recover from stop state
             flags &= ~CPU_IS_STOPPED;
 
-            // Enter supervisor mode
-            setSupervisorMode(true);
-
-            // Disable tracing
-            clearTraceFlags();
-            flags &= ~CPU_TRACE_EXCEPTION;
+            SYNC(4);
 
             // Write stack frame
-            SYNC(4);
             writeStackFrame0000<C>(status, reg.pc, vector);
 
+            // Branch to the exception handler
             jumpToVector<C>(vector);
             break;
 
         case EXC_FORMAT_ERROR:
 
-            // Enter supervisor mode
-            setSupervisorMode(true);
-
-            // Disable tracing
-            clearTraceFlags();
+            // Clear any pending trace event
             flags &= ~CPU_TRACE_EXCEPTION;
 
-            // Write stack frame
             SYNC(4);
+
+            // Write stack frame
             writeStackFrame0000<C>(status, reg.pc, vector);
 
+            // Branch to the exception handler
             jumpToVector<C, AE_SET_CB3>(vector);
             break;
 
         case EXC_TRAP:
 
-            // Enter supervisor mode
-            setSupervisorMode(true);
-
-            // Disable tracing, but keep the CPU_TRACE_EXCEPTION flag
-            clearTraceFlags();
-
             // Write stack frame
             writeStackFrame0000<C>(status, reg.pc, u16(vector));
 
+            // Branch to the exception handler
             jumpToVector<C>(vector);
             break;
             
@@ -297,7 +285,7 @@ Moira::execException(ExceptionType exc, int nr)
             break;
     }
 
-    // Call the delegate
+    // Inform the delegate
     didExecute(exc, vector);
 }
 

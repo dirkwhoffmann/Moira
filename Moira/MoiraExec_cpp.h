@@ -47,7 +47,7 @@ Moira::execLineA(u16 opcode)
         queue.irc = trap.instruction;
         prefetch<C>();
 
-        // Call the delegate
+        // Inform the delegate
         softwareTrapReached(reg.pc0);
         return;
     }
