@@ -23,6 +23,7 @@ add_subdirectory(Musashi)
 add_subdirectory(M68k)
 
 # Add the executable
+#add_executable(testRunner main.cpp Runner/Testrunner.cpp Runner/TestCPU.cpp Runner/musashi.cpp Runner/Sandbox.cpp Runner/Randomizer.cpp)
 add_executable(testRunner main.cpp)
 target_link_libraries(testRunner runner)
 target_link_libraries(testRunner moira)
@@ -38,9 +39,9 @@ target_compile_options(testRunner PUBLIC -Wno-nested-anon-types)
 # Add include paths
 target_include_directories(testRunner PUBLIC
 
-${CMAKE_PROJECT_SOURCE_DIR}/.
-${CMAKE_PROJECT_SOURCE_DIR}/Testrunner
-${CMAKE_PROJECT_SOURCE_DIR}/M68k
-${CMAKE_PROJECT_SOURCE_DIR}/Musashi
-${CMAKE_PROJECT_SOURCE_DIR}/Moira
+${CMAKE_SOURCE_DIR}/.
+${CMAKE_SOURCE_DIR}/Runner
+${CMAKE_SOURCE_DIR}/M68k
+${CMAKE_SOURCE_DIR}/Musashi
+${CMAKE_SOURCE_DIR}/Moira
 )

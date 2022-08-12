@@ -16,8 +16,8 @@ target_compile_options(runner PUBLIC -Wno-missing-field-initializers)
 # Add include paths
 target_include_directories(runner PUBLIC
 
-${CMAKE_CURRENT_SOURCE_DIR}/.
-${CMAKE_CURRENT_SOURCE_DIR}/../M68k
-${CMAKE_CURRENT_SOURCE_DIR}/../Musashi
-${CMAKE_CURRENT_SOURCE_DIR}/../Moira
+${CMAKE_SOURCE_DIR}/.
+${CMAKE_SOURCE_DIR}/M68k
+${CMAKE_SOURCE_DIR}/Musashi
+${CMAKE_SOURCE_DIR}/Moira
 )
