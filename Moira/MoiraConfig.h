@@ -66,11 +66,12 @@
  */
 #define MIMIC_MUSASHI true
 
-/* Instruction hooks
- *
- * The following two macros appear at the beginning and the end of all
- * instruction handler and determine if a delegation method should be called
- * for a particular instruction.
+/* The following macro appear at the beginning of each instruction handler.
+ * Moira will call 'willExecute(...)' for all listed instructions.
  */
-#define WILL_EXECUTE I == RESET || I == STOP || I == TAS
-#define DID_EXECUTE I == RESET
+#define WILL_EXECUTE    I == RESET || I == STOP || I == TAS
+
+/* The following macro appear at the end of each instruction handler.
+ * Moira will call 'didExecute(...)' for all listed instructions.
+ */
+#define DID_EXECUTE     I == RESET

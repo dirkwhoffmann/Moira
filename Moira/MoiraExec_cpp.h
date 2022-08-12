@@ -240,7 +240,7 @@ Moira::execAbcdEa(u16 opcode)
     u32 ea1, ea2, data1, data2;
     if (!readOp<C, M, S>(src, ea1, data1)) return;
     pollIpl();
-    if (!readOp<C, M, S, IMPLICIT_DECR>(dst, ea2, data2)) return;
+    if (!readOp<C, M, S, IMPL_DEC>(dst, ea2, data2)) return;
 
     u32 result = bcd<C, I, Byte>(data1, data2);
     looping<I>() ? noPrefetch() : prefetch<C>();
@@ -538,7 +538,7 @@ Moira::execAddxEa(u16 opcode)
     AVAILABILITY(M68000)
 
     const u64 flags =
-    (S == Word) ? AE_INC_PC : (S == Long) ? AE_INC_PC | AE_INC_ADDR : 0;
+    (S == Word) ? AE_INC_PC : (S == Long) ? AE_INC_PC | AE_INC_A : 0;
 
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
@@ -551,7 +551,7 @@ Moira::execAddxEa(u16 opcode)
     }
     if constexpr (S != Long) pollIpl();
 
-    if (!readOp<C, M, S, flags|IMPLICIT_DECR> (dst, ea2, data2)) {
+    if (!readOp<C, M, S, flags|IMPL_DEC> (dst, ea2, data2)) {
         if constexpr (S == Long) undoAnPD<M,S>(dst);
         return;
     }
@@ -2461,7 +2461,7 @@ Moira::execMove4(u16 opcode)
 
     looping<I>() ? noPrefetch() : prefetch<C, POLLIPL>();
 
-    ea = computeEA <C, MODE_PD, S, IMPLICIT_DECR> (dst);
+    ea = computeEA <C, MODE_PD, S, IMPL_DEC> (dst);
 
     // Check for address error
     if (misaligned<C, S>(ea)) {

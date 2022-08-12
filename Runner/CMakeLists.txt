@@ -1,0 +1,22 @@
+add_library(runner STATIC
+
+musashi.cpp
+Testrunner.cpp
+TestCPU.cpp
+Sandbox.cpp
+Randomizer.cpp
+)
+
+target_compile_options(runner PUBLIC -Wno-unused-parameter)
+target_compile_options(runner PUBLIC -Wno-unused-variable)
+target_compile_options(runner PUBLIC -Wno-unused-but-set-variable)
+target_compile_options(runner PUBLIC -Wno-implicit-fallthrough)
+
+# Add include paths
+target_include_directories(runner PUBLIC
+
+${CMAKE_CURRENT_SOURCE_DIR}/.
+${CMAKE_CURRENT_SOURCE_DIR}/../M68k
+${CMAKE_CURRENT_SOURCE_DIR}/../Musashi
+${CMAKE_CURRENT_SOURCE_DIR}/../Moira
+)

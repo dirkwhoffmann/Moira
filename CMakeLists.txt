@@ -17,12 +17,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS False)
   
 # Add sub directories
+add_subdirectory(Runner)
 add_subdirectory(Moira)
 add_subdirectory(Musashi)
 add_subdirectory(M68k)
 
 # Add the executable
-add_executable(testRunner main.cpp musashi.cpp Testrunner.cpp TestCPU.cpp Sandbox.cpp Randomizer.cpp)
+add_executable(testRunner main.cpp)
+target_link_libraries(testRunner runner)
 target_link_libraries(testRunner moira)
 target_link_libraries(testRunner musashi)
 target_link_libraries(testRunner m68k)
@@ -36,8 +38,9 @@ target_compile_options(testRunner PUBLIC -Wno-nested-anon-types)
 # Add include paths
 target_include_directories(testRunner PUBLIC
 
-${CMAKE_CURRENT_SOURCE_DIR}/.
-${CMAKE_CURRENT_SOURCE_DIR}/M68k
-${CMAKE_CURRENT_SOURCE_DIR}/Musashi
-${CMAKE_CURRENT_SOURCE_DIR}/Moira
+${CMAKE_PROJECT_SOURCE_DIR}/.
+${CMAKE_PROJECT_SOURCE_DIR}/Testrunner
+${CMAKE_PROJECT_SOURCE_DIR}/M68k
+${CMAKE_PROJECT_SOURCE_DIR}/Musashi
+${CMAKE_PROJECT_SOURCE_DIR}/Moira
 )

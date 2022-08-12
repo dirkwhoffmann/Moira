@@ -111,7 +111,7 @@ Moira::computeEA(u32 n) {
         }
         case 4:  // -(An)
         {
-            if ((F & IMPLICIT_DECR) == 0) SYNC(2);
+            if ((F & IMPL_DEC) == 0) SYNC(2);
             result = readA(n) - ((n == 7 && S == Byte) ? 2 : S);
             break;
         }
@@ -518,8 +518,8 @@ Moira::makeFrame(u32 addr, u32 pc, u16 sr, u16 ird)
     // Adjust
     if (F & AE_INC_PC) frame.pc += 2;
     if (F & AE_DEC_PC) frame.pc -= 2;
-    if (F & AE_INC_ADDR) frame.addr += 2;
-    if (F & AE_DEC_ADDR) frame.addr -= 2;
+    if (F & AE_INC_A) frame.addr += 2;
+    if (F & AE_DEC_A) frame.addr -= 2;
     if (F & AE_SET_CB3) frame.code |= (1 << 3);
         
     return frame;
