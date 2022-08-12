@@ -74,12 +74,3 @@
  */
 #define WILL_EXECUTE I == RESET || I == STOP || I == TAS
 #define DID_EXECUTE I == RESET
-
-
-/* This macro is evaluated at the beginning of the execution handlers of all
- * instructions. It is intended to invoke debug code. Make sure to define it
- * as an empty macro in release builds.
- */
-// #define EXEC_DEBUG { } // printf("%s(%d,%d,%d,%d)\n", __func__, C, I, M, S); }
-
-// #define NDEBUG
