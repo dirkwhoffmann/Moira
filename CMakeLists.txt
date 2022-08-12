@@ -17,15 +17,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS False)
   
 # Add sub directories
-# add_subdirectory(Runner)
 add_subdirectory(Moira)
 add_subdirectory(Musashi)
 add_subdirectory(M68k)
 
 # Add the executable
-add_executable(testRunner main.cpp Runner/Testrunner.cpp Runner/TestCPU.cpp Runner/musashi.cpp Runner/Sandbox.cpp Runner/Randomizer.cpp)
-#add_executable(testRunner main.cpp)
-#target_link_libraries(testRunner runner)
+add_executable(testRunner
+main.cpp
+Runner/Testrunner.cpp
+Runner/TestCPU.cpp
+Runner/musashi.cpp
+Runner/Sandbox.cpp
+Runner/Randomizer.cpp
+)
 target_link_libraries(testRunner moira)
 target_link_libraries(testRunner musashi)
 target_link_libraries(testRunner m68k)
