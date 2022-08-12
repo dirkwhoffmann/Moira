@@ -108,9 +108,9 @@ template <Core C, Size S, Flags F = 0> void push(u32 value, bool &error);
 template <Core C, Size S = Word> bool misaligned(u32 addr);
 
 // Creates an address error stack frame
-template <Flags F = 0> AEStackFrame makeFrame(u32 addr, u32 pc, u16 sr, u16 ird);
-template <Flags F = 0> AEStackFrame makeFrame(u32 addr, u32 pc);
-template <Flags F = 0> AEStackFrame makeFrame(u32 addr);
+template <Flags F = 0> StackFrame makeFrame(u32 addr, u32 pc, u16 sr, u16 ird);
+template <Flags F = 0> StackFrame makeFrame(u32 addr, u32 pc);
+template <Flags F = 0> StackFrame makeFrame(u32 addr);
 
 // Prefetches the next instruction
 template <Core C, Flags F = 0> void prefetch();

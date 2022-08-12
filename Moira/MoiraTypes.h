@@ -412,7 +412,7 @@ typedef struct
     u16 sr;
     u32 pc;
 }
-AEStackFrame;
+StackFrame;
 
 struct StatusRegister {
 

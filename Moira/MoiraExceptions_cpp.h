@@ -8,7 +8,7 @@
 // -----------------------------------------------------------------------------
 
 void
-Moira::saveToStack0(AEStackFrame &frame)
+Moira::saveToStack0(StackFrame &frame)
 {
     switch (core) {
 
@@ -22,7 +22,7 @@ Moira::saveToStack0(AEStackFrame &frame)
 }
 
 template <Core C> void
-Moira::saveToStack0(AEStackFrame &frame)
+Moira::saveToStack0(StackFrame &frame)
 {
     // Push PC
     push <C,Word> ((u16)frame.pc);
@@ -40,6 +40,7 @@ Moira::saveToStack0(AEStackFrame &frame)
     push <C,Word> (frame.code);
 }
 
+/*
 void
 Moira::saveToStack1(u16 nr, u16 sr, u32 pc)
 {
@@ -95,6 +96,7 @@ Moira::saveToStack1(u16 nr, u16 sr, u32 pc)
             break;
     }
 }
+*/
 
 void
 Moira::saveToStack2(u16 nr, u16 sr, u32 pc)
@@ -190,9 +192,9 @@ Moira::writeStackFrame0000(u16 sr, u32 pc, u16 nr)
             } else {
 
                 reg.sp -= 6;
-                writeMS<C, MEM_DATA,Word>((reg.sp + 4) & ~1, pc & 0xFFFF);
-                writeMS<C, MEM_DATA,Word>((reg.sp + 0) & ~1, sr);
-                writeMS<C, MEM_DATA,Word>((reg.sp + 2) & ~1, pc >> 16);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 4) & ~1, pc & 0xFFFF);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 0) & ~1, sr);
+                writeMS<C, MEM_DATA, Word>((reg.sp + 2) & ~1, pc >> 16);
             }
             break;
 
@@ -262,7 +264,7 @@ Moira::writeStackFrame1011(u16 sr, u32 pc, u16 nr)
 }
 
 void
-Moira::execAddressError(AEStackFrame frame, int delay)
+Moira::execAddressError(StackFrame frame, int delay)
 {
     switch (core) {
 
@@ -276,7 +278,7 @@ Moira::execAddressError(AEStackFrame frame, int delay)
 }
 
 template <Core C> void
-Moira::execAddressError(AEStackFrame frame, int delay)
+Moira::execAddressError(StackFrame frame, int delay)
 {
     assert(frame.addr & 1);
 
@@ -294,7 +296,7 @@ Moira::execAddressError(AEStackFrame frame, int delay)
     flags &= ~CPU_TRACE_EXCEPTION;
     SYNC(8);
 
-    // A misaligned stack pointer will cause a "double fault"
+    // A misaligned stack pointer will cause a double fault
     bool doubleFault = misaligned<C>(reg.sp);
 
     if (!doubleFault) {
@@ -352,7 +354,8 @@ Moira::execException(ExceptionType exc, int nr)
 
             // Write stack frame
             SYNC(4);
-            saveToStack1<C>(vector, status, reg.pc - 2);
+            writeStackFrame0000<C>(status, reg.pc - 2, vector);
+//            saveToStack1<C>(vector, status, reg.pc - 2);
 
             jumpToVector<C, AE_SET_CB3>(vector);
             break;
@@ -384,7 +387,8 @@ Moira::execException(ExceptionType exc, int nr)
 
             // Write exception information to stack
             SYNC(4);
-            saveToStack1<C>(vector, status, reg.pc - 2);
+            writeStackFrame0000<C>(status, reg.pc - 2, vector);
+//            saveToStack1<C>(vector, status, reg.pc - 2);
 
             jumpToVector<C,AE_SET_CB3>(vector);
             break;
@@ -403,7 +407,8 @@ Moira::execException(ExceptionType exc, int nr)
 
             // Write stack frame
             SYNC(4);
-            saveToStack1<C>(vector, status, reg.pc);
+            writeStackFrame0000<C>(status, reg.pc, vector);
+//            saveToStack1<C>(vector, status, reg.pc);
 
             jumpToVector<C>(vector);
             break;
@@ -419,7 +424,8 @@ Moira::execException(ExceptionType exc, int nr)
 
             // Write stack frame
             SYNC(4);
-            saveToStack1(14, status, reg.pc);
+            writeStackFrame0000<C>(status, reg.pc, vector);
+            // saveToStack1(vector, status, reg.pc - 2);
 
             jumpToVector<C, AE_SET_CB3>(vector);
             break;
@@ -463,6 +469,8 @@ Moira::execUnimplemented(int nr)
 template <Core C> void
 Moira::execUnimplemented(int nr)
 {
+    // TODO: USE execException instead
+
     u16 status = getSR();
     
     // Enter supervisor mode
@@ -474,7 +482,8 @@ Moira::execUnimplemented(int nr)
 
     // Write exception information to stack
     SYNC(4);
-    saveToStack1<C>(u16(nr), status, reg.pc - 2);
+    writeStackFrame0000<C>(status, reg.pc - 2, u16(nr));
+//     saveToStack1<C>(u16(nr), status, reg.pc - 2);
 
     jumpToVector<C,AE_SET_CB3>(nr);
 }

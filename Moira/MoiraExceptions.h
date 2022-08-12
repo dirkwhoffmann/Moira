@@ -8,12 +8,12 @@
 // -----------------------------------------------------------------------------
 
 // Emulates a group 0 exception (DEPRECATED)
-void saveToStack0(AEStackFrame &frame);
-template <Core C> void saveToStack0(AEStackFrame &frame);
+void saveToStack0(StackFrame &frame);
+template <Core C> void saveToStack0(StackFrame &frame);
 
 // Emulates a group 1 exception (DEPRECATED)
-void saveToStack1(u16 nr, u16 sr, u32 pc);
-template <Core C> void saveToStack1(u16 nr, u16 sr, u32 pc);
+// void saveToStack1(u16 nr, u16 sr, u32 pc);
+// template <Core C> void saveToStack1(u16 nr, u16 sr, u32 pc);
 
 // Emulates a group 2 exception (DEPRECATED)
 void saveToStack2(u16 nr, u16 sr, u32 pc);
@@ -39,45 +39,17 @@ template <Core C> void writeStackFrame1001(u16 sr, u32 pc, u32 ia, u16 nr);
 template <Core C> void writeStackFrame1010(u16 sr, u32 pc, u16 nr);
 template <Core C> void writeStackFrame1011(u16 sr, u32 pc, u16 nr);
 
-// Emulates an address error exception
-void execAddressError(AEStackFrame frame, int delay = 0);
-template <Core C> void execAddressError(AEStackFrame frame, int delay = 0);
-
 // Emulates an exception
 void execException(ExceptionType exc, int nr = 0);
 template <Core C> void execException(ExceptionType exc, int nr = 0);
 
-// Emulates a format error (68010+)
-/*
-void execFormatError();
-template <Core C> void execFormatError();
-*/
+// Emulates an address error exception
+void execAddressError(StackFrame frame, int delay = 0);
+template <Core C> void execAddressError(StackFrame frame, int delay = 0);
 
-// Emulates the execution of unimplemented and illegal instructions
+// Emulates the execution of unimplemented and illegal instructions (DEPRECATED)
 void execUnimplemented(int nr);
 template <Core C> void execUnimplemented(int nr);
-
-// Emulates a trace exception
-/*
-void execTraceException();
-template <Core C> void execTraceException();
-*/
-
-// Emulates a trap exception
-/*
-void execTrapException(int nr);
-template <Core C> void execTrapException(int nr);
-*/
-/*
-void execTrapNException(int nr);
-template <Core C> void execTrapNException(int nr);
-*/
-
-// Emulates a priviledge exception
-/*
-void execPrivilegeException();
-template <Core C> void execPrivilegeException();
-*/
 
 // Emulates an interrupt exception
 void execIrqException(u8 level);

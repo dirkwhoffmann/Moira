@@ -497,10 +497,10 @@ Moira::misaligned(u32 addr)
     }
 }
 
-template <Flags F> AEStackFrame
+template <Flags F> StackFrame
 Moira::makeFrame(u32 addr, u32 pc, u16 sr, u16 ird)
 {
-    AEStackFrame frame;
+    StackFrame frame;
     u16 read = 0x10;
     
     // Prepare
@@ -525,13 +525,13 @@ Moira::makeFrame(u32 addr, u32 pc, u16 sr, u16 ird)
     return frame;
 }
 
-template <Flags F> AEStackFrame
+template <Flags F> StackFrame
 Moira::makeFrame(u32 addr, u32 pc)
 {
     return makeFrame<F>(addr, pc, getSR(), getIRD());
 }
 
-template <Flags F> AEStackFrame
+template <Flags F> StackFrame
 Moira::makeFrame(u32 addr)
 {
     return makeFrame<F>(addr, getPC(), getSR(), getIRD());
