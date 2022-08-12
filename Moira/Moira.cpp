@@ -245,7 +245,7 @@ Moira::checkForIrq()
         }
 
         // Trigger interrupt
-        execIrqException(reg.ipl);
+        execInterrupt(reg.ipl);
         return true;
 
     } else {

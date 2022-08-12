@@ -37,10 +37,6 @@ template <Core C> void execException(ExceptionType exc, int nr = 0);
 void execAddressError(StackFrame frame, int delay = 0);
 template <Core C> void execAddressError(StackFrame frame, int delay = 0);
 
-// Emulates the execution of unimplemented and illegal instructions (DEPRECATED)
-void execUnimplemented(int nr);
-template <Core C> void execUnimplemented(int nr);
-
 // Emulates an interrupt exception
-void execIrqException(u8 level);
-template <Core C> void execIrqException(u8 level);
+void execInterrupt(u8 level);
+template <Core C> void execInterrupt(u8 level);

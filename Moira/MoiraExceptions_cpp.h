@@ -13,19 +13,19 @@ Moira::writeStackFrameAEBE(StackFrame &frame)
     // assert(C == M68000);
 
     // Push PC
-    push <C,Word> ((u16)frame.pc);
-    push <C,Word> (frame.pc >> 16);
+    push<C, Word>((u16)frame.pc);
+    push<C, Word>(frame.pc >> 16);
     
     // Push SR and IRD
-    push <C,Word> (frame.sr);
-    push <C,Word> (frame.ird);
+    push<C, Word>(frame.sr);
+    push<C, Word>(frame.ird);
     
     // Push address
-    push <C,Word> ((u16)frame.addr);
-    push <C,Word> (frame.addr >> 16);
+    push<C, Word>((u16)frame.addr);
+    push<C, Word>(frame.addr >> 16);
     
     // Push memory access type and function code
-    push <C,Word> (frame.code);
+    push<C, Word>(frame.code);
 }
 
 template <Core C> void
@@ -119,9 +119,9 @@ Moira::execAddressError(StackFrame frame, int delay)
 {
     switch (core) {
 
-        case M68000: execAddressError <M68000> (frame, delay); break;
-        case M68010: execAddressError <M68010> (frame, delay); break;
-        case M68020: execAddressError <M68020> (frame, delay); break;
+        case M68000: execAddressError<M68000>(frame, delay); break;
+        case M68010: execAddressError<M68010>(frame, delay); break;
+        case M68020: execAddressError<M68020>(frame, delay); break;
 
         default:
             assert(false);
@@ -302,13 +302,13 @@ Moira::execException(ExceptionType exc, int nr)
 }
 
 void
-Moira::execUnimplemented(int nr)
+Moira::execInterrupt(u8 level)
 {
     switch (core) {
 
-        case M68000: execUnimplemented <M68000> (nr); break;
-        case M68010: execUnimplemented <M68010> (nr); break;
-        case M68020: execUnimplemented <M68020> (nr); break;
+        case M68000: execInterrupt<M68000>(level); break;
+        case M68010: execInterrupt<M68010>(level); break;
+        case M68020: execInterrupt<M68020>(level); break;
 
         default:
             assert(false);
@@ -316,42 +316,7 @@ Moira::execUnimplemented(int nr)
 }
 
 template <Core C> void
-Moira::execUnimplemented(int nr)
-{
-    // TODO: USE execException instead
-
-    u16 status = getSR();
-    
-    // Enter supervisor mode
-    setSupervisorMode(true);
-    
-    // Disable tracing
-    clearTraceFlags();
-    flags &= ~CPU_TRACE_EXCEPTION;
-
-    // Write exception information to stack
-    SYNC(4);
-    writeStackFrame0000<C>(status, reg.pc - 2, u16(nr));
-
-    jumpToVector<C,AE_SET_CB3>(nr);
-}
-
-void
-Moira::execIrqException(u8 level)
-{
-    switch (core) {
-
-        case M68000: execIrqException <M68000> (level); break;
-        case M68010: execIrqException <M68010> (level); break;
-        case M68020: execIrqException <M68020> (level); break;
-
-        default:
-            assert(false);
-    }
-}
-
-template <Core C> void
-Moira::execIrqException(u8 level)
+Moira::execInterrupt(u8 level)
 {
     assert(level < 8);
     
