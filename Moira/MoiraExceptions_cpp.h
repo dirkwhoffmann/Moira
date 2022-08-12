@@ -7,23 +7,11 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-void
-Moira::saveToStack0(StackFrame &frame)
-{
-    switch (core) {
-
-        case M68000: saveToStack0 <M68000> (frame); break;
-        case M68010: saveToStack0 <M68010> (frame); break;
-        case M68020: saveToStack0 <M68020> (frame); break;
-
-        default:
-            assert(false);
-    }
-}
-
 template <Core C> void
-Moira::saveToStack0(StackFrame &frame)
+Moira::writeStackFrameAEBE(StackFrame &frame)
 {
+    // assert(C == M68000);
+
     // Push PC
     push <C,Word> ((u16)frame.pc);
     push <C,Word> (frame.pc >> 16);
@@ -165,7 +153,7 @@ Moira::execAddressError(StackFrame frame, int delay)
     if (!doubleFault) {
         
         // Write stack frame
-        saveToStack0(frame);
+        writeStackFrameAEBE<C>(frame);
         SYNC(2);
         jumpToVector<C>(3);
     }

@@ -7,22 +7,20 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-// Emulates a group 0 exception (DEPRECATED)
-void saveToStack0(StackFrame &frame);
-template <Core C> void saveToStack0(StackFrame &frame);
-
 /* Creates a stack frame of a certain format
  *
  * Format  Description                  68000  68010  68020
  * ----------------------------------------------------------------------------
- * 0b0000  Short format                   X      X      X
- * 0b0001  Throwaway                                    X
- * 0b0010  Instruction exception                        X
- * 0b1000  Bus fault                             X
- * 0b1001  Coprocessor mid-instruction                  X
- * 0b1010  Short bus fault                              X
- * 0b1011  Long bus fault                               X
+ *  AEBE   Address error / Bus error      X
+ *  0000   Short format                   X      X      X
+ *  0001   Throwaway                                    X
+ *  0010   Instruction exception                        X
+ *  1000   Bus fault                             X
+ *  1001   Coprocessor mid-instruction                  X
+ *  1010   Short bus fault                              X
+ *  1011   Long bus fault                               X
  */
+template <Core C> void writeStackFrameAEBE(StackFrame &frame);
 template <Core C> void writeStackFrame0000(u16 sr, u32 pc, u16 nr);
 template <Core C> void writeStackFrame0001(u16 sr, u32 pc, u16 nr);
 template <Core C> void writeStackFrame0010(u16 sr, u32 pc, u32 ia, u16 nr);
