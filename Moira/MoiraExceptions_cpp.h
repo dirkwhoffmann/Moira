@@ -330,34 +330,48 @@ Moira::execInterrupt(u8 level)
     clearTraceFlags();
     flags &= ~CPU_TRACE_EXCEPTION;
 
-    if constexpr (C == M68000) {
+    switch (C) {
 
-        SYNC(6);
-        reg.sp -= 6;
-        writeMS<C, MEM_DATA, Word>(reg.sp + 4, reg.pc & 0xFFFF);
+        case M68000:
 
-        SYNC(4);
-        queue.ird = getIrqVector(level);
+            SYNC(6);
+            reg.sp -= 6;
+            writeMS<C, MEM_DATA, Word>(reg.sp + 4, reg.pc & 0xFFFF);
 
-        SYNC(4);
-        writeMS<C, MEM_DATA, Word>(reg.sp + 0, status);
-        writeMS<C, MEM_DATA, Word>(reg.sp + 2, reg.pc >> 16);
-    }
+            SYNC(4);
+            queue.ird = getIrqVector(level);
 
-    if constexpr (C == M68010) {
+            SYNC(4);
+            writeMS<C, MEM_DATA, Word>(reg.sp + 0, status);
+            writeMS<C, MEM_DATA, Word>(reg.sp + 2, reg.pc >> 16);
+            break;
 
-        SYNC(6);
-        reg.sp -= 8;
-        writeMS<C, MEM_DATA, Word>(reg.sp + 4, reg.pc & 0xFFFF);
+        case M68010:
 
-        SYNC(4);
-        queue.ird = getIrqVector(level);
+            SYNC(6);
+            reg.sp -= 8;
+            writeMS<C, MEM_DATA, Word>(reg.sp + 4, reg.pc & 0xFFFF);
 
-        SYNC(4);
-        writeMS<C, MEM_DATA, Word>(reg.sp + 0, status);
-        writeMS<C, MEM_DATA, Word>(reg.sp + 2, reg.pc >> 16);
+            SYNC(4);
+            queue.ird = getIrqVector(level);
 
-        writeMS<C, MEM_DATA, Word>(reg.sp + 6, 4 * queue.ird);
+            SYNC(4);
+            writeMS<C, MEM_DATA, Word>(reg.sp + 0, status);
+            writeMS<C, MEM_DATA, Word>(reg.sp + 2, reg.pc >> 16);
+
+            writeMS<C, MEM_DATA, Word>(reg.sp + 6, 4 * queue.ird);
+            break;
+
+        case M68020:
+
+            queue.ird = getIrqVector(level);
+
+            writeStackFrame0000<C>(status, reg.pc, 4 * queue.ird);
+
+            if (reg.sr.m) {
+
+                writeStackFrame0001<C>(status, reg.pc, 4 * queue.ird);
+            }
     }
 
     jumpToVector<C, AE_SET_CB3>(queue.ird);
