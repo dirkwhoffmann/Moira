@@ -21,23 +21,8 @@ class Moira {
     friend class Watchpoints;
     friend class Catchpoints;
 
-protected:
-
-    // Emulated CPU core
-    Core core = M68000;
-
-    // Interrupt mode of this CPU
-    IrqMode irqMode = IRQ_AUTO;
-
-    // Disassembler output format
-    DasmStyle style = DASM_MOIRA;
-    DasmNumberFormat numberFormat { .prefix = "$", .radix = 16 };
-    DasmLetterCase letterCase = DASM_MIXED_CASE;
-    Tab tab{8};
-
-
     //
-    // Internals
+    // Sub components
     //
 
 public:
@@ -45,7 +30,24 @@ public:
     // Breakpoints, watchpoints, catchpoints, instruction tracing
     Debugger debugger = Debugger(*this);
 
+
+    //
+    // Internals
+    //
+
 protected:
+
+    // The emulated CPU core
+    Core core = M68000;
+
+    // The interrupt mode of this CPU
+    IrqMode irqMode = IRQ_AUTO;
+
+    // The disassembler format
+    DasmStyle style = DASM_MOIRA;
+    DasmNumberFormat numberFormat { .prefix = "$", .radix = 16 };
+    DasmLetterCase letterCase = DASM_MIXED_CASE;
+    Tab tab{8};
 
     /* State flags
      *
@@ -84,21 +86,21 @@ protected:
      *    This flag indicates whether the CPU should check fo watchpoints.
      */
     int flags;
-    static constexpr int CPU_IS_HALTED         = (1 << 8);
-    static constexpr int CPU_IS_STOPPED        = (1 << 9);
-    static constexpr int CPU_IS_LOOPING        = (1 << 10);
-    static constexpr int CPU_LOG_INSTRUCTION   = (1 << 11);
-    static constexpr int CPU_CHECK_IRQ         = (1 << 12);
-    static constexpr int CPU_TRACE_EXCEPTION   = (1 << 13);
-    static constexpr int CPU_TRACE_FLAG        = (1 << 14);
-    static constexpr int CPU_CHECK_BP          = (1 << 15);
-    static constexpr int CPU_CHECK_WP          = (1 << 16);
-    static constexpr int CPU_CHECK_CP          = (1 << 17);
+    static constexpr int CPU_IS_HALTED          = (1 << 8);
+    static constexpr int CPU_IS_STOPPED         = (1 << 9);
+    static constexpr int CPU_IS_LOOPING         = (1 << 10);
+    static constexpr int CPU_LOG_INSTRUCTION    = (1 << 11);
+    static constexpr int CPU_CHECK_IRQ          = (1 << 12);
+    static constexpr int CPU_TRACE_EXCEPTION    = (1 << 13);
+    static constexpr int CPU_TRACE_FLAG         = (1 << 14);
+    static constexpr int CPU_CHECK_BP           = (1 << 15);
+    static constexpr int CPU_CHECK_WP           = (1 << 16);
+    static constexpr int CPU_CHECK_CP           = (1 << 17);
 
     // Number of elapsed cycles since powerup
     i64 clock;
     
-    // The data and address registers
+    // The egister set
     Registers reg;
 
     // The prefetch queue
@@ -116,7 +118,7 @@ protected:
     // Remembers the number of the last processed exception
     int exception;
 
-    // EXPERIMENTAL (Cycle penalty)
+    // Cycle penalty (needed for 68020+ extended addressing modes)
     int cp;
 
     // Jump table holding the instruction handlers
@@ -154,9 +156,9 @@ public:
     void setDasmLetterCase(DasmLetterCase value);
     void setIndentation(int value);
 
-protected:
+private:
 
-    // Creates the generic jump table (all models)
+    // Creates the generic jump table
     void createJumpTable();
 
 
@@ -229,8 +231,8 @@ protected:
     virtual u16 read16Dasm(u32 addr) { return read16(addr); }
 
     // Writes a byte or word into memory
-    virtual void write8  (u32 addr, u8  val) = 0;
-    virtual void write16 (u32 addr, u16 val) = 0;
+    virtual void write8(u32 addr, u8 val) = 0;
+    virtual void write16(u32 addr, u16 val) = 0;
 
     // Provides the interrupt level in IRQ_USER mode
     virtual u16 readIrqUserVector(u8 level) const { return 0; }
@@ -357,6 +359,7 @@ protected:
     template <Size S = Long> void writeD(int n, u32 v);
     template <Size S = Long> void writeA(int n, u32 v);
     template <Size S = Long> void writeR(int n, u32 v);
+
 
     //
     // Managing the function code pins

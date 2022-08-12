@@ -32,5 +32,4 @@ static constexpr bool PROFILE_DASM = false;
 
 // Uncomment to disable assertion checking
 // #define NDEBUG
-
-#include <assert.h>
+#include <cassert>
