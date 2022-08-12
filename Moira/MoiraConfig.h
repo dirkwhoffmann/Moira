@@ -62,11 +62,11 @@
  * The compatibility mode is used by the test runner application to compare
  * the results computed by Moira and Musashi, respectively.
  *
- * Disable to improve emulation compatibility.
+ * Disable to improve emulation accuracy.
  */
 #define MIMIC_MUSASHI true
 
-/* Modify the following macros to install instruction hooks.
+/* Instruction hooks
  *
  * The following two macros appear at the beginning and the end of all
  * instruction handler and determine if a delegation method should be called
