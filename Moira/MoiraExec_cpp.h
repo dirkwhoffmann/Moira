@@ -4450,7 +4450,6 @@ Moira::execTrapv(u16 opcode)
 
         (void)readMS<C, MEM_PROG, Word>(reg.pc + 2);
         execException<C>(EXC_TRAPV);
-        // execTrapException(7);
 
         //           00  10  20        00  10  20        00  10  20
         //           .b  .b  .b        .w  .w  .w        .l  .l  .l

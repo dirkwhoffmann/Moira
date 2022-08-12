@@ -11,14 +11,6 @@
 void saveToStack0(StackFrame &frame);
 template <Core C> void saveToStack0(StackFrame &frame);
 
-// Emulates a group 1 exception (DEPRECATED)
-// void saveToStack1(u16 nr, u16 sr, u32 pc);
-// template <Core C> void saveToStack1(u16 nr, u16 sr, u32 pc);
-
-// Emulates a group 2 exception (DEPRECATED)
-void saveToStack2(u16 nr, u16 sr, u32 pc);
-template <Core C> void saveToStack2(u16 nr, u16 sr, u32 pc);
-
 /* Creates a stack frame of a certain format
  *
  * Format  Description                  68000  68010  68020

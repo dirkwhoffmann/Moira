@@ -40,143 +40,6 @@ Moira::saveToStack0(StackFrame &frame)
     push <C,Word> (frame.code);
 }
 
-/*
-void
-Moira::saveToStack1(u16 nr, u16 sr, u32 pc)
-{
-    switch (core) {
-
-        case M68000: saveToStack1 <M68000> (nr, sr, pc); break;
-        case M68010: saveToStack1 <M68010> (nr, sr, pc); break;
-        case M68020: saveToStack1 <M68020> (nr, sr, pc); break;
-
-        default:
-            assert(false);
-    }
-}
-
-template <Core C> void
-Moira::saveToStack1(u16 nr, u16 sr, u32 pc)
-{
-    switch (C) {
-
-        case M68000:
-
-            if constexpr (MIMIC_MUSASHI) {
-
-                push <C,Long> (pc);
-                push <C,Word> (sr);
-
-            } else {
-
-                reg.sp -= 6;
-                writeMS<C, MEM_DATA, Word>((reg.sp + 4) & ~1, pc & 0xFFFF);
-                writeMS<C, MEM_DATA, Word>((reg.sp + 0) & ~1, sr);
-                writeMS<C, MEM_DATA, Word>((reg.sp + 2) & ~1, pc >> 16);
-            }
-            break;
-
-        case M68010:
-        case M68020:
-
-            if constexpr (MIMIC_MUSASHI) {
-
-                push<C, Word>(4 * nr);
-                push<C, Long>(pc);
-                push<C, Word>(sr);
-
-            } else {
-
-                reg.sp -= 8;
-                writeMS<C, MEM_DATA, Word>((reg.sp + 6) & ~1, 4 * nr);
-                writeMS<C, MEM_DATA, Word>((reg.sp + 4) & ~1, pc & 0xFFFF);
-                writeMS<C, MEM_DATA, Word>((reg.sp + 0) & ~1, sr);
-                writeMS<C, MEM_DATA, Word>((reg.sp + 2) & ~1, pc >> 16);
-            }
-            break;
-    }
-}
-*/
-
-void
-Moira::saveToStack2(u16 nr, u16 sr, u32 pc)
-{
-    switch (core) {
-
-        case M68000: saveToStack2<M68000>(nr, sr, pc); break;
-        case M68010: saveToStack2<M68010>(nr, sr, pc); break;
-        case M68020: saveToStack2<M68020>(nr, sr, pc); break;
-
-        default:
-            assert(false);
-    }
-}
-
-template <Core C> void
-Moira::saveToStack2(u16 nr, u16 sr, u32 pc)
-{
-    switch (C) {
-
-        case M68000:
-
-            // SAME AS saveToStack1? IF YES, CALL IT
-            if constexpr (MIMIC_MUSASHI) {
-
-                push <C,Long> (pc);
-                push <C,Word> (sr);
-
-            } else {
-
-                reg.sp -= 6;
-                writeMS<C, MEM_DATA, Word>((reg.sp + 4) & ~1, pc & 0xFFFF);
-                writeMS<C, MEM_DATA, Word>((reg.sp + 0) & ~1, sr);
-                writeMS<C, MEM_DATA, Word>((reg.sp + 2) & ~1, pc >> 16);
-            }
-            break;
-
-        case M68010:
-
-            // SAME AS saveToStack1? IF YES, CALL IT
-            if constexpr (MIMIC_MUSASHI) {
-
-                push<C, Word>(4 * nr);
-                push<C, Long>(pc);
-                push<C, Word>(sr);
-
-            } else {
-
-                reg.sp -= 8;
-                writeMS<C, MEM_DATA, Word>((reg.sp + 6) & ~1, 4 * nr);
-                writeMS<C, MEM_DATA, Word>((reg.sp + 4) & ~1, pc & 0xFFFF);
-                writeMS<C, MEM_DATA, Word>((reg.sp + 0) & ~1, sr);
-                writeMS<C, MEM_DATA, Word>((reg.sp + 2) & ~1, pc >> 16);
-            }
-            break;
-
-        case M68020:
-
-            if constexpr (MIMIC_MUSASHI) {
-
-                // printf("Pushing %x %x %x %x\n", pc, 0x2000 | nr << 2, reg.pc, sr);
-                push<C, Long>(reg.pc0);
-                push<C, Word>(0x2000 | nr << 2);
-                push<C, Long>(pc);
-                push<C, Word>(sr);
-
-            } else {
-
-                // TODO
-                assert(false);
-                reg.sp -= 8;
-                writeMS<C, MEM_DATA, Word>((reg.sp + 6) & ~1, 4 * nr);
-                writeMS<C, MEM_DATA, Word>((reg.sp + 4) & ~1, pc & 0xFFFF);
-                writeMS<C, MEM_DATA, Word>((reg.sp + 0) & ~1, sr);
-                writeMS<C, MEM_DATA, Word>((reg.sp + 2) & ~1, pc >> 16);
-            }
-            break;
-    }
-}
-
 template <Core C> void
 Moira::writeStackFrame0000(u16 sr, u32 pc, u16 nr)
 {
@@ -355,7 +218,6 @@ Moira::execException(ExceptionType exc, int nr)
             // Write stack frame
             SYNC(4);
             writeStackFrame0000<C>(status, reg.pc - 2, vector);
-//            saveToStack1<C>(vector, status, reg.pc - 2);
 
             jumpToVector<C, AE_SET_CB3>(vector);
             break;
@@ -370,8 +232,10 @@ Moira::execException(ExceptionType exc, int nr)
             // Disable tracing, but keep the CPU_TRACE_EXCEPTION flag
             clearTraceFlags();
 
-            // Write exception information to stack
-            saveToStack2<C>(u16(vector), status, reg.pc);
+            // Write stack frame
+            C == M68020 ?
+            writeStackFrame0010<C>(status, reg.pc, reg.pc0, vector) :
+            writeStackFrame0000<C>(status, reg.pc, vector);
 
             jumpToVector<C>(vector);
             break;
@@ -385,10 +249,9 @@ Moira::execException(ExceptionType exc, int nr)
             clearTraceFlags();
             flags &= ~CPU_TRACE_EXCEPTION;
 
-            // Write exception information to stack
+            // Write stack frame
             SYNC(4);
             writeStackFrame0000<C>(status, reg.pc - 2, vector);
-//            saveToStack1<C>(vector, status, reg.pc - 2);
 
             jumpToVector<C,AE_SET_CB3>(vector);
             break;
@@ -408,7 +271,6 @@ Moira::execException(ExceptionType exc, int nr)
             // Write stack frame
             SYNC(4);
             writeStackFrame0000<C>(status, reg.pc, vector);
-//            saveToStack1<C>(vector, status, reg.pc);
 
             jumpToVector<C>(vector);
             break;
@@ -425,7 +287,6 @@ Moira::execException(ExceptionType exc, int nr)
             // Write stack frame
             SYNC(4);
             writeStackFrame0000<C>(status, reg.pc, vector);
-            // saveToStack1(vector, status, reg.pc - 2);
 
             jumpToVector<C, AE_SET_CB3>(vector);
             break;
@@ -483,7 +344,6 @@ Moira::execUnimplemented(int nr)
     // Write exception information to stack
     SYNC(4);
     writeStackFrame0000<C>(status, reg.pc - 2, u16(nr));
-//     saveToStack1<C>(u16(nr), status, reg.pc - 2);
 
     jumpToVector<C,AE_SET_CB3>(nr);
 }
