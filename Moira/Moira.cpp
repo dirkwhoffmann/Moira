@@ -7,8 +7,8 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+#include "MoiraConfig.h"
 #include "Moira.h"
-
 #include <cstdio>
 #include <algorithm>
 #include <cmath>

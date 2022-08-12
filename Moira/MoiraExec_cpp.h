@@ -7,8 +7,6 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-// #include <set>
-
 #define AVAILABILITY(cpu) \
 if constexpr (WILL_EXECUTE) willExecute(__func__, I, M, S, opcode); \
 assert(C >= (cpu)); \
@@ -2131,7 +2129,7 @@ Moira::execJmp(u16 opcode)
     u32 oldpc = reg.pc;
 
     int src = _____________xxx(opcode);
-    u32 ea  = computeEA <C, M, Long, SKIP_LAST_READ> (src);
+    u32 ea  = computeEA <C, M, Long, SKIP_LAST_RD> (src);
 
     [[maybe_unused]] const int delay[] = { 0,0,0,0,0,2,4,2,0,2,4,0 };
     SYNC(delay[M]);
@@ -2167,7 +2165,7 @@ Moira::execJsr(u16 opcode)
     AVAILABILITY(M68000)
 
     int src = _____________xxx(opcode);
-    u32 ea  = computeEA <C, M, Long, SKIP_LAST_READ> (src);
+    u32 ea  = computeEA <C, M, Long, SKIP_LAST_RD> (src);
 
     [[maybe_unused]] const int delay[] = { 0,0,0,0,0,2,4,2,0,2,4,0 };
     SYNC(delay[M]);

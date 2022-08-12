@@ -11,46 +11,41 @@
 
 static const char *mnemonics[]
 {
-    // 68000 instruction set
-    "abcd" ,    "add",      "adda",
-    "addi",     "addq",     "addx",     "and",      "andi",     "andi",
-    "andi",     "asl",      "asr",      "bcc",      "bcs",      "beq",
-    "bge",      "bgt",      "bhi",      "ble",      "bls",      "blt",
-    "bmi",      "bne",      "bpl",      "bvc",      "bvs",          "bchg",     "bclr",     "bra",      "bset",
-    "bsr",      "btst",         "chk",
-        "clr",      "cmp",     "cmpa",     "cmpi",
-    "cmpm",     "dbcc",     "dbcs",     "dbeq",     "dbge",     "dbgt",
-    "dbhi",     "dble",     "dbls",     "dblt",     "dbmi",     "dbne",
-    "dbpl",     "dbvc",     "dbvs",     "dbra",     "dbt",
+    // 68000
+    "abcd" ,    "add",      "adda",     "addi",     "addq",     "addx",
+    "and",      "andi",     "andi",     "andi",     "asl",      "asr",
+    "bcc",      "bcs",      "beq",      "bge",      "bgt",      "bhi",
+    "ble",      "bls",      "blt",      "bmi",      "bne",      "bpl",
+    "bvc",      "bvs",      "bchg",     "bclr",     "bra",      "bset",
+    "bsr",      "btst",     "chk",      "clr",      "cmp",     "cmpa",
+    "cmpi",      "cmpm",     "dbcc",    "dbcs",     "dbeq",     "dbge",
+    "dbgt",     "dbhi",     "dble",     "dbls",     "dblt",     "dbmi",
+    "dbne",     "dbpl",     "dbvc",     "dbvs",     "dbra",     "dbt",
     "divs",     "divu",     "eor",      "eori",     "eori",     "eori",
-    "exg",      "ext",        "???", "jmp",      "jsr",
-    "lea",      "???", "???", "link",     "lsl",      "lsr",      "move" ,    "movea",
-       "move",     "move",     "move",     "move",     "move",
-    "movem",    "movep",    "moveq",       "muls",
-    "mulu",     "nbcd",     "neg",      "negx",     "nop",      "not",
-    "or",       "ori",      "ori",      "ori",       "pea",
-    "reset",    "rol",      "ror",      "roxl",     "roxr",
-    "rte",      "rtr",      "rts",      "sbcd",     "scc",
-    "scs",      "seq",      "sge",      "sgt",      "shi",      "sle",
-    "sls",      "slt",      "smi",      "sne",      "spl",      "svc",
-    "svs",      "sf",       "st",       "stop",     "sub",      "suba",
-    "subi",     "subq",     "subx",     "swap",     "tas",      "trap",
-    "trapv",       "tst",
-    "unlk",
+    "exg",      "ext",      "???",      "jmp",      "jsr",      "lea",
+    "???",      "???",      "link",     "lsl",      "lsr",      "move",
+    "movea",    "move",     "move",     "move",     "move",     "move",
+    "movem",    "movep",    "moveq",    "muls",     "mulu",     "nbcd",
+    "neg",      "negx",     "nop",      "not",      "or",       "ori",
+    "ori",      "ori",      "pea",      "reset",    "rol",      "ror",
+    "roxl",     "roxr",     "rte",      "rtr",      "rts",      "sbcd",
+    "scc",      "scs",      "seq",      "sge",      "sgt",      "shi",
+    "sle",      "sls",      "slt",      "smi",      "sne",      "spl",
+    "svc",      "svs",      "sf",       "st",       "stop",     "sub",
+    "suba",     "subi",     "subq",     "subx",     "swap",     "tas",
+    "trap",     "trapv",    "tst",      "unlk",
 
-    "bkpt",  "movec", "moves",  "rtd",
+    // 68010
+    "bkpt",     "movec",    "moves",    "rtd",
 
-    "bfchg",
-    "bfclr",    "bfexts",   "bfextu",   "bfffo",    "bfins",    "bfset",
-    "bftst", "callm",    "cas",      "cas2", "chk2", 
-    "cmp2",   "b",        "db",       "gen",
-    "restore",  "save",     "s",        "trap",  "divl",
-    "extb",
-    "mull", "pack",   "rtm",    
-    "trapcc",   "trapcs",   "trapeq",   "trapge",   "trapgt",
+    // 68020
+    "bfchg",    "bfclr",    "bfexts",   "bfextu",   "bfffo",    "bfins",
+    "bfset",    "bftst",    "callm",    "cas",      "cas2",     "chk2",
+    "cmp2",     "b",        "db",       "gen",      "restore",  "save",
+    "s",        "trap",     "divl",     "extb",     "mull",     "pack",
+    "rtm",      "trapcc",   "trapcs",   "trapeq",   "trapge",   "trapgt",
     "traphi",   "traple",   "trapls",   "traplt",   "trapmi",   "trapne",
-    "trappl",   "trapvc",   "trapvs",   "trapf",    "trapt", 
-    "unpk"
+    "trappl",   "trapvc",   "trapvs",   "trapf",    "trapt",    "unpk"
 };
 
 static int decDigits(u64 value) { return value ? 1 + (int)log10(value) : 1; }

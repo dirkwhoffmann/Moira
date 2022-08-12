@@ -9,8 +9,8 @@
 
 #pragma once
 
-#include "MoiraConfig.h"
 #include "MoiraTypes.h"
+#include "StrWriter.h"
 #include <map>
 
 namespace moira {
@@ -173,7 +173,7 @@ struct SoftwareTrap {
 
 struct SoftwareTraps {
     
-    std::map <u16,SoftwareTrap> traps;
+    std::map<u16, SoftwareTrap>traps;
     
     // Creates a new software trap for a given instruction
     u16 create(u16 instr);

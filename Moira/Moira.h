@@ -9,11 +9,8 @@
 
 #pragma once
 
-#include "MoiraConfig.h"
 #include "MoiraTypes.h"
 #include "MoiraDebugger.h"
-#include "StrWriter.h"
-#include <cassert>
 
 namespace moira {
 
