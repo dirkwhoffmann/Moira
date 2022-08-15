@@ -13,6 +13,11 @@
 #include <string>
 #include <optional>
 
+#if defined(__clang__)
+#pragma GCC diagnostic ignored "-Wgnu-anonymous-struct"
+#pragma GCC diagnostic ignored "-Wnested-anon-types"
+#endif
+
 namespace moira {
 
 typedef int8_t             i8;
@@ -176,7 +181,7 @@ typedef enum
     EXC_DIVIDE_BY_ZERO      = 5,
     EXC_CHK                 = 6,
     EXC_TRAPV               = 7,
-    EXC_PRIVILEGE_VIOLATION = 8,
+    EXC_PRIVILEGE           = 8,
     EXC_TRACE               = 9,
     EXC_LINEA               = 10,
     EXC_LINEF               = 11,
@@ -212,14 +217,6 @@ typedef enum
     FC_SUPERVISOR_PROG      = 6
 }
 FunctionCode;
-
-typedef enum
-{
-    FC_FROM_FCL,
-    FC_FROM_SFC,
-    FC_FROM_DFC
-}
-FCSource;
 
 typedef enum
 {
@@ -302,7 +299,7 @@ struct PrefetchQueue {
  * differences, some functions take an additional 'flags' argument to alter
  * their behavior. All flags are passed as a template parameter for efficiency.
  */
- 
+
 typedef u64 Flags;
 
 // Memory access flags
@@ -311,7 +308,7 @@ constexpr u64 SKIP_LAST_RD  (1 << 1);   // Don't read the extension word
 
 // Interrupt flags
 constexpr u64 POLLIPL       (1 << 2);   // Poll the interrupt lines
-                           
+
 // Address error flags
 constexpr u64 AE_WRITE      (1 << 3);   // Clear read flag in code word
 constexpr u64 AE_PROG       (1 << 4);   // Set FC pins to program space

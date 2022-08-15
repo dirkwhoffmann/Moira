@@ -18,55 +18,50 @@
 
 #if PRECISE_TIMING == true
 
-#define SYNC(x)         if constexpr (C != M68020) sync(x)
-#define SYNC_68000(x)   if constexpr (C == M68000) sync(x)
-#define SYNC_68010(x)   if constexpr (C == M68010) sync(x)
+#define SYNC(x)         { if constexpr (C != M68020) sync(x); }
+#define SYNC_68000(x)   { if constexpr (C == M68000) sync(x); }
+#define SYNC_68010(x)   { if constexpr (C == M68010) sync(x); }
 
-#define CYCLES_68000(c)
-#define CYCLES_68010(c)
-#define CYCLES_68020(c) if constexpr (C == M68020) { sync((c) + cp); }
+#define CYCLES_68000(c) { }
+#define CYCLES_68010(c) { }
+#define CYCLES_68020(c) { if constexpr (C == M68020) sync((c) + cp); }
 
 #else
 
-#define SYNC(x) { }
-#define SYNC_68000(x) { }
-#define SYNC_68010(x) { }
+#define SYNC(x)         { }
+#define SYNC_68000(x)   { }
+#define SYNC_68010(x)   { }
 
-#define CYCLES_68000(c) if constexpr (C == M68000) { sync(c); }
-#define CYCLES_68010(c) if constexpr (C == M68010) { sync(c); }
-#define CYCLES_68020(c) if constexpr (C == M68020) { sync((c) + cp); }
+#define CYCLES_68000(c) { if constexpr (C == M68000) sync(c); }
+#define CYCLES_68010(c) { if constexpr (C == M68010) sync(c); }
+#define CYCLES_68020(c) { if constexpr (C == M68020) sync((c) + cp); }
 
 #endif
 
 #define CYCLES(c) { CYCLES_68000(c) CYCLES_68010(c) CYCLES_68020(c) }
 
-#define CYCLES_BWL_00(m,b,w,l) CYCLES_68000(S == Byte ? (b) : S == Word ? (w) : (l))
-#define CYCLES_BWL_10(m,b,w,l) CYCLES_68010(S == Byte ? (b) : S == Word ? (w) : (l))
-#define CYCLES_BWL_20(m,b,w,l) CYCLES_68020(S == Byte ? (b) : S == Word ? (w) : (l))
+#define CYCLES_BWL_00(b,w,l) CYCLES_68000(S == Byte ? (b) : S == Word ? (w) : (l))
+#define CYCLES_BWL_10(b,w,l) CYCLES_68010(S == Byte ? (b) : S == Word ? (w) : (l))
+#define CYCLES_BWL_20(b,w,l) CYCLES_68020(S == Byte ? (b) : S == Word ? (w) : (l))
 
 #define CYCLES_MBWL(m,b0,b1,b2,w0,w1,w2,l0,l1,l2) \
-if constexpr (M == m) { CYCLES_BWL_00(m,b0,w0,l0) } \
-if constexpr (M == m) { CYCLES_BWL_10(m,b1,w1,l1) } \
-if constexpr (M == m) { CYCLES_BWL_20(m,b2,w2,l2) }
+{ if constexpr (M == m) { CYCLES_BWL_00(b0,w0,l0) } } \
+{ if constexpr (M == m) { CYCLES_BWL_10(b1,w1,l1) } } \
+{ if constexpr (M == m) { CYCLES_BWL_20(b2,w2,l2) } }
 
-#define CYCLES_IBWL(i,b0,b1,b2,w0,w1,w2,l0,l1,l2) \
-if constexpr (I == i) { CYCLES_BWL_00(m,b0,w0,l0) } \
-if constexpr (I == i) { CYCLES_BWL_10(m,b1,w1,l1) } \
-if constexpr (I == i) { CYCLES_BWL_20(m,b2,w2,l2) }
-
-#define CYCLES_DN(...)      CYCLES_MBWL(MODE_DN,    ##__VA_ARGS__)
-#define CYCLES_AN(...)      CYCLES_MBWL(MODE_AN,    ##__VA_ARGS__)
-#define CYCLES_AI(...)      CYCLES_MBWL(MODE_AI,    ##__VA_ARGS__)
-#define CYCLES_PI(...)      CYCLES_MBWL(MODE_PI,    ##__VA_ARGS__)
-#define CYCLES_PD(...)      CYCLES_MBWL(MODE_PD,    ##__VA_ARGS__)
-#define CYCLES_DI(...)      CYCLES_MBWL(MODE_DI,    ##__VA_ARGS__)
-#define CYCLES_IX(...)      CYCLES_MBWL(MODE_IX,    ##__VA_ARGS__)
-#define CYCLES_AW(...)      CYCLES_MBWL(MODE_AW,    ##__VA_ARGS__)
-#define CYCLES_AL(...)      CYCLES_MBWL(MODE_AL,    ##__VA_ARGS__)
-#define CYCLES_DIPC(...)    CYCLES_MBWL(MODE_DIPC,  ##__VA_ARGS__)
-#define CYCLES_IXPC(...)    CYCLES_MBWL(MODE_IXPC,  ##__VA_ARGS__)
-#define CYCLES_IM(...)      CYCLES_MBWL(MODE_IM,    ##__VA_ARGS__)
-#define CYCLES_IP(...)      CYCLES_MBWL(MODE_IP,    ##__VA_ARGS__)
+#define CYCLES_DN(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_DN,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_AN(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_AN,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_AI(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_AI,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_PI(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_PI,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_PD(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_PD,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_DI(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_DI,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_IX(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_IX,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_AW(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_AW,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_AL(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_AL,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_DIPC(b0,b1,b2,w0,w1,w2,l0,l1,l2)   CYCLES_MBWL(MODE_DIPC, b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_IXPC(b0,b1,b2,w0,w1,w2,l0,l1,l2)   CYCLES_MBWL(MODE_IXPC, b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_IM(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_IM,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_IP(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_IP,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
 
 #define REVERSE_8(x) (u8)(((x) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
 #define REVERSE_16(x) (u16)((REVERSE_8((x) & 0xFF) << 8) | REVERSE_8(((x) >> 8) & 0xFF))

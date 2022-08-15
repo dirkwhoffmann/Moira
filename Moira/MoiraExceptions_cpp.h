@@ -185,7 +185,7 @@ Moira::execException(ExceptionType exc, int nr)
     u16 status = getSR();
 
     // Determine the exception vector number
-    u16 vector = u16(exc) + (exc == EXC_TRAP ? nr : 0);
+    u16 vector = (exc == EXC_TRAP) ? u16(exc + nr) : u16(exc);
 
     // Inform the delegate
     willExecute(exc, vector);
@@ -227,7 +227,7 @@ Moira::execException(ExceptionType exc, int nr)
             jumpToVector<C>(vector);
             break;
 
-        case EXC_PRIVILEGE_VIOLATION:
+        case EXC_PRIVILEGE:
 
             // Clear any pending trace event
             flags &= ~CPU_TRACE_EXCEPTION;

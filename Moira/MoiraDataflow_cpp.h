@@ -8,22 +8,22 @@
 // -----------------------------------------------------------------------------
 
 template <Core C, Mode M, Size S, Flags F> bool
-Moira::readOp(int n, u32 &ea, u32 &result)
+Moira::readOp(int n, u32 *ea, u32 *result)
 {
     switch (M) {
-            
-        // Handle non-memory modes
-        case MODE_DN: result = readD<S>(n);   return true;
-        case MODE_AN: result = readA<S>(n);   return true;
-        case MODE_IM: result = readI<C, S>(); return true;
-            
+
+            // Handle non-memory modes
+        case MODE_DN: *result = readD<S>(n);   return true;
+        case MODE_AN: *result = readA<S>(n);   return true;
+        case MODE_IM: *result = readI<C, S>(); return true;
+
         default:
             
             // Compute effective address
-            ea = computeEA<C, M, S , F>(n);
+            *ea = computeEA<C, M, S , F>(n);
 
             // Read from effective address
-            bool error; result = readM<C, M, S, F>(ea, error);
+            bool error; *result = readM<C, M, S, F>(*ea, error);
 
             // Emulate -(An) register modification
             updateAnPD<M, S>(n);
@@ -133,9 +133,9 @@ Moira::computeEA(u32 n) {
                     result = computeEAfull<C, M, S, F>(readA(n));
                 } else {
                     result = computeEAbrief<C, M, S, F>(readA(n));
-                }
-                break;
             }
+
+            } else {
 
             i8   d = (i8)queue.irc;
             u32 an = readA(n);
@@ -145,6 +145,7 @@ Moira::computeEA(u32 n) {
 
             SYNC(2);
             if ((F & SKIP_LAST_RD) == 0) { readExt<C>(); } else { reg.pc += 2; }
+            }
             break;
         }
         case 7: // ABS.W
@@ -177,9 +178,9 @@ Moira::computeEA(u32 n) {
                     result = computeEAfull<C, M, S, F>(reg.pc);
                 } else {
                     result = computeEAbrief<C, M, S, F>(reg.pc);
-                }
-                break;
             }
+
+            } else {
 
             i8   d = (i8)queue.irc;
             u32 xi = readR((queue.irc >> 12) & 0b1111);
@@ -187,6 +188,7 @@ Moira::computeEA(u32 n) {
             result = U32_ADD3(reg.pc, d, ((queue.irc & 0x800) ? xi : SEXT<Word>(xi)));
             SYNC(2);
             if ((F & SKIP_LAST_RD) == 0) { readExt<C>(); } else { reg.pc += 2; }
+            }
             break;
         }
         case 11: // Im
@@ -387,7 +389,7 @@ Moira::writeM(u32 addr, u32 val, bool &error)
 template <Core C, Mode M, Size S, Flags F> void
 Moira::writeM(u32 addr, u32 val)
 {
-    if (isPrgMode(M)) {
+    if constexpr (isPrgMode(M)) {
         writeMS<C, MEM_PROG, S, F>(addr, val);
     } else {
         writeMS<C, MEM_DATA, S, F>(addr, val);

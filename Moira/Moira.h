@@ -113,7 +113,7 @@ protected:
     u8 fcl;
 
     // Determines the source of the function code pins
-    FCSource fcSource;
+    u8 fcSource;
 
     // Remembers the number of the last processed exception
     int exception;
@@ -156,7 +156,7 @@ public:
     void setDasmLetterCase(DasmLetterCase value);
     void setIndentation(int value);
 
-private:
+protected:
 
     // Creates the generic jump table
     void createJumpTable();
@@ -368,7 +368,7 @@ protected:
 public:
     
     // Returns the current value on the function code pins
-    FunctionCode readFC();
+    FunctionCode readFC() const;
 
     private:
     

@@ -107,7 +107,7 @@ Moira::reset()
 
     ipl = 0;
     fcl = 0;
-    fcSource = FC_FROM_FCL;
+    fcSource = 0;
 
     SYNC(16);
 
@@ -186,7 +186,7 @@ Moira::execute()
             sync(4);
             reg.pc -= 2;
             flags &= ~CPU_IS_STOPPED;
-            execException(EXC_PRIVILEGE_VIOLATION);
+            execException(EXC_PRIVILEGE);
             return;
         }
         
@@ -396,13 +396,13 @@ Moira::setSupervisorFlags(bool s, bool m)
 }
 
 FunctionCode
-Moira::readFC()
+Moira::readFC() const
 {
     switch (fcSource) {
 
-        case FC_FROM_FCL: return FunctionCode((reg.sr.s ? 4 : 0) | fcl);
-        case FC_FROM_SFC: return FunctionCode(reg.sfc);
-        case FC_FROM_DFC: return FunctionCode(reg.dfc);
+        case 0: return FunctionCode((reg.sr.s ? 4 : 0) | fcl);
+        case 1: return FunctionCode(reg.sfc);
+        case 2: return FunctionCode(reg.dfc);
 
         default:
             fatalError;
@@ -502,9 +502,10 @@ void
 Moira::disassembleMemory(u32 addr, int cnt, char *str)
 {
     U32_DEC(addr, 2); // Because dasmRead increases addr first
+
     for (int i = 0; i < cnt; i++) {
         u32 value = dasmRead<Word>(addr);
-        disassembleWord(value, str);
+        sprintx(str, value, { .prefix = "", .radix = 16, .upperCase = true }, 4);
         *str++ = (i == cnt - 1) ? 0 : ' ';
     }
 }

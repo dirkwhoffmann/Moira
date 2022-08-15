@@ -39,7 +39,7 @@ template <Size S> u32 CLEAR(u64 data) {
 }
 
 template <Size S> i32 SEXT(u64 data) {
-    if constexpr (S == 0) return data;
+    if constexpr (S == 0)    return (i32)data;
     if constexpr (S == Byte) return (i8)data;
     if constexpr (S == Word) return (i16)data;
     if constexpr (S == Long) return (i32)data;
@@ -494,7 +494,7 @@ Moira::logic(u32 op1, u32 op2)
 template <Instr I> u32
 Moira::bitfield(u32 data, u32 offset, u32 width, u32 mask)
 {
-    u32 result;
+    u32 result = 0;
 
     switch (I) {
 
@@ -573,7 +573,7 @@ Moira::bitfield(u32 data, u32 offset, u32 width, u32 mask)
             break;
 
         default:
-            fatalError;
+            break;
     }
 
     return result;

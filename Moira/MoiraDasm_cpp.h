@@ -61,8 +61,8 @@ Moira::Op(u16 reg, u32 &pc)
 
             if (result.ext1 & 0x100) {
 
-                result.dw = baseDispWords((u16)result.ext1);
-                result.ow = outerDispWords((u16)result.ext1);
+                result.dw = u8(baseDispWords((u16)result.ext1));
+                result.ow = u8(outerDispWords((u16)result.ext1));
 
                 // Compensate Musashi bug (?)
                 if (style == DASM_MUSASHI && (result.ext1 & 0x47) >= 0x44) {
