@@ -4272,7 +4272,7 @@ Moira::execRts(u16 opcode)
     AVAILABILITY(M68000)
 
     bool error;
-    u32 newpc = readM <C, M, Long> (reg.sp, error);
+    u32 newpc = readM<C, M, Long>(reg.sp, error);
     if (error) return;
 
     reg.sp += 4;
@@ -4609,7 +4609,7 @@ Moira::execUnpkPd(u16 opcode)
     if (!readOp<C, M, Byte>(dy, &ea, &data)) return;
 
     u16 adj = (u16)readI<C, Word>();
-
+    
     u32 src = ((data << 4 & 0x0F00) | (data & 0x000F)) + adj;
 
     writeOp<C, M, Byte>(dx, src >> 8 & 0xFF);

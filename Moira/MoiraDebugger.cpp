@@ -23,7 +23,7 @@ bool
 Guard::eval(u32 addr, Size S)
 {
     if (this->addr >= addr && this->addr < addr + u32(S) && this->enabled) {
-
+        
         if (!ignore) return true;
         ignore--;
     }
@@ -53,7 +53,7 @@ Guards::guardAt(u32 addr) const
     for (int i = 0; i < count; i++) {
         if (guards[i].addr == addr) return &guards[i];
     }
-
+    
     return nullptr;
 }
 
@@ -68,16 +68,16 @@ void
 Guards::setAt(u32 addr)
 {
     if (isSetAt(addr)) return;
-
+    
     if (count >= capacity) {
-
+        
         Guard *newguards = new Guard[2 * capacity];
         for (long i = 0; i < capacity; i++) newguards[i] = guards[i];
         delete [] guards;
         guards = newguards;
         capacity *= 2;
     }
-
+    
     guards[count++].addr = addr;
     setNeedsCheck(true);
 }
@@ -92,9 +92,9 @@ void
 Guards::removeAt(u32 addr)
 {
     for (int i = 0; i < count; i++) {
-
+        
         if (guards[i].addr == addr) {
-
+            
             for (int j = i; j + 1 < count; j++) guards[j] = guards[j + 1];
             count--;
             break;
@@ -345,7 +345,7 @@ Debugger::vectorName(u8 vectorNr)
         return "User interrupt vector";
     }
     switch (vectorNr) {
-    
+            
         case 0:     return "Reset SP";
         case 1:     return "Reset PC";
         case 2:     return "Bus error";
@@ -360,7 +360,7 @@ Debugger::vectorName(u8 vectorNr)
         case 11:    return "Line F instruction";
         case 15:    return "Uninitialized IRQ vector";
         case 24:    return "Spurious interrupt";
-
+            
         default:
             fatalError;
     }

@@ -69,7 +69,7 @@
 /* The following macro appear at the beginning of each instruction handler.
  * Moira will call 'willExecute(...)' for all listed instructions.
  */
-#define WILL_EXECUTE    I == RESET || I == STOP || I == TAS
+#define WILL_EXECUTE    I == STOP || I == TAS || I == BKPT
 
 /* The following macro appear at the end of each instruction handler.
  * Moira will call 'didExecute(...)' for all listed instructions.
