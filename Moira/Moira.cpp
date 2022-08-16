@@ -41,11 +41,11 @@ Moira::~Moira()
 }
 
 void
-Moira::setCore(Core core)
+Moira::setModel(Model model)
 {
-    if (this->core != core) {
+    if (this->model != model) {
         
-        this->core = core;
+        this->model = model;
         createJumpTable();
         flags &= ~CPU_IS_LOOPING;
     }
@@ -85,12 +85,15 @@ Moira::setIndentation(int value)
 void
 Moira::reset()
 {
-    switch (core) {
-            
-        case C68000: reset <C68000> (); break;
-        case C68010: reset <C68010> (); break;
-        case C68020: reset <C68020> (); break;
-            
+    switch (model) {
+
+        case M68000:    reset<C68000>(); break;
+        case M68010:    reset<C68010>(); break;
+        case M68EC020:
+        case M68020:
+        case M68EC030:
+        case M68030:    reset<C68020>(); break;
+
         default:
             assert(false);
     }
@@ -350,7 +353,7 @@ Moira::setSR(u16 val)
     setCCR((u8)val);
     setSupervisorMode(s);
     
-    if (core == C68020) {
+    if (model > M68010) {
         
         bool t0 = (val >> 14) & 1;
         bool m = (val >> 12) & 1;

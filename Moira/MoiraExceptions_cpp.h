@@ -114,6 +114,7 @@ Moira::writeStackFrame1011(u16 sr, u32 pc, u16 nr)
     
 }
 
+/*
 void
 Moira::execAddressError(StackFrame frame, int delay)
 {
@@ -127,6 +128,7 @@ Moira::execAddressError(StackFrame frame, int delay)
             assert(false);
     }
 }
+*/
 
 template <Core C> void
 Moira::execAddressError(StackFrame frame, int delay)
@@ -168,11 +170,14 @@ Moira::execAddressError(StackFrame frame, int delay)
 void
 Moira::execException(ExceptionType exc, int nr)
 {
-    switch (core) {
-            
-        case C68000: execException<C68000>(exc, nr); break;
-        case C68010: execException<C68010>(exc, nr); break;
-        case C68020: execException<C68020>(exc, nr); break;
+    switch (model) {
+
+        case M68000:    execException<C68000>(exc, nr); break;
+        case M68010:    execException<C68010>(exc, nr); break;
+        case M68EC020:
+        case M68020:
+        case M68EC030:
+        case M68030:    execException<C68020>(exc, nr); break;
             
         default:
             assert(false);
@@ -292,12 +297,15 @@ Moira::execException(ExceptionType exc, int nr)
 void
 Moira::execInterrupt(u8 level)
 {
-    switch (core) {
-            
-        case C68000: execInterrupt<C68000>(level); break;
-        case C68010: execInterrupt<C68010>(level); break;
-        case C68020: execInterrupt<C68020>(level); break;
-            
+    switch (model) {
+
+        case M68000:    execInterrupt<C68000>(level); break;
+        case M68010:    execInterrupt<C68010>(level); break;
+        case M68EC020:
+        case M68020:
+        case M68EC030:
+        case M68030:    execInterrupt<C68020>(level); break;
+
         default:
             assert(false);
     }

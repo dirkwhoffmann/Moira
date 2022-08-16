@@ -268,7 +268,7 @@ Moira::execAddEaRg(u16 opcode)
 
     looping<I>() ? noPrefetch() : prefetch<C, POLLIPL>();
 
-    if (core == C68000) {
+    if constexpr (C == C68000) {
         if constexpr (S == Long) SYNC(2 + (isMemMode(M) ? 0 : 2));
     } else {
         if constexpr (S == Long) SYNC(2);
@@ -340,7 +340,7 @@ Moira::execAdda(u16 opcode)
     looping<I>() ? noPrefetch() : prefetch<C, POLLIPL>();
 
     SYNC(2);
-    if (core == C68000) {
+    if constexpr (C == C68000) {
         if constexpr (S == Word || isRegMode(M) || isImmMode(M)) SYNC(2);
     } else {
         if constexpr (S == Word) SYNC(2);
@@ -464,7 +464,7 @@ Moira::execAddqAn(u16 opcode)
     u32 result = (I == ADDQ) ? readA(dst) + src : readA(dst) - src;
     prefetch<C, POLLIPL>();
 
-    if (core == C68000 || S == Long) SYNC(4);
+    if constexpr (C == C68000 || S == Long) SYNC(4);
     writeA(dst, result);
 
     //           00  10  20        00  10  20        00  10  20
@@ -515,7 +515,7 @@ Moira::execAddxRg(u16 opcode)
     u32 result = addsub<C, I, S>(readD<S>(src), readD<S>(dst));
     prefetch<C, POLLIPL>();
 
-    if (core == C68000) {
+    if constexpr (C == C68000) {
         if constexpr (S == Long) SYNC(4);
     } else {
         if constexpr (S == Long) SYNC(2);
@@ -589,7 +589,7 @@ Moira::execAndEaRg(u16 opcode)
     u32 result = logic<C, I, S>(data, readD<S>(dst));
     prefetch<C, POLLIPL>();
 
-    if (core == C68000) {
+    if constexpr (C == C68000) {
         if constexpr (S == Long) SYNC(isRegMode(M) || isImmMode(M) ? 4 : 2);
     } else {
         if constexpr (S == Long) SYNC(2);
@@ -628,7 +628,7 @@ Moira::execAndRgEa(u16 opcode)
     u32 result = logic<C, I, S>(readD<S>(src), data);
     looping<I>() ? noPrefetch() : prefetch<C, POLLIPL>();
 
-    if (core == C68000) {
+    if constexpr (C == C68000) {
         if constexpr (S == Long && isRegMode(M)) SYNC(4);
     } else {
         if constexpr (S == Long && isRegMode(M)) SYNC(2);
@@ -779,7 +779,7 @@ Moira::execBra(u16 opcode)
 
     // Check for address error
     if (misaligned<C>(newpc)) {
-        execAddressError(makeFrame(newpc, reg.pc));
+        execAddressError<C>(makeFrame(newpc, reg.pc));
         return;
     }
 
@@ -816,7 +816,7 @@ Moira::execBcc(u16 opcode)
 
         // Check for address error
         if (misaligned<C>(newpc)) {
-            execAddressError(makeFrame(newpc, reg.pc));
+            execAddressError<C>(makeFrame(newpc, reg.pc));
             return;
         }
 
@@ -831,7 +831,7 @@ Moira::execBcc(u16 opcode)
     } else {
 
         // Fall through to next instruction
-        if (core == C68000) SYNC(2);
+        if constexpr (C == C68000) SYNC(2);
         if constexpr (S == Word || S == Long) readExt<C>();
         if constexpr (S == Long) readExt<C>();
         prefetch<C, POLLIPL>();
@@ -1273,7 +1273,7 @@ Moira::execBsr(u16 opcode)
     // Check for address error
     if (misaligned<C>(newpc)) {
 
-        execAddressError(makeFrame(newpc));
+        execAddressError<C>(makeFrame(newpc));
         return;
     }
 
@@ -1863,7 +1863,7 @@ Moira::execDbcc(u16 opcode)
 
             // Check for address error
             if (misaligned<C, S>(newpc)) {
-                execAddressError(makeFrame(newpc, newpc + 2));
+                execAddressError<C>(makeFrame(newpc, newpc + 2));
                 return;
             }
 
@@ -1913,7 +1913,7 @@ Moira::execDbcc(u16 opcode)
 
             // Check for address error
             if (misaligned<C, S>(newpc)) {
-                execAddressError(makeFrame(newpc, newpc + 2));
+                execAddressError<C>(makeFrame(newpc, newpc + 2));
                 return;
             }
 
@@ -1970,7 +1970,7 @@ Moira::execDbcc(u16 opcode)
 
             // Check for address error
             if (misaligned<C, S>(newpc)) {
-                execAddressError(makeFrame(newpc, newpc + 2));
+                execAddressError<C>(makeFrame(newpc, newpc + 2));
                 return;
             }
 
@@ -2136,7 +2136,7 @@ Moira::execJmp(u16 opcode)
 
     // Check for address error
     if (misaligned<C, Word>(ea)) {
-        execAddressError(makeFrame(ea, oldpc));
+        execAddressError<C>(makeFrame(ea, oldpc));
         return;
     }
 
@@ -2173,13 +2173,13 @@ Moira::execJsr(u16 opcode)
     // Check for address error in displacement modes
     if (isDspMode(M) && misaligned<C>(ea)) {
 
-        execAddressError(makeFrame(ea));
+        execAddressError<C>(makeFrame(ea));
         return;
     }
 
     // Check for address error in all other modes
     if (misaligned<C>(ea)) {
-        execAddressError(makeFrame(ea));
+        execAddressError<C>(makeFrame(ea));
         return;
     }
 
@@ -2252,7 +2252,7 @@ Moira::execLink(u16 opcode)
     if (misaligned<C>(sp)) {
 
         writeA(ax, sp);
-        execAddressError(makeFrame<AE_DATA|AE_WRITE>(sp, getPC() + 2, getSR(), ird));
+        execAddressError<C>(makeFrame<AE_DATA|AE_WRITE>(sp, getPC() + 2, getSR(), ird));
         return;
     }
 
@@ -2463,14 +2463,14 @@ Moira::execMove4(u16 opcode)
 
     // Check for address error
     if (misaligned<C, S>(ea)) {
-        if (format == 0) execAddressError(makeFrame<flags0>(ea + 2, reg.pc + 2, getSR(), ird));
-        if (format == 1) execAddressError(makeFrame<flags1>(ea, reg.pc + 2), 2);
-        if (format == 2) execAddressError(makeFrame<flags2>(ea, reg.pc + 2), 2);
+        if (format == 0) execAddressError<C>(makeFrame<flags0>(ea + 2, reg.pc + 2, getSR(), ird));
+        if (format == 1) execAddressError<C>(makeFrame<flags1>(ea, reg.pc + 2), 2);
+        if (format == 2) execAddressError<C>(makeFrame<flags2>(ea, reg.pc + 2), 2);
         if constexpr (S != Long) updateAn <MODE_PD, S> (dst);
         return;
     }
 
-    if (core == C68010 && S == Long) SYNC(2);
+    if constexpr (C == C68010 && S == Long) SYNC(2);
 
     writeM<C, MODE_PD, S, REVERSE>(ea, data);
     updateAn<MODE_PD, S>(dst);
@@ -2680,7 +2680,7 @@ Moira::execMove8(u16 opcode)
         ea2 |= queue.irc;
 
         if (misaligned<C, S>(ea2)) {
-            execAddressError(makeFrame<AE_WRITE|AE_DATA>(ea2));
+            execAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(ea2));
             return;
         }
 
@@ -2880,9 +2880,9 @@ Moira::execMovemEaRg(u16 opcode)
     if (misaligned<C, S>(ea)) {
         setFC<M>();
         if constexpr (M == MODE_IX || M == MODE_IXPC) {
-            execAddressError(makeFrame<AE_DEC_PC>(ea));
+            execAddressError<C>(makeFrame<AE_DEC_PC>(ea));
         } else {
-            execAddressError(makeFrame<AE_INC_PC>(ea));
+            execAddressError<C>(makeFrame<AE_INC_PC>(ea));
         }
         return;
     }
@@ -2959,7 +2959,7 @@ Moira::execMovemRgEa(u16 opcode)
             if (mask && misaligned<C, S>(ea)) {
 
                 setFC<M>();
-                execAddressError(makeFrame<AE_INC_PC|AE_WRITE>(ea - S));
+                execAddressError<C>(makeFrame<AE_INC_PC|AE_WRITE>(ea - S));
                 return;
             }
 
@@ -2983,7 +2983,7 @@ Moira::execMovemRgEa(u16 opcode)
             if (mask && misaligned<C, S>(ea)) {
 
                 setFC<M>();
-                execAddressError(makeFrame<AE_INC_PC|AE_WRITE>(ea));
+                execAddressError<C>(makeFrame<AE_INC_PC|AE_WRITE>(ea));
                 return;
             }
 
@@ -3116,6 +3116,8 @@ Moira::execMoves(u16 opcode)
     AVAILABILITY(C68010)
     SUPERVISOR_MODE_ONLY
 
+    // printf("execMoves: C,I,M,S = %d,%d,%d,%d cp = %d\n", C, I, M, S, cp);
+
     u32 ea, data;
 
     if (queue.irc & 0x800) {    // Rg -> Ea
@@ -3160,15 +3162,7 @@ Moira::execMoves(u16 opcode)
                 fatalError;
         }
 
-        //           00  10  20        00  10  20        00  10  20
-        //           .b  .b  .b        .w  .w  .w        .l  .l  .l
-        CYCLES_AI   ( 0, 18,  9,        0, 18,  9,        0, 22, 11)
-        CYCLES_PI   ( 0, 18,  9,        0, 18,  9,        0, 22, 11)
-        CYCLES_PD   ( 0, 20, 10,        0, 20, 10,        0, 28, 12)
-        CYCLES_DI   ( 0, 26, 10,        0, 26, 10,        0, 32, 12)
-        CYCLES_IX   ( 0, 30, 12,        0, 30, 12,        0, 36, 14)
-        CYCLES_AW   ( 0, 26,  9,        0, 26,  9,        0, 32, 11)
-        CYCLES_AL   ( 0, 30,  9,        0, 30,  9,        0, 36, 11)
+        if (S == Long && (model == M68020 || model == M68EC020)) cp += 2;
 
     } else {                    // Ea -> Rg
 
@@ -3204,18 +3198,20 @@ Moira::execMoves(u16 opcode)
                 fatalError;
         }
 
-        //           00  10  20        00  10  20        00  10  20
-        //           .b  .b  .b        .w  .w  .w        .l  .l  .l
-        CYCLES_AI   ( 0, 18, 11,        0, 18, 11,        0, 22, 11)
-        CYCLES_PI   ( 0, 18, 11,        0, 18, 11,        0, 22, 11)
-        CYCLES_PD   ( 0, 20, 12,        0, 20, 12,        0, 28, 12)
-        CYCLES_DI   ( 0, 26, 12,        0, 26, 12,        0, 32, 12)
-        CYCLES_IX   ( 0, 30, 14,        0, 30, 14,        0, 36, 14)
-        CYCLES_AW   ( 0, 26, 11,        0, 26, 11,        0, 32, 11)
-        CYCLES_AL   ( 0, 30, 11,        0, 30, 11,        0, 36, 11)
+        if (model == M68020 || model == M68EC020) cp += 2;
     }
 
     prefetch<C, POLLIPL>();
+
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_AI   ( 0, 18,  9,        0, 18,  9,        0, 22,  9)
+    CYCLES_PI   ( 0, 18,  9,        0, 18,  9,        0, 22,  9)
+    CYCLES_PD   ( 0, 20, 10,        0, 20, 10,        0, 28, 10)
+    CYCLES_DI   ( 0, 26, 10,        0, 26, 10,        0, 32, 10)
+    CYCLES_IX   ( 0, 30, 12,        0, 30, 12,        0, 36, 12)
+    CYCLES_AW   ( 0, 26,  9,        0, 26,  9,        0, 32,  9)
+    CYCLES_AL   ( 0, 30,  9,        0, 30,  9,        0, 36,  9)
 
     FINALIZE
 }
@@ -3392,7 +3388,7 @@ Moira::execMoveUspAn(u16 opcode)
 
     int an = _____________xxx(opcode);
 
-    if (core >= C68010) SYNC(2);
+    if constexpr (C >= C68010) SYNC(2);
 
     prefetch<C, POLLIPL>();
     writeA(an, getUSP());
@@ -3412,7 +3408,7 @@ Moira::execMoveAnUsp(u16 opcode)
 
     int an = _____________xxx(opcode);
 
-    if (core >= C68010) SYNC(2);
+    if constexpr (C >= C68010) SYNC(2);
 
     prefetch<C, POLLIPL>();
     setUSP(readA(an));
@@ -3650,13 +3646,12 @@ Moira::execDivMusashi(u16 opcode)
 
     // Check for division by zero
     if (divisor == 0) {
-        if (core == C68000) {
+        if constexpr (C == C68000) {
             SYNC(8 - (int)(clock - c));
         } else {
             SYNC(10 - (int)(clock - c));
         }
         execException<C>(EXC_DIVIDE_BY_ZERO);
-        // execTrapException(5);
 
         CYCLES_68000(38);
         CYCLES_68010(44);
@@ -3977,9 +3972,9 @@ Moira::execPea(u16 opcode)
     if (misaligned<C>(reg.sp)) {
         reg.sp -= S;
         if (isAbsMode(M)) {
-            execAddressError(makeFrame<AE_WRITE|AE_DATA>(reg.sp));
+            execAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(reg.sp));
         } else {
-            execAddressError(makeFrame<AE_WRITE|AE_DATA|AE_INC_PC>(reg.sp));
+            execAddressError<C>(makeFrame<AE_WRITE|AE_DATA|AE_INC_PC>(reg.sp));
         }
         return;
     }
@@ -4045,7 +4040,7 @@ Moira::execRtd(u16 opcode)
     reg.sp += 4 + i16(queue.irc);
 
     if (misaligned<C>(newpc)) {
-        execAddressError(makeFrame<AE_PROG>(newpc, reg.pc));
+        execAddressError<C>(makeFrame<AE_PROG>(newpc, reg.pc));
         return;
     }
 
@@ -4208,7 +4203,7 @@ Moira::execRte(u16 opcode)
     setSR(newsr);
 
     if (misaligned<C>(newpc)) {
-        execAddressError(makeFrame<AE_PROG>(newpc, reg.pc));
+        execAddressError<C>(makeFrame<AE_PROG>(newpc, reg.pc));
         return;
     }
 
@@ -4251,7 +4246,7 @@ Moira::execRtr(u16 opcode)
     setCCR((u8)newccr);
 
     if (misaligned<C>(newpc)) {
-        execAddressError(makeFrame<AE_PROG>(newpc, reg.pc));
+        execAddressError<C>(makeFrame<AE_PROG>(newpc, reg.pc));
         return;
     }
 
@@ -4278,7 +4273,7 @@ Moira::execRts(u16 opcode)
     reg.sp += 4;
 
     if (misaligned<C>(newpc)) {
-        execAddressError(makeFrame<AE_PROG>(newpc, reg.pc));
+        execAddressError<C>(makeFrame<AE_PROG>(newpc, reg.pc));
         return;
     }
 
@@ -4554,7 +4549,7 @@ Moira::execUnlk(u16 opcode)
 
     // Move address register to stack pointer
     if (misaligned<C>(readA(an))) {
-        execAddressError(makeFrame<AE_DATA|AE_INC_PC>(readA(an)));
+        execAddressError<C>(makeFrame<AE_DATA|AE_INC_PC>(readA(an)));
         return;
     }
     reg.sp = readA(an);

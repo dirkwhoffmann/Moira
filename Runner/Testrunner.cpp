@@ -18,7 +18,8 @@ u8 musashiMem[0x10000];
 u8 moiraMem[0x10000];
 u32 musashiFC = 0;
 long testrun = 0;
-int cpuType = 0;
+moira::Model cpuModel = M68000;
+// int cpuType = 0;
 
 // M68k disassembler
 struct vda68k::DisasmPara_68k dp;
@@ -27,16 +28,28 @@ char operands[128];
 char iwordbuf[32];
 char tmpbuf[8];
 
-void selectCore(int core)
+void selectModel(moira::Model model)
 {
-    cpuType = core;
+    cpuModel = model;
 
     setupMusashi();
     setupM68k();
     setupMoira();
 
     printf("\n");
-    printf("Emulated CPU: Motorola %d\n\n", cpuType);
+    printf("Emulated CPU: ");
+
+    switch (cpuModel) {
+
+        case M68000:    printf("Motorola 68000");   break;
+        case M68010:    printf("Motorola 68010");   break;
+        case M68EC020:  printf("Motorola 68EC020"); break;
+        case M68020:    printf("Motorola 68020");   break;
+        case M68EC030:  printf("Motorola 68EC030"); break;
+        case M68030:    printf("Motorola 68030");   break;
+    }
+
+    printf("\n\n");
     printf("              Exec range: %s\n", TOSTRING(doExec(opcode)));
     printf("              Dasm range: %s\n", TOSTRING(doDasm(opcode)));
     printf("\n");
@@ -54,28 +67,20 @@ void setupMusashi()
 {
     m68k_init();
 
-    switch (cpuType) {
+    switch (cpuModel) {
 
-        case 68000: m68k_set_cpu_type(M68K_CPU_TYPE_68000); break;
-        case 68010: m68k_set_cpu_type(M68K_CPU_TYPE_68010); break;
-        case 68020: m68k_set_cpu_type(M68K_CPU_TYPE_68020); break;
-
-        default:
-            assert(false);
+        case M68000:    m68k_set_cpu_type(M68K_CPU_TYPE_68000);     break;
+        case M68010:    m68k_set_cpu_type(M68K_CPU_TYPE_68010);     break;
+        case M68EC020:  m68k_set_cpu_type(M68K_CPU_TYPE_68EC020);   break;
+        case M68020:    m68k_set_cpu_type(M68K_CPU_TYPE_68020);     break;
+        case M68EC030:  m68k_set_cpu_type(M68K_CPU_TYPE_68EC030);   break;
+        case M68030:    m68k_set_cpu_type(M68K_CPU_TYPE_68030);     break;
     }
 }
 
 void setupMoira()
 {
-    switch (cpuType) {
-
-        case 68000: moiracpu->setCore(C68000); break;
-        case 68010: moiracpu->setCore(C68010); break;
-        case 68020: moiracpu->setCore(C68020); break;
-
-        default:
-            assert(false);
-    }
+    moiracpu->setModel(cpuModel);
 }
 
 void setupTestEnvironment(Setup &s)
@@ -195,7 +200,7 @@ void run()
     printf("The test program runs Moira agains Musashi with randomly generated data.\n");
     printf("It runs until a bug has been found.\n");
 
-    selectCore(68020);
+    selectModel(M68EC030);
     srand(3);
 
     for (testrun = 1 ;; testrun++) {
@@ -206,8 +211,7 @@ void run()
         // Switch the CPU core from time to time
         if (testrun % 16 == 0) {
 
-            selectCore(cpuType == 68000 ? 68010 :
-                       cpuType == 68010 ? 68020 : 68000);
+            selectModel(cpuModel == M68030 ? M68000 : Model(cpuModel + 1));
         }
         
         printf("Round %ld ", testrun); fflush(stdout);
@@ -296,73 +300,89 @@ void runM68k(Setup &s, Result &r)
 
 void runMusashi(Setup &s, Result &r)
 {
-    clock_t elapsed = 0;
-
     r.oldpc = m68k_get_reg(NULL, M68K_REG_PC);
     r.opcode = get16(musashiMem, r.oldpc);
+    r.elapsed[0] = r.elapsed[1] = 0;
 
     // Run the Musashi disassembler
-    auto type =
-    cpuType == 68000 ? M68K_CPU_TYPE_68000 :
-    cpuType == 68010 ? M68K_CPU_TYPE_68010 : M68K_CPU_TYPE_68020;
-    elapsed = clock();
-    r.dasmCntMusashi = m68k_disassemble(r.dasmMusashi, s.pc, type);
-    r.elapsed[1] = clock() - elapsed;
+    if (doDasm(r.opcode)) {
 
-    if (VERBOSE)
-        printf("$%04x ($%04x): %s (Musashi)\n", r.oldpc, r.opcode, r.dasmMusashi);
+        auto type =
+        cpuModel == M68000   ? M68K_CPU_TYPE_68000 :
+        cpuModel == M68010   ? M68K_CPU_TYPE_68010 :
+        cpuModel == M68EC020 ? M68K_CPU_TYPE_68EC020 :
+        cpuModel == M68020   ? M68K_CPU_TYPE_68020 :
+        cpuModel == M68EC030 ? M68K_CPU_TYPE_68EC030 : M68K_CPU_TYPE_68030;
+
+        clock_t elapsed = clock();
+        r.dasmCntMusashi = m68k_disassemble(r.dasmMusashi, s.pc, type);
+        r.elapsed[1] = clock() - elapsed;
+
+        if (VERBOSE) {
+            printf("$%04x ($%04x): %s (Musashi)\n", r.oldpc, r.opcode, r.dasmMusashi);
+        }
+    }
 
     // Run the Musashi CPU
-    elapsed = clock();
-    r.cycles = m68k_execute(1);
-    r.elapsed[0] = clock() - elapsed;
+    if (doExec(r.opcode)) {
 
-    // Record the result
-    recordMusashiRegisters(r);
+        clock_t elapsed = clock();
+        r.cycles = m68k_execute(1);
+        r.elapsed[0] = clock() - elapsed;
+
+        recordMusashiRegisters(r);
+    }
 }
 
 void runMoira(Setup &s, Result &r)
 {
-    clock_t elapsed = 0;
-
     r.oldpc = moiracpu->getPC();
     r.opcode = get16(moiraMem, r.oldpc);
+    r.elapsed[0] = r.elapsed[1] = 0;
 
-    // Disassemble the instruction in Musashi format
-    moiracpu->setDasmStyle(DASM_MUSASHI);
-    moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
-    elapsed = clock();
-    r.dasmCntMusashi = moiracpu->disassemble(r.oldpc, r.dasmMusashi);
-    r.elapsed[1] = clock() - elapsed;
+    // Run the Moira disassembler
+    if (doDasm(r.opcode)) {
 
-    // Disassemble the instruction in Vda68k Motorola format
-    moiracpu->setDasmStyle(DASM_VDA68K_MOT);
-    moiracpu->setDasmNumberFormat({ .prefix="0x", .radix=16, .plainZero=true });
-    r.dasmCntMoto = moiracpu->disassemble(r.oldpc, r.dasmMoto);
+        // Disassemble the instruction in Musashi format
+        moiracpu->setDasmStyle(DASM_MUSASHI);
+        moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
+        clock_t elapsed = clock();
+        r.dasmCntMusashi = moiracpu->disassemble(r.oldpc, r.dasmMusashi);
+        r.elapsed[1] = clock() - elapsed;
 
-    // Disassemble the instruction in Vda68k MIT format
-    moiracpu->setDasmStyle(DASM_VDA68K_MIT);
-    moiracpu->setDasmNumberFormat({ .prefix="0x", .radix=16, .plainZero=true });
-    r.dasmCntMIT = moiracpu->disassemble(r.oldpc, r.dasmMIT);
+        // Disassemble the instruction in Vda68k Motorola format
+        moiracpu->setDasmStyle(DASM_VDA68K_MOT);
+        moiracpu->setDasmNumberFormat({ .prefix="0x", .radix=16, .plainZero=true });
+        r.dasmCntMoto = moiracpu->disassemble(r.oldpc, r.dasmMoto);
 
-    u32 pc = moiracpu->getPC();
-    u16 op = get16(moiraMem, pc);
+        // Disassemble the instruction in Vda68k MIT format
+        moiracpu->setDasmStyle(DASM_VDA68K_MIT);
+        moiracpu->setDasmNumberFormat({ .prefix="0x", .radix=16, .plainZero=true });
+        r.dasmCntMIT = moiracpu->disassemble(r.oldpc, r.dasmMIT);
+    }
 
-    int64_t cycles = moiracpu->getClock();
+    // Run the Moira CPU
+    if (doExec(r.opcode)) {
+
+        u32 pc = moiracpu->getPC();
+        u16 op = get16(moiraMem, pc);
+
+        int64_t cycles = moiracpu->getClock();
 
         if (VERBOSE)
             printf("$%04x ($%04x): %s (Moira)\n", r.oldpc, r.opcode, r.dasmMusashi);
 
-    // Execute instruction
-    elapsed = clock();
-    moiracpu->execute();
-    r.elapsed[0] = clock() - elapsed;
+        // Execute instruction
+        clock_t elapsed = clock();
+        moiracpu->execute();
+        r.elapsed[0] = clock() - elapsed;
 
-    // Record the result
-    r.cycles = (int)(moiracpu->getClock() - cycles);
-    r.oldpc = pc;
-    r.opcode = op;
-    recordMoiraRegisters(r);
+        // Record the result
+        r.cycles = (int)(moiracpu->getClock() - cycles);
+        r.oldpc = pc;
+        r.opcode = op;
+        recordMoiraRegisters(r);
+    }
 }
 
 bool skip(u16 op)
@@ -668,7 +688,9 @@ bool compareCycles(Result &r1, Result &r2)
 
     // Exclude some instructions
     if (I == moira::TAS) return true;
-    if (cpuType == 68010) {
+
+    // WHY DO WE IGNORE THESE?
+    if (cpuModel == M68010) {
 
         if (I == moira::CLR && S == Byte && M == MODE_AL) return true;
         if (I == moira::CLR && S == Word && M == MODE_AL) return true;

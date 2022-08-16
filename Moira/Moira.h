@@ -37,8 +37,8 @@ public:
     
 protected:
     
-    // The emulated CPU core
-    Core core = C68000;
+    // The emulated CPU model
+    Model model = M68000;
     
     // The interrupt mode of this CPU
     IrqMode irqMode = IRQ_AUTO;
@@ -147,8 +147,8 @@ public:
     Moira();
     virtual ~Moira();
     
-    // Selects the emulated CPU core
-    void setCore(Core core);
+    // Selects the emulated CPU model
+    void setModel(Model model);
     
     // Configures the disassembler
     void setDasmStyle(DasmStyle value);

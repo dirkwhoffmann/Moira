@@ -144,11 +144,14 @@ parse(const char *s, int sum = 0)
 void
 Moira::createJumpTable()
 {
-    switch (core) {
+    switch (model) {
 
-        case C68000: createJumpTable<C68000>(); break;
-        case C68010: createJumpTable<C68010>(); break;
-        case C68020: createJumpTable<C68020>(); break;
+        case M68000:    createJumpTable<C68000>(); break;
+        case M68010:    createJumpTable<C68010>(); break;
+        case M68EC020:
+        case M68020:
+        case M68EC030:
+        case M68030:    createJumpTable<C68020>(); break;
 
         default:
             fatalError;
@@ -182,7 +185,7 @@ Moira::createJumpTable()
     opcode = parse("1111 ---- ---- ----");
     ____XXXXXXXXXXXX(opcode, LINE_F, MODE_IP, (Size)0, LineF, CIMS)
     
-    if (core >= C68020) {
+    if constexpr (C >= C68020) {
         
         opcode = parse("1111 ---0 10-- ----");
         ____XXX___XXXXXX(opcode, cpBcc, MODE_IP, Word, CpBcc, CIMS)
@@ -457,7 +460,7 @@ Moira::createJumpTable()
         ________________(opcode | 0xF00 | i, BLE, MODE_IP, Byte, Bcc, CIMS)
     }
     
-    if (core >= C68020) {
+    if constexpr (C >= C68020) {
         
         ________________(opcode | 0x0FF, BRA, MODE_IP, Long, Bra, CIMS)
         ________________(opcode | 0x2FF, BHI, MODE_IP, Long, Bcc, CIMS)
@@ -487,7 +490,7 @@ Moira::createJumpTable()
     //               -------------------------------------------------
     //                 X       X           X   X   X   X
     
-    if (core >= C68020) {
+    if constexpr (C >= C68020) {
         
         opcode = parse("1110 1010 11-- ----");
         __________MMMXXX(opcode, BFCHG, 0b100000000000, Long, BitFieldDn, CIMS)
@@ -517,7 +520,7 @@ Moira::createJumpTable()
     //               -------------------------------------------------
     //                 X       X           X   X   X   X   X   X   X
     
-    if (core >= C68020) {
+    if constexpr (C >= C68020) {
         
         opcode = parse("1110 1011 11-- ----");
         __________MMMXXX(opcode, BFEXTS, 0b100000000000, Long, BitFieldDn, CIMS)
@@ -575,7 +578,7 @@ Moira::createJumpTable()
     //       Syntax: BKPT #<vector>
     //        Sizes: Unsized
     
-    if (core >= C68010) {
+    if constexpr (C >= C68010) {
         
         opcode = parse("0100 1000 0100 1---");
         _____________XXX(opcode, BKPT, MODE_IP, Long, Bkpt, CIMS)
@@ -619,7 +622,7 @@ Moira::createJumpTable()
         ________________(opcode | i, BSR, MODE_IP, Byte, Bsr, CIMS)
     }
     
-    if (core >= C68020) {
+    if constexpr (C >= C68020) {
         ________________(opcode | 0xFF, BSR, MODE_IP, Long, Bsr, CIMS)
     }
     
@@ -659,10 +662,13 @@ Moira::createJumpTable()
     //               -------------------------------------------------
     //                TODO
     
-    if (core >= C68020) {
-        
-        opcode = parse("0000 0110 11-- ----");
-        __________MMMXXX(opcode, CALLM, 0b001001111110, Long, Callm, CIMS)
+    if constexpr (C >= C68020) {
+
+        if (model == M68EC020 || model == M68020) {
+
+            opcode = parse("0000 0110 11-- ----");
+            __________MMMXXX(opcode, CALLM, 0b001001111110, Long, Callm, CIMS)
+        }
     }
     
     
@@ -677,7 +683,7 @@ Moira::createJumpTable()
     //               -------------------------------------------------
     //                TODO
     
-    if (core >= C68020) {
+    if constexpr (C >= C68020) {
         
         // CAS
         opcode = parse("0000 1010 11-- ----");
@@ -709,7 +715,7 @@ Moira::createJumpTable()
     opcode = parse("0100 ---1 10-- ----");
     ____XXX___MMMXXX(opcode, CHK, 0b101111111111, Word, Chk, CIMS)
     
-    if (core >= C68020) {
+    if constexpr (C >= C68020) {
         
         opcode = parse("0100 ---1 00-- ----");
         ____XXX___MMMXXX(opcode, CHK, 0b101111111111, Long, Chk, CIMS)
@@ -726,7 +732,7 @@ Moira::createJumpTable()
     //               -------------------------------------------------
     //                         X           X   X   X   X   X   X
     
-    if (core >= C68020) {
+    if constexpr (C >= C68020) {
         
         opcode = parse("0000 0000 11-- ----");
         __________MMMXXX(opcode, CHK2, 0b001001111110, Byte, ChkCmp2, CIMS)
@@ -798,7 +804,7 @@ Moira::createJumpTable()
     ________SSMMMXXX(opcode, CMPI, 0b100000000000, Byte | Word | Long, CmpiRg, CIMS)
     ________SSMMMXXX(opcode, CMPI, 0b001111111000, Byte | Word | Long, CmpiEa, CIMS)
     
-    if (core >= C68010) {
+    if constexpr (C >= C68010) {
         
         ________SSMMMXXX(opcode, CMPI, 0b000000000110, Byte | Word | Long, CmpiEa, CIMS)
     }
@@ -872,7 +878,7 @@ Moira::createJumpTable()
     opcode = parse("1000 ---0 11-- ----");
     ____XXX___MMMXXX(opcode, DIVU, 0b101111111111, Word, Div, CIMS)
     
-    if (core >= C68020) {
+    if constexpr (C >= C68020) {
         
         opcode = parse("0100 1100 01-- ----");
         __________MMMXXX(opcode, DIVL, 0b101111111111, Long, Divl, CIMS)
@@ -961,7 +967,7 @@ Moira::createJumpTable()
     //       Syntax: EXTB Dx
     //        Sizes: Longword
     
-    if (core >= C68020) {
+    if constexpr (C >= C68020) {
         
         opcode = parse("0100 1001 --00 0---");
         _____________XXX(opcode | 3 << 6, EXTB, MODE_DN, Long, Extb, CIMS)
@@ -976,7 +982,7 @@ Moira::createJumpTable()
     opcode = parse("0100 1110 0101 0---");
     _____________XXX(opcode, LINK, MODE_IP, Word, Link, CIMS)
     
-    if (core >= C68020) {
+    if constexpr (C >= C68020) {
         
         opcode = parse("0100 1000 0000 1---");
         _____________XXX(opcode, LINK, MODE_IP, Long, Link, CIMS)
@@ -1144,7 +1150,7 @@ Moira::createJumpTable()
     //               MOVEC Rx,Rc
     //        Sizes: Longword
     
-    if (core >= C68010) {
+    if constexpr (C >= C68010) {
         
         opcode = parse("0100 1110 0111 101-");
         ________________(opcode | 0, MOVEC, MODE_IP, Long, MovecRcRx, CIMS)
@@ -1214,7 +1220,7 @@ Moira::createJumpTable()
     //               -------------------------------------------------
     //                         X   X   X   X   X   X   X
     
-    if (core >= C68010) {
+    if constexpr (C >= C68010) {
         
         opcode = parse("0000 1110 ---- ----");
         ________SSMMMXXX(opcode, MOVES, 0b001111111000, Byte | Word | Long, Moves, CIMS)
@@ -1231,7 +1237,7 @@ Moira::createJumpTable()
     //               -------------------------------------------------
     //                 X       X   X   X   X   X   X   X
     
-    if (core >= C68010) {
+    if constexpr (C >= C68010) {
         
         opcode = parse("0100 0010 11-- ----");
         __________MMMXXX(opcode, MOVEFCCR, 0b100000000000, Word, MoveFromCcrRg, CIMS)
@@ -1310,7 +1316,7 @@ Moira::createJumpTable()
     opcode = parse("1100 ---0 11-- ----");
     ____XXX___MMMXXX(opcode, MULU, 0b101111111111, Word, Mul, CIMS)
     
-    if (core >= C68020) {
+    if constexpr (C >= C68020) {
         
         opcode = parse("0100 1100 00-- ----");
         __________MMMXXX(opcode, MULL, 0b101111111111, Long, Mull, CIMS)
@@ -1491,7 +1497,7 @@ Moira::createJumpTable()
     //               PACK DX,Dy,#<adjustment>
     //        Sizes: Unsized
     
-    if (core >= C68020) {
+    if constexpr (C >= C68020) {
         
         opcode = parse("1000 ---1 0100 0---");
         ____XXX______XXX(opcode, PACK, MODE_DN, Word, PackDn, CIMS)
@@ -1529,7 +1535,7 @@ Moira::createJumpTable()
     //       Syntax: RTD
     //        Sizes: Unsized
     
-    if (core >= C68010) {
+    if constexpr (C >= C68010) {
         
         opcode = parse("0100 1110 0111 0100");
         ________________(opcode, RTD, MODE_IP, Long, Rtd, CIMS)
@@ -1550,12 +1556,15 @@ Moira::createJumpTable()
     //       Syntax: RTM Rn
     //        Sizes: Unsized
     
-    if (core >= C68020) {
-        
-        opcode = parse("0000 0110 1100 ----");
-        ____________XXXX(opcode, RTM, MODE_IP, Long, Rtm, CIMS)
+    if constexpr (C >= C68020) {
+
+        if (model == M68EC020 || model == M68020) {
+
+            opcode = parse("0000 0110 1100 ----");
+            ____________XXXX(opcode, RTM, MODE_IP, Long, Rtm, CIMS)
+        }
     }
-    
+
     
     // RTR
     //
@@ -1773,7 +1782,7 @@ Moira::createJumpTable()
     //       Syntax: TRAPcc #<vector>
     //        Sizes: Unsized
     
-    if (core >= C68020) {
+    if constexpr (C >= C68020) {
         
         opcode = parse("0101 ---- 1111 1100");
         ________________(opcode | 0x000, TRAPT,  MODE_IP, Byte, Trapcc, CIMS)
@@ -1854,7 +1863,7 @@ Moira::createJumpTable()
     ________SSMMMXXX(opcode, TST, 0b101111111000, Byte | Word | Long, Tst, CIMS)
     ________SSMMMXXX(opcode, TST, 0b001110000000, Byte | Word | Long, Tst, CIMSloop)
     
-    if (core >= C68020) {
+    if constexpr (C >= C68020) {
         
         ________SSMMMXXX(opcode, TST, 0b000000000111, Byte, Tst, CIMS)
         ________SSMMMXXX(opcode, TST, 0b010000000111, Word | Long, Tst, CIMS)
@@ -1876,7 +1885,7 @@ Moira::createJumpTable()
     //               UNPK DX,Dy,#<adjustment>
     //        Sizes: Unsized
     
-    if (core >= C68020) {
+    if constexpr (C >= C68020) {
         
         opcode = parse("1000 ---1 1000 0---");
         ____XXX______XXX(opcode, UNPK, MODE_DN, Word, UnpkDn, CIMS)

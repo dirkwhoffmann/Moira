@@ -40,7 +40,7 @@ extern u8 musashiMem[0x10000];
 extern u8 moiraMem[0x10000];
 extern u32 musashiFC;
 extern long testrun;
-extern int cpuType;
+extern moira::Model cpuModel;
 
 inline u8 get8(u8 *p, u32 addr) {
     return p[addr & 0xFFFF];
@@ -112,7 +112,7 @@ const u32 pc = 0x1000;
 // Preparing a test
 //
 
-void selectCore(int core);
+void selectModel(moira::Model model);
 
 void setupM68k();
 void setupMusashi();
