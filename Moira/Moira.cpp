@@ -87,9 +87,9 @@ Moira::reset()
 {
     switch (core) {
             
-        case M68000: reset <M68000> (); break;
-        case M68010: reset <M68010> (); break;
-        case M68020: reset <M68020> (); break;
+        case C68000: reset <C68000> (); break;
+        case C68010: reset <C68010> (); break;
+        case C68020: reset <C68020> (); break;
             
         default:
             assert(false);
@@ -350,7 +350,7 @@ Moira::setSR(u16 val)
     setCCR((u8)val);
     setSupervisorMode(s);
     
-    if (core == M68020) {
+    if (core == C68020) {
         
         bool t0 = (val >> 14) & 1;
         bool m = (val >> 12) & 1;

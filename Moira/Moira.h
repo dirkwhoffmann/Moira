@@ -38,7 +38,7 @@ public:
 protected:
     
     // The emulated CPU core
-    Core core = M68000;
+    Core core = C68000;
     
     // The interrupt mode of this CPU
     IrqMode irqMode = IRQ_AUTO;

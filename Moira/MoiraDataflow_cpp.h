@@ -126,7 +126,7 @@ Moira::computeEA(u32 n) {
         }
         case 6: // (d,An,Xi)
         {
-            if constexpr (C == M68020) {
+            if constexpr (C == C68020) {
                 
                 // printf("compteEA: irc = %x\n", queue.irc);
                 if (queue.irc & 0x100) {
@@ -172,7 +172,7 @@ Moira::computeEA(u32 n) {
         }
         case 10: // (d,PC,Xi)
         {
-            if constexpr (C == M68020) {
+            if constexpr (C == C68020) {
                 
                 if (queue.irc & 0x100) {
                     result = computeEAfull<C, M, S, F>(reg.pc);
@@ -492,7 +492,7 @@ Moira::push(u32 val, bool &error)
 template <Core C, Size S> bool
 Moira::misaligned(u32 addr)
 {
-    if constexpr (EMULATE_ADDRESS_ERROR && C != M68020 && S != Byte) {
+    if constexpr (EMULATE_ADDRESS_ERROR && C != C68020 && S != Byte) {
         return addr & 1;
     } else {
         return false;
@@ -673,7 +673,7 @@ Moira::penaltyCycles(u16 ext)
         6, 11, 13, 13,  0, 11, 13, 13,  0, 11, 13, 13,  0, 11, 13, 13
     };
     
-    if constexpr (C == M68020 && (M == MODE_IX || M == MODE_IXPC)) {
+    if constexpr (C == C68020 && (M == MODE_IX || M == MODE_IXPC)) {
         
         if (ext & 0x100) return delay[ext & 0x3F];
     }
