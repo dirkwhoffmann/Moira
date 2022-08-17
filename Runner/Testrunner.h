@@ -70,8 +70,8 @@ struct Setup {
     u16     vbr;
     u16     sfc;
     u16     dfc;
-    u16     cacr;
-    u16     caar;
+    u32     cacr;
+    u32     caar;
     u8      mem[0x10000];
 };
 

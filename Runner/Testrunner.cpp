@@ -93,8 +93,8 @@ void setupTestEnvironment(Setup &s)
     s.vbr = u16(randomizer.rand());
     s.sfc = u16(randomizer.rand());
     s.dfc = u16(randomizer.rand());
-    s.cacr = u16(randomizer.rand()) & 0xF;
-    s.caar = u16(randomizer.rand()) & 0xF;
+    s.cacr = randomizer.rand() & moiracpu->cacrMask();
+    s.caar = randomizer.rand();
 
     for (int i = 0; i < 8; i++) s.d[i] = randomizer.rand();
     for (int i = 0; i < 8; i++) s.a[i] = randomizer.rand();
@@ -411,8 +411,8 @@ void recordMusashiRegisters(Result &r)
     r.vbr = m68k_get_reg(NULL, M68K_REG_VBR);
     r.sfc = m68k_get_reg(NULL, M68K_REG_SFC);
     r.dfc = m68k_get_reg(NULL, M68K_REG_DFC);
-    r.cacr = m68k_get_reg(NULL, M68K_REG_CACR) & 0xF;
-    r.caar = m68k_get_reg(NULL, M68K_REG_CAAR) & 0xF;
+    r.cacr = m68k_get_reg(NULL, M68K_REG_CACR);
+    r.caar = m68k_get_reg(NULL, M68K_REG_CAAR);
     for (int i = 0; i < 8; i++) {
         r.d[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_D0 + i));
         r.a[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_A0 + i));
