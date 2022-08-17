@@ -153,7 +153,7 @@ Moira::reset()
     
     // Fill the prefetch queue
     SYNC(4);
-    queue.irc = read16OnReset(reg.pc & 0xFFFFFF);
+    queue.irc = read16OnReset(reg.pc & addrMask<C>());
     SYNC(2);
     prefetch<C>();
     
