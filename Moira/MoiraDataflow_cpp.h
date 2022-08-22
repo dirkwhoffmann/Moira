@@ -220,7 +220,7 @@ Moira::computeEAbrief(u32 an)
     u16 scale = _____xx_________ (ext);
     u16 disp  = ________xxxxxxxx (ext);
     
-    u32 xn = (lw ? readR(rn) : SEXT<Word>(readR(rn))) << scale;
+    u32 xn = u32(u64(lw ? readR(rn) : SEXT<Word>(readR(rn))) << scale);
     result = U32_ADD3(an, i8(disp), xn);
     
     SYNC(2);
@@ -325,9 +325,9 @@ template <Core C, Mode M, Size S, Flags F> u32
 Moira::readM(u32 addr)
 {
     if (isPrgMode(M)) {
-        return readMS<C, MEM_PROG, S, F> (addr);
+        return readMS<C, MEM_PROG, S, F>(addr);
     } else {
-        return readMS<C, MEM_DATA, S, F> (addr);
+        return readMS<C, MEM_DATA, S, F>(addr);
     }
 }
 
@@ -610,9 +610,7 @@ template <Core C, Flags F> void
 Moira::jumpToVector(int nr)
 {
     u32 vectorAddr = reg.vbr + 4 * nr;
-    
-    exception = nr;
-    
+
     // Update the program counter
     reg.pc = readMS<C, MEM_DATA, Long>(vectorAddr);
     

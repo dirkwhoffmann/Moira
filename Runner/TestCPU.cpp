@@ -112,17 +112,3 @@ TestCPU::breakpointReached(moira::u32 addr) { }
  */
 void
 TestCPU::watchpointReached(moira::u32 addr) { }
-
-/* Instruction handlers
- */
-void
-TestCPU::willExecute(const char *func, Instr I, Mode M, Size S, u16 opcode)
-{
-    // printf("%s: Opcode: %x I: %d M: %d S: %d)\n", func, opcode, I, M, S);
-}
-
-void
-TestCPU::didExecute(const char *func, Instr I, Mode M, Size S, u16 opcode)
-{
-
-}

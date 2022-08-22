@@ -7,26 +7,25 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-template <> u32
-Moira::dasmRead<Byte>(u32 &addr)
+template <Size S> u32
+Moira::dasmRead(u32 &addr)
 {
-    U32_INC(addr, 2);
-    return read16Dasm(addr) & 0xFF;
-}
+    switch (S) {
 
-template <> u32
-Moira::dasmRead<Word>(u32 &addr)
-{
-    U32_INC(addr, 2);
-    return read16Dasm(addr);
-}
+        case Byte:
 
-template <> u32
-Moira::dasmRead<Long>(u32 &addr)
-{
-    u32 result = dasmRead<Word>(addr) << 16;
-    result |= dasmRead<Word>(addr);
-    return result;
+            U32_INC(addr, 2);
+            return read16Dasm(addr) & 0xFF;
+
+        case Long:
+
+            return dasmRead<Word>(addr) << 16 | dasmRead<Word>(addr);
+
+        default:
+
+            U32_INC(addr, 2);
+            return read16Dasm(addr);
+    }
 }
 
 template <Mode M, Size S> Ea<M,S>
@@ -1183,12 +1182,18 @@ Moira::dasmMoveAnUsp(StrWriter &str, u32 &addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
-Moira::dasmMul(StrWriter &str, u32 &addr, u16 op)
+Moira::dasmMuls(StrWriter &str, u32 &addr, u16 op)
 {
     auto src = Op <M,S> ( _____________xxx(op), addr );
     auto dst = Dn       ( ____xxx_________(op)       );
     
     str << Ins<I>{} << Sz<S>{} << tab << src << Sep{} << dst;
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmMulu(StrWriter &str, u32 &addr, u16 op)
+{
+    dasmMuls<I, M, S>(str, addr, op);
 }
 
 template <Instr I, Mode M, Size S> void
@@ -1208,11 +1213,20 @@ Moira::dasmMull(StrWriter &str, u32 &addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
-Moira::dasmDiv(StrWriter &str, u32 &addr, u16 op)
+Moira::dasmDivs(StrWriter &str, u32 &addr, u16 op)
 {
     auto src = Op <M,S> ( _____________xxx(op), addr );
     auto dst = Dn       ( ____xxx_________(op)       );
     
+    str << Ins<I>{} << Sz<S>{} << tab << src << Sep{} << dst;
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmDivu(StrWriter &str, u32 &addr, u16 op)
+{
+    auto src = Op <M,S> ( _____________xxx(op), addr );
+    auto dst = Dn       ( ____xxx_________(op)       );
+
     str << Ins<I>{} << Sz<S>{} << tab << src << Sep{} << dst;
 }
 

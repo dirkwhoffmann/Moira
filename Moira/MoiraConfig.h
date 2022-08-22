@@ -21,6 +21,19 @@
  */
 #define PRECISE_TIMING false
 
+/* Set to true to implement the CPU interface as virtual functions.
+ *
+ * To communicate with the environment (e.g., for reading a word from memory),
+ * the CPU calls an appropriate function that has to be implemented by the
+ * client. If this option is set to true, all API functions are declared as
+ * virtual which corresponds to the standard OOP pradigm. Because virtual
+ * functions impose a performance penalty, Moira allows to link the client API
+ * statically by setting this option to false.
+ *
+ * Enable to follow the standard OOP paradigm, disable to gain speed.
+ */
+#define VIRTUAL_API true
+
 /* Set to true to enable address error checking.
  *
  * The 68000 and 68010 signal an address error violation if an odd memory

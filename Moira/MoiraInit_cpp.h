@@ -196,7 +196,7 @@ Moira::createJumpTable()
         ____XXX___XXXXXX(opcode, cpGEN, MODE_IP, (Size)0, CpGen, CIMS)
         
         opcode = parse("1111 ---1 01-- ----");
-        ____XXX___MMMXXX(opcode, cpRESTORE, 0b001101111000, Word, CpRestore, CIMS)
+        ____XXX___MMMXXX(opcode, cpRESTORE, 0b001101111110, Word, CpRestore, CIMS)
         
         opcode = parse("1111 ---1 00-- ----");
         ____XXX___MMMXXX(opcode, cpSAVE, 0b001011111000, Word, CpSave, CIMS)
@@ -333,9 +333,8 @@ Moira::createJumpTable()
     
     opcode = parse("1100 ---0 ---- ----");
     ____XXX_SSMMMXXX(opcode, AND, 0b101111111111, Byte | Word | Long, AndEaRg, CIMS)
-    ____XXX_SSMMMXXX(opcode, AND, 0b001110000000, Byte,        AddEaRg, CIMSloop)
-    ____XXX_SSMMMXXX(opcode, AND, 0b001110000000, Word | Long, AddEaRg, CIMSloop)
-    
+    ____XXX_SSMMMXXX(opcode, AND, 0b001110000000, Byte | Word | Long, AndEaRg, CIMSloop)
+
     
     //               -------------------------------------------------
     // Dx,<ea>       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
@@ -862,22 +861,24 @@ Moira::createJumpTable()
     _____________XXX(opcode | 0xF00, DBLE, MODE_IP, Word, Dbcc, CIMSloop)
     
     
-    // DIVS, DIVU
+    // DIVS, DIVU, DIVL
     //
     //       Syntax: DIVx <ea>,Dy
-    //        Sizes: Longword, Word -> Longword
-    
+    //               DIVx.L <ea>,Dq         (68020+)
+    //               DIVx.L <ea>,Dr:Dq      (68020+)
+    //               DIVxL.L <ea>,Dr:Dq     (68020+)
+    //
     //               -------------------------------------------------
     // <ea>,Dn       | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B |
     //               -------------------------------------------------
     //                 X       X   X   X   X   X   X   X   X   X   X
     
     opcode = parse("1000 ---1 11-- ----");
-    ____XXX___MMMXXX(opcode, DIVS, 0b101111111111, Word, Div, CIMS)
+    ____XXX___MMMXXX(opcode, DIVS, 0b101111111111, Word, Divs, CIMS)
     
     opcode = parse("1000 ---0 11-- ----");
-    ____XXX___MMMXXX(opcode, DIVU, 0b101111111111, Word, Div, CIMS)
-    
+    ____XXX___MMMXXX(opcode, DIVU, 0b101111111111, Word, Divu, CIMS)
+
     if constexpr (C >= C68020) {
         
         opcode = parse("0100 1100 01-- ----");
@@ -1311,10 +1312,10 @@ Moira::createJumpTable()
     //                 X       X   X   X   X   X   X   X   X   X   X
     
     opcode = parse("1100 ---1 11-- ----");
-    ____XXX___MMMXXX(opcode, MULS, 0b101111111111, Word, Mul, CIMS)
+    ____XXX___MMMXXX(opcode, MULS, 0b101111111111, Word, Muls, CIMS)
     
     opcode = parse("1100 ---0 11-- ----");
-    ____XXX___MMMXXX(opcode, MULU, 0b101111111111, Word, Mul, CIMS)
+    ____XXX___MMMXXX(opcode, MULU, 0b101111111111, Word, Mulu, CIMS)
     
     if constexpr (C >= C68020) {
         
@@ -1387,8 +1388,7 @@ Moira::createJumpTable()
     
     opcode = parse("1000 ---0 ---- ----");
     ____XXX_SSMMMXXX(opcode, OR, 0b101111111111, Byte | Word | Long, AndEaRg, CIMS)
-    ____XXX_SSMMMXXX(opcode, OR, 0b001110000000, Byte,        AddEaRg, CIMSloop)
-    ____XXX_SSMMMXXX(opcode, OR, 0b001110000000, Word | Long, AddEaRg, CIMSloop)
+    ____XXX_SSMMMXXX(opcode, OR, 0b001110000000, Byte | Word | Long, AndEaRg, CIMSloop)
     
     
     //               -------------------------------------------------

@@ -395,7 +395,15 @@ bool skip(u16 op)
     result =
     instr == moira::ABCD    ||
     instr == moira::SBCD    ||
-    instr == moira::NBCD;
+    instr == moira::NBCD    ||
+    instr == moira::BFCHG   ||
+    instr == moira::BFCLR   ||
+    instr == moira::BFEXTS  ||
+    instr == moira::BFEXTU  ||
+    instr == moira::BFFFO   ||
+    instr == moira::BFINS   ||
+    instr == moira::BFSET   ||
+    instr == moira::BFTST;
 
     return result;
 }

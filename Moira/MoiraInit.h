@@ -87,7 +87,8 @@ MOIRA_DECLARE(CpScc)
 MOIRA_DECLARE(CpTrapcc)
 
 MOIRA_DECLARE(Dbcc)
-MOIRA_DECLARE(Div)
+MOIRA_DECLARE(Divs)
+MOIRA_DECLARE(Divu)
 MOIRA_DECLARE(Divl)
 
 MOIRA_DECLARE(ExgDxDy)
@@ -127,7 +128,8 @@ MOIRA_DECLARE(Moves)
 MOIRA_DECLARE(MoveToSr)
 MOIRA_DECLARE(MoveUspAn)
 MOIRA_DECLARE(MoveAnUsp)
-MOIRA_DECLARE(Mul)
+MOIRA_DECLARE(Muls)
+MOIRA_DECLARE(Mulu)
 MOIRA_DECLARE(Mull)
 
 MOIRA_DECLARE(NbcdRg)
@@ -163,8 +165,17 @@ MOIRA_DECLARE(Unlk)
 MOIRA_DECLARE(UnpkDn)
 MOIRA_DECLARE(UnpkPd)
 
-// Musashi compatibility mode
-MOIRA_DECLARE_EXEC(MulMusashi)
-MOIRA_DECLARE_EXEC(MullMusashi)
-MOIRA_DECLARE_EXEC(DivMusashi)
-MOIRA_DECLARE_EXEC(DivlMusashi)
+// Sub handlers 
+template <Core C, Instr I, Mode M, Size S> void execMulsMoira(u16);
+template <Core C, Instr I, Mode M, Size S> void execMuluMoira(u16);
+template <Core C, Instr I, Mode M, Size S> void execMullMoira(u16);
+template <Core C, Instr I, Mode M, Size S> bool execDivsMoira(u16, bool *);
+template <Core C, Instr I, Mode M, Size S> bool execDivuMoira(u16, bool *);
+template <Core C, Instr I, Mode M, Size S> bool execDivlMoira(u16, bool *);
+
+template <Core C, Instr I, Mode M, Size S> void execMulsMusashi(u16);
+template <Core C, Instr I, Mode M, Size S> void execMuluMusashi(u16);
+template <Core C, Instr I, Mode M, Size S> void execMullMusashi(u16);
+template <Core C, Instr I, Mode M, Size S> bool execDivsMusashi(u16, bool *);
+template <Core C, Instr I, Mode M, Size S> bool execDivuMusashi(u16, bool *);
+template <Core C, Instr I, Mode M, Size S> bool execDivlMusashi(u16, bool *);

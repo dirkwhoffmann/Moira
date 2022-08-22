@@ -83,7 +83,7 @@ Moira::shift(int cnt, u64 data) {
             for (int i = 0; i < cnt; i++) {
                 
                 carry = NBIT<S>(data);
-                u64 shifted = data << 1;
+                u64 shifted = (data & 0xFFFFFFFF) << 1;
                 changed |= (u32)(data ^ shifted);
                 data = shifted;
             }
@@ -282,6 +282,7 @@ Moira::addsub(u32 op1, u32 op2)
     return (u32)result;
 }
 
+/*
 template <Core C, Instr I> u32
 Moira::mul(u32 op1, u32 op2)
 {
@@ -303,11 +304,86 @@ Moira::mul(u32 op1, u32 op2)
             fatalError;
     }
     
-    reg.sr.n = NBIT <Long> (result);
-    reg.sr.z = ZERO <Long> (result);
+    reg.sr.n = NBIT<Long>(result);
+    reg.sr.z = ZERO<Long>(result);
     reg.sr.v = 0;
     reg.sr.c = 0;
     
+    return result;
+}
+*/
+
+template <Core C> u32
+Moira::muls(u32 op1, u32 op2)
+{
+    u32 result = (i16)op1 * (i16)op2;
+
+    reg.sr.n = NBIT<Long>(result);
+    reg.sr.z = ZERO<Long>(result);
+    reg.sr.v = 0;
+    reg.sr.c = 0;
+
+    return result;
+}
+
+template <Core C> u32
+Moira::mulu(u32 op1, u32 op2)
+{
+    u32 result = op1 * op2;
+
+    reg.sr.n = NBIT<Long>(result);
+    reg.sr.z = ZERO<Long>(result);
+    reg.sr.v = 0;
+    reg.sr.c = 0;
+
+    return result;
+}
+
+template <Core C, Size S> u64
+Moira::mulls(u32 op1, u32 op2)
+{
+    u64 result = u64(i64(i32(op1)) * i64(i32(op2)));
+
+    if constexpr (S == Word) {
+
+        reg.sr.n = NBIT<Long>(result);
+        reg.sr.z = ZERO<Long>(result);
+        reg.sr.v = result != u64(i32(result));
+        reg.sr.c = 0;
+    }
+
+    if constexpr (S == Long) {
+
+        reg.sr.n = NBIT<Long>(result >> 32);
+        reg.sr.z = result == 0;
+        reg.sr.v = 0;
+        reg.sr.c = 0;
+    }
+
+    return result;
+}
+
+template <Core C, Size S> u64
+Moira::mullu(u32 op1, u32 op2)
+{
+    u64 result = u64(op1) * u64(op2);
+
+    if constexpr (S == Word) {
+
+        reg.sr.n = NBIT<Long>(result);
+        reg.sr.z = ZERO<Long>(result);
+        reg.sr.v = (result >> 32) != 0;
+        reg.sr.c = 0;
+    }
+
+    if constexpr (S == Long) {
+
+        reg.sr.n = NBIT<Long>(result >> 32);
+        reg.sr.z = result == 0;
+        reg.sr.v = 0;
+        reg.sr.c = 0;
+    }
+
     return result;
 }
 
@@ -316,9 +392,7 @@ Moira::div(u32 op1, u32 op2)
 {
     u32 result;
     bool overflow;
-    
-    reg.sr.n = reg.sr.z = reg.sr.v = reg.sr.c = 0;
-    
+
     switch (I) {
             
         case DIVS: // Signed division
@@ -345,70 +419,118 @@ Moira::div(u32 op1, u32 op2)
         default:
             fatalError;
     }
-    
-    reg.sr.v = overflow ? 1        : reg.sr.v;
-    reg.sr.n = overflow ? 1        : NBIT<Word>(result);
-    reg.sr.z = overflow ? reg.sr.z : ZERO<Word>(result);
-    
+
+    reg.sr.v = overflow;
+
+    if (I == DIVS) {
+
+        if (overflow) {
+
+            setUndefinedDIVS<C, Word>(i32(op1), i16(op2));
+
+        } else {
+
+            reg.sr.c = 0;
+            reg.sr.n = NBIT<Word>(result);
+            reg.sr.z = ZERO<Word>(result);
+        }
+    }
+    if (I == DIVU) {
+
+        if (overflow) {
+
+            setUndefinedDIVU<C, Word>(i32(op1), i16(op2));
+
+        } else {
+
+            reg.sr.c = 0;
+            reg.sr.n = NBIT<Word>(result);
+            reg.sr.z = ZERO<Word>(result);
+        }
+    }
+
     return overflow ? op1 : result;
 }
 
 template <Core C, Instr I, Size S> u32
 Moira::bcd(u32 op1, u32 op2)
 {
-    u64 result, tmpResult;
-    
+    u64 tmp, result;
+
+    // Extract digits
+    u16 hi1 = op1 & 0xF0, lo1 = op1 & 0x0F;
+    u16 hi2 = op2 & 0xF0, lo2 = op2 & 0x0F;
+
     switch (I) {
             
         case ABCD:
         {
-            // Extract nibbles
-            u16 op1_hi = op1 & 0xF0, op1_lo = op1 & 0x0F;
-            u16 op2_hi = op2 & 0xF0, op2_lo = op2 & 0x0F;
-            
-            // From portable68000
-            u16 resLo = op1_lo + op2_lo + reg.sr.x;
-            u16 resHi = op1_hi + op2_hi;
-            
-            result = tmpResult = resHi + resLo;
-            if (resLo > 9) result += 6;
-            reg.sr.x = reg.sr.c = (result & 0x3F0) > 0x90;
-            if (reg.sr.c) result += 0x60;
-            if (CLIP<Byte>(result)) reg.sr.z = 0;
-            reg.sr.n = NBIT<Byte>(result);
-            reg.sr.v = ((tmpResult & 0x80) == 0) && ((result & 0x80) == 0x80);
+            // Add digits
+            u16 lo = lo1 + lo2 + reg.sr.x;
+            u16 hi = hi1 + hi2;
+            result = tmp = hi + lo;
+
+            // Rectify first digit
+            if (lo > 9) {
+                result += 0x06;
+            }
+
+            // Rectify second digit
+            if ((result & 0x3F0) > 0x90) {
+                result += 0x60;
+                reg.sr.x = 1;
+            } else {
+                reg.sr.x = 0;
+            }
+
+            // Set V flag
+            if constexpr (C != C68020) {
+                reg.sr.v = ((tmp & 0x80) == 0) && ((result & 0x80) == 0x80);
+            } else {
+                reg.sr.v = 0;
+            }
+
             break;
         }
         case SBCD:
         {
-            // Extract nibbles
-            u16 op1_hi = op1 & 0xF0, op1_lo = op1 & 0x0F;
-            u16 op2_hi = op2 & 0xF0, op2_lo = op2 & 0x0F;
-            
-            // From portable68000
-            u16 resLo = op2_lo - op1_lo - reg.sr.x;
-            u16 resHi = op2_hi - op1_hi;
-            
-            result = tmpResult = resHi + resLo;
-            int bcd = 0;
-            if (resLo & 0xf0) {
-                bcd = 6;
-                result -= 6;
+            // Subtract digits
+            u16 lo = lo2 - lo1 - reg.sr.x;
+            u16 hi = hi2 - hi1;
+            result = tmp = hi + lo;
+
+            // Rectify first digit
+            if (lo & 0xF0) {
+                result -= 0x06;
+                reg.sr.x = ((op2 - op1 - 6 - reg.sr.x) & 0x300) > 0xFF;
+            } else {
+                reg.sr.x = ((op2 - op1 - reg.sr.x) & 0x300) > 0xFF;
             }
-            if (((op2 - op1 - reg.sr.x) & 0x100) > 0xff) result -= 0x60;
-            reg.sr.c = reg.sr.x = ((op2 - op1 - bcd - reg.sr.x) & 0x300) > 0xff;
-            
-            if (CLIP<Byte>(result)) reg.sr.z = 0;
-            reg.sr.n = NBIT<Byte>(result);
-            reg.sr.v = ((tmpResult & 0x80) == 0x80) && ((result & 0x80) == 0);
+
+            // Rectify second digit
+            if (((op2 - op1 - reg.sr.x) & 0x100) > 0xFF) {
+                result -= 0x60;
+            }
+
+            // Set V flag
+            if constexpr (C != C68020) {
+                reg.sr.v = ((tmp & 0x80) == 0x80) && ((result & 0x80) == 0);
+            } else {
+                reg.sr.v = 0;
+            }
+
             break;
         }
             
         default:
             fatalError;
     }
-    
+
+    // Set other flags
+    reg.sr.c = reg.sr.x;
     reg.sr.n = NBIT<S>(result);
+    if (CLIP<Byte>(result)) reg.sr.z = 0;
+
     return (u32)result;
 }
 
@@ -465,17 +587,17 @@ Moira::logic(u32 op1, u32 op2)
     
     switch (I) {
             
-        case AND: case ANDI: case ANDICCR: case ANDISR:
-            
+        case AND: case ANDI: case ANDICCR: case ANDISR: case AND_LOOP:
+
             result = op1 & op2;
             break;
             
-        case OR: case ORI: case ORICCR: case ORISR:
+        case OR: case ORI: case ORICCR: case ORISR: case OR_LOOP:
             
             result = op1 | op2;
             break;
             
-        case EOR: case EORI: case EORICCR: case EORISR:
+        case EOR: case EORI: case EORICCR: case EORISR: case EOR_LOOP:
             
             result = op1 ^ op2;
             break;
@@ -668,7 +790,7 @@ Moira::cond(Instr I) {
 }
 
 template <Core C, Instr I> int
-Moira::cyclesBit(u8 bit)
+Moira::cyclesBit(u8 bit) const
 {
     switch (I)
     {
@@ -683,7 +805,7 @@ Moira::cyclesBit(u8 bit)
 }
 
 template <Core C, Instr I> int
-Moira::cyclesMul(u16 data)
+Moira::cyclesMul(u16 data) const
 {
     int mcycles = 17;
     
@@ -706,7 +828,7 @@ Moira::cyclesMul(u16 data)
 }
 
 template <Core C, Instr I> int
-Moira::cyclesDiv(u32 op1, u16 op2)
+Moira::cyclesDiv(u32 op1, u16 op2) const
 {
     int result;
     
@@ -971,4 +1093,379 @@ Moira::divluMusashi(u64 op1, u32 op2)
     }
     
     return { u32(quotient), u32(remainder) };
+}
+
+template <Size S> std::pair<u32,u32>
+Moira::divlsMoira(i64 a, u32 src)
+{
+    i64 quotient, remainder;
+
+    // TODO: CLEAN THIS UP
+    if (S == Word) { a = (i64)(i32)a; }
+
+    if ((u64)a == 0x8000000000000000UL && (i32)src == -1) {
+
+        assert(S == Word);
+        reg.sr.v = 1;
+        return { u32(0), u32(0) };
+
+    } else {
+
+        remainder = a % (i64)(i32)src;
+        quotient = a / (i64)(i32)src;
+
+        if ((quotient & u64(0xffffffff80000000)) != 0
+            && (quotient & u64(0xffffffff80000000)) != u64(0xffffffff80000000)) {
+
+            assert(S != Word);
+            reg.sr.v = 1;
+            return { u32(0), u32(0) };
+
+        } else {
+
+            if (((i32)remainder < 0) != ((i64)a < 0)) {
+                remainder = -remainder;
+            }
+
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+            reg.sr.z = (i32)quotient == 0;
+            reg.sr.n = (i32)quotient < 0;
+
+            return { u32(quotient), u32(remainder) };
+        }
+    }
+}
+
+template <Size S> std::pair<u32,u32>
+Moira::divluMoira(u64 a, u32 src)
+{
+    u64 quotient, remainder;
+
+    remainder = a % (u64)src;
+    quotient = a / (u64)src;
+    if (quotient > 0xffffffffu) {
+
+        reg.sr.v = 1;
+        return { u32(0), u32(0) };
+
+    } else {
+
+        reg.sr.v = 0;
+        reg.sr.c = 0;
+        reg.sr.z = (i32)quotient == 0;
+        reg.sr.n = (i32)quotient < 0;
+
+        return { u32(quotient), u32(remainder) };
+    }
+}
+
+template <Core C, Instr I, Size S> void
+Moira::setUndefinedFlags(i32 arg1, i32 arg2, i32 arg3)
+{
+    switch (I) {
+
+        case CHK:
+        {
+            i32 src = arg1;
+            i32 dst = arg2;
+
+            switch (C) {
+
+                case C68000:
+                case C68010:
+
+                    reg.sr.c = 0;
+                    reg.sr.z = dst == 0 ? 1 : 0;
+                    reg.sr.v = 0;
+                    break;
+
+                case C68020:
+
+                    reg.sr.c = reg.sr.z = reg.sr.n = reg.sr.v = 0;
+
+                    if (dst == 0) reg.sr.z = 1;
+                    if (dst < 0 || dst > src) {
+
+                        if constexpr (S == Word) {
+                            int flgs = i16(dst) < 0;
+                            int flgo = i16(src) < 0;
+                            i16 val = i16(i64(src) - i64(dst));
+                            int flgn = val < 0;
+                            reg.sr.v = (flgs ^ flgo) & (flgn ^ flgo);
+                        } else {
+                            int flgs = dst < 0;
+                            int flgo = src < 0;
+                            i32 val = i32(i64(src) - i64(dst));
+                            int flgn = val < 0;
+                            reg.sr.v = (flgs ^ flgo) & (flgn ^ flgo);
+                        }
+                        if (dst < 0) {
+                            reg.sr.c = dst > src || src >= 0;
+                        } else {
+                            reg.sr.c = src >= 0;
+                        }
+                    }
+                    break;
+            }
+            break;
+        }
+        case CHK2:
+        {
+            auto diff = [&](i32 arg1, i32 arg2) {
+                return i32((i64)arg1 - (i64)arg2);
+            };
+
+            i32 lower = arg1;
+            i32 upper = arg2;
+            i32 value = arg3;
+
+            // Logic taken from UAE
+            reg.sr.n = reg.sr.v = 0;
+
+            if (value == lower || value == upper) return;
+
+            if (lower < 0 && upper >= 0) {
+                if (value < lower) {
+                    reg.sr.n = 1;
+                }
+                if (value >= 0 && value < upper) {
+                    reg.sr.n = 1;
+                }
+                // assert((lower - value >= 0) == i32((u32)lower - (u32)value) >= 0);
+                if (value >= 0 && diff(lower, value) >= 0) {
+                // if (value >= 0 && lower - value >= 0) {
+                    reg.sr.v = 1;
+                    reg.sr.n = 0;
+                    if (value > upper) {
+                        reg.sr.n = 1;
+                    }
+                }
+            } else if (lower >= 0 && upper < 0) {
+                if (value >= 0) {
+                    reg.sr.n = 1;
+                }
+                if (value > upper) {
+                    reg.sr.n = 1;
+                }
+                if (value > lower && diff(upper, value) >= 0) {
+                    reg.sr.v = 1;
+                    reg.sr.n = 0;
+                }
+            } else if (lower >= 0 && upper >= 0 && lower > upper) {
+                if (value > upper && value < lower) {
+                    reg.sr.n = 1;
+                }
+                if (value < 0 && diff(lower, value) < 0) {
+                    reg.sr.v = 1;
+                }
+                if (value < 0 && diff(lower, value) >= 0) {
+                    reg.sr.n = 1;
+                }
+            } else if (lower >= 0 && upper >= 0 && lower <= upper) {
+                if (value >= 0 && value < lower) {
+                    reg.sr.n = 1;
+                }
+                if (value > upper) {
+                    reg.sr.n = 1;
+                }
+                if (value < 0 && diff(upper, value) < 0) {
+                    reg.sr.n = 1;
+                    reg.sr.v = 1;
+                }
+            } else if (lower < 0 && upper < 0 && lower > upper) {
+                if (value >= 0) {
+                    reg.sr.n = 1;
+                }
+                if (value > upper && value < lower) {
+                    reg.sr.n = 1;
+                }
+                if (value >= 0 && diff(value, lower) < 0) {
+                    reg.sr.n = 0;
+                    reg.sr.v = 1;
+                }
+            } else if (lower < 0 && upper < 0 && lower <= upper) {
+                if (value < lower) {
+                    reg.sr.n = 1;
+                }
+                if (value < 0 && value > upper) {
+                    reg.sr.n = 1;
+                }
+                if (value >= 0 && diff(value, lower) < 0) {
+                    reg.sr.n = 1;
+                    reg.sr.v = 1;
+                }
+            }
+            break;
+        }
+        default:
+            fatalError;
+    }
+}
+
+template <Core C, Size S> void
+Moira::setUndefinedDIVU(u32 dividend, u16 divisor)
+{
+    auto iDividend = i32(dividend);
+
+    switch (C) {
+
+        case C68000:
+        case C68010:
+
+            reg.sr.c = 0;
+            reg.sr.n = 1;
+            reg.sr.z = 0;
+            break;
+
+        case C68020:
+
+            if (iDividend < 0) reg.sr.n = 1;
+            break;
+    }
+}
+
+template <Core C, Size S> void
+Moira::setUndefinedDIVS(i32 dividend, i16 divisor)
+{
+    auto uDividend = u32(std::abs(dividend));
+    auto uDivisor = u16(std::abs(divisor));
+
+    switch (C) {
+
+        case C68000:
+        case C68010:
+
+            reg.sr.c = 0;
+            reg.sr.n = 1;
+            reg.sr.z = 0;
+            break;
+
+        case C68020:
+
+            reg.sr.c = 0;
+            reg.sr.n = 0;
+            reg.sr.z = 0;
+
+            if ((uDividend >> 16) < uDivisor) {
+
+                u32 quot = uDividend / uDivisor;
+                if (i8(quot) == 0) reg.sr.z = 1;
+                if (i8(quot) < 0) reg.sr.n = 1;
+            }
+    }
+}
+
+template <Core C, Size S> void
+Moira::setUndefinedDIVUL(i64 a, i32 divisor)
+{
+    i32 a32 = (i32)a;
+    bool neg32 = a32 < 0;
+    
+    reg.sr.n = neg32;
+    reg.sr.z = a32 == 0;
+    reg.sr.c = 0;
+}
+
+template <Core C, Size S> void
+Moira::setUndefinedDIVSL(i64 a, i32 divisor)
+{
+    i32 a32 = (i32)a;
+    bool neg64 = a < 0;
+    bool neg32 = a32 < 0;
+
+    if constexpr (S == Long) {
+
+        i32 ahigh = a >> 32;
+        if (ahigh == 0) {
+            reg.sr.z = 1;
+            reg.sr.n = 0;
+        } else if (ahigh < 0 && divisor < 0 && ahigh > divisor) {
+            reg.sr.z = 0;
+            reg.sr.n = 0;
+        } else {
+            if (a32 == 0) {
+                reg.sr.z = 1;
+                reg.sr.n = 0;
+            } else {
+                reg.sr.z = 0;
+                reg.sr.n = neg32 ^ neg64;
+            }
+        }
+    } else {
+        if (a32 == 0) {
+            reg.sr.z = 1;
+            reg.sr.n = 0;
+        } else {
+            reg.sr.n = neg32;
+            reg.sr.z = 0;
+        }
+    }
+    reg.sr.c = 0;
+}
+
+template <Core C, Size S> void
+Moira::setDivZeroDIVU(u32 dividend)
+{
+    switch (C) {
+
+        case C68000:
+        case C68010:
+        {
+            reg.sr.n = 0;
+            reg.sr.z = 0;
+
+            i16 d = i16(dividend >> 16);
+            if (d < 0) reg.sr.n = 1;
+            if (d == 0) reg.sr.z = 1;
+            break;
+        }
+        case C68020:
+        {
+            reg.sr.n = 0;
+            reg.sr.z = 0;
+            reg.sr.v = 1;
+            
+            i16 d = i16(dividend >> 16);
+            if (d < 0) reg.sr.n = 1;
+            if (d == 0) reg.sr.z = 1;
+            break;
+        }
+    }
+}
+
+template <Core C, Size S> void
+Moira::setDivZeroDIVS(u32 dividend)
+{
+    switch (C) {
+
+        case C68000:
+        case C68010:
+
+            reg.sr.n = 0;
+            reg.sr.z = 1;
+            break;
+
+        case C68020:
+
+            reg.sr.n = 0;
+            reg.sr.z = 1;
+            break;
+    }
+}
+
+template <Core C, Size S> void
+Moira::setDivZeroDIVUL(i64 dividend)
+{
+    i32 a32 = (i32)dividend;
+    bool neg32 = a32 < 0;
+    reg.sr.n = neg32;
+    reg.sr.z = a32 == 0;
+}
+
+template <Core C, Size S> void
+Moira::setDivZeroDIVSL(i64 dividend)
+{
+    reg.sr.n = 0;
+    reg.sr.z = 1;
 }
