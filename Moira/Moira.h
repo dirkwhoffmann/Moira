@@ -172,6 +172,7 @@ protected:
 private:
     
     template <Core C> void createJumpTable();
+    template <Core C> void createJumpTableMMU();
 
 
     //

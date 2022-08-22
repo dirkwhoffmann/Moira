@@ -111,7 +111,10 @@ typedef enum
     RTM,        TRAPCC,     TRAPCS,     TRAPEQ,     TRAPGE,     TRAPGT,
     TRAPHI,     TRAPLE,     TRAPLS,     TRAPLT,     TRAPMI,     TRAPNE,
     TRAPPL,     TRAPVC,     TRAPVS,     TRAPF,      TRAPT,      UNPK,
-    
+
+    // MMU instructions (68030)
+    PFLUSH,     PFLUSHA,    PLOAD,      PMOVE,      PTEST,
+
     // Loop mode variants (68010)
     ABCD_LOOP,  ADD_LOOP,   ADDA_LOOP,  ADDX_LOOP,  AND_LOOP,   ASL_LOOP,
     ASR_LOOP,   CLR_LOOP,   CMP_LOOP,   CMPA_LOOP,  DBCC_LOOP,  DBCS_LOOP,
@@ -125,7 +128,7 @@ typedef enum
 Instr;
 
 template <Instr I>
-constexpr bool looping() { return I >= ABCD_LOOP; }
+constexpr bool looping() { return I >= ABCD_LOOP && I <= TST_LOOP; }
 
 typedef enum
 {

@@ -643,11 +643,44 @@ Moira::dasmCpDbcc(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmCpGen(StrWriter &str, u32 &addr, u16 op)
 {
-    auto ext = Imu ( dasmRead<Long>(addr) );
-    auto id =      ( ____xxx_________(op) );
-    
-    str << id << Ins<I>{} << tab << ext;
-    str << Av<I, M, S>{};
+    auto id = ( ____xxx_________(op) );
+    bool hasMMU = model == M68030 || model == M68EC030;
+
+    if (id == 0 && hasMMU && str.style == DASM_MUSASHI) {
+
+        auto ext = Imu ( dasmRead<Long>(addr) );
+
+        str << id << Ins<I>{} << tab << ext;
+        str << Av<I, M, S>{};
+
+    } else {
+
+        switch ((op >> 3) & 0b111) {
+
+            case 0b000: dasmP68030<I, Mode(0), S>(str, addr, op); break;
+            case 0b001: dasmP68030<I, Mode(1), S>(str, addr, op); break;
+            case 0b010: dasmP68030<I, Mode(2), S>(str, addr, op); break;
+            case 0b011: dasmP68030<I, Mode(3), S>(str, addr, op); break;
+            case 0b100: dasmP68030<I, Mode(4), S>(str, addr, op); break;
+            case 0b101: dasmP68030<I, Mode(5), S>(str, addr, op); break;
+            case 0b110: dasmP68030<I, Mode(6), S>(str, addr, op); break;
+
+        default:
+
+            switch(op & 0b111) {
+
+                case 0b000: dasmP68030<I, Mode(7), S>(str, addr, op); break;
+                case 0b001: dasmP68030<I, Mode(8), S>(str, addr, op); break;
+                case 0b010: dasmP68030<I, Mode(9), S>(str, addr, op); break;
+                case 0b011: dasmP68030<I, Mode(10), S>(str, addr, op); break;
+                case 0b100: dasmP68030<I, Mode(11), S>(str, addr, op); break;
+
+                default:
+
+                    dasmP68030<I, Mode(10), S>(str, addr, op); break;
+            }
+        }
+    }
 }
 
 template <Instr I, Mode M, Size S> void
@@ -1520,4 +1553,50 @@ template <Instr I, Mode M, Size S> void
 Moira::dasmUnpkPd(StrWriter &str, u32 &addr, u16 op)
 {
     dasmUnpkDn<I, M, S>(str, addr, op);
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmP68030(StrWriter &str, u32 &addr, u16 op)
+{
+
+    auto ext = dasmRead<Word>(addr);
+
+    if ((ext & 0xE000) == 0x0000) {
+        dasmPMove<PMOVE, M, Long>(str, addr, op);
+    } else {
+        str << "TODO: dasmP68030";
+    }
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmPFlush(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "TODO: dasmPFlush";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmPFlushA(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "TODO: dasmPFlushA";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmPLoad(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "TODO: dasmPLoad";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
+{
+    auto reg  = _____________xxx(op);
+    auto preg = ___xxx__________(op);
+
+    str << Ins<I>{} << Sz<Long>{} << tab << Op<M, S>(reg, addr) << Sep{} << "???";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmPTest(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "TODO: dasmPTest";
 }

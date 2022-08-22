@@ -45,7 +45,10 @@ static const char *mnemonics[]
     "s",        "trap",     "divl",     "extb",     "mull",     "pack",
     "rtm",      "trapcc",   "trapcs",   "trapeq",   "trapge",   "trapgt",
     "traphi",   "traple",   "trapls",   "traplt",   "trapmi",   "trapne",
-    "trappl",   "trapvc",   "trapvs",   "trapf",    "trapt",    "unpk"
+    "trappl",   "trapvc",   "trapvs",   "trapf",    "trapt",    "unpk",
+
+    // MMU
+    "pflush",   "pflusha",  "pload",    "pmove",    "ptest"
 };
 
 static int decDigits(u64 value) { return value ? 1 + (int)log10(value) : 1; }

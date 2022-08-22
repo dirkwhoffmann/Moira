@@ -4990,6 +4990,42 @@ Moira::execUnpkPd(u16 opcode)
     FINALIZE
 }
 
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execP68030(u16 opcode)
+{
+    printf("TODO: execP68030");
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execPFlush(u16 opcode)
+{
+    printf("TODO: execPFlush");
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execPFlushA(u16 opcode)
+{
+    printf("TODO: execPFlushA");
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execPLoad(u16 opcode)
+{
+    printf("TODO: execPLoad");
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execPMove(u16 opcode)
+{
+    printf("TODO: execPMove");
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execPTest(u16 opcode)
+{
+    printf("TODO: execPTest");
+}
+
 #undef AVAILABILITY
 #undef SUPERVISOR_MODE_ONLY
 #undef FINALIZE

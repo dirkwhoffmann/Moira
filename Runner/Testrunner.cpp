@@ -591,16 +591,32 @@ void compare(Setup &s, Result &r1, Result &r2)
 
 bool compareDasm(Result &r1, Result &r2)
 {
-    // REMOVE ASAP
-    // printf("compareDasm: %s\n", r1.dasm);
-
     bool isIllegal = moiracpu->getInfo(r1.opcode).I == ILLEGAL;
 
-    // Compare with Musashi
-    if (r1.dasmCntMusashi != r2.dasmCntMusashi) return false;
-    if (strcmp(r1.dasmMusashi, r2.dasmMusashi) != 0) return false;
+    // Skip some opcodes with known differences
+    bool skipMusashi = false;
+    bool skipM68k = isIllegal;
 
-    if (!isIllegal) {
+    // MMU range
+    /*
+    if (r1.opcode >= 0xF000 && r1.opcode < 0xF100) {
+
+        skipMusashi = true;
+        skipM68k =
+        ((r1.opcode & 0b111111) == 0b111101) || // Illegal mode pattern
+        ((r1.opcode & 0b111111) == 0b111110) || // Illegal mode pattern
+        ((r1.opcode & 0b111111) == 0b111111);   // Illegal mode pattern
+    }
+    */
+
+    // Compare with Musashi
+    if (!skipMusashi) {
+
+        if (r1.dasmCntMusashi != r2.dasmCntMusashi) return false;
+        if (strcmp(r1.dasmMusashi, r2.dasmMusashi) != 0) return false;
+    }
+
+    if (!skipM68k) {
 
         // Compare with M68k (Motorola syntax)
         if (r1.dasmCntMoto != r2.dasmCntMoto) return false;

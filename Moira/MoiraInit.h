@@ -165,6 +165,13 @@ MOIRA_DECLARE(Unlk)
 MOIRA_DECLARE(UnpkDn)
 MOIRA_DECLARE(UnpkPd)
 
+MOIRA_DECLARE(P68030)
+MOIRA_DECLARE(PFlush)
+MOIRA_DECLARE(PFlushA)
+MOIRA_DECLARE(PLoad)
+MOIRA_DECLARE(PMove)
+MOIRA_DECLARE(PTest)
+
 // Sub handlers 
 template <Core C, Instr I, Mode M, Size S> void execMulsMoira(u16);
 template <Core C, Instr I, Mode M, Size S> void execMuluMoira(u16);
