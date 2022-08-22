@@ -256,7 +256,7 @@ StrWriter::operator<<(Cpcc cpcc)
     switch (cpcc.raw) {
             
         case 0:  *this << "f";      break;
-        case 1:  *this << "eq";     break;
+        case 1:  *this << (style == DASM_MUSASHI ? "eq" : "bc"); break;
         case 2:  *this << "ogt";    break;
         case 3:  *this << "oge";    break;
         case 4:  *this << "olt";    break;

@@ -617,9 +617,17 @@ Moira::dasmCpBcc(StrWriter &str, u32 &addr, u16 op)
     auto cnd  = ( __________xxxxxx(op) );
     
     pc += SEXT<S>(disp);
-    
-    str << id << Ins<I>{} << Cpcc{cnd} << tab << Ims<Word>(ext2);
-    str << "; " << UInt(pc) << " (extension = " << Int(ext1) << ") (2-3)";
+
+    if (id != 0 || str.style == DASM_MUSASHI) {
+
+        str << id << Ins<I>{} << Cpcc{cnd} << tab << Ims<Word>(ext2);
+        str << "; " << UInt(pc) << " (extension = " << Int(ext1) << ") (2-3)";
+
+    } else {
+
+        str << "TODO";
+        // str << id << "p" << Cpcc{cnd} << Tab{9} << ;
+    }
 }
 
 template <Instr I, Mode M, Size S> void
@@ -709,14 +717,22 @@ template <Instr I, Mode M, Size S> void
 Moira::dasmCpScc(StrWriter &str, u32 &addr, u16 op)
 {
     auto ext1 = dasmRead<Word>(addr);
-    auto ext2 = dasmRead<Word>(addr);
     auto dn   = ( _____________xxx(op)   );
     auto id   = ( ____xxx_________(op)   );
     auto cnd  = ( __________xxxxxx(ext1) );
     auto ea   = Op <M,S> (dn, addr);
-    
-    str << id << Ins<I>{} << Cpcc{cnd} << tab << ea;
-    str << "; (extension = " << Int(ext2) << ") (2-3)";
+
+    if (id != 0 || str.style == DASM_MUSASHI) {
+
+        auto ext2 = dasmRead<Word>(addr);
+
+        str << id << Ins<I>{} << Cpcc{cnd} << tab << ea;
+        str << "; (extension = " << Int(ext2) << ") (2-3)";
+
+    } else {
+
+        str << "ps" << Cpcc{cnd} << tab << ea;
+    }
 }
 
 template <Instr I, Mode M, Size S> void
@@ -1590,7 +1606,7 @@ template <Instr I, Mode M, Size S> void
 Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
 {
     auto reg  = _____________xxx(op);
-    auto preg = ___xxx__________(op);
+    // auto preg = ___xxx__________(op);
 
     str << Ins<I>{} << Sz<Long>{} << tab << Op<M, S>(reg, addr) << Sep{} << "???";
 }
