@@ -3513,7 +3513,7 @@ Moira::execMulsMusashi(u16 opcode)
     if (!readOp<C, M, Word>(src, &ea, &data)) return;
 
     prefetch<C, POLLIPL>();
-    result = mulMusashi<C, I>(data, readD<Word>(dst));
+    result = muls<C>(data, readD<Word>(dst));
 
     if constexpr (I == MULU) { SYNC_68000(50); SYNC_68010(26); }
     if constexpr (I == MULS) { SYNC_68000(50); SYNC_68010(28); }
@@ -3579,7 +3579,7 @@ Moira::execMuluMusashi(u16 opcode)
     if (!readOp<C, M, Word>(src, &ea, &data)) return;
 
     prefetch<C, POLLIPL>();
-    result = mulMusashi<C, I>(data, readD<Word>(dst));
+    result = mulu<C>(data, readD<Word>(dst));
 
     if constexpr (I == MULU) { SYNC_68000(50); SYNC_68010(26); }
     if constexpr (I == MULS) { SYNC_68000(50); SYNC_68010(28); }
