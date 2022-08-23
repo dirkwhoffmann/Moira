@@ -597,18 +597,6 @@ bool compareDasm(Result &r1, Result &r2)
     bool skipMusashi = false;
     bool skipM68k = isIllegal;
 
-    // MMU range
-    /*
-    if (r1.opcode >= 0xF000 && r1.opcode < 0xF100) {
-
-        skipMusashi = true;
-        skipM68k =
-        ((r1.opcode & 0b111111) == 0b111101) || // Illegal mode pattern
-        ((r1.opcode & 0b111111) == 0b111110) || // Illegal mode pattern
-        ((r1.opcode & 0b111111) == 0b111111);   // Illegal mode pattern
-    }
-    */
-
     // Compare with Musashi
     if (!skipMusashi) {
 

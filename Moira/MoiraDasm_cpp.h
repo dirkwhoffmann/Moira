@@ -625,8 +625,8 @@ Moira::dasmCpBcc(StrWriter &str, u32 &addr, u16 op)
 
     } else {
 
-        str << "TODO";
-        // str << id << "p" << Cpcc{cnd} << Tab{9} << ;
+        addr -= 4; // THIS MUST BE WRONG
+        str << "pb" << Cpcc{cnd & 0xF} << Sz<S>{} << tab << UInt(pc);
     }
 }
 
@@ -636,16 +636,28 @@ Moira::dasmCpDbcc(StrWriter &str, u32 &addr, u16 op)
     auto pc   = addr + 2;
     auto ext1 = dasmRead<Word>(addr);
     auto ext2 = dasmRead<Word>(addr);
-    auto ext3 = dasmRead<Word>(addr);
-    auto ext4 = dasmRead<Word>(addr);
     auto dn   = ( _____________xxx(op)   );
     auto id   = ( ____xxx_________(op)   );
     auto cnd  = ( __________xxxxxx(ext1) );
-    
-    pc += i16(ext3);
-    
-    str << id << Ins<I>{} << Cpcc{cnd} << tab << Dn{dn} << "," << Ims<Word>(ext4);
-    str << "; " << UInt(pc) << " (extension = " << Int(ext2) << ") (2-3)";
+
+    if (id != 0 || str.style == DASM_MUSASHI) {
+
+        auto ext3 = dasmRead<Word>(addr);
+        auto ext4 = dasmRead<Word>(addr);
+
+        pc += i16(ext3);
+
+        str << id << Ins<I>{} << Cpcc{cnd} << tab << Dn{dn} << "," << Ims<Word>(ext4);
+        str << "; " << UInt(pc) << " (extension = " << Int(ext2) << ") (2-3)";
+
+    } else {
+
+        auto ext3 = dasmRead<Word>(addr); addr -= 2;
+
+        pc += i16(ext3);
+
+        str << "pdb" << Cpcc{cnd} << tab << Dn{dn} << Sep{} << UInt(pc + 2);
+    }
 }
 
 template <Instr I, Mode M, Size S> void
@@ -720,17 +732,18 @@ Moira::dasmCpScc(StrWriter &str, u32 &addr, u16 op)
     auto dn   = ( _____________xxx(op)   );
     auto id   = ( ____xxx_________(op)   );
     auto cnd  = ( __________xxxxxx(ext1) );
-    auto ea   = Op <M,S> (dn, addr);
 
     if (id != 0 || str.style == DASM_MUSASHI) {
 
         auto ext2 = dasmRead<Word>(addr);
+        auto ea = Op<M, S>(dn, addr);
 
         str << id << Ins<I>{} << Cpcc{cnd} << tab << ea;
         str << "; (extension = " << Int(ext2) << ") (2-3)";
 
     } else {
 
+        auto ea = Op<M, S>(dn, addr);
         str << "ps" << Cpcc{cnd} << tab << ea;
     }
 }
@@ -739,29 +752,63 @@ template <Instr I, Mode M, Size S> void
 Moira::dasmCpTrapcc(StrWriter &str, u32 &addr, u16 op)
 {
     auto ext1 = dasmRead<Word>(addr);
-    auto ext2 = dasmRead<Word>(addr);
     auto id   = ( ____xxx_________(op)   );
     auto cnd  = ( __________xxxxxx(ext1) );
-    
-    str << id << Ins<I>{} << Cpcc{cnd} << Tab{9};
-    
-    switch (op & 0b111) {
-            
-        case 0b010:
-        {
-            auto ext = dasmRead <Word> (addr);
-            str << Tab{10} << Imu(ext);
-            break;
+
+    if (id != 0 || str.style == DASM_MUSASHI) {
+
+        auto ext2 = dasmRead<Word>(addr);
+
+        switch (op & 0b111) {
+
+            case 0b010:
+            {
+                auto ext = dasmRead<Word>(addr);
+                str << id << Ins<I>{} << Cpcc{cnd} << Tab{9};
+                str << Tab{10} << Imu(ext);
+                str << "; (extension = " << Int(ext2) << ") (2-3)";
+                break;
+            }
+            case 0b011:
+            {
+                auto ext = dasmRead<Long>(addr);
+                str << id << Ins<I>{} << Cpcc{cnd} << Tab{9};
+                str << Tab{10} << Imu(ext);
+                str << "; (extension = " << Int(ext2) << ") (2-3)";
+                break;
+            }
+            case 0b100:
+            {
+                // (void)dasmRead<Long>(addr);
+                str << id << Ins<I>{} << Cpcc{cnd} << Tab{9};
+                str << "; (extension = " << Int(ext2) << ") (2-3)";
+                break;
+            }
+            default:
+                addr -= 4;
+                dasmLineF<I, M, S>(str, addr, op);
         }
-        case 0b011:
-        {
-            auto ext = dasmRead <Long> (addr);
-            str << Tab{10} << Imu(ext);
-            break;
+
+    } else {
+
+        switch (op & 0b111) {
+
+            case 0b010:
+            {
+                auto ext = dasmRead <Word> (addr);
+                str << "ptrap" << Cpcc{cnd} << Sz<Word>{} << tab << Imu(ext);
+                break;
+            }
+            case 0b011:
+            {
+                auto ext = dasmRead <Long> (addr);
+                str << "ptrap" << Cpcc{cnd} << Sz<Long>{} << tab << Imu(ext);
+                break;
+            }
+            default:
+                str << "ptrap" << Cpcc{cnd} << Sz<Long>{};
         }
     }
-    
-    str << "; (extension = " << Int(ext2) << ") (2-3)";
 }
 
 template <Instr I, Mode M, Size S> void
