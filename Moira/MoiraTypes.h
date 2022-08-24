@@ -36,7 +36,11 @@ typedef enum
     M68EC020,           // Work in progress
     M68020,             // Work in progress
     M68EC030,           // Work in progress
-    M68030              // Work in progress
+    M68030,             // Work in progress
+    M68EC040,           // Work in progress
+    M68LC040,           // Work in progress
+    M68040              // Work in progress
+
 }
 Model;
 
@@ -44,7 +48,7 @@ typedef enum
 {
     C68000,             // Used by M68000
     C68010,             // Used by M68010
-    C68020              // Used by M68EC020, M68020, M68EC030, and M68030
+    C68020              // Used by all others
 }
 Core;
 

@@ -704,7 +704,7 @@ Moira::dasmCpGen(StrWriter &str, u32 &addr, u16 op)
 
                 default:
 
-                    dasmP68030<I, Mode(10), S>(str, addr, op); break;
+                    dasmP68030<I, Mode(12), S>(str, addr, op); break;
             }
         }
     }
@@ -1655,8 +1655,7 @@ Moira::dasmP68030(StrWriter &str, u32 &addr, u16 op)
     auto ext = dasmRead<Word>(addr);
 
     // PLOAD
-    if (((ext & 0xFDE0) == 0x2000) ||
-        (((ext & 0xE000) == 0x2000) && str.style != DASM_MUSASHI)) {
+    if ((ext & 0xFDE0) == 0x2000) {
 
         dasmPLoad<PLOAD, M, Long>(str, addr, op);
         return;
@@ -1706,18 +1705,35 @@ Moira::dasmP68030(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmPFlush(StrWriter &str, u32 &addr, u16 op)
 {
-    auto ea = Op <M,S> ( _____________xxx(op), addr );
-
     addr -= 2;
     auto ext = dasmRead<Word>(addr);
 
     if ((ext & 0xE200) == 0x2000) { // PFLUSH
 
-        str << "pflushr" << tab << u8(ext & 0x1F) << Sep{} << u8((ext >> 5) & 0xF) << Sep{} << ea;
+        if (M == MODE_IP) {
+
+            str << "pflushr" << tab << u8(ext & 0x1F) << Sep{} << u8((ext >> 5) & 0xF);
+            str << Sep{} << "INVALID " << Int(op & 0x3f);
+
+        } else {
+
+            auto ea = Op <M,S> ( _____________xxx(op), addr );
+            str << "pflushr" << tab << u8(ext & 0x1F) << Sep{} << u8((ext >> 5) & 0xF);
+            str << Sep{} << ea;
+        }
 
     } else if (ext == 0xa000) { // PFLUSHR
 
-        str << "pflushr" << tab << ea;
+        if (M == MODE_IP) {
+
+            str << "pflushr ??? IP" << tab;
+
+        } else {
+
+            auto ea = Op <M,S> ( _____________xxx(op), addr );
+            str << "pflushr" << tab << ea;
+
+        }
 
     } else {
 
@@ -1779,40 +1795,26 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
     auto nr   = ___________xxx__(ext);
 
     const char *pStr = "";
-    const char *sStr = "";
 
     switch (fmt) {
 
         case 0:
 
-            if (str.style == DASM_MUSASHI) {
-
-                pStr = mmuregs[preg]; sStr = "";
-
-            } else {
-
-                switch (preg) {
-
-                    case 2:     pStr = "tt0"; sStr = ".l"; break;
-                    case 3:     pStr = "tt1"; sStr = ".l"; break;
-                    default:    pStr = "???"; sStr = ".l"; break;
-                }
-            }
+            pStr = mmuregs[preg];
             break;
 
         case 2:
 
             switch (preg) {
 
-                case 0:     pStr = "tc"; sStr = ".l"; break;
-                case 1:     pStr = "drp"; sStr = ".?"; break;
-                case 2:     pStr = "srp"; sStr = ".?"; break;
-                case 3:     pStr = "crp"; sStr = ".?"; break;
-                case 4:     pStr = "cal"; sStr = ".b"; break;
-                case 5:     pStr = "val"; sStr = ".b"; break;
-                case 6:     pStr = "scc"; sStr = ".b"; break;
-                case 7:     pStr = "ac"; sStr = ".w"; break;
-                default:    pStr = "???"; break;
+                case 0:     pStr = "tc"; break;
+                case 1:     pStr = "drp"; break;
+                case 2:     pStr = "srp"; break;
+                case 3:     pStr = "crp"; break;
+                case 4:     pStr = "cal"; break;
+                case 5:     pStr = "val"; break;
+                case 6:     pStr = "scc"; break;
+                case 7:     pStr = "ac"; break;
             }
             break;
 
@@ -1820,11 +1822,11 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
 
             switch (preg) {
 
-                case 0: pStr = "mmusr"; break;
-                case 1: pStr = "pcsr"; break;
-                case 4: pStr = "bad"; sStr =".w"; break;
-                case 5: pStr = "bac"; break;
-                default: pStr = "???"; break;
+                case 0:     pStr = "mmusr"; break;
+                case 1:     pStr = "pcsr"; break;
+                case 4:     pStr = "bad"; break;
+                case 5:     pStr = "bac"; break;
+                default:    pStr = "???"; break;
             }
             break;
 
@@ -1837,18 +1839,25 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
 
     if (!(ext & 0x200)) {
 
-        str << Ins<I>{} << suffix;
-        if (str.style != DASM_MUSASHI) str << sStr;
-        str << tab << Op<M, S>(reg, addr) << Sep{} << pStr;
-        if (fmt == 3 && preg > 1) str << Int(nr);
+        str << Ins<I>{} << suffix << tab;
+
+        if (M == MODE_IP) {
+            str << "[unknown form]" << Sep{} << "INVALID " << Int(op & 0x3f);
+        } else {
+            str << Op<M, S>(reg, addr) << Sep{} << pStr;
+            if (fmt == 3 && preg > 1) str << Int(nr);
+        }
 
     } else {
 
         str << Ins<I>{} << suffix;
-        str << sStr << tab;
-        str << pStr;
-        if (fmt == 3 && preg > 1) str << Int(nr);
-        str << Sep{} << Op<M, S>(reg, addr);
+
+        if (M == MODE_IP) {
+            str << tab << "[unknown form]" << Sep{} << "INVALID " << Int(op & 0x3f);
+        } else {
+            if (fmt == 3 && preg > 1) str << Int(nr);
+            str << tab << pStr << Sep{} << Op<M, S>(reg, addr);
+        }
     }
 }
 

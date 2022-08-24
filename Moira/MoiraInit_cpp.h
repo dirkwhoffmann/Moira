@@ -165,6 +165,14 @@ Moira::createJumpTable()
             createJumpTableMMU<C68020>();
             break;
 
+        case M68EC040:
+        case M68LC040:
+        case M68040:
+
+            createJumpTable<C68020>();
+            createJumpTableMMU<C68020>();
+            break;
+
         default:
             fatalError;
     }

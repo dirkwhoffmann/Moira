@@ -181,7 +181,11 @@ private:
 
 public:
 
-    // Returns the memory address mask (address bus width)
+    // Checks the presence of a memory managenemt unit or floating point unit
+    bool hasMMU() { return model == M68030 || model == M68LC040 || model == M68040; }
+    bool hasFPU() { return model == M68040; }
+
+    // Returns the address bus mask (bus width)
     template <Core C> u32 addrMask() const;
 
     // Returns the cache register mask (accessible CACR bits)

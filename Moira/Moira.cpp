@@ -116,13 +116,7 @@ Moira::reset()
 
         case M68000:    reset<C68000>(); break;
         case M68010:    reset<C68010>(); break;
-        case M68EC020:
-        case M68020:
-        case M68EC030:
-        case M68030:    reset<C68020>(); break;
-
-        default:
-            assert(false);
+        default:        reset<C68020>(); break;
     }
 }
 

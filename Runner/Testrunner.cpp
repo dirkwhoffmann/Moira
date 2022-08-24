@@ -47,6 +47,9 @@ void selectModel(moira::Model model)
         case M68020:    printf("Motorola 68020");   break;
         case M68EC030:  printf("Motorola 68EC030"); break;
         case M68030:    printf("Motorola 68030");   break;
+        case M68EC040:  printf("Motorola 68EC040"); break;
+        case M68LC040:  printf("Motorola 68LC040"); break;
+        case M68040:    printf("Motorola 68040"); break;
     }
 
     printf("\n\n");
@@ -75,6 +78,9 @@ void setupMusashi()
         case M68020:    m68k_set_cpu_type(M68K_CPU_TYPE_68020);     break;
         case M68EC030:  m68k_set_cpu_type(M68K_CPU_TYPE_68EC030);   break;
         case M68030:    m68k_set_cpu_type(M68K_CPU_TYPE_68030);     break;
+        case M68EC040:  m68k_set_cpu_type(M68K_CPU_TYPE_68EC040);   break;
+        case M68LC040:  m68k_set_cpu_type(M68K_CPU_TYPE_68LC040);   break;
+        case M68040:    m68k_set_cpu_type(M68K_CPU_TYPE_68040);     break;
     }
 }
 
@@ -215,9 +221,10 @@ void run()
         randomizer.init(testrun);
 
         // Switch the CPU core from time to time
-        if (testrun % 16 == 0) {
+        // if (testrun % 16 == 0) {
+        {
 
-            selectModel(cpuModel == M68030 ? M68000 : Model(cpuModel + 1));
+            selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
         }
         
         printf("Round %ld ", testrun); fflush(stdout);
@@ -311,22 +318,22 @@ void runMusashi(Setup &s, Result &r)
     r.elapsed[0] = r.elapsed[1] = 0;
 
     // Run the Musashi disassembler
-    if (doDasm(r.opcode)) {
+    auto type =
+    cpuModel == M68000   ? M68K_CPU_TYPE_68000 :
+    cpuModel == M68010   ? M68K_CPU_TYPE_68010 :
+    cpuModel == M68EC020 ? M68K_CPU_TYPE_68EC020 :
+    cpuModel == M68020   ? M68K_CPU_TYPE_68020 :
+    cpuModel == M68EC030 ? M68K_CPU_TYPE_68EC030 :
+    cpuModel == M68030   ? M68K_CPU_TYPE_68030 :
+    cpuModel == M68EC040 ? M68K_CPU_TYPE_68EC040 :
+    cpuModel == M68LC040 ? M68K_CPU_TYPE_68LC040 : M68K_CPU_TYPE_68040;
 
-        auto type =
-        cpuModel == M68000   ? M68K_CPU_TYPE_68000 :
-        cpuModel == M68010   ? M68K_CPU_TYPE_68010 :
-        cpuModel == M68EC020 ? M68K_CPU_TYPE_68EC020 :
-        cpuModel == M68020   ? M68K_CPU_TYPE_68020 :
-        cpuModel == M68EC030 ? M68K_CPU_TYPE_68EC030 : M68K_CPU_TYPE_68030;
+    clock_t elapsed = clock();
+    r.dasmCntMusashi = m68k_disassemble(r.dasmMusashi, s.pc, type);
+    r.elapsed[1] = clock() - elapsed;
 
-        clock_t elapsed = clock();
-        r.dasmCntMusashi = m68k_disassemble(r.dasmMusashi, s.pc, type);
-        r.elapsed[1] = clock() - elapsed;
-
-        if (VERBOSE) {
-            printf("$%04x ($%04x): %s (Musashi)\n", r.oldpc, r.opcode, r.dasmMusashi);
-        }
+    if (VERBOSE) {
+        printf("$%04x ($%04x): %s (Musashi)\n", r.oldpc, r.opcode, r.dasmMusashi);
     }
 
     // Run the Musashi CPU
@@ -502,6 +509,11 @@ void compare(Setup &s, Result &r1, Result &r2)
 {
     bool error = false;
 
+    /*
+    if (s.opcode >= 0xF000) {
+        printf("%x: %s\n", s.opcode, r1.dasmMusashi);
+    }
+    */
     if (doDasm((int)s.opcode)) {
 
         if (!compareDasm(r1, r2)) {
