@@ -3216,13 +3216,13 @@ static void d68851_p000(void)
 
 	if ((modes & 0xe200) == 0x2000)	// PFLUSH
 	{
-		sprintf(g_dasm_str, "pflushr  %x, %x, %s", modes & 0x1f, (modes>>5)&0xf, str);
+		sprintf(g_dasm_str, "pflushr %x, %x, %s", modes & 0x1f, (modes>>5)&0xf, str);
 		return;
 	}
 
 	if (modes == 0xa000)	// PFLUSHR
 	{
-		sprintf(g_dasm_str, "pflushr  %s", str);
+		sprintf(g_dasm_str, "pflushr %s", str);
 	}
 
 	if (modes == 0x2800)	// PVALID (FORMAT 1)
@@ -3283,7 +3283,7 @@ static void d68851_p000(void)
 			break;
 
 		default:
-			sprintf(g_dasm_str, "pmove [unknown form] %s", str);
+			sprintf(g_dasm_str, "pmove   [unknown form], %s", str);
 			break;
 	}
 }

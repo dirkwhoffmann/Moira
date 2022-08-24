@@ -601,7 +601,7 @@ bool compareDasm(Result &r1, Result &r2)
 
     // Skip some opcodes with known differences
     bool skipMusashi = false;
-    bool skipM68k = I == ILLEGAL || I == LINE_F;
+    bool skipM68k = r1.opcode >= 0xF000 || I == ILLEGAL || I == LINE_F;
 
     // Compare with Musashi
     if (!skipMusashi) {

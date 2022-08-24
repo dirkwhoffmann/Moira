@@ -1655,7 +1655,8 @@ Moira::dasmP68030(StrWriter &str, u32 &addr, u16 op)
     auto ext = dasmRead<Word>(addr);
 
     // PLOAD
-    if ((ext & 0xFDE0) == 0x2000) {
+    if (((ext & 0xFDE0) == 0x2000) ||
+        (((ext & 0xE000) == 0x2000) && str.style != DASM_MUSASHI)) {
 
         dasmPLoad<PLOAD, M, Long>(str, addr, op);
         return;
@@ -1692,22 +1693,36 @@ Moira::dasmP68030(StrWriter &str, u32 &addr, u16 op)
     }
 
     // PMOVE
-    if ((ext & 0xE000) == 0x0000 || (ext & 0xE000) == 0x6000 || (ext & 0xE000) == 0x4000) {
-
-        printf("opcode = %x ext = %x\n", op, ext);
-
+    // if ((ext & 0xE000) == 0x0000 || (ext & 0xE000) == 0x6000 || (ext & 0xE000) == 0x4000) {
+    {
         dasmPMove<PMOVE, M, S>(str, addr, op);
         return;
 
     }
 
-    str << "TODO: dasmP68030";
+    // str << "TODO: dasmP68030";
 }
 
 template <Instr I, Mode M, Size S> void
 Moira::dasmPFlush(StrWriter &str, u32 &addr, u16 op)
 {
-    str << "TODO: dasmPFlush";
+    auto ea = Op <M,S> ( _____________xxx(op), addr );
+
+    addr -= 2;
+    auto ext = dasmRead<Word>(addr);
+
+    if ((ext & 0xE200) == 0x2000) { // PFLUSH
+
+        str << "pflushr" << tab << u8(ext & 0x1F) << Sep{} << u8((ext >> 5) & 0xF) << Sep{} << ea;
+
+    } else if (ext == 0xa000) { // PFLUSHR
+
+        str << "pflushr" << tab << ea;
+
+    } else {
+
+        str << "pflushr ???";
+    }
 }
 
 template <Instr I, Mode M, Size S> void
@@ -1756,6 +1771,7 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
 
     addr -= 2;
     auto ext = dasmRead<Word>(addr);
+    const char *suffix = (ext & 0x100) ? "fd" : "";
 
     auto reg  = _____________xxx(op);
     auto fmt  = xxx_____________(ext);
@@ -1811,20 +1827,24 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
                 default: pStr = "???"; break;
             }
             break;
+
+        default:
+
+            pStr = "[unknown form]";
+            suffix = "";
+            break;
     }
 
     if (!(ext & 0x200)) {
 
-        str << Ins<I>{};
-        if (ext & 0x100) str << "fd";
+        str << Ins<I>{} << suffix;
         if (str.style != DASM_MUSASHI) str << sStr;
         str << tab << Op<M, S>(reg, addr) << Sep{} << pStr;
         if (fmt == 3 && preg > 1) str << Int(nr);
 
     } else {
 
-        str << Ins<I>{};
-        if (ext & 0x100) str << "fd";
+        str << Ins<I>{} << suffix;
         str << sStr << tab;
         str << pStr;
         if (fmt == 3 && preg > 1) str << Int(nr);
