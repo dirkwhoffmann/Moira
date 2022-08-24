@@ -1097,6 +1097,22 @@ StrWriter::operator<<(Scale s)
 }
 
 StrWriter&
+StrWriter::operator<<(Fc fc)
+{
+    if (fc.raw & 0x10) {
+        *this << "#" << Int(fc.raw & 0xF);
+    } else if (fc.raw & 0x8) {
+        *this << Dn{fc.raw & 0x7};
+    } else if (fc.raw == 1) {
+        *this << "dfc";
+    } else {
+        *this << "sfc";
+    }
+
+    return *this;
+}
+
+StrWriter&
 StrWriter::operator<<(Tab tab)
 {
     // Write at least a single space

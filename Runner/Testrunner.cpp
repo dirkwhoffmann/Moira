@@ -106,6 +106,8 @@ void setupTestEnvironment(Setup &s)
 
 void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
 {
+    static u64 mmu = 0;
+
     moira::Instr instr = moiracpu->getInfo(opcode).I;
 
     // Prepare special extension words for some instructions
@@ -127,6 +129,10 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
         }
         default:
             break;
+    }
+    // MMU instructions
+    if ((opcode & 0xFFC0) == 0xF000) {
+        s.ext1 = u16(mmu++ << 8) | (s.ext1 & 0xFF);
     }
 
     s.pc = pc;
@@ -591,11 +597,11 @@ void compare(Setup &s, Result &r1, Result &r2)
 
 bool compareDasm(Result &r1, Result &r2)
 {
-    bool isIllegal = moiracpu->getInfo(r1.opcode).I == ILLEGAL;
+    auto I = moiracpu->getInfo(r1.opcode).I;
 
     // Skip some opcodes with known differences
     bool skipMusashi = false;
-    bool skipM68k = isIllegal;
+    bool skipM68k = I == ILLEGAL || I == LINE_F;
 
     // Compare with Musashi
     if (!skipMusashi) {

@@ -609,23 +609,30 @@ Moira::dasmCmpm(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmCpBcc(StrWriter &str, u32 &addr, u16 op)
 {
-    auto pc   = addr + 2;
-    auto ext1 = dasmRead<Word>(addr);
-    auto disp = dasmRead<S>(addr);
-    auto ext2 = dasmRead<Word>(addr);
     auto id   = ( ____xxx_________(op) );
     auto cnd  = ( __________xxxxxx(op) );
-    
-    pc += SEXT<S>(disp);
 
     if (id != 0 || str.style == DASM_MUSASHI) {
+
+        auto pc   = addr + 2;
+        auto ext1 = dasmRead<Word>(addr);
+        auto disp = dasmRead<S>(addr);
+        auto ext2 = dasmRead<Word>(addr);
+
+        pc += SEXT<S>(disp);
 
         str << id << Ins<I>{} << Cpcc{cnd} << tab << Ims<Word>(ext2);
         str << "; " << UInt(pc) << " (extension = " << Int(ext1) << ") (2-3)";
 
     } else {
 
-        addr -= 4; // THIS MUST BE WRONG
+        auto pc   = addr + 2;
+        auto disp = dasmRead<S>(addr);
+        // auto ext1 = dasmRead<Word>(addr);
+        // auto ext2 = dasmRead<Word>(addr);
+
+        pc += SEXT<S>(disp);
+
         str << "pb" << Cpcc{cnd & 0xF} << Sz<S>{} << tab << UInt(pc);
     }
 }
@@ -666,7 +673,7 @@ Moira::dasmCpGen(StrWriter &str, u32 &addr, u16 op)
     auto id = ( ____xxx_________(op) );
     bool hasMMU = model == M68030 || model == M68EC030;
 
-    if (id == 0 && hasMMU && str.style == DASM_MUSASHI) {
+    if (id != 0 || !hasMMU) {
 
         auto ext = Imu ( dasmRead<Long>(addr) );
 
@@ -720,9 +727,18 @@ Moira::dasmCpSave(StrWriter &str, u32 &addr, u16 op)
     auto dn = ( _____________xxx(op) );
     auto id = ( ____xxx_________(op) );
     auto ea = Op <M,S> (dn, addr);
+
+    printf("dasmCpSave\n");
     
-    str << id << Ins<I>{} << tab << ea;
-    str << Av<I, M, S>{};
+    if (id != 0 || str.style == DASM_MUSASHI) {
+
+        str << id << Ins<I>{} << tab << ea;
+        str << Av<I, M, S>{};
+
+    } else {
+
+        str << "psave" << tab << ea;
+    }
 }
 
 template <Instr I, Mode M, Size S> void
@@ -784,9 +800,12 @@ Moira::dasmCpTrapcc(StrWriter &str, u32 &addr, u16 op)
                 str << "; (extension = " << Int(ext2) << ") (2-3)";
                 break;
             }
+                /*
             default:
+                break;
                 addr -= 4;
                 dasmLineF<I, M, S>(str, addr, op);
+                */
         }
 
     } else {
@@ -805,8 +824,10 @@ Moira::dasmCpTrapcc(StrWriter &str, u32 &addr, u16 op)
                 str << "ptrap" << Cpcc{cnd} << Sz<Long>{} << tab << Imu(ext);
                 break;
             }
-            default:
+            case 0b100:
+            {
                 str << "ptrap" << Cpcc{cnd} << Sz<Long>{};
+            }
         }
     }
 }
@@ -1621,14 +1642,66 @@ Moira::dasmUnpkPd(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmP68030(StrWriter &str, u32 &addr, u16 op)
 {
+    //  PFLUSH: 001x xx0x xxxx xxxx
+    //   PLOAD: 0010 00x0 000x xxxx
+    // PVALID1: 0010 1000 0000 0000
+    // PVALID2: 0010 1100 0000 0xxx
+    //   PMOVE: 010x xxx0 0000 0000 (Format 1)
+    //          011x xxx0 000x xx00 (Format 2)
+    //          011x xxx0 0000 0000 (Format 3)
+    //   PTEST: 100x xxxx xxxx xxxx
+    // PFLUSHR: 1010 0000 0000 0000
 
     auto ext = dasmRead<Word>(addr);
 
-    if ((ext & 0xE000) == 0x0000) {
-        dasmPMove<PMOVE, M, Long>(str, addr, op);
-    } else {
-        str << "TODO: dasmP68030";
+    // PLOAD
+    if ((ext & 0xFDE0) == 0x2000) {
+
+        dasmPLoad<PLOAD, M, Long>(str, addr, op);
+        return;
     }
+
+    // PFLUSH
+    if ((ext & 0xE200) == 0x2000) {
+
+        dasmPFlush<PFLUSH, M, Long>(str, addr, op);
+        return;
+    }
+
+    // PFLUSHR
+    if ((ext & 0xFFFF) == 0xA000) {
+
+        dasmPFlushA<PFLUSHA, M, Long>(str, addr, op);
+        return;
+    }
+
+    // PVALID
+    if ((ext & 0xFFFF) == 0x2800 || (ext & 0xFFF8) == 0x2C00) {
+
+        str << "TODO: dasmP68030 PVALID";
+        // dasmPValid<I, M, S>(str, addr, op);
+        return;
+    }
+
+    // PTEST
+    if ((ext & 0xE000) == 0x8000) {
+
+        dasmPFlushA<PTEST, M, Long>(str, addr, op);
+        return;
+
+    }
+
+    // PMOVE
+    if ((ext & 0xE000) == 0x0000 || (ext & 0xE000) == 0x6000 || (ext & 0xE000) == 0x4000) {
+
+        printf("opcode = %x ext = %x\n", op, ext);
+
+        dasmPMove<PMOVE, M, S>(str, addr, op);
+        return;
+
+    }
+
+    str << "TODO: dasmP68030";
 }
 
 template <Instr I, Mode M, Size S> void
@@ -1646,16 +1719,117 @@ Moira::dasmPFlushA(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmPLoad(StrWriter &str, u32 &addr, u16 op)
 {
-    str << "TODO: dasmPLoad";
+    auto ea = Op <M,S> ( _____________xxx(op), addr );
+
+    addr -= 2;
+    auto ext = dasmRead<Word>(addr);
+
+    switch (str.style) {
+
+        case DASM_MUSASHI:
+
+            str << "pload" << tab;
+
+            if (ext & 0x200) {
+
+                str << Imd((ext >> 10) & 7) << Sep{} << ea;
+
+            } else {
+
+                str << ea << Sep{} << Imd((ext >> 10) & 7);
+            }
+            break;
+
+        default:
+
+            str << "pload" << ((ext & 0x200) ? "r" : "w") << tab;
+            str << Fc(ext & 0b11111) << Sep{} << ea;
+            break;
+    }
 }
 
 template <Instr I, Mode M, Size S> void
 Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
 {
-    auto reg  = _____________xxx(op);
-    // auto preg = ___xxx__________(op);
+    const char *const mmuregs[8] =
+    { "tc", "drp", "srp", "crp", "cal", "val", "sccr", "acr" };
 
-    str << Ins<I>{} << Sz<Long>{} << tab << Op<M, S>(reg, addr) << Sep{} << "???";
+    addr -= 2;
+    auto ext = dasmRead<Word>(addr);
+
+    auto reg  = _____________xxx(op);
+    auto fmt  = xxx_____________(ext);
+    auto preg = ___xxx__________(ext);
+    auto nr   = ___________xxx__(ext);
+
+    const char *pStr = "";
+    const char *sStr = "";
+
+    switch (fmt) {
+
+        case 0:
+
+            if (str.style == DASM_MUSASHI) {
+
+                pStr = mmuregs[preg]; sStr = "";
+
+            } else {
+
+                switch (preg) {
+
+                    case 2:     pStr = "tt0"; sStr = ".l"; break;
+                    case 3:     pStr = "tt1"; sStr = ".l"; break;
+                    default:    pStr = "???"; sStr = ".l"; break;
+                }
+            }
+            break;
+
+        case 2:
+
+            switch (preg) {
+
+                case 0:     pStr = "tc"; sStr = ".l"; break;
+                case 1:     pStr = "drp"; sStr = ".?"; break;
+                case 2:     pStr = "srp"; sStr = ".?"; break;
+                case 3:     pStr = "crp"; sStr = ".?"; break;
+                case 4:     pStr = "cal"; sStr = ".b"; break;
+                case 5:     pStr = "val"; sStr = ".b"; break;
+                case 6:     pStr = "scc"; sStr = ".b"; break;
+                case 7:     pStr = "ac"; sStr = ".w"; break;
+                default:    pStr = "???"; break;
+            }
+            break;
+
+        case 3:
+
+            switch (preg) {
+
+                case 0: pStr = "mmusr"; break;
+                case 1: pStr = "pcsr"; break;
+                case 4: pStr = "bad"; sStr =".w"; break;
+                case 5: pStr = "bac"; break;
+                default: pStr = "???"; break;
+            }
+            break;
+    }
+
+    if (!(ext & 0x200)) {
+
+        str << Ins<I>{};
+        if (ext & 0x100) str << "fd";
+        if (str.style != DASM_MUSASHI) str << sStr;
+        str << tab << Op<M, S>(reg, addr) << Sep{} << pStr;
+        if (fmt == 3 && preg > 1) str << Int(nr);
+
+    } else {
+
+        str << Ins<I>{};
+        if (ext & 0x100) str << "fd";
+        str << sStr << tab;
+        str << pStr;
+        if (fmt == 3 && preg > 1) str << Int(nr);
+        str << Sep{} << Op<M, S>(reg, addr);
+    }
 }
 
 template <Instr I, Mode M, Size S> void
