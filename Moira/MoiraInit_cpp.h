@@ -208,39 +208,7 @@ Moira::createJumpTable()
     opcode = parse("1111 ---- ---- ----");
     ____XXXXXXXXXXXX(opcode, LINE_F, MODE_IP, (Size)0, LineF, CIMS)
     
-    if constexpr (C >= C68020) {
-        
-        opcode = parse("1111 ---0 10-- ----");
-        ____XXX___XXXXXX(opcode, cpBcc, MODE_IP, Word, CpBcc, CIMS)
 
-        opcode = parse("1111 ---0 11-- ----");
-        ____XXX___XXXXXX(opcode, cpBcc, MODE_IP, Long, CpBcc, CIMS)
-        
-        opcode = parse("1111 ---0 00-- ----");
-        ____XXX___XXXXXX(opcode, cpGEN, MODE_IP, (Size)0, CpGen, CIMS)
-        
-        opcode = parse("1111 ---1 01-- ----");
-        ____XXX___MMMXXX(opcode, cpRESTORE, 0b001101111110, Word, CpRestore, CIMS)
-        
-        opcode = parse("1111 ---1 00-- ----");
-        ____XXX___MMMXXX(opcode, cpSAVE, 0b001011111000, Word, CpSave, CIMS)
-
-        opcode = parse("1111 ---0 0111 1---");
-        ____XXX___XXXXXX(opcode, cpTRAPcc, MODE_IP, Word, CpTrapcc, CIMS)
-        /*
-        ____XXX___XXX___(opcode | 0b010, cpTRAPcc, MODE_IP, Word, CpTrapcc, CIMS)
-        ____XXX___XXX___(opcode | 0b011, cpTRAPcc, MODE_IP, Long, CpTrapcc, CIMS)
-        ____XXX___XXX___(opcode | 0b100, cpTRAPcc, MODE_IP, Byte, CpTrapcc, CIMS)
-        */
-
-        opcode = parse("1111 ---0 01-- ----");
-        ____XXX___MMMXXX(opcode, cpScc, 0b101111111000, Byte, CpScc, CIMS)
-        
-        opcode = parse("1111 ---0 0100 1---");
-        ____XXX______XXX(opcode, cpDBcc, MODE_IP, (Size)0, CpDbcc, CIMS)
-    }
-    
-    
     // ABCD
     //
     //       Syntax: (1) ABCD Dx,Dy
@@ -1922,11 +1890,69 @@ Moira::createJumpTable()
     }
 
     //
-    // FPU
+    // Line-F area
     //
 
-    opcode = parse("1111 0010 00-- ----");
-    __________XXXXXX(opcode, LINE_F, MODE_IP, Unsized, Fpu, CIMS)
+    if constexpr (C >= C68020) {
+
+        //
+        // Coprocessor interface
+        //
+
+        if (hasCPI()) {
+
+            opcode = parse("1111 ---0 10-- ----");
+            ____XXX___XXXXXX(opcode, cpBcc, MODE_IP, Word, CpBcc, CIMS)
+
+            opcode = parse("1111 ---0 11-- ----");
+            ____XXX___XXXXXX(opcode, cpBcc, MODE_IP, Long, CpBcc, CIMS)
+
+            opcode = parse("1111 ---0 00-- ----");
+            ____XXX___XXXXXX(opcode, cpGEN, MODE_IP, (Size)0, CpGen, CIMS)
+
+            opcode = parse("1111 ---1 01-- ----");
+            ____XXX___MMMXXX(opcode, cpRESTORE, 0b001101111110, Word, CpRestore, CIMS)
+
+            opcode = parse("1111 ---1 00-- ----");
+            ____XXX___MMMXXX(opcode, cpSAVE, 0b001011111000, Word, CpSave, CIMS)
+
+            opcode = parse("1111 ---0 0111 1---");
+            ____XXX___XXXXXX(opcode, cpTRAPcc, MODE_IP, Word, CpTrapcc, CIMS)
+            /*
+             ____XXX___XXX___(opcode | 0b010, cpTRAPcc, MODE_IP, Word, CpTrapcc, CIMS)
+             ____XXX___XXX___(opcode | 0b011, cpTRAPcc, MODE_IP, Long, CpTrapcc, CIMS)
+             ____XXX___XXX___(opcode | 0b100, cpTRAPcc, MODE_IP, Byte, CpTrapcc, CIMS)
+             */
+
+            opcode = parse("1111 ---0 01-- ----");
+            ____XXX___MMMXXX(opcode, cpScc, 0b101111111000, Byte, CpScc, CIMS)
+
+            opcode = parse("1111 ---0 0100 1---");
+            ____XXX______XXX(opcode, cpDBcc, MODE_IP, (Size)0, CpDbcc, CIMS)
+        }
+
+        //
+        // Memory management unit
+        //
+
+        if (hasMMU()) {
+
+
+        }
+
+
+        //
+        // Floating point unit
+        //
+
+        if (hasFPU()) {
+
+            opcode = parse("1111 0010 00-- ----");
+            __________XXXXXX(opcode, LINE_F, MODE_IP, Unsized, Fpu, CIMS)
+            __________MMMXXX(opcode, cpScc, 0b101111111111, Unsized, Fpu, CIMS)
+        }
+
+    }
 }
 
 template <Core C> void

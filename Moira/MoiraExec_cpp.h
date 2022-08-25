@@ -5001,9 +5001,9 @@ Moira::execUnpkPd(u16 opcode)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execP68030(u16 opcode)
+Moira::execMMU(u16 opcode)
 {
-    printf("TODO: execP68030");
+    printf("TODO: execMMU");
 }
 
 template <Core C, Instr I, Mode M, Size S> void

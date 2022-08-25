@@ -212,7 +212,7 @@ void run()
     printf("The test program runs Moira agains Musashi with randomly generated data.\n");
     printf("It runs until a bug has been found.\n");
 
-    selectModel(M68EC030);
+    selectModel(M68000);
     srand(3);
 
     for (testrun = 1 ;; testrun++) {
@@ -609,11 +609,52 @@ void compare(Setup &s, Result &r1, Result &r2)
 
 bool compareDasm(Result &r1, Result &r2)
 {
+    bool skipMusashi = false;
+    bool skipM68k = false;
+
     auto I = moiracpu->getInfo(r1.opcode).I;
 
-    // Skip some opcodes with known differences
-    bool skipMusashi = false;
-    bool skipM68k = r1.opcode >= 0xF000 || I == ILLEGAL || I == LINE_F;
+    // M68k seems to be buggy in the line F range
+    skipM68k = r1.opcode >= 0xF000 || I == ILLEGAL || I == LINE_F;
+
+    // Skip broken Musashi opcodes
+    switch (cpuModel) {
+
+        case moira::M68000:
+        case moira::M68010:
+
+            skipMusashi |= ((r1.opcode & 0xf800) == 0xf000);
+            break;
+
+        case moira::M68EC020:
+        case moira::M68020:
+
+            skipMusashi |= (((r1.opcode & 0xfe00) == 0xf000) ); // MMU
+            [[fallthrough]];
+
+        case moira::M68EC030:
+        case moira::M68030:
+
+            skipMusashi |= (((r1.opcode & 0xfe00) == 0xf200) || // FPU
+                            ((r1.opcode & 0xff20) == 0xf400) || // cinv
+                            ((r1.opcode & 0xff20) == 0xf420) || // cpush
+                            ((r1.opcode & 0xfff8) == 0xf620) || // move16
+                            ((r1.opcode & 0xfff8) == 0xf600) || // move16
+                            ((r1.opcode & 0xfff8) == 0xf608) || // move16
+                            ((r1.opcode & 0xfff8) == 0xf610) || // move16
+                            ((r1.opcode & 0xfff8) == 0xf618) ); // move16
+            break;
+
+        case moira::M68EC040:
+        case moira::M68LC040:
+        case moira::M68040:
+
+            if (((r1.opcode & 0xff00) == 0xf000) ) skipMusashi = true;
+            break;
+
+        default:
+            break;
+    }
 
     // Compare with Musashi
     if (!skipMusashi) {

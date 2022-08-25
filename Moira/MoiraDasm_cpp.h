@@ -680,27 +680,27 @@ Moira::dasmCpGen(StrWriter &str, u32 &addr, u16 op)
 
         switch ((op >> 3) & 0b111) {
 
-            case 0b000: dasmP68030<I, Mode(0), S>(str, addr, op); break;
-            case 0b001: dasmP68030<I, Mode(1), S>(str, addr, op); break;
-            case 0b010: dasmP68030<I, Mode(2), S>(str, addr, op); break;
-            case 0b011: dasmP68030<I, Mode(3), S>(str, addr, op); break;
-            case 0b100: dasmP68030<I, Mode(4), S>(str, addr, op); break;
-            case 0b101: dasmP68030<I, Mode(5), S>(str, addr, op); break;
-            case 0b110: dasmP68030<I, Mode(6), S>(str, addr, op); break;
+            case 0b000: dasmMMU<I, Mode(0), S>(str, addr, op); break;
+            case 0b001: dasmMMU<I, Mode(1), S>(str, addr, op); break;
+            case 0b010: dasmMMU<I, Mode(2), S>(str, addr, op); break;
+            case 0b011: dasmMMU<I, Mode(3), S>(str, addr, op); break;
+            case 0b100: dasmMMU<I, Mode(4), S>(str, addr, op); break;
+            case 0b101: dasmMMU<I, Mode(5), S>(str, addr, op); break;
+            case 0b110: dasmMMU<I, Mode(6), S>(str, addr, op); break;
 
             default:
 
                 switch(op & 0b111) {
 
-                    case 0b000: dasmP68030<I, Mode(7), S>(str, addr, op); break;
-                    case 0b001: dasmP68030<I, Mode(8), S>(str, addr, op); break;
-                    case 0b010: dasmP68030<I, Mode(9), S>(str, addr, op); break;
-                    case 0b011: dasmP68030<I, Mode(10), S>(str, addr, op); break;
-                    case 0b100: dasmP68030<I, Mode(11), S>(str, addr, op); break;
+                    case 0b000: dasmMMU<I, Mode(7), S>(str, addr, op); break;
+                    case 0b001: dasmMMU<I, Mode(8), S>(str, addr, op); break;
+                    case 0b010: dasmMMU<I, Mode(9), S>(str, addr, op); break;
+                    case 0b011: dasmMMU<I, Mode(10), S>(str, addr, op); break;
+                    case 0b100: dasmMMU<I, Mode(11), S>(str, addr, op); break;
 
                     default:
 
-                        dasmP68030<I, Mode(12), S>(str, addr, op); break;
+                        dasmMMU<I, Mode(12), S>(str, addr, op); break;
                 }
         }
         return;
@@ -724,13 +724,6 @@ Moira::dasmCpRestore(StrWriter &str, u32 &addr, u16 op)
     auto dn = ( _____________xxx(op) );
     auto id = ( ____xxx_________(op) );
     auto ea = Op <M,S> (dn, addr);
-
-    if (str.style == DASM_MUSASHI && (op & 0xffe0) == 0xf500) {
-
-        // Mimic Musashi bug
-        dasmLineF<I, M, S>(str, addr, op);
-        return;
-    }
 
     if (id == 1) {
 
@@ -1693,7 +1686,7 @@ Moira::dasmUnpkPd(StrWriter &str, u32 &addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
-Moira::dasmP68030(StrWriter &str, u32 &addr, u16 op)
+Moira::dasmMMU(StrWriter &str, u32 &addr, u16 op)
 {
     //  PFLUSH: 001x xx0x xxxx xxxx
     //   PLOAD: 0010 00x0 000x xxxx
@@ -1731,7 +1724,7 @@ Moira::dasmP68030(StrWriter &str, u32 &addr, u16 op)
     // PVALID
     if ((ext & 0xFFFF) == 0x2800 || (ext & 0xFFF8) == 0x2C00) {
 
-        str << "TODO: dasmP68030 PVALID";
+        str << "TODO: dasmMMU PVALID";
         // dasmPValid<I, M, S>(str, addr, op);
         return;
     }
@@ -1752,7 +1745,7 @@ Moira::dasmP68030(StrWriter &str, u32 &addr, u16 op)
 
     }
 
-    // str << "TODO: dasmP68030";
+    // str << "TODO: dasmMMU";
 }
 
 template <Instr I, Mode M, Size S> void
@@ -2035,17 +2028,17 @@ Moira::dasmFpu(StrWriter &str, u32 &addr, u16 op)
             switch ((w2>>10)&7)
             {
                 case 3:        // packed decimal w/fixed k-factor
-                    str << "fmove" << float_data_format[(w2>>10)&7] << tab << "FP" << dst_reg << Sep{} << Op<M, Long>(reg, addr) << "sext_7bit_int(w2&0x7f)";
+                    str << "fmove" << float_data_format[(w2>>10)&7] << tab << "FP1" << dst_reg << Sep{} << Op<M, Long>(reg, addr) << "sext_7bit_int(w2&0x7f)";
                     // sprintf(g_dasm_str, "fmove%s   FP%d, %s {#%d}", float_data_format[(w2>>10)&7], dst_reg, get_ea_mode_str_32(g_cpu_ir), sext_7bit_int(w2&0x7f));
                     break;
 
                 case 7:        // packed decimal w/dynamic k-factor (register)
-                    str << "fmove" << float_data_format[(w2>>10)&7] << tab << "FP" << dst_reg << Sep{} << Op<M, Long>(reg, addr) << int((w2>>4)&7);
+                    str << "fmove" << float_data_format[(w2>>10)&7] << tab << "F" << dst_reg << Sep{} << Op<M, Long>(reg, addr) << "{" << Dn((w2>>4)&7) << "}";
                     // sprintf(g_dasm_str, "fmove%s   FP%d, %s {D%d}", float_data_format[(w2>>10)&7], dst_reg, get_ea_mode_str_32(g_cpu_ir), (w2>>4)&7);
                     break;
 
                 default:
-                    str << "fmove" << float_data_format[(w2>>10)&7] << tab << "FP" << dst_reg << Sep{} << Op<M, Long>(reg, addr);
+                    str << "fmove" << float_data_format[(w2>>10)&7] << tab << "FP3" << dst_reg << Sep{} << Op<M, Long>(reg, addr);
                     // sprintf(g_dasm_str, "fmove%s   FP%d, %s", float_data_format[(w2>>10)&7], dst_reg, get_ea_mode_str_32(g_cpu_ir));
                     break;
             }

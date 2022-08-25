@@ -1821,7 +1821,7 @@ static void d68040_fpu(void)
 
 			if (w2 & 0x4000)
 			{
-				sprintf(g_dasm_str, "%s%s   %s, FP%d", mnemonic, float_data_format[src], get_ea_mode_str_32(g_cpu_ir), dst_reg);
+				sprintf(g_dasm_str, "%s%s %s, FP%d", mnemonic, float_data_format[src], get_ea_mode_str_32(g_cpu_ir), dst_reg);
 			}
 			else
 			{
@@ -1835,15 +1835,15 @@ static void d68040_fpu(void)
 			switch ((w2>>10)&7)
 			{
 				case 3:		// packed decimal w/fixed k-factor
-					sprintf(g_dasm_str, "fmove%s   FP%d, %s {#%d}", float_data_format[(w2>>10)&7], dst_reg, get_ea_mode_str_32(g_cpu_ir), sext_7bit_int(w2&0x7f));
+					sprintf(g_dasm_str, "fmove%s FP%d, %s {#%d}", float_data_format[(w2>>10)&7], dst_reg, get_ea_mode_str_32(g_cpu_ir), sext_7bit_int(w2&0x7f));
 					break;
 
 				case 7:		// packed decimal w/dynamic k-factor (register)
-					sprintf(g_dasm_str, "fmove%s   FP%d, %s {D%d}", float_data_format[(w2>>10)&7], dst_reg, get_ea_mode_str_32(g_cpu_ir), (w2>>4)&7);
+					sprintf(g_dasm_str, "fmove%s FP%d, %s {D%d}", float_data_format[(w2>>10)&7], dst_reg, get_ea_mode_str_32(g_cpu_ir), (w2>>4)&7);
 					break;
 
 				default:
-					sprintf(g_dasm_str, "fmove%s   FP%d, %s", float_data_format[(w2>>10)&7], dst_reg, get_ea_mode_str_32(g_cpu_ir));
+					sprintf(g_dasm_str, "fmove%s FP%d, %s", float_data_format[(w2>>10)&7], dst_reg, get_ea_mode_str_32(g_cpu_ir));
 					break;
 			}
 			break;
@@ -3742,6 +3742,9 @@ static void build_opcode_table(void)
 						continue;
 				if(valid_ea(opcode, ostruct->ea_mask))
 				{
+                    if (i == 0xf600) {
+                        // printf("Installing callback for %x (%x, %x)\n", i, ostruct->mask, ostruct->match);
+                    }
 					g_instruction_table[i] = ostruct->opcode_handler;
 					break;
 				}
