@@ -32,6 +32,7 @@ template <Instr I> struct Ins { };
 template <Size S> struct Sz { };
 struct Cnd { int raw; Cnd(int v) : raw(v) { } };
 struct Cpcc { int raw; Cpcc(int v) : raw(v) { } };
+struct Mmucc { int raw; Mmucc(int v) : raw(v) { } };
 
 // Registers
 struct Dn { int raw; Dn(int v) : raw(v) { } };
@@ -118,6 +119,7 @@ public:
     template <Size S> StrWriter& operator<<(Sz<S>);
     StrWriter& operator<<(Cnd);
     StrWriter& operator<<(Cpcc);
+    StrWriter& operator<<(Mmucc);
 
     StrWriter& operator<<(Dn);
     StrWriter& operator<<(An);

@@ -49,6 +49,9 @@ for (int j = 0; j < 8; j++) func((op) | j, f, I, M, S); }
 #define ____________XXXX(op,I,M,S,f,func) { \
 for (int j = 0; j < 16; j++) func((op) | j, f, I, M, S); }
 
+#define ___________XXXXX(op,I,M,S,f,func) { \
+for (int j = 0; j < 32; j++) func((op) | j, f, I, M, S); }
+
 #define __________XXXXXX(op,I,M,S,f,func) { \
 for (int j = 0; j < 64; j++) func((op) | j, f, I, M, S); }
 
@@ -223,10 +226,12 @@ Moira::createJumpTable()
         ____XXX___MMMXXX(opcode, cpSAVE, 0b001011111000, Word, CpSave, CIMS)
 
         opcode = parse("1111 ---0 0111 1---");
-        // ____XXX___XXXXXX(opcode, cpTRAPcc, MODE_IP, Word, CpTrapcc, CIMS)
+        ____XXX___XXXXXX(opcode, cpTRAPcc, MODE_IP, Word, CpTrapcc, CIMS)
+        /*
         ____XXX___XXX___(opcode | 0b010, cpTRAPcc, MODE_IP, Word, CpTrapcc, CIMS)
         ____XXX___XXX___(opcode | 0b011, cpTRAPcc, MODE_IP, Long, CpTrapcc, CIMS)
         ____XXX___XXX___(opcode | 0b100, cpTRAPcc, MODE_IP, Byte, CpTrapcc, CIMS)
+        */
 
         opcode = parse("1111 ---0 01-- ----");
         ____XXX___MMMXXX(opcode, cpScc, 0b101111111000, Byte, CpScc, CIMS)
@@ -1915,6 +1920,13 @@ Moira::createJumpTable()
         opcode = parse("1000 ---1 1000 1---");
         ____XXX______XXX(opcode, UNPK, MODE_PD, Word, UnpkPd, CIMS)
     }
+
+    //
+    // FPU
+    //
+
+    opcode = parse("1111 0010 00-- ----");
+    __________XXXXXX(opcode, LINE_F, MODE_IP, Unsized, Fpu, CIMS)
 }
 
 template <Core C> void

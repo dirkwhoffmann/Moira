@@ -1941,7 +1941,7 @@ static void d68040_fpu(void)
 
 		default:
 		{
-			sprintf(g_dasm_str, "FPU (?) ");
+			sprintf(g_dasm_str, "FPU (?)");
 			break;
 		}
 	}
@@ -3292,14 +3292,14 @@ static void d68851_pbcc16(void)
 {
 	uint32 temp_pc = g_cpu_pc;
 
-	sprintf(g_dasm_str, "pb%s %x", g_mmucond[g_cpu_ir&0xf], temp_pc + make_int_16(read_imm_16()));
+	sprintf(g_dasm_str, "pb%s    $%x", g_mmucond[g_cpu_ir&0xf], temp_pc + make_int_16(read_imm_16()));
 }
 
 static void d68851_pbcc32(void)
 {
 	uint32 temp_pc = g_cpu_pc;
 
-	sprintf(g_dasm_str, "pb%s %x", g_mmucond[g_cpu_ir&0xf], temp_pc + make_int_32(read_imm_32()));
+	sprintf(g_dasm_str, "pb%s    $%x", g_mmucond[g_cpu_ir&0xf], temp_pc + make_int_32(read_imm_32()));
 }
 
 static void d68851_pdbcc(void)
@@ -3307,7 +3307,7 @@ static void d68851_pdbcc(void)
 	uint32 temp_pc = g_cpu_pc;
 	uint16 modes = read_imm_16();
 
-	sprintf(g_dasm_str, "pb%s %x", g_mmucond[modes&0xf], temp_pc + make_int_16(read_imm_16()));
+	sprintf(g_dasm_str, "pb%s    $%x", g_mmucond[modes&0xf], temp_pc + make_int_16(read_imm_16()));
 }
 
 // PScc:  0000000000xxxxxx
@@ -3449,9 +3449,10 @@ static const opcode_struct g_opcode_info[] =
 	{d68020_cpbcc_32     , 0xf1c0, 0xf0c0, 0x000},
 	{d68020_cpdbcc       , 0xf1f8, 0xf048, 0x000},
 	{d68020_cpgen        , 0xf1c0, 0xf000, 0x000},
-	{d68020_cprestore    , 0xf1c0, 0xf140, 0x37f},
-    {d68020_cprestore    , 0xf1c0, 0xf140, 0x378},
-	{d68020_cpsave       , 0xf1c0, 0xf100, 0x2f8},
+//	{d68020_cprestore    , 0xf1c0, 0xf140, 0x37f}, // DIRK
+//  {d68020_cprestore    , 0xf1c0, 0xf140, 0x378}, // DIRK
+    {d68020_cprestore    , 0xf1c0, 0xf140, 0x37b}, // DIRK
+    {d68020_cpsave       , 0xf1c0, 0xf100, 0x2f8},
 	{d68020_cpscc        , 0xf1c0, 0xf040, 0xbf8},
 	{d68020_cptrapcc_0   , 0xf1ff, 0xf07c, 0x000},
 	{d68020_cptrapcc_16  , 0xf1ff, 0xf07a, 0x000},

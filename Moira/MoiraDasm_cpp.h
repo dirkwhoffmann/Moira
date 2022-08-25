@@ -612,7 +612,25 @@ Moira::dasmCpBcc(StrWriter &str, u32 &addr, u16 op)
     auto id   = ( ____xxx_________(op) );
     auto cnd  = ( __________xxxxxx(op) );
 
-    if (id != 0 || str.style == DASM_MUSASHI) {
+    if (id == 2 && str.style == DASM_MUSASHI) {
+
+        // Mimic Musashi bug
+        dasmLineF<I, M, S>(str, addr, op);
+        return;
+    }
+
+    if (id == 0) {
+
+        auto pc   = addr + 2;
+        auto disp = dasmRead<S>(addr);
+        // auto ext1 = dasmRead<Word>(addr);
+        // auto ext2 = dasmRead<Word>(addr);
+
+        pc += SEXT<S>(disp);
+
+        str << "pb" << Mmucc{cnd & 0xF} << tab << UInt(pc);
+
+    } else {
 
         auto pc   = addr + 2;
         auto ext1 = dasmRead<Word>(addr);
@@ -623,17 +641,6 @@ Moira::dasmCpBcc(StrWriter &str, u32 &addr, u16 op)
 
         str << id << Ins<I>{} << Cpcc{cnd} << tab << Ims<Word>(ext2);
         str << "; " << UInt(pc) << " (extension = " << Int(ext1) << ") (2-3)";
-
-    } else {
-
-        auto pc   = addr + 2;
-        auto disp = dasmRead<S>(addr);
-        // auto ext1 = dasmRead<Word>(addr);
-        // auto ext2 = dasmRead<Word>(addr);
-
-        pc += SEXT<S>(disp);
-
-        str << "pb" << Cpcc{cnd & 0xF} << Sz<S>{} << tab << UInt(pc);
     }
 }
 
@@ -643,11 +650,16 @@ Moira::dasmCpDbcc(StrWriter &str, u32 &addr, u16 op)
     auto pc   = addr + 2;
     auto ext1 = dasmRead<Word>(addr);
     auto ext2 = dasmRead<Word>(addr);
+
     auto dn   = ( _____________xxx(op)   );
     auto id   = ( ____xxx_________(op)   );
     auto cnd  = ( __________xxxxxx(ext1) );
 
-    if (id != 0 || str.style == DASM_MUSASHI) {
+    if (id == 0) {
+
+        str << "pb" << Mmucc{cnd & 0xF} << tab << UInt(pc + ext2);
+
+    } else {
 
         auto ext3 = dasmRead<Word>(addr);
         auto ext4 = dasmRead<Word>(addr);
@@ -656,14 +668,6 @@ Moira::dasmCpDbcc(StrWriter &str, u32 &addr, u16 op)
 
         str << id << Ins<I>{} << Cpcc{cnd} << tab << Dn{dn} << "," << Ims<Word>(ext4);
         str << "; " << UInt(pc) << " (extension = " << Int(ext2) << ") (2-3)";
-
-    } else {
-
-        auto ext3 = dasmRead<Word>(addr); addr -= 2;
-
-        pc += i16(ext3);
-
-        str << "pdb" << Cpcc{cnd} << tab << Dn{dn} << Sep{} << UInt(pc + 2);
     }
 }
 
@@ -672,6 +676,25 @@ Moira::dasmCpGen(StrWriter &str, u32 &addr, u16 op)
 {
     auto id = ( ____xxx_________(op) );
     bool hasMMU = model == M68030 || model == M68EC030;
+
+    if (str.style == DASM_MUSASHI) {
+        /*
+         0xfff8, 0xf620, 0x000},
+         {d68040_move16_pi_al , 0xfff8, 0xf600, 0x000},
+         {d68040_move16_al_pi , 0xfff8, 0xf608, 0x000},
+         {d68040_move16_ai_al , 0xfff8, 0xf610, 0x000},
+         {d68040_move16_al_ai , 0xfff8, 0xf618
+         */
+        if (id == 2 ||
+            (op & 0xfff8) == 0xf600 || (op & 0xfff8) == 0xf608 ||
+            (op & 0xfff8) == 0xf610 || (op & 0xfff8) == 0xf618 ||
+            (op & 0xfff8) == 0xf620) {
+
+            // Mimic Musashi bug
+            dasmLineF<I, M, S>(str, addr, op);
+            return;
+        }
+    }
 
     if (id != 0 || !hasMMU) {
 
@@ -716,9 +739,29 @@ Moira::dasmCpRestore(StrWriter &str, u32 &addr, u16 op)
     auto dn = ( _____________xxx(op) );
     auto id = ( ____xxx_________(op) );
     auto ea = Op <M,S> (dn, addr);
-    
-    str << id << Ins<I>{} << " " << ea;
-    str << Av<I, M, S>{};
+
+    if (str.style == DASM_MUSASHI && (op & 0xffe0) == 0xf500) {
+
+        // Mimic Musashi bug
+        dasmLineF<I, M, S>(str, addr, op);
+        return;
+    }
+
+    if (id == 1) {
+
+        str << "frestore" << tab << ea;
+
+    } else {
+
+        str << id << Ins<I>{} << " " << ea;
+        str << Av<I, M, S>{};
+    }
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmCpRestoreInvalid(StrWriter &str, u32 &addr, u16 op)
+{
+    dasmCpRestore<I, M, S>(str, addr, op);
 }
 
 template <Instr I, Mode M, Size S> void
@@ -728,39 +771,51 @@ Moira::dasmCpSave(StrWriter &str, u32 &addr, u16 op)
     auto id = ( ____xxx_________(op) );
     auto ea = Op <M,S> (dn, addr);
 
-    printf("dasmCpSave\n");
-    
-    if (id != 0 || str.style == DASM_MUSASHI) {
+    if (str.style == DASM_MUSASHI && (op & 0xffe0) == 0xf500) {
 
-        str << id << Ins<I>{} << tab << ea;
-        str << Av<I, M, S>{};
+        // Mimic Musashi bug
+        dasmLineF<I, M, S>(str, addr, op);
+        return;
+    }
+    
+    if (id == 1) {
+
+        str << "fsave" << tab << ea;
 
     } else {
 
-        str << "psave" << tab << ea;
+        str << id << Ins<I>{} << tab << ea;
+        str << Av<I, M, S>{};
     }
 }
 
 template <Instr I, Mode M, Size S> void
 Moira::dasmCpScc(StrWriter &str, u32 &addr, u16 op)
 {
-    auto ext1 = dasmRead<Word>(addr);
-    auto dn   = ( _____________xxx(op)   );
-    auto id   = ( ____xxx_________(op)   );
-    auto cnd  = ( __________xxxxxx(ext1) );
+    auto dn   = ( _____________xxx(op) );
+    auto id   = ( ____xxx_________(op) );
 
-    if (id != 0 || str.style == DASM_MUSASHI) {
+    if (id == 2 && str.style == DASM_MUSASHI) {
+
+        // Mimic Musashi bug
+        dasmLineF<I, M, S>(str, addr, op);
+        return;
+    }
+
+    if (id == 0) {
+
+            str << "MMU 001 group";
+
+    } else {
+
+        auto ext1 = dasmRead<Word>(addr);
+        auto cnd  = ( __________xxxxxx(ext1) );
 
         auto ext2 = dasmRead<Word>(addr);
         auto ea = Op<M, S>(dn, addr);
 
         str << id << Ins<I>{} << Cpcc{cnd} << tab << ea;
         str << "; (extension = " << Int(ext2) << ") (2-3)";
-
-    } else {
-
-        auto ea = Op<M, S>(dn, addr);
-        str << "ps" << Cpcc{cnd} << tab << ea;
     }
 }
 
@@ -771,7 +826,7 @@ Moira::dasmCpTrapcc(StrWriter &str, u32 &addr, u16 op)
     auto id   = ( ____xxx_________(op)   );
     auto cnd  = ( __________xxxxxx(ext1) );
 
-    if (id != 0 || str.style == DASM_MUSASHI) {
+    if (id == 0) {
 
         auto ext2 = dasmRead<Word>(addr);
 
@@ -800,34 +855,47 @@ Moira::dasmCpTrapcc(StrWriter &str, u32 &addr, u16 op)
                 str << "; (extension = " << Int(ext2) << ") (2-3)";
                 break;
             }
-                /*
             default:
-                break;
+
                 addr -= 4;
-                dasmLineF<I, M, S>(str, addr, op);
-                */
+                str << "MMU 001 group";
+                break;
         }
 
     } else {
+
+        auto ext2 = dasmRead<Word>(addr);
 
         switch (op & 0b111) {
 
             case 0b010:
             {
-                auto ext = dasmRead <Word> (addr);
-                str << "ptrap" << Cpcc{cnd} << Sz<Word>{} << tab << Imu(ext);
+                auto ext = dasmRead<Word>(addr);
+                str << id << Ins<I>{} << Cpcc{cnd} << Tab{9};
+                str << Tab{10} << Imu(ext);
+                str << "; (extension = " << Int(ext2) << ") (2-3)";
                 break;
             }
             case 0b011:
             {
-                auto ext = dasmRead <Long> (addr);
-                str << "ptrap" << Cpcc{cnd} << Sz<Long>{} << tab << Imu(ext);
+                auto ext = dasmRead<Long>(addr);
+                str << id << Ins<I>{} << Cpcc{cnd} << Tab{9};
+                str << Tab{10} << Imu(ext);
+                str << "; (extension = " << Int(ext2) << ") (2-3)";
                 break;
             }
             case 0b100:
             {
-                str << "ptrap" << Cpcc{cnd} << Sz<Long>{};
+                // (void)dasmRead<Long>(addr);
+                str << id << Ins<I>{} << Cpcc{cnd} << Tab{9};
+                str << "; (extension = " << Int(ext2) << ") (2-3)";
+                break;
             }
+            default:
+
+                addr -= 4;
+                dasmLineF<I, M, S>(str, addr, op);
+                break;
         }
     }
 }
@@ -1750,6 +1818,8 @@ Moira::dasmPFlushA(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmPLoad(StrWriter &str, u32 &addr, u16 op)
 {
+    assert(M != MODE_IP);
+    
     auto ea = Op <M,S> ( _____________xxx(op), addr );
 
     addr -= 2;
@@ -1841,7 +1911,7 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
 
         str << Ins<I>{} << suffix << tab;
 
-        if (M == MODE_IP) {
+        if constexpr (M == MODE_IP) {
             str << "[unknown form]" << Sep{} << "INVALID " << Int(op & 0x3f);
         } else {
             str << Op<M, S>(reg, addr) << Sep{} << pStr;
@@ -1865,4 +1935,249 @@ template <Instr I, Mode M, Size S> void
 Moira::dasmPTest(StrWriter &str, u32 &addr, u16 op)
 {
     str << "TODO: dasmPTest";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFpu(StrWriter &str, u32 &addr, u16 op)
+{
+    auto reg  = _____________xxx(op);
+    
+    // Ported from Musashi.
+    // TODO: CLEANUP
+
+    static const char float_data_format[8][3] =
+    {
+        ".l", ".s", ".x", ".p", ".w", ".d", ".b", ".p"
+    };
+
+    u32 w2, src, dst_reg;
+    // LIMIT_CPU_TYPES(M68030_PLUS);
+
+    w2 = dasmRead<Word>(addr);
+
+    src = (w2 >> 10) & 0x7;
+    dst_reg = (w2 >> 7) & 0x7;
+
+    // special override for FMOVECR
+    if ((((w2 >> 13) & 0x7) == 2) && (((w2>>10)&0x7) == 7)) {
+
+        str << "fmovecr" << tab << Imd{w2 & 0x7f} << Sep{} << "fp" << dst_reg;
+        // sprintf(g_dasm_str, "fmovecr   #$%0x, fp%d", (w2&0x7f), dst_reg);
+        return;
+    }
+
+    const char *mnemonic = "";
+
+    switch ((w2 >> 13) & 0x7) {
+
+        case 0x0:
+        case 0x2:
+        {
+            switch(w2 & 0x7f)
+            {
+                case 0x00:    mnemonic = "fmove"; break;
+                case 0x01:    mnemonic = "fint"; break;
+                case 0x02:    mnemonic = "fsinh"; break;
+                case 0x03:    mnemonic = "fintrz"; break;
+                case 0x04:    mnemonic = "fsqrt"; break;
+                case 0x06:    mnemonic = "flognp1"; break;
+                case 0x08:    mnemonic = "fetoxm1"; break;
+                case 0x09:    mnemonic = "ftanh1"; break;
+                case 0x0a:    mnemonic = "fatan"; break;
+                case 0x0c:    mnemonic = "fasin"; break;
+                case 0x0d:    mnemonic = "fatanh"; break;
+                case 0x0e:    mnemonic = "fsin"; break;
+                case 0x0f:    mnemonic = "ftan"; break;
+                case 0x10:    mnemonic = "fetox"; break;
+                case 0x11:    mnemonic = "ftwotox"; break;
+                case 0x12:    mnemonic = "ftentox"; break;
+                case 0x14:    mnemonic = "flogn"; break;
+                case 0x15:    mnemonic = "flog10"; break;
+                case 0x16:    mnemonic = "flog2"; break;
+                case 0x18:    mnemonic = "fabs"; break;
+                case 0x19:    mnemonic = "fcosh"; break;
+                case 0x1a:    mnemonic = "fneg"; break;
+                case 0x1c:    mnemonic = "facos"; break;
+                case 0x1d:    mnemonic = "fcos"; break;
+                case 0x1e:    mnemonic = "fgetexp"; break;
+                case 0x1f:    mnemonic = "fgetman"; break;
+                case 0x20:    mnemonic = "fdiv"; break;
+                case 0x21:    mnemonic = "fmod"; break;
+                case 0x22:    mnemonic = "fadd"; break;
+                case 0x23:    mnemonic = "fmul"; break;
+                case 0x24:    mnemonic = "fsgldiv"; break;
+                case 0x25:    mnemonic = "frem"; break;
+                case 0x26:    mnemonic = "fscale"; break;
+                case 0x27:    mnemonic = "fsglmul"; break;
+                case 0x28:    mnemonic = "fsub"; break;
+                case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: case 0x35: case 0x36: case 0x37:
+                    mnemonic = "fsincos"; break;
+                case 0x38:    mnemonic = "fcmp"; break;
+                case 0x3a:    mnemonic = "ftst"; break;
+                case 0x41:    mnemonic = "fssqrt"; break;
+                case 0x45:    mnemonic = "fdsqrt"; break;
+                case 0x58:    mnemonic = "fsabs"; break;
+                case 0x5a:    mnemonic = "fsneg"; break;
+                case 0x5c:    mnemonic = "fdabs"; break;
+                case 0x5e:    mnemonic = "fdneg"; break;
+                case 0x60:    mnemonic = "fsdiv"; break;
+                case 0x62:    mnemonic = "fsadd"; break;
+                case 0x63:    mnemonic = "fsmul"; break;
+                case 0x64:    mnemonic = "fddiv"; break;
+                case 0x66:    mnemonic = "fdadd"; break;
+                case 0x67:    mnemonic = "fdmul"; break;
+                case 0x68:    mnemonic = "fssub"; break;
+                case 0x6c:    mnemonic = "fdsub"; break;
+
+                default:    mnemonic = "FPU (?)"; break;
+            }
+
+            if (w2 & 0x4000) {
+
+
+                str << mnemonic << float_data_format[src] << Op<M, Long>(reg, addr);
+
+            } else {
+
+                str << mnemonic << tab << "FP" << src << Sep{} << "FP" << src << dst_reg;
+                // sprintf(g_dasm_str, "%s.x   FP%d, FP%d", mnemonic, src, dst_reg);
+            }
+            break;
+        }
+
+        case 0x3:
+        {
+            switch ((w2>>10)&7)
+            {
+                case 3:        // packed decimal w/fixed k-factor
+                    str << "fmove" << float_data_format[(w2>>10)&7] << tab << "FP" << dst_reg << Sep{} << Op<M, Long>(reg, addr) << "sext_7bit_int(w2&0x7f)";
+                    // sprintf(g_dasm_str, "fmove%s   FP%d, %s {#%d}", float_data_format[(w2>>10)&7], dst_reg, get_ea_mode_str_32(g_cpu_ir), sext_7bit_int(w2&0x7f));
+                    break;
+
+                case 7:        // packed decimal w/dynamic k-factor (register)
+                    str << "fmove" << float_data_format[(w2>>10)&7] << tab << "FP" << dst_reg << Sep{} << Op<M, Long>(reg, addr) << int((w2>>4)&7);
+                    // sprintf(g_dasm_str, "fmove%s   FP%d, %s {D%d}", float_data_format[(w2>>10)&7], dst_reg, get_ea_mode_str_32(g_cpu_ir), (w2>>4)&7);
+                    break;
+
+                default:
+                    str << "fmove" << float_data_format[(w2>>10)&7] << tab << "FP" << dst_reg << Sep{} << Op<M, Long>(reg, addr);
+                    // sprintf(g_dasm_str, "fmove%s   FP%d, %s", float_data_format[(w2>>10)&7], dst_reg, get_ea_mode_str_32(g_cpu_ir));
+                    break;
+            }
+            break;
+        }
+
+        case 0x4:    // ea to control
+        {
+            str << "fmovem.l" << tab << Op<M, Long>(reg, addr);
+            if (w2 & 0x1000) str << "fpcr";
+            if (w2 & 0x0800) str << "/fpsr";
+            if (w2 & 0x0400) str << "/fpiar";
+            /* sprintf(g_dasm_str, "fmovem.l   %s, ", get_ea_mode_str_32(g_cpu_ir));
+            if (w2 & 0x1000) strcat(g_dasm_str, "fpcr");
+            if (w2 & 0x0800) strcat(g_dasm_str, "/fpsr");
+            if (w2 & 0x0400) strcat(g_dasm_str, "/fpiar");
+            */
+            break;
+        }
+
+        case 0x5:    // control to ea
+        {
+            str << "fmovem.l" << tab;
+            if (w2 & 0x1000) str << "fpcr";
+            if (w2 & 0x0800) str << "/fpsr";
+            if (w2 & 0x0400) str << "/fpiar";
+            str << Sep{} << Op<M, Long>(reg, addr);
+            /*
+            strcpy(g_dasm_str, "fmovem.l   ");
+            if (w2 & 0x1000) strcat(g_dasm_str, "fpcr");
+            if (w2 & 0x0800) strcat(g_dasm_str, "/fpsr");
+            if (w2 & 0x0400) strcat(g_dasm_str, "/fpiar");
+            strcat(g_dasm_str, ", ");
+            strcat(g_dasm_str, get_ea_mode_str_32(g_cpu_ir));
+            */
+            break;
+        }
+
+        case 0x6:    // memory to FPU, list
+        {
+            if ((w2>>11) & 1)    // dynamic register list
+            {
+                str << "fmovem.x" << tab << Op<M, Long>(reg, addr) << Sep{} << Dn((w2>>4)&7);
+                // sprintf(g_dasm_str, "fmovem.x   %s, D%d", get_ea_mode_str_32(g_cpu_ir), (w2>>4)&7);
+            }
+            else    // static register list
+            {
+                int i;
+
+                str << "fmovem.x" << tab << Op<M, Long>(reg, addr) << Sep{};
+                // sprintf(g_dasm_str, "fmovem.x   %s, ", get_ea_mode_str_32(g_cpu_ir));
+
+                for (i = 0; i < 8; i++) {
+
+                    if (w2 & (1<<i)) {
+
+                        if ((w2>>12) & 1) {   // postincrement or control
+
+                            str << "FP" << 7 - i;
+                            // sprintf(temp, "FP%d ", 7-i);
+
+                        } else {           // predecrement
+
+                            str << "FP" << i;
+                            // sprintf(temp, "FP%d ", i);
+                        }
+                        // strcat(g_dasm_str, temp);
+                    }
+                }
+            }
+            break;
+        }
+
+        case 0x7:    // FPU to memory, list
+        {
+            if ((w2>>11) & 1)    // dynamic register list
+            {
+                str << "fmovem.x" << tab << Dn((w2>>4)&7) << Sep{} << Op<M, Long>(reg, addr);
+                // sprintf(g_dasm_str, "fmovem.x   D%d, %s", (w2>>4)&7, get_ea_mode_str_32(g_cpu_ir));
+            }
+            else    // static register list
+            {
+                int i;
+
+                str << "fmovem.x" << tab;
+                // sprintf(g_dasm_str, "fmovem.x   ");
+
+                for (i = 0; i < 8; i++)
+                {
+                    if (w2 & (1<<i))
+                    {
+                        if ((w2>>12) & 1)    // postincrement or control
+                        {
+                            str << "FP" << 7 - i;
+                            // sprintf(temp, "FP%d ", 7-i);
+                        }
+                        else            // predecrement
+                        {
+                            str << "FP" << i;
+                            // sprintf(temp, "FP%d ", i);
+                        }
+                        // strcat(g_dasm_str, temp);
+                    }
+                }
+
+                str << Sep{} << Op<M, Long>(reg, addr);
+                // strcat(g_dasm_str, ", ");
+                // strcat(g_dasm_str, get_ea_mode_str_32(g_cpu_ir));
+            }
+            break;
+        }
+
+        default:
+        {
+            str << "FPU (?)";
+            // sprintf(g_dasm_str, "FPU (?) ");
+            break;
+        }
+    }
 }

@@ -255,22 +255,22 @@ StrWriter::operator<<(Cpcc cpcc)
 {
     switch (cpcc.raw) {
 
-        case 0:  *this << (style == DASM_MUSASHI ? "f"   : "bs"); break;
-        case 1:  *this << (style == DASM_MUSASHI ? "eq"  : "bc"); break;
-        case 2:  *this << (style == DASM_MUSASHI ? "ogt" : "ls"); break;
-        case 3:  *this << (style == DASM_MUSASHI ? "oge" : "lc"); break;
-        case 4:  *this << (style == DASM_MUSASHI ? "olt" : "ss"); break;
-        case 5:  *this << (style == DASM_MUSASHI ? "ole" : "sc"); break;
-        case 6:  *this << (style == DASM_MUSASHI ? "ogl" : "as"); break;
-        case 7:  *this << (style == DASM_MUSASHI ? "or"  : "ac"); break;
-        case 8:  *this << (style == DASM_MUSASHI ? "un"  : "ws"); break;
-        case 9:  *this << (style == DASM_MUSASHI ? "ueq" : "wc"); break;
-        case 10: *this << (style == DASM_MUSASHI ? "ugt" : "is"); break;
-        case 11: *this << (style == DASM_MUSASHI ? "uge" : "ic"); break;
-        case 12: *this << (style == DASM_MUSASHI ? "ult" : "gs"); break;
-        case 13: *this << (style == DASM_MUSASHI ? "ule" : "gc"); break;
-        case 14: *this << (style == DASM_MUSASHI ? "ne"  : "cs"); break;
-        case 15: *this << (style == DASM_MUSASHI ? "t"   : "cc"); break;
+        case 0:  *this << "f";      break;
+        case 1:  *this << "eq";     break;
+        case 2:  *this << "ogt";    break;
+        case 3:  *this << "oge";    break;
+        case 4:  *this << "olt";    break;
+        case 5:  *this << "ole";    break;
+        case 6:  *this << "ogl";    break;
+        case 7:  *this << "or";     break;
+        case 8:  *this << "un";     break;
+        case 9:  *this << "ueq";    break;
+        case 10: *this << "ugt";    break;
+        case 11: *this << "uge";    break;
+        case 12: *this << "ult";    break;
+        case 13: *this << "ule";    break;
+        case 14: *this << "ne";     break;
+        case 15: *this << "t";      break;
         case 16: *this << "sf";     break;
         case 17: *this << "seq";    break;
         case 18: *this << "gt";     break;
@@ -288,6 +288,34 @@ StrWriter::operator<<(Cpcc cpcc)
         case 30: *this << "sne";    break;
         case 31: *this << "st";     break;
             
+        default:
+            *this << "?";
+    }
+    return *this;
+}
+
+StrWriter&
+StrWriter::operator<<(Mmucc mmucc)
+{
+    switch (mmucc.raw) {
+
+        case 0:  *this << "bs"; break;
+        case 1:  *this << "bc"; break;
+        case 2:  *this << "ls"; break;
+        case 3:  *this << "lc"; break;
+        case 4:  *this << "ss"; break;
+        case 5:  *this << "sc"; break;
+        case 6:  *this << "as"; break;
+        case 7:  *this << "ac"; break;
+        case 8:  *this << "ws"; break;
+        case 9:  *this << "wc"; break;
+        case 10: *this << "is"; break;
+        case 11: *this << "ic"; break;
+        case 12: *this << "gs"; break;
+        case 13: *this << "gc"; break;
+        case 14: *this << "cs"; break;
+        case 15: *this << "cc"; break;
+
         default:
             *this << "?";
     }
@@ -525,6 +553,9 @@ StrWriter::operator<<(const Ea<M,S> &ea)
         case MODE_DIPC: *this << DiPc<M,S>{ea}; break;
         case MODE_IXPC: *this << Ix<M,S>{ea};   break;
         case MODE_IM:   *this << Im<M,S>{ea};   break;
+
+        default:
+            *this << "???";
     }
     return *this;
 }

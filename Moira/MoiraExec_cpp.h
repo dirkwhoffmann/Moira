@@ -1850,6 +1850,16 @@ Moira::execCpRestore(u16 opcode)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
+Moira::execCpRestoreInvalid(u16 opcode)
+{
+    AVAILABILITY(C68020)
+
+    execLineF<C, I, M, S>(opcode);
+
+    FINALIZE
+}
+
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execCpSave(u16 opcode)
 {
     AVAILABILITY(C68020)
@@ -5024,6 +5034,12 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execPTest(u16 opcode)
 {
     printf("TODO: execPTest");
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execFpu(u16 opcode)
+{
+    execLineF<C, I, M, S>(opcode);
 }
 
 #undef AVAILABILITY
