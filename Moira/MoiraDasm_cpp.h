@@ -675,35 +675,8 @@ template <Instr I, Mode M, Size S> void
 Moira::dasmCpGen(StrWriter &str, u32 &addr, u16 op)
 {
     auto id = ( ____xxx_________(op) );
-    bool hasMMU = model == M68030 || model == M68EC030;
 
-    if (str.style == DASM_MUSASHI) {
-        /*
-         0xfff8, 0xf620, 0x000},
-         {d68040_move16_pi_al , 0xfff8, 0xf600, 0x000},
-         {d68040_move16_al_pi , 0xfff8, 0xf608, 0x000},
-         {d68040_move16_ai_al , 0xfff8, 0xf610, 0x000},
-         {d68040_move16_al_ai , 0xfff8, 0xf618
-         */
-        if (id == 2 ||
-            (op & 0xfff8) == 0xf600 || (op & 0xfff8) == 0xf608 ||
-            (op & 0xfff8) == 0xf610 || (op & 0xfff8) == 0xf618 ||
-            (op & 0xfff8) == 0xf620) {
-
-            // Mimic Musashi bug
-            dasmLineF<I, M, S>(str, addr, op);
-            return;
-        }
-    }
-
-    if (id != 0 || !hasMMU) {
-
-        auto ext = Imu ( dasmRead<Long>(addr) );
-
-        str << id << Ins<I>{} << tab << ext;
-        str << Av<I, M, S>{};
-
-    } else {
+    if (id == 0 && hasMMU()) {
 
         switch ((op >> 3) & 0b111) {
 
@@ -715,22 +688,34 @@ Moira::dasmCpGen(StrWriter &str, u32 &addr, u16 op)
             case 0b101: dasmP68030<I, Mode(5), S>(str, addr, op); break;
             case 0b110: dasmP68030<I, Mode(6), S>(str, addr, op); break;
 
-        default:
+            default:
 
-            switch(op & 0b111) {
+                switch(op & 0b111) {
 
-                case 0b000: dasmP68030<I, Mode(7), S>(str, addr, op); break;
-                case 0b001: dasmP68030<I, Mode(8), S>(str, addr, op); break;
-                case 0b010: dasmP68030<I, Mode(9), S>(str, addr, op); break;
-                case 0b011: dasmP68030<I, Mode(10), S>(str, addr, op); break;
-                case 0b100: dasmP68030<I, Mode(11), S>(str, addr, op); break;
+                    case 0b000: dasmP68030<I, Mode(7), S>(str, addr, op); break;
+                    case 0b001: dasmP68030<I, Mode(8), S>(str, addr, op); break;
+                    case 0b010: dasmP68030<I, Mode(9), S>(str, addr, op); break;
+                    case 0b011: dasmP68030<I, Mode(10), S>(str, addr, op); break;
+                    case 0b100: dasmP68030<I, Mode(11), S>(str, addr, op); break;
 
-                default:
+                    default:
 
-                    dasmP68030<I, Mode(12), S>(str, addr, op); break;
-            }
+                        dasmP68030<I, Mode(12), S>(str, addr, op); break;
+                }
         }
+        return;
     }
+
+    if (hasCPI()) {
+
+        auto ext = Imu ( dasmRead<Long>(addr) );
+
+        str << id << Ins<I>{} << tab << ext;
+        str << Av<I, M, S>{};
+        return;
+    }
+
+    dasmLineF<I, M, S>(str, addr, op);
 }
 
 template <Instr I, Mode M, Size S> void

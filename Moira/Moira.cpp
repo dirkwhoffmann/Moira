@@ -84,6 +84,45 @@ Moira::setIndentation(int value)
     tab = Tab{value};
 }
 
+bool
+Moira::hasCPI()
+{
+    switch (model) {
+
+        case M68EC020: case M68020: case M68EC030: case M68030:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+bool
+Moira::hasMMU()
+{
+    switch (model) {
+
+        case M68030: case M68LC040: case M68040:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+bool
+Moira::hasFPU()
+{
+    switch (model) {
+
+        case M68040:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 template <Core C> u32
 Moira::addrMask() const
 {

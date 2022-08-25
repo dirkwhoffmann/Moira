@@ -181,9 +181,14 @@ private:
 
 public:
 
-    // Checks the presence of a memory managenemt unit or floating point unit
-    bool hasMMU() { return model == M68030 || model == M68LC040 || model == M68040; }
-    bool hasFPU() { return model == M68040; }
+    // Checks if the emulated CPU model has a coprocessor interface
+    bool hasCPI();
+
+    // Checks if the emulated CPU model has a memory managenemt unit
+    bool hasMMU();
+
+    // Checks if the emulated CPU model has a floating point unit
+    bool hasFPU();
 
     // Returns the address bus mask (bus width)
     template <Core C> u32 addrMask() const;
