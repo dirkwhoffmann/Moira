@@ -31,9 +31,6 @@ static constexpr bool PROFILE_DASM = false;
 // Change to limit the range of disassembled instructions
 #define doDasm(opcode) (opcode >= 0x0000 && opcode <= 0xEFFF)
 
-// Change to produce some disassembler debug output
-#define DUMP_DASM (cpuModel == M68040 && opcode >= 0xF200 && opcode <= 0xF2FF)
-
 // Uncomment to disable assertion checking
 // #define NDEBUG
 #include <cassert>

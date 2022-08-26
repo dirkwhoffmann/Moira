@@ -166,3 +166,10 @@ bool compareCAxR(Result &r1, Result &r2);
 bool compareCycles(Result &r1, Result &r2);
 
 void bugReport();
+
+
+//
+// Produce some disassembler output (for manual comparison)
+//
+
+void dumpDasm();

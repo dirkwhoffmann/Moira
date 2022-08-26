@@ -212,6 +212,9 @@ void run()
     printf("The test program runs Moira agains Musashi with randomly generated data.\n");
     printf("It runs until a bug has been found.\n");
 
+    // EXPERIMENTAL
+    dumpDasm();
+
     selectModel(M68000);
     srand(3);
 
@@ -268,8 +271,6 @@ void runSingleTest(Setup &s)
 {
     Result mur, mor;
 
-    u16 opcode = s.opcode;
-
     // Prepare
     resetMusashi(s);
     resetM68k(s);
@@ -290,15 +291,6 @@ void runSingleTest(Setup &s)
 
     // Compare
     compare(s, mur, mor);
-
-    // Print some debug output if requested
-    if (DUMP_DASM) {
-
-        printf("$%04X: Moira:   [%d] %s\n", mor.opcode, mor.dasmCntMoira, mor.dasmMoira);
-        printf("       Musashi: [%d] %s\n", mur.dasmCntMusashi, mur.dasmMusashi);
-        printf("       vda68k:  [%d] %s\n", mur.dasmCntMoto, mur.dasmMoto);
-        printf("                [%d] %s\n\n", mur.dasmCntMIT, mur.dasmMIT);
-    }
 }
 
 void runM68k(Setup &s, Result &r)
@@ -364,11 +356,7 @@ void runMoira(Setup &s, Result &r)
     r.opcode = get16(moiraMem, r.oldpc);
     r.elapsed[0] = r.elapsed[1] = 0;
 
-    // Disassemble the instruction in Moira format
-    moiracpu->setDasmStyle(DASM_MOIRA);
-    moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16, .plainZero = true });
-    r.dasmCntMoira = moiracpu->disassemble(r.oldpc, r.dasmMoira);
-
+    // Disassemble the instruction
     if (doDasm(r.opcode)) {
 
         // Disassemble the instruction in Musashi format
@@ -827,4 +815,84 @@ void bugReport()
     printf("Please send a bug report to: dirk.hoffmann@me.com\n");
     printf("Thanks you!\n\n");
     exit(0);
+}
+
+void dumpDasm()
+{
+    /*
+    struct vda68k::DisasmPara_68k m68k_dp;
+    char m68k_opcode[16];
+    char m68k_operands[128];
+    char m68k_iwordbuf[32];
+    char m68k_tmpbuf[8];
+    */
+
+    Setup s;
+    Result r;
+
+    selectModel(M68040);
+    setupM68k();
+    srand(0);
+    randomizer.init(testrun);
+    setupTestEnvironment(s);
+
+    long nr = 0;
+
+    // Iterate through all opcodes
+
+    for (int op = 0xF200; op <= 0xF200; op++) {
+
+        for (int i = 0x0000; i <= 0x07F; i++) {
+
+            u16 ext = (rand() & 0x5F80) | i;
+            s.ext1 = ext;
+            setupTestInstruction(s, pc, u16(op));
+
+            resetMusashi(s);
+            resetM68k(s);
+            resetMoira(s);
+
+            // Disassemble the instruction in Moira format
+            moiracpu->setDasmStyle(DASM_MOIRA);
+            moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16, .plainZero = true });
+            r.dasmCntMoira = moiracpu->disassemble(pc, r.dasmMoira);
+
+            // Run the Musashi disassembler
+            auto type =
+            cpuModel == M68000   ? M68K_CPU_TYPE_68000 :
+            cpuModel == M68010   ? M68K_CPU_TYPE_68010 :
+            cpuModel == M68EC020 ? M68K_CPU_TYPE_68EC020 :
+            cpuModel == M68020   ? M68K_CPU_TYPE_68020 :
+            cpuModel == M68EC030 ? M68K_CPU_TYPE_68EC030 :
+            cpuModel == M68030   ? M68K_CPU_TYPE_68030 :
+            cpuModel == M68EC040 ? M68K_CPU_TYPE_68EC040 :
+            cpuModel == M68LC040 ? M68K_CPU_TYPE_68LC040 : M68K_CPU_TYPE_68040;
+            r.dasmCntMusashi = m68k_disassemble(r.dasmMusashi, s.pc, type);
+
+            // Run m86k disassembler in Motorola syntax
+            auto n1 = M68k_Disassemble(&dp) - dp.instr;
+            r.dasmCntMoto = 2 * n1;
+            if (strcmp(operands, "") == 0) {
+                sprintf(r.dasmMoto, "%s", opcode);
+            } else {
+                sprintf(r.dasmMoto, "%-7s %s", opcode, operands);
+            }
+
+            // Run disassembler in MIT syntax
+            auto n2 = M68k_Disassemble(&dp, true) - dp.instr;
+            r.dasmCntMIT = 2 * n2;
+            if (strcmp(operands, "") == 0) {
+                sprintf(r.dasmMIT, "%s", opcode);
+            } else {
+                sprintf(r.dasmMIT, "%-7s %s", opcode, operands);
+            }
+
+            printf("%5ld: %04X %04x: Moira:   [%d] %s\n", nr++, op, ext, r.dasmCntMoira, r.dasmMoira);
+            printf("                  Musashi: [%d] %s\n", r.dasmCntMusashi, r.dasmMusashi);
+            printf("                  vda68k:  [%d] %s\n", r.dasmCntMoto, r.dasmMoto);
+            printf("                           [%d] %s\n\n", r.dasmCntMIT, r.dasmMIT);
+        }
+    }
+
+    exit(1);
 }
