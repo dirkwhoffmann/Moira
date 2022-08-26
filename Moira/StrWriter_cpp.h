@@ -48,7 +48,7 @@ static const char *mnemonics[]
     "trappl",   "trapvc",   "trapvs",   "trapf",    "trapt",    "unpk",
 
     // 68040
-    "cinv",
+    "cinv",     "cpush",    "move16",
 
     // MMU
     "pflush",   "pflusha",  "pload",    "pmove",    "ptest"
@@ -1255,6 +1255,8 @@ StrWriter::operator<<(const Av<I,M,S> &av)
             break;
 
         case CINV:
+        case CPUSH:
+        case MOVE16:
 
             *this << "; (4)";
             break;

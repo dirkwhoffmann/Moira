@@ -5052,6 +5052,66 @@ Moira::execCinv(u16 opcode)
     FINALIZE
 }
 
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execCpush(u16 opcode)
+{
+    AVAILABILITY(C68020)
+
+    execLineF<C, I, M, S>(opcode);
+
+    FINALIZE
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execMove16PiPi(u16 opcode)
+{
+    AVAILABILITY(C68020)
+
+    execLineF<C, I, M, S>(opcode);
+
+    FINALIZE
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execMove16PiAl(u16 opcode)
+{
+    AVAILABILITY(C68020)
+
+    execLineF<C, I, M, S>(opcode);
+
+    FINALIZE
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execMove16AlPi(u16 opcode)
+{
+    AVAILABILITY(C68020)
+
+    execLineF<C, I, M, S>(opcode);
+
+    FINALIZE
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execMove16AiAl(u16 opcode)
+{
+    AVAILABILITY(C68020)
+
+    execLineF<C, I, M, S>(opcode);
+
+    FINALIZE
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execMove16AlAi(u16 opcode)
+{
+    AVAILABILITY(C68020)
+
+    execLineF<C, I, M, S>(opcode);
+
+    FINALIZE
+}
+
 #undef AVAILABILITY
 #undef SUPERVISOR_MODE_ONLY
 #undef FINALIZE

@@ -117,8 +117,8 @@ typedef enum
     TRAPPL,     TRAPVC,     TRAPVS,     TRAPF,      TRAPT,      UNPK,
 
     // 68040+ instructions
-    CINV,
-
+    CINV,       CPUSH,      MOVE16,
+    
     // MMU instructions
     PFLUSH,     PFLUSHA,    PLOAD,      PMOVE,      PTEST,
 

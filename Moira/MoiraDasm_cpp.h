@@ -2189,21 +2189,68 @@ Moira::dasmCinv(StrWriter &str, u32 &addr, u16 op)
     }
 
     str << Av<I, M, S>{};
-    /*
-    switch((g_cpu_ir>>3)&3)
-    {
-        case 0:
-            sprintf(g_dasm_str, "cinv (illegal scope); (4)");
-            break;
-        case 1:
-            sprintf(g_dasm_str, "cinvl   %d, (A%d); (4)", (g_cpu_ir>>6)&3, g_cpu_ir&7);
-            break;
-        case 2:
-            sprintf(g_dasm_str, "cinvp   %d, (A%d); (4)", (g_cpu_ir>>6)&3, g_cpu_ir&7);
-            break;
-        case 3:
-            sprintf(g_dasm_str, "cinva   %d; (4)", (g_cpu_ir>>6)&3);
-            break;
-    }
-    */
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmCpush(StrWriter &str, u32 &addr, u16 op)
+{
+    dasmCinv<I, M, S>(str, addr, op);
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmMove16PiPi(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = dasmRead<Word>(addr);
+    auto ax  = _____________xxx(op);
+    auto ay  = _xxx____________(ext);
+
+    str << Ins<I>{} << tab << Op<MODE_PI>(ax, addr) << Sep{} << Op<MODE_PI>(ay, addr);
+    str << Av<I, M, S>{};
+    // sprintf(g_dasm_str, "move16  (A%d)+, (A%d)+; (4)", g_cpu_ir&7, (read_imm_16()>>12)&7);
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmMove16PiAl(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = dasmRead<Long>(addr);
+    auto ay  = _____________xxx(op);
+
+    str << Ins<I>{} << tab << Op<MODE_PI>(ay, addr) << Sep{} << Imu{ext};
+    str << Av<I, M, S>{};
+    // sprintf(g_dasm_str, "move16  (A%d)+, %s; (4)", g_cpu_ir&7, get_imm_str_u32());
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmMove16AlPi(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = dasmRead<Long>(addr);
+    auto ay  = _____________xxx(op);
+
+    str << Ins<I>{} << tab << Imu{ext} << Sep{} << Op<MODE_PI>(ay, addr);
+    str << Av<I, M, S>{};
+    // sprintf(g_dasm_str, "move16  %s, (A%d)+; (4)", get_imm_str_u32(), g_cpu_ir&7);
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmMove16AiAl(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = dasmRead<Long>(addr);
+    auto ay  = _____________xxx(op);
+
+    str << Ins<I>{} << tab << Op<MODE_AI>(ay, addr) << Sep{} << Imu{ext};
+    str << Av<I, M, S>{};
+
+    // sprintf(g_dasm_str, "move16  (A%d), %s; (4)", g_cpu_ir&7, get_imm_str_u32());
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmMove16AlAi(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = dasmRead<Long>(addr);
+    auto ay  = _____________xxx(op);
+
+    str << Ins<I>{} << tab << Imu{ext} << Sep{} << Op<MODE_AI>(ay, addr);
+    str << Av<I, M, S>{};
+
+    // sprintf(g_dasm_str, "move16  %s, (A%d); (4)", get_imm_str_u32(), g_cpu_ir&7);
 }

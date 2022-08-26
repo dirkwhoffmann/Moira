@@ -179,7 +179,12 @@ MOIRA_DECLARE(Fpu)
 
 // 68040
 MOIRA_DECLARE(Cinv)
-
+MOIRA_DECLARE(Cpush)
+MOIRA_DECLARE(Move16PiPi)
+MOIRA_DECLARE(Move16PiAl)
+MOIRA_DECLARE(Move16AlPi)
+MOIRA_DECLARE(Move16AiAl)
+MOIRA_DECLARE(Move16AlAi)
 
 // Sub handlers 
 template <Core C, Instr I, Mode M, Size S> void execMulsMoira(u16);

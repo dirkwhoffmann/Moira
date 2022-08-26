@@ -1956,15 +1956,50 @@ Moira::createJumpTable()
 
 
         //
-        // CINV
+        // 68040 instructions
         //
 
         if (model == M68040 || model == M68EC040 || model == M68LC040) {
+
+
+            //
+            // CINV
+            //
 
             opcode = parse("1111 0100 --0- ----");
             for (int i = 0; i < 4; i++) {
                 ___________XXXXX(opcode | i << 6, CINV, MODE_AI, Unsized, Cinv, CIMS)
             }
+
+
+            //
+            // CPUSH
+            //
+
+            opcode = parse("1111 0100 --1- ----");
+            for (int i = 0; i < 4; i++) {
+                ___________XXXXX(opcode | i << 6, CPUSH, MODE_AI, Unsized, Cpush, CIMS)
+            }
+
+
+            //
+            // MOVE16
+            //
+
+            opcode = parse("1111 0110 0010 0---");
+            _____________XXX(opcode, MOVE16, MODE_IP, Unsized, Move16PiPi, CIMS)
+
+            opcode = parse("1111 0110 0000 0---");
+            _____________XXX(opcode, MOVE16, MODE_IP, Unsized, Move16PiAl, CIMS)
+
+            opcode = parse("1111 0110 0000 1---");
+            _____________XXX(opcode, MOVE16, MODE_IP, Unsized, Move16AlPi, CIMS)
+
+            opcode = parse("1111 0110 0001 0---");
+            _____________XXX(opcode, MOVE16, MODE_IP, Unsized, Move16AiAl, CIMS)
+
+            opcode = parse("1111 0110 0001 1---");
+            _____________XXX(opcode, MOVE16, MODE_IP, Unsized, Move16AlAi, CIMS)
         }
     }
 }

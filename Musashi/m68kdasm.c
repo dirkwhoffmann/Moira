@@ -1607,7 +1607,7 @@ static void d68040_cpush(void)
 	switch((g_cpu_ir>>3)&3)
 	{
 		case 0:
-			sprintf(g_dasm_str, "cpush (illegal scope); (4)");
+			sprintf(g_dasm_str, "cpush   (illegal scope); (4)");
 			break;
 		case 1:
 			sprintf(g_dasm_str, "cpushl  %d, (A%d); (4)", (g_cpu_ir>>6)&3, g_cpu_ir&7);
@@ -3734,6 +3734,10 @@ static void build_opcode_table(void)
 			/* match opcode mask and allowed ea modes */
 			if((opcode & ostruct->mask) == ostruct->match)
 			{
+                if (i == 0xf448) {
+                    // printf("Matching callback for %x (%x, %x)\n", i, ostruct->mask, ostruct->match);
+                }
+
 				/* Handle destination ea for move instructions */
 				if((ostruct->opcode_handler == d68000_move_8 ||
 					 ostruct->opcode_handler == d68000_move_16 ||
@@ -3742,7 +3746,7 @@ static void build_opcode_table(void)
 						continue;
 				if(valid_ea(opcode, ostruct->ea_mask))
 				{
-                    if (i == 0xf600) {
+                    if (i == 0xf448) {
                         // printf("Installing callback for %x (%x, %x)\n", i, ostruct->mask, ostruct->match);
                     }
 					g_instruction_table[i] = ostruct->opcode_handler;
