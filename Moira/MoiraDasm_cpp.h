@@ -1939,29 +1939,29 @@ Moira::dasmFpu(StrWriter &str, u32 &addr, u16 op)
 
             switch (cmd) {
 
-                case 0x18: dasmFabs<FABS, M, S>(str, addr, op); return;
-                case 0x22: dasmFadd<FADD, M, S>(str, addr, op); return;
-                case 0x38: dasmFcmp<FCMP, M, S>(str, addr, op); return;
-                case 0x20: dasmFdiv<FDIV, M, S>(str, addr, op); return;
                 case 0x00: dasmFmove<FMOVE, M, S>(str, addr, op); return;
-                case 0x23: dasmFmul<FMUL, M, S>(str, addr, op); return;
-                case 0x1A: dasmFneg<FNEG, M, S>(str, addr, op); return;
-                case 0x04: dasmFsqrt<FSQRT, M, S>(str, addr, op); return;
-                case 0x28: dasmFsub<FSUB, M, S>(str, addr, op); return;
-                case 0x3A: dasmFtst<FTST, M, S>(str, addr, op); return;
-                case 0x58: dasmFsabs<FSABS, M, S>(str, addr, op); return;
-                case 0x5C: dasmFdabs<FDABS, M, S>(str, addr, op); return;
-                case 0x62: dasmFsadd<FSADD, M, S>(str, addr, op); return;
-                case 0x66: dasmFdadd<FDADD, M, S>(str, addr, op); return;
-                case 0x60: dasmFsdiv<FSDIV, M, S>(str, addr, op); return;
-                case 0x63: dasmFsmul<FSMUL, M, S>(str, addr, op); return;
-                case 0x67: dasmFdmul<FDMUL, M, S>(str, addr, op); return;
-                case 0x5A: dasmFsneg<FSNEG, M, S>(str, addr, op); return;
-                case 0x5E: dasmFdneg<FDNEG, M, S>(str, addr, op); return;
-                case 0x41: dasmFssqrt<FSSQRT, M, S>(str, addr, op); return;
-                case 0x45: dasmFdsqrt<FDSQRT, M, S>(str, addr, op); return;
-                case 0x68: dasmFssub<FSSUB, M, S>(str, addr, op); return;
-                case 0x6C: dasmFdsub<FDSUB, M, S>(str, addr, op); return;
+                case 0x04: dasmFgeneric<FSQRT, M, S>(str, addr, op); return;
+                case 0x18: dasmFgeneric<FABS, M, S>(str, addr, op); return;
+                case 0x1A: dasmFgeneric<FNEG, M, S>(str, addr, op); return;
+                case 0x20: dasmFgeneric<FDIV, M, S>(str, addr, op); return;
+                case 0x22: dasmFgeneric<FADD, M, S>(str, addr, op); return;
+                case 0x23: dasmFgeneric<FMUL, M, S>(str, addr, op); return;
+                case 0x28: dasmFgeneric<FSUB, M, S>(str, addr, op); return;
+                case 0x38: dasmFgeneric<FCMP, M, S>(str, addr, op); return;
+                case 0x3A: dasmFgeneric<FTST, M, S>(str, addr, op); return;
+                case 0x41: dasmFgeneric<FSSQRT, M, S>(str, addr, op); return;
+                case 0x45: dasmFgeneric<FDSQRT, M, S>(str, addr, op); return;
+                case 0x58: dasmFgeneric<FSABS, M, S>(str, addr, op); return;
+                case 0x5A: dasmFgeneric<FSNEG, M, S>(str, addr, op); return;
+                case 0x5C: dasmFgeneric<FDABS, M, S>(str, addr, op); return;
+                case 0x5E: dasmFgeneric<FDNEG, M, S>(str, addr, op); return;
+                case 0x62: dasmFgeneric<FSADD, M, S>(str, addr, op); return;
+                case 0x60: dasmFgeneric<FSDIV, M, S>(str, addr, op); return;
+                case 0x63: dasmFgeneric<FSMUL, M, S>(str, addr, op); return;
+                case 0x66: dasmFgeneric<FDADD, M, S>(str, addr, op); return;
+                case 0x67: dasmFgeneric<FDMUL, M, S>(str, addr, op); return;
+                case 0x68: dasmFgeneric<FSSUB, M, S>(str, addr, op); return;
+                case 0x6C: dasmFgeneric<FDSUB, M, S>(str, addr, op); return;
             }
             break;
 
@@ -2339,16 +2339,7 @@ Moira::dasmFscc(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmFsqrt(StrWriter &str, u32 &addr, u16 op)
 {
-    auto ext = dasmRead(addr);
-    auto reg = _____________xxx (op);
-    auto src = ___xxx__________ (ext);
-    auto dst = ______xxx_______ (ext);
-
-    if (ext & 0x4000) {
-        str << Ins<I>{} << Ffmt{src} << tab << Op<M, Long>(reg, addr) << Sep{} << Fp{dst};
-    } else {
-        str << Ins<I>{} << Ffmt{2} << tab << Fp{src} << Sep{} << Fp{dst};
-    }
+    str << "dasmFsqrt";
 }
 
 template <Instr I, Mode M, Size S> void
@@ -2463,6 +2454,21 @@ template <Instr I, Mode M, Size S> void
 Moira::dasmFdsub(StrWriter &str, u32 &addr, u16 op)
 {
     str << "dasmFdsub";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFgeneric(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = dasmRead(addr);
+    auto reg = _____________xxx (op);
+    auto src = ___xxx__________ (ext);
+    auto dst = ______xxx_______ (ext);
+
+    if (ext & 0x4000) {
+        str << Ins<I>{} << Ffmt{src} << tab << Op<M, Long>(reg, addr) << Sep{} << Fp{dst};
+    } else {
+        str << Ins<I>{} << Ffmt{2} << tab << Fp{src} << Sep{} << Fp{dst};
+    }
 }
 
 template <Instr I, Mode M, Size S> void

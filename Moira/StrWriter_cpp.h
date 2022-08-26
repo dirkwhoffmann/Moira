@@ -1200,7 +1200,6 @@ StrWriter::operator<<(Ffmt ffmt)
         case 4: *ptr++ = 'w'; break;
         case 5: *ptr++ = 'd'; break;
         case 6: *ptr++ = 'b'; break;
-        case 7: *ptr++ = 'p'; break;
 
         default:
             *ptr++ = '?';
