@@ -52,6 +52,21 @@ static const char *mnemonics[]
 
     // MMU
     "pflush",   "pflusha",  "pload",    "pmove",    "ptest"
+
+    // FPU
+    "fabs",     "fadd",     "fbcc",     "fcmp",     "fdbcc",    "fdiv",
+    "fmove",    "fmovem",   "fmul",     "fneg",     "fnop",     "frestore",
+    "fsave",    "fscc",     "fsqrt",    "fsub",     "ftrapcc",  "ftst",
+
+    "fsabs",    "fdabs",    "fsadd",    "fdadd",    "fsdiv",    "fddiv",
+    "fsmove",   "fdmove",   "fsmul",    "fdmul",    "fsneg",    "fdneg",
+    "fssqrt",   "fdsqrt",   "fsubb",    "fdsub",
+
+    "facos",    "fasin",    "fatan",    "fatanh",   "fcos",     "fcosh",
+    "fetox",    "fetoxm1",  "fgetexp",  "fgetman",  "fint",     "fintrz",
+    "flog10",   "flog2",    "flogn",    "fmod",     "fmovecr",  "frem",
+    "fscale",   "fsgldiv",  "fsglmul",  "fsin",     "fsincos",  "fsinh",
+    "ftan",     "ftanh",    "ftentox",  "ftwotox"
 };
 
 static int decDigits(u64 value) { return value ? 1 + (int)log10(value) : 1; }

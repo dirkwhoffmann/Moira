@@ -122,6 +122,23 @@ typedef enum
     // MMU instructions
     PFLUSH,     PFLUSHA,    PLOAD,      PMOVE,      PTEST,
 
+    // FPU instructions (68040 and 6888x)
+    FABS,       FADD,       FBcc,       FCMP,       FDBcc,      FDIV,
+    FMOVE,      FMOVEM,     FMUL,       FNEG,       FNOP,       FRESTORE,
+    FSAVE,      FScc,       FSQRT,      FSUB,       FTRAPcc,    FTST,
+
+    // FPU instructions (68040 only)
+    FSABS,      FDABS,      FSADD,      FDADD,      FSDIV,      FDDIV,
+    FSMOVE,     FDMOVE,     FSMUL,      FDMUL,      FSNEG,      FDNEG,
+    FSSQRT,     FDSQRT,     FSUBB,      FDSUB,
+
+    // FPU instructions (6888x only)
+    FACOS,      FASIN,      FATAN,      FATANH,     FCOS,       FCOSH,
+    FETOX,      FETOXM1,    FGETEXP,    FGETMAN,    FINT,       FINTRZ,
+    FLOG10,     FLOG2,      FLOGN,      FMOD,       FMOVECR,    FREM,
+    FSCALE,     FSGLDIV,    FSGLMUL,    FSIN,       FSINCOS,    FSINH,
+    FTAN,       FTANH,      FTENTOX,    FTWOTOX,
+
     // Loop mode variants (68010)
     ABCD_LOOP,  ADD_LOOP,   ADDA_LOOP,  ADDX_LOOP,  AND_LOOP,   ASL_LOOP,
     ASR_LOOP,   CLR_LOOP,   CMP_LOOP,   CMPA_LOOP,  DBCC_LOOP,  DBCS_LOOP,

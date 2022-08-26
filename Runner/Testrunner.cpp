@@ -213,7 +213,7 @@ void run()
     printf("It runs until a bug has been found.\n");
 
     // EXPERIMENTAL
-    dumpDasm();
+    // dumpDasm();
 
     selectModel(M68000);
     srand(3);

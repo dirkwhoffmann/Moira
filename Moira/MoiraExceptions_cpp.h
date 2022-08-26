@@ -174,13 +174,7 @@ Moira::execException(ExceptionType exc, int nr)
 
         case M68000:    execException<C68000>(exc, nr); break;
         case M68010:    execException<C68010>(exc, nr); break;
-        case M68EC020:
-        case M68020:
-        case M68EC030:
-        case M68030:    execException<C68020>(exc, nr); break;
-            
-        default:
-            assert(false);
+        default:        execException<C68020>(exc, nr); break;
     }
 }
 
@@ -322,13 +316,7 @@ Moira::execInterrupt(u8 level)
 
         case M68000:    execInterrupt<C68000>(level); break;
         case M68010:    execInterrupt<C68010>(level); break;
-        case M68EC020:
-        case M68020:
-        case M68EC030:
-        case M68030:    execInterrupt<C68020>(level); break;
-
-        default:
-            assert(false);
+        default:        execInterrupt<C68020>(level); break;
     }
 }
 

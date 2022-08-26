@@ -25,8 +25,7 @@ static constexpr bool PROFILE_CPU = true;
 static constexpr bool PROFILE_DASM = false;
 
 // Change to limit the range of executed instructions
-#define doExec(opcode) false
-// (opcode >= 0x0000 && opcode <= 0xEFFF)
+#define doExec(opcode) (opcode >= 0x0000 && opcode <= 0xEFFF)
 
 // Change to limit the range of disassembled instructions
 #define doDasm(opcode) (opcode >= 0x0000 && opcode <= 0xEFFF)

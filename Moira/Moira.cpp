@@ -142,9 +142,7 @@ Moira::cacrMask() const
 
         case M68020: case M68EC020: return 0x0003;
         case M68030: case M68EC030: return 0x3F13;
-
-        default:
-            return 0xFFFF;
+        default:                    return 0xFFFF;
     }
 }
 
