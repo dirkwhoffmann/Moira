@@ -64,9 +64,9 @@ static const char *mnemonics[]
 
     "facos",    "fasin",    "fatan",    "fatanh",   "fcos",     "fcosh",
     "fetox",    "fetoxm1",  "fgetexp",  "fgetman",  "fint",     "fintrz",
-    "flog10",   "flog2",    "flogn",    "fmod",     "fmovecr",  "frem",
-    "fscale",   "fsgldiv",  "fsglmul",  "fsin",     "fsincos",  "fsinh",
-    "ftan",     "ftanh",    "ftentox",  "ftwotox"
+    "flog10",   "flog2",    "flogn",    "flognp1",  "fmod",     "fmovecr",
+    "frem",     "fscale",   "fsgldiv",  "fsglmul",  "fsin",     "fsincos",
+    "fsinh",    "ftan",     "ftanh",    "ftentox",  "ftwotox"
 };
 
 static int decDigits(u64 value) { return value ? 1 + (int)log10(value) : 1; }

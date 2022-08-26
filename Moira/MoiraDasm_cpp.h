@@ -1921,32 +1921,62 @@ Moira::dasmFpu(StrWriter &str, u32 &addr, u16 op)
     auto cmd = _________xxxxxxx(ext);
     addr -= 2;
 
-    printf("dasmFpu(%x)\n", ext);
+    if ((ext & 0xFC00) == 0x5C00) {
 
-    // Dispatch instruction
+        dasmFmovecr<FMOVECR, M, S>(str, addr, op);
+        return;
+    }
+
     switch (cod) {
 
-        case 0b000:
-
-            if (ext == 0) {
-
-                dasmFnop<FNOP, M, S>(str, addr, op);
-                return;
-            }
-            [[fallthrough]];
-
         case 0b010:
+        case 0b000:
 
             switch (cmd) {
 
                 case 0x00: dasmFmove<FMOVE, M, S>(str, addr, op); return;
+                case 0x01: dasmFgeneric<FINT, M, S>(str, addr, op); return;
+                case 0x02: dasmFgeneric<FSINH, M, S>(str, addr, op); return;
+                case 0x03: dasmFgeneric<FINTRZ, M, S>(str, addr, op); return;
                 case 0x04: dasmFgeneric<FSQRT, M, S>(str, addr, op); return;
+                case 0x06: dasmFgeneric<FLOGNP1, M, S>(str, addr, op); return;
+                case 0x08: dasmFgeneric<FETOXM1, M, S>(str, addr, op); return;
+                case 0x09: dasmFgeneric<FTANH, M, S>(str, addr, op); return;
+                case 0x0A: dasmFgeneric<FATAN, M, S>(str, addr, op); return;
+                case 0x0C: dasmFgeneric<FASIN, M, S>(str, addr, op); return;
+                case 0x0D: dasmFgeneric<FATANH, M, S>(str, addr, op); return;
+                case 0x0E: dasmFgeneric<FSIN, M, S>(str, addr, op); return;
+                case 0x0F: dasmFgeneric<FTAN, M, S>(str, addr, op); return;
+                case 0x10: dasmFgeneric<FETOX, M, S>(str, addr, op); return;
+                case 0x11: dasmFgeneric<FTWOTOX, M, S>(str, addr, op); return;
+                case 0x12: dasmFgeneric<FTENTOX, M, S>(str, addr, op); return;
+                case 0x14: dasmFgeneric<FLOGN, M, S>(str, addr, op); return;
+                case 0x15: dasmFgeneric<FLOG10, M, S>(str, addr, op); return;
+                case 0x16: dasmFgeneric<FLOG2, M, S>(str, addr, op); return;
                 case 0x18: dasmFgeneric<FABS, M, S>(str, addr, op); return;
+                case 0x19: dasmFgeneric<FCOSH, M, S>(str, addr, op); return;
                 case 0x1A: dasmFgeneric<FNEG, M, S>(str, addr, op); return;
+                case 0x1C: dasmFgeneric<FACOS, M, S>(str, addr, op); return;
+                case 0x1D: dasmFgeneric<FCOS, M, S>(str, addr, op); return;
+                case 0x1E: dasmFgeneric<FGETEXP, M, S>(str, addr, op); return;
+                case 0x1F: dasmFgeneric<FGETMAN, M, S>(str, addr, op); return;
                 case 0x20: dasmFgeneric<FDIV, M, S>(str, addr, op); return;
+                case 0x21: dasmFgeneric<FMOD, M, S>(str, addr, op); return;
                 case 0x22: dasmFgeneric<FADD, M, S>(str, addr, op); return;
                 case 0x23: dasmFgeneric<FMUL, M, S>(str, addr, op); return;
+                case 0x24: dasmFgeneric<FSGLDIV, M, S>(str, addr, op); return;
+                case 0x25: dasmFgeneric<FREM, M, S>(str, addr, op); return;
+                case 0x26: dasmFgeneric<FSCALE, M, S>(str, addr, op); return;
+                case 0x27: dasmFgeneric<FSGLMUL, M, S>(str, addr, op); return;
                 case 0x28: dasmFgeneric<FSUB, M, S>(str, addr, op); return;
+                case 0x30: dasmFgeneric<FSINCOS, M, S>(str, addr, op); return;
+                case 0x31: dasmFgeneric<FSINCOS, M, S>(str, addr, op); return;
+                case 0x32: dasmFgeneric<FSINCOS, M, S>(str, addr, op); return;
+                case 0x33: dasmFgeneric<FSINCOS, M, S>(str, addr, op); return;
+                case 0x34: dasmFgeneric<FSINCOS, M, S>(str, addr, op); return;
+                case 0x35: dasmFgeneric<FSINCOS, M, S>(str, addr, op); return;
+                case 0x36: dasmFgeneric<FSINCOS, M, S>(str, addr, op); return;
+                case 0x37: dasmFgeneric<FSINCOS, M, S>(str, addr, op); return;
                 case 0x38: dasmFgeneric<FCMP, M, S>(str, addr, op); return;
                 case 0x3A: dasmFgeneric<FTST, M, S>(str, addr, op); return;
                 case 0x41: dasmFgeneric<FSSQRT, M, S>(str, addr, op); return;
@@ -1955,9 +1985,10 @@ Moira::dasmFpu(StrWriter &str, u32 &addr, u16 op)
                 case 0x5A: dasmFgeneric<FSNEG, M, S>(str, addr, op); return;
                 case 0x5C: dasmFgeneric<FDABS, M, S>(str, addr, op); return;
                 case 0x5E: dasmFgeneric<FDNEG, M, S>(str, addr, op); return;
-                case 0x62: dasmFgeneric<FSADD, M, S>(str, addr, op); return;
                 case 0x60: dasmFgeneric<FSDIV, M, S>(str, addr, op); return;
+                case 0x62: dasmFgeneric<FSADD, M, S>(str, addr, op); return;
                 case 0x63: dasmFgeneric<FSMUL, M, S>(str, addr, op); return;
+                case 0x64: dasmFgeneric<FDDIV, M, S>(str, addr, op); return;
                 case 0x66: dasmFgeneric<FDADD, M, S>(str, addr, op); return;
                 case 0x67: dasmFgeneric<FDMUL, M, S>(str, addr, op); return;
                 case 0x68: dasmFgeneric<FSSUB, M, S>(str, addr, op); return;
@@ -2210,39 +2241,15 @@ Moira::dasmFpu(StrWriter &str, u32 &addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
-Moira::dasmFabs(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFabs";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFadd(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFadd";
-}
-
-template <Instr I, Mode M, Size S> void
 Moira::dasmFbcc(StrWriter &str, u32 &addr, u16 op)
 {
     str << "dasmFbcc";
 }
 
 template <Instr I, Mode M, Size S> void
-Moira::dasmFcmp(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFcmp";
-}
-
-template <Instr I, Mode M, Size S> void
 Moira::dasmFdbcc(StrWriter &str, u32 &addr, u16 op)
 {
     str << "dasmFdbcc";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFdiv(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFdiv";
 }
 
 template <Instr I, Mode M, Size S> void
@@ -2255,6 +2262,12 @@ Moira::dasmFmove(StrWriter &str, u32 &addr, u16 op)
     auto cod = xxx_____________ (ext);
     auto src = ___xxx__________ (ext);
     auto dst = ______xxx_______ (ext);
+
+    if (ext == 0) {
+
+        str << Ins<FNOP>{};
+        return;
+    }
 
     switch (cod) {
 
@@ -2295,27 +2308,19 @@ Moira::dasmFmove(StrWriter &str, u32 &addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
+Moira::dasmFmovecr(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = dasmRead(addr);
+    auto dst = ______xxx_______ (ext);
+    auto ofs = _________xxxxxxx (ext);
+
+    str << Ins<I>{} << Ffmt{2} << tab << Imu{ofs} << Sep{} << Fp{dst};
+}
+
+template <Instr I, Mode M, Size S> void
 Moira::dasmFmovem(StrWriter &str, u32 &addr, u16 op)
 {
     str << "dasmFmovem";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFmul(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFmul";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFneg(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFneg";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFnop(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFnop";
 }
 
 template <Instr I, Mode M, Size S> void
@@ -2337,123 +2342,9 @@ Moira::dasmFscc(StrWriter &str, u32 &addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
-Moira::dasmFsqrt(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFsqrt";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFsub(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFsub";
-}
-
-template <Instr I, Mode M, Size S> void
 Moira::dasmFtrapcc(StrWriter &str, u32 &addr, u16 op)
 {
     str << "dasmTrapcc";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFtst(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFtst";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFsabs(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFsabs";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFdabs(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFdabs";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFsadd(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFsadd";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFdadd(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFdadd";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFsdiv(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFsdiv";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFddiv(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFddiv";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFsmove(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFsmove";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFdmove(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFdmove";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFsmul(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFsmul";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFdmul(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFdmul";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFsneg(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFsneg";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFdneg(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFdneg";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFssqrt(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFssqrt";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFdsqrt(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFdsqrt";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFssub(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFssub";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFdsub(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFdsub";
 }
 
 template <Instr I, Mode M, Size S> void

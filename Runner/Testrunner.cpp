@@ -842,9 +842,9 @@ void dumpDasm()
 
     for (int op = 0xF200; op <= 0xF200; op++) {
 
-        for (int i = 0x0000; i <= 0x07F; i++) {
+        for (int i = 0x0000; i <= 0x0FF; i++) {
 
-            u16 ext = (rand() & 0x5F80) | i;
+            u16 ext = (rand() & 0x5F00) | i;
             s.ext1 = ext;
             setupTestInstruction(s, pc, u16(op));
 
@@ -887,7 +887,7 @@ void dumpDasm()
                 sprintf(r.dasmMIT, "%-7s %s", opcode, operands);
             }
 
-            printf("%5ld: %04X %04x: Moira:   [%d] %s\n", nr++, op, ext, r.dasmCntMoira, r.dasmMoira);
+            printf("%5lx: %04X %04x: Moira:   [%d] %s\n", nr++, op, ext, r.dasmCntMoira, r.dasmMoira);
             printf("                  Musashi: [%d] %s\n", r.dasmCntMusashi, r.dasmMusashi);
             printf("                  vda68k:  [%d] %s\n", r.dasmCntMoto, r.dasmMoto);
             printf("                           [%d] %s\n\n", r.dasmCntMIT, r.dasmMIT);

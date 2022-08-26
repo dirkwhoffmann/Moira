@@ -135,9 +135,9 @@ typedef enum
     // FPU instructions (6888x only)
     FACOS,      FASIN,      FATAN,      FATANH,     FCOS,       FCOSH,
     FETOX,      FETOXM1,    FGETEXP,    FGETMAN,    FINT,       FINTRZ,
-    FLOG10,     FLOG2,      FLOGN,      FMOD,       FMOVECR,    FREM,
-    FSCALE,     FSGLDIV,    FSGLMUL,    FSIN,       FSINCOS,    FSINH,
-    FTAN,       FTANH,      FTENTOX,    FTWOTOX,
+    FLOG10,     FLOG2,      FLOGN,      FLOGNP1,    FMOD,       FMOVECR,
+    FREM,       FSCALE,     FSGLDIV,    FSGLMUL,    FSIN,       FSINCOS,
+    FSINH,      FTAN,       FTANH,      FTENTOX,    FTWOTOX,
 
     // Loop mode variants (68010)
     ABCD_LOOP,  ADD_LOOP,   ADDA_LOOP,  ADDX_LOOP,  AND_LOOP,   ASL_LOOP,
