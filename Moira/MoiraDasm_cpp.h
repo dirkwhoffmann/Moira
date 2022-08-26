@@ -1916,11 +1916,75 @@ Moira::dasmPTest(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmFpu(StrWriter &str, u32 &addr, u16 op)
 {
-    auto reg  = _____________xxx(op);
-    
+    auto ext = dasmRead<Word>(addr);
+    auto cod = xxx_____________(ext);
+    auto cmd = _________xxxxxxx(ext);
+    addr -= 2;
+
+    printf("dasmFpu(%x)\n", ext);
+
+    // Dispatch instruction
+    switch (cod) {
+
+        case 0b000:
+
+            if (ext == 0) {
+
+                dasmFnop<FNOP, M, S>(str, addr, op);
+                return;
+            }
+            [[fallthrough]];
+
+        case 0b010:
+
+            switch (cmd) {
+
+                case 0x18: dasmFabs<FABS, M, S>(str, addr, op); return;
+                case 0x22: dasmFadd<FADD, M, S>(str, addr, op); return;
+                case 0x38: dasmFcmp<FCMP, M, S>(str, addr, op); return;
+                case 0x20: dasmFdiv<FDIV, M, S>(str, addr, op); return;
+                case 0x00: dasmFmove<FMOVE, M, S>(str, addr, op); return;
+                case 0x23: dasmFmul<FMUL, M, S>(str, addr, op); return;
+                case 0x1A: dasmFneg<FNEG, M, S>(str, addr, op); return;
+                case 0x04: dasmFsqrt<FSQRT, M, S>(str, addr, op); return;
+                case 0x28: dasmFsub<FSUB, M, S>(str, addr, op); return;
+                case 0x3A: dasmFtst<FTST, M, S>(str, addr, op); return;
+                case 0x58: dasmFsabs<FSABS, M, S>(str, addr, op); return;
+                case 0x5C: dasmFdabs<FDABS, M, S>(str, addr, op); return;
+                case 0x62: dasmFsadd<FSADD, M, S>(str, addr, op); return;
+                case 0x66: dasmFdadd<FDADD, M, S>(str, addr, op); return;
+                case 0x60: dasmFsdiv<FSDIV, M, S>(str, addr, op); return;
+                case 0x63: dasmFsmul<FSMUL, M, S>(str, addr, op); return;
+                case 0x67: dasmFdmul<FDMUL, M, S>(str, addr, op); return;
+                case 0x5A: dasmFsneg<FSNEG, M, S>(str, addr, op); return;
+                case 0x5E: dasmFdneg<FDNEG, M, S>(str, addr, op); return;
+                case 0x41: dasmFssqrt<FSSQRT, M, S>(str, addr, op); return;
+                case 0x45: dasmFdsqrt<FDSQRT, M, S>(str, addr, op); return;
+                case 0x68: dasmFssub<FSSUB, M, S>(str, addr, op); return;
+                case 0x6C: dasmFdsub<FDSUB, M, S>(str, addr, op); return;
+            }
+            break;
+
+        case 0b011:
+
+            dasmFmove<FMOVE, M, S>(str, addr, op);
+            return;
+
+        case 0b100:
+        case 0b101:
+        case 0b110:
+        case 0b111:
+
+            dasmFmovem<FMOVE, M, S>(str, addr, op);
+            return;
+    }
+
+    dasmLineF<I, M, S>(str, addr, op);
+
+    /*
+
     // Ported from Musashi.
     // TODO: CLEANUP
-
     static const char float_data_format[8][3] =
     {
         ".l", ".s", ".x", ".p", ".w", ".d", ".b", ".p"
@@ -2010,7 +2074,6 @@ Moira::dasmFpu(StrWriter &str, u32 &addr, u16 op)
 
             if (w2 & 0x4000) {
 
-
                 str << mnemonic << float_data_format[src] << Op<M, Long>(reg, addr);
 
             } else {
@@ -2049,11 +2112,6 @@ Moira::dasmFpu(StrWriter &str, u32 &addr, u16 op)
             if (w2 & 0x1000) str << "fpcr";
             if (w2 & 0x0800) str << "/fpsr";
             if (w2 & 0x0400) str << "/fpiar";
-            /* sprintf(g_dasm_str, "fmovem.l   %s, ", get_ea_mode_str_32(g_cpu_ir));
-            if (w2 & 0x1000) strcat(g_dasm_str, "fpcr");
-            if (w2 & 0x0800) strcat(g_dasm_str, "/fpsr");
-            if (w2 & 0x0400) strcat(g_dasm_str, "/fpiar");
-            */
             break;
         }
 
@@ -2064,14 +2122,6 @@ Moira::dasmFpu(StrWriter &str, u32 &addr, u16 op)
             if (w2 & 0x0800) str << "/fpsr";
             if (w2 & 0x0400) str << "/fpiar";
             str << Sep{} << Op<M, Long>(reg, addr);
-            /*
-            strcpy(g_dasm_str, "fmovem.l   ");
-            if (w2 & 0x1000) strcat(g_dasm_str, "fpcr");
-            if (w2 & 0x0800) strcat(g_dasm_str, "/fpsr");
-            if (w2 & 0x0400) strcat(g_dasm_str, "/fpiar");
-            strcat(g_dasm_str, ", ");
-            strcat(g_dasm_str, get_ea_mode_str_32(g_cpu_ir));
-            */
             break;
         }
 
@@ -2156,6 +2206,263 @@ Moira::dasmFpu(StrWriter &str, u32 &addr, u16 op)
             break;
         }
     }
+    */
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFabs(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFabs";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFadd(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFadd";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFbcc(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFbcc";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFcmp(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFcmp";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFdbcc(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFdbcc";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFdiv(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFdiv";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFmove(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = dasmRead(addr);
+    addr -= 2;
+
+    auto reg = _____________xxx (op);
+    auto cod = xxx_____________ (ext);
+    auto src = ___xxx__________ (ext);
+    auto dst = ______xxx_______ (ext);
+
+    switch (cod) {
+
+        case 0b000:
+
+            str << Ins<I>{} << Ffmt{src} << tab << Fp(src) << src << Sep{} << Fp(dst);
+            break;
+
+        case 0b010:
+
+            str << Ins<I>{} << Ffmt{src} << tab << Op<M, Long>(reg, addr) << Sep{} << Fp(dst);
+            break;
+
+        case 0b011:
+
+            str << "TODO";
+            break;
+            /*
+    switch ((w2>>10)&7)
+    {
+        case 3:        // packed decimal w/fixed k-factor
+            str << "fmove" << float_data_format[(w2>>10)&7] << tab << "FP1" << dst_reg << Sep{} << Op<M, Long>(reg, addr) << "sext_7bit_int(w2&0x7f)";
+            // sprintf(g_dasm_str, "fmove%s   FP%d, %s {#%d}", float_data_format[(w2>>10)&7], dst_reg, get_ea_mode_str_32(g_cpu_ir), sext_7bit_int(w2&0x7f));
+            break;
+
+        case 7:        // packed decimal w/dynamic k-factor (register)
+            str << "fmove" << float_data_format[(w2>>10)&7] << tab << "F" << dst_reg << Sep{} << Op<M, Long>(reg, addr) << "{" << Dn((w2>>4)&7) << "}";
+            // sprintf(g_dasm_str, "fmove%s   FP%d, %s {D%d}", float_data_format[(w2>>10)&7], dst_reg, get_ea_mode_str_32(g_cpu_ir), (w2>>4)&7);
+            break;
+
+        default:
+            str << "fmove" << float_data_format[(w2>>10)&7] << tab << "FP3" << dst_reg << Sep{} << Op<M, Long>(reg, addr);
+            // sprintf(g_dasm_str, "fmove%s   FP%d, %s", float_data_format[(w2>>10)&7], dst_reg, get_ea_mode_str_32(g_cpu_ir));
+            break;
+    }
+             */
+    }
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFmovem(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFmovem";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFmul(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFmul";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFneg(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFneg";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFnop(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFnop";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFrestore(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFrestore";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFsave(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFsave";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFscc(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFscc";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFsqrt(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = dasmRead(addr);
+    auto reg = _____________xxx (op);
+    auto src = ___xxx__________ (ext);
+    auto dst = ______xxx_______ (ext);
+
+    if (ext & 0x4000) {
+        str << Ins<I>{} << Ffmt{src} << tab << Op<M, Long>(reg, addr) << Sep{} << Fp{dst};
+    } else {
+        str << Ins<I>{} << Ffmt{2} << tab << Fp{src} << Sep{} << Fp{dst};
+    }
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFsub(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFsub";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFtrapcc(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmTrapcc";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFtst(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFtst";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFsabs(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFsabs";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFdabs(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFdabs";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFsadd(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFsadd";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFdadd(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFdadd";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFsdiv(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFsdiv";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFddiv(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFddiv";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFsmove(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFsmove";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFdmove(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFdmove";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFsmul(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFsmul";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFdmul(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFdmul";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFsneg(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFsneg";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFdneg(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFdneg";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFssqrt(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFssqrt";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFdsqrt(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFdsqrt";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFssub(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFssub";
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFdsub(StrWriter &str, u32 &addr, u16 op)
+{
+    str << "dasmFdsub";
 }
 
 template <Instr I, Mode M, Size S> void

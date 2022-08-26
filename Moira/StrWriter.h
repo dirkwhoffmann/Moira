@@ -72,6 +72,10 @@ struct Scale { int raw; Scale(int v) : raw(v) { } };
 // MMU
 struct Fc { int raw; Fc(int v) : raw(v) { } };
 
+// FPU
+struct Fp { int raw; Fp(int v) : raw(v) { } };
+struct Ffmt { int raw; Ffmt(int v) : raw(v) { } };
+
 // Indentation
 struct Tab { int raw;  Tab(int v) : raw(v) { } };
 struct Sep { };
@@ -151,6 +155,9 @@ public:
     template <Mode M, Size S> StrWriter& operator<<(Ip<M,S>);
 
     StrWriter& operator<<(Fc);
+
+    StrWriter& operator<<(Fp);
+    StrWriter& operator<<(Ffmt);
 
     StrWriter& operator<<(Scale);
 

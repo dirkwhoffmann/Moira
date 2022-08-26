@@ -51,7 +51,7 @@ static const char *mnemonics[]
     "cinv",     "cpush",    "move16",
 
     // MMU
-    "pflush",   "pflusha",  "pload",    "pmove",    "ptest"
+    "pflush",   "pflusha",  "pload",    "pmove",    "ptest",
 
     // FPU
     "fabs",     "fadd",     "fbcc",     "fcmp",     "fdbcc",    "fdiv",
@@ -60,7 +60,7 @@ static const char *mnemonics[]
 
     "fsabs",    "fdabs",    "fsadd",    "fdadd",    "fsdiv",    "fddiv",
     "fsmove",   "fdmove",   "fsmul",    "fdmul",    "fsneg",    "fdneg",
-    "fssqrt",   "fdsqrt",   "fsubb",    "fdsub",
+    "fssqrt",   "fdsqrt",   "fssub",    "fdsub",
 
     "facos",    "fasin",    "fatan",    "fatanh",   "fcos",     "fcosh",
     "fetox",    "fetoxm1",  "fgetexp",  "fgetman",  "fint",     "fintrz",
@@ -1156,6 +1156,54 @@ StrWriter::operator<<(Fc fc)
         *this << "dfc";
     } else {
         *this << "sfc";
+    }
+
+    return *this;
+}
+
+StrWriter&
+StrWriter::operator<<(Fp fp)
+{
+    switch (style) {
+
+        case DASM_MOIRA:
+        case DASM_MUSASHI:
+
+            *ptr++ = 'F';
+            *ptr++ = 'P';
+            *ptr++ = '0' + (char)fp.raw;
+            break;
+
+        case DASM_VDA68K_MOT:
+        case DASM_VDA68K_MIT:
+
+            *ptr++ = 'f';
+            *ptr++ = 'p';
+            *ptr++ = '0' + (char)fp.raw;
+            break;
+    }
+
+    return *this;
+}
+
+StrWriter&
+StrWriter::operator<<(Ffmt ffmt)
+{
+    *ptr++ = '.';
+
+    switch (ffmt.raw) {
+
+        case 0: *ptr++ = 'l'; break;
+        case 1: *ptr++ = 's'; break;
+        case 2: *ptr++ = 'x'; break;
+        case 3: *ptr++ = 'p'; break;
+        case 4: *ptr++ = 'w'; break;
+        case 5: *ptr++ = 'd'; break;
+        case 6: *ptr++ = 'b'; break;
+        case 7: *ptr++ = 'p'; break;
+
+        default:
+            *ptr++ = '?';
     }
 
     return *this;

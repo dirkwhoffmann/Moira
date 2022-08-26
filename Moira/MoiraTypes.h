@@ -130,7 +130,7 @@ typedef enum
     // FPU instructions (68040 only)
     FSABS,      FDABS,      FSADD,      FDADD,      FSDIV,      FDDIV,
     FSMOVE,     FDMOVE,     FSMUL,      FDMUL,      FSNEG,      FDNEG,
-    FSSQRT,     FDSQRT,     FSUBB,      FDSUB,
+    FSSQRT,     FDSQRT,     FSSUB,      FDSUB,
 
     // FPU instructions (6888x only)
     FACOS,      FASIN,      FATAN,      FATANH,     FCOS,       FCOSH,
