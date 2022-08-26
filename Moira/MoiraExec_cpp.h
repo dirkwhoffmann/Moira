@@ -5042,6 +5042,16 @@ Moira::execFpu(u16 opcode)
     execLineF<C, I, M, S>(opcode);
 }
 
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execCinv(u16 opcode)
+{
+    AVAILABILITY(C68020)
+
+    execLineF<C, I, M, S>(opcode);
+
+    FINALIZE
+}
+
 #undef AVAILABILITY
 #undef SUPERVISOR_MODE_ONLY
 #undef FINALIZE

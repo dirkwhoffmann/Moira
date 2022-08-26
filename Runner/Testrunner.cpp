@@ -628,11 +628,11 @@ bool compareDasm(Result &r1, Result &r2)
 
         case moira::M68EC020:
         case moira::M68020:
+        case moira::M68EC030:
 
             skipMusashi |= (((r1.opcode & 0xfe00) == 0xf000) ); // MMU
             [[fallthrough]];
 
-        case moira::M68EC030:
         case moira::M68030:
 
             skipMusashi |= (((r1.opcode & 0xfe00) == 0xf200) || // FPU
@@ -646,10 +646,26 @@ bool compareDasm(Result &r1, Result &r2)
             break;
 
         case moira::M68EC040:
+
+            skipMusashi |= (((r1.opcode & 0xfe00) == 0xf000) || // MMU
+                            ((r1.opcode & 0xfe00) == 0xf200) || // FPU
+                            ((r1.opcode & 0xf1c0) == 0xf140) || // cpRestore
+                            ((r1.opcode & 0xf1c0) == 0xf100) ); // cpSave
+            break;
+
         case moira::M68LC040:
+
+            skipMusashi |= (((r1.opcode & 0xfe00) == 0xf200) || // FPU
+                            ((r1.opcode & 0xff00) == 0xf000) || // 0cp
+                            ((r1.opcode & 0xf1c0) == 0xf140) || // cpRestore
+                            ((r1.opcode & 0xf1c0) == 0xf100) ); // cpSave
+            break;
+
         case moira::M68040:
 
-            if (((r1.opcode & 0xff00) == 0xf000) ) skipMusashi = true;
+            skipMusashi |= (((r1.opcode & 0xff00) == 0xf000) || // 0cp
+                            ((r1.opcode & 0xf1c0) == 0xf140) || // cpRestore
+                            ((r1.opcode & 0xf1c0) == 0xf100) ); // cpSave
             break;
 
         default:

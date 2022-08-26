@@ -116,7 +116,10 @@ typedef enum
     TRAPHI,     TRAPLE,     TRAPLS,     TRAPLT,     TRAPMI,     TRAPNE,
     TRAPPL,     TRAPVC,     TRAPVS,     TRAPF,      TRAPT,      UNPK,
 
-    // MMU instructions (68030)
+    // 68040+ instructions
+    CINV,
+
+    // MMU instructions
     PFLUSH,     PFLUSHA,    PLOAD,      PMOVE,      PTEST,
 
     // Loop mode variants (68010)

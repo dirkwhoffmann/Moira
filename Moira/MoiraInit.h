@@ -177,6 +177,10 @@ MOIRA_DECLARE(PTest)
 // FPU
 MOIRA_DECLARE(Fpu)
 
+// 68040
+MOIRA_DECLARE(Cinv)
+
+
 // Sub handlers 
 template <Core C, Instr I, Mode M, Size S> void execMulsMoira(u16);
 template <Core C, Instr I, Mode M, Size S> void execMuluMoira(u16);

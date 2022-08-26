@@ -1937,7 +1937,9 @@ Moira::createJumpTable()
 
         if (hasMMU()) {
 
-
+            opcode = parse("1111 0000 00-- ----");
+            __________XXXXXX(opcode, LINE_F, MODE_IP, Unsized, MMU, CIMS)
+            __________MMMXXX(opcode, LINE_F, 0b111111111111, Unsized, MMU, CIMS)
         }
 
 
@@ -1952,6 +1954,18 @@ Moira::createJumpTable()
             __________MMMXXX(opcode, cpScc, 0b101111111111, Unsized, Fpu, CIMS)
         }
 
+
+        //
+        // CINV
+        //
+
+        if (model == M68040 || model == M68EC040 || model == M68LC040) {
+
+            opcode = parse("1111 0100 --0- ----");
+            for (int i = 0; i < 4; i++) {
+                ___________XXXXX(opcode | i << 6, CINV, MODE_AI, Unsized, Cinv, CIMS)
+            }
+        }
     }
 }
 

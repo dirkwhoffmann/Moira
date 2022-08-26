@@ -1360,7 +1360,7 @@ static void d68040_cinv(void)
 	switch((g_cpu_ir>>3)&3)
 	{
 		case 0:
-			sprintf(g_dasm_str, "cinv (illegal scope); (4)");
+			sprintf(g_dasm_str, "cinv    (illegal scope); (4)");
 			break;
 		case 1:
 			sprintf(g_dasm_str, "cinvl   %d, (A%d); (4)", (g_cpu_ir>>6)&3, g_cpu_ir&7);

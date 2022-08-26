@@ -1699,6 +1699,7 @@ Moira::dasmMMU(StrWriter &str, u32 &addr, u16 op)
     // PFLUSHR: 1010 0000 0000 0000
 
     auto ext = dasmRead<Word>(addr);
+    addr -= 2;
 
     // PLOAD
     if ((ext & 0xFDE0) == 0x2000) {
@@ -1751,7 +1752,6 @@ Moira::dasmMMU(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmPFlush(StrWriter &str, u32 &addr, u16 op)
 {
-    addr -= 2;
     auto ext = dasmRead<Word>(addr);
 
     if ((ext & 0xE200) == 0x2000) { // PFLUSH
@@ -1800,7 +1800,6 @@ Moira::dasmPLoad(StrWriter &str, u32 &addr, u16 op)
     
     auto ea = Op <M,S> ( _____________xxx(op), addr );
 
-    addr -= 2;
     auto ext = dasmRead<Word>(addr);
 
     switch (str.style) {
@@ -1833,7 +1832,6 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
     const char *const mmuregs[8] =
     { "tc", "drp", "srp", "crp", "cal", "val", "sccr", "acr" };
 
-    addr -= 2;
     auto ext = dasmRead<Word>(addr);
     const char *suffix = (ext & 0x100) ? "fd" : "";
 
@@ -2158,4 +2156,54 @@ Moira::dasmFpu(StrWriter &str, u32 &addr, u16 op)
             break;
         }
     }
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmCinv(StrWriter &str, u32 &addr, u16 op)
+{
+    auto reg   = _____________xxx(op);
+    auto scope = ___________xx___(op);
+    auto cache = ________xx______(op);
+
+    switch (scope) {
+
+        case 0b00:
+
+            str << Ins<I>{} << tab << "(illegal scope)";
+            break;
+
+        case 0b01:
+
+            str << Ins<I>{} << "l" << tab << cache << Sep{} << Op<M, Long>(reg, addr);
+            break;
+
+        case 0b10:
+
+            str << Ins<I>{} << "p" << tab << cache << Sep{} << Op<M, Long>(reg, addr);
+            break;
+
+        case 0b11:
+
+            str << Ins<I>{} << "a" << tab << cache;
+            break;
+    }
+
+    str << Av<I, M, S>{};
+    /*
+    switch((g_cpu_ir>>3)&3)
+    {
+        case 0:
+            sprintf(g_dasm_str, "cinv (illegal scope); (4)");
+            break;
+        case 1:
+            sprintf(g_dasm_str, "cinvl   %d, (A%d); (4)", (g_cpu_ir>>6)&3, g_cpu_ir&7);
+            break;
+        case 2:
+            sprintf(g_dasm_str, "cinvp   %d, (A%d); (4)", (g_cpu_ir>>6)&3, g_cpu_ir&7);
+            break;
+        case 3:
+            sprintf(g_dasm_str, "cinva   %d; (4)", (g_cpu_ir>>6)&3);
+            break;
+    }
+    */
 }
