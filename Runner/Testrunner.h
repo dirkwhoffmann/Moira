@@ -94,6 +94,8 @@ struct Result {
     u32     dfc;
     u32     cacr;
     u32     caar;
+    char    dasmMoira[128];
+    int     dasmCntMoira;
     char    dasmMusashi[128];
     int     dasmCntMusashi;
     char    dasmMoto[128];

@@ -268,6 +268,8 @@ void runSingleTest(Setup &s)
 {
     Result mur, mor;
 
+    u16 opcode = s.opcode;
+
     // Prepare
     resetMusashi(s);
     resetM68k(s);
@@ -288,6 +290,15 @@ void runSingleTest(Setup &s)
 
     // Compare
     compare(s, mur, mor);
+
+    // Print some debug output if requested
+    if (DUMP_DASM) {
+
+        printf("$%04X: Moira:   [%d] %s\n", mor.opcode, mor.dasmCntMoira, mor.dasmMoira);
+        printf("       Musashi: [%d] %s\n", mur.dasmCntMusashi, mur.dasmMusashi);
+        printf("       vda68k:  [%d] %s\n", mur.dasmCntMoto, mur.dasmMoto);
+        printf("                [%d] %s\n\n", mur.dasmCntMIT, mur.dasmMIT);
+    }
 }
 
 void runM68k(Setup &s, Result &r)
@@ -353,7 +364,11 @@ void runMoira(Setup &s, Result &r)
     r.opcode = get16(moiraMem, r.oldpc);
     r.elapsed[0] = r.elapsed[1] = 0;
 
-    // Run the Moira disassembler
+    // Disassemble the instruction in Moira format
+    moiracpu->setDasmStyle(DASM_MOIRA);
+    moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16, .plainZero = true });
+    r.dasmCntMoira = moiracpu->disassemble(r.oldpc, r.dasmMoira);
+
     if (doDasm(r.opcode)) {
 
         // Disassemble the instruction in Musashi format
@@ -365,12 +380,12 @@ void runMoira(Setup &s, Result &r)
 
         // Disassemble the instruction in Vda68k Motorola format
         moiracpu->setDasmStyle(DASM_VDA68K_MOT);
-        moiracpu->setDasmNumberFormat({ .prefix="0x", .radix=16, .plainZero=true });
+        moiracpu->setDasmNumberFormat({ .prefix = "0x", .radix = 16, .plainZero = true });
         r.dasmCntMoto = moiracpu->disassemble(r.oldpc, r.dasmMoto);
 
         // Disassemble the instruction in Vda68k MIT format
         moiracpu->setDasmStyle(DASM_VDA68K_MIT);
-        moiracpu->setDasmNumberFormat({ .prefix="0x", .radix=16, .plainZero=true });
+        moiracpu->setDasmNumberFormat({ .prefix = "0x", .radix = 16, .plainZero = true });
         r.dasmCntMIT = moiracpu->disassemble(r.oldpc, r.dasmMIT);
     }
 
