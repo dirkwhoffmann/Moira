@@ -612,19 +612,10 @@ Moira::dasmCpBcc(StrWriter &str, u32 &addr, u16 op)
     auto id   = ( ____xxx_________(op) );
     auto cnd  = ( __________xxxxxx(op) );
 
-    if (id == 2 && str.style == DASM_MUSASHI) {
-
-        // Mimic Musashi bug
-        dasmLineF<I, M, S>(str, addr, op);
-        return;
-    }
-
     if (id == 0) {
 
         auto pc   = addr + 2;
         auto disp = dasmRead<S>(addr);
-        // auto ext1 = dasmRead<Word>(addr);
-        // auto ext2 = dasmRead<Word>(addr);
 
         pc += SEXT<S>(disp);
 

@@ -840,11 +840,12 @@ void dumpDasm()
 
     // Iterate through all opcodes
 
-    for (int op = 0xF200; op <= 0xF200; op++) {
+    // for (int op = 0xF200; op <= 0xF200; op++) {
+    for (int op = 0xF200; op <= 0xF2FF; op++) {
 
-        for (int i = 0x0000; i <= 0xFF; i++) {
+        for (int i = 0x00; i <= 0x00; i++) {
 
-            // u16 ext = (rand() & 0x5F00) | i;
+            // u16 ext = 0xF200 | i;
             u16 ext = 0xE000 | (rand() & 0x1FFF);
             s.ext1 = ext;
             setupTestInstruction(s, pc, u16(op));
