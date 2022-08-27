@@ -45,7 +45,7 @@ protected:
     IrqMode irqMode = IRQ_AUTO;
     
     // The selected disassembler syntax
-    DasmStyle style = DASM_MOIRA;
+    DasmStyle style = DASM_MOIRA_MOT;
 
     // The number format used by the disassembler
     DasmNumberFormat numberFormat { .prefix = "$", .radix = 16 };

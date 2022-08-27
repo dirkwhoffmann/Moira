@@ -819,16 +819,11 @@ void bugReport()
 
 void dumpDasm()
 {
-    /*
-    struct vda68k::DisasmPara_68k m68k_dp;
-    char m68k_opcode[16];
-    char m68k_operands[128];
-    char m68k_iwordbuf[32];
-    char m68k_tmpbuf[8];
-    */
+    char    dasm[5][128];
+    int     dasmCnt[5];
 
     Setup s;
-    Result r;
+    // Result r;
 
     selectModel(M68040);
     setupM68k();
@@ -854,10 +849,15 @@ void dumpDasm()
             resetM68k(s);
             resetMoira(s);
 
-            // Disassemble the instruction in Moira format
-            moiracpu->setDasmStyle(DASM_MOIRA);
+            // Disassemble the instruction in Moira Motorola syntax
+            moiracpu->setDasmStyle(DASM_MOIRA_MOT);
             moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16, .plainZero = true });
-            r.dasmCntMoira = moiracpu->disassemble(pc, r.dasmMoira);
+            dasmCnt[0] = moiracpu->disassemble(pc, dasm[0]);
+
+            // Disassemble the instruction in Moira MIT syntax
+            moiracpu->setDasmStyle(DASM_MOIRA_MIT);
+            moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16, .plainZero = true });
+            dasmCnt[1] = moiracpu->disassemble(pc, dasm[1]);
 
             // Run the Musashi disassembler
             auto type =
@@ -869,30 +869,31 @@ void dumpDasm()
             cpuModel == M68030   ? M68K_CPU_TYPE_68030 :
             cpuModel == M68EC040 ? M68K_CPU_TYPE_68EC040 :
             cpuModel == M68LC040 ? M68K_CPU_TYPE_68LC040 : M68K_CPU_TYPE_68040;
-            r.dasmCntMusashi = m68k_disassemble(r.dasmMusashi, s.pc, type);
+            dasmCnt[2] = m68k_disassemble(dasm[2], s.pc, type);
 
             // Run m86k disassembler in Motorola syntax
             auto n1 = M68k_Disassemble(&dp) - dp.instr;
-            r.dasmCntMoto = 2 * n1;
+            dasmCnt[3] = 2 * n1;
             if (strcmp(operands, "") == 0) {
-                sprintf(r.dasmMoto, "%s", opcode);
+                sprintf(dasm[3], "%s", opcode);
             } else {
-                sprintf(r.dasmMoto, "%-7s %s", opcode, operands);
+                sprintf(dasm[3], "%-7s %s", opcode, operands);
             }
 
             // Run disassembler in MIT syntax
             auto n2 = M68k_Disassemble(&dp, true) - dp.instr;
-            r.dasmCntMIT = 2 * n2;
+            dasmCnt[4] = 2 * n2;
             if (strcmp(operands, "") == 0) {
-                sprintf(r.dasmMIT, "%s", opcode);
+                sprintf(dasm[4], "%s", opcode);
             } else {
-                sprintf(r.dasmMIT, "%-7s %s", opcode, operands);
+                sprintf(dasm[4], "%-7s %s", opcode, operands);
             }
 
-            printf("%5lx: %04X %04x: Moira:   [%d] %s\n", nr++, op, ext, r.dasmCntMoira, r.dasmMoira);
-            printf("                  Musashi: [%d] %s\n", r.dasmCntMusashi, r.dasmMusashi);
-            printf("                  vda68k:  [%d] %s\n", r.dasmCntMoto, r.dasmMoto);
-            printf("                           [%d] %s\n\n", r.dasmCntMIT, r.dasmMIT);
+            printf("%5lx: %04X %04x: Moira:   [%d] %s\n", nr++, op, ext, dasmCnt[0], dasm[0]);
+            printf("                           [%d] %s\n", dasmCnt[1], dasm[1]);
+            printf("                  Musashi: [%d] %s\n", dasmCnt[2], dasm[2]);
+            printf("                  vda68k:  [%d] %s\n", dasmCnt[3], dasm[3]);
+            printf("                           [%d] %s\n\n", dasmCnt[4], dasm[4]);
         }
     }
 

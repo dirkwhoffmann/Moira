@@ -374,7 +374,7 @@ Moira::dasmBitFieldDn(StrWriter &str, u32 &addr, u16 op)
 {
     auto ext = dasmRead <Word> (addr);
     auto dst = Op <M,S> ( _____________xxx(op), addr );
-    auto spc = str.style == DASM_MOIRA || str.style == DASM_MUSASHI ? " " : "";
+    auto spc = str.style == DASM_MOIRA_MOT || str.style == DASM_MOIRA_MIT || str.style == DASM_MUSASHI ? " " : "";
     
     str << Ins<I>{} << tab;
     
@@ -515,11 +515,18 @@ Moira::dasmCas2(StrWriter &str, u32 &addr, u16 op)
     
     str << Ins<I>{} << Sz<S>{} << tab;
     str << dc1 << ":" << dc2 << Sep{} << du1 << ":" << du2 << Sep{};
-    
-    if (str.style == DASM_VDA68K_MIT) {
-        str << rn1 << "@:" << rn2 << "@";
-    } else {
-        str << "(" << rn1 << "):(" << rn2 << ")";
+
+    switch (str.style) {
+
+        case DASM_MOIRA_MIT:
+        case DASM_VDA68K_MIT:
+
+            str << rn1 << "@:" << rn2 << "@";
+            break;
+
+        default:
+
+            str << "(" << rn1 << "):(" << rn2 << ")";
     }
     
     str << Av<I, M, S>{};
@@ -1259,7 +1266,8 @@ Moira::dasmMoveToCcr(StrWriter &str, u32 &addr, u16 op)
     
     switch (str.style) {
             
-        case DASM_MOIRA:
+        case DASM_MOIRA_MOT:
+        case DASM_MOIRA_MIT:
         case DASM_MUSASHI:
             
             str << Ins<I>{} << tab << Op<M, Byte>(src, addr) << Sep{} << Ccr{};
@@ -1358,7 +1366,7 @@ Moira::dasmMull(StrWriter &str, u32 &addr, u16 op)
     auto dl  = Dn       ( _xxx____________(ext)      );
     auto dh  = Dn       ( _____________xxx(ext)      );
     
-    auto fill = str.style == DASM_VDA68K_MIT ? "," : ":";
+    auto fill = str.style == DASM_VDA68K_MIT || str.style == DASM_MOIRA_MIT ? "," : ":";
     
     (ext & 1 << 11) ? str << Ins<MULS>{} : str << Ins<MULU>{};
     str << Sz<S>{} << tab << src << Sep{};
@@ -1392,7 +1400,7 @@ Moira::dasmDivl(StrWriter &str, u32 &addr, u16 op)
     auto dl  = Dn       ( _xxx____________(ext)      );
     auto dh  = Dn       ( _____________xxx(ext)      );
     
-    auto fill = str.style == DASM_VDA68K_MIT ? "," : ":";
+    auto fill = str.style == DASM_VDA68K_MIT || str.style == DASM_MOIRA_MIT ? "," : ":";
     
     (ext & 1 << 11) ? str << Ins<DIVS>{} : str << Ins<DIVU>{};
     
@@ -1589,7 +1597,8 @@ Moira::dasmTrapcc(StrWriter &str, u32 &addr, u16 op)
 {
     switch (str.style) {
             
-        case DASM_MOIRA:
+        case DASM_MOIRA_MOT:
+        case DASM_MOIRA_MIT:
         case DASM_MUSASHI:
             
             switch (S) {

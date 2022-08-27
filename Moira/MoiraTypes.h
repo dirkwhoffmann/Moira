@@ -54,10 +54,12 @@ Core;
 
 typedef enum
 {
-    DASM_MOIRA,         // Default disassembler style
-    DASM_MUSASHI,       // Musashi style
-    DASM_VDA68K_MOT,    // Vda68k style (Motorola)
-    DASM_VDA68K_MIT     // Vda68k style (MIT)
+    DASM_MOIRA_MOT,      // Official syntax styles
+    DASM_MOIRA_MIT,
+
+    DASM_MUSASHI,       // Compatibilty styles
+    DASM_VDA68K_MOT,
+    DASM_VDA68K_MIT
 }
 DasmStyle;
 
