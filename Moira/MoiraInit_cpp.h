@@ -1917,7 +1917,7 @@ Moira::createJumpTable()
             ____XXX___MMMXXX(opcode, cpSAVE, 0b001011111000, Word, CpSave, CIMS)
 
             opcode = parse("1111 ---0 0111 1---");
-            ____XXX___XXXXXX(opcode, cpTRAPcc, MODE_IP, Word, CpTrapcc, CIMS)
+            ____XXX______XXX(opcode, cpTRAPcc, MODE_IP, Word, CpTrapcc, CIMS)
 
             opcode = parse("1111 ---0 01-- ----");
             ____XXX___MMMXXX(opcode, cpScc, 0b101111111000, Byte, CpScc, CIMS)
@@ -1960,7 +1960,10 @@ Moira::createJumpTable()
             ____XXX___MMMXXX(opcode, cpSAVE, 0b001011111000, Word, Fsave, CIMS)
 
             opcode = parse("1111 0010 0111 1---");
-            __________XXXXXX(opcode, cpTRAPcc, MODE_IP, Word, Ftrapcc, CIMS)
+            // _____________XXX(opcode, cpTRAPcc, MODE_IP, Word, Ftrapcc, CIMS)
+            ________________(opcode | 0b010, cpTRAPcc, MODE_IP, Word, Ftrapcc, CIMS)
+            ________________(opcode | 0b011, cpTRAPcc, MODE_IP, Long, Ftrapcc, CIMS)
+            ________________(opcode | 0b100, cpTRAPcc, MODE_IP, Unsized, Ftrapcc, CIMS)
 
             opcode = parse("1111 0010 01-- ----");
             ____XXX___MMMXXX(opcode, cpScc, 0b101111111000, Byte, Fscc, CIMS)

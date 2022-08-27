@@ -115,7 +115,7 @@ Moira::dasmFbcc(StrWriter &str, u32 &addr, u16 op)
     auto dst = addr + 2;
     U32_INC(dst, SEXT<S>(dasmRead<S>(addr)));
 
-    str << "fb" << Cpcc{cnd} << tab << Ims<Word>(dst);
+    str << "fb" << Fcc{cnd} << Sz<S>{} << tab << Imu(dst);
 }
 
 template <Instr I, Mode M, Size S> void
@@ -128,7 +128,71 @@ Moira::dasmFdbcc(StrWriter &str, u32 &addr, u16 op)
     auto dst = addr + 2;
     U32_INC(dst, SEXT<S>(dasmRead<S>(addr)));
 
-    str << "fdb" << Cpcc{cnd} << tab << Dn{src} << Sep{} << UInt(dst);
+    str << "fdb" << Fcc{cnd} << tab << Dn{src} << Sep{} << UInt(dst);
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFrestore(StrWriter &str, u32 &addr, u16 op)
+{
+    auto dn = _____________xxx (op);
+
+    str << Ins<I>{} << tab << Op<M, S>(dn, addr);
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFsave(StrWriter &str, u32 &addr, u16 op)
+{
+    auto dn = _____________xxx (op);
+
+    str << Ins<I>{} << tab << Op<M, S>(dn, addr);
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFscc(StrWriter &str, u32 &addr, u16 op)
+{
+    printf("dasmFscc(%x): %d %d %d\n", op, I, M, S);
+    auto ext = dasmRead(addr);
+    auto reg = _____________xxx (op);
+    auto cnd = __________xxxxxx (ext);
+
+    str << "fs" << Fcc{cnd} << tab << Op<M, S>(reg, addr);
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFtrapcc(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = dasmRead(addr);
+    auto cnd = __________xxxxxx (ext);
+
+    switch (S) {
+
+        case Unsized:
+
+            str << "ftrap" << Fcc{cnd};
+            break;
+
+        case Word:
+        case Long:
+
+            auto ext = dasmRead<S>(addr);
+            str << "ftrap" << Fcc{cnd} << tab << Imu(ext);
+            break;
+    }
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFgeneric(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = dasmRead(addr);
+    auto reg = _____________xxx (op);
+    auto src = ___xxx__________ (ext);
+    auto dst = ______xxx_______ (ext);
+
+    if (ext & 0x4000) {
+        str << Ins<I>{} << Ffmt{src} << tab << Op<M, Long>(reg, addr) << Sep{} << Fp{dst};
+    } else {
+        str << Ins<I>{} << Ffmt{2} << tab << Fp{src} << Sep{} << Fp{dst};
+    }
 }
 
 template <Instr I, Mode M, Size S> void
@@ -296,44 +360,5 @@ Moira::dasmFmovem(StrWriter &str, u32 &addr, u16 op)
                     break;
             }
             break;
-    }
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFrestore(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFrestore";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFsave(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFsave";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFscc(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmFscc";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFtrapcc(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "dasmTrapcc";
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFgeneric(StrWriter &str, u32 &addr, u16 op)
-{
-    auto ext = dasmRead(addr);
-    auto reg = _____________xxx (op);
-    auto src = ___xxx__________ (ext);
-    auto dst = ______xxx_______ (ext);
-
-    if (ext & 0x4000) {
-        str << Ins<I>{} << Ffmt{src} << tab << Op<M, Long>(reg, addr) << Sep{} << Fp{dst};
-    } else {
-        str << Ins<I>{} << Ffmt{2} << tab << Fp{src} << Sep{} << Fp{dst};
     }
 }

@@ -723,15 +723,8 @@ Moira::dasmCpRestore(StrWriter &str, u32 &addr, u16 op)
     auto id = ( ____xxx_________(op) );
     auto ea = Op <M,S> (dn, addr);
 
-    if (id == 1) {
-
-        str << "frestore" << tab << ea;
-
-    } else {
-
-        str << id << Ins<I>{} << " " << ea;
-        str << Av<I, M, S>{};
-    }
+    str << id << Ins<I>{} << " " << ea;
+    str << Av<I, M, S>{};
 }
 
 template <Instr I, Mode M, Size S> void
@@ -747,22 +740,8 @@ Moira::dasmCpSave(StrWriter &str, u32 &addr, u16 op)
     auto id = ( ____xxx_________(op) );
     auto ea = Op <M,S> (dn, addr);
 
-    if (str.style == DASM_MUSASHI && (op & 0xffe0) == 0xf500) {
-
-        // Mimic Musashi bug
-        dasmLineF<I, M, S>(str, addr, op);
-        return;
-    }
-    
-    if (id == 1) {
-
-        str << "fsave" << tab << ea;
-
-    } else {
-
-        str << id << Ins<I>{} << tab << ea;
-        str << Av<I, M, S>{};
-    }
+    str << id << Ins<I>{} << tab << ea;
+    str << Av<I, M, S>{};
 }
 
 template <Instr I, Mode M, Size S> void
@@ -771,28 +750,14 @@ Moira::dasmCpScc(StrWriter &str, u32 &addr, u16 op)
     auto dn   = ( _____________xxx(op) );
     auto id   = ( ____xxx_________(op) );
 
-    if (id == 2 && str.style == DASM_MUSASHI) {
+    auto ext1 = dasmRead<Word>(addr);
+    auto cnd  = ( __________xxxxxx(ext1) );
 
-        // Mimic Musashi bug
-        dasmLineF<I, M, S>(str, addr, op);
-        return;
-    }
+    auto ext2 = dasmRead<Word>(addr);
+    auto ea = Op<M, S>(dn, addr);
 
-    if (id == 0) {
-
-            str << "MMU 001 group";
-
-    } else {
-
-        auto ext1 = dasmRead<Word>(addr);
-        auto cnd  = ( __________xxxxxx(ext1) );
-
-        auto ext2 = dasmRead<Word>(addr);
-        auto ea = Op<M, S>(dn, addr);
-
-        str << id << Ins<I>{} << Cpcc{cnd} << tab << ea;
-        str << "; (extension = " << Int(ext2) << ") (2-3)";
-    }
+    str << id << Ins<I>{} << Cpcc{cnd} << tab << ea;
+    str << "; (extension = " << Int(ext2) << ") (2-3)";
 }
 
 template <Instr I, Mode M, Size S> void

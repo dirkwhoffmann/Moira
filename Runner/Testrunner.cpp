@@ -851,12 +851,12 @@ void dumpDasm()
 
             // Disassemble the instruction in Moira Motorola syntax
             moiracpu->setDasmStyle(DASM_MOIRA_MOT);
-            moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16, .plainZero = true });
+            moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
             dasmCnt[0] = moiracpu->disassemble(pc, dasm[0]);
 
             // Disassemble the instruction in Moira MIT syntax
             moiracpu->setDasmStyle(DASM_MOIRA_MIT);
-            moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16, .plainZero = true });
+            moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
             dasmCnt[1] = moiracpu->disassemble(pc, dasm[1]);
 
             // Run the Musashi disassembler

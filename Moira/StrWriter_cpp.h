@@ -300,6 +300,47 @@ StrWriter::operator<<(Cpcc cpcc)
 }
 
 StrWriter&
+StrWriter::operator<<(Fcc fcc)
+{
+    switch (fcc.raw & 0x1F) {
+
+        case 0:  *this << "f";      break;
+        case 1:  *this << "eq";     break;
+        case 2:  *this << "ogt";    break;
+        case 3:  *this << "oge";    break;
+        case 4:  *this << "olt";    break;
+        case 5:  *this << "ole";    break;
+        case 6:  *this << "ogl";    break;
+        case 7:  *this << "or";     break;
+        case 8:  *this << "un";     break;
+        case 9:  *this << "ueq";    break;
+        case 10: *this << "ugt";    break;
+        case 11: *this << "uge";    break;
+        case 12: *this << "ult";    break;
+        case 13: *this << "ule";    break;
+        case 14: *this << "ne";     break;
+        case 15: *this << "t";      break;
+        case 16: *this << "sf";     break;
+        case 17: *this << "seq";    break;
+        case 18: *this << "gt";     break;
+        case 19: *this << "ge";     break;
+        case 20: *this << "lt";     break;
+        case 21: *this << "le";     break;
+        case 22: *this << "gl";     break;
+        case 23: *this << "gle";    break;
+        case 24: *this << "ngle";   break;
+        case 25: *this << "ngl";    break;
+        case 26: *this << "nle";    break;
+        case 27: *this << "nlt";    break;
+        case 28: *this << "nge";    break;
+        case 29: *this << "ngt";    break;
+        case 30: *this << "sne";    break;
+        case 31: *this << "st";     break;
+    }
+    return *this;
+}
+
+StrWriter&
 StrWriter::operator<<(Mmucc mmucc)
 {
     switch (mmucc.raw) {
