@@ -674,46 +674,10 @@ Moira::dasmCpGen(StrWriter &str, u32 &addr, u16 op)
 {
     auto id = ( ____xxx_________(op) );
 
-    if (id == 0 && hasMMU()) {
+    auto ext = Imu ( dasmRead<Long>(addr) );
 
-        switch ((op >> 3) & 0b111) {
-
-            case 0b000: dasmMMU<I, Mode(0), S>(str, addr, op); break;
-            case 0b001: dasmMMU<I, Mode(1), S>(str, addr, op); break;
-            case 0b010: dasmMMU<I, Mode(2), S>(str, addr, op); break;
-            case 0b011: dasmMMU<I, Mode(3), S>(str, addr, op); break;
-            case 0b100: dasmMMU<I, Mode(4), S>(str, addr, op); break;
-            case 0b101: dasmMMU<I, Mode(5), S>(str, addr, op); break;
-            case 0b110: dasmMMU<I, Mode(6), S>(str, addr, op); break;
-
-            default:
-
-                switch(op & 0b111) {
-
-                    case 0b000: dasmMMU<I, Mode(7), S>(str, addr, op); break;
-                    case 0b001: dasmMMU<I, Mode(8), S>(str, addr, op); break;
-                    case 0b010: dasmMMU<I, Mode(9), S>(str, addr, op); break;
-                    case 0b011: dasmMMU<I, Mode(10), S>(str, addr, op); break;
-                    case 0b100: dasmMMU<I, Mode(11), S>(str, addr, op); break;
-
-                    default:
-
-                        dasmMMU<I, Mode(12), S>(str, addr, op); break;
-                }
-        }
-        return;
-    }
-
-    if (hasCPI()) {
-
-        auto ext = Imu ( dasmRead<Long>(addr) );
-
-        str << id << Ins<I>{} << tab << ext;
-        str << Av<I, M, S>{};
-        return;
-    }
-
-    dasmLineF<I, M, S>(str, addr, op);
+    str << id << Ins<I>{} << tab << ext;
+    str << Av<I, M, S>{};
 }
 
 template <Instr I, Mode M, Size S> void

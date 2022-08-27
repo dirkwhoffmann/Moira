@@ -8,43 +8,43 @@
 // -----------------------------------------------------------------------------
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execFgen(u16 opcode)
+Moira::execFGen(u16 opcode)
 {
     execLineF<C, I, M, S>(opcode);
 }
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execFbcc(u16 opcode)
+Moira::execFBcc(u16 opcode)
 {
     execLineF<C, I, M, S>(opcode);
 }
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execFdbcc(u16 opcode)
+Moira::execFDbcc(u16 opcode)
 {
     execLineF<C, I, M, S>(opcode);
 }
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execFrestore(u16 opcode)
+Moira::execFRestore(u16 opcode)
 {
     execLineF<C, I, M, S>(opcode);
 }
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execFsave(u16 opcode)
+Moira::execFSave(u16 opcode)
 {
     execLineF<C, I, M, S>(opcode);
 }
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execFscc(u16 opcode)
+Moira::execFScc(u16 opcode)
 {
     execLineF<C, I, M, S>(opcode);
 }
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execFtrapcc(u16 opcode)
+Moira::execFTrapcc(u16 opcode)
 {
     execLineF<C, I, M, S>(opcode);
 }

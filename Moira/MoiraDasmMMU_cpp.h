@@ -8,7 +8,7 @@
 // -----------------------------------------------------------------------------
 
 template <Instr I, Mode M, Size S> void
-Moira::dasmMMU(StrWriter &str, u32 &addr, u16 op)
+Moira::dasmPGen(StrWriter &str, u32 &addr, u16 op)
 {
     //  PFLUSH: 001x xx0x xxxx xxxx
     //   PLOAD: 0010 00x0 000x xxxx
@@ -47,7 +47,7 @@ Moira::dasmMMU(StrWriter &str, u32 &addr, u16 op)
     // PVALID
     if ((ext & 0xFFFF) == 0x2800 || (ext & 0xFFF8) == 0x2C00) {
 
-        str << "TODO: dasmMMU PVALID";
+        str << "TODO: dasmMgen PVALID";
         // dasmPValid<I, M, S>(str, addr, op);
         return;
     }
@@ -68,7 +68,7 @@ Moira::dasmMMU(StrWriter &str, u32 &addr, u16 op)
 
     }
 
-    // str << "TODO: dasmMMU";
+    // str << "TODO: dasmMgen";
 }
 
 template <Instr I, Mode M, Size S> void

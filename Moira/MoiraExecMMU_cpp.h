@@ -8,9 +8,9 @@
 // -----------------------------------------------------------------------------
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execMMU(u16 opcode)
+Moira::execPGen(u16 opcode)
 {
-    printf("TODO: execMMU");
+    printf("TODO: execPGen");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
