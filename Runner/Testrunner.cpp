@@ -842,9 +842,10 @@ void dumpDasm()
 
     for (int op = 0xF200; op <= 0xF200; op++) {
 
-        for (int i = 0x0000; i <= 0x0FF; i++) {
+        for (int i = 0x0000; i <= 0xFF; i++) {
 
-            u16 ext = (rand() & 0x5F00) | i;
+            // u16 ext = (rand() & 0x5F00) | i;
+            u16 ext = 0xC000 | (rand() & 0x1FFF);
             s.ext1 = ext;
             setupTestInstruction(s, pc, u16(op));
 

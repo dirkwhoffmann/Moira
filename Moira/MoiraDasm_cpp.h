@@ -2256,12 +2256,12 @@ template <Instr I, Mode M, Size S> void
 Moira::dasmFmove(StrWriter &str, u32 &addr, u16 op)
 {
     auto ext = dasmRead(addr);
-    addr -= 2;
 
     auto reg = _____________xxx (op);
     auto cod = xxx_____________ (ext);
     auto src = ___xxx__________ (ext);
     auto dst = ______xxx_______ (ext);
+    auto fac = _________xxxxxxx (ext);
 
     if (ext == 0) {
 
@@ -2283,27 +2283,26 @@ Moira::dasmFmove(StrWriter &str, u32 &addr, u16 op)
 
         case 0b011:
 
-            str << "TODO";
-            break;
-            /*
-    switch ((w2>>10)&7)
-    {
-        case 3:        // packed decimal w/fixed k-factor
-            str << "fmove" << float_data_format[(w2>>10)&7] << tab << "FP1" << dst_reg << Sep{} << Op<M, Long>(reg, addr) << "sext_7bit_int(w2&0x7f)";
-            // sprintf(g_dasm_str, "fmove%s   FP%d, %s {#%d}", float_data_format[(w2>>10)&7], dst_reg, get_ea_mode_str_32(g_cpu_ir), sext_7bit_int(w2&0x7f));
-            break;
+            switch (src) {
 
-        case 7:        // packed decimal w/dynamic k-factor (register)
-            str << "fmove" << float_data_format[(w2>>10)&7] << tab << "F" << dst_reg << Sep{} << Op<M, Long>(reg, addr) << "{" << Dn((w2>>4)&7) << "}";
-            // sprintf(g_dasm_str, "fmove%s   FP%d, %s {D%d}", float_data_format[(w2>>10)&7], dst_reg, get_ea_mode_str_32(g_cpu_ir), (w2>>4)&7);
-            break;
+                case 0b011:
 
-        default:
-            str << "fmove" << float_data_format[(w2>>10)&7] << tab << "FP3" << dst_reg << Sep{} << Op<M, Long>(reg, addr);
-            // sprintf(g_dasm_str, "fmove%s   FP%d, %s", float_data_format[(w2>>10)&7], dst_reg, get_ea_mode_str_32(g_cpu_ir));
+                    str << Ins<I>{} << Ffmt{src} << tab << Fp(dst) << Sep{} << Op<M, Long>(reg, addr);
+                    str << " {" << Ims<Byte>(i8(fac << 1) >> 1) << "}";
+                    break;
+
+                case 0b111:
+
+                    str << Ins<I>{} << Ffmt{3} << tab << Fp{dst} << Sep{} << Op<M, Long>(reg, addr);
+                    str << " {" << Dn(fac >> 4) << "}";
+                    break;
+
+                default:
+
+                    str << Ins<I>{} << Ffmt{src} << tab << Fp{dst} << Sep{} << Op<M, Long>(reg, addr);
+                    break;
+            }
             break;
-    }
-             */
     }
 }
 
@@ -2320,7 +2319,111 @@ Moira::dasmFmovecr(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmFmovem(StrWriter &str, u32 &addr, u16 op)
 {
-    str << "dasmFmovem";
+    auto ext = dasmRead(addr);
+    auto reg = _____________xxx (op);
+    auto cod = xxx_____________ (ext);
+
+    const char *delim = "";
+
+    switch (cod) {
+
+        case 0b100: // Ea to Cntrl
+
+            str << "1:";
+            str << Ins<I>{} << Ffmt{0} << tab;
+            str << Op<M, Long>(reg, addr) << Sep{};
+            if ((ext & 0x1C00) == 0) { str << "{}"; }
+            if (ext & 0x0400) { str << delim << "fpiar"; delim = "/"; }
+            if (ext & 0x0800) { str << delim << "fpsr";  delim = "/"; }
+            if (ext & 0x1000) { str << delim << "fpcr";  delim = "/"; }
+            break;
+
+        case 0b101: // Cntrl to Ea
+
+            str << "2:";
+            str << Ins<I>{} << Ffmt{0} << tab;
+            if ((ext & 0x1C00) == 0) { str << "{}"; }
+            if (ext & 0x0400) { str << delim << "fpiar"; delim = "/"; }
+            if (ext & 0x0800) { str << delim << "fpsr";  delim = "/"; }
+            if (ext & 0x1000) { str << delim << "fpcr";  delim = "/"; }
+            str << Sep{} << Op<M, Long>(reg, addr);
+            break;
+
+        case 0b110:
+
+            str << "3: TODO";
+            /*
+            char temp[32];
+
+        if ((w2>>11) & 1)    // dynamic register list
+        {
+            sprintf(g_dasm_str, "fmovem.x   %s, D%d", get_ea_mode_str_32(g_cpu_ir), (w2>>4)&7);
+        }
+        else    // static register list
+        {
+            int i;
+
+            sprintf(g_dasm_str, "fmovem.x   %s, ", get_ea_mode_str_32(g_cpu_ir));
+
+            for (i = 0; i < 8; i++)
+            {
+                if (w2 & (1<<i))
+                {
+                    if ((w2>>12) & 1)    // postincrement or control
+                    {
+                        sprintf(temp, "FP%d ", 7-i);
+                    }
+                    else            // predecrement
+                    {
+                        sprintf(temp, "FP%d ", i);
+                    }
+                    strcat(g_dasm_str, temp);
+                }
+            }
+        }
+        break;
+    }
+             */
+
+        case 0b111:
+            str << "4: TODO";
+            /*
+    {
+        char temp[32];
+
+        if ((w2>>11) & 1)    // dynamic register list
+        {
+            sprintf(g_dasm_str, "fmovem.x   D%d, %s", (w2>>4)&7, get_ea_mode_str_32(g_cpu_ir));
+        }
+        else    // static register list
+        {
+            int i;
+
+            sprintf(g_dasm_str, "fmovem.x   ");
+
+            for (i = 0; i < 8; i++)
+            {
+                if (w2 & (1<<i))
+                {
+                    if ((w2>>12) & 1)    // postincrement or control
+                    {
+                        sprintf(temp, "FP%d ", 7-i);
+                    }
+                    else            // predecrement
+                    {
+                        sprintf(temp, "FP%d ", i);
+                    }
+                    strcat(g_dasm_str, temp);
+                }
+            }
+
+            strcat(g_dasm_str, ", ");
+            strcat(g_dasm_str, get_ea_mode_str_32(g_cpu_ir));
+        }
+        break;
+             */
+            break;
+    }
 }
 
 template <Instr I, Mode M, Size S> void
