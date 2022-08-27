@@ -93,6 +93,10 @@
 		50F549DE288E817600D5D559 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F80AA723C9E4EC00F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F80AAB23C9F16900F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		50FA79A228BA346700610F21 /* MoiraExecMMU_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraExecMMU_cpp.h; sourceTree = "<group>"; };
+		50FA79A328BA347F00610F21 /* MoiraExecFPU_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraExecFPU_cpp.h; sourceTree = "<group>"; };
+		50FA79A428BA349700610F21 /* MoiraDasmMMU_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraDasmMMU_cpp.h; sourceTree = "<group>"; };
+		50FA79A528BA34AE00610F21 /* MoiraDasmFPU_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraDasmFPU_cpp.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -198,8 +202,12 @@
 				509D631B25964F5C00E9DD0C /* MoiraExceptions.h */,
 				509D631A25964F5C00E9DD0C /* MoiraExceptions_cpp.h */,
 				50804F362386AA5C004D3EC2 /* MoiraExec_cpp.h */,
+				50FA79A228BA346700610F21 /* MoiraExecMMU_cpp.h */,
+				50FA79A328BA347F00610F21 /* MoiraExecFPU_cpp.h */,
 				50804F3A2387B466004D3EC2 /* MoiraDasm.h */,
 				50804F392387B466004D3EC2 /* MoiraDasm_cpp.h */,
+				50FA79A428BA349700610F21 /* MoiraDasmMMU_cpp.h */,
+				50FA79A528BA34AE00610F21 /* MoiraDasmFPU_cpp.h */,
 				502C09DE23C8D82600A179E1 /* MoiraDebugger.h */,
 				502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */,
 				5010BDAD238A897400CFD010 /* StrWriter.h */,

@@ -5001,84 +5001,6 @@ Moira::execUnpkPd(u16 opcode)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execMMU(u16 opcode)
-{
-    printf("TODO: execMMU");
-}
-
-template <Core C, Instr I, Mode M, Size S> void
-Moira::execPFlush(u16 opcode)
-{
-    printf("TODO: execPFlush");
-}
-
-template <Core C, Instr I, Mode M, Size S> void
-Moira::execPFlushA(u16 opcode)
-{
-    printf("TODO: execPFlushA");
-}
-
-template <Core C, Instr I, Mode M, Size S> void
-Moira::execPLoad(u16 opcode)
-{
-    printf("TODO: execPLoad");
-}
-
-template <Core C, Instr I, Mode M, Size S> void
-Moira::execPMove(u16 opcode)
-{
-    printf("TODO: execPMove");
-}
-
-template <Core C, Instr I, Mode M, Size S> void
-Moira::execPTest(u16 opcode)
-{
-    printf("TODO: execPTest");
-}
-
-template <Core C, Instr I, Mode M, Size S> void
-Moira::execFgen(u16 opcode)
-{
-    execLineF<C, I, M, S>(opcode);
-}
-
-template <Core C, Instr I, Mode M, Size S> void
-Moira::execFbcc(u16 opcode)
-{
-    execLineF<C, I, M, S>(opcode);
-}
-
-template <Core C, Instr I, Mode M, Size S> void
-Moira::execFdbcc(u16 opcode)
-{
-    execLineF<C, I, M, S>(opcode);
-}
-
-template <Core C, Instr I, Mode M, Size S> void
-Moira::execFrestore(u16 opcode)
-{
-    execLineF<C, I, M, S>(opcode);
-}
-
-template <Core C, Instr I, Mode M, Size S> void
-Moira::execFsave(u16 opcode)
-{
-    execLineF<C, I, M, S>(opcode);
-}
-
-template <Core C, Instr I, Mode M, Size S> void
-Moira::execFscc(u16 opcode)
-{
-    execLineF<C, I, M, S>(opcode);
-}
-
-template <Core C, Instr I, Mode M, Size S> void
-Moira::execFtrapcc(u16 opcode)
-{
-    execLineF<C, I, M, S>(opcode);
-}
-
-template <Core C, Instr I, Mode M, Size S> void
 Moira::execCinv(u16 opcode)
 {
     AVAILABILITY(C68020)
@@ -5147,6 +5069,9 @@ Moira::execMove16AlAi(u16 opcode)
 
     FINALIZE
 }
+
+#include "MoiraExecMMU_cpp.h"
+#include "MoiraExecFPU_cpp.h"
 
 #undef AVAILABILITY
 #undef SUPERVISOR_MODE_ONLY
