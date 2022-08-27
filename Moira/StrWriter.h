@@ -48,6 +48,7 @@ struct Cn { u16 raw; Cn(u16 v) : raw(v) { } };
 // Register lists
 struct RegList { u16 raw; RegList(u16 v) : raw(v) { } };
 struct RegRegList { u16 raw; RegRegList(u16 v) : raw(v) { } };
+struct FRegList { u16 raw; FRegList(u16 v) : raw(v) { } };
 
 // Addressing modes
 template <Mode M, Size S> struct Ea {
@@ -137,6 +138,7 @@ public:
 
     StrWriter& operator<<(RegList);
     StrWriter& operator<<(RegRegList);
+    StrWriter& operator<<(FRegList);
 
     template <Mode M, Size S> StrWriter& operator<<(const Ea<M,S> &);
 

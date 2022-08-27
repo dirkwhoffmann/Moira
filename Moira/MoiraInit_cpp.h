@@ -1918,11 +1918,6 @@ Moira::createJumpTable()
 
             opcode = parse("1111 ---0 0111 1---");
             ____XXX___XXXXXX(opcode, cpTRAPcc, MODE_IP, Word, CpTrapcc, CIMS)
-            /*
-             ____XXX___XXX___(opcode | 0b010, cpTRAPcc, MODE_IP, Word, CpTrapcc, CIMS)
-             ____XXX___XXX___(opcode | 0b011, cpTRAPcc, MODE_IP, Long, CpTrapcc, CIMS)
-             ____XXX___XXX___(opcode | 0b100, cpTRAPcc, MODE_IP, Byte, CpTrapcc, CIMS)
-             */
 
             opcode = parse("1111 ---0 01-- ----");
             ____XXX___MMMXXX(opcode, cpScc, 0b101111111000, Byte, CpScc, CIMS)
@@ -1949,9 +1944,29 @@ Moira::createJumpTable()
 
         if (hasFPU()) {
 
+            opcode = parse("1111 0010 10-- ----");
+            __________XXXXXX(opcode, cpBcc, MODE_IP, Word, Fbcc, CIMS)
+
+            opcode = parse("1111 0010 11-- ----");
+            __________XXXXXX(opcode, cpBcc, MODE_IP, Long, Fbcc, CIMS)
+
             opcode = parse("1111 0010 00-- ----");
-            __________XXXXXX(opcode, LINE_F, MODE_IP, Unsized, Fpu, CIMS)
-            __________MMMXXX(opcode, cpScc, 0b101111111111, Unsized, Fpu, CIMS)
+            __________MMMXXX(opcode, cpGEN, 0b101111111111, (Size)0, Fgen, CIMS)
+
+            opcode = parse("1111 0011 01-- ----");
+            ____XXX___MMMXXX(opcode, cpRESTORE, 0b001101111110, Word, Frestore, CIMS)
+
+            opcode = parse("1111 0011 00-- ----");
+            ____XXX___MMMXXX(opcode, cpSAVE, 0b001011111000, Word, Fsave, CIMS)
+
+            opcode = parse("1111 0010 0111 1---");
+            __________XXXXXX(opcode, cpTRAPcc, MODE_IP, Word, Ftrapcc, CIMS)
+
+            opcode = parse("1111 0010 01-- ----");
+            ____XXX___MMMXXX(opcode, cpScc, 0b101111111000, Byte, Fscc, CIMS)
+
+            opcode = parse("1111 0010 0100 1---");
+            _____________XXX(opcode, cpDBcc, MODE_IP, (Size)0, Fdbcc, CIMS)
         }
 
 

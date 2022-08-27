@@ -554,6 +554,39 @@ StrWriter::operator<<(RegRegList l)
     return *this;
 }
 
+StrWriter&
+StrWriter::operator<<(FRegList l)
+{
+    int r[8];
+
+    // Step 1: Fill array r with the register list bits, e.g., 11101101
+    for (int i = 0; i <= 7; i++) { r[i] = !!(l.raw & (1 << i)); }
+
+    // Step 2: Convert 11101101 to 12301201
+    for (int i = 1; i <= 7; i++) { if (r[i]) r[i] = r[i-1] + 1; }
+
+    // Step 3: Convert 12301201 to 33302201
+    for (int i = 6; i >= 0; i--) { if (r[i] && r[i+1]) r[i] = r[i+1]; }
+
+    // Step 4: Convert 33302201 to "FP0-FP2/FP4/FP5/FP7"
+    bool first = true;
+    for (int i = 0; i <= 7; i += r[i] + 1) {
+
+        if (r[i] == 0) continue;
+
+        // Print delimiter
+        if (first) { first = false; } else { *this << "/"; }
+
+        // Format variant 1: Single register
+        if (r[i] == 1) { *this << Fp{i}; }
+
+        // Format variant 2: Register range
+        else { *this << Fp{i} << "-" << Fp{i+r[i]-1}; }
+    }
+
+    return *this;
+}
+
 template <Mode M, Size S> StrWriter&
 StrWriter::operator<<(const Ea<M,S> &ea)
 {

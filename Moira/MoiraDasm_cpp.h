@@ -1914,7 +1914,7 @@ Moira::dasmPTest(StrWriter &str, u32 &addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
-Moira::dasmFpu(StrWriter &str, u32 &addr, u16 op)
+Moira::dasmFgen(StrWriter &str, u32 &addr, u16 op)
 {
     auto ext = dasmRead<Word>(addr);
     auto cod = xxx_____________(ext);
@@ -2322,6 +2322,8 @@ Moira::dasmFmovem(StrWriter &str, u32 &addr, u16 op)
     auto ext = dasmRead(addr);
     auto reg = _____________xxx (op);
     auto cod = xxx_____________ (ext);
+    auto mod = ___xx___________ (ext);
+    auto rrr = _________xxx____ (ext);
 
     const char *delim = "";
 
@@ -2349,79 +2351,72 @@ Moira::dasmFmovem(StrWriter &str, u32 &addr, u16 op)
             str << Sep{} << Op<M, Long>(reg, addr);
             break;
 
-        case 0b110:
+        case 0b110: // Memory to FPU
 
-            str << "3: TODO";
-            /*
-            char temp[32];
+            switch (mod) {
 
-        if ((w2>>11) & 1)    // dynamic register list
-        {
-            sprintf(g_dasm_str, "fmovem.x   %s, D%d", get_ea_mode_str_32(g_cpu_ir), (w2>>4)&7);
-        }
-        else    // static register list
-        {
-            int i;
+                case 0b00: // Static list, predecrement addressing
 
-            sprintf(g_dasm_str, "fmovem.x   %s, ", get_ea_mode_str_32(g_cpu_ir));
+                    str << Ins<I>{} << Ffmt{2} << tab;
+                    str << Op<MODE_PD, Long>(reg, addr) << Sep{};
+                    str << FRegList(ext & 0xFF);
+                    break;
 
-            for (i = 0; i < 8; i++)
-            {
-                if (w2 & (1<<i))
-                {
-                    if ((w2>>12) & 1)    // postincrement or control
-                    {
-                        sprintf(temp, "FP%d ", 7-i);
-                    }
-                    else            // predecrement
-                    {
-                        sprintf(temp, "FP%d ", i);
-                    }
-                    strcat(g_dasm_str, temp);
-                }
+                case 0b01: // Dynamic list, predecrement addressing
+
+                    str << Ins<I>{} << Ffmt{2} << tab;
+                    str << Op<MODE_PD, Long>(reg, addr) << Sep{};
+                    str << Dn{rrr};
+                    break;
+
+                case 0b10: // Static list, postincrement addressing (invalid?!)
+
+                    str << Ins<I>{} << Ffmt{2} << tab;
+                    str << Op<MODE_PI, Long>(reg, addr) << Sep{};
+                    str << FRegList(REVERSE_8(ext & 0xFF));
+                    break;
+
+                case 0b11: // Dynamic list, postincrement addressing (invalid?!)
+
+                    str << Ins<I>{} << Ffmt{2} << tab;
+                    str << Op<MODE_PI, Long>(reg, addr) << Sep{};
+                    str << Dn{rrr};
+                    break;
             }
-        }
-        break;
-    }
-             */
+            break;
 
-        case 0b111:
-            str << "4: TODO";
-            /*
-    {
-        char temp[32];
+        case 0b111: // FPU to memory
 
-        if ((w2>>11) & 1)    // dynamic register list
-        {
-            sprintf(g_dasm_str, "fmovem.x   D%d, %s", (w2>>4)&7, get_ea_mode_str_32(g_cpu_ir));
-        }
-        else    // static register list
-        {
-            int i;
+            switch (mod) {
 
-            sprintf(g_dasm_str, "fmovem.x   ");
+                case 0b00: // Static list, predecrement addressing  (invalid?!)
 
-            for (i = 0; i < 8; i++)
-            {
-                if (w2 & (1<<i))
-                {
-                    if ((w2>>12) & 1)    // postincrement or control
-                    {
-                        sprintf(temp, "FP%d ", 7-i);
-                    }
-                    else            // predecrement
-                    {
-                        sprintf(temp, "FP%d ", i);
-                    }
-                    strcat(g_dasm_str, temp);
-                }
+                    str << Ins<I>{} << Ffmt{2} << tab;
+                    str << FRegList(ext & 0xFF) << Sep{};
+                    str << Op<MODE_PD, Long>(reg, addr);
+                    break;
+
+                case 0b01: // Dynamic list, predecrement addressing  (invalid?!)
+
+                    str << Ins<I>{} << Ffmt{2} << tab;
+                    str << Dn{rrr} << Sep{};
+                    str << Op<MODE_PD, Long>(reg, addr);
+                    break;
+
+                case 0b10: // Static list, postincrement addressing (invalid?!)
+
+                    str << Ins<I>{} << Ffmt{2} << tab;
+                    str << FRegList(REVERSE_8(ext & 0xFF)) << Sep{};
+                    str << Op<MODE_PI, Long>(reg, addr);
+                    break;
+
+                case 0b11: // Dynamic list, postincrement addressing (invalid?!)
+
+                    str << Ins<I>{} << Ffmt{2} << tab;
+                    str << Dn{rrr} << Sep{};
+                    str << Op<MODE_PI, Long>(reg, addr);
+                    break;
             }
-
-            strcat(g_dasm_str, ", ");
-            strcat(g_dasm_str, get_ea_mode_str_32(g_cpu_ir));
-        }
-        break;
-             */
             break;
     }
 }

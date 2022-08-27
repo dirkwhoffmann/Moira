@@ -5037,7 +5037,43 @@ Moira::execPTest(u16 opcode)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execFpu(u16 opcode)
+Moira::execFgen(u16 opcode)
+{
+    execLineF<C, I, M, S>(opcode);
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execFbcc(u16 opcode)
+{
+    execLineF<C, I, M, S>(opcode);
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execFdbcc(u16 opcode)
+{
+    execLineF<C, I, M, S>(opcode);
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execFrestore(u16 opcode)
+{
+    execLineF<C, I, M, S>(opcode);
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execFsave(u16 opcode)
+{
+    execLineF<C, I, M, S>(opcode);
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execFscc(u16 opcode)
+{
+    execLineF<C, I, M, S>(opcode);
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execFtrapcc(u16 opcode)
 {
     execLineF<C, I, M, S>(opcode);
 }
