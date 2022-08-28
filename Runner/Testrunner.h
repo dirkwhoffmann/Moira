@@ -19,8 +19,9 @@
 #include "Randomizer.h"
 #include "TestCPU.h"
 
-// Musashi
 extern "C" {
+
+// Musashi
 #include "m68k.h"
 #include "m68kcpu.h"
 #include "m68kops.h"
@@ -41,6 +42,14 @@ extern u8 moiraMem[0x10000];
 extern u32 musashiFC;
 extern long testrun;
 extern moira::Model cpuModel;
+
+// Binutils
+struct meminfo { unsigned char bytes[32]; unsigned len; };
+extern char* binutilsBuffer;
+extern size_t binutilsBufferSize;
+extern FILE* binutilsStream;
+extern meminfo mi;
+extern disassemble_info di;
 
 inline u8 get8(u8 *p, u32 addr) {
     return p[addr & 0xFFFF];
@@ -119,6 +128,7 @@ const u32 pc = 0x1000;
 void selectModel(moira::Model model);
 
 void setupM68k();
+void setupBinutils();
 void setupMusashi();
 void setupMoira();
 

@@ -19,7 +19,13 @@ u8 moiraMem[0x10000];
 u32 musashiFC = 0;
 long testrun = 0;
 moira::Model cpuModel = M68000;
-// int cpuType = 0;
+
+// Binutils
+char* binutilsBuffer = NULL;
+size_t binutilsBufferSize = 0;
+FILE* binutilsStream = open_memstream(&binutilsBuffer, &binutilsBufferSize);
+meminfo mi;
+disassemble_info di;
 
 // M68k disassembler
 struct vda68k::DisasmPara_68k dp;
@@ -34,6 +40,7 @@ void selectModel(moira::Model model)
 
     setupMusashi();
     setupM68k();
+    setupBinutils();
     setupMoira();
 
     printf("\n");
@@ -64,6 +71,36 @@ void setupM68k()
     dp.opcode = opcode;
     dp.operands = operands;
     dp.radix = 16;
+}
+
+void setupBinutils()
+{
+    switch (cpuModel) {
+
+        case M68000:    di.mach = MACH_68000; break;
+        case M68010:    di.mach = MACH_68010; break;
+        case M68EC020:  // Not supported by binutils
+        case M68020:    di.mach = MACH_68020; break;
+        case M68EC030:  // Not supported by binutils
+        case M68030:    di.mach = MACH_68030; break;
+        case M68EC040:  // Not supported by binutils
+        case M68LC040:  // Not supported by binutils
+        case M68040:    di.mach = MACH_68040; break;
+    }
+
+    di.stream = binutilsStream;
+    di.caller_private = &mi;
+    di.memory_error_func = [](int, bfd_vma, struct disassemble_info*) {};
+    di.read_memory_func = [](bfd_vma memaddr, bfd_byte* myaddr, unsigned int length, struct disassemble_info* dinfo) -> int {
+        meminfo* mi = static_cast<meminfo*>(dinfo->caller_private);
+        while (length--)
+            *myaddr++ = memaddr < mi->len ? mi->bytes[memaddr++] : 0;
+        return 0; // return <> 0 to indicate error
+    };
+    di.fprintf_func = &fprintf;
+    di.print_address_func = [](bfd_vma addr, struct disassemble_info* dinfo) {
+        dinfo->fprintf_func(dinfo->stream, "$%X", addr);
+    };
 }
 
 void setupMusashi()
@@ -112,7 +149,7 @@ void setupTestEnvironment(Setup &s)
 
 void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
 {
-    static u64 mmu = 0;
+    // static u64 mmu = 0;
 
     moira::Instr instr = moiracpu->getInfo(opcode).I;
 
@@ -320,41 +357,14 @@ void runM68k(Setup &s, Result &r)
 
 void runBinutils(Setup &s, Result &r)
 {
-    struct meminfo {
-        unsigned char bytes[32];
-        unsigned len;
-    };
-
-    meminfo mi;
     memcpy(mi.bytes, moiraMem + pc, 32);
     mi.len = 16;
 
-    char* buffer = NULL;
-    size_t bufferSize = 0;
-    FILE* memStream = open_memstream(&buffer, &bufferSize);
-
-    disassemble_info di;
-    di.mach = MACH_68000;
-    di.stream = memStream;
-    di.caller_private = &mi;
-    di.memory_error_func = [](int, bfd_vma, struct disassemble_info*) {};
-    di.read_memory_func = [](bfd_vma memaddr, bfd_byte* myaddr, unsigned int length, struct disassemble_info* dinfo) -> int {
-        meminfo* mi = static_cast<meminfo*>(dinfo->caller_private);
-        while (length--)
-            *myaddr++ = memaddr < mi->len ? mi->bytes[memaddr++] : 0;
-        return 0; // return <> 0 to indicate error
-    };
-    di.fprintf_func = &fprintf;
-    di.print_address_func = [](bfd_vma addr, struct disassemble_info* dinfo) {
-        dinfo->fprintf_func(dinfo->stream, "$%X", addr);
-    };
-
     r.dasmCntBinutils = print_insn_m68k(0, &di);
-    fflush(memStream);
-    memcpy(r.dasmBinutils, buffer, std::min(bufferSize, (size_t)128));
-    r.dasmBinutils[bufferSize] = 0;
-    fclose(memStream);
-    free(buffer);
+    fflush(binutilsStream);
+    memcpy(r.dasmBinutils, binutilsBuffer, std::min(binutilsBufferSize, (size_t)128));
+    r.dasmBinutils[binutilsBufferSize] = 0;
+    rewind(binutilsStream);
 
     unsigned char * p = moiraMem + pc;
     printf("%02x%02x %02x%02x %02x%02x [%d] : %s\n", p[0], p[1], p[2], p[3], p[4], p[5], r.dasmCntBinutils, r.dasmBinutils);
@@ -411,6 +421,11 @@ void runMoira(Setup &s, Result &r)
         clock_t elapsed = clock();
         r.dasmCntMusashi = moiracpu->disassemble(r.oldpc, r.dasmMusashi);
         r.elapsed[1] = clock() - elapsed;
+
+        // Disassemble the instruction in GNU format (binutils)
+        moiracpu->setDasmStyle(DASM_GNU);
+        moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 10, .plainZero = true });
+        r.dasmCntBinutils = moiracpu->disassemble(r.oldpc, r.dasmBinutils);
 
         // Disassemble the instruction in Vda68k Motorola format
         moiracpu->setDasmStyle(DASM_VDA68K_MOT);
@@ -637,6 +652,9 @@ void compare(Setup &s, Result &r1, Result &r2)
         printf("\nInstruction: [%d] %-40s (Musashi)", r1.dasmCntMusashi, r1.dasmMusashi);
         printf("\n             [%d] %-40s (Moira)\n", r2.dasmCntMusashi, r2.dasmMusashi);
 
+        printf("\n             [%d] %-40s (Binutils)", r1.dasmCntBinutils, r1.dasmBinutils);
+        printf("\n             [%d] %-40s (Moira)\n", r2.dasmCntBinutils, r2.dasmBinutils);
+
         printf("\n             [%d] %-40s (Vda68k, Motorola)", r1.dasmCntMoto, r1.dasmMoto);
         printf("\n             [%d] %-40s (Moira)\n", r2.dasmCntMoto, r2.dasmMoto);
 
@@ -659,6 +677,7 @@ void compare(Setup &s, Result &r1, Result &r2)
 bool compareDasm(Result &r1, Result &r2)
 {
     bool skipMusashi = false;
+    bool skipBinutils = false;
     bool skipM68k = false;
 
     auto I = moiracpu->getInfo(r1.opcode).I;
@@ -748,6 +767,14 @@ bool compareDasm(Result &r1, Result &r2)
         if (strcmp(r1.dasmMusashi, r2.dasmMusashi) != 0) return false;
     }
 
+    // Compare with binutils
+    if (!skipBinutils) {
+
+        if (r1.dasmCntBinutils != r2.dasmCntBinutils) return false;
+        if (strcmp(r1.dasmBinutils, r2.dasmBinutils) != 0) return false;
+    }
+
+    // DEPRECATED
     if (!skipM68k) {
 
         // Compare with M68k (Motorola syntax)
