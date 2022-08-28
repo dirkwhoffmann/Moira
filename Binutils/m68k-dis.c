@@ -112,7 +112,6 @@ void floatformat_to_double(const struct floatformat* fmt, const void* from, doub
     } u;
     memcpy(u.buf, from, fmt->len);
     for (int i = 0; i < fmt->len / 2; ++i) {
-        printf("%02X ", u.buf[i]);
         bfd_byte tmp = u.buf[i];
         u.buf[i] = u.buf[fmt->len - 1 - i];
         u.buf[fmt->len - 1 - i] = tmp;

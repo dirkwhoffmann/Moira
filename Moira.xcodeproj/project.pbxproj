@@ -18,9 +18,8 @@
 		507BE4AF23B66456000B37D2 /* Testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* Testrunner.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
 		50804EE22386A72C004D3EC2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E8C2386A72C004D3EC2 /* main.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
 		50804F352386A7DD004D3EC2 /* Moira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F332386A7DD004D3EC2 /* Moira.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
-		50C0123A28BBAD9B001EFB37 /* m68k-dis.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123628BBAD9B001EFB37 /* m68k-dis.c */; };
-		50C0123B28BBAD9B001EFB37 /* m68k-opc.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123728BBAD9B001EFB37 /* m68k-opc.c */; };
-		50C0123F28BBADEA001EFB37 /* m68k-main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123E28BBADEA001EFB37 /* m68k-main.cpp */; };
+		50C0123A28BBAD9B001EFB37 /* m68k-dis.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123628BBAD9B001EFB37 /* m68k-dis.c */; settings = {COMPILER_FLAGS = "-w"; }; };
+		50C0123B28BBAD9B001EFB37 /* m68k-opc.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123728BBAD9B001EFB37 /* m68k-opc.c */; settings = {COMPILER_FLAGS = "-w"; }; };
 		50CECEC723A924B000E07C65 /* Sandbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50CECEC523A924B000E07C65 /* Sandbox.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
 		50EC62EB289D8D9500398CBD /* m68k_disasm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50EC62EA289D8D9500398CBD /* m68k_disasm.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
 /* End PBXBuildFile section */
@@ -320,7 +319,6 @@
 				502C09E223C8E16600A179E1 /* TestCPU.cpp in Sources */,
 				50CECEC723A924B000E07C65 /* Sandbox.cpp in Sources */,
 				507BE4AF23B66456000B37D2 /* Testrunner.cpp in Sources */,
-				50C0123F28BBADEA001EFB37 /* m68k-main.cpp in Sources */,
 				50804EE22386A72C004D3EC2 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

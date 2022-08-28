@@ -1198,7 +1198,8 @@ Moira::dasmMoveToCcr(StrWriter &str, u32 &addr, u16 op)
         case DASM_MOIRA_MOT:
         case DASM_MOIRA_MIT:
         case DASM_MUSASHI:
-            
+        case DASM_GNU:
+
             str << Ins<I>{} << tab << Op<M, Byte>(src, addr) << Sep{} << Ccr{};
             break;
             
@@ -1529,7 +1530,8 @@ Moira::dasmTrapcc(StrWriter &str, u32 &addr, u16 op)
         case DASM_MOIRA_MOT:
         case DASM_MOIRA_MIT:
         case DASM_MUSASHI:
-            
+        case DASM_GNU:
+
             switch (S) {
                     
                 case Byte:

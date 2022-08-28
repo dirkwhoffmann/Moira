@@ -376,14 +376,15 @@ StrWriter::operator<<(Dn dn)
         case DASM_MOIRA_MOT:
         case DASM_MOIRA_MIT:
         case DASM_MUSASHI:
-            
+
             *ptr++ = 'D';
             *ptr++ = '0' + (char)dn.raw;
             break;
             
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
-            
+        case DASM_GNU:
+
             *ptr++ = 'd';
             *ptr++ = '0' + (char)dn.raw;
             break;
@@ -407,7 +408,8 @@ StrWriter::operator<<(An an)
             
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
-            
+        case DASM_GNU:
+
             if (an.raw == 7) {
                 
                 *ptr++ = 's';
@@ -439,7 +441,8 @@ StrWriter::operator<<(Anr an)
             
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
-            
+        case DASM_GNU:
+
             *ptr++ = 'a';
             *ptr++ = '0' + (char)an.raw;
             break;
@@ -653,7 +656,8 @@ StrWriter::operator<<(Ai<M,S> wrapper)
         case DASM_MOIRA_MOT:
         case DASM_MUSASHI:
         case DASM_VDA68K_MOT:
-            
+        case DASM_GNU:
+
             *this << "(" << An{ea.reg} << ")";
             break;
 
@@ -677,7 +681,8 @@ StrWriter::operator<<(Pi<M,S> wrapper)
         case DASM_MOIRA_MOT:
         case DASM_MUSASHI:
         case DASM_VDA68K_MOT:
-            
+        case DASM_GNU:
+
             *this << "(" << An{ea.reg} << ")+";
             break;
 
@@ -701,7 +706,8 @@ StrWriter::operator<<(Pd<M,S> wrapper)
         case DASM_MOIRA_MOT:
         case DASM_MUSASHI:
         case DASM_VDA68K_MOT:
-            
+        case DASM_GNU:
+
             *this << "-(" << An{ea.reg} << ")";
             break;
 
@@ -724,7 +730,8 @@ StrWriter::operator<<(Di<M,S> wrapper)
 
         case DASM_MOIRA_MOT:
         case DASM_MUSASHI:
-            
+        case DASM_GNU:
+
             *this << "(" << Int{(i16)ea.ext1} << "," << An{ea.reg} << ")";
             return *this;
             
@@ -750,7 +757,8 @@ StrWriter::operator<<(Ix<M,S> wrapper)
             
         case DASM_MOIRA_MOT:
         case DASM_MUSASHI:
-            
+        case DASM_GNU:
+
             *this << IxMus<M,S>{wrapper.ea};
             break;
             
@@ -1077,7 +1085,8 @@ StrWriter::operator<<(Aw<M,S> wrapper)
         case DASM_MOIRA_MIT:
         case DASM_MUSASHI:
         case DASM_VDA68K_MOT:
-            
+        case DASM_GNU:
+
             *this << UInt(ea.ext1) << Sz<Word>{};
             break;
             
@@ -1101,7 +1110,8 @@ StrWriter::operator<<(Al<M,S> wrapper)
         case DASM_MOIRA_MIT:
         case DASM_MUSASHI:
         case DASM_VDA68K_MOT:
-            
+        case DASM_GNU:
+
             *this << UInt(ea.ext1) << Sz<Long>{};
             break;
             
@@ -1124,7 +1134,8 @@ StrWriter::operator<<(DiPc<M,S> wrapper)
             
         case DASM_MOIRA_MOT:
         case DASM_MUSASHI:
-            
+        case DASM_GNU:
+
             *this << "(" << Int{(i16)ea.ext1} << ",PC)";
             resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
             StrWriter(comment, style, nf) << "; (" << UInt(resolved) << ")" << Finish{};
@@ -1158,7 +1169,8 @@ StrWriter::operator<<(Im<M,S> wrapper)
         case DASM_MOIRA_MIT:
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
-            
+        case DASM_GNU:
+
             *this << Ims<S>(ea.ext1);
             break;
             
@@ -1181,7 +1193,8 @@ StrWriter::operator<<(Ip<M,S> wrapper)
         case DASM_MOIRA_MOT:
         case DASM_MUSASHI:
         case DASM_VDA68K_MOT:
-            
+        case DASM_GNU:
+
             *this << "-(" << An{ea.reg} << ")";
             break;
 
@@ -1205,7 +1218,8 @@ StrWriter::operator<<(Scale s)
         case DASM_MOIRA_MOT:
         case DASM_MUSASHI:
         case DASM_VDA68K_MOT:
-            
+        case DASM_GNU:
+
             *ptr++ = '*';
             *ptr++ = '0' + (char)(1 << s.raw);
             break;
@@ -1253,6 +1267,7 @@ StrWriter::operator<<(Fp fp)
 
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
+        case DASM_GNU:
 
             *ptr++ = 'f';
             *ptr++ = 'p';
@@ -1290,8 +1305,12 @@ StrWriter::operator<<(Tab tab)
 {
     // Write at least a single space
     *ptr++ = ' ';
-    
-    while (ptr < base + tab.raw) *ptr++ = ' ';
+
+    if (style != DASM_GNU) {
+
+        while (ptr < base + tab.raw) *ptr++ = ' ';
+    }
+
     return *this;
 }
 
