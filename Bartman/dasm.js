@@ -2514,13 +2514,15 @@ function m68k_scan_mask(buffer, memaddr, arch_mask) {
             && ((0xff & buffer[1] & (opc.match >> 16)) === (0xff & (opc.opcode >> 16)))
             && (((0xffff & opc.match) === 0)
                 || (((0xff & buffer[2] & (opc.match >> 8)) === (0xff & (opc.opcode >> 8)))
-                    && ((0xff & buffer[3] & opc.match) === (0xff & opc.opcode))))
-            && (opc.arch & arch_mask) !== 0) {
-            // TODO: args for divul, divsl
-            //console.log('match:', opc);
-            var val = match_insn_m68k(buffer, memaddr, opc);
-            if (val.len)
-                return val;
+                    && ((0xff & buffer[3] & opc.match) === (0xff & opc.opcode))))) {
+                        // console.log('match:', opc);
+                        if ((opc.arch & arch_mask) !== 0) {
+                // TODO: args for divul, divsl
+                console.log('match:', opc);
+                var val = match_insn_m68k(buffer, memaddr, opc);
+                if (val.len)
+                    return val;
+            }
         }
     }
     return { text: '', len: 0 };
@@ -2555,11 +2557,39 @@ function get_all_insn_m68k() {
     return ret;
 }
 exports.get_all_insn_m68k = get_all_insn_m68k;
+
 var args = process.argv.slice(2);
-var mem = new Uint8Array(2);
-//mem[0]=0x1234;
-//mem[1]=0x4567;
-mem[0] = parseInt(args[0], 16);
-mem[1] = parseInt(args[1], 16);
-var dasm = print_insn_m68k(mem, 0).text;
-console.log(dasm);
+var mem = new Uint8Array(32);
+var i,j;
+
+for (i = 0, j = 0; i < 16; i++) {
+
+    if (i < args.length) {
+        
+        var word = parseInt(args[i], 16);
+        mem[j++] = (word >> 8) & 0xFF;
+        mem[j++] = word & 0xFF;
+    
+    } else {
+
+        mem[j++] = 0;
+        mem[j++] = 0;
+    }
+}
+
+var dasm = print_insn_m68k(mem, 0);
+var hex = ""
+
+for (i = 0; i < 16; i++) {
+    hex += ("00"+mem[i].toString(16)).slice(-2) + " "; 
+}
+console.log(hex);
+hex = "";
+
+for (i = 0; i < dasm.len; i++) {
+
+    if (i % 2 == 0) hex += "$";
+    hex += ("00"+mem[i].toString(16)).slice(-2);
+    if (i % 2 == 1) hex += " ";
+}
+console.log(hex + ": " + dasm.text);
