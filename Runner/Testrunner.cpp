@@ -137,10 +137,11 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
             break;
     }
     // MMU instructions
+    /*
     if ((opcode & 0xFFC0) == 0xF000) {
         s.ext1 = u16(mmu++ << 8) | (s.ext1 & 0xFF);
     }
-
+    */
     s.pc = pc;
     s.opcode = opcode;
 
@@ -836,12 +837,14 @@ void dumpDasm()
     // Iterate through all opcodes
 
     // for (int op = 0xF200; op <= 0xF200; op++) {
-    for (int op = 0xF200; op <= 0xF2FF; op++) {
+    for (int op = 0xF000; op <= 0xF1FF; op++) {
 
         for (int i = 0x00; i <= 0x00; i++) {
 
             // u16 ext = 0xF200 | i;
-            u16 ext = 0xE000 | (rand() & 0x1FFF);
+            // u16 ext = 0xE000 | (rand() & 0x1FFF);
+            u16 ext = rand();
+
             s.ext1 = ext;
             setupTestInstruction(s, pc, u16(op));
 

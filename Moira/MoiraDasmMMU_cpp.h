@@ -23,6 +23,8 @@ Moira::dasmPGen(StrWriter &str, u32 &addr, u16 op)
     auto ext = dasmRead<Word>(addr);
     addr -= 2;
 
+    printf("dasmPGen(%x) ext = %x\n", op, ext);
+
     // PLOAD
     if ((ext & 0xFDE0) == 0x2000) {
 
@@ -162,17 +164,21 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
     auto preg = ___xxx__________(ext);
     auto nr   = ___________xxx__(ext);
 
+    printf("dasmPMove ext = %x\n", ext);
+
     const char *pStr = "";
 
     switch (fmt) {
 
         case 0:
 
+            printf("dasmPMove0\n");
             pStr = mmuregs[preg];
             break;
 
         case 2:
 
+            printf("dasmPMove2\n");
             switch (preg) {
 
                 case 0:     pStr = "tc"; break;
@@ -188,6 +194,7 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
 
         case 3:
 
+            printf("dasmPMove3\n");
             switch (preg) {
 
                 case 0:     pStr = "mmusr"; break;
@@ -218,7 +225,7 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
 
     } else {
 
-        str << Ins<I>{} << suffix;
+        str << Ins<I>{} << suffix << tab;
 
         if (M == MODE_IP) {
             str << tab << "[unknown form]" << Sep{} << "INVALID " << Int(op & 0x3f);
