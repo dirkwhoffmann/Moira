@@ -23,6 +23,10 @@ Randomizer::init(int testrun)
     if (testrun <= 10) {
 
         mode = testrun;
+
+        // REMOVE ASAP
+        mode = 16;
+
         return;
     }
 

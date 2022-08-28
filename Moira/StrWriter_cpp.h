@@ -123,6 +123,16 @@ static void sprintx_signed(char *&s, i64 value, const DasmNumberFormat &fmt)
     sprintx(s, value, fmt, hexDigits(value));
 }
 
+static void sprint(char *&s, u64 value, const DasmNumberFormat &fmt)
+{
+    fmt.radix == 10 ? sprintd(s, value) : sprintx(s, value, fmt);
+}
+
+static void sprint_signed(char *&s, i64 value, const DasmNumberFormat &fmt)
+{
+    fmt.radix == 10 ? sprintd_signed(s, value) : sprintx_signed(s, value, fmt);
+}
+
 StrWriter&
 StrWriter::operator<<(const char *str)
 {
@@ -147,35 +157,47 @@ StrWriter::operator<<(unsigned int value)
 StrWriter&
 StrWriter::operator<<(Int i)
 {
-    sprintx_signed(ptr, i.raw, nf);
+    sprint_signed(ptr, i.raw, nf);
     return *this;
 }
 
 StrWriter&
 StrWriter::operator<<(UInt u)
 {
-    sprintx(ptr, u.raw, nf);
+    sprint(ptr, u.raw, nf);
     return *this;
 }
 
 StrWriter&
 StrWriter::operator<<(UInt8 u)
 {
-    sprintx(ptr, u.raw, nf, nf.radix == 16 ? 2 : 3);
+    if (nf.radix == 16) {
+        sprintx(ptr, u.raw, nf, 2);
+    } else {
+        sprintd(ptr, u.raw, 3);
+    }
     return *this;
 }
 
 StrWriter&
 StrWriter::operator<<(UInt16 u)
 {
-    sprintx(ptr, u.raw, nf, nf.radix == 16 ? 4 : 5);
+    if (nf.radix == 16) {
+        sprintx(ptr, u.raw, nf, 4);
+    } else {
+        sprintd(ptr, u.raw, 5);
+    }
     return *this;
 }
 
 StrWriter&
 StrWriter::operator<<(UInt32 u)
 {
-    sprintx(ptr, u.raw, nf, nf.radix == 16 ? 8 : 10);
+    if (nf.radix == 16) {
+        sprintx(ptr, u.raw, nf, 8);
+    } else {
+        sprintd(ptr, u.raw, 10);
+    }
     return *this;
 }
 
@@ -730,13 +752,13 @@ StrWriter::operator<<(Di<M,S> wrapper)
 
         case DASM_MOIRA_MOT:
         case DASM_MUSASHI:
-        case DASM_GNU:
 
             *this << "(" << Int{(i16)ea.ext1} << "," << An{ea.reg} << ")";
             return *this;
             
         case DASM_VDA68K_MOT:
-            
+        case DASM_GNU:
+
             *this << Int{(i16)ea.ext1} << "(" << An{ea.reg} << ")";
             break;
 
