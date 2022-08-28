@@ -22,6 +22,7 @@ Runner/musashi.cpp
 Runner/Sandbox.cpp
 Runner/Randomizer.cpp
 )
+target_link_libraries(testRunner binutils)
 target_link_libraries(testRunner moira)
 target_link_libraries(testRunner musashi)
 target_link_libraries(testRunner m68k)
@@ -36,8 +37,9 @@ target_compile_options(testRunner PUBLIC -Wno-nested-anon-types)
 target_include_directories(testRunner PUBLIC
 
 ${CMAKE_SOURCE_DIR}/.
-${CMAKE_SOURCE_DIR}/Runner
+${CMAKE_SOURCE_DIR}/Binutils
 ${CMAKE_SOURCE_DIR}/M68k
 ${CMAKE_SOURCE_DIR}/Musashi
 ${CMAKE_SOURCE_DIR}/Moira
+${CMAKE_SOURCE_DIR}/Runner
 )

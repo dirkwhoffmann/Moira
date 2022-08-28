@@ -96,6 +96,8 @@ struct Result {
     u32     caar;
     char    dasmMoira[128];
     int     dasmCntMoira;
+    char    dasmBinutils[128];
+    int     dasmCntBinutils;
     char    dasmMusashi[128];
     int     dasmCntMusashi;
     char    dasmMoto[128];
@@ -137,6 +139,7 @@ void run();
 void runSingleTest(Setup &s);
 
 void runM68k(Setup &s, Result &r);
+void runBinutils(Setup &s, Result &r);
 void runMusashi(Setup &s, Result &r);
 void runMoira(Setup &s, Result &r);
 

@@ -214,7 +214,7 @@ void run()
     printf("It runs until a bug has been found.\n");
 
     // EXPERIMENTAL
-    dumpDasm();
+    // dumpDasm();
 
     selectModel(M68000);
     srand(3);
@@ -280,6 +280,9 @@ void runSingleTest(Setup &s)
     // Run the vda68k disassembler
     runM68k(s, mur);
 
+    // Run the binutils disassembler
+    runBinutils(s, mur);
+
     // Run Musashi
     runMusashi(s, mur);
     muclk[0] += mur.elapsed[0];
@@ -313,6 +316,48 @@ void runM68k(Setup &s, Result &r)
     } else {
         sprintf(r.dasmMIT, "%-7s %s", opcode, operands);
     }
+}
+
+void runBinutils(Setup &s, Result &r)
+{
+    struct meminfo {
+        unsigned char bytes[32];
+        unsigned len;
+    };
+
+    meminfo mi;
+    memcpy(mi.bytes, moiraMem + pc, 32);
+    mi.len = 16;
+
+    char* buffer = NULL;
+    size_t bufferSize = 0;
+    FILE* memStream = open_memstream(&buffer, &bufferSize);
+
+    disassemble_info di;
+    di.mach = MACH_68000;
+    di.stream = memStream;
+    di.caller_private = &mi;
+    di.memory_error_func = [](int, bfd_vma, struct disassemble_info*) {};
+    di.read_memory_func = [](bfd_vma memaddr, bfd_byte* myaddr, unsigned int length, struct disassemble_info* dinfo) -> int {
+        meminfo* mi = static_cast<meminfo*>(dinfo->caller_private);
+        while (length--)
+            *myaddr++ = memaddr < mi->len ? mi->bytes[memaddr++] : 0;
+        return 0; // return <> 0 to indicate error
+    };
+    di.fprintf_func = &fprintf;
+    di.print_address_func = [](bfd_vma addr, struct disassemble_info* dinfo) {
+        dinfo->fprintf_func(dinfo->stream, "$%X", addr);
+    };
+
+    r.dasmCntBinutils = print_insn_m68k(0, &di);
+    fflush(memStream);
+    memcpy(r.dasmBinutils, buffer, std::min(bufferSize, (size_t)128));
+    r.dasmBinutils[bufferSize] = 0;
+    fclose(memStream);
+    free(buffer);
+
+    unsigned char * p = moiraMem + pc;
+    printf("%02x%02x %02x%02x %02x%02x [%d] : %s\n", p[0], p[1], p[2], p[3], p[4], p[5], r.dasmCntBinutils, r.dasmBinutils);
 }
 
 void runMusashi(Setup &s, Result &r)
