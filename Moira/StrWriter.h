@@ -106,7 +106,9 @@ public:
         nf = n;
         comment[0] = 0;
     };
-    
+
+    bool checkAvailability();
+
     StrWriter& operator<<(const char *);
     StrWriter& operator<<(int);
     StrWriter& operator<<(unsigned int);

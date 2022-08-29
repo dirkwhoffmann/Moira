@@ -447,8 +447,28 @@ protected:
     template <Size S = Long> void writeD(int n, u32 v);
     template <Size S = Long> void writeA(int n, u32 v);
     template <Size S = Long> void writeR(int n, u32 v);
-    
-    
+
+
+    //
+    // Analyzing instructions
+    //
+
+    // Returns the availability mask for a certain instruction
+    u16 availabilityMask(Instr I);
+    u16 availabilityMask(Instr I, Mode M, Size S);
+    u16 availabilityMask(Instr I, Mode M, Size S, u16 ext);
+
+    // Checks if the currently selected CPU model supports a certain instruction
+    bool isAvailable(Instr I);
+    bool isAvailable(Instr I, Mode M, Size S);
+    bool isAvailable(Instr I, Mode M, Size S, u16 ext);
+
+private:
+
+    // Returns an availability string (used by the disassembler)
+    const char *availabilityString(Instr I, Mode M, Size S, u16 ext);
+
+
     //
     // Managing the function code pins
     //

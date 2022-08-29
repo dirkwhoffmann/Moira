@@ -470,6 +470,178 @@ Moira::setSupervisorFlags(bool s, bool m)
     if (mspIsVisible)  reg.sp = reg.msp;
 }
 
+u16
+Moira::availabilityMask(Instr I)
+{
+    
+    switch (I) {
+
+        case BKPT: case MOVEC: case MOVES: case MOVEFCCR: case RTD:
+
+            return AV_68010_UP;
+
+        case CALLM: case RTM:
+
+            return AV_68020;
+
+        case cpGEN: case cpRESTORE: case cpSAVE: case cpScc: case cpTRAPcc:
+
+            return AV_68020 | AV_68030;
+
+        case BFCHG: case BFCLR: case BFEXTS: case BFEXTU: case BFFFO:
+        case BFINS: case BFSET: case BFTST: case CAS: case CAS2:
+        case CHK2: case CMP2: case DIVL: case EXTB: case MULL:
+        case PACK: case TRAPCC: case TRAPCS: case TRAPEQ: case TRAPGE:
+        case TRAPGT: case TRAPHI: case TRAPLE: case TRAPLS: case TRAPLT:
+        case TRAPMI: case TRAPNE: case TRAPPL: case TRAPVC: case TRAPVS:
+        case TRAPF: case TRAPT: case UNPK:
+
+            return AV_68020_UP;
+
+        case CINV: case CPUSH: case MOVE16:
+
+            return AV_68040;
+
+        case PFLUSH: case PFLUSHA: case PLOAD: case PMOVE: case PTEST:
+
+            return AV_MMU;
+
+        case FABS: case FADD: case FBcc: case FCMP: case FDBcc: case FDIV:
+            case FMOVE: case FMOVEM: case FMUL: case FNEG: case FNOP:
+        case FRESTORE: case FSAVE: case FScc: case FSQRT: case FSUB:
+        case FTRAPcc: case FTST:
+
+        case FSABS: case FDABS: case FSADD: case FDADD: case FSDIV: case FDDIV:
+        case FSMOVE: case FDMOVE: case FSMUL: case FDMUL: case FSNEG:
+        case FDNEG: case FSSQRT: case FDSQRT: case FSSUB: case FDSUB:
+
+            return AV_FPU;
+
+        case FACOS: case FASIN: case FATAN: case FATANH: case FCOS: case FCOSH:
+        case FETOX: case FETOXM1: case FGETEXP: case FGETMAN: case FINT:
+        case FINTRZ: case FLOG10: case FLOG2: case FLOGN: case FLOGNP1:
+        case FMOD: case FMOVECR: case FREM: case FSCALE: case FSGLDIV:
+        case FSGLMUL: case FSIN: case FSINCOS: case FSINH: case FTAN:
+        case FTANH: case FTENTOX: case FTWOTOX:
+
+            return 0; // M6888x only
+
+        default:
+
+            return AV_68000_UP;
+    }
+}
+
+u16
+Moira::availabilityMask(Instr I, Mode M, Size S)
+{
+    u16 mask = availabilityMask(I);
+
+    switch (I) {
+
+        case CMPI:
+
+            if (isPrgMode(M)) mask &= AV_68010_UP;
+            break;
+
+        case CHK: case LINK: case BRA: case BHI: case BLS: case BCC: case BCS:
+        case BNE: case BEQ: case BVC: case BVS: case BPL: case BMI: case BGE:
+        case BLT: case BGT: case BLE: case BSR:
+
+            if (S == Long) mask &= AV_68020_UP;
+            break;
+
+        case TST:
+
+            if (M == 1 || M >= 9) mask &= AV_68020_UP;
+            break;
+
+        default:
+
+            break;
+    }
+
+    return mask;
+}
+
+u16 Moira::availabilityMask(Instr I, Mode M, Size S, u16 ext)
+{
+    u16 mask = availabilityMask(I);
+
+    switch (I) {
+
+        case MOVEC:
+
+            switch (ext & 0x0FFF) {
+
+                case 0x000:
+                case 0x001:
+                case 0x800:
+                case 0x801: mask &= AV_68010_UP; break;
+                case 0x002:
+                case 0x803:
+                case 0x804: mask &=  AV_68020_UP; break;
+                case 0x802: mask &=  AV_68020 | AV_68030; break;
+                case 0x003:
+                case 0x004:
+                case 0x005:
+                case 0x006:
+                case 0x007:
+                case 0x805:
+                case 0x806:
+                case 0x807: mask &= AV_68040; break;
+
+                default:
+                    break;
+            }
+            break;
+            
+        case MOVES:
+
+            if (ext & 0x7FF) mask = 0;
+            break;
+
+        default:
+            break;
+    }
+
+    return mask;
+}
+
+bool
+Moira::isAvailable(Instr I)
+{
+    return availabilityMask(I) & (1 << model);
+}
+
+bool
+Moira::isAvailable(Instr I, Mode M, Size S)
+{
+    return availabilityMask(I, M, S) & (1 << model);
+}
+
+bool
+Moira::isAvailable(Instr I, Mode M, Size S, u16 ext)
+{
+    return availabilityMask(I, M, S, ext) & (1 << model);
+}
+
+const char *
+Moira::availabilityString(Instr I, Mode M, Size S, u16 ext)
+{
+    switch (availabilityMask(I, M, S, ext)) {
+
+        case AV_68010_UP:           return "(1+)";
+        case AV_68020:              return "(2)";
+        case AV_68020 | AV_68030:   return "(2-3)";
+        case AV_68020_UP:           return "(2+)";
+        case AV_68040:              return "(4+)";
+
+        default:
+            return "(?)";
+    }
+}
+
 FunctionCode
 Moira::readFC() const
 {

@@ -2081,7 +2081,8 @@ print_insn_m68k (bfd_vma memaddr, disassemble_info *info)
 
   if (val == 0)
     /* Handle undefined instructions.  */
-    info->fprintf_func (info->stream, ".short 0x%04x", (buffer[0] << 8) + buffer[1]);
+    // info->fprintf_func (info->stream, ".short 0x%04x", (buffer[0] << 8) + buffer[1]); // DIRK
+    info->fprintf_func (info->stream, ".short %d", (buffer[0] << 8) + buffer[1]);
 
   return val ? val : 2;
 }

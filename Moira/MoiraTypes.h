@@ -40,9 +40,19 @@ typedef enum
     M68EC040,           // Work in progress
     M68LC040,           // Work in progress
     M68040              // Work in progress
-
 }
 Model;
+
+// Availabilty masks
+constexpr u16 AV_68040    = 1 << M68EC040 | 1 << M68LC040 | 1 << M68040;
+constexpr u16 AV_68030    = 1 << M68EC030 | 1 << M68030;
+constexpr u16 AV_68020    = 1 << M68EC020 | 1 << M68020;
+constexpr u16 AV_68030_UP = AV_68030 | AV_68040;
+constexpr u16 AV_68020_UP = AV_68020 | AV_68030_UP;
+constexpr u16 AV_68010_UP = 1 << M68010 | AV_68020_UP;
+constexpr u16 AV_68000_UP = 1 << M68000 | AV_68010_UP;
+constexpr u16 AV_MMU      = 1 << M68030 | 1 << M68LC040 | 1 << M68040;
+constexpr u16 AV_FPU      = 1 << M68040;
 
 typedef enum
 {

@@ -93,7 +93,18 @@ Moira::Op(u16 reg, u32 &pc)
 template <Instr I, Mode M, Size S> void
 Moira::dasmIllegal(StrWriter &str, u32 &addr, u16 op)
 {
-    str << "dc.w " << UInt16{op} << "; ILLEGAL";
+    switch (str.style) {
+
+        case DASM_GNU:
+
+            str << ".short " << Int{op};
+            break;
+
+        default:
+
+            str << "dc.w " << UInt16{op} << "; ILLEGAL";
+            break;
+    }
 }
 
 template <Instr I, Mode M, Size S> void
@@ -1162,10 +1173,18 @@ Moira::dasmMoveq(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmMoves(StrWriter &str, u32 &addr, u16 op)
 {
+    auto oldaddr = addr;
     auto ext = (u16)dasmRead<Word>(addr);
     auto ea = Op <M,S> ( _____________xxx(op), addr );
     auto rg = Rn ( xxxx____________(ext) );
-    
+
+    if (str.checkAvailability() && !isAvailable(I, M, S, ext)) {
+
+        addr = oldaddr;
+        dasmIllegal<I, M, S>(str, addr, op);
+        return;
+    }
+
     if (ext & 0x800) {      // Rg -> Ea
         str << Ins<I>{} << Sz<S>{} << tab << rg << Sep{} << ea;
     } else {                // Ea -> Rg
@@ -1217,16 +1236,40 @@ template <Instr I, Mode M, Size S> void
 Moira::dasmMoveFromSrRg(StrWriter &str, u32 &addr, u16 op)
 {
     auto dst = Dn ( _____________xxx(op) );
-    
-    str << Ins<I>{} << tab << Sr{} << Sep{} << dst;
+
+    switch (style) {
+
+        case DASM_MUSASHI:
+        case DASM_VDA68K_MOT:
+        case DASM_VDA68K_MIT:
+
+            str << Ins<I>{} << tab << Sr{} << Sep{} << dst;
+            break;
+
+        default:
+
+            str << Ins<I>{} << Sz<S>{} << tab << Sr{} << Sep{} << dst;
+    }
 }
 
 template <Instr I, Mode M, Size S> void
 Moira::dasmMoveFromSrEa(StrWriter &str, u32 &addr, u16 op)
 {
     auto dst = Op<M, S>( _____________xxx(op), addr );
-    
-    str << Ins<I>{} << tab << Sr{} << Sep{} << dst;
+
+    switch (style) {
+
+        case DASM_MUSASHI:
+        case DASM_VDA68K_MOT:
+        case DASM_VDA68K_MIT:
+
+            str << Ins<I>{} << tab << Sr{} << Sep{} << dst;
+            break;
+
+        default:
+
+            str << Ins<I>{} << Sz<S>{} << tab << Sr{} << Sep{} << dst;
+    }
 }
 
 template <Instr I, Mode M, Size S> void
