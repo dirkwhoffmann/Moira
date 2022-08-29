@@ -38,9 +38,11 @@ struct Mmucc { int raw; Mmucc(int v) : raw(v) { } };
 // Registers
 struct Dn { int raw; Dn(int v) : raw(v) { } };
 struct An { int raw; An(int v) : raw(v) { } };
-struct Anr { int raw; Anr(int v) : raw(v) { } };
+struct Am { int raw; Am(int v) : raw(v) { } };
+struct Anr { int raw; Anr(int v) : raw(v) { } }; // DEPRECATED
 struct Rn { int raw;  Rn(int v) : raw(v) { } };
-struct Rnr { int raw; Rnr(int v) : raw(v) { } };
+struct Rm { int raw;  Rm(int v) : raw(v) { } };
+struct Rnr { int raw; Rnr(int v) : raw(v) { } }; // DEPRECATED
 struct Ccr { };
 struct Sr { };
 struct Usp { };
@@ -132,8 +134,10 @@ public:
 
     StrWriter& operator<<(Dn);
     StrWriter& operator<<(An);
+    StrWriter& operator<<(Am);
     StrWriter& operator<<(Anr);
     StrWriter& operator<<(Rn);
+    StrWriter& operator<<(Rm);
     StrWriter& operator<<(Rnr);
     StrWriter& operator<<(Ccr);
     StrWriter& operator<<(Sr);

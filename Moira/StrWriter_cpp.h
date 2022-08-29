@@ -455,6 +455,44 @@ StrWriter::operator<<(An an)
 }
 
 StrWriter&
+StrWriter::operator<<(Am an)
+{
+    switch (style) {
+
+        case DASM_MOIRA_MOT:
+        case DASM_MOIRA_MIT:
+        case DASM_MUSASHI:
+
+            *ptr++ = 'A';
+            *ptr++ = '0' + (char)an.raw;
+            break;
+
+        case DASM_VDA68K_MOT:
+        case DASM_VDA68K_MIT:
+
+            *ptr++ = 'a';
+            *ptr++ = '0' + (char)an.raw;
+            break;
+
+        case DASM_GNU:
+
+            if (an.raw == 7) {
+
+                *ptr++ = 's';
+                *ptr++ = 'p';
+
+            } else {
+
+                *ptr++ = 'a';
+                *ptr++ = '0' + (char)an.raw;
+            }
+            break;
+    }
+
+    return *this;
+}
+
+StrWriter&
 StrWriter::operator<<(Anr an)
 {
     switch (style) {
@@ -483,6 +521,13 @@ StrWriter&
 StrWriter::operator<<(Rn rn)
 {
     rn.raw < 8 ? *this << Dn{rn.raw} : *this << An{rn.raw - 8};
+    return *this;
+}
+
+StrWriter&
+StrWriter::operator<<(Rm rm)
+{
+    rm.raw < 8 ? *this << Dn{rm.raw} : *this << Am{rm.raw - 8};
     return *this;
 }
 
@@ -595,10 +640,10 @@ StrWriter::operator<<(RegList l)
         if (first) { first = false; } else { *this << "/"; }
         
         // Format variant 1: Single register
-        if (r[i] == 1) { *this << Rnr{i}; }
+        if (r[i] == 1) { *this << Rm{i}; }
         
         // Format variant 2: Register range
-        else { *this << Rnr{i} << "-" << Rnr{i+r[i]-1}; }
+        else { *this << Rnr{i} << "-" << Rm{i+r[i]-1}; }
     }
     
     return *this;
