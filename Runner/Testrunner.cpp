@@ -359,6 +359,11 @@ void runM68k(Setup &s, Result &r)
 
 void runBinutils(Setup &s, Result &r)
 {
+    if ((moiraMem[pc] << 8 | moiraMem[pc+1]) == 0xc3a) {
+        printf("runBinutils(%x)\n", opcode);
+        printf("di.mach = %d\n", di.mach);
+    }
+
     // memcpy(mi.bytes, moiraMem + pc, 32);
     memcpy(mi.bytes, moiraMem, sizeof(mi.bytes));
     mi.len = 0x10000;

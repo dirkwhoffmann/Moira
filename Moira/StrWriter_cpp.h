@@ -1350,7 +1350,9 @@ StrWriter::operator<<(Tab tab)
 template <Instr I, Mode M, Size S> StrWriter&
 StrWriter::operator<<(const Av<I,M,S> &av)
 {
-    if (style == DASM_VDA68K_MOT || style == DASM_VDA68K_MIT) { return *this; }
+    if (style == DASM_VDA68K_MOT ||
+        style == DASM_VDA68K_MIT ||
+        style == DASM_GNU) { return *this; }
     
     switch (I) {
             

@@ -10,6 +10,7 @@ set(CMAKE_CXX_EXTENSIONS False)
   
 # Add sub directories
 add_subdirectory(Moira)
+add_subdirectory(Binutils)
 add_subdirectory(Musashi)
 add_subdirectory(M68k)
 

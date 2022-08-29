@@ -229,8 +229,8 @@
 			isa = PBXGroup;
 			children = (
 				50C0124028BBAE80001EFB37 /* CmakeLists.txt */,
-				50C0123628BBAD9B001EFB37 /* m68k-dis.c */,
 				50C0123528BBAD9B001EFB37 /* m68k-dis.h */,
+				50C0123628BBAD9B001EFB37 /* m68k-dis.c */,
 				50C0123728BBAD9B001EFB37 /* m68k-opc.c */,
 				50C0123828BBAD9B001EFB37 /* m68k.h */,
 				50C0123E28BBADEA001EFB37 /* m68k-main.cpp */,
