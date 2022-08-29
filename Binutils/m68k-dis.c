@@ -668,12 +668,14 @@ m68k_valid_ea (char code, int val)
    REGNO = -1 for pc, -2 for none (suppressed).  */
 
 static void
-print_base (int regno, bfd_vma disp, disassemble_info *info)
+// print_base (int regno, bfd_vma disp, disassemble_info *info)
+print_base (int regno, int disp, disassemble_info *info) // DIRK: Made signed
 {
   if (regno == -1)
     {
 #ifdef MOTOROLA
-      (*info->print_address_func) (disp, info);
+      // (*info->print_address_func) (disp, info); // DIRK: Commented out
+      (*info->fprintf_func) (info->stream, "%d", disp); // DIRK: Added
       (*info->fprintf_func) (info->stream, ",pc");
 #else
       (*info->fprintf_func) (info->stream, "%%pc@(");
@@ -779,14 +781,16 @@ print_indexed (int basereg,
   if ((word & 0x100) == 0)
     {
       base_disp = word & 0xff;
+      /* DIRK: COMMENTED OUT
       if ((base_disp & 0x80) != 0)
 	base_disp -= 0x100;
       if (basereg == -1)
 	base_disp += addr;
+       */
 #ifdef MOTOROLA
       (*info->fprintf_func) (info->stream, "(");
 #endif
-      print_base (basereg, base_disp, info);
+      print_base (basereg, (signed char)base_disp, info); // DIRK: Added (signed char)
       (*info->fprintf_func) (info->stream, ",%s)", buf);
       return p;
     }
@@ -1405,9 +1409,9 @@ print_insn_arg (const char *d,
 	  switch (val & 7)
 	    {
 	    case 0:
-	      NEXTWORD (p, val, PRINT_INSN_ARG_MEMORY_ERROR);
+          NEXTWORD (p, val, PRINT_INSN_ARG_MEMORY_ERROR);
         info->target = val;
-	      (*info->print_address_func) (val, info);
+	      (*info->print_address_func) ((unsigned short)val, info); // DIRK: Added (unsigned short)
 	      break;
 
 	    case 1:

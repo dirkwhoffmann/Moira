@@ -779,11 +779,11 @@ StrWriter::operator<<(Ix<M,S> wrapper)
             
         case DASM_MOIRA_MOT:
         case DASM_MUSASHI:
-        case DASM_GNU:
 
             *this << IxMus<M,S>{wrapper.ea};
             break;
             
+        case DASM_GNU:
         case DASM_VDA68K_MOT:
             
             *this << IxMot<M,S>{wrapper.ea};
@@ -922,9 +922,15 @@ StrWriter::operator<<(IxMot<M,S> wrapper)
         u16 lw    = ____x___________ (ea.ext1);
         u16 scale = _____xx_________ (ea.ext1);
         u16 disp  = ________xxxxxxxx (ea.ext1);
-        
+
         *this << "(";
-        *this << Int{(i8)disp} << ",";
+
+        if (style == DASM_GNU) {
+            *this << Int{(i8)disp} << ",";
+        } else {
+            *this << Int{(i8)disp} << ",";
+        }
+
         M == 10 ? *this << "pc" : *this << An{ea.reg};
         *this << "," << Rn{reg};
         lw ? *this << Sz<Long>{} : *this << Sz<Word>{};
@@ -1107,11 +1113,11 @@ StrWriter::operator<<(Aw<M,S> wrapper)
         case DASM_MOIRA_MIT:
         case DASM_MUSASHI:
         case DASM_VDA68K_MOT:
-        case DASM_GNU:
 
             *this << UInt(ea.ext1) << Sz<Word>{};
             break;
-            
+
+        case DASM_GNU:
         case DASM_VDA68K_MIT:
             
             *this << UInt(ea.ext1);
@@ -1132,11 +1138,11 @@ StrWriter::operator<<(Al<M,S> wrapper)
         case DASM_MOIRA_MIT:
         case DASM_MUSASHI:
         case DASM_VDA68K_MOT:
-        case DASM_GNU:
 
             *this << UInt(ea.ext1) << Sz<Long>{};
             break;
             
+        case DASM_GNU:
         case DASM_VDA68K_MIT:
             
             *this << UInt(ea.ext1);
@@ -1156,13 +1162,13 @@ StrWriter::operator<<(DiPc<M,S> wrapper)
             
         case DASM_MOIRA_MOT:
         case DASM_MUSASHI:
-        case DASM_GNU:
 
             *this << "(" << Int{(i16)ea.ext1} << ",PC)";
             resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
             StrWriter(comment, style, nf) << "; (" << UInt(resolved) << ")" << Finish{};
             break;
             
+        case DASM_GNU:
         case DASM_VDA68K_MOT:
             
             resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
@@ -1170,6 +1176,11 @@ StrWriter::operator<<(DiPc<M,S> wrapper)
             break;
 
         case DASM_MOIRA_MIT:
+
+            resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
+            *this << "PC@(" << UInt(resolved) << ")";
+            break;
+
         case DASM_VDA68K_MIT:
             
             resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);

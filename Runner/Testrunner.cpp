@@ -99,7 +99,9 @@ void setupBinutils()
     };
     di.fprintf_func = &fprintf;
     di.print_address_func = [](bfd_vma addr, struct disassemble_info* dinfo) {
-        dinfo->fprintf_func(dinfo->stream, "$%X", addr);
+        // dinfo->fprintf_func(dinfo->stream, "$%X", addr);
+        printf("Output: %x %u (%d)\n", addr, addr, (int)addr);
+        dinfo->fprintf_func(dinfo->stream, "%u", addr);
     };
 }
 
@@ -357,10 +359,12 @@ void runM68k(Setup &s, Result &r)
 
 void runBinutils(Setup &s, Result &r)
 {
-    memcpy(mi.bytes, moiraMem + pc, 32);
-    mi.len = 16;
+    // memcpy(mi.bytes, moiraMem + pc, 32);
+    memcpy(mi.bytes, moiraMem, sizeof(mi.bytes));
+    mi.len = 0x10000;
 
-    r.dasmCntBinutils = print_insn_m68k(0, &di);
+    // r.dasmCntBinutils = print_insn_m68k(0, &di);
+    r.dasmCntBinutils = print_insn_m68k(pc, &di);
     fflush(binutilsStream);
     memcpy(r.dasmBinutils, binutilsBuffer, std::min(binutilsBufferSize, (size_t)128));
     r.dasmBinutils[binutilsBufferSize] = 0;

@@ -878,7 +878,8 @@ Moira::dasmBitImDy(StrWriter &str, u32 &addr, u16 op)
             
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
-            
+        case DASM_GNU:
+
             str << Ins<I>{} << tab << Ims<S>(src) << Sep{} << dst;
             break;
             
@@ -898,7 +899,8 @@ Moira::dasmBitImEa(StrWriter &str, u32 &addr, u16 op)
             
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
-            
+        case DASM_GNU:
+
             str << Ins<I>{} << tab << Ims<S>(src) << Sep{} << dst;
             break;
             

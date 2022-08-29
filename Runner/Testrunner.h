@@ -44,7 +44,7 @@ extern long testrun;
 extern moira::Model cpuModel;
 
 // Binutils
-struct meminfo { unsigned char bytes[32]; unsigned len; };
+struct meminfo { unsigned char bytes[0x10000]; unsigned len; };
 extern char* binutilsBuffer;
 extern size_t binutilsBufferSize;
 extern FILE* binutilsStream;
