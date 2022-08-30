@@ -479,7 +479,7 @@ Moira::dasmBsr(StrWriter &str, u32 &addr, u16 op)
             
         default:
             
-            str << Ins<I>{} << tab << UInt(dst) << Av<I, M, S>{};
+            str << Ins<I>{} << Szb<S>{} << tab << UInt(dst) << Av<I, M, S>{};
             break;
     }
 }
@@ -849,7 +849,13 @@ Moira::dasmBcc(StrWriter &str, u32 &addr, u16 op)
             
             str << Ins<I>{} << tab << UInt(dst) << Av<I, M, S>{};
             break;
-            
+
+        case DASM_GNU:
+
+            printf("dasmBcc S = %d\n", S);
+            str << Ins<I>{} << Szb<S>{} << tab << UInt(dst);
+            break;
+
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
             
@@ -1025,7 +1031,8 @@ Moira::dasmLink(StrWriter &str, u32 &addr, u16 op)
             
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
-            
+        case DASM_GNU:
+
             str << Ins<I>{} << Sz<S>{} << tab << src << Sep{} << Ims<S>(dsp);
             break;
             
@@ -1345,7 +1352,8 @@ Moira::dasmMoveUspAn(StrWriter &str, u32 &addr, u16 op)
             
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
-            
+        case DASM_GNU:
+
             str << Ins<I>{} << Sz<S>{} << tab << Usp{} << Sep{} << dst;
             break;
             
@@ -1364,7 +1372,8 @@ Moira::dasmMoveAnUsp(StrWriter &str, u32 &addr, u16 op)
             
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
-            
+        case DASM_GNU:
+
             str << Ins<I>{} << Sz<S>{} << tab << src << Sep{} << Usp{};
             break;
             

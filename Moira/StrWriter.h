@@ -30,6 +30,7 @@ struct Imd { u32 raw; Imd(u32 v) : raw(v) { } };
 // Mnemonics
 template <Instr I> struct Ins { };
 template <Size S> struct Sz { };
+template <Size S> struct Szb { };
 struct Cnd { int raw; Cnd(int v) : raw(v) { } };
 struct Cpcc { int raw; Cpcc(int v) : raw(v) { } };
 struct Fcc { int raw; Fcc(int v) : raw(v) { } };
@@ -127,6 +128,7 @@ public:
 
     template <Instr I> StrWriter& operator<<(Ins<I>);
     template <Size S> StrWriter& operator<<(Sz<S>);
+    template <Size S> StrWriter& operator<<(Szb<S>);
     StrWriter& operator<<(Cnd);
     StrWriter& operator<<(Cpcc);
     StrWriter& operator<<(Fcc);

@@ -236,7 +236,7 @@ StrWriter::operator<<(Ins<I> i)
 {
     if constexpr (I == DBF) {
         
-        if (style == DASM_VDA68K_MOT || style == DASM_VDA68K_MIT) {
+        if (style == DASM_VDA68K_MOT || style == DASM_VDA68K_MIT || style == DASM_GNU) {
             *this << "dbf";
         } else {
             *this << "dbra";
@@ -253,7 +253,45 @@ StrWriter::operator<<(Ins<I> i)
 template <Size S> StrWriter&
 StrWriter::operator<<(Sz<S>)
 {
-    *this << ((S == Byte) ? ".b" : (S == Word) ? ".w" : ".l");
+    switch (style) {
+
+        case DASM_MOIRA_MIT:
+        case DASM_GNU:
+
+            *this << ((S == Byte) ? "b" : (S == Word) ? "w" : "l");
+            break;
+
+        default:
+
+            *this << ((S == Byte) ? ".b" : (S == Word) ? ".w" : ".l");
+    }
+
+    return *this;
+}
+
+template <Size S> StrWriter&
+StrWriter::operator<<(Szb<S>)
+{
+    switch (style) {
+
+        case DASM_MOIRA_MIT:
+        case DASM_GNU:
+
+            if constexpr (S == Byte) *this << "s";
+            if constexpr (S == Word) *this << "w";
+            break;
+
+        case DASM_VDA68K_MIT:
+        case DASM_VDA68K_MOT:
+
+            if constexpr (S == Byte) *this << ".b";
+            if constexpr (S == Word) *this << ".w";
+            if constexpr (S == Long) *this << ".l";
+            break;
+
+        default:
+            break;
+    }
 
     return *this;
 }
@@ -875,7 +913,8 @@ StrWriter::operator<<(IxMus<M,S> wrapper)
         if (disp) *this << Int{(i8)disp} << ",";
         M == 10 ? *this << "PC" : *this << An{ea.reg};
         *this << "," << Rn{reg};
-        lw ? *this << Sz<Long>{} : *this << Sz<Word>{};
+        // lw ? *this << Sz<Long>{} : *this << Sz<Word>{};
+        *this << (lw ? ".l" : ".w");
         *this << Scale{scale} << ")";
         
     } else {
@@ -932,7 +971,8 @@ StrWriter::operator<<(IxMus<M,S> wrapper)
             
             if (comma) *this << ",";
             *this << Rn{reg};
-            lw ? (*this << Sz<Long>{}) : (*this << Sz<Word>{});
+            // lw ? (*this << Sz<Long>{}) : (*this << Sz<Word>{});
+            *this << (lw ? ".l" : ".w");
             *this << Scale{scale};
             comma = true;
         }
@@ -984,7 +1024,8 @@ StrWriter::operator<<(IxMot<M,S> wrapper)
 
         M == 10 ? *this << "pc" : *this << An{ea.reg};
         *this << "," << Rn{reg};
-        lw ? *this << Sz<Long>{} : *this << Sz<Word>{};
+        // lw ? *this << Sz<Long>{} : *this << Sz<Word>{};
+        *this << (lw ? ".l" : ".w");
         *this << Scale{scale} << ")";
         
     } else {
@@ -1036,7 +1077,8 @@ StrWriter::operator<<(IxMot<M,S> wrapper)
             
             *this << ",";
             *this << Rn{reg};
-            lw ? (*this << Sz<Long>{}) : (*this << Sz<Word>{});
+            // lw ? (*this << Sz<Long>{}) : (*this << Sz<Word>{});
+            *this << (lw ? ".l" : ".w");
             *this << Scale{scale};
         }
         if (preindex) {
