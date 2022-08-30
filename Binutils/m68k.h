@@ -29,8 +29,13 @@
 #define	m68030   0x008
 #define	m68040   0x010
 #define m68060   0x020
-#define	m68881   0x040
-#define	m68851   0x080
+
+// DIRK: WE TAKE OUT coprocessors for now
+#define	m68881   0x0
+#define	m68851   0x0
+//#define    m68881   0x040
+// #define    m68851   0x080
+
 #define cpu32	 0x100		/* e.g., 68332 */
 #define fido_a   0x200
 #define m68k_mask  0x3ff

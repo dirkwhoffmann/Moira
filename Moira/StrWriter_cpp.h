@@ -712,7 +712,7 @@ StrWriter::operator<<(RegRegList l)
 {
     if (style == DASM_GNU) {
 
-        *this << RegList{l.raw};
+        l.raw ? *this << RegList{l.raw} : *this << "#0";
 
     } else {
 
@@ -1068,10 +1068,6 @@ StrWriter::operator<<(IxGnu<M,S> wrapper)
         u32  base  = ea.ext2;
         u32  outer = ea.ext3;
 
-        bool preindex = (iis > 0 && iis < 4);
-        bool postindex = (iis > 4);
-        bool comma = false;
-
         // printf("IxGnu full<M = %d, S = %d>: bs = %d is = %d iis = %d preindex = %d postindex = %d base = %d outer = %d\n", M, S, bs, is, iis, preindex, postindex, base, outer);
 
         if (M != 10 && iis == 0) {
@@ -1165,8 +1161,9 @@ StrWriter::operator<<(IxGnu<M,S> wrapper)
                 *this << Sep{};
             }
             if (!bs) {
-                *this << Pc{};
-                *this << Sep{};
+                *this << "pc" << Sep{};
+            } else {
+                *this << "zpc" << Sep{};
             }
             if (!is) {
 
