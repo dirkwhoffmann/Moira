@@ -685,9 +685,6 @@ bool compareDasm(Result &r1, Result &r2)
 
     auto I = moiracpu->getInfo(r1.opcode).I;
 
-    // M68k seems to be buggy in the line F range
-    skipM68k = r1.opcode >= 0xF000 || I == ILLEGAL || I == LINE_F;
-
     // Skip broken Musashi opcodes
     skipMusashi |= (((r1.opcode & 0xff20) == 0xf400) || // cinv
                     ((r1.opcode & 0xff20) == 0xf420) || // cpush
@@ -696,6 +693,12 @@ bool compareDasm(Result &r1, Result &r2)
                     ((r1.opcode & 0xfff8) == 0xf608) || // move16
                     ((r1.opcode & 0xfff8) == 0xf610) || // move16
                     ((r1.opcode & 0xfff8) == 0xf618) ); // move16
+
+    // Skip broken Binutils opcodes
+    skipBinutils |= I == CMPI && cpuModel == M68010;
+
+    // M68k seems to be buggy in the line F range
+    skipM68k = r1.opcode >= 0xF000 || I == ILLEGAL || I == LINE_F;
 
     switch (cpuModel) {
 

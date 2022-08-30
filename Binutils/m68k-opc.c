@@ -267,19 +267,11 @@ const struct m68k_opcode m68k_opcodes[] =
 
 {"cmpaw", 2,	one(0130300),	one(0170700), "*wAd", m68000up, dis_nonbranch },
 {"cmpal", 2,	one(0130700),	one(0170700), "*lAd", m68000up | mcfisa_a, dis_nonbranch },
-/*
- {"cmpib", 4,	one(0006000),	one(0177700), "#b$s", m68000 | m68010, dis_nonbranch },
- {"cmpib", 4,	one(0006000),	one(0177700), "#b@s", m68020up | cpu32 | fido_a, dis_nonbranch },
-*/
- {"cmpib", 4,    one(0006000),    one(0177700), "#b$s", m68000, dis_nonbranch }, // DIRK
- {"cmpib", 4,    one(0006000),    one(0177700), "#b@s", m68010up | cpu32 | fido_a, dis_nonbranch }, // DIRK
- {"cmpib", 4,	one(0006000),	one(0177700), "#bDs", mcfisa_b | mcfisa_c, dis_nonbranch },
-/*
+{"cmpib", 4,	one(0006000),	one(0177700), "#b$s", m68000 | m68010, dis_nonbranch },
+{"cmpib", 4,	one(0006000),	one(0177700), "#b@s", m68020up | cpu32 | fido_a, dis_nonbranch },
+{"cmpib", 4,	one(0006000),	one(0177700), "#bDs", mcfisa_b | mcfisa_c, dis_nonbranch },
 {"cmpiw", 4,	one(0006100),	one(0177700), "#w$s", m68000 | m68010, dis_nonbranch },
 {"cmpiw", 4,	one(0006100),	one(0177700), "#w@s", m68020up | cpu32 | fido_a, dis_nonbranch },
-*/
-{"cmpiw", 4,    one(0006100),    one(0177700), "#w$s", m68000, dis_nonbranch }, // DIRK
-{"cmpiw", 4,    one(0006100),    one(0177700), "#w@s", m68010up | cpu32 | fido_a, dis_nonbranch }, // DIRK
 {"cmpiw", 4,	one(0006100),	one(0177700), "#wDs", mcfisa_b | mcfisa_c, dis_nonbranch },
 {"cmpil", 6,    one(0006200),    one(0177700), "#l$s", m68000, dis_nonbranch },
 {"cmpil", 6,    one(0006200),    one(0177700), "#l@s", m68010up | cpu32 | fido_a, dis_nonbranch },
