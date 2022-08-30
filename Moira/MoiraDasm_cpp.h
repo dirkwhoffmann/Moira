@@ -736,9 +736,17 @@ Moira::dasmCpDbcc(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmCpGen(StrWriter &str, u32 &addr, u16 op)
 {
+    auto old = addr;
     auto id = ( ____xxx_________(op) );
 
     auto ext = Imu ( dasmRead<Long>(addr) );
+
+    if (style == DASM_GNU) {
+
+        addr = old;
+        dasmIllegal<I, M, S>(str, addr, op);
+        return;
+    }
 
     str << id << Ins<I>{} << tab << ext;
     str << Av<I, M, S>{};
@@ -775,6 +783,7 @@ Moira::dasmCpSave(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmCpScc(StrWriter &str, u32 &addr, u16 op)
 {
+    auto old  = addr;
     auto dn   = ( _____________xxx(op) );
     auto id   = ( ____xxx_________(op) );
 
@@ -783,6 +792,13 @@ Moira::dasmCpScc(StrWriter &str, u32 &addr, u16 op)
 
     auto ext2 = dasmRead<Word>(addr);
     auto ea = Op<M, S>(dn, addr);
+
+    if (style == DASM_GNU) {
+
+        addr = old;
+        dasmIllegal<I, M, S>(str, addr, op);
+        return;
+    }
 
     str << id << Ins<I>{} << Cpcc{cnd} << tab << ea;
     str << "; (extension = " << Int(ext2) << ") (2-3)";
