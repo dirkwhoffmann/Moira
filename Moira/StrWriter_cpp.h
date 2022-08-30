@@ -279,6 +279,7 @@ StrWriter::operator<<(Szb<S>)
 
             if constexpr (S == Byte) *this << "s";
             if constexpr (S == Word) *this << "w";
+            if constexpr (S == Long) *this << "l";
             break;
 
         case DASM_VDA68K_MIT:

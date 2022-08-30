@@ -254,7 +254,7 @@ void run()
     // EXPERIMENTAL
     // dumpDasm();
 
-    selectModel(M68010);
+    selectModel(M68020);
     srand(3);
 
     for (testrun = 1 ;; testrun++) {
@@ -364,7 +364,7 @@ void runBinutils(Setup &s, Result &r)
     r.dasmBinutils[binutilsBufferSize] = 0;
     rewind(binutilsStream);
 
-    unsigned char * p = moiraMem + pc;
+    // unsigned char * p = moiraMem + pc;
     // printf("%02x%02x %02x%02x %02x%02x [%d] : %s\n", p[0], p[1], p[2], p[3], p[4], p[5], r.dasmCntBinutils, r.dasmBinutils);
 }
 
