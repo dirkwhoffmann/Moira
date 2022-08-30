@@ -1043,9 +1043,7 @@ StrWriter::operator<<(IxGnu<M,S> wrapper)
         u16 scale = _____xx_________ (ea.ext1);
         u16 disp  = ________xxxxxxxx (ea.ext1);
 
-        *this << "(";
-        // if (disp) *this << Int{(i8)disp} << ",";
-        *this << Int{(i8)disp} << ",";
+        *this << "(" << Int{(i8)disp} << ",";
         M == 10 ? *this << Pc{} : *this << An{ea.reg};
         *this << "," << Rn{reg};
         *this << (lw ? ".l" : ".w");
@@ -1070,20 +1068,20 @@ StrWriter::operator<<(IxGnu<M,S> wrapper)
 
         // printf("IxGnu full<M = %d, S = %d>: bs = %d is = %d iis = %d preindex = %d postindex = %d base = %d outer = %d\n", M, S, bs, is, iis, preindex, postindex, base, outer);
 
-        if (M != 10 && iis == 0) {
+        if (iis == 0) {
 
             // Memory Indirect Unindexed
             *this << "(";
 
-            // if (base) {
-            {
-                size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
-                *this << Sep{};
+            size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
+            *this << Sep{};
+
+            if constexpr (M == 10) {
+                *this << (bs ? "zpc" : "pc") << Sep{};
+            } else {
+                if (!bs) *this << An{ea.reg} << Sep{};
             }
-            if (!bs) {
-                *this << An{ea.reg};
-                *this << Sep{};
-            }
+
             if (!is) {
 
                 *this << Rn{reg};
@@ -1094,101 +1092,18 @@ StrWriter::operator<<(IxGnu<M,S> wrapper)
 
             ptr[-1] == ',' ? ptr[-1] = ')' : *ptr++ = ')';
 
-        } else if (M != 10 && (iis & 0b100)) {
+        } else if (iis & 0b100) {
 
             // Memory Indirect Postindexed
             *this << "([";
 
-            // if (base) {
-            {
-                size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
-                *this << Sep{};
-            }
-            if (!bs) {
-                *this << An{ea.reg};
-                *this << Sep{};
-            }
-
-            if (ptr[-1] == '[') *ptr++ = '0';
-            ptr[-1] == ',' ? ptr[-1] = ']' : *ptr++ = ']';
+            size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
             *this << Sep{};
 
-            if (!is) {
-
-                *this << Rn{reg};
-                *this << (lw ? ".l" : ".w");
-                *this << Scale{scale};
-                *this << Sep{};
-            }
-
-            *this << Int(outer) << ")";
-
-        } else if (M != 10) {
-
-            // Memory Indirect Preindexed
-            *this << "([";
-
-            // if (base) {
-            {
-                size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
-                *this << Sep{};
-            }
-            if (!bs) {
-                *this << An{ea.reg};
-                *this << Sep{};
-            }
-            if (!is) {
-
-                *this << Rn{reg};
-                *this << (lw ? ".l" : ".w");
-                *this << Scale{scale};
-                *this << Sep{};
-            }
-
-            if (ptr[-1] == '[') *ptr++ = '0';
-            ptr[-1] == ',' ? ptr[-1] = ']' : *ptr++ = ']';
-
-            *this << Sep{} << Int(outer) << ")";
-
-        } else if (M == 10 && iis == 0) {
-
-            // Program Counter Memory Indirect Unindexed
-            *this << "(";
-
-            // if (base) {
-            {
-                size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
-                *this << Sep{};
-            }
-            if (!bs) {
-                *this << "pc" << Sep{};
+            if constexpr (M == 10) {
+                *this << (bs ? "zpc" : "pc") << Sep{};
             } else {
-                *this << "zpc" << Sep{};
-            }
-            if (!is) {
-
-                *this << Rn{reg};
-                *this << (lw ? ".l" : ".w");
-                *this << Scale{scale};
-                *this << Sep{};
-            }
-
-            ptr[-1] == ',' ? ptr[-1] = ')' : *ptr++ = ')';
-
-        } else if (M == 10 && (iis & 0b100)) {
-
-            // Program counter Memory Indirect Postindexed Mode
-            *this << "([";
-
-            // if (base) {
-            {
-                size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
-                *this << Sep{};
-            }
-            if (!bs) {
-                *this << "pc" << Sep{};
-            } else {
-                *this << "zpc" << Sep{};
+                if (!bs) *this << An{ea.reg} << Sep{};
             }
 
             if (ptr[-1] == '[') *ptr++ = '0';
@@ -1207,19 +1122,18 @@ StrWriter::operator<<(IxGnu<M,S> wrapper)
 
         } else {
 
-            // Memory Indirect Preindexed Mode
+            // Memory Indirect Preindexed
             *this << "([";
 
-            // if (base) // DIFFERS FROM non-pc mode
-            {
-                size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
-                *this << Sep{};
-            }
-            if (!bs) {
-                *this << "pc" << Sep{};
+            size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
+            *this << Sep{};
+
+            if constexpr (M == 10) {
+                *this << (bs ? "zpc" : "pc") << Sep{};
             } else {
-                *this << "zpc" << Sep{}; // DIFFERS from non-pc mode
+                if (!bs) *this << An{ea.reg} << Sep{};
             }
+
             if (!is) {
 
                 *this << Rn{reg};
