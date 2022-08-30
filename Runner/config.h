@@ -28,7 +28,7 @@ static constexpr bool PROFILE_DASM = false;
 #define doExec(opcode) (opcode >= 0x0000 && opcode <= 0xEFFF)
 
 // Change to limit the range of disassembled instructions
-#define doDasm(opcode) (opcode >= 0x0000 && opcode <= 0xEFFF)
+#define doDasm(opcode) (opcode >= 0x0000 && opcode <= 0xFFFF)
 
 // Uncomment to disable assertion checking
 // #define NDEBUG

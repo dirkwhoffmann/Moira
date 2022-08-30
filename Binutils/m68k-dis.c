@@ -815,8 +815,7 @@ print_indexed (int basereg,
     case 3:
       NEXTLONG (p, base_disp, NULL);
     }
-  if (basereg == -1)
-    base_disp += addr;
+  // if (basereg == -1) base_disp += addr;  // DIRK: COMMENTED OUT
 
   /* Handle single-level case (not indirect).  */
   if ((word & 7) == 0)
@@ -1872,6 +1871,7 @@ match_insn_m68k (bfd_vma memaddr,
       && strcmp("bfexts", best->name)
       && strcmp("bfins", best->name)
       && strcmp("cas", best->name)
+    && strcmp("tas", best->name)
       && (c == 's' || c == 'w' || c == 'b' || c == 'l'))
     {
       static char b[32];

@@ -117,7 +117,12 @@ Moira::dasmLineA(StrWriter &str, u32 &addr, u16 op)
             
             str << "linea";
             break;
-            
+
+        case DASM_GNU:
+
+            str << ".short " << Int{op};
+            break;
+
         default:
             
             str << "dc.w " << tab << UInt16{op} << "; opcode 1010";
@@ -134,7 +139,12 @@ Moira::dasmLineF(StrWriter &str, u32 &addr, u16 op)
             
             str << "linef";
             break;
-            
+
+        case DASM_GNU:
+
+            str << ".short " << Int{op};
+            break;
+
         default:
             
             str << "dc.w " << tab << UInt16{op} << "; opcode 1111";
@@ -553,10 +563,7 @@ Moira::dasmChk(StrWriter &str, u32 &addr, u16 op)
     auto src = Op <M,S> ( _____________xxx(op), addr );
     auto dst = Dn       ( ____xxx_________(op)       );
 
-    printf("dasmChk\n");
     if (str.checkAvailability() && !isAvailable(I, M, S)) {
-
-        printf("not avail\n");
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -852,7 +859,6 @@ Moira::dasmBcc(StrWriter &str, u32 &addr, u16 op)
 
         case DASM_GNU:
 
-            printf("dasmBcc S = %d\n", S);
             str << Ins<I>{} << Szb<S>{} << tab << UInt(dst);
             break;
 

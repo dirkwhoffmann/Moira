@@ -585,6 +585,26 @@ StrWriter::operator<<(Ccr ccr)
 }
 
 StrWriter&
+StrWriter::operator<<(Pc _)
+{
+    switch (style) {
+
+        case DASM_GNU:
+        case DASM_VDA68K_MIT:
+        case DASM_VDA68K_MOT:
+
+            *ptr++ = 'p'; *ptr++ = 'c';
+            break;
+
+        default:
+
+            *ptr++ = 'P'; *ptr++ = 'C';
+    }
+
+    return *this;
+}
+
+StrWriter&
 StrWriter::operator<<(Sr _)
 {
     auto upper = style == DASM_MOIRA_MOT || style == DASM_MOIRA_MIT || style == DASM_MUSASHI;
@@ -690,13 +710,20 @@ StrWriter::operator<<(RegList l)
 StrWriter&
 StrWriter::operator<<(RegRegList l)
 {
-    u16 regsD = l.raw & 0x00FF;
-    u16 regsA = l.raw & 0xFF00;
-    
-    *this << RegList { regsD };
-    if (regsD && regsA) *this << "/";
-    *this << RegList { regsA };
-    
+    if (style == DASM_GNU) {
+
+        *this << RegList{l.raw};
+
+    } else {
+
+        u16 regsD = l.raw & 0x00FF;
+        u16 regsA = l.raw & 0xFF00;
+
+        *this << RegList { regsD };
+        if (regsD && regsA) *this << "/";
+        *this << RegList { regsA };
+    }
+
     return *this;
 }
 
@@ -871,8 +898,12 @@ StrWriter::operator<<(Ix<M,S> wrapper)
 
             *this << IxMus<M,S>{wrapper.ea};
             break;
-            
+
         case DASM_GNU:
+
+            *this << IxGnu<M,S>{wrapper.ea};
+            break;
+
         case DASM_VDA68K_MOT:
             
             *this << IxMot<M,S>{wrapper.ea};
@@ -911,9 +942,8 @@ StrWriter::operator<<(IxMus<M,S> wrapper)
         
         *this << "(";
         if (disp) *this << Int{(i8)disp} << ",";
-        M == 10 ? *this << "PC" : *this << An{ea.reg};
+        M == 10 ? *this << Pc{} : *this << An{ea.reg};
         *this << "," << Rn{reg};
-        // lw ? *this << Sz<Long>{} : *this << Sz<Word>{};
         *this << (lw ? ".l" : ".w");
         *this << Scale{scale} << ")";
         
@@ -959,7 +989,7 @@ StrWriter::operator<<(IxMus<M,S> wrapper)
         if (!bs) {
             
             if (comma) *this << ",";
-            M == 10 ? *this << "PC" : *this << An{ea.reg};
+            M == 10 ? *this << Pc{} : *this << An{ea.reg};
             comma = true;
         }
         if (postindex) {
@@ -971,7 +1001,6 @@ StrWriter::operator<<(IxMus<M,S> wrapper)
             
             if (comma) *this << ",";
             *this << Rn{reg};
-            // lw ? (*this << Sz<Long>{}) : (*this << Sz<Word>{});
             *this << (lw ? ".l" : ".w");
             *this << Scale{scale};
             comma = true;
@@ -990,6 +1019,225 @@ StrWriter::operator<<(IxMus<M,S> wrapper)
         *this << ")";
     }
     
+    return *this;
+}
+
+template <Mode M, Size S> StrWriter&
+StrWriter::operator<<(IxGnu<M,S> wrapper)
+{
+    assert(M == 6 || M == 10);
+
+    auto &ea = wrapper.ea;
+
+    u16 full = _______x________ (ea.ext1);
+
+    if (!full) {
+
+        //   15-12   11   10   09   08   07   06   05   04   03   02   01   00
+        // --------------------------------------------------------------------
+        // | REG   | LW | SCALE   | 0  | DISPLACEMENT                         |
+        // --------------------------------------------------------------------
+
+        u16 reg   = xxxx____________ (ea.ext1);
+        u16 lw    = ____x___________ (ea.ext1);
+        u16 scale = _____xx_________ (ea.ext1);
+        u16 disp  = ________xxxxxxxx (ea.ext1);
+
+        *this << "(";
+        // if (disp) *this << Int{(i8)disp} << ",";
+        *this << Int{(i8)disp} << ",";
+        M == 10 ? *this << Pc{} : *this << An{ea.reg};
+        *this << "," << Rn{reg};
+        *this << (lw ? ".l" : ".w");
+        *this << Scale{scale} << ")";
+
+    } else {
+
+        //   15-12   11   10   09   08   07   06   05   04   03   02   01   00
+        // --------------------------------------------------------------------
+        // | REG   | LW | SCALE   | 1  | BS | IS | BD SIZE  | 0  | IIS        |
+        // --------------------------------------------------------------------
+
+        u16  reg   = xxxx____________ (ea.ext1);
+        u16  lw    = ____x___________ (ea.ext1);
+        u16  scale = _____xx_________ (ea.ext1);
+        u16  bs    = ________x_______ (ea.ext1);
+        u16  is    = _________x______ (ea.ext1);
+        u16  size  = __________xx____ (ea.ext1);
+        u16  iis   = _____________xxx (ea.ext1);
+        u32  base  = ea.ext2;
+        u32  outer = ea.ext3;
+
+        bool preindex = (iis > 0 && iis < 4);
+        bool postindex = (iis > 4);
+        bool comma = false;
+
+        // printf("IxGnu full<M = %d, S = %d>: bs = %d is = %d iis = %d preindex = %d postindex = %d base = %d outer = %d\n", M, S, bs, is, iis, preindex, postindex, base, outer);
+
+        if (M != 10 && iis == 0) {
+
+            // Memory Indirect Unindexed
+            *this << "(";
+
+            // if (base) {
+            {
+                size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
+                *this << Sep{};
+            }
+            if (!bs) {
+                *this << An{ea.reg};
+                *this << Sep{};
+            }
+            if (!is) {
+
+                *this << Rn{reg};
+                *this << (lw ? ".l" : ".w");
+                *this << Scale{scale};
+                *this << Sep{};
+            }
+
+            ptr[-1] == ',' ? ptr[-1] = ')' : *ptr++ = ')';
+
+        } else if (M != 10 && (iis & 0b100)) {
+
+            // Memory Indirect Postindexed
+            *this << "([";
+
+            // if (base) {
+            {
+                size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
+                *this << Sep{};
+            }
+            if (!bs) {
+                *this << An{ea.reg};
+                *this << Sep{};
+            }
+
+            if (ptr[-1] == '[') *ptr++ = '0';
+            ptr[-1] == ',' ? ptr[-1] = ']' : *ptr++ = ']';
+            *this << Sep{};
+
+            if (!is) {
+
+                *this << Rn{reg};
+                *this << (lw ? ".l" : ".w");
+                *this << Scale{scale};
+                *this << Sep{};
+            }
+
+            *this << Int(outer) << ")";
+
+        } else if (M != 10) {
+
+            // Memory Indirect Preindexed
+            *this << "([";
+
+            // if (base) {
+            {
+                size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
+                *this << Sep{};
+            }
+            if (!bs) {
+                *this << An{ea.reg};
+                *this << Sep{};
+            }
+            if (!is) {
+
+                *this << Rn{reg};
+                *this << (lw ? ".l" : ".w");
+                *this << Scale{scale};
+                *this << Sep{};
+            }
+
+            if (ptr[-1] == '[') *ptr++ = '0';
+            ptr[-1] == ',' ? ptr[-1] = ']' : *ptr++ = ']';
+
+            *this << Sep{} << Int(outer) << ")";
+
+        } else if (M == 10 && iis == 0) {
+
+            // Program Counter Memory Indirect Unindexed
+            *this << "(";
+
+            // if (base) {
+            {
+                size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
+                *this << Sep{};
+            }
+            if (!bs) {
+                *this << Pc{};
+                *this << Sep{};
+            }
+            if (!is) {
+
+                *this << Rn{reg};
+                *this << (lw ? ".l" : ".w");
+                *this << Scale{scale};
+                *this << Sep{};
+            }
+
+            ptr[-1] == ',' ? ptr[-1] = ')' : *ptr++ = ')';
+
+        } else if (M == 10 && (iis & 0b100)) {
+
+            // Program counter Memory Indirect Postindexed Mode
+            *this << "([";
+
+            // if (base) {
+            {
+                size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
+                *this << Sep{};
+            }
+            if (!bs) {
+                *this << "pc" << Sep{};
+            } else {
+                *this << "zpc" << Sep{};
+            }
+
+            if (ptr[-1] == '[') *ptr++ = '0';
+            ptr[-1] == ',' ? ptr[-1] = ']' : *ptr++ = ']';
+            *this << Sep{};
+
+            if (!is) {
+
+                *this << Rn{reg};
+                *this << (lw ? ".l" : ".w");
+                *this << Scale{scale};
+                *this << Sep{};
+            }
+
+            *this << Int(outer) << ")";
+
+        } else {
+
+            // Memory Indirect Preindexed Mode
+            *this << "([";
+
+            // if (base) // DIFFERS FROM non-pc mode
+            {
+                size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
+                *this << Sep{};
+            }
+            if (!bs) {
+                *this << "pc" << Sep{};
+            } else {
+                *this << "zpc" << Sep{}; // DIFFERS from non-pc mode
+            }
+            if (!is) {
+
+                *this << Rn{reg};
+                *this << (lw ? ".l" : ".w");
+                *this << Scale{scale};
+                *this << Sep{};
+            }
+
+            if (ptr[-1] == '[') *ptr++ = '0';
+            ptr[-1] == ',' ? ptr[-1] = ']' : *ptr++ = ']';
+
+            *this << Sep{} << Int(outer) << ")";
+        }
+    }
+
     return *this;
 }
 
@@ -1015,19 +1263,22 @@ StrWriter::operator<<(IxMot<M,S> wrapper)
         u16 disp  = ________xxxxxxxx (ea.ext1);
 
         *this << "(";
-
+        *this << Int{(i8)disp} << ",";
+        /*
         if (style == DASM_GNU) {
             *this << Int{(i8)disp} << ",";
         } else {
             *this << Int{(i8)disp} << ",";
         }
-
+        */
         M == 10 ? *this << "pc" : *this << An{ea.reg};
         *this << "," << Rn{reg};
         // lw ? *this << Sz<Long>{} : *this << Sz<Word>{};
         *this << (lw ? ".l" : ".w");
         *this << Scale{scale} << ")";
-        
+
+        // printf("IxMot: not full");
+
     } else {
         
         //   15-12   11   10   09   08   07   06   05   04   03   02   01   00
@@ -1070,9 +1321,9 @@ StrWriter::operator<<(IxMot<M,S> wrapper)
             *this << "]";
         }
         if (is && bd) {
-            
+
             *this << ",0";
-            
+
         } else {
             
             *this << ",";
@@ -1092,7 +1343,9 @@ StrWriter::operator<<(IxMot<M,S> wrapper)
         }
         *this << ")";
     }
-    
+
+    // printf("IxMot: full");
+
     return *this;
 }
 

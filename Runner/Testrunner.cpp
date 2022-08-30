@@ -100,7 +100,6 @@ void setupBinutils()
     di.fprintf_func = &fprintf;
     di.print_address_func = [](bfd_vma addr, struct disassemble_info* dinfo) {
         // dinfo->fprintf_func(dinfo->stream, "$%X", addr);
-        printf("Output: %x %u (%d)\n", addr, addr, (int)addr);
         dinfo->fprintf_func(dinfo->stream, "%u", addr);
     };
 }
@@ -264,11 +263,7 @@ void run()
         randomizer.init(testrun);
 
         // Switch the CPU core from time to time
-        // if (testrun % 16 == 0) {
-        {
-
-            selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
-        }
+        if (testrun % 65536 == 65535) selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
         
         printf("Round %ld ", testrun); fflush(stdout);
         setupTestEnvironment(setup);
@@ -370,7 +365,7 @@ void runBinutils(Setup &s, Result &r)
     rewind(binutilsStream);
 
     unsigned char * p = moiraMem + pc;
-    printf("%02x%02x %02x%02x %02x%02x [%d] : %s\n", p[0], p[1], p[2], p[3], p[4], p[5], r.dasmCntBinutils, r.dasmBinutils);
+    // printf("%02x%02x %02x%02x %02x%02x [%d] : %s\n", p[0], p[1], p[2], p[3], p[4], p[5], r.dasmCntBinutils, r.dasmBinutils);
 }
 
 void runMusashi(Setup &s, Result &r)
@@ -684,6 +679,10 @@ bool compareDasm(Result &r1, Result &r2)
     bool skipM68k = false;
 
     auto I = moiracpu->getInfo(r1.opcode).I;
+
+    // Skip both Musashi and M68k in the Line A range
+    skipMusashi |= r1.opcode >= 0xF000;
+    skipM68k |= r1.opcode >= 0xF000;
 
     // Skip broken Musashi opcodes
     skipMusashi |= (((r1.opcode & 0xff20) == 0xf400) || // cinv
