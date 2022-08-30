@@ -626,19 +626,24 @@ StrWriter::operator<<(Cn cn)
     bool upper, valid;
     
     switch (style) {
-            
-        case DASM_MOIRA_MOT:
-        case DASM_MOIRA_MIT:
-        case DASM_MUSASHI:
-            
+
+        case DASM_GNU:
+
             valid = cn.raw <= 0x007 || (cn.raw >= 0x800 && cn.raw <= 0x807);
-            upper = true;
+            upper = false;
             break;
-            
-        default:
-            
+
+        case DASM_VDA68K_MIT:
+        case DASM_VDA68K_MOT:
+
             valid = cn.raw <= 0x008 || (cn.raw >= 0x800 && cn.raw <= 0x808);
             upper = false;
+            break;
+
+        default:
+
+            valid = cn.raw <= 0x007 || (cn.raw >= 0x800 && cn.raw <= 0x807);
+            upper = true;
             break;
     }
     
@@ -667,8 +672,12 @@ StrWriter::operator<<(Cn cn)
         }
         
     } else {
-        
-        style == DASM_MUSASHI ? *this << UInt(cn.raw) : *this << "INVALID";
+
+        if (style == DASM_MUSASHI || style == DASM_GNU) {
+            *this << UInt(cn.raw);
+        } else {
+            *this << "INVALID";
+        }
     }
     
     return *this;

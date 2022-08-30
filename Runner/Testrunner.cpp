@@ -254,7 +254,7 @@ void run()
     // EXPERIMENTAL
     // dumpDasm();
 
-    selectModel(M68000);
+    selectModel(M68010);
     srand(3);
 
     for (testrun = 1 ;; testrun++) {
