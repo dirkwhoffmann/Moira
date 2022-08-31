@@ -133,7 +133,8 @@ typedef enum
     CINV,       CPUSH,      MOVE16,
     
     // MMU instructions
-    PFLUSH,     PFLUSHA,    PLOAD,      PMOVE,      PTEST,
+    PFLUSH,     PFLUSHA, // TODO: DELETE FLUSHA
+    PLOAD,      PMOVE,      PTEST,
 
     // FPU instructions (68040 and 6888x)
     FABS,       FADD,       FBcc,       FCMP,       FDBcc,      FDIV,

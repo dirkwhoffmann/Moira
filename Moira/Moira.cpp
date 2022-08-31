@@ -647,22 +647,6 @@ Moira::isValidExt(Instr I, u16 op, u32 ext)
 {
     switch (I) {
 
-        case BFCHG:
-        case BFCLR:     return (ext & 0xF000) == 0;
-        case BFEXTS:
-        case BFEXTU:
-        case BFFFO:
-        case BFINS:     return (ext & 0x8000) == 0;
-        case BFSET:
-        case BFTST:     return (ext & 0xF000) == 0;
-        case CAS:       return (ext & 0xFE38) == 0;
-        case CAS2:      return (ext & 0x0E380E38) == 0;
-        case CHK2:      return (ext & 0x07FF) == 0;
-        case CMP2:      return (ext & 0x0FFF) == 0;
-        case MULL:
-        case DIVL:      return (ext & 0x83F8) == 0;
-
-            /*
         case BFCHG:     return (ext & 0xF000) == 0;
         case BFCLR:     return (ext & 0xF000) == 0;
         case BFEXTS:    return (ext & 0x8000) == 0;
@@ -671,13 +655,20 @@ Moira::isValidExt(Instr I, u16 op, u32 ext)
         case BFINS:     return (ext & 0x8000) == 0;
         case BFSET:     return (ext & 0xF000) == 0;
         case BFTST:     return (ext & 0xF000) == 0;
-        case CAS:       return (ext & 0x0E38) == 0;
+        case CAS:       return (ext & 0xFE38) == 0;
         case CAS2:      return (ext & 0x0E380E38) == 0;
-        case CHK2:      return (ext & 0x0FFF) == 0;
+        case CHK2:      return (ext & 0x07FF) == 0;
         case CMP2:      return (ext & 0x0FFF) == 0;
         case MULL:      return (ext & 0x83F8) == 0;
         case DIVL:      return (ext & 0x83F8) == 0;
-             */
+
+        case PMOVE:
+            return
+            (ext & 0xE0FF) == 0xE000 ||
+            (ext & 0xFDFF) == 0x6000 ||
+            (ext & 0xFCFF) == 0x0800 ||
+            (ext & 0xFCFF) == 0x0C00;
+
 
         default:
             fatalError;

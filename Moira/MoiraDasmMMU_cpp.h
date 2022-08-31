@@ -7,6 +7,7 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+/*
 template <Instr I, Mode M, Size S> void
 Moira::dasmPBcc(StrWriter &str, u32 &addr, u16 op)
 {
@@ -30,6 +31,7 @@ Moira::dasmPDbcc(StrWriter &str, u32 &addr, u16 op)
 
     str << "pdb" << Pcc{cnd} << tab << Dn{src} << Sep{} << UInt(dst);
 }
+*/
 
 template <Instr I, Mode M, Size S> void
 Moira::dasmPGen(StrWriter &str, u32 &addr, u16 op)
@@ -38,16 +40,16 @@ Moira::dasmPGen(StrWriter &str, u32 &addr, u16 op)
     //   PLOAD: 0010 00x0 000x xxxx
     // PVALID1: 0010 1000 0000 0000
     // PVALID2: 0010 1100 0000 0xxx
-    //   PMOVE: 010x xxx0 0000 0000 (Format 1)
-    //          011x xxx0 000x xx00 (Format 2)
-    //          011x xxx0 0000 0000 (Format 3)
+    //   PMOVE: 010x xxx0 0000 0000 (Format 1) ??
+    //          011x xxx0 000x xx00 (Format 2) ??
+    //          011x xxx0 0000 0000 (Format 3) ??
     //   PTEST: 100x xxxx xxxx xxxx
     // PFLUSHR: 1010 0000 0000 0000
 
     auto ext = dasmRead<Word>(addr);
     addr -= 2;
 
-    printf("dasmPGen(%x) ext = %x\n", op, ext);
+    // printf("dasmPGen(%x) ext = %x\n", op, ext);
 
     // PLOAD
     if ((ext & 0xFDE0) == 0x2000) {
@@ -60,13 +62,6 @@ Moira::dasmPGen(StrWriter &str, u32 &addr, u16 op)
     if ((ext & 0xE200) == 0x2000) {
 
         dasmPFlush<PFLUSH, M, Long>(str, addr, op);
-        return;
-    }
-
-    // PFLUSHR
-    if ((ext & 0xFFFF) == 0xA000) {
-
-        dasmPFlushA<PFLUSHA, M, Long>(str, addr, op);
         return;
     }
 
@@ -87,20 +82,22 @@ Moira::dasmPGen(StrWriter &str, u32 &addr, u16 op)
     }
 
     // PMOVE
-    // if ((ext & 0xE000) == 0x0000 || (ext & 0xE000) == 0x6000 || (ext & 0xE000) == 0x4000) {
-    {
-        dasmPMove<PMOVE, M, S>(str, addr, op);
-        return;
-
-    }
-
-    // str << "TODO: dasmMgen";
+    dasmPMove<PMOVE, M, S>(str, addr, op);
 }
 
 template <Instr I, Mode M, Size S> void
 Moira::dasmPFlush(StrWriter &str, u32 &addr, u16 op)
 {
+    auto old = addr;
     auto ext = dasmRead<Word>(addr);
+
+    // Catch illegal extension words
+    if (str.style == DASM_GNU && !isValidExt(I, op, ext)) {
+
+        addr = old;
+        dasmIllegal<I, M, S>(str, addr, op);
+        return;
+    }
 
     if ((ext & 0xE200) == 0x2000) { // PFLUSH
 
@@ -180,15 +177,24 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
     const char *const mmuregs[8] =
     { "tc", "drp", "srp", "crp", "cal", "val", "sccr", "acr" };
 
-    auto ext = dasmRead<Word>(addr);
-    const char *suffix = (ext & 0x100) ? "fd" : "";
-
+    auto old  = addr;
+    auto ext  = dasmRead<Word>(addr);
     auto reg  = _____________xxx(op);
     auto fmt  = xxx_____________(ext);
     auto preg = ___xxx__________(ext);
     auto nr   = ___________xxx__(ext);
 
-    printf("dasmPMove ext = %x\n", ext);
+    // Catch illegal extension words
+    if (str.style == DASM_GNU && !isValidExt(I, op, ext)) {
+
+        addr = old;
+        dasmIllegal<I, M, S>(str, addr, op);
+        return;
+    }
+    
+    const char *suffix = (ext & 0x100) ? "fd" : "";
+
+    // printf("dasmPMove ext = %x\n", ext);
 
     const char *pStr = "";
 
@@ -196,13 +202,13 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
 
         case 0:
 
-            printf("dasmPMove0\n");
+            // printf("dasmPMove0\n");
             pStr = mmuregs[preg];
             break;
 
         case 2:
 
-            printf("dasmPMove2\n");
+            // printf("dasmPMove2\n");
             switch (preg) {
 
                 case 0:     pStr = "tc"; break;
@@ -218,7 +224,7 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
 
         case 3:
 
-            printf("dasmPMove3\n");
+            // printf("dasmPMove3\n");
             switch (preg) {
 
                 case 0:     pStr = "mmusr"; break;

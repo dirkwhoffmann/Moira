@@ -255,7 +255,7 @@ void run()
     // EXPERIMENTAL
     // dumpDasm();
 
-    selectModel(M68020);
+    selectModel(M68030);
     srand(3);
 
     for (testrun = 1 ;; testrun++) {
@@ -264,13 +264,14 @@ void run()
         randomizer.init(testrun);
 
         // Switch the CPU core from time to time
-        if (testrun % 65536 == 65535) selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
+        // if (testrun % 16 == 0) selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
         
         printf("Round %ld ", testrun); fflush(stdout);
         setupTestEnvironment(setup);
 
         // Iterate through all opcodes
-        for (int opcode = 0x0000; opcode < 65536; opcode++) {
+        // for (int opcode = 0x0000; opcode < 65536; opcode++) {
+        for (int opcode = 0xF000; opcode < 0xF0FF; opcode++) { // REMOVE ASAP
 
             // REMOVE ASAP
             // if (moiracpu->getInfo(opcode).I != moira::MOVEC) continue;
