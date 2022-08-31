@@ -7,32 +7,6 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-/*
-template <Instr I, Mode M, Size S> void
-Moira::dasmPBcc(StrWriter &str, u32 &addr, u16 op)
-{
-    auto cnd = __________xxxxxx (op);
-
-    auto dst = addr + 2;
-    U32_INC(dst, SEXT<S>(dasmRead<S>(addr)));
-
-    str << "pb" << Pcc{cnd} << Sz<S>{} << tab << Imu(dst);
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmPDbcc(StrWriter &str, u32 &addr, u16 op)
-{
-    auto ext = dasmRead(addr);
-    auto src = _____________xxx (op);
-    auto cnd = __________xxxxxx (ext);
-
-    auto dst = addr + 2;
-    U32_INC(dst, SEXT<S>(dasmRead<S>(addr)));
-
-    str << "pdb" << Pcc{cnd} << tab << Dn{src} << Sep{} << UInt(dst);
-}
-*/
-
 template <Instr I, Mode M, Size S> void
 Moira::dasmPGen(StrWriter &str, u32 &addr, u16 op)
 {
@@ -76,9 +50,8 @@ Moira::dasmPGen(StrWriter &str, u32 &addr, u16 op)
     // PTEST
     if ((ext & 0xE000) == 0x8000) {
 
-        dasmPFlushA<PTEST, M, Long>(str, addr, op);
+        dasmPTest<PTEST, M, Long>(str, addr, op);
         return;
-
     }
 
     // PMOVE
@@ -91,8 +64,17 @@ Moira::dasmPFlush(StrWriter &str, u32 &addr, u16 op)
     auto old = addr;
     auto ext = dasmRead<Word>(addr);
 
-    // Catch illegal extension words
-    if (str.style == DASM_GNU && !isValidExt(I, op, ext)) {
+    // Catch illegal extension words (TODO: Clean this up)
+    bool illegalMode =
+    M == MODE_DN ||
+    M == MODE_AN ||
+    M == MODE_PI ||
+    M == MODE_PD ||
+    M == MODE_DIPC ||
+    M == MODE_IXPC ||
+    M == MODE_IM;
+
+    if (str.style == DASM_GNU && (!isValidExt(I, op, ext) || illegalMode)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -103,39 +85,16 @@ Moira::dasmPFlush(StrWriter &str, u32 &addr, u16 op)
 
         if (M == MODE_IP) {
 
-            str << "pflushr" << tab << u8(ext & 0x1F) << Sep{} << u8((ext >> 5) & 0xF);
+            str << Ins<I>{} << tab << u8(ext & 0x1F) << Sep{} << u8((ext >> 5) & 0xF);
             str << Sep{} << "INVALID " << Int(op & 0x3f);
 
         } else {
 
             auto ea = Op <M,S> ( _____________xxx(op), addr );
-            str << "pflushr" << tab << u8(ext & 0x1F) << Sep{} << u8((ext >> 5) & 0xF);
+            str << Ins<I>{} << tab << u8(ext & 0x1F) << Sep{} << u8((ext >> 5) & 0xF);
             str << Sep{} << ea;
         }
-
-    } else if (ext == 0xa000) { // PFLUSHR
-
-        if (M == MODE_IP) {
-
-            str << "pflushr ??? IP" << tab;
-
-        } else {
-
-            auto ea = Op <M,S> ( _____________xxx(op), addr );
-            str << "pflushr" << tab << ea;
-
-        }
-
-    } else {
-
-        str << "pflushr ???";
     }
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmPFlushA(StrWriter &str, u32 &addr, u16 op)
-{
-    str << "TODO: dasmPFlushA";
 }
 
 template <Instr I, Mode M, Size S> void
@@ -269,5 +228,51 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmPTest(StrWriter &str, u32 &addr, u16 op)
 {
-    str << "TODO: dasmPTest";
+    auto old = addr;
+    auto ext = dasmRead<Word>(addr);
+    auto reg = _____________xxx(op);
+    auto lev = ___xxx__________(ext);
+    auto rw  = ______x_________(ext);
+    auto a   = _______x________(ext);
+    auto an  = ________xxx_____(ext);
+    auto fc  = ___________xxxxx(ext);
+    auto fc1 = ___________xx___(ext);
+    auto fc2 = _____________xxx(ext);
+
+    // Catch illegal extension words (TODO: Clean this up)
+    bool illegalMode =
+    M == MODE_DN ||
+    M == MODE_AN ||
+    M == MODE_PI ||
+    M == MODE_PD ||
+    M == MODE_DIPC ||
+    M == MODE_IXPC ||
+    M == MODE_IM;
+
+    if (str.style == DASM_GNU && (!isValidExt(I, op, ext) || illegalMode)) {
+
+        addr = old;
+        dasmIllegal<I, M, S>(str, addr, op);
+        return;
+    }
+
+    str << Ins<I>{} << (rw ? "r" : "w") << tab;
+
+    // 10XXX — Function code is specified as bits XXX
+    // 01DDD — Function code is specified as bits 2–0 of data register DDD
+    // 00000 — Function code is specified as source function code register
+    // 00001 — Function code is specified as destination function code register
+
+    if (fc == 0b00000) {
+        str << "sfc";
+    } else if (fc == 0b0001) {
+        str << "dfc";
+    } else if (fc1 == 0b10) {
+        str << Dn{fc2};
+    } else {
+        str << "code " << fc2;
+    }
+
+    str << Sep{} << Op<M>(reg, addr) << Sep{} << lev;
+    if (a) { str << Sep{} << An{an}; }
 }

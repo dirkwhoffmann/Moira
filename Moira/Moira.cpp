@@ -645,6 +645,18 @@ Moira::availabilityString(Instr I, Mode M, Size S, u16 ext)
 bool
 Moira::isValidExt(Instr I, u16 op, u32 ext)
 {
+    auto mode = [ext]() { return ext >> 10 & 0b111; };
+    auto mask = [ext]() { return ext >> 5 & 0b111; };
+    auto fc   = [ext]() { return ext & 0b11111; };
+
+    auto validMode = [&]() {    // 001, 100, 110
+        return mode() == 0b001 || mode() == 0b100 || mode() == 0b110;
+    };
+
+    auto validFC = [&]() {      // 10XXX, 01DDD, 00000, 00001
+        return fc() <= 1 || (fc() >= 8 && fc() <= 23);
+    };
+
     switch (I) {
 
         case BFCHG:     return (ext & 0xF000) == 0;
@@ -664,11 +676,26 @@ Moira::isValidExt(Instr I, u16 op, u32 ext)
 
         case PMOVE:
             return
-            (ext & 0xE0FF) == 0xE000 ||
+            (ext & 0xE0FF) == 0x2000 ||
             (ext & 0xFDFF) == 0x6000 ||
             (ext & 0xFCFF) == 0x0800 ||
             (ext & 0xFCFF) == 0x0C00;
 
+        case PTEST:
+
+            if ((ext & 0x1C00) == 0 && (ext & 0x0100) != 0) return false;
+            if ((ext & 0x0100) == 0 && (ext & 0x00E0) != 0) return false;
+            if ((ext & 0x0018) == 0x0018) return false;
+            if ((ext & 0x0018) == 0 && (ext & 0x0060) != 0) return false;
+            return true;
+
+        case PFLUSH:
+
+            // When mode is 001, mask and fc must be 0
+            if (mode() == 0b001 && mask() != 0) return false;
+            if (mode() == 0b001 && fc() != 0) return false;
+
+            return validFC() && validMode();
 
         default:
             fatalError;

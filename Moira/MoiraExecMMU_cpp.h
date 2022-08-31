@@ -34,12 +34,6 @@ Moira::execPFlush(u16 opcode)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execPFlushA(u16 opcode)
-{
-    printf("TODO: execPFlushA");
-}
-
-template <Core C, Instr I, Mode M, Size S> void
 Moira::execPLoad(u16 opcode)
 {
     printf("TODO: execPLoad");
