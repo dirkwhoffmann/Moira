@@ -1006,8 +1006,8 @@ print_insn_arg (const char *d,
           // {"pc", 0x80f},
 	    /* Reg c04 is sometimes called flashbar or rambar.
 	       Reg c05 is also sometimes called rambar.  */
-          {"rambar0", 0xc04},
-          {"rambar1", 0xc05},
+          // {"rambar0", 0xc04},
+          // {"rambar1", 0xc05},
 
 	    /* reg c0e is sometimes called mbar2 or secmbar.
 	       reg c0f is sometimes called mbar.  */

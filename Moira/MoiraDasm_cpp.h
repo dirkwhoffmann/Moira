@@ -1263,23 +1263,23 @@ Moira::dasmMovea(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmMovecRcRx(StrWriter &str, u32 &addr, u16 op)
 {
-    auto arg = u16(dasmRead<Word>(addr));
-    auto src = Cn(____xxxxxxxxxxxx(arg));
-    auto dst = Rn(xxxx____________(arg));
+    auto ext = u16(dasmRead<Word>(addr));
+    auto src = Cn(____xxxxxxxxxxxx(ext));
+    auto dst = Rn(xxxx____________(ext));
     
     str << Ins<I>{} << tab << src << Sep{} << dst;
-    str << Av<I, M, S>{arg};
+    str << Av<I, M, S>{ext};
 }
 
 template <Instr I, Mode M, Size S> void
 Moira::dasmMovecRxRc(StrWriter &str, u32 &addr, u16 op)
 {
-    auto arg = u16(dasmRead<Word>(addr));
-    auto dst = Cn(____xxxxxxxxxxxx(arg));
-    auto src = Rn(xxxx____________(arg));
+    auto ext = u16(dasmRead<Word>(addr));
+    auto dst = Cn(____xxxxxxxxxxxx(ext));
+    auto src = Rn(xxxx____________(ext));
     
     str << Ins<I>{} << tab << src << Sep{} << dst;
-    str << Av<I, M, S>{arg};
+    str << Av<I, M, S>{ext};
 }
 
 template <Instr I, Mode M, Size S> void

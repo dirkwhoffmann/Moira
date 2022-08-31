@@ -151,6 +151,7 @@ void setupTestEnvironment(Setup &s)
 void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
 {
     // static u64 mmu = 0;
+    static long mvc = 0;
 
     moira::Instr instr = moiracpu->getInfo(opcode).I;
 
@@ -163,11 +164,11 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
 
         case MOVEC:
         {
-            auto cnt = testrun & 31;
-            if (cnt < 9) {
-                s.ext1 = (s.ext1 & 0xF000) | (cnt % 9);
-            } else if (cnt < 18) {
-                s.ext1 = (s.ext1 & 0xF000) | 0x800 | (cnt % 9);
+            if (testrun % 2) {
+
+                s.ext1 &= 0xF000;
+                if (mvc % 2) s.ext1 |= 0x800;
+                s.ext1 |= (mvc >> 2) & 0xFF;
             }
             break;
         }
@@ -270,6 +271,9 @@ void run()
 
         // Iterate through all opcodes
         for (int opcode = 0x0000; opcode < 65536; opcode++) {
+
+            // REMOVE ASAP
+            // if (moiracpu->getInfo(opcode).I != moira::MOVEC) continue;
 
             if ((opcode & 0xFFF) == 0) { printf("."); fflush(stdout); }
 
