@@ -680,35 +680,34 @@ Moira::dasmCmpm(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmCpBcc(StrWriter &str, u32 &addr, u16 op)
 {
+    if (style == DASM_GNU) {
+
+        dasmIllegal<I, M, S>(str, addr, op);
+        return;
+    }
+
     auto id   = ( ____xxx_________(op) );
     auto cnd  = ( __________xxxxxx(op) );
-
-    if (id == 0) {
-
-        auto pc   = addr + 2;
-        auto disp = dasmRead<S>(addr);
-
-        pc += SEXT<S>(disp);
-
-        str << "pb" << Mmucc{cnd & 0xF} << tab << UInt(pc);
-
-    } else {
-
-        auto pc   = addr + 2;
-        auto ext1 = dasmRead<Word>(addr);
-        auto disp = dasmRead<S>(addr);
-        auto ext2 = dasmRead<Word>(addr);
-
-        pc += SEXT<S>(disp);
-
-        str << id << Ins<I>{} << Cpcc{cnd} << tab << Ims<Word>(ext2);
-        str << "; " << UInt(pc) << " (extension = " << Int(ext1) << ") (2-3)";
-    }
+    auto pc   = addr + 2;
+    auto ext1 = dasmRead<Word>(addr);
+    auto disp = dasmRead<S>(addr);
+    auto ext2 = dasmRead<Word>(addr);
+    
+    pc += SEXT<S>(disp);
+    
+    str << id << Ins<I>{} << Cpcc{cnd} << tab << Ims<Word>(ext2);
+    str << "; " << UInt(pc) << " (extension = " << Int(ext1) << ") (2-3)";
 }
 
 template <Instr I, Mode M, Size S> void
 Moira::dasmCpDbcc(StrWriter &str, u32 &addr, u16 op)
 {
+    if (style == DASM_GNU) {
+
+        dasmIllegal<I, M, S>(str, addr, op);
+        return;
+    }
+
     auto pc   = addr + 2;
     auto ext1 = dasmRead<Word>(addr);
     auto ext2 = dasmRead<Word>(addr);
@@ -717,36 +716,26 @@ Moira::dasmCpDbcc(StrWriter &str, u32 &addr, u16 op)
     auto id   = ( ____xxx_________(op)   );
     auto cnd  = ( __________xxxxxx(ext1) );
 
-    if (id == 0) {
+    auto ext3 = dasmRead<Word>(addr);
+    auto ext4 = dasmRead<Word>(addr);
 
-        str << "pb" << Mmucc{cnd & 0xF} << tab << UInt(pc + ext2);
+    pc += i16(ext3);
 
-    } else {
-
-        auto ext3 = dasmRead<Word>(addr);
-        auto ext4 = dasmRead<Word>(addr);
-
-        pc += i16(ext3);
-
-        str << id << Ins<I>{} << Cpcc{cnd} << tab << Dn{dn} << "," << Ims<Word>(ext4);
-        str << "; " << UInt(pc) << " (extension = " << Int(ext2) << ") (2-3)";
-    }
+    str << id << Ins<I>{} << Cpcc{cnd} << tab << Dn{dn} << "," << Ims<Word>(ext4);
+    str << "; " << UInt(pc) << " (extension = " << Int(ext2) << ") (2-3)";
 }
 
 template <Instr I, Mode M, Size S> void
 Moira::dasmCpGen(StrWriter &str, u32 &addr, u16 op)
 {
-    auto old = addr;
-    auto id = ( ____xxx_________(op) );
-
-    auto ext = Imu ( dasmRead<Long>(addr) );
-
     if (style == DASM_GNU) {
 
-        addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
         return;
     }
+
+    auto id  = ( ____xxx_________(op) );
+    auto ext = Imu ( dasmRead<Long>(addr) );
 
     str << id << Ins<I>{} << tab << ext;
     str << Av<I, M, S>{};
@@ -755,6 +744,12 @@ Moira::dasmCpGen(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmCpRestore(StrWriter &str, u32 &addr, u16 op)
 {
+    if (style == DASM_GNU) {
+
+        dasmIllegal<I, M, S>(str, addr, op);
+        return;
+    }
+
     auto dn = ( _____________xxx(op) );
     auto id = ( ____xxx_________(op) );
     auto ea = Op <M,S> (dn, addr);
@@ -764,14 +759,14 @@ Moira::dasmCpRestore(StrWriter &str, u32 &addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
-Moira::dasmCpRestoreInvalid(StrWriter &str, u32 &addr, u16 op)
-{
-    dasmCpRestore<I, M, S>(str, addr, op);
-}
-
-template <Instr I, Mode M, Size S> void
 Moira::dasmCpSave(StrWriter &str, u32 &addr, u16 op)
 {
+    if (style == DASM_GNU) {
+
+        dasmIllegal<I, M, S>(str, addr, op);
+        return;
+    }
+
     auto dn = ( _____________xxx(op) );
     auto id = ( ____xxx_________(op) );
     auto ea = Op <M,S> (dn, addr);
@@ -783,22 +778,18 @@ Moira::dasmCpSave(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmCpScc(StrWriter &str, u32 &addr, u16 op)
 {
-    auto old  = addr;
-    auto dn   = ( _____________xxx(op) );
-    auto id   = ( ____xxx_________(op) );
-
-    auto ext1 = dasmRead<Word>(addr);
-    auto cnd  = ( __________xxxxxx(ext1) );
-
-    auto ext2 = dasmRead<Word>(addr);
-    auto ea = Op<M, S>(dn, addr);
-
     if (style == DASM_GNU) {
 
-        addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
         return;
     }
+
+    auto dn   = ( _____________xxx(op) );
+    auto id   = ( ____xxx_________(op) );
+    auto ext1 = dasmRead<Word>(addr);
+    auto cnd  = ( __________xxxxxx(ext1) );
+    auto ext2 = dasmRead<Word>(addr);
+    auto ea   = Op<M, S>(dn, addr);
 
     str << id << Ins<I>{} << Cpcc{cnd} << tab << ea;
     str << "; (extension = " << Int(ext2) << ") (2-3)";
@@ -807,6 +798,12 @@ Moira::dasmCpScc(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmCpTrapcc(StrWriter &str, u32 &addr, u16 op)
 {
+    if (style == DASM_GNU) {
+
+        dasmIllegal<I, M, S>(str, addr, op);
+        return;
+    }
+
     auto ext1 = dasmRead<Word>(addr);
     auto id   = ( ____xxx_________(op)   );
     auto cnd  = ( __________xxxxxx(ext1) );
@@ -1557,7 +1554,8 @@ Moira::dasmPackDn(StrWriter &str, u32 &addr, u16 op)
             
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
-            
+        case DASM_GNU:
+
             str << Ins<I>{} << tab << rx << Sep{} << ry << Sep{} << Ims<S>(ext);
             break;
             
@@ -1796,7 +1794,8 @@ Moira::dasmUnpkDn(StrWriter &str, u32 &addr, u16 op)
             
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
-            
+        case DASM_GNU:
+
             str << Ins<I>{} << tab << rx << Sep{} << ry << Sep{} << Ims<S>(ext);
             break;
             

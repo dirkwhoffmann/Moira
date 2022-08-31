@@ -8,6 +8,30 @@
 // -----------------------------------------------------------------------------
 
 template <Instr I, Mode M, Size S> void
+Moira::dasmFBcc(StrWriter &str, u32 &addr, u16 op)
+{
+    auto cnd = __________xxxxxx (op);
+
+    auto dst = addr + 2;
+    U32_INC(dst, SEXT<S>(dasmRead<S>(addr)));
+
+    str << "fb" << Fcc{cnd} << Sz<S>{} << tab << Imu(dst);
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFDbcc(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = dasmRead(addr);
+    auto src = _____________xxx (op);
+    auto cnd = __________xxxxxx (ext);
+
+    auto dst = addr + 2;
+    U32_INC(dst, SEXT<S>(dasmRead<S>(addr)));
+
+    str << "fdb" << Fcc{cnd} << tab << Dn{src} << Sep{} << UInt(dst);
+}
+
+template <Instr I, Mode M, Size S> void
 Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
 {
     auto ext = dasmRead<Word>(addr);
@@ -105,30 +129,6 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
     }
 
     dasmLineF<I, M, S>(str, addr, op);
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFBcc(StrWriter &str, u32 &addr, u16 op)
-{
-    auto cnd = __________xxxxxx (op);
-
-    auto dst = addr + 2;
-    U32_INC(dst, SEXT<S>(dasmRead<S>(addr)));
-
-    str << "fb" << Fcc{cnd} << Sz<S>{} << tab << Imu(dst);
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFDbcc(StrWriter &str, u32 &addr, u16 op)
-{
-    auto ext = dasmRead(addr);
-    auto src = _____________xxx (op);
-    auto cnd = __________xxxxxx (ext);
-
-    auto dst = addr + 2;
-    U32_INC(dst, SEXT<S>(dasmRead<S>(addr)));
-
-    str << "fdb" << Fcc{cnd} << tab << Dn{src} << Sep{} << UInt(dst);
 }
 
 template <Instr I, Mode M, Size S> void

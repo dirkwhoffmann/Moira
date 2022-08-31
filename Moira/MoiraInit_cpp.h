@@ -1934,6 +1934,12 @@ Moira::createJumpTable()
 
             opcode = parse("1111 0000 00-- ----");
             __________MMMXXX(opcode, cpGEN, 0b101111111111, Unsized, PGen, CIMS)
+
+            opcode = parse("1111 0010 10-- ----");
+            __________XXXXXX(opcode, cpBcc, MODE_IP, Word, PBcc, CIMS)
+
+            opcode = parse("1111 0010 11-- ----");
+            __________XXXXXX(opcode, cpBcc, MODE_IP, Long, PBcc, CIMS)
         }
 
 

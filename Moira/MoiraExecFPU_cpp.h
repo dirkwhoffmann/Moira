@@ -8,12 +8,6 @@
 // -----------------------------------------------------------------------------
 
 template <Core C, Instr I, Mode M, Size S> void
-Moira::execFGen(u16 opcode)
-{
-    execLineF<C, I, M, S>(opcode);
-}
-
-template <Core C, Instr I, Mode M, Size S> void
 Moira::execFBcc(u16 opcode)
 {
     execLineF<C, I, M, S>(opcode);
@@ -21,6 +15,12 @@ Moira::execFBcc(u16 opcode)
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execFDbcc(u16 opcode)
+{
+    execLineF<C, I, M, S>(opcode);
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execFGen(u16 opcode)
 {
     execLineF<C, I, M, S>(opcode);
 }

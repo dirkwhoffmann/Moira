@@ -8,6 +8,30 @@
 // -----------------------------------------------------------------------------
 
 template <Instr I, Mode M, Size S> void
+Moira::dasmPBcc(StrWriter &str, u32 &addr, u16 op)
+{
+    auto cnd = __________xxxxxx (op);
+
+    auto dst = addr + 2;
+    U32_INC(dst, SEXT<S>(dasmRead<S>(addr)));
+
+    str << "pb" << Pcc{cnd} << Sz<S>{} << tab << Imu(dst);
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmPDbcc(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = dasmRead(addr);
+    auto src = _____________xxx (op);
+    auto cnd = __________xxxxxx (ext);
+
+    auto dst = addr + 2;
+    U32_INC(dst, SEXT<S>(dasmRead<S>(addr)));
+
+    str << "pdb" << Pcc{cnd} << tab << Dn{src} << Sep{} << UInt(dst);
+}
+
+template <Instr I, Mode M, Size S> void
 Moira::dasmPGen(StrWriter &str, u32 &addr, u16 op)
 {
     //  PFLUSH: 001x xx0x xxxx xxxx

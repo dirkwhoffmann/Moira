@@ -408,9 +408,9 @@ StrWriter::operator<<(Fcc fcc)
 }
 
 StrWriter&
-StrWriter::operator<<(Mmucc mmucc)
+StrWriter::operator<<(Pcc pcc)
 {
-    switch (mmucc.raw) {
+    switch (pcc.raw) {
 
         case 0:  *this << "bs"; break;
         case 1:  *this << "bc"; break;
