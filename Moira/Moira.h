@@ -453,15 +453,18 @@ protected:
     // Analyzing instructions
     //
 
-    // Returns the availability mask for a certain instruction
+    // Returns the availability mask for a given instruction
     u16 availabilityMask(Instr I);
     u16 availabilityMask(Instr I, Mode M, Size S);
     u16 availabilityMask(Instr I, Mode M, Size S, u16 ext);
 
-    // Checks if the currently selected CPU model supports a certain instruction
+    // Checks if the currently selected CPU model supports a given instruction
     bool isAvailable(Instr I);
     bool isAvailable(Instr I, Mode M, Size S);
     bool isAvailable(Instr I, Mode M, Size S, u16 ext);
+
+    // Checks the validity of the extension words for a given instruction
+    bool isValidExt(Instr I, u16 op, u32 ext);
 
 private:
 
