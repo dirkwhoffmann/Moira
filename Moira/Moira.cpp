@@ -645,9 +645,12 @@ Moira::availabilityString(Instr I, Mode M, Size S, u16 ext)
 bool
 Moira::isValidExt(Instr I, u16 op, u32 ext)
 {
-    auto mode = [ext]() { return ext >> 10 & 0b111; };
-    auto mask = [ext]() { return ext >> 5 & 0b111; };
-    auto fc   = [ext]() { return ext & 0b11111; };
+    auto level = [ext]() { return ext >> 10 & 0b111; };
+    auto a     = [ext]() { return ext >> 8 & 0b1; };
+    auto mode  = [ext]() { return ext >> 10 & 0b111; };
+    auto mask  = [ext]() { return ext >> 5 & 0b111; };
+    auto reg   = [ext]() { return ext >> 5 & 0b111; };
+    auto fc    = [ext]() { return ext & 0b11111; };
 
     auto validMode = [&]() {    // 001, 100, 110
         return mode() == 0b001 || mode() == 0b100 || mode() == 0b110;
@@ -683,10 +686,16 @@ Moira::isValidExt(Instr I, u16 op, u32 ext)
 
         case PTEST:
 
-            if ((ext & 0x1C00) == 0 && (ext & 0x0100) != 0) return false;
-            if ((ext & 0x0100) == 0 && (ext & 0x00E0) != 0) return false;
-            if ((ext & 0x0018) == 0x0018) return false;
-            if ((ext & 0x0018) == 0 && (ext & 0x0060) != 0) return false;
+            // When level is 0, A must be 0
+            if (level() == 0 && a() != 0) return false;
+
+            // When A is 0, reg must be 0
+            if (a() == 0 && reg() != 0) return false;
+
+            // Check FC
+            // if (fc() < 0b1000 && fc() != 0 && fc() != 1) return false;
+            if ((fc() & 0b11000) == 0 && (fc() & 0b110) != 0) return false;
+
             return true;
 
         case PFLUSH:
