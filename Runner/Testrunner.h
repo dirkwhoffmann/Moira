@@ -145,7 +145,11 @@ void resetMoira(Setup &s);
 //
 
 void run();
-void runMMU();
+
+void runCPU(long round);
+void runMMU(long round);
+void runFPU(long round);
+void passed();
 
 void runSingleTest(Setup &s);
 

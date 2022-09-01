@@ -55,7 +55,13 @@ Moira::dasmPGen(StrWriter &str, u32 &addr, u16 op)
     }
 
     // PMOVE
-    dasmPMove<PMOVE, M, S>(str, addr, op);
+    if ((ext & 0xE000) == 0x0000 || (ext & 0xE000) == 0x4000 || (ext & 0xE000) == 0x6000) {
+
+        dasmPMove<PMOVE, M, S>(str, addr, op);
+        return;
+    }
+
+    dasmIllegal<I, M, S>(str, addr, op);
 }
 
 template <Instr I, Mode M, Size S> void
@@ -145,7 +151,20 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
 
             // printf("dasmPMove0\n");
             pStr = mmuregs[preg];
-            break;
+
+            if (!(ext & 0x200)) {
+
+                str << Ins<I>{} << suffix << tab;
+                str << Op<M, Long>(reg, addr) << Sep{} << pStr;
+                if (fmt == 3 && preg > 1) str << Int(nr);
+
+            } else {
+
+                str << Ins<I>{} << suffix << tab;
+                if (fmt == 3 && preg > 1) str << Int(nr);
+                str << pStr << Sep{} << Op<M, Long>(reg, addr);
+            }
+            return;
 
         case 2:
 
@@ -186,24 +205,14 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
     if (!(ext & 0x200)) {
 
         str << Ins<I>{} << suffix << tab;
-
-        if constexpr (M == MODE_IP) {
-            str << "[unknown form]" << Sep{} << "INVALID " << Int(op & 0x3f);
-        } else {
-            str << Op<M, S>(reg, addr) << Sep{} << pStr;
-            if (fmt == 3 && preg > 1) str << Int(nr);
-        }
+        str << Op<M, S>(reg, addr) << Sep{} << pStr;
+        if (fmt == 3 && preg > 1) str << Int(nr);
 
     } else {
 
         str << Ins<I>{} << suffix << tab;
-
-        if (M == MODE_IP) {
-            str << tab << "[unknown form]" << Sep{} << "INVALID " << Int(op & 0x3f);
-        } else {
-            if (fmt == 3 && preg > 1) str << Int(nr);
-            str << pStr << Sep{} << Op<M, S>(reg, addr);
-        }
+        if (fmt == 3 && preg > 1) str << Int(nr);
+        str << pStr << Sep{} << Op<M, S>(reg, addr);
     }
 }
 

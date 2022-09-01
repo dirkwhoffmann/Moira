@@ -18,6 +18,9 @@ u8 musashiMem[0x10000];
 u8 moiraMem[0x10000];
 u32 musashiFC = 0;
 moira::Model cpuModel = M68000;
+long cpuround[16] = { };
+long mmuround[16] = { };
+long fpuround[16] = { };
 
 // Binutils
 char* binutilsBuffer = NULL;
@@ -241,8 +244,6 @@ clock_t muclk[2] = {0,0}, moclk[2] = {0,0};
 
 void run()
 {
-    Setup setup;
-
     printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2022\n\n");
     printf("The test program runs Moira agains Musashi with randomly generated data.\n");
     printf("It runs until a bug has been found.\n");
@@ -250,78 +251,68 @@ void run()
     selectModel(M68030);
     srand(3);
 
-    // EXPERIMENTAL
-    runMMU();
-
-    for (long testrun = 1 ;; testrun++) {
-
-        // Initialize the random number generator
-        randomizer.init(testrun);
+    for (long i = 0;;) {
 
         // Switch the CPU core from time to time
-        // if (testrun % 16 == 0) selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
-        
-        printf("Round %ld ", testrun); fflush(stdout);
-        setupTestEnvironment(setup, testrun);
+        if (++i % 16 == 0) selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
 
-        // Iterate through all opcodes
-        // for (int opcode = 0x0000; opcode < 65536; opcode++) {
-        for (int opcode = 0xF000; opcode < 0xF0FF; opcode++) { // REMOVE ASAP
+        // Run a CPU round
+        // runCPU(cpuround[cpuModel]++);
 
-            // REMOVE ASAP
-            // if (moiracpu->getInfo(opcode).I != moira::MOVEC) continue;
+        // Continue with a MMU round if applicable
+        if (moiracpu->hasMMU()) runMMU(mmuround[cpuModel]++);
 
-            if ((opcode & 0xFFF) == 0) { printf("."); fflush(stdout); }
-
-            if constexpr (SKIP_ILLEGAL) {
-                if (moiracpu->getInfo(opcode).I == moira::ILLEGAL) continue;
-            }
-
-            // Prepare the test case with the selected instruction
-            setupTestInstruction(setup, pc, u16(opcode));
-
-            // Reset the sandbox (memory accesses observer)
-            sandbox.prepare(u16(opcode));
-
-            // Execute both CPU cores
-            runSingleTest(setup);
-        }
-
-        printf(" PASSED ");
-        if (PROFILE_DASM || PROFILE_CPU) {
-
-            clock_t mu = 0, mo = 0;
-            if (PROFILE_CPU) { mu += muclk[0]; mo += moclk[0]; }
-            if (PROFILE_DASM) { mu += muclk[1]; mo += moclk[1]; }
-
-            printf(" (Musashi: %.2fs  Moira: %.2fs)",
-                   mu / double(CLOCKS_PER_SEC),
-                   mo / double(CLOCKS_PER_SEC));
-        }
-        printf("\n");
+        // Continue with a FPU round if applicable
+        if (moiracpu->hasFPU()) runFPU(mmuround[cpuModel]++);
     }
 }
 
-void runMMU()
+void runCPU(long round)
 {
     Setup setup;
 
-    for (long testrun = 0 ;; testrun++) {
+    printf("CPU round %ld ", round); fflush(stdout);
+    setupTestEnvironment(setup, round);
 
-        // Initialize the random number generator
-        randomizer.init(testrun);
+    // Initialize the random number generator
+    randomizer.init(round);
 
-        // Switch the CPU core from time to time
-        // if (testrun % 16 == 0) selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
+    // Iterate through all opcodes
+    for (int opcode = 0x0000; opcode <= 0xFFFF; opcode++) {
 
-        printf("MMU Round %ld ", testrun); fflush(stdout);
-        setupTestEnvironment(setup, testrun);
+        if ((opcode & 0xFFF) == 0) { printf("."); fflush(stdout); }
 
-        // int opcode = 0xF000 | (testrun & 0x3F);
-        int opcode = 0xF000 | (testrun & 0xF) << 3;
+        if constexpr (SKIP_ILLEGAL) {
+            if (moiracpu->getInfo(opcode).I == moira::ILLEGAL) continue;
+        }
 
+        // Prepare the test case with the selected instruction
+        setupTestInstruction(setup, pc, u16(opcode));
+
+        // Reset the sandbox (memory accesses observer)
+        sandbox.prepare(u16(opcode));
+
+        // Execute both CPU cores
+        runSingleTest(setup);
+    }
+    passed();
+}
+
+void runMMU(long round)
+{
+    Setup setup;
+
+    printf("MMU round %ld ", round); fflush(stdout);
+    setupTestEnvironment(setup, round);
+
+    // Initialize the random number generator
+    randomizer.init(round);
+
+    // int opcode = 0xF000 | (round & 0xF) << 3 | (round & 0x3);
+    for (int opcode = 0xF000; opcode <= 0xF03F; opcode++) {
         // Iterate through all extension words
-        for (int ext = 0x0000; ext < 0xFFFF; ext++) {
+        // for (int ext = 0x0000; ext < 0xFFFF; ext++) {
+        for (int ext = 0x0000; ext <= 0x1F00; ext += 0x0100) {
 
             if ((ext & 0xFFF) == 0) { printf("."); fflush(stdout); }
 
@@ -335,9 +326,29 @@ void runMMU()
             // Execute both CPU cores
             runSingleTest(setup);
         }
-
-        printf(" PASSED\n");
     }
+    passed();
+}
+
+void runFPU(long round)
+{
+    // TODO
+}
+
+void passed()
+{
+    printf(" PASSED ");
+    if (PROFILE_DASM || PROFILE_CPU) {
+
+        clock_t mu = 0, mo = 0;
+        if (PROFILE_CPU) { mu += muclk[0]; mo += moclk[0]; }
+        if (PROFILE_DASM) { mu += muclk[1]; mo += moclk[1]; }
+
+        printf(" (Musashi: %.2fs  Moira: %.2fs)",
+               mu / double(CLOCKS_PER_SEC),
+               mo / double(CLOCKS_PER_SEC));
+    }
+    printf("\n");
 }
 
 void runSingleTest(Setup &s)

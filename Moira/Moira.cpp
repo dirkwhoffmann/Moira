@@ -726,6 +726,10 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
                     // If memory is written, flushing is mandatory
                     if ((ext & 0x300) == 0x300) return false;
 
+                    if ((ext & 0x200)) {
+                        if (M == MODE_DIPC || M == MODE_IXPC) return false;
+                    }
+
                     return true;
 
                 case 0b010:
@@ -739,6 +743,7 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
                     if ((ext & 0x300) == 0) {
                         if (preg() != 0) {
                             if (M == MODE_PI || M == MODE_PD) return false;
+                            if (M == MODE_IM || M == MODE_IP) return false;
                         }
                     }
 
