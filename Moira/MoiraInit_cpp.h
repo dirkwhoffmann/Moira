@@ -1933,6 +1933,7 @@ Moira::createJumpTable()
         if (hasMMU()) {
 
             opcode = parse("1111 0000 00-- ----");
+            __________XXXXXX(opcode, cpGEN, MODE_IP, Unsized, PGen, CIMS)
             __________MMMXXX(opcode, cpGEN, 0b111111111111, Unsized, PGen, CIMS)
 
             /* MC68851 only

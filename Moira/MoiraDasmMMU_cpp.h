@@ -272,17 +272,8 @@ Moira::dasmPTest(StrWriter &str, u32 &addr, u16 op)
     auto fc1 = ___________xx___(ext);
     auto fc2 = _____________xxx(ext);
 
-    // Catch illegal extension words (TODO: Clean this up)
-    bool illegalMode =
-    M == MODE_DN ||
-    M == MODE_AN ||
-    M == MODE_PI ||
-    M == MODE_PD ||
-    M == MODE_DIPC ||
-    M == MODE_IXPC ||
-    M == MODE_IM;
-
-    if (str.style == DASM_GNU && (!isValidExt(I, M, ext) || illegalMode)) {
+    // Catch illegal extension words
+    if (str.style == DASM_GNU && !isValidExt(I, M, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -302,6 +293,8 @@ Moira::dasmPTest(StrWriter &str, u32 &addr, u16 op)
         str << "dfc";
     } else if (fc1 == 0b10) {
         str << Imu{fc2};
+    } else if (fc1 == 0b01) {
+        str << Dn{fc2};
     } else {
         str << Imu(fc & 0xF);
     }

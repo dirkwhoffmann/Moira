@@ -689,14 +689,20 @@ Moira::isValidExt(Instr I, Mode M, u32 ext)
         case PTEST:
 
             // When level is 0, A must be 0
-            if (level() == 0 && a() != 0) return false;
+            // if (level() == 0 && a() != 0) return false;
 
             // When A is 0, reg must be 0
             if (a() == 0 && reg() != 0) return false;
 
             // Check FC
             // if (fc() < 0b1000 && fc() != 0 && fc() != 1) return false;
-            if ((fc() & 0b11000) == 0 && (fc() & 0b110) != 0) return false;
+            if ((fc() & 0b11000) == 0 && (fc() & 0b110) != 0) {
+                // printf("Wrong FC\n");
+                return false;
+            }
+
+            // Check EA mode
+            if (M != MODE_AI && M != MODE_DI && M != MODE_IX && M != MODE_AW && M != MODE_AL) return false;
 
             return true;
 
