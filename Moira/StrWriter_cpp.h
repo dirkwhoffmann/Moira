@@ -1538,14 +1538,23 @@ StrWriter::operator<<(Scale s)
 StrWriter&
 StrWriter::operator<<(Fc fc)
 {
-    if (fc.raw & 0x10) {
-        *this << "#" << Int(fc.raw & 0xF);
-    } else if (fc.raw & 0x8) {
-        *this << Dn{fc.raw & 0x7};
-    } else if (fc.raw == 1) {
-        *this << "dfc";
-    } else {
-        *this << "sfc";
+    // 10XXX — Function code is specified as bits XXX
+    // 01DDD — Function code is specified as bits 2–0 of data register DDD
+    // 00000 — Function code is specified as source function code register
+    // 00001 — Function code is specified as destination function code register
+
+    switch (fc.raw >> 3 & 0b11) {
+
+        case 0b10:  *this << Imu(fc.raw & 0b111); break;
+        case 0b01:  *this << Dn(fc.raw & 0b111); break;
+
+        case 0b00:
+
+            if (fc.raw == 0) { *this << "sfc"; break; }
+            if (fc.raw == 1) { *this << "dfc"; break; }
+            [[fallthrough]];
+
+        default:    *this << Imu(fc.raw & 0b1111);
     }
 
     return *this;

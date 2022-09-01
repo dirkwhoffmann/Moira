@@ -67,10 +67,6 @@ Moira::dasmPFlush(StrWriter &str, u32 &addr, u16 op)
     auto mode  = ___xxx__________(ext);
     auto mask  = _______xxxx_____(ext);
     auto fc    = ___________xxxxx(ext);
-    auto fc1   = ___________xx___(ext);
-    auto fc2   = _____________xxx(ext);
-
-    printf("dasmPFlush(%x,%x)\n", op, ext);
     
     // Catch illegal extension words
     if (str.style == DASM_GNU && !isValidExt(I, M, ext)) {
@@ -92,42 +88,9 @@ Moira::dasmPFlush(StrWriter &str, u32 &addr, u16 op)
         return;
     }
 
-    // 10XXX — Function code is specified as bits XXX
-    // 01DDD — Function code is specified as bits 2–0 of data register DDD
-    // 00000 — Function code is specified as source function code register
-    // 00001 - Function code is specified as destination function code register
-
     str << Ins<I>{} << tab;
-
-    if (fc == 0b00000) {
-        str << "sfc";
-    } else if (fc == 0b0001) {
-        str << "dfc";
-    } else if (fc1 == 0b10) {
-        str << Imu{fc2};
-    } else {
-        str << Imu(fc & 0xF);
-    }
-
-    str << Sep{} << Imu{mask};
+    str << Fc{fc} << Sep{} << Imu{mask};
     if (mode == 6) str << Sep{} << Op<M>(reg, addr);
-
-    /*
-    if ((ext & 0xE200) == 0x2000) {
-
-        if (M == MODE_IP) {
-
-            str << Ins<I>{} << tab << u8(ext & 0x1F) << Sep{} << u8((ext >> 5) & 0xF);
-            str << Sep{} << "INVALID " << Int(op & 0x3f);
-
-        } else {
-
-            auto ea = Op <M,S> ( _____________xxx(op), addr );
-            str << Ins<I>{} << tab << u8(ext & 0x1F) << Sep{} << u8((ext >> 5) & 0xF);
-            str << Sep{} << ea;
-        }
-    }
-    */
 }
 
 template <Instr I, Mode M, Size S> void
@@ -269,8 +232,6 @@ Moira::dasmPTest(StrWriter &str, u32 &addr, u16 op)
     auto a   = _______x________(ext);
     auto an  = ________xxx_____(ext);
     auto fc  = ___________xxxxx(ext);
-    auto fc1 = ___________xx___(ext);
-    auto fc2 = _____________xxx(ext);
 
     // Catch illegal extension words
     if (str.style == DASM_GNU && !isValidExt(I, M, ext)) {
@@ -281,24 +242,6 @@ Moira::dasmPTest(StrWriter &str, u32 &addr, u16 op)
     }
 
     str << Ins<I>{} << (rw ? "r" : "w") << tab;
-
-    // 10XXX — Function code is specified as bits XXX
-    // 01DDD — Function code is specified as bits 2–0 of data register DDD
-    // 00000 — Function code is specified as source function code register
-    // 00001 — Function code is specified as destination function code register
-
-    if (fc == 0b00000) {
-        str << "sfc";
-    } else if (fc == 0b0001) {
-        str << "dfc";
-    } else if (fc1 == 0b10) {
-        str << Imu{fc2};
-    } else if (fc1 == 0b01) {
-        str << Dn{fc2};
-    } else {
-        str << Imu(fc & 0xF);
-    }
-
-    str << Sep{} << Op<M>(reg, addr) << Sep{} << lev;
+    str << Fc{fc} << Sep{} << Op<M>(reg, addr) << Sep{} << lev;
     if (a) { str << Sep{} << An{an}; }
 }
