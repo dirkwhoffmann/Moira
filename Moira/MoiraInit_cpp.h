@@ -165,7 +165,6 @@ Moira::createJumpTable()
         case M68030:
 
             createJumpTable<C68020>();
-            createJumpTableMMU<C68020>();
             break;
 
         case M68EC040:
@@ -173,7 +172,6 @@ Moira::createJumpTable()
         case M68040:
 
             createJumpTable<C68020>();
-            createJumpTableMMU<C68020>();
             break;
 
         default:
@@ -2027,19 +2025,5 @@ Moira::createJumpTable()
             opcode = parse("1111 0110 0001 1---");
             _____________XXX(opcode, MOVE16, MODE_IP, Unsized, Move16AlAi, CIMS)
         }
-    }
-}
-
-template <Core C> void
-Moira::createJumpTableMMU()
-{
-    // u16 opcode;
-
-    if (model == M68030 || model == M68EC030) {
-
-        /*
-        opcode = parse("1111 0000 00-- ----");
-        __________XXXXXX(opcode, LINE_F, 0b111111111111, Unsized, P68030, CIMS)
-        */
     }
 }

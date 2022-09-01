@@ -175,12 +175,7 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
         default:
             break;
     }
-    // MMU instructions
-    /*
-    if ((opcode & 0xFFC0) == 0xF000) {
-        s.ext1 = u16(mmu++ << 8) | (s.ext1 & 0xFF);
-    }
-    */
+
     s.pc = pc;
     s.opcode = opcode;
 
@@ -252,11 +247,12 @@ void run()
     printf("The test program runs Moira agains Musashi with randomly generated data.\n");
     printf("It runs until a bug has been found.\n");
 
-    // EXPERIMENTAL
-    // dumpDasm();
-
     selectModel(M68030);
     srand(3);
+
+    // EXPERIMENTAL
+    runMMU();
+    // dumpDasm();
 
     for (testrun = 1 ;; testrun++) {
 
@@ -304,6 +300,44 @@ void run()
                    mo / double(CLOCKS_PER_SEC));
         }
         printf("\n");
+    }
+}
+
+void runMMU()
+{
+    Setup setup;
+
+    for (testrun = 0 ;; testrun++) {
+
+        // Initialize the random number generator
+        randomizer.init(testrun);
+
+        // Switch the CPU core from time to time
+        // if (testrun % 16 == 0) selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
+
+        printf("MMU Round %ld ", testrun); fflush(stdout);
+        setupTestEnvironment(setup);
+
+        // int opcode = 0xF000 | (testrun & 0x3F);
+        int opcode = 0xF000 | (testrun & 0xF) << 3;
+
+        // Iterate through all extension words
+        for (int ext = 0x0000; ext < 0xFFFF; ext++) {
+
+            if ((ext & 0xFFF) == 0) { printf("."); fflush(stdout); }
+
+            // Prepare the test case with the selected instruction
+            setup.ext1 = ext;
+            setupTestInstruction(setup, pc, u16(opcode));
+
+            // Reset the sandbox (memory accesses observer)
+            sandbox.prepare(u16(opcode));
+
+            // Execute both CPU cores
+            runSingleTest(setup);
+        }
+
+        printf(" PASSED\n");
     }
 }
 

@@ -69,7 +69,7 @@ Moira::dasmPFlush(StrWriter &str, u32 &addr, u16 op)
     auto fc    = ___________xxxxx(ext);
     
     // Catch illegal extension words
-    if (str.style == DASM_GNU && !isValidExt(I, M, ext)) {
+    if (str.style == DASM_GNU && !isValidExt(I, M, op, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -96,41 +96,27 @@ Moira::dasmPFlush(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmPLoad(StrWriter &str, u32 &addr, u16 op)
 {
-    assert(M != MODE_IP);
-
-    auto ea = Op <M,S> ( _____________xxx(op), addr );
-
+    auto old = addr;
+    auto ea  = Op <M,S> ( _____________xxx(op), addr );
     auto ext = dasmRead<Word>(addr);
 
-    switch (str.style) {
+    // Catch illegal extension words
+    if (str.style == DASM_GNU && !isValidExt(I, M, op, ext)) {
 
-        case DASM_MUSASHI:
-
-            str << "pload" << tab;
-
-            if (ext & 0x200) {
-
-                str << Imd((ext >> 10) & 7) << Sep{} << ea;
-
-            } else {
-
-                str << ea << Sep{} << Imd((ext >> 10) & 7);
-            }
-            break;
-
-        default:
-
-            str << "pload" << ((ext & 0x200) ? "r" : "w") << tab;
-            str << Fc(ext & 0b11111) << Sep{} << ea;
-            break;
+        addr = old;
+        dasmIllegal<I, M, S>(str, addr, op);
+        return;
     }
+
+    str << "pload" << ((ext & 0x200) ? "r" : "w") << tab;
+    str << Fc(ext & 0b11111) << Sep{} << ea;
 }
 
 template <Instr I, Mode M, Size S> void
 Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
 {
     const char *const mmuregs[8] =
-    { "tc", "drp", "srp", "crp", "cal", "val", "sccr", "acr" };
+    { "tc", "drp", "tt0", "tt1", "cal", "val", "sccr", "acr" };
 
     auto old  = addr;
     auto ext  = dasmRead<Word>(addr);
@@ -140,7 +126,7 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
     auto nr   = ___________xxx__(ext);
 
     // Catch illegal extension words
-    if (str.style == DASM_GNU && !isValidExt(I, M, ext)) {
+    if (str.style == DASM_GNU && !isValidExt(I, M, op, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -182,7 +168,7 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
             // printf("dasmPMove3\n");
             switch (preg) {
 
-                case 0:     pStr = "mmusr"; break;
+                case 0:     pStr = "psr"; break;
                 case 1:     pStr = "pcsr"; break;
                 case 4:     pStr = "bad"; break;
                 case 5:     pStr = "bac"; break;
@@ -216,7 +202,7 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
             str << tab << "[unknown form]" << Sep{} << "INVALID " << Int(op & 0x3f);
         } else {
             if (fmt == 3 && preg > 1) str << Int(nr);
-            str << tab << pStr << Sep{} << Op<M, S>(reg, addr);
+            str << pStr << Sep{} << Op<M, S>(reg, addr);
         }
     }
 }
@@ -234,7 +220,7 @@ Moira::dasmPTest(StrWriter &str, u32 &addr, u16 op)
     auto fc  = ___________xxxxx(ext);
 
     // Catch illegal extension words
-    if (str.style == DASM_GNU && !isValidExt(I, M, ext)) {
+    if (str.style == DASM_GNU && !isValidExt(I, M, op, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);

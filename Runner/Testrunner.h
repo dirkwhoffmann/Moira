@@ -145,6 +145,7 @@ void resetMoira(Setup &s);
 //
 
 void run();
+void runMMU();
 
 void runSingleTest(Setup &s);
 
