@@ -40,7 +40,6 @@ extern Randomizer randomizer;
 extern u8 musashiMem[0x10000];
 extern u8 moiraMem[0x10000];
 extern u32 musashiFC;
-extern long testrun;
 extern moira::Model cpuModel;
 
 // Binutils
@@ -67,6 +66,7 @@ inline void set16(u8 *p, u32 addr, u16 val) {
 // A test setup
 struct Setup {
 
+    long    round;
     u8      ccr;
     bool    supervisor;
     u32     pc;
@@ -132,7 +132,7 @@ void setupBinutils();
 void setupMusashi();
 void setupMoira();
 
-void setupTestEnvironment(Setup &s);
+void setupTestEnvironment(Setup &s, long round);
 void setupTestInstruction(Setup &s, u32 pc, u16 opcode);
 
 void resetM68k(Setup &s);
@@ -180,10 +180,3 @@ bool compareCAxR(Result &r1, Result &r2);
 bool compareCycles(Result &r1, Result &r2);
 
 void bugReport();
-
-
-//
-// Produce some disassembler output (for manual comparison)
-//
-
-void dumpDasm();

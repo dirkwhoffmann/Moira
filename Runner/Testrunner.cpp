@@ -17,7 +17,6 @@ Randomizer randomizer;
 u8 musashiMem[0x10000];
 u8 moiraMem[0x10000];
 u32 musashiFC = 0;
-long testrun = 0;
 moira::Model cpuModel = M68000;
 
 // Binutils
@@ -127,9 +126,10 @@ void setupMoira()
     moiracpu->setModel(cpuModel);
 }
 
-void setupTestEnvironment(Setup &s)
+void setupTestEnvironment(Setup &s, long round)
 {
-    s.supervisor = testrun % 2;
+    s.round = round;
+    s.supervisor = round % 2;
     s.ccr = u8(rand());
     s.ext1 = u16(randomizer.rand());
     s.ext2 = u16(randomizer.rand());
@@ -164,7 +164,7 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
 
         case MOVEC:
         {
-            if (testrun % 2) {
+            if (s.round % 2) {
 
                 s.ext1 &= 0xF000;
                 if (mvc % 2) s.ext1 |= 0x800;
@@ -252,9 +252,8 @@ void run()
 
     // EXPERIMENTAL
     runMMU();
-    // dumpDasm();
 
-    for (testrun = 1 ;; testrun++) {
+    for (long testrun = 1 ;; testrun++) {
 
         // Initialize the random number generator
         randomizer.init(testrun);
@@ -263,7 +262,7 @@ void run()
         // if (testrun % 16 == 0) selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
         
         printf("Round %ld ", testrun); fflush(stdout);
-        setupTestEnvironment(setup);
+        setupTestEnvironment(setup, testrun);
 
         // Iterate through all opcodes
         // for (int opcode = 0x0000; opcode < 65536; opcode++) {
@@ -307,7 +306,7 @@ void runMMU()
 {
     Setup setup;
 
-    for (testrun = 0 ;; testrun++) {
+    for (long testrun = 0 ;; testrun++) {
 
         // Initialize the random number generator
         randomizer.init(testrun);
@@ -316,7 +315,7 @@ void runMMU()
         // if (testrun % 16 == 0) selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
 
         printf("MMU Round %ld ", testrun); fflush(stdout);
-        setupTestEnvironment(setup);
+        setupTestEnvironment(setup, testrun);
 
         // int opcode = 0xF000 | (testrun & 0x3F);
         int opcode = 0xF000 | (testrun & 0xF) << 3;
@@ -932,89 +931,4 @@ void bugReport()
     printf("Please send a bug report to: dirk.hoffmann@me.com\n");
     printf("Thanks you!\n\n");
     exit(0);
-}
-
-void dumpDasm()
-{
-    char    dasm[5][128];
-    int     dasmCnt[5];
-
-    Setup s;
-    // Result r;
-
-    selectModel(M68040);
-    setupM68k();
-    srand(0);
-    randomizer.init(testrun);
-    setupTestEnvironment(s);
-
-    long nr = 0;
-
-    // Iterate through all opcodes
-
-    // for (int op = 0xF200; op <= 0xF200; op++) {
-    for (int op = 0xF000; op <= 0xF1FF; op++) {
-
-        for (int i = 0x00; i <= 0x00; i++) {
-
-            // u16 ext = 0xF200 | i;
-            // u16 ext = 0xE000 | (rand() & 0x1FFF);
-            u16 ext = rand();
-
-            s.ext1 = ext;
-            setupTestInstruction(s, pc, u16(op));
-
-            resetMusashi(s);
-            resetM68k(s);
-            resetMoira(s);
-
-            // Disassemble the instruction in Moira Motorola syntax
-            moiracpu->setDasmStyle(DASM_MOIRA_MOT);
-            moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
-            dasmCnt[0] = moiracpu->disassemble(pc, dasm[0]);
-
-            // Disassemble the instruction in Moira MIT syntax
-            moiracpu->setDasmStyle(DASM_MOIRA_MIT);
-            moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
-            dasmCnt[1] = moiracpu->disassemble(pc, dasm[1]);
-
-            // Run the Musashi disassembler
-            auto type =
-            cpuModel == M68000   ? M68K_CPU_TYPE_68000 :
-            cpuModel == M68010   ? M68K_CPU_TYPE_68010 :
-            cpuModel == M68EC020 ? M68K_CPU_TYPE_68EC020 :
-            cpuModel == M68020   ? M68K_CPU_TYPE_68020 :
-            cpuModel == M68EC030 ? M68K_CPU_TYPE_68EC030 :
-            cpuModel == M68030   ? M68K_CPU_TYPE_68030 :
-            cpuModel == M68EC040 ? M68K_CPU_TYPE_68EC040 :
-            cpuModel == M68LC040 ? M68K_CPU_TYPE_68LC040 : M68K_CPU_TYPE_68040;
-            dasmCnt[2] = m68k_disassemble(dasm[2], s.pc, type);
-
-            // Run m86k disassembler in Motorola syntax
-            auto n1 = M68k_Disassemble(&dp) - dp.instr;
-            dasmCnt[3] = 2 * n1;
-            if (strcmp(operands, "") == 0) {
-                sprintf(dasm[3], "%s", opcode);
-            } else {
-                sprintf(dasm[3], "%-7s %s", opcode, operands);
-            }
-
-            // Run disassembler in MIT syntax
-            auto n2 = M68k_Disassemble(&dp, true) - dp.instr;
-            dasmCnt[4] = 2 * n2;
-            if (strcmp(operands, "") == 0) {
-                sprintf(dasm[4], "%s", opcode);
-            } else {
-                sprintf(dasm[4], "%-7s %s", opcode, operands);
-            }
-
-            printf("%5lx: %04X %04x: Moira:   [%d] %s\n", nr++, op, ext, dasmCnt[0], dasm[0]);
-            printf("                           [%d] %s\n", dasmCnt[1], dasm[1]);
-            printf("                  Musashi: [%d] %s\n", dasmCnt[2], dasm[2]);
-            printf("                  vda68k:  [%d] %s\n", dasmCnt[3], dasm[3]);
-            printf("                           [%d] %s\n\n", dasmCnt[4], dasm[4]);
-        }
-    }
-
-    exit(1);
 }
