@@ -658,7 +658,8 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
     };
 
     auto validFC = [&]() {      // 10XXX, 01DDD, 00000, 00001
-        return fc() <= 1 || (fc() >= 8 && fc() <= 23);
+        // return fc() <= 1 || (fc() >= 8 && fc() <= 23);
+        return fc() <= 1 || (fc() >= 8); // Binutils checks M68851
     };
 
     switch (I) {
@@ -683,7 +684,7 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
             // Check register
             if (mode() == 0b001 && (op & 0x7) != 0) return false;
 
-            // printf("ext = %x mode() = %x mask() = %x fc() = %x validMode = %d\n", ext, mode(), mask(), fc(), validMode());
+            // printf("M = %d op = %x ext = %x mode() = %x mask() = %x fc() = %x validMode = %d\n", M, op, ext, mode(), mask(), fc(), validMode());
 
             // Check mode
             if (!validMode()) return false;
@@ -691,6 +692,8 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
             // When mode is 001, mask and fc must be 0
             if (mode() == 0b001 && mask() != 0) return false;
             if (mode() == 0b001 && fc() != 0) return false;
+            // if (mode() == 0b001 && M == MODE_AN) return false;
+            if (mode() == 0b001 && M != 0) return false;
 
             // Check FC
             if ((fc() & 0b11000) == 0 && (fc() & 0b110) != 0) return false;
@@ -707,10 +710,10 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
         case PLOAD:
 
             // Check EA mode
-            if (M == MODE_AI) return false;
+//            if (M == MODE_AI || M == MODE_DI || M == MODE_IX) return validFC();
             if (M != MODE_AI && M != MODE_DI && M != MODE_IX && M != MODE_AW && M != MODE_AL) return false;
 
-            return true;
+            return validFC();
 
         case PMOVE:
 
@@ -734,19 +737,29 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
                     // Check zero bits
                     if (ext & 0xFF) return false;
 
+                    // If memory is written, flushing is mandatory
+                    if ((ext & 0x300) == 0x300) return false;
+
+                    if ((ext & 0x300) == 0) {
+                        if (preg() != 0) {
+                            if (M == MODE_PI || M == MODE_PD) return false;
+                        }
+                    }
+
                     // Check register field
                     // Binutils accepts all M68851 registers
                     // if (preg() != 0b000 && preg() != 0b010 && preg() != 0b011) return false;
                     if ((ext & 0x100) == 0) {
-                        if (preg() == 0b001 || preg() == 0b010 || preg() == 0b011 ||
-                            preg() == 0b100 || preg() == 0b101 || preg() == 0b110 ||
-                            preg() == 0b111) {
+                        if (preg() != 0) {
                             if (M == MODE_DN || M == MODE_AN) return false;
                         }
                     }
 
-                    // If memory is written, flushing is mandatory
-                    if ((ext & 0x300) == 0x300) return false;
+                    if ((ext & 0x100) == 0) {
+                        if (preg() == 0b001) {
+                            // if (M == MODE_PI) return false;
+                        }
+                    }
 
                     return true;
 

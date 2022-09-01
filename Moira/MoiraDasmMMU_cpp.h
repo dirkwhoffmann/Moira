@@ -97,8 +97,8 @@ template <Instr I, Mode M, Size S> void
 Moira::dasmPLoad(StrWriter &str, u32 &addr, u16 op)
 {
     auto old = addr;
-    auto ea  = Op <M,S> ( _____________xxx(op), addr );
     auto ext = dasmRead<Word>(addr);
+    auto ea  = Op <M,S> ( _____________xxx(op), addr );
 
     // Catch illegal extension words
     if (str.style == DASM_GNU && !isValidExt(I, M, op, ext)) {
