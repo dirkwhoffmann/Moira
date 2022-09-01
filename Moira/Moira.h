@@ -464,7 +464,7 @@ protected:
     bool isAvailable(Instr I, Mode M, Size S, u16 ext);
 
     // Checks the validity of the extension words for a given instruction
-    bool isValidExt(Instr I, u16 op, u32 ext);
+    bool isValidExt(Instr I, Mode M, u32 ext);
 
 private:
 

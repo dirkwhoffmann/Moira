@@ -65,26 +65,25 @@ Moira::dasmPFlush(StrWriter &str, u32 &addr, u16 op)
     auto ext   = dasmRead<Word>(addr);
     auto reg   = _____________xxx(op);
     auto mode  = ___xxx__________(ext);
-    auto mask  = ________xxx_____(ext);
+    auto mask  = _______xxxx_____(ext);
     auto fc    = ___________xxxxx(ext);
     auto fc1   = ___________xx___(ext);
     auto fc2   = _____________xxx(ext);
 
-    // Catch illegal extension words (TODO: Clean this up)
-    bool illegalMode =
-    M == MODE_DN ||
-    M == MODE_AN ||
-    M == MODE_PI ||
-    M == MODE_PD ||
-    M == MODE_DIPC ||
-    M == MODE_IXPC ||
-    M == MODE_IM;
-
-    if (str.style == DASM_GNU && (!isValidExt(I, op, ext) || illegalMode)) {
+    printf("dasmPFlush(%x,%x)\n", op, ext);
+    
+    // Catch illegal extension words
+    if (str.style == DASM_GNU && !isValidExt(I, M, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
         return;
+    }
+
+    if (str.style == DASM_MOIRA_MOT || str.style == DASM_MOIRA_MIT) {
+
+        // Only the MC68851 has four mask bits. The 68030 only has three.
+        mask &= 0b111;
     }
 
     if (mode == 1) {
@@ -178,7 +177,7 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
     auto nr   = ___________xxx__(ext);
 
     // Catch illegal extension words
-    if (str.style == DASM_GNU && !isValidExt(I, op, ext)) {
+    if (str.style == DASM_GNU && !isValidExt(I, M, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -283,7 +282,7 @@ Moira::dasmPTest(StrWriter &str, u32 &addr, u16 op)
     M == MODE_IXPC ||
     M == MODE_IM;
 
-    if (str.style == DASM_GNU && (!isValidExt(I, op, ext) || illegalMode)) {
+    if (str.style == DASM_GNU && (!isValidExt(I, M, ext) || illegalMode)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);

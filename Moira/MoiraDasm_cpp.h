@@ -400,7 +400,7 @@ Moira::dasmBitFieldDn(StrWriter &str, u32 &addr, u16 op)
     auto w   = ___________xxxxx(ext);
 
     // Catch illegal extension words
-    if (str.style == DASM_GNU && !isValidExt(I, op, ext)) {
+    if (str.style == DASM_GNU && !isValidExt(I, M, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -454,53 +454,6 @@ Moira::dasmBitFieldDn(StrWriter &str, u32 &addr, u16 op)
                 case 0x0820: str << " {" << Dn{o&7} << ":" << Dn{w&7} << "}"; break;
             }
     }
-
-    /*
-    const char *space = " ", *open = "{", *close = "}", *delim = ":";
-
-    switch (str.style) {
-
-        case DASM_GNU:
-
-            space = ""; open = ","; close = ""; delim = ",";
-
-            if (!isValidExt(I, op, ext)) {
-
-                addr = old;
-                dasmIllegal<I, M, S>(str, addr, op);
-                return;
-            }
-            break;
-
-        case DASM_VDA68K_MIT:
-        case DASM_VDA68K_MOT:
-
-            space = "";
-            break;
-
-        default:
-            break;
-    }
-
-    str << space << open;
-
-    if (ext & 0x0800) {
-        str << Dn ( _______xxx______(ext) );
-    } else {
-        str << _____xxxxx______(ext);
-    }
-
-    str << delim;
-
-    if (ext & 0x0020) {
-        str << Dn ( _____________xxx(ext) );
-    } else {
-        auto width = ___________xxxxx(ext);
-        str << (width ? width : 32);
-    }
-
-    str << close;
-    */
 
     if constexpr (I == BFEXTU || I == BFEXTS || I == BFFFO) {
         str << Sep{} << Dn ( _xxx____________(ext) );
@@ -609,7 +562,7 @@ Moira::dasmCas(StrWriter &str, u32 &addr, u16 op)
     auto dst = Op <M,S> ( _____________xxx(op), addr );
 
     // Catch illegal extension words
-    if (str.style == DASM_GNU && !isValidExt(I, op, ext)) {
+    if (str.style == DASM_GNU && !isValidExt(I, M, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -633,7 +586,7 @@ Moira::dasmCas2(StrWriter &str, u32 &addr, u16 op)
     auto rn2 = Rn ( (ext >> 12) & 0b1111 );
 
     // Catch illegal extension words (binutils only checks the first word)
-    if (str.style == DASM_GNU && !isValidExt(I, op, u16(ext >> 16))) {
+    if (str.style == DASM_GNU && !isValidExt(I, M, u16(ext >> 16))) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -693,7 +646,7 @@ Moira::dasmChkCmp2(StrWriter &str, u32 &addr, u16 op)
     auto dst = Rn       ( xxxx____________(ext)      );
 
     // Catch illegal extension words
-    if (str.style == DASM_GNU && !isValidExt(I, op, ext)) {
+    if (str.style == DASM_GNU && !isValidExt(I, M, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -1547,7 +1500,7 @@ Moira::dasmMull(StrWriter &str, u32 &addr, u16 op)
     auto fill = str.style == DASM_VDA68K_MIT || str.style == DASM_MOIRA_MIT ? "," : ":";
 
     // Catch illegal extension words
-    if (str.style == DASM_GNU && !isValidExt(I, op, ext)) {
+    if (str.style == DASM_GNU && !isValidExt(I, M, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -1590,7 +1543,7 @@ Moira::dasmDivl(StrWriter &str, u32 &addr, u16 op)
     auto fill = str.style == DASM_VDA68K_MIT || str.style == DASM_MOIRA_MIT || str.style == DASM_GNU ? "," : ":";
 
     // Catch illegal extension words
-    if (str.style == DASM_GNU && !isValidExt(I, op, ext)) {
+    if (str.style == DASM_GNU && !isValidExt(I, M, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);

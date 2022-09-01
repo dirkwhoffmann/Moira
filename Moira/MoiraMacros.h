@@ -85,6 +85,7 @@
 #define _________xxx____(opcode) (u8)((opcode >> 4)  & 0b111)
 #define __________x_____(opcode) (u8)((opcode >> 5)  & 0b1)
 #define ________xxx_____(opcode) (u8)((opcode >> 5)  & 0b111)
+#define _______xxxx_____(opcode) (u8)((opcode >> 5)  & 0b1111)
 #define _________x______(opcode) (u8)((opcode >> 6)  & 0b1)
 #define ________xx______(opcode) (u8)((opcode >> 6)  & 0b11)
 #define _______xxx______(opcode) (u8)((opcode >> 6)  & 0b111)

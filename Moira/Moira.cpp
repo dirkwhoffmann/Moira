@@ -643,22 +643,24 @@ Moira::availabilityString(Instr I, Mode M, Size S, u16 ext)
 }
 
 bool
-Moira::isValidExt(Instr I, u16 op, u32 ext)
+Moira::isValidExt(Instr I, Mode M, u32 ext)
 {
-    auto level = [ext]() { return ext >> 10 & 0b111; };
-    auto a     = [ext]() { return ext >> 8 & 0b1; };
-    auto mode  = [ext]() { return ext >> 10 & 0b111; };
-    auto mask  = [ext]() { return ext >> 5 & 0b111; };
-    auto reg   = [ext]() { return ext >> 5 & 0b111; };
-    auto fc    = [ext]() { return ext & 0b11111; };
+    auto level = [ext]() { return ext >> 10 & 0b111;   };
+    auto a     = [ext]() { return ext >>  8 & 0b1;     };
+    auto mode  = [ext]() { return ext >> 10 & 0b111;   };
+    auto mask  = [ext]() { return ext >>  5 & 0b111;   };
+    auto reg   = [ext]() { return ext >>  5 & 0b111;   };
+    auto fc    = [ext]() { return ext       & 0b11111; };
 
     auto validMode = [&]() {    // 001, 100, 110
         return mode() == 0b001 || mode() == 0b100 || mode() == 0b110;
     };
 
+    /*
     auto validFC = [&]() {      // 10XXX, 01DDD, 00000, 00001
         return fc() <= 1 || (fc() >= 8 && fc() <= 23);
     };
+    */
 
     switch (I) {
 
@@ -700,11 +702,27 @@ Moira::isValidExt(Instr I, u16 op, u32 ext)
 
         case PFLUSH:
 
+            printf("ext = %x mode() = %x mask() = %x fc() = %x validMode = %d\n", ext, mode(), mask(), fc(), validMode());
+
+            // Check mode
+            if (!validMode()) return false;
+
             // When mode is 001, mask and fc must be 0
             if (mode() == 0b001 && mask() != 0) return false;
             if (mode() == 0b001 && fc() != 0) return false;
 
-            return validFC() && validMode();
+            // Check FC
+            if ((fc() & 0b11000) == 0 && (fc() & 0b110) != 0) return false;
+
+            // Check EA mode
+            if (mode() == 0b110) {
+                if (M != MODE_AI && M != MODE_DI && M != MODE_IX && M != MODE_AW && M != MODE_AL) {
+                    return false;
+                }
+            }
+
+            printf("PASSED\n");
+            return true;
 
         default:
             fatalError;
