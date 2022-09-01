@@ -646,7 +646,6 @@ bool
 Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
 {
     auto preg  = [ext]() { return ext >> 10 & 0b111;   };
-    auto level = [ext]() { return ext >> 10 & 0b111;   };
     auto a     = [ext]() { return ext >>  8 & 0b1;     };
     auto mode  = [ext]() { return ext >> 10 & 0b111;   };
     auto mask  = [ext]() { return ext >>  5 & 0b1111;  }; // 68851 mask is 4 bit
@@ -658,7 +657,6 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
     };
 
     auto validFC = [&]() {      // 10XXX, 01DDD, 00000, 00001
-        // return fc() <= 1 || (fc() >= 8 && fc() <= 23);
         return fc() <= 1 || (fc() >= 8); // Binutils checks M68851
     };
 
@@ -692,7 +690,6 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
             // When mode is 001, mask and fc must be 0
             if (mode() == 0b001 && mask() != 0) return false;
             if (mode() == 0b001 && fc() != 0) return false;
-            // if (mode() == 0b001 && M == MODE_AN) return false;
             if (mode() == 0b001 && M != 0) return false;
 
             // Check FC
@@ -710,7 +707,6 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
         case PLOAD:
 
             // Check EA mode
-//            if (M == MODE_AI || M == MODE_DI || M == MODE_IX) return validFC();
             if (M != MODE_AI && M != MODE_DI && M != MODE_IX && M != MODE_AW && M != MODE_AL) return false;
 
             return validFC();
@@ -748,16 +744,9 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
 
                     // Check register field
                     // Binutils accepts all M68851 registers
-                    // if (preg() != 0b000 && preg() != 0b010 && preg() != 0b011) return false;
                     if ((ext & 0x100) == 0) {
                         if (preg() != 0) {
                             if (M == MODE_DN || M == MODE_AN) return false;
-                        }
-                    }
-
-                    if ((ext & 0x100) == 0) {
-                        if (preg() == 0b001) {
-                            // if (M == MODE_PI) return false;
                         }
                     }
 
@@ -776,18 +765,11 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
 
         case PTEST:
 
-            // When level is 0, A must be 0
-            // if (level() == 0 && a() != 0) return false;
-
             // When A is 0, reg must be 0
             if (a() == 0 && reg() != 0) return false;
 
             // Check FC
-            // if (fc() < 0b1000 && fc() != 0 && fc() != 1) return false;
-            if ((fc() & 0b11000) == 0 && (fc() & 0b110) != 0) {
-                // printf("Wrong FC\n");
-                return false;
-            }
+            if ((fc() & 0b11000) == 0 && (fc() & 0b110) != 0) return false;
 
             // Check EA mode
             if (M != MODE_AI && M != MODE_DI && M != MODE_IX && M != MODE_AW && M != MODE_AL) return false;
