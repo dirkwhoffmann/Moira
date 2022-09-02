@@ -151,7 +151,8 @@ void runMMU(long round);
 void runFPU(long round);
 void passed();
 
-void runSingleTest(Setup &s);
+void runSingleTest(Setup &s, u16 op);
+void runSingleTest(Setup &s, u16 op, u16 ext);
 
 void runM68k(Setup &s, Result &r);
 void runBinutils(Setup &s, Result &r);

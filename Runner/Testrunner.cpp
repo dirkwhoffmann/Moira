@@ -286,14 +286,8 @@ void runCPU(long round)
             if (moiracpu->getInfo(opcode).I == moira::ILLEGAL) continue;
         }
 
-        // Prepare the test case with the selected instruction
-        setupTestInstruction(setup, pc, u16(opcode));
-
-        // Reset the sandbox (memory accesses observer)
-        sandbox.prepare(u16(opcode));
-
         // Execute both CPU cores
-        runSingleTest(setup);
+        runSingleTest(setup, u16(opcode));
     }
     passed();
 }
@@ -310,24 +304,13 @@ void runMMU(long round)
     // Initialize the random number generator
     randomizer.init(round);
 
-    for (int opcode = 0xF000; opcode <= 0xF03F; opcode++) {
+    for (int op = 0xF000; op <= 0xF03F; op++) {
 
-        if ((opcode % 4) == 0) { printf("."); fflush(stdout); }
+        if ((op % 4) == 0) { printf("."); fflush(stdout); }
 
-        // Iterate through all extension words
-        // for (int ext = 0x0000; ext < 0xFFFF; ext++) {
-        // for (int ext = 0x0000; ext <= 0x1F00; ext += 0x0100) {
-        for (int ext = 0x6000; ext <= 0x6FFF; ext++) {
+        for (int ext = 0x0000; ext <= 0xFFFF; ext++) {
 
-            // Prepare the test case with the selected instruction
-            setup.ext1 = ext;
-            setupTestInstruction(setup, pc, u16(opcode));
-
-            // Reset the sandbox (memory accesses observer)
-            sandbox.prepare(u16(opcode));
-
-            // Execute both CPU cores
-            runSingleTest(setup);
+            runSingleTest(setup, u16(op), u16(ext));
         }
     }
     passed();
@@ -356,9 +339,15 @@ void passed()
     printf("\n");
 }
 
-void runSingleTest(Setup &s)
+void runSingleTest(Setup &s, u16 op)
 {
     Result mur, mor;
+
+    // Prepare the test case with the selected instruction
+    setupTestInstruction(s, pc, op);
+
+    // Reset the sandbox (memory accesses observer)
+    sandbox.prepare(op);
 
     // Prepare
     resetMusashi(s);
@@ -383,6 +372,12 @@ void runSingleTest(Setup &s)
 
     // Compare
     compare(s, mur, mor);
+}
+
+void runSingleTest(Setup &s, u16 op, u16 ext)
+{
+    s.ext1 = ext;
+    runSingleTest(s, op);
 }
 
 void runM68k(Setup &s, Result &r)
