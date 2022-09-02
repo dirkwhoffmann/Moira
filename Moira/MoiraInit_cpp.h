@@ -1957,7 +1957,7 @@ Moira::createJumpTable()
             __________XXXXXX(opcode, cpBcc, MODE_IP, Long, FBcc, CIMS)
 
             opcode = parse("1111 0010 00-- ----");
-            __________MMMXXX(opcode, cpGEN, 0b101111111111, Unsized, FGen, CIMS)
+            __________MMMXXX(opcode, cpGEN, 0b111111111111, Unsized, FGen, CIMS)
 
             opcode = parse("1111 0011 01-- ----");
             ____XXX___MMMXXX(opcode, cpRESTORE, 0b001101111110, Word, FRestore, CIMS)

@@ -36,13 +36,22 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
 {
     auto ext = dasmRead<Word>(addr);
     auto cod = xxx_____________(ext);
+    auto fmt = ___xxx__________(ext);
     auto cmd = _________xxxxxxx(ext);
     addr -= 2;
 
     if ((ext & 0xFC00) == 0x5C00) {
 
-        dasmFMovecr<FMOVECR, M, S>(str, addr, op);
+        if (op & 0x3F) {
+            dasmLineF<I, M, S>(str, addr, op);
+        } else {
+            dasmFMovecr<FMOVECR, M, S>(str, addr, op);
+        }
         return;
+    }
+
+    if (M == MODE_AN) {
+        if (ext & 0x4000) { dasmLineF<I, M, S>(str, addr, op); return; }
     }
 
     switch (cod) {
@@ -52,7 +61,13 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
 
             switch (cmd) {
 
-                case 0x00: dasmFMove<FMOVE, M, S>(str, addr, op); return;
+                case 0x00:
+
+                    // If R/M = 0, the E/A field is unused and must be 0
+                    if (cod == 0 && (op & 0x3F)) break;
+
+                    dasmFMove<FMOVE, M, S>(str, addr, op); return;
+
                 case 0x40: dasmFMove<FMOVE, M, S>(str, addr, op); return;
                 case 0x44: dasmFMove<FMOVE, M, S>(str, addr, op); return;
 
@@ -118,12 +133,10 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
             break;
 
         case 0b011:
-        {
-            auto fmt = ___xxx__________ (ext);
 
             // Check for k-factor formats
             if (fmt == 0b011 || fmt == 0b111) {
-                break;
+                if (M != MODE_AI) break;
             } else {
                 if (ext & 0x7F) break;
             }
@@ -133,17 +146,15 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
             }
             dasmFMove<FMOVE, M, S>(str, addr, op);
             return;
-        }
+
         case 0b101:
         {
             auto lst = ___xxx__________ (ext);
 
             if (ext & 0x3FF) break;
 
-            if (M == MODE_DN) {
-                if (lst != 0b000 && lst != 0b001 && lst != 0b010 && lst != 0b100) {
-                    break;
-                }
+            if (M == MODE_DN || M == MODE_AN) {
+                if (lst != 0b000 && lst != 0b001 && lst != 0b010 && lst != 0b100) break;
             }
             dasmFMovem<FMOVEM, M, S>(str, addr, op);
             return;
@@ -159,7 +170,7 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
         case 0b111:
 
             if (M == MODE_DN || M == MODE_AN) break;
-            
+
             if (ext & 0x3FF) break;
 
             dasmFMovem<FMOVEM, M, S>(str, addr, op);
@@ -259,7 +270,6 @@ Moira::dasmFGeneric3(StrWriter &str, u32 &addr, u16 op)
     auto ext = dasmRead(addr);
     auto reg = _____________xxx (op);
     auto src = ___xxx__________ (ext);
-    auto dst = ______xxx_______ (ext);
 
     if (ext & 0x4000) {
         str << Ins<I>{} << Ffmt{src} << tab << Op<M, Long>(reg, addr);
@@ -321,13 +331,14 @@ Moira::dasmFMove(StrWriter &str, u32 &addr, u16 op)
                 case 0b011:
 
                     str << Ins<I>{} << Ffmt{src} << tab << Fp(dst) << Sep{} << Op<M, Long>(reg, addr);
-                    str << " {" << Ims<Byte>(i8(fac << 1) >> 1) << "}";
+                    str << "{" << Ims<Byte>(i8(fac << 1) >> 1) << "}";
                     break;
 
                 case 0b111:
 
                     str << Ins<I>{} << Ffmt{3} << tab << Fp{dst} << Sep{} << Op<M, Long>(reg, addr);
-                    str << " {" << Dn(fac >> 4) << "}";
+                    // str << "{" << Dn(fac >> 4) << "}";
+                    str << Sep{} << Dn(fac >> 4);
                     break;
 
                 default:
@@ -361,13 +372,11 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op)
 
     const char *delim = "";
 
-    printf("dasmFMovem: %x %x\n", op, ext);
+    // printf("dasmFMovem: %x %x\n", op, ext);
 
     switch (cod) {
 
         case 0b100: // Ea to Cntrl
-
-            printf("(4)\n");
 
             if ((ext & 0x1C00) == 0) {
 
@@ -391,8 +400,6 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op)
 
         case 0b101: // Cntrl to Ea
 
-            printf("(5)\n");
-
             if ((ext & 0x1C00) == 0) {
 
                 if (str.style == DASM_GNU) {
@@ -415,8 +422,6 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op)
             break;
 
         case 0b110: // Memory to FPU
-
-            printf("(6)\n");
 
             switch (mod) {
 
@@ -451,8 +456,6 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op)
             break;
 
         case 0b111: // FPU to memory
-
-            printf("(7)\n");
 
             switch (mod) {
 
