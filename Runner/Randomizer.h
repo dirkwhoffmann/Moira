@@ -19,8 +19,8 @@ class Randomizer {
 
 public:
 
-    Randomizer();
-    void init(int testrun);
+    int init();
+    void prepare(int testrun);
     u32 rand();
 
 private:

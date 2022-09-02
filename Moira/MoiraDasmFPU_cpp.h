@@ -189,9 +189,19 @@ Moira::dasmFGeneric(StrWriter &str, u32 &addr, u16 op)
     auto dst = ______xxx_______ (ext);
 
     if (ext & 0x4000) {
-        str << Ins<I>{} << Ffmt{src} << tab << Op<M, Long>(reg, addr) << Sep{} << Fp{dst};
+        str << Ins<I>{} << Ffmt{src} << tab << Op<M, Long>(reg, addr);
     } else {
-        str << Ins<I>{} << Ffmt{2} << tab << Fp{src} << Sep{} << Fp{dst};
+        str << Ins<I>{} << Ffmt{2} << tab << Fp{src};
+    }
+
+    if constexpr (I == FSINCOS) {
+
+        auto fpc = _____________xxx (ext);
+        str << Sep{} << Fp{fpc} << Sep{} << Fp{dst};
+
+    } else {
+
+        str << Sep{} << Fp{dst};
     }
 }
 
@@ -205,9 +215,15 @@ Moira::dasmFMove(StrWriter &str, u32 &addr, u16 op)
     auto dst = ______xxx_______ (ext);
     auto fac = _________xxxxxxx (ext);
 
-    if (ext == 0) {
+    if (ext == 0 && (str.style == DASM_MOIRA_MOT || str.style == DASM_MOIRA_MIT)) {
 
         str << Ins<FNOP>{};
+        return;
+
+    } else {
+
+        // EXPERIMENTAL
+        str << "fmovex fp0,fp0";
         return;
     }
 

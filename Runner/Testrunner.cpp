@@ -245,19 +245,20 @@ clock_t muclk[2] = {0,0}, moclk[2] = {0,0};
 void run()
 {
     printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2022\n\n");
-    printf("The test program runs Moira agains Musashi with randomly generated data.\n");
-    printf("It runs until a bug has been found.\n");
+    printf("The test program runs Moira agains Musashi with randomly generated data.\n\n");
 
-    selectModel(M68030);
-    srand(3);
+    printf("    Test rounds: %ld\n", ROUNDS);
+    printf("    Random seed: %d\n", randomizer.init());
 
-    for (long i = 0;;) {
+    selectModel(M68040);
+
+    for (long i = 0; i < ROUNDS;) {
 
         // Switch the CPU core from time to time
-        if (++i % 1600000 == 0) selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
+        if (++i % 1000 == 0) selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
 
         // Run a CPU round
-        runCPU(cpuround[cpuModel]++);
+        // runCPU(cpuround[cpuModel]++);
 
         // Continue with a MMU round if applicable
         if constexpr (CHECK_MMU) runMMU(mmuround[cpuModel]++);
@@ -275,7 +276,7 @@ void runCPU(long round)
     setupTestEnvironment(setup, round);
 
     // Initialize the random number generator
-    randomizer.init(round);
+    randomizer.prepare(round);
 
     // Iterate through all opcodes
     for (int opcode = 0x0000; opcode <= 0xFFFF; opcode++) {
@@ -302,7 +303,7 @@ void runMMU(long round)
     setupTestEnvironment(setup, round);
 
     // Initialize the random number generator
-    randomizer.init(round);
+    randomizer.prepare(round);
 
     for (int op = 0xF000; op <= 0xF03F; op++) {
 
@@ -320,7 +321,24 @@ void runFPU(long round)
 {
     if (!moiracpu->hasFPU()) return;
 
-    // TODO
+    Setup setup;
+
+    printf("FPU round %ld ", round); fflush(stdout);
+    setupTestEnvironment(setup, round);
+
+    // Initialize the random number generator
+    randomizer.prepare(round);
+
+    for (int op = 0xF200; op <= 0xF23F; op++) {
+
+        if ((op % 4) == 0) { printf("."); fflush(stdout); }
+
+        for (int ext = 0x0000; ext <= 0xFFFF; ext++) {
+
+            runSingleTest(setup, u16(op), u16(ext));
+        }
+    }
+    passed();
 }
 
 void passed()

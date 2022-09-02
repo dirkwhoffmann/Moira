@@ -11,13 +11,20 @@
 #include "Randomizer.h"
 #include <bit>
 
-Randomizer::Randomizer()
+int
+Randomizer::init()
 {
-    srand(0);
+    std::time_t t = std::time(0);
+    std::tm* now = std::localtime(&t);
+
+    auto seed = now->tm_year + now->tm_yday;
+
+    srand(seed);
+    return seed;
 }
 
 void
-Randomizer::init(int testrun)
+Randomizer::prepare(int testrun)
 {
     // In the first few rounds, use a single constant
     if (testrun <= 10) {

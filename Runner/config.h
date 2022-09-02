@@ -9,20 +9,23 @@
 
 #pragma once
 
-// Set to true for verbose output
-static constexpr bool VERBOSE = false;
+// Number of test rounds
+static constexpr long ROUNDS = 1000;
 
 // Set to true to verify all memory write operations
 static constexpr bool CHECK_MEM_WRITES = true;
 
 // Set to true to inclue MMU rounds for capable CPUs
-static constexpr bool CHECK_MMU = true;
+static constexpr bool CHECK_MMU = false;
 
 // Set to true to inclue FPU rounds for capable CPUs
 static constexpr bool CHECK_FPU = true;
 
 // Set to true to skip the execution of illegal instructions
 static constexpr bool SKIP_ILLEGAL = true;
+
+// Set to true for verbose output
+static constexpr bool VERBOSE = false;
 
 // Set to true to measure the CPU speed
 static constexpr bool PROFILE_CPU = true;
