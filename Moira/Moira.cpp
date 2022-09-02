@@ -727,9 +727,10 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
                     if ((ext & 0x300) == 0x300) return false;
 
                     if ((ext & 0x200)) {
-                        if (M == MODE_DIPC || M == MODE_IXPC) return false;
+                        if (M == MODE_DIPC || M == MODE_IXPC || M == MODE_IM) return false;
                     }
-
+                    if (M == MODE_IP) return false;
+                    
                     return true;
 
                 case 0b010:
@@ -747,13 +748,17 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
                         }
                     }
 
-                    // Check register field
-                    // Binutils accepts all M68851 registers
+                    // Check register field (binutils accepts all M68851 registers)
                     if ((ext & 0x100) == 0) {
                         if (preg() != 0) {
                             if (M == MODE_DN || M == MODE_AN) return false;
                         }
                     }
+
+                    if ((ext & 0x200)) {
+                        if (M == MODE_DIPC || M == MODE_IXPC || M == MODE_IM) return false;
+                    }
+                    if (M == MODE_IP) return false;
 
                     return true;
 
@@ -761,6 +766,13 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
 
                     // Check zero bits
                     if (ext & 0x1DFF) return false;
+
+                    // Check EA modes
+                    if (ext & 0x200) {
+                        if (M == MODE_DIPC || M == MODE_IXPC || M == MODE_IM) return false;
+                    }
+                    if (M == MODE_IP) return false;
+
                     return true;
 
                 default:

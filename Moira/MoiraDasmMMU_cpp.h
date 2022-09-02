@@ -164,7 +164,7 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
                 if (fmt == 3 && preg > 1) str << Int(nr);
                 str << pStr << Sep{} << Op<M, Long>(reg, addr);
             }
-            return;
+            break;
 
         case 2:
 
@@ -180,6 +180,19 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
                 case 6:     pStr = "scc"; break;
                 case 7:     pStr = "ac"; break;
             }
+
+            if (!(ext & 0x200)) {
+
+                str << Ins<I>{} << suffix << tab;
+                str << Op<M, Long>(reg, addr) << Sep{} << pStr;
+                if (fmt == 3 && preg > 1) str << Int(nr);
+
+            } else {
+
+                str << Ins<I>{} << suffix << tab;
+                if (fmt == 3 && preg > 1) str << Int(nr);
+                str << pStr << Sep{} << Op<M, Long>(reg, addr);
+            }
             break;
 
         case 3:
@@ -193,26 +206,20 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
                 case 5:     pStr = "bac"; break;
                 default:    pStr = "???"; break;
             }
+
+            if (!(ext & 0x200)) {
+
+                str << Ins<I>{} << suffix << tab;
+                str << Op<M, Word>(reg, addr) << Sep{} << pStr;
+                if (fmt == 3 && preg > 1) str << Int(nr);
+
+            } else {
+
+                str << Ins<I>{} << suffix << tab;
+                if (fmt == 3 && preg > 1) str << Int(nr);
+                str << pStr << Sep{} << Op<M, Word>(reg, addr);
+            }
             break;
-
-        default:
-
-            pStr = "[unknown form]";
-            suffix = "";
-            break;
-    }
-
-    if (!(ext & 0x200)) {
-
-        str << Ins<I>{} << suffix << tab;
-        str << Op<M, S>(reg, addr) << Sep{} << pStr;
-        if (fmt == 3 && preg > 1) str << Int(nr);
-
-    } else {
-
-        str << Ins<I>{} << suffix << tab;
-        if (fmt == 3 && preg > 1) str << Int(nr);
-        str << pStr << Sep{} << Op<M, S>(reg, addr);
     }
 }
 

@@ -254,16 +254,16 @@ void run()
     for (long i = 0;;) {
 
         // Switch the CPU core from time to time
-        if (++i % 16 == 0) selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
+        if (++i % 1600000 == 0) selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
 
         // Run a CPU round
-        // runCPU(cpuround[cpuModel]++);
+        runCPU(cpuround[cpuModel]++);
 
         // Continue with a MMU round if applicable
-        if (moiracpu->hasMMU()) runMMU(mmuround[cpuModel]++);
+        if constexpr (CHECK_MMU) runMMU(mmuround[cpuModel]++);
 
         // Continue with a FPU round if applicable
-        if (moiracpu->hasFPU()) runFPU(mmuround[cpuModel]++);
+        if constexpr (CHECK_FPU) runFPU(fpuround[cpuModel]++);
     }
 }
 
@@ -300,6 +300,8 @@ void runCPU(long round)
 
 void runMMU(long round)
 {
+    if (!moiracpu->hasMMU()) return;
+
     Setup setup;
 
     printf("MMU round %ld ", round); fflush(stdout);
@@ -308,13 +310,14 @@ void runMMU(long round)
     // Initialize the random number generator
     randomizer.init(round);
 
-    // int opcode = 0xF000 | (round & 0xF) << 3 | (round & 0x3);
     for (int opcode = 0xF000; opcode <= 0xF03F; opcode++) {
+
+        if ((opcode % 4) == 0) { printf("."); fflush(stdout); }
+
         // Iterate through all extension words
         // for (int ext = 0x0000; ext < 0xFFFF; ext++) {
-        for (int ext = 0x0000; ext <= 0x1F00; ext += 0x0100) {
-
-            if ((ext & 0xFFF) == 0) { printf("."); fflush(stdout); }
+        // for (int ext = 0x0000; ext <= 0x1F00; ext += 0x0100) {
+        for (int ext = 0x6000; ext <= 0x6FFF; ext++) {
 
             // Prepare the test case with the selected instruction
             setup.ext1 = ext;
@@ -332,6 +335,8 @@ void runMMU(long round)
 
 void runFPU(long round)
 {
+    if (!moiracpu->hasFPU()) return;
+
     // TODO
 }
 
@@ -344,9 +349,9 @@ void passed()
         if (PROFILE_CPU) { mu += muclk[0]; mo += moclk[0]; }
         if (PROFILE_DASM) { mu += muclk[1]; mo += moclk[1]; }
 
-        printf(" (Musashi: %.2fs  Moira: %.2fs)",
-               mu / double(CLOCKS_PER_SEC),
-               mo / double(CLOCKS_PER_SEC));
+        printf(" (Moira: %.2fs  Musashi: %.2fs)",
+               mo / double(CLOCKS_PER_SEC),
+               mu / double(CLOCKS_PER_SEC));
     }
     printf("\n");
 }
