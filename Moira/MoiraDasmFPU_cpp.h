@@ -53,6 +53,9 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
             switch (cmd) {
 
                 case 0x00: dasmFMove<FMOVE, M, S>(str, addr, op); return;
+                case 0x40: dasmFMove<FMOVE, M, S>(str, addr, op); return;
+                case 0x44: dasmFMove<FMOVE, M, S>(str, addr, op); return;
+
                 case 0x01: dasmFGeneric<FINT, M, S>(str, addr, op); return;
                 case 0x02: dasmFGeneric<FSINH, M, S>(str, addr, op); return;
                 case 0x03: dasmFGeneric<FINTRZ, M, S>(str, addr, op); return;
@@ -87,16 +90,16 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
                 case 0x26: dasmFGeneric<FSCALE, M, S>(str, addr, op); return;
                 case 0x27: dasmFGeneric<FSGLMUL, M, S>(str, addr, op); return;
                 case 0x28: dasmFGeneric<FSUB, M, S>(str, addr, op); return;
-                case 0x30: dasmFGeneric<FSINCOS, M, S>(str, addr, op); return;
-                case 0x31: dasmFGeneric<FSINCOS, M, S>(str, addr, op); return;
-                case 0x32: dasmFGeneric<FSINCOS, M, S>(str, addr, op); return;
-                case 0x33: dasmFGeneric<FSINCOS, M, S>(str, addr, op); return;
-                case 0x34: dasmFGeneric<FSINCOS, M, S>(str, addr, op); return;
-                case 0x35: dasmFGeneric<FSINCOS, M, S>(str, addr, op); return;
-                case 0x36: dasmFGeneric<FSINCOS, M, S>(str, addr, op); return;
-                case 0x37: dasmFGeneric<FSINCOS, M, S>(str, addr, op); return;
+                case 0x30: dasmFGeneric2<FSINCOS, M, S>(str, addr, op); return;
+                case 0x31: dasmFGeneric2<FSINCOS, M, S>(str, addr, op); return;
+                case 0x32: dasmFGeneric2<FSINCOS, M, S>(str, addr, op); return;
+                case 0x33: dasmFGeneric2<FSINCOS, M, S>(str, addr, op); return;
+                case 0x34: dasmFGeneric2<FSINCOS, M, S>(str, addr, op); return;
+                case 0x35: dasmFGeneric2<FSINCOS, M, S>(str, addr, op); return;
+                case 0x36: dasmFGeneric2<FSINCOS, M, S>(str, addr, op); return;
+                case 0x37: dasmFGeneric2<FSINCOS, M, S>(str, addr, op); return;
                 case 0x38: dasmFGeneric<FCMP, M, S>(str, addr, op); return;
-                case 0x3A: dasmFGeneric<FTST, M, S>(str, addr, op); return;
+                case 0x3A: dasmFGeneric3<FTST, M, S>(str, addr, op); return;
                 case 0x41: dasmFGeneric<FSSQRT, M, S>(str, addr, op); return;
                 case 0x45: dasmFGeneric<FDSQRT, M, S>(str, addr, op); return;
                 case 0x58: dasmFGeneric<FSABS, M, S>(str, addr, op); return;
@@ -115,16 +118,51 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
             break;
 
         case 0b011:
+        {
+            auto fmt = ___xxx__________ (ext);
 
+            // Check for k-factor formats
+            if (fmt == 0b011 || fmt == 0b111) {
+                break;
+            } else {
+                if (ext & 0x7F) break;
+            }
+
+            if (M == MODE_DN && (fmt != 0 && fmt != 1 && fmt != 4 && fmt != 6)) {
+                break;
+            }
             dasmFMove<FMOVE, M, S>(str, addr, op);
             return;
-
-        case 0b100:
+        }
         case 0b101:
+        {
+            auto lst = ___xxx__________ (ext);
+
+            if (ext & 0x3FF) break;
+
+            if (M == MODE_DN) {
+                if (lst != 0b000 && lst != 0b001 && lst != 0b010 && lst != 0b100) {
+                    break;
+                }
+            }
+            dasmFMovem<FMOVEM, M, S>(str, addr, op);
+            return;
+        }
+        case 0b100:
+
+            if (ext & 0x3FF) break;
+
+            dasmFMovem<FMOVEM, M, S>(str, addr, op);
+            return;
+
         case 0b110:
         case 0b111:
 
-            dasmFMovem<FMOVE, M, S>(str, addr, op);
+            if (M == MODE_DN || M == MODE_AN) break;
+            
+            if (ext & 0x3FF) break;
+
+            dasmFMovem<FMOVEM, M, S>(str, addr, op);
             return;
     }
 
@@ -194,14 +232,39 @@ Moira::dasmFGeneric(StrWriter &str, u32 &addr, u16 op)
         str << Ins<I>{} << Ffmt{2} << tab << Fp{src};
     }
 
-    if constexpr (I == FSINCOS) {
+    str << Sep{} << Fp{dst};
+}
 
-        auto fpc = _____________xxx (ext);
-        str << Sep{} << Fp{fpc} << Sep{} << Fp{dst};
+template <Instr I, Mode M, Size S> void
+Moira::dasmFGeneric2(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = dasmRead(addr);
+    auto reg = _____________xxx (op);
+    auto src = ___xxx__________ (ext);
+    auto dst = ______xxx_______ (ext);
+    auto fpc = _____________xxx (ext);
 
+    if (ext & 0x4000) {
+        str << Ins<I>{} << Ffmt{src} << tab << Op<M, Long>(reg, addr);
     } else {
+        str << Ins<I>{} << Ffmt{2} << tab << Fp{src};
+    }
 
-        str << Sep{} << Fp{dst};
+    str << Sep{} << Fp{fpc} << Sep{} << Fp{dst};
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFGeneric3(StrWriter &str, u32 &addr, u16 op)
+{
+    auto ext = dasmRead(addr);
+    auto reg = _____________xxx (op);
+    auto src = ___xxx__________ (ext);
+    auto dst = ______xxx_______ (ext);
+
+    if (ext & 0x4000) {
+        str << Ins<I>{} << Ffmt{src} << tab << Op<M, Long>(reg, addr);
+    } else {
+        str << Ins<I>{} << Ffmt{2} << tab << Fp{src};
     }
 }
 
@@ -215,28 +278,40 @@ Moira::dasmFMove(StrWriter &str, u32 &addr, u16 op)
     auto dst = ______xxx_______ (ext);
     auto fac = _________xxxxxxx (ext);
 
-    if (ext == 0 && (str.style == DASM_MOIRA_MOT || str.style == DASM_MOIRA_MIT)) {
+    // printf("dasmFmove: %x %x %x\n", op, ext, fac);
+    if (ext == 0) {
 
-        str << Ins<FNOP>{};
-        return;
+        if (str.style == DASM_MOIRA_MOT || str.style == DASM_MOIRA_MIT) {
 
-    } else {
+            str << Ins<FNOP>{};
+            return;
 
-        // EXPERIMENTAL
-        str << "fmovex fp0,fp0";
-        return;
+        } else {
+
+            // EXPERIMENTAL
+            str << "fmovex fp0,fp0";
+            return;
+        }
     }
 
     switch (cod) {
 
         case 0b000:
 
-            str << Ins<I>{} << Ffmt{src} << tab << Fp(src) << src << Sep{} << Fp(dst);
+            if (fac == 0x40) str << "fsmove" << Ffmt{2};
+            else if (fac == 0x44) str << "fdmove" << Ffmt{2};
+            else str << Ins<I>{} << Ffmt{2};
+
+            str << tab << Fp(src) << Sep{} << Fp(dst);
             break;
 
         case 0b010:
 
-            str << Ins<I>{} << Ffmt{src} << tab << Op<M, Long>(reg, addr) << Sep{} << Fp(dst);
+            if (fac == 0x40) str << "fsmove" << Ffmt{src};
+            else if (fac == 0x44) str << "fdmove" << Ffmt{src};
+            else str << Ins<I>{} << Ffmt{src};
+
+            str << tab << Op<M, Long>(reg, addr) << Sep{} << Fp(dst);
             break;
 
         case 0b011:
@@ -282,15 +357,31 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op)
     auto cod = xxx_____________ (ext);
     auto mod = ___xx___________ (ext);
     auto rrr = _________xxx____ (ext);
+    auto lll = ___xxx__________ (ext);
 
     const char *delim = "";
+
+    printf("dasmFMovem: %x %x\n", op, ext);
 
     switch (cod) {
 
         case 0b100: // Ea to Cntrl
 
-            str << "1:";
-            str << Ins<I>{} << Ffmt{0} << tab;
+            printf("(4)\n");
+
+            if ((ext & 0x1C00) == 0) {
+
+                if (str.style == DASM_GNU) {
+
+                    str << "fmovel" << tab << Op<M, Long>(reg, addr) << Sep{};
+                    return;
+                }
+            }
+            if (lll == 0 || lll == 1 || lll == 2 || lll == 4) {
+                str << Ins<FMOVE>{} << Ffmt{0} << tab;
+            } else {
+                str << Ins<FMOVEM>{} << Ffmt{0} << tab;
+            }
             str << Op<M, Long>(reg, addr) << Sep{};
             if ((ext & 0x1C00) == 0) { str << "{}"; }
             if (ext & 0x0400) { str << delim << "fpiar"; delim = "/"; }
@@ -300,9 +391,23 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op)
 
         case 0b101: // Cntrl to Ea
 
-            str << "2:";
-            str << Ins<I>{} << Ffmt{0} << tab;
-            if ((ext & 0x1C00) == 0) { str << "{}"; }
+            printf("(5)\n");
+
+            if ((ext & 0x1C00) == 0) {
+
+                if (str.style == DASM_GNU) {
+
+                    str << "fmovel" << tab << Sep{} << Op<M, Long>(reg, addr);
+                    return;
+                }
+            }
+            if (lll == 0 || lll == 1 || lll == 2 || lll == 4) {
+                str << Ins<FMOVE>{} << Ffmt{0} << tab;
+            } else {
+                str << Ins<FMOVEM>{} << Ffmt{0} << tab;
+            }
+            // str << Ins<I>{} << Ffmt{0} << tab;
+            if ((ext & 0x1C00) == 0 && str.style != DASM_GNU) { str << "{}"; }
             if (ext & 0x0400) { str << delim << "fpiar"; delim = "/"; }
             if (ext & 0x0800) { str << delim << "fpsr";  delim = "/"; }
             if (ext & 0x1000) { str << delim << "fpcr";  delim = "/"; }
@@ -310,6 +415,8 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op)
             break;
 
         case 0b110: // Memory to FPU
+
+            printf("(6)\n");
 
             switch (mod) {
 
@@ -344,6 +451,8 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op)
             break;
 
         case 0b111: // FPU to memory
+
+            printf("(7)\n");
 
             switch (mod) {
 
