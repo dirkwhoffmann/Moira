@@ -140,6 +140,13 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
             if (M == MODE_AI) { if (fmt == 0b111 && (ext & 0xF)) break; }
             if (M == MODE_PI) { if (fmt == 0b111 && (ext & 0xF)) break; }
             if (M == MODE_PD) { if (fmt == 0b111 && (ext & 0xF)) break; }
+            if (M == MODE_DI) { if (fmt == 0b111 && (ext & 0xF)) break; }
+            if (M == MODE_IX) { if (fmt == 0b111 && (ext & 0xF)) break; }
+            if (M == MODE_AW) { if (fmt == 0b111 && (ext & 0xF)) break; }
+            if (M == MODE_AL) { if (fmt == 0b111 && (ext & 0xF)) break; }
+            if (M == MODE_DIPC) { break; }
+            if (M == MODE_IXPC) { break; }
+
             if (fmt != 0b011 && fmt != 0b111 && (ext & 0x7F)) break;
 
             if (M == MODE_DN && (fmt != 0 && fmt != 1 && fmt != 4 && fmt != 6)) {
@@ -157,6 +164,9 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
             if (M == MODE_DN || M == MODE_AN) {
                 if (lst != 0b000 && lst != 0b001 && lst != 0b010 && lst != 0b100) break;
             }
+            if (M == MODE_DIPC) break;
+            if (M == MODE_IXPC) break;
+
             dasmFMovem<FMOVEM, M, S>(str, addr, op);
             return;
         }
@@ -175,8 +185,13 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
             if (M == MODE_PI) { if (mode == 0 || mode == 1) break; if (cod == 0b111) break; }
             if (M == MODE_PD && cod == 0b110) { break; }
             if (M == MODE_PD && cod == 0b111 && (mode == 1) && (ext & 0x8F)) { break; }
-
-            // if (M == MODE_PI) { break; }
+            if (M == MODE_PD && cod == 0b111 && (mode == 2 || mode == 3)) { break; }
+            if (M == MODE_DI) { if (mode == 0 || mode == 1) break; }
+            if (M == MODE_IX) { if (mode == 0 || mode == 1) break; }
+            if (M == MODE_AW) { if (mode == 0 || mode == 1) break; }
+            if (M == MODE_AL) { if (mode == 0 || mode == 1) break; }
+            if (M == MODE_DIPC) break;
+            if (M == MODE_IXPC) break;
 
             if (ext & 0x0700) break;
             if (mode == 3 && (ext & 0x8F)) break;

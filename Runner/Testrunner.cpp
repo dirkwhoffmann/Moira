@@ -330,7 +330,7 @@ void runFPU(long round)
     randomizer.prepare(round);
 
     // for (int op = 0xF200; op <= 0xF23F; op++) {
-    for (int op = 0xF220; op <= 0xF23F; op++) {
+    for (int op = 0xF238; op <= 0xF23F; op++) {
 
         if ((op % 4) == 0) { printf("."); fflush(stdout); }
 
