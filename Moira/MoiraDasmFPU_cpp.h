@@ -34,10 +34,11 @@ Moira::dasmFDbcc(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
 {
-    auto ext = dasmRead<Word>(addr);
-    auto cod = xxx_____________(ext);
-    auto fmt = ___xxx__________(ext);
-    auto cmd = _________xxxxxxx(ext);
+    auto ext  = dasmRead<Word>(addr);
+    auto cod  = xxx_____________(ext);
+    auto fmt  = ___xxx__________(ext);
+    auto mode = ___xx___________(ext);
+    auto cmd  = _________xxxxxxx(ext);
     addr -= 2;
 
     if ((ext & 0xFC00) == 0x5C00) {
@@ -135,11 +136,9 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
         case 0b011:
 
             // Check for k-factor formats
-            if (fmt == 0b011 || fmt == 0b111) {
-                if (M != MODE_AI) break;
-            } else {
-                if (ext & 0x7F) break;
-            }
+            if (M == MODE_DN || M == MODE_AN) { if (fmt == 0b011 || fmt == 0b111) break; }
+            if (M == MODE_AI) { if (fmt == 0b111 && (ext & 0xF)) break; }
+            if (fmt != 0b011 && fmt != 0b111 && (ext & 0x7F)) break;
 
             if (M == MODE_DN && (fmt != 0 && fmt != 1 && fmt != 4 && fmt != 6)) {
                 break;
@@ -170,6 +169,7 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
         case 0b111:
 
             if (M == MODE_DN || M == MODE_AN) break;
+            if (M == MODE_AI) { if (mode == 0 || mode == 1) break; }
 
             if (ext & 0x3FF) break;
 
