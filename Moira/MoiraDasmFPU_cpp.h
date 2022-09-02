@@ -139,6 +139,7 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
             if (M == MODE_DN || M == MODE_AN) { if (fmt == 0b011 || fmt == 0b111) break; }
             if (M == MODE_AI) { if (fmt == 0b111 && (ext & 0xF)) break; }
             if (M == MODE_PI) { if (fmt == 0b111 && (ext & 0xF)) break; }
+            if (M == MODE_PD) { if (fmt == 0b111 && (ext & 0xF)) break; }
             if (fmt != 0b011 && fmt != 0b111 && (ext & 0x7F)) break;
 
             if (M == MODE_DN && (fmt != 0 && fmt != 1 && fmt != 4 && fmt != 6)) {
@@ -171,7 +172,10 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
 
             if (M == MODE_DN || M == MODE_AN) break;
             if (M == MODE_AI) { if (mode == 0 || mode == 1) break; }
-            if (M == MODE_PI) { if (mode == 0 || mode == 1) break; }
+            if (M == MODE_PI) { if (mode == 0 || mode == 1) break; if (cod == 0b111) break; }
+            if (M == MODE_PD && cod == 0b110) { break; }
+            if (M == MODE_PD && cod == 0b111 && (mode == 1) && (ext & 0x8F)) { break; }
+
             // if (M == MODE_PI) { break; }
 
             if (ext & 0x0700) break;
