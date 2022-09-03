@@ -33,10 +33,13 @@ Moira::dasmPGen(StrWriter &str, u32 &addr, u16 op)
     }
 
     // PFLUSH
-    if ((ext & 0xE200) == 0x2000) {
+    if (model == M68030) {
 
-        dasmPFlush<PFLUSH, M, Long>(str, addr, op);
-        return;
+        if ((ext & 0xE200) == 0x2000) {
+
+            dasmPFlush<PFLUSH, M, Long>(str, addr, op);
+            return;
+        }
     }
 
     // PVALID
@@ -55,10 +58,13 @@ Moira::dasmPGen(StrWriter &str, u32 &addr, u16 op)
     }
 
     // PMOVE
-    if ((ext & 0xE000) == 0x0000 || (ext & 0xE000) == 0x4000 || (ext & 0xE000) == 0x6000) {
+    if (model == M68030) {
 
-        dasmPMove<PMOVE, M, S>(str, addr, op);
-        return;
+        if ((ext & 0xE000) == 0x0000 || (ext & 0xE000) == 0x4000 || (ext & 0xE000) == 0x6000) {
+
+            dasmPMove<PMOVE, M, S>(str, addr, op);
+            return;
+        }
     }
 
     dasmIllegal<I, M, S>(str, addr, op);

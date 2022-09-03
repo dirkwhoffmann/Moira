@@ -10,24 +10,42 @@
 template <Instr I, Mode M, Size S> void
 Moira::dasmFBcc(StrWriter &str, u32 &addr, u16 op)
 {
+    auto old = addr;
+    auto ext = dasmRead<S>(addr);
     auto cnd = ___________xxxxx (op);
 
-    auto dst = addr + 2;
-    U32_INC(dst, SEXT<S>(dasmRead<S>(addr)));
+    if ((op & 0x7F) == 0 && ext == 0) {
+
+        dasmFNop<FNOP, M, S>(str, addr, op);
+        return;
+    }
+
+    // printf("dasmFbcc: S = %d old = %x cnd = %x ext = %x\n", S, old, cnd, ext);
+
+    auto dst = old + 2;
+    U32_INC(dst, SEXT<S>(ext));
 
     if (S == Long) {
-        str << Ins<I>{} << Fcc{cnd} << Sz<S>{} << tab << Int(dst);
+        str << Ins<I>{} << Fcc{cnd} << Sz<S>{} << tab << UInt(dst);
     } else {
-        str << Ins<I>{} << Fcc{cnd} << tab << Int(dst);
+        str << Ins<I>{} << Fcc{cnd} << tab << UInt(dst);
     }
 }
 
 template <Instr I, Mode M, Size S> void
 Moira::dasmFDbcc(StrWriter &str, u32 &addr, u16 op)
 {
+    auto old = addr;
     auto ext = dasmRead(addr);
     auto src = _____________xxx (op);
     auto cnd = ___________xxxxx (ext);
+
+    if (ext & 0xFFE0) {
+
+        addr = old;
+        dasmIllegal<I, M, S>(str, addr, op);
+        return;
+    }
 
     auto dst = addr + 2;
     U32_INC(dst, SEXT<S>(dasmRead<S>(addr)));
@@ -224,8 +242,6 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmFNop(StrWriter &str, u32 &addr, u16 op)
 {
-    (void)dasmRead(addr);
-
     str << Ins<I>{};
     if (style == DASM_GNU) str << " ";
 }
@@ -249,9 +265,17 @@ Moira::dasmFSave(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmFScc(StrWriter &str, u32 &addr, u16 op)
 {
+    auto old = addr;
     auto ext = dasmRead(addr);
     auto reg = _____________xxx (op);
     auto cnd = __________xxxxxx (ext);
+
+    if (ext & 0xFFE0) {
+
+        addr = old;
+        dasmIllegal<I, M, S>(str, addr, op);
+        return;
+    }
 
     str << Ins<I>{} << Fcc{cnd} << tab << Op<M, S>(reg, addr);
 }
@@ -259,8 +283,16 @@ Moira::dasmFScc(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmFTrapcc(StrWriter &str, u32 &addr, u16 op)
 {
+    auto old = addr;
     auto ext = dasmRead(addr);
     auto cnd = __________xxxxxx (ext);
+
+    if (ext & 0xFFE0) {
+
+        addr = old;
+        dasmIllegal<I, M, S>(str, addr, op);
+        return;
+    }
 
     switch (S) {
 

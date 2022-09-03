@@ -19,7 +19,7 @@ static constexpr bool CHECK_MEM_WRITES = true;
 static constexpr bool CHECK_MMU = false;
 
 // Set to true to inclue FPU rounds for capable CPUs
-static constexpr bool CHECK_FPU = true;
+static constexpr bool CHECK_FPU = false;
 
 // Set to true to skip the execution of illegal instructions
 static constexpr bool SKIP_ILLEGAL = true;
