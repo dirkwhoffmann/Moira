@@ -10,7 +10,7 @@
 #pragma once
 
 // Number of test rounds
-static constexpr long ROUNDS = 1000;
+static constexpr long ROUNDS = 1;
 
 // Set to true to verify all memory write operations
 static constexpr bool CHECK_MEM_WRITES = true;

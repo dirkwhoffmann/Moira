@@ -244,35 +244,38 @@ void run()
     printf("\n");
     printf("    Test rounds: %ld\n", ROUNDS);
     printf("    Random seed: %d\n", randomizer.init());
-    printf("\n");
     printf("     Exec range: %s\n", TOSTRING(doExec(opcode)));
     printf("     Dasm range: %s\n", TOSTRING(doDasm(opcode)));
-    printf("\n");
 
-    selectModel(M68000);
+    for (long i = 1; i <= ROUNDS; i++) {
 
-    for (long i = 0; i <= ROUNDS;) {
+        printf("\nRound %ld:\n\n", i);
+        selectModel(M68000);
 
-        // Increase the loop counter when all CPUs have been emulated
-        if (cpuModel == M68000) i++;
+        while (1) {
 
-        // Run the CPU round
-        runCPU(i);
+            // Run the CPU round
+            runCPU(i);
 
-        // Continue with the MMU and the FPU if applicable
-        if constexpr (CHECK_MMU) runMMU(i);
-        if constexpr (CHECK_FPU) runFPU(i);
+            // Continue with the MMU and the FPU if applicable
+            if constexpr (CHECK_MMU) runMMU(i);
+            if constexpr (CHECK_FPU) runFPU(i);
 
-        // Switch the CPU core
-        selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
+            // Switch the CPU core
+            if (cpuModel == M68040) break;
+            selectModel(Model(cpuModel + 1));
+        }
     }
+
+    printf("\n");
+    printf("All tests completed\n");
 }
 
 void runCPU(long round)
 {
     Setup setup;
 
-    printf("%s CPU round %ld ", selectedModel(), round); fflush(stdout);
+    printf("%s CPU ", selectedModel()); fflush(stdout);
 
     for (int i = 0; i < 32; i++) {
 
@@ -299,7 +302,7 @@ void runMMU(long round)
 
     Setup setup;
 
-    printf("%s MMU round %ld ", selectedModel(), round); fflush(stdout);
+    printf("%s MMU ", selectedModel()); fflush(stdout);
     setupTestEnvironment(setup, round);
 
     for (int op = 0xF000; op <= 0xF03F; op++) {
@@ -320,7 +323,7 @@ void runFPU(long round)
 
     Setup setup;
 
-    printf("%s FPU round %ld ", selectedModel(), round); fflush(stdout);
+    printf("%s FPU ", selectedModel()); fflush(stdout);
     setupTestEnvironment(setup, round);
 
     for (int op = 0xF200; op <= 0xF23F; op++) {
@@ -889,5 +892,5 @@ void bugReport()
 {
     printf("Please send a bug report to: dirk.hoffmann@me.com\n");
     printf("Thanks you!\n\n");
-    exit(0);
+    exit(1);
 }
