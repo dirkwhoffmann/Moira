@@ -34,6 +34,12 @@ Moira::execPFlush(u16 opcode)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
+Moira::execPFlush40(u16 opcode)
+{
+    printf("TODO: execPFlush40");
+}
+
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execPLoad(u16 opcode)
 {
     printf("TODO: execPLoad");
@@ -49,4 +55,10 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execPTest(u16 opcode)
 {
     printf("TODO: execPTest");
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execPTest40(u16 opcode)
+{
+    printf("TODO: execPTest40");
 }

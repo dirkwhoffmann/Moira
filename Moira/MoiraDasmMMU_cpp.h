@@ -73,7 +73,9 @@ Moira::dasmPFlush(StrWriter &str, u32 &addr, u16 op)
     auto mode  = ___xxx__________(ext);
     auto mask  = _______xxxx_____(ext);
     auto fc    = ___________xxxxx(ext);
-    
+
+    printf("dasmPFlush\n");
+
     // Catch illegal extension words
     if (str.style == DASM_GNU && !isValidExt(I, M, op, ext)) {
 
@@ -97,6 +99,21 @@ Moira::dasmPFlush(StrWriter &str, u32 &addr, u16 op)
     str << Ins<I>{} << tab;
     str << Fc{fc} << Sep{} << Imu{mask};
     if (mode == 6) str << Sep{} << Op<M>(reg, addr);
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmPFlush40(StrWriter &str, u32 &addr, u16 op)
+{
+    auto reg  = _____________xxx(op);
+    auto mode = ___________xx___(op);
+
+    switch (mode) {
+
+        case 0: str << "pflushn" << tab << Op<MODE_AI>(reg, addr); break;
+        case 1: str << "pflush" << tab << Op<MODE_AI>(reg, addr); break;
+        case 2: str << "pflushan"; break;
+        case 3: str << "pflusha"; break;
+    }
 }
 
 template <Instr I, Mode M, Size S> void
@@ -246,4 +263,14 @@ Moira::dasmPTest(StrWriter &str, u32 &addr, u16 op)
     str << Ins<I>{} << (rw ? "r" : "w") << tab;
     str << Fc{fc} << Sep{} << Op<M>(reg, addr) << Sep{} << lev;
     if (a) { str << Sep{} << An{an}; }
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmPTest40(StrWriter &str, u32 &addr, u16 op)
+{
+    auto reg = _____________xxx(op);
+    auto rw  = __________x_____(op);
+
+    str << Ins<I>{} << (rw ? "r" : "w") << tab;
+    str << Op<MODE_AI>(reg, addr);
 }

@@ -250,7 +250,7 @@ void run()
     printf("    Test rounds: %ld\n", ROUNDS);
     printf("    Random seed: %d\n", randomizer.init());
 
-    selectModel(M68030);
+    selectModel(M68040);
 
     for (long i = 0; i < ROUNDS;) {
 
