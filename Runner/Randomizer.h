@@ -15,15 +15,8 @@ using namespace moira;
 
 class Randomizer {
 
-    int mode;
-
 public:
 
     int init();
-    void prepare(int testrun);
     u32 rand();
-
-private:
-
-    u32 rand(int numberType);
 };

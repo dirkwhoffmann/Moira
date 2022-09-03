@@ -62,9 +62,6 @@ void selectModel(moira::Model model)
     }
 
     printf("\n\n");
-    printf("              Exec range: %s\n", TOSTRING(doExec(opcode)));
-    printf("              Dasm range: %s\n", TOSTRING(doDasm(opcode)));
-    printf("\n");
 }
 
 void setupM68k()
@@ -245,17 +242,18 @@ clock_t muclk[2] = {0,0}, moclk[2] = {0,0};
 void run()
 {
     printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2022\n\n");
-    printf("The test program runs Moira agains Musashi with randomly generated data.\n\n");
-
+    printf("The test program runs Moira agains Musashi with randomly generated data.\n");
+    printf("\n");
     printf("    Test rounds: %ld\n", ROUNDS);
     printf("    Random seed: %d\n", randomizer.init());
+    printf("\n");
+    printf("     Exec range: %s\n", TOSTRING(doExec(opcode)));
+    printf("     Dasm range: %s\n", TOSTRING(doDasm(opcode)));
+    printf("\n");
 
-    selectModel(M68040);
+    selectModel(M68000);
 
-    for (long i = 0; i < ROUNDS;) {
-
-        // Switch the CPU core from time to time
-        if (++i % 1000 == 0) selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
+    for (long i = 1; i <= ROUNDS;) {
 
         // Run a CPU round
         runCPU(cpuround[cpuModel]++);
@@ -265,6 +263,9 @@ void run()
 
         // Continue with a FPU round if applicable
         if constexpr (CHECK_FPU) runFPU(fpuround[cpuModel]++);
+
+        // Switch the CPU core
+        selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
     }
 }
 
@@ -273,22 +274,22 @@ void runCPU(long round)
     Setup setup;
 
     printf("CPU round %ld ", round); fflush(stdout);
-    setupTestEnvironment(setup, round);
 
-    // Initialize the random number generator
-    randomizer.prepare(round);
+    for (int i = 0; i < 32; i++) {
 
-    // Iterate through all opcodes
-    for (int opcode = 0x0000; opcode <= 0xFFFF; opcode++) {
+        printf("."); fflush(stdout);
 
-        if ((opcode & 0xFFF) == 0) { printf("."); fflush(stdout); }
+        setupTestEnvironment(setup, round * 32 + i);
 
-        if constexpr (SKIP_ILLEGAL) {
-            if (moiracpu->getInfo(opcode).I == moira::ILLEGAL) continue;
+        for (int opcode = 0x0000; opcode <= 0xFFFF; opcode++) {
+
+            if constexpr (SKIP_ILLEGAL) {
+                if (moiracpu->getInfo(opcode).I == moira::ILLEGAL) continue;
+            }
+
+            // Execute both CPU cores
+            runSingleTest(setup, u16(opcode));
         }
-
-        // Execute both CPU cores
-        runSingleTest(setup, u16(opcode));
     }
     passed();
 }
@@ -302,12 +303,9 @@ void runMMU(long round)
     printf("MMU round %ld ", round); fflush(stdout);
     setupTestEnvironment(setup, round);
 
-    // Initialize the random number generator
-    randomizer.prepare(round);
-
     for (int op = 0xF000; op <= 0xF03F; op++) {
 
-        if ((op % 4) == 0) { printf("."); fflush(stdout); }
+        if ((op % 2) == 0) { printf("."); fflush(stdout); }
 
         for (int ext = 0x0000; ext <= 0xFFFF; ext++) {
 
@@ -326,12 +324,9 @@ void runFPU(long round)
     printf("FPU round %ld ", round); fflush(stdout);
     setupTestEnvironment(setup, round);
 
-    // Initialize the random number generator
-    randomizer.prepare(round);
-
     for (int op = 0xF200; op <= 0xF23F; op++) {
 
-        if ((op % 4) == 0) { printf("."); fflush(stdout); }
+        if ((op % 2) == 0) { printf("."); fflush(stdout); }
 
         for (int ext = 0x0000; ext <= 0xFFFF; ext++) {
 

@@ -24,34 +24,68 @@ Randomizer::init()
     return seed;
 }
 
-void
-Randomizer::prepare(int testrun)
+u32
+Randomizer::rand()
 {
-    // In the first few rounds, use a single constant
-    if (testrun <= 10) {
+    u32 r = ::rand();
+    u32 s = ::rand();
 
-        mode = testrun;
+    u32 s1 = (s >> 0) & 0xF;
+    u32 s2 = (s >> 4) & 0x7;
 
-        // REMOVE ASAP
-        mode = 16;
+    switch (s1) {
 
-        return;
-    }
+        case 0: return 0;           // Constants
+        case 1: return 1;
 
-    // Iterate through all remaining modes
-    switch(testrun % 8) {
+        case 2: case 3: case 4:     // 8-bit number
 
-        case 0: mode = 11; break;
-        case 1: mode = 12; break;
-        case 2: mode = 13; break;
-        case 3: mode = 14; break;
-        case 4:
-        case 5: mode = 15; break;
-        case 6:
-        case 7: mode = 16; break;
+            return
+            s2 == 2 ? 0x80 :
+            s2 == 3 ? 0x7F :
+            s2 == 4 ? 0xFF : u8(r);
+
+        case 5: case 6: case 7:     // 16-bit number
+
+            return
+            s2 == 2 ? 0x8000 :
+            s2 == 3 ? 0x7FFF :
+            s2 == 4 ? 0xFFFF : u16(r);
+
+        case 8: case 9: case 10:     // 32-bit number
+
+            return
+            s2 == 2 ? 0x80000000 :
+            s2 == 3 ? 0x7FFFFFFF :
+            s2 == 4 ? 0xFFFFFFFF : u32(r);
+
+        case 11:                     // Bit field
+        {
+            u32 mask2 = std::rotl(u32(0xFFFF), ::rand() & 15);
+            u32 mask3 = std::rotl(u32(0xFFFF), ::rand() & 15);
+            return std::rotl(u32(mask2 & mask3), ::rand() & 15);
+        }
+
+        case 12:                    // Repeating patterns
+
+            return
+            s2 == 0 ? 0xF0F0F0F0 :
+            s2 == 1 ? 0x0F0F0F0F :
+            s2 == 2 ? 0xFF00FF00 :
+            s2 == 3 ? 0x00FF00FF :
+            s2 == 4 ? 0xFFFF0000 :
+            s2 == 5 ? 0xAAAAAAAA :
+            s2 == 6 ? 0xCCCCCCCC : 0x11111111;
+
+        default:                    // Real random number
+
+            return r;
     }
 }
 
+
+
+/*
 u32
 Randomizer::rand()
 {
@@ -127,3 +161,4 @@ Randomizer::rand(int numberType)
             return ::rand();
     }
 }
+*/

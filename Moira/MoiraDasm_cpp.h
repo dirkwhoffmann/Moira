@@ -1497,7 +1497,7 @@ Moira::dasmMull(StrWriter &str, u32 &addr, u16 op)
     auto dl  = Dn       ( _xxx____________(ext)      );
     auto dh  = Dn       ( _____________xxx(ext)      );
 
-    auto fill = str.style == DASM_VDA68K_MIT || str.style == DASM_MOIRA_MIT ? "," : ":";
+    auto fill = str.style == DASM_VDA68K_MIT || str.style == DASM_MOIRA_MIT || str.style == DASM_GNU ? "," : ":";
 
     // Catch illegal extension words
     if (str.style == DASM_GNU && !isValidExt(I, M, op, ext)) {
