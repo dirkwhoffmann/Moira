@@ -258,7 +258,7 @@ void run()
         if (++i % 1000 == 0) selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
 
         // Run a CPU round
-        // runCPU(cpuround[cpuModel]++);
+        runCPU(cpuround[cpuModel]++);
 
         // Continue with a MMU round if applicable
         if constexpr (CHECK_MMU) runMMU(mmuround[cpuModel]++);
@@ -329,8 +329,7 @@ void runFPU(long round)
     // Initialize the random number generator
     randomizer.prepare(round);
 
-    // for (int op = 0xF200; op <= 0xF23F; op++) {
-    for (int op = 0xF238; op <= 0xF23F; op++) {
+    for (int op = 0xF200; op <= 0xF23F; op++) {
 
         if ((op % 4) == 0) { printf("."); fflush(stdout); }
 
@@ -718,8 +717,8 @@ void compare(Setup &s, Result &r1, Result &r2)
         printf("\nInstruction: [%d] %-40s (Musashi)", r1.dasmCntMusashi, r1.dasmMusashi);
         printf("\n             [%d] %-40s (Moira)\n", r2.dasmCntMusashi, r2.dasmMusashi);
 
-        printf("\n             [%d] %-40s (Binutils)", r1.dasmCntBinutils, r1.dasmBinutils);
-        printf("\n             [%d] %-40s (Moira)\n", r2.dasmCntBinutils, r2.dasmBinutils);
+        printf("\n             [%d] '%s' (Binutils)", r1.dasmCntBinutils, r1.dasmBinutils);
+        printf("\n             [%d] '%s' (Moira)\n", r2.dasmCntBinutils, r2.dasmBinutils);
 
         printf("\n             [%d] %-40s (Vda68k, Motorola)", r1.dasmCntMoto, r1.dasmMoto);
         printf("\n             [%d] %-40s (Moira)\n", r2.dasmCntMoto, r2.dasmMoto);

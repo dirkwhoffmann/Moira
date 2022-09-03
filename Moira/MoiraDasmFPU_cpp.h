@@ -254,14 +254,14 @@ Moira::dasmFTrapcc(StrWriter &str, u32 &addr, u16 op)
 
         case Unsized:
 
-            str << "ftrap" << Fcc{cnd};
+            str << "ftrap" << Fcc{cnd} << " ";
             break;
 
         case Word:
         case Long:
 
-            auto ext = dasmRead<S>(addr);
-            str << "ftrap" << Fcc{cnd} << tab << Imu(ext);
+            auto ext2 = cnd == 0 ? 0 : dasmRead<S>(addr);
+            str << "ftrap" << Fcc{cnd} << Sz<S>{} << tab << Imu(ext2);
             break;
     }
 }
