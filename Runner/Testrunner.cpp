@@ -250,7 +250,7 @@ void run()
     printf("    Test rounds: %ld\n", ROUNDS);
     printf("    Random seed: %d\n", randomizer.init());
 
-    selectModel(M68040);
+    selectModel(M68030);
 
     for (long i = 0; i < ROUNDS;) {
 
@@ -741,95 +741,29 @@ void compare(Setup &s, Result &r1, Result &r2)
 
 bool compareDasm(Result &r1, Result &r2)
 {
-    bool skipMusashi = false;
-    bool skipBinutils = false;
-    bool skipM68k = false;
-
     auto I = moiracpu->getInfo(r1.opcode).I;
 
-    // Skip both Musashi and M68k in the Line A range
-    skipMusashi |= r1.opcode >= 0xF000;
-    skipM68k |= r1.opcode >= 0xF000;
-
-    // Skip broken Musashi opcodes
-    skipMusashi |= (((r1.opcode & 0xff20) == 0xf400) || // cinv
-                    ((r1.opcode & 0xff20) == 0xf420) || // cpush
-                    ((r1.opcode & 0xfff8) == 0xf620) || // move16
-                    ((r1.opcode & 0xfff8) == 0xf600) || // move16
-                    ((r1.opcode & 0xfff8) == 0xf608) || // move16
-                    ((r1.opcode & 0xfff8) == 0xf610) || // move16
-                    ((r1.opcode & 0xfff8) == 0xf618) ); // move16
-
-    // Skip broken Binutils opcodes
-    skipBinutils |= I == CMPI && cpuModel == M68010;
-
-    // M68k seems to be buggy in the line F range
-    skipM68k = r1.opcode >= 0xF000 || I == ILLEGAL || I == LINE_F;
+    bool skipMusashi = r1.opcode >= 0xF000;
+    bool skipBinutils = false;
+    bool skipM68k = r1.opcode >= 0xF000;
 
     switch (cpuModel) {
 
-        case moira::M68000:
         case moira::M68010:
 
-            skipMusashi |= ((r1.opcode & 0xf800) == 0xf000);
+            skipBinutils |= I == CMPI;
             break;
-
+            
         case moira::M68EC020:
-        case moira::M68020:
         case moira::M68EC030:
-
-            skipMusashi |= (((r1.opcode & 0xfe00) == 0xf000) || // MMU
-                            ((r1.opcode & 0xfe00) == 0xf200) ); // FPU
-            break;
-
-        case moira::M68030:
-
-            skipMusashi |= (((r1.opcode & 0xfe00) == 0xf200) ); // FPU
-            break;
-
         case moira::M68EC040:
-
-            skipMusashi |= (((r1.opcode & 0xfe00) == 0xf000) || // MMU
-                            ((r1.opcode & 0xfe00) == 0xf200) ); // FPU
-            break;
-
         case moira::M68LC040:
 
-            skipMusashi |= (((r1.opcode & 0xfe00) == 0xf200) ); // FPU
-            break;
-
-        case moira::M68040:
-
+            skipBinutils |= r1.opcode >= 0xF000;
             break;
 
         default:
             break;
-    }
-
-    bool is040 = (cpuModel == moira::M68040   ||
-                  cpuModel == moira::M68EC040 ||
-                  cpuModel == moira::M68LC040 );
-
-    if (is040) {
-
-        // Disable CPI
-        skipMusashi |= (((r1.opcode & 0xf1c0) == 0xf000) || // cpGen
-                        ((r1.opcode & 0xf1f8) == 0xf048) || // cpDbcc
-                        ((r1.opcode & 0xf1c0) == 0xf040) || // cpScc
-                        ((r1.opcode & 0xf1c0) == 0xf080) || // cpBcc16
-                        ((r1.opcode & 0xf1c0) == 0xf0c0) || // cpBcc32
-                        ((r1.opcode & 0xf1f8) == 0xf078) || // cpTrap
-                        ((r1.opcode & 0xf1c0) == 0xf140) || // cpRestore
-                        ((r1.opcode & 0xf1c0) == 0xf100) ); // cpSave
-
-        // Enable special 68040 instructions
-        skipMusashi &= !(((r1.opcode & 0xff20) == 0xf400) || // cinv
-                         ((r1.opcode & 0xff20) == 0xf420) || // cpush
-                         ((r1.opcode & 0xfff8) == 0xf620) || // move16
-                         ((r1.opcode & 0xfff8) == 0xf600) || // move16
-                         ((r1.opcode & 0xfff8) == 0xf608) || // move16
-                         ((r1.opcode & 0xfff8) == 0xf610) || // move16
-                         ((r1.opcode & 0xfff8) == 0xf618) ); // move16
     }
 
     // Compare with Musashi

@@ -26,6 +26,12 @@ Moira::execFGen(u16 opcode)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
+Moira::execFNop(u16 opcode)
+{
+    execLineF<C, I, M, S>(opcode);
+}
+
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execFRestore(u16 opcode)
 {
     execLineF<C, I, M, S>(opcode);

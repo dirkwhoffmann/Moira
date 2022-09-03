@@ -1877,6 +1877,14 @@ Moira::dasmCinv(StrWriter &str, u32 &addr, u16 op)
     auto scope = ___________xx___(op);
     auto cache = ________xx______(op);
 
+    const char *cname[4] = { "nc", "dc", "ic", "bc" };
+
+    if (scope == 0) {
+
+        dasmIllegal<I, M, S>(str, addr, op);
+        return;
+    }
+
     switch (scope) {
 
         case 0b00:
@@ -1886,17 +1894,17 @@ Moira::dasmCinv(StrWriter &str, u32 &addr, u16 op)
 
         case 0b01:
 
-            str << Ins<I>{} << "l" << tab << cache << Sep{} << Op<M, Long>(reg, addr);
+            str << Ins<I>{} << "l" << tab << cname[cache] << Sep{} << Op<M, Long>(reg, addr);
             break;
 
         case 0b10:
 
-            str << Ins<I>{} << "p" << tab << cache << Sep{} << Op<M, Long>(reg, addr);
+            str << Ins<I>{} << "p" << tab << cname[cache] << Sep{} << Op<M, Long>(reg, addr);
             break;
 
         case 0b11:
 
-            str << Ins<I>{} << "a" << tab << cache;
+            str << Ins<I>{} << "a" << tab << cname[cache];
             break;
     }
 

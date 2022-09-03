@@ -10,12 +10,16 @@
 template <Instr I, Mode M, Size S> void
 Moira::dasmFBcc(StrWriter &str, u32 &addr, u16 op)
 {
-    auto cnd = __________xxxxxx (op);
+    auto cnd = ___________xxxxx (op);
 
     auto dst = addr + 2;
     U32_INC(dst, SEXT<S>(dasmRead<S>(addr)));
 
-    str << "fb" << Fcc{cnd} << Sz<S>{} << tab << Imu(dst);
+    if (S == Long) {
+        str << Ins<I>{} << Fcc{cnd} << Sz<S>{} << tab << Int(dst);
+    } else {
+        str << Ins<I>{} << Fcc{cnd} << tab << Int(dst);
+    }
 }
 
 template <Instr I, Mode M, Size S> void
@@ -23,12 +27,12 @@ Moira::dasmFDbcc(StrWriter &str, u32 &addr, u16 op)
 {
     auto ext = dasmRead(addr);
     auto src = _____________xxx (op);
-    auto cnd = __________xxxxxx (ext);
+    auto cnd = ___________xxxxx (ext);
 
     auto dst = addr + 2;
     U32_INC(dst, SEXT<S>(dasmRead<S>(addr)));
 
-    str << "fdb" << Fcc{cnd} << tab << Dn{src} << Sep{} << UInt(dst);
+    str << Ins<I>{} << Fcc{cnd} << tab << Dn{src} << Sep{} << UInt(dst);
 }
 
 template <Instr I, Mode M, Size S> void
@@ -218,6 +222,15 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
+Moira::dasmFNop(StrWriter &str, u32 &addr, u16 op)
+{
+    (void)dasmRead(addr);
+
+    str << Ins<I>{};
+    if (style == DASM_GNU) str << " ";
+}
+
+template <Instr I, Mode M, Size S> void
 Moira::dasmFRestore(StrWriter &str, u32 &addr, u16 op)
 {
     auto dn = _____________xxx (op);
@@ -236,12 +249,11 @@ Moira::dasmFSave(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmFScc(StrWriter &str, u32 &addr, u16 op)
 {
-    printf("dasmFscc(%x): %d %d %d\n", op, I, M, S);
     auto ext = dasmRead(addr);
     auto reg = _____________xxx (op);
     auto cnd = __________xxxxxx (ext);
 
-    str << "fs" << Fcc{cnd} << tab << Op<M, S>(reg, addr);
+    str << Ins<I>{} << Fcc{cnd} << tab << Op<M, S>(reg, addr);
 }
 
 template <Instr I, Mode M, Size S> void
@@ -254,14 +266,14 @@ Moira::dasmFTrapcc(StrWriter &str, u32 &addr, u16 op)
 
         case Unsized:
 
-            str << "ftrap" << Fcc{cnd} << " ";
+            str << Ins<I>{} << Fcc{cnd} << " ";
             break;
 
         case Word:
         case Long:
 
             auto ext2 = cnd == 0 ? 0 : dasmRead<S>(addr);
-            str << "ftrap" << Fcc{cnd} << Sz<S>{} << tab << Imu(ext2);
+            str << Ins<I>{} << Fcc{cnd} << Sz<S>{} << tab << Imu(ext2);
             break;
     }
 }
@@ -468,21 +480,6 @@ Moira::dasmFMove(StrWriter &str, u32 &addr, u16 op)
     auto fac = _________xxxxxxx (ext);
 
     // printf("dasmFmove: %x %x %x\n", op, ext, fac);
-    if (ext == 0) {
-
-        if (str.style == DASM_MOIRA_MOT || str.style == DASM_MOIRA_MIT) {
-
-            str << Ins<FNOP>{};
-            return;
-
-        } else {
-
-            // EXPERIMENTAL
-            str << "fmovex fp0,fp0";
-            return;
-        }
-    }
-
     switch (cod) {
 
         case 0b000:

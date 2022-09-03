@@ -1950,33 +1950,34 @@ Moira::createJumpTable()
 
         if (hasFPU()) {
 
-            opcode = parse("1111 0010 10-- ----");
-            __________XXXXXX(opcode, cpBcc, MODE_IP, Word, FBcc, CIMS)
+            opcode = parse("1111 0010 100- ----");
+            ___________XXXXX(opcode, FBcc, MODE_IP, Word, FBcc, CIMS)
+            ________________(opcode, FNOP, MODE_IP, Word, FNop, CIMS)
 
-            opcode = parse("1111 0010 11-- ----");
-            __________XXXXXX(opcode, cpBcc, MODE_IP, Long, FBcc, CIMS)
+            opcode = parse("1111 0010 110- ----");
+            ___________XXXXX(opcode, FBcc, MODE_IP, Long, FBcc, CIMS)
 
             opcode = parse("1111 0010 00-- ----");
             __________XXXXXX(opcode, cpGEN, MODE_IP, Unsized, FGen, CIMS)
             __________MMMXXX(opcode, cpGEN, 0b111111111111, Unsized, FGen, CIMS)
 
             opcode = parse("1111 0011 01-- ----");
-            ____XXX___MMMXXX(opcode, cpRESTORE, 0b001101111110, Word, FRestore, CIMS)
+            ____XXX___MMMXXX(opcode, FRESTORE, 0b001101111110, Word, FRestore, CIMS)
 
             opcode = parse("1111 0011 00-- ----");
-            ____XXX___MMMXXX(opcode, cpSAVE, 0b001011111000, Word, FSave, CIMS)
+            ____XXX___MMMXXX(opcode, FSAVE, 0b001011111000, Word, FSave, CIMS)
 
             opcode = parse("1111 0010 0111 1---");
             // _____________XXX(opcode, cpTRAPcc, MODE_IP, Word, Ftrapcc, CIMS)
-            ________________(opcode | 0b010, cpTRAPcc, MODE_IP, Word, FTrapcc, CIMS)
-            ________________(opcode | 0b011, cpTRAPcc, MODE_IP, Long, FTrapcc, CIMS)
-            ________________(opcode | 0b100, cpTRAPcc, MODE_IP, Unsized, FTrapcc, CIMS)
+            ________________(opcode | 0b010, FTRAPcc, MODE_IP, Word, FTrapcc, CIMS)
+            ________________(opcode | 0b011, FTRAPcc, MODE_IP, Long, FTrapcc, CIMS)
+            ________________(opcode | 0b100, FTRAPcc, MODE_IP, Unsized, FTrapcc, CIMS)
 
             opcode = parse("1111 0010 01-- ----");
-            ____XXX___MMMXXX(opcode, cpScc, 0b101111111000, Byte, FScc, CIMS)
+            ____XXX___MMMXXX(opcode, FScc, 0b101111111000, Byte, FScc, CIMS)
 
             opcode = parse("1111 0010 0100 1---");
-            _____________XXX(opcode, cpDBcc, MODE_IP, Word, FDbcc, CIMS)
+            _____________XXX(opcode, FDBcc, MODE_IP, Word, FDbcc, CIMS)
         }
 
 

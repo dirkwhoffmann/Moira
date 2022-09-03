@@ -54,9 +54,9 @@ static const char *mnemonics[]
     "pflush",   "pflusha",  "pload",    "pmove",    "ptest",
 
     // FPU
-    "fabs",     "fadd",     "fbcc",     "fcmp",     "fdbcc",    "fdiv",
+    "fabs",     "fadd",     "fb",       "fcmp",     "fdb",      "fdiv",
     "fmove",    "fmovem",   "fmul",     "fneg",     "fnop",     "frestore",
-    "fsave",    "fscc",     "fsqrt",    "fsub",     "ftrapcc",  "ftst",
+    "fsave",    "fs",       "fsqrt",    "fsub",     "ftrap",    "ftst",
 
     "fsabs",    "fdabs",    "fsadd",    "fdadd",    "fsdiv",    "fddiv",
     "fsmove",   "fdmove",   "fsmul",    "fdmul",    "fsneg",    "fdneg",
