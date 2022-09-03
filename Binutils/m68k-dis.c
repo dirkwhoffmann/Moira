@@ -1494,7 +1494,7 @@ print_insn_arg (const char *d,
 		  return PRINT_INSN_ARG_INVALID_OPERAND;
 	      }
 	      if (flt_p)	/* Print a float? */
-		(*info->fprintf_func) (info->stream, "#0e%g", flval);
+              (*info->fprintf_func) (info->stream, "#<fixme>"); //  "#0e%g", flval);  // DIRK: REMOVE ASAP
 	      else
 		(*info->fprintf_func) (info->stream, "#%d", val);
 	      break;

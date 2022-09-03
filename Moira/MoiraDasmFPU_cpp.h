@@ -173,6 +173,7 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
             if (M == MODE_DIPC) break;
             if (M == MODE_IXPC) break;
             if (M == MODE_IM) break;
+            if (M == MODE_IP) break;
 
             dasmFMovem<FMOVEM, M, S>(str, addr, op);
             return;
@@ -284,13 +285,13 @@ Moira::dasmFGeneric(StrWriter &str, u32 &addr, u16 op)
                 case 0: // Long-Word Integer
 
                     val = dasmRead<Long>(addr);
-                    str << Ins<I>{} << Ffmt{src} << tab << Imu(val);
+                    str << Ins<I>{} << Ffmt{src} << tab << Ims<Long>(val);
                     break;
 
                 case 1: // Single precision
 
                     val = dasmRead<Long>(addr);
-                    str << Ins<I>{} << Ffmt{src} << tab << Imu(val) << "e0";
+                    str << Ins<I>{} << Ffmt{src} << tab << "#<fixme>";
                     break;
 
                 case 2: // Double precision
@@ -299,14 +300,19 @@ Moira::dasmFGeneric(StrWriter &str, u32 &addr, u16 op)
                     val = dasmRead<Long>(addr);
                     dasmRead<Long>(addr);
                     dasmRead<Long>(addr); // Why???
-                    str << Ins<I>{} << Ffmt{src} << tab << Imu(val) << "e0";
+                    str << Ins<I>{} << Ffmt{src} << tab << "#<fixme>";
                     break;
 
                 case 5: // Double-precision real
 
                     val = dasmRead<Long>(addr);
                     dasmRead<Long>(addr);
-                    str << Ins<I>{} << Ffmt{src} << tab << Imu(val) << "e0";
+                    str << Ins<I>{} << Ffmt{src} << tab << "#<fixme>";
+                    break;
+
+                case 6: // Byte Integer
+                    val = dasmRead<Word>(addr);
+                    str << Ins<I>{} << Ffmt{src} << tab << Ims<Byte>(val);
                     break;
 
                 default:
@@ -345,13 +351,13 @@ Moira::dasmFGeneric2(StrWriter &str, u32 &addr, u16 op)
                 case 0: // Long-Word Integer
 
                     val = dasmRead<Long>(addr);
-                    str << Imu(val);
+                    str << Ims<Long>(val);
                     break;
 
                 case 1: // Single precision
 
                     val = dasmRead<Long>(addr);
-                    str << Imu(val) << "e0";
+                    str << "#<fixme>";
                     break;
 
                 case 2: // Double precision
@@ -360,14 +366,20 @@ Moira::dasmFGeneric2(StrWriter &str, u32 &addr, u16 op)
                     val = dasmRead<Long>(addr);
                     dasmRead<Long>(addr);
                     dasmRead<Long>(addr); // Why???
-                    str << Imu(val) << "e0";
+                    str << "#<fixme>";
                     break;
 
                 case 5: // Double-precision real
 
                     val = dasmRead<Long>(addr);
                     dasmRead<Long>(addr);
-                    str << Imu(val) << "e0";
+                    str << "#<fixme>";
+                    break;
+
+                case 6: // Byte Integer
+
+                    val = dasmRead<Word>(addr);
+                    str << Ims<Byte>(val);
                     break;
 
                 default:
@@ -402,13 +414,13 @@ Moira::dasmFGeneric3(StrWriter &str, u32 &addr, u16 op)
                 case 0: // Long-Word Integer
 
                     val = dasmRead<Long>(addr);
-                    str << Ins<I>{} << Ffmt{src} << tab << Imu(val);
+                    str << Ins<I>{} << Ffmt{src} << tab << Ims<Long>(val);
                     break;
 
                 case 1: // Single precision
 
                     val = dasmRead<Long>(addr);
-                    str << Ins<I>{} << Ffmt{src} << tab << Imu(val) << "e0";
+                    str << Ins<I>{} << Ffmt{src} << tab << "#<fixme>";
                     break;
 
                 case 2: // Double precision
@@ -417,14 +429,20 @@ Moira::dasmFGeneric3(StrWriter &str, u32 &addr, u16 op)
                     val = dasmRead<Long>(addr);
                     dasmRead<Long>(addr);
                     dasmRead<Long>(addr); // Why???
-                    str << Ins<I>{} << Ffmt{src} << tab << Imu(val) << "e0";
+                    str << Ins<I>{} << Ffmt{src} << tab << "#<fixme>";
                     break;
 
                 case 5: // Double-precision real
 
                     val = dasmRead<Long>(addr);
                     dasmRead<Long>(addr);
-                    str << Ins<I>{} << Ffmt{src} << tab << Imu(val) << "e0";
+                    str << Ins<I>{} << Ffmt{src} << tab << "#<fixme>";
+                    break;
+
+                case 6: // Byte Integer
+
+                    val = dasmRead<Word>(addr);
+                    str << Ins<I>{} << Ffmt{src} << tab << Ims<Byte>(val);
                     break;
 
                 default:
@@ -490,13 +508,13 @@ Moira::dasmFMove(StrWriter &str, u32 &addr, u16 op)
 
                     case 0: // Long-Word Integer
                         val = dasmRead<Long>(addr);
-                        str << tab << Imu(val) << Sep{} << Fp(dst);
+                        str << tab << Ims<Long>(val) << Sep{} << Fp(dst);
                         break;
 
                     case 1: // Single precision
 
                         val = dasmRead<Long>(addr);
-                        str << tab << Imu(val) << "e0" << Sep{} << Fp(dst);
+                        str << tab << "#<fixme>" << Sep{} << Fp(dst);
                         break;
 
                     case 2: // Double precision
@@ -505,14 +523,19 @@ Moira::dasmFMove(StrWriter &str, u32 &addr, u16 op)
                         val = dasmRead<Long>(addr);
                         dasmRead<Long>(addr);
                         dasmRead<Long>(addr); // Why???
-                        str << tab << Imu(val) << "e0" << Sep{} << Fp(dst);
+                        str << tab << "#<fixme>" << Sep{} << Fp(dst);
                         break;
 
                     case 5: // Double-precision real
 
                         val = dasmRead<Long>(addr);
                         dasmRead<Long>(addr);
-                        str << tab << Imu(val) << "e0" << Sep{} << Fp(dst);
+                        str << tab << "#<fixme>" << Sep{} << Fp(dst);
+                        break;
+
+                    case 6: // Byte Integer
+                        val = dasmRead<Word>(addr);
+                        str << tab << Ims<Byte>(val) << Sep{} << Fp(dst);
                         break;
 
                     default:
