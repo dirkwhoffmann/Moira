@@ -1881,6 +1881,7 @@ match_insn_m68k (bfd_vma memaddr,
 
 #ifdef MOTOROLA
   /* add a . into movel and simila names. */
+  /*
   int bnl = strlen(best->name);
   char c = best->name[bnl - 1];
   if (strcmp("rts", best->name)
@@ -1916,6 +1917,7 @@ match_insn_m68k (bfd_vma memaddr,
       b[bnl + 1] = 0;
       info->fprintf_func (info->stream, "%s", b);
     } else
+   */
 #endif
   info->fprintf_func (info->stream, "%s", best->name);
 
