@@ -26,10 +26,13 @@ Moira::dasmPGen(StrWriter &str, u32 &addr, u16 op)
     // printf("dasmPGen(%x) ext = %x\n", op, ext);
 
     // PLOAD
-    if ((ext & 0xFDE0) == 0x2000) {
+    if (model == M68030) {
 
-        dasmPLoad<PLOAD, M, Long>(str, addr, op);
-        return;
+        if ((ext & 0xFDE0) == 0x2000) {
+
+            dasmPLoad<PLOAD, M, Long>(str, addr, op);
+            return;
+        }
     }
 
     // PFLUSH

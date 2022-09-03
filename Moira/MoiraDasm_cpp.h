@@ -1925,7 +1925,7 @@ Moira::dasmMove16PiPi(StrWriter &str, u32 &addr, u16 op)
     auto ax  = _____________xxx(op);
     auto ay  = _xxx____________(ext);
 
-    if ((ext & 0x80FFF) != 0x8000) {
+    if ((ext & 0x80FF) != 0x8000) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -1942,7 +1942,7 @@ Moira::dasmMove16PiAl(StrWriter &str, u32 &addr, u16 op)
     auto ext = dasmRead<Long>(addr);
     auto ay  = _____________xxx(op);
 
-    str << Ins<I>{} << tab << Op<MODE_PI>(ay, addr) << Sep{} << Int(ext);
+    str << Ins<I>{} << tab << Op<MODE_PI>(ay, addr) << Sep{} << UInt(ext);
     str << Av<I, M, S>{};
 }
 
@@ -1952,7 +1952,7 @@ Moira::dasmMove16AlPi(StrWriter &str, u32 &addr, u16 op)
     auto ext = dasmRead<Long>(addr);
     auto ay  = _____________xxx(op);
 
-    str << Ins<I>{} << tab << Int(ext) << Sep{} << Op<MODE_PI>(ay, addr);
+    str << Ins<I>{} << tab << UInt(ext) << Sep{} << Op<MODE_PI>(ay, addr);
     str << Av<I, M, S>{};
 }
 
@@ -1962,7 +1962,7 @@ Moira::dasmMove16AiAl(StrWriter &str, u32 &addr, u16 op)
     auto ext = dasmRead<Long>(addr);
     auto ay  = _____________xxx(op);
 
-    str << Ins<I>{} << tab << Op<MODE_AI>(ay, addr) << Sep{} << Int(ext);
+    str << Ins<I>{} << tab << Op<MODE_AI>(ay, addr) << Sep{} << UInt(ext);
     str << Av<I, M, S>{};
 }
 
@@ -1972,7 +1972,7 @@ Moira::dasmMove16AlAi(StrWriter &str, u32 &addr, u16 op)
     auto ext = dasmRead<Long>(addr);
     auto ay  = _____________xxx(op);
 
-    str << Ins<I>{} << tab << Int(ext) << Sep{} << Op<MODE_AI>(ay, addr);
+    str << Ins<I>{} << tab << UInt(ext) << Sep{} << Op<MODE_AI>(ay, addr);
     str << Av<I, M, S>{};
 }
 
