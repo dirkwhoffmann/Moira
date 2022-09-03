@@ -58,6 +58,10 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
     switch (cod) {
 
         case 0b010:
+
+            if (M == MODE_IP) break;
+            [[fallthrough]];
+
         case 0b000:
 
             switch (cmd) {
@@ -144,8 +148,10 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
             if (M == MODE_IX) { if (fmt == 0b111 && (ext & 0xF)) break; }
             if (M == MODE_AW) { if (fmt == 0b111 && (ext & 0xF)) break; }
             if (M == MODE_AL) { if (fmt == 0b111 && (ext & 0xF)) break; }
-            if (M == MODE_DIPC) { break; }
-            if (M == MODE_IXPC) { break; }
+            if (M == MODE_DIPC) break;
+            if (M == MODE_IXPC) break;
+            if (M == MODE_IM) break;
+            if (M == MODE_IP) break;
 
             if (fmt != 0b011 && fmt != 0b111 && (ext & 0x7F)) break;
 
@@ -166,6 +172,7 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
             }
             if (M == MODE_DIPC) break;
             if (M == MODE_IXPC) break;
+            if (M == MODE_IM) break;
 
             dasmFMovem<FMOVEM, M, S>(str, addr, op);
             return;
@@ -173,6 +180,8 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
         case 0b100:
 
             if (ext & 0x3FF) break;
+
+            if (M == MODE_IP) break;
 
             dasmFMovem<FMOVEM, M, S>(str, addr, op);
             return;
@@ -192,6 +201,8 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
             if (M == MODE_AL) { if (mode == 0 || mode == 1) break; }
             if (M == MODE_DIPC) break;
             if (M == MODE_IXPC) break;
+            if (M == MODE_IM) break;
+            if (M == MODE_IP) break;
 
             if (ext & 0x0700) break;
             if (mode == 3 && (ext & 0x8F)) break;
@@ -263,7 +274,48 @@ Moira::dasmFGeneric(StrWriter &str, u32 &addr, u16 op)
     auto dst = ______xxx_______ (ext);
 
     if (ext & 0x4000) {
-        str << Ins<I>{} << Ffmt{src} << tab << Op<M, Long>(reg, addr);
+
+        if (M == MODE_IM) {
+
+            u64 val;
+
+            switch (src) {
+
+                case 0: // Long-Word Integer
+
+                    val = dasmRead<Long>(addr);
+                    str << Ins<I>{} << Ffmt{src} << tab << Imu(val);
+                    break;
+
+                case 1: // Single precision
+
+                    val = dasmRead<Long>(addr);
+                    str << Ins<I>{} << Ffmt{src} << tab << Imu(val) << "e0";
+                    break;
+
+                case 2: // Double precision
+                case 3: // Packed-Decimal Real
+
+                    val = dasmRead<Long>(addr);
+                    dasmRead<Long>(addr);
+                    dasmRead<Long>(addr); // Why???
+                    str << Ins<I>{} << Ffmt{src} << tab << Imu(val) << "e0";
+                    break;
+
+                case 5: // Double-precision real
+
+                    val = dasmRead<Long>(addr);
+                    dasmRead<Long>(addr);
+                    str << Ins<I>{} << Ffmt{src} << tab << Imu(val) << "e0";
+                    break;
+
+                default:
+                    str << Ins<I>{} << Ffmt{src} << tab << Op<M, Word>(reg, addr);
+            }
+        } else {
+            str << Ins<I>{} << Ffmt{src} << tab << Op<M, Long>(reg, addr);
+        }
+
     } else {
         str << Ins<I>{} << Ffmt{2} << tab << Fp{src};
     }
@@ -281,7 +333,50 @@ Moira::dasmFGeneric2(StrWriter &str, u32 &addr, u16 op)
     auto fpc = _____________xxx (ext);
 
     if (ext & 0x4000) {
-        str << Ins<I>{} << Ffmt{src} << tab << Op<M, Long>(reg, addr);
+
+        str << Ins<I>{} << Ffmt{src} << tab;
+
+        if (M == MODE_IM) {
+
+            u64 val;
+
+            switch (src) {
+
+                case 0: // Long-Word Integer
+
+                    val = dasmRead<Long>(addr);
+                    str << Imu(val);
+                    break;
+
+                case 1: // Single precision
+
+                    val = dasmRead<Long>(addr);
+                    str << Imu(val) << "e0";
+                    break;
+
+                case 2: // Double precision
+                case 3: // Packed-Decimal Real
+
+                    val = dasmRead<Long>(addr);
+                    dasmRead<Long>(addr);
+                    dasmRead<Long>(addr); // Why???
+                    str << Imu(val) << "e0";
+                    break;
+
+                case 5: // Double-precision real
+
+                    val = dasmRead<Long>(addr);
+                    dasmRead<Long>(addr);
+                    str << Imu(val) << "e0";
+                    break;
+
+                default:
+                    str << Op<M, Word>(reg, addr);
+            }
+        } else {
+            str << Op<M, Long>(reg, addr);
+        }
+
     } else {
         str << Ins<I>{} << Ffmt{2} << tab << Fp{src};
     }
@@ -297,7 +392,48 @@ Moira::dasmFGeneric3(StrWriter &str, u32 &addr, u16 op)
     auto src = ___xxx__________ (ext);
 
     if (ext & 0x4000) {
-        str << Ins<I>{} << Ffmt{src} << tab << Op<M, Long>(reg, addr);
+
+        if (M == MODE_IM) {
+
+            u64 val;
+
+            switch (src) {
+
+                case 0: // Long-Word Integer
+
+                    val = dasmRead<Long>(addr);
+                    str << Ins<I>{} << Ffmt{src} << tab << Imu(val);
+                    break;
+
+                case 1: // Single precision
+
+                    val = dasmRead<Long>(addr);
+                    str << Ins<I>{} << Ffmt{src} << tab << Imu(val) << "e0";
+                    break;
+
+                case 2: // Double precision
+                case 3: // Packed-Decimal Real
+
+                    val = dasmRead<Long>(addr);
+                    dasmRead<Long>(addr);
+                    dasmRead<Long>(addr); // Why???
+                    str << Ins<I>{} << Ffmt{src} << tab << Imu(val) << "e0";
+                    break;
+
+                case 5: // Double-precision real
+
+                    val = dasmRead<Long>(addr);
+                    dasmRead<Long>(addr);
+                    str << Ins<I>{} << Ffmt{src} << tab << Imu(val) << "e0";
+                    break;
+
+                default:
+                    str << Ins<I>{} << Ffmt{src} << tab << Op<M, Word>(reg, addr);
+            }
+        } else {
+            str << Ins<I>{} << Ffmt{src} << tab << Op<M, Long>(reg, addr);
+        }
+
     } else {
         str << Ins<I>{} << Ffmt{2} << tab << Fp{src};
     }
@@ -346,7 +482,45 @@ Moira::dasmFMove(StrWriter &str, u32 &addr, u16 op)
             else if (fac == 0x44) str << "fdmove" << Ffmt{src};
             else str << Ins<I>{} << Ffmt{src};
 
-            str << tab << Op<M, Long>(reg, addr) << Sep{} << Fp(dst);
+            if (M == MODE_IM) {
+
+                u64 val;
+
+                switch (src) {
+
+                    case 0: // Long-Word Integer
+                        val = dasmRead<Long>(addr);
+                        str << tab << Imu(val) << Sep{} << Fp(dst);
+                        break;
+
+                    case 1: // Single precision
+
+                        val = dasmRead<Long>(addr);
+                        str << tab << Imu(val) << "e0" << Sep{} << Fp(dst);
+                        break;
+
+                    case 2: // Double precision
+                    case 3: // Packed-Decimal Real
+
+                        val = dasmRead<Long>(addr);
+                        dasmRead<Long>(addr);
+                        dasmRead<Long>(addr); // Why???
+                        str << tab << Imu(val) << "e0" << Sep{} << Fp(dst);
+                        break;
+
+                    case 5: // Double-precision real
+
+                        val = dasmRead<Long>(addr);
+                        dasmRead<Long>(addr);
+                        str << tab << Imu(val) << "e0" << Sep{} << Fp(dst);
+                        break;
+
+                    default:
+                        str << tab << Op<M, Word>(reg, addr) << Sep{} << Fp(dst);
+                }
+            } else {
+                str << tab << Op<M, Long>(reg, addr) << Sep{} << Fp(dst);
+            }
             break;
 
         case 0b011:

@@ -10,6 +10,7 @@
 #include "config.h"
 #include "Randomizer.h"
 #include <bit>
+#include <ctime>
 
 int
 Randomizer::init()
