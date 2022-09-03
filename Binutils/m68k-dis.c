@@ -1881,14 +1881,32 @@ match_insn_m68k (bfd_vma memaddr,
 
 #ifdef MOTOROLA
   /* add a . into movel and simila names. */
-      /*
   int bnl = strlen(best->name);
   char c = best->name[bnl - 1];
   if (strcmp("rts", best->name)
       && strcmp("bfexts", best->name)
       && strcmp("bfins", best->name)
       && strcmp("cas", best->name)
-    && strcmp("tas", best->name)
+      && strcmp("cinvl", best->name)
+      && strcmp("cpushl", best->name)
+      && strcmp("dbcs", best->name)
+      && strcmp("dbls", best->name)
+      && strcmp("dbvs", best->name)
+      && strcmp("dbpl", best->name)
+      && strcmp("fbngl", best->name)
+      && strcmp("fbgl", best->name)
+      && strcmp("fbogl", best->name)
+      && strcmp("ploadw", best->name)
+      && strcmp("ptestw", best->name)
+      && strcmp("scs", best->name)
+      && strcmp("spl", best->name)
+      && strcmp("sls", best->name)
+      && strcmp("svs", best->name)
+      && strcmp("tas", best->name)
+      && strcmp("trapcs", best->name)
+      && strcmp("trapls", best->name)
+      && strcmp("trapvs", best->name)
+      && strcmp("trappl", best->name)
       && (c == 's' || c == 'w' || c == 'b' || c == 'l'))
     {
       static char b[32];
@@ -1898,7 +1916,6 @@ match_insn_m68k (bfd_vma memaddr,
       b[bnl + 1] = 0;
       info->fprintf_func (info->stream, "%s", b);
     } else
-       */
 #endif
   info->fprintf_func (info->stream, "%s", best->name);
 

@@ -250,7 +250,7 @@ void run()
     for (long i = 1; i <= ROUNDS; i++) {
 
         printf("\nRound %ld:\n\n", i);
-        selectModel(M68000);
+        selectModel(M68040);
 
         while (1) {
 

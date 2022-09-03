@@ -1925,7 +1925,7 @@ Moira::dasmMove16PiPi(StrWriter &str, u32 &addr, u16 op)
     auto ax  = _____________xxx(op);
     auto ay  = _xxx____________(ext);
 
-    if ((ext & 0x80FF) != 0x8000) {
+    if ((ext & 0x8FFF) != 0x8000) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);

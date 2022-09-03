@@ -256,7 +256,6 @@ StrWriter::operator<<(Sz<S>)
     switch (style) {
 
         case DASM_MOIRA_MIT:
-        case DASM_GNU:
 
             *this << ((S == Byte) ? "b" : (S == Word) ? "w" : "l");
             break;
@@ -275,17 +274,17 @@ StrWriter::operator<<(Szb<S>)
     switch (style) {
 
         case DASM_MOIRA_MIT:
-        case DASM_GNU:
 
             if constexpr (S == Byte) *this << "s";
             if constexpr (S == Word) *this << "w";
             if constexpr (S == Long) *this << "l";
             break;
 
+        case DASM_GNU:
         case DASM_VDA68K_MIT:
         case DASM_VDA68K_MOT:
 
-            if constexpr (S == Byte) *this << ".b";
+            if constexpr (S == Byte) *this << ".s";
             if constexpr (S == Word) *this << ".w";
             if constexpr (S == Long) *this << ".l";
             break;
@@ -1590,7 +1589,7 @@ StrWriter::operator<<(Fp fp)
 StrWriter&
 StrWriter::operator<<(Ffmt ffmt)
 {
-    if (style != DASM_MOIRA_MIT && style != DASM_GNU) *ptr++ = '.';
+    if (style != DASM_MOIRA_MIT) *ptr++ = '.';
 
     switch (ffmt.raw) {
 
