@@ -78,8 +78,6 @@ Moira::dasmPFlush(StrWriter &str, u32 &addr, u16 op)
     auto mask  = _______xxxx_____(ext);
     auto fc    = ___________xxxxx(ext);
 
-    printf("dasmPFlush\n");
-
     // Catch illegal extension words
     if (str.style == DASM_GNU && !isValidExt(I, M, op, ext)) {
 

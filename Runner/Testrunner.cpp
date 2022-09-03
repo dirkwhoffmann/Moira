@@ -18,9 +18,6 @@ u8 musashiMem[0x10000];
 u8 moiraMem[0x10000];
 u32 musashiFC = 0;
 moira::Model cpuModel = M68000;
-long cpuround[16] = { };
-long mmuround[16] = { };
-long fpuround[16] = { };
 
 // Binutils
 char* binutilsBuffer = NULL;
@@ -44,24 +41,25 @@ void selectModel(moira::Model model)
     setupM68k();
     setupBinutils();
     setupMoira();
+}
 
-    printf("\n");
-    printf("Emulated CPU: ");
-
+const char *selectedModel()
+{
     switch (cpuModel) {
 
-        case M68000:    printf("Motorola 68000");   break;
-        case M68010:    printf("Motorola 68010");   break;
-        case M68EC020:  printf("Motorola 68EC020"); break;
-        case M68020:    printf("Motorola 68020");   break;
-        case M68EC030:  printf("Motorola 68EC030"); break;
-        case M68030:    printf("Motorola 68030");   break;
-        case M68EC040:  printf("Motorola 68EC040"); break;
-        case M68LC040:  printf("Motorola 68LC040"); break;
-        case M68040:    printf("Motorola 68040"); break;
-    }
+        case M68000:    return "68000";
+        case M68010:    return "68010";
+        case M68EC020:  return "EC020";
+        case M68020:    return "68020";
+        case M68EC030:  return "EC030";
+        case M68030:    return "68030";
+        case M68EC040:  return "EC040";
+        case M68LC040:  return "LC040";
+        case M68040:    return "68040";
 
-    printf("\n\n");
+        default:
+            return "???";
+    }
 }
 
 void setupM68k()
@@ -253,16 +251,17 @@ void run()
 
     selectModel(M68000);
 
-    for (long i = 1; i <= ROUNDS;) {
+    for (long i = 0; i <= ROUNDS;) {
 
-        // Run a CPU round
-        runCPU(cpuround[cpuModel]++);
+        // Increase the loop counter when all CPUs have been emulated
+        if (cpuModel == M68000) i++;
 
-        // Continue with a MMU round if applicable
-        if constexpr (CHECK_MMU) runMMU(mmuround[cpuModel]++);
+        // Run the CPU round
+        runCPU(i);
 
-        // Continue with a FPU round if applicable
-        if constexpr (CHECK_FPU) runFPU(fpuround[cpuModel]++);
+        // Continue with the MMU and the FPU if applicable
+        if constexpr (CHECK_MMU) runMMU(i);
+        if constexpr (CHECK_FPU) runFPU(i);
 
         // Switch the CPU core
         selectModel(cpuModel == M68040 ? M68000 : Model(cpuModel + 1));
@@ -273,7 +272,7 @@ void runCPU(long round)
 {
     Setup setup;
 
-    printf("CPU round %ld ", round); fflush(stdout);
+    printf("%s CPU round %ld ", selectedModel(), round); fflush(stdout);
 
     for (int i = 0; i < 32; i++) {
 
@@ -300,7 +299,7 @@ void runMMU(long round)
 
     Setup setup;
 
-    printf("MMU round %ld ", round); fflush(stdout);
+    printf("%s MMU round %ld ", selectedModel(), round); fflush(stdout);
     setupTestEnvironment(setup, round);
 
     for (int op = 0xF000; op <= 0xF03F; op++) {
@@ -321,7 +320,7 @@ void runFPU(long round)
 
     Setup setup;
 
-    printf("FPU round %ld ", round); fflush(stdout);
+    printf("%s FPU round %ld ", selectedModel(), round); fflush(stdout);
     setupTestEnvironment(setup, round);
 
     for (int op = 0xF200; op <= 0xF23F; op++) {

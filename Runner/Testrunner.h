@@ -126,6 +126,7 @@ const u32 pc = 0x1000;
 //
 
 void selectModel(moira::Model model);
+const char *selectedModel();
 
 void setupM68k();
 void setupBinutils();
