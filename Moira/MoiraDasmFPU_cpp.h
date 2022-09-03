@@ -304,8 +304,7 @@ Moira::dasmFTrapcc(StrWriter &str, u32 &addr, u16 op)
         case Word:
         case Long:
 
-            auto ext2 = cnd == 0 ? 0 : dasmRead<S>(addr);
-            str << Ins<I>{} << Fcc{cnd} << Sz<S>{} << tab << Imu(ext2);
+            str << Ins<I>{} << Fcc{cnd} << Sz<S>{} << tab << Ims<S>(dasmRead<S>(addr));
             break;
     }
 }

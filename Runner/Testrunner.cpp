@@ -776,7 +776,9 @@ bool compareDasm(Result &r1, Result &r2)
     // Compare with binutils
     if (!skipBinutils) {
 
-        if (r1.dasmCntBinutils != r2.dasmCntBinutils) return false;
+        if (I != FTRAPcc) {
+            if (r1.dasmCntBinutils != r2.dasmCntBinutils) return false;
+        }
         if (strcmp(r1.dasmBinutils, r2.dasmBinutils) != 0) return false;
     }
 

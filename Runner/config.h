@@ -16,7 +16,7 @@ static constexpr long ROUNDS = 1000;
 static constexpr bool CHECK_MEM_WRITES = true;
 
 // Set to true to inclue MMU rounds for capable CPUs
-static constexpr bool CHECK_MMU = false;
+static constexpr bool CHECK_MMU = true;
 
 // Set to true to inclue FPU rounds for capable CPUs
 static constexpr bool CHECK_FPU = false;

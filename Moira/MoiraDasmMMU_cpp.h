@@ -45,19 +45,14 @@ Moira::dasmPGen(StrWriter &str, u32 &addr, u16 op)
         }
     }
 
-    // PVALID
-    if ((ext & 0xFFFF) == 0x2800 || (ext & 0xFFF8) == 0x2C00) {
-
-        str << "TODO: dasmMgen PVALID";
-        // dasmPValid<I, M, S>(str, addr, op);
-        return;
-    }
-
     // PTEST
-    if ((ext & 0xE000) == 0x8000) {
+    if (model == M68030) {
 
-        dasmPTest<PTEST, M, Long>(str, addr, op);
-        return;
+        if ((ext & 0xE000) == 0x8000) {
+
+            dasmPTest<PTEST, M, Long>(str, addr, op);
+            return;
+        }
     }
 
     // PMOVE
