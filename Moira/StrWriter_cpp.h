@@ -304,9 +304,9 @@ StrWriter::operator<<(Szb<S>)
 }
 
 StrWriter&
-StrWriter::operator<<(Cnd cnd)
+StrWriter::operator<<(Cc cc)
 {
-    switch (Cond(cnd.raw)) {
+    switch (Cond(cc.raw)) {
             
         case COND_BT: *this << "t";   break;
         case COND_BF: *this << "f";   break;

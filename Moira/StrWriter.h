@@ -18,7 +18,7 @@ namespace moira {
 // Numerical values
 struct Int { i32 raw; Int(i32 v) : raw(v) { } };
 struct UInt { u32 raw; UInt(u32 v) : raw(v) { } };
-struct UInt8 { u8 raw; UInt8(u8  v) : raw(v) { } };
+struct UInt8 { u8 raw; UInt8(u8 v) : raw(v) { } };
 struct UInt16 { u16 raw; UInt16(u16 v) : raw(v) { } };
 struct UInt32 { u32 raw; UInt32(u32 v) : raw(v) { } };
 
@@ -31,7 +31,7 @@ struct Imd { u32 raw; Imd(u32 v) : raw(v) { } };
 template <Instr I> struct Ins { };
 template <Size S> struct Sz { };
 template <Size S> struct Szb { };
-struct Cnd { int raw; Cnd(int v) : raw(v) { } };
+struct Cc { int raw; Cc(int v) : raw(v) { } };
 struct Cpcc { int raw; Cpcc(int v) : raw(v) { } };
 struct Fcc { int raw; Fcc(int v) : raw(v) { } };
 struct Pcc { int raw; Pcc(int v) : raw(v) { } };
@@ -40,12 +40,12 @@ struct Pcc { int raw; Pcc(int v) : raw(v) { } };
 struct Dn { int raw; Dn(int v) : raw(v) { } };
 struct An { int raw; An(int v) : raw(v) { } };
 struct Rn { int raw;  Rn(int v) : raw(v) { } };
+struct Cn { u16 raw; Cn(u16 v) : raw(v) { } };
 struct Ccr { };
 struct Pc { };
 struct Zpc { };
 struct Sr { };
 struct Usp { };
-struct Cn { u16 raw; Cn(u16 v) : raw(v) { } };
 
 // Register lists
 struct RegList { u16 raw; RegList(u16 v) : raw(v) { } };
@@ -94,7 +94,8 @@ public:
     
     char comment[32];       // Appended to the end of the disassembled string
     char *base;             // Start address of the destination string
-    char *ptr;              // Current writing position
+    char *ptr;              // Write pointer
+
     DasmStyle style;
     DasmNumberFormat nf;
     
@@ -102,10 +103,10 @@ public:
     
     StrWriter(char *p, DasmStyle s, DasmNumberFormat n) {
         
+        comment[0] = 0;
         base = ptr = p;
         style = s;
         nf = n;
-        comment[0] = 0;
     };
 
     bool checkAvailability();
@@ -128,7 +129,7 @@ public:
     template <Instr I> StrWriter& operator<<(Ins<I>);
     template <Size S> StrWriter& operator<<(Sz<S>);
     template <Size S> StrWriter& operator<<(Szb<S>);
-    StrWriter& operator<<(Cnd);
+    StrWriter& operator<<(Cc);
     StrWriter& operator<<(Cpcc);
     StrWriter& operator<<(Fcc);
     StrWriter& operator<<(Pcc);
@@ -136,12 +137,12 @@ public:
     StrWriter& operator<<(Dn);
     StrWriter& operator<<(An);
     StrWriter& operator<<(Rn);
+    StrWriter& operator<<(Cn);
     StrWriter& operator<<(Ccr);
     StrWriter& operator<<(Pc);
     StrWriter& operator<<(Zpc);
     StrWriter& operator<<(Sr);
     StrWriter& operator<<(Usp);
-    StrWriter& operator<<(Cn);
 
     StrWriter& operator<<(RegList);
     StrWriter& operator<<(RegRegList);
@@ -163,13 +164,10 @@ public:
     template <Mode M, Size S> StrWriter& operator<<(Im<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(Ip<M,S>);
 
+    StrWriter& operator<<(Scale);
     StrWriter& operator<<(Fc);
-
     StrWriter& operator<<(Fp);
     StrWriter& operator<<(Ffmt);
-
-    StrWriter& operator<<(Scale);
-
     StrWriter& operator<<(Tab);
     StrWriter& operator<<(Sep);
     template <Instr I, Mode M, Size S> StrWriter& operator<<(const Av<I,M,S> &);
