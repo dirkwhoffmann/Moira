@@ -10,59 +10,35 @@
 template <Instr I, Mode M, Size S> void
 Moira::dasmPGen(StrWriter &str, u32 &addr, u16 op)
 {
-    //  PFLUSH: 001x xx0x xxxx xxxx
-    //   PLOAD: 0010 00x0 000x xxxx
-    // PVALID1: 0010 1000 0000 0000
-    // PVALID2: 0010 1100 0000 0xxx
-    //   PMOVE: 010x xxx0 0000 0000 (Format 1) ??
-    //          011x xxx0 000x xx00 (Format 2) ??
-    //          011x xxx0 0000 0000 (Format 3) ??
-    //   PTEST: 100x xxxx xxxx xxxx
-    // PFLUSHR: 1010 0000 0000 0000
-
     auto ext = dasmRead<Word>(addr);
     addr -= 2;
 
-    // printf("dasmPGen(%x) ext = %x\n", op, ext);
+    // PLOAD: 0010 00x0 000x xxxx
+    if ((ext & 0xFDE0) == 0x2000) {
 
-    // PLOAD
-    if (model == M68030) {
-
-        if ((ext & 0xFDE0) == 0x2000) {
-
-            dasmPLoad<PLOAD, M, Long>(str, addr, op);
-            return;
-        }
+        dasmPLoad<PLOAD, M, Long>(str, addr, op);
+        return;
     }
 
-    // PFLUSH
-    if (model == M68030) {
+    // PFLUSH: 001x xx0x xxxx xxxx
+    if ((ext & 0xE200) == 0x2000) {
 
-        if ((ext & 0xE200) == 0x2000) {
-
-            dasmPFlush<PFLUSH, M, Long>(str, addr, op);
-            return;
-        }
+        dasmPFlush<PFLUSH, M, Long>(str, addr, op);
+        return;
     }
 
-    // PTEST
-    if (model == M68030) {
+    // PTEST: 100x xxxx xxxx xxxx
+    if ((ext & 0xE000) == 0x8000) {
 
-        if ((ext & 0xE000) == 0x8000) {
-
-            dasmPTest<PTEST, M, Long>(str, addr, op);
-            return;
-        }
+        dasmPTest<PTEST, M, Long>(str, addr, op);
+        return;
     }
 
-    // PMOVE
-    if (model == M68030) {
+    // PMOVE: 010x xxxx 0000 0000 | 0110 00x0 0000 0000 | 000x xxxx 0000 0000
+    if ((ext & 0xE0FF) == 0x4000 || (ext & 0xFDFF) == 0x6000 || (ext & 0xE0FF) == 0x0000) {
 
-        if ((ext & 0xE000) == 0x0000 || (ext & 0xE000) == 0x4000 || (ext & 0xE000) == 0x6000) {
-
-            dasmPMove<PMOVE, M, S>(str, addr, op);
-            return;
-        }
+        dasmPMove<PMOVE, M, S>(str, addr, op);
+        return;
     }
 
     dasmIllegal<I, M, S>(str, addr, op);
@@ -159,8 +135,6 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
     }
     
     const char *suffix = (ext & 0x100) ? "fd" : "";
-
-    // printf("dasmPMove ext = %x\n", ext);
 
     const char *pStr = "";
 

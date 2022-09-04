@@ -227,20 +227,20 @@ void run()
     for (long i = 1; i <= ROUNDS; i++) {
 
         printf("\nRound %ld:\n\n", i);
-        selectModel(M68000);
 
         while (1) {
 
-            // Run the CPU round
-            runCPU(i);
+            // Select the CPU core
+            selectModel(cpuModel);
 
-            // Continue with the MMU and the FPU if applicable
+            // Execute tests
+            if constexpr (CHECK_CPU) runCPU(i);
             if constexpr (CHECK_MMU) runMMU(i);
             if constexpr (CHECK_FPU) runFPU(i);
 
             // Switch the CPU core
             if (cpuModel == M68040) break;
-            selectModel(Model(cpuModel + 1));
+            cpuModel = Model(cpuModel + 1);
         }
     }
 

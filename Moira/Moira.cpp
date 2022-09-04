@@ -682,8 +682,6 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
             // Check register
             if (mode() == 0b001 && (op & 0x7) != 0) return false;
 
-            // printf("M = %d op = %x ext = %x mode() = %x mask() = %x fc() = %x validMode = %d\n", M, op, ext, mode(), mask(), fc(), validMode());
-
             // Check mode
             if (!validMode()) return false;
 
@@ -717,9 +715,6 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
 
                 case 0b000:
 
-                    // Check zero bits
-                    if (ext & 0xFF) return false;
-
                     // Check register field
                     if (preg() != 0b010 && preg() != 0b011) return false;
 
@@ -734,9 +729,6 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
                     return true;
 
                 case 0b010:
-
-                    // Check zero bits
-                    if (ext & 0xFF) return false;
 
                     // If memory is written, flushing is mandatory
                     if ((ext & 0x300) == 0x300) return false;
@@ -763,9 +755,6 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
                     return true;
 
                 case 0b011:
-
-                    // Check zero bits
-                    if (ext & 0x1DFF) return false;
 
                     // Check EA modes
                     if (ext & 0x200) {

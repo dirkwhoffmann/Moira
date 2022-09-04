@@ -15,11 +15,14 @@ static constexpr long ROUNDS = 1;
 // Set to true to verify all memory write operations
 static constexpr bool CHECK_MEM_WRITES = true;
 
-// Set to true to inclue MMU rounds for capable CPUs
+// Set to true to execute CPU tests
+static constexpr bool CHECK_CPU = false;
+
+// Set to true to execute MMU tests for capable CPUs
 static constexpr bool CHECK_MMU = true;
 
-// Set to true to inclue FPU rounds for capable CPUs
-static constexpr bool CHECK_FPU = true;
+// Set to true to execute FPU tests for capable CPUs
+static constexpr bool CHECK_FPU = false;
 
 // Set to true to skip the execution of illegal instructions
 static constexpr bool SKIP_ILLEGAL = true;

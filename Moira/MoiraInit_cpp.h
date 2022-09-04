@@ -1928,35 +1928,22 @@ Moira::createJumpTable()
         // Memory management unit
         //
 
-        if (hasMMU()) {
+        if (model == M68030) {
 
             opcode = parse("1111 0000 00-- ----");
             __________XXXXXX(opcode, cpGEN, MODE_IP, Unsized, PGen, CIMS)
             __________MMMXXX(opcode, cpGEN, 0b111111111111, Unsized, PGen, CIMS)
+        }
 
-            //
-            // 68040 only instructions
-            //
+        if (model == M68040 || model == M68LC040) {
 
-            if (model == M68040 || model == M68LC040) {
+            opcode = parse("1111 0101 000- ----");
+            ___________XXXXX(opcode, PFLUSH, MODE_IP, Unsized, PFlush40, CIMS)
 
-                opcode = parse("1111 0101 000- ----");
-                ___________XXXXX(opcode, PFLUSH, MODE_IP, Unsized, PFlush40, CIMS)
-
-                opcode = parse("1111 0101 0100 1---");
-                _____________XXX(opcode, PTEST, MODE_IP, Unsized, PTest40, CIMS)
-                opcode = parse("1111 0101 0110 1---");
-                _____________XXX(opcode, PTEST, MODE_IP, Unsized, PTest40, CIMS)
-
-            }
-
-            /* MC68851 only
-            opcode = parse("1111 0010 10-- ----");
-            __________XXXXXX(opcode, cpBcc, MODE_IP, Word, PBcc, CIMS)
-
-            opcode = parse("1111 0010 11-- ----");
-            __________XXXXXX(opcode, cpBcc, MODE_IP, Long, PBcc, CIMS)
-            */
+            opcode = parse("1111 0101 0100 1---");
+            _____________XXX(opcode, PTEST, MODE_IP, Unsized, PTest40, CIMS)
+            opcode = parse("1111 0101 0110 1---");
+            _____________XXX(opcode, PTEST, MODE_IP, Unsized, PTest40, CIMS)
         }
 
 
@@ -1964,7 +1951,7 @@ Moira::createJumpTable()
         // Floating point unit
         //
 
-        if (hasFPU()) {
+        if (model == M68040) {
 
             opcode = parse("1111 0010 100- ----");
             ___________XXXXX(opcode, FBcc, MODE_IP, Word, FBcc, CIMS)
