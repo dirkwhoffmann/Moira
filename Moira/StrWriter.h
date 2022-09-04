@@ -61,11 +61,9 @@ template <Mode M, Size S> struct Pi { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct Pd { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct Di { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct Ix { const Ea<M,S> &ea; };
-template <Mode M, Size S> struct IxMus { const Ea<M,S> &ea; };
-template <Mode M, Size S> struct IxGnu { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct IxMot { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct IxMit { const Ea<M,S> &ea; };
-template <Mode M, Size S> struct IxMitOld { const Ea<M,S> &ea; };
+template <Mode M, Size S> struct IxMus { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct Aw { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct Al { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct DiPc { const Ea<M,S> &ea; };
@@ -112,6 +110,7 @@ public:
 
     bool checkAvailability();
 
+    StrWriter& operator<<(char);
     StrWriter& operator<<(const char *);
     StrWriter& operator<<(int);
     StrWriter& operator<<(unsigned int);
@@ -155,11 +154,9 @@ public:
     template <Mode M, Size S> StrWriter& operator<<(Pd<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(Di<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(Ix<M,S>);
-    template <Mode M, Size S> StrWriter& operator<<(IxMus<M,S>);
-    template <Mode M, Size S> StrWriter& operator<<(IxGnu<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(IxMot<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(IxMit<M,S>);
-    template <Mode M, Size S> StrWriter& operator<<(IxMitOld<M,S>);
+    template <Mode M, Size S> StrWriter& operator<<(IxMus<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(Aw<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(Al<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(DiPc<M,S>);
