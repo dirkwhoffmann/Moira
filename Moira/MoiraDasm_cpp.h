@@ -96,6 +96,7 @@ Moira::dasmIllegal(StrWriter &str, u32 &addr, u16 op)
     switch (str.style) {
 
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             str << ".short " << Int{op};
             break;
@@ -119,6 +120,7 @@ Moira::dasmLineA(StrWriter &str, u32 &addr, u16 op)
             break;
 
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             str << ".short " << Int{op};
             break;
@@ -141,6 +143,7 @@ Moira::dasmLineF(StrWriter &str, u32 &addr, u16 op)
             break;
 
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             str << ".short " << Int{op};
             break;
@@ -372,9 +375,9 @@ Moira::dasmAndiccr(StrWriter &str, u32 &addr, u16 op)
     auto src = dasmRead<S>(addr);
     
     if (str.style == DASM_MUSASHI) {
-        str << Ins<I>{} << tab << Imu{src} << ", CCR";
+        str << Ins<I>{} << tab << Imu{src} << Sep{} << Ccr{};
     } else {
-        str << Ins<I>{} << Sz<S>{} << tab << Ims<S>(src) << ",ccr";
+        str << Ins<I>{} << Sz<S>{} << tab << Ims<S>(src) << Sep{} << Ccr{};
     }
 }
 
@@ -384,9 +387,9 @@ Moira::dasmAndisr(StrWriter &str, u32 &addr, u16 op)
     auto src = dasmRead<S>(addr);
     
     if (str.style == DASM_MUSASHI) {
-        str << Ins<I>{} << tab << Imu{src} << ", SR";
+        str << Ins<I>{} << tab << Imu{src} << Sep{} << Sr{};
     } else {
-        str << Ins<I>{} << Sz<S>{} << tab << Ims<S>(src) << ",sr";
+        str << Ins<I>{} << Sz<S>{} << tab << Ims<S>(src) << Sep{} << Sr{};
     }
 }
 
@@ -942,6 +945,7 @@ Moira::dasmBcc(StrWriter &str, u32 &addr, u16 op)
             break;
 
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             str << Ins<I>{} << Szb<S>{} << tab << UInt(dst);
             break;
@@ -1000,6 +1004,7 @@ Moira::dasmBitImDy(StrWriter &str, u32 &addr, u16 op)
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             str << Ins<I>{} << tab << Ims<S>(src) << Sep{} << dst;
             break;
@@ -1021,6 +1026,7 @@ Moira::dasmBitImEa(StrWriter &str, u32 &addr, u16 op)
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             str << Ins<I>{} << tab << Ims<S>(src) << Sep{} << dst;
             break;
@@ -1122,6 +1128,7 @@ Moira::dasmLink(StrWriter &str, u32 &addr, u16 op)
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             str << Ins<I>{} << Sz<S>{} << tab << src << Sep{} << Ims<S>(dsp);
             break;
@@ -1363,6 +1370,7 @@ Moira::dasmMoveToCcr(StrWriter &str, u32 &addr, u16 op)
             break;
 
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             str << Ins<I>{} << Sz<S>{} << tab << Op<M, S>(src, addr) << Sep{} << Ccr{};
             break;
@@ -1443,6 +1451,7 @@ Moira::dasmMoveUspAn(StrWriter &str, u32 &addr, u16 op)
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             str << Ins<I>{} << Sz<S>{} << tab << Usp{} << Sep{} << dst;
             break;
@@ -1463,6 +1472,7 @@ Moira::dasmMoveAnUsp(StrWriter &str, u32 &addr, u16 op)
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             str << Ins<I>{} << Sz<S>{} << tab << src << Sep{} << Usp{};
             break;
@@ -1803,6 +1813,7 @@ Moira::dasmTrapcc(StrWriter &str, u32 &addr, u16 op)
             break;
 
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             switch (S) {
 

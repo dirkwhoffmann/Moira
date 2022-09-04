@@ -40,12 +40,13 @@ struct Pcc { int raw; Pcc(int v) : raw(v) { } };
 struct Dn { int raw; Dn(int v) : raw(v) { } };
 struct An { int raw; An(int v) : raw(v) { } };
 struct Am { int raw; Am(int v) : raw(v) { } };
-struct Anr { int raw; Anr(int v) : raw(v) { } }; // DEPRECATED
+// struct Anr { int raw; Anr(int v) : raw(v) { } }; // DEPRECATED
 struct Rn { int raw;  Rn(int v) : raw(v) { } };
 struct Rm { int raw;  Rm(int v) : raw(v) { } };
-struct Rnr { int raw; Rnr(int v) : raw(v) { } }; // DEPRECATED
+// struct Rnr { int raw; Rnr(int v) : raw(v) { } }; // DEPRECATED
 struct Ccr { };
 struct Pc { };
+struct Zpc { };
 struct Sr { };
 struct Usp { };
 struct Cn { u16 raw; Cn(u16 v) : raw(v) { } };
@@ -68,6 +69,7 @@ template <Mode M, Size S> struct IxMus { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct IxGnu { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct IxMot { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct IxMit { const Ea<M,S> &ea; };
+template <Mode M, Size S> struct IxMitOld { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct Aw { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct Al { const Ea<M,S> &ea; };
 template <Mode M, Size S> struct DiPc { const Ea<M,S> &ea; };
@@ -139,12 +141,13 @@ public:
     StrWriter& operator<<(Dn);
     StrWriter& operator<<(An);
     StrWriter& operator<<(Am);
-    StrWriter& operator<<(Anr);
+//     StrWriter& operator<<(Anr);
     StrWriter& operator<<(Rn);
     StrWriter& operator<<(Rm);
-    StrWriter& operator<<(Rnr);
+//    StrWriter& operator<<(Rnr);
     StrWriter& operator<<(Ccr);
     StrWriter& operator<<(Pc);
+    StrWriter& operator<<(Zpc);
     StrWriter& operator<<(Sr);
     StrWriter& operator<<(Usp);
     StrWriter& operator<<(Cn);
@@ -164,6 +167,7 @@ public:
     template <Mode M, Size S> StrWriter& operator<<(IxGnu<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(IxMot<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(IxMit<M,S>);
+    template <Mode M, Size S> StrWriter& operator<<(IxMitOld<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(Aw<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(Al<M,S>);
     template <Mode M, Size S> StrWriter& operator<<(DiPc<M,S>);

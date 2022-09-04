@@ -69,6 +69,7 @@ typedef enum
 
     DASM_MUSASHI,       // Compatibilty styles
     DASM_GNU,
+    DASM_GNU_MIT,
     DASM_VDA68K_MOT,
     DASM_VDA68K_MIT
 }

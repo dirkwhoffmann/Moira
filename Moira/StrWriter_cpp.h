@@ -236,7 +236,7 @@ StrWriter::operator<<(Ins<I> i)
 {
     if constexpr (I == DBF) {
         
-        if (style == DASM_VDA68K_MOT || style == DASM_VDA68K_MIT || style == DASM_GNU) {
+        if (style == DASM_VDA68K_MOT || style == DASM_VDA68K_MIT || style == DASM_GNU || style == DASM_GNU_MIT) {
             *this << "dbf";
         } else {
             *this << "dbra";
@@ -257,6 +257,7 @@ StrWriter::operator<<(Sz<S>)
 
         case DASM_MOIRA_MIT:
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             *this << ((S == Byte) ? "b" : (S == Word) ? "w" : "l");
             break;
@@ -276,6 +277,7 @@ StrWriter::operator<<(Szb<S>)
 
         case DASM_MOIRA_MIT:
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             if constexpr (S == Byte) *this << "s";
             if constexpr (S == Word) *this << "w";
@@ -439,15 +441,24 @@ StrWriter&
 StrWriter::operator<<(Dn dn)
 {
     switch (style) {
-            
-        case DASM_MOIRA_MOT:
+
         case DASM_MOIRA_MIT:
+
+            *ptr++ = '%';
+            [[fallthrough]];
+
+        case DASM_MOIRA_MOT:
         case DASM_MUSASHI:
 
             *ptr++ = 'D';
             *ptr++ = '0' + (char)dn.raw;
             break;
-            
+
+        case DASM_GNU_MIT:
+
+            *ptr++ = '%';
+            [[fallthrough]];
+
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
         case DASM_GNU:
@@ -464,18 +475,34 @@ StrWriter&
 StrWriter::operator<<(An an)
 {
     switch (style) {
-            
-        case DASM_MOIRA_MOT:
+
         case DASM_MOIRA_MIT:
+
+            *ptr++ = '%';
+            [[fallthrough]];
+
+        case DASM_MOIRA_MOT:
         case DASM_MUSASHI:
             
             *ptr++ = 'A';
             *ptr++ = '0' + (char)an.raw;
             break;
-            
+
+        case DASM_GNU_MIT:
+
+            *ptr++ = '%';
+            [[fallthrough]];
+
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
         case DASM_GNU:
+
+            if (style == DASM_GNU_MIT && an.raw == 6) {
+
+                *ptr++ = 'f';
+                *ptr++ = 'p';
+                break;
+            }
 
             if (an.raw == 7) {
                 
@@ -498,8 +525,12 @@ StrWriter::operator<<(Am an)
 {
     switch (style) {
 
-        case DASM_MOIRA_MOT:
         case DASM_MOIRA_MIT:
+
+            *ptr++ = '%';
+            [[fallthrough]];
+
+        case DASM_MOIRA_MOT:
         case DASM_MUSASHI:
 
             *ptr++ = 'A';
@@ -513,7 +544,19 @@ StrWriter::operator<<(Am an)
             *ptr++ = '0' + (char)an.raw;
             break;
 
+        case DASM_GNU_MIT:
+
+            *ptr++ = '%';
+            [[fallthrough]];
+
         case DASM_GNU:
+
+            if (style == DASM_GNU_MIT && an.raw == 6) {
+
+                *ptr++ = 'f';
+                *ptr++ = 'p';
+                break;
+            }
 
             if (an.raw == 7) {
 
@@ -535,15 +578,24 @@ StrWriter&
 StrWriter::operator<<(Anr an)
 {
     switch (style) {
-            
-        case DASM_MOIRA_MOT:
+
         case DASM_MOIRA_MIT:
+
+            *ptr++ = '%';
+            [[fallthrough]];
+
+        case DASM_MOIRA_MOT:
         case DASM_MUSASHI:
             
             *ptr++ = 'A';
             *ptr++ = '0' + (char)an.raw;
             break;
-            
+
+        case DASM_GNU_MIT:
+
+            *ptr++ = '%';
+            [[fallthrough]];
+
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
         case DASM_GNU:
@@ -578,10 +630,19 @@ StrWriter::operator<<(Rnr rn)
 }
 
 StrWriter&
-StrWriter::operator<<(Ccr ccr)
+StrWriter::operator<<(Ccr _)
 {
-    auto upper = style == DASM_MOIRA_MOT || style == DASM_MOIRA_MIT || style == DASM_MUSASHI;
-    *this << (upper ? "CCR" : "ccr");
+    switch (style) {
+
+        case DASM_GNU_MIT:      *ptr++ = '%'; [[fallthrough]];
+        case DASM_VDA68K_MIT:
+        case DASM_VDA68K_MOT:
+        case DASM_GNU:          *ptr++ = 'c'; *ptr++ = 'c'; *ptr++ = 'r'; break;
+
+        case DASM_MOIRA_MIT:    *ptr++ = '%'; [[fallthrough]];
+        default:                *ptr++ = 'C'; *ptr++ = 'C'; *ptr++ = 'R'; break;
+    }
+
     return *this;
 }
 
@@ -590,16 +651,30 @@ StrWriter::operator<<(Pc _)
 {
     switch (style) {
 
-        case DASM_GNU:
+        case DASM_GNU_MIT:      *ptr++ = '%'; [[fallthrough]];
         case DASM_VDA68K_MIT:
         case DASM_VDA68K_MOT:
+        case DASM_GNU:          *ptr++ = 'p'; *ptr++ = 'c'; break;
 
-            *ptr++ = 'p'; *ptr++ = 'c';
-            break;
+        case DASM_MOIRA_MIT:    *ptr++ = '%'; [[fallthrough]];
+        default:                *ptr++ = 'P'; *ptr++ = 'C'; break;
+    }
 
-        default:
+    return *this;
+}
 
-            *ptr++ = 'P'; *ptr++ = 'C';
+StrWriter&
+StrWriter::operator<<(Zpc _)
+{
+    switch (style) {
+
+        case DASM_GNU_MIT:      *ptr++ = '%'; [[fallthrough]];
+        case DASM_VDA68K_MIT:
+        case DASM_VDA68K_MOT:
+        case DASM_GNU:          *ptr++ = 'z'; *ptr++ = 'p'; *ptr++ = 'c'; break;
+
+        case DASM_MOIRA_MIT:    *ptr++ = '%'; [[fallthrough]];
+        default:                *ptr++ = 'Z'; *ptr++ = 'P'; *ptr++ = 'C'; break;
     }
 
     return *this;
@@ -608,16 +683,34 @@ StrWriter::operator<<(Pc _)
 StrWriter&
 StrWriter::operator<<(Sr _)
 {
-    auto upper = style == DASM_MOIRA_MOT || style == DASM_MOIRA_MIT || style == DASM_MUSASHI;
-    *this << (upper ? "SR" : "sr");
+    switch (style) {
+
+        case DASM_GNU_MIT:      *ptr++ = '%'; [[fallthrough]];
+        case DASM_VDA68K_MIT:
+        case DASM_VDA68K_MOT:
+        case DASM_GNU:          *ptr++ = 's'; *ptr++ = 'r'; break;
+
+        case DASM_MOIRA_MIT:    *ptr++ = '%'; [[fallthrough]];
+        default:                *ptr++ = 'S'; *ptr++ = 'R'; break;
+    }
+
     return *this;
 }
 
 StrWriter&
 StrWriter::operator<<(Usp _)
 {
-    auto upper = style == DASM_MOIRA_MOT || style == DASM_MOIRA_MIT || style == DASM_MUSASHI;
-    *this << (upper ? "USP" : "usp");
+    switch (style) {
+
+        case DASM_GNU_MIT:      *ptr++ = '%'; [[fallthrough]];
+        case DASM_VDA68K_MIT:
+        case DASM_VDA68K_MOT:
+        case DASM_GNU:          *ptr++ = 'u'; *ptr++ = 's'; *ptr++ = 'p'; break;
+
+        case DASM_MOIRA_MIT:    *ptr++ = '%'; [[fallthrough]];
+        default:                *ptr++ = 'U'; *ptr++ = 'S'; *ptr++ = 'P'; break;
+    }
+
     return *this;
 }
 
@@ -711,7 +804,7 @@ StrWriter::operator<<(RegList l)
         if (r[i] == 1) { *this << Rm{i}; }
         
         // Format variant 2: Register range
-        else { *this << Rnr{i} << "-" << Rm{i+r[i]-1}; }
+        else { *this << Rm{i} << "-" << Rm{i+r[i]-1}; }
     }
     
     return *this;
@@ -720,18 +813,22 @@ StrWriter::operator<<(RegList l)
 StrWriter&
 StrWriter::operator<<(RegRegList l)
 {
-    if (style == DASM_GNU) {
+    switch (style) {
 
-        l.raw ? *this << RegList{l.raw} : *this << "#0";
+        case DASM_GNU:
+        case DASM_GNU_MIT:
 
-    } else {
+            l.raw ? *this << RegList{l.raw} : *this << "#0";
+            break;
 
-        u16 regsD = l.raw & 0x00FF;
-        u16 regsA = l.raw & 0xFF00;
+        default:
 
-        *this << RegList { regsD };
-        if (regsD && regsA) *this << "/";
-        *this << RegList { regsA };
+            u16 regsD = l.raw & 0x00FF;
+            u16 regsA = l.raw & 0xFF00;
+
+            *this << RegList { regsD };
+            if (regsD && regsA) *this << "/";
+            *this << RegList { regsA };
     }
 
     return *this;
@@ -809,6 +906,7 @@ StrWriter::operator<<(Ai<M,S> wrapper)
             *this << "(" << An{ea.reg} << ")";
             break;
 
+        case DASM_GNU_MIT:
         case DASM_MOIRA_MIT:
         case DASM_VDA68K_MIT:
             
@@ -834,6 +932,7 @@ StrWriter::operator<<(Pi<M,S> wrapper)
             *this << "(" << An{ea.reg} << ")+";
             break;
 
+        case DASM_GNU_MIT:
         case DASM_MOIRA_MIT:
         case DASM_VDA68K_MIT:
             
@@ -859,6 +958,7 @@ StrWriter::operator<<(Pd<M,S> wrapper)
             *this << "-(" << An{ea.reg} << ")";
             break;
 
+        case DASM_GNU_MIT:
         case DASM_MOIRA_MIT:
         case DASM_VDA68K_MIT:
             
@@ -888,6 +988,7 @@ StrWriter::operator<<(Di<M,S> wrapper)
             *this << Int{(i16)ea.ext1} << "(" << An{ea.reg} << ")";
             break;
 
+        case DASM_GNU_MIT:
         case DASM_MOIRA_MIT:
         case DASM_VDA68K_MIT:
             
@@ -919,10 +1020,15 @@ StrWriter::operator<<(Ix<M,S> wrapper)
             *this << IxMot<M,S>{wrapper.ea};
             break;
 
+        case DASM_GNU_MIT:
         case DASM_MOIRA_MIT:
+
+            *this << IxMit<M,S>{wrapper.ea};
+            break;
+
         case DASM_VDA68K_MIT:
             
-            *this << IxMit<M,S>{wrapper.ea};
+            *this << IxMitOld<M,S>{wrapper.ea};
             break;
     }
     
@@ -1087,7 +1193,7 @@ StrWriter::operator<<(IxGnu<M,S> wrapper)
             *this << Sep{};
 
             if constexpr (M == 10) {
-                *this << (bs ? "zpc" : "pc") << Sep{};
+                bs ? *this << Zpc{} : *this << Pc{}; *this << Sep{};
             } else {
                 if (!bs) *this << An{ea.reg} << Sep{};
             }
@@ -1111,7 +1217,7 @@ StrWriter::operator<<(IxGnu<M,S> wrapper)
             *this << Sep{};
 
             if constexpr (M == 10) {
-                *this << (bs ? "zpc" : "pc") << Sep{};
+                bs ? *this << Zpc{} : *this << Pc{}; *this << Sep{};
             } else {
                 if (!bs) *this << An{ea.reg} << Sep{};
             }
@@ -1139,7 +1245,7 @@ StrWriter::operator<<(IxGnu<M,S> wrapper)
             *this << Sep{};
 
             if constexpr (M == 10) {
-                *this << (bs ? "zpc" : "pc") << Sep{};
+                bs ? *this << Zpc{} : *this << Pc{}; *this << Sep{};
             } else {
                 if (!bs) *this << An{ea.reg} << Sep{};
             }
@@ -1161,6 +1267,128 @@ StrWriter::operator<<(IxGnu<M,S> wrapper)
 
     return *this;
 }
+
+template <Mode M, Size S> StrWriter&
+StrWriter::operator<<(IxMit<M,S> wrapper)
+{
+    assert(M == 6 || M == 10);
+
+    auto &ea = wrapper.ea;
+
+    u16 full = _______x________ (ea.ext1);
+
+    if (!full) {
+
+        //   15-12   11   10   09   08   07   06   05   04   03   02   01   00
+        // --------------------------------------------------------------------
+        // | REG   | LW | SCALE   | 0  | DISPLACEMENT                         |
+        // --------------------------------------------------------------------
+
+        u16 reg   = xxxx____________ (ea.ext1);
+        u16 lw    = ____x___________ (ea.ext1);
+        u16 scale = _____xx_________ (ea.ext1);
+        u16 disp  = ________xxxxxxxx (ea.ext1);
+
+        M == 10 ? *this << Pc{} : *this << An{ea.reg};
+        *this << "@(" << Int{(i8)disp} << "," << Rn{reg};
+        *this << (lw ? ":l" : ":w") << Scale{scale} << ")";
+
+    } else {
+
+        //   15-12   11   10   09   08   07   06   05   04   03   02   01   00
+        // --------------------------------------------------------------------
+        // | REG   | LW | SCALE   | 1  | BS | IS | BD SIZE  | 0  | IIS        |
+        // --------------------------------------------------------------------
+
+        u16  reg   = xxxx____________ (ea.ext1);
+        u16  lw    = ____x___________ (ea.ext1);
+        u16  scale = _____xx_________ (ea.ext1);
+        u16  bs    = ________x_______ (ea.ext1);
+        u16  is    = _________x______ (ea.ext1);
+        u16  size  = __________xx____ (ea.ext1);
+        u16  iis   = _____________xxx (ea.ext1);
+        u32  base  = ea.ext2;
+        u32  outer = ea.ext3;
+
+        if (iis == 0) {
+
+            // printf("Memory Indirect Unindexed\n");
+
+            // Memory Indirect Unindexed
+            if constexpr (M == 10) {
+                bs ? *this << Zpc{} : *this << Pc{};
+            } else {
+                if (!bs) *this << An{ea.reg};
+            }
+
+            *this << "@(";
+
+            size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
+
+            if (!is) {
+
+                *this << Sep{} << Rn{reg};
+                *this << (lw ? ":l" : ":w");
+                *this << Scale{scale};
+            }
+
+            *this << ")";
+            // ptr[-1] == ',' ? ptr[-1] = ')' : *ptr++ = ')';
+
+        } else if (iis & 0b100) {
+
+            // printf("Memory Indirect Postindexed\n");
+
+            // Memory Indirect Postindexed
+            if constexpr (M == 10) {
+                bs ? *this << Zpc{} : *this << Pc{};
+            } else {
+                if (!bs) *this << An{ea.reg};
+            }
+
+            *this << "@(";
+            size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
+            *this << ")@(" << Int(outer);
+
+            if (!is) {
+
+                *this << Sep{} << Rn{reg};
+                *this << (lw ? ":l" : ":w");
+                *this << Scale{scale};
+            }
+
+            *this << ")";
+
+        } else {
+
+            // printf("Memory Indirect Preindexed\n");
+
+            // Memory Indirect Preindexed
+            if constexpr (M == 10) {
+                bs ? *this << Zpc{} : *this << Pc{};
+            } else {
+                if (!bs) *this << An{ea.reg};
+            }
+
+            *this << "@(";
+
+            size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
+
+            if (!is) {
+
+                *this << Sep{} << Rn{reg};
+                *this << (lw ? ":l" : ":w");
+                *this << Scale{scale};
+            }
+
+            *this << ")@(" << Int(outer) << ")";
+        }
+    }
+
+    return *this;
+}
+
+
 
 template <Mode M, Size S> StrWriter&
 StrWriter::operator<<(IxMot<M,S> wrapper)
@@ -1192,7 +1420,7 @@ StrWriter::operator<<(IxMot<M,S> wrapper)
             *this << Int{(i8)disp} << ",";
         }
         */
-        M == 10 ? *this << "pc" : *this << An{ea.reg};
+        M == 10 ? *this << Pc{} : *this << An{ea.reg};
         *this << "," << Rn{reg};
         // lw ? *this << Sz<Long>{} : *this << Sz<Word>{};
         *this << (lw ? ".l" : ".w");
@@ -1271,7 +1499,7 @@ StrWriter::operator<<(IxMot<M,S> wrapper)
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(IxMit<M,S> wrapper)
+StrWriter::operator<<(IxMitOld<M,S> wrapper)
 {
     assert(M == 6 || M == 10);
     
@@ -1280,7 +1508,7 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
     u16 full = _______x________ (ea.ext1);
     
     if (!full) {
-        
+
         //   15-12   11   10   09   08   07   06   05   04   03   02   01   00
         // --------------------------------------------------------------------
         // | REG   | LW | SCALE   | 0  | DISPLACEMENT                         |
@@ -1291,12 +1519,12 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
         u16 scale = _____xx_________ (ea.ext1);
         u16 disp  = ________xxxxxxxx (ea.ext1);
         
-        M == 10 ? *this << "pc" : *this << An{ea.reg};
+        M == 10 ? *this << Pc{} : *this << An{ea.reg};
         *this << "@(" << Int{(i8)disp} << "," << Rn{reg};
         *this << (lw ? ":l" : ":w") << Scale{scale} << ")";
         
     } else {
-        
+
         //   15-12   11   10   09   08   07   06   05   04   03   02   01   00
         // --------------------------------------------------------------------
         // | REG   | LW | SCALE   | 1  | BS | IS | BD SIZE  | 0  | IIS        |
@@ -1321,13 +1549,13 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
         if (M == MODE_IX) {
             if (!bd || !bs) { *this << An{ea.reg}; }
         } else {
-            if (bs) { *this << "zpc"; } else { *this << "pc"; }
+            bs ? *this << Zpc{} : *this << Pc{};
         }
         
         *this << "@(";
         
         if (size > 1) {
-            
+
             size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
             comma = true;
             
@@ -1343,7 +1571,7 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
         if (postindex) {
             
             if (od != 1) {
-                
+
                 *this << Int(outer);
                 comma = true;
             }
@@ -1358,7 +1586,7 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
         if (preindex) {
             
             if (od != 1) {
-                
+
                 *this << ")@(";
                 *this << Int(outer);
             }
@@ -1385,6 +1613,7 @@ StrWriter::operator<<(Aw<M,S> wrapper)
             break;
 
         case DASM_GNU:
+        case DASM_GNU_MIT:
         case DASM_VDA68K_MIT:
             
             *this << UInt(ea.ext1);
@@ -1410,6 +1639,7 @@ StrWriter::operator<<(Al<M,S> wrapper)
             break;
             
         case DASM_GNU:
+        case DASM_GNU_MIT:
         case DASM_VDA68K_MIT:
             
             *this << UInt(ea.ext1);
@@ -1439,19 +1669,15 @@ StrWriter::operator<<(DiPc<M,S> wrapper)
         case DASM_VDA68K_MOT:
             
             resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
-            *this << UInt(resolved) << "(pc)";
+            *this << UInt(resolved) << "(" << Pc{} << ")";
             break;
 
         case DASM_MOIRA_MIT:
-
-            resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
-            *this << "PC@(" << UInt(resolved) << ")";
-            break;
-
+        case DASM_GNU_MIT:
         case DASM_VDA68K_MIT:
             
             resolved = U32_ADD(U32_ADD(ea.pc, (i16)ea.ext1), 2);
-            *this << "pc@(" << UInt(resolved) << ")";
+            *this << Pc{} << "@(" << UInt(resolved) << ")";
             break;
     }
     
@@ -1470,6 +1696,7 @@ StrWriter::operator<<(Im<M,S> wrapper)
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             *this << Ims<S>(ea.ext1);
             break;
@@ -1498,6 +1725,7 @@ StrWriter::operator<<(Ip<M,S> wrapper)
             *this << "-(" << An{ea.reg} << ")";
             break;
 
+        case DASM_GNU_MIT:
         case DASM_MOIRA_MIT:
         case DASM_VDA68K_MIT:
             
@@ -1524,6 +1752,7 @@ StrWriter::operator<<(Scale s)
             *ptr++ = '0' + (char)(1 << s.raw);
             break;
 
+        case DASM_GNU_MIT:
         case DASM_MOIRA_MIT:
         case DASM_VDA68K_MIT:
             
@@ -1577,6 +1806,7 @@ StrWriter::operator<<(Fp fp)
         case DASM_VDA68K_MOT:
         case DASM_VDA68K_MIT:
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             *ptr++ = 'f';
             *ptr++ = 'p';
@@ -1612,12 +1842,17 @@ StrWriter::operator<<(Ffmt ffmt)
 StrWriter&
 StrWriter::operator<<(Tab tab)
 {
-    // Write at least a single space
-    *ptr++ = ' ';
+    switch (style) {
 
-    if (style != DASM_GNU) {
+        case DASM_GNU:
+        case DASM_GNU_MIT:
 
-        while (ptr < base + tab.raw) *ptr++ = ' ';
+            *ptr++ = ' ';
+            break;
+
+        default:
+
+            do { *ptr++ = ' '; } while (ptr < base + tab.raw);
     }
 
     return *this;
@@ -1626,9 +1861,8 @@ StrWriter::operator<<(Tab tab)
 template <Instr I, Mode M, Size S> StrWriter&
 StrWriter::operator<<(const Av<I,M,S> &av)
 {
-    if (style == DASM_VDA68K_MOT ||
-        style == DASM_VDA68K_MIT ||
-        style == DASM_GNU) { return *this; }
+    if (style == DASM_VDA68K_MOT || style == DASM_VDA68K_MIT ||
+        style == DASM_GNU || style == DASM_GNU_MIT) { return *this; }
     
     switch (I) {
             

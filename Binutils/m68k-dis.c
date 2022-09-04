@@ -137,12 +137,14 @@ void floatformat_to_double(const struct floatformat* fmt, const void* from, doub
 }
 
 
-#define MOTOROLA 1
-#define TARGET_AMIGA 1
+// #define MOTOROLA 1
+// #define TARGET_AMIGA 1
 
 #ifdef MOTOROLA
 /* print as signed decimal. */
 #undef sprintf_vma
+#define sprintf_vma(b,n) sprintf(b,"%d",(int)n)
+#else
 #define sprintf_vma(b,n) sprintf(b,"%d",(int)n)
 #endif
 
@@ -679,7 +681,8 @@ print_base (int regno, int disp, disassemble_info *info) // DIRK: Made signed
       (*info->fprintf_func) (info->stream, ",pc");
 #else
       (*info->fprintf_func) (info->stream, "%%pc@(");
-      (*info->print_address_func) (disp, info);
+      // (*info->print_address_func) (disp, info); // DIRK: Commented out
+      (*info->fprintf_func) (info->stream, "%d", disp); // DIRK: Added
 #endif
     }
   else

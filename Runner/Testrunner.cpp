@@ -485,7 +485,7 @@ void runMoira(Setup &s, Result &r)
         r.elapsed[1] = clock() - elapsed;
 
         // Disassemble the instruction in GNU format (binutils)
-        moiracpu->setDasmStyle(DASM_GNU);
+        moiracpu->setDasmStyle(DASM_GNU_MIT);
         moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 10, .plainZero = true });
         r.dasmCntBinutils = moiracpu->disassemble(r.oldpc, r.dasmBinutils);
 
