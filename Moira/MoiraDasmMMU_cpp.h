@@ -85,7 +85,7 @@ Moira::dasmPFlush(StrWriter &str, u32 &addr, u16 op)
 
             str << Ins<I>{} << tab;
             str << Fc{fc} << Sep{} << Imu{mask};
-            if (mode == 6) str << Sep{} << Op<M>(reg, addr);
+            if (mode == 0b110) str << Sep{} << Op<M>(reg, addr);
     }
 }
 
@@ -123,10 +123,10 @@ Moira::dasmPFlush40(StrWriter &str, u32 &addr, u16 op)
 
     switch (mode) {
 
-        case 0: str << "pflushn" << tab << Op<MODE_AI>(reg, addr); break;
-        case 1: str << "pflush" << tab << Op<MODE_AI>(reg, addr); break;
-        case 2: str << "pflushan"; break;
-        case 3: str << "pflusha"; break;
+        case 0: str << Ins<PFLUSHN>{} << tab << Op<MODE_AI>(reg, addr); break;
+        case 1: str << Ins<PFLUSH>{} << tab << Op<MODE_AI>(reg, addr); break;
+        case 2: str << Ins<PFLUSHAN>{}; break;
+        case 3: str << Ins<PFLUSHA>{}; break;
     }
 }
 
@@ -137,16 +137,25 @@ Moira::dasmPLoad(StrWriter &str, u32 &addr, u16 op)
     auto ext = dasmRead<Word>(addr);
     auto ea  = Op <M,S> ( _____________xxx(op), addr );
 
-    // Catch illegal extension words
-    if ((str.style == DASM_GNU || str.style == DASM_GNU_MIT) && !isValidExt(I, M, op, ext)) {
+    switch (style) {
 
-        addr = old;
-        dasmIllegal<I, M, S>(str, addr, op);
-        return;
+        case DASM_GNU:
+        case DASM_GNU_MIT:
+
+            // Catch illegal extension words
+            if (!isValidExt(I, M, op, ext)) {
+
+                addr = old;
+                dasmIllegal<I, M, S>(str, addr, op);
+                return;
+            }
+            [[fallthrough]];
+
+        default:
+
+            str << Ins<I>{} << ((ext & 0x200) ? "r" : "w") << tab;
+            str << Fc(ext & 0b11111) << Sep{} << ea;
     }
-
-    str << "pload" << ((ext & 0x200) ? "r" : "w") << tab;
-    str << Fc(ext & 0b11111) << Sep{} << ea;
 }
 
 template <Instr I, Mode M, Size S> void

@@ -51,7 +51,7 @@ static const char *mnemonics[]
     "cinv",     "cpush",    "move16",
 
     // MMU
-    "pflush",   "pflusha",  "pload",    "pmove",    "ptest",
+    "pflush",   "pflusha",  "pflushan", "pflushn",  "pload",    "pmove",    "ptest",
 
     // FPU
     "fabs",     "fadd",     "fb",       "fcmp",     "fdb",      "fdiv",

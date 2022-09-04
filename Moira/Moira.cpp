@@ -502,12 +502,13 @@ Moira::availabilityMask(Instr I)
 
             return AV_68040;
 
-        case PFLUSH: case PFLUSHA: case PLOAD: case PMOVE: case PTEST:
+        case PFLUSH: case PFLUSHA: case PFLUSHAN: case PFLUSHN: case PLOAD:
+        case PMOVE: case PTEST:
 
             return AV_MMU;
 
         case FABS: case FADD: case FBcc: case FCMP: case FDBcc: case FDIV:
-            case FMOVE: case FMOVEM: case FMUL: case FNEG: case FNOP:
+        case FMOVE: case FMOVEM: case FMUL: case FNEG: case FNOP:
         case FRESTORE: case FSAVE: case FScc: case FSQRT: case FSUB:
         case FTRAPcc: case FTST:
 
@@ -722,8 +723,7 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
 
                     if ((ext & 0x300) == 0) {
                         if (preg() != 0) {
-                            if (M == MODE_PI || M == MODE_PD) return false;
-                            if (M == MODE_IM || M == MODE_IP) return false;
+                            if (M == MODE_PI || M == MODE_PD || M == MODE_IM || M == MODE_IP) return false;
                         }
                     }
 
