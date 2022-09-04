@@ -674,21 +674,17 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
         case CAS2:      return (ext & 0x0E380E38) == 0;
         case CHK2:      return (ext & 0x07FF) == 0;
         case CMP2:      return (ext & 0x0FFF) == 0;
-        // case MULL:      return (ext & 0x83F8) == 0;
+        case MULL:      return (ext & 0x83F8) == 0;
         case DIVL:      return (ext & 0x83F8) == 0;
+
+        case PFLUSHA:
+
+            return (op & 0xFF) == 0 && mask() == 0 && fc() == 0;
 
         case PFLUSH:
 
-            // Check register
-            if (mode() == 0b001 && (op & 0x7) != 0) return false;
-
             // Check mode
             if (!validMode()) return false;
-
-            // When mode is 001, mask and fc must be 0
-            if (mode() == 0b001 && mask() != 0) return false;
-            if (mode() == 0b001 && fc() != 0) return false;
-            if (mode() == 0b001 && M != 0) return false;
 
             // Check FC
             if ((fc() & 0b11000) == 0 && (fc() & 0b110) != 0) return false;

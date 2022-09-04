@@ -20,6 +20,13 @@ Moira::dasmPGen(StrWriter &str, u32 &addr, u16 op)
         return;
     }
 
+    // PFLUSHA: 0010 010x xxxx xxxx
+    if ((ext & 0xFE00) == 0x2400) {
+
+        dasmPFlusha<PFLUSHA, M, Long>(str, addr, op);
+        return;
+    }
+
     // PFLUSH: 001x xx0x xxxx xxxx
     if ((ext & 0xE200) == 0x2000) {
 
@@ -54,29 +61,58 @@ Moira::dasmPFlush(StrWriter &str, u32 &addr, u16 op)
     auto mask  = _______xxxx_____(ext);
     auto fc    = ___________xxxxx(ext);
 
-    // Catch illegal extension words
-    if ((str.style == DASM_GNU || str.style == DASM_GNU_MIT) && !isValidExt(I, M, op, ext)) {
-
-        addr = old;
-        dasmIllegal<I, M, S>(str, addr, op);
-        return;
-    }
-
     if (str.style == DASM_MOIRA_MOT || str.style == DASM_MOIRA_MIT) {
 
         // Only the MC68851 has four mask bits. The 68030 only has three.
         mask &= 0b111;
     }
 
-    if (mode == 1) {
+    switch (style) {
 
-        str << "pflusha";
-        return;
+        case DASM_GNU:
+        case DASM_GNU_MIT:
+
+            // Catch illegal extension words
+            if (!isValidExt(I, M, op, ext)) {
+
+                addr = old;
+                dasmIllegal<I, M, S>(str, addr, op);
+                return;
+            }
+            [[fallthrough]];
+
+        default:
+
+            str << Ins<I>{} << tab;
+            str << Fc{fc} << Sep{} << Imu{mask};
+            if (mode == 6) str << Sep{} << Op<M>(reg, addr);
     }
+}
 
-    str << Ins<I>{} << tab;
-    str << Fc{fc} << Sep{} << Imu{mask};
-    if (mode == 6) str << Sep{} << Op<M>(reg, addr);
+template <Instr I, Mode M, Size S> void
+Moira::dasmPFlusha(StrWriter &str, u32 &addr, u16 op)
+{
+    auto old   = addr;
+    auto ext   = dasmRead<Word>(addr);
+
+    switch (style) {
+
+        case DASM_GNU:
+        case DASM_GNU_MIT:
+
+            // Catch illegal extension words
+            if (!isValidExt(I, M, op, ext)) {
+
+                addr = old;
+                dasmIllegal<I, M, S>(str, addr, op);
+                return;
+            }
+            [[fallthrough]];
+
+        default:
+
+            str << Ins<I>{};
+    }
 }
 
 template <Instr I, Mode M, Size S> void

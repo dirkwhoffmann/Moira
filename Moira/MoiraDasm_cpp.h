@@ -1407,15 +1407,15 @@ Moira::dasmMull(StrWriter &str, u32 &addr, u16 op)
     auto dl  = Dn       ( _xxx____________(ext)      );
     auto dh  = Dn       ( _____________xxx(ext)      );
 
-    auto fill = str.style == DASM_GNU ? "," : ":";
+    auto fill = str.style == DASM_GNU || str.style == DASM_GNU_MIT ? "," : ":";
 
-    // Catch illegal extension words
     switch (style) {
 
         case DASM_GNU:
         case DASM_GNU_MIT:
 
-            if (ext & 0x83F8) {
+            // Catch illegal extension words
+            if (!isValidExt(I, M, op, ext)) {
 
                 addr = old;
                 dasmIllegal<I, M, S>(str, addr, op);
@@ -1461,39 +1461,41 @@ Moira::dasmDivl(StrWriter &str, u32 &addr, u16 op)
 
     auto fill = str.style == DASM_GNU || str.style == DASM_GNU_MIT ? "," : ":";
 
-    // Catch illegal extension words
-    if ((str.style == DASM_GNU || str.style == DASM_GNU_MIT) && !isValidExt(I, M, op, ext)) {
+    switch (style) {
 
-        addr = old;
-        dasmIllegal<I, M, S>(str, addr, op);
-        return;
-    }
+        case DASM_GNU:
+        case DASM_GNU_MIT:
 
-    (ext & 1 << 11) ? str << Ins<DIVS>{} : str << Ins<DIVU>{};
-    
-    if (ext & 1 << 10) {        // DIVS.L <ea>,Dr:Dq    (64-bit dividend)
+            // Catch illegal extension words
+            if (!isValidExt(I, M, op, ext)) {
 
-        str << Sz<S>{} << tab << src << Sep{} << dh << fill << dl;
+                addr = old;
+                dasmIllegal<I, M, S>(str, addr, op);
+                return;
+            }
+            [[fallthrough]];
 
-    } else {                    // DIVSL.L <ea>,Dr:Dq   (32-bit dividend)
-        
-        switch (str.style) {
+        default:
 
-            case DASM_MUSASHI:
+            (ext & 1 << 11) ? str << Ins<DIVS>{} : str << Ins<DIVU>{};
 
-                if (dl.raw == dh.raw) {
+            if (ext & 1 << 10) {
 
-                    str << Sz<S>{} << tab << src << Sep{} << dl;
-                    break;
+                // DIVS.L <ea>,Dr:Dq    (64-bit dividend)
+                str << Sz<S>{} << tab << src << Sep{} << dh << fill << dl;
+
+            } else {
+
+                // DIVSL.L <ea>,Dr:Dq   (32-bit dividend)
+                if (dl.raw == dh.raw && str.style == DASM_MUSASHI) {
+                    str << Sz<S>{} << tab << src << Sep{} << dh;
+                } else {
+                    str << "l" << Sz<S>{} << tab << src << Sep{} << dh << fill << dl;
+
                 }
-                [[fallthrough]];
-
-            default:
-
-                str << "l" << Sz<S>{} << tab << src << Sep{} << dh << fill << dl;
-        }
+            }
+            str << Av<I, M, S>{};
     }
-    str << Av<I, M, S>{};
 }
 
 template <Instr I, Mode M, Size S> void

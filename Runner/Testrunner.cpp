@@ -16,7 +16,7 @@ Randomizer randomizer;
 u8 musashiMem[0x10000];
 u8 moiraMem[0x10000];
 u32 musashiFC = 0;
-moira::Model cpuModel = M68000;
+moira::Model cpuModel = M68020;
 
 // Binutils
 char* binutilsBuffer = NULL;
