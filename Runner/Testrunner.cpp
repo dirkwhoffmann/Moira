@@ -9,7 +9,6 @@
 
 #include "config.h"
 #include "Testrunner.h"
-#include "m68k_disasm.h"
 
 TestCPU *moiracpu;
 Sandbox sandbox;
@@ -25,15 +24,6 @@ size_t binutilsBufferSize = 0;
 FILE* binutilsStream = open_memstream(&binutilsBuffer, &binutilsBufferSize);
 meminfo mi;
 disassemble_info di;
-
-// M68k disassembler
-/*
-struct vda68k::DisasmPara_68k dp;
-char opcode[16];
-char operands[128];
-char iwordbuf[32];
-char tmpbuf[8];
-*/
 
 void selectModel(moira::Model model)
 {

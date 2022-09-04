@@ -21,7 +21,6 @@
 		50C0123A28BBAD9B001EFB37 /* m68k-dis.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123628BBAD9B001EFB37 /* m68k-dis.c */; settings = {COMPILER_FLAGS = "-w"; }; };
 		50C0123B28BBAD9B001EFB37 /* m68k-opc.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123728BBAD9B001EFB37 /* m68k-opc.c */; settings = {COMPILER_FLAGS = "-w"; }; };
 		50CECEC723A924B000E07C65 /* Sandbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50CECEC523A924B000E07C65 /* Sandbox.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
-		50EC62EB289D8D9500398CBD /* m68k_disasm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50EC62EA289D8D9500398CBD /* m68k_disasm.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -94,9 +93,6 @@
 		50C0124028BBAE80001EFB37 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50CECEC523A924B000E07C65 /* Sandbox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Sandbox.cpp; sourceTree = "<group>"; };
 		50CECEC623A924B000E07C65 /* Sandbox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sandbox.h; sourceTree = "<group>"; };
-		50EC62E9289D8D9500398CBD /* m68k_disasm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68k_disasm.h; sourceTree = "<group>"; };
-		50EC62EA289D8D9500398CBD /* m68k_disasm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = m68k_disasm.cpp; sourceTree = "<group>"; };
-		50EC62ED289D8E1E00398CBD /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50EC62EE289DB14500398CBD /* MoiraMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraMacros.h; sourceTree = "<group>"; };
 		50F549DE288E817600D5D559 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F80AA723C9E4EC00F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -178,7 +174,6 @@
 				50804E8C2386A72C004D3EC2 /* main.cpp */,
 				50C0123D28BBADCF001EFB37 /* Binutils */,
 				5054686328A6642900028727 /* Runner */,
-				50EC62EC289D8DEA00398CBD /* M68k */,
 				5028B100288D9EA600047C20 /* Musashi */,
 				50804E082386A4CE004D3EC2 /* Moira */,
 				50804E072386A4CE004D3EC2 /* Products */,
@@ -236,16 +231,6 @@
 				50C0123E28BBADEA001EFB37 /* m68k-main.cpp */,
 			);
 			path = Binutils;
-			sourceTree = "<group>";
-		};
-		50EC62EC289D8DEA00398CBD /* M68k */ = {
-			isa = PBXGroup;
-			children = (
-				50EC62ED289D8E1E00398CBD /* CMakeLists.txt */,
-				50EC62EA289D8D9500398CBD /* m68k_disasm.cpp */,
-				50EC62E9289D8D9500398CBD /* m68k_disasm.h */,
-			);
-			path = M68k;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -307,7 +292,6 @@
 			files = (
 				505580EC23AFA14D0009F77F /* musashi.cpp in Sources */,
 				5028B11C288D9EDC00047C20 /* m68kcpu.c in Sources */,
-				50EC62EB289D8D9500398CBD /* m68k_disasm.cpp in Sources */,
 				50C0123B28BBAD9B001EFB37 /* m68k-opc.c in Sources */,
 				5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */,
 				5028B10E288D9ECD00047C20 /* m68kops.c in Sources */,

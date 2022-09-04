@@ -12,7 +12,6 @@ set(CMAKE_CXX_EXTENSIONS False)
 add_subdirectory(Moira)
 add_subdirectory(Binutils)
 add_subdirectory(Musashi)
-add_subdirectory(M68k)
 
 # Add the executable
 add_executable(testRunner
@@ -26,7 +25,6 @@ Runner/Randomizer.cpp
 target_link_libraries(testRunner binutils)
 target_link_libraries(testRunner moira)
 target_link_libraries(testRunner musashi)
-target_link_libraries(testRunner m68k)
 
 # Add compile options
 target_compile_options(testRunner PUBLIC -Wno-unused-parameter)
@@ -39,7 +37,6 @@ target_include_directories(testRunner PUBLIC
 
 ${CMAKE_SOURCE_DIR}/.
 ${CMAKE_SOURCE_DIR}/Binutils
-${CMAKE_SOURCE_DIR}/M68k
 ${CMAKE_SOURCE_DIR}/Musashi
 ${CMAKE_SOURCE_DIR}/Moira
 ${CMAKE_SOURCE_DIR}/Runner
