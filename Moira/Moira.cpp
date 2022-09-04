@@ -652,13 +652,7 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
     auto reg   = [ext]() { return ext >>  5 & 0b111;   };
     auto fc    = [ext]() { return ext       & 0b11111; };
 
-    auto validMode = [&]() {    // 001, 100, 110
-        return mode() == 0b001 || mode() == 0b100 || mode() == 0b110;
-    };
-
-    auto validFC = [&]() {      // 10XXX, 01DDD, 00000, 00001
-        return fc() <= 1 || (fc() >= 8); // Binutils checks M68851
-    };
+    auto validFC = [&]() { return fc() <= 1 || (fc() >= 8); }; // Binutils checks M68851
 
     switch (I) {
 
@@ -684,10 +678,7 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
         case PFLUSH:
 
             // Check mode
-            if (!validMode()) return false;
-
-            // Check FC
-            if ((fc() & 0b11000) == 0 && (fc() & 0b110) != 0) return false;
+            if (mode() != 0b100 && mode() != 0b110) return false;
 
             // Check EA mode
             if (mode() == 0b110) {
@@ -695,17 +686,23 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
                     return false;
                 }
             }
-
-            return true;
+            return validFC();
 
         case PLOAD:
 
             // Check EA mode
-            if (M != MODE_AI && M != MODE_DI && M != MODE_IX && M != MODE_AW && M != MODE_AL) return false;
+            if (M != MODE_AI && M != MODE_DI && M != MODE_IX && M != MODE_AW && M != MODE_AL) {
+                return false;
+            }
 
             return validFC();
 
         case PMOVE:
+
+            if ((ext & 0x200)) {
+                if (M == MODE_DIPC || M == MODE_IXPC || M == MODE_IM) return false;
+            }
+            if (M == MODE_IP) return false;
 
             switch (ext >> 13 & 0b111) {
 
@@ -716,12 +713,6 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
 
                     // If memory is written, flushing is mandatory
                     if ((ext & 0x300) == 0x300) return false;
-
-                    if ((ext & 0x200)) {
-                        if (M == MODE_DIPC || M == MODE_IXPC || M == MODE_IM) return false;
-                    }
-                    if (M == MODE_IP) return false;
-                    
                     return true;
 
                 case 0b010:
@@ -742,21 +733,9 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
                             if (M == MODE_DN || M == MODE_AN) return false;
                         }
                     }
-
-                    if ((ext & 0x200)) {
-                        if (M == MODE_DIPC || M == MODE_IXPC || M == MODE_IM) return false;
-                    }
-                    if (M == MODE_IP) return false;
-
                     return true;
 
                 case 0b011:
-
-                    // Check EA modes
-                    if (ext & 0x200) {
-                        if (M == MODE_DIPC || M == MODE_IXPC || M == MODE_IM) return false;
-                    }
-                    if (M == MODE_IP) return false;
 
                     return true;
 
