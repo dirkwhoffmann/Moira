@@ -879,9 +879,7 @@ StrWriter::operator<<(IxMot<M,S> wrapper)
 
         *this << "(" << Int{(i8)disp} << ",";
         M == 10 ? *this << Pc{} : *this << An{ea.reg};
-        *this << "," << Rn{reg};
-        *this << (lw ? ".l" : ".w");
-        *this << Scale{scale} << ")";
+        *this << "," << Rn{reg} << (lw ? ".l" : ".w") << Scale{scale} << ")";
 
     } else {
 
@@ -920,35 +918,27 @@ StrWriter::operator<<(IxMot<M,S> wrapper)
         if (iis == 0) {
 
             // Memory Indirect Unindexed
-            *this << '(';
-            baseDisplacement();
-            baseRegister();
-            indexRegister();
-            *this << ')';
+            *this << "(";
+            baseDisplacement(); baseRegister(); indexRegister();
+            *this << ")";
 
         } else if (iis & 0b100) {
 
             // Memory Indirect Postindexed
-            *this << '(';
-            *this << '[';
-            baseDisplacement();
-            baseRegister();
-            *this << ']';
-            indexRegister();
-            outerDisplacement();
-            *this << ')';
+            *this << "([";
+            baseDisplacement(); baseRegister();
+            *this << "]";
+            indexRegister(); outerDisplacement();
+            *this << ")";
 
         } else {
 
             // Memory Indirect Preindexed
-            *this << '(';
-            *this << '[';
-            baseDisplacement();
-            baseRegister();
-            indexRegister();
-            *this << ']';
+            *this << "([";
+            baseDisplacement(); baseRegister(); indexRegister();
+            *this << "]";
             outerDisplacement();
-            *this << ')';
+            *this << ")";
         }
     }
 
@@ -977,8 +967,8 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
         u16 disp  = ________xxxxxxxx (ea.ext1);
 
         M == 10 ? *this << Pc{} : *this << An{ea.reg};
-        *this << "@(" << Int{(i8)disp} << "," << Rn{reg};
-        *this << (lw ? ":l" : ":w") << Scale{scale} << ")";
+        *this << "@(" << Int{(i8)disp};
+        *this << "," << Rn{reg} << (lw ? ":l" : ":w") << Scale{scale} << ")";
 
     } else {
 
@@ -997,78 +987,50 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
         u32  base  = ea.ext2;
         u32  outer = ea.ext3;
 
-        if (iis == 0) {
-
-            // printf("Memory Indirect Unindexed\n");
-
-            // Memory Indirect Unindexed
+        auto baseDisplacement = [&]() {
+            size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
+        };
+        auto baseRegister = [&]() {
             if constexpr (M == 10) {
                 bs ? *this << Zpc{} : *this << Pc{};
             } else {
                 if (!bs) *this << An{ea.reg};
             }
+        };
+        auto indexRegister = [&]() {
+            if (!is) *this << Sep{} << Rn{reg} << (lw ? ":l" : ":w") << Scale{scale};
+        };
+        auto outerDisplacement = [&]() {
+            *this << Int(outer);
+        };
 
+        if (iis == 0) {
+
+            // Memory Indirect Unindexed
+            baseRegister();
             *this << "@(";
-
-            size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
-
-            if (!is) {
-
-                *this << Sep{} << Rn{reg};
-                *this << (lw ? ":l" : ":w");
-                *this << Scale{scale};
-            }
-
+            baseDisplacement(); indexRegister();
             *this << ")";
-            // ptr[-1] == ',' ? ptr[-1] = ')' : *ptr++ = ')';
 
         } else if (iis & 0b100) {
 
-            // printf("Memory Indirect Postindexed\n");
-
             // Memory Indirect Postindexed
-            if constexpr (M == 10) {
-                bs ? *this << Zpc{} : *this << Pc{};
-            } else {
-                if (!bs) *this << An{ea.reg};
-            }
-
+            baseRegister();
             *this << "@(";
-            size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
-            *this << ")@(" << Int(outer);
-
-            if (!is) {
-
-                *this << Sep{} << Rn{reg};
-                *this << (lw ? ":l" : ":w");
-                *this << Scale{scale};
-            }
-
+            baseDisplacement();
+            *this << ")@(";
+            outerDisplacement(); indexRegister();
             *this << ")";
 
         } else {
 
-            // printf("Memory Indirect Preindexed\n");
-
             // Memory Indirect Preindexed
-            if constexpr (M == 10) {
-                bs ? *this << Zpc{} : *this << Pc{};
-            } else {
-                if (!bs) *this << An{ea.reg};
-            }
-
+            baseRegister();
             *this << "@(";
-
-            size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
-
-            if (!is) {
-
-                *this << Sep{} << Rn{reg};
-                *this << (lw ? ":l" : ":w");
-                *this << Scale{scale};
-            }
-
-            *this << ")@(" << Int(outer) << ")";
+            baseDisplacement(); indexRegister();
+            *this << ")@(";
+            outerDisplacement();
+            *this << ")";
         }
     }
 
