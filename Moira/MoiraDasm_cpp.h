@@ -470,30 +470,7 @@ Moira::dasmBkpt(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmBsr(StrWriter &str, u32 &addr, u16 op)
 {
-    // TODO: Redirect to dasmBcc<I,M,S>(str, addr, op);
-    
-    u32 dst = addr;
-    U32_INC(dst, 2);
-    U32_INC(dst, S == Byte ? (i8)op : SEXT<S>(dasmRead<S>(addr)));
-    
-    switch (style) {
-            
-        case DASM_MUSASHI:
-            
-            if (S == Byte && (u8)op == 0xFF) {
-                
-                dasmIllegal<I, M, S>(str, addr, op);
-                break;
-            }
-            
-            str << Ins<I>{} << tab << UInt(dst) << Av<I, M, S>{};
-            break;
-
-        default:
-            
-            str << Ins<I>{} << Szb<S>{} << tab << UInt(dst) << Av<I, M, S>{};
-            break;
-    }
+    dasmBcc<I, M, S>(str, addr, op);
 }
 
 template <Instr I, Mode M, Size S> void

@@ -275,13 +275,18 @@ StrWriter::operator<<(Szb<S>)
 {
     switch (style) {
 
+        case DASM_MOIRA_MOT:
+
+            *ptr++ = '.';
+            [[fallthrough]];
+
         case DASM_MOIRA_MIT:
         case DASM_GNU:
         case DASM_GNU_MIT:
 
-            if constexpr (S == Byte) *this << "s";
-            if constexpr (S == Word) *this << "w";
-            if constexpr (S == Long) *this << "l";
+            if constexpr (S == Byte) *ptr++ = 's';
+            if constexpr (S == Word) *ptr++ = 'w';
+            if constexpr (S == Long) *ptr++ = 'l';
             break;
 
         default:
