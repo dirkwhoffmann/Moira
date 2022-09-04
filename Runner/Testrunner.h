@@ -109,10 +109,6 @@ struct Result {
     int     dasmCntBinutils;
     char    dasmMusashi[128];
     int     dasmCntMusashi;
-    char    dasmMoto[128];
-    int     dasmCntMoto;
-    char    dasmMIT[128];
-    int     dasmCntMIT;
     int     cycles;
     clock_t elapsed[2];
 };
@@ -128,7 +124,6 @@ const u32 pc = 0x1000;
 void selectModel(moira::Model model);
 const char *selectedModel();
 
-void setupM68k();
 void setupBinutils();
 void setupMusashi();
 void setupMoira();
@@ -136,7 +131,6 @@ void setupMoira();
 void setupTestEnvironment(Setup &s, long round);
 void setupTestInstruction(Setup &s, u32 pc, u16 opcode);
 
-void resetM68k(Setup &s);
 void resetMusashi(Setup &s);
 void resetMoira(Setup &s);
 
@@ -155,7 +149,6 @@ void passed();
 void runSingleTest(Setup &s, u16 op);
 void runSingleTest(Setup &s, u16 op, u16 ext);
 
-void runM68k(Setup &s, Result &r);
 void runBinutils(Setup &s, Result &r);
 void runMusashi(Setup &s, Result &r);
 void runMoira(Setup &s, Result &r);

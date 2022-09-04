@@ -27,18 +27,19 @@ meminfo mi;
 disassemble_info di;
 
 // M68k disassembler
+/*
 struct vda68k::DisasmPara_68k dp;
 char opcode[16];
 char operands[128];
 char iwordbuf[32];
 char tmpbuf[8];
+*/
 
 void selectModel(moira::Model model)
 {
     cpuModel = model;
 
     setupMusashi();
-    setupM68k();
     setupBinutils();
     setupMoira();
 }
@@ -60,14 +61,6 @@ const char *selectedModel()
         default:
             return "???";
     }
-}
-
-void setupM68k()
-{
-    memset(&dp,0,sizeof(struct vda68k::DisasmPara_68k));
-    dp.opcode = opcode;
-    dp.operands = operands;
-    dp.radix = 16;
 }
 
 void setupBinutils()
@@ -186,12 +179,6 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
     memcpy(moiraMem, s.mem, sizeof(moiraMem));
 }
 
-void resetM68k(Setup &s)
-{
-    dp.instr = (u16 *)&musashiMem[s.pc];
-    dp.iaddr = (vda68k::m68k_word *)pc;
-}
-
 void resetMusashi(Setup &s)
 {
     m68k_set_reg(M68K_REG_USP, 0);
@@ -250,7 +237,7 @@ void run()
     for (long i = 1; i <= ROUNDS; i++) {
 
         printf("\nRound %ld:\n\n", i);
-        selectModel(M68010);
+        selectModel(M68000);
 
         while (1) {
 
@@ -366,11 +353,7 @@ void runSingleTest(Setup &s, u16 op)
 
     // Prepare
     resetMusashi(s);
-    resetM68k(s);
     resetMoira(s);
-
-    // Run the vda68k disassembler
-    runM68k(s, mur);
 
     // Run the binutils disassembler
     runBinutils(s, mur);
@@ -393,27 +376,6 @@ void runSingleTest(Setup &s, u16 op, u16 ext)
 {
     s.ext1 = ext;
     runSingleTest(s, op);
-}
-
-void runM68k(Setup &s, Result &r)
-{
-    // Run disassembler in Motorola syntax
-    auto n1 = M68k_Disassemble(&dp) - dp.instr;
-    r.dasmCntMoto = 2 * n1;
-    if (strcmp(operands, "") == 0) {
-        sprintf(r.dasmMoto, "%s", opcode);
-    } else {
-        sprintf(r.dasmMoto, "%-7s %s", opcode, operands);
-    }
-
-    // Run disassembler in MIT syntax
-    auto n2 = M68k_Disassemble(&dp, true) - dp.instr;
-    r.dasmCntMIT = 2 * n2;
-    if (strcmp(operands, "") == 0) {
-        sprintf(r.dasmMIT, "%s", opcode);
-    } else {
-        sprintf(r.dasmMIT, "%-7s %s", opcode, operands);
-    }
 }
 
 void runBinutils(Setup &s, Result &r)
@@ -488,16 +450,6 @@ void runMoira(Setup &s, Result &r)
         moiracpu->setDasmStyle(DASM_GNU);
         moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 10, .plainZero = true });
         r.dasmCntBinutils = moiracpu->disassemble(r.oldpc, r.dasmBinutils);
-
-        // Disassemble the instruction in Vda68k Motorola format
-        moiracpu->setDasmStyle(DASM_VDA68K_MOT);
-        moiracpu->setDasmNumberFormat({ .prefix = "0x", .radix = 16, .plainZero = true });
-        r.dasmCntMoto = moiracpu->disassemble(r.oldpc, r.dasmMoto);
-
-        // Disassemble the instruction in Vda68k MIT format
-        moiracpu->setDasmStyle(DASM_VDA68K_MIT);
-        moiracpu->setDasmNumberFormat({ .prefix = "0x", .radix = 16, .plainZero = true });
-        r.dasmCntMIT = moiracpu->disassemble(r.oldpc, r.dasmMIT);
     }
 
     // Run the Moira CPU
@@ -711,17 +663,11 @@ void compare(Setup &s, Result &r1, Result &r2)
     if (error) {
 
         printf("\n");
-        printf("\nInstruction: [%d] %-40s (Musashi)", r1.dasmCntMusashi, r1.dasmMusashi);
-        printf("\n             [%d] %-40s (Moira)\n", r2.dasmCntMusashi, r2.dasmMusashi);
+        printf("\nInstruction:  Musashi: [%d] '%s'", r1.dasmCntMusashi, r1.dasmMusashi);
+        printf("\n                Moira: [%d] '%s'\n", r2.dasmCntMusashi, r2.dasmMusashi);
 
-        printf("\n             [%d] '%s' (Binutils)", r1.dasmCntBinutils, r1.dasmBinutils);
-        printf("\n             [%d] '%s' (Moira)\n", r2.dasmCntBinutils, r2.dasmBinutils);
-
-        printf("\n             [%d] %-40s (Vda68k, Motorola)", r1.dasmCntMoto, r1.dasmMoto);
-        printf("\n             [%d] %-40s (Moira)\n", r2.dasmCntMoto, r2.dasmMoto);
-
-        printf("\n             [%d] %-40s (Vda68k, MIT)", r1.dasmCntMIT, r1.dasmMIT);
-        printf("\n             [%d] %-40s (Moira)\n\n", r2.dasmCntMIT, r2.dasmMIT);
+        printf("\n             Binutils: [%d] '%s'", r1.dasmCntBinutils, r1.dasmBinutils);
+        printf("\n                Moira: [%d] '%s'\n", r2.dasmCntBinutils, r2.dasmBinutils);
 
         printf("Setup:   ");
         dumpSetup(s);
@@ -742,7 +688,6 @@ bool compareDasm(Result &r1, Result &r2)
 
     bool skipMusashi = r1.opcode >= 0xF000;
     bool skipBinutils = false;
-    bool skipM68k = r1.opcode >= 0xF000;
 
     switch (cpuModel) {
 
@@ -777,18 +722,6 @@ bool compareDasm(Result &r1, Result &r2)
             if (r1.dasmCntBinutils != r2.dasmCntBinutils) return false;
         }
         if (strcmp(r1.dasmBinutils, r2.dasmBinutils) != 0) return false;
-    }
-
-    // DEPRECATED
-    if (!skipM68k) {
-
-        // Compare with M68k (Motorola syntax)
-        if (r1.dasmCntMoto != r2.dasmCntMoto) return false;
-        if (strcmp(r1.dasmMoto, r2.dasmMoto) != 0) return false;
-
-        // Compare with M68k (MIT syntax)
-        if (r1.dasmCntMIT != r2.dasmCntMIT) return false;
-        if (strcmp(r1.dasmMIT, r2.dasmMIT) != 0) return false;
     }
 
     return true;
