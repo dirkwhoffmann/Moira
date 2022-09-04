@@ -439,29 +439,12 @@ StrWriter::operator<<(Dn dn)
 {
     switch (style) {
 
-        case DASM_GNU_MIT:
-
-            *ptr++ = '%';
-            [[fallthrough]];
-
-        case DASM_GNU:
-
-            *ptr++ = 'd';
-            *ptr++ = '0' + (char)dn.raw;
-            break;
-
-        case DASM_MOIRA_MIT:
-
-            *ptr++ = '%';
-            [[fallthrough]];
-
-        default:
-
-            *ptr++ = 'D';
-            *ptr++ = '0' + (char)dn.raw;
-            break;
+        case DASM_GNU_MIT:      *ptr++ = '%'; [[fallthrough]];
+        case DASM_GNU:          *ptr++ = 'd'; *ptr++ = '0' + (char)dn.raw; break;
+        case DASM_MOIRA_MIT:    *ptr++ = '%'; [[fallthrough]];
+        default:                *ptr++ = 'D'; *ptr++ = '0' + (char)dn.raw; break;
     }
-    
+
     return *this;
 }
 
@@ -470,45 +453,28 @@ StrWriter::operator<<(An an)
 {
     switch (style) {
 
-        case DASM_MOIRA_MIT:
+        case DASM_GNU_MIT:      *ptr++ = '%'; [[fallthrough]];
+        case DASM_GNU:          *ptr++ = 'a'; *ptr++ = '0' + (char)an.raw; break;
+        case DASM_MOIRA_MIT:    *ptr++ = '%'; [[fallthrough]];
+        default:                *ptr++ = 'A'; *ptr++ = '0' + (char)an.raw; break;
+    }
 
-            *ptr++ = '%';
-            [[fallthrough]];
-
-        case DASM_MOIRA_MOT:
-        case DASM_MUSASHI:
-            
-            *ptr++ = 'A';
-            *ptr++ = '0' + (char)an.raw;
-            break;
+    switch (style) {
 
         case DASM_GNU_MIT:
 
-            *ptr++ = '%';
+            if (an.raw == 6) { ptr[-2] = 'f'; ptr[-1] = 'p'; }
             [[fallthrough]];
 
         case DASM_GNU:
 
-            if (style == DASM_GNU_MIT && an.raw == 6) {
+            if (an.raw == 7) { ptr[-2] = 's'; ptr[-1] = 'p'; }
+            break;
 
-                *ptr++ = 'f';
-                *ptr++ = 'p';
-                break;
-            }
-
-            if (an.raw == 7) {
-                
-                *ptr++ = 's';
-                *ptr++ = 'p';
-                
-            } else {
-                
-                *ptr++ = 'a';
-                *ptr++ = '0' + (char)an.raw;
-            }
+        default:
             break;
     }
-    
+
     return *this;
 }
 
