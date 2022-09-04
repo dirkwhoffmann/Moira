@@ -900,81 +900,55 @@ StrWriter::operator<<(IxMot<M,S> wrapper)
         u32  base  = ea.ext2;
         u32  outer = ea.ext3;
 
+        auto baseDisplacement = [&]() {
+            size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
+        };
+        auto baseRegister = [&]() {
+            if constexpr (M == 10) {
+                if (!bs) { *this << Sep{} << Pc{}; } else { *this << Sep{} << Zpc{}; }
+            } else {
+                if (!bs) { *this << Sep{} << An{ea.reg}; }
+            }
+        };
+        auto indexRegister = [&]() {
+            if (!is) *this << Sep{} << Rn{reg} << (lw ? ".l" : ".w") << Scale{scale};
+        };
+        auto outerDisplacement = [&]() {
+            *this << Sep{} << Int(outer);
+        };
+
         if (iis == 0) {
 
             // Memory Indirect Unindexed
-            *this << "(";
-
-            size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
-            *this << Sep{};
-
-            if constexpr (M == 10) {
-                bs ? *this << Zpc{} : *this << Pc{}; *this << Sep{};
-            } else {
-                if (!bs) *this << An{ea.reg} << Sep{};
-            }
-
-            if (!is) {
-
-                *this << Rn{reg};
-                *this << (lw ? ".l" : ".w");
-                *this << Scale{scale};
-                *this << Sep{};
-            }
-
-            ptr[-1] == ',' ? ptr[-1] = ')' : *ptr++ = ')';
+            *this << '(';
+            baseDisplacement();
+            baseRegister();
+            indexRegister();
+            *this << ')';
 
         } else if (iis & 0b100) {
 
             // Memory Indirect Postindexed
-            *this << "([";
-
-            size == 3 ? *this << Int{(i32)base} : *this << Int{(i16)base};
-
-            if constexpr (M == 10) {
-                bs ? *this << Sep{} << Zpc{} : *this << Sep{} << Pc{};
-            } else {
-                if (!bs) *this << Sep{} << An{ea.reg};
-            }
-
-            *this << ']' << Sep{};
-
-            if (!is) {
-
-                *this << Rn{reg};
-                *this << (lw ? ".l" : ".w");
-                *this << Scale{scale};
-                *this << Sep{};
-            }
-
-            *this << Int(outer) << ")";
+            *this << '(';
+            *this << '[';
+            baseDisplacement();
+            baseRegister();
+            *this << ']';
+            indexRegister();
+            outerDisplacement();
+            *this << ')';
 
         } else {
 
             // Memory Indirect Preindexed
-            *this << "([";
-
-            size == 3 ? (*this << Int{(i32)base}) : (*this << Int{(i16)base});
-            *this << Sep{};
-
-            if constexpr (M == 10) {
-                bs ? *this << Zpc{} : *this << Pc{}; *this << Sep{};
-            } else {
-                if (!bs) *this << An{ea.reg} << Sep{};
-            }
-
-            if (!is) {
-
-                *this << Rn{reg};
-                *this << (lw ? ".l" : ".w");
-                *this << Scale{scale};
-                *this << Sep{};
-            }
-
-            if (ptr[-1] == '[') *ptr++ = '0';
-            ptr[-1] == ',' ? ptr[-1] = ']' : *ptr++ = ']';
-
-            *this << Sep{} << Int(outer) << ")";
+            *this << '(';
+            *this << '[';
+            baseDisplacement();
+            baseRegister();
+            indexRegister();
+            *this << ']';
+            outerDisplacement();
+            *this << ')';
         }
     }
 

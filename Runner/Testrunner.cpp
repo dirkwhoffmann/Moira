@@ -658,6 +658,7 @@ void compare(Setup &s, Result &r1, Result &r2)
 
         printf("\n             Binutils: [%d] '%s'", r1.dasmCntBinutils, r1.dasmBinutils);
         printf("\n                Moira: [%d] '%s'\n", r2.dasmCntBinutils, r2.dasmBinutils);
+        printf("\n");
 
         printf("Setup:   ");
         dumpSetup(s);
