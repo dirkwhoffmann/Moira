@@ -109,8 +109,6 @@ public:
         nf = n;
     };
 
-    bool checkAvailability();
-
     StrWriter& operator<<(char);
     StrWriter& operator<<(const char *);
     StrWriter& operator<<(int);

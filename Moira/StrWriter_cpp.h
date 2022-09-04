@@ -133,12 +133,6 @@ static void sprint_signed(char *&s, i64 value, const DasmNumberFormat &fmt)
     fmt.radix == 10 ? sprintd_signed(s, value) : sprintx_signed(s, value, fmt);
 }
 
-bool
-StrWriter::checkAvailability()
-{
-    return style == DASM_GNU || style == DASM_MOIRA_MOT || style == DASM_MOIRA_MIT;
-}
-
 StrWriter&
 StrWriter::operator<<(char c)
 {
@@ -565,23 +559,9 @@ StrWriter::operator<<(Usp _)
 StrWriter&
 StrWriter::operator<<(Cn cn)
 {
-    bool upper, valid;
-    
-    switch (style) {
+    bool valid = cn.raw <= 0x007 || (cn.raw >= 0x800 && cn.raw <= 0x807);
+    bool upper = style != DASM_GNU && style != DASM_GNU_MIT;
 
-        case DASM_GNU:
-
-            valid = cn.raw <= 0x007 || (cn.raw >= 0x800 && cn.raw <= 0x807);
-            upper = false;
-            break;
-
-        default:
-
-            valid = cn.raw <= 0x007 || (cn.raw >= 0x800 && cn.raw <= 0x807);
-            upper = true;
-            break;
-    }
-    
     if (valid) {
         
         switch (cn.raw) {
@@ -608,7 +588,7 @@ StrWriter::operator<<(Cn cn)
         
     } else {
 
-        if (style == DASM_MUSASHI || style == DASM_GNU) {
+        if (style == DASM_MUSASHI || style == DASM_GNU || style == DASM_GNU_MIT) {
             *this << UInt(cn.raw);
         } else {
             *this << "INVALID";

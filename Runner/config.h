@@ -16,7 +16,7 @@ static constexpr long ROUNDS = 1;
 static constexpr bool CHECK_MEM_WRITES = true;
 
 // Set to true to execute CPU tests
-static constexpr bool CHECK_CPU = false;
+static constexpr bool CHECK_CPU = true;
 
 // Set to true to execute MMU tests for capable CPUs
 static constexpr bool CHECK_MMU = true;

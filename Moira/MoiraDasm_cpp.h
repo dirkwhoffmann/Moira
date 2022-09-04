@@ -391,7 +391,7 @@ Moira::dasmBitFieldDn(StrWriter &str, u32 &addr, u16 op)
     auto w   = ___________xxxxx(ext);
 
     // Catch illegal extension words
-    if (str.style == DASM_GNU && !isValidExt(I, M, op, ext)) {
+    if ((str.style == DASM_GNU || str.style == DASM_GNU_MIT) && !isValidExt(I, M, op, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -457,6 +457,7 @@ Moira::dasmBkpt(StrWriter &str, u32 &addr, u16 op)
             break;
 
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             str << Ins<I>{} << tab << Int(nr);
             break;
@@ -482,6 +483,7 @@ Moira::dasmCallm(StrWriter &str, u32 &addr, u16 op)
     switch (str.style) {
             
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             str << Ins<I>{} << tab << Ims<Byte>(src) << Sep{} << dst;
             break;
@@ -502,7 +504,7 @@ Moira::dasmCas(StrWriter &str, u32 &addr, u16 op)
     auto dst = Op <M,S> ( _____________xxx(op), addr );
 
     // Catch illegal extension words
-    if (str.style == DASM_GNU && !isValidExt(I, M, op, ext)) {
+    if ((str.style == DASM_GNU || str.style == DASM_GNU_MIT) && !isValidExt(I, M, op, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -526,7 +528,7 @@ Moira::dasmCas2(StrWriter &str, u32 &addr, u16 op)
     auto rn2 = Rn ( (ext >> 12) & 0b1111 );
 
     // Catch illegal extension words (binutils only checks the first word)
-    if (str.style == DASM_GNU && !isValidExt(I, M, op, u16(ext >> 16))) {
+    if ((str.style == DASM_GNU || str.style == DASM_GNU_MIT) && !isValidExt(I, M, op, u16(ext >> 16))) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -559,7 +561,7 @@ Moira::dasmChk(StrWriter &str, u32 &addr, u16 op)
     auto src = Op <M,S> ( _____________xxx(op), addr );
     auto dst = Dn       ( ____xxx_________(op)       );
 
-    if (str.checkAvailability() && !isAvailable(I, M, S)) {
+    if (str.style != DASM_MUSASHI && !isAvailable(I, M, S)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -579,7 +581,7 @@ Moira::dasmChkCmp2(StrWriter &str, u32 &addr, u16 op)
     auto dst = Rn       ( xxxx____________(ext)      );
 
     // Catch illegal extension words
-    if (str.style == DASM_GNU && !isValidExt(I, M, op, ext)) {
+    if ((str.style == DASM_GNU || str.style == DASM_GNU_MIT) && !isValidExt(I, M, op, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -652,7 +654,7 @@ Moira::dasmCmpm(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmCpBcc(StrWriter &str, u32 &addr, u16 op)
 {
-    if (style == DASM_GNU) {
+    if (style == DASM_GNU || style == DASM_GNU_MIT) {
 
         dasmIllegal<I, M, S>(str, addr, op);
         return;
@@ -674,7 +676,7 @@ Moira::dasmCpBcc(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmCpDbcc(StrWriter &str, u32 &addr, u16 op)
 {
-    if (style == DASM_GNU) {
+    if (style == DASM_GNU || style == DASM_GNU_MIT) {
 
         dasmIllegal<I, M, S>(str, addr, op);
         return;
@@ -700,7 +702,7 @@ Moira::dasmCpDbcc(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmCpGen(StrWriter &str, u32 &addr, u16 op)
 {
-    if (style == DASM_GNU) {
+    if (style == DASM_GNU || style == DASM_GNU_MIT) {
 
         dasmIllegal<I, M, S>(str, addr, op);
         return;
@@ -716,7 +718,7 @@ Moira::dasmCpGen(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmCpRestore(StrWriter &str, u32 &addr, u16 op)
 {
-    if (style == DASM_GNU) {
+    if (style == DASM_GNU || style == DASM_GNU_MIT) {
 
         dasmIllegal<I, M, S>(str, addr, op);
         return;
@@ -733,7 +735,7 @@ Moira::dasmCpRestore(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmCpSave(StrWriter &str, u32 &addr, u16 op)
 {
-    if (style == DASM_GNU) {
+    if (style == DASM_GNU || style == DASM_GNU_MIT) {
 
         dasmIllegal<I, M, S>(str, addr, op);
         return;
@@ -750,7 +752,7 @@ Moira::dasmCpSave(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmCpScc(StrWriter &str, u32 &addr, u16 op)
 {
-    if (style == DASM_GNU) {
+    if (style == DASM_GNU || style == DASM_GNU_MIT) {
 
         dasmIllegal<I, M, S>(str, addr, op);
         return;
@@ -770,7 +772,7 @@ Moira::dasmCpScc(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmCpTrapcc(StrWriter &str, u32 &addr, u16 op)
 {
-    if (style == DASM_GNU) {
+    if (style == DASM_GNU || style == DASM_GNU_MIT) {
 
         dasmIllegal<I, M, S>(str, addr, op);
         return;
@@ -1208,7 +1210,7 @@ Moira::dasmMoves(StrWriter &str, u32 &addr, u16 op)
     auto ea = Op <M,S> ( _____________xxx(op), addr );
     auto rg = Rn ( xxxx____________(ext) );
 
-    if (str.checkAvailability() && !isAvailable(I, M, S, ext)) {
+    if (str.style != DASM_MUSASHI && !isAvailable(I, M, S, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -1399,20 +1401,29 @@ Moira::dasmMull(StrWriter &str, u32 &addr, u16 op)
     auto dl  = Dn       ( _xxx____________(ext)      );
     auto dh  = Dn       ( _____________xxx(ext)      );
 
-    auto fill = str.style == DASM_MOIRA_MIT || str.style == DASM_GNU ? "," : ":";
+    auto fill = str.style == DASM_GNU ? "," : ":";
 
     // Catch illegal extension words
-    if (str.style == DASM_GNU && !isValidExt(I, M, op, ext)) {
+    switch (style) {
 
-        addr = old;
-        dasmIllegal<I, M, S>(str, addr, op);
-        return;
+        case DASM_GNU:
+        case DASM_GNU_MIT:
+
+            if (ext & 0x83F8) {
+
+                addr = old;
+                dasmIllegal<I, M, S>(str, addr, op);
+                return;
+            }
+            [[fallthrough]];
+
+        default:
+
+            (ext & 1 << 11) ? str << Ins<MULS>{} : str << Ins<MULU>{};
+            str << Sz<S>{} << tab << src << Sep{};
+            (ext & 1 << 10) ? str << dh << fill << dl : str << dl;
+            str << Av<I, M, S>{};
     }
-
-    (ext & 1 << 11) ? str << Ins<MULS>{} : str << Ins<MULU>{};
-    str << Sz<S>{} << tab << src << Sep{};
-    (ext & 1 << 10) ? str << dh << fill << dl : str << dl;
-    str << Av<I, M, S>{};
 }
 
 template <Instr I, Mode M, Size S> void
@@ -1442,10 +1453,10 @@ Moira::dasmDivl(StrWriter &str, u32 &addr, u16 op)
     auto dl  = Dn       ( _xxx____________(ext)      );
     auto dh  = Dn       ( _____________xxx(ext)      );
 
-    auto fill = str.style == DASM_MOIRA_MIT || str.style == DASM_GNU ? "," : ":";
+    auto fill = str.style == DASM_GNU ? "," : ":";
 
     // Catch illegal extension words
-    if (str.style == DASM_GNU && !isValidExt(I, M, op, ext)) {
+    if ((str.style == DASM_GNU || str.style == DASM_GNU_MIT) && !isValidExt(I, M, op, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -1511,6 +1522,7 @@ Moira::dasmPackDn(StrWriter &str, u32 &addr, u16 op)
     switch (str.style) {
             
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             str << Ins<I>{} << tab << rx << Sep{} << ry << Sep{} << Ims<S>(ext);
             break;
@@ -1728,6 +1740,7 @@ Moira::dasmUnpkDn(StrWriter &str, u32 &addr, u16 op)
     switch (str.style) {
             
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             str << Ins<I>{} << tab << rx << Sep{} << ry << Sep{} << Ims<S>(ext);
             break;

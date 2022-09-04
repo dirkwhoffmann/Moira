@@ -7,20 +7,6 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-/*
-template <Core C, Instr I, Mode M, Size S> void
-Moira::execPBcc(u16 opcode)
-{
-    execLineF<C, I, M, S>(opcode);
-}
-
-template <Core C, Instr I, Mode M, Size S> void
-Moira::execPDbcc(u16 opcode)
-{
-    execLineF<C, I, M, S>(opcode);
-}
-*/
-
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPGen(u16 opcode)
 {

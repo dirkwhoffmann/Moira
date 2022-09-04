@@ -55,7 +55,7 @@ Moira::dasmPFlush(StrWriter &str, u32 &addr, u16 op)
     auto fc    = ___________xxxxx(ext);
 
     // Catch illegal extension words
-    if (str.style == DASM_GNU && !isValidExt(I, M, op, ext)) {
+    if ((str.style == DASM_GNU || str.style == DASM_GNU_MIT) && !isValidExt(I, M, op, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -102,7 +102,7 @@ Moira::dasmPLoad(StrWriter &str, u32 &addr, u16 op)
     auto ea  = Op <M,S> ( _____________xxx(op), addr );
 
     // Catch illegal extension words
-    if (str.style == DASM_GNU && !isValidExt(I, M, op, ext)) {
+    if ((str.style == DASM_GNU || str.style == DASM_GNU_MIT) && !isValidExt(I, M, op, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -127,7 +127,7 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
     auto nr   = ___________xxx__(ext);
 
     // Catch illegal extension words
-    if (str.style == DASM_GNU && !isValidExt(I, M, op, ext)) {
+    if ((str.style == DASM_GNU || str.style == DASM_GNU_MIT) && !isValidExt(I, M, op, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -229,7 +229,7 @@ Moira::dasmPTest(StrWriter &str, u32 &addr, u16 op)
     auto fc  = ___________xxxxx(ext);
 
     // Catch illegal extension words
-    if (str.style == DASM_GNU && !isValidExt(I, M, op, ext)) {
+    if ((str.style == DASM_GNU || str.style == DASM_GNU_MIT) && !isValidExt(I, M, op, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);

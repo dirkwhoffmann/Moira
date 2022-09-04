@@ -674,7 +674,7 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext)
         case CAS2:      return (ext & 0x0E380E38) == 0;
         case CHK2:      return (ext & 0x07FF) == 0;
         case CMP2:      return (ext & 0x0FFF) == 0;
-        case MULL:      return (ext & 0x83F8) == 0;
+        // case MULL:      return (ext & 0x83F8) == 0;
         case DIVL:      return (ext & 0x83F8) == 0;
 
         case PFLUSH:
