@@ -250,7 +250,7 @@ void run()
     for (long i = 1; i <= ROUNDS; i++) {
 
         printf("\nRound %ld:\n\n", i);
-        selectModel(M68000);
+        selectModel(M68010);
 
         while (1) {
 
@@ -485,7 +485,7 @@ void runMoira(Setup &s, Result &r)
         r.elapsed[1] = clock() - elapsed;
 
         // Disassemble the instruction in GNU format (binutils)
-        moiracpu->setDasmStyle(DASM_GNU_MIT);
+        moiracpu->setDasmStyle(DASM_GNU);
         moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 10, .plainZero = true });
         r.dasmCntBinutils = moiracpu->disassemble(r.oldpc, r.dasmBinutils);
 

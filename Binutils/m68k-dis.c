@@ -137,8 +137,8 @@ void floatformat_to_double(const struct floatformat* fmt, const void* from, doub
 }
 
 
-// #define MOTOROLA 1
-// #define TARGET_AMIGA 1
+#define MOTOROLA 1
+#define TARGET_AMIGA 1
 
 #ifdef MOTOROLA
 /* print as signed decimal. */
@@ -2129,6 +2129,7 @@ print_insn_m68k (bfd_vma memaddr, disassemble_info *info)
 }
 
 #ifdef TARGET_AMIGA
+#if 0
 void print_m68k_disassembler_options (FILE * stream)
 {
   fprintf (stream, _("\n\
@@ -2151,4 +2152,5 @@ parse_disassembler_options (const char * options)
 
   dump_baserel = !strncmp(p, "a4", 2);
 }
+#endif
 #endif

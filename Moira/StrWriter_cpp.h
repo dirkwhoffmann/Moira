@@ -575,40 +575,6 @@ StrWriter::operator<<(Am an)
 }
 
 StrWriter&
-StrWriter::operator<<(Anr an)
-{
-    switch (style) {
-
-        case DASM_MOIRA_MIT:
-
-            *ptr++ = '%';
-            [[fallthrough]];
-
-        case DASM_MOIRA_MOT:
-        case DASM_MUSASHI:
-            
-            *ptr++ = 'A';
-            *ptr++ = '0' + (char)an.raw;
-            break;
-
-        case DASM_GNU_MIT:
-
-            *ptr++ = '%';
-            [[fallthrough]];
-
-        case DASM_VDA68K_MOT:
-        case DASM_VDA68K_MIT:
-        case DASM_GNU:
-
-            *ptr++ = 'a';
-            *ptr++ = '0' + (char)an.raw;
-            break;
-    }
-    
-    return *this;
-}
-
-StrWriter&
 StrWriter::operator<<(Rn rn)
 {
     rn.raw < 8 ? *this << Dn{rn.raw} : *this << An{rn.raw - 8};
@@ -619,13 +585,6 @@ StrWriter&
 StrWriter::operator<<(Rm rm)
 {
     rm.raw < 8 ? *this << Dn{rm.raw} : *this << Am{rm.raw - 8};
-    return *this;
-}
-
-StrWriter&
-StrWriter::operator<<(Rnr rn)
-{
-    rn.raw < 8 ? *this << Dn{rn.raw} : *this << Anr{rn.raw - 8};
     return *this;
 }
 
