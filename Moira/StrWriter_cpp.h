@@ -563,7 +563,11 @@ StrWriter::operator<<(Cn cn)
     bool upper = style != DASM_GNU && style != DASM_GNU_MIT;
 
     if (valid) {
-        
+
+        if (style == DASM_GNU_MIT || style == DASM_MOIRA_MIT) {
+            *ptr++ = '%';
+        }
+
         switch (cn.raw) {
                 
             case 0x000: *this << (upper ? "SFC"   : "sfc");   break;
@@ -1290,11 +1294,39 @@ StrWriter::operator<<(Fc fc)
 
         case 0b00:
 
-            if (fc.raw == 0) { *this << "sfc"; break; }
-            if (fc.raw == 1) { *this << "dfc"; break; }
+            if (fc.raw == 0) { *this << Sfc(); break; }
+            if (fc.raw == 1) { *this << Dfc(); break; }
             [[fallthrough]];
 
         default:    *this << Imu(fc.raw & 0b1111);
+    }
+
+    return *this;
+}
+
+StrWriter&
+StrWriter::operator<<(Sfc _)
+{
+    switch (style) {
+
+        case DASM_GNU_MIT:      *ptr++ = '%'; [[fallthrough]];
+        case DASM_GNU:          *ptr++ = 's'; *ptr++ = 'f'; *ptr++ = 'c'; break;
+        case DASM_MOIRA_MIT:    *ptr++ = '%'; [[fallthrough]];
+        default:                *ptr++ = 'S'; *ptr++ = 'F'; *ptr++ = 'C'; break;
+    }
+
+    return *this;
+}
+
+StrWriter&
+StrWriter::operator<<(Dfc _)
+{
+    switch (style) {
+
+        case DASM_GNU_MIT:      *ptr++ = '%'; [[fallthrough]];
+        case DASM_GNU:          *ptr++ = 'd'; *ptr++ = 'f'; *ptr++ = 'c'; break;
+        case DASM_MOIRA_MIT:    *ptr++ = '%'; [[fallthrough]];
+        default:                *ptr++ = 'D'; *ptr++ = 'F'; *ptr++ = 'C'; break;
     }
 
     return *this;
@@ -1305,22 +1337,10 @@ StrWriter::operator<<(Fp fp)
 {
     switch (style) {
 
-        case DASM_MOIRA_MOT:
-        case DASM_MOIRA_MIT:
-        case DASM_MUSASHI:
-
-            *ptr++ = 'F';
-            *ptr++ = 'P';
-            *ptr++ = '0' + (char)fp.raw;
-            break;
-
-        case DASM_GNU:
-        case DASM_GNU_MIT:
-
-            *ptr++ = 'f';
-            *ptr++ = 'p';
-            *ptr++ = '0' + (char)fp.raw;
-            break;
+        case DASM_GNU_MIT:      *ptr++ = '%'; [[fallthrough]];
+        case DASM_GNU:          *ptr++ = 'f'; *ptr++ = 'p'; *ptr++ = '0' + (char)fp.raw; break;
+        case DASM_MOIRA_MIT:    *ptr++ = '%'; [[fallthrough]];
+        default:                *ptr++ = 'F'; *ptr++ = 'P'; *ptr++ = '0' + (char)fp.raw; break;
     }
 
     return *this;
@@ -1329,7 +1349,7 @@ StrWriter::operator<<(Fp fp)
 StrWriter&
 StrWriter::operator<<(Ffmt ffmt)
 {
-    if (style != DASM_MOIRA_MIT && style != DASM_GNU) *ptr++ = '.';
+    if (style != DASM_MOIRA_MIT && style != DASM_GNU_MIT) *ptr++ = '.';
 
     switch (ffmt.raw) {
 

@@ -243,7 +243,7 @@ template <Instr I, Mode M, Size S> void
 Moira::dasmFNop(StrWriter &str, u32 &addr, u16 op)
 {
     str << Ins<I>{};
-    if (style == DASM_GNU) str << " ";
+    if (style == DASM_GNU || style == DASM_GNU_MIT) str << " ";
 }
 
 template <Instr I, Mode M, Size S> void
@@ -510,7 +510,6 @@ Moira::dasmFMove(StrWriter &str, u32 &addr, u16 op)
     auto dst = ______xxx_______ (ext);
     auto fac = _________xxxxxxx (ext);
 
-    // printf("dasmFmove: %x %x %x\n", op, ext, fac);
     switch (cod) {
 
         case 0b000:
@@ -621,8 +620,7 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op)
     auto lll = ___xxx__________ (ext);
 
     const char *delim = "";
-
-    // printf("dasmFMovem: %x %x\n", op, ext);
+    const char *mit = str.style == DASM_GNU_MIT || str.style == DASM_MOIRA_MIT ? "%" : "";
 
     switch (cod) {
 
@@ -630,7 +628,7 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op)
 
             if ((ext & 0x1C00) == 0) {
 
-                if (str.style == DASM_GNU) {
+                if (str.style == DASM_GNU || str.style == DASM_GNU_MIT) {
 
                     str << "fmovel" << tab << Op<M, Long>(reg, addr) << Sep{};
                     return;
@@ -643,16 +641,16 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op)
             }
             str << Op<M, Long>(reg, addr) << Sep{};
             if ((ext & 0x1C00) == 0) { str << "{}"; }
-            if (ext & 0x0400) { str << delim << "fpiar"; delim = "/"; }
-            if (ext & 0x0800) { str << delim << "fpsr";  delim = "/"; }
-            if (ext & 0x1000) { str << delim << "fpcr";  delim = "/"; }
+            if (ext & 0x0400) { str << delim << mit << "fpiar"; delim = "/"; }
+            if (ext & 0x0800) { str << delim << mit << "fpsr";  delim = "/"; }
+            if (ext & 0x1000) { str << delim << mit << "fpcr";  delim = "/"; }
             break;
 
         case 0b101: // Cntrl to Ea
 
             if ((ext & 0x1C00) == 0) {
 
-                if (str.style == DASM_GNU) {
+                if (str.style == DASM_GNU || str.style == DASM_GNU_MIT) {
 
                     str << "fmovel" << tab << Sep{} << Op<M, Long>(reg, addr);
                     return;
@@ -665,9 +663,9 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op)
             }
             // str << Ins<I>{} << Ffmt{0} << tab;
             if ((ext & 0x1C00) == 0 && str.style != DASM_GNU) { str << "{}"; }
-            if (ext & 0x0400) { str << delim << "fpiar"; delim = "/"; }
-            if (ext & 0x0800) { str << delim << "fpsr";  delim = "/"; }
-            if (ext & 0x1000) { str << delim << "fpcr";  delim = "/"; }
+            if (ext & 0x0400) { str << delim << mit << "fpiar"; delim = "/"; }
+            if (ext & 0x0800) { str << delim << mit << "fpsr";  delim = "/"; }
+            if (ext & 0x1000) { str << delim << mit << "fpcr";  delim = "/"; }
             str << Sep{} << Op<M, Long>(reg, addr);
             break;
 

@@ -409,6 +409,7 @@ Moira::dasmBitFieldDn(StrWriter &str, u32 &addr, u16 op)
     switch (str.style) {
 
         case DASM_GNU:
+        case DASM_GNU_MIT:
 
             switch (ext & 0x0820) {
 
@@ -535,20 +536,25 @@ Moira::dasmCas2(StrWriter &str, u32 &addr, u16 op)
         return;
     }
 
+    auto fill = str.style == DASM_GNU || str.style == DASM_GNU_MIT ? ',' : ':';
+
     str << Ins<I>{} << Sz<S>{} << tab;
 
     switch (str.style) {
 
-        case DASM_GNU:
+        case DASM_MOIRA_MIT:
+        case DASM_GNU_MIT:
 
-            str << dc1 << "," << dc2 << Sep{} << du1 << "," << du2 << Sep{};
-            str << "(" << rn1 << "),(" << rn2 << ")";
+            str << dc1 << fill << dc2 << Sep{} << du1 << fill << du2 << Sep{};
+            rn1.raw < 8 ? str << "@(" << rn1 << ')' : str << rn1 << '@';
+            str << fill;
+            rn2.raw < 8 ? str << "@(" << rn2 << ')' : str << rn2 << '@';
             break;
 
         default:
 
-            str << dc1 << ":" << dc2 << Sep{} << du1 << ":" << du2 << Sep{};
-            str << "(" << rn1 << "):(" << rn2 << ")";
+            str << dc1 << fill << dc2 << Sep{} << du1 << fill << du2 << Sep{};
+            str << '(' << rn1 << ')' << fill << '(' << rn2 << ')';
     }
     
     str << Av<I, M, S>{};
@@ -1453,7 +1459,7 @@ Moira::dasmDivl(StrWriter &str, u32 &addr, u16 op)
     auto dl  = Dn       ( _xxx____________(ext)      );
     auto dh  = Dn       ( _____________xxx(ext)      );
 
-    auto fill = str.style == DASM_GNU ? "," : ":";
+    auto fill = str.style == DASM_GNU || str.style == DASM_GNU_MIT ? "," : ":";
 
     // Catch illegal extension words
     if ((str.style == DASM_GNU || str.style == DASM_GNU_MIT) && !isValidExt(I, M, op, ext)) {

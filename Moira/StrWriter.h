@@ -74,6 +74,8 @@ struct Scale { int raw; Scale(int v) : raw(v) { } };
 
 // MMU
 struct Fc { int raw; Fc(int v) : raw(v) { } };
+struct Sfc { };
+struct Dfc { };
 
 // FPU
 struct Fp { int raw; Fp(int v) : raw(v) { } };
@@ -164,6 +166,8 @@ public:
 
     StrWriter& operator<<(Scale);
     StrWriter& operator<<(Fc);
+    StrWriter& operator<<(Sfc);
+    StrWriter& operator<<(Dfc);
     StrWriter& operator<<(Fp);
     StrWriter& operator<<(Ffmt);
     StrWriter& operator<<(Tab);

@@ -142,26 +142,28 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
 
         case 0:
 
-            // printf("dasmPMove0\n");
             pStr = mmuregs[preg];
 
             if (!(ext & 0x200)) {
 
                 str << Ins<I>{} << suffix << tab;
-                str << Op<M, Long>(reg, addr) << Sep{} << pStr;
+                str << Op<M, Long>(reg, addr) << Sep{};
+                if (style == DASM_GNU_MIT || style == DASM_MOIRA_MIT) str << '%';
+                str << pStr;
                 if (fmt == 3 && preg > 1) str << Int(nr);
 
             } else {
 
                 str << Ins<I>{} << suffix << tab;
                 if (fmt == 3 && preg > 1) str << Int(nr);
-                str << pStr << Sep{} << Op<M, Long>(reg, addr);
+                if (style == DASM_GNU_MIT || style == DASM_MOIRA_MIT) str << '%';
+                str << pStr;
+                str << Sep{} << Op<M, Long>(reg, addr);
             }
             break;
 
         case 2:
 
-            // printf("dasmPMove2\n");
             switch (preg) {
 
                 case 0:     pStr = "tc"; break;
@@ -177,20 +179,23 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
             if (!(ext & 0x200)) {
 
                 str << Ins<I>{} << suffix << tab;
-                str << Op<M, Long>(reg, addr) << Sep{} << pStr;
+                str << Op<M, Long>(reg, addr) << Sep{};
+                if (style == DASM_GNU_MIT || style == DASM_MOIRA_MIT) str << '%';
+                str << pStr;
                 if (fmt == 3 && preg > 1) str << Int(nr);
 
             } else {
 
                 str << Ins<I>{} << suffix << tab;
                 if (fmt == 3 && preg > 1) str << Int(nr);
-                str << pStr << Sep{} << Op<M, Long>(reg, addr);
+                if (style == DASM_GNU_MIT || style == DASM_MOIRA_MIT) str << '%';
+                str << pStr;
+                str << Sep{} << Op<M, Long>(reg, addr);
             }
             break;
 
         case 3:
 
-            // printf("dasmPMove3\n");
             switch (preg) {
 
                 case 0:     pStr = "psr"; break;
@@ -203,14 +208,18 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
             if (!(ext & 0x200)) {
 
                 str << Ins<I>{} << suffix << tab;
-                str << Op<M, Word>(reg, addr) << Sep{} << pStr;
+                str << Op<M, Word>(reg, addr) << Sep{};
+                if (style == DASM_GNU_MIT || style == DASM_MOIRA_MIT) str << '%';
+                str << pStr;
                 if (fmt == 3 && preg > 1) str << Int(nr);
 
             } else {
 
                 str << Ins<I>{} << suffix << tab;
                 if (fmt == 3 && preg > 1) str << Int(nr);
-                str << pStr << Sep{} << Op<M, Word>(reg, addr);
+                if (style == DASM_GNU_MIT || style == DASM_MOIRA_MIT) str << '%';
+                str << pStr;
+                str << Sep{} << Op<M, Word>(reg, addr);
             }
             break;
     }
