@@ -67,7 +67,7 @@ Moira::dasmPFlush(StrWriter &str, u32 &addr, u16 op)
     // Catch illegal extension words
     if (str.style == DASM_GNU || str.style == DASM_GNU_MIT) {
 
-        if (!isValidExt(I, M, op, ext)) {
+        if (!isValidExtMMU(I, M, op, ext)) {
 
             addr = old;
             dasmIllegal<I, M, S>(str, addr, op);
@@ -89,7 +89,7 @@ Moira::dasmPFlusha(StrWriter &str, u32 &addr, u16 op)
     // Catch illegal extension words
     if (str.style == DASM_GNU || str.style == DASM_GNU_MIT) {
 
-        if (!isValidExt(I, M, op, ext)) {
+        if (!isValidExtMMU(I, M, op, ext)) {
 
             addr = old;
             dasmIllegal<I, M, S>(str, addr, op);
@@ -125,7 +125,7 @@ Moira::dasmPLoad(StrWriter &str, u32 &addr, u16 op)
     // Catch illegal extension words
     if (str.style == DASM_GNU || str.style == DASM_GNU_MIT) {
 
-        if (!isValidExt(I, M, op, ext)) {
+        if (!isValidExtMMU(I, M, op, ext)) {
 
             addr = old;
             dasmIllegal<I, M, S>(str, addr, op);
@@ -150,7 +150,7 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
     // Catch illegal extension words
     if (str.style == DASM_GNU || str.style == DASM_GNU_MIT) {
 
-        if (!isValidExt(I, M, op, ext)) {
+        if (!isValidExtMMU(I, M, op, ext)) {
 
             addr = old;
             dasmIllegal<I, M, S>(str, addr, op);
@@ -234,7 +234,7 @@ Moira::dasmPTest(StrWriter &str, u32 &addr, u16 op)
     // Catch illegal extension words
     if (str.style == DASM_GNU || str.style == DASM_GNU_MIT) {
 
-        if (!isValidExt(I, M, op, ext)) {
+        if (!isValidExtMMU(I, M, op, ext)) {
 
             addr = old;
             dasmIllegal<I, M, S>(str, addr, op);
