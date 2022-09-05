@@ -60,24 +60,33 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
     auto cmd  = _________xxxxxxx(ext);
     addr -= 2;
 
+    if (M == MODE_AN) {
+        if (ext & 0x4000) { dasmLineF<I, M, S>(str, addr, op); return; }
+    }
+
     // Catch special MOVECR opcode
+    /*
     if ((ext & 0xFC00) == 0x5C00) {
 
         dasmFMovecr<FMOVECR, M, S>(str, addr, op);
         return;
     }
-
-    if (M == MODE_AN) {
-        if (ext & 0x4000) { dasmLineF<I, M, S>(str, addr, op); return; }
-    }
-
+    */
+    
     switch (cod) {
 
-        case 0b000:
         case 0b010:
+
+            if ((ext & 0xFC00) == 0x5C00) { dasmFMovecr<FMOVECR, M, S>(str, addr, op); return; }
+            [[fallthrough]];
+
+        case 0b000:
+
+            if (cmd != 0x00 && cmd != 0x40 && cmd != 0x44) break;
+            [[fallthrough]];
+
         case 0b011:
 
-            if (cod != 0b011 && cmd != 0x00 && cmd != 0x40 && cmd != 0x44) break;
             dasmFMove<FMOVE, M, S>(str, addr, op);
             return;
 
