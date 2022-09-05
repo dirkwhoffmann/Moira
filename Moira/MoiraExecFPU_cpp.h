@@ -32,37 +32,32 @@ Moira::isValidExtFPU(Instr I, Mode M, u16 op, u32 ext)
 
             switch (cod) {
 
-                case 0b010: // FMOVE (??)
+                case 0b010:
 
                     if (M == MODE_IP) break;
                     return true;
 
-                case 0b000: // FMOVE
+                case 0b000:
 
                     if (cmd == 0 && cod == 0 && (op & 0x3F)) break;
                     return true;
 
-                case 0b011: // FMOVE
-
-                    // Check for k-factor formats
-                    if (M == MODE_DN || M == MODE_AN) { if (fmt == 0b011 || fmt == 0b111) break; }
-                    if (M == MODE_AI) { if (fmt == 0b111 && (ext & 0xF)) break; }
-                    if (M == MODE_PI) { if (fmt == 0b111 && (ext & 0xF)) break; }
-                    if (M == MODE_PD) { if (fmt == 0b111 && (ext & 0xF)) break; }
-                    if (M == MODE_DI) { if (fmt == 0b111 && (ext & 0xF)) break; }
-                    if (M == MODE_IX) { if (fmt == 0b111 && (ext & 0xF)) break; }
-                    if (M == MODE_AW) { if (fmt == 0b111 && (ext & 0xF)) break; }
-                    if (M == MODE_AL) { if (fmt == 0b111 && (ext & 0xF)) break; }
-                    if (M == MODE_DIPC) break;
-                    if (M == MODE_IXPC) break;
-                    if (M == MODE_IM) break;
-                    if (M == MODE_IP) break;
+                case 0b011:
 
                     if (fmt != 0b011 && fmt != 0b111 && (ext & 0x7F)) break;
 
-                    if (M == MODE_DN && (fmt != 0 && fmt != 1 && fmt != 4 && fmt != 6)) {
-                        break;
+                    if (M == MODE_DN) {
+                        if (fmt == 0b010 || fmt == 0b011 || fmt == 0b101 || fmt == 0b111) break;
                     }
+                    if (M == MODE_AN) {
+                        if (fmt == 0b011 || fmt == 0b111) break;
+                    }
+                    if (M == MODE_DIPC || M == MODE_IXPC || M == MODE_IM || M == MODE_IP) {
+                        break;
+                    } else {
+                        if (fmt == 0b111 && (ext & 0xF)) break;
+                    }
+
                     return true;
             }
 
@@ -78,10 +73,9 @@ Moira::isValidExtFPU(Instr I, Mode M, u16 op, u32 ext)
                     if (M == MODE_DN || M == MODE_AN) {
                         if (lst != 0b000 && lst != 0b001 && lst != 0b010 && lst != 0b100) break;
                     }
-                    if (M == MODE_DIPC) break;
-                    if (M == MODE_IXPC) break;
-                    if (M == MODE_IM) break;
-                    if (M == MODE_IP) break;
+                    if (M == MODE_DIPC || M == MODE_IXPC || M == MODE_IM || M == MODE_IP) {
+                        break;
+                    }
                     return true;
                 }
                 case 0b100:
@@ -93,23 +87,29 @@ Moira::isValidExtFPU(Instr I, Mode M, u16 op, u32 ext)
                 case 0b110:
                 case 0b111:
 
-                    if (M == MODE_DN || M == MODE_AN) break;
-                    if (M == MODE_AI) { if (mode == 0 || mode == 1) break; }
-                    if (M == MODE_PI) { if (mode == 0 || mode == 1) break; if (cod == 0b111) break; }
-                    if (M == MODE_PD && cod == 0b110) { break; }
-                    if (M == MODE_PD && cod == 0b111 && (mode == 1) && (ext & 0x8F)) { break; }
-                    if (M == MODE_PD && cod == 0b111 && (mode == 2 || mode == 3)) { break; }
-                    if (M == MODE_DI) { if (mode == 0 || mode == 1) break; }
-                    if (M == MODE_IX) { if (mode == 0 || mode == 1) break; }
-                    if (M == MODE_AW) { if (mode == 0 || mode == 1) break; }
-                    if (M == MODE_AL) { if (mode == 0 || mode == 1) break; }
-                    if (M == MODE_DIPC) break;
-                    if (M == MODE_IXPC) break;
-                    if (M == MODE_IM) break;
-                    if (M == MODE_IP) break;
-
                     if (ext & 0x0700) break;
                     if (mode == 3 && (ext & 0x8F)) break;
+
+                    if (M == MODE_DN || M == MODE_AN) {
+                        break;
+                    }
+                    if (M == MODE_DIPC || M == MODE_IXPC || M == MODE_IM || M == MODE_IP) {
+                        break;
+                    }
+                    if (M == MODE_AI) {
+                        if (mode == 0 || mode == 1) break;
+                    }
+                    if (M == MODE_PI) {
+                        if (mode == 0 || mode == 1 || cod == 0b111) break;
+                    }
+                    if (M == MODE_PD) {
+                        if (cod == 0b110) break;
+                        if (cod == 0b111 && (mode == 1) && (ext & 0x8F)) break;
+                        if (cod == 0b111 && (mode == 2 || mode == 3)) break;
+                    }
+                    if (M == MODE_DI || M == MODE_IX || M == MODE_AW || M == MODE_AL) {
+                        if (mode == 0 || mode == 1) break;
+                    }
                     return true;
             }
             return false;
