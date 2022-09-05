@@ -161,9 +161,6 @@ Moira::dasmPLoad(StrWriter &str, u32 &addr, u16 op)
 template <Instr I, Mode M, Size S> void
 Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
 {
-    const char *const mmuregs[8] =
-    { "tc", "drp", "tt0", "tt1", "cal", "val", "sccr", "acr" };
-
     auto old  = addr;
     auto ext  = dasmRead<Word>(addr);
     auto reg  = _____________xxx(op);
@@ -179,31 +176,19 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
         return;
     }
     
+    const char *prefix = style == DASM_GNU_MIT || style == DASM_MOIRA_MIT ? "%" : "";
     const char *suffix = (ext & 0x100) ? "fd" : "";
-
-    const char *pStr = "";
+    const char *r = "";
+    Size s = Size(Unsized);
 
     switch (fmt) {
 
         case 0:
 
-            pStr = mmuregs[preg];
+            switch (preg) {
 
-            if (!(ext & 0x200)) {
-
-                str << Ins<I>{} << suffix << tab;
-                str << Op<M, Long>(reg, addr) << Sep{};
-                if (style == DASM_GNU_MIT || style == DASM_MOIRA_MIT) str << '%';
-                str << pStr;
-                if (fmt == 3 && preg > 1) str << Int(nr);
-
-            } else {
-
-                str << Ins<I>{} << suffix << tab;
-                if (fmt == 3 && preg > 1) str << Int(nr);
-                if (style == DASM_GNU_MIT || style == DASM_MOIRA_MIT) str << '%';
-                str << pStr;
-                str << Sep{} << Op<M, Long>(reg, addr);
+                case 0b010: r = "tt0";  s = Long; break;
+                case 0b011: r = "tt1";  s = Long; break;
             }
             break;
 
@@ -211,31 +196,14 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
 
             switch (preg) {
 
-                case 0:     pStr = "tc"; break;
-                case 1:     pStr = "drp"; break;
-                case 2:     pStr = "srp"; break;
-                case 3:     pStr = "crp"; break;
-                case 4:     pStr = "cal"; break;
-                case 5:     pStr = "val"; break;
-                case 6:     pStr = "scc"; break;
-                case 7:     pStr = "ac"; break;
-            }
-
-            if (!(ext & 0x200)) {
-
-                str << Ins<I>{} << suffix << tab;
-                str << Op<M, Long>(reg, addr) << Sep{};
-                if (style == DASM_GNU_MIT || style == DASM_MOIRA_MIT) str << '%';
-                str << pStr;
-                if (fmt == 3 && preg > 1) str << Int(nr);
-
-            } else {
-
-                str << Ins<I>{} << suffix << tab;
-                if (fmt == 3 && preg > 1) str << Int(nr);
-                if (style == DASM_GNU_MIT || style == DASM_MOIRA_MIT) str << '%';
-                str << pStr;
-                str << Sep{} << Op<M, Long>(reg, addr);
+                case 0b000: r = "tc";   s = Long; break;
+                case 0b001: r = "drp";  s = Long; break;
+                case 0b010: r = "srp";  s = Long; break;
+                case 0b011: r = "crp";  s = Long; break;
+                case 0b100: r = "cal";  s = Long; break;
+                case 0b101: r = "val";  s = Long; break;
+                case 0b110: r = "scc";  s = Long; break;
+                case 0b111: r = "ac";   s = Long; break;
             }
             break;
 
@@ -243,30 +211,29 @@ Moira::dasmPMove(StrWriter &str, u32 &addr, u16 op)
 
             switch (preg) {
 
-                case 0:     pStr = "psr"; break;
-                case 1:     pStr = "pcsr"; break;
-                case 4:     pStr = "bad"; break;
-                case 5:     pStr = "bac"; break;
-                default:    pStr = "???"; break;
-            }
-
-            if (!(ext & 0x200)) {
-
-                str << Ins<I>{} << suffix << tab;
-                str << Op<M, Word>(reg, addr) << Sep{};
-                if (style == DASM_GNU_MIT || style == DASM_MOIRA_MIT) str << '%';
-                str << pStr;
-                if (fmt == 3 && preg > 1) str << Int(nr);
-
-            } else {
-
-                str << Ins<I>{} << suffix << tab;
-                if (fmt == 3 && preg > 1) str << Int(nr);
-                if (style == DASM_GNU_MIT || style == DASM_MOIRA_MIT) str << '%';
-                str << pStr;
-                str << Sep{} << Op<M, Word>(reg, addr);
+                case 0b000: r = "psr";  s = Word; break;
+                case 0b001: r = "pcsr"; s = Word; break;
+                case 0b100: r = "bad";  s = Word; break;
+                case 0b101: r = "bac";  s = Word; break;
             }
             break;
+    }
+
+    if (!(ext & 0x200)) {
+
+        str << Ins<I>{} << suffix << tab;
+        if (s == Word) str << Op<M, Word>(reg, addr) << Sep{};
+        if (s == Long) str << Op<M, Long>(reg, addr) << Sep{};
+        str << prefix << r;
+        if (fmt == 3 && preg > 1) str << Int(nr);
+
+    } else {
+
+        str << Ins<I>{} << suffix << tab;
+        if (fmt == 3 && preg > 1) str << Int(nr);
+        str << prefix << r;
+        if (s == Word) str << Sep{} << Op<M, Word>(reg, addr);
+        if (s == Long) str << Sep{} << Op<M, Long>(reg, addr);
     }
 }
 

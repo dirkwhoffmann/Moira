@@ -53,7 +53,7 @@ struct RegRegList { u16 raw; RegRegList(u16 v) : raw(v) { } };
 struct FRegList { u16 raw; FRegList(u16 v) : raw(v) { } };
 
 // Addressing modes
-template <Mode M, Size S> struct Ea {
+template <Mode M, Size S = Word> struct Ea {
     u32 pc; u16 reg; u8 dw; u8 ow; u32 ext1; i32 ext2; i32 ext3;
 };
 template <Mode M, Size S> struct Ai { const Ea<M,S> &ea; };

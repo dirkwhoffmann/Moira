@@ -693,7 +693,7 @@ StrWriter::operator<<(FRegList l)
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(const Ea<M,S> &ea)
+StrWriter::operator<<(const Ea<M, S> &ea)
 {
     switch (M) {
             
@@ -717,7 +717,7 @@ StrWriter::operator<<(const Ea<M,S> &ea)
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(Ai<M,S> wrapper)
+StrWriter::operator<<(Ai<M, S> wrapper)
 {
     auto &ea = wrapper.ea;
     
@@ -741,7 +741,7 @@ StrWriter::operator<<(Ai<M,S> wrapper)
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(Pi<M,S> wrapper)
+StrWriter::operator<<(Pi<M, S> wrapper)
 {
     auto &ea = wrapper.ea;
     
@@ -765,7 +765,7 @@ StrWriter::operator<<(Pi<M,S> wrapper)
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(Pd<M,S> wrapper)
+StrWriter::operator<<(Pd<M, S> wrapper)
 {
     auto &ea = wrapper.ea;
     
@@ -789,7 +789,7 @@ StrWriter::operator<<(Pd<M,S> wrapper)
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(Di<M,S> wrapper)
+StrWriter::operator<<(Di<M, S> wrapper)
 {
     auto &ea = wrapper.ea;
     
@@ -817,31 +817,31 @@ StrWriter::operator<<(Di<M,S> wrapper)
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(Ix<M,S> wrapper)
+StrWriter::operator<<(Ix<M, S> wrapper)
 {
     switch (style) {
 
         case DASM_MUSASHI:
 
-            *this << IxMus<M,S>{wrapper.ea};
+            *this << IxMus<M, S>{wrapper.ea};
             break;
 
         case DASM_GNU_MIT:
         case DASM_MOIRA_MIT:
 
-            *this << IxMit<M,S>{wrapper.ea};
+            *this << IxMit<M, S>{wrapper.ea};
             break;
 
         default:
 
-            *this << IxMot<M,S>{wrapper.ea};
+            *this << IxMot<M, S>{wrapper.ea};
     }
     
     return *this;
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(IxMot<M,S> wrapper)
+StrWriter::operator<<(IxMot<M, S> wrapper)
 {
     assert(M == 6 || M == 10);
 
@@ -930,7 +930,7 @@ StrWriter::operator<<(IxMot<M,S> wrapper)
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(IxMit<M,S> wrapper)
+StrWriter::operator<<(IxMit<M, S> wrapper)
 {
     assert(M == 6 || M == 10);
 
@@ -1022,7 +1022,7 @@ StrWriter::operator<<(IxMit<M,S> wrapper)
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(IxMus<M,S> wrapper)
+StrWriter::operator<<(IxMus<M, S> wrapper)
 {
     assert(M == 6 || M == 10);
 
@@ -1125,7 +1125,7 @@ StrWriter::operator<<(IxMus<M,S> wrapper)
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(Aw<M,S> wrapper)
+StrWriter::operator<<(Aw<M, S> wrapper)
 {
     auto &ea = wrapper.ea;
     
@@ -1149,7 +1149,7 @@ StrWriter::operator<<(Aw<M,S> wrapper)
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(Al<M,S> wrapper)
+StrWriter::operator<<(Al<M, S> wrapper)
 {
     auto &ea = wrapper.ea;
     
@@ -1173,7 +1173,7 @@ StrWriter::operator<<(Al<M,S> wrapper)
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(DiPc<M,S> wrapper)
+StrWriter::operator<<(DiPc<M, S> wrapper)
 {
     auto &ea = wrapper.ea;
     u32 resolved;
@@ -1206,7 +1206,7 @@ StrWriter::operator<<(DiPc<M,S> wrapper)
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(Im<M,S> wrapper)
+StrWriter::operator<<(Im<M, S> wrapper)
 {
     auto &ea = wrapper.ea;
     
@@ -1230,7 +1230,7 @@ StrWriter::operator<<(Im<M,S> wrapper)
 }
 
 template <Mode M, Size S> StrWriter&
-StrWriter::operator<<(Ip<M,S> wrapper)
+StrWriter::operator<<(Ip<M, S> wrapper)
 {
     auto &ea = wrapper.ea;
     
@@ -1388,7 +1388,7 @@ StrWriter::operator<<(Tab tab)
 }
 
 template <Instr I, Mode M, Size S> StrWriter&
-StrWriter::operator<<(const Av<I,M,S> &av)
+StrWriter::operator<<(const Av<I, M, S> &av)
 {
     if (style == DASM_GNU || style == DASM_GNU_MIT) { return *this; }
     
