@@ -80,6 +80,7 @@ struct Dfc { };
 // FPU
 struct Fp { int raw; Fp(int v) : raw(v) { } };
 struct Ffmt { int raw; Ffmt(int v) : raw(v) { } };
+struct Fctrl { int raw; Fctrl(int v) : raw(v) { } };
 
 // Indentation
 struct Tab { int raw;  Tab(int v) : raw(v) { } };
@@ -170,6 +171,7 @@ public:
     StrWriter& operator<<(Dfc);
     StrWriter& operator<<(Fp);
     StrWriter& operator<<(Ffmt);
+    StrWriter& operator<<(Fctrl);
     StrWriter& operator<<(Tab);
     StrWriter& operator<<(Sep);
     template <Instr I, Mode M, Size S> StrWriter& operator<<(const Av<I,M,S> &);

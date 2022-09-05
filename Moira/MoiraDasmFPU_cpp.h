@@ -8,51 +8,6 @@
 // -----------------------------------------------------------------------------
 
 template <Instr I, Mode M, Size S> void
-Moira::dasmFBcc(StrWriter &str, u32 &addr, u16 op)
-{
-    auto old = addr;
-    auto ext = dasmRead<S>(addr);
-    auto cnd = ___________xxxxx (op);
-
-    // Check for special FNOP opcode
-    if ((op & 0x7F) == 0 && ext == 0) {
-
-        dasmFNop<FNOP, M, S>(str, addr, op);
-        return;
-    }
-
-    auto dst = old + 2;
-    U32_INC(dst, SEXT<S>(ext));
-
-    if (S == Long) {
-        str << Ins<I>{} << Fcc{cnd} << Sz<S>{} << tab << UInt(dst);
-    } else {
-        str << Ins<I>{} << Fcc{cnd} << tab << UInt(dst);
-    }
-}
-
-template <Instr I, Mode M, Size S> void
-Moira::dasmFDbcc(StrWriter &str, u32 &addr, u16 op)
-{
-    auto old = addr;
-    auto ext = dasmRead(addr);
-    auto src = _____________xxx (op);
-    auto cnd = ___________xxxxx (ext);
-
-    if (ext & 0xFFE0) {
-
-        addr = old;
-        dasmIllegal<I, M, S>(str, addr, op);
-        return;
-    }
-
-    auto dst = addr + 2;
-    U32_INC(dst, SEXT<S>(dasmRead<S>(addr)));
-
-    str << Ins<I>{} << Fcc{cnd} << tab << Dn{src} << Sep{} << UInt(dst);
-}
-
-template <Instr I, Mode M, Size S> void
 Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
 {
     auto ext  = dasmRead<Word>(addr);
@@ -63,16 +18,11 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
     if (M == MODE_AN) {
         if (ext & 0x4000) { dasmLineF<I, M, S>(str, addr, op); return; }
     }
-
-    // Catch special MOVECR opcode
-    /*
-    if ((ext & 0xFC00) == 0x5C00) {
-
-        dasmFMovecr<FMOVECR, M, S>(str, addr, op);
-        return;
+    if (M == MODE_IP) {
+        if (cod == 0b010) { dasmLineF<I, M, S>(str, addr, op); return; }
     }
-    */
-    
+
+    // Catch FMOVE instructions
     switch (cod) {
 
         case 0b010:
@@ -99,20 +49,14 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
             return;
     }
 
+    // Catch all other instructions
     switch (cod) {
 
         case 0b010:
-
-            if (M == MODE_IP) break;
-            [[fallthrough]];
-
         case 0b000:
 
             switch (cmd) {
 
-                // case 0x00: dasmFMove<FMOVE, M, S>(str, addr, op); return;
-                // case 0x40: dasmFMove<FMOVE, M, S>(str, addr, op); return;
-                // case 0x44: dasmFMove<FMOVE, M, S>(str, addr, op); return;
                 case 0x01: dasmFGeneric<FINT, M, S>(str, addr, op); return;
                 case 0x02: dasmFGeneric<FSINH, M, S>(str, addr, op); return;
                 case 0x03: dasmFGeneric<FINTRZ, M, S>(str, addr, op); return;
@@ -179,6 +123,52 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
 }
 
 template <Instr I, Mode M, Size S> void
+Moira::dasmFBcc(StrWriter &str, u32 &addr, u16 op)
+{
+    auto old = addr;
+    auto ext = dasmRead<S>(addr);
+    auto cnd = ___________xxxxx (op);
+
+    // Check for special FNOP opcode
+    if ((op & 0x7F) == 0 && ext == 0) {
+
+        dasmFNop<FNOP, M, S>(str, addr, op);
+        return;
+    }
+
+    auto dst = old + 2;
+    U32_INC(dst, SEXT<S>(ext));
+
+    if (S == Long) {
+        str << Ins<I>{} << Fcc{cnd} << Sz<S>{} << tab << UInt(dst);
+    } else {
+        str << Ins<I>{} << Fcc{cnd} << tab << UInt(dst);
+    }
+}
+
+template <Instr I, Mode M, Size S> void
+Moira::dasmFDbcc(StrWriter &str, u32 &addr, u16 op)
+{
+    auto old = addr;
+    auto ext = dasmRead(addr);
+    auto src = _____________xxx (op);
+    auto cnd = ___________xxxxx (ext);
+
+    // Catch illegal extension words
+    if ((str.style == DASM_GNU || str.style == DASM_GNU_MIT) && !isValidExtFPU(I, M, op, ext)) {
+
+        addr = old;
+        dasmIllegal<I, M, S>(str, addr, op);
+        return;
+    }
+
+    auto dst = addr + 2;
+    U32_INC(dst, SEXT<S>(dasmRead<S>(addr)));
+
+    str << Ins<I>{} << Fcc{cnd} << tab << Dn{src} << Sep{} << UInt(dst);
+}
+
+template <Instr I, Mode M, Size S> void
 Moira::dasmFNop(StrWriter &str, u32 &addr, u16 op)
 {
     str << Ins<I>{};
@@ -209,7 +199,8 @@ Moira::dasmFScc(StrWriter &str, u32 &addr, u16 op)
     auto reg = _____________xxx (op);
     auto cnd = __________xxxxxx (ext);
 
-    if (ext & 0xFFE0) {
+    // Catch illegal extension words
+    if ((str.style == DASM_GNU || str.style == DASM_GNU_MIT) && !isValidExtFPU(I, M, op, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -226,7 +217,8 @@ Moira::dasmFTrapcc(StrWriter &str, u32 &addr, u16 op)
     auto ext = dasmRead(addr);
     auto cnd = __________xxxxxx (ext);
 
-    if (ext & 0xFFE0) {
+    // Catch illegal extension words
+    if ((str.style == DASM_GNU || str.style == DASM_GNU_MIT) && !isValidExtFPU(I, M, op, ext)) {
 
         addr = old;
         dasmIllegal<I, M, S>(str, addr, op);
@@ -465,8 +457,8 @@ Moira::dasmFMove(StrWriter &str, u32 &addr, u16 op)
 
         case 0b000:
 
-            if (fac == 0x40) str << "fsmove" << Ffmt{2};
-            else if (fac == 0x44) str << "fdmove" << Ffmt{2};
+            if (fac == 0x40) str << Ins<FSMOVE>{} << Ffmt{2};
+            else if (fac == 0x44) str << Ins<FDMOVE>{} << Ffmt{2};
             else str << Ins<I>{} << Ffmt{2};
 
             str << tab << Fp(src) << Sep{} << Fp(dst);
@@ -474,8 +466,8 @@ Moira::dasmFMove(StrWriter &str, u32 &addr, u16 op)
 
         case 0b010:
 
-            if (fac == 0x40) str << "fsmove" << Ffmt{src};
-            else if (fac == 0x44) str << "fdmove" << Ffmt{src};
+            if (fac == 0x40) str << Ins<FSMOVE>{} << Ffmt{src};
+            else if (fac == 0x44) str << Ins<FDMOVE>{} << Ffmt{src};
             else str << Ins<I>{} << Ffmt{src};
 
             if (M == MODE_IM) {
@@ -537,7 +529,6 @@ Moira::dasmFMove(StrWriter &str, u32 &addr, u16 op)
                 case 0b111:
 
                     str << Ins<I>{} << Ffmt{3} << tab << Fp{dst} << Sep{} << Op<M, Long>(reg, addr);
-                    // str << "{" << Dn(fac >> 4) << "}";
                     str << Sep{} << Dn(fac >> 4);
                     break;
 
@@ -594,9 +585,6 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op)
         }
     }
 
-    const char *delim = "";
-    const char *mit = str.style == DASM_GNU_MIT || str.style == DASM_MOIRA_MIT ? "%" : "";
-
     switch (cod) {
 
         case 0b100: // Ea to Cntrl
@@ -614,11 +602,7 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op)
             } else {
                 str << Ins<FMOVEM>{} << Ffmt{0} << tab;
             }
-            str << Op<M, Long>(reg, addr) << Sep{};
-            if ((ext & 0x1C00) == 0) { str << "{}"; }
-            if (ext & 0x0400) { str << delim << mit << "fpiar"; delim = "/"; }
-            if (ext & 0x0800) { str << delim << mit << "fpsr";  delim = "/"; }
-            if (ext & 0x1000) { str << delim << mit << "fpcr";  delim = "/"; }
+            str << Op<M, Long>(reg, addr) << Sep{} << Fctrl{lll};
             break;
 
         case 0b101: // Cntrl to Ea
@@ -636,12 +620,7 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op)
             } else {
                 str << Ins<FMOVEM>{} << Ffmt{0} << tab;
             }
-            // str << Ins<I>{} << Ffmt{0} << tab;
-            if ((ext & 0x1C00) == 0 && str.style != DASM_GNU) { str << "{}"; }
-            if (ext & 0x0400) { str << delim << mit << "fpiar"; delim = "/"; }
-            if (ext & 0x0800) { str << delim << mit << "fpsr";  delim = "/"; }
-            if (ext & 0x1000) { str << delim << mit << "fpcr";  delim = "/"; }
-            str << Sep{} << Op<M, Long>(reg, addr);
+            str << Fctrl{lll} << Sep{} << Op<M, Long>(reg, addr);
             break;
 
         case 0b110: // Memory to FPU

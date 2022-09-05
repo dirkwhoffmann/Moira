@@ -1369,6 +1369,20 @@ StrWriter::operator<<(Ffmt ffmt)
 }
 
 StrWriter&
+StrWriter::operator<<(Fctrl fctrl)
+{
+    const char *prefix = style == DASM_GNU_MIT || style == DASM_MOIRA_MIT ? "%" : "";
+    const char *delim = "";
+
+    if (fctrl.raw == 0 && style != DASM_GNU) { *this << "{}"; }
+    if (fctrl.raw & 1) { *this << delim << prefix << "fpiar"; delim = "/"; }
+    if (fctrl.raw & 2) { *this << delim << prefix << "fpsr";  delim = "/"; }
+    if (fctrl.raw & 4) { *this << delim << prefix << "fpcr";  delim = "/"; }
+
+    return *this;
+}
+
+StrWriter&
 StrWriter::operator<<(Tab tab)
 {
     switch (style) {
