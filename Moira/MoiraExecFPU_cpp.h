@@ -29,7 +29,6 @@ Moira::isValidExtFPU(Instr I, Mode M, u16 op, u32 ext)
             return (op & 0x3F) == 0;
             
         case FMOVE:
-        case FMOVEM:
 
             switch (cod) {
 
@@ -65,8 +64,13 @@ Moira::isValidExtFPU(Instr I, Mode M, u16 op, u32 ext)
                         break;
                     }
                     return true;
+            }
 
-                case 0b101: // FMOVEM
+        case FMOVEM:
+
+            switch (cod) {
+
+                case 0b101:
                 {
 
                     if (ext & 0x3FF) break;
@@ -80,13 +84,13 @@ Moira::isValidExtFPU(Instr I, Mode M, u16 op, u32 ext)
                     if (M == MODE_IP) break;
                     return true;
                 }
-                case 0b100: // FMOVEM
+                case 0b100:
 
                     if (ext & 0x3FF) break;
                     if (M == MODE_IP) break;
                     return true;
 
-                case 0b110: // FMOVEM
+                case 0b110:
                 case 0b111:
 
                     if (M == MODE_DN || M == MODE_AN) break;
