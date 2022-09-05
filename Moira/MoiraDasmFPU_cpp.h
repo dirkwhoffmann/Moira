@@ -73,6 +73,25 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
 
     switch (cod) {
 
+        case 0b000:
+        case 0b010:
+        case 0b011:
+
+            if (cod != 0b011 && cmd != 0x00 && cmd != 0x40 && cmd != 0x44) break;
+            dasmFMove<FMOVE, M, S>(str, addr, op);
+            return;
+
+        case 0b101:
+        case 0b100:
+        case 0b110:
+        case 0b111:
+
+            dasmFMovem<FMOVEM, M, S>(str, addr, op);
+            return;
+    }
+
+    switch (cod) {
+
         case 0b010:
 
             if (M == MODE_IP) break;
@@ -82,9 +101,9 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
 
             switch (cmd) {
 
-                case 0x00: dasmFMove<FMOVE, M, S>(str, addr, op); return;
-                case 0x40: dasmFMove<FMOVE, M, S>(str, addr, op); return;
-                case 0x44: dasmFMove<FMOVE, M, S>(str, addr, op); return;
+                // case 0x00: dasmFMove<FMOVE, M, S>(str, addr, op); return;
+                // case 0x40: dasmFMove<FMOVE, M, S>(str, addr, op); return;
+                // case 0x44: dasmFMove<FMOVE, M, S>(str, addr, op); return;
                 case 0x01: dasmFGeneric<FINT, M, S>(str, addr, op); return;
                 case 0x02: dasmFGeneric<FSINH, M, S>(str, addr, op); return;
                 case 0x03: dasmFGeneric<FINTRZ, M, S>(str, addr, op); return;
@@ -145,12 +164,6 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
                 case 0x6C: dasmFGeneric<FDSUB, M, S>(str, addr, op); return;
             }
             break;
-
-        case 0b011: dasmFMove<FMOVE, M, S>(str, addr, op); return;
-        case 0b101: // dasmFMovem<FMOVEM, M, S>(str, addr, op); return;
-        case 0b100: // dasmFMovem<FMOVEM, M, S>(str, addr, op); return;
-        case 0b110:
-        case 0b111: dasmFMovem<FMOVEM, M, S>(str, addr, op); return;
     }
 
     dasmLineF<I, M, S>(str, addr, op);
