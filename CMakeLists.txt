@@ -28,7 +28,7 @@ target_link_libraries(testRunner musashi)
 
 # Add compile options
 if(MSVC)
-  target_compile_options(vAmigaCore PUBLIC /wd4100 /wd4201 /wd4324 /wd4458)
+  target_compile_options(testRunner PUBLIC /wd4100 /wd4201 /wd4324 /wd4458)
 else()
   target_compile_options(testRunner PUBLIC -Wno-unused-parameter)
   target_compile_options(testRunner PUBLIC -Wno-unused-variable)
