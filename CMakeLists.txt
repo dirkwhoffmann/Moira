@@ -27,10 +27,14 @@ target_link_libraries(testRunner moira)
 target_link_libraries(testRunner musashi)
 
 # Add compile options
-# target_compile_options(testRunner PUBLIC -Wno-unused-parameter)
-# target_compile_options(testRunner PUBLIC -Wno-unused-variable)
-# target_compile_options(testRunner PUBLIC -Wno-gnu-anonymous-struct)
-# target_compile_options(testRunner PUBLIC -Wno-nested-anon-types)
+if(MSVC)
+  target_compile_options(vAmigaCore PUBLIC /wd4100 /wd4201 /wd4324 /wd4458)
+else()
+  target_compile_options(testRunner PUBLIC -Wno-unused-parameter)
+  target_compile_options(testRunner PUBLIC -Wno-unused-variable)
+  target_compile_options(testRunner PUBLIC -Wno-gnu-anonymous-struct)
+  target_compile_options(testRunner PUBLIC -Wno-nested-anon-types)
+endif()
 
 # Add include paths
 target_include_directories(testRunner PUBLIC
