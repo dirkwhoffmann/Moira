@@ -66,6 +66,7 @@
 		5054686128A4CDDC00028727 /* Randomizer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Randomizer.h; sourceTree = "<group>"; };
 		5054686428A6647B00028727 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		505580EA23AFA14D0009F77F /* musashi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = musashi.cpp; sourceTree = "<group>"; };
+		505CA8AA28C7209200871439 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		507BE4AD23B66456000B37D2 /* Testrunner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Testrunner.cpp; sourceTree = "<group>"; };
 		507BE4AE23B66456000B37D2 /* Testrunner.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Testrunner.h; sourceTree = "<group>"; };
 		50804E062386A4CE004D3EC2 /* Moira */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Moira; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -191,6 +192,7 @@
 		50804E082386A4CE004D3EC2 /* Moira */ = {
 			isa = PBXGroup;
 			children = (
+				505CA8AA28C7209200871439 /* LICENSE */,
 				50F80AA723C9E4EC00F21D80 /* CMakeLists.txt */,
 				509ABE1323BA356E00BD91A8 /* MoiraConfig.h */,
 				50B99DAB23B24E0C00D8A89A /* MoiraTypes.h */,

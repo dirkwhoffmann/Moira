@@ -2,9 +2,7 @@
 // This file is part of Moira - A Motorola 68k emulator
 //
 // Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de
-// Licensed under the GNU General Public License v3
-//
-// See https://www.gnu.org for license information
+// Published under the terms of the MIT License
 // -----------------------------------------------------------------------------
 
 /* This file declares all instruction handlers. All handlers follow a common
@@ -169,10 +167,7 @@ MOIRA_DECLARE(CpScc)
 MOIRA_DECLARE(CpTrapcc)
 
 // MMU (Memory management unit)
-// MOIRA_DECLARE(PBcc) // MC68851 only
-// MOIRA_DECLARE(PDbcc) // MC68851 only
 MOIRA_DECLARE(PGen)
-
 MOIRA_DECLARE(PFlush)
 MOIRA_DECLARE(PFlusha)
 MOIRA_DECLARE(PFlush40)

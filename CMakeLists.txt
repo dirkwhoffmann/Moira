@@ -27,10 +27,10 @@ target_link_libraries(testRunner moira)
 target_link_libraries(testRunner musashi)
 
 # Add compile options
-target_compile_options(testRunner PUBLIC -Wno-unused-parameter)
-target_compile_options(testRunner PUBLIC -Wno-unused-variable)
-target_compile_options(testRunner PUBLIC -Wno-gnu-anonymous-struct)
-target_compile_options(testRunner PUBLIC -Wno-nested-anon-types)
+# target_compile_options(testRunner PUBLIC -Wno-unused-parameter)
+# target_compile_options(testRunner PUBLIC -Wno-unused-variable)
+# target_compile_options(testRunner PUBLIC -Wno-gnu-anonymous-struct)
+# target_compile_options(testRunner PUBLIC -Wno-nested-anon-types)
 
 # Add include paths
 target_include_directories(testRunner PUBLIC
