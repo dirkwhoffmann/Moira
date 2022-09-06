@@ -9,6 +9,7 @@
 
 #include "config.h"
 #include "Testrunner.h"
+#include <cstdio>
 
 TestCPU *moiracpu;
 Sandbox sandbox;
