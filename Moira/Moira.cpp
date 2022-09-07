@@ -519,7 +519,7 @@ Moira::availabilityMask(Instr I)
         case FACOS: case FASIN: case FATAN: case FATANH: case FCOS: case FCOSH:
         case FETOX: case FETOXM1: case FGETEXP: case FGETMAN: case FINT:
         case FINTRZ: case FLOG10: case FLOG2: case FLOGN: case FLOGNP1:
-        case FMOD: case FMOVECR: case FREM: case FSCALE: case FSGLDIV:
+        case FMOD: case FMOVECR: case FREM: case FSCAL: case FSGLDIV:
         case FSGLMUL: case FSIN: case FSINCOS: case FSINH: case FTAN:
         case FTANH: case FTENTOX: case FTWOTOX:
 

@@ -147,7 +147,7 @@ typedef enum
     FACOS,      FASIN,      FATAN,      FATANH,     FCOS,       FCOSH,
     FETOX,      FETOXM1,    FGETEXP,    FGETMAN,    FINT,       FINTRZ,
     FLOG10,     FLOG2,      FLOGN,      FLOGNP1,    FMOD,       FMOVECR,
-    FREM,       FSCALE,     FSGLDIV,    FSGLMUL,    FSIN,       FSINCOS,
+    FREM,       FSCAL,      FSGLDIV,    FSGLMUL,    FSIN,       FSINCOS,
     FSINH,      FTAN,       FTANH,      FTENTOX,    FTWOTOX,
 
     // Loop mode variants (68010)

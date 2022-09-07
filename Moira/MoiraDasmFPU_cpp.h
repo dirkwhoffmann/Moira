@@ -88,7 +88,7 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op)
                 case 0x23: dasmFGeneric<FMUL, M, S>(str, addr, op); return;
                 case 0x24: dasmFGeneric<FSGLDIV, M, S>(str, addr, op); return;
                 case 0x25: dasmFGeneric<FREM, M, S>(str, addr, op); return;
-                case 0x26: dasmFGeneric<FSCALE, M, S>(str, addr, op); return;
+                case 0x26: dasmFGeneric<FSCAL, M, S>(str, addr, op); return;
                 case 0x27: dasmFGeneric<FSGLMUL, M, S>(str, addr, op); return;
                 case 0x28: dasmFGeneric<FSUB, M, S>(str, addr, op); return;
                 case 0x30: dasmFGeneric2<FSINCOS, M, S>(str, addr, op); return;
@@ -259,7 +259,7 @@ Moira::dasmFGeneric(StrWriter &str, u32 &addr, u16 op)
                 case 0: // Long-Word Integer
 
                     val = dasmRead<Long>(addr);
-                    str << Ins<I>{} << Ffmt{src} << tab << Ims<Long>(val);
+                    str << Ins<I>{} << Ffmt{src} << tab << Ims<Long>(u32(val));
                     break;
 
                 case 1: // Single precision
@@ -286,7 +286,7 @@ Moira::dasmFGeneric(StrWriter &str, u32 &addr, u16 op)
 
                 case 6: // Byte Integer
                     val = dasmRead<Word>(addr);
-                    str << Ins<I>{} << Ffmt{src} << tab << Ims<Byte>(val);
+                    str << Ins<I>{} << Ffmt{src} << tab << Ims<Byte>(u32(val));
                     break;
 
                 default:
@@ -325,7 +325,7 @@ Moira::dasmFGeneric2(StrWriter &str, u32 &addr, u16 op)
                 case 0: // Long-Word Integer
 
                     val = dasmRead<Long>(addr);
-                    str << Ims<Long>(val);
+                    str << Ims<Long>(u32(val));
                     break;
 
                 case 1: // Single precision
@@ -353,7 +353,7 @@ Moira::dasmFGeneric2(StrWriter &str, u32 &addr, u16 op)
                 case 6: // Byte Integer
 
                     val = dasmRead<Word>(addr);
-                    str << Ims<Byte>(val);
+                    str << Ims<Byte>(u32(val));
                     break;
 
                 default:
@@ -388,7 +388,7 @@ Moira::dasmFGeneric3(StrWriter &str, u32 &addr, u16 op)
                 case 0: // Long-Word Integer
 
                     val = dasmRead<Long>(addr);
-                    str << Ins<I>{} << Ffmt{src} << tab << Ims<Long>(val);
+                    str << Ins<I>{} << Ffmt{src} << tab << Ims<Long>(u32(val));
                     break;
 
                 case 1: // Single precision
@@ -416,7 +416,7 @@ Moira::dasmFGeneric3(StrWriter &str, u32 &addr, u16 op)
                 case 6: // Byte Integer
 
                     val = dasmRead<Word>(addr);
-                    str << Ins<I>{} << Ffmt{src} << tab << Ims<Byte>(val);
+                    str << Ins<I>{} << Ffmt{src} << tab << Ims<Byte>(u32(val));
                     break;
 
                 default:
@@ -478,7 +478,7 @@ Moira::dasmFMove(StrWriter &str, u32 &addr, u16 op)
 
                     case 0: // Long-Word Integer
                         val = dasmRead<Long>(addr);
-                        str << tab << Ims<Long>(val) << Sep{} << Fp(dst);
+                        str << tab << Ims<Long>(u32(val)) << Sep{} << Fp(dst);
                         break;
 
                     case 1: // Single precision
@@ -505,7 +505,7 @@ Moira::dasmFMove(StrWriter &str, u32 &addr, u16 op)
 
                     case 6: // Byte Integer
                         val = dasmRead<Word>(addr);
-                        str << tab << Ims<Byte>(val) << Sep{} << Fp(dst);
+                        str << tab << Ims<Byte>(u32(val)) << Sep{} << Fp(dst);
                         break;
 
                     default:
