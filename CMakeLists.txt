@@ -45,3 +45,7 @@ ${CMAKE_SOURCE_DIR}/Musashi
 ${CMAKE_SOURCE_DIR}/Moira
 ${CMAKE_SOURCE_DIR}/Runner
 )
+
+# Add tests
+enable_testing()
+add_test(UnitTest testRunner)
