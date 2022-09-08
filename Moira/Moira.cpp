@@ -12,6 +12,7 @@
 #include <cmath>
 #include <bit>
 #include <vector>
+#include <stdexcept>
 
 namespace moira {
 
