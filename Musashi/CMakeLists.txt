@@ -6,10 +6,8 @@ m68kops.c
 softfloat/softfloat.c
 )
 
-target_compile_options(musashi PUBLIC -Wno-strict-aliasing)
-
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  target_compile_options(musashi PUBLIC -Wno-format-overflow)
-else()
-  target_compile_options(musashi PUBLIC -Wno-string-concatenation)
+if(NOT MSVC)
+    target_compile_options(musashi PUBLIC -Wno-strict-aliasing)
+    target_compile_options(musashi PUBLIC -Wno-format-overflow)
+    target_compile_options(musashi PUBLIC -Wno-string-concatenation)
 endif()

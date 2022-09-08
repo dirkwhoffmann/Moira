@@ -12,6 +12,7 @@
 #include <cmath>
 #include <bit>
 #include <vector>
+#include <stdexcept>
 
 namespace moira {
 
@@ -125,9 +126,8 @@ template <Core C> u32
 Moira::addrMask() const
 {
     if constexpr (C == C68020) {
-
-        if (model == M68020) return 0xFFFFFFFF;
-        if (model == M68030) return 0xFFFFFFFF;
+        
+        return model == M68EC020 ? 0x00FFFFFF : 0xFFFFFFFF;
     }
 
     return 0x00FFFFFF;
@@ -519,7 +519,7 @@ Moira::availabilityMask(Instr I)
         case FACOS: case FASIN: case FATAN: case FATANH: case FCOS: case FCOSH:
         case FETOX: case FETOXM1: case FGETEXP: case FGETMAN: case FINT:
         case FINTRZ: case FLOG10: case FLOG2: case FLOGN: case FLOGNP1:
-        case FMOD: case FMOVECR: case FREM: case FSCALE: case FSGLDIV:
+        case FMOD: case FMOVECR: case FREM: case FSCAL: case FSGLDIV:
         case FSGLMUL: case FSIN: case FSINCOS: case FSINH: case FTAN:
         case FTANH: case FTENTOX: case FTWOTOX:
 

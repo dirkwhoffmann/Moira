@@ -9,6 +9,8 @@
 
 #include "config.h"
 #include "Testrunner.h"
+#include <cstdio>
+#include <cstdarg>
 
 TestCPU *moiracpu;
 Sandbox sandbox;
@@ -19,11 +21,18 @@ u32 musashiFC = 0;
 moira::Model cpuModel = M68000;
 
 // Binutils
-char* binutilsBuffer = NULL;
-size_t binutilsBufferSize = 0;
-FILE* binutilsStream = open_memstream(&binutilsBuffer, &binutilsBufferSize);
 meminfo mi;
 disassemble_info di;
+
+static int binutilsFprintf(FILE* f, const char* format, ...)
+{
+    std::va_list ap;
+    va_start(ap, format);
+    char* buf = (char*)f;
+    const int l = strlen(buf);
+    const int n = vsnprintf(buf + l, sizeof(Result::dasmBinutils) - l, format, ap);va_end(ap);
+    return n;
+}
 
 void selectModel(moira::Model model)
 {
@@ -68,7 +77,7 @@ void setupBinutils()
         case M68040:    di.mach = MACH_68040; break;
     }
 
-    di.stream = binutilsStream;
+    // di.stream = binutilsStream;
     di.caller_private = &mi;
     di.memory_error_func = [](int, bfd_vma, struct disassemble_info*) {};
     di.read_memory_func = [](bfd_vma memaddr, bfd_byte* myaddr, unsigned int length, struct disassemble_info* dinfo) -> int {
@@ -77,9 +86,8 @@ void setupBinutils()
             *myaddr++ = memaddr < mi->len ? mi->bytes[memaddr++] : 0;
         return 0; // return <> 0 to indicate error
     };
-    di.fprintf_func = &fprintf;
+    di.fprintf_func = &binutilsFprintf;
     di.print_address_func = [](bfd_vma addr, struct disassemble_info* dinfo) {
-        // dinfo->fprintf_func(dinfo->stream, "$%X", addr);
         dinfo->fprintf_func(dinfo->stream, "%u", addr);
     };
 }
@@ -131,7 +139,6 @@ void setupTestEnvironment(Setup &s, long round)
 
 void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
 {
-    // static u64 mmu = 0;
     static long mvc = 0;
 
     moira::Instr instr = moiracpu->getInfo(opcode).I;
@@ -373,15 +380,9 @@ void runBinutils(Setup &s, Result &r)
     memcpy(mi.bytes, moiraMem, sizeof(mi.bytes));
     mi.len = 0x10000;
 
-    // r.dasmCntBinutils = print_insn_m68k(0, &di);
+    di.stream = (FILE*)r.dasmBinutils;
+    r.dasmBinutils[0] = 0;
     r.dasmCntBinutils = print_insn_m68k(pc, &di);
-    fflush(binutilsStream);
-    memcpy(r.dasmBinutils, binutilsBuffer, std::min(binutilsBufferSize, (size_t)128));
-    r.dasmBinutils[binutilsBufferSize] = 0;
-    rewind(binutilsStream);
-
-    // unsigned char * p = moiraMem + pc;
-    // printf("%02x%02x %02x%02x %02x%02x [%d] : %s\n", p[0], p[1], p[2], p[3], p[4], p[5], r.dasmCntBinutils, r.dasmBinutils);
 }
 
 void runMusashi(Setup &s, Result &r)
@@ -549,7 +550,6 @@ void dumpSetup(Setup &s)
 
 void dumpResult(Result &r)
 {
-    // printf("Old PC: %4x (opcode %x)  ", r.oldpc, r.opcode);
     printf("PC: %04x  Elapsed cycles: %d\n", r.pc, r.cycles);
     printf("         ");
     printf("SR: %x  ", r.sr);
@@ -577,11 +577,6 @@ void compare(Setup &s, Result &r1, Result &r2)
 {
     bool error = false;
 
-    /*
-    if (s.opcode >= 0xF000) {
-        printf("%x: %s\n", s.opcode, r1.dasmMusashi);
-    }
-    */
     if (doDasm((int)s.opcode)) {
 
         if (!compareDasm(r1, r2)) {

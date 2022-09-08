@@ -147,7 +147,7 @@ typedef enum
     FACOS,      FASIN,      FATAN,      FATANH,     FCOS,       FCOSH,
     FETOX,      FETOXM1,    FGETEXP,    FGETMAN,    FINT,       FINTRZ,
     FLOG10,     FLOG2,      FLOGN,      FLOGNP1,    FMOD,       FMOVECR,
-    FREM,       FSCALE,     FSGLDIV,    FSGLMUL,    FSIN,       FSINCOS,
+    FREM,       FSCAL,      FSGLDIV,    FSGLMUL,    FSIN,       FSINCOS,
     FSINH,      FTAN,       FTANH,      FTENTOX,    FTWOTOX,
 
     // Loop mode variants (68010)
@@ -261,14 +261,11 @@ typedef enum
 }
 IrqMode;
 
-typedef enum
-{
-    FC_USER_DATA            = 1,
-    FC_USER_PROG            = 2,
-    FC_SUPERVISOR_DATA      = 5,
-    FC_SUPERVISOR_PROG      = 6
-}
-FunctionCode;
+typedef u8 FunctionCode;
+static constexpr u8 FC_USER_DATA = 1;
+static constexpr u8 FC_USER_PROG = 2;
+static constexpr u8 FC_SUPERVISOR_DATA = 5;
+static constexpr u8 FC_SUPERVISOR_PROG = 6;
 
 typedef enum
 {
@@ -341,6 +338,16 @@ struct PrefetchQueue {
     
     u16 irc;                // The most recent word prefetched from memory
     u16 ird;                // The instruction currently being executed
+};
+
+struct MMU {
+
+    u64 crp;                // Cpu Root Pointer
+    u64 srp;                // Supervisor Root Pointer
+    u32 trc;                // Translation Control Register
+    u32 tt0;                // Transparent Translation Register 0
+    u32 tt1;                // Transparent Translation Register 1
+    u16 mmusr;              // MMU status register
 };
 
 /* Execution flags

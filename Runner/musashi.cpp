@@ -41,21 +41,21 @@ extern "C" unsigned int m68k_read_disassembler_32 (unsigned int addr)
 extern "C" void m68k_write_memory_8(unsigned int addr, unsigned int value)
 {
     if (CHECK_MEM_WRITES)
-        sandbox.record(POKE8, addr & 0xFFFFFF, 0, musashiFC, (u8)value);
+        sandbox.record(POKE8, addr, 0, musashiFC, (u8)value);
     set8(musashiMem, addr, (u8)value);
 }
 
 extern "C" void m68k_write_memory_16(unsigned int addr, unsigned int value)
 {
     if (CHECK_MEM_WRITES)
-        sandbox.record(POKE16, addr & 0xFFFFFF, 0, musashiFC, (u16)value);
+        sandbox.record(POKE16, addr, 0, musashiFC, (u16)value);
     set16(musashiMem, addr, (u16)value);
 }
 
 extern "C" void m68k_write_memory_32(unsigned int addr, unsigned int value)
 {
     m68k_write_memory_16(addr, (value >> 16) & 0xFFFF);
-    m68k_write_memory_16(addr + 2, value & 0xFFFF);
+    m68k_write_memory_16((addr + 2) & CPU_ADDRESS_MASK, value & 0xFFFF);
 }
 
 extern "C" int interrupt_handler(int irqLevel)

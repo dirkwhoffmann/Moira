@@ -7,11 +7,13 @@ Sandbox.cpp
 Randomizer.cpp
 )
 
-target_compile_options(runner PUBLIC -Wno-unused-parameter)
-target_compile_options(runner PUBLIC -Wno-unused-variable)
-target_compile_options(runner PUBLIC -Wno-unused-but-set-variable)
-target_compile_options(runner PUBLIC -Wno-implicit-fallthrough)
-target_compile_options(runner PUBLIC -Wno-missing-field-initializers)
+if (NOT MSVC)
+    target_compile_options(runner PUBLIC -Wno-unused-parameter)
+    target_compile_options(runner PUBLIC -Wno-unused-variable)
+    target_compile_options(runner PUBLIC -Wno-unused-but-set-variable)
+    target_compile_options(runner PUBLIC -Wno-implicit-fallthrough)
+    target_compile_options(runner PUBLIC -Wno-missing-field-initializers)
+endif()
 
 # Add include paths
 target_include_directories(runner PUBLIC

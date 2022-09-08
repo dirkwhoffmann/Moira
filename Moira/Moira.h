@@ -106,11 +106,14 @@ protected:
     // Number of elapsed cycles since powerup
     i64 clock;
     
-    // The egister set
+    // The register set
     Registers reg;
     
     // The prefetch queue
     PrefetchQueue queue;
+
+    // The memory management unit
+    MMU mmu;
     
     // Current value on the IPL pins (Interrupt Priority Level)
     u8 ipl;
@@ -505,7 +508,21 @@ private:
     
     // Selects the IRQ vector to branch to
     u16 getIrqVector(u8 level) const;
-    
+
+
+    //
+    // Working with the MMU
+    //
+
+private:
+
+    // Translates a logical address to a physical address
+    template <Core C, bool write> u32 translate(u32 addr, u8 fc);
+
+
+
+private:
+
 #include "MoiraInit.h"
 #include "MoiraALU.h"
 #include "MoiraDataflow.h"
