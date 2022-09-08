@@ -442,8 +442,7 @@ Moira::writeMS(u32 addr, u32 val)
 
         SYNC(2);
         if (F & POLLIPL) pollIpl();
-        // TODO: Use addrMask
-        write8(addr & 0xFFFFFF, (u8)val);
+        write8(addr & addrMask<C>(), (u8)val);
         SYNC(2);
     }
 
@@ -451,7 +450,7 @@ Moira::writeMS(u32 addr, u32 val)
 
         SYNC(2);
         if (F & POLLIPL) pollIpl();
-        write16(addr & 0xFFFFFF, (u16)val);
+        write16(addr & addrMask<C>(), (u16)val);
         SYNC(2);
     }
 
@@ -460,19 +459,19 @@ Moira::writeMS(u32 addr, u32 val)
         if (F & REVERSE) {
 
             SYNC(2);
-            write16((addr + 2) & 0xFFFFFF, u16(val & 0xFFFF));
+            write16((addr + 2) & addrMask<C>(), u16(val & 0xFFFF));
             SYNC(4);
             if (F & POLLIPL) pollIpl();
-            write16(addr & 0xFFFFFF, u16(val >> 16));
+            write16(addr & addrMask<C>(), u16(val >> 16));
             SYNC(2);
 
         } else {
 
             SYNC(2);
-            write16(addr  & 0xFFFFFF, u16(val >> 16));
+            write16(addr & addrMask<C>(), u16(val >> 16));
             SYNC(4);
             if (F & POLLIPL) pollIpl();
-            write16((addr + 2) & 0xFFFFFF, u16(val & 0xFFFF));
+            write16((addr + 2) & addrMask<C>(), u16(val & 0xFFFF));
             SYNC(2);
         }
     }
