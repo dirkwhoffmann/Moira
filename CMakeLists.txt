@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 # Set the project name
 project(testRunner)
 
+# Enable testing
+enable_testing()
+
 # Set the C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -47,5 +50,4 @@ ${CMAKE_SOURCE_DIR}/Runner
 )
 
 # Add tests
-enable_testing()
 add_test(UnitTest testRunner)
