@@ -1,7 +1,11 @@
 name: CMake-MSVC
 
-on: [push,pull_request]
-
+on:  
+  push:
+  pull_request:
+  schedule:
+    - cron: '20 11 * * *'
+    
 env:
   BUILD_TYPE: Release
 
