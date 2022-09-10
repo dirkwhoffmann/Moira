@@ -33,7 +33,7 @@ these four paragraphs for those parts of this code that are retained.
 /*----------------------------------------------------------------------------
 | Include common integer types and flags.
 *----------------------------------------------------------------------------*/
-#include "mamesf.h"
+#include "musashi_mamesf.h"
 
 /*----------------------------------------------------------------------------
 | Symbolic Boolean literals.

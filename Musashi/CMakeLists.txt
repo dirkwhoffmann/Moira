@@ -3,7 +3,7 @@ add_library(musashi STATIC
 m68kcpu.c
 m68kdasm.c
 m68kops.c
-softfloat/softfloat.c
+musashi_softfloat/musashi_softfloat.c
 )
 
 if(NOT MSVC)

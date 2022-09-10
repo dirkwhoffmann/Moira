@@ -51,7 +51,7 @@ int8 float_rounding_mode = float_round_nearest_even;
 | are propagated from function inputs to output.  These details are target-
 | specific.
 *----------------------------------------------------------------------------*/
-#include "softfloat-specialize"
+#include "musashi_softfloat-specialize"
 
 /*----------------------------------------------------------------------------
 | Takes a 64-bit fixed-point value `absZ' with binary point between bits 6

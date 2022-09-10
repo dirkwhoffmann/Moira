@@ -62,7 +62,7 @@ typedef struct {
 | division and square root approximations.  (Can be specialized to target if
 | desired.)
 *----------------------------------------------------------------------------*/
-#include "softfloat-macros"
+#include "musashi_softfloat-macros"
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point underflow tininess-detection mode.
