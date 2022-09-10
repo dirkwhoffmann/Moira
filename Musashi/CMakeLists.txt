@@ -8,6 +8,9 @@ musashi_softfloat/musashi_softfloat.c
 
 if(NOT MSVC)
     target_compile_options(musashi PUBLIC -Wno-strict-aliasing)
-    target_compile_options(musashi PUBLIC -Wno-format-overflow)
     target_compile_options(musashi PUBLIC -Wno-string-concatenation)
+endif()
+
+if(MINGW)
+    target_compile_options(musashi PUBLIC -Wno-format-overflow)
 endif()

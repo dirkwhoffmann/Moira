@@ -2,7 +2,10 @@ add_library(moira STATIC
 
 Moira.cpp
 MoiraDebugger.cpp
+softfloat/softfloat.cpp
 )
+
+target_include_directories(moira PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/softfloat)
 
 if (NOT MSVC)
     target_compile_options(moira PUBLIC -Wno-unused-parameter)
