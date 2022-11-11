@@ -672,13 +672,6 @@ Moira::execAndRgEa(u16 opcode)
     looping<I>() ? noPrefetch<C>(2) : prefetch<C, POLL>();
 
     if constexpr (S == Long && isRegMode(M)) { SYNC_68000(4); SYNC_68010(2); }
-    /*
-     if constexpr (C == C68000) {
-     if constexpr (S == Long && isRegMode(M)) SYNC(4);
-     } else {
-     if constexpr (S == Long && isRegMode(M)) SYNC(2);
-     }
-     */
 
     if constexpr (MIMIC_MUSASHI) {
         writeOp<C, M, S>(dst, ea, result);
@@ -2534,7 +2527,7 @@ Moira::execLink(u16 opcode)
     // Check for address error
     if (misaligned<C>(sp)) {
 
-        writeBuffer = u16(readA(ax));
+        writeBuffer = u16(readA(ax) >> 16);
         writeA(ax, sp);
         throw AddressError(makeFrame<AE_DATA|AE_WRITE>(sp, getPC() + 2, getSR(), ird));
     }
