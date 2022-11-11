@@ -92,24 +92,23 @@ struct Finish { };
 
 class StrWriter
 {
-    
+
 public:
-    
+
     char comment[32];       // Appended to the end of the disassembled string
     char *base;             // Start address of the destination string
     char *ptr;              // Write pointer
 
-    DasmStyle style;
-    DasmNumberFormat nf;
-    
+    const DasmStyle &style;
+    Tab tab {8};
+
 public:
-    
-    StrWriter(char *p, DasmStyle s, DasmNumberFormat n) {
-        
+
+    // StrWriter(char *p, DasmSyntax s, DasmNumberFormat n) {
+    StrWriter(char *p, const DasmStyle &style) : style(style) {
+
         comment[0] = 0;
         base = ptr = p;
-        style = s;
-        nf = n;
     };
 
     StrWriter& operator<<(char);

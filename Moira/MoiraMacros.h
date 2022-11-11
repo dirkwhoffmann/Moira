@@ -61,12 +61,26 @@
 #define CYCLES_IM(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_IM,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
 #define CYCLES_IP(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_IP,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
 
+#define POLL_IPL reg.ipl = ipl
+
 #define REVERSE_8(x) (u8)(((x) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
 #define REVERSE_16(x) (u16)((REVERSE_8((x) & 0xFF) << 8) | REVERSE_8(((x) >> 8) & 0xFF))
+
+// Sanitizer friendly macros for adding signed offsets to u32 values
 #define U32_ADD(x,y) (u32)((i64)(x) + (i64)(y))
 #define U32_SUB(x,y) (u32)((i64)(x) - (i64)(y))
+#define U32_ADD3(x,y,z) (u32)((i64)(x) + (i64)(y) + (i64)(z))
+#define U32_SUB3(x,y,z) (u32)((i64)(x) - (i64)(y) - (i64)(z))
 #define U32_INC(x,y) x = U32_ADD(x,y)
 #define U32_DEC(x,y) x = U32_SUB(x,y)
+
+// Sanitizer friendly macros for adding signed offsets to u64 values
+#define U64_ADD(x,y) (u64)((i64)(x) + (i64)(y))
+#define U64_SUB(x,y) (u64)((i64)(x) - (i64)(y))
+#define U64_ADD3(x,y,z) (u64)((i64)(x) + (i64)(y) + (i64)(z))
+#define U64_SUB3(x,y,z) (u64)((i64)(x) - (i64)(y) - (i64)(z))
+#define U64_INC(x,y) x = U64_ADD(x,y)
+#define U64_DEC(x,y) x = U64_SUB(x,y)
 
 #define ______________xx(opcode) (u8)((opcode >> 0)  & 0b11)
 #define _____________xxx(opcode) (u8)((opcode >> 0)  & 0b111)
@@ -102,3 +116,4 @@
 #define _xxx____________(opcode) (u8)((opcode >> 12) & 0b111)
 #define xxxx____________(opcode) (u8)((opcode >> 12) & 0b1111)
 #define xxx_____________(opcode) (u8)((opcode >> 13) & 0b111)
+#define x_______________(opcode) (u8)((opcode >> 15) & 0b1)

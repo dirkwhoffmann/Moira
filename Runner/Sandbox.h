@@ -20,8 +20,7 @@ enum AccessType {
     PEEK8,
     PEEK16,
     POKE8,
-    POKE16,
-    POLL,
+    POKE16
 };
 
 static const char *accessTypeStr[] = {
@@ -54,7 +53,6 @@ public:
     void prepare(u16 opcode);
     long getErrors() { return errors; }
     void record(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value);
-    void recordPoll(u64 cycle, u32 fc, u8 value);
     void replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value);
 
     void error(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value = 0);

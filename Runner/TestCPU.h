@@ -16,12 +16,12 @@ using namespace moira;
 class TestCPU : public Moira {
 
     void sync(int cycles) override;
-    u8 read8(u32 addr) override;
-    u16 read16(u32 addr) override;
-    u16 read16OnReset(u32 addr) override;
-    u16 read16Dasm(u32 addr) override;
-    void write8 (u32 addr, u8  val) override;
-    void write16 (u32 addr, u16 val) override;
+    u8 read8(u32 addr) const override;
+    u16 read16(u32 addr) const override;
+    u16 read16OnReset(u32 addr) const override;
+    u16 read16Dasm(u32 addr) const override;
+    void write8 (u32 addr, u8  val) const override;
+    void write16 (u32 addr, u16 val) const override;
     u16 readIrqUserVector(u8 level) const override;
     void breakpointReached(u32 addr) override;
     void watchpointReached(u32 addr) override;

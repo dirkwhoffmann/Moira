@@ -5,21 +5,8 @@
 // Published under the terms of the MIT License
 // -----------------------------------------------------------------------------
 
-template <Core C, bool write> u32
-Moira::translate(u32 addr, u8 fc)
-{
-    // Only proceed if a MMU capable core is present
-    if constexpr (C == C68000 || C == C68010) return addr;
-
-    // Only proceed of the selected CPU model has a MMU
-    if (!hasMMU()) return addr;
-
-    // TODO: Translate address
-    return addr;
-}
-
 bool
-Moira::isValidExtMMU(Instr I, Mode M, u16 op, u32 ext)
+Moira::isValidExtMMU(Instr I, Mode M, u16 op, u32 ext) const
 {
     auto preg  = [ext]() { return ext >> 10 & 0b111;   };
     auto a     = [ext]() { return ext >>  8 & 0b1;     };
@@ -28,7 +15,9 @@ Moira::isValidExtMMU(Instr I, Mode M, u16 op, u32 ext)
     auto reg   = [ext]() { return ext >>  5 & 0b111;   };
     auto fc    = [ext]() { return ext       & 0b11111; };
 
-    auto validFC = [&]() { return fc() <= 1 || (fc() >= 8); }; // Binutils checks M68851
+    auto validFC = [&]() {
+        return fc() <= 1 || (fc() >= 8); // Binutils checks M68851
+    };
 
     switch (I) {
 
@@ -125,47 +114,92 @@ Moira::isValidExtMMU(Instr I, Mode M, u16 op, u32 ext)
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPGen(u16 opcode)
 {
-    printf("TODO: execPGen");
+    auto ext = queue.irc;
+
+    // PLOAD: 0010 00x0 000x xxxx
+    if ((ext & 0xFDE0) == 0x2000) {
+
+        execPLoad<C, PLOAD, M, S>(opcode);
+        return;
+    }
+
+    // PFLUSHA: 0010 010x xxxx xxxx
+    if ((ext & 0xFE00) == 0x2400) {
+
+        execPFlusha<C, PFLUSHA, M, S>(opcode);
+        return;
+    }
+
+    // PFLUSH: 001x xx0x xxxx xxxx
+    if ((ext & 0xE200) == 0x2000) {
+
+        execPFlush<C, PFLUSH, M, S>(opcode);
+        return;
+    }
+
+    // PTEST: 100x xxxx xxxx xxxx
+    if ((ext & 0xE000) == 0x8000) {
+
+        execPTest<C, PTEST, M, S>(opcode);
+        return;
+    }
+
+    // PMOVE: 010x xxxx 0000 0000 || 0110 00x0 0000 0000 || 000x xxxx 0000 0000
+    if ((ext & 0xE0FF) == 0x4000 || (ext & 0xFDFF) == 0x6000 || (ext & 0xE0FF) == 0x0000) {
+
+        execPMove<C, PMOVE, M, S>(opcode);
+        return;
+    }
+
+    execIllegal<C, I, M, S>(opcode);
 }
+
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPFlush(u16 opcode)
 {
-    printf("TODO: execPFlush");
+    AVAILABILITY(C68020)
+    throw std::runtime_error("Attempted to execute an unsupported 68030 instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPFlusha(u16 opcode)
 {
-    printf("TODO: execPFlusha");
+    AVAILABILITY(C68020)
+    throw std::runtime_error("Attempted to execute an unsupported 68030 instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPFlush40(u16 opcode)
 {
-    printf("TODO: execPFlush40");
+    AVAILABILITY(C68020)
+    throw std::runtime_error("Attempted to execute an unsupported 68040 instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPLoad(u16 opcode)
 {
-    printf("TODO: execPLoad");
+    AVAILABILITY(C68020)
+    throw std::runtime_error("Attempted to execute an unsupported 68030 instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPMove(u16 opcode)
 {
-    printf("TODO: execPMove");
+    AVAILABILITY(C68020)
+    throw std::runtime_error("Attempted to execute an unsupported 68030 instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPTest(u16 opcode)
 {
-    printf("TODO: execPTest");
+    AVAILABILITY(C68020)
+    throw std::runtime_error("Attempted to execute an unsupported 68030 instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPTest40(u16 opcode)
 {
-    printf("TODO: execPTest40");
+    AVAILABILITY(C68020)
+    throw std::runtime_error("Attempted to execute an unsupported 68040 instruction.");
 }

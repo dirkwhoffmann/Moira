@@ -95,8 +95,8 @@ typedef uint32 uint64;
 #define S64(val) val
 #endif
 
-#include "softfloat/milieu.h"
-#include "softfloat/softfloat.h"
+#include "musashi_softfloat/musashi_milieu.h"
+#include "musashi_softfloat/musashi_softfloat.h"
 
 
 /* Allow for architectures that don't have 8-bit sizes */
