@@ -5,21 +5,8 @@
 // Published under the terms of the MIT License
 // -----------------------------------------------------------------------------
 
-template <Core C, bool write> u32
-Moira::translate(u32 addr, u8 fc)
-{
-    // Only proceed if a MMU capable core is present
-    if constexpr (C == C68000 || C == C68010) return addr;
-
-    // Only proceed of the selected CPU model has a MMU
-    if (!hasMMU()) return addr;
-
-    // TODO: Translate address
-    return addr;
-}
-
 bool
-Moira::isValidExtMMU(Instr I, Mode M, u16 op, u32 ext)
+Moira::isValidExtMMU(Instr I, Mode M, u16 op, u32 ext) const
 {
     auto preg  = [ext]() { return ext >> 10 & 0b111;   };
     auto a     = [ext]() { return ext >>  8 & 0b1;     };
@@ -28,7 +15,9 @@ Moira::isValidExtMMU(Instr I, Mode M, u16 op, u32 ext)
     auto reg   = [ext]() { return ext >>  5 & 0b111;   };
     auto fc    = [ext]() { return ext       & 0b11111; };
 
-    auto validFC = [&]() { return fc() <= 1 || (fc() >= 8); }; // Binutils checks M68851
+    auto validFC = [&]() {
+        return fc() <= 1 || (fc() >= 8); // Binutils checks M68851
+    };
 
     switch (I) {
 
@@ -165,186 +154,52 @@ Moira::execPGen(u16 opcode)
     execIllegal<C, I, M, S>(opcode);
 }
 
+
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPFlush(u16 opcode)
 {
-    printf("TODO: execPFlush");
+    AVAILABILITY(C68020)
+    throw std::runtime_error("Attempted to execute an unsupported 68030 instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPFlusha(u16 opcode)
 {
-    printf("TODO: execPFlusha");
+    AVAILABILITY(C68020)
+    throw std::runtime_error("Attempted to execute an unsupported 68030 instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPFlush40(u16 opcode)
 {
-    printf("TODO: execPFlush40");
+    AVAILABILITY(C68020)
+    throw std::runtime_error("Attempted to execute an unsupported 68040 instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPLoad(u16 opcode)
 {
-    printf("TODO: execPLoad");
+    AVAILABILITY(C68020)
+    throw std::runtime_error("Attempted to execute an unsupported 68030 instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPMove(u16 opcode)
 {
     AVAILABILITY(C68020)
-
-    u16 ext = queue.irc;
-    auto fmt  = xxx_____________ (ext);
-    auto preg = ___xxx__________ (ext);
-    bool rw   = ______x_________ (ext);
-
-    // Catch illegal extension words
-    if (!isValidExtMMU(I, M, opcode, ext)) {
-
-        execIllegal<C, ILLEGAL, M, S>(opcode);
-        return;
-    }
-
-    (void)readI<C, Word>();
-
-    switch (fmt) {
-
-        case 0:
-
-            switch (preg) {
-
-                case 0b010: execPMove<M>(opcode, REG_TT0, rw); break;
-                case 0b011: execPMove<M>(opcode, REG_TT1, rw); break;
-            }
-            break;
-
-        case 2:
-
-            switch (preg) {
-
-                case 0b000: execPMove<M>(opcode, REG_TC, rw); break;
-                case 0b010: execPMove<M>(opcode, REG_SRP, rw); break;
-                case 0b011: execPMove<M>(opcode, REG_CRP, rw); break;
-            }
-            break;
-
-        case 3:
-
-            switch (preg) {
-
-                case 0b000: execPMove<M>(opcode, REG_MMUSR, rw); break;
-            }
-            break;
-    }
-
-    prefetch<C, POLLIPL>();
-
-    CYCLES_68020(8);
-    FINALIZE
-}
-
-template <Mode M> void
-Moira::execPMove(u16 opcode, RegName mmuReg, bool rw)
-{
-    u32 ea;
-    u32 data32;
-    u64 data64;
-
-    auto reg  = _____________xxx (opcode);
-
-    if (rw) {
-
-        switch (mmuReg) {
-
-            case REG_MMUSR:
-
-                writeOp<C68020, M, Word>(reg, mmu.mmusr);
-                break;
-
-            case REG_TT0:
-
-                writeOp<C68020, M, Long>(reg, mmu.tt0);
-                break;
-
-            case REG_TT1:
-
-                writeOp<C68020, M, Long>(reg, mmu.tt1);
-                break;
-
-            case REG_TC:
-
-                writeOp<C68020, M, Long>(reg, mmu.tc);
-                break;
-
-            case REG_CRP:
-
-                writeOp64<C68020, M>(reg, mmu.crp);
-                break;
-
-            case REG_SRP:
-
-                writeOp64<C68020, M>(reg, mmu.srp);
-                break;
-
-            default:
-                assert(false);
-        }
-
-    } else {
-
-        switch (mmuReg) {
-
-            case REG_MMUSR:
-
-                if (!readOp<C68020, M, Word>(reg, &ea, &data32)) return;
-                mmu.mmusr = u16(data32);
-                break;
-
-            case REG_TT0:
-
-                if (!readOp<C68020, M, Word>(reg, &ea, &data32)) return;
-                mmu.tt0 = data32;
-                break;
-
-            case REG_TT1:
-
-                if (!readOp<C68020, M, Word>(reg, &ea, &data32)) return;
-                mmu.tt1 = data32;
-                break;
-
-            case REG_TC:
-
-                if (!readOp<C68020, M, Word>(reg, &ea, &data32)) return;
-                mmu.tc = data32;
-                break;
-
-            case REG_CRP:
-
-                if (!readOp64<M, Word>(reg, &ea, &data64)) return;
-                mmu.crp = data64;
-                break;
-
-            case REG_SRP:
-
-                if (!readOp64<M, Word>(reg, &ea, &data64)) return;
-                mmu.srp = data64;
-                break;
-
-            default:
-                assert(false);
-        }
-    }
+    throw std::runtime_error("Attempted to execute an unsupported 68030 instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPTest(u16 opcode)
 {
-    printf("TODO: execPTest");
+    AVAILABILITY(C68020)
+    throw std::runtime_error("Attempted to execute an unsupported 68030 instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPTest40(u16 opcode)
 {
-    printf("TODO: execPTest40");
+    AVAILABILITY(C68020)
+    throw std::runtime_error("Attempted to execute an unsupported 68040 instruction.");
 }

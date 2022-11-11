@@ -32,40 +32,6 @@ these four paragraphs for those parts of this code that are retained.
 
 #include "softfloat-types.h"
 
-#if 0
-/*----------------------------------------------------------------------------
-| The macro `FLOATX80' must be defined to enable the extended double-precision
-| floating-point format `floatx80'.  If this macro is not defined, the
-| `floatx80' type will not be defined, and none of the functions that either
-| input or output the `floatx80' type will be defined.  The same applies to
-| the `FLOAT128' macro and the quadruple-precision format `float128'.
-*----------------------------------------------------------------------------*/
-#define FLOATX80
-#define FLOAT128
-
-
-namespace softfloat {
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE floating-point types.
-*----------------------------------------------------------------------------*/
-typedef bits32 float32;
-typedef bits64 float64;
-#ifdef FLOATX80
-typedef struct {
-	bits16 high;
-	bits64 low;
-} floatx80;
-#endif
-#ifdef FLOAT128
-typedef struct {
-	bits64 high, low;
-} float128;
-#endif
-
-}
-#endif
-
 /*----------------------------------------------------------------------------
  | Primitive arithmetic functions, including multi-word arithmetic, and
  | division and square root approximations.  (Can be specialized to target if
@@ -222,7 +188,7 @@ static inline floatx80 packFloatx80( flag zSign, int32 zExp, bits64 zSig )
 	floatx80 z;
 
 	z.low = zSig;
-	z.high = ( ( (bits16) zSign )<<15 ) + zExp;
+	z.high = (bits16)(( ( (bits16) zSign )<<15 ) + zExp); // DIRK
 	return z;
 
 }
@@ -405,7 +371,7 @@ static inline float128
 						LIT64( 0xFFFFFFFFFFFFFFFF )
 					);
 			shift128ExtraRightJamming(
-				zSig0, zSig1, zSig2, - zExp, &zSig0, &zSig1, &zSig2 );
+				zSig0, zSig1, zSig2, (int16)(- zExp), &zSig0, &zSig1, &zSig2 ); // DIRK
 			zExp = 0;
 			if ( isTiny && zSig2 ) float_raise( float_flag_underflow );
 			if ( roundNearestEven ) {

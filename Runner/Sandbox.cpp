@@ -30,15 +30,15 @@ Sandbox::record(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
 }
 
 void
-Sandbox::recordPoll(u64 cycle, u32 fc, u8 value)
-{
-    record(POLL, 0, cycle, fc, value);
-}
-
-void
 Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
 {
     if (!enabled) return;
+
+    auto info = moiracpu->getInfo(opcode);
+
+    // Ignore some opcodes that are handled differently by Moira
+    if (info.I == CLR && info.S == Long) return;
+    if (info.I == CHK && cpuModel != M68000) return;
 
     for (int i = 0; i < recordCnt; i++) {
 

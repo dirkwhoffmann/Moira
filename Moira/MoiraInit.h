@@ -16,7 +16,7 @@
 template <Core C, Instr I, Mode M, Size S> void exec##x(u16);
 
 #define MOIRA_DECLARE_DASM(x) \
-template <Instr I, Mode M, Size S> void dasm##x(StrWriter &, u32 &, u16);
+template <Instr I, Mode M, Size S> void dasm##x(StrWriter &, u32 &, u16) const;
 
 #define MOIRA_DECLARE(x) \
 MOIRA_DECLARE_EXEC(x) \
@@ -202,19 +202,19 @@ MOIRA_DECLARE(Move16AlPi)
 MOIRA_DECLARE(Move16AiAl)
 MOIRA_DECLARE(Move16AlAi)
 
-// Sub handlers 
+// Sub handlers
 template <Core C, Instr I, Mode M, Size S> void execMulsMoira(u16);
 template <Core C, Instr I, Mode M, Size S> void execMuluMoira(u16);
 template <Core C, Instr I, Mode M, Size S> void execMullMoira(u16);
-template <Core C, Instr I, Mode M, Size S> bool execDivsMoira(u16, bool *);
-template <Core C, Instr I, Mode M, Size S> bool execDivuMoira(u16, bool *);
+template <Core C, Instr I, Mode M, Size S> void execDivsMoira(u16, bool *);
+template <Core C, Instr I, Mode M, Size S> void execDivuMoira(u16, bool *);
 template <Core C, Instr I, Mode M, Size S> bool execDivlMoira(u16, bool *);
 
 template <Core C, Instr I, Mode M, Size S> void execMulsMusashi(u16);
 template <Core C, Instr I, Mode M, Size S> void execMuluMusashi(u16);
 template <Core C, Instr I, Mode M, Size S> void execMullMusashi(u16);
-template <Core C, Instr I, Mode M, Size S> bool execDivsMusashi(u16, bool *);
-template <Core C, Instr I, Mode M, Size S> bool execDivuMusashi(u16, bool *);
+template <Core C, Instr I, Mode M, Size S> void execDivsMusashi(u16, bool *);
+template <Core C, Instr I, Mode M, Size S> void execDivuMusashi(u16, bool *);
 template <Core C, Instr I, Mode M, Size S> bool execDivlMusashi(u16, bool *);
 
 template <Mode M> void execPMove(u16, RegName, bool);

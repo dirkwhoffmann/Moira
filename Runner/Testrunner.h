@@ -41,6 +41,7 @@ extern u8 musashiMem[0x10000];
 extern u8 moiraMem[0x10000];
 extern u32 musashiFC;
 extern moira::Model cpuModel;
+extern u16 opcode;
 
 // Binutils
 struct meminfo { unsigned char bytes[0x10000]; unsigned len; };

@@ -24,7 +24,7 @@ TestCPU::sync(int cycles)
  * It should emulate the read access including all side effects.
  */
 u8
-TestCPU::read8(u32 addr)
+TestCPU::read8(u32 addr) const
 {
     return get8(moiraMem, addr);
 }
@@ -35,7 +35,7 @@ TestCPU::read8(u32 addr)
  * It should emulate the read access including all side effects.
  */
 u16
-TestCPU::read16(u32 addr)
+TestCPU::read16(u32 addr) const
 {
     return get16(moiraMem, addr);
 }
@@ -46,7 +46,7 @@ TestCPU::read16(u32 addr)
  * In contrast to read16, no side effects should be emulated.
  */
 u16
-TestCPU::read16Dasm(u32 addr)
+TestCPU::read16Dasm(u32 addr) const
 {
     return get16(moiraMem, addr);
 }
@@ -57,7 +57,7 @@ TestCPU::read16Dasm(u32 addr)
  * It's up to you if you want to emulate side effects here.
  */
 u16
-TestCPU::read16OnReset(u32 addr)
+TestCPU::read16OnReset(u32 addr) const
 {
     switch (addr) {
         case 0: return 0x0000;
@@ -74,7 +74,7 @@ TestCPU::read16OnReset(u32 addr)
  * It should emulate the write access including all side effects.
  */
 void
-TestCPU::write8(u32 addr, u8  val)
+TestCPU::write8(u32 addr, u8  val) const
 {
     if (CHECK_MEM_WRITES)
         sandbox.replayPoke(POKE8, addr, getClock(), readFC(), val);
@@ -83,11 +83,11 @@ TestCPU::write8(u32 addr, u8  val)
 
 /* Writes a word into memory.
  *
- * This function is called whenever the 68000 CPU writes a word into memory.
+ * This function is called whenever the CPU writes a word into memory.
  * It should emulate the write access including all side effects.
  */
 void
-TestCPU::write16 (u32 addr, u16 val)
+TestCPU::write16 (u32 addr, u16 val) const
 {
     if (CHECK_MEM_WRITES)
         sandbox.replayPoke(POKE16, addr, getClock(), readFC(), val);

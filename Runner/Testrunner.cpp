@@ -18,7 +18,8 @@ Randomizer randomizer;
 u8 musashiMem[0x10000];
 u8 moiraMem[0x10000];
 u32 musashiFC = 0;
-moira::Model cpuModel = M68000;
+moira::Model cpuModel = M68010;
+u16 opcode = 0;
 
 // Binutils
 meminfo mi;
@@ -123,7 +124,7 @@ void setupTestEnvironment(Setup &s, long round)
     s.ext1 = u16(randomizer.rand());
     s.ext2 = u16(randomizer.rand());
     s.ext3 = u16(randomizer.rand());
-    s.vbr = u16(randomizer.rand());
+    s.vbr = cpuModel == M68000 ? 0 : u16(randomizer.rand() & ~1);
     s.sfc = u16(randomizer.rand());
     s.dfc = u16(randomizer.rand());
     s.cacr = randomizer.rand() & moiracpu->cacrMask();
@@ -267,14 +268,14 @@ void runCPU(long round)
 
         setupTestEnvironment(setup, round * 32 + i);
 
-        for (int opcode = 0x0000; opcode <= 0xFFFF; opcode++) {
+        for (int op = 0x0000; op <= 0xFFFF; op++) {
 
             if constexpr (SKIP_ILLEGAL) {
-                if (moiracpu->getInfo(opcode).I == moira::ILLEGAL) continue;
+                if (moiracpu->getInfo(op).I == moira::ILLEGAL) continue;
             }
 
             // Execute both CPU cores
-            runSingleTest(setup, u16(opcode));
+            runSingleTest(setup, u16(op));
         }
     }
     passed();
@@ -341,6 +342,8 @@ void passed()
 void runSingleTest(Setup &s, u16 op)
 {
     Result mur, mor;
+
+    opcode = op;
 
     // Prepare the test case with the selected instruction
     setupTestInstruction(s, pc, op);
@@ -431,14 +434,14 @@ void runMoira(Setup &s, Result &r)
     if (doDasm(r.opcode)) {
 
         // Disassemble the instruction in Musashi format
-        moiracpu->setDasmStyle(DASM_MUSASHI);
+        moiracpu->setDasmSyntax(DASM_MUSASHI);
         moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
         clock_t elapsed = clock();
         r.dasmCntMusashi = moiracpu->disassemble(r.oldpc, r.dasmMusashi);
         r.elapsed[1] = clock() - elapsed;
 
         // Disassemble the instruction in GNU format (binutils)
-        moiracpu->setDasmStyle(DASM_GNU_MIT);
+        moiracpu->setDasmSyntax(DASM_GNU_MIT);
         moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 10, .plainZero = true });
         r.dasmCntBinutils = moiracpu->disassemble(r.oldpc, r.dasmBinutils);
     }
@@ -486,6 +489,11 @@ bool skip(u16 op)
     instr == moira::BFINS   ||
     instr == moira::BFSET   ||
     instr == moira::BFTST;
+
+    if (cpuModel != M68000) {
+
+        result |= instr == moira::RTE;
+    }
 
     return result;
 }
@@ -587,17 +595,16 @@ void compare(Setup &s, Result &r1, Result &r2)
 
     if (doExec((int)s.opcode)) {
 
-        if (!comparePC(r1, r2)) {
-            printf("\nPROGRAM COUNTER MISMATCH FOUND");
-            error = true;
-        }
-        if (!compareCycles(r1, r2)) {
-            printf("\nCLOCK MISMATCH FOUND");
-            error = true;
-        }
-
         if (!skip(s.opcode)) {
 
+            if (!comparePC(r1, r2)) {
+                printf("\nPROGRAM COUNTER MISMATCH FOUND");
+                error = true;
+            }
+            if (!compareCycles(r1, r2)) {
+                printf("\nCLOCK MISMATCH FOUND");
+                error = true;
+            }
             if (!compareSR(r1, r2)) {
                 printf("\nSTATUS REGISTER MISMATCH FOUND");
                 error = true;
