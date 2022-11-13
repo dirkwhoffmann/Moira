@@ -1532,7 +1532,7 @@ Moira::execChk(u16 opcode)
 
         readOp<C, M, S>(src, &ea, &data);
 
-    } catch (const AddressError &exc) {
+    } catch (const AddressError &) {
 
         // Rectify the stack frame
         if (C == C68000) {
