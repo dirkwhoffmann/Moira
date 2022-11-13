@@ -5,7 +5,6 @@
 // Published under the terms of the MIT License
 // -----------------------------------------------------------------------------
 
-#include "config.h"
 #include "MoiraConfig.h"
 #include "Moira.h"
 #include "MoiraMacros.h"

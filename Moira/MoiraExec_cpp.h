@@ -1538,7 +1538,7 @@ Moira::execChk(u16 opcode)
         if (C == C68000) {
 
             SYNC(2);
-            throw AddressError( makeFrame<STD_AE_FRAME>(ea));
+            throw AddressError(makeFrame<STD_AE_FRAME>(ea));
 
         } else {
 
@@ -1574,17 +1574,23 @@ Moira::execChk(u16 opcode)
 
     if (SEXT<S>(dy) > SEXT<S>(data)) {
 
-        if (C == C68000) {
+        switch (C) {
 
-            SYNC(MIMIC_MUSASHI ? 10 - (int)(clock - c) : 2);
+            case C68000:
+            case C68020:
 
-        } else {
+                SYNC(MIMIC_MUSASHI ? 10 - (int)(clock - c) : 2);
+                break;
 
-            prefetch<C, POLL>();
-            SYNC_68010(4);
+            case C68010:
+
+                prefetch<C, POLL>();
+                SYNC_68010(4);
+                break;
         }
         reg.sr.n = NBIT<S>(dy);
         execException<C>(EXC_CHK);
+
 
         CYCLES_68000(40)
         CYCLES_68010(44)
@@ -1594,14 +1600,18 @@ Moira::execChk(u16 opcode)
 
     if (SEXT<S>(dy) < 0) {
 
-        if (C == C68000) {
+        switch (C) {
 
-            SYNC(MIMIC_MUSASHI ? 10 - (int)(clock - c) : 4);
+            case C68000:
+            case C68020:
 
-        } else {
+                SYNC(MIMIC_MUSASHI ? 10 - (int)(clock - c) : 4);
+                break;
 
-            prefetch<C, POLL>();
-            SYNC_68010(6);
+            case C68010:
+
+                prefetch<C, POLL>();
+                SYNC_68010(6);
         }
         reg.sr.n = MIMIC_MUSASHI ? NBIT<S>(dy) : 1;
         execException<C>(EXC_CHK);
@@ -1732,36 +1742,67 @@ Moira::execClr(u16 opcode)
         int dst = _____________xxx(opcode);
 
         u32 ea = computeEA<C, M, S>(dst);
-        updateAn<M, S>(dst);
+        // updateAnPD<M, S>(dst);
+        // if (!misaligned<C>(ea)) updateAnPI<M, S>(dst);
 
         switch (M) {
 
             case MODE_AI:
+
+                writeOp<C, M, S, POLL | AE_INC_PC>(dst, ea, 0);
+                looping<I>() ? noPrefetch<C>() : prefetch<C>();
+                if (looping<I>()) loopModeDelay = 4;
+                break;
+
             case MODE_PI:
 
-                writeOp<C, M, S, POLL>(dst, ea, 0);
+                writeOp<C, M, S, POLL | AE_INC_PC>(dst, ea, 0);
+                updateAnPI<M, S>(dst);
                 looping<I>() ? noPrefetch<C>() : prefetch<C>();
                 if (looping<I>()) loopModeDelay = 4;
                 break;
 
             case MODE_PD:
 
-                writeOp<C, M, S, REVERSE | POLL>(dst, ea, 0);
+                if constexpr (S == Long) {
+                    writeOp<C, M, S, REVERSE | POLL | AE_INC_PC | AE_INC_A>(dst, ea, 0);
+                } else {
+                    writeOp<C, M, S, REVERSE | POLL | AE_INC_PC>(dst, ea, 0);
+                }
+                updateAnPD<M, S>(dst);
                 looping<I>() ? noPrefetch<C>() : prefetch<C>();
                 if (looping<I>()) loopModeDelay = 4;
                 break;
 
             case MODE_DI:
 
+                reg.sr.n = 0;
+                reg.sr.z = 1;
+                reg.sr.v = 0;
+                reg.sr.c = 0;
+
                 prefetch<C, POLL>();
-                writeOp<C, M, S, REVERSE>(dst, ea, 0);
+                if constexpr (S == Long) {
+                    writeOp<C, M, S, REVERSE | AE_INC_PC | AE_INC_A>(dst, ea, 0);
+                } else {
+                    writeOp<C, M, S, REVERSE | AE_INC_PC>(dst, ea, 0);
+                }
                 break;
 
             case MODE_IX:
 
+                reg.sr.n = 0;
+                reg.sr.z = 1;
+                reg.sr.v = 0;
+                reg.sr.c = 0;
+
                 SYNC(2);
-                prefetch<C, POLL>();
-                writeOp<C, M, S, REVERSE>(dst, ea, 0);
+                prefetch<C,POLL>();
+                if constexpr (S == Long) {
+                    writeOp<C, M, S, REVERSE | AE_INC_PC | AE_INC_A>(dst, ea, 0);
+                } else {
+                    writeOp<C, M, S, REVERSE | AE_INC_PC>(dst, ea, 0);
+                }
                 break;
 
             case MODE_AW:
@@ -2791,10 +2832,8 @@ Moira::execMove4(u16 opcode)
     // Determine next address error stack frame format
     const u64 flags0 = AE_WRITE | AE_DATA;
     const u64 flags1 = AE_WRITE | AE_DATA | AE_SET_CB3;
-    // const u64 flags1 = AE_WRITE | AE_DATA;
     const u64 flags2 = AE_WRITE | AE_DATA;
-    int format = (S == Long) ? 0 : reg.sr.c ? 2 : 1;
-    // int format = reg.sr.c ? 2 : 1;
+    int format = (S == Long) ? 0 : (reg.sr.s || reg.sr.c) ? 2 : 1;
 
     reg.sr.n = NBIT<S>(data);
     reg.sr.z = ZERO<S>(data);
@@ -3078,7 +3117,6 @@ Moira::execMovea(u16 opcode)
     try { readOp<C, M, S>(src, &ea, &data); } catch (AddressError &exc) {
 
         // Rectify the stack frame
-        readBuffer = 0xFFFF; // To pass ADDRERR6 (needs investigation)
         exc.stackFrame = makeFrame<STD_AE_FRAME|AE_SET_RW|AE_SET_DF>(ea);
         throw exc;
     }
@@ -3117,9 +3155,9 @@ Moira::execMovecRcRx(u16 opcode)
 
     if constexpr (C == C68010) {
 
-        auto reg = arg & 0xFFF;
+        auto rc = arg & 0xFFF;
 
-        if (reg != 0x000 && reg != 0x001 && reg != 0x800 && reg != 0x801) {
+        if (rc != 0x000 && rc != 0x001 && rc != 0x800 && rc != 0x801) {
 
             execIllegal<C, I, M, S>(opcode);
             return;
@@ -3127,10 +3165,10 @@ Moira::execMovecRcRx(u16 opcode)
     }
     if constexpr (C == C68020) {
 
-        auto reg = arg & 0xFFF;
+        auto rc = arg & 0xFFF;
 
-        if (reg != 0x000 && reg != 0x001 && reg != 0x800 && reg != 0x801 &&
-            reg != 0x002 && reg != 0x802 && reg != 0x803 && reg != 0x804) {
+        if (rc != 0x000 && rc != 0x001 && rc != 0x800 && rc != 0x801 &&
+            rc != 0x002 && rc != 0x802 && rc != 0x803 && rc != 0x804) {
 
             execIllegal<C, I, M, S>(opcode);
             return;
@@ -3460,6 +3498,8 @@ Moira::execMoves(u16 opcode)
     AVAILABILITY(C68010)
     SUPERVISOR_MODE_ONLY
 
+    auto old = queue.irc;
+
     if (queue.irc & 0x800) {    // Rg -> Ea
 
         auto arg = readI<C, Word>();
@@ -3468,7 +3508,6 @@ Moira::execMoves(u16 opcode)
 
         auto value = readR<S>(src);
 
-        // readOp<C, M, S, STD_AE_FRAME | SKIP_READ>(dst, &ea, &data);
         u32 ea = computeEA<C, M, S>(dst);
         updateAn<M, S>(dst);
 
@@ -3496,7 +3535,17 @@ Moira::execMoves(u16 opcode)
         fcSource = 2;
 
         // writeOp<C, M, S>(dst, value);
-        writeM<C, M, S>(ea, value);
+        try {
+            writeM<C, M, S, AE_INC_PC>(ea, value);
+        } catch (AddressError &exc) {
+
+            writeBuffer = (S == Long ? u16(value >> 16) : u16(value & 0xFFFF));
+
+            // EXPERIMENTAL: CLEAN THIS UP (RENAME stackFrame.ird to irc?!)
+            fcSource = 0;
+            queue.irc = old;
+            throw exc;
+        }
 
         // Switch back to the old FC pin values
         fcSource = 0;
@@ -3511,8 +3560,17 @@ Moira::execMoves(u16 opcode)
 
         // u32 ea, data;
         // readOp<C, M, S, STD_AE_FRAME | SKIP_READ>(src, &ea, &data);
-        u32 ea = computeEA<C, M, S>(src);
-        updateAn<M, S>(src);
+        u32 ea;
+        try {
+
+            ea = computeEA<C, M, S>(src);
+            updateAn<M, S>(src);
+
+        } catch (AddressError &exc) {
+
+            exc.stackFrame.ird = old;
+            throw exc;
+        }
 
         // Make the SFC register visible on the FC pins
         fcSource = 1;
@@ -3584,8 +3642,35 @@ Moira::execMoveFromCcrEa(u16 opcode)
     if (M == MODE_AI) SYNC(2);
     if (M == MODE_PI) SYNC(4);
     if (M == MODE_PD) SYNC(2);
+
+    auto val = getCCR();
+
+    // Compute effective address
+    u32 ea = computeEA<C, M, S>(dst);
+
+    // Emulate -(An) register modification
+    updateAnPD<M, S>(dst);
+
+    prefetch<C>();
+
+    if (misaligned<C>(ea)) {
+
+        writeBuffer = val & 0xFFFF;
+        updateAnPI<M, S>(dst);
+        setFC<M>();
+        throw AddressError(makeFrame<AE_WRITE|AE_INC_PC>(ea));
+    }
+
+    // Write to effective address
+    writeM<C, M, S, POLL>(ea, val);
+
+    // Emulate (An)+ register modification
+    updateAnPI<M, S>(dst);
+
+    /*
     writeOp<C, M, S, POLL>(dst, getCCR());
     prefetch<C>();
+    */
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -3676,8 +3761,33 @@ Moira::execMoveFromSrEa(u16 opcode)
         if (M == MODE_AI) SYNC(2);
         if (M == MODE_PI) SYNC(4);
         if (M == MODE_PD) SYNC(2);
+
+        auto val = getSR();
+        u32 ea = computeEA<C, M, S>(dst);
+
+        // Emulate -(An) register modification
+        updateAnPD<M, S>(dst);
+
+        prefetch<C>();
+
+        if (misaligned<C>(ea)) {
+
+            writeBuffer = val & 0xFFFF;
+            updateAnPI<M, S>(dst);
+            setFC<M>();
+            throw AddressError(makeFrame<AE_WRITE|AE_INC_PC>(ea));
+        }
+
+        // Write to effective address
+        writeM<C, M, S, POLL>(ea, val);
+
+        // Emulate (An)+ register modification
+        updateAnPI<M, S>(dst);
+
+        /*
         writeOp<C, M, S, POLL>(dst, getSR());
         prefetch<C>();
+        */
     }
 
     //           00  10  20        00  10  20        00  10  20
@@ -4849,7 +4959,7 @@ Moira::execRte(u16 opcode)
 
         case C68000:
         {
-            // TODO: Use pop instead of read
+            // TODO: Use pop instead of read (?)
             newsr = (u16)read<C, MEM_DATA, Word>(reg.sp);
             reg.sp += 2;
 
@@ -4859,8 +4969,7 @@ Moira::execRte(u16 opcode)
         }
         case C68010:
         {
-            // TODO: Use pop instead of read
-
+            // TODO: Use pop instead of read (?)
             format = (u16)read<C, MEM_DATA, Word>(reg.sp + 6);
 
             // Check the frame format
@@ -4930,7 +5039,7 @@ Moira::execRte(u16 opcode)
                     SYNC(4);
                     (void)read<C, MEM_DATA, Long>(reg.sp + 2);
 
-                    reg.sr.c = 1; // Check test case Exceptions/StackFrame/stackframe2
+                    // reg.sr.c = 1; // Check test case Exceptions/StackFrame/stackframe2
                     execException(EXC_FORMAT_ERROR);
                     return;
             }

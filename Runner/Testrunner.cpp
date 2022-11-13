@@ -227,10 +227,10 @@ void run()
     printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2022\n\n");
     printf("The test program runs Moira agains Musashi with randomly generated data.\n");
     printf("\n");
-    printf("    Test rounds: %ld\n", ROUNDS);
-    printf("    Random seed: %d\n", randomizer.init());
-    printf("     Exec range: %s\n", TOSTRING(doExec(opcode)));
-    printf("     Dasm range: %s\n", TOSTRING(doDasm(opcode)));
+    printf("    Test rounds : %ld\n", ROUNDS);
+    printf("    Random seed : %d\n", randomizer.init());
+    printf("     Exec range : %s\n", TOSTRING(doExec(opcode)));
+    printf("     Dasm range : %s\n", TOSTRING(doDasm(opcode)));
 
     for (long i = 1; i <= ROUNDS; i++) {
 
