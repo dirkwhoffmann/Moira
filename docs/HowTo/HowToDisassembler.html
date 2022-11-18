@@ -1,0 +1,485 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>How to use the disassembler &#8212; Version 2.2</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="How to use the debugger" href="HowToDebugger.html" />
+    <link rel="prev" title="How to use the CPU core" href="HowToCPU.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="../_static/icon.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">Version 2.2</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Overview
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../Overview/About.html">
+   About
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Tutorials
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../Tutorials/GettingStarted.html">
+   Getting started
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  How-to guides
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="HowToCPU.html">
+   How to use the CPU core
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   How to use the disassembler
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="HowToDebugger.html">
+   How to use the debugger
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="HowToDelegation.html">
+   How to use the delegation system
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Reference
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../Reference/ConfigOptions.html">
+   Configuration options
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+            <div class="navbar_extra_footer">
+            Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
+            </div>
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
+</div>
+
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
+        
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<button onclick="toggleFullScreen()"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="bottom"
+title="Fullscreen mode"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+<a href="https://github.com/dirkwhoffmann/Moira"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="bottom"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+<div class="menu-dropdown menu-dropdown-download-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Download this page">
+      <i class="fas fa-download"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="../_sources/HowTo/HowToDisassembler.md.txt"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Download source file"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="headerbtn__text-container">.md</span>
+</a>
+
+      </li>
+      
+      <li>
+        
+<button onclick="printPdf(this)"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="left"
+title="Print to PDF"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="headerbtn__text-container">.pdf</span>
+</button>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
+    </div>
+</div>
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#running-the-disassembler">
+   Running the disassembler
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#customizing-output">
+   Customizing output
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#examples">
+   Examples
+  </a>
+ </li>
+</ul>
+
+    </nav>
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>How to use the disassembler</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#running-the-disassembler">
+   Running the disassembler
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#customizing-output">
+   Customizing output
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#examples">
+   Examples
+  </a>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <main id="main-content" role="main">
+                
+              <div>
+                
+  <section id="how-to-use-the-disassembler">
+<h1>How to use the disassembler<a class="headerlink" href="#how-to-use-the-disassembler" title="Permalink to this heading">#</a></h1>
+<section id="running-the-disassembler">
+<h2>Running the disassembler<a class="headerlink" href="#running-the-disassembler" title="Permalink to this heading">#</a></h2>
+<p>Moira features a built-in disassembler which allows to create textual representations for instructions, the program counter and the status register. Textual representations can be created with the following API functions:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">disassemble(u32</span> <span class="pre">addr,</span> <span class="pre">char</span> <span class="pre">*str)</span> <span class="pre">const</span></code></p>
+<p>This functions disassembles the command at the specified address. It is the responsibility of the caller to ensure that the target string is initialized and large enough to hold the generated string. The function returns the number of bytes that the disassembled instruction occupies in memory.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">disassembleWord(u32</span> <span class="pre">value,</span> <span class="pre">char</span> <span class="pre">*str)</span> <span class="pre">const</span></code></p>
+<p>Returns a textual representation for a single word from memory.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">disassembleMemory(u32</span> <span class="pre">addr,</span> <span class="pre">int</span> <span class="pre">cnt,</span> <span class="pre">char</span> <span class="pre">*str)</span> <span class="pre">const</span></code></p>
+<p>Returns a textual representation for one or more words from memory.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">disassemblePC(u32</span> <span class="pre">pc,</span> <span class="pre">char</span> <span class="pre">*str)</span> <span class="pre">const</span></code></p>
+<p>Creates a textual representation for the passed-in value of the program counter. If the first parameter is omitted, the current value of the program counter is disassembled.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">disassembleSR(const</span> <span class="pre">StatusRegister</span> <span class="pre">&amp;sr,</span> <span class="pre">char</span> <span class="pre">*str)</span> <span class="pre">const</span></code></p>
+<p>Creates a textual representation for the referenced status register. If the first parameter is omitted, the current status register is disassembled.</p>
+</li>
+</ul>
+</section>
+<section id="customizing-output">
+<h2>Customizing output<a class="headerlink" href="#customizing-output" title="Permalink to this heading">#</a></h2>
+<p>The disassembler output can be customized in various ways by calling one of the following API functions:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">setDasmSyntax(DasmSyntax</span> <span class="pre">value)</span></code></p>
+<p>Moira supports the following syntax styles:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DASM_MOIRA</span></code>
+This is the default syntax style. It prints the instructions in Motorola syntax.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DASM_MOIRA_MIT</span></code>
+This is a Moira-specific style that prints the instructions in MIT syntax.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DASM_GNU</span></code>
+This style resembles the output of the m68k disassembler integrated in <code class="docutils literal notranslate"><span class="pre">binutils</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DASM_GNU_MIT</span></code>
+This style mimics the output of <code class="docutils literal notranslate"><span class="pre">binutils</span></code> when run in MIT mode.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DASM_MUSASHI</span></code>
+This style reproduces the Musashi disassembler output one-by-one.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">setDasmNumberFormat(DasmNumberFormat</span> <span class="pre">value)</span></code></p>
+<p>The number format can be controlled by a variety of parameters which are grouped together in a singe struct:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">DasmNumberFormat</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">prefix</span><span class="p">;</span><span class="w">     </span><span class="c1">// Prefix for hexidecimal numbers</span>
+<span class="w">    </span><span class="n">u8</span><span class="w"> </span><span class="n">radix</span><span class="p">;</span><span class="w">               </span><span class="c1">// 10 (decimal) or 16 (hexadecimal)</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">upperCase</span><span class="p">;</span><span class="w">         </span><span class="c1">// Lettercase for hexadecimal digits A...F</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">plainZero</span><span class="p">;</span><span class="w">         </span><span class="c1">// Determines whether 0 is printed with a prefix</span>
+<span class="p">};</span><span class="w"></span>
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">setDasmLetterCase(DasmLetterCase</span> <span class="pre">value)</span></code></p>
+<p>The letter case determines the appearance of mnemonics and register names. The following options are availabe:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DASM_MIXED_CASE</span></code>
+The style is determined by the selected syntax style.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DASM_LOWER_CASE</span></code>
+All mnemonics and register names are printed in lowercase.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DASM_UPPER_CASE</span></code>
+All mnemonics and register names are printed in uppercase.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">setDasmIndentation(int</span> <span class="pre">value)</span></code></p>
+<p>Defines the tabulator space between the mnemonic and the rest of the instruction.</p>
+</li>
+</ul>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Running Moira in vAmiga with syntax style <code class="docutils literal notranslate"><span class="pre">DASM_MOIRA</span></code>
+<img alt="Screenshot" src="../_images/dasm_mot.png" /></p></li>
+<li><p>Running Moira in vAmiga with syntax style <code class="docutils literal notranslate"><span class="pre">DASM_MOIRA_MIT</span></code>
+<img alt="Screenshot" src="../_images/dasm_mit.png" /></p></li>
+</ul>
+</section>
+</section>
+
+
+              </div>
+              
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="HowToCPU.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">How to use the CPU core</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="HowToDebugger.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">How to use the debugger</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+            </footer>
+        </div>
+    </div>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Dirk W. Hoffmann<br/>
+  
+      &copy; Copyright 2022, Dirk W. Hoffmann.<br/>
+</p>
+        </footer>
+    </div>
+    
+</div>
+
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
+
+  </body>
+</html>

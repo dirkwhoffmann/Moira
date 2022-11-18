@@ -25,12 +25,12 @@
 			<!-- Nav -->
 			<nav id="nav">
 				<ul>
-					<li class="current"><a href="index.html">News</a></li>
-					<li><a href="about.html">About</a></li>
+					<li class="current"><a href="index.html">About</a></li>
+					<li><a href="news.html">News</a></li>
 					<li><a href="https://github.com/dirkwhoffmann/moira">Code</a></li>
+					<li><a href="docs/index.html">Documentation</a></li>
 					<li><a href="https://github.com/dirkwhoffmann/moira/issues">Issues</a></li>
 					<li><a href="https://github.com/dirkwhoffmann/moira/discussions">Discussions</a></li>
-					<li><a href="https://github.com/dirkwhoffmann/moira/wiki">Wiki</a></li>
 					<li><a href="impressum.html">Impressum</a></li>
 				</ul>
 			</nav>
@@ -44,104 +44,98 @@
 			</header>
 		</section>
 
-		<!-- Main -->
+		<!-- Grid -->
 		<section class="wrapper style1">
 			<div class="container">
-				<div class="row gtr-200">
-					<div class="col-8 col-12-narrower imp-narrower">
-						<div id="content">
-
-							<!-- Content -->
-
-							<article>
-								<header>
-									<h2>News</h2>
-								</header>
-
-								<h3><em>11.5.2021 &nbsp;</em>Moira v1.0 has been released</h3>
-
-								<p>Moira v1.0 is the version being used in vAmiga 1.0, which has been released today. 
-								</p>
-
-								<h3><em>10.1.2021 &nbsp;</em>Web site has been relocated</h3>
-
-								<p>I am currently moving all HTML pages from my personal domain to GitHub pages. 
-									The old web site will go away once this is done.
-								</p>
-
-								<h3><em>5.3.2020 &nbsp;</em>New web site in place</h3>
-
-								<p>The old web page is gone for good. I replaced it by a new template scheme which
-									allows me to publish in a more blog-style manner.</p>
-							</article>
-
+				<div class="row">
+					<section class="col-6 col-12-narrower">
+						<div class="box post">
+							<a href="#" class="image left"><img src="images/icon-mo.jpg" alt="" /></a>
+							<div class="inner">
+								<h3>About</h3>
+								<p>Moira is a Motorola 68000 emulator written in C++. It aims for high emulation
+									accuracy, both functionally and temporally. Moira is the heart of the vAmiga
+									emulator where it does a very good job so far.</p>
+							</div>
 						</div>
-					</div>
-					<div class="col-4 col-12-narrower">
-						<div id="sidebar2">
-
-							<!-- Sidebar -->
-							<section>
-								<h3>Project activity</h3>
-								<p>
-									<img alt="GitHub watchers"
-										src="https://img.shields.io/github/watchers/dirkwhoffmann/Moira?style=social">
-									<img alt="GitHub Repo stars"
-										src="https://img.shields.io/github/stars/dirkwhoffmann/Moira?style=social">
-									<img alt="GitHub forks"
-										src="https://img.shields.io/github/forks/dirkwhoffmann/Moira?style=social"><br><br>
-									<img alt="GitHub build status"
-										src="https://github.com/dirkwhoffmann/Moira/workflows/C%2FC++%20CI/badge.svg"><br>
-									<img alt="GitHub release (latest by date)"
-										src="https://img.shields.io/github/downloads/dirkwhoffmann/Moira/latest/total">
-									<img alt="GitHub all releases"
-										src="https://img.shields.io/github/downloads/dirkwhoffmann/Moira/total"><br>
-									<img alt="GitHub issues"
-										src="https://img.shields.io/github/issues/dirkwhoffmann/Moira">
-									<img alt="GitHub closed issues"
-										src="https://img.shields.io/github/issues-closed/dirkwhoffmann/Moira"><br>
-									<img alt="GitHub code size in bytes"
-										src="https://img.shields.io/github/languages/code-size/dirkwhoffmann/Moira">
-									<img alt="GitHub repo size"
-										src="https://img.shields.io/github/repo-size/dirkwhoffmann/Moira">
-								</p>
-							</section>
-
-							<section>
-								<h3>Show case</h3>
-								<p>Moira is the core of vAmiga, a user-friendly Amiga emulator for macOS. Check it out today.</p>
-								<span class="image featured"><img src="images/ad-va.png" alt="vAmiga" /></span>
-								<footer>
-									<a href="https://dirkwhoffmann.github.io/vAmiga" class="button">Learn more</a>
-								</footer>
-							</section>
+					</section>
+					<section class="col-6 col-12-narrower">
+						<div class="box post">
+							<a href="#" class="image left"><img src="images/cpp.jpg" alt="" /></a>
+							<div class="inner">
+								<h3>Portability</h3>
+								<p>Moira has been tested thouroughly with clang on macOS as part of the vAmiga
+									project. It has been designed to compile on other platforms as well. If you encouter
+									portability issues, please feel free to contact me.</p>
+							</div>
 						</div>
-					</div>
+					</section>
+				</div>
+				<div class="row">
+					<section class="col-6 col-12-narrower">
+						<div class="box post">
+							<a href="#" class="image left"><img src="images/speed.jpg" alt="" /></a>
+							<div class="inner">
+								<h3>Speed</h3>
+								<p>Due to heavy template usage, Moira ist fast. 
+									It surpasses the emulation speed of Musashi, which is among the fastest 
+									M68k emulators to date.
+								</p>
+							</div>
+						</div>
+					</section>
+					<section class="col-6 col-12-narrower">
+						<div class="box post">
+							<a href="#" class="image left"><img src="images/mit.png" alt="" /></a>
+							<div class="inner">
+								<h3>License</h3>
+								<p>Moira is open-source and published under the terms of the MIT License.</p>
+							</div>
+						</div>
+					</section>
 				</div>
 			</div>
-		</section>
+			<!-- </section> -->
 
-		<!-- Footer -->
-		<div id="footer">
+			<!-- One column -->
+			<div class="container">
+				<article>
+					<div id="content">
 
-			<!-- Icons -->
-			<ul class="icons">
-				<li><a href="https://github.com/dirkwhoffmann" class="icon brands fa-github"><span
-							class="label">GitHub</span></a></li>
-			</ul>
+						<!-- Content -->
 
-			<!-- Copyright -->
-			<div class="copyright">
-				<ul class="menu">
-					<li>&copy; <a href="http://www.dirkwhoffmann.de">Dirk W. Hoffmann</a></li>
-					<li><a href="impressum.html">Impressum</a></li>
-					<li><a href="impressum.html">Datenschutz</a></li>
-					<li><a href="http://html5up.net">HTML5 UP</a></li>
-				</ul>
+						<div class="container">
+							<div id="content">
+								<article>
+									<span class="image featured"><img src="images/cpuPanel.jpg" alt="" /></span>
+								</article>
+							</div>
+						</div>
+					</div>
+				</article>
 			</div>
+	</div>
+	</section>
 
+	<!-- Footer -->
+	<div id="footer">
+
+		<!-- Icons -->
+		<ul class="icons">
+			<li><a href="https://github.com/dirkwhoffmann" class="icon brands fa-github"><span
+						class="label">GitHub</span></a></li>
+		</ul>
+
+		<!-- Copyright -->
+		<div class="copyright">
+			<ul class="menu">
+				<li>&copy; <a href="http://www.dirkwhoffmann.de">Dirk W. Hoffmann</a></li>
+				<li><a href="impressum.html">Impressum</a></li>
+				<li><a href="impressum.html">Datenschutz</a></li>
+				<li><a href="http://html5up.net">HTML5 UP</a></li>
+			</ul>
 		</div>
-
+	</div>
 	</div>
 
 	<!-- Scripts -->
@@ -151,6 +145,7 @@
 	<script src="assets/js/breakpoints.min.js"></script>
 	<script src="assets/js/util.js"></script>
 	<script src="assets/js/main.js"></script>
+
 </body>
 
 </html>
