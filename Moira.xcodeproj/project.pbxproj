@@ -175,6 +175,7 @@
 			children = (
 				50C0123D28BBADCF001EFB37 /* Binutils */,
 				5028B100288D9EA600047C20 /* Musashi */,
+				50804E8C2386A72C004D3EC2 /* main.cpp */,
 				5054686428A6647B00028727 /* CMakeLists.txt */,
 				50953AE228895D5D0077C9E8 /* config.h */,
 				507BE4AE23B66456000B37D2 /* Testrunner.h */,
@@ -194,7 +195,6 @@
 			isa = PBXGroup;
 			children = (
 				50F80AAB23C9F16900F21D80 /* CMakeLists.txt */,
-				50804E8C2386A72C004D3EC2 /* main.cpp */,
 				5054686328A6642900028727 /* Runner */,
 				50804E082386A4CE004D3EC2 /* Moira */,
 				50804E072386A4CE004D3EC2 /* Products */,
