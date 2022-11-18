@@ -13,12 +13,12 @@ set(CMAKE_CXX_EXTENSIONS False)
   
 # Add sub directories
 add_subdirectory(Moira)
-add_subdirectory(Binutils)
-add_subdirectory(Musashi)
+add_subdirectory(Runner/Binutils)
+add_subdirectory(Runner/Musashi)
 
 # Add the executable
 add_executable(testRunner
-main.cpp
+Runner/main.cpp
 Runner/Testrunner.cpp
 Runner/TestCPU.cpp
 Runner/musashi.cpp
@@ -43,10 +43,10 @@ endif()
 target_include_directories(testRunner PUBLIC
 
 ${CMAKE_SOURCE_DIR}/.
-${CMAKE_SOURCE_DIR}/Binutils
-${CMAKE_SOURCE_DIR}/Musashi
 ${CMAKE_SOURCE_DIR}/Moira
 ${CMAKE_SOURCE_DIR}/Runner
+${CMAKE_SOURCE_DIR}/Runner/Binutils
+${CMAKE_SOURCE_DIR}/Runner/Musashi
 )
 
 # Add tests
