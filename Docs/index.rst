@@ -1,6 +1,12 @@
-Moira User Manual
+Moira - A Motorola 68k Emulator 
+===============================
+
 =================
 
+.. image:: images/splash.jpg
+  :alt: Banner
+
+=================
 
 .. toctree::
    :maxdepth: 1
