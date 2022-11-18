@@ -50,23 +50,25 @@
 				<div class="row">
 					<section class="col-6 col-12-narrower">
 						<div class="box post">
-							<a href="#" class="image left"><img src="images/icon-mo.jpg" alt="" /></a>
+							<a href="#" class="image left"><img src="images/icon-mo.png" alt="" /></a>
 							<div class="inner">
 								<h3>About</h3>
-								<p>Moira is a Motorola 68000 emulator written in C++. It aims for high emulation
-									accuracy, both functionally and temporally. Moira is the heart of the vAmiga
-									emulator where it does a very good job so far.</p>
+								<p>Moira is a Motorola 68000, 68010, 680EC20, and 68020 emulator with
+									high emulation accuracy, both functionally and temporally. It was designed 
+									for Amiga emulation which does not only require exact cycle counts, but 
+									memory accesses being performed at the proper DMA cycles.</p>
 							</div>
 						</div>
 					</section>
 					<section class="col-6 col-12-narrower">
 						<div class="box post">
-							<a href="#" class="image left"><img src="images/cpp.jpg" alt="" /></a>
+							<a href="#" class="image left"><img src="images/cpp.png" alt="" /></a>
 							<div class="inner">
 								<h3>Portability</h3>
-								<p>Moira has been tested thouroughly with clang on macOS as part of the vAmiga
-									project. It has been designed to compile on other platforms as well. If you encouter
-									portability issues, please feel free to contact me.</p>
+								<p>The source code is compatible with all common C++ compilers, namely Clang, 
+									GCC, and MSVC. It compiles flawlessly on macOS, Linux, and Windows. 
+									Furthermore, the source code is compatible with WebAssembly which makes 
+									Moira a first-class candidate for being used in web-based applications.</p>
 							</div>
 						</div>
 					</section>
@@ -74,12 +76,13 @@
 				<div class="row">
 					<section class="col-6 col-12-narrower">
 						<div class="box post">
-							<a href="#" class="image left"><img src="images/speed.jpg" alt="" /></a>
+							<a href="#" class="image left"><img src="images/speed.png" alt="" /></a>
 							<div class="inner">
 								<h3>Speed</h3>
-								<p>Due to heavy template usage, Moira ist fast. 
-									It surpasses the emulation speed of Musashi, which is among the fastest 
-									M68k emulators to date.
+								<p>The architecture of Moira is geared towards high emulation speed. To achieve 
+									this goal, the emulator makes extensive use of templates. Moira even surpasses 
+									the emulation speed of Musashi, which belongs to the fastest M68k emulators ever 
+									developed.
 								</p>
 							</div>
 						</div>
@@ -89,7 +92,8 @@
 							<a href="#" class="image left"><img src="images/mit.png" alt="" /></a>
 							<div class="inner">
 								<h3>License</h3>
-								<p>Moira is open-source and published under the terms of the MIT License.</p>
+								<p>The source code of the core emulator is open-source and published under the 
+									terms of the MIT License.</p>
 							</div>
 						</div>
 					</section>
