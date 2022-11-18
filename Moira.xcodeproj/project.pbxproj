@@ -114,6 +114,7 @@
 		509F15C22927D5A000BA8AC1 /* HowToDelegation.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HowToDelegation.md; sourceTree = "<group>"; };
 		509F15C42927D5A000BA8AC1 /* About.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = About.md; sourceTree = "<group>"; };
 		509F15C62927D5A000BA8AC1 /* ConfigOptions.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ConfigOptions.md; sourceTree = "<group>"; };
+		509F15C72927D79B00BA8AC1 /* requirements.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = requirements.txt; sourceTree = "<group>"; };
 		50B99DAB23B24E0C00D8A89A /* MoiraTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraTypes.h; sourceTree = "<group>"; };
 		50BF14CA23BB4D2700EDFB9C /* MoiraALU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraALU.h; sourceTree = "<group>"; };
 		50C0123528BBAD9B001EFB37 /* m68k-dis.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "m68k-dis.h"; sourceTree = "<group>"; };
@@ -283,9 +284,10 @@
 		509F15AF2927D5A000BA8AC1 /* Docs */ = {
 			isa = PBXGroup;
 			children = (
-				509F15B02927D5A000BA8AC1 /* index.rst */,
-				509F15B12927D5A000BA8AC1 /* images */,
 				509F15BB2927D5A000BA8AC1 /* conf.py */,
+				509F15B02927D5A000BA8AC1 /* index.rst */,
+				509F15C72927D79B00BA8AC1 /* requirements.txt */,
+				509F15B12927D5A000BA8AC1 /* images */,
 				509F15BC2927D5A000BA8AC1 /* Tutorials */,
 				509F15BE2927D5A000BA8AC1 /* HowTo */,
 				509F15C32927D5A000BA8AC1 /* Overview */,
