@@ -33,14 +33,11 @@ source_suffix = ['.rst', '.md']
 #html_theme = 'sphinx_rtd_theme'
 html_theme = 'sphinx_book_theme'
 html_theme_options = {
-    "repository_url": "https://github.com/dirkwhoffmann/Moira",
+    "repository_url": "https://dirkwhoffmann.github.io/Moira/",
     "use_repository_button": True,
     "logo_only": False,
 }
-html_logo = "images/icon.png"
-html_title = "Version 2.2"
-#import sphinx_adc_theme
-#html_theme = 'sphinx_adc_theme'
-#html_theme_path = [sphinx_adc_theme.get_html_theme_path()]
-#html_theme = 'yummy_sphinx_theme'
-#html_static_path = ['_static']
+html_logo = "images/logo.png"
+html_title = "Moira v2.2"
+html_static_path = ["_static"]
+html_css_files = ["custom.css"]

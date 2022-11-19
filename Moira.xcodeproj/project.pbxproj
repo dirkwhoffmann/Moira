@@ -117,6 +117,10 @@
 		509F15C72927D79B00BA8AC1 /* requirements.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = requirements.txt; sourceTree = "<group>"; };
 		509F15C82927E32D00BA8AC1 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		509F15C92927E7A600BA8AC1 /* splash.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = splash.jpg; sourceTree = "<group>"; };
+		509F15CC2928D69F00BA8AC1 /* header.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = header.html; sourceTree = "<group>"; };
+		509F15CE2928D69F00BA8AC1 /* custom.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = custom.css; sourceTree = "<group>"; };
+		509F15CF2928D6BD00BA8AC1 /* logo-large.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "logo-large.png"; sourceTree = "<group>"; };
+		509F15D02928D6CF00BA8AC1 /* logo-larger.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "logo-larger.png"; sourceTree = "<group>"; };
 		50B99DAB23B24E0C00D8A89A /* MoiraTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraTypes.h; sourceTree = "<group>"; };
 		50BF14CA23BB4D2700EDFB9C /* MoiraALU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraALU.h; sourceTree = "<group>"; };
 		50C0123528BBAD9B001EFB37 /* m68k-dis.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "m68k-dis.h"; sourceTree = "<group>"; };
@@ -290,6 +294,8 @@
 				509F15BB2927D5A000BA8AC1 /* conf.py */,
 				509F15B02927D5A000BA8AC1 /* index.rst */,
 				509F15C72927D79B00BA8AC1 /* requirements.txt */,
+				509F15CD2928D69F00BA8AC1 /* _static */,
+				509F15CA2928D69F00BA8AC1 /* _templates */,
 				509F15B12927D5A000BA8AC1 /* images */,
 				509F15BC2927D5A000BA8AC1 /* Tutorials */,
 				509F15BE2927D5A000BA8AC1 /* HowTo */,
@@ -309,6 +315,8 @@
 				509F15B52927D5A000BA8AC1 /* cpuPanel.jpg */,
 				509F15B62927D5A000BA8AC1 /* dasm_mit.png */,
 				509F15B72927D5A000BA8AC1 /* logo.png */,
+				509F15CF2928D6BD00BA8AC1 /* logo-large.png */,
+				509F15D02928D6CF00BA8AC1 /* logo-larger.png */,
 				509F15B82927D5A000BA8AC1 /* stripe.png */,
 				509F15B92927D5A000BA8AC1 /* disassembler.png */,
 				509F15BA2927D5A000BA8AC1 /* disassembler.jpg */,
@@ -349,6 +357,30 @@
 				509F15C62927D5A000BA8AC1 /* ConfigOptions.md */,
 			);
 			path = Reference;
+			sourceTree = "<group>";
+		};
+		509F15CA2928D69F00BA8AC1 /* _templates */ = {
+			isa = PBXGroup;
+			children = (
+				509F15CB2928D69F00BA8AC1 /* sections */,
+			);
+			path = _templates;
+			sourceTree = "<group>";
+		};
+		509F15CB2928D69F00BA8AC1 /* sections */ = {
+			isa = PBXGroup;
+			children = (
+				509F15CC2928D69F00BA8AC1 /* header.html */,
+			);
+			path = sections;
+			sourceTree = "<group>";
+		};
+		509F15CD2928D69F00BA8AC1 /* _static */ = {
+			isa = PBXGroup;
+			children = (
+				509F15CE2928D69F00BA8AC1 /* custom.css */,
+			);
+			path = _static;
 			sourceTree = "<group>";
 		};
 		50C0123D28BBADCF001EFB37 /* Binutils */ = {

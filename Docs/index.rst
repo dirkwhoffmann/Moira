@@ -1,12 +1,11 @@
-Moira - A Motorola 68k Emulator 
-===============================
 
-=================
+.. image:: images/logo-large.png
+   :width: 100%
+   :align: center
+   :alt: Banner
 
-.. image:: images/splash.jpg
-  :alt: Banner
-
-=================
+User manual
+===================
 
 .. toctree::
    :maxdepth: 1
