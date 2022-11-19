@@ -1,6 +1,11 @@
-Moira User Manual
-=================
 
+.. image:: images/logo-large.png
+   :width: 100%
+   :align: center
+   :alt: Banner
+
+User manual
+===================
 
 .. toctree::
    :maxdepth: 1
