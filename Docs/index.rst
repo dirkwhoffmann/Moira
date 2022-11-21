@@ -18,6 +18,7 @@ User manual
    :caption: Tutorials
 
    Tutorials/GettingStarted
+   Tutorials/UsingMoiraInYourOwnApp
 
 .. toctree::
    :maxdepth: 1
@@ -27,6 +28,7 @@ User manual
    HowTo/HowToDisassembler
    HowTo/HowToDebugger
    HowTo/HowToDelegation
+   HowTo/HowToOverclock
 
 .. toctree::
    :maxdepth: 1

@@ -131,6 +131,8 @@
 		50C0124028BBAE80001EFB37 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50CECEC523A924B000E07C65 /* Sandbox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Sandbox.cpp; sourceTree = "<group>"; };
 		50CECEC623A924B000E07C65 /* Sandbox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sandbox.h; sourceTree = "<group>"; };
+		50D1E9F2292BD36B008E1415 /* UsingMoiraInYourOwnApp.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = UsingMoiraInYourOwnApp.md; sourceTree = "<group>"; };
+		50D1E9F3292BD382008E1415 /* HowToOverclock.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HowToOverclock.md; sourceTree = "<group>"; };
 		50EC62EE289DB14500398CBD /* MoiraMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraMacros.h; sourceTree = "<group>"; };
 		50F549DE288E817600D5D559 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F80AA723C9E4EC00F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -328,6 +330,7 @@
 			isa = PBXGroup;
 			children = (
 				509F15BD2927D5A000BA8AC1 /* GettingStarted.md */,
+				50D1E9F2292BD36B008E1415 /* UsingMoiraInYourOwnApp.md */,
 			);
 			path = Tutorials;
 			sourceTree = "<group>";
@@ -339,6 +342,7 @@
 				509F15C02927D5A000BA8AC1 /* HowToCPU.md */,
 				509F15C12927D5A000BA8AC1 /* HowToDebugger.md */,
 				509F15C22927D5A000BA8AC1 /* HowToDelegation.md */,
+				50D1E9F3292BD382008E1415 /* HowToOverclock.md */,
 			);
 			path = HowTo;
 			sourceTree = "<group>";
