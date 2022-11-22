@@ -24,14 +24,21 @@ User manual
    :maxdepth: 1
    :caption: How-to guides
 
-   HowTo/HowToCPU
-   HowTo/HowToDisassembler
-   HowTo/HowToDebugger
-   HowTo/HowToDelegation
-   HowTo/HowToOverclock
+   HowTo/HowToUseTheCpu
+   HowTo/HowToUseTheDisassembler
+   HowTo/HowToUseTheDebugger
+   HowTo/HowToUseDelegates
+   HowTo/HowToOverclockTheCpu
 
 .. toctree::
    :maxdepth: 1
-   :caption: Reference
+   :caption: Explanations
+
+   Explanations/MainExecutionFunction
+   Explanations/InstructionHandlers
+
+.. toctree::
+   :maxdepth: 1
+   :caption: References
    
-   Reference/ConfigOptions
+   References/ConfigOptions
