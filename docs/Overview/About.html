@@ -112,6 +112,11 @@
    Getting started
   </a>
  </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../Tutorials/UsingMoiraInYourOwnApp.html">
+   Using Moira in your own app
+  </a>
+ </li>
 </ul>
 <p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
@@ -120,34 +125,56 @@
 </p>
 <ul class="nav bd-sidenav">
  <li class="toctree-l1">
-  <a class="reference internal" href="../HowTo/HowToCPU.html">
+  <a class="reference internal" href="../HowTo/HowToUseTheCpu.html">
    How to use the CPU core
   </a>
  </li>
  <li class="toctree-l1">
-  <a class="reference internal" href="../HowTo/HowToDisassembler.html">
+  <a class="reference internal" href="../HowTo/HowToUseTheDisassembler.html">
    How to use the disassembler
   </a>
  </li>
  <li class="toctree-l1">
-  <a class="reference internal" href="../HowTo/HowToDebugger.html">
+  <a class="reference internal" href="../HowTo/HowToUseTheDebugger.html">
    How to use the debugger
   </a>
  </li>
  <li class="toctree-l1">
-  <a class="reference internal" href="../HowTo/HowToDelegation.html">
+  <a class="reference internal" href="../HowTo/HowToUseDelegates.html">
    How to use the delegation system
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../HowTo/HowToOverclockTheCpu.html">
+   How to implement overclocking
   </a>
  </li>
 </ul>
 <p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
-  Reference
+  Explanations
  </span>
 </p>
 <ul class="nav bd-sidenav">
  <li class="toctree-l1">
-  <a class="reference internal" href="../Reference/ConfigOptions.html">
+  <a class="reference internal" href="../Explanations/MainExecutionFunction.html">
+   The main execution function
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../Explanations/InstructionHandlers.html">
+   Instruction handlers
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  References
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../References/ConfigOptions.html">
    Configuration options
   </a>
  </li>
@@ -357,7 +384,7 @@ title="Print to PDF"
                 
   <section id="about">
 <h1>About<a class="headerlink" href="#about" title="Permalink to this heading">#</a></h1>
-<p>Moira is a Motorola 68000, 68010, 680EC20, and 68020 emulator written in C++. The emulator is compatible with macOS, Linux, and Windows. The source code of the core emulator is published under the term of the MIT license.</p>
+<p>Moira is a Motorola 68000, 68010, 680EC20, and 68020 emulator written in C++. The emulator is compatible with macOS, Linux, and Windows. The source code of the core emulator is published under the term of the MIT license. Moira is the heart of <a class="reference external" href="https://dirkwhoffmann.github.io/vAmiga">vAmiga</a>, a high-precison emulator for the classic Commodore Amiga models.</p>
 <p><img alt="Screenshot" src="../_images/disassembler.png" /></p>
 <section id="design-goals">
 <h2>Design goals<a class="headerlink" href="#design-goals" title="Permalink to this heading">#</a></h2>

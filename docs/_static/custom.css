@@ -14,7 +14,7 @@ span.pre, h1 {
     color: #4E45B0;
 }
 
-a.reference, a.reference.internal, div.prev-next-info, a.left-prev, p.prev-next-subtitle { 
+nav, a.reference, a.reference.internal, a.reference.external, div.prev-next-info, a.left-prev, p.prev-next-subtitle { 
     background-color: #F1F0F9;
     color: #4E45B0;
 }

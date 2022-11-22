@@ -1,0 +1,579 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Using Moira in your own app &#8212; Moira v2.2</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="How to use the CPU core" href="../HowTo/HowToUseTheCpu.html" />
+    <link rel="prev" title="Getting started" href="GettingStarted.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"><img src="https://dirkwhoffmann.github.io/Moira/images/banner-mo-1.jpg" width="100%" alt="Banner"></div>
+
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="../_static/logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">Moira v2.2</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Overview
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../Overview/About.html">
+   About
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Tutorials
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="GettingStarted.html">
+   Getting started
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   Using Moira in your own app
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  How-to guides
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../HowTo/HowToUseTheCpu.html">
+   How to use the CPU core
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../HowTo/HowToUseTheDisassembler.html">
+   How to use the disassembler
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../HowTo/HowToUseTheDebugger.html">
+   How to use the debugger
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../HowTo/HowToUseDelegates.html">
+   How to use the delegation system
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../HowTo/HowToOverclockTheCpu.html">
+   How to implement overclocking
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Explanations
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../Explanations/MainExecutionFunction.html">
+   The main execution function
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../Explanations/InstructionHandlers.html">
+   Instruction handlers
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  References
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../References/ConfigOptions.html">
+   Configuration options
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+            <div class="navbar_extra_footer">
+            Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
+            </div>
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
+</div>
+
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
+        
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<button onclick="toggleFullScreen()"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="bottom"
+title="Fullscreen mode"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+<a href="https://dirkwhoffmann.github.io/Moira/"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="bottom"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+<div class="menu-dropdown menu-dropdown-download-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Download this page">
+      <i class="fas fa-download"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="../_sources/Tutorials/UsingMoiraInYourOwnApp.md.txt"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Download source file"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="headerbtn__text-container">.md</span>
+</a>
+
+      </li>
+      
+      <li>
+        
+<button onclick="printPdf(this)"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="left"
+title="Print to PDF"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="headerbtn__text-container">.pdf</span>
+</button>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
+    </div>
+</div>
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#configuring-moira">
+   Configuring Moira
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#subclassing-moira">
+   Subclassing Moira
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#creating-a-run-loop">
+   Creating a run loop
+  </a>
+ </li>
+</ul>
+
+    </nav>
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>Using Moira in your own app</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#configuring-moira">
+   Configuring Moira
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#subclassing-moira">
+   Subclassing Moira
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#creating-a-run-loop">
+   Creating a run loop
+  </a>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <main id="main-content" role="main">
+                
+              <div>
+                
+  <section id="using-moira-in-your-own-app">
+<h1>Using Moira in your own app<a class="headerlink" href="#using-moira-in-your-own-app" title="Permalink to this heading">#</a></h1>
+<p>This tutorial shows how to integrate Moira into your own application. It explains the basic steps by showing how Moira is used in vAmiga, the Amiga emulator Moira was originally developed for.</p>
+<section id="configuring-moira">
+<h2>Configuring Moira<a class="headerlink" href="#configuring-moira" title="Permalink to this heading">#</a></h2>
+<p>We start by examining the compile-time options chosen by vAmiga. The following options are set in <code class="docutils literal notranslate"><span class="pre">MoiraConfig.h</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">#define</span> <span class="pre">PRECISE_TIMING</span> <span class="pre">true</span></code></p></li>
+</ul>
+<p>Moira is run in precise timing mode, which means that a <code class="docutils literal notranslate"><span class="pre">sync</span></code> call is initiated before each memory access. This gives vAmiga the ability to emulate the surrounding logic up to the point in time when the memory access actually  happens. This is an essential feature in Amiga emulation, as many applications rely on accurate bus timing. In fact, the lack of this feature in Musashi was the reason I implemented Moira in the first place. Note that this feature is only available for the M68000 and M68010. M68020 emulation is always done in simple cycle mode, regardless of how this preprocessor variable is set.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">#define</span> <span class="pre">VIRTUAL_API</span> <span class="pre">false</span></code></p></li>
+</ul>
+<p>All functions of the Moira class that are required to be implemented by the client (vAmiga) are declared as non-virtual. This means these functions will be statically linked, resulting in a small performance boost compared to virtual functions.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">#define</span> <span class="pre">EMULATE_ADDRESS_ERROR</span> <span class="pre">true</span></code></p></li>
+</ul>
+<p>The M68000 and the M68010 signal an address error when a word or longword access to an odd address is attempted. Since some Amiga titles rely on this behavior, address error emulation is enabled in vAmiga.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">#define</span> <span class="pre">EMULATE_FC</span> <span class="pre">true</span></code></p></li>
+</ul>
+<p>All M680x0 CPUs are equipped with three so-called function code pins (FC pins). Whenever memory is accessed, the value on these pins allows external hardware to check the access type. Although the Amiga does not make use of those pins, emulation is enabled in Moira to accurately emulate the M68010 CPU. Unlike the M68000, the M68010 includes the current value of the FC pins in some stack frames.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">#define</span> <span class="pre">ENABLE_DASM</span> <span class="pre">true</span></code></p></li>
+</ul>
+<p>This option instructs Moira to create a lookup table with all disassembler handlers. The creation of this table is mandatory for using the disassembler. If the disassembler is not needed, it is advisable to set this option to <code class="docutils literal notranslate"><span class="pre">false</span></code>, since the lookup table consumes a decent amount of memory.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">#define</span> <span class="pre">BUILD_INSTR_INFO_TABLE</span> <span class="pre">false</span></code></p></li>
+</ul>
+<p>During initialization, Moira is able to create an optional info table that stores information about the instruction, addressing mode, and size attribute for each of the 65536 opcode words. In vAmiga, the creation of this table is omitted because the information is not needed.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">#define</span> <span class="pre">MIMIC_MUSASHI</span> <span class="pre">false</span></code></p></li>
+</ul>
+<p>This option instructs Moira <em>not</em> to run in Musashi compatibility mode, resulting in higher accuracy.</p>
+</section>
+<section id="subclassing-moira">
+<h2>Subclassing Moira<a class="headerlink" href="#subclassing-moira" title="Permalink to this heading">#</a></h2>
+<p>Having learned how Moira’s compile-time options are configured, we take a deeper look on how Moira is integrated in vAmiga. The most prominent class in vAmiga is the <code class="docutils literal notranslate"><span class="pre">Amiga</span></code> class. It has the following structure:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Amiga</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">Thread</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+
+<span class="w">    </span><span class="p">...</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// Core components</span>
+<span class="w">    </span><span class="n">CPU</span><span class="w"> </span><span class="n">cpu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CPU</span><span class="p">(</span><span class="o">*</span><span class="k">this</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">CIAA</span><span class="w"> </span><span class="n">ciaA</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CIAA</span><span class="p">(</span><span class="o">*</span><span class="k">this</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">CIAB</span><span class="w"> </span><span class="n">ciaB</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CIAB</span><span class="p">(</span><span class="o">*</span><span class="k">this</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">Memory</span><span class="w"> </span><span class="n">mem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Memory</span><span class="p">(</span><span class="o">*</span><span class="k">this</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">Agnus</span><span class="w"> </span><span class="n">agnus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Agnus</span><span class="p">(</span><span class="o">*</span><span class="k">this</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">Denise</span><span class="w"> </span><span class="n">denise</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Denise</span><span class="p">(</span><span class="o">*</span><span class="k">this</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">Paula</span><span class="w"> </span><span class="n">paula</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Paula</span><span class="p">(</span><span class="o">*</span><span class="k">this</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">...</span><span class="w"></span>
+<span class="p">};</span><span class="w"></span>
+</pre></div>
+</div>
+<p>vAmiga’s <code class="docutils literal notranslate"><span class="pre">CPU</span></code> class is a subclass of the Moira class. It’s main purpose is to add additional functionality to what Moira already offers. E.g., the CPU class provides capabilities for serializing and deserializing the CPU state which is important for saving and loading emulator states (snapshots). In addition, the CPU class enhances the Moira class with overclocking support. If you are interested in how overclocking is implemented in vAmiga, please refer to the How-to section.</p>
+<p>In <code class="docutils literal notranslate"><span class="pre">CPU.cpp</span></code> we find the implementations of all Moira functions that interact with the environment. Since we have declared the API as non-virtual, none of these functions have a default implementation. Therefore, all functions must be implemented even if there is nothing to do. Thus, many functions are defined with an empty function body. E.g.:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"></span>
+<span class="nf">Moira::didReset</span><span class="p">()</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>This function is one of the delegation methods Moira provides. It is called at the end of the reset handler to allow the client to perform special actions.</p>
+<p>Other functions do have a non-empty implementation such as functions for accessing memory. E.g., this is how <code class="docutils literal notranslate"><span class="pre">read8</span></code> and <code class="docutils literal notranslate"><span class="pre">read16</span></code> are implemented in vAmiga:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">u8</span><span class="w"></span>
+<span class="nf">Moira::read8</span><span class="p">(</span><span class="n">u32</span><span class="w"> </span><span class="n">addr</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">mem</span><span class="p">.</span><span class="n">peek8</span><span class="o">&lt;</span><span class="n">ACCESSOR_CPU</span><span class="o">&gt;</span><span class="p">(</span><span class="n">addr</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="n">u16</span><span class="w"></span>
+<span class="nf">Moira::read16</span><span class="p">(</span><span class="n">u32</span><span class="w"> </span><span class="n">addr</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">mem</span><span class="p">.</span><span class="n">peek16</span><span class="o">&lt;</span><span class="n">ACCESSOR_CPU</span><span class="o">&gt;</span><span class="p">(</span><span class="n">addr</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>At first glance, the code seems to speak for itself. Moira’s memory request is passed to the <code class="docutils literal notranslate"><span class="pre">mem</span></code> object, which is an instance of vAmiga’s <code class="docutils literal notranslate"><span class="pre">Memory</span></code> class. Lookin closer, however, it’s no longer that clear. How does Moira know about the various Amiga components such as the memory? These objects are not part of the Moira class. Well, the answer is they are, because in vAmiga we use a slightly modified Moira class. In fact, the class is declared as follows:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Moira</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">SubComponent</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="p">...</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>As you can see, Moira inherits from the <code class="docutils literal notranslate"><span class="pre">SubComponent</span></code> class which is the base class of most Amiga components. One important purpose of the <code class="docutils literal notranslate"><span class="pre">SubComponent</span></code> class is to provide convinient access to all other components of the virtual Amiga. This is done by declaring a number of references that are initialized in the constructor:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SubComponent</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">AmigaComponent</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+
+<span class="k">protected</span><span class="o">:</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">Agnus</span><span class="w"> </span><span class="o">&amp;</span><span class="n">agnus</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">Amiga</span><span class="w"> </span><span class="o">&amp;</span><span class="n">amiga</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">Blitter</span><span class="w"> </span><span class="o">&amp;</span><span class="n">blitter</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">...</span><span class="w"></span>
+<span class="w">    </span><span class="n">Memory</span><span class="w"> </span><span class="o">&amp;</span><span class="n">mem</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">...</span><span class="w"></span>
+<span class="p">};</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Here we go. The <code class="docutils literal notranslate"><span class="pre">mem</span></code> object is inherited from the <code class="docutils literal notranslate"><span class="pre">SubComponent</span></code> class and allows any Moira function to access Amiga memory.</p>
+<p>Side note: If you spot a violation of the loose coupling principle here, please remember that we are talking about an emulator which a very special kind of software in various ways. The Amiga is a very tightly coupled system, and we wouldn’t do ourselves any good if we tried to emulate it with a loosely coupled software system.</p>
+<p>$$$</p>
+</section>
+<section id="creating-a-run-loop">
+<h2>Creating a run loop<a class="headerlink" href="#creating-a-run-loop" title="Permalink to this heading">#</a></h2>
+<p>Last but not least, let’s take a closer look at where vAmiga executes the CPU, i.e. where it calls Moira’s execution function. As you may have noticed, the Amiga class inherits from the Thread class, which provides capabilities for concurrent code execution. Whenever an instance of the Amiga class is created, an emulator thread is spawned automatically.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">Amiga</span><span class="o">::</span><span class="n">Amiga</span><span class="p">()</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="p">...</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// Start the thread and enter the main function</span>
+<span class="w">    </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="p">(</span><span class="o">&amp;</span><span class="n">Thread</span><span class="o">::</span><span class="n">main</span><span class="p">,</span><span class="w"> </span><span class="k">this</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">...</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Inside the function <code class="docutils literal notranslate"><span class="pre">main</span></code> one of the following functions is executed, depending on the operating mode of the thread:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">execute&lt;SyncMode::Periodic&gt;();</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">execute&lt;SyncMode::Pulsed&gt;();</span></code></p></li>
+</ul>
+<p>Both functions call the <code class="docutils literal notranslate"><span class="pre">execute</span></code> function which is implemented inside the Amiga class. This function is one of the most prominent, since it implements the emulator’s run loop. It is structures as follows:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"></span>
+<span class="nf">Amiga::execute</span><span class="p">()</span><span class="w"></span>
+<span class="p">{</span><span class="w">    </span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span>
+<span class="w">        </span><span class="c1">// Emulate the next CPU instruction</span>
+<span class="w">        </span><span class="n">cpu</span><span class="p">.</span><span class="n">execute</span><span class="p">();</span><span class="w"></span>
+
+<span class="w">        </span><span class="c1">// Check if special action needs to be taken</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">flags</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="p">...</span><span class="w"></span>
+<span class="w">             </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">flags</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">RL</span><span class="o">::</span><span class="n">BREAKPOINT_REACHED</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="p">...</span><span class="w"></span>
+<span class="w">                </span><span class="k">auto</span><span class="w"> </span><span class="n">addr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">isize</span><span class="p">(</span><span class="n">cpu</span><span class="p">.</span><span class="n">debugger</span><span class="p">.</span><span class="n">breakpoints</span><span class="p">.</span><span class="n">hit</span><span class="o">-&gt;</span><span class="n">addr</span><span class="p">);</span><span class="w"></span>
+<span class="w">                </span><span class="n">msgQueue</span><span class="p">.</span><span class="n">put</span><span class="p">(</span><span class="n">MSG_BREAKPOINT_REACHED</span><span class="p">,</span><span class="w"> </span><span class="n">addr</span><span class="p">);</span><span class="w"></span>
+<span class="w">                </span><span class="n">newState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EXEC_PAUSED</span><span class="p">;</span><span class="w"></span>
+<span class="w">                </span><span class="k">break</span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">            </span><span class="p">...</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>We are finally there. Right at the beginning of the body of the while loop is the place where Moira’s execution function is called. Variable <code class="docutils literal notranslate"><span class="pre">flags</span></code> is used to trigger special actions inside the run loop. E.g., when Moira reaches a breakpoint, a dedicated bit in variable <code class="docutils literal notranslate"><span class="pre">flags</span></code> is set. The bits are checked inside the run loop and  trigger special actions if it is set. In case of the breakpoint flag, vAmiga first performs some actions which are not important here. After that, it notifies the GUI by sending a <code class="docutils literal notranslate"><span class="pre">MSG_BREAKPOINT_REACHED</span></code> message. Finally, it puts the thread into paused state and exits the run loop.</p>
+</section>
+</section>
+
+
+              </div>
+              
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="GettingStarted.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Getting started</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="../HowTo/HowToUseTheCpu.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">How to use the CPU core</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+            </footer>
+        </div>
+    </div>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Dirk W. Hoffmann<br/>
+  
+      &copy; Copyright 2022, Dirk W. Hoffmann.<br/>
+</p>
+        </footer>
+    </div>
+    
+</div>
+
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
+
+  </body>
+</html>

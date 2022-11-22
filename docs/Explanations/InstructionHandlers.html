@@ -1,0 +1,425 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Instruction handlers &#8212; Moira v2.2</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Configuration options" href="../References/ConfigOptions.html" />
+    <link rel="prev" title="The main execution function" href="MainExecutionFunction.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"><img src="https://dirkwhoffmann.github.io/Moira/images/banner-mo-1.jpg" width="100%" alt="Banner"></div>
+
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="../_static/logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">Moira v2.2</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Overview
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../Overview/About.html">
+   About
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Tutorials
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../Tutorials/GettingStarted.html">
+   Getting started
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../Tutorials/UsingMoiraInYourOwnApp.html">
+   Using Moira in your own app
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  How-to guides
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../HowTo/HowToUseTheCpu.html">
+   How to use the CPU core
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../HowTo/HowToUseTheDisassembler.html">
+   How to use the disassembler
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../HowTo/HowToUseTheDebugger.html">
+   How to use the debugger
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../HowTo/HowToUseDelegates.html">
+   How to use the delegation system
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../HowTo/HowToOverclockTheCpu.html">
+   How to implement overclocking
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Explanations
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="MainExecutionFunction.html">
+   The main execution function
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   Instruction handlers
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  References
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../References/ConfigOptions.html">
+   Configuration options
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+            <div class="navbar_extra_footer">
+            Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
+            </div>
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
+</div>
+
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
+        
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<button onclick="toggleFullScreen()"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="bottom"
+title="Fullscreen mode"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+<a href="https://dirkwhoffmann.github.io/Moira/"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="bottom"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+<div class="menu-dropdown menu-dropdown-download-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Download this page">
+      <i class="fas fa-download"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="../_sources/Explanations/InstructionHandlers.md.txt"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Download source file"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="headerbtn__text-container">.md</span>
+</a>
+
+      </li>
+      
+      <li>
+        
+<button onclick="printPdf(this)"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="left"
+title="Print to PDF"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="headerbtn__text-container">.pdf</span>
+</button>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+
+    </div>
+</div>
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>Instruction handlers</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                    </div>
+                </div>
+            </div>
+            <main id="main-content" role="main">
+                
+              <div>
+                
+  <section id="instruction-handlers">
+<h1>Instruction handlers<a class="headerlink" href="#instruction-handlers" title="Permalink to this heading">#</a></h1>
+<p>This article explains the inner workings of a typical instruction handler. All instruction handlers are stored in a large lookup table. The previous article showed how Moira retrieves the handler from the table and calls it via a function pointer call.</p>
+<p>To get an idea of how a typical command handler is structured, let’s see how the ABCD command is implemented:</p>
+<p><img alt="ABCD instruction details" src="../_images/abcd.png" /></p>
+<p>The following handler implements the register addressing variant of the ABCD instruction:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="n">Core</span><span class="w"> </span><span class="n">C</span><span class="p">,</span><span class="w"> </span><span class="n">Instr</span><span class="w"> </span><span class="n">I</span><span class="p">,</span><span class="w"> </span><span class="n">Mode</span><span class="w"> </span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">Size</span><span class="w"> </span><span class="n">S</span><span class="o">&gt;</span><span class="w"> </span><span class="kt">void</span><span class="w"></span>
+<span class="n">Moira</span><span class="o">::</span><span class="n">execAbcdRg</span><span class="p">(</span><span class="n">u16</span><span class="w"> </span><span class="n">opcode</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">AVAILABILITY</span><span class="p">(</span><span class="n">C68000</span><span class="p">)</span><span class="w"></span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">_____________xxx</span><span class="p">(</span><span class="n">opcode</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">dst</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">____xxx_________</span><span class="p">(</span><span class="n">opcode</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">u32</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bcd</span><span class="o">&lt;</span><span class="n">C</span><span class="p">,</span><span class="w"> </span><span class="n">I</span><span class="p">,</span><span class="w"> </span><span class="n">Byte</span><span class="o">&gt;</span><span class="p">(</span><span class="n">readD</span><span class="o">&lt;</span><span class="n">Byte</span><span class="o">&gt;</span><span class="p">(</span><span class="n">src</span><span class="p">),</span><span class="w"> </span><span class="n">readD</span><span class="o">&lt;</span><span class="n">Byte</span><span class="o">&gt;</span><span class="p">(</span><span class="n">dst</span><span class="p">));</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">prefetch</span><span class="o">&lt;</span><span class="n">C</span><span class="p">,</span><span class="w"> </span><span class="n">POLL</span><span class="o">&gt;</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="n">SYNC</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">writeD</span><span class="o">&lt;</span><span class="n">Byte</span><span class="o">&gt;</span><span class="p">(</span><span class="n">dst</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//           00  10  20        00  10  20        00  10  20</span>
+<span class="w">    </span><span class="c1">//           .b  .b  .b        .w  .w  .w        .l  .l  .l</span>
+<span class="w">    </span><span class="n">CYCLES_DN</span><span class="w">   </span><span class="p">(</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w">  </span><span class="mi">6</span><span class="p">,</span><span class="w">  </span><span class="mi">4</span><span class="p">,</span><span class="w">        </span><span class="mi">0</span><span class="p">,</span><span class="w">  </span><span class="mi">0</span><span class="p">,</span><span class="w">  </span><span class="mi">0</span><span class="p">,</span><span class="w">        </span><span class="mi">0</span><span class="p">,</span><span class="w">  </span><span class="mi">0</span><span class="p">,</span><span class="w">  </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">FINALIZE</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>All instruction handlers are declared with four template arguments:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Core</span> <span class="pre">C</span></code>: The emulated CPU core</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Instr</span> <span class="pre">I</span></code>: The emulated instruction</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Mode</span> <span class="pre">M</span></code>: The emulated addressing mode</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Size</span> <span class="pre">S</span></code>: The size attribute of the instruction</p></li>
+</ul>
+<p>In case of the <code class="docutils literal notranslate"><span class="pre">ABCD</span> <span class="pre">Dy,Dx</span></code> instruction, the template arguments are instantiated as follows:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">C</span></code> equals <code class="docutils literal notranslate"><span class="pre">C68000</span></code>, <code class="docutils literal notranslate"><span class="pre">C68010</span></code> or <code class="docutils literal notranslate"><span class="pre">C68020</span></code>, depending on the emulated CPU model</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">I</span></code> equals <code class="docutils literal notranslate"><span class="pre">ABCD</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">M</span></code> equals <code class="docutils literal notranslate"><span class="pre">MODE_DN</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">S</span></code> equals <code class="docutils literal notranslate"><span class="pre">BYTE</span></code></p></li>
+</ul>
+<p>All instruction handlers begin and end with a special macro called <code class="docutils literal notranslate"><span class="pre">AVAILABILITY</span></code> and <code class="docutils literal notranslate"><span class="pre">FINALIZE</span></code>, respectively. The <code class="docutils literal notranslate"><span class="pre">AVAILABILITY</span></code> macro expands to a series of assertion checks that verify the integrity of template parameter <code class="docutils literal notranslate"><span class="pre">C</span></code>. In addition, delegation function <code class="docutils literal notranslate"><span class="pre">willExecute</span></code> is called if the statement is among the observed instructions, as specified in <code class="docutils literal notranslate"><span class="pre">MoiraConfig.h</span></code>.</p>
+<p>In the next two lines, the source and destination registers are extracted from the opcode. Then the <code class="docutils literal notranslate"><span class="pre">bcd</span></code> function is called, which emulates the core functionality of the ABCD instruction.</p>
+<p>The next line instructs Moira to emulate the prefetch operation. Like many other functions, <code class="docutils literal notranslate"><span class="pre">prefetch</span></code> accepts an optional template argument that can be used to alter the inner workings of this function. In this example, the <code class="docutils literal notranslate"><span class="pre">POLL</span></code> flag is passed, which causes Moira to query the IPL pins in the middle of the prefetch operation.</p>
+<p>After that, the result of the <code class="docutils literal notranslate"><span class="pre">bcd</span></code> operation is written into the destination register by calling <code class="docutils literal notranslate"><span class="pre">writeD</span></code>.</p>
+<p>The next code section is only relevant in simple cycle mode. In this mode macro <code class="docutils literal notranslate"><span class="pre">CYCLES_DN</span></code> is expanded to a suitable call of <code class="docutils literal notranslate"><span class="pre">sync</span></code>. In our example, it expands to <code class="docutils literal notranslate"><span class="pre">sync(6)</span></code> when emulating a M68000 or M68010, and to <code class="docutils literal notranslate"><span class="pre">sync(4)</span></code> for all other models. In precision timing mode, the macro expands into an empty statement, because the <code class="docutils literal notranslate"><span class="pre">sync</span></code> calls have already been issued in the correct places in the instruction handler code.</p>
+<p>Like all instruction handlers, the instruction handler for the ABCD command ends with the <code class="docutils literal notranslate"><span class="pre">FINALIZE</span></code> macro. It is responsible for calling the delegation function <code class="docutils literal notranslate"><span class="pre">didExecute</span></code> if Moira has been configured to do so in <code class="docutils literal notranslate"><span class="pre">MoiraConfig.h</span></code>.</p>
+</section>
+
+
+              </div>
+              
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="MainExecutionFunction.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">The main execution function</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="../References/ConfigOptions.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Configuration options</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+            </footer>
+        </div>
+    </div>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Dirk W. Hoffmann<br/>
+  
+      &copy; Copyright 2022, Dirk W. Hoffmann.<br/>
+</p>
+        </footer>
+    </div>
+    
+</div>
+
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
+
+  </body>
+</html>

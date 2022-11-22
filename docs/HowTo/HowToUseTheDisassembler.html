@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>How to use the delegation system &#8212; Moira v2.2</title>
+    <title>How to use the disassembler &#8212; Moira v2.2</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -36,8 +36,8 @@
     <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Configuration options" href="../Reference/ConfigOptions.html" />
-    <link rel="prev" title="How to use the debugger" href="HowToDebugger.html" />
+    <link rel="next" title="How to use the debugger" href="HowToUseTheDebugger.html" />
+    <link rel="prev" title="How to use the CPU core" href="HowToUseTheCpu.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="en">
     
@@ -112,6 +112,11 @@
    Getting started
   </a>
  </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../Tutorials/UsingMoiraInYourOwnApp.html">
+   Using Moira in your own app
+  </a>
+ </li>
 </ul>
 <p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
@@ -120,34 +125,56 @@
 </p>
 <ul class="current nav bd-sidenav">
  <li class="toctree-l1">
-  <a class="reference internal" href="HowToCPU.html">
+  <a class="reference internal" href="HowToUseTheCpu.html">
    How to use the CPU core
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="HowToDisassembler.html">
-   How to use the disassembler
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="HowToDebugger.html">
-   How to use the debugger
   </a>
  </li>
  <li class="toctree-l1 current active">
   <a class="current reference internal" href="#">
+   How to use the disassembler
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="HowToUseTheDebugger.html">
+   How to use the debugger
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="HowToUseDelegates.html">
    How to use the delegation system
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="HowToOverclockTheCpu.html">
+   How to implement overclocking
   </a>
  </li>
 </ul>
 <p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
-  Reference
+  Explanations
  </span>
 </p>
 <ul class="nav bd-sidenav">
  <li class="toctree-l1">
-  <a class="reference internal" href="../Reference/ConfigOptions.html">
+  <a class="reference internal" href="../Explanations/MainExecutionFunction.html">
+   The main execution function
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../Explanations/InstructionHandlers.html">
+   Instruction handlers
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  References
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../References/ConfigOptions.html">
    Configuration options
   </a>
  </li>
@@ -237,7 +264,7 @@ title="Source repository"
   <div class="menu-dropdown__content">
     <ul>
       <li>
-        <a href="../_sources/HowTo/HowToDelegation.md.txt"
+        <a href="../_sources/HowTo/HowToUseTheDisassembler.md.txt"
    class="headerbtn"
    data-toggle="tooltip"
 data-placement="left"
@@ -297,28 +324,18 @@ title="Print to PDF"
     <nav id="bd-toc-nav" aria-label="Page">
         <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#state-delegates">
-   State delegates
+  <a class="reference internal nav-link" href="#running-the-disassembler">
+   Running the disassembler
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#instruction-delegates">
-   Instruction delegates
+  <a class="reference internal nav-link" href="#customizing-output">
+   Customizing output
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#exception-delegates">
-   Exception delegates
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#cache-register-delegated">
-   Cache register delegated
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#debugger-delegates">
-   Debugger delegates
+  <a class="reference internal nav-link" href="#examples">
+   Examples
   </a>
  </li>
 </ul>
@@ -330,7 +347,7 @@ title="Print to PDF"
         <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
-                <h1>How to use the delegation system</h1>
+                <h1>How to use the disassembler</h1>
                 <!-- Table of contents -->
                 <div id="print-main-content">
                     <div id="jb-print-toc">
@@ -341,28 +358,18 @@ title="Print to PDF"
                         <nav aria-label="Page">
                             <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#state-delegates">
-   State delegates
+  <a class="reference internal nav-link" href="#running-the-disassembler">
+   Running the disassembler
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#instruction-delegates">
-   Instruction delegates
+  <a class="reference internal nav-link" href="#customizing-output">
+   Customizing output
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#exception-delegates">
-   Exception delegates
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#cache-register-delegated">
-   Cache register delegated
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#debugger-delegates">
-   Debugger delegates
+  <a class="reference internal nav-link" href="#examples">
+   Examples
   </a>
  </li>
 </ul>
@@ -375,74 +382,83 @@ title="Print to PDF"
                 
               <div>
                 
-  <section id="how-to-use-the-delegation-system">
-<h1>How to use the delegation system<a class="headerlink" href="#how-to-use-the-delegation-system" title="Permalink to this heading">#</a></h1>
-<p>The Moira class declares various delegation functions that are called on certain events. By default, all delegation functions are declared as virtual and provided with an empty implementation. A subclassed CPU can react on the supported events by overrding the corresponding function.</p>
-<section id="state-delegates">
-<h2>State delegates<a class="headerlink" href="#state-delegates" title="Permalink to this heading">#</a></h2>
+  <section id="how-to-use-the-disassembler">
+<h1>How to use the disassembler<a class="headerlink" href="#how-to-use-the-disassembler" title="Permalink to this heading">#</a></h1>
+<section id="running-the-disassembler">
+<h2>Running the disassembler<a class="headerlink" href="#running-the-disassembler" title="Permalink to this heading">#</a></h2>
+<p>Moira features a built-in disassembler which allows to create textual representations for instructions, the program counter and the status register. Textual representations can be created with the following API functions:</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">didReset()</span></code></p>
-<p>Invoked at the end of the <code class="docutils literal notranslate"><span class="pre">reset()</span></code> routine.</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">disassemble(u32</span> <span class="pre">addr,</span> <span class="pre">char</span> <span class="pre">*str)</span> <span class="pre">const</span></code></p>
+<p>This functions disassembles the command at the specified address. It is the responsibility of the caller to ensure that the target string is initialized and large enough to hold the generated string. The function returns the number of bytes that the disassembled instruction occupies in memory.</p>
 </li>
-<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">didHalt()</span></code></p>
-<p>Invoked when the CPU is halted. This state is entered, e.g., when a double-fault occurs.</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">disassembleWord(u32</span> <span class="pre">value,</span> <span class="pre">char</span> <span class="pre">*str)</span> <span class="pre">const</span></code></p>
+<p>Returns a textual representation for a single word from memory.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">disassembleMemory(u32</span> <span class="pre">addr,</span> <span class="pre">int</span> <span class="pre">cnt,</span> <span class="pre">char</span> <span class="pre">*str)</span> <span class="pre">const</span></code></p>
+<p>Returns a textual representation for one or more words from memory.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">disassemblePC(u32</span> <span class="pre">pc,</span> <span class="pre">char</span> <span class="pre">*str)</span> <span class="pre">const</span></code></p>
+<p>Creates a textual representation for the passed-in value of the program counter. If the first parameter is omitted, the current value of the program counter is disassembled.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">disassembleSR(const</span> <span class="pre">StatusRegister</span> <span class="pre">&amp;sr,</span> <span class="pre">char</span> <span class="pre">*str)</span> <span class="pre">const</span></code></p>
+<p>Creates a textual representation for the referenced status register. If the first parameter is omitted, the current status register is disassembled.</p>
 </li>
 </ul>
 </section>
-<section id="instruction-delegates">
-<h2>Instruction delegates<a class="headerlink" href="#instruction-delegates" title="Permalink to this heading">#</a></h2>
+<section id="customizing-output">
+<h2>Customizing output<a class="headerlink" href="#customizing-output" title="Permalink to this heading">#</a></h2>
+<p>The disassembler output can be customized in various ways by calling one of the following API functions:</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">willExecute(const</span> <span class="pre">char</span> <span class="pre">*func,</span> <span class="pre">Instr</span> <span class="pre">I,</span> <span class="pre">Mode</span> <span class="pre">M,</span> <span class="pre">Size</span> <span class="pre">S,</span> <span class="pre">u16</span> <span class="pre">opcode)</span></code></p>
-<p>Invoked at the beginning of the instruction handlers of certain instructions. Due to speed reasons, the delegation function is only called for selected instructions. The instructions are selected by macro <code class="docutils literal notranslate"><span class="pre">WILL_EXECUTE</span></code> defined in <code class="docutils literal notranslate"><span class="pre">MoiraConfig.h</span></code>. The default implementation looks like this:</p>
-<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#define WILL_EXECUTE    I == STOP || I == TAS || I == BKPT</span>
-</pre></div>
-</div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">didExecute(const</span> <span class="pre">char</span> <span class="pre">*func,</span> <span class="pre">Instr</span> <span class="pre">I,</span> <span class="pre">Mode</span> <span class="pre">M,</span> <span class="pre">Size</span> <span class="pre">S,</span> <span class="pre">u16</span> <span class="pre">opcode)</span></code></p>
-<p>Invoked at the end of the instruction handlers of certain instructions. Due to speed reasons, the delegation function is only called for selected instructions. The instructions are selected by macro <code class="docutils literal notranslate"><span class="pre">DID_EXECUTE</span></code> defined in <code class="docutils literal notranslate"><span class="pre">MoiraConfig.h</span></code>. The default implementation looks like this:</p>
-<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DID_EXECUTE     I == RESET</span>
-</pre></div>
-</div>
-</li>
-</ul>
-</section>
-<section id="exception-delegates">
-<h2>Exception delegates<a class="headerlink" href="#exception-delegates" title="Permalink to this heading">#</a></h2>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">willExecute(ExceptionType</span> <span class="pre">exc,</span> <span class="pre">u16</span> <span class="pre">vector)</span></code></p>
-<p>Invoked at the beginning of the exception processing code.</p>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">willInterrupt(u8</span> <span class="pre">level)</span></code></p>
-<p>Invoked at the beginning of the interrupt processing code.</p>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">didJumpToVector(int</span> <span class="pre">nr,</span> <span class="pre">u32</span> <span class="pre">addr)</span></code></p>
-<p>Invoked after the program counter has been redirected to the exception handler.</p>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">didExecute(ExceptionType</span> <span class="pre">exc,</span> <span class="pre">u16</span> <span class="pre">vector)</span></code></p>
-<p>Invoked at the end of the exception processing code.</p>
-</li>
-</ul>
-</section>
-<section id="cache-register-delegated">
-<h2>Cache register delegated<a class="headerlink" href="#cache-register-delegated" title="Permalink to this heading">#</a></h2>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">didChangeCACR(u32</span> <span class="pre">value)</span></code></p>
-<p>Invoked when the CACR register is modified (68020 only).</p>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">didChangeCAAR(u32</span> <span class="pre">value)</span></code></p>
-<p>Invoked when the CAAR register is modified (68020 only).</p>
-</li>
-</ul>
-</section>
-<section id="debugger-delegates">
-<h2>Debugger delegates<a class="headerlink" href="#debugger-delegates" title="Permalink to this heading">#</a></h2>
-<p>The following delegation methods are invoked by the debugger to signal a debug event.</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">setDasmSyntax(DasmSyntax</span> <span class="pre">value)</span></code></p>
+<p>Moira supports the following syntax styles:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">softstopReached(u32</span> <span class="pre">addr)</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">breakpointReached(u32</span> <span class="pre">addr)</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">watchpointReached(u32</span> <span class="pre">addr)</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">catchpointReached(u8</span> <span class="pre">vector)</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">softwareTrapReached(u32</span> <span class="pre">addr)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DASM_MOIRA</span></code>
+This is the default syntax style. It prints the instructions in Motorola syntax.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DASM_MOIRA_MIT</span></code>
+This is a Moira-specific style that prints the instructions in MIT syntax.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DASM_GNU</span></code>
+This style resembles the output of the m68k disassembler integrated in <code class="docutils literal notranslate"><span class="pre">binutils</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DASM_GNU_MIT</span></code>
+This style mimics the output of <code class="docutils literal notranslate"><span class="pre">binutils</span></code> when run in MIT mode.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DASM_MUSASHI</span></code>
+This style reproduces the Musashi disassembler output one-by-one.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">setDasmNumberFormat(DasmNumberFormat</span> <span class="pre">value)</span></code></p>
+<p>The number format can be controlled by a variety of parameters which are grouped together in a singe struct:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">DasmNumberFormat</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">prefix</span><span class="p">;</span><span class="w">     </span><span class="c1">// Prefix for hexidecimal numbers</span>
+<span class="w">    </span><span class="n">u8</span><span class="w"> </span><span class="n">radix</span><span class="p">;</span><span class="w">               </span><span class="c1">// 10 (decimal) or 16 (hexadecimal)</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">upperCase</span><span class="p">;</span><span class="w">         </span><span class="c1">// Lettercase for hexadecimal digits A...F</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">plainZero</span><span class="p">;</span><span class="w">         </span><span class="c1">// Determines whether 0 is printed with a prefix</span>
+<span class="p">};</span><span class="w"></span>
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">setDasmLetterCase(DasmLetterCase</span> <span class="pre">value)</span></code></p>
+<p>The letter case determines the appearance of mnemonics and register names. The following options are availabe:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DASM_MIXED_CASE</span></code>
+The style is determined by the selected syntax style.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DASM_LOWER_CASE</span></code>
+All mnemonics and register names are printed in lowercase.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DASM_UPPER_CASE</span></code>
+All mnemonics and register names are printed in uppercase.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">setDasmIndentation(int</span> <span class="pre">value)</span></code></p>
+<p>Defines the tabulator space between the mnemonic and the rest of the instruction.</p>
+</li>
+</ul>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Running Moira in vAmiga with syntax style <code class="docutils literal notranslate"><span class="pre">DASM_MOIRA</span></code>
+<img alt="Screenshot" src="../_images/dasm_mot.png" /></p></li>
+<li><p>Running Moira in vAmiga with syntax style <code class="docutils literal notranslate"><span class="pre">DASM_MOIRA_MIT</span></code>
+<img alt="Screenshot" src="../_images/dasm_mit.png" /></p></li>
 </ul>
 </section>
 </section>
@@ -455,17 +471,17 @@ title="Print to PDF"
                 
     <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="HowToDebugger.html" title="previous page">
+    <a class='left-prev' id="prev-link" href="HowToUseTheCpu.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
             <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">How to use the debugger</p>
+            <p class="prev-next-title">How to use the CPU core</p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="../Reference/ConfigOptions.html" title="next page">
+    <a class='right-next' id="next-link" href="HowToUseTheDebugger.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Configuration options</p>
+        <p class="prev-next-title">How to use the debugger</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>
