@@ -96,26 +96,6 @@
 		509F15AC2927CE9800BA8AC1 /* package.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = package.json; sourceTree = "<group>"; };
 		509F15AD2927CE9800BA8AC1 /* dasm.ts */ = {isa = PBXFileReference; lastKnownFileType = text; path = dasm.ts; sourceTree = "<group>"; };
 		509F15AE2927CE9800BA8AC1 /* tsconfig.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = tsconfig.json; sourceTree = "<group>"; };
-		509F15B02927D5A000BA8AC1 /* index.rst */ = {isa = PBXFileReference; lastKnownFileType = text; path = index.rst; sourceTree = "<group>"; };
-		509F15B22927D5A000BA8AC1 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.png; sourceTree = "<group>"; };
-		509F15B32927D5A000BA8AC1 /* dasm_mot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = dasm_mot.png; sourceTree = "<group>"; };
-		509F15B42927D5A000BA8AC1 /* banner.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = banner.png; sourceTree = "<group>"; };
-		509F15B52927D5A000BA8AC1 /* cpuPanel.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = cpuPanel.jpg; sourceTree = "<group>"; };
-		509F15B62927D5A000BA8AC1 /* dasm_mit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = dasm_mit.png; sourceTree = "<group>"; };
-		509F15B72927D5A000BA8AC1 /* logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = logo.png; sourceTree = "<group>"; };
-		509F15B82927D5A000BA8AC1 /* stripe.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = stripe.png; sourceTree = "<group>"; };
-		509F15B92927D5A000BA8AC1 /* disassembler.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = disassembler.png; sourceTree = "<group>"; };
-		509F15BA2927D5A000BA8AC1 /* disassembler.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = disassembler.jpg; sourceTree = "<group>"; };
-		509F15BB2927D5A000BA8AC1 /* conf.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = conf.py; sourceTree = "<group>"; };
-		509F15BD2927D5A000BA8AC1 /* GettingStarted.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = GettingStarted.md; sourceTree = "<group>"; };
-		509F15C42927D5A000BA8AC1 /* About.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = About.md; sourceTree = "<group>"; };
-		509F15C72927D79B00BA8AC1 /* requirements.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = requirements.txt; sourceTree = "<group>"; };
-		509F15C82927E32D00BA8AC1 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
-		509F15C92927E7A600BA8AC1 /* splash.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = splash.jpg; sourceTree = "<group>"; };
-		509F15CC2928D69F00BA8AC1 /* header.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = header.html; sourceTree = "<group>"; };
-		509F15CE2928D69F00BA8AC1 /* custom.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = custom.css; sourceTree = "<group>"; };
-		509F15CF2928D6BD00BA8AC1 /* logo-large.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "logo-large.png"; sourceTree = "<group>"; };
-		509F15D02928D6CF00BA8AC1 /* logo-larger.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "logo-larger.png"; sourceTree = "<group>"; };
 		50B99DAB23B24E0C00D8A89A /* MoiraTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraTypes.h; sourceTree = "<group>"; };
 		50BF14CA23BB4D2700EDFB9C /* MoiraALU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraALU.h; sourceTree = "<group>"; };
 		50C0123528BBAD9B001EFB37 /* m68k-dis.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "m68k-dis.h"; sourceTree = "<group>"; };
@@ -126,15 +106,6 @@
 		50C0124028BBAE80001EFB37 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50CECEC523A924B000E07C65 /* Sandbox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Sandbox.cpp; sourceTree = "<group>"; };
 		50CECEC623A924B000E07C65 /* Sandbox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sandbox.h; sourceTree = "<group>"; };
-		50D1E9F2292BD36B008E1415 /* UsingMoiraInYourOwnApp.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = UsingMoiraInYourOwnApp.md; sourceTree = "<group>"; };
-		50D1E9F5292D2779008E1415 /* ConfigOptions.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ConfigOptions.md; sourceTree = "<group>"; };
-		50D1E9F7292D2791008E1415 /* InstructionHandlers.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = InstructionHandlers.md; sourceTree = "<group>"; };
-		50D1E9F8292D2791008E1415 /* MainExecutionFunction.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = MainExecutionFunction.md; sourceTree = "<group>"; };
-		50D1E9F9292D27AC008E1415 /* HowToUseTheDebugger.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HowToUseTheDebugger.md; sourceTree = "<group>"; };
-		50D1E9FA292D27AC008E1415 /* HowToUseTheDisassembler.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HowToUseTheDisassembler.md; sourceTree = "<group>"; };
-		50D1E9FB292D27AC008E1415 /* HowToUseDelegates.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HowToUseDelegates.md; sourceTree = "<group>"; };
-		50D1E9FC292D27AC008E1415 /* HowToOverclockTheCpu.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HowToOverclockTheCpu.md; sourceTree = "<group>"; };
-		50D1E9FD292D27AC008E1415 /* HowToUseTheCpu.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HowToUseTheCpu.md; sourceTree = "<group>"; };
 		50EC62EE289DB14500398CBD /* MoiraMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraMacros.h; sourceTree = "<group>"; };
 		50F549DE288E817600D5D559 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F80AA723C9E4EC00F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -229,7 +200,6 @@
 		50804DFD2386A4CE004D3EC2 = {
 			isa = PBXGroup;
 			children = (
-				509F15AF2927D5A000BA8AC1 /* Docs */,
 				50F80AAB23C9F16900F21D80 /* CMakeLists.txt */,
 				5054686328A6642900028727 /* Runner */,
 				50804E082386A4CE004D3EC2 /* Moira */,
@@ -291,97 +261,6 @@
 			path = Bartman;
 			sourceTree = "<group>";
 		};
-		509F15AF2927D5A000BA8AC1 /* Docs */ = {
-			isa = PBXGroup;
-			children = (
-				509F15C82927E32D00BA8AC1 /* Makefile */,
-				509F15BB2927D5A000BA8AC1 /* conf.py */,
-				509F15B02927D5A000BA8AC1 /* index.rst */,
-				509F15C72927D79B00BA8AC1 /* requirements.txt */,
-				509F15CD2928D69F00BA8AC1 /* _static */,
-				509F15CA2928D69F00BA8AC1 /* _templates */,
-				509F15B12927D5A000BA8AC1 /* images */,
-				509F15BC2927D5A000BA8AC1 /* Tutorials */,
-				509F15BE2927D5A000BA8AC1 /* HowTo */,
-				50D1E9F4292D2779008E1415 /* References */,
-				50D1E9F6292D2791008E1415 /* Explanations */,
-				509F15C32927D5A000BA8AC1 /* Overview */,
-			);
-			path = Docs;
-			sourceTree = "<group>";
-		};
-		509F15B12927D5A000BA8AC1 /* images */ = {
-			isa = PBXGroup;
-			children = (
-				509F15C92927E7A600BA8AC1 /* splash.jpg */,
-				509F15B22927D5A000BA8AC1 /* icon.png */,
-				509F15B32927D5A000BA8AC1 /* dasm_mot.png */,
-				509F15B42927D5A000BA8AC1 /* banner.png */,
-				509F15B52927D5A000BA8AC1 /* cpuPanel.jpg */,
-				509F15B62927D5A000BA8AC1 /* dasm_mit.png */,
-				509F15B72927D5A000BA8AC1 /* logo.png */,
-				509F15CF2928D6BD00BA8AC1 /* logo-large.png */,
-				509F15D02928D6CF00BA8AC1 /* logo-larger.png */,
-				509F15B82927D5A000BA8AC1 /* stripe.png */,
-				509F15B92927D5A000BA8AC1 /* disassembler.png */,
-				509F15BA2927D5A000BA8AC1 /* disassembler.jpg */,
-			);
-			path = images;
-			sourceTree = "<group>";
-		};
-		509F15BC2927D5A000BA8AC1 /* Tutorials */ = {
-			isa = PBXGroup;
-			children = (
-				509F15BD2927D5A000BA8AC1 /* GettingStarted.md */,
-				50D1E9F2292BD36B008E1415 /* UsingMoiraInYourOwnApp.md */,
-			);
-			path = Tutorials;
-			sourceTree = "<group>";
-		};
-		509F15BE2927D5A000BA8AC1 /* HowTo */ = {
-			isa = PBXGroup;
-			children = (
-				50D1E9FC292D27AC008E1415 /* HowToOverclockTheCpu.md */,
-				50D1E9FB292D27AC008E1415 /* HowToUseDelegates.md */,
-				50D1E9FD292D27AC008E1415 /* HowToUseTheCpu.md */,
-				50D1E9F9292D27AC008E1415 /* HowToUseTheDebugger.md */,
-				50D1E9FA292D27AC008E1415 /* HowToUseTheDisassembler.md */,
-			);
-			path = HowTo;
-			sourceTree = "<group>";
-		};
-		509F15C32927D5A000BA8AC1 /* Overview */ = {
-			isa = PBXGroup;
-			children = (
-				509F15C42927D5A000BA8AC1 /* About.md */,
-			);
-			path = Overview;
-			sourceTree = "<group>";
-		};
-		509F15CA2928D69F00BA8AC1 /* _templates */ = {
-			isa = PBXGroup;
-			children = (
-				509F15CB2928D69F00BA8AC1 /* sections */,
-			);
-			path = _templates;
-			sourceTree = "<group>";
-		};
-		509F15CB2928D69F00BA8AC1 /* sections */ = {
-			isa = PBXGroup;
-			children = (
-				509F15CC2928D69F00BA8AC1 /* header.html */,
-			);
-			path = sections;
-			sourceTree = "<group>";
-		};
-		509F15CD2928D69F00BA8AC1 /* _static */ = {
-			isa = PBXGroup;
-			children = (
-				509F15CE2928D69F00BA8AC1 /* custom.css */,
-			);
-			path = _static;
-			sourceTree = "<group>";
-		};
 		50C0123D28BBADCF001EFB37 /* Binutils */ = {
 			isa = PBXGroup;
 			children = (
@@ -393,23 +272,6 @@
 				50C0123E28BBADEA001EFB37 /* m68k-main.cpp */,
 			);
 			path = Binutils;
-			sourceTree = "<group>";
-		};
-		50D1E9F4292D2779008E1415 /* References */ = {
-			isa = PBXGroup;
-			children = (
-				50D1E9F5292D2779008E1415 /* ConfigOptions.md */,
-			);
-			path = References;
-			sourceTree = "<group>";
-		};
-		50D1E9F6292D2791008E1415 /* Explanations */ = {
-			isa = PBXGroup;
-			children = (
-				50D1E9F7292D2791008E1415 /* InstructionHandlers.md */,
-				50D1E9F8292D2791008E1415 /* MainExecutionFunction.md */,
-			);
-			path = Explanations;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
