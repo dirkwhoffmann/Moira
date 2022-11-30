@@ -23,7 +23,7 @@ All available options are explained in detail in a seperate section.
 
 ## Compiling 
 
-The easies way to compile Moira is via `CMake`. Simply create a build directory, invoke `CMake` to setup the build-chain, and call `make` afterwards:
+The easiest way to compile Moira is via `CMake`. Simply create a build directory, invoke `CMake` to setup the build-chain, and call `make` afterwards:
 
 ````bash
 mkdir build
@@ -34,7 +34,7 @@ make
 
 ## Running 
 
-If build as explained above, an application called `testRunner` is created. The application iterates over all opcodes, runs Moira and Musashi in parallel, and compares the outcome. If everything works as expected, the application terminates after a few minutes. If a disrepancy is detected, an error rerport is generated. In such a case, please file a bug on GitHub. Every help in ruling out remaining bugs is highly appreciated.
+If build as explained above, an application called `testRunner` is created. The application iterates over all opcodes, runs Moira and Musashi in parallel, and compares the outcome. If everything works as expected, the application terminates after a few minutes. If a disrepancy is detected, an error report is generated. In such a case, please file a bug on GitHub. Every help in ruling out remaining bugs is highly appreciated.
 
 ````text
 Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2022

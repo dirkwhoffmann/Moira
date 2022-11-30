@@ -84,7 +84,7 @@ Moira::read16(u32 addr) const
 }
 ```
 
-At first glance, the code seems to speak for itself. Moira's memory request is passed to the `mem` object, which is an instance of vAmiga's `Memory` class. Lookin closer, however, it's no longer that clear. How does Moira know about the various Amiga components such as the memory? These objects are not part of the Moira class. Well, the answer is they are, because in vAmiga we use a slightly modified Moira class. In fact, the class is declared as follows:
+At first glance, the code seems to speak for itself. Moira's memory request is passed to the `mem` object, which is an instance of vAmiga's `Memory` class. When looking closer, however, this straightforward usage of vAmiga's memory class brings up the following question: How does Moira know about the various Amiga components such as the memory? These objects are not part of the Moira class. Well, the answer is they are, because in vAmiga we use a slightly modified Moira class. In fact, the class is declared as follows:
 
 ```c++
 class Moira : public SubComponent {
