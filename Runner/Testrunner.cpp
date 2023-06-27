@@ -437,13 +437,13 @@ void runMoira(Setup &s, Result &r)
         moiracpu->setDasmSyntax(DASM_MUSASHI);
         moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
         clock_t elapsed = clock();
-        r.dasmCntMusashi = moiracpu->disassemble(r.oldpc, r.dasmMusashi);
+        r.dasmCntMusashi = moiracpu->disassemble(r.dasmMusashi, r.oldpc);
         r.elapsed[1] = clock() - elapsed;
 
         // Disassemble the instruction in GNU format (binutils)
         moiracpu->setDasmSyntax(DASM_GNU_MIT);
         moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 10, .plainZero = true });
-        r.dasmCntBinutils = moiracpu->disassemble(r.oldpc, r.dasmBinutils);
+        r.dasmCntBinutils = moiracpu->disassemble(r.dasmBinutils, r.oldpc);
     }
 
     // Run the Moira CPU

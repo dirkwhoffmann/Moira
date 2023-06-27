@@ -133,7 +133,7 @@ Inside the function `main` one of the following functions is executed, depending
  - `execute<SyncMode::Periodic>();`
  - `execute<SyncMode::Pulsed>();`
 
-Both functions call the `execute` function which is implemented inside the Amiga class. This function is one of the most prominent, since it implements the emulator's run loop. It is structures as follows:
+Both functions call the `execute` function which is implemented inside the Amiga class. This function is one of the most prominent, since it implements the emulator's run loop. It is structured as follows:
 
 ```c++
 void

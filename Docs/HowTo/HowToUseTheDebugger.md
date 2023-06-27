@@ -11,7 +11,7 @@ All API calls to the debugger are handled through the `debugger` object which is
 
 ## Managing Breakpoints
 
-If one or more breakpoints are set, Moira starts monitoring the program counter. As soon as one of the monitored memory addresses is reached, function `breakpointReached` is invoked. This functions has an empty function body by default and needs to be overwritten in your sub-class. 
+If one or more breakpoints are set, Moira starts monitoring the program counter. As soon as one of the monitored memory addresses is reached, function `breakpointReached` is invoked. This function has an empty function body by default and needs to be overwritten in your sub-class. 
 
 All API calls related to breakpoints are handled through the `breakpoints` object which is a public member of the `debugger` object.
 
@@ -41,7 +41,7 @@ This function sets a soft breakpoint on the instruction that is next to the curr
 
 ## Watchpoints
 
-If one or more watchpoints are set, Moira monitors all reads and writes from or to memory. As soon as one of the monitored addresses is accessed, function `watchpointReached` is invoked. This functions has an empty function body by default and needs to be overwritten in your sub-class. 
+If one or more watchpoints are set, Moira monitors all reads and writes from or to memory. As soon as one of the monitored addresses is accessed, function `watchpointReached` is invoked. This function has an empty function body by default and needs to be overwritten in your sub-class. 
 
 All API calls related to watchpoints are handled through the `watchpoints` object which is a public member of the debugger object.
 
@@ -63,7 +63,7 @@ All API calls related to watchpoints are handled through the `watchpoints` objec
 
 ## Catchpoints
 
-If one or more catchpoints are set, Moira monitors the exception vector table. As soon as one of the monitored exceptions is thrown, function `catchpointReached` is invoked. This functions has an empty function body by default and needs to be overwritten in your sub-class. Catchpoints are a handy debug tool. They can be used to intercept certain interrupts or certain error conditions such as address errors or bus errors. 
+If one or more catchpoints are set, Moira monitors the exception vector table. As soon as one of the monitored exceptions is thrown, function `catchpointReached` is invoked. This function has an empty function body by default and needs to be overwritten in your sub-class. Catchpoints are a handy debug tool. They can be used to intercept certain interrupts or certain error conditions such as address errors or bus errors. 
 
 All API calls related to catchpoints are handled through the `catchpoints` object which is a public member of the debugger object.
 

@@ -37,7 +37,7 @@ After instantiating an object of your custom CPU class, the CPU needs to be conf
 
 - `void setModel(Model cpuModel, Model dasmModel)`
 
-  This function configures the CPU core and the disassembler seperately. The functions is usefuls, because the disassembler supports a broader range of CPU models. Whereas the emulated CPU core is restricted to the models mentioned above, the disassembler is capable of producing output for higher-end CPUs, too. These CPUs are specified by the following keys: 
+  This function configures the CPU core and the disassembler seperately. The function has been intentionally overloaded to let the disassembler support a broader range of cpu models. Whereas the emulated CPU core is restricted to the models mentioned above, the disassembler is capable of producing output for higher-end CPUs, too. These CPUs are specified by the following keys: 
 
   - `M68EC030`
   - `M68030`
