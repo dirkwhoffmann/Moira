@@ -462,7 +462,7 @@ Moira::dasmAndiRg(StrWriter &str, u32 &addr, u16 op) const
     auto dst = _____________xxx(op);
 
     if (str.style.syntax == DASM_MUSASHI) {
-        str << Ins<I>{} << Sz<S>{} << str.tab << Imu{src} << Sep{} << Dn{dst};
+        str << Ins<I>{} << Sz<S>{} << str.tab << Imu<S>{src} << Sep{} << Dn{dst};
     } else {
         str << Ins<I>{} << Sz<S>{} << str.tab << Ims<S>(src) << Sep{} << Dn{dst};
     }
@@ -475,7 +475,7 @@ Moira::dasmAndiEa(StrWriter &str, u32 &addr, u16 op) const
     auto dst = Op <M,S> ( _____________xxx(op), addr );
 
     if (str.style.syntax == DASM_MUSASHI) {
-        str << Ins<I>{} << Sz<S>{} << str.tab << Imu{src} << Sep{} << dst;
+        str << Ins<I>{} << Sz<S>{} << str.tab << Imu<S>{src} << Sep{} << dst;
     } else {
         str << Ins<I>{} << Sz<S>{} << str.tab << Ims<S>(src) << "," << dst;
     }
@@ -487,7 +487,7 @@ Moira::dasmAndiccr(StrWriter &str, u32 &addr, u16 op) const
     auto src = dasmIncRead<S>(addr);
 
     if (str.style.syntax == DASM_MUSASHI) {
-        str << Ins<I>{} << str.tab << Imu{src} << Sep{} << Ccr{};
+        str << Ins<I>{} << str.tab << Imu<S>{src} << Sep{} << Ccr{};
     } else {
         str << Ins<I>{} << Sz<S>{} << str.tab << Ims<S>(src) << Sep{} << Ccr{};
     }
@@ -1059,7 +1059,7 @@ Moira::dasmBitImDy(StrWriter &str, u32 &addr, u16 op) const
 
         default:
 
-            str << Ins<I>{} << str.tab << Imu(src) << Sep{} << dst;
+            str << Ins<I>{} << str.tab << Imu<S>(src) << Sep{} << dst;
     }
 }
 
@@ -1079,7 +1079,7 @@ Moira::dasmBitImEa(StrWriter &str, u32 &addr, u16 op) const
 
         default:
 
-            str << Ins<I>{} << str.tab << Imu(src) << Sep{} << dst;
+            str << Ins<I>{} << str.tab << Imu<S>(src) << Sep{} << dst;
     }
 }
 
