@@ -18,6 +18,8 @@
    Software Foundation, 51 Franklin Street - Fifth Floor, Boston, MA
    02110-1301, USA.  */
 
+#include <stdbool.h>
+#include "config.h" // DIRK
 #include "m68k-dis.h"
 
 /* These are used as bit flags for the arch field in the m68k_opcode
@@ -31,9 +33,9 @@
 #define m68060   0x020
 
 // DIRK: WE TAKE OUT coprocessors for now
-#define	m68881   0x0
+// #define	m68881   0x0
 #define	m68851   0x0
-//#define    m68881   0x040
+#define    m68881   0x040
 // #define    m68851   0x080
 
 #define cpu32	 0x100		/* e.g., 68332 */

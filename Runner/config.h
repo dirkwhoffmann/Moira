@@ -10,31 +10,31 @@
 #pragma once
 
 // Number of test rounds
-static constexpr long ROUNDS = 1;
+static const long ROUNDS = 1;
 
 // Set to true to verify all memory write operations
-static constexpr bool CHECK_MEM_WRITES = true;
+static const bool CHECK_MEM_WRITES = true;
 
 // Set to true to execute CPU tests
-static constexpr bool CHECK_CPU = true;
+static const bool CHECK_CPU = true;
 
 // Set to true to execute MMU tests for capable CPUs
-static constexpr bool CHECK_MMU = true;
+static const bool CHECK_MMU = true;
 
 // Set to true to execute FPU tests for capable CPUs
-static constexpr bool CHECK_FPU = true;
+static const bool CHECK_FPU = true;
 
 // Set to true to skip the execution of illegal instructions
-static constexpr bool SKIP_ILLEGAL = true;
+static const bool SKIP_ILLEGAL = true;
 
 // Set to true for verbose output
-static constexpr bool VERBOSE = false;
+static const bool VERBOSE = false;
 
 // Set to true to measure the CPU speed
-static constexpr bool PROFILE_CPU = true;
+static const bool PROFILE_CPU = true;
 
 // Set to true to measure the disassembler speed
-static constexpr bool PROFILE_DASM = false;
+static const bool PROFILE_DASM = false;
 
 // Change to limit the range of executed instructions
 #define doExec(opcode) (opcode >= 0x0000 && opcode <= 0xEFFF)
@@ -42,6 +42,9 @@ static constexpr bool PROFILE_DASM = false;
 // Change to limit the range of disassembled instructions
 #define doDasm(opcode) (opcode >= 0x0000 && opcode <= 0xFFFF)
 
+// Uncomment to check against M68K in Motorola syntax
+#define MOTOROLA
+
 // Uncomment to disable assertion checking
 // #define NDEBUG
-#include <cassert>
+#include <assert.h>

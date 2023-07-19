@@ -441,7 +441,11 @@ void runMoira(Setup &s, Result &r)
         r.elapsed[1] = clock() - elapsed;
 
         // Disassemble the instruction in GNU format (binutils)
+#ifdef MOTOROLA
+        moiracpu->setDasmSyntax(DASM_GNU);
+#else
         moiracpu->setDasmSyntax(DASM_GNU_MIT);
+#endif
         moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 10, .plainZero = true });
         r.dasmCntBinutils = moiracpu->disassemble(r.dasmBinutils, r.oldpc);
     }
