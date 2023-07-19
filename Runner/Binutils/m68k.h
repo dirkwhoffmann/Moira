@@ -32,11 +32,14 @@
 #define	m68040   0x010
 #define m68060   0x020
 
-// DIRK: WE TAKE OUT coprocessors for now
-#define	m68881   0x0
+// DIRK: Make M68881 coprocessor optional
+#ifdef ENABLE_M68881
+#define    m68881   0x040
+#else
+#define    m68881   0x0
+#endif
+
 #define	m68851   0x0
-// #define    m68881   0x040
-// #define    m68851   0x080
 
 #define cpu32	 0x100		/* e.g., 68332 */
 #define fido_a   0x200
