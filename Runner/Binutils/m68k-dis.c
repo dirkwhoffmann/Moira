@@ -139,6 +139,9 @@ void floatformat_to_double(const struct floatformat* fmt, const void* from, doub
 
 // #define MOTOROLA 1
 // #define TARGET_AMIGA 1
+#ifdef MOTOROLA
+#define TARGET_AMIGA 1
+#endif
 
 #ifdef MOTOROLA
 /* print as signed decimal. */
