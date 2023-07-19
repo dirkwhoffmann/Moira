@@ -1358,7 +1358,7 @@ StrWriter::operator<<(Fp fp)
 StrWriter&
 StrWriter::operator<<(Ffmt ffmt)
 {
-    if (style.syntax != DASM_MOIRA_MIT && style.syntax != DASM_GNU_MIT) *ptr++ = '.';
+    if (style.syntax != DASM_GNU && style.syntax != DASM_GNU_MIT) *ptr++ = '.';
 
     switch (ffmt.raw) {
 

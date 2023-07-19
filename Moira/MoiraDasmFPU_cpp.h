@@ -613,7 +613,7 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op) const
 
                 if (str.style.syntax == DASM_GNU || str.style.syntax == DASM_GNU_MIT) {
 
-                    str << "fmovel" << str.tab << Sep{} << Op<M, Long>(reg, addr);
+                    str << Ins<FMOVE>{} << Ffmt{0} << str.tab << Sep{} << Op<M, Long>(reg, addr);
                     return;
                 }
             }
