@@ -34,10 +34,4 @@ jobs:
           echo "Tests crashed, capturing core dump..."
           tar -cvf core-dump.tar core*
         )
-        
-    - name: Upload core dump if crash occurs
-      if: failure()
-      uses: actions/upload-artifact@v3
-      with:
-        name: core-dump
-        path: core-dump.tar
+    
