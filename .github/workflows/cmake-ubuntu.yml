@@ -29,9 +29,5 @@ jobs:
       
     - name: Test
       working-directory: ${{github.workspace}}/build
-      run: |
-        ctest --verbose -C ${{env.BUILD_TYPE}} || (
-          echo "Tests crashed, capturing core dump..."
-          tar -cvf core-dump.tar core*
-        )
+      run: ctest --rerun-failed --output-on-failure --verbose -C ${{env.BUILD_TYPE}}
     
