@@ -34,7 +34,7 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
 {
     if (!enabled) return;
 
-    auto info = moiracpu->getInfo(opcode);
+    auto info = moiracpu->getInstrInfo(opcode);
 
     // Ignore some opcodes that are handled differently by Moira
     if (info.I == CLR && info.S == Long) return;

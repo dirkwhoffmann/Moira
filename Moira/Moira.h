@@ -41,7 +41,7 @@ protected:
 
 
     //
-    // Sub components
+    // Subcomponents
     //
 
 public:
@@ -64,9 +64,6 @@ protected:
 
     // The prefetch queue
     PrefetchQueue queue;
-
-    // The floating point unit (not supported yet)
-    FPU fpu;
 
     // The interrupt mode of this CPU
     IrqMode irqMode = IRQ_AUTO;
@@ -105,10 +102,10 @@ private:
 
     // Jump table holding the instruction handlers
     typedef void (Moira::*ExecPtr)(u16);
-    ExecPtr exec[65536];
+    ExecPtr *exec = nullptr;
 
     // Jump table holding the loop mode instruction handlers (68010 only)
-    ExecPtr loop[65536];
+    ExecPtr *loop = nullptr;
 
     // Jump table holding the disassebler handlers
     typedef void (Moira::*DasmPtr)(StrWriter&, u32&, u16) const;
@@ -171,13 +168,13 @@ private:
 public:
 
     // Checks if the emulated CPU model has a coprocessor interface
-    bool hasCPI();
+    bool hasCPI() const;
 
     // Checks if the emulated CPU model has a memory managenemt unit
-    bool hasMMU();
+    bool hasMMU() const;
 
     // Checks if the emulated CPU model has a floating point unit
-    bool hasFPU();
+    bool hasFPU() const;
 
     // Returns the cache register mask (accessible CACR bits)
     u32 cacrMask() const;
@@ -246,7 +243,7 @@ public:
     void dump16(char *str, u32 addr, int cnt) const;
 
     // Return an info struct for a certain opcode
-    InstrInfo getInfo(u16 op) const;
+    InstrInfo getInstrInfo(u16 op) const;
 
 
     //
@@ -276,8 +273,8 @@ protected:
     virtual u16 readIrqUserVector(u8 level) const { return 0; }
 
     // State delegates
-    virtual void didReset() { }
-    virtual void didHalt() { }
+    virtual void cpuDidReset() { }
+    virtual void cpuDidHalt() { }
 
     // Instruction delegates
     virtual void willExecute(const char *func, Instr I, Mode M, Size S, u16 opcode) { }
@@ -323,8 +320,8 @@ protected:
     u16 readIrqUserVector(u8 level) const;
 
     // State delegates
-    void didReset();
-    void didHalt();
+    void cpuDidReset();
+    void cpuDidHalt();
 
     // Instruction delegates
     void willExecute(const char *func, Instr I, Mode M, Size S, u16 opcode);

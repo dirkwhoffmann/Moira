@@ -2,9 +2,7 @@
 // This file is part of Moira - A Motorola 68k emulator
 //
 // Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de
-// Licensed under the GNU General Public License v3
-//
-// See https://www.gnu.org for license information
+// Published under the terms of the MIT License
 // -----------------------------------------------------------------------------
 
 #pragma once
@@ -34,7 +32,6 @@ public:
 
     // Returns true if the guard hits
     bool eval(u32 addr, Size S = Byte);
-
 };
 
 
@@ -90,13 +87,12 @@ public:
     bool isSet(long nr) const { return guardNr(nr) != nullptr; }
     bool isSetAt(u32 addr) const { return guardAt(addr) != nullptr; }
 
-    void setAt(u32 addr);
+    void setAt(u32 addr, long ignores = 0);
+    void replace(long nr, u32 addr);
 
     void remove(long nr);
     void removeAt(u32 addr);
     void removeAll() { count = 0; setNeedsCheck(false); }
-
-    void replace(long nr, u32 addr);
 
 
     //
@@ -110,10 +106,15 @@ public:
 
     void enable(long nr) { setEnable(nr, true); }
     void enableAt(u32 addr) { setEnableAt(addr, true); }
+    void enableAll() { setEnableAll(true); }
     void disable(long nr) { setEnable(nr, false); }
     void disableAt(u32 addr) { setEnableAt(addr, false); }
+    void disableAll() { setEnableAll(false); }
+    void toggle(long nr) { setEnable(nr, isDisabled(nr)); }
+    void toggleAt(u32 addr) { setEnableAt(addr, isDisabledAt(addr)); }
     void setEnable(long nr, bool val);
     void setEnableAt(u32 addr, bool val);
+    void setEnableAll(bool val);
 
     void ignore(long nr, long count);
 
@@ -123,7 +124,7 @@ public:
     //
 
     // Indicates if guard checking is necessary
-    virtual void setNeedsCheck(bool value) = 0;
+    virtual void setNeedsCheck(bool value) { };
 
     // Evaluates all guards
     bool eval(u32 addr, Size S = Byte);

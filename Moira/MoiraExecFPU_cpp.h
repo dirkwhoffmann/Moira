@@ -120,48 +120,71 @@ Moira::isValidExtFPU(Instr I, Mode M, u16 op, u32 ext) const
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execFBcc(u16 opcode)
 {
-    execLineF<C, I, M, S>(opcode);
+    throw std::runtime_error("Attempt to execute an unsupported FPU instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execFDbcc(u16 opcode)
 {
-    execLineF<C, I, M, S>(opcode);
+    throw std::runtime_error("Attempt to execute an unsupported FPU instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execFGen(u16 opcode)
 {
-    execLineF<C, I, M, S>(opcode);
+    throw std::runtime_error("Attempt to execute an unsupported FPU instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execFNop(u16 opcode)
 {
-    execLineF<C, I, M, S>(opcode);
+    throw std::runtime_error("Attempt to execute an unsupported FPU instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execFRestore(u16 opcode)
 {
-    execLineF<C, I, M, S>(opcode);
+    throw std::runtime_error("Attempt to execute an unsupported FPU instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execFSave(u16 opcode)
 {
-    execLineF<C, I, M, S>(opcode);
+    throw std::runtime_error("Attempt to execute an unsupported FPU instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execFScc(u16 opcode)
 {
-    execLineF<C, I, M, S>(opcode);
+    throw std::runtime_error("Attempt to execute an unsupported FPU instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execFTrapcc(u16 opcode)
 {
-    execLineF<C, I, M, S>(opcode);
+    throw std::runtime_error("Attempt to execute an unsupported FPU instruction.");
 }
 
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execFMove(u16 opcode)
+{
+    throw std::runtime_error("Attempt to execute an unsupported FPU instruction.");
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execFMovecr(u16 opcode)
+{
+    throw std::runtime_error("Attempt to execute an unsupported FPU instruction.");
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execFMovem(u16 opcode)
+{
+    throw std::runtime_error("Attempt to execute an unsupported FPU instruction.");
+}
+
+template <Core C, Instr I, Mode M, Size S> void
+Moira::execFGeneric(u16 opcode)
+{
+    throw std::runtime_error("Attempt to execute an unsupported FPU instruction.");
+}

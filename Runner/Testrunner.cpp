@@ -142,7 +142,7 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
 {
     static long mvc = 0;
 
-    moira::Instr instr = moiracpu->getInfo(opcode).I;
+    moira::Instr instr = moiracpu->getInstrInfo(opcode).I;
 
     // Prepare special extension words for some instructions
     switch (instr) {
@@ -271,7 +271,7 @@ void runCPU(long round)
         for (int op = 0x0000; op <= 0xFFFF; op++) {
 
             if constexpr (SKIP_ILLEGAL) {
-                if (moiracpu->getInfo(op).I == moira::ILLEGAL) continue;
+                if (moiracpu->getInstrInfo(op).I == moira::ILLEGAL) continue;
             }
 
             // Execute both CPU cores
@@ -478,7 +478,7 @@ bool skip(u16 op)
 {
     bool result;
 
-    moira::Instr instr = moiracpu->getInfo(op).I;
+    moira::Instr instr = moiracpu->getInstrInfo(op).I;
 
     // Skip some instructions that are broken in Musashi
     result =
@@ -681,7 +681,7 @@ void compare(Setup &s, Result &r1, Result &r2)
 
 bool compareDasm(Result &r1, Result &r2)
 {
-    auto I = moiracpu->getInfo(r1.opcode).I;
+    auto I = moiracpu->getInstrInfo(r1.opcode).I;
 
     bool skipMusashi = r1.opcode >= 0xF000;
     bool skipBinutils = false;
@@ -727,7 +727,7 @@ bool compareDasm(Result &r1, Result &r2)
 bool compareD(Result &r1, Result &r2)
 {
     assert(r1.opcode == r2.opcode);
-    moira::Instr instr = moiracpu->getInfo(r1.opcode).I;
+    moira::Instr instr = moiracpu->getInstrInfo(r1.opcode).I;
     if (instr == moira::DIVU || instr == moira::DIVS)
     {
         // Musashi differs in some corner cases
@@ -752,7 +752,7 @@ bool comparePC(Result &r1, Result &r2)
 bool compareSR(Result &r1, Result &r2)
 {
     assert(r1.opcode == r2.opcode);
-    moira::Instr instr = moiracpu->getInfo(r1.opcode).I;
+    moira::Instr instr = moiracpu->getInstrInfo(r1.opcode).I;
     if (instr == moira::DIVU || instr == moira::DIVS) {
 
         // Musashi differs (and is likely wrong). Ignore it
@@ -800,9 +800,9 @@ bool compareCAxR(Result &r1, Result &r2)
 bool compareCycles(Result &r1, Result &r2)
 {
     assert(r1.opcode == r2.opcode);
-    auto I = moiracpu->getInfo(r1.opcode).I;
-    auto S = moiracpu->getInfo(r1.opcode).S;
-    auto M = moiracpu->getInfo(r1.opcode).M;
+    auto I = moiracpu->getInstrInfo(r1.opcode).I;
+    auto S = moiracpu->getInstrInfo(r1.opcode).S;
+    auto M = moiracpu->getInstrInfo(r1.opcode).M;
 
     // Exclude some instructions
     if (I == moira::TAS) return true;
