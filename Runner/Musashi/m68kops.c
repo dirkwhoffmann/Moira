@@ -13194,7 +13194,12 @@ static void m68k_op_divl_32_d(void)
 
 				if(BIT_B(word2))	   /* signed */
 				{
-					quotient  = (uint64)((sint64)dividend / (sint64)((sint32)divisor));
+                    if ((sint64)dividend != 0x8000000000000000 ||
+                        (sint64)((sint32)divisor != -1)) {
+                        quotient = (uint64)((sint64)dividend / (sint64)((sint32)divisor));
+                    } else {
+                        quotient = (uint64)(sint64)dividend;
+                    }
 					remainder = (uint64)((sint64)dividend % (sint64)((sint32)divisor));
 
                     if((sint64)quotient != (sint64)((sint32)quotient))
