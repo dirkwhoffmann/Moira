@@ -18,7 +18,7 @@ Randomizer::init()
     std::time_t t = std::time(0);
     std::tm* now = std::localtime(&t);
 
-    auto seed = 222; // now->tm_year + now->tm_yday;
+    auto seed = now->tm_year + now->tm_yday;
 
     srand(seed);
     return seed;
