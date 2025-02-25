@@ -44,5 +44,5 @@ jobs:
         cmake --build build --config ${{matrix.build}}  
     - name: Test
       working-directory: ${{github.workspace}}/build
-      run: ctest --verbose -C ${{env.BUILD_TYPE}}
+      run: ctest --verbose -C ${{matrix.build}}
         
