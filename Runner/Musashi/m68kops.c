@@ -13183,7 +13183,8 @@ static void m68k_op_divl_32_d(void)
 		uint64 quotient  = 0;
 		uint64 remainder = 0;
 
-		if(divisor != 0)
+		// if(divisor != 0)
+        if ((sint64)((sint32)divisor) != 0)
 		{
 			if(BIT_A(word2))	/* 64 bit */
 			{
