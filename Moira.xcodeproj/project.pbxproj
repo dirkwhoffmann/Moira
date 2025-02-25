@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		501A67C628CC66B0005809B2 /* softfloat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 501A67C528CC66B0005809B2 /* softfloat.cpp */; settings = {COMPILER_FLAGS = "-w"; }; };
 		5028B10A288D9EC000047C20 /* musashi_softfloat.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B103288D9EC000047C20 /* musashi_softfloat.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		5028B10E288D9ECD00047C20 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B10D288D9ECD00047C20 /* m68kops.c */; settings = {COMPILER_FLAGS = "-w"; }; };
+		5028B10E288D9ECD00047C20 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B10D288D9ECD00047C20 /* m68kops.c */; settings = {COMPILER_FLAGS = "-w -fno-sanitize=undefined"; }; };
 		5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B114288D9EDC00047C20 /* m68kdasm.c */; settings = {COMPILER_FLAGS = "-w"; }; };
 		5028B11C288D9EDC00047C20 /* m68kcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B116288D9EDC00047C20 /* m68kcpu.c */; settings = {COMPILER_FLAGS = "-w"; }; };
 		502C09DF23C8D82600A179E1 /* MoiraDebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
