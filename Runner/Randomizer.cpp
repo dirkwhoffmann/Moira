@@ -12,18 +12,6 @@
 #include <bit>
 #include <ctime>
 
-int
-Randomizer::init()
-{
-    std::time_t t = std::time(0);
-    std::tm* now = std::localtime(&t);
-
-    auto seed = now->tm_year + now->tm_yday;
-
-    srand(seed);
-    return seed;
-}
-
 u32
 Randomizer::rand()
 {

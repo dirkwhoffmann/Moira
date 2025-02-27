@@ -272,6 +272,23 @@ public:
      * @brief Executes the next instruction in the CPU pipeline.
      */
     void execute();
+
+    /**
+     * @brief Executes instructions for the given number of cycles.
+     *
+     * @note Since Moira cannot stop in the middle of an instruction, the number of actually elapsed cycles
+     * may exceed the specified cycle budget.
+     *
+     * @param cycles Number of cycles to execute.
+     */
+    void execute(i64 cycles);
+    
+    /**
+     * @brief Executes instructions until a specific cycle count is reached.
+     *
+     * @param cycle Target cycle count at which execution stops.
+     */
+    void executeUntil(i64 cycle);
     
     /**
      * @brief Checks if the CPU is in a HALT state.

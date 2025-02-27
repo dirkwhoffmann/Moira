@@ -138,6 +138,7 @@ void resetMoira(Setup &s);
 //
 
 void run();
+void run(unsigned seed);
 
 void runCPU(long round);
 void runMMU(long round);

@@ -224,14 +224,24 @@ clock_t muclk[2] = {0,0}, moclk[2] = {0,0};
 
 void run()
 {
+    std::time_t t = std::time(0);
+    std::tm* now = std::localtime(&t);
+
+    run(900 + now->tm_year + now->tm_yday);
+}
+
+void run(unsigned seed)
+{
     printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2023\n\n");
     printf("The test program runs Moira agains Musashi with randomly generated data.\n");
     printf("\n");
     printf("    Test rounds : %ld\n", ROUNDS);
-    printf("    Random seed : %d\n", randomizer.init());
+    printf("    Random seed : %d\n", seed);
     printf("     Exec range : %s\n", TOSTRING(doExec(opcode)));
     printf("     Dasm range : %s\n", TOSTRING(doDasm(opcode)));
 
+    srand(seed);
+    
     for (long i = 1; i <= ROUNDS; i++) {
 
         printf("\nRound %ld:\n\n", i);

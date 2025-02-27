@@ -17,6 +17,5 @@ class Randomizer {
 
 public:
 
-    int init();
     u32 rand();
 };
