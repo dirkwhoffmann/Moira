@@ -23,6 +23,6 @@ class TestCPU : public Moira {
     void write8 (u32 addr, u8  val) const override;
     void write16 (u32 addr, u16 val) const override;
     u16 readIrqUserVector(u8 level) const override;
-    void breakpointReached(u32 addr) override;
-    void watchpointReached(u32 addr) override;
+    void didReachBreakpoint(u32 addr) override;
+    void didReachWatchpoint(u32 addr) override;
 };

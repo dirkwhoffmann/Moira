@@ -18,7 +18,7 @@ Randomizer randomizer;
 u8 musashiMem[0x10000];
 u8 moiraMem[0x10000];
 u32 musashiFC = 0;
-moira::Model cpuModel = M68000;
+moira::Model cpuModel = Model::M68000;
 u16 opcode = 0;
 
 // Binutils
@@ -48,15 +48,15 @@ const char *selectedModel()
 {
     switch (cpuModel) {
 
-        case M68000:    return "68000";
-        case M68010:    return "68010";
-        case M68EC020:  return "EC020";
-        case M68020:    return "68020";
-        case M68EC030:  return "EC030";
-        case M68030:    return "68030";
-        case M68EC040:  return "EC040";
-        case M68LC040:  return "LC040";
-        case M68040:    return "68040";
+        case Model::M68000:    return "68000";
+        case Model::M68010:    return "68010";
+        case Model::M68EC020:  return "EC020";
+        case Model::M68020:    return "68020";
+        case Model::M68EC030:  return "EC030";
+        case Model::M68030:    return "68030";
+        case Model::M68EC040:  return "EC040";
+        case Model::M68LC040:  return "LC040";
+        case Model::M68040:    return "68040";
 
         default:
             return "???";
@@ -67,15 +67,15 @@ void setupBinutils()
 {
     switch (cpuModel) {
 
-        case M68000:    di.mach = MACH_68000; break;
-        case M68010:    di.mach = MACH_68010; break;
-        case M68EC020:  // Not supported by binutils
-        case M68020:    di.mach = MACH_68020; break;
-        case M68EC030:  // Not supported by binutils
-        case M68030:    di.mach = MACH_68030; break;
-        case M68EC040:  // Not supported by binutils
-        case M68LC040:  // Not supported by binutils
-        case M68040:    di.mach = MACH_68040; break;
+        case Model::M68000:    di.mach = MACH_68000; break;
+        case Model::M68010:    di.mach = MACH_68010; break;
+        case Model::M68EC020:  // Not supported by binutils
+        case Model::M68020:    di.mach = MACH_68020; break;
+        case Model::M68EC030:  // Not supported by binutils
+        case Model::M68030:    di.mach = MACH_68030; break;
+        case Model::M68EC040:  // Not supported by binutils
+        case Model::M68LC040:  // Not supported by binutils
+        case Model::M68040:    di.mach = MACH_68040; break;
     }
 
     // di.stream = binutilsStream;
@@ -99,15 +99,15 @@ void setupMusashi()
 
     switch (cpuModel) {
 
-        case M68000:    m68k_set_cpu_type(M68K_CPU_TYPE_68000);     break;
-        case M68010:    m68k_set_cpu_type(M68K_CPU_TYPE_68010);     break;
-        case M68EC020:  m68k_set_cpu_type(M68K_CPU_TYPE_68EC020);   break;
-        case M68020:    m68k_set_cpu_type(M68K_CPU_TYPE_68020);     break;
-        case M68EC030:  m68k_set_cpu_type(M68K_CPU_TYPE_68EC030);   break;
-        case M68030:    m68k_set_cpu_type(M68K_CPU_TYPE_68030);     break;
-        case M68EC040:  m68k_set_cpu_type(M68K_CPU_TYPE_68EC040);   break;
-        case M68LC040:  m68k_set_cpu_type(M68K_CPU_TYPE_68LC040);   break;
-        case M68040:    m68k_set_cpu_type(M68K_CPU_TYPE_68040);     break;
+        case Model::M68000:    m68k_set_cpu_type(M68K_CPU_TYPE_68000);     break;
+        case Model::M68010:    m68k_set_cpu_type(M68K_CPU_TYPE_68010);     break;
+        case Model::M68EC020:  m68k_set_cpu_type(M68K_CPU_TYPE_68EC020);   break;
+        case Model::M68020:    m68k_set_cpu_type(M68K_CPU_TYPE_68020);     break;
+        case Model::M68EC030:  m68k_set_cpu_type(M68K_CPU_TYPE_68EC030);   break;
+        case Model::M68030:    m68k_set_cpu_type(M68K_CPU_TYPE_68030);     break;
+        case Model::M68EC040:  m68k_set_cpu_type(M68K_CPU_TYPE_68EC040);   break;
+        case Model::M68LC040:  m68k_set_cpu_type(M68K_CPU_TYPE_68LC040);   break;
+        case Model::M68040:    m68k_set_cpu_type(M68K_CPU_TYPE_68040);     break;
     }
 }
 
@@ -124,7 +124,7 @@ void setupTestEnvironment(Setup &s, long round)
     s.ext1 = u16(randomizer.rand());
     s.ext2 = u16(randomizer.rand());
     s.ext3 = u16(randomizer.rand());
-    s.vbr = cpuModel == M68000 ? 0 : u16(randomizer.rand() & ~1);
+    s.vbr = cpuModel == Model::M68000 ? 0 : u16(randomizer.rand() & ~1);
     s.sfc = u16(randomizer.rand());
     s.dfc = u16(randomizer.rand());
     s.cacr = randomizer.rand() & moiracpu->cacrMask();
@@ -147,11 +147,11 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
     // Prepare special extension words for some instructions
     switch (instr) {
 
-        case RTE:
+        case Instr::RTE:
 
             break;
 
-        case MOVEC:
+        case Instr::MOVEC:
         {
             if (s.round % 2) {
 
@@ -247,8 +247,8 @@ void run()
             if constexpr (CHECK_FPU) runFPU(i);
 
             // Switch the CPU core
-            if (cpuModel == M68040) break;
-            cpuModel = Model(cpuModel + 1);
+            if (cpuModel == Model::M68040) break;
+            cpuModel = Model(int(cpuModel) + 1);
         }
     }
 
@@ -271,7 +271,7 @@ void runCPU(long round)
         for (int op = 0x0000; op <= 0xFFFF; op++) {
 
             if constexpr (SKIP_ILLEGAL) {
-                if (moiracpu->getInstrInfo(op).I == moira::ILLEGAL) continue;
+                if (moiracpu->getInstrInfo(op).I == moira::Instr::ILLEGAL) continue;
             }
 
             // Execute both CPU cores
@@ -396,14 +396,14 @@ void runMusashi(Setup &s, Result &r)
 
     // Run the Musashi disassembler
     auto type =
-    cpuModel == M68000   ? M68K_CPU_TYPE_68000 :
-    cpuModel == M68010   ? M68K_CPU_TYPE_68010 :
-    cpuModel == M68EC020 ? M68K_CPU_TYPE_68EC020 :
-    cpuModel == M68020   ? M68K_CPU_TYPE_68020 :
-    cpuModel == M68EC030 ? M68K_CPU_TYPE_68EC030 :
-    cpuModel == M68030   ? M68K_CPU_TYPE_68030 :
-    cpuModel == M68EC040 ? M68K_CPU_TYPE_68EC040 :
-    cpuModel == M68LC040 ? M68K_CPU_TYPE_68LC040 : M68K_CPU_TYPE_68040;
+    cpuModel == Model::M68000   ? M68K_CPU_TYPE_68000 :
+    cpuModel == Model::M68010   ? M68K_CPU_TYPE_68010 :
+    cpuModel == Model::M68EC020 ? M68K_CPU_TYPE_68EC020 :
+    cpuModel == Model::M68020   ? M68K_CPU_TYPE_68020 :
+    cpuModel == Model::M68EC030 ? M68K_CPU_TYPE_68EC030 :
+    cpuModel == Model::M68030   ? M68K_CPU_TYPE_68030 :
+    cpuModel == Model::M68EC040 ? M68K_CPU_TYPE_68EC040 :
+    cpuModel == Model::M68LC040 ? M68K_CPU_TYPE_68LC040 : M68K_CPU_TYPE_68040;
 
     clock_t elapsed = clock();
     r.dasmCntMusashi = m68k_disassemble(r.dasmMusashi, s.pc, type);
@@ -434,7 +434,7 @@ void runMoira(Setup &s, Result &r)
     if (doDasm(r.opcode)) {
 
         // Disassemble the instruction in Musashi format
-        moiracpu->setDasmSyntax(DASM_MUSASHI);
+        moiracpu->setDasmSyntax(Syntax::MUSASHI);
         moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
         clock_t elapsed = clock();
         r.dasmCntMusashi = moiracpu->disassemble(r.dasmMusashi, r.oldpc);
@@ -442,9 +442,9 @@ void runMoira(Setup &s, Result &r)
 
         // Disassemble the instruction in GNU format (binutils)
 #ifdef MOTOROLA
-        moiracpu->setDasmSyntax(DASM_GNU);
+        moiracpu->setDasmSyntax(Syntax::GNU);
 #else
-        moiracpu->setDasmSyntax(DASM_GNU_MIT);
+        moiracpu->setDasmSyntax(Syntax::GNU_MIT);
 #endif
         moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 10, .plainZero = true });
         r.dasmCntBinutils = moiracpu->disassemble(r.dasmBinutils, r.oldpc);
@@ -482,21 +482,21 @@ bool skip(u16 op)
 
     // Skip some instructions that are broken in Musashi
     result =
-    instr == moira::ABCD    ||
-    instr == moira::SBCD    ||
-    instr == moira::NBCD    ||
-    instr == moira::BFCHG   ||
-    instr == moira::BFCLR   ||
-    instr == moira::BFEXTS  ||
-    instr == moira::BFEXTU  ||
-    instr == moira::BFFFO   ||
-    instr == moira::BFINS   ||
-    instr == moira::BFSET   ||
-    instr == moira::BFTST;
+    instr == Instr::ABCD    ||
+    instr == Instr::SBCD    ||
+    instr == Instr::NBCD    ||
+    instr == Instr::BFCHG   ||
+    instr == Instr::BFCLR   ||
+    instr == Instr::BFEXTS  ||
+    instr == Instr::BFEXTU  ||
+    instr == Instr::BFFFO   ||
+    instr == Instr::BFINS   ||
+    instr == Instr::BFSET   ||
+    instr == Instr::BFTST;
 
-    if (cpuModel != M68000) {
+    if (cpuModel != Model::M68000) {
 
-        result |= instr == moira::RTE;
+        result |= instr == Instr::RTE;
     }
 
     return result;
@@ -688,15 +688,15 @@ bool compareDasm(Result &r1, Result &r2)
 
     switch (cpuModel) {
 
-        case moira::M68010:
+        case Model::M68010:
 
-            skipBinutils |= I == CMPI;
+            skipBinutils |= I == Instr::CMPI;
             break;
             
-        case moira::M68EC020:
-        case moira::M68EC030:
-        case moira::M68EC040:
-        case moira::M68LC040:
+        case Model::M68EC020:
+        case Model::M68EC030:
+        case Model::M68EC040:
+        case Model::M68LC040:
 
             skipBinutils |= r1.opcode >= 0xF000;
             break;
@@ -715,7 +715,7 @@ bool compareDasm(Result &r1, Result &r2)
     // Compare with binutils
     if (!skipBinutils) {
 
-        if (I != FTRAPcc) {
+        if (I != Instr::FTRAPcc) {
             if (r1.dasmCntBinutils != r2.dasmCntBinutils) return false;
         }
         if (strcmp(r1.dasmBinutils, r2.dasmBinutils) != 0) return false;
@@ -728,7 +728,7 @@ bool compareD(Result &r1, Result &r2)
 {
     assert(r1.opcode == r2.opcode);
     moira::Instr instr = moiracpu->getInstrInfo(r1.opcode).I;
-    if (instr == moira::DIVU || instr == moira::DIVS)
+    if (instr == Instr::DIVU || instr == Instr::DIVS)
     {
         // Musashi differs in some corner cases
         return true;
@@ -753,7 +753,7 @@ bool compareSR(Result &r1, Result &r2)
 {
     assert(r1.opcode == r2.opcode);
     moira::Instr instr = moiracpu->getInstrInfo(r1.opcode).I;
-    if (instr == moira::DIVU || instr == moira::DIVS) {
+    if (instr == Instr::DIVU || instr == Instr::DIVS) {
 
         // Musashi differs (and is likely wrong). Ignore it
         return true;
@@ -805,14 +805,14 @@ bool compareCycles(Result &r1, Result &r2)
     auto M = moiracpu->getInstrInfo(r1.opcode).M;
 
     // Exclude some instructions
-    if (I == moira::TAS) return true;
+    if (I == Instr::TAS) return true;
 
     // WHY DO WE IGNORE THESE?
-    if (cpuModel == M68010) {
+    if (cpuModel == Model::M68010) {
 
-        if (I == moira::CLR && S == Byte && M == MODE_AL) return true;
-        if (I == moira::CLR && S == Word && M == MODE_AL) return true;
-        if (I == moira::TRAPV) return true;
+        if (I == Instr::CLR && S == Byte && M == Mode::AL) return true;
+        if (I == Instr::CLR && S == Word && M == Mode::AL) return true;
+        if (I == Instr::TRAPV) return true;
     }
 
     return r1.cycles == r2.cycles;

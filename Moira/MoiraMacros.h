@@ -14,15 +14,15 @@
 #endif
 #define fatalError      assert(false); unreachable
 
-#if PRECISE_TIMING == true
+#if MOIRA_PRECISE_TIMING == true
 
-#define SYNC(x)         { if constexpr (C != C68020) sync(x); }
-#define SYNC_68000(x)   { if constexpr (C == C68000) sync(x); }
-#define SYNC_68010(x)   { if constexpr (C == C68010) sync(x); }
+#define SYNC(x)         { if constexpr (C != Core::C68020) sync(x); }
+#define SYNC_68000(x)   { if constexpr (C == Core::C68000) sync(x); }
+#define SYNC_68010(x)   { if constexpr (C == Core::C68010) sync(x); }
 
 #define CYCLES_68000(c) { }
 #define CYCLES_68010(c) { }
-#define CYCLES_68020(c) { if constexpr (C == C68020) sync((c) + cp); }
+#define CYCLES_68020(c) { if constexpr (C == Core::C68020) sync((c) + cp); }
 
 #else
 
@@ -30,9 +30,9 @@
 #define SYNC_68000(x)   { }
 #define SYNC_68010(x)   { }
 
-#define CYCLES_68000(c) { if constexpr (C == C68000) sync(c); }
-#define CYCLES_68010(c) { if constexpr (C == C68010) sync(c); }
-#define CYCLES_68020(c) { if constexpr (C == C68020) sync((c) + cp); }
+#define CYCLES_68000(c) { if constexpr (C == Core::C68000) sync(c); }
+#define CYCLES_68010(c) { if constexpr (C == Core::C68010) sync(c); }
+#define CYCLES_68020(c) { if constexpr (C == Core::C68020) sync((c) + cp); }
 
 #endif
 
@@ -47,19 +47,19 @@
 { if constexpr (M == m) { CYCLES_BWL_10(b1,w1,l1) } } \
 { if constexpr (M == m) { CYCLES_BWL_20(b2,w2,l2) } }
 
-#define CYCLES_DN(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_DN,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
-#define CYCLES_AN(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_AN,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
-#define CYCLES_AI(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_AI,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
-#define CYCLES_PI(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_PI,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
-#define CYCLES_PD(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_PD,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
-#define CYCLES_DI(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_DI,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
-#define CYCLES_IX(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_IX,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
-#define CYCLES_AW(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_AW,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
-#define CYCLES_AL(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_AL,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
-#define CYCLES_DIPC(b0,b1,b2,w0,w1,w2,l0,l1,l2)   CYCLES_MBWL(MODE_DIPC, b0,b1,b2,w0,w1,w2,l0,l1,l2)
-#define CYCLES_IXPC(b0,b1,b2,w0,w1,w2,l0,l1,l2)   CYCLES_MBWL(MODE_IXPC, b0,b1,b2,w0,w1,w2,l0,l1,l2)
-#define CYCLES_IM(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_IM,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
-#define CYCLES_IP(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(MODE_IP,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_DN(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(Mode::DN,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_AN(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(Mode::AN,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_AI(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(Mode::AI,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_PI(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(Mode::PI,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_PD(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(Mode::PD,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_DI(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(Mode::DI,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_IX(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(Mode::IX,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_AW(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(Mode::AW,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_AL(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(Mode::AL,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_DIPC(b0,b1,b2,w0,w1,w2,l0,l1,l2)   CYCLES_MBWL(Mode::DIPC, b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_IXPC(b0,b1,b2,w0,w1,w2,l0,l1,l2)   CYCLES_MBWL(Mode::IXPC, b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_IM(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(Mode::IM,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
+#define CYCLES_IP(b0,b1,b2,w0,w1,w2,l0,l1,l2)     CYCLES_MBWL(Mode::IP,   b0,b1,b2,w0,w1,w2,l0,l1,l2)
 
 #define POLL_IPL reg.ipl = ipl
 

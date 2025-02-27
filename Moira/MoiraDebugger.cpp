@@ -187,9 +187,9 @@ void
 Breakpoints::setNeedsCheck(bool value)
 {
     if (value) {
-        moira.flags |= CPU_CHECK_BP;
+        moira.flags |= State::CHECK_BP;
     } else {
-        moira.flags &= ~CPU_CHECK_BP;
+        moira.flags &= ~State::CHECK_BP;
     }
 }
 
@@ -197,9 +197,9 @@ void
 Watchpoints::setNeedsCheck(bool value)
 {
     if (value) {
-        moira.flags |= CPU_CHECK_WP;
+        moira.flags |= State::CHECK_WP;
     } else {
-        moira.flags &= ~CPU_CHECK_WP;
+        moira.flags &= ~State::CHECK_WP;
     }
 }
 
@@ -207,9 +207,9 @@ void
 Catchpoints::setNeedsCheck(bool value)
 {
     if (value) {
-        moira.flags |= CPU_CHECK_CP;
+        moira.flags |= State::CHECK_CP;
     } else {
-        moira.flags &= ~CPU_CHECK_CP;
+        moira.flags &= ~State::CHECK_CP;
     }
 }
 
@@ -296,13 +296,13 @@ Debugger::catchpointMatches(u32 vectorNr)
 void
 Debugger::enableLogging()
 {
-    moira.flags |= CPU_LOG_INSTRUCTION;
+    moira.flags |= State::LOGGING;
 }
 
 void
 Debugger::disableLogging()
 {
-    moira.flags &= ~CPU_LOG_INSTRUCTION;
+    moira.flags &= ~State::LOGGING;
 }
 
 int
@@ -379,7 +379,7 @@ void
 Debugger::jump(u32 addr)
 {
     moira.reg.pc = addr & ~1;
-    moira.fullPrefetch<C68000, POLL>();
+    moira.fullPrefetch<Core::C68000, Flag::POLL>();
 }
 
 }

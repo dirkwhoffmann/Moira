@@ -104,11 +104,11 @@ TestCPU::readIrqUserVector(moira::u8 level) const { return 0; }
  * Moira calls this function to signal that a breakpoint has been reached.
  */
 void
-TestCPU::breakpointReached(moira::u32 addr) { }
+TestCPU::didReachBreakpoint(moira::u32 addr) { }
 
 /* Watchpoint handler
  *
  * Moira calls this function to signal that a watchpoint has been reached.
  */
 void
-TestCPU::watchpointReached(moira::u32 addr) { }
+TestCPU::didReachWatchpoint(moira::u32 addr) { }

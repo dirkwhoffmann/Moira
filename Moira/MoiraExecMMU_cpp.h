@@ -21,38 +21,38 @@ Moira::isValidExtMMU(Instr I, Mode M, u16 op, u32 ext) const
 
     switch (I) {
 
-        case PFLUSHA:
+        case Instr::PFLUSHA:
 
             return (op & 0xFF) == 0 && mask() == 0 && fc() == 0;
 
-        case PFLUSH:
+        case Instr::PFLUSH:
 
             // Check mode
             if (mode() != 0b100 && mode() != 0b110) return false;
 
             // Check EA mode
             if (mode() == 0b110) {
-                if (M != MODE_AI && M != MODE_DI && M != MODE_IX && M != MODE_AW && M != MODE_AL) {
+                if (M != Mode::AI && M != Mode::DI && M != Mode::IX && M != Mode::AW && M != Mode::AL) {
                     return false;
                 }
             }
             return validFC();
 
-        case PLOAD:
+        case Instr::PLOAD:
 
             // Check EA mode
-            if (M != MODE_AI && M != MODE_DI && M != MODE_IX && M != MODE_AW && M != MODE_AL) {
+            if (M != Mode::AI && M != Mode::DI && M != Mode::IX && M != Mode::AW && M != Mode::AL) {
                 return false;
             }
 
             return validFC();
 
-        case PMOVE:
+        case Instr::PMOVE:
 
             if ((ext & 0x200)) {
-                if (M == MODE_DIPC || M == MODE_IXPC || M == MODE_IM) return false;
+                if (M == Mode::DIPC || M == Mode::IXPC || M == Mode::IM) return false;
             }
-            if (M == MODE_IP) return false;
+            if (M == Mode::IP) return false;
 
             switch (ext >> 13 & 0b111) {
 
@@ -72,14 +72,14 @@ Moira::isValidExtMMU(Instr I, Mode M, u16 op, u32 ext) const
 
                     if ((ext & 0x300) == 0) {
                         if (preg() != 0) {
-                            if (M == MODE_PI || M == MODE_PD || M == MODE_IM || M == MODE_IP) return false;
+                            if (M == Mode::PI || M == Mode::PD || M == Mode::IM || M == Mode::IP) return false;
                         }
                     }
 
                     // Check register field (binutils accepts all M68851 registers)
                     if ((ext & 0x100) == 0) {
                         if (preg() != 0) {
-                            if (M == MODE_DN || M == MODE_AN) return false;
+                            if (M == Mode::DN || M == Mode::AN) return false;
                         }
                     }
                     return true;
@@ -93,7 +93,7 @@ Moira::isValidExtMMU(Instr I, Mode M, u16 op, u32 ext) const
             }
             break;
 
-        case PTEST:
+        case Instr::PTEST:
 
             // When A is 0, reg must be 0
             if (a() == 0 && reg() != 0) return false;
@@ -102,7 +102,7 @@ Moira::isValidExtMMU(Instr I, Mode M, u16 op, u32 ext) const
             if ((fc() & 0b11000) == 0 && (fc() & 0b110) != 0) return false;
 
             // Check EA mode
-            if (M != MODE_AI && M != MODE_DI && M != MODE_IX && M != MODE_AW && M != MODE_AL) return false;
+            if (M != Mode::AI && M != Mode::DI && M != Mode::IX && M != Mode::AW && M != Mode::AL) return false;
 
             return true;
 
@@ -119,35 +119,35 @@ Moira::execPGen(u16 opcode)
     // PLOAD: 0010 00x0 000x xxxx
     if ((ext & 0xFDE0) == 0x2000) {
 
-        execPLoad<C, PLOAD, M, S>(opcode);
+        execPLoad<C, Instr::PLOAD, M, S>(opcode);
         return;
     }
 
     // PFLUSHA: 0010 010x xxxx xxxx
     if ((ext & 0xFE00) == 0x2400) {
 
-        execPFlusha<C, PFLUSHA, M, S>(opcode);
+        execPFlusha<C, Instr::PFLUSHA, M, S>(opcode);
         return;
     }
 
     // PFLUSH: 001x xx0x xxxx xxxx
     if ((ext & 0xE200) == 0x2000) {
 
-        execPFlush<C, PFLUSH, M, S>(opcode);
+        execPFlush<C, Instr::PFLUSH, M, S>(opcode);
         return;
     }
 
     // PTEST: 100x xxxx xxxx xxxx
     if ((ext & 0xE000) == 0x8000) {
 
-        execPTest<C, PTEST, M, S>(opcode);
+        execPTest<C, Instr::PTEST, M, S>(opcode);
         return;
     }
 
     // PMOVE: 010x xxxx 0000 0000 || 0110 00x0 0000 0000 || 000x xxxx 0000 0000
     if ((ext & 0xE0FF) == 0x4000 || (ext & 0xFDFF) == 0x6000 || (ext & 0xE0FF) == 0x0000) {
 
-        execPMove<C, PMOVE, M, S>(opcode);
+        execPMove<C, Instr::PMOVE, M, S>(opcode);
         return;
     }
 
@@ -158,48 +158,48 @@ Moira::execPGen(u16 opcode)
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPFlush(u16 opcode)
 {
-    AVAILABILITY(C68020)
+    AVAILABILITY(Core::C68020)
     throw std::runtime_error("Attempt to execute an unsupported 68030 instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPFlusha(u16 opcode)
 {
-    AVAILABILITY(C68020)
+    AVAILABILITY(Core::C68020)
     throw std::runtime_error("Attempt to execute an unsupported 68030 instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPFlush40(u16 opcode)
 {
-    AVAILABILITY(C68020)
+    AVAILABILITY(Core::C68020)
     throw std::runtime_error("Attempt to execute an unsupported 68040 instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPLoad(u16 opcode)
 {
-    AVAILABILITY(C68020)
+    AVAILABILITY(Core::C68020)
     throw std::runtime_error("Attempt to execute an unsupported 68030 instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPMove(u16 opcode)
 {
-    AVAILABILITY(C68020)
+    AVAILABILITY(Core::C68020)
     throw std::runtime_error("Attempt to execute an unsupported 68030 instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPTest(u16 opcode)
 {
-    AVAILABILITY(C68020)
+    AVAILABILITY(Core::C68020)
     throw std::runtime_error("Attempt to execute an unsupported 68030 instruction.");
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPTest40(u16 opcode)
 {
-    AVAILABILITY(C68020)
+    AVAILABILITY(Core::C68020)
     throw std::runtime_error("Attempt to execute an unsupported 68040 instruction.");
 }

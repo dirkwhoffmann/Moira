@@ -37,8 +37,8 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
     auto info = moiracpu->getInstrInfo(opcode);
 
     // Ignore some opcodes that are handled differently by Moira
-    if (info.I == CLR && info.S == Long) return;
-    if (info.I == CHK && cpuModel != M68000) return;
+    if (info.I == Instr::CLR && info.S == Long) return;
+    if (info.I == Instr::CHK && cpuModel != Model::M68000) return;
 
     for (int i = 0; i < recordCnt; i++) {
 
@@ -50,7 +50,7 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
         if (access[i].addr != addr) continue;
         if (access[i].value != value) continue;
         if (access[i].fc != fc) continue;
-        if (!MIMIC_MUSASHI) {
+        if (!MOIRA_MIMIC_MUSASHI) {
             if (access[i].cycle != cycle) continue;
         }
 
