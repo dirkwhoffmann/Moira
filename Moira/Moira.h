@@ -16,7 +16,6 @@ namespace moira {
 /** @brief Main CPU emulator class */
 class Moira {
     
-    friend class FPU;
     friend class Debugger;
     friend class Breakpoints;
     friend class Watchpoints;
