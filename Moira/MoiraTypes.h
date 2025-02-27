@@ -119,10 +119,10 @@ enum class Instr
     SVC,        SVS,        SF,         ST,         STOP,       SUB,
     SUBA,       SUBI,       SUBQ,       SUBX,       SWAP,       TAS,
     TRAP,       TRAPV,      TST,        UNLK,
-
+    
     // 68010 instructions
     BKPT,       MOVEC,      MOVES,      RTD,
-
+    
     // 68020 instructions
     BFCHG,      BFCLR,      BFEXTS,     BFEXTU,     BFFFO,      BFINS,
     BFSET,      BFTST,      CALLM,      CAS,        CAS2,       CHK2,
@@ -131,31 +131,31 @@ enum class Instr
     RTM,        TRAPCC,     TRAPCS,     TRAPEQ,     TRAPGE,     TRAPGT,
     TRAPHI,     TRAPLE,     TRAPLS,     TRAPLT,     TRAPMI,     TRAPNE,
     TRAPPL,     TRAPVC,     TRAPVS,     TRAPF,      TRAPT,      UNPK,
-
+    
     // 68040 instructions
     CINV,       CPUSH,      MOVE16,
-
+    
     // MMU instructions
     PFLUSH,     PFLUSHA,    PFLUSHAN,   PFLUSHN,
     PLOAD,      PMOVE,      PTEST,
-
+    
     // FPU instructions (68040 and 6888x)
     FABS,       FADD,       FBcc,       FCMP,       FDBcc,      FDIV,
     FMOVE,      FMOVEM,     FMUL,       FNEG,       FNOP,       FRESTORE,
     FSAVE,      FScc,       FSQRT,      FSUB,       FTRAPcc,    FTST,
-
+    
     // FPU instructions (68040 only)
     FSABS,      FDABS,      FSADD,      FDADD,      FSDIV,      FDDIV,
     FSMOVE,     FDMOVE,     FSMUL,      FDMUL,      FSNEG,      FDNEG,
     FSSQRT,     FDSQRT,     FSSUB,      FDSUB,
-
+    
     // FPU instructions (6888x only)
     FACOS,      FASIN,      FATAN,      FATANH,     FCOS,       FCOSH,
     FETOX,      FETOXM1,    FGETEXP,    FGETMAN,    FINT,       FINTRZ,
     FLOG10,     FLOG2,      FLOGN,      FLOGNP1,    FMOD,       FMOVECR,
     FREM,       FSCAL,      FSGLDIV,    FSGLMUL,    FSIN,       FSINCOS,
     FSINH,      FTAN,       FTANH,      FTENTOX,    FTWOTOX,
-
+    
     // Loop mode variants (68010)
     ABCD_LOOP,  ADD_LOOP,   ADDA_LOOP,  ADDX_LOOP,  AND_LOOP,   ASL_LOOP,
     ASR_LOOP,   CLR_LOOP,   CMP_LOOP,   CMPA_LOOP,  CMPM_LOOP,  DBCC_LOOP,
@@ -238,7 +238,7 @@ enum class M68kException
     IRQ_UNINITIALIZED   = 15,   ///< Uninitialized interrupt request
     IRQ_SPURIOUS        = 24,   ///< Spurious interrupt
     TRAP                = 32,   ///< TRAP instruction exception
-
+    
     BKPT                        ///< Breakpoint (maps to a native exception when triggered)
 };
 
@@ -264,48 +264,6 @@ enum class AddrSpace
 
 
 //
-// Floating-point types (unused)
-//
-
-/*
-enum class FltFormat
-{
-    LONG,
-    SINGLE,
-    EXTENDED,
-    PACKED,
-    WORD,
-    DOUBLE,
-    BYTE
-};
-
-enum class FpuPrecision
-{
-    EXTENDED,
-    SINGLE,
-    DOUBLE,
-    UNDEFINED
-};
-
-enum class FpuRoundingMode
-{
-    NEAREST,
-    ZERO,
-    DOWNWARD,
-    UPWARD
-};
-
-enum class FpuFrameType
-{
-    INVALID,
-    NULLFRAME,
-    IDLE,
-    UNIMP,
-    BUSY
-};
-*/
-
-//
 // Structures
 //
 
@@ -316,13 +274,13 @@ struct StackFrame
     u16 ird;
     u16 sr;
     u32 pc;
-
+    
     u16 fc;                 // Function code
     u16 ssw;                // Special status word (68010)
 };
 
 struct StatusRegister {
-
+    
     bool t1;                // Trace flag
     bool t0;                // Trace flag         (68020 only)
     bool s;                 // Supervisor flag
@@ -332,16 +290,16 @@ struct StatusRegister {
     bool z;                 // Zero flag
     bool v;                 // Overflow flag
     bool c;                 // Carry flag
-
+    
     u8 ipl;                 // Required Interrupt Priority Level
 };
 
 struct Registers {
-
+    
     u32 pc;                 // Program counter
     u32 pc0;                // Beginning of the currently executed instruction
     StatusRegister sr;      // Status register
-
+    
     union {
         struct {
             u32 d[8];       // D0, D1 ... D7
@@ -355,24 +313,24 @@ struct Registers {
             u32 sp;         // Visible stack pointer (overlays a[7])
         };
     };
-
+    
     u32 usp;                // User Stack Pointer
     u32 isp;                // Interrupt Stack Pointer
     u32 msp;                // Master Stack Pointer             (68020+)
-
+    
     u8 ipl;                 // Polled Interrupt Priority Level
-
+    
     u32 vbr;                // Vector Base Register             (68010+)
     u32 sfc;                // Source Function Code             (68010+)
     u32 dfc;                // Destination Function Code        (68010+)
-
+    
     // Unemulated registers
     u32 cacr;               // Cache Control Register           (68020+)
     u32 caar;               // Cache Address Register           (68020+)
 };
 
 struct PrefetchQueue {
-
+    
     u16 irc;                // The most recent word prefetched from memory
     u16 ird;                // The instruction currently being executed
 };
@@ -405,28 +363,65 @@ struct DasmStyle
 // Flags and masks
 //
 
-// Function codes
+/**
+ * @brief Function codes for CPU privilege levels and memory space separation.
+ * @details The M68k CPU provides three function code pins (FC2–FC0) that indicate
+ * the current privilege level and memory access type. FC2 distinguishes between
+ * user and supervisor modes, while FC1 and FC0 signal accesses to program
+ * and data memory, respectively.
+ */
 namespace FC {
 
+/// Access to data space in user mode.
 static constexpr u8 USER_DATA       = 1;
+
+/// Access to program space in user mode.
 static constexpr u8 USER_PROG       = 2;
+
+/// Access to data space in supervisor mode.
 static constexpr u8 SUPERVISOR_DATA = 5;
+
+/// Access to program space in supervisor mode.
 static constexpr u8 SUPERVISOR_PROG = 6;
 }
 
-// Availabilty masks
+/**
+ * @brief Availability masks for different CPU models.
+ * @details These masks are utilized to indicate the presence of instructions for specific CPU models.
+ */
 namespace AV {
 
+/// Availability mask for the Motorola 68000 CPU.
 static constexpr u16 M68000         = 1 << int(Model::M68000);
+
+/// Availability mask for the Motorola 68010 CPU.
 static constexpr u16 M68010         = 1 << int(Model::M68010);
+
+/// Availability mask for the Motorola 68020 and 68EC020 CPUs.
 static constexpr u16 M68020         = 1 << int(Model::M68EC020) | 1 << int(Model::M68020);
+
+/// Availability mask for the Motorola 68030 and 68EC030 CPUs.
 static constexpr u16 M68030         = 1 << int(Model::M68EC030) | 1 << int(Model::M68030);
+
+/// Availability mask for the Motorola 68040, 68EC040, and 68LC040 CPUs.
 static constexpr u16 M68040         = 1 << int(Model::M68EC040) | 1 << int(Model::M68LC040) | 1 << int(Model::M68040);
+
+/// Availability mask for CPUs with an MMU (Memory Management Unit).
 static constexpr u16 MMU            = 1 << int(Model::M68030) | 1 << int(Model::M68LC040) | 1 << int(Model::M68040);
+
+/// Availability mask for CPUs with an FPU (Floating Point Unit).
 static constexpr u16 FPU            = 1 << int(Model::M68040);
+
+/// Availability mask for the Motorola 68030 and later CPUs.
 static constexpr u16 M68030_UP      = M68030 | M68040;
+
+/// Availability mask for the Motorola 68020 and later CPUs.
 static constexpr u16 M68020_UP      = M68020 | M68030_UP;
+
+/// Availability mask for the Motorola 68010 and later CPUs.
 static constexpr u16 M68010_UP      = M68010 | M68020_UP;
+
+/// Availability mask for the Motorola 68000 and later CPUs.
 static constexpr u16 M68000_UP      = M68000 | M68010_UP;
 }
 
@@ -442,13 +437,13 @@ static constexpr int HALTED         = (1 << 0);
 /** CPU is stopped after executing a STOP instruction. Cleared on the next interrupt. */
 static constexpr int STOPPED        = (1 << 1);
 
-/** CPU is in loop mode (68010 feature for optimizing DBcc loops). */
+/** CPU is in loop mode. Loop mode is a 68010 feature for optimizing DBcc loops. */
 static constexpr int LOOPING        = (1 << 2);
 
-/** Enables instruction logging, storing register states in a log buffer. */
+/** Enables instruction logging. Register states are stored in a ring buffer. */
 static constexpr int LOGGING        = (1 << 3);
 
-/** Reflects the T flag from the status register, used to speed up emulation. */
+/** Reflects the T flag from the status register. Used to speed up emulation. */
 static constexpr int TRACING        = (1 << 4);
 
 /** Triggers a trace exception when set. */
@@ -512,13 +507,13 @@ struct IllegalInstruction : public std::exception { };
 struct DoubleFault : public std::exception { };
 
 struct AddressError : public std::exception {
-
+    
     StackFrame stackFrame;
     AddressError(const StackFrame frame) { stackFrame = frame; }
 };
 
 struct BusError : public std::exception {
-
+    
     StackFrame stackFrame;
     BusError(const StackFrame frame) { stackFrame = frame; }
 };
