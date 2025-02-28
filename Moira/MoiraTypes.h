@@ -13,10 +13,10 @@
 
 namespace moira {
 
+//
+// Basic data types
+//
 
-/**
- * @brief Basic data types.
- */
 using i8  = int8_t;
 using i16 = int16_t;             ;
 using i32 = int32_t;
@@ -27,73 +27,64 @@ using u32 = uint32_t;
 using u64 = unsigned long long;
 
 
-/**
- * @brief Address sizes for various instructions.
- */
+//
+// Address sizes for various instructions.
+//
+
 using Size = int;
-static constexpr int Unsized     = 0;  ///< No specific size.
-static constexpr int Byte        = 1;  ///< Byte addressing (.b)
-static constexpr int Word        = 2;  ///< Word addressing (.w)
-static constexpr int Long        = 4;  ///< Long word addressing (.l)
-static constexpr int Quad        = 8;  ///< Quad word (FPU)
-static constexpr int Extended    = 12; ///< Extended precision (FPU)
+static constexpr int Unsized     = 0;  // No specific size.
+static constexpr int Byte        = 1;  // Byte addressing (.b)
+static constexpr int Word        = 2;  // Word addressing (.w)
+static constexpr int Long        = 4;  // Long word addressing (.l)
+static constexpr int Quad        = 8;  // Quad word (FPU)
+static constexpr int Extended    = 12; // Extended precision (FPU)
 
 
 //
 // Enumerations
 //
 
-/**
- * @brief CPU model enumeration.
- */
+// CPU variants
 enum class Model
 {
-    M68000,     ///< Fully supported.
-    M68010,     ///< Fully supported.
-    M68EC020,   ///< Work in progress.
-    M68020,     ///< Work in progress.
-    M68EC030,   ///< Disassembler only.
-    M68030,     ///< Disassembler only.
-    M68EC040,   ///< Disassembler only.
-    M68LC040,   ///< Disassembler only.
-    M68040      ///< Disassembler only.
+    M68000,                 // Cycle-exact emulation
+    M68010,                 // Cycle-exact emulation
+    M68EC020,               // Non-cycle exaxt emulation
+    M68020,                 // Non-cycle exaxt emulation
+    M68EC030,               // Disassembler only
+    M68030,                 // Disassembler only
+    M68EC040,               // Disassembler only
+    M68LC040,               // Disassembler only
+    M68040                  // Disassembler only
 };
 
-/**
- * @brief Determines the execution core used by different CPU models.
- */
+// Execution cores
 enum class Core
 {
-    C68000,     ///< Used by M68000.
-    C68010,     ///< Used by M68010.
-    C68020      ///< Used by all others.
+    C68000,                 // Used by M68000
+    C68010,                 // Used by M68010
+    C68020                  // Used by all other models
 };
 
-/**
- * @brief Syntax styles for disassembly output.
- */
+// Syntax styles for disassembly output
 enum class Syntax
 {
-    MOIRA,      ///< Official syntax.
+    MOIRA,                  // My personal favorite
     MOIRA_MIT,
-    GNU,        ///< Legacy styles (for testing).
-    GNU_MIT,
-    MUSASHI
+    GNU,                    // Legacy styles (for testing)
+    GNU_MIT,                // Legacy styles (for testing)
+    MUSASHI                 // Musashi compatibility
 };
 
-/**
- * @brief Letter case preferences for disassembly output.
- */
+// Letter case preferences for disassembly output
 enum class LetterCase
 {
-    MIXED_CASE, ///< Determined by the selected syntax.
-    LOWER_CASE, ///< Everything in lowercase.
-    UPPER_CASE  ///< Everything in uppercase.
+    MIXED_CASE,             // Determined by the selected syntax
+    LOWER_CASE,             // Everything in lowercase
+    UPPER_CASE              // Everything in uppercase
 };
 
-/**
- * @brief Processor instructions.
- */
+// Processor instructions
 enum class Instr
 {
     // 68000 instructions
@@ -167,24 +158,22 @@ enum class Instr
     SUBA_LOOP,  SUBX_LOOP,  TST_LOOP
 };
 
-/**
- * @brief Addressing modes.
- */
+// Addressing modes
 enum class Mode
 {
-    DN,                ///<  0: Dn, Data register direct.
-    AN,                ///<  1: An, Address register direct.
-    AI,                ///<  2: (An), Address register indirect.
-    PI,                ///<  3: (An)+, Address register indirect with post-increment.
-    PD,                ///<  4: -(An), Address register indirect with pre-decrement.
-    DI,                ///<  5: (d,An), Address register indirect with displacement.
-    IX,                ///<  6: (d,An,Xi), Address register indirect with index.
-    AW,                ///<  7: (####).w, Absolute short addressing.
-    AL,                ///<  8: (####).l, Absolute long addressing.
-    DIPC,              ///<  9: (d,PC), Program counter relative with displacement.
-    IXPC,              ///< 10: (d,PC,Xi), Program counter relative with index.
-    IM,                ///< 11: ####, Immediate value.
-    IP                 ///< 12: Implied addressing.
+    DN,                 //  0: Dn, Data register direct.
+    AN,                 //  1: An, Address register direct.
+    AI,                 //  2: (An), Address register indirect.
+    PI,                 //  3: (An)+, Address register indirect with post-increment.
+    PD,                 //  4: -(An), Address register indirect with pre-decrement.
+    DI,                 //  5: (d,An), Address register indirect with displacement.
+    IX,                 //  6: (d,An,Xi), Address register indirect with index.
+    AW,                 //  7: (####).w, Absolute short addressing.
+    AL,                 //  8: (####).l, Absolute long addressing.
+    DIPC,               //  9: (d,PC), Program counter relative with displacement.
+    IXPC,               // 10: (d,PC,Xi), Program counter relative with index.
+    IM,                 // 11: ####, Immediate value.
+    IP                  // 12: Implied addressing.
 };
 
 constexpr bool isRegMode(Mode M) { return M == Mode::DN || M == Mode::AN;  }
@@ -195,71 +184,63 @@ constexpr bool isPrgMode(Mode M) { return M == Mode::DIPC || M == Mode::IXPC; }
 constexpr bool isDspMode(Mode M) { return M == Mode::DI || M == Mode::IX || M == Mode::DIPC || M == Mode::IXPC; }
 constexpr bool isImmMode(Mode M) { return M == Mode::IM; }
 
-/**
- * Condition codes used in conditional instructions.
- */
+// Condition codes used in conditional instructions
 enum class Cond
 {
-    BT,  ///< Always true
-    BF,  ///< Always false
-    HI,  ///< Higher than
-    LS,  ///< Lower or same
-    CC,  ///< Carry clear
-    CS,  ///< Carry set
-    NE,  ///< Not equal
-    EQ,  ///< Equal
-    VC,  ///< Overflow clear
-    VS,  ///< Overflow set
-    PL,  ///< Plus
-    MI,  ///< Minus
-    GE,  ///< Greater or equal
-    LT,  ///< Less than
-    GT,  ///< Greater than
-    LE   ///< Less than or equal
+    BT,                     // Always true
+    BF,                     // Always false
+    HI,                     // Higher than
+    LS,                     // Lower or same
+    CC,                     // Carry clear
+    CS,                     // Carry set
+    NE,                     // Not equal
+    EQ,                     // Equal
+    VC,                     // Overflow clear
+    VS,                     // Overflow set
+    PL,                     // Plus
+    MI,                     // Minus
+    GE,                     // Greater or equal
+    LT,                     // Less than
+    GT,                     // Greater than
+    LE                      // Less than or equal
 };
 
-/**
- * Enumeration of Motorola 68k CPU exceptions.
- */
+// Enumeration of Motorola 68k CPU exceptions
 enum class M68kException
 {
-    RESET               = 1,    ///< CPU reset exception
-    BUS_ERROR           = 2,    ///< Bus error
-    ADDRESS_ERROR       = 3,    ///< Address error
-    ILLEGAL             = 4,    ///< Illegal instruction
-    DIVIDE_BY_ZERO      = 5,    ///< Division by zero
-    CHK                 = 6,    ///< CHK instruction exception
-    TRAPV               = 7,    ///< TRAPV instruction exception
-    PRIVILEGE           = 8,    ///< Privilege violation
-    TRACE               = 9,    ///< Trace exception
-    LINEA               = 10,   ///< Line A emulator trap
-    LINEF               = 11,   ///< Line F emulator trap
-    FORMAT_ERROR        = 14,   ///< Stack frame format error
-    IRQ_UNINITIALIZED   = 15,   ///< Uninitialized interrupt request
-    IRQ_SPURIOUS        = 24,   ///< Spurious interrupt
-    TRAP                = 32,   ///< TRAP instruction exception
+    RESET             = 1,    // CPU reset exception
+    BUS_ERROR         = 2,    // Bus error
+    ADDRESS_ERROR     = 3,    // Address error
+    ILLEGAL           = 4,    // Illegal instruction
+    DIVIDE_BY_ZERO    = 5,    // Division by zero
+    CHK               = 6,    // CHK instruction exception
+    TRAPV             = 7,    // TRAPV instruction exception
+    PRIVILEGE         = 8,    // Privilege violation
+    TRACE             = 9,    // Trace exception
+    LINEA             = 10,   // Line A emulator trap
+    LINEF             = 11,   // Line F emulator trap
+    FORMAT_ERROR      = 14,   // Stack frame format error
+    IRQ_UNINITIALIZED = 15,   // Uninitialized interrupt request
+    IRQ_SPURIOUS      = 24,   // Spurious interrupt
+    TRAP              = 32,   // TRAP instruction exception
     
-    BKPT                        ///< Breakpoint (maps to a native exception when triggered)
+    BKPT                        // Breakpoint (maps to a native exception when triggered)
 };
 
-/**
- * M68k interrupt modes
- */
+// M68k interrupt modes
 enum class IrqMode
 {
-    AUTO,           ///< Automatic IRQ handling
-    USER,           ///< User-defined IRQ handling
-    SPURIOUS,       ///< Spurious IRQ handling
-    UNINITIALIZED   ///< Uninitialized IRQ mode
+    AUTO,                       // Automatic IRQ handling
+    USER,                       // User-defined IRQ handling
+    SPURIOUS,                   // Spurious IRQ handling
+    UNINITIALIZED               // Uninitialized IRQ mode
 };
 
-/**
- * Address spaces
- */
+// Address spaces
 enum class AddrSpace
 {
-    DATA = 1,       ///< Data space
-    PROG = 2        ///< Program space
+    DATA = 1,                   // Data space
+    PROG = 2                    // Program space
 };
 
 
@@ -275,64 +256,64 @@ struct StackFrame
     u16 sr;
     u32 pc;
     
-    u16 fc;                 // Function code
-    u16 ssw;                // Special status word (68010)
+    u16 fc;                     // Function code
+    u16 ssw;                    // Special status word (68010)
 };
 
 struct StatusRegister {
     
-    bool t1;                // Trace flag
-    bool t0;                // Trace flag         (68020 only)
-    bool s;                 // Supervisor flag
-    bool m;                 // Master flag        (68020 only)
-    bool x;                 // Extend flag
-    bool n;                 // Negative flag
-    bool z;                 // Zero flag
-    bool v;                 // Overflow flag
-    bool c;                 // Carry flag
+    bool t1;                    // Trace flag
+    bool t0;                    // Trace flag         (68020 only)
+    bool s;                     // Supervisor flag
+    bool m;                     // Master flag        (68020 only)
+    bool x;                     // Extend flag
+    bool n;                     // Negative flag
+    bool z;                     // Zero flag
+    bool v;                     // Overflow flag
+    bool c;                     // Carry flag
     
-    u8 ipl;                 // Required Interrupt Priority Level
+    u8 ipl;                     // Required Interrupt Priority Level
 };
 
 struct Registers {
     
-    u32 pc;                 // Program counter
-    u32 pc0;                // Beginning of the currently executed instruction
-    StatusRegister sr;      // Status register
+    u32 pc;                     // Program counter
+    u32 pc0;                    // Beginning of the current instruction
+    StatusRegister sr;          // Status register
     
     union {
         struct {
-            u32 d[8];       // D0, D1 ... D7
-            u32 a[8];       // A0, A1 ... A7
+            u32 d[8];           // D0, D1 ... D7
+            u32 a[8];           // A0, A1 ... A7
         };
         struct {
-            u32 r[16];      // D0, D1 ... D7, A0, A1 ... A7
+            u32 r[16];          // D0, D1 ... D7, A0, A1 ... A7
         };
         struct {
             u32 _pad[15];
-            u32 sp;         // Visible stack pointer (overlays a[7])
+            u32 sp;             // Visible stack pointer (overlays a[7])
         };
     };
     
-    u32 usp;                // User Stack Pointer
-    u32 isp;                // Interrupt Stack Pointer
-    u32 msp;                // Master Stack Pointer             (68020+)
+    u32 usp;                    // User Stack Pointer
+    u32 isp;                    // Interrupt Stack Pointer
+    u32 msp;                    // Master Stack Pointer             (68020+)
     
-    u8 ipl;                 // Polled Interrupt Priority Level
+    u8 ipl;                     // Polled Interrupt Priority Level
     
-    u32 vbr;                // Vector Base Register             (68010+)
-    u32 sfc;                // Source Function Code             (68010+)
-    u32 dfc;                // Destination Function Code        (68010+)
+    u32 vbr;                    // Vector Base Register             (68010+)
+    u32 sfc;                    // Source Function Code             (68010+)
+    u32 dfc;                    // Destination Function Code        (68010+)
     
     // Unemulated registers
-    u32 cacr;               // Cache Control Register           (68020+)
-    u32 caar;               // Cache Address Register           (68020+)
+    u32 cacr;                   // Cache Control Register           (68020+)
+    u32 caar;                   // Cache Address Register           (68020+)
 };
 
 struct PrefetchQueue {
     
-    u16 irc;                // The most recent word prefetched from memory
-    u16 ird;                // The instruction currently being executed
+    u16 irc;                    // The most recent word prefetched from memory
+    u16 ird;                    // The instruction currently being executed
 };
 
 struct InstrInfo
@@ -344,10 +325,10 @@ struct InstrInfo
 
 struct DasmNumberFormat
 {
-    const char *prefix;     // Prefix for hexidecimal numbers
-    u8 radix;               // 10 (decimal) or 16 (hexadecimal)
-    bool upperCase;         // Lettercase for hexadecimal digits A...F
-    bool plainZero;         // Determines whether 0 is printed with a prefix
+    const char *prefix;         // Prefix for hexidecimal numbers
+    u8 radix;                   // 10 (decimal) or 16 (hexadecimal)
+    bool upperCase;             // Lettercase for hexadecimal digits A...F
+    bool plainZero;             // Determines whether 0 is printed with a prefix
 };
 
 struct DasmStyle
@@ -363,102 +344,76 @@ struct DasmStyle
 // Flags and masks
 //
 
-/**
- * @brief Function codes for CPU privilege levels and memory space separation.
- * @details The M68k CPU provides three function code pins (FC2–FC0) that indicate
- * the current privilege level and memory access type. FC2 distinguishes between
+/* Function codes for CPU privilege levels and address space separation.
+ *
+ * The M68k CPU provides three function code pins (FC2–FC0) indicating the
+ * current privilege level and memory access type. FC2 distinguishes between
  * user and supervisor modes, while FC1 and FC0 signal accesses to program
  * and data memory, respectively.
  */
 namespace FC {
 
-/// Access to data space in user mode.
-static constexpr u8 USER_DATA       = 1;
 
-/// Access to program space in user mode.
-static constexpr u8 USER_PROG       = 2;
-
-/// Access to data space in supervisor mode.
-static constexpr u8 SUPERVISOR_DATA = 5;
-
-/// Access to program space in supervisor mode.
-static constexpr u8 SUPERVISOR_PROG = 6;
+static constexpr u8 USER_DATA       = 1;  // User-mode access to data space
+static constexpr u8 USER_PROG       = 2;  // User-mode access to program space
+static constexpr u8 SUPERVISOR_DATA = 5;  // Supervisor access to data space
+static constexpr u8 SUPERVISOR_PROG = 6;  // Supervisor access to program space
 }
 
-/**
- * @brief Availability masks for different CPU models.
- * @details These masks are utilized to indicate the presence of instructions for specific CPU models.
+/* Availability masks for different CPU models.
+ *
+ * These masks are utilized to indicate the presence of instructions for
+ * specific CPU models.
  */
 namespace AV {
 
-/// Availability mask for the Motorola 68000 CPU.
 static constexpr u16 M68000         = 1 << int(Model::M68000);
-
-/// Availability mask for the Motorola 68010 CPU.
 static constexpr u16 M68010         = 1 << int(Model::M68010);
-
-/// Availability mask for the Motorola 68020 and 68EC020 CPUs.
 static constexpr u16 M68020         = 1 << int(Model::M68EC020) | 1 << int(Model::M68020);
-
-/// Availability mask for the Motorola 68030 and 68EC030 CPUs.
 static constexpr u16 M68030         = 1 << int(Model::M68EC030) | 1 << int(Model::M68030);
-
-/// Availability mask for the Motorola 68040, 68EC040, and 68LC040 CPUs.
 static constexpr u16 M68040         = 1 << int(Model::M68EC040) | 1 << int(Model::M68LC040) | 1 << int(Model::M68040);
-
-/// Availability mask for CPUs with an MMU (Memory Management Unit).
 static constexpr u16 MMU            = 1 << int(Model::M68030) | 1 << int(Model::M68LC040) | 1 << int(Model::M68040);
-
-/// Availability mask for CPUs with an FPU (Floating Point Unit).
 static constexpr u16 FPU            = 1 << int(Model::M68040);
-
-/// Availability mask for the Motorola 68030 and later CPUs.
 static constexpr u16 M68030_UP      = M68030 | M68040;
-
-/// Availability mask for the Motorola 68020 and later CPUs.
 static constexpr u16 M68020_UP      = M68020 | M68030_UP;
-
-/// Availability mask for the Motorola 68010 and later CPUs.
 static constexpr u16 M68010_UP      = M68010 | M68020_UP;
-
-/// Availability mask for the Motorola 68000 and later CPUs.
 static constexpr u16 M68000_UP      = M68000 | M68010_UP;
 }
 
-/**
- * @brief CPU Execution Flags
- * @details These flags control the CPU's execution state and behavior.
+/* CPU Execution Flags
+ *
+ * These flags control the CPU's execution state and behavior.
  */
 namespace State {
 
-/** CPU is in a halted state due to a double fault. Cleared only on reset. */
+// CPU is in a halted state due to a double fault. Cleared only on reset.
 static constexpr int HALTED         = (1 << 0);
 
-/** CPU is stopped after executing a STOP instruction. Cleared on the next interrupt. */
+// CPU is stopped after executing a STOP instruction. Cleared on the next interrupt.
 static constexpr int STOPPED        = (1 << 1);
 
-/** CPU is in loop mode. Loop mode is a 68010 feature for optimizing DBcc loops. */
+// CPU is in loop mode. Loop mode is a 68010 feature for optimizing DBcc loops.
 static constexpr int LOOPING        = (1 << 2);
 
-/** Enables instruction logging. Register states are stored in a ring buffer. */
+// Enables instruction logging. Register states are stored in a ring buffer.
 static constexpr int LOGGING        = (1 << 3);
 
-/** Reflects the T flag from the status register. Used to speed up emulation. */
+// Reflects the T flag from the status register. Used to speed up emulation.
 static constexpr int TRACING        = (1 << 4);
 
-/** Triggers a trace exception when set. */
+// Triggers a trace exception when set.
 static constexpr int TRACE_EXC      = (1 << 5);
 
-/** CPU checks for pending interrupts only if this flag is set. Cleared when no interrupt is possible. */
+// CPU checks for pending interrupts only if this flag is set. Cleared when no interrupt is possible.
 static constexpr int CHECK_IRQ      = (1 << 6);
 
-/** Enables checking for breakpoints. */
+// Enables checking for breakpoints.
 static constexpr int CHECK_BP       = (1 << 7);
 
-/** Enables checking for watchpoints. */
+// Enables checking for watchpoints.
 static constexpr int CHECK_WP       = (1 << 8);
 
-/** Enables checking for catchpoints. */
+// Enables checking for catchpoints.
 static constexpr int CHECK_CP       = (1 << 9);
 
 }
