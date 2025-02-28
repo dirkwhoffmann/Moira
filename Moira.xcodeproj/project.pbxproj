@@ -68,19 +68,6 @@
 		505CA8AA28C7209200871439 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		507805AB2D7106F8006752C1 /* custom.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = custom.css; sourceTree = "<group>"; };
 		507805AD2D7106F8006752C1 /* header.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = header.html; sourceTree = "<group>"; };
-		507805B02D7106F8006752C1 /* custom.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = custom.css; sourceTree = "<group>"; };
-		507805B12D7106F8006752C1 /* doxygen-awesome.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = "doxygen-awesome.css"; sourceTree = "<group>"; };
-		507805B22D7106F8006752C1 /* doxygen-awesome-darkmode-toggle.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "doxygen-awesome-darkmode-toggle.js"; sourceTree = "<group>"; };
-		507805B32D7106F8006752C1 /* doxygen-awesome-fragment-copy-button.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "doxygen-awesome-fragment-copy-button.js"; sourceTree = "<group>"; };
-		507805B42D7106F8006752C1 /* doxygen-awesome-interactive-toc.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "doxygen-awesome-interactive-toc.js"; sourceTree = "<group>"; };
-		507805B52D7106F8006752C1 /* doxygen-awesome-paragraph-link.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "doxygen-awesome-paragraph-link.js"; sourceTree = "<group>"; };
-		507805B62D7106F8006752C1 /* doxygen-awesome-sidebar-only.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = "doxygen-awesome-sidebar-only.css"; sourceTree = "<group>"; };
-		507805B72D7106F8006752C1 /* doxygen-awesome-sidebar-only-darkmode-toggle.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = "doxygen-awesome-sidebar-only-darkmode-toggle.css"; sourceTree = "<group>"; };
-		507805B82D7106F8006752C1 /* doxygen-awesome-tabs.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "doxygen-awesome-tabs.js"; sourceTree = "<group>"; };
-		507805BA2D7106F8006752C1 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.png; sourceTree = "<group>"; };
-		507805BC2D7106F8006752C1 /* home.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = home.md; sourceTree = "<group>"; };
-		507805BE2D7106F8006752C1 /* Doxyfile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Doxyfile; sourceTree = "<group>"; };
-		507805BF2D7106F8006752C1 /* header.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = header.html; sourceTree = "<group>"; };
 		507805C12D7106F8006752C1 /* InstructionHandlers.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = InstructionHandlers.md; sourceTree = "<group>"; };
 		507805C22D7106F8006752C1 /* MainExecutionFunction.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = MainExecutionFunction.md; sourceTree = "<group>"; };
 		507805C42D7106F8006752C1 /* HowToOverclockTheCpu.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HowToOverclockTheCpu.md; sourceTree = "<group>"; };
@@ -246,50 +233,6 @@
 			path = _templates;
 			sourceTree = "<group>";
 		};
-		507805B92D7106F8006752C1 /* doxygen-awesome */ = {
-			isa = PBXGroup;
-			children = (
-				507805B02D7106F8006752C1 /* custom.css */,
-				507805B12D7106F8006752C1 /* doxygen-awesome.css */,
-				507805B22D7106F8006752C1 /* doxygen-awesome-darkmode-toggle.js */,
-				507805B32D7106F8006752C1 /* doxygen-awesome-fragment-copy-button.js */,
-				507805B42D7106F8006752C1 /* doxygen-awesome-interactive-toc.js */,
-				507805B52D7106F8006752C1 /* doxygen-awesome-paragraph-link.js */,
-				507805B62D7106F8006752C1 /* doxygen-awesome-sidebar-only.css */,
-				507805B72D7106F8006752C1 /* doxygen-awesome-sidebar-only-darkmode-toggle.css */,
-				507805B82D7106F8006752C1 /* doxygen-awesome-tabs.js */,
-			);
-			path = "doxygen-awesome";
-			sourceTree = "<group>";
-		};
-		507805BB2D7106F8006752C1 /* images */ = {
-			isa = PBXGroup;
-			children = (
-				507805BA2D7106F8006752C1 /* icon.png */,
-			);
-			path = images;
-			sourceTree = "<group>";
-		};
-		507805BD2D7106F8006752C1 /* pages */ = {
-			isa = PBXGroup;
-			children = (
-				507805BC2D7106F8006752C1 /* home.md */,
-			);
-			path = pages;
-			sourceTree = "<group>";
-		};
-		507805C02D7106F8006752C1 /* Doxygen */ = {
-			isa = PBXGroup;
-			children = (
-				507805B92D7106F8006752C1 /* doxygen-awesome */,
-				507805BB2D7106F8006752C1 /* images */,
-				507805BD2D7106F8006752C1 /* pages */,
-				507805BE2D7106F8006752C1 /* Doxyfile */,
-				507805BF2D7106F8006752C1 /* header.html */,
-			);
-			path = Doxygen;
-			sourceTree = "<group>";
-		};
 		507805C32D7106F8006752C1 /* Explanations */ = {
 			isa = PBXGroup;
 			children = (
@@ -364,7 +307,6 @@
 			children = (
 				507805AC2D7106F8006752C1 /* _static */,
 				507805AF2D7106F8006752C1 /* _templates */,
-				507805C02D7106F8006752C1 /* Doxygen */,
 				507805C32D7106F8006752C1 /* Explanations */,
 				507805C92D7106F8006752C1 /* HowTo */,
 				507805DA2D7106F8006752C1 /* images */,

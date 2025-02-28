@@ -10,7 +10,6 @@
 #include "config.h"
 #include "Randomizer.h"
 #include <bit>
-#include <ctime>
 
 u32
 Randomizer::rand()

@@ -11,6 +11,7 @@
 #include "Testrunner.h"
 #include <cstdio>
 #include <cstdarg>
+#include <ctime>
 
 TestCPU *moiracpu;
 Sandbox sandbox;
