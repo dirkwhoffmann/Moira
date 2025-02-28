@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'Moira'
-copyright = '2022, Dirk W. Hoffmann'
+copyright = '2025, Dirk W. Hoffmann'
 author = 'Dirk W. Hoffmann'
 
 # -- General configuration ---------------------------------------------------
@@ -34,10 +34,16 @@ source_suffix = ['.rst', '.md']
 html_theme = 'sphinx_book_theme'
 html_theme_options = {
     "repository_url": "https://dirkwhoffmann.github.io/Moira/",
+    "repository_provider": "github",
     "use_repository_button": True,
-    "logo_only": False,
+    "use_issues_button": True,
+    "logo": {
+        "text": "Moira v3.0",
+        "image_light": "images/logo.png",
+        "image_dark": "images/logo.png",
+    }
 }
-html_logo = "images/logo.png"
-html_title = "Moira v2.2"
+# html_logo = "images/logo.png"
+html_title = "Moira v3.0"
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]

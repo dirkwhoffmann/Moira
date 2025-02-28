@@ -32,7 +32,7 @@ User manual
 
 .. toctree::
    :maxdepth: 1
-   :caption: Explanations
+   :caption: Expert Notes
 
    Explanations/MainExecutionFunction
    Explanations/InstructionHandlers

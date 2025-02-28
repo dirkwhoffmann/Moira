@@ -2,7 +2,7 @@
     --pst-color-link: #665DC0;
 }
 
-.headerbtn, div {
+.headerbtn, div, div.bd-content,div.bd-header-article, div.bd-sidebar-primary {
     background-color: #F1F0F9;
 }
 
