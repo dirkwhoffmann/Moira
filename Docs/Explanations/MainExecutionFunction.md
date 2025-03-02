@@ -1,16 +1,18 @@
-# The main execution function
+# The Main Execution Function
 
-This article gives an insight into the inner workings of the main execute function. That is, it explains what happens after calling `Moira::execute()`. 
-
-This is how the main execution functions looks like in v2.2:
+This article provides an overview of the inner workings of the main execution function in vAmiga. Specifically, it explains what happens when `Moira::execute()` is called.
+Below is the structure of the main execution function:
 
 ```c++
 void
 Moira::execute()
 {
+    ...
+
+    // Take the fast path or the slow path
     if (!flags) {
 
-        // 
+        //
         // Fast path
         //
 
@@ -22,65 +24,57 @@ Moira::execute()
         }
 
     } else {
-
+    
         //
         // Slow path
         //
 
         ...
     }
+    ...
 }
 ```
 
-## The fast path 
+## The Fast Path 
 
-First and foremost, Moira checks if a bit is set in variable `flags`. Flags are only set in exceptional situations, which means the variable will be 0 most of the time. In this case Moira can execute the function on a fast path, since many time consuming tasks can be skipped. As can be seen above, very few statements are processed. First, Moira increments the program counter by 2. Then, it calls the handler of the currently executed instruction by looking up a function pointer in the `exec` table. 
+The first step in execution is a check on the `flags` variable. Flags are typically set only in exceptional circumstances, so in most cases, the variable will be 0. This allows Moira to execute instructions on the fast path, skipping time-consuming tasks. In this path, the program counter (`reg.pc`) is incremented by 2, and the appropriate instruction handler is called by looking up a function pointer from the `exec` table.
+The call to the instruction handler is enclosed in a try-catch block, as exceptions may be thrown during instruction execution. For instance, if an address error occurs, the handler will throw an `AddressError` exception. This exception is caught, and `processException` handles it accordingly.
 
-The command handler call is embedded in a try-catch block because it may throw. For example, if an address error occurs within the command handler, an `AddressError` exception is thrown. The exception is caught and processed further in the `processException` function. 
+## The Slow Path
 
-## The slow path
-
-If at least one bit is set in variable `flags`, Moira is forced to execute the slow path. On this path, Moira checks all flags one by one and triggers special actions if necessary. The following code skeleton shows the details:
+When at least one bit in flags is set, Moira enters the slow path, where it evaluates each flag individually and performs special actions as needed. Below is a detailed breakdown of the slow path code:
 
 ```c++
-        // Only continue if the CPU is not halted
-        if (flags & CPU_IS_HALTED) {
-            ...
-            return;
-        }
+        if (flags & (HALTED | TRACE_EXC | TRACING)) {
 
-        // Process pending trace exception (if any)
-        if (flags & CPU_TRACE_EXCEPTION) {
-            ...
-            goto done;
-        }
+            // Only continue if the CPU is not halted
+            if (flags & HALTED) {
+                sync(2);
+                return;
+            }
 
-        // Check if the T flag is set inside the status register
-        if ((flags & CPU_TRACE_FLAG) && !(flags & CPU_IS_STOPPED)) {
-            ...
-        }
+            // Process pending trace exception (if any)
+            if (flags & TRACE_EXC) {
+                execException(M68kException::TRACE);
+                goto done;
+            }
 
-        // Process pending interrupt (if any)
-        if (flags & CPU_CHECK_IRQ) {
-            ...
+            // Check if the T flag is set inside the status register
+            if ((flags & TRACING) && !(flags & STOPPED)) {
+                flags |= TRACE_EXC;
+            }
         }
-
-        // If the CPU is stopped, poll the IPL lines and return
-        if (flags & CPU_IS_STOPPED) {
-            ...
-            return;
-        }
-
-        // If logging is enabled, record the executed instruction
-        if (flags & CPU_LOG_INSTRUCTION) {
-            ...
-        }
-
+        
+        ... 
+        
         // Execute the instruction
         reg.pc += 2;
 
-        if (flags & CPU_IS_LOOPING) {
-            ...
+        if (flags & LOOPING) {
+
+            assert(loop[queue.ird]);
+            (this->*loop[queue.ird])(queue.ird);
+
         } else {
 
             try {
@@ -89,25 +83,24 @@ If at least one bit is set in variable `flags`, Moira is forced to execute the s
                 processException(exc);
             }
         }
-
-    done:
+        
+     done:
 
         // Check if a breakpoint has been reached
-        if (flags & CPU_CHECK_BP) {
+        if (flags & CHECK_BP) {
 
             // Don't break if the instruction won't be executed due to tracing
-            if (flags & CPU_TRACE_EXCEPTION) return;
+            if (flags & TRACE_EXC) return;
 
             // Check if a softstop has been reached
-            if (debugger.softstopMatches(reg.pc0)) { ... }
+            if (debugger.softstopMatches(reg.pc0)) didReachSoftstop(reg.pc0);
 
             // Check if a breakpoint has been reached
-            if (debugger.breakpointMatches(reg.pc0)) { ... }
+            if (debugger.breakpointMatches(reg.pc0)) didReachBreakpoint(reg.pc0);
         }
     }
 }
 ```
 
-On the slow path, Moira calls the instruction handler somewhere in the middle. Note that the code is embedded in a block that checks the `CPU_IS_LOOPING` flag. When the flag is cleared, Moira calls the instruction handler exactly as it would on the fast path. When the flag is set, a special loop-mode handler is called. Loop mode is a feature of the M68010 that allows the CPU to speed up the execution of certain loop constructs. In hindsight, this feature was short lived as it was no longer present in the M68020. It had become obsolete with the introduction of caches. 
-
-After returning from the instruction handler, Moira checks for breakpoints and exits. In the next section we will learn what a typical instruction handler looks like.
+On the slow path, the instruction handler is called after checking various conditions related to the CPU state. The CPU_IS_LOOPING flag is specifically examined to determine if the CPU is in loop mode. If the flag is set, Moira uses a special loop-mode handler to optimize execution. Loop mode, which was introduced with the M68010, helps speed up the execution of specific loop constructs. However, it was removed in the M68020 due to the introduction of caches, making it obsolete.
+After returning from the instruction handler, Moira checks if any breakpoints have been hit. If any are reached, it triggers the appropriate handling procedures. In the next section, we'll explore the details of a typical instruction handler.

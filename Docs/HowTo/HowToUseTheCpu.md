@@ -1,10 +1,12 @@
-# How to use the CPU core
+# Integrating the CPU Core
 
-To integrate Moira into your own application, copy the contents of subfolder `Moira` to your application. All other files are only needed to create the test application.
+This guide explains how to integrate Moira into your application, create a custom CPU, and manage execution, memory access, and interrupts.
 
-## Creating a custom CPU
+To use Moira in your application, copy the contents of the Moira subfolder into your project. Other files are only needed for the test application.
 
-By default, Moira is configured to declare all functions that require a custom implementation as virtual. By doing so, Moira follows the basic C++ design principle which means that a custom CPU is created by sub-classing. A minimal custom CPU looks like this:
+## Creating a Custom CPU
+
+By default, Moira declares all necessary interface functions as virtual, allowing for easy subclassing. A minimal custom CPU looks like this:
 
 ```c++
     #include "Moira.h"
@@ -18,26 +20,28 @@ By default, Moira is configured to declare all functions that require a custom i
     };
 ```
 
-`Moira` is an abstract class that requires the implementation of the four mentioned methods. These functions provide the basic functionality for transferring bytes or words between the CPU and memory. 
+The Moira class is abstract, requiring the implementation of the four mentioned methods. They handle memory access by reading and writing bytes and words.
 
-Alternatively, Moira can be configured to declare all interfacing functions as non-virtual to speed up emulation. This solution has been chosen by vAmiga to achieve maximum speed.
+Alternatively, for better performance, Moira can be configured to use non-virtual functions (as done in vAmiga).
 
-After instantiating an object of your custom CPU class, the CPU needs to be configured. The most important property is the emulated CPU type which can be selected by the following API functions:
+## Configuring the CPU
+
+After instantiating your CPU class, configure the CPU model:
 
 - `void setModel(Model cpuModel)`
 
-  Currently supported CPU models are: 
+  The following models are supported: 
 
   - `M68000`
   - `M68010` 
   - `M68EC020` 
   - `M68020`
 
-  This functions configures both the CPU core and the disassembler. 
+  This function configures both the CPU core and disassembler. To configure them separately: 
 
 - `void setModel(Model cpuModel, Model dasmModel)`
 
-  This function configures the CPU core and the disassembler seperately. The function has been intentionally overloaded to let the disassembler support a broader range of cpu models. Whereas the emulated CPU core is restricted to the models mentioned above, the disassembler is capable of producing output for higher-end CPUs, too. These CPUs are specified by the following keys: 
+  This function configures the CPU core and the disassembler seperately. The function has been intentionally overloaded to let the disassembler support a broader range of CPU models. Whereas the emulated CPU core is restricted to the models mentioned above, the disassembler supports higher-end CPUs. These CPUs are specified by the following keys: 
 
   - `M68EC030`
   - `M68030`
@@ -45,34 +49,35 @@ After instantiating an object of your custom CPU class, the CPU needs to be conf
   - `M68LC040`
   - `M68040`
 
-## Running the custom CPU 
+## Running the Custom CPU 
 
-After the class has been instantiated, the CPU is ready to use. The following two API functions are the main entry points for running the device:  
+After instantiation, the CPU is ready to use. The two key functions are:
 
 - `void reset()`
 
-  Initiates the CPU's internal reset procedure.
+  Runs the CPU's internal reset procedure.
 
 - `void execute()`
 
-  Executes the CPU for one instruction.
+  Emulates the CPU for one instruction.
 
-Please make sure to reset the CPU before executing any instruction.
+Make sure to reset the CPU before executing any instruction.
 
-Internally, Moira holds a variable called `clock` which counts the number of CPU cycles that have elapsed since power-up. The following code utilizes the `clock` variable to run the CPU until a certain amount of cycles have been executed:
+The following functions are convenient wrappers around `execute()`:
 
-````c++
-i64 now = cpu.getClock();
-while (cpu.getClock() - now < 1000) {
-  cpu.execute();
-}
-````
+- `void execute(i64 cycles)`
 
-Keep in mind that Moira always executes a single instruction as a whole. This means that the above code is likely to execute slightly more than 1000 cycles in most cases.
+  Runs the CPU for the given number of cycles. Be aware that the number of 
+  actually elapsed cycles may exceed the specified cycle budget since the 
+  emulator cannot stop in the middle of an instruction.
+  
+- `void executeUntil(i64 cycle)`
 
-## Querying CPU properties 
+  Executes instructions until a specific cycle count is reached.
 
-The `Moira` class provides a variety of functions for querying the CPU state. The following incomprehensive list contains the most important ones: 
+## Querying CPU Properties 
+
+Moira provides various functions to inspect the CPU state. The following incomprehensive list contains the most important ones: 
 
 - `u32 getD(int n) const`
     
@@ -84,11 +89,11 @@ The `Moira` class provides a variety of functions for querying the CPU state. Th
 
 - `u32 getPC() const`
 
-  Reads the current value of the program counter. Keep in mind that the program counter is a moving target. It progresses while an instruction is executed. 
+  Reads the current value of the program counter. Keep in mind that the program counter is a moving target. It may progress multiple times during the execution of an instruction. 
 
 - `u32 getPC0() const`
 
-  Returns the address of the currently executed instruction. Unlike the program counter, the instruction address always points to the start address of the current instruction. It matches the program counter when execution begins and remains unchanged until the next instruction is processed. In most scenarios, `getPC0` is the function you want to call, and not `getPC`. 
+  Returns the address of the currently executed instruction. Unlike the program counter, the instruction address always points to the start address of the current instruction. It matches the program counter when execution begins and remains unchanged until the next instruction is processed. In most scenarios, `getPC0` is the function you want to call rather than `getPC`. 
 
 - `u8 getCCR() const`
 
@@ -98,13 +103,13 @@ The `Moira` class provides a variety of functions for querying the CPU state. Th
 
   Returns the entire status register, including the CCR part. 
 
-## Managing interrupts 
+## Managing Interrupts 
 
-The Motorola 68000 CPU has three interrupt pins that are accessible from outside. The values of these pins encode the so-called Interrupt Priority Level (IPL) which ranges from 0 to 7 and is set to 0 on reset. The IPL pins can be accessed with the following API functions: 
+The Motorola 68000 CPU has three interrupt pins that define the Interrupt Priority Level (IPL), which ranges from 0 to 7 and is set to 0 on reset.
 
 - `u8 getIPL()`
 
-  Returns the current interrupt level set on the IPL pins.
+  Returns the current interrupt level encoded on the IPL pins.
 
 - `void setIPL(u8 level)`
 
@@ -112,11 +117,11 @@ The Motorola 68000 CPU has three interrupt pins that are accessible from outside
 
 ## Synchronizing the CPU
 
-One of the key features of Moira is to provide information about the number of cycles that have passed between two bus accesses. This information is transmitted via the following delegation function:
+Moira provides cycle-accurate timing via the following function:
 
 - `void sync(int cycles)`
 
-  This function is called each time the CPU accesses memory. The passed integer value indicates the number of cycles that have elapsed since the last call of this function. The default implementation simply adds up the passed cycle counts:
+  The function is called each time the CPU accesses memory. The passed integer value indicates the number of cycles that have elapsed since the last call of this function. The default implementation simply adds up the passed cycle counts:
 
   ````c++
   virtual void sync(int cycles) 
@@ -125,18 +130,16 @@ One of the key features of Moira is to provide information about the number of c
   }
   ````
 
-  In vAmiga this function is utilized to emulate bus sharing between the CPU and the custom chip set. As soon as the CPU tries to access memory, vAmiga intercepts the access in `sync()` and emulates the external hardware up to the point in time the CPU has already reached. When the actual memory access happens, vAmiga can determine exactly whether the bus is blocked or not. If it is, the CPU is virtually suspended by increasing variable `clock` by a certain number of wait states.
+  In vAmiga this function is utilized to emulate bus sharing between the CPU and the custom chip set. As soon as the CPU tries to access memory, vAmiga intercepts the access in `sync()` and emulates the external hardware up to the point the CPU has already reached. Consequently, when the actual memory access happens, vAmiga can determine exactly whether the bus is blocked. If it is, the CPU is virtually suspended by increasing variable `clock` by a certain number of wait states.
 
-## Tweaking memory access
+## Tweaking Memory Access
 
- Keep in mind that during the reset process the Motorola 68000 CPU reads the initial stack pointer and program counter from memory. This means that the memory must be fully initialized before calling reset(). However, you can easily work around this restriction by implementing the following function in your subclass:
+During the reset process, the Motorola 68000 CPU reads the initial stack pointer from address 0x000000 and the program counter from address 0x000004. This means that memory must be fully initialized before calling `reset`, which can be inconvenient in certain situations. To work around this restriction, Moira provides a dedicated function that can be implemented in a subclass. By implementing the following function, it becomes possible to supply the required values without requiring the entire memory system to be set up:
 
 - `u16 read16OnReset(u32 addr)`
 
-  Once implemented, Moira accesses memory with this function during reset. Hence, the initial stack pointer and the program counter can be passed to the CPU even without memory being ready for operation.
-
-The disassembler is subject to a similar issue. By default it calls `read16()` to read data words from memory. This default behaviour is not adequate, e.g., for emulating an Amiga, because reading certain registers causes side effects. In Moira this problem can be avoided by redirecting the disassembler to another read function. This is done by implementing
+A similar issue arises when the disassembler reads memory. By default, it uses `read16` to fetch instruction words, but this approach can be problematic when emulating systems like the Amiga. Some memory-mapped registers trigger side effects when accessed, and these side effects should not occur when simply disassembling instructions. To prevent unintended behavior, Moira allows the disassembler to use a separate function:
 
 - `u16 read16Dasm(u32 addr)`
 
-  If this function is implemented in your subclass, it should return the exact same values as the already implemented function `read16()` would. Only side effects which would occur on real hardware are not carried out.
+If your subclass implements this function, it should return the exact same values as the already implemented function `read16`. However, no side effects should be carried out.

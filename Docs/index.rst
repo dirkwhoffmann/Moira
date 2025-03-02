@@ -3,7 +3,14 @@
    :width: 100%
    :align: center
    :alt: Banner
+   :class: only-light
 
+.. image:: images/logo-large-dark.png
+   :width: 100%
+   :align: center
+   :alt: Banner
+   :class: only-dark
+   
 User manual
 ===================
 

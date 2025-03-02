@@ -4,7 +4,7 @@ Moira is a Motorola 68000, 68010, 680EC20, and 68020 emulator written in C++. It
 
 ![Screenshot](../images/disassembler.png "Moira screenshot")
 
-## Design goals 
+## Design Goals 
 
 Moira was developed with three primary goals:
 

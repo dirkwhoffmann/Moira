@@ -1,66 +1,87 @@
-# How to use the delegation system
+# Using the Delegation System
 
-The Moira class declares various delegation functions that are called on certain events. By default, all delegation functions are declared as virtual and provided with an empty implementation. A subclassed CPU can react on the supported events by overrding the corresponding function.
+The Moira class defines various delegation functions that are triggered on specific events. These functions are declared as virtual and have empty default implementations. A subclassed CPU can override them to react to the corresponding events.
 
-## State delegates
+## State Delegates
 
-- `void didReset()`
+The following functions are called when the CPU enters specific states:
+
+- `void cpuDidReset()`
 
     Invoked at the end of the `reset()` routine. 
 
-- `void didHalt()`
+- `void cpuDidHalt()`
 
-    Invoked when the CPU is halted. This state is entered, e.g., when a double-fault occurs. 
+    Called when the CPU is halted, e.g., after a double-fault.
 
-## Instruction delegates
+## Instruction Delegates
+
+These functions are invoked at the start and end of selected instruction handlers:
 
 - `void willExecute(const char *func, Instr I, Mode M, Size S, u16 opcode)`
 
-    Invoked at the beginning of the instruction handlers of certain instructions. Due to speed reasons, the delegation function is only called for selected instructions. The instructions are selected by macro `WILL_EXECUTE` defined in `MoiraConfig.h`. The default implementation looks like this:
+    Called at the beginning of selected instruction handlers. The instructions are defined by the `WILL_EXECUTE` macro in `MoiraConfig.h`. The default implementation looks as follows:
     ````c++
-    #define WILL_EXECUTE    I == STOP || I == TAS || I == BKPT
+    #define MOIRA_WILL_EXECUTE I == Instr::STOP || I == Instr::TAS || I == Instr::BKPT
     `````
 
 - `void didExecute(const char *func, Instr I, Mode M, Size S, u16 opcode)`
 
-    Invoked at the end of the instruction handlers of certain instructions. Due to speed reasons, the delegation function is only called for selected instructions. The instructions are selected by macro `DID_EXECUTE` defined in `MoiraConfig.h`. The default implementation looks like this:
+    Called at the end of selected instruction handlers. The instructions are defined by the `DID_EXECUTE` macro in MoiraConfig.h. The default implementation looks as follows:
     ````c++
-    #define DID_EXECUTE     I == RESET
+    #define MOIRA_DID_EXECUTE I == Instr::RESET
     `````
 
-## Exception delegates
+## Exception Delegates
 
 - `void willExecute(ExceptionType exc, u16 vector)`
 
-    Invoked at the beginning of the exception processing code. 
-
-- `void willInterrupt(u8 level)`
-
-    Invoked at the beginning of the interrupt processing code. 
-
-- `void didJumpToVector(int nr, u32 addr)`
-
-    Invoked after the program counter has been redirected to the exception handler. 
+    Called at the start of exception processing. 
 
 - `void didExecute(ExceptionType exc, u16 vector)`
 
-    Invoked at the end of the exception processing code. 
+    Called at the end of exception processing.
 
-## Cache register delegated
+- `void willInterrupt(u8 level)`
+
+    Called at the start of interrupt processing.
+
+- `void didJumpToVector(int nr, u32 addr)`
+
+    Called after the program counter jumps to the exception handler. 
+
+## Cache Register Delegates (68020 Only)
+
+These functions track changes to cache-related registers:
 
 - `void didChangeCACR(u32 value)`
 
-    Invoked when the CACR register is modified (68020 only). 
+    Called when the CACR (Cache Control Register) is modified. 
 
 - `void didChangeCAAR(u32 value)`
 
-    Invoked when the CAAR register is modified (68020 only). 
+    Called when the CAAR (Cache Address Register) is modified.
 
-## Debugger delegates
+## Debugger Delegates
 
-The following delegation methods are invoked by the debugger to signal a debug event.
-- `void softstopReached(u32 addr)`
-- `void breakpointReached(u32 addr)`
-- `void watchpointReached(u32 addr)`
-- `void catchpointReached(u8 vector)`
-- `void softwareTrapReached(u32 addr)`
+These functions signal debug events:
+
+- `void didReachSoftstop(u32 addr)`
+
+   Called when a soft stop is reached.
+    
+- `void didReachBreakpoint(u32 addr)`
+
+   Called when a breakpoint is hit.
+           
+- `void didReachWatchpoint(u32 addr)`
+    
+   Called when a watchpoint is hit.
+        
+- `void didReachCatchpoint(u8 vector)`
+    
+   Called when a catchpoint is hit.
+        
+- `void didReachSoftwareTrap(u32 addr)`
+
+   Called when a software trap is hit.

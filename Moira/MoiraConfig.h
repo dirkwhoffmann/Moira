@@ -9,36 +9,35 @@
 
 /* Set to true to enable precise timing mode (68000 and 68010 only).
  *
- * If disabled, Moira calls function 'sync' at the end of each instruction
- * with the number of elapsed cycles as argument. In precise timing mode,
- * 'sync' is called prior to each memory access. This enables the client to
- * emulate the surrounding hardware up the point where the memory access
- * actually happens.
+ * When disabled, Moira calls the 'sync' function at the end of each instruction,
+ * passing the number of elapsed cycles as an argument. In precise timing mode,
+ * 'sync' is called before each memory access, allowing the client to emulate
+ * the surrounding hardware up to the point where the memory access occurs.
  *
- * Precise timing mode is only available in 68000 or 68010 emulation. For
- * all other supported models, this setting has no effect.
+ * Precise timing mode is available only for 68000 and 68010 emulation. For
+ * other supported models, this setting has no effect.
  *
- * Enable to improve accuracy, disable to gain speed.
+ * Enable to improve accuracy, disable it to enhance performance.
  */
 #define MOIRA_PRECISE_TIMING false
 
 /* Set to true to implement the CPU interface as virtual functions.
  *
- * To communicate with the environment (e.g., for reading data from memory),
- * the CPU calls an appropriate function that has to be implemented by the
- * client. If this option is set to true, all API functions are declared
- * virtual which corresponds to the standard OOP pradigm. Because virtual
- * functions impose a performance penalty, Moira allows to link the client API
- * statically by setting this option to false.
+ * To interact with the environment (e.g., for reading data from memory),
+ * the CPU calls an appropriate function that must be implemented by the client.
+ * When this option is enabled, all API functions are declared virtual, following
+ * the standard object-oriented programming (OOP) paradigm. However, virtual
+ * functions introduce a performance penalty. Setting this option to false allows
+ * the client API to be statically linked, improving performance.
  *
- * Enable to follow the standard OOP paradigm, disable to gain speed.
+ * Enable to adhere to the standard OOP paradigm, disable to gain speed.
  */
 #define MOIRA_VIRTUAL_API true
 
 /* Set to true to enable address error checking.
  *
- * The 68000 and 68010 signal an address error violation if a word or long word
- * is accessed at an odd memory location.
+ * The 68000 and 68010 trigger an address error violation if a word or longword
+ * is accessed at an odd memory address.
  *
  * Enable to improve accuracy, disable to gain speed.
  */
@@ -74,12 +73,13 @@
  */
 #define MOIRA_BUILD_INSTR_INFO_TABLE true
 
-/* Set to true to run Moira in a special Musashi compatibility mode.
+/* Enables Musashi compatibility mode.
  *
- * The compatibility mode is used by the test runner application to compare
- * Moira against Musashi.
+ * When set to true, Moira runs in a special mode designed for compatibility
+ * with the Musashi emulator. This mode is primarily used by the test runner
+ * application to compare Moira's behavior against Musashi.
  *
- * Disable to improve accuracy.
+ * Set to false for improved accuracy.
  */
 #define MOIRA_MIMIC_MUSASHI true
 
@@ -93,9 +93,10 @@
  */
 #define MOIRA_DID_EXECUTE     I == Instr::RESET
 
-/* Comment out to enable assertion checking.
+/* Controls assertion checking.
  *
- * Uncomment in release builds, comment out in debug builds.
+ * Comment out to enable assertions (recommended for debugging).
+ * Uncomment to disable assertions (recommended for release builds).
  */
 // #define NDEBUG
 #include <cassert>

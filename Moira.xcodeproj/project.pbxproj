@@ -88,7 +88,6 @@
 		507805D42D7106F8006752C1 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.png; sourceTree = "<group>"; };
 		507805D52D7106F8006752C1 /* logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = logo.png; sourceTree = "<group>"; };
 		507805D62D7106F8006752C1 /* logo-large.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "logo-large.png"; sourceTree = "<group>"; };
-		507805D72D7106F8006752C1 /* logo-larger.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "logo-larger.png"; sourceTree = "<group>"; };
 		507805D82D7106F8006752C1 /* splash.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = splash.jpg; sourceTree = "<group>"; };
 		507805D92D7106F8006752C1 /* stripe.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = stripe.png; sourceTree = "<group>"; };
 		507805DB2D7106F8006752C1 /* About.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = About.md; sourceTree = "<group>"; };
@@ -132,6 +131,7 @@
 		50C0124028BBAE80001EFB37 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50CECEC523A924B000E07C65 /* Sandbox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Sandbox.cpp; sourceTree = "<group>"; };
 		50CECEC623A924B000E07C65 /* Sandbox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sandbox.h; sourceTree = "<group>"; };
+		50D1CE932D74E8D1002AA425 /* logo-large-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "logo-large-dark.png"; sourceTree = "<group>"; };
 		50EC62EE289DB14500398CBD /* MoiraMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraMacros.h; sourceTree = "<group>"; };
 		50F549DE288E817600D5D559 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F80AA723C9E4EC00F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -270,7 +270,7 @@
 				507805D42D7106F8006752C1 /* icon.png */,
 				507805D52D7106F8006752C1 /* logo.png */,
 				507805D62D7106F8006752C1 /* logo-large.png */,
-				507805D72D7106F8006752C1 /* logo-larger.png */,
+				50D1CE932D74E8D1002AA425 /* logo-large-dark.png */,
 				507805D82D7106F8006752C1 /* splash.jpg */,
 				507805D92D7106F8006752C1 /* stripe.png */,
 			);

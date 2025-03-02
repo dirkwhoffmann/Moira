@@ -1,42 +1,43 @@
-# Using Moira in your own app
+# Using Moira in Your Own App
 
-This tutorial shows how to integrate Moira into your own application. It explains the basic steps by showing how Moira is used in vAmiga, the Amiga emulator Moira was originally developed for.
+This tutorial guides you through integrating Moira into your application. It covers the essential steps using vAmiga, the Amiga emulator Moira was originally developed for.
 
 ## Configuring Moira
 
-We start by examining the compile-time options chosen by vAmiga. The following options are set in `MoiraConfig.h`:
+We begin by examining the compile-time options configured in vAmiga. The following options are selected in `MoiraConfig.h`:
 
-- `#define PRECISE_TIMING true`
+- `#define MOIRA_PRECISE_TIMING true`
 
-Moira is run in precise timing mode, which means that a `sync` call is initiated before each memory access. This gives vAmiga the ability to emulate the surrounding logic up to the point in time when the memory access actually  happens. This is an essential feature in Amiga emulation, as many applications rely on accurate bus timing. In fact, the lack of this feature in Musashi was the reason I implemented Moira in the first place. Note that this feature is only available for the M68000 and M68010. M68020 emulation is always done in simple cycle mode, regardless of how this preprocessor variable is set. 
+With this option enabled, Moira operates in precise timing mode, meaning a `sync` call is triggered before each memory access. This allows vAmiga to emulate the surrounding logic up to the exact moment the memory access occurs. This is an essential feature for Amiga emulation, as many applications depend on accurate bus timing.
+In fact, the absence of this feature in Musashi was the primary reason for developing Moira. However, note that precise timing mode is only available for the M68000 and M68010. M68020 emulation always runs in simple cycle mode, regardless of this preprocessor setting.
 
-- `#define VIRTUAL_API false`
+- `#define MOIRA_VIRTUAL_API false`
 
-All functions of the Moira class that are required to be implemented by the client (vAmiga) are declared as non-virtual. This means these functions will be statically linked, resulting in a small performance boost compared to virtual functions. 
+In vAmiga, all Moira class functions that must be implemented by the client are declared as non-virtual. This ensures they are statically linked, providing a slight performance advantage over virtual functions.
 
-- `#define EMULATE_ADDRESS_ERROR true`
+- `#define MOIRA_EMULATE_ADDRESS_ERROR true`
 
-The M68000 and the M68010 signal an address error when a word or longword access to an odd address is attempted. Since some Amiga titles rely on this behavior, address error emulation is enabled in vAmiga. 
+The M68000 and M68010 generate an address error when a word or longword access is attempted at an odd address. Since some Amiga titles depend on this behavior, vAmiga enables address error emulation to ensure accurate compatibility.
 
-- `#define EMULATE_FC true`
+- `#define MOIRA_EMULATE_FC true`
 
-All M680x0 CPUs are equipped with three so-called function code pins (FC pins). Whenever memory is accessed, the value on these pins allows external hardware to check the access type. Although the Amiga does not make use of those pins, emulation is enabled in Moira to accurately emulate the M68010 CPU. Unlike the M68000, the M68010 includes the current value of the FC pins in some stack frames. 
+All M680x0 CPUs have three function code (FC) pins that indicate the type of memory access being performed. While the Amiga itself does not use these pins, vAmiga enables their emulation to accurately replicate M68010 behavior. Unlike the M68000, the M68010 includes the FC pin values in certain stack frames, making this feature essential for precise emulation.
 
-- `#define ENABLE_DASM true`
+- `#define MOIRA_ENABLE_DASM true`
 
-This option instructs Moira to create a lookup table with all disassembler handlers. The creation of this table is mandatory for using the disassembler. If the disassembler is not needed, it is advisable to set this option to `false`, since the lookup table consumes a decent amount of memory.
+Enabling this option instructs Moira to generate a lookup table for all disassembler handlers. This table is required for using the disassembler. However, if disassembly is not needed, it is recommended to set this option to `false`, as the table consumes a significant amount of memory.
 
-- `#define BUILD_INSTR_INFO_TABLE false`
+- `#define MOIRA_BUILD_INSTR_INFO_TABLE false`
 
-During initialization, Moira is able to create an optional info table that stores information about the instruction, addressing mode, and size attribute for each of the 65536 opcode words. In vAmiga, the creation of this table is omitted because the information is not needed. 
+During initialization, Moira can generate an optional info table containing details about the instruction, addressing mode, and size attribute for each of the 65536 opcode words. In vAmiga, this table is omitted since the information is not required, reducing memory usage.
 
-- `#define MIMIC_MUSASHI false`
+- `#define MOIRA_MIMIC_MUSASHI false`
 
-This option instructs Moira *not* to run in Musashi compatibility mode, resulting in higher accuracy. 
+This option disables Musashi compatibility mode, allowing Moira to prioritize higher accuracy over Musashi-like behavior.
 
 ## Subclassing Moira
 
-Having learned how Moira's compile-time options are configured, we take a deeper look on how Moira is integrated in vAmiga. The most prominent class in vAmiga is the `Amiga` class. It has the following structure: 
+Having explored Moira's compile-time options, let's dive deeper into its integration within vAmiga. The core class in vAmiga is the `Amiga` class, which has the following structure:
 
 ```c++
 class Amiga : public Thread {
@@ -54,21 +55,21 @@ class Amiga : public Thread {
 };
 ```
 
-vAmiga's `CPU` class is a subclass of the Moira class. It's main purpose is to add additional functionality to what Moira already offers. E.g., the CPU class provides capabilities for serializing and deserializing the CPU state which is important for saving and loading emulator states (snapshots). In addition, the CPU class enhances the Moira class with overclocking support. If you are interested in how overclocking is implemented in vAmiga, please refer to the How-to section. 
+The `CPU` class in vAmiga is a subclass of the Moira class, designed to extend Moira's functionality. For example, it provides features for serializing and deserializing the CPU state, which is crucial for saving and loading emulator snapshots. Additionally, the CPU class adds overclocking support to Moira. If you're interested in how overclocking is implemented in vAmiga, please refer to the How-to section.
 
-In `CPU.cpp` we find the implementations of all Moira functions that interact with the environment. Since we have declared the API as non-virtual, none of these functions have a default implementation. Therefore, all functions must be implemented even if there is nothing to do. Thus, many functions are defined with an empty function body. E.g.:
+In `CPU.cpp`, you'll find the implementations of all Moira functions that interact with the environment. Since the API is declared as non-virtual, none of these functions have a default implementation. As a result, each function must be explicitly implemented, even if there's no specific action required. This leads to many functions being defined with empty bodies, such as:
 
 ```c++
 void
-Moira::didReset()
+Moira::cpuDidReset()
 {
 
 }
 ```
 
-This function is one of the delegation methods Moira provides. It is called at the end of the reset handler to allow the client to perform special actions.
+This function is one of the delegation methods provided by Moira. It is called at the end of the reset handler, allowing the client to perform any special actions required.
 
-Other functions do have a non-empty implementation such as functions for accessing memory. E.g., this is how `read8` and `read16` are implemented in vAmiga:
+Other functions, however, have non-empty implementations, such as those for memory access. For example, here’s how `read8` and `read16` are implemented in vAmiga:
 
 ```c++
 u8
@@ -84,7 +85,7 @@ Moira::read16(u32 addr) const
 }
 ```
 
-At first glance, the code seems to speak for itself. Moira's memory request is passed to the `mem` object, which is an instance of vAmiga's `Memory` class. When looking closer, however, this straightforward usage of vAmiga's memory class brings up the following question: How does Moira know about the various Amiga components such as the memory? These objects are not part of the Moira class. Well, the answer is they are, because in vAmiga we use a slightly modified Moira class. In fact, the class is declared as follows:
+At first glance, the code seems self-explanatory. Moira’s memory request is passed to the `mem` object, which is an instance of vAmiga’s Memory class. However, upon closer inspection, a question arises: How does Moira know about the various Amiga components, such as memory? These objects aren’t part of the Moira class itself. The answer is that vAmiga utilizes a slightly modified version of the Moira class. In fact, the class is declared as follows:
 
 ```c++
 class Moira : public SubComponent {
@@ -92,7 +93,7 @@ class Moira : public SubComponent {
 }
 ```
 
-As you can see, Moira inherits from the `SubComponent` class which is the base class of most Amiga components. One important purpose of the `SubComponent` class is to provide convinient access to all other components of the virtual Amiga. This is done by declaring a number of references that are initialized in the constructor: 
+As you can see, Moira inherits from the `SubComponent` class, which serves as the base class for most Amiga components. One key role of the SubComponent class is to provide convenient access to the other components of the virtual Amiga. This is achieved by declaring several references that are initialized in the constructor:
 
 ```c++
 class SubComponent : public AmigaComponent {
@@ -108,51 +109,34 @@ protected:
 };
 ``` 
 
-Here we go. The `mem` object is inherited from the `SubComponent` class and allows any Moira function to access Amiga memory. 
+As you can see, the `mem` object is inherited from the `SubComponent` class, enabling any Moira function to access Amiga memory.
+Side note: If you notice a potential violation of the loose coupling principle here, keep in mind that we are dealing with an emulator, a unique type of software. The Amiga itself is a tightly coupled system, and attempting to emulate it using a loosely coupled software architecture wouldn’t serve us well.
 
-Side note: If you spot a violation of the loose coupling principle here, please remember that we are talking about an emulator which a very special kind of software in various ways. The Amiga is a very tightly coupled system, and we wouldn't do ourselves any good if we tried to emulate it with a loosely coupled software system.
+## Creating a Run Loop
 
-$$$
+Lastly, let's take a closer look at where vAmiga calls Moira's execution function. This happens inside function `computeFrame`, which, as the name already suggests, emulates the Amiga for a single video frame. 
 
-## Creating a run loop
-
-Last but not least, let's take a closer look at where vAmiga executes the CPU, i.e. where it calls Moira's execution function. As you may have noticed, the Amiga class inherits from the Thread class, which provides capabilities for concurrent code execution. Whenever an instance of the Amiga class is created, an emulator thread is spawned automatically. 
-
-```c++
-Amiga::Amiga()
-{
-    ...
-    // Start the thread and enter the main function
-    thread = std::thread(&Thread::main, this);
-    ...
-}
-```
-
-Inside the function `main` one of the following functions is executed, depending on the operating mode of the thread: 
- 
- - `execute<SyncMode::Periodic>();`
- - `execute<SyncMode::Pulsed>();`
-
-Both functions call the `execute` function which is implemented inside the Amiga class. This function is one of the most prominent, since it implements the emulator's run loop. It is structured as follows:
+This function is one of the most prominent, since it contains the emulator's run loop. It is structured as follows:
 
 ```c++
 void
-Amiga::execute()
-{    
+Amiga::computeFrame()
+{
     while (1) {
-        
+
         // Emulate the next CPU instruction
         cpu.execute();
 
         // Check if special action needs to be taken
         if (flags) {
+
             ...
-             if (flags & RL::BREAKPOINT_REACHED) {
-                ...
-                auto addr = isize(cpu.debugger.breakpoints.hit->addr);
-                msgQueue.put(MSG_BREAKPOINT_REACHED, addr);
-                newState = EXEC_PAUSED;
-                break;
+            // Did we reach a breakpoint?
+            if (flags & RL::BREAKPOINT_REACHED) {
+
+                auto addr = cpu.debugger.breakpoints.hit->addr;
+                msgQueue.put(Msg::BREAKPOINT_REACHED, CpuMsg { addr, 0 });
+                action = pause;
             }
             ...
         }
@@ -160,4 +144,5 @@ Amiga::execute()
 }
 ```
 
-We are finally there. Right at the beginning of the body of the while loop is the place where Moira's execution function is called. Variable `flags` is used to trigger special actions inside the run loop. E.g., when Moira reaches a breakpoint, a dedicated bit in variable `flags` is set. The bits are checked inside the run loop and  trigger special actions if it is set. In case of the breakpoint flag, vAmiga first performs some actions which are not important here. After that, it notifies the GUI by sending a `MSG_BREAKPOINT_REACHED` message. Finally, it puts the thread into paused state and exits the run loop. 
+We’ve reached the critical code section. At the beginning of the while loop’s body, Moira’s execution function is called. The flags variable is used to trigger special actions within the run loop. For example, when Moira reaches a breakpoint, a specific bit in the flags variable is set. These bits are checked inside the run loop, and if a bit is set, it triggers the corresponding action.
+In the case of the breakpoint flag, vAmiga first performs some necessary actions (which are not relevant here). Then, it notifies the GUI by sending a `BREAKPOINT_REACHED` message. Finally, it requests the subsequent code to pause the thread and exit the run loop.

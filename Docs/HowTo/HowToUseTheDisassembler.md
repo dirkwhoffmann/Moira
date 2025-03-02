@@ -1,80 +1,76 @@
-# How to use the disassembler
+# Using the Disassembler
 
-## Running the disassembler 
+## Running the Disassembler 
 
-Moira features a built-in disassembler which allows to create textual representations for instructions, the program counter and the status register. Textual representations can be created with the following API functions: 
+Moira includes a built-in disassembler that converts instructions, the program counter, and the status register into human-readable text. The following API functions generate textual representations:
 
-- `int disassemble(u32 addr, char *str) const`
+- `int disassemble(char *str, u32 addr) const`
 
-    This functions disassembles the command at the specified address. It is the responsibility of the caller to ensure that the target string is initialized and large enough to hold the generated string. The function returns the number of bytes that the disassembled instruction occupies in memory.  
+   Disassembles the instruction at the specified address. The caller must ensure that the target string is initialized and large enough to hold the output. The function returns how many bytes the disassembled instruction occupies in memory, making it easy to know where the next instruction starts.
 
-- `void disassembleWord(u32 value, char *str) const`
+- `void disassembleSR(char *str, const StatusRegister &sr) const;`
 
-    Returns a textual representation for a single word from memory. 
+    Creates a textual representation for the referenced status register state. If the second parameter is omitted, the current state of the status register is disassembled.
 
-- `void disassembleMemory(u32 addr, int cnt, char *str) const`
+- `void dump8(char *str, u8 value) const`
+- `void dump16(char *str, u16 value) const`
+- `void dump24(char *str, u32 value) const`
+- `void dump32(char *str, u32 value) const`
+    
+   These functions generate a textual representation of the provided integer value.
 
-    Returns a textual representation for one or more words from memory.
-
-- `void disassemblePC(u32 pc, char *str) const`
-
-    Creates a textual representation for the passed-in value of the program counter. If the first parameter is omitted, the current value of the program counter is disassembled.
-
-- `void disassembleSR(const StatusRegister &sr, char *str) const`
-
-    Creates a textual representation for the referenced status register. If the first parameter is omitted, the current status register is disassembled.
-
-## Customizing output
+    
+## Customizing Output
 
 The disassembler output can be customized in various ways by calling one of the following API functions:
 
-- `void setDasmSyntax(DasmSyntax value)` 
+- `void setDasmSyntax(Syntax value)` 
 
     Moira supports the following syntax styles: 
-    - `DASM_MOIRA`
-        This is the default syntax style. It prints the instructions in Motorola syntax.
-    - `DASM_MOIRA_MIT` 
-        This is a Moira-specific style that prints the instructions in MIT syntax. 
-    - `DASM_GNU`
-        This style resembles the output of the m68k disassembler integrated in `binutils`. 
-    - `DASM_GNU_MIT`
-        This style mimics the output of `binutils` when run in MIT mode. 
-    - `DASM_MUSASHI`
-        This style reproduces the Musashi disassembler output one-by-one. 
+    - `MOIRA` (default)
+        Standard Motorola syntax.
+    - `MOIRA_MIT` 
+        A Moira-specific variation using MIT syntax.
+    - `GNU`
+        Mimics the output of the m68k disassembler in `binutils`.
+    - `GNU_MIT`
+        Mimics the output of `binutils` when run in MIT mode. 
+    - `MUSASHI`
+        Reproduces the exact output of the Musashi disassembler.
 
 - `void setDasmNumberFormat(DasmNumberFormat value)`
 
-    The number format can be controlled by a variety of parameters which are grouped together in a singe struct: 
+    Controls the formatting of numbers in disassembly output. The structure below defines the configurable parameters:
 
     ````c++
     struct DasmNumberFormat
     {
-        const char *prefix;     // Prefix for hexidecimal numbers
-        u8 radix;               // 10 (decimal) or 16 (hexadecimal)
-        bool upperCase;         // Lettercase for hexadecimal digits A...F
-        bool plainZero;         // Determines whether 0 is printed with a prefix
+        const char *prefix;         // Prefix for hexidecimal numbers
+        u8 radix;                   // 10 (decimal) or 16 (hexadecimal)
+        bool upperCase;             // Lettercase for hexadecimal digits A...F
+        bool plainZero;             // Determines whether 0 is printed with a prefix
     };
     ````
 
-- `void setDasmLetterCase(DasmLetterCase value)`
+- `void setDasmLetterCase(LetterCase value)`
 
     The letter case determines the appearance of mnemonics and register names. The following options are availabe: 
-    - `DASM_MIXED_CASE`
-        The style is determined by the selected syntax style. 
-    - `DASM_LOWER_CASE`
-        All mnemonics and register names are printed in lowercase.
-    - `DASM_UPPER_CASE`
-        All mnemonics and register names are printed in uppercase.
+    - `MIXED_CASE`
+        Uses default case based on the selected syntax style.
+    - `LOWER_CASE`
+        Outputs mnemonics and register names in lowercase.
+    - `UPPER_CASE`
+        Outputs mnemonics and register names in uppercase.
     
 - `void setDasmIndentation(int value)`
 
-    Defines the tabulator space between the mnemonic and the rest of the instruction. 
+    Adjusts the spacing between the mnemonic and the rest of the instruction for better readability.
 
 ## Examples
 
-- Running Moira in vAmiga with syntax style `DASM_MOIRA`
+- Running Moira in vAmiga with syntax style `MOIRA`
     ![Screenshot](../images/dasm_mot.png)
 
-- Running Moira in vAmiga with syntax style `DASM_MOIRA_MIT`
+- Running Moira in vAmiga with syntax style `MOIRA_MIT`
     ![Screenshot](../images/dasm_mit.png)
 

@@ -1,4 +1,4 @@
-# How to use the debugger
+# Using the Debugger
 
 Moira comes with built-in support for the following debugging features: 
 - Breakpoints
@@ -7,19 +7,19 @@ Moira comes with built-in support for the following debugging features:
 - Software traps
 - Instructions log
 
-All API calls to the debugger are handled through the `debugger` object which is a public member of the Moira class.
+All API calls related to debugging are handled through the debugger object, which is a public member of the Moira class.
 
-## Managing Breakpoints
+## Breakpoints
 
-If one or more breakpoints are set, Moira starts monitoring the program counter. As soon as one of the monitored memory addresses is reached, function `breakpointReached` is invoked. This function has an empty function body by default and needs to be overwritten in your sub-class. 
+When breakpoints are set, Moira monitors the program counter. If execution reaches one of the specified addresses, the function `didReachBreakpoint` is called. By default, this function has an empty implementation and must be overridden in a subclass.
 
-All API calls related to breakpoints are handled through the `breakpoints` object which is a public member of the `debugger` object.
+All breakpoint-related API calls are managed through the `breakpoints` object, which is a public member of the `debugger` object. 
 
-- `void addAt(u32 addr)`
+- `void setAt(u32 addr)`
     
-    Adds a breakpoint at the specified address.
+    Sets a breakpoint at the specified address.
 
-- `void addAt(u32 addr)`
+- `void removeAt(u32 addr)`
 
    Removes the breakpoint at the specified address.
 
@@ -33,21 +33,21 @@ All API calls related to breakpoints are handled through the `breakpoints` objec
 
 - `void stepInto()`
 
-   This function sets a breakpoint on the instruction that is going to be executed next. The breakpoint is *soft* which means that it is deleted automatically when reached. 
+   This function sets a breakpoint on the instruction that is going to be executed next. The breakpoint is *soft*, that is, it is deleted automatically when reached. 
 
 - `void stepOver()`
 
-This function sets a soft breakpoint on the instruction that is next to the currently executed instruction in memory. Note: If the current instruction performs a jump, this instruction might never be reached. 
+This function sets a soft breakpoint on the instruction next to the currently executed instruction in memory. Note: If the current instruction jumps, this instruction might never be reached. 
 
 ## Watchpoints
 
-If one or more watchpoints are set, Moira monitors all reads and writes from or to memory. As soon as one of the monitored addresses is accessed, function `watchpointReached` is invoked. This function has an empty function body by default and needs to be overwritten in your sub-class. 
+Watchpoints allow monitoring of memory reads and writes. If a specified address is accessed, the function `didReachWatchpoint` is called. Like 'didReachBreakpoint`, this function is empty by default and must be overridden in a subclass.
 
-All API calls related to watchpoints are handled through the `watchpoints` object which is a public member of the debugger object.
+All API calls related to watchpoints are managed by the `watchpoints` object which is a public member of the debugger object.
 
-- `void addAt(u32 addr)`
+- `void setAt(u32 addr)`
     
-    Adds a watchpoint at the specified address.
+    Sets a watchpoint at the specified address.
 
 - `void removeAt(u32 addr)`
 
@@ -55,7 +55,7 @@ All API calls related to watchpoints are handled through the `watchpoints` objec
 
 - `void disableAt(u32 addr)`
 
-    Disables the watchpoint at the specified address. A disabled watchpoint is kept in the watchpoint list, but can never trigger.
+    Disables the watchpoint at the specified address. A disabled watchpoint is kept in the watchpoint list, but never triggers.
 
 - `void reableAt(u32 addr)`
 
@@ -63,13 +63,12 @@ All API calls related to watchpoints are handled through the `watchpoints` objec
 
 ## Catchpoints
 
-If one or more catchpoints are set, Moira monitors the exception vector table. As soon as one of the monitored exceptions is thrown, function `catchpointReached` is invoked. This function has an empty function body by default and needs to be overwritten in your sub-class. Catchpoints are a handy debug tool. They can be used to intercept certain interrupts or certain error conditions such as address errors or bus errors. 
+Catchpoints provide a way to intercept exceptions by monitoring the exception vector table. When a monitored exception executes, Moira calls `catchpointReached`, which must be implemented in a subclass. Catchpoints are a useful tool for debugging error conditions such as address errors, bus errors, or certain interrupts.
+All catchpoint-related API calls are managed by the `catchpoints` object inside the debugger.
 
-All API calls related to catchpoints are handled through the `catchpoints` object which is a public member of the debugger object.
-
-- `void addAt(u32 addr)`
+- `void setAt(u32 addr)`
     
-    Adds a catchpoint at the specified address.
+    Sets a catchpoint at the specified address.
 
 - `void removeAt(u32 addr)`
 
@@ -77,15 +76,15 @@ All API calls related to catchpoints are handled through the `catchpoints` objec
 
 - `void disableAt(u32 addr)`
 
-    Disables the catchpoint at the specified address. A disabled catchpoint is kept in the catchpoint list, but can never trigger.
+    Disables the catchpoint at the specified address. A disabled catchpoint is kept in the catchpoint list, but never triggers.
 
 - `void reableAt(u32 addr)`
 
     Reenables the catchpoint at the specified address. 
 
-## Software traps
+## Software Traps
 
-Software traps are a flexible mechanism to interrupt execution in a relocatable way. If a software trap is set at a specific address, Moira replaces the instruction by a special LINEA instruction. When this instruction is executed, which is independet of it's current address, Moira signals the occurance of a software trap. Once reached, the trap is removed by putting back the original instruction.
+Software traps are a flexible mechanism for interrupting execution in a relocatable manner. When a trap is set at a particular address, Moira replaces the instruction with a special LINEA instruction. If this instruction is executed, Moira signals that a software trap has occurred. Once triggered, the trap is automatically removed, restoring the original instruction at that address. This mechanism is particularly useful for setting temporary execution stops without modifying program logic permanently.
 
 - `u16 create(u16 instr)`
 
@@ -93,9 +92,8 @@ Software traps are a flexible mechanism to interrupt execution in a relocatable 
 
 ## Logging
 
-Moira provides a special log mode for recording the instruction stream. If logging is enabled, the contents of all registers is recorded prior to the execution of an instruction. The logged information is stored inside a *log buffer* which is a ring buffer whose capacity is currently hard-coded to 256 elements. 
-
-All API calls of the logging facility are handled through the `debugger` object.
+Moira includes an instruction logging system that records register states before each instruction executes. Logged entries are stored in a circular buffer with a fixed capacity of 256 entries. 
+All logging-related API calls are handled through the `debugger` object. 
 
 - `void enableLogging()`
 
@@ -107,17 +105,17 @@ All API calls of the logging facility are handled through the `debugger` object.
     
 - `int loggedInstructions() const`
 
-    Returns the number of records in the log buffer. If the emulator has run for a few cycles, the return value matches the log buffer capacity and does not change thereafter. 
+    Returns the number of log buffer entries. Once the circular buffer has filled up, the return value matches the log buffer capacity and does not change thereafter.
 
 - `void clearLog()`
 
-    Start over with a clean log buffer.
+    Starts over with a clean log buffer.
 
 - `const Registers logEntryAbs(n) const`
 
-    Read an entry from the log buffer where *n = 0* specifies the most recently recorded entry. 
+    Reads an entry from the log buffer where *n = 0* specifies the most recently recorded entry. 
 
 - `debugger.logEntryAbs(n) const`
 
-    Same as `logEntry(n)` with reversed addressing. When called with *n = 0*, the oldest record will be read from the buffer.
+    Same as `logEntry(n)` with reversed enumeration order. Called with *n = 0*, the oldest record will be read from the buffer.
 
