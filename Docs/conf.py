@@ -36,7 +36,7 @@ html_theme_options = {
     "repository_url": "https://dirkwhoffmann.github.io/Moira/",
     "repository_provider": "github",
     "use_repository_button": True,
-    "use_issues_button": True,
+    "use_issues_button": False,
     "logo": {
         "text": "Moira v3.0",
         "image_light": "images/logo.png",

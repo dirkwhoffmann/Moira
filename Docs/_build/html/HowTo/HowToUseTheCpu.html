@@ -1,0 +1,609 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Integrating the CPU Core &#8212; Moira v3.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=558cde68" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'HowTo/HowToUseTheCpu';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Using the Disassembler" href="HowToUseTheDisassembler.html" />
+    <link rel="prev" title="Using Moira in Your Own App" href="../Tutorials/UsingMoiraInYourOwnApp.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none"><img src="https://dirkwhoffmann.github.io/Moira/images/banner-mo-1.jpg" width="100%" alt="Banner">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.png" class="logo__image only-light" alt=""/>
+    <script>document.write(`<img src="../_static/logo.png" class="logo__image only-dark" alt=""/>`);</script>
+  
+  
+    <p class="title logo__title">Moira v3.0</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../Overview/About.html">About</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/GettingStarted.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/UsingMoiraInYourOwnApp.html">Using Moira in Your Own App</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How-to guides</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Integrating the CPU Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="HowToUseTheDisassembler.html">Using the Disassembler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="HowToUseTheDebugger.html">Using the Debugger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="HowToUseDelegates.html">Using the Delegation System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="HowToOverclockTheCpu.html">How to Implement Overclocking</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Expert Notes</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../Explanations/MainExecutionFunction.html">The Main Execution Function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Explanations/InstructionHandlers.html">Instruction Handlers</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">References</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../References/ConfigOptions.html">Configuration Options</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://dirkwhoffmann.github.io/Moira" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/HowTo/HowToUseTheCpu.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Integrating the CPU Core</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-a-custom-cpu">Creating a Custom CPU</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuring-the-cpu">Configuring the CPU</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-custom-cpu">Running the Custom CPU</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#querying-cpu-properties">Querying CPU Properties</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#managing-interrupts">Managing Interrupts</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#synchronizing-the-cpu">Synchronizing the CPU</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tweaking-memory-access">Tweaking Memory Access</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="integrating-the-cpu-core">
+<h1>Integrating the CPU Core<a class="headerlink" href="#integrating-the-cpu-core" title="Link to this heading">#</a></h1>
+<p>This guide explains how to integrate Moira into your application, create a custom CPU, and manage execution, memory access, and interrupts.</p>
+<p>To use Moira in your application, copy the contents of the Moira subfolder into your project. Other files are only needed for the test application.</p>
+<section id="creating-a-custom-cpu">
+<h2>Creating a Custom CPU<a class="headerlink" href="#creating-a-custom-cpu" title="Link to this heading">#</a></h2>
+<p>By default, Moira declares all necessary interface functions as virtual, allowing for easy subclassing. A minimal custom CPU looks like this:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;Moira.h&quot;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="k">class</span><span class="w"> </span><span class="nc">CPU</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">moira</span><span class="o">::</span><span class="n">Moira</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">        </span><span class="n">u8</span><span class="w"> </span><span class="nf">read8</span><span class="p">(</span><span class="n">u32</span><span class="w"> </span><span class="n">addr</span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="p">;</span>
+<span class="w">        </span><span class="n">u16</span><span class="w"> </span><span class="nf">read16</span><span class="p">(</span><span class="n">u32</span><span class="w"> </span><span class="n">addr</span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">write8</span><span class="w"> </span><span class="p">(</span><span class="n">u32</span><span class="w"> </span><span class="n">addr</span><span class="p">,</span><span class="w"> </span><span class="n">u8</span><span class="w">  </span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">write16</span><span class="w"> </span><span class="p">(</span><span class="n">u32</span><span class="w"> </span><span class="n">addr</span><span class="p">,</span><span class="w"> </span><span class="n">u16</span><span class="w"> </span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="p">;</span>
+<span class="w">    </span><span class="p">};</span>
+</pre></div>
+</div>
+<p>The Moira class is abstract, requiring the implementation of the four mentioned methods. They handle memory access by reading and writing bytes and words.</p>
+<p>Alternatively, for better performance, Moira can be configured to use non-virtual functions (as done in vAmiga).</p>
+</section>
+<section id="configuring-the-cpu">
+<h2>Configuring the CPU<a class="headerlink" href="#configuring-the-cpu" title="Link to this heading">#</a></h2>
+<p>After instantiating your CPU class, configure the CPU model:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">setModel(Model</span> <span class="pre">cpuModel)</span></code></p>
+<p>The following models are supported:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">M68000</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">M68010</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">M68EC020</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">M68020</span></code></p></li>
+</ul>
+<p>This function configures both the CPU core and disassembler. To configure them separately:</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">setModel(Model</span> <span class="pre">cpuModel,</span> <span class="pre">Model</span> <span class="pre">dasmModel)</span></code></p>
+<p>This function configures the CPU core and the disassembler seperately. The function has been intentionally overloaded to let the disassembler support a broader range of CPU models. Whereas the emulated CPU core is restricted to the models mentioned above, the disassembler supports higher-end CPUs. These CPUs are specified by the following keys:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">M68EC030</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">M68030</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">M68EC040</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">M68LC040</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">M68040</span></code></p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="running-the-custom-cpu">
+<h2>Running the Custom CPU<a class="headerlink" href="#running-the-custom-cpu" title="Link to this heading">#</a></h2>
+<p>After instantiation, the CPU is ready to use. The two key functions are:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">reset()</span></code></p>
+<p>Runs the CPU’s internal reset procedure.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">execute()</span></code></p>
+<p>Emulates the CPU for one instruction.</p>
+</li>
+</ul>
+<p>Make sure to reset the CPU before executing any instruction.</p>
+<p>The following functions are convenient wrappers around <code class="docutils literal notranslate"><span class="pre">execute()</span></code>:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">execute(i64</span> <span class="pre">cycles)</span></code></p>
+<p>Runs the CPU for the given number of cycles. Be aware that the number of
+actually elapsed cycles may exceed the specified cycle budget since the
+emulator cannot stop in the middle of an instruction.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">executeUntil(i64</span> <span class="pre">cycle)</span></code></p>
+<p>Executes instructions until a specific cycle count is reached.</p>
+</li>
+</ul>
+</section>
+<section id="querying-cpu-properties">
+<h2>Querying CPU Properties<a class="headerlink" href="#querying-cpu-properties" title="Link to this heading">#</a></h2>
+<p>Moira provides various functions to inspect the CPU state. The following incomprehensive list contains the most important ones:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">u32</span> <span class="pre">getD(int</span> <span class="pre">n)</span> <span class="pre">const</span></code></p>
+<p>Reads the current value from a data register.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">u32</span> <span class="pre">getA(int</span> <span class="pre">n)</span> <span class="pre">const</span></code></p>
+<p>Reads the current value from an address register.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">u32</span> <span class="pre">getPC()</span> <span class="pre">const</span></code></p>
+<p>Reads the current value of the program counter. Keep in mind that the program counter is a moving target. It may progress multiple times during the execution of an instruction.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">u32</span> <span class="pre">getPC0()</span> <span class="pre">const</span></code></p>
+<p>Returns the address of the currently executed instruction. Unlike the program counter, the instruction address always points to the start address of the current instruction. It matches the program counter when execution begins and remains unchanged until the next instruction is processed. In most scenarios, <code class="docutils literal notranslate"><span class="pre">getPC0</span></code> is the function you want to call rather than <code class="docutils literal notranslate"><span class="pre">getPC</span></code>.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">u8</span> <span class="pre">getCCR()</span> <span class="pre">const</span></code></p>
+<p>Returns the CCR part of the status register.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">u16</span> <span class="pre">getSR()</span> <span class="pre">const</span></code></p>
+<p>Returns the entire status register, including the CCR part.</p>
+</li>
+</ul>
+</section>
+<section id="managing-interrupts">
+<h2>Managing Interrupts<a class="headerlink" href="#managing-interrupts" title="Link to this heading">#</a></h2>
+<p>The Motorola 68000 CPU has three interrupt pins that define the Interrupt Priority Level (IPL), which ranges from 0 to 7 and is set to 0 on reset.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">u8</span> <span class="pre">getIPL()</span></code></p>
+<p>Returns the current interrupt level encoded on the IPL pins.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">setIPL(u8</span> <span class="pre">level)</span></code></p>
+<p>Sets the IPL pins to the specified value.</p>
+</li>
+</ul>
+</section>
+<section id="synchronizing-the-cpu">
+<h2>Synchronizing the CPU<a class="headerlink" href="#synchronizing-the-cpu" title="Link to this heading">#</a></h2>
+<p>Moira provides cycle-accurate timing via the following function:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">sync(int</span> <span class="pre">cycles)</span></code></p>
+<p>The function is called each time the CPU accesses memory. The passed integer value indicates the number of cycles that have elapsed since the last call of this function. The default implementation simply adds up the passed cycle counts:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">virtual</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">sync</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">cycles</span><span class="p">)</span><span class="w"> </span>
+<span class="p">{</span><span class="w"> </span>
+<span class="w">    </span><span class="n">clock</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">cycles</span><span class="p">;</span><span class="w">  </span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In vAmiga this function is utilized to emulate bus sharing between the CPU and the custom chip set. As soon as the CPU tries to access memory, vAmiga intercepts the access in <code class="docutils literal notranslate"><span class="pre">sync()</span></code> and emulates the external hardware up to the point the CPU has already reached. Consequently, when the actual memory access happens, vAmiga can determine exactly whether the bus is blocked. If it is, the CPU is virtually suspended by increasing variable <code class="docutils literal notranslate"><span class="pre">clock</span></code> by a certain number of wait states.</p>
+</li>
+</ul>
+</section>
+<section id="tweaking-memory-access">
+<h2>Tweaking Memory Access<a class="headerlink" href="#tweaking-memory-access" title="Link to this heading">#</a></h2>
+<p>During the reset process, the Motorola 68000 CPU reads the initial stack pointer from address 0x000000 and the program counter from address 0x000004. This means that memory must be fully initialized before calling <code class="docutils literal notranslate"><span class="pre">reset</span></code>, which can be inconvenient in certain situations. To work around this restriction, Moira provides a dedicated function that can be implemented in a subclass. By implementing the following function, it becomes possible to supply the required values without requiring the entire memory system to be set up:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">u16</span> <span class="pre">read16OnReset(u32</span> <span class="pre">addr)</span></code></p></li>
+</ul>
+<p>A similar issue arises when the disassembler reads memory. By default, it uses <code class="docutils literal notranslate"><span class="pre">read16</span></code> to fetch instruction words, but this approach can be problematic when emulating systems like the Amiga. Some memory-mapped registers trigger side effects when accessed, and these side effects should not occur when simply disassembling instructions. To prevent unintended behavior, Moira allows the disassembler to use a separate function:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">u16</span> <span class="pre">read16Dasm(u32</span> <span class="pre">addr)</span></code></p></li>
+</ul>
+<p>If your subclass implements this function, it should return the exact same values as the already implemented function <code class="docutils literal notranslate"><span class="pre">read16</span></code>. However, no side effects should be carried out.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../Tutorials/UsingMoiraInYourOwnApp.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Using Moira in Your Own App</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="HowToUseTheDisassembler.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Using the Disassembler</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-a-custom-cpu">Creating a Custom CPU</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuring-the-cpu">Configuring the CPU</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-custom-cpu">Running the Custom CPU</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#querying-cpu-properties">Querying CPU Properties</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#managing-interrupts">Managing Interrupts</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#synchronizing-the-cpu">Synchronizing the CPU</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tweaking-memory-access">Tweaking Memory Access</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Dirk W. Hoffmann
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Dirk W. Hoffmann.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

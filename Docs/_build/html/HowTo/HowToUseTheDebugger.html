@@ -1,0 +1,577 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Using the Debugger &#8212; Moira v3.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=558cde68" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'HowTo/HowToUseTheDebugger';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Using the Delegation System" href="HowToUseDelegates.html" />
+    <link rel="prev" title="Using the Disassembler" href="HowToUseTheDisassembler.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none"><img src="https://dirkwhoffmann.github.io/Moira/images/banner-mo-1.jpg" width="100%" alt="Banner">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.png" class="logo__image only-light" alt=""/>
+    <script>document.write(`<img src="../_static/logo.png" class="logo__image only-dark" alt=""/>`);</script>
+  
+  
+    <p class="title logo__title">Moira v3.0</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../Overview/About.html">About</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/GettingStarted.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Tutorials/UsingMoiraInYourOwnApp.html">Using Moira in Your Own App</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How-to guides</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="HowToUseTheCpu.html">Integrating the CPU Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="HowToUseTheDisassembler.html">Using the Disassembler</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Using the Debugger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="HowToUseDelegates.html">Using the Delegation System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="HowToOverclockTheCpu.html">How to Implement Overclocking</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Expert Notes</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../Explanations/MainExecutionFunction.html">The Main Execution Function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Explanations/InstructionHandlers.html">Instruction Handlers</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">References</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../References/ConfigOptions.html">Configuration Options</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://dirkwhoffmann.github.io/Moira" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/HowTo/HowToUseTheDebugger.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Using the Debugger</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#breakpoints">Breakpoints</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#watchpoints">Watchpoints</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#catchpoints">Catchpoints</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#software-traps">Software Traps</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#logging">Logging</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="using-the-debugger">
+<h1>Using the Debugger<a class="headerlink" href="#using-the-debugger" title="Link to this heading">#</a></h1>
+<p>Moira comes with built-in support for the following debugging features:</p>
+<ul class="simple">
+<li><p>Breakpoints</p></li>
+<li><p>Watchpoints</p></li>
+<li><p>Catchpoints</p></li>
+<li><p>Software traps</p></li>
+<li><p>Instructions log</p></li>
+</ul>
+<p>All API calls related to debugging are handled through the debugger object, which is a public member of the Moira class.</p>
+<section id="breakpoints">
+<h2>Breakpoints<a class="headerlink" href="#breakpoints" title="Link to this heading">#</a></h2>
+<p>When breakpoints are set, Moira monitors the program counter. If execution reaches one of the specified addresses, the function <code class="docutils literal notranslate"><span class="pre">didReachBreakpoint</span></code> is called. By default, this function has an empty implementation and must be overridden in a subclass.</p>
+<p>All breakpoint-related API calls are managed through the <code class="docutils literal notranslate"><span class="pre">breakpoints</span></code> object, which is a public member of the <code class="docutils literal notranslate"><span class="pre">debugger</span></code> object.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">setAt(u32</span> <span class="pre">addr)</span></code></p>
+<p>Sets a breakpoint at the specified address.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">removeAt(u32</span> <span class="pre">addr)</span></code></p>
+<p>Removes the breakpoint at the specified address.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">disableAt(u32</span> <span class="pre">addr)</span></code></p>
+<p>Disables the breakpoint at the specified address. A disabled breakpoint is kept in the breakpoint list, but will never trigger.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">enableAt(u32</span> <span class="pre">addr)</span></code></p>
+<p>Reenables the breakpoint at the specified address.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">stepInto()</span></code></p>
+<p>This function sets a breakpoint on the instruction that is going to be executed next. The breakpoint is <em>soft</em>, that is, it is deleted automatically when reached.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">stepOver()</span></code></p></li>
+</ul>
+<p>This function sets a soft breakpoint on the instruction next to the currently executed instruction in memory. Note: If the current instruction jumps, this instruction might never be reached.</p>
+</section>
+<section id="watchpoints">
+<h2>Watchpoints<a class="headerlink" href="#watchpoints" title="Link to this heading">#</a></h2>
+<p>Watchpoints allow monitoring of memory reads and writes. If a specified address is accessed, the function <code class="docutils literal notranslate"><span class="pre">didReachWatchpoint</span></code> is called. Like ‘didReachBreakpoint`, this function is empty by default and must be overridden in a subclass.</p>
+<p>All API calls related to watchpoints are managed by the <code class="docutils literal notranslate"><span class="pre">watchpoints</span></code> object which is a public member of the debugger object.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">setAt(u32</span> <span class="pre">addr)</span></code></p>
+<p>Sets a watchpoint at the specified address.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">removeAt(u32</span> <span class="pre">addr)</span></code></p>
+<p>Removes the watchpoint at the specified address.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">disableAt(u32</span> <span class="pre">addr)</span></code></p>
+<p>Disables the watchpoint at the specified address. A disabled watchpoint is kept in the watchpoint list, but never triggers.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">reableAt(u32</span> <span class="pre">addr)</span></code></p>
+<p>Reenables the watchpoint at the specified address.</p>
+</li>
+</ul>
+</section>
+<section id="catchpoints">
+<h2>Catchpoints<a class="headerlink" href="#catchpoints" title="Link to this heading">#</a></h2>
+<p>Catchpoints provide a way to intercept exceptions by monitoring the exception vector table. When a monitored exception executes, Moira calls <code class="docutils literal notranslate"><span class="pre">catchpointReached</span></code>, which must be implemented in a subclass. Catchpoints are a useful tool for debugging error conditions such as address errors, bus errors, or certain interrupts.
+All catchpoint-related API calls are managed by the <code class="docutils literal notranslate"><span class="pre">catchpoints</span></code> object inside the debugger.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">setAt(u32</span> <span class="pre">addr)</span></code></p>
+<p>Sets a catchpoint at the specified address.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">removeAt(u32</span> <span class="pre">addr)</span></code></p>
+<p>Removes the catchpoint at the specified address.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">disableAt(u32</span> <span class="pre">addr)</span></code></p>
+<p>Disables the catchpoint at the specified address. A disabled catchpoint is kept in the catchpoint list, but never triggers.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">reableAt(u32</span> <span class="pre">addr)</span></code></p>
+<p>Reenables the catchpoint at the specified address.</p>
+</li>
+</ul>
+</section>
+<section id="software-traps">
+<h2>Software Traps<a class="headerlink" href="#software-traps" title="Link to this heading">#</a></h2>
+<p>Software traps are a flexible mechanism for interrupting execution in a relocatable manner. When a trap is set at a particular address, Moira replaces the instruction with a special LINEA instruction. If this instruction is executed, Moira signals that a software trap has occurred. Once triggered, the trap is automatically removed, restoring the original instruction at that address. This mechanism is particularly useful for setting temporary execution stops without modifying program logic permanently.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">u16</span> <span class="pre">create(u16</span> <span class="pre">instr)</span></code></p>
+<p>Places a software trap at the specified address.</p>
+</li>
+</ul>
+</section>
+<section id="logging">
+<h2>Logging<a class="headerlink" href="#logging" title="Link to this heading">#</a></h2>
+<p>Moira includes an instruction logging system that records register states before each instruction executes. Logged entries are stored in a circular buffer with a fixed capacity of 256 entries.
+All logging-related API calls are handled through the <code class="docutils literal notranslate"><span class="pre">debugger</span></code> object.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">enableLogging()</span></code></p>
+<p>Turns logging on.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">disableLogging()</span></code></p>
+<p>Turns logging off.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">loggedInstructions()</span> <span class="pre">const</span></code></p>
+<p>Returns the number of log buffer entries. Once the circular buffer has filled up, the return value matches the log buffer capacity and does not change thereafter.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">clearLog()</span></code></p>
+<p>Starts over with a clean log buffer.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Registers</span> <span class="pre">logEntryAbs(n)</span> <span class="pre">const</span></code></p>
+<p>Reads an entry from the log buffer where <em>n = 0</em> specifies the most recently recorded entry.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">debugger.logEntryAbs(n)</span> <span class="pre">const</span></code></p>
+<p>Same as <code class="docutils literal notranslate"><span class="pre">logEntry(n)</span></code> with reversed enumeration order. Called with <em>n = 0</em>, the oldest record will be read from the buffer.</p>
+</li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="HowToUseTheDisassembler.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Using the Disassembler</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="HowToUseDelegates.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Using the Delegation System</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#breakpoints">Breakpoints</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#watchpoints">Watchpoints</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#catchpoints">Catchpoints</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#software-traps">Software Traps</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#logging">Logging</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Dirk W. Hoffmann
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Dirk W. Hoffmann.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,14 @@
+/* Light mode background color */
+html[data-theme="light"] {
+    --pst-color-background: #F1F0F9 !important;
+
+}
+
+/* Dark mode background color */
+/*
+html[data-theme="dark"] {
+    --pst-color-background: #1E1E2E !important;
+}
+*/
+
+}
