@@ -9,7 +9,7 @@ git clone https://github.com/dirkwhoffmann/Moira.git
 cd Moira 
 ````
 
-Older versions are available at [Moira release page](https://github.com/dirkwhoffmann/Moira/releases).  
+Older versions are available at [Moira's release page](https://github.com/dirkwhoffmann/Moira/releases).  
 
 ## Configuring 
 
