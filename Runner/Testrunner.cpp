@@ -233,7 +233,7 @@ void run()
 
 void run(unsigned seed)
 {
-    printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2025\n\n");
+    printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2026\n\n");
     printf("The test program runs Moira agains Musashi with randomly generated data.\n");
     printf("\n");
     printf("    Test rounds : %ld\n", ROUNDS);
