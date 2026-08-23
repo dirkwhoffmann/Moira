@@ -1,6 +1,9 @@
 add_library(moira STATIC
 
 Moira.cpp
+MoiraCore68000.cpp
+MoiraCore68010.cpp
+MoiraCore68020.cpp
 MoiraDebugger.cpp
 )
 

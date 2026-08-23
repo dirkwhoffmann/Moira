@@ -5,15 +5,7 @@
 // Published under the terms of the MIT License
 // -----------------------------------------------------------------------------
 
-//
-// Auxiliary functions
-//
+// Instantiates all instruction handlers for the 68010 core
 
-// Reads a data value from memory without side-effects
-u32 dasmRead(u32 addr, Size S = Word) const;
-
-// Increments addr and reads a data value from memory without side-effects
-u32 dasmIncRead(u32 &addr, Size S = Word) const;
-
-// Assembles an operand
-Ea Op(Mode M, Size S, u16 reg, u32 &pc) const;
+#define MOIRA_CORE Core::C68010
+#include "MoiraCore_cpp.h"

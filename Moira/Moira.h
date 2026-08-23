@@ -109,8 +109,14 @@ private:
     // Jump table holding the loop mode instruction handlers (68010 only)
     ExecPtr *loop = nullptr;
     
-    // Jump table holding the disassembler handlers
-    typedef void (Moira::*DasmPtr)(StrWriter&, u32&, u16) const;
+    /* Jump table holding the disassembler handlers.
+     *
+     * Since the handlers are not templated, the instruction, addressing mode
+     * and size attributes that used to be template arguments are passed in at
+     * call time. They are read from the InstrInfo table, which is built
+     * alongside this one.
+     */
+    typedef void (Moira::*DasmPtr)(StrWriter&, u32&, u16, Instr, Mode, Size) const;
     DasmPtr *dasm = nullptr;
     
     // Table holding instruction information
@@ -139,6 +145,24 @@ private:
     
     // Core routine for creating jump tables
     template <Core C> void createJumpTable(Model model, bool registerDasm);
+    template <Core C> void createJumpTable1(Model model, bool registerDasm);
+    template <Core C> void createJumpTable2(Model model, bool registerDasm);
+    template <Core C> void createJumpTable3(Model model, bool registerDasm);
+    template <Core C> void createJumpTable4(Model model, bool registerDasm);
+    template <Core C> void createJumpTable5(Model model, bool registerDasm);
+    template <Core C> void createJumpTable6(Model model, bool registerDasm);
+    template <Core C> void createJumpTable7(Model model, bool registerDasm);
+    template <Core C> void createJumpTable8(Model model, bool registerDasm);
+    template <Core C> void createJumpTable9(Model model, bool registerDasm);
+    template <Core C> void createJumpTable10(Model model, bool registerDasm);
+    template <Core C> void createJumpTable11(Model model, bool registerDasm);
+    template <Core C> void createJumpTable12(Model model, bool registerDasm);
+
+    /* Note: createJumpTable is deliberately split into twelve parts. As a
+     * single function it expands into several hundred kilobytes of
+     * straight-line code per core, which drives the compiler's memory
+     * consumption far beyond what some CI runners provide.
+     */
     
     
     //
@@ -709,5 +733,15 @@ private:
 #include "MoiraExceptions.h"
 #include "MoiraDasm.h"
 };
+
+/* The jump table builders are the only place where the instruction handler
+ * templates are instantiated. Keeping each core in a translation unit of its
+ * own splits the instantiation work three ways and keeps the compiler's peak
+ * memory usage within bounds. The definitions live in MoiraCore680x0.cpp.
+ */
+extern template void Moira::createJumpTable<Core::C68000>(Model, bool);
+extern template void Moira::createJumpTable<Core::C68010>(Model, bool);
+extern template void Moira::createJumpTable<Core::C68020>(Model, bool);
+
 
 }
