@@ -14,6 +14,7 @@
 #include "Moira.h"
 #include "MoiraMacros.h"
 
+#include <cassert>
 #include <cstdio>
 #include <algorithm>
 #include <cmath>
@@ -37,7 +38,7 @@ Moira::Moira()
 {
     exec = new ExecPtr[65536];
     loop = new ExecPtr[65536];
-    if (MOIRA_BUILD_INSTR_INFO_TABLE) info = new InstrInfo[65536];
+    if (MOIRA_ENABLE_DASM) info = new InstrInfo[65536];
     if (MOIRA_ENABLE_DASM) dasm = new DasmPtr[65536];
 
     createJumpTable(cpuModel, dasmModel);
@@ -802,13 +803,13 @@ Moira::getIrqVector(u8 level) const {
 InstrInfo
 Moira::getInstrInfo(u16 op) const
 {
-    if constexpr (MOIRA_BUILD_INSTR_INFO_TABLE) {
+    if constexpr (MOIRA_ENABLE_DASM) {
 
         return info[op];
 
     } else {
 
-        throw std::runtime_error("This feature requires MOIRA_WANT_INSTR_INFO_TABLE = true\n");
+        throw std::runtime_error("This feature requires MOIRA_ENABLE_DASM = true\n");
     }
 }
 

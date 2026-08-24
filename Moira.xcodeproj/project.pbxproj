@@ -18,12 +18,12 @@
 		507BE4AF23B66456000B37D2 /* Testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* Testrunner.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
 		50804EE22386A72C004D3EC2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E8C2386A72C004D3EC2 /* main.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
 		50804F352386A7DD004D3EC2 /* Moira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F332386A7DD004D3EC2 /* Moira.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
-		B6F33308D2D0F45B428944A2 /* MoiraCore68000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61F3AFFB3C6CFCEC22A0FD23 /* MoiraCore68000.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
-		A7499A3FCDD6B869B1ED1BA6 /* MoiraCore68010.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55703C9956D2BECD0F343A8F /* MoiraCore68010.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
-		F33E4567A22AB4A162CCE6CC /* MoiraCore68020.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1654296120AA412377E9642D /* MoiraCore68020.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
 		50C0123A28BBAD9B001EFB37 /* m68k-dis.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123628BBAD9B001EFB37 /* m68k-dis.c */; settings = {COMPILER_FLAGS = "-w"; }; };
 		50C0123B28BBAD9B001EFB37 /* m68k-opc.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123728BBAD9B001EFB37 /* m68k-opc.c */; settings = {COMPILER_FLAGS = "-w"; }; };
 		50CECEC723A924B000E07C65 /* Sandbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50CECEC523A924B000E07C65 /* Sandbox.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
+		A7499A3FCDD6B869B1ED1BA6 /* MoiraCore68010.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55703C9956D2BECD0F343A8F /* MoiraCore68010.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
+		B6F33308D2D0F45B428944A2 /* MoiraCore68000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61F3AFFB3C6CFCEC22A0FD23 /* MoiraCore68000.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
+		F33E4567A22AB4A162CCE6CC /* MoiraCore68020.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1654296120AA412377E9642D /* MoiraCore68020.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -39,6 +39,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1654296120AA412377E9642D /* MoiraCore68020.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraCore68020.cpp; sourceTree = "<group>"; };
+		38037577E0C9EA87178FAF59 /* MoiraCore_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraCore_cpp.h; sourceTree = "<group>"; };
 		50032B4823BCA8D600959BEC /* MoiraInit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraInit.h; sourceTree = "<group>"; };
 		5010BDAC238A897400CFD010 /* StrWriter_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StrWriter_cpp.h; sourceTree = "<group>"; };
 		5010BDAD238A897400CFD010 /* StrWriter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StrWriter.h; sourceTree = "<group>"; };
@@ -69,48 +71,11 @@
 		5054686428A6647B00028727 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		505580EA23AFA14D0009F77F /* musashi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = musashi.cpp; sourceTree = "<group>"; };
 		505CA8AA28C7209200871439 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
-		507805AB2D7106F8006752C1 /* custom.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = custom.css; sourceTree = "<group>"; };
-		507805AD2D7106F8006752C1 /* header.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = header.html; sourceTree = "<group>"; };
-		507805C12D7106F8006752C1 /* InstructionHandlers.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = InstructionHandlers.md; sourceTree = "<group>"; };
-		507805C22D7106F8006752C1 /* MainExecutionFunction.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = MainExecutionFunction.md; sourceTree = "<group>"; };
-		507805C42D7106F8006752C1 /* HowToOverclockTheCpu.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HowToOverclockTheCpu.md; sourceTree = "<group>"; };
-		507805C52D7106F8006752C1 /* HowToUseDelegates.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HowToUseDelegates.md; sourceTree = "<group>"; };
-		507805C62D7106F8006752C1 /* HowToUseTheCpu.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HowToUseTheCpu.md; sourceTree = "<group>"; };
-		507805C72D7106F8006752C1 /* HowToUseTheDebugger.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HowToUseTheDebugger.md; sourceTree = "<group>"; };
-		507805C82D7106F8006752C1 /* HowToUseTheDisassembler.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HowToUseTheDisassembler.md; sourceTree = "<group>"; };
-		507805CA2D7106F8006752C1 /* 68020-bottom.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "68020-bottom.png"; sourceTree = "<group>"; };
-		507805CB2D7106F8006752C1 /* 68020-flat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "68020-flat.png"; sourceTree = "<group>"; };
-		507805CC2D7106F8006752C1 /* 68020-top.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "68020-top.png"; sourceTree = "<group>"; };
-		507805CD2D7106F8006752C1 /* abcd.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = abcd.png; sourceTree = "<group>"; };
-		507805CE2D7106F8006752C1 /* banner.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = banner.png; sourceTree = "<group>"; };
-		507805CF2D7106F8006752C1 /* cpuPanel.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = cpuPanel.jpg; sourceTree = "<group>"; };
-		507805D02D7106F8006752C1 /* dasm_mit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = dasm_mit.png; sourceTree = "<group>"; };
-		507805D12D7106F8006752C1 /* dasm_mot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = dasm_mot.png; sourceTree = "<group>"; };
-		507805D22D7106F8006752C1 /* disassembler.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = disassembler.jpg; sourceTree = "<group>"; };
-		507805D32D7106F8006752C1 /* disassembler.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = disassembler.png; sourceTree = "<group>"; };
-		507805D42D7106F8006752C1 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.png; sourceTree = "<group>"; };
-		507805D52D7106F8006752C1 /* logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = logo.png; sourceTree = "<group>"; };
-		507805D62D7106F8006752C1 /* logo-large.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "logo-large.png"; sourceTree = "<group>"; };
-		507805D82D7106F8006752C1 /* splash.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = splash.jpg; sourceTree = "<group>"; };
-		507805D92D7106F8006752C1 /* stripe.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = stripe.png; sourceTree = "<group>"; };
-		507805DB2D7106F8006752C1 /* About.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = About.md; sourceTree = "<group>"; };
-		507805DD2D7106F8006752C1 /* ConfigOptions.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ConfigOptions.md; sourceTree = "<group>"; };
-		507805DF2D7106F8006752C1 /* GettingStarted.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = GettingStarted.md; sourceTree = "<group>"; };
-		507805E02D7106F8006752C1 /* UsingMoiraInYourOwnApp.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = UsingMoiraInYourOwnApp.md; sourceTree = "<group>"; };
-		507805E22D7106F8006752C1 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
-		507805E32D7106F8006752C1 /* conf.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = conf.py; sourceTree = "<group>"; };
-		507805E42D7106F8006752C1 /* index.rst */ = {isa = PBXFileReference; lastKnownFileType = text; path = index.rst; sourceTree = "<group>"; };
-		507805E52D7106F8006752C1 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
-		507805E62D7106F8006752C1 /* requirements.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = requirements.txt; sourceTree = "<group>"; };
 		507BE4AD23B66456000B37D2 /* Testrunner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Testrunner.cpp; sourceTree = "<group>"; };
 		507BE4AE23B66456000B37D2 /* Testrunner.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Testrunner.h; sourceTree = "<group>"; };
 		50804E062386A4CE004D3EC2 /* Moira */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Moira; sourceTree = BUILT_PRODUCTS_DIR; };
 		50804E8C2386A72C004D3EC2 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		50804F332386A7DD004D3EC2 /* Moira.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Moira.cpp; sourceTree = "<group>"; };
-		61F3AFFB3C6CFCEC22A0FD23 /* MoiraCore68000.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraCore68000.cpp; sourceTree = "<group>"; };
-		55703C9956D2BECD0F343A8F /* MoiraCore68010.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraCore68010.cpp; sourceTree = "<group>"; };
-		1654296120AA412377E9642D /* MoiraCore68020.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraCore68020.cpp; sourceTree = "<group>"; };
-		38037577E0C9EA87178FAF59 /* MoiraCore_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraCore_cpp.h; sourceTree = "<group>"; };
 		50804F342386A7DD004D3EC2 /* Moira.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Moira.h; sourceTree = "<group>"; };
 		50804F362386AA5C004D3EC2 /* MoiraExec_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraExec_cpp.h; sourceTree = "<group>"; };
 		50804F392387B466004D3EC2 /* MoiraDasm_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraDasm_cpp.h; sourceTree = "<group>"; };
@@ -138,7 +103,6 @@
 		50C0124028BBAE80001EFB37 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50CECEC523A924B000E07C65 /* Sandbox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Sandbox.cpp; sourceTree = "<group>"; };
 		50CECEC623A924B000E07C65 /* Sandbox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sandbox.h; sourceTree = "<group>"; };
-		50D1CE932D74E8D1002AA425 /* logo-large-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "logo-large-dark.png"; sourceTree = "<group>"; };
 		50EC62EE289DB14500398CBD /* MoiraMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraMacros.h; sourceTree = "<group>"; };
 		50F549DE288E817600D5D559 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F80AA723C9E4EC00F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -147,6 +111,8 @@
 		50FA79A328BA347F00610F21 /* MoiraExecFPU_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraExecFPU_cpp.h; sourceTree = "<group>"; };
 		50FA79A428BA349700610F21 /* MoiraDasmMMU_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraDasmMMU_cpp.h; sourceTree = "<group>"; };
 		50FA79A528BA34AE00610F21 /* MoiraDasmFPU_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraDasmFPU_cpp.h; sourceTree = "<group>"; };
+		55703C9956D2BECD0F343A8F /* MoiraCore68010.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraCore68010.cpp; sourceTree = "<group>"; };
+		61F3AFFB3C6CFCEC22A0FD23 /* MoiraCore68000.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraCore68000.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -216,126 +182,12 @@
 			path = Runner;
 			sourceTree = "<group>";
 		};
-		507805AC2D7106F8006752C1 /* _static */ = {
-			isa = PBXGroup;
-			children = (
-				507805AB2D7106F8006752C1 /* custom.css */,
-			);
-			path = _static;
-			sourceTree = "<group>";
-		};
-		507805AE2D7106F8006752C1 /* sections */ = {
-			isa = PBXGroup;
-			children = (
-				507805AD2D7106F8006752C1 /* header.html */,
-			);
-			path = sections;
-			sourceTree = "<group>";
-		};
-		507805AF2D7106F8006752C1 /* _templates */ = {
-			isa = PBXGroup;
-			children = (
-				507805AE2D7106F8006752C1 /* sections */,
-			);
-			path = _templates;
-			sourceTree = "<group>";
-		};
-		507805C32D7106F8006752C1 /* Explanations */ = {
-			isa = PBXGroup;
-			children = (
-				507805C12D7106F8006752C1 /* InstructionHandlers.md */,
-				507805C22D7106F8006752C1 /* MainExecutionFunction.md */,
-			);
-			path = Explanations;
-			sourceTree = "<group>";
-		};
-		507805C92D7106F8006752C1 /* HowTo */ = {
-			isa = PBXGroup;
-			children = (
-				507805C42D7106F8006752C1 /* HowToOverclockTheCpu.md */,
-				507805C52D7106F8006752C1 /* HowToUseDelegates.md */,
-				507805C62D7106F8006752C1 /* HowToUseTheCpu.md */,
-				507805C72D7106F8006752C1 /* HowToUseTheDebugger.md */,
-				507805C82D7106F8006752C1 /* HowToUseTheDisassembler.md */,
-			);
-			path = HowTo;
-			sourceTree = "<group>";
-		};
-		507805DA2D7106F8006752C1 /* images */ = {
-			isa = PBXGroup;
-			children = (
-				507805CA2D7106F8006752C1 /* 68020-bottom.png */,
-				507805CB2D7106F8006752C1 /* 68020-flat.png */,
-				507805CC2D7106F8006752C1 /* 68020-top.png */,
-				507805CD2D7106F8006752C1 /* abcd.png */,
-				507805CE2D7106F8006752C1 /* banner.png */,
-				507805CF2D7106F8006752C1 /* cpuPanel.jpg */,
-				507805D02D7106F8006752C1 /* dasm_mit.png */,
-				507805D12D7106F8006752C1 /* dasm_mot.png */,
-				507805D22D7106F8006752C1 /* disassembler.jpg */,
-				507805D32D7106F8006752C1 /* disassembler.png */,
-				507805D42D7106F8006752C1 /* icon.png */,
-				507805D52D7106F8006752C1 /* logo.png */,
-				507805D62D7106F8006752C1 /* logo-large.png */,
-				50D1CE932D74E8D1002AA425 /* logo-large-dark.png */,
-				507805D82D7106F8006752C1 /* splash.jpg */,
-				507805D92D7106F8006752C1 /* stripe.png */,
-			);
-			path = images;
-			sourceTree = "<group>";
-		};
-		507805DC2D7106F8006752C1 /* Overview */ = {
-			isa = PBXGroup;
-			children = (
-				507805DB2D7106F8006752C1 /* About.md */,
-			);
-			path = Overview;
-			sourceTree = "<group>";
-		};
-		507805DE2D7106F8006752C1 /* References */ = {
-			isa = PBXGroup;
-			children = (
-				507805DD2D7106F8006752C1 /* ConfigOptions.md */,
-			);
-			path = References;
-			sourceTree = "<group>";
-		};
-		507805E12D7106F8006752C1 /* Tutorials */ = {
-			isa = PBXGroup;
-			children = (
-				507805DF2D7106F8006752C1 /* GettingStarted.md */,
-				507805E02D7106F8006752C1 /* UsingMoiraInYourOwnApp.md */,
-			);
-			path = Tutorials;
-			sourceTree = "<group>";
-		};
-		507805E72D7106F8006752C1 /* Docs */ = {
-			isa = PBXGroup;
-			children = (
-				507805AC2D7106F8006752C1 /* _static */,
-				507805AF2D7106F8006752C1 /* _templates */,
-				507805C32D7106F8006752C1 /* Explanations */,
-				507805C92D7106F8006752C1 /* HowTo */,
-				507805DA2D7106F8006752C1 /* images */,
-				507805DC2D7106F8006752C1 /* Overview */,
-				507805DE2D7106F8006752C1 /* References */,
-				507805E12D7106F8006752C1 /* Tutorials */,
-				507805E22D7106F8006752C1 /* .gitignore */,
-				507805E32D7106F8006752C1 /* conf.py */,
-				507805E42D7106F8006752C1 /* index.rst */,
-				507805E52D7106F8006752C1 /* Makefile */,
-				507805E62D7106F8006752C1 /* requirements.txt */,
-			);
-			path = Docs;
-			sourceTree = "<group>";
-		};
 		50804DFD2386A4CE004D3EC2 = {
 			isa = PBXGroup;
 			children = (
 				50F80AAB23C9F16900F21D80 /* CMakeLists.txt */,
 				5054686328A6642900028727 /* Runner */,
 				50804E082386A4CE004D3EC2 /* Moira */,
-				507805E72D7106F8006752C1 /* Docs */,
 				50804E072386A4CE004D3EC2 /* Products */,
 			);
 			sourceTree = "<group>";
