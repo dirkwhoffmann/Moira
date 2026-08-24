@@ -13,6 +13,15 @@
 
 namespace moira {
 
+namespace Version {
+
+inline constexpr int major = 5;
+inline constexpr int minor = 0;
+inline constexpr int patch = 0;
+inline constexpr int beta  = 1;
+
+}
+
 class Moira {
     
     friend class Debugger;
@@ -134,6 +143,12 @@ public:
     
     //  Destroys the Moira instance
     virtual ~Moira();
+    
+    // Returns a version string for this release
+    static std::string version();
+
+    // Returns a build number string for this release
+    static std::string build();
     
 protected:
     

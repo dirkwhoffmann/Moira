@@ -66,6 +66,30 @@ Moira::~Moira()
     if (dasm) delete [] dasm;
 }
 
+std::string
+Moira::version()
+{
+    std::string result;
+    
+    result = std::to_string(Version::major) + "." + std::to_string(Version::minor);
+    if constexpr (Version::patch > 0) result += "." + std::to_string(Version::patch);
+    if constexpr (Version::beta > 0) result += 'b' + std::to_string(Version::beta);
+    
+    return result;
+}
+
+std::string
+Moira::build()
+{
+#ifdef NDEBUG
+    std::string db = "";
+#else
+    std::string db = " [DEBUG BUILD]";
+#endif
+    
+    return version() + db + " (" + __DATE__ + " " + __TIME__ + ")";
+}
+
 void
 Moira::setModel(Model cpuModel, Model dasmModel)
 {
