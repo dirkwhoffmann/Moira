@@ -5,11 +5,6 @@
 // Published under the terms of the MIT License
 // -----------------------------------------------------------------------------
 
-/* Marks this file as the main translation unit. Non-templated function
- * definitions inside the *_cpp.h files are compiled here and nowhere else.
- */
-#define MOIRA_MAIN_TU
-
 #include "MoiraConfig.h"
 #include "Moira.h"
 #include "MoiraMacros.h"
@@ -25,6 +20,9 @@
 namespace moira {
 
 using namespace Flag;
+
+// Mark this file as the main translation unit
+#define MOIRA_MAIN_TU
 
 #include "MoiraInit_cpp.h"
 #include "MoiraALU_cpp.h"

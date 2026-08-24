@@ -143,7 +143,14 @@ protected:
     
 private:
     
-    // Core routine for creating jump tables
+    /* Core routines for creating jump tables
+     *
+     * Jump table creation is deliberately split into several parts.
+     * As a single function it expands into several hundred kilobytes of
+     * straight-line code per core, which drives the compiler's memory
+     * consumption far beyond what some environments provide.
+     */
+    
     template <Core C> void createJumpTable(Model model, bool registerDasm);
     template <Core C> void createJumpTable1(Model model, bool registerDasm);
     template <Core C> void createJumpTable2(Model model, bool registerDasm);
@@ -157,12 +164,6 @@ private:
     template <Core C> void createJumpTable10(Model model, bool registerDasm);
     template <Core C> void createJumpTable11(Model model, bool registerDasm);
     template <Core C> void createJumpTable12(Model model, bool registerDasm);
-
-    /* Note: createJumpTable is deliberately split into twelve parts. As a
-     * single function it expands into several hundred kilobytes of
-     * straight-line code per core, which drives the compiler's memory
-     * consumption far beyond what some CI runners provide.
-     */
     
     
     //
