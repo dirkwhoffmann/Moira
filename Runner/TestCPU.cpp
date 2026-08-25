@@ -40,6 +40,19 @@ TestCPU::read16(u32 addr) const
     return get16(moiraMem, addr);
 }
 
+/* Reads a longword from memory.
+ *
+ * This function is called whenever the CPU reads a longword from memory
+ * through a 32 bit port. Since dsack() is not overridden, TestCPU always
+ * reports a 16 bit port, so this function is currently unused, but is
+ * required to satisfy the Moira interface.
+ */
+u32
+TestCPU::read32(u32 addr) const
+{
+    return get32(moiraMem, addr);
+}
+
 /* Reads a word from memory.
  *
  * This function is called by the disassembler to read a word from memory.
@@ -92,6 +105,18 @@ TestCPU::write16 (u32 addr, u16 val) const
     if (CHECK_MEM_WRITES)
         sandbox.replayPoke(POKE16, addr, getClock(), readFC(), val);
     set16(moiraMem, addr, val);
+}
+
+/* Writes a longword into memory.
+ *
+ * See read32(): unused while dsack() reports a 16 bit port, but required to
+ * satisfy the Moira interface. The write sandbox only replays 8/16 bit
+ * pokes, so it is not consulted here.
+ */
+void
+TestCPU::write32 (u32 addr, u32 val) const
+{
+    set32(moiraMem, addr, val);
 }
 
 /* Returns the interrupt vector in IRQ_USER mode

@@ -73,7 +73,10 @@ protected:
     
     // Prefetch queue for fetching instructions
     PrefetchQueue queue {};
-    
+
+    // Instruction cache (68020 only)
+    InstructionCache iCache {};
+
     // Interrupt mode
     IrqMode irqMode {IrqMode::AUTO};
     
@@ -328,17 +331,22 @@ protected:
     // Reads a value from memory
     virtual u8 read8(u32 addr) const = 0;
     virtual u16 read16(u32 addr) const = 0;
-    
+    virtual u32 read32(u32 addr) const = 0;
+
     // Reads a 16-bit value from memory during the reset routine
     virtual u16 read16OnReset(u32 addr) const { return read16(addr); }
-    
+
     // Reads a 16-bit value from memory for disassembly purposes
     virtual u16 read16Dasm(u32 addr) const { return read16(addr); }
-    
+
     // Writes a value into memory
     virtual void write8(u32 addr, u8 val) const = 0;
     virtual void write16(u32 addr, u16 val) const = 0;
-    
+    virtual void write32(u32 addr, u32 val) const = 0;
+
+    // Returns the DSACK bits for the addressed device (68020)
+    virtual u8 dsack(u32 addr) const { return DSACK_16; }
+
     // Provides the interrupt vector for a given interrupt level in USER mode
     virtual u16 readIrqUserVector(u8 level) const { return 0; }
 
@@ -420,17 +428,22 @@ protected:
     // Reads a value from memory
     u8 read8(u32 addr) const;
     u16 read16(u32 addr) const;
-    
+    u32 read32(u32 addr) const;
+
     // Reads a 16-bit value from memory during the reset routine
     u16 read16OnReset(u32 addr) const;
-    
+
     // Reads a 16-bit value from memory for disassembly purposes
     u16 read16Dasm(u32 addr) const;
-    
+
     // Writes a value into memory
     void write8(u32 addr, u8 val) const;
     void write16(u32 addr, u16 val) const;
-    
+    void write32(u32 addr, u32 val) const;
+
+    // Returns the DSACK bits for the addressed device (68020)
+    u8 dsack(u32 addr) const;
+
     // Provides the interrupt vector for a given interrupt level in USER mode
     u16 readIrqUserVector(u8 level) const;
 
@@ -745,6 +758,7 @@ private:
     
 #include "MoiraInit.h"
 #include "MoiraALU.h"
+#include "MoiraCache.h"
 #include "MoiraDataflow.h"
 #include "MoiraExceptions.h"
 #include "MoiraDasm.h"

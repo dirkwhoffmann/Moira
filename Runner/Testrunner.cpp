@@ -819,6 +819,19 @@ bool compareCycles(Result &r1, Result &r2)
     // Exclude some instructions
     if (I == Instr::TAS) return true;
 
+    /* Timing comparison is off for every model beyond the 68000 and 68010
+     * while the instruction cache is emulated. Those models (68020 and up)
+     * all execute on Moira's C68020 core (see createJumpTable() in
+     * MoiraInit_cpp.h), which routes instruction fetches through the cache.
+     * Musashi does not model the 68020's instruction cache, so its cycle
+     * counts assume every fetch goes straight to the bus. Moira's
+     * cache-aware fetch timing (tuned against WinUAE/Amiberry, not Musashi)
+     * legitimately diverges from that flat model.
+     */
+    if constexpr (MOIRA_EMULATE_ICACHE) {
+        if (cpuModel != Model::M68000 && cpuModel != Model::M68010) return true;
+    }
+
     // WHY DO WE IGNORE THESE?
     if (cpuModel == Model::M68010) {
 

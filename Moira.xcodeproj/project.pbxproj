@@ -86,6 +86,8 @@
 		50953AE228895D5D0077C9E8 /* config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
 		509ABE1323BA356E00BD91A8 /* MoiraConfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraConfig.h; sourceTree = "<group>"; };
 		509ABE1423BB402B00BD91A8 /* MoiraDataflow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraDataflow.h; sourceTree = "<group>"; };
+		C20E21D44E8A477AB1A178E8 /* MoiraCache_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraCache_cpp.h; sourceTree = "<group>"; };
+		08C7A9B1140D45BEA6DAD5A6 /* MoiraCache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraCache.h; sourceTree = "<group>"; };
 		509D631A25964F5C00E9DD0C /* MoiraExceptions_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraExceptions_cpp.h; sourceTree = "<group>"; };
 		509D631B25964F5C00E9DD0C /* MoiraExceptions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraExceptions.h; sourceTree = "<group>"; };
 		509F15AA2927CE9800BA8AC1 /* dasm.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = dasm.js; sourceTree = "<group>"; };
@@ -219,6 +221,8 @@
 				50BF14CA23BB4D2700EDFB9C /* MoiraALU.h */,
 				50804F4923891480004D3EC2 /* MoiraALU_cpp.h */,
 				509ABE1423BB402B00BD91A8 /* MoiraDataflow.h */,
+				08C7A9B1140D45BEA6DAD5A6 /* MoiraCache.h */,
+				C20E21D44E8A477AB1A178E8 /* MoiraCache_cpp.h */,
 				50804F3D2387CC52004D3EC2 /* MoiraDataflow_cpp.h */,
 				509D631B25964F5C00E9DD0C /* MoiraExceptions.h */,
 				509D631A25964F5C00E9DD0C /* MoiraExceptions_cpp.h */,

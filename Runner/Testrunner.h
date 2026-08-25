@@ -54,11 +54,17 @@ inline u8 get8(u8 *p, u32 addr) {
 inline u16 get16(u8 *p, u32 addr) {
     return (u16)(get8(p, addr) << 8 | get8(p, addr + 1));
 }
+inline u32 get32(u8 *p, u32 addr) {
+    return (u32)(get16(p, addr) << 16 | get16(p, addr + 2));
+}
 inline void set8(u8 *p, u32 addr, u8 val) {
     p[addr & 0xFFFF] = val;
 }
 inline void set16(u8 *p, u32 addr, u16 val) {
     set8(p, addr, val >> 8); set8(p, addr + 1, val & 0xFF);
+}
+inline void set32(u8 *p, u32 addr, u32 val) {
+    set16(p, addr, val >> 16); set16(p, addr + 2, val & 0xFFFF);
 }
 
 // A test setup

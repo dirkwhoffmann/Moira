@@ -26,6 +26,7 @@ using namespace Flag;
 
 #include "MoiraInit_cpp.h"
 #include "MoiraALU_cpp.h"
+#include "MoiraCache_cpp.h"
 #include "MoiraDataflow_cpp.h"
 #include "MoiraExceptions_cpp.h"
 #include "MoiraExec_cpp.h"
@@ -99,8 +100,9 @@ Moira::setModel(Model cpuModel, Model dasmModel)
         this->dasmModel = dasmModel;
 
         createJumpTable(cpuModel, dasmModel);
-        
+
         reg.cacr &= cacrMask();
+        flushInstructionCache();
         flags &= ~State::LOOPING;
     }
 }
@@ -223,6 +225,8 @@ Moira::reset()
     ipl = 0;
     fcl = 2;
     fcSource = 0;
+
+    flushInstructionCache();
 
     SYNC(16);
 
@@ -528,6 +532,12 @@ Moira::setSR(u16 val)
 void
 Moira::setCACR(u32 val)
 {
+    // Setting the CE bit invalidates the entry for the address in CAAR
+    if (val & (1 << 2)) invalidateCacheEntry(reg.caar);
+
+    // Setting the C bit invalidates all entries
+    if (val & (1 << 3)) flushInstructionCache();
+
     reg.cacr = val & cacrMask();
     didChangeCACR(val);
 }

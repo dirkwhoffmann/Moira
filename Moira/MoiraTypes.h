@@ -41,6 +41,41 @@ static constexpr Size Extended   = 12; // Extended precision (FPU)
 
 
 //
+// Port sizes, as reported by the DSACK pins (68020)
+//
+
+/* A slave device tells the CPU how wide its data port is by asserting DSACK0
+ * and DSACK1. Both signals are active low, which gives the following encoding
+ * (68020 User's Manual, table 5-2):
+ *
+ *     DSACK1  DSACK0
+ *        1       1     No acknowledge yet, wait states are inserted
+ *        1       0     8 bit port
+ *        0       1     16 bit port
+ *        0       0     32 bit port
+ *
+ * Bit 1 of a DSACK value holds DSACK1, bit 0 holds DSACK0. The CPU splits
+ * every memory access into as many bus cycles as the reported port width
+ * requires.
+ */
+static constexpr u8 DSACK_32   = 0b00;   // Both DSACK lines asserted
+static constexpr u8 DSACK_16   = 0b01;   // DSACK1 asserted
+static constexpr u8 DSACK_8    = 0b10;   // DSACK0 asserted
+static constexpr u8 DSACK_WAIT = 0b11;   // Neither line asserted
+
+/* Returns the width of the addressed port in bytes.
+ *
+ * DSACK_WAIT means the device has not acknowledged yet. Moira does not model
+ * wait states, so it is treated like the narrowest port, which is the most
+ * conservative assumption in terms of bus cycles.
+ */
+static constexpr int portSize(u8 dsack)
+{
+    return dsack == DSACK_32 ? 4 : dsack == DSACK_16 ? 2 : 1;
+}
+
+
+//
 // Enumerations
 //
 
@@ -314,6 +349,29 @@ struct PrefetchQueue {
     
     u16 irc;                    // The most recent word prefetched from memory
     u16 ird;                    // The instruction currently being executed
+};
+
+struct CacheLine {
+
+    u32 data;
+    u32 tag;
+    bool valid;
+};
+
+struct CacheLatch {
+
+    u32 addr;
+    u32 data;
+};
+
+struct InstructionCache {
+
+    static constexpr int lineCnt = 64;
+    static constexpr u32 idxMask = 0x000000FC;
+    static constexpr u32 tagMask = 0xFFFFFF00;
+
+    CacheLine cache[lineCnt];
+    CacheLatch latch;
 };
 
 /* Note: Instr, Mode and Size carry narrow underlying types so that this
