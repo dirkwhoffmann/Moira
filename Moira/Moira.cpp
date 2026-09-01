@@ -225,6 +225,7 @@ Moira::reset()
     ipl = 0;
     fcl = 2;
     fcSource = 0;
+    budget = { };
 
     flushInstructionCache();
 
@@ -251,6 +252,42 @@ Moira::reset()
 
     // Inform the delegate
     cpuDidReset();
+}
+
+void
+Moira::syncCp(int cycles)
+{
+    // Max number of instructions that may execute without advancing the clock
+    static constexpr int maxStalled = 4;
+
+    // Lower bound for the model time debt
+    static constexpr int minAccum = -454;
+
+    // Accumulate the cycle penalty (may become negative)
+    budget.accumulated += cycles;
+
+    if (budget.accumulated >= 2) {
+
+        // The CPU is ahead of its environment. Spend everything that amounts
+        // to whole bus cycles
+
+        int step = budget.accumulated & ~1;
+        budget.accumulated -= step;
+        budget.stalled = 0;
+        sync(step);
+
+    } else if (++budget.stalled >= maxStalled) {
+
+        // Nothing was spend for a while now. Since the environment is stepped
+        // from here alone, it has to be moved forward regardless - otherwise
+        // the emulation makes no progress and its main loop never terminates.
+        // The borrowed bus cycle is booked as a debt.
+
+        budget.stalled = 0;
+        budget.accumulated -= 2;
+        if (budget.accumulated < minAccum) budget.accumulated = minAccum;
+        sync(2);
+    }
 }
 
 void
@@ -420,10 +457,10 @@ Moira::processException(const std::exception &exc)
 
         if (auto df = dynamic_cast<const DoubleFault *>(&exc); df) {
 
-            throw df;
+            throw *df;
         }
 
-    } catch (DoubleFault &df) {
+    } catch (const DoubleFault &) {
 
         halt();
         return;

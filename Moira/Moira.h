@@ -77,6 +77,9 @@ protected:
     // Instruction cache (68020 only)
     InstructionCache iCache {};
 
+    // Speed trackers (68020 only)
+    CycleBudget budget {};
+
     // Interrupt mode
     IrqMode irqMode {IrqMode::AUTO};
     
@@ -91,10 +94,7 @@ protected:
     
     // Remembers the vector number of the most recent exception
     int exception {};
-    
-    // Cycle penalty (for 68020+ extended addressing modes)
-    int cp {};
-    
+
     // Controls exact timing of instructions running in loop mode (68010 only)
     int loopModeDelay {2};
     
@@ -316,7 +316,26 @@ public:
     // Returns instruction metadata for a given opcode
     InstrInfo getInstrInfo(u16 op) const;
 
-    
+    //
+    // Advancing the clock
+    //
+
+protected:
+
+    /* Advances the clock by the cycle count computed for a 68020 instruction.
+     *
+     * Instruction fetches that hit the cache are modelled as a discount (see
+     * readInstructionWord), so the total can drop to zero or below, while the
+     * environment can only be stepped in whole bus cycles. The time is
+     * therefore accumulated and spent as soon as it amounts to at least one
+     * bus cycle, which keeps the discount fully effective. Should that not
+     * happen for CpStallMax instructions in a row, one bus cycle is borrowed:
+     * the environment is stepped from here alone, so without it the emulation
+     * would make no progress and its main loop would never terminate.
+     */
+    void syncCp(int cycles);
+
+
     //
     // Interfacing with other components
     //
@@ -419,7 +438,10 @@ protected:
     
     // Called when a software trap is hit
     virtual void didReachSoftwareTrap(u32 addr) { }
-    
+
+    // Called after an instruction has been appended to the log buffer
+    virtual void didLogInstruction(const Registers &reg) { }
+
 #else
     
     // Advances the internal clock by the specified number of cycles
@@ -516,6 +538,9 @@ protected:
     
     // Called when a software trap is hit
     void didReachSoftwareTrap(u32 addr);
+
+    // Called after an instruction has been appended to the log buffer
+    void didLogInstruction(const Registers &reg);
     
 #endif
     
