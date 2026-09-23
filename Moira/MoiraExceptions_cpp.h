@@ -569,11 +569,13 @@ Moira::execInterrupt(u8 level)
 
             queue.ird = getIrqVector(level);
 
-            writeStackFrame0000<C>(status, reg.pc, 4 * queue.ird);
+            // Both frame writers take the vector number, not the vector offset
+            writeStackFrame0000<C>(status, reg.pc, queue.ird);
 
             if (reg.sr.m) {
 
-                writeStackFrame0001<C>(status, reg.pc, 4 * queue.ird);
+                setMasterMode(false);
+                writeStackFrame0001<C>(status | 0x2000, reg.pc, queue.ird);
             }
     }
 

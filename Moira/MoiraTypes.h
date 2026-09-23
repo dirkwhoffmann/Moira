@@ -8,6 +8,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 #include <string>
 #include <optional>
 
@@ -25,6 +26,7 @@ using u8  = uint8_t;
 using u16 = uint16_t;
 using u32 = uint32_t;
 using u64 = unsigned long long;
+using isize = std::ptrdiff_t;
 
 
 //
@@ -386,10 +388,6 @@ struct CycleBudget { // 68020 only
     int stalled {};
 };
 
-/* Note: Instr, Mode and Size carry narrow underlying types so that this
- * struct occupies four bytes. The disassembler reads its operand attributes
- * from a table of 65536 of these.
- */
 struct InstrInfo
 {
     Instr I;
