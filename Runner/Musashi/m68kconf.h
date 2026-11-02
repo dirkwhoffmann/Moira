@@ -141,6 +141,18 @@
 #define M68K_ILLG_HAS_CALLBACK	    OPT_OFF
 #define M68K_ILLG_CALLBACK(opcode)  op_illg(opcode)
 
+/* If ON, CPU will call the callback when it encounters a TRAP instruction,
+ * passing the trap code as an argument. If the callback returns 1, then the
+ * exception is considered handled and the CPU does not process it.
+ * If it returns 0, the exception occurs normally.
+ * The callback looks like int callback(int trap)
+ * You should put OPT_SPECIFY_HANDLER here if you want to use it, otherwise it
+ * will use a dummy default handler and you'll have to call
+ * m68k_set_trap_instr_callback explicitly.
+ */
+#define M68K_TRAP_HAS_CALLBACK      OPT_OFF
+#define M68K_TRAP_CALLBACK(trap)    your_op_trap_handler_function(trap)
+
 /* If ON, CPU will call the set fc callback on every memory access to
  * differentiate between user/supervisor, program/data access like a real
  * 68000 would.  This should be enabled and the callback should be set if you
