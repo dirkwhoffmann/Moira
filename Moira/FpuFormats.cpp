@@ -225,6 +225,11 @@ FpuFormats::fromSingle(u32 raw)
         return Float80::fromBits(u16((raw >> 16) & 0x8000) | 0x7FFF,
                                  u64(raw & 0x007FFFFF) << 40);
     }
+
+    // Denormals keep their unnormalized significand and the smallest normal exponent
+    if ((raw & 0x7F800000) == 0 && (raw & 0x007FFFFF)) {
+        return Float80::fromBits(u16((raw >> 16) & 0x8000) | 0x3F81, u64(raw & 0x007FFFFF) << 40);
+    }
     return Float80::fromFloat(std::bit_cast<float>(raw));
 }
 
@@ -234,6 +239,10 @@ FpuFormats::fromDouble(u64 raw)
     if ((raw & 0x7FF0000000000000ULL) == 0x7FF0000000000000ULL && (raw & 0x000FFFFFFFFFFFFFULL)) {
         return Float80::fromBits(u16((raw >> 48) & 0x8000) | 0x7FFF,
                                  (raw & 0x000FFFFFFFFFFFFFULL) << 11);
+    }
+
+    if ((raw & 0x7FF0000000000000ULL) == 0 && (raw & 0x000FFFFFFFFFFFFFULL)) {
+        return Float80::fromBits(u16((raw >> 48) & 0x8000) | 0x3C01, (raw & 0x000FFFFFFFFFFFFFULL) << 11);
     }
     return Float80::fromDouble(std::bit_cast<double>(raw));
 }
@@ -383,11 +392,16 @@ FpuFormats::toPacked(const Float80 &value, int k, u32 (&w)[3])
 
     // Represent the value as man * 2^p
     Big man(value.mantissa());
-    int p = std::max(1, (int)value.biasedExponent()) - Float80::bias - 63;
+    int p = (int)value.biasedExponent() - Float80::bias - 63;
 
     // Estimate the decimal exponent: floor(log10(value)) with a small error
     int top = p + man.bitLength() - 1;
     int e10 = (int)std::floor(top * 0.30102999566398120);
+
+    // The exponent of the smallest normalized number is the lower limit. Smaller values (denormals)
+    // are represented with leading zeros in the mantissa.
+    constexpr int minExp10 = -4933;
+    e10 = std::max(e10, minExp10);
 
     /* Determine the number of significant digits (nd) and the exponent of the
      * least significant digit (t). With a positive k-factor, k digits are
@@ -449,7 +463,7 @@ FpuFormats::toPacked(const Float80 &value, int k, u32 (&w)[3])
 
         // Check the result against the expected number of digits
         Big lowBound = Big::pow10(nd - 1), highBound = Big::pow10(nd);
-        if (s.cmp(lowBound) < 0) { e10--; continue; }
+        if (s.cmp(lowBound) < 0) { if (e10 == minExp10) break; e10--; continue; }
         if (s.cmp(highBound) >= 0) {
             if (s.cmp(highBound) == 0 && up) { s = lowBound; e10++; break; }
             e10++; continue;
@@ -469,6 +483,7 @@ FpuFormats::toPacked(const Float80 &value, int k, u32 (&w)[3])
 
     // Assemble the mantissa (17 digits, padded with zeros)
     auto ds = s.digits();
+    if (int(ds.size()) < nd) ds.insert(ds.begin(), nd - ds.size(), 0);
     ds.resize(17, 0);
     w[0] |= (u32)ds[0];
     for (int i = 0; i < 8; i++) w[1] |= u32(ds[1 + i]) << (28 - 4 * i);

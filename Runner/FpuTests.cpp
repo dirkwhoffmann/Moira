@@ -277,8 +277,30 @@ static void testArithmetic()
     CHECK(same(fpu.fgetexp(F(8)), F(3)));
     CHECK(same(fpu.fgetexp(F(0.1)), F(-4)));
     CHECK(same(fpu.fgetexp(F(-1)), F(0)));
-    CHECK(same(fpu.fgetexp(Float80::fromBits(0x0000, 1)), Float80::fromInt(-16382 - 63)));
+    CHECK(same(fpu.fgetexp(Float80::fromBits(0x0000, 1)), Float80::fromInt(-16383 - 63)));
     CHECK(same(fpu.fgetexp(Float80::zero(true)), Float80::zero(true)));
+
+    // Denormals: The biased exponent 0 is a regular exponent, i.e., 0:8000... is 2^-16383
+    CHECK(same(fpu.fgetexp(Float80::fromBits(0x0000, 1ULL << 63)), Float80::fromInt(-16383)));
+    {
+        FPU::Scope scope(fpu);
+        fpu.setFPSR(0);
+        auto half = Float80::fromBits(0x3FFE, 1ULL << 63);
+        auto minNormal = Float80::fromBits(0x0001, 1ULL << 63);
+
+        // 2^-16382 * 2^-1 is a regular result (no underflow), 2^-16382 * 2^-2 is not
+        CHECK(same(minNormal * half, Float80::fromBits(0x0000, 1ULL << 63)));
+        CHECK((fpu.fpsr & FPEXP::UNFL) == 0);
+        CHECK(same(minNormal * Float80::fromBits(0x3FFD, 1ULL << 63), Float80::fromBits(0x0000, 1ULL << 62)));
+        CHECK(FloatEnv::flags() & FloatFlags::UNFL);
+        FloatEnv::clearFlags();
+
+        // Denormal operands are scaled by the 68k convention
+        CHECK(same(Float80::fromBits(0x0000, 5) + Float80::fromBits(0x0000, 6), Float80::fromBits(0x0000, 11)));
+        CHECK(same(Float80::fromBits(0x0000, 1ULL << 63) + Float80::fromBits(0x0000, 1ULL << 63), minNormal));
+        CHECK(same(Float80::fromBits(0x0000, 5) / Float80::fromBits(0x3FFE, 1ULL << 63), Float80::fromBits(0x0000, 10)));
+        FloatEnv::clearFlags();
+    }
     CHECK(same(fpu.fgetman(F(10)), F(1.25)));
     CHECK(same(fpu.fgetman(F(-0.1)), Float80::fromBits(0xBFFF, Float80::fromDouble(0.1).mantissa())));
     CHECK(same(fpu.fgetman(Float80::fromBits(0x0000, 1)), Float80::one()));

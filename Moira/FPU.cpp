@@ -188,18 +188,6 @@ invokeSilently(F operation)
     return result;
 }
 
-/* FREM returns the destination unrounded if its magnitude is less than half
- * the magnitude of the source (FMOD rounds in this case).
- */
-bool
-isSmallerThanHalf(const Float80 &a, const Float80 &b)
-{
-    auto exponent = [](const Float80 &x) {
-        return std::max<i32>(1, x.biasedExponent()) - std::countl_zero(x.mantissa());
-    };
-    return exponent(a) - exponent(b) < -1;
-}
-
 /* FSGLMUL and FSGLDIV round the significand to single precision, but keep the
  * extended exponent range. If an overflow yields the largest finite number,
  * all significand bits are set.
@@ -212,41 +200,71 @@ Float80 singleOverflow(const Float80 &result)
     return result;
 }
 
-// Returns the exponent of the least significant mantissa bit
-i32 lsbExponent(const Float80 &x)
-{
-    return std::max<i32>(1, x.biasedExponent()) - Float80::bias - 63;
-}
-
-/* Computes the seven least significant bits of floor(|a| / |b|) for finite
- * numbers a and b with b != 0.
+/* The result of dividing the magnitudes of two finite nonzero numbers a and b.
+ * The remainder has the value 'rem' * 2^(unit - bias - 63) and the quotient
+ * is given by its least significant bits.
  */
-u8
-truncatedQuotient(const Float80 &a, const Float80 &b)
+using u128 = unsigned __int128;
+
+struct Division {
+
+    u64 quotient = 0;
+    u128 rem = 0;
+    u128 divisor = 0;
+    i32 unit = 0;
+    bool small = false;     // The magnitude of a is less than half the magnitude of b
+};
+
+Division
+divide(const Float80 &a, const Float80 &b)
 {
-    u64 ma = a.mantissa(), mb = b.mantissa();
-    if (ma == 0) return 0;
+    auto normalize = [](const Float80 &x, i32 &e) {
+        int shift = std::countl_zero(x.mantissa());
+        e = x.biasedExponent() - shift;
+        return x.mantissa() << shift;
+    };
 
-    i32 d = lsbExponent(a) - lsbExponent(b);
+    Division d;
+    i32 ea, eb;
+    u64 ma = normalize(a, ea), mb = normalize(b, eb);
+    i32 diff = ea - eb;
 
-    if (d < 0) {
-
-        // The quotient is ma / (mb * 2^-d)
-        if (-d > std::countl_zero(mb)) return 0;
-        return u8((ma / (mb << -d)) & 0x7F);
+    // Magnitudes that differ by more than a factor of 2 have a zero quotient
+    if (diff < -1) {
+        d.rem = ma; d.divisor = u128(mb) << 2; d.unit = ea; d.small = true;
+        return d;
+    }
+    if (diff == -1) {
+        d.rem = ma; d.divisor = u128(mb) << 1; d.unit = ea;
+        return d;
     }
 
-    // Binary long division of ma * 2^d by mb. Only the last bits are of interest.
-    u64 rem = 0, q = 0;
-    for (i32 i = 63; i >= -d; i--) {
+    // Binary long division of ma * 2^diff by mb. Only the last bits of the quotient are of interest.
+    u128 rem = 0;
+    u64 q = 0;
+    for (i32 i = 63; i >= -diff; i--) {
 
-        bool carry = rem >> 63;
         rem = rem << 1 | (i >= 0 ? (ma >> i) & 1 : 0);
-        bool bit = carry || rem >= mb;
+        bool bit = rem >= mb;
         if (bit) rem -= mb;
         q = q << 1 | bit;
     }
-    return u8(q & 0x7F);
+    d.quotient = q;
+    d.rem = rem;
+    d.divisor = mb;
+    d.unit = eb;
+    return d;
+}
+
+// Converts the remainder of a division into a number
+Float80
+remainder(const Division &d, bool sign)
+{
+    if (d.rem == 0) return Float80::zero(sign);
+
+    int length = 128 - (d.rem >> 64 ? std::countl_zero(u64(d.rem >> 64)) : 64 + std::countl_zero(u64(d.rem)));
+    u64 sig = length > 64 ? u64(d.rem >> (length - 64)) : u64(d.rem << (64 - length));
+    return Float80::roundPack(sign, d.unit + length - 64, sig);
 }
 
 }
@@ -348,7 +366,7 @@ FPU::fgetexp(const Float80 &value)
     if (value.isZero()) return value;
 
     // The exponent of a denormalized number is determined after normalization
-    i32 e = std::max<i32>(1, value.biasedExponent()) - Float80::bias - std::countl_zero(value.mantissa());
+    i32 e = i32(value.biasedExponent()) - Float80::bias - std::countl_zero(value.mantissa());
     return Float80::fromInt(e);
 }
 
@@ -425,8 +443,11 @@ FPU::fsglmul(const Float80 &dst, const Float80 &src)
     // single precision
     auto truncate = [](const Float80 &x) {
 
-        if (!x.isFinite() || x.biasedExponent() == 0) return x;
-        return Float80::fromBits(x.signExp(), x.mantissa() & 0xFFFFFF0000000000ULL);
+        // The 24 most significant bits after normalization are kept
+        if (!x.isFinite() || x.mantissa() == 0) return x;
+        int lead = 63 - std::countl_zero(x.mantissa());
+        u64 mask = lead > 23 ? ~((1ULL << (lead - 23)) - 1) : ~0ULL;
+        return Float80::fromBits(x.signExp(), x.mantissa() & mask);
     };
 
     FloatEnv::Scope scope;
@@ -452,26 +473,17 @@ FPU::fmod(const Float80 &dst, const Float80 &src)
 {
     if (auto nan = resolveNan(dst, src)) return *nan;
 
-    // The remainder is computed exactly and then rounded like any other result
-    auto r = invokeExact([&] { return dst.rem(src); });
-
     // Invalid operations (dst infinite, src zero) have no quotient
-    if (r.isNaN()) return r;
+    if (dst.isInfinite() || src.isZero()) return invokeExact([&] { return dst.rem(src); });
 
     bool negative = dst.sign() != src.sign();
     if (src.isInfinite() || dst.isZero()) { setQuotientByte(0, negative); return dst.rounded(); }
 
-    u8 q = truncatedQuotient(dst, src);
-    setQuotientByte(q, negative);
+    // The remainder is computed exactly and then rounded like any other result
+    auto d = divide(dst, src);
+    setQuotientByte(u8(d.quotient & 0x7F), negative);
 
-    // rem rounds the quotient to nearest. Correct the result if it was rounded away from zero.
-    if (!r.isZero() && r.sign() != dst.sign()) {
-
-        auto adjust = dst.sign() ? -src.abs() : src.abs();
-        r = invokeExact([&] { return r + adjust; });
-    }
-    if (r.isZero()) return Float80::zero(dst.sign());
-    return r.rounded();
+    return remainder(d, dst.sign());
 }
 
 Float80
@@ -479,19 +491,27 @@ FPU::frem(const Float80 &dst, const Float80 &src)
 {
     if (auto nan = resolveNan(dst, src)) return *nan;
 
-    auto r = invokeExact([&] { return dst.rem(src); });
-    if (r.isNaN()) return r;
+    if (dst.isInfinite() || src.isZero()) return invokeExact([&] { return dst.rem(src); });
 
     bool negative = dst.sign() != src.sign();
     if (src.isInfinite() || dst.isZero()) { setQuotientByte(0, negative); return dst.rounded(); }
 
-    // rem rounds the quotient to nearest, i.e., up if the remainder has the opposite sign
-    u8 q = truncatedQuotient(dst, src);
-    if (!r.isZero() && r.sign() != dst.sign()) q++;
-    setQuotientByte(q, negative);
+    auto d = divide(dst, src);
+    bool sign = dst.sign();
 
-    if (r.isZero()) return Float80::zero(dst.sign());
-    return isSmallerThanHalf(dst, src) ? r : r.rounded();
+    // Round the quotient to the nearest integer (ties to even)
+    u128 twice = d.rem << 1;
+    if (twice > d.divisor || (twice == d.divisor && (d.quotient & 1))) {
+        d.quotient++;
+        d.rem = d.divisor - d.rem;
+        sign = !sign;
+    }
+    setQuotientByte(u8(d.quotient & 0x7F), negative);
+
+    // A destination smaller than half the source is returned unrounded
+    if (d.small) return dst;
+
+    return remainder(d, sign);
 }
 
 void

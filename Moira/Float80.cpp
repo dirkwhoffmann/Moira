@@ -8,6 +8,7 @@
 #include "Float80.h"
 #include "softfloat/platform.h"
 #include "softfloat/moira_env.h"
+#include <algorithm>
 #include <bit>
 #include <cfloat>
 #include <cstring>
@@ -53,141 +54,303 @@ roundingModeOf()
 
 thread_local bool limitExponent = true;
 
-/* Rounds a value to single or double precision including the exponent range
- * of the respective format.
+using u128 = unsigned __int128;
+
+/* Returns the offset of the exponent range in effect. With a reduced precision,
+ * the exponent range of the respective format applies (single: 0x3F80, double:
+ * 0x3C00), unless the limit is switched off.
+ */
+inline i32
+exponentOffset()
+{
+    if (!limitExponent) return 0;
+
+    switch (FloatEnv::precision()) {
+
+        case Precision::SINGLE:     return 0x3F80;
+        case Precision::DOUBLE:     return 0x3C00;
+        default:                    return 0;
+    }
+}
+
+/* Rounds a value to the current precision and exponent range
  *
  * The value is given as sign, biased exponent and a normalized significand
- * (integer bit set) plus a sticky flag that indicates nonzero bits below the
- * significand. This is the rounding step of the Motorola FPUs:
+ * (integer bit set) plus up to 64 additional bits below the significand. This
+ * is the rounding step of the Motorola FPUs:
  *
  *  - A result beyond the largest number of the format raises OVFL and INEX2
  *    and becomes infinity, or the largest number if the rounding mode points
  *    towards zero.
- *  - A result below the smallest normalized number of the format raises UNFL
- *    (tininess is detected before rounding) and is denormalized. The result is
- *    stored with the exponent of the smallest normalized number and an
- *    unnormalized significand.
+ *  - A result below the smallest normalized number raises UNFL (tininess is
+ *    detected before rounding, even if the result is exact) and is
+ *    denormalized. Denormals are stored with an unnormalized significand and
+ *    the exponent of the smallest normalized number. The extended format is
+ *    special, because a denormal has the biased exponent 0 whereas the smallest
+ *    normalized number has the biased exponent 1. A number with the exponent 0
+ *    and the integer bit set is thus a regular result that is not tiny.
  */
 Float80
-roundToFormat(bool sign, i32 exp, u64 sig, bool sticky)
+roundToFormat(bool sign, i32 exp, u64 sig, u64 extra = 0)
 {
-    bool single = FloatEnv::precision() == Precision::SINGLE;
-    i32 offset = single ? 0x3F80 : 0x3C00;
-    u64 mask = single ? 0x000000FFFFFFFFFFULL : 0x00000000000007FFULL;
-    u64 inc = single ? 0x0000008000000000ULL : 0x0000000000000400ULL;
+    auto precision = FloatEnv::precision();
+    int bits = precision == Precision::SINGLE ? 24 : precision == Precision::DOUBLE ? 53 : 64;
+    i32 offset = exponentOffset();
+    i32 lowest = offset ? offset + 1 : 0;
+    i32 maxExp = 0x7FFE - offset;
     auto mode = FloatEnv::roundingMode();
-    bool nearest = mode == RoundingMode::NEAREST;
 
-    // Determine the rounding increment
-    if (!nearest) {
-        if (mode == RoundingMode::ZERO) inc = 0;
-        else inc = ((mode == RoundingMode::UP) == !sign) ? mask : 0;
+    u128 t = u128(sig) << 64 | extra;
+    bool sticky = false;
+
+    // Denormalize
+    bool tiny = exp < lowest;
+    if (tiny) {
+        i32 shift = lowest - exp;
+        if (shift >= 128) {
+            sticky = t != 0;
+            t = 0;
+        } else {
+            sticky = (t & ((u128(1) << shift) - 1)) != 0;
+            t >>= shift;
+        }
     }
-    bool towardsZero = mode == RoundingMode::ZERO ||
-                       (sign && mode == RoundingMode::UP) || (!sign && mode == RoundingMode::DOWN);
 
-    sig |= sticky;
-    u64 roundBits = sig & mask;
+    // Round
+    int drop = 128 - bits;
+    u128 unit = u128(1) << drop;
+    u128 half = unit >> 1;
+    u128 frac = t & (unit - 1);
+    u128 kept = t >> drop;
+    bool inexact = frac != 0 || sticky;
+    bool roundBit = (frac & half) != 0;
+    bool rest = (frac & (half - 1)) != 0 || sticky;
+
+    bool increment = false;
+    switch (mode) {
+
+        case RoundingMode::NEAREST: increment = roundBit && (rest || (kept & 1)); break;
+        case RoundingMode::ZERO:    increment = false; break;
+        case RoundingMode::DOWN:    increment = sign && inexact; break;
+        case RoundingMode::UP:      increment = !sign && inexact; break;
+    }
+    kept += increment;
+    if (!tiny && (kept >> bits)) { kept >>= 1; exp++; }
 
     // Overflow
-    i32 maxExp = 0x7FFE - offset;
-    if (exp > maxExp || (exp == maxExp && sig + inc < sig)) {
+    if (exp > maxExp) {
 
         FloatEnv::raiseFlags(FloatFlags::OVFL | FloatFlags::INEXACT);
-        return towardsZero ? Float80::fromBits(u16(maxExp | (sign ? 0x8000 : 0)), ~mask)
+        bool towardsZero = mode == RoundingMode::ZERO ||
+                           (sign && mode == RoundingMode::UP) || (!sign && mode == RoundingMode::DOWN);
+        u64 largest = bits == 64 ? ~0ULL : (~0ULL << (64 - bits));
+        return towardsZero ? Float80::fromBits(u16(maxExp | (sign ? 0x8000 : 0)), largest)
                            : Float80::infinity(sign);
     }
 
-    // Underflow
-    if (exp < offset + 1) {
+    if (inexact) FloatEnv::raiseFlags(FloatFlags::INEXACT);
+    if (tiny) FloatEnv::raiseFlags(FloatFlags::UNFL);
 
-        FloatEnv::raiseFlags(FloatFlags::UNFL);
+    // A result that rounds to zero is a regular zero
+    if (kept == 0) return Float80::zero(sign);
 
-        i32 shift = offset + 1 - exp;
-        sig = shift >= 64 ? (sig != 0) : (sig >> shift) | ((sig << (64 - shift)) != 0);
-        roundBits = sig & mask;
-        if (roundBits) FloatEnv::raiseFlags(FloatFlags::INEXACT);
+    u64 result = u64(kept) << (64 - bits);
+    return Float80::fromBits(u16((tiny ? lowest : exp) | (sign ? 0x8000 : 0)), result);
+}
 
-        sig += inc;
-        if (nearest && roundBits == inc) mask |= inc << 1;
-        sig &= ~mask;
+/* Normalized representation of a finite number. The exponent is the biased
+ * exponent that applies to the normalized significand. It is not limited to the
+ * range of the format. In contrast to the x87, a biased exponent of 0 is a
+ * regular exponent (the 68k FPUs don't treat it as 1).
+ */
+struct Num {
 
-        // A result that rounds to zero is a regular zero
-        if (sig == 0) return Float80::zero(sign);
-        return Float80::fromBits(u16((offset + 1) | (sign ? 0x8000 : 0)), sig);
+    bool sign;
+    bool zero;
+    i32 exp;
+    u64 sig;
+
+    explicit Num(const Float80 &x) : sign(x.sign()), zero(x.mantissa() == 0), exp(x.biasedExponent()), sig(x.mantissa())
+    {
+        if (!zero) {
+            int shift = std::countl_zero(sig);
+            sig <<= shift;
+            exp -= shift;
+        }
     }
 
-    // Regular case
-    if (roundBits) FloatEnv::raiseFlags(FloatFlags::INEXACT);
+    // Creates an x87 compatible number with the given biased exponent
+    Float80 rebased(i32 field) const
+    {
+        return zero ? Float80::zero(sign) : Float80::fromBits(u16(field | (sign ? 0x8000 : 0)), sig);
+    }
+};
 
-    sig += inc;
-    if (sig < inc) { exp++; sig = 1ULL << 63; }
-
-    u64 half = mask + 1;
-    if (nearest && (roundBits << 1) == half) mask |= half;
-    sig &= ~mask;
-
-    return Float80::fromBits(u16(exp | (sign ? 0x8000 : 0)), sig);
-}
-
-// Checks whether the exponent range of the current precision has to be applied
+// Checks if a number is in a form that SoftFloat processes like the 68k FPUs
 inline bool
-limitsExponentRange()
+isRegular(const Float80 &x)
 {
-    return limitExponent && FloatEnv::precision() != Precision::EXTENDED;
+    if (!x.isFinite() || x.mantissa() == 0) return true;
+    return x.biasedExponent() != 0 && x.integerBit();
 }
 
-/* Executes an arithmetic operation, taking the exponent range of the current
- * precision into account. The operation is first executed by SoftFloat, which
- * rounds the significand correctly, but allows the full extended exponent
- * range. If the result lies close to or outside the limits of the target
- * format, the operation is repeated with truncation to obtain the exact
- * result bits, which are then rounded by roundToFormat.
- */
-template <typename F> Float80
-ranged(F operation)
+enum class Op { ADD, SUB, MUL, DIV, SQRT };
+
+Float80
+plain(Op op, const Float80 &a, const Float80 &b)
 {
-    if (!limitsExponentRange()) return operation();
+    switch (op) {
+
+        case Op::ADD:   return fromSF(moira_extF80_add(toSF(a), toSF(b)));
+        case Op::SUB:   return fromSF(moira_extF80_sub(toSF(a), toSF(b)));
+        case Op::MUL:   return fromSF(moira_extF80_mul(toSF(a), toSF(b)));
+        case Op::DIV:   return fromSF(moira_extF80_div(toSF(a), toSF(b)));
+        case Op::SQRT:  return fromSF(moira_extF80_sqrt(toSF(a)));
+    }
+    return Float80();
+}
+
+/* Executes an operation on arbitrary finite operands, including denormals,
+ * unnormals and results that lie outside the range of the target format.
+ *
+ * The operands are rebased to the middle of the exponent range of the x87, where
+ * SoftFloat computes the exact result bits. The exponent of the result is
+ * corrected afterwards. If the result is close to or outside the limits of the
+ * target format, the operation is repeated with truncation to obtain the exact
+ * result bits including a sticky flag, which are then rounded by roundToFormat.
+ */
+Float80
+exactOp(Op op, const Float80 &a, const Float80 &b)
+{
+    constexpr i32 mid = Float80::bias;
+
+    Num x(a), y(b);
+    Float80 ra, rb;
+    i32 delta = 0;
+
+    switch (op) {
+
+        case Op::ADD:
+        case Op::SUB: {
+
+            // Keep the distance between the operands, but limit it to avoid denormals
+            i32 top = x.zero ? y.exp : y.zero ? x.exp : std::max(x.exp, y.exp);
+            ra = x.rebased(mid - std::min(top - x.exp, 300));
+            rb = y.rebased(mid - std::min(top - y.exp, 300));
+            delta = top - mid;
+            break;
+        }
+        case Op::MUL:
+            ra = x.rebased(mid);
+            rb = y.rebased(mid);
+            delta = (x.exp - mid) + (y.exp - mid);
+            break;
+
+        case Op::DIV:
+            ra = x.rebased(mid);
+            rb = y.rebased(mid);
+            delta = (x.exp - mid) - (y.exp - mid);
+            break;
+
+        case Op::SQRT: {
+
+            // The parity of the exponent must be preserved
+            i32 field = mid + ((x.exp - mid) & 1);
+            ra = x.rebased(field);
+            delta = (x.exp - field) / 2;
+            break;
+        }
+    }
 
     auto saved = FloatEnv::flags();
-    FloatEnv::clearFlags();
-    auto result = operation();
-    auto flags = FloatEnv::flags();
-
-    // Check if the result is safely inside the range of the format
-    i32 offset = FloatEnv::precision() == Precision::SINGLE ? 0x3F80 : 0x3C00;
-    bool special = !result.isFinite() || result.isZero();
-    bool overflown = result.isInfinite() && (flags & FloatFlags::OVFL);
-    i32 exp = result.biasedExponent();
-    bool inside = special ? !overflown : (exp >= offset + 2 && exp <= 0x7FFE - offset - 1);
-
-    if (inside) {
-        FloatEnv::raiseFlags(saved);
-        return result;
-    }
-
-    // Repeat the operation with truncation to get the exact bits and a sticky flag
     auto mode = FloatEnv::roundingMode();
     auto precision = FloatEnv::precision();
+    i32 offset = exponentOffset();
+    i32 lowest = offset ? offset + 1 : 0;
+    i32 maxExp = 0x7FFE - offset;
+
+    FloatEnv::clearFlags();
+    FloatEnv::setPrecision(Precision::EXTENDED);
+
+    // Run 1: Execute the operation with the selected rounding mode
+    auto r1 = plain(op, ra, rb);
+    auto flags1 = FloatEnv::flags();
+
+    // Special results are final (zeros, NaNs, division by zero, ...)
+    if (!r1.isFinite() || r1.isZero()) {
+
+        FloatEnv::setPrecision(precision);
+        FloatEnv::clearFlags();
+        FloatEnv::raiseFlags(saved | flags1);
+        return r1;
+    }
+
+    // An extended precision result that is not tiny is already rounded correctly
+    i32 exp1 = r1.biasedExponent() + delta;
+    auto final1 = [&] {
+
+        FloatEnv::clearFlags();
+        FloatEnv::raiseFlags(saved | flags1);
+        if (exp1 > maxExp) return roundToFormat(r1.sign(), exp1, r1.mantissa());
+        return Float80::fromBits(u16(exp1 | (r1.sign() ? 0x8000 : 0)), r1.mantissa());
+    };
+    if (precision == Precision::EXTENDED && exp1 >= lowest + 1) return final1();
+
+    // Run 2: Truncate to get the exact result bits and a sticky flag
     FloatEnv::clearFlags();
     FloatEnv::setRoundingMode(RoundingMode::ZERO);
-    FloatEnv::setPrecision(Precision::EXTENDED);
-    auto exact = operation();
+    auto r2 = plain(op, ra, rb);
     bool sticky = FloatEnv::flags() & FloatFlags::INEXACT;
+
     FloatEnv::setRoundingMode(mode);
     FloatEnv::setPrecision(precision);
     FloatEnv::clearFlags();
     FloatEnv::raiseFlags(saved);
 
-    // Bring the significand into normalized form
-    i32 e = exact.biasedExponent() ? exact.biasedExponent() : 1;
-    u64 sig = exact.mantissa();
-    if (sig == 0) { e = -100000; sig = 1ULL << 63; sticky = true; }
-    int shift = std::countl_zero(sig);
-    sig <<= shift;
-    e -= shift;
+    // Tininess is detected before rounding
+    i32 exp2 = r2.biasedExponent() + delta;
+    if (precision == Precision::EXTENDED && exp2 >= lowest) return final1();
 
-    return roundToFormat(exact.sign(), e, sig, sticky);
+    return roundToFormat(r2.sign(), r2.biasedExponent() + delta, r2.mantissa(), sticky ? 1 : 0);
+}
+
+/* Executes an arithmetic operation. Regular operands are first processed by
+ * SoftFloat directly. If the result is close to or outside the limits of the
+ * target format, or if an operand is a denormal or unnormal, the operation is
+ * executed by exactOp.
+ */
+Float80
+arith(Op op, const Float80 &a, const Float80 &b = Float80())
+{
+    bool unary = op == Op::SQRT;
+
+    if (isRegular(a) && (unary || isRegular(b))) {
+
+        auto saved = FloatEnv::flags();
+        FloatEnv::clearFlags();
+        auto result = plain(op, a, b);
+        auto flags = FloatEnv::flags();
+
+        // Check if the result is safely inside the range of the format
+        i32 offset = exponentOffset();
+        bool special = !result.isFinite() || result.isZero();
+        bool overflown = result.isInfinite() && (flags & FloatFlags::OVFL);
+        bool lost = result.isZero() && (flags & (FloatFlags::INEXACT | FloatFlags::UNFL));
+        i32 exp = result.biasedExponent();
+        bool inside = special ? !overflown && !lost : (exp >= offset + 2 && exp <= 0x7FFE - offset - 1);
+
+        if (inside) {
+            FloatEnv::raiseFlags(saved);
+            return result;
+        }
+        FloatEnv::clearFlags();
+        FloatEnv::raiseFlags(saved);
+    }
+
+    // NaNs and infinities are processed as they are
+    if (!a.isFinite() || (!unary && !b.isFinite())) return plain(op, a, b);
+
+    return exactOp(op, a, b);
 }
 
 }
@@ -320,25 +483,24 @@ Float80::roundPack(bool sign, i32 exp, u64 sig, u64 extra)
     if (sig == 0 && extra == 0) return zero(sign);
     if (sig == 0) { sig = extra; extra = 0; exp -= 64; }
 
-    return fromSF(moira_softfloat_normRoundPackToExtF80(sign, exp, sig, extra, moira_sf_getPrecision()));
+    int shift = std::countl_zero(sig);
+    sig = shift ? sig << shift | extra >> (64 - shift) : sig;
+    extra <<= shift;
+    exp -= shift;
+
+    return roundToFormat(sign, exp, sig, extra);
 }
 
 Float80
 Float80::rounded() const
 {
-    if (!isFinite() || isZero()) return *this;
+    if (!isFinite() || mantissa() == 0) return *this;
 
-    // Without an exponent limit, only the significand is rounded
-    if (!limitsExponentRange()) return roundPack(sign(), std::max<i32>(1, biasedExponent()), mantissa());
+    // Regular extended precision values are not changed
+    if (isRegular(*this) && exponentOffset() == 0 && FloatEnv::precision() == Precision::EXTENDED) return *this;
 
-    // Normalize the significand
-    i32 e = biasedExponent() ? biasedExponent() : 1;
-    u64 m = mantissa();
-    int shift = std::countl_zero(m);
-    m <<= shift;
-    e -= shift;
-
-    return roundToFormat(sign(), e, m, false);
+    Num n(*this);
+    return roundToFormat(n.sign, n.exp, n.sig);
 }
 
 Float80
@@ -445,31 +607,31 @@ Float80::abs() const
 Float80
 Float80::operator+(const Float80 &rhs) const
 {
-    return ranged([&] { return fromSF(moira_extF80_add(toSF(*this), toSF(rhs))); });
+    return arith(Op::ADD, *this, rhs);
 }
 
 Float80
 Float80::operator-(const Float80 &rhs) const
 {
-    return ranged([&] { return fromSF(moira_extF80_sub(toSF(*this), toSF(rhs))); });
+    return arith(Op::SUB, *this, rhs);
 }
 
 Float80
 Float80::operator*(const Float80 &rhs) const
 {
-    return ranged([&] { return fromSF(moira_extF80_mul(toSF(*this), toSF(rhs))); });
+    return arith(Op::MUL, *this, rhs);
 }
 
 Float80
 Float80::operator/(const Float80 &rhs) const
 {
-    return ranged([&] { return fromSF(moira_extF80_div(toSF(*this), toSF(rhs))); });
+    return arith(Op::DIV, *this, rhs);
 }
 
 Float80
 Float80::sqrt() const
 {
-    return ranged([&] { return fromSF(moira_extF80_sqrt(toSF(*this))); });
+    return arith(Op::SQRT, *this);
 }
 
 Float80
@@ -512,23 +674,11 @@ Float80::scale(const Float80 &rhs) const
         FloatEnv::raiseFlags(saved);
     }
 
-    // Normalize the mantissa. Denormals have the exponent of the smallest
-    // normal number.
-    i32 e = biasedExponent() ? biasedExponent() : 1;
-    u64 m = man;
-    int shift = std::countl_zero(m);
-    m <<= shift;
-    e -= shift;
+    // Normalize the mantissa
+    Num x(*this);
 
-    // With a reduced precision, the exponent range of the format applies
-    if (limitsExponentRange()) {
-
-        if (e + n < -100000) return roundToFormat(sign(), -100000, m, false);
-        return roundToFormat(sign(), e + n, m, false);
-    }
-
-    // Let SoftFloat do the rounding and the exception handling
-    return fromSF(moira_softfloat_roundPackToExtF80(sign(), e + n, m, 0, moira_sf_getPrecision()));
+    // The rounding step takes care of overflows and underflows
+    return roundToFormat(x.sign, x.exp + std::clamp(n, -0x100000, 0x100000), x.sig);
 }
 
 

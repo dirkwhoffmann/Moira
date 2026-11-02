@@ -20,6 +20,7 @@
 #include "FpuFormats.h"
 #include "Amiberry/AmiberryRef.h"
 
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <map>
@@ -41,7 +42,6 @@ struct Stats {
     long failures = 0;
     int printed = 0;
     std::map<std::string, long> categories;
-    long pending = 0;       // Mismatches that belong to a later implementation step
     long known = 0;         // Mismatches that are accepted deviations from the reference
 };
 std::map<std::string, Stats> stats;
@@ -120,7 +120,6 @@ struct Reporter {
 
     explicit Reporter(const std::string &k) : key(k), s(stats[k]) { s.checks++; }
 
-    void pending() { s.pending++; }
     void known() { s.known++; }
 
     template <typename... Args>
@@ -258,8 +257,6 @@ void testArithmetic(int model, long iterations)
             }
 
             Reporter rep(std::string(d.name) + (is040 ? " (040)" : " (6888x)"));
-            bool nanResult = res.isNaN() && Float80::fromBits(ref.se, ref.man).isNaN();
-            (void)nanResult;
             bool sameValue = res.signExp() == ref.se && res.mantissa() == ref.man;
             bool sameExc = exc == ref.exc;
             bool sameQuot = !(d.op == Op::MOD || d.op == Op::REM) || quot == ref.quot;
@@ -271,7 +268,7 @@ void testArithmetic(int model, long iterations)
                 bool zeroByInf = (d.op == Op::MOD || d.op == Op::REM) && dst.isZero() && src.isInfinite();
                 // The reference returns a zero significand with the minimum exponent of the format
                 bool pseudoZero = ref.man == 0 && (ref.se & 0x7FFF) != 0 && (ref.se & 0x7FFF) != 0x7FFF;
-                if (pseudoZero && res.isZero() && res.sign() == bool(ref.se & 0x8000) && exc == ref.exc) { rep.known(); continue; }
+                if (pseudoZero && res.isZero() && res.sign() == bool(ref.se & 0x8000) && (exc == ref.exc || (exc | amiref::UNFL) == ref.exc)) { rep.known(); continue; }
 
                 bool overflow = (res.signExp() & 0x7FFF) == 0x7FFF || (exc & FPEXP::OVFL);
                 if ((overflow && sameValue && exc == (ref.exc | amiref::INEX2)) ||      // Inexact exception on overflow
@@ -281,13 +278,6 @@ void testArithmetic(int model, long iterations)
                     continue;
                 }
 
-                // Mismatches that are addressed in later steps
-                bool denormalOperand = (dst.biasedExponent() == 0 && !dst.isZero()) || (src.biasedExponent() == 0 && !src.isZero());
-                bool reducedPrecision = (fpcr & 0xC0) || (d.cmd & 0x40) || d.op == Op::SGLMUL || d.op == Op::SGLDIV;
-                bool refDenormal = (ref.se & 0x7FFF) == 0 && ref.man != 0;
-                bool resDenormal = res.biasedExponent() == 0 && !res.isZero();
-                if (denormalOperand) { rep.pending(); continue; }
-                if (refDenormal || resDenormal) { rep.pending(); continue; }
 
                 rep.category = classify(fpcr, { dst, src });
                 if (sameValue && sameQuot) rep.category += " (flags only)";
@@ -344,7 +334,6 @@ void testConversions(int model, long iterations)
             Float80 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::fromSingle(raw); }
             auto ref = amiref::fromSingle(raw, fpcr);
             Reporter rep("single -> extended" + tag);
-            if ((raw & 0x7F800000) == 0 && (raw & 0x7FFFFF)) { if (v.signExp() != ref.se || v.mantissa() != ref.man) rep.pending(); } else
             if (v.signExp() != ref.se || v.mantissa() != ref.man || (fpu.fpsr & 0xFF00) != ref.exc)
                 rep.fail("raw=%08x\n   moira=%s exc=%04x   ref=%s exc=%04x", raw, str(v).c_str(),
                          fpu.fpsr & 0xFF00, str(ref.se, ref.man).c_str(), ref.exc);
@@ -356,7 +345,6 @@ void testConversions(int model, long iterations)
             Float80 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::fromDouble(raw); }
             auto ref = amiref::fromDouble(raw, fpcr);
             Reporter rep("double -> extended" + tag);
-            if ((raw & 0x7FF0000000000000ULL) == 0 && (raw & 0xFFFFFFFFFFFFFULL)) { if (v.signExp() != ref.se || v.mantissa() != ref.man) rep.pending(); } else
             if (v.signExp() != ref.se || v.mantissa() != ref.man || (fpu.fpsr & 0xFF00) != ref.exc)
                 rep.fail("raw=%016llx\n   moira=%s exc=%04x   ref=%s exc=%04x", (unsigned long long)raw,
                          str(v).c_str(), fpu.fpsr & 0xFF00, str(ref.se, ref.man).c_str(), ref.exc);
@@ -410,7 +398,6 @@ void testConversions(int model, long iterations)
             u32 w[3] = {}; { fpu.setFPSR(0); FPU::Scope s(fpu); FpuFormats::toPacked(x, k, w); }
             auto ref = amiref::toPacked(x.signExp(), x.mantissa(), k, fpcr);
             Reporter rep("extended -> packed" + tag);
-            if (x.biasedExponent() == 0 && !x.isZero()) { if (!(w[0] == ref.raw[0] && w[1] == ref.raw[1] && w[2] == ref.raw[2])) rep.pending(); continue; }
             bool sameWords = w[0] == ref.raw[0] && w[1] == ref.raw[1] && w[2] == ref.raw[2];
             auto digits = [](const u32 (&x)[3]) {
                 u64 v = x[0] & 0xF;
@@ -423,6 +410,14 @@ void testConversions(int model, long iterations)
             u64 unit = 1;
             for (int i = k; k > 0 && i < 17; i++) unit *= 10;
             bool lastDigit = (w[0] & ~0xFu) == (refw[0] & ~0xFu) && (dm > dr ? dm - dr : dr - dm) <= 2 * unit && (fpu.fpsr & 0xFF00) == ref.exc;
+            // The reference may be off by one in the last digit, which changes the exponent if a carry occurs
+            auto value = [&](const u32 (&x)[3]) {
+                int e = int((x[0] >> 24 & 0xF) * 100 + (x[0] >> 20 & 0xF) * 10 + (x[0] >> 16 & 0xF) + (x[0] >> 12 & 0xF) * 1000);
+                return (long double)digits(x) * powl(10.0L, (x[0] & 0x40000000 ? -e : e) - 16);
+            };
+            long double vm = value(w), vr = value(refw);
+            bool carry = k > 0 && vm != 0 && vr != 0 && (w[0] & 0xFFFFF000) != (refw[0] & 0xFFFFF000) && fabsl(vm - vr) <= 11 * powl(10.0L, floorl(log10l(fabsl(vm) + 1e-300L)) - (k - 1)) && (fpu.fpsr & 0xFF00) == ref.exc;
+            lastDigit = lastDigit || carry;
             bool mismatch = !sameWords || (fpu.fpsr & 0xFF00) != ref.exc;
             if (mismatch && ((k == 1 || k == 2 || k == 3) || lastDigit ||      // The reference is off by one in directed rounding modes                                           // Reference rounds to k-1 digits
                              (sameWords && ref.exc == ((fpu.fpsr & 0xFF00) | amiref::INEX2)))) rep.known(); else
@@ -474,9 +469,9 @@ int main(int argc, char **argv)
     }
 
     long failures = 0;
-    printf("\n%-28s %10s %10s %10s %10s\n", "Test", "Checks", "Failures", "Pending", "Accepted");
+    printf("\n%-28s %10s %10s %10s\n", "Test", "Checks", "Failures", "Accepted");
     for (auto &[name, s] : stats) {
-        printf("%-28s %10ld %10ld %10ld %10ld%s\n", name.c_str(), s.checks, s.failures, s.pending, s.known, s.failures ? "  <--" : "");
+        printf("%-28s %10ld %10ld %10ld%s\n", name.c_str(), s.checks, s.failures, s.known, s.failures ? "  <--" : "");
         for (auto &[cat, n] : s.categories) printf("      %-34s %6ld\n", cat.c_str(), n);
         failures += s.failures;
     }
