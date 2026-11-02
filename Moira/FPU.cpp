@@ -6,6 +6,7 @@
 // -----------------------------------------------------------------------------
 
 #include "FPU.h"
+#include <bit>
 
 namespace moira {
 
@@ -88,6 +89,11 @@ FPU::Scope::Scope(FPU &fpu) : fpu(fpu)
     FloatEnv::clearFlags();
 }
 
+FPU::Scope::Scope(FPU &fpu, Precision precision) : Scope(fpu)
+{
+    FloatEnv::setPrecision(precision);
+}
+
 FPU::Scope::~Scope()
 {
     fpu.collectFlags();
@@ -107,6 +113,344 @@ FPU::collectFlags()
 
     if (mask) setExcStatusBit(mask);
     FloatEnv::clearFlags();
+}
+
+//
+// Arithmetic
+//
+
+namespace {
+
+/* Runs an operation that must not produce NaN operands. If the operation
+ * reports an invalid operation, the x87 default NaN produced by SoftFloat is
+ * replaced by the default NaN of the 68k FPUs.
+ */
+template <typename F> Float80
+invoke(F operation)
+{
+    auto saved = FloatEnv::flags();
+    FloatEnv::clearFlags();
+
+    auto result = operation();
+
+    if ((FloatEnv::flags() & FloatFlags::INVALID) && result.isNaN()) {
+        result = FPU::defaultNaN();
+    }
+    FloatEnv::raiseFlags(saved);
+    return result;
+}
+
+// Runs an operation in extended precision with rounding to nearest
+template <typename F> Float80
+invokeExact(F operation)
+{
+    FloatEnv::Scope scope;
+    FloatEnv::setPrecision(Precision::EXTENDED);
+    FloatEnv::setRoundingMode(RoundingMode::NEAREST);
+    return invoke(operation);
+}
+
+// Runs an operation and discards all exceptions it raises
+template <typename F> Float80
+invokeSilently(F operation)
+{
+    auto saved = FloatEnv::flags();
+    auto result = operation();
+    FloatEnv::clearFlags();
+    FloatEnv::raiseFlags(saved);
+    return result;
+}
+
+// Returns the exponent of the least significant mantissa bit
+i32 lsbExponent(const Float80 &x)
+{
+    return std::max<i32>(1, x.biasedExponent()) - Float80::bias - 63;
+}
+
+/* Computes the seven least significant bits of floor(|a| / |b|) for finite
+ * numbers a and b with b != 0.
+ */
+u8
+truncatedQuotient(const Float80 &a, const Float80 &b)
+{
+    u64 ma = a.mantissa(), mb = b.mantissa();
+    if (ma == 0) return 0;
+
+    i32 d = lsbExponent(a) - lsbExponent(b);
+
+    if (d < 0) {
+
+        // The quotient is ma / (mb * 2^-d)
+        if (-d > std::countl_zero(mb)) return 0;
+        return u8((ma / (mb << -d)) & 0x7F);
+    }
+
+    // Binary long division of ma * 2^d by mb. Only the last bits are of interest.
+    u64 rem = 0, q = 0;
+    for (i32 i = 63; i >= -d; i--) {
+
+        bool carry = rem >> 63;
+        rem = rem << 1 | (i >= 0 ? (ma >> i) & 1 : 0);
+        bool bit = carry || rem >= mb;
+        if (bit) rem -= mb;
+        q = q << 1 | bit;
+    }
+    return u8(q & 0x7F);
+}
+
+}
+
+Float80
+FPU::round(const Float80 &value)
+{
+    if (!value.isFinite() || value.isZero()) return value;
+
+    // The exponent field of denormalized numbers counts as 1
+    return Float80::roundPack(value.sign(), std::max<i32>(1, value.biasedExponent()), value.mantissa());
+}
+
+std::optional<Float80>
+FPU::resolveNan(const Float80 &op1, const Float80 &op2)
+{
+    /* MC68881/MC68882 Floating-Point Coprocessor User's Manual:
+     *
+     * 4.5.4.1 NON-SIGNALING NANS
+     *
+     * "If either, but not both, operand of an operation is a NAN, and it is a
+     *  non-signaling NAN, then that NAN is returned as the result. If both
+     *  operands are non-signaling NANs, then the destination operand
+     *  non-signaling NAN is returned as the result.
+     *
+     * 4.5.4.2 SIGNALING NANS
+     *
+     * If either operand to an operation is a signaling NAN (SNAN), then the
+     * SNAN bit is set in the FPSR EXC byte. If the SNAN trap enable bit is
+     * set in the FPCR ENABLE byte, then the trap is taken and the destination
+     * is not modified. If the SNAN trap enable bit is not set, then the SNAN
+     * is converted to a non-signaling NAN (by setting the SNAN bit in the
+     * operand to a one), and the operation continues as described in the
+     * preceding section for non-signaling NANs."
+     */
+    if (!op1.isNaN() && !op2.isNaN()) return std::nullopt;
+
+    auto quiet = [&](const Float80 &op) {
+
+        if (op.isSignalingNaN()) setExcStatusBit(FPEXP::SNAN);
+        return Float80::fromBits(op.signExp(), op.mantissa() | (1ULL << 62));
+    };
+
+    // Both operands are processed, because both can raise the SNAN exception
+    auto r1 = quiet(op1);
+    auto r2 = quiet(op2);
+
+    return op1.isNaN() ? r1 : r2;
+}
+
+std::optional<Float80>
+FPU::resolveNan(const Float80 &op)
+{
+    return resolveNan(op, Float80::zero());
+}
+
+Float80
+FPU::fabs(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return nan->abs();
+    return value.abs();
+}
+
+Float80
+FPU::fneg(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return -*nan;
+    return -value;
+}
+
+Float80
+FPU::fsqrt(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke([&] { return value.sqrt(); });
+}
+
+Float80
+FPU::fint(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return value.roundToInt();
+}
+
+Float80
+FPU::fintrz(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+
+    FloatEnv::Scope scope;
+    FloatEnv::setRoundingMode(RoundingMode::ZERO);
+    return value.roundToInt();
+}
+
+Float80
+FPU::fgetexp(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+
+    if (value.isInfinite()) { setExcStatusBit(FPEXP::OPERR); return defaultNaN(); }
+    if (value.isZero()) return value;
+
+    // The exponent of a denormalized number is determined after normalization
+    i32 e = std::max<i32>(1, value.biasedExponent()) - Float80::bias - std::countl_zero(value.mantissa());
+    return Float80::fromInt(e);
+}
+
+Float80
+FPU::fgetman(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+
+    if (value.isInfinite()) { setExcStatusBit(FPEXP::OPERR); return defaultNaN(); }
+    if (value.isZero()) return value;
+
+    u64 man = value.mantissa() << std::countl_zero(value.mantissa());
+    return Float80::fromBits(u16((value.sign() ? 0x8000 : 0) | Float80::bias), man);
+}
+
+Float80
+FPU::ftst(const Float80 &value)
+{
+    auto result = value;
+    if (auto nan = resolveNan(value)) result = *nan;
+
+    setConditionCodes(result);
+    return result;
+}
+
+Float80
+FPU::fadd(const Float80 &dst, const Float80 &src)
+{
+    if (auto nan = resolveNan(dst, src)) return *nan;
+    return invoke([&] { return dst + src; });
+}
+
+Float80
+FPU::fsub(const Float80 &dst, const Float80 &src)
+{
+    if (auto nan = resolveNan(dst, src)) return *nan;
+    return invoke([&] { return dst - src; });
+}
+
+Float80
+FPU::fmul(const Float80 &dst, const Float80 &src)
+{
+    if (auto nan = resolveNan(dst, src)) return *nan;
+    return invoke([&] { return dst * src; });
+}
+
+Float80
+FPU::fdiv(const Float80 &dst, const Float80 &src)
+{
+    if (auto nan = resolveNan(dst, src)) return *nan;
+    return invoke([&] { return dst / src; });
+}
+
+Float80
+FPU::fscal(const Float80 &dst, const Float80 &src)
+{
+    if (auto nan = resolveNan(dst, src)) return *nan;
+
+    // Scaling by an infinite value is invalid
+    if (src.isInfinite()) { setExcStatusBit(FPEXP::OPERR); return defaultNaN(); }
+
+    // Infinities and zeroes are unaffected by scaling
+    if (dst.isInfinite() || dst.isZero()) return dst;
+
+    return invoke([&] { return dst.scale(src); });
+}
+
+Float80
+FPU::fsglmul(const Float80 &dst, const Float80 &src)
+{
+    if (auto nan = resolveNan(dst, src)) return *nan;
+
+    // Round both operands to single precision, then multiply
+    FloatEnv::Scope scope;
+    FloatEnv::setPrecision(Precision::SINGLE);
+    auto a = invokeSilently([&] { return round(dst); });
+    auto b = invokeSilently([&] { return round(src); });
+    return invoke([&] { return a * b; });
+}
+
+Float80
+FPU::fsgldiv(const Float80 &dst, const Float80 &src)
+{
+    if (auto nan = resolveNan(dst, src)) return *nan;
+
+    // Round both operands to single precision, then divide
+    FloatEnv::Scope scope;
+    FloatEnv::setPrecision(Precision::SINGLE);
+    auto a = invokeSilently([&] { return round(dst); });
+    auto b = invokeSilently([&] { return round(src); });
+    return invoke([&] { return a / b; });
+}
+
+Float80
+FPU::fmod(const Float80 &dst, const Float80 &src)
+{
+    if (auto nan = resolveNan(dst, src)) return *nan;
+
+    // The remainder is always exact
+    auto r = invokeExact([&] { return dst.rem(src); });
+
+    // Invalid operations (dst infinite, src zero) have no quotient
+    if (r.isNaN()) return r;
+
+    bool negative = dst.sign() != src.sign();
+    if (src.isInfinite() || dst.isZero()) { setQuotientByte(0, negative); return dst; }
+
+    u8 q = truncatedQuotient(dst, src);
+    setQuotientByte(q, negative);
+
+    // rem rounds the quotient to nearest. Correct the result if it was rounded away from zero.
+    if (!r.isZero() && r.sign() != dst.sign()) {
+
+        auto adjust = dst.sign() ? -src.abs() : src.abs();
+        r = invokeExact([&] { return r + adjust; });
+    }
+    return r.isZero() ? Float80::zero(dst.sign()) : r;
+}
+
+Float80
+FPU::frem(const Float80 &dst, const Float80 &src)
+{
+    if (auto nan = resolveNan(dst, src)) return *nan;
+
+    auto r = invokeExact([&] { return dst.rem(src); });
+    if (r.isNaN()) return r;
+
+    bool negative = dst.sign() != src.sign();
+    if (src.isInfinite() || dst.isZero()) { setQuotientByte(0, negative); return dst; }
+
+    // rem rounds the quotient to nearest, i.e., up if the remainder has the opposite sign
+    u8 q = truncatedQuotient(dst, src);
+    if (!r.isZero() && r.sign() != dst.sign()) q++;
+    setQuotientByte(q, negative);
+
+    return r.isZero() ? Float80::zero(dst.sign()) : r;
+}
+
+void
+FPU::fcmp(const Float80 &dst, const Float80 &src)
+{
+    if (auto nan = resolveNan(dst, src)) { setConditionCodes(*nan); return; }
+
+    // The condition codes reflect the difference dst - src
+    Float80 diff;
+    if (dst.isInfinite() && src.isInfinite() && dst.sign() == src.sign()) {
+        diff = Float80::zero();
+    } else {
+        diff = invokeSilently([&] { return invokeExact([&] { return dst - src; }); });
+    }
+    setConditionCodes(diff);
 }
 
 Float80

@@ -9,6 +9,7 @@
 
 #include "MoiraTypes.h"
 #include "FpuFormats.h"
+#include <optional>
 
 namespace moira {
 
@@ -197,11 +198,81 @@ public:
     public:
 
         explicit Scope(FPU &fpu);
+
+        // Same as above, but overrides the rounding precision (FSADD, FDADD, ...)
+        Scope(FPU &fpu, Precision precision);
         ~Scope();
     };
 
     // Transfers the exception flags of FloatEnv into FPSR and clears them
     void collectFlags();
+
+
+    //
+    // Executing arithmetic instructions
+    //
+
+    /* The functions in this section implement the arithmetic of the Motorola
+     * FPUs on top of Float80. They have to be called inside a Scope, because
+     * they use the rounding mode and precision of the floating-point
+     * environment and report exceptions by raising flags in it.
+     *
+     * The functions differ from plain Float80 arithmetic in the way special
+     * values are handled:
+     *
+     *  - NaN operands are resolved before the operation is carried out. A
+     *    signaling NaN sets the SNAN bit in FPSR and is converted into a
+     *    quiet NaN. If only one operand is a NaN, this NaN is the result. If
+     *    both operands are NaNs, the destination operand is the result.
+     *  - The result of an invalid operation is the default NaN, which is
+     *    positive and has an all-ones mantissa (not the negative default NaN
+     *    of the x87).
+     *
+     * Dyadic operations are computed as 'dst <op> src'. Neither the condition
+     * codes nor any register is modified, unless noted otherwise.
+     */
+
+public:
+
+    // The default NaN returned by invalid operations
+    static Float80 defaultNaN() { return Float80::fromBits(0x7FFF, 0xFFFFFFFFFFFFFFFFULL); }
+
+    // Rounds a value to the precision and rounding mode of the environment
+    Float80 round(const Float80 &value);
+
+    // Resolves NaN operands (returns nothing if there is no NaN)
+    std::optional<Float80> resolveNan(const Float80 &op1, const Float80 &op2);
+    std::optional<Float80> resolveNan(const Float80 &op);
+
+    // Monadic operations
+    Float80 fabs(const Float80 &value);
+    Float80 fneg(const Float80 &value);
+    Float80 fsqrt(const Float80 &value);
+    Float80 fint(const Float80 &value);
+    Float80 fintrz(const Float80 &value);
+    Float80 fgetexp(const Float80 &value);
+    Float80 fgetman(const Float80 &value);
+
+    // Sets the condition codes according to a value (FTST)
+    Float80 ftst(const Float80 &value);
+
+    // Dyadic operations
+    Float80 fadd(const Float80 &dst, const Float80 &src);
+    Float80 fsub(const Float80 &dst, const Float80 &src);
+    Float80 fmul(const Float80 &dst, const Float80 &src);
+    Float80 fdiv(const Float80 &dst, const Float80 &src);
+    Float80 fscal(const Float80 &dst, const Float80 &src);
+
+    // Single precision multiplication and division (FSGLMUL, FSGLDIV)
+    Float80 fsglmul(const Float80 &dst, const Float80 &src);
+    Float80 fsgldiv(const Float80 &dst, const Float80 &src);
+
+    // Remainders. These functions update the quotient byte in FPSR.
+    Float80 fmod(const Float80 &dst, const Float80 &src);
+    Float80 frem(const Float80 &dst, const Float80 &src);
+
+    // Compares two values and sets the condition codes (FCMP)
+    void fcmp(const Float80 &dst, const Float80 &src);
 
 
     //
