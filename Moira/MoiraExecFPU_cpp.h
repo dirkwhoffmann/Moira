@@ -7,6 +7,10 @@
 
 // The following definitions are not templated. They are compiled into the
 // main translation unit only (see MoiraCore_cpp.h).
+// Floating-point instructions cause a line F exception if no FPU is installed
+#define FPU_REQUIRED \
+if (!fpu.isPresent()) { execLineF<C, I, M, S>(opcode); return; }
+
 #ifdef MOIRA_MAIN_TU
 
 bool
@@ -365,6 +369,7 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execFGen(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
+    FPU_REQUIRED
 
     auto ext = queue.irc;
     auto cod = xxx_____________(ext);
@@ -480,49 +485,236 @@ Moira::execFGen(u16 opcode)
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execFBcc(u16 opcode)
 {
-    throw std::runtime_error("Attempt to execute an unsupported FPU instruction.");
+    AVAILABILITY(Core::C68000)
+    FPU_REQUIRED
+
+    u32 oldpc = reg.pc;
+
+    // Conditional instructions don't leave the reset state of the 68040
+    if (fpu.model != FPUModel::INTERNAL) fpu.resetState = false;
+
+    if (fpu.test(opcode & 0x1F)) {
+
+        u32 disp = queue.irc;
+
+        if constexpr (S == Long) {
+
+            readExt<C>();
+            disp = disp << 16 | queue.irc;
+        }
+
+        u32 newpc = U32_ADD(oldpc, SEXT<S>(disp));
+
+        // Check for address error
+        if (misaligned<C>(newpc)) {
+            throw AddressError(makeFrame(newpc));
+        }
+
+        // Take branch
+        reg.pc = newpc;
+        fullPrefetch<C, POLL>();
+
+    } else {
+
+        // Fall through to next instruction
+        readExt<C>();
+        if constexpr (S == Long) readExt<C>();
+        prefetch<C, POLL>();
+    }
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execFDbcc(u16 opcode)
 {
-    throw std::runtime_error("Attempt to execute an unsupported FPU instruction.");
+    AVAILABILITY(Core::C68000)
+    FPU_REQUIRED
+
+    auto ext = queue.irc;
+    auto dn  = _____________xxx (opcode);
+
+    // Catch illegal extension words
+    if (!isValidExtFPU(I, M, opcode, ext)) { execLineF<C, I, M, S>(opcode); return; }
+
+    if (fpu.model != FPUModel::INTERNAL) fpu.resetState = false;
+    readI<C, Word>();
+
+    if (!fpu.test(ext & 0x3F)) {
+
+        u32 newpc = U32_ADD(reg.pc, (i16)queue.irc);
+        bool takeBranch = readD<Word>(dn) != 0;
+
+        // Check for address error
+        if (takeBranch && misaligned<C>(newpc)) {
+            throw AddressError(makeFrame(newpc));
+        }
+
+        // Decrement loop counter
+        writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+
+        if (takeBranch) {
+
+            reg.pc = newpc;
+            fullPrefetch<C, POLL>();
+            FINALIZE
+            return;
+        }
+    }
+
+    // Fall through to next instruction
+    reg.pc += 2;
+    fullPrefetch<C, POLL>();
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execFNop(u16 opcode)
 {
-    throw std::runtime_error("Attempt to execute an unsupported FPU instruction.");
+    AVAILABILITY(Core::C68000)
+    FPU_REQUIRED
+
+    // FNOP is encoded as FBcc.W with condition F and displacement 0
+    readExt<C>();
+    prefetch<C, POLL>();
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execFRestore(u16 opcode)
 {
-    throw std::runtime_error("Attempt to execute an unsupported FPU instruction.");
+    AVAILABILITY(Core::C68000)
+    FPU_REQUIRED
+    SUPERVISOR_MODE_ONLY
+
+    auto n = _____________xxx (opcode);
+
+    // Locate the state frame
+    u32 ea;
+    if constexpr (M == Mode::PI) ea = readA(n); else ea = computeEA<C, M, Long>(n);
+
+    u32 fmt = readM<C, M, Long>(ea);
+    u32 version = fmt >> 24;
+
+    if (version == 0) {
+
+        // A NULL frame resets the FPU
+        fpu.reset();
+        if constexpr (M == Mode::PI) writeA(n, U32_ADD(ea, 4));
+
+    } else {
+
+        // The size of the frame is stored in the format word
+        u32 size = 4 + ((fmt >> 16) & 0xFF);
+        fpu.resetState = false;
+        if constexpr (M == Mode::PI) writeA(n, U32_ADD(ea, size));
+    }
+
+    prefetch<C, POLL>();
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execFSave(u16 opcode)
 {
-    throw std::runtime_error("Attempt to execute an unsupported FPU instruction.");
+    AVAILABILITY(Core::C68000)
+    FPU_REQUIRED
+    SUPERVISOR_MODE_ONLY
+
+    auto n = _____________xxx (opcode);
+
+    // Frame to be written: A NULL frame if the FPU is in reset state, an IDLE frame otherwise
+    bool null = fpu.inResetState();
+    u32 fmt   = null ? 0 : fpu.computeFormatWord(FpuFrameType::IDLE);
+    u32 size  = null ? 4 : 4 + fpu.stateFrameSize(FpuFrameType::IDLE);
+
+    u32 ea;
+    if constexpr (M == Mode::PD) ea = U32_SUB(readA(n), size); else ea = computeEA<C, M, Long>(n);
+
+    writeM<C, M, Long>(ea, fmt);
+    for (u32 i = 4; i < size; i += 4) writeM<C, M, Long>(U32_ADD(ea, i), 0);
+
+    if constexpr (M == Mode::PD) writeA(n, ea);
+
+    prefetch<C, POLL>();
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execFScc(u16 opcode)
 {
-    throw std::runtime_error("Attempt to execute an unsupported FPU instruction.");
+    AVAILABILITY(Core::C68000)
+    FPU_REQUIRED
+
+    auto ext = queue.irc;
+    auto dst = _____________xxx (opcode);
+
+    // Catch illegal extension words
+    if (!isValidExtFPU(I, M, opcode, ext)) { execLineF<C, I, M, S>(opcode); return; }
+
+    if (fpu.model != FPUModel::INTERNAL) fpu.resetState = false;
+    readI<C, Word>();
+
+    u32 data = fpu.test(ext & 0x3F) ? 0xFF : 0;
+
+    if constexpr (M == Mode::DN) {
+
+        writeD<Byte>(dst, data);
+
+    } else {
+
+        u32 ea = computeEA<C, M, Byte>(dst);
+        updateAn<M, Byte>(dst);
+        writeM<C, M, Byte>(ea, data);
+    }
+
+    prefetch<C, POLL>();
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execFTrapcc(u16 opcode)
 {
-    throw std::runtime_error("Attempt to execute an unsupported FPU instruction.");
+    AVAILABILITY(Core::C68000)
+    FPU_REQUIRED
+
+    auto ext = queue.irc;
+
+    // Catch illegal extension words
+    if (!isValidExtFPU(I, M, opcode, ext)) { execLineF<C, I, M, S>(opcode); return; }
+
+    if (fpu.model != FPUModel::INTERNAL) fpu.resetState = false;
+    readI<C, Word>();
+
+    // Skip the optional operand
+    switch (opcode & 0b111) {
+
+        case 0b010: (void)readI<C, Word>(); break;
+        case 0b011: (void)readI<C, Long>(); break;
+    }
+
+    if (fpu.test(ext & 0x3F)) {
+
+        execException<C>(M68kException::TRAPV);
+        FINALIZE
+        return;
+    }
+
+    prefetch<C, POLL>();
+
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execFMove(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
+    FPU_REQUIRED
 
     auto ext = queue.irc;
     auto reg = _____________xxx (opcode);
@@ -616,6 +808,7 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execFMovecr(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
+    FPU_REQUIRED
 
     auto ext = queue.irc;
     auto dst = ______xxx_______ (ext);
@@ -644,6 +837,7 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execFMovem(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
+    FPU_REQUIRED
 
     auto ext = queue.irc;
     auto reg = _____________xxx (opcode);
@@ -785,6 +979,7 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execFGeneric(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
+    FPU_REQUIRED
 
     auto ext = queue.irc;
     auto rm  = (ext >> 14) & 1;                            // Bit 14: Source is an <ea>

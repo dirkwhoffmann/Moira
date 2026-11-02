@@ -16,6 +16,7 @@ namespace moira {
 // Supported FPU models
 enum class FPUModel
 {
+    NONE,           // No FPU installed (floating-point instructions cause a line F exception)
     INTERNAL,       // FPU built into the 68040
     M68881,         // External FPU
     M68882          // External FPU
@@ -142,6 +143,7 @@ public:
 public:
 
     FPUModel getModel() const { return model; }
+    bool isPresent() const { return model != FPUModel::NONE; }
     void setModel(FPUModel newModel) { model = newModel; }
 
     // Checks whether an instruction is implemented in hardware by the emulated model
@@ -178,6 +180,13 @@ public:
     // Sets the condition code byte according to a value
     void setConditionCodes(const Float80 &value);
     void setConditionCodes(int reg) { setConditionCodes(fpr[reg & 7]); }
+
+    /* Evaluates a floating-point condition (the 5 least significant bits of
+     * the condition field are used). Conditions 16 to 31 are the signaling
+     * variants of conditions 0 to 15. They set the BSUN bit if the NAN condition
+     * code bit is set.
+     */
+    bool test(unsigned condition);
 
     // Sets the quotient byte (used by FMOD and FREM)
     void setQuotientByte(u8 byte);

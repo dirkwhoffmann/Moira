@@ -41,9 +41,9 @@ public:
 
     static constexpr u32 codeStart = 0x1000;
 
-    TestCPU(FPUModel fpuModel = FPUModel::M68882)
+    TestCPU(FPUModel fpuModel = FPUModel::M68882, Model cpuModel = Model::M68040)
     {
-        setModel(Model::M68040);
+        setModel(cpuModel);
         fpu.setModel(fpuModel);
 
         // Reset vector
@@ -348,6 +348,206 @@ static void testTraps()
     CHECK(cpu3.reg.pc0 == 0x9000);
 }
 
+static void testControl()
+{
+    // FBcc.W EQ: taken if Z is set
+    {
+        TestCPU cpu;
+        cpu.fpu.setFPSR(FPSR::CC_Z);
+        cpu.run({ 0xF281, 0x0010 });
+        CHECK(cpu.pcOffset() == 0x12);
+        cpu.fpu.setFPSR(0);
+        cpu.run({ 0xF281, 0x0010 });
+        CHECK(cpu.pcOffset() == 4);
+    }
+
+    // FBcc.L OGT (negative displacement)
+    {
+        TestCPU cpu;
+        cpu.run({ 0xF2C2, 0x0000, 0x0020 });
+        CHECK(cpu.pcOffset() == 0x22);
+        cpu.fpu.setFPSR(FPSR::CC_N);
+        cpu.run({ 0xF2C2, 0x0000, 0x0020 });
+        CHECK(cpu.pcOffset() == 6);
+    }
+
+    // Signaling conditions set BSUN if NAN is set, non-signaling conditions don't
+    {
+        TestCPU cpu;
+        cpu.fpu.setFPSR(FPSR::CC_NAN);
+        cpu.run({ 0xF281, 0x0010 });                                // FBEQ
+        CHECK(!(cpu.fpu.fpsr & FPEXP::BSUN));
+        cpu.run({ 0xF291, 0x0010 });                                // FBSEQ
+        CHECK(cpu.fpu.fpsr & FPEXP::BSUN);
+        CHECK(cpu.fpu.fpsr & (1 << 7));                             // IOP
+    }
+
+    // All conditions
+    {
+        TestCPU cpu;
+        struct { u32 cc; unsigned cond; bool result; } table[] = {
+            { 0, 0x00, false }, { 0, 0x0F, true }, { FPSR::CC_Z, 0x01, true }, { 0, 0x0E, true },
+            { FPSR::CC_NAN, 0x08, true }, { FPSR::CC_NAN, 0x07, false }, { FPSR::CC_NAN, 0x0A, true },
+            { FPSR::CC_N, 0x04, true }, { FPSR::CC_N | FPSR::CC_Z, 0x04, false },
+            { FPSR::CC_N | FPSR::CC_NAN, 0x0C, true }, { FPSR::CC_N, 0x0B, false },
+            { FPSR::CC_Z, 0x13, true }, { 0, 0x12, true }, { FPSR::CC_N, 0x15, true }
+        };
+        for (auto &t : table) {
+            cpu.fpu.setFPSR(t.cc);
+            CHECK(cpu.fpu.test(t.cond) == t.result);
+        }
+    }
+
+    // FScc
+    {
+        TestCPU cpu;
+        cpu.reg.d[0] = 0x12345600;
+        cpu.fpu.setFPSR(FPSR::CC_Z);
+        cpu.run({ 0xF240, 0x0001 });                                // FSEQ D0
+        CHECK(cpu.reg.d[0] == 0x123456FF);
+        cpu.run({ 0xF240, 0x000E });                                // FSNE D0
+        CHECK(cpu.reg.d[0] == 0x12345600);
+
+        cpu.reg.a[0] = 0x2000;
+        cpu.write8(0x2000, 0);
+        cpu.run({ 0xF250, 0x000F });                                // FST (A0)
+        CHECK(cpu.read8(0x2000) == 0xFF);
+        CHECK(cpu.pcOffset() == 4);
+    }
+
+    // FDBcc
+    {
+        TestCPU cpu;
+        cpu.reg.d[0] = 1;
+        cpu.run({ 0xF248, 0x0000, 0x0010 });                        // FDBF D0,<disp>
+        CHECK((cpu.reg.d[0] & 0xFFFF) == 0);
+        CHECK(cpu.pcOffset() == 0x14);
+        cpu.run({ 0xF248, 0x0000, 0x0010 });
+        CHECK((cpu.reg.d[0] & 0xFFFF) == 0xFFFF);
+        CHECK(cpu.pcOffset() == 6);                                 // Counter expired: no branch
+        cpu.reg.d[0] = 5;
+        cpu.run({ 0xF248, 0x000F, 0x0010 });                        // FDBT: condition true, no loop
+        CHECK(cpu.reg.d[0] == 5);
+        CHECK(cpu.pcOffset() == 6);
+    }
+
+    // FTRAPcc
+    {
+        TestCPU cpu;
+        cpu.write32(7 * 4, 0x9000);
+        cpu.run({ 0xF27C, 0x0000 });                                // FTRAPF
+        CHECK(cpu.pcOffset() == 4);
+        cpu.run({ 0xF27A, 0x000F, 0x1234 });                        // FTRAPT.W
+        CHECK(cpu.reg.pc0 == 0x9000);
+    }
+    {
+        TestCPU cpu;
+        cpu.run({ 0xF27B, 0x0000, 0x1234, 0x5678 });                // FTRAPF.L skips the operand
+        CHECK(cpu.pcOffset() == 8);
+    }
+
+    // FSAVE and FRESTORE on the 68040
+    {
+        TestCPU cpu(FPUModel::INTERNAL);
+        cpu.reg.a[0] = 0x3000;
+        cpu.write32(0x2FFC, 0xDEADBEEF);
+        cpu.run({ 0xF320 });                                        // FSAVE -(A0) in reset state
+        CHECK(cpu.reg.a[0] == 0x2FFC);
+        CHECK(cpu.read32(0x2FFC) == 0);
+
+        cpu.run({ 0xF358 });                                        // FRESTORE (A0)+
+        CHECK(cpu.reg.a[0] == 0x3000);
+
+        cpu.reg.d[0] = 7;
+        cpu.run({ 0xF200, 0x4000 });                                // FMOVE.L D0,FP0
+        cpu.run({ 0xF320 });                                        // FSAVE -(A0) now yields an IDLE frame
+        CHECK(cpu.reg.a[0] == 0x2FFC);
+        CHECK(cpu.read32(0x2FFC) == 0x41000000);
+
+        cpu.run({ 0xF358 });
+        CHECK(cpu.reg.a[0] == 0x3000);
+        CHECK(same(cpu.fpu.fpr[0], Float80::fromInt(7)));           // IDLE frames keep the registers
+
+        cpu.write32(0x2FFC, 0);
+        cpu.reg.a[0] = 0x2FFC;
+        cpu.run({ 0xF350 });                                        // FRESTORE (A0) with a NULL frame
+        CHECK(cpu.fpu.fpr[0].isNaN());
+        CHECK(cpu.fpu.inResetState());
+    }
+
+    // FSAVE on the 6888x writes a longer IDLE frame
+    {
+        TestCPU cpu(FPUModel::M68882);
+        cpu.reg.a[0] = 0x3000;
+        cpu.reg.d[0] = 1;
+        cpu.run({ 0xF200, 0x4000 });
+        cpu.run({ 0xF320 });
+        CHECK(cpu.reg.a[0] == 0x3000 - 60);
+        CHECK(cpu.read32(cpu.reg.a[0]) == 0x1F380000);
+        cpu.run({ 0xF358 });
+        CHECK(cpu.reg.a[0] == 0x3000);
+    }
+}
+
+static void testModels()
+{
+    // A 68030 with a 68882
+    {
+        TestCPU cpu(FPUModel::M68882, Model::M68030);
+        cpu.reg.d[0] = 42;
+        cpu.run({ 0xF200, 0x4000 });                                // FMOVE.L D0,FP0
+        CHECK(same(cpu.fpu.fpr[0], Float80::fromInt(42)));
+
+        cpu.fpu.fpr[0] = F(11);
+        cpu.fpu.fpr[1] = F(3);
+        cpu.run({ 0xF200, 0x0021 | (1 << 10) });                    // FMOD FP1,FP0 (available on the 6888x)
+        CHECK(same(cpu.fpu.fpr[0], F(2)));
+
+        cpu.fpu.setFPSR(FPSR::CC_Z);
+        cpu.run({ 0xF281, 0x0010 });                                // FBEQ
+        CHECK(cpu.pcOffset() == 0x12);
+
+        cpu.write32(11 * 4, 0x9000);
+        cpu.run({ 0xF200, 0x4000 | 0x62 });                         // FSADD is a 68040 instruction
+        CHECK(cpu.reg.pc0 == 0x9000);
+    }
+
+    // A 68020 with a 68881
+    {
+        TestCPU cpu(FPUModel::M68881, Model::M68020);
+        cpu.fpu.fpr[1] = F(9);
+        cpu.run({ 0xF200, 0x0504 });                                // FSQRT FP1,FP2
+        CHECK(same(cpu.fpu.fpr[2], F(3)));
+    }
+
+    // Without an FPU, floating-point instructions cause a line F exception
+    for (auto model : { Model::M68020, Model::M68030, Model::M68EC040 }) {
+
+        TestCPU cpu(FPUModel::NONE, model);
+        cpu.write32(11 * 4, 0x9000);
+        cpu.run({ 0xF200, 0x4000 });
+        CHECK(cpu.reg.pc0 == 0x9000);
+
+        TestCPU cpu2(FPUModel::NONE, model);
+        cpu2.write32(11 * 4, 0x9000);
+        cpu2.run({ 0xF281, 0x0010 });                               // FBEQ
+        CHECK(cpu2.reg.pc0 == 0x9000);
+    }
+
+    // The 68040 has a built-in FPU, other models start without one
+    {
+        TestCPU cpu(FPUModel::INTERNAL, Model::M68040);
+        CHECK(cpu.fpu.getModel() == FPUModel::INTERNAL);
+        cpu.setModel(Model::M68030);
+        CHECK(!cpu.fpu.isPresent());
+        cpu.fpu.setModel(FPUModel::M68882);
+        cpu.setModel(Model::M68020);
+        CHECK(cpu.fpu.getModel() == FPUModel::M68882);              // An installed 6888x stays
+        cpu.setModel(Model::M68040);
+        CHECK(cpu.fpu.getModel() == FPUModel::INTERNAL);
+    }
+}
+
 int main()
 {
     testMove();
@@ -356,6 +556,8 @@ int main()
     testMovem();
     testArithmetic();
     testTraps();
+    testControl();
+    testModels();
 
     printf("%d checks, %d failures\n", checks, failures);
     return failures ? EXIT_FAILURE : EXIT_SUCCESS;

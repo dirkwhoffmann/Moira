@@ -2079,7 +2079,18 @@ Moira::createJumpTable12(Model model, bool regDasm)
     // Floating-Point Unit
     //
 
-    if (model == Model::M68040) {
+    /* The 68040 has a built-in FPU. The 68020 and 68030 can be connected to a
+     * 68881 or 68882 (coprocessor ID 1). In this case, the execution handlers
+     * replace the generic coprocessor interface. The disassembler keeps showing
+     * generic coprocessor instructions, because the disassembler cannot know if
+     * an FPU is present. To see FPU instructions, use the 68040 as disassembler
+     * model.
+     */
+    const bool dasmFPU = regDasm && model == Model::M68040;
+    if (model == Model::M68EC020 || model == Model::M68020 || model == Model::M68EC030 ||
+        model == Model::M68030 || model == Model::M68040) {
+
+        [[maybe_unused]] const bool regDasm = dasmFPU;
 
         opcode = parse("1111 0010 100- ----");
         ___________XXXXX(opcode, Instr::FBcc, Mode::IP, Word, FBcc, CIMS)

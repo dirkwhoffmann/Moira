@@ -101,6 +101,14 @@ Moira::setModel(Model cpuModel, Model dasmModel)
 
         createJumpTable(cpuModel, dasmModel);
 
+        // The 68040 has a built-in FPU. All other models start without an FPU
+        // (an external 6888x can be installed by calling fpu.setModel).
+        if (cpuModel == Model::M68040) {
+            fpu.setModel(FPUModel::INTERNAL);
+        } else if (fpu.getModel() == FPUModel::INTERNAL) {
+            fpu.setModel(FPUModel::NONE);
+        }
+
         reg.cacr &= cacrMask();
         flushInstructionCache();
         flags &= ~State::LOOPING;

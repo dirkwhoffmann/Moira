@@ -78,7 +78,7 @@ FPU::setExcStatusBit(u32 mask)
     fpsr |= mask & FPSR::EXC_MASK;
 
     // Update the accrued exception byte (sticky bits)
-    if (fpsr & (FPEXP::SNAN | FPEXP::OPERR))                    fpsr |= 1 << 7;
+    if (fpsr & (FPEXP::BSUN | FPEXP::SNAN | FPEXP::OPERR))      fpsr |= 1 << 7;
     if (fpsr & FPEXP::OVFL)                                     fpsr |= 1 << 6;
     if ((fpsr & FPEXP::UNFL) && (fpsr & FPEXP::INEX2))          fpsr |= 1 << 5;
     if (fpsr & FPEXP::DZ)                                       fpsr |= 1 << 4;
@@ -94,6 +94,39 @@ FPU::setConditionCodes(const Float80 &value)
     if (value.isZero())     fpsr |= FPSR::CC_Z;
     if (value.isInfinite()) fpsr |= FPSR::CC_I;
     if (value.isNaN())      fpsr |= FPSR::CC_NAN;
+}
+
+bool
+FPU::test(unsigned condition)
+{
+    condition &= 0x1F;
+
+    bool n = fpsr & FPSR::CC_N;
+    bool z = fpsr & FPSR::CC_Z;
+    bool nan = fpsr & FPSR::CC_NAN;
+
+    // The signaling variants raise BSUN if the operands were unordered
+    if ((condition & 0x10) && nan) setExcStatusBit(FPEXP::BSUN);
+
+    switch (condition & 0xF) {
+
+        case 0x0:   return false;                           // F, SF
+        case 0x1:   return z;                               // EQ, SEQ
+        case 0x2:   return !(nan || z || n);                // OGT, GT
+        case 0x3:   return z || !(nan || n);                // OGE, GE
+        case 0x4:   return n && !(nan || z);                // OLT, LT
+        case 0x5:   return z || (n && !nan);                // OLE, LE
+        case 0x6:   return !(nan || z);                     // OGL, GL
+        case 0x7:   return !nan;                            // OR, GLE
+        case 0x8:   return nan;                             // UN, NGLE
+        case 0x9:   return nan || z;                        // UEQ, NGL
+        case 0xA:   return nan || !(n || z);                // UGT, NLE
+        case 0xB:   return nan || z || !n;                  // UGE, NLT
+        case 0xC:   return nan || (n && !z);                // ULT, NGE
+        case 0xD:   return nan || z || n;                   // ULE, NGT
+        case 0xE:   return !z;                              // NE, SNE
+        default:    return true;                            // T, ST
+    }
 }
 
 void
@@ -658,6 +691,11 @@ FPU::computeFormatWord(FpuFrameType type) const
     switch (type) {
 
         case FpuFrameType::IDLE:
+
+            // The 68040 uses a different version number than the 6888x
+            if (model == FPUModel::INTERNAL) return 0x41000000;
+            return 0x1F000000 | u32(stateFrameSize(type)) << 16;
+
         case FpuFrameType::UNIMP:
         case FpuFrameType::BUSY:
 
