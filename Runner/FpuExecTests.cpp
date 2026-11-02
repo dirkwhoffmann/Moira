@@ -6,6 +6,7 @@
 // -----------------------------------------------------------------------------
 
 #include "Moira.h"
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -341,11 +342,70 @@ static void testTraps()
     cpu4.run({ 0xF200, 0x5400 });
     CHECK(cpu4.reg.pc0 == 0x9000);
 
-    // Transcendental functions are not yet supported
-    TestCPU cpu3;
+    // Transcendental functions are not available on the 68040
+    TestCPU cpu3(FPUModel::INTERNAL);
     cpu3.write32(11 * 4, 0x9000);
     cpu3.run({ 0xF200, 0x000E });                                           // FSIN FP0,FP0
     CHECK(cpu3.reg.pc0 == 0x9000);
+}
+
+static void testTranscendental()
+{
+    auto near = [](const Float80 &a, double expected) {
+        double v = a.toDouble();
+        return std::fabs(v - expected) <= std::fabs(expected) * 1e-15;
+    };
+
+    // FSIN FP1,FP0
+    {
+        TestCPU cpu;
+        cpu.fpu.fpr[1] = F(1.0);
+        cpu.run({ 0xF200, 0x040E });
+        CHECK(near(cpu.fpu.fpr[0], std::sin(1.0)));
+    }
+
+    // FETOX FP1,FP0 and FLOGN FP1,FP0 are inverse operations
+    {
+        TestCPU cpu;
+        cpu.fpu.fpr[1] = F(2.5);
+        cpu.run({ 0xF200, 0x0410, 0xF200, 0x0014 }, 2);
+        CHECK(near(cpu.fpu.fpr[0], 2.5));
+    }
+
+    // FTENTOX of an integer is exact
+    {
+        TestCPU cpu;
+        cpu.fpu.fpr[0] = F(6.0);
+        cpu.run({ 0xF200, 0x0012 });
+        CHECK(same(cpu.fpu.fpr[0], F(1e6)));
+    }
+
+    // FSINCOS FP1,FP2:FP0 (cosine to FP2, sine to FP0)
+    {
+        TestCPU cpu;
+        cpu.fpu.fpr[1] = F(0.5);
+        cpu.run({ 0xF200, 0x0432 });
+        CHECK(near(cpu.fpu.fpr[0], std::sin(0.5)));
+        CHECK(near(cpu.fpu.fpr[2], std::cos(0.5)));
+    }
+
+    // Invalid operands
+    {
+        TestCPU cpu;
+        cpu.fpu.fpr[0] = Float80::infinity();
+        cpu.run({ 0xF200, 0x000E });                                        // FSIN FP0,FP0
+        CHECK(cpu.fpu.fpr[0].isNaN());
+        CHECK(cpu.fpu.fpsr & FPEXP::OPERR);
+    }
+
+    // Logarithm of zero
+    {
+        TestCPU cpu;
+        cpu.fpu.fpr[0] = Float80::zero();
+        cpu.run({ 0xF200, 0x0014 });                                        // FLOGN FP0,FP0
+        CHECK(same(cpu.fpu.fpr[0], Float80::infinity(true)));
+        CHECK(cpu.fpu.fpsr & FPEXP::DZ);
+    }
 }
 
 static void testControl()
@@ -557,6 +617,7 @@ int main()
     testArithmetic();
     testTraps();
     testControl();
+    testTranscendental();
     testModels();
 
     printf("%d checks, %d failures\n", checks, failures);

@@ -1015,7 +1015,12 @@ Moira::execFGeneric(u16 opcode)
     I == Instr::FSABS || I == Instr::FDABS || I == Instr::FSADD || I == Instr::FDADD ||
     I == Instr::FSDIV || I == Instr::FDDIV || I == Instr::FSMUL || I == Instr::FDMUL ||
     I == Instr::FSNEG || I == Instr::FDNEG || I == Instr::FSSQRT || I == Instr::FDSQRT ||
-    I == Instr::FSSUB || I == Instr::FDSUB;
+    I == Instr::FSSUB || I == Instr::FDSUB ||
+    I == Instr::FSIN || I == Instr::FCOS || I == Instr::FTAN || I == Instr::FASIN ||
+    I == Instr::FACOS || I == Instr::FATAN || I == Instr::FSINH || I == Instr::FCOSH ||
+    I == Instr::FTANH || I == Instr::FATANH || I == Instr::FETOX || I == Instr::FETOXM1 ||
+    I == Instr::FTWOTOX || I == Instr::FTENTOX || I == Instr::FLOGN || I == Instr::FLOGNP1 ||
+    I == Instr::FLOG2 || I == Instr::FLOG10 || I == Instr::FSINCOS;
 
     bool illegal = !implemented || !fpu.isSupported(I);
 
@@ -1076,6 +1081,33 @@ Moira::execFGeneric(u16 opcode)
             case Instr::FINTRZ:     result = fpu.fintrz(val); break;
             case Instr::FGETEXP:    result = fpu.fgetexp(val); break;
             case Instr::FGETMAN:    result = fpu.fgetman(val); break;
+            case Instr::FSIN:        result = fpu.fsin(val); break;
+            case Instr::FCOS:        result = fpu.fcos(val); break;
+            case Instr::FTAN:        result = fpu.ftan(val); break;
+            case Instr::FASIN:       result = fpu.fasin(val); break;
+            case Instr::FACOS:       result = fpu.facos(val); break;
+            case Instr::FATAN:       result = fpu.fatan(val); break;
+            case Instr::FSINH:       result = fpu.fsinh(val); break;
+            case Instr::FCOSH:       result = fpu.fcosh(val); break;
+            case Instr::FTANH:       result = fpu.ftanh(val); break;
+            case Instr::FATANH:      result = fpu.fatanh(val); break;
+            case Instr::FETOX:       result = fpu.fetox(val); break;
+            case Instr::FETOXM1:     result = fpu.fetoxm1(val); break;
+            case Instr::FTWOTOX:     result = fpu.ftwotox(val); break;
+            case Instr::FTENTOX:     result = fpu.ftentox(val); break;
+            case Instr::FLOGN:       result = fpu.flogn(val); break;
+            case Instr::FLOGNP1:     result = fpu.flognp1(val); break;
+            case Instr::FLOG2:       result = fpu.flog2(val); break;
+            case Instr::FLOG10:      result = fpu.flog10(val); break;
+
+            case Instr::FSINCOS: {
+                Float80 sine, cosine;
+                fpu.fsincos(val, sine, cosine);
+                auto &c = fpu.fpr[ext & 7];
+                c = fpu.round(cosine);
+                result = sine;
+                break;
+            }
 
             case Instr::FADD: case Instr::FSADD: case Instr::FDADD:
                                     result = fpu.fadd(d, val); break;

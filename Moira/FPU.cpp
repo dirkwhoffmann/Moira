@@ -6,6 +6,7 @@
 // -----------------------------------------------------------------------------
 
 #include "FPU.h"
+#include "FloatMath.h"
 #include <bit>
 
 namespace moira {
@@ -371,6 +372,140 @@ FPU::fsqrt(const Float80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
     return invoke([&] { return value.sqrt(); });
+}
+
+Float80
+FPU::fsin(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke([&] { return FloatMath::sin(value); });
+}
+
+Float80
+FPU::fcos(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke([&] { return FloatMath::cos(value); });
+}
+
+Float80
+FPU::ftan(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke([&] { return FloatMath::tan(value); });
+}
+
+Float80
+FPU::fasin(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke([&] { return FloatMath::asin(value); });
+}
+
+Float80
+FPU::facos(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke([&] { return FloatMath::acos(value); });
+}
+
+Float80
+FPU::fatan(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke([&] { return FloatMath::atan(value); });
+}
+
+Float80
+FPU::fsinh(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke([&] { return FloatMath::sinh(value); });
+}
+
+Float80
+FPU::fcosh(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke([&] { return FloatMath::cosh(value); });
+}
+
+Float80
+FPU::ftanh(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke([&] { return FloatMath::tanh(value); });
+}
+
+Float80
+FPU::fatanh(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke([&] { return FloatMath::atanh(value); });
+}
+
+Float80
+FPU::fetox(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke([&] { return FloatMath::etox(value); });
+}
+
+Float80
+FPU::fetoxm1(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke([&] { return FloatMath::etoxm1(value); });
+}
+
+Float80
+FPU::ftwotox(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke([&] { return FloatMath::twotox(value); });
+}
+
+Float80
+FPU::ftentox(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke([&] { return FloatMath::tentox(value); });
+}
+
+Float80
+FPU::flogn(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke([&] { return FloatMath::logn(value); });
+}
+
+Float80
+FPU::flognp1(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke([&] { return FloatMath::lognp1(value); });
+}
+
+Float80
+FPU::flog2(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke([&] { return FloatMath::log2(value); });
+}
+
+Float80
+FPU::flog10(const Float80 &value)
+{
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke([&] { return FloatMath::log10(value); });
+}
+
+void
+FPU::fsincos(const Float80 &value, Float80 &sine, Float80 &cosine)
+{
+    if (auto nan = resolveNan(value)) { sine = cosine = *nan; return; }
+    sine = invoke([&] { FloatMath::sincos(value, sine, cosine); return sine; });
+    if (sine.isNaN()) cosine = sine;
 }
 
 Float80

@@ -6,6 +6,7 @@ MoiraCore68010.cpp
 MoiraCore68020.cpp
 MoiraDebugger.cpp
 Float80.cpp
+FloatMath.cpp
 FpuFormats.cpp
 FPU.cpp
 )

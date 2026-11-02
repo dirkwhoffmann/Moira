@@ -529,6 +529,73 @@ static void testFPU()
     CHECK(fpu.stateFrameSize(FpuFrameType::BUSY) == 180);
 }
 
+static void testTranscendental()
+{
+    FPU fpu;
+    fpu.setModel(FPUModel::M68882);
+    FPU::Scope scope(fpu);
+
+    auto near = [](const Float80 &a, long double expected) {
+        long double v = a.toLongDouble();
+        return std::fabs(double(v - expected)) <= std::fabs(double(expected)) * 1e-12;
+    };
+
+    // Exact special cases
+    CHECK(same(fpu.fetox(Float80::zero()), Float80::one()));
+    CHECK(same(fpu.fcos(Float80::zero()), Float80::one()));
+    CHECK(same(fpu.fsin(Float80::zero(true)), Float80::zero(true)));
+    CHECK(same(fpu.ftwotox(Float80::fromInt(10)), Float80::fromInt(1024)));
+    CHECK(same(fpu.ftwotox(Float80::fromInt(-3)), Float80::fromDouble(0.125)));
+    CHECK(same(fpu.ftentox(Float80::fromInt(9)), Float80::fromInt(1000000000)));
+    CHECK(same(fpu.flog2(Float80::fromInt(1024)), Float80::fromInt(10)));
+    CHECK(same(fpu.flog10(Float80::fromInt(1000)), Float80::fromInt(3)));
+    CHECK(same(fpu.flogn(Float80::one()), Float80::zero()));
+    CHECK(same(fpu.ftanh(Float80::infinity(true)), Float80::one(true)));
+    CHECK(same(fpu.fetox(Float80::infinity(true)), Float80::zero()));
+    CHECK(near(fpu.fatan(Float80::infinity()), 1.5707963267948966192L));
+
+    // Values
+    CHECK(near(fpu.fsin(Float80::fromInt(1)), std::sin(1.0L)));
+    CHECK(near(fpu.fcos(Float80::fromInt(2)), std::cos(2.0L)));
+    CHECK(near(fpu.ftan(Float80::fromInt(1)), std::tan(1.0L)));
+    CHECK(near(fpu.fatan(Float80::fromInt(1)), std::atan(1.0L)));
+    CHECK(near(fpu.fasin(Float80::fromDouble(0.5)), std::asin(0.5L)));
+    CHECK(near(fpu.facos(Float80::fromDouble(0.5)), std::acos(0.5L)));
+    CHECK(near(fpu.fsinh(Float80::fromInt(1)), std::sinh(1.0L)));
+    CHECK(near(fpu.fcosh(Float80::fromInt(1)), std::cosh(1.0L)));
+    CHECK(near(fpu.ftanh(Float80::fromInt(1)), std::tanh(1.0L)));
+    CHECK(near(fpu.fatanh(Float80::fromDouble(0.5)), std::atanh(0.5L)));
+    CHECK(near(fpu.fetox(Float80::fromInt(1)), std::exp(1.0L)));
+    CHECK(near(fpu.fetoxm1(Float80::fromDouble(1e-5)), std::expm1(1e-5L)));
+    CHECK(near(fpu.flogn(Float80::fromInt(10)), std::log(10.0L)));
+    CHECK(near(fpu.flognp1(Float80::fromDouble(1e-5)), std::log1p(1e-5L)));
+
+    // sin(pi) is tiny, but not zero. Compare to the part of pi not covered by the 64-bit significand.
+    Float80 pi = Float80::fromBits(0x4000, 0xC90FDAA22168C235ULL);
+    Float80 s = fpu.fsin(pi);
+    CHECK(s.exponent() < -60 && s.exponent() > -70);
+
+    // Large arguments are reduced exactly (reference value computed offline)
+    Float80 big = Float80::fromBits(0x3FFF + 100, 1ULL << 63);
+    Float80 sb = fpu.fsin(big);
+    CHECK(near(sb, -0.87218360541826730978L));
+
+    // Exceptions
+    FloatEnv::clearFlags();
+    Float80 r = fpu.fsin(Float80::infinity());
+    CHECK(r.isNaN() && (FloatEnv::flags() & FloatFlags::INVALID));
+    CHECK(fpu.fasin(Float80::fromInt(2)).isNaN());
+    CHECK(fpu.flogn(Float80::fromInt(-1)).isNaN());
+    CHECK(same(fpu.flogn(Float80::zero()), Float80::infinity(true)));
+    CHECK(same(fpu.fatanh(Float80::one()), Float80::infinity()));
+
+    // sincos agrees with sin and cos
+    Float80 sn, cs;
+    fpu.fsincos(Float80::fromDouble(0.7), sn, cs);
+    CHECK(same(sn, fpu.fsin(Float80::fromDouble(0.7))));
+    CHECK(same(cs, fpu.fcos(Float80::fromDouble(0.7))));
+}
+
 int main()
 {
     testIntegers();
@@ -540,6 +607,7 @@ int main()
     testRoundingPrecision();
     testNaNConversions();
     testFPU();
+    testTranscendental();
 
     printf("%d checks, %d failures\n", checks, failures);
     return failures ? EXIT_FAILURE : EXIT_SUCCESS;

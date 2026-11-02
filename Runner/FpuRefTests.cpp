@@ -291,6 +291,111 @@ void testArithmetic(int model, long iterations)
 }
 
 //
+// Transcendental functions
+//
+
+struct TransDesc {
+    u8 cmd;
+    const char *name;
+    Float80 (FPU::*fn)(const Float80 &);
+};
+
+const TransDesc transOps[] = {
+
+    { 0x02, "fsinh",    &FPU::fsinh },    { 0x06, "flognp1",  &FPU::flognp1 },
+    { 0x08, "fetoxm1",  &FPU::fetoxm1 },  { 0x09, "ftanh",    &FPU::ftanh },
+    { 0x0a, "fatan",    &FPU::fatan },    { 0x0c, "fasin",    &FPU::fasin },
+    { 0x0d, "fatanh",   &FPU::fatanh },   { 0x0e, "fsin",     &FPU::fsin },
+    { 0x0f, "ftan",     &FPU::ftan },     { 0x10, "fetox",    &FPU::fetox },
+    { 0x11, "ftwotox",  &FPU::ftwotox },  { 0x12, "ftentox",  &FPU::ftentox },
+    { 0x14, "flogn",    &FPU::flogn },    { 0x15, "flog10",   &FPU::flog10 },
+    { 0x16, "flog2",    &FPU::flog2 },    { 0x19, "fcosh",    &FPU::fcosh },
+    { 0x1c, "facos",    &FPU::facos },    { 0x1d, "fcos",     &FPU::fcos },
+};
+
+// Maps a finite value to an integer such that adjacent values differ by 1
+__int128 ulpIndex(u16 se, u64 man)
+{
+    __int128 e = se & 0x7FFF;
+    __int128 pos = (e << 63) + (e ? __int128(man & ~(1ULL << 63)) : __int128(man >> 1));
+    return (se & 0x8000) ? -pos : pos;
+}
+
+// The reference is accurate to only a few ulps
+int ulpTolerance = 8;
+
+void testTranscendentals(long iterations)
+{
+    FPU fpu;
+    fpu.setModel(FPUModel::M68882);
+    amiref::init(68882);
+
+    for (long i = 0; i < iterations; i++) {
+
+        for (const TransDesc &d : transOps) {
+
+            Float80 src = genOperand();
+            u32 fpcr = genFPCR() & ~0xC0u;      // Extended precision only
+
+            fpu.reset();
+            fpu.setFPCR(fpcr);
+            fpu.setFPSR(0);
+            Float80 res;
+            {
+                FPU::Scope scope(fpu);
+                res = fpu.round((fpu.*d.fn)(src));
+            }
+            u32 exc = fpu.fpsr & 0xFF00;
+
+            amiref::Result ref;
+            if (!amiref::arith(d.cmd, 0, 0, src.signExp(), src.mantissa(), fpcr, ref)) {
+                printf("Reference doesn't implement command %02x\n", d.cmd);
+                continue;
+            }
+
+            Reporter rep(std::string(d.name));
+            bool bothFinite = res.isFinite() && (ref.se & 0x7FFF) != 0x7FFF;
+            bool sameValue = res.signExp() == ref.se && res.mantissa() == ref.man;
+            __int128 diff = 0;
+            if (bothFinite) diff = ulpIndex(res.signExp(), res.mantissa()) - ulpIndex(ref.se, ref.man);
+            if (diff < 0) diff = -diff;
+            bool closeValue = sameValue || (bothFinite && diff <= ulpTolerance);
+            bool sameExc = exc == ref.exc;
+
+            // The reference reduces the argument of sin, cos, and tan with a pi
+            // of limited precision, so its results degrade for large arguments.
+            // Moira reduces exactly (Payne-Hanek).
+            bool trig = d.cmd == 0x0e || d.cmd == 0x0f || d.cmd == 0x1d;
+            if (trig && bothFinite && !closeValue && src.isFinite() && src.exponent() >= 0) {
+                double err = std::ldexp(double(diff), res.exponent() - 63);
+                double slope = d.cmd == 0x0f ? 1.0 + std::ldexp(1.0, 2 * res.exponent()) : 1.0;
+                if (src.exponent() >= 20 || err <= std::ldexp(slope, src.exponent() - 58)) closeValue = true;
+            }
+
+            // The reference has an absolute error of a few units of 2^-64
+            if (!closeValue && bothFinite && std::ldexp(double(diff), res.exponent() - 63) <= std::ldexp(1.0, -60)) closeValue = true;
+
+            // The reference returns garbage in the low bits for tiny arguments
+            // where the function is the identity
+            if (!closeValue && src.isFinite() && src.exponent() < -40 && res.identical(src)) closeValue = true;
+
+            // The reference omits the inexact flag if an overflow or underflow occurs
+            if (!sameExc && (exc & (FPEXP::OVFL | FPEXP::UNFL)) && exc == (ref.exc | amiref::INEX2)) sameExc = true;
+            if (closeValue && !sameValue) rep.known();
+
+            if (!closeValue || !sameExc) {
+
+                rep.category = classify(fpcr, { src });
+                if (closeValue) rep.category += " (flags only)";
+                else if (bothFinite) rep.category += " (" + std::to_string((long long)(diff > 1000 ? 1000 : diff)) + " ulp)";
+                rep.fail("fpcr=%02x src=%s\n   moira=%s exc=%04x   ref=%s exc=%04x", fpcr, str(src).c_str(),
+                         str(res).c_str(), exc, str(ref.se, ref.man).c_str(), ref.exc);
+            }
+        }
+    }
+}
+
+//
 // Conversions
 //
 
@@ -466,6 +571,7 @@ int main(int argc, char **argv)
     for (int model : { 68882, 68040 }) {
         testArithmetic(model, iterations);
         testConversions(model, iterations);
+        if (model != 68040) testTranscendentals(iterations);
     }
 
     long failures = 0;

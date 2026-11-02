@@ -276,6 +276,25 @@ public:
     Float80 fint(const Float80 &value);
     Float80 fintrz(const Float80 &value);
     Float80 fgetexp(const Float80 &value);
+    Float80 fsin(const Float80 &value);
+    Float80 fcos(const Float80 &value);
+    Float80 ftan(const Float80 &value);
+    Float80 fasin(const Float80 &value);
+    Float80 facos(const Float80 &value);
+    Float80 fatan(const Float80 &value);
+    Float80 fsinh(const Float80 &value);
+    Float80 fcosh(const Float80 &value);
+    Float80 ftanh(const Float80 &value);
+    Float80 fatanh(const Float80 &value);
+    Float80 fetox(const Float80 &value);
+    Float80 fetoxm1(const Float80 &value);
+    Float80 ftwotox(const Float80 &value);
+    Float80 ftentox(const Float80 &value);
+    Float80 flogn(const Float80 &value);
+    Float80 flognp1(const Float80 &value);
+    Float80 flog2(const Float80 &value);
+    Float80 flog10(const Float80 &value);
+    void fsincos(const Float80 &value, Float80 &sine, Float80 &cosine);
     Float80 fgetman(const Float80 &value);
 
     // Sets the condition codes according to a value (FTST)
