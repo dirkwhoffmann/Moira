@@ -188,6 +188,30 @@ invokeSilently(F operation)
     return result;
 }
 
+/* FREM returns the destination unrounded if its magnitude is less than half
+ * the magnitude of the source (FMOD rounds in this case).
+ */
+bool
+isSmallerThanHalf(const Float80 &a, const Float80 &b)
+{
+    auto exponent = [](const Float80 &x) {
+        return std::max<i32>(1, x.biasedExponent()) - std::countl_zero(x.mantissa());
+    };
+    return exponent(a) - exponent(b) < -1;
+}
+
+/* FSGLMUL and FSGLDIV round the significand to single precision, but keep the
+ * extended exponent range. If an overflow yields the largest finite number,
+ * all significand bits are set.
+ */
+Float80 singleOverflow(const Float80 &result)
+{
+    if ((FloatEnv::flags() & FloatFlags::OVFL) && result.isFinite() && result.biasedExponent() == 0x7FFE) {
+        return Float80::fromBits(result.signExp(), ~0ULL);
+    }
+    return result;
+}
+
 // Returns the exponent of the least significant mantissa bit
 i32 lsbExponent(const Float80 &x)
 {
@@ -231,10 +255,7 @@ Float80
 FPU::round(const Float80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    if (!value.isFinite() || value.isZero()) return value;
-
-    // The exponent field of denormalized numbers counts as 1
-    return Float80::roundPack(value.sign(), std::max<i32>(1, value.biasedExponent()), value.mantissa());
+    return value.rounded();
 }
 
 std::optional<Float80>
@@ -392,13 +413,7 @@ FPU::fscal(const Float80 &dst, const Float80 &src)
     // Infinities and zeroes are unaffected by scaling
     if (dst.isInfinite() || dst.isZero()) return dst;
 
-    // An overflow doesn't raise the inexact exception
-    auto saved = FloatEnv::flags();
-    FloatEnv::clearFlags();
-    auto result = dst.scale(src);
-    if (FloatEnv::flags() & FloatFlags::OVFL) FloatEnv::clearFlags(FloatFlags::INEXACT);
-    FloatEnv::raiseFlags(saved);
-    return result;
+    return invoke([&] { return dst.scale(src); });
 }
 
 Float80
@@ -416,7 +431,8 @@ FPU::fsglmul(const Float80 &dst, const Float80 &src)
 
     FloatEnv::Scope scope;
     FloatEnv::setPrecision(Precision::SINGLE);
-    return invoke([&] { return truncate(dst) * truncate(src); });
+    FloatEnv::setLimitsExponent(false);
+    return singleOverflow(invoke([&] { return truncate(dst) * truncate(src); }));
 }
 
 Float80
@@ -427,7 +443,8 @@ FPU::fsgldiv(const Float80 &dst, const Float80 &src)
     // The quotient of the unmodified operands is rounded to single precision
     FloatEnv::Scope scope;
     FloatEnv::setPrecision(Precision::SINGLE);
-    return invoke([&] { return dst / src; });
+    FloatEnv::setLimitsExponent(false);
+    return singleOverflow(invoke([&] { return dst / src; }));
 }
 
 Float80
@@ -435,14 +452,14 @@ FPU::fmod(const Float80 &dst, const Float80 &src)
 {
     if (auto nan = resolveNan(dst, src)) return *nan;
 
-    // The remainder is always exact
+    // The remainder is computed exactly and then rounded like any other result
     auto r = invokeExact([&] { return dst.rem(src); });
 
     // Invalid operations (dst infinite, src zero) have no quotient
     if (r.isNaN()) return r;
 
     bool negative = dst.sign() != src.sign();
-    if (src.isInfinite() || dst.isZero()) { setQuotientByte(0, negative); return dst; }
+    if (src.isInfinite() || dst.isZero()) { setQuotientByte(0, negative); return dst.rounded(); }
 
     u8 q = truncatedQuotient(dst, src);
     setQuotientByte(q, negative);
@@ -453,7 +470,8 @@ FPU::fmod(const Float80 &dst, const Float80 &src)
         auto adjust = dst.sign() ? -src.abs() : src.abs();
         r = invokeExact([&] { return r + adjust; });
     }
-    return r.isZero() ? Float80::zero(dst.sign()) : r;
+    if (r.isZero()) return Float80::zero(dst.sign());
+    return r.rounded();
 }
 
 Float80
@@ -465,14 +483,15 @@ FPU::frem(const Float80 &dst, const Float80 &src)
     if (r.isNaN()) return r;
 
     bool negative = dst.sign() != src.sign();
-    if (src.isInfinite() || dst.isZero()) { setQuotientByte(0, negative); return dst; }
+    if (src.isInfinite() || dst.isZero()) { setQuotientByte(0, negative); return dst.rounded(); }
 
     // rem rounds the quotient to nearest, i.e., up if the remainder has the opposite sign
     u8 q = truncatedQuotient(dst, src);
     if (!r.isZero() && r.sign() != dst.sign()) q++;
     setQuotientByte(q, negative);
 
-    return r.isZero() ? Float80::zero(dst.sign()) : r;
+    if (r.isZero()) return Float80::zero(dst.sign());
+    return isSmallerThanHalf(dst, src) ? r : r.rounded();
 }
 
 void

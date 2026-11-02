@@ -80,6 +80,14 @@ public:
     static Precision precision();
     static void setPrecision(Precision precision);
 
+    /* The exponent range of results. If the precision is SINGLE or DOUBLE, the
+     * Motorola FPUs limit the exponent range to the one of the corresponding
+     * format (default: true). FSGLMUL and FSGLDIV only reduce the mantissa
+     * and keep the extended exponent range.
+     */
+    static bool limitsExponent();
+    static void setLimitsExponent(bool value);
+
     // Exception flags (see FloatFlags)
     static u8 flags();
     static void clearFlags(u8 mask = FloatFlags::ALL);
@@ -93,6 +101,7 @@ public:
 
         RoundingMode savedMode;
         Precision savedPrecision;
+        bool savedLimits;
         u8 savedFlags;
         bool restoreFlags;
 
@@ -147,6 +156,9 @@ public:
      * overflow flags as needed.
      */
     static Float80 roundPack(bool sign, i32 exp, u64 sig, u64 extra = 0);
+
+    // Rounds to the current precision and exponent range (FMOVE, FABS, FNEG)
+    Float80 rounded() const;
 
     // Special values
     static constexpr Float80 zero(bool negative = false) { return { u16(negative ? 0x8000 : 0), 0 }; }

@@ -269,10 +269,14 @@ void testArithmetic(int model, long iterations)
                 // Accepted deviations from the reference
                 bool infOperand = dst.isInfinite() || src.isInfinite();
                 bool zeroByInf = (d.op == Op::MOD || d.op == Op::REM) && dst.isZero() && src.isInfinite();
+                // The reference returns a zero significand with the minimum exponent of the format
+                bool pseudoZero = ref.man == 0 && (ref.se & 0x7FFF) != 0 && (ref.se & 0x7FFF) != 0x7FFF;
+                if (pseudoZero && res.isZero() && res.sign() == bool(ref.se & 0x8000) && exc == ref.exc) { rep.known(); continue; }
+
                 bool overflow = (res.signExp() & 0x7FFF) == 0x7FFF || (exc & FPEXP::OVFL);
                 if ((overflow && sameValue && exc == (ref.exc | amiref::INEX2)) ||      // Inexact exception on overflow
                     (d.op == Op::SUB && infOperand && !is040 && (exc == ref.exc)) ||    // 6888x quirk
-                    (zeroByInf && sameValue && (exc | amiref::UNFL) == ref.exc)) {
+                    (zeroByInf && res.isZero() && ref.man == 0 && res.sign() == bool(ref.se & 0x8000) && (exc | amiref::UNFL) == ref.exc)) {
                     rep.known();
                     continue;
                 }
@@ -282,8 +286,8 @@ void testArithmetic(int model, long iterations)
                 bool reducedPrecision = (fpcr & 0xC0) || (d.cmd & 0x40) || d.op == Op::SGLMUL || d.op == Op::SGLDIV;
                 bool refDenormal = (ref.se & 0x7FFF) == 0 && ref.man != 0;
                 bool resDenormal = res.biasedExponent() == 0 && !res.isZero();
-                if (reducedPrecision || denormalOperand) { rep.pending(); continue; }
-                if (refDenormal || resDenormal || (ref.exc & amiref::UNFL) || (exc & FPEXP::UNFL)) { rep.pending(); continue; }
+                if (denormalOperand) { rep.pending(); continue; }
+                if (refDenormal || resDenormal) { rep.pending(); continue; }
 
                 rep.category = classify(fpcr, { dst, src });
                 if (sameValue && sameQuot) rep.category += " (flags only)";
