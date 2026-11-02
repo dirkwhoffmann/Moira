@@ -76,6 +76,8 @@
 		505A80FD3098B1AD00E2E307 /* s_shiftRightJam64Extra.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B63098B1AD00E2E307 /* s_shiftRightJam64Extra.c */; };
 		505A80FE3098B1AD00E2E307 /* s_subMagsExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BC3098B1AD00E2E307 /* s_subMagsExtF80.c */; };
 		505A81013098B1C600E2E307 /* Float80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81003098B1C600E2E307 /* Float80.cpp */; };
+		505A81063098E38500E2E307 /* FPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81033098E38500E2E307 /* FPU.cpp */; };
+		505A81073098E38500E2E307 /* FpuFormats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81053098E38500E2E307 /* FpuFormats.cpp */; };
 		507BE4AF23B66456000B37D2 /* Testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* Testrunner.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
 		50804EE22386A72C004D3EC2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E8C2386A72C004D3EC2 /* main.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
 		50804F352386A7DD004D3EC2 /* Moira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F332386A7DD004D3EC2 /* Moira.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
@@ -205,6 +207,10 @@
 		505A80C13098B1AD00E2E307 /* specialize.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = specialize.h; sourceTree = "<group>"; };
 		505A80FF3098B1C600E2E307 /* Float80.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Float80.h; sourceTree = "<group>"; };
 		505A81003098B1C600E2E307 /* Float80.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Float80.cpp; sourceTree = "<group>"; };
+		505A81023098E38500E2E307 /* FPU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FPU.h; sourceTree = "<group>"; };
+		505A81033098E38500E2E307 /* FPU.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FPU.cpp; sourceTree = "<group>"; };
+		505A81043098E38500E2E307 /* FpuFormats.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FpuFormats.h; sourceTree = "<group>"; };
+		505A81053098E38500E2E307 /* FpuFormats.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FpuFormats.cpp; sourceTree = "<group>"; };
 		505CA8AA28C7209200871439 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		507BE4AD23B66456000B37D2 /* Testrunner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Testrunner.cpp; sourceTree = "<group>"; };
 		507BE4AE23B66456000B37D2 /* Testrunner.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Testrunner.h; sourceTree = "<group>"; };
@@ -450,6 +456,10 @@
 				502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */,
 				5010BDAD238A897400CFD010 /* StrWriter.h */,
 				5010BDAC238A897400CFD010 /* StrWriter_cpp.h */,
+				505A81023098E38500E2E307 /* FPU.h */,
+				505A81033098E38500E2E307 /* FPU.cpp */,
+				505A81043098E38500E2E307 /* FpuFormats.h */,
+				505A81053098E38500E2E307 /* FpuFormats.cpp */,
 				505A80FF3098B1C600E2E307 /* Float80.h */,
 				505A81003098B1C600E2E307 /* Float80.cpp */,
 			);
@@ -558,6 +568,8 @@
 				505A80C43098B1AD00E2E307 /* extF80_mul.c in Sources */,
 				505A80C53098B1AD00E2E307 /* extF80_add.c in Sources */,
 				505A80C63098B1AD00E2E307 /* extF80_div.c in Sources */,
+				505A81063098E38500E2E307 /* FPU.cpp in Sources */,
+				505A81073098E38500E2E307 /* FpuFormats.cpp in Sources */,
 				505A80C73098B1AD00E2E307 /* s_approxRecip32_1.c in Sources */,
 				505A80C83098B1AD00E2E307 /* moira_env.c in Sources */,
 				505A80C93098B1AD00E2E307 /* extF80_roundToInt.c in Sources */,

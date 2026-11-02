@@ -10,6 +10,7 @@
 #include "MoiraConfig.h"
 #include "MoiraTypes.h"
 #include "MoiraDebugger.h"
+#include "FPU.h"
 
 namespace moira {
 
@@ -70,6 +71,9 @@ protected:
     
     // The CPU's register set
     Registers reg {};
+
+    // The floating-point unit
+    FPU fpu {};
     
     // Prefetch queue for fetching instructions
     PrefetchQueue queue {};

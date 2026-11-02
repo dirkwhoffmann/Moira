@@ -155,6 +155,23 @@ template <Core C> void noPrefetch(int delay = 0);
 template <Core C> void readExt();
 template <Core C, Size S> u32 readExt();
 
+/* Reads and writes floating-point operands. Depending on the addressing mode,
+ * the operand is located in a data register, in memory, or in the instruction
+ * stream. The operand format is given as an FpuFormat. Operands in memory
+ * advance the address register for the modes (An)+ and -(An).
+ */
+template <Core C, Mode M> Float80 readFpuOp(int n, FpuFormat fmt);
+template <Core C> Float80 readFpuOpRg(int n, FpuFormat fmt);
+template <Core C> Float80 readFpuOpIm(FpuFormat fmt);
+template <Core C, Mode M> Float80 readFpuOpEa(int n, u32 ea, FpuFormat fmt);
+
+template <Core C, Mode M> void writeFpuOp(int n, const Float80 &val, FpuFormat fmt, int k);
+template <Core C> void writeFpuOpRg(int n, const Float80 &val, FpuFormat fmt);
+template <Core C, Mode M> void writeFpuOpEa(int n, u32 ea, const Float80 &val, FpuFormat fmt, int k, bool round);
+
+// Computes the effective address of a floating-point operand
+template <Core C, Mode M> u32 computeFpuEA(int n, FpuFormat fmt);
+
 // Jumps to an exception vector
 template <Core C, Flags F = 0> void jumpToVector(int nr);
 

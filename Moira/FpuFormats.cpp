@@ -213,24 +213,46 @@ FpuFormats::toInteger(const Float80 &value, int bits)
 Float80
 FpuFormats::fromSingle(u32 raw)
 {
+    // NaNs are converted bit by bit to keep their payload and their signaling state
+    if ((raw & 0x7F800000) == 0x7F800000 && (raw & 0x007FFFFF)) {
+        return Float80::fromBits(u16((raw >> 16) & 0x8000) | 0x7FFF,
+                                 (1ULL << 63) | u64(raw & 0x007FFFFF) << 40);
+    }
     return Float80::fromFloat(std::bit_cast<float>(raw));
 }
 
 Float80
 FpuFormats::fromDouble(u64 raw)
 {
+    if ((raw & 0x7FF0000000000000ULL) == 0x7FF0000000000000ULL && (raw & 0x000FFFFFFFFFFFFFULL)) {
+        return Float80::fromBits(u16((raw >> 48) & 0x8000) | 0x7FFF,
+                                 (1ULL << 63) | (raw & 0x000FFFFFFFFFFFFFULL) << 11);
+    }
     return Float80::fromDouble(std::bit_cast<double>(raw));
 }
 
 u32
 FpuFormats::toSingle(const Float80 &value)
 {
+    if (value.isNaN()) {
+
+        // Truncate the payload, but make sure the result remains a NaN
+        u32 frac = u32((value.mantissa() >> 40) & 0x007FFFFF);
+        if (frac == 0) frac = 0x00400000;
+        return u32(value.sign()) << 31 | 0x7F800000 | frac;
+    }
     return std::bit_cast<u32>(value.toFloat());
 }
 
 u64
 FpuFormats::toDouble(const Float80 &value)
 {
+    if (value.isNaN()) {
+
+        u64 frac = (value.mantissa() >> 11) & 0x000FFFFFFFFFFFFFULL;
+        if (frac == 0) frac = 0x0008000000000000ULL;
+        return u64(value.sign()) << 63 | 0x7FF0000000000000ULL | frac;
+    }
     return std::bit_cast<u64>(value.toDouble());
 }
 

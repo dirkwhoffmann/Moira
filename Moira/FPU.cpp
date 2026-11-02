@@ -23,6 +23,32 @@ FPU::reset()
     resetState = true;
 }
 
+bool
+FPU::isSupported(Instr I) const
+{
+    switch (I) {
+
+        // Instructions that are only available on the 6888x. The 68040 traps them.
+        case Instr::FACOS:     case Instr::FASIN:     case Instr::FATANH:    case Instr::FCOS:
+        case Instr::FCOSH:     case Instr::FETOX:     case Instr::FETOXM1:   case Instr::FGETEXP:
+        case Instr::FGETMAN:   case Instr::FLOG10:    case Instr::FLOG2:     case Instr::FLOGN:
+        case Instr::FLOGNP1:   case Instr::FMOD:      case Instr::FREM:      case Instr::FSCAL:
+        case Instr::FSIN:      case Instr::FSINCOS:   case Instr::FSINH:     case Instr::FTAN:
+        case Instr::FTANH:     case Instr::FTENTOX:   case Instr::FTWOTOX:   case Instr::FATAN:
+            return model != FPUModel::INTERNAL;
+
+        // Instructions that are only available on the 68040
+        case Instr::FSABS:     case Instr::FDABS:     case Instr::FSADD:     case Instr::FDADD:
+        case Instr::FSDIV:     case Instr::FDDIV:     case Instr::FSMOVE:    case Instr::FDMOVE:
+        case Instr::FSMUL:     case Instr::FDMUL:     case Instr::FSNEG:     case Instr::FDNEG:
+        case Instr::FSSQRT:    case Instr::FDSQRT:    case Instr::FSSUB:     case Instr::FDSUB:
+            return model == FPUModel::INTERNAL;
+
+        default:
+            return true;
+    }
+}
+
 Precision
 FPU::getPrecision() const
 {

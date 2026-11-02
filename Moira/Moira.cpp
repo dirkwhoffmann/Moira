@@ -203,6 +203,8 @@ Moira::addrMask() const
 void
 Moira::reset()
 {
+    fpu.reset();
+
     switch (cpuModel) {
 
         case Model::M68000:    reset<Core::C68000>(); break;

@@ -414,6 +414,29 @@ static void testRoundingPrecision()
     }
 }
 
+static void testNaNConversions()
+{
+    FloatEnv::Scope scope;
+    FloatEnv::clearFlags();
+
+    // Signaling NaNs stay signaling, quiet NaNs stay quiet, and no flags are raised
+    auto snan = FpuFormats::fromSingle(0x7F800001);
+    CHECK(snan.isSignalingNaN());
+    CHECK(same(snan, Float80::fromBits(0x7FFF, 0x8000000000000000ULL | 1ULL << 40)));
+    CHECK(FpuFormats::fromSingle(0xFFC00000).isQuietNaN() && FpuFormats::fromSingle(0xFFC00000).sign());
+    CHECK(FpuFormats::fromDouble(0x7FF0000000000001ULL).isSignalingNaN());
+    CHECK(FpuFormats::fromDouble(0x7FF8000000000001ULL).isQuietNaN());
+    CHECK(FloatEnv::flags() == 0);
+
+    // The conversion back truncates the payload
+    CHECK(FpuFormats::toSingle(FpuFormats::fromSingle(0x7FC12345)) == 0x7FC12345);
+    CHECK(FpuFormats::toDouble(FpuFormats::fromDouble(0xFFF8000000000042ULL)) == 0xFFF8000000000042ULL);
+
+    // A NaN never turns into an infinity
+    CHECK(FpuFormats::toSingle(Float80::fromBits(0x7FFF, 0x8000000000000001ULL)) == 0x7FC00000);
+    CHECK(FpuFormats::toDouble(Float80::fromBits(0x7FFF, 0x8000000000000001ULL)) == 0x7FF8000000000000ULL);
+}
+
 static void testFPU()
 {
     FPU fpu;
@@ -493,6 +516,7 @@ int main()
     testPackedRoundTrip();
     testArithmetic();
     testRoundingPrecision();
+    testNaNConversions();
     testFPU();
 
     printf("%d checks, %d failures\n", checks, failures);

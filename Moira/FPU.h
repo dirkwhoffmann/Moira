@@ -31,6 +31,19 @@ enum class FpuFrameType
     BUSY
 };
 
+// Operand formats (source and destination specifier of FMOVE and arithmetic instructions)
+enum class FpuFormat : int
+{
+    LONG        = 0,
+    SINGLE      = 1,
+    EXTENDED    = 2,
+    PACKED      = 3,    // Packed decimal, k-factor is a static value
+    WORD        = 4,
+    DOUBLE      = 5,
+    BYTE        = 6,
+    PACKED_DYN  = 7     // Packed decimal, k-factor is taken from a data register
+};
+
 /* Floating-point control register (FPCR)
  *
  *   Bits 15..8: Exception enable byte (BSUN, SNAN, OPERR, OVFL, UNFL, DZ, INEX2, INEX1)
@@ -130,6 +143,9 @@ public:
 
     FPUModel getModel() const { return model; }
     void setModel(FPUModel newModel) { model = newModel; }
+
+    // Checks whether an instruction is implemented in hardware by the emulated model
+    bool isSupported(Instr I) const;
 
     // Returns the precision and rounding mode, as specified in the FPCR
     Precision getPrecision() const;

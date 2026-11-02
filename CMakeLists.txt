@@ -54,6 +54,11 @@ add_executable(fpuTests Runner/FpuTests.cpp)
 target_link_libraries(fpuTests moira)
 target_include_directories(fpuTests PUBLIC ${CMAKE_SOURCE_DIR}/Moira)
 
+add_executable(fpuExecTests Runner/FpuExecTests.cpp)
+target_link_libraries(fpuExecTests moira)
+target_include_directories(fpuExecTests PUBLIC ${CMAKE_SOURCE_DIR}/Moira)
+
 # Add tests
 add_test(UnitTest testRunner)
+add_test(FpuExecTests fpuExecTests)
 add_test(FpuTests fpuTests)
