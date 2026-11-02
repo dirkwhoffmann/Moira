@@ -15,6 +15,13 @@ using namespace moira;
 
 class TestCPU : public Moira {
 
+public:
+
+    // Grant the test runner access to the FPU state
+    using Moira::fpu;
+
+private:
+
     void sync(int cycles) override;
     u8 read8(u32 addr) const override;
     u16 read16(u32 addr) const override;

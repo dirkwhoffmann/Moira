@@ -24,6 +24,9 @@ static const bool CHECK_MMU = true;
 // Set to true to execute FPU tests for capable CPUs
 static const bool CHECK_FPU = true;
 
+// Number of random setups per FPU test round
+static const int FPU_SETUPS = 4;
+
 // Set to true to skip the execution of illegal instructions
 static const bool SKIP_ILLEGAL = true;
 
@@ -37,7 +40,7 @@ static const bool PROFILE_CPU = true;
 static const bool PROFILE_DASM = false;
 
 // Change to limit the range of executed instructions
-#define doExec(opcode) (opcode >= 0x0000 && opcode <= 0xEFFF)
+#define doExec(opcode) ((opcode) <= 0xEFFF || isFpuOpcode(opcode))
 
 // Change to limit the range of disassembled instructions
 #define doDasm(opcode) (opcode >= 0x0000 && opcode <= 0xFFFF)

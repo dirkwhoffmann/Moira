@@ -221,6 +221,43 @@ void resetMoira(Setup &s)
     moiracpu->setSupervisorMode(s.supervisor);
 }
 
+void resetMusashiFpu(Setup &s)
+{
+    for (int i = 0; i < 8; i++) {
+        REG_FP[i].high = s.fpr[i].signExp();
+        REG_FP[i].low = s.fpr[i].mantissa();
+    }
+    REG_FPCR = s.fpcr;
+    REG_FPSR = s.fpsr;
+    REG_FPIAR = s.fpiar;
+}
+
+void resetMoiraFpu(Setup &s)
+{
+    for (int i = 0; i < 8; i++) moiracpu->fpu.fpr[i] = s.fpr[i];
+    moiracpu->fpu.setFPCR(s.fpcr);
+    moiracpu->fpu.setFPSR(s.fpsr);
+    moiracpu->fpu.setFPIAR(s.fpiar);
+}
+
+void recordMusashiFpu(Result &r)
+{
+    for (int i = 0; i < 8; i++) {
+        r.fpr[i] = Float80::fromBits(REG_FP[i].high, REG_FP[i].low);
+    }
+    r.fpcr = REG_FPCR;
+    r.fpsr = REG_FPSR;
+    r.fpiar = REG_FPIAR;
+}
+
+void recordMoiraFpu(Result &r)
+{
+    for (int i = 0; i < 8; i++) r.fpr[i] = moiracpu->fpu.fpr[i];
+    r.fpcr = moiracpu->fpu.getFPCR();
+    r.fpsr = moiracpu->fpu.getFPSR();
+    r.fpiar = moiracpu->fpu.getFPIAR();
+}
+
 clock_t muclk[2] = {0,0}, moclk[2] = {0,0};
 
 void run()
@@ -286,6 +323,9 @@ void runCPU(long round)
                 if (moiracpu->getInstrInfo(op).I == moira::Instr::ILLEGAL) continue;
             }
 
+            // FPU opcodes are covered by runFPU
+            if (isFpuOpcode(u16(op))) continue;
+
             // Execute both CPU cores
             runSingleTest(setup, u16(op));
         }
@@ -321,18 +361,72 @@ void runFPU(long round)
     Setup setup;
 
     printf("%s FPU ", selectedModel()); fflush(stdout);
-    setupTestEnvironment(setup, round);
 
-    for (int op = 0xF200; op <= 0xF23F; op++) {
+    for (int i = 0; i < FPU_SETUPS; i++) {
 
-        if ((op % 2) == 0) { printf("."); fflush(stdout); }
+        printf("."); fflush(stdout);
 
-        for (int ext = 0x0000; ext <= 0xFFFF; ext++) {
+        setupTestEnvironment(setup, round * FPU_SETUPS + i);
+        setupFpuEnvironment(setup);
 
-            runSingleTest(setup, u16(op), u16(ext));
+        for (int op = 0xF200; op <= 0xF23F; op++) {
+
+            for (int ext = 0x0000; ext <= 0xFFFF; ext++) {
+
+                runSingleTest(setup, u16(op), u16(ext));
+            }
         }
     }
     passed();
+}
+
+bool isFpuOpcode(u16 op)
+{
+    return (op & 0xFF00) == 0xF200 && moiracpu != nullptr && moiracpu->hasFPU();
+}
+
+void setupFpuEnvironment(Setup &s)
+{
+    // A pool of interesting values
+    static const Float80 pool[] = {
+
+        Float80::zero(), Float80::zero(true),
+        Float80::one(), Float80::one(true),
+        Float80::infinity(), Float80::infinity(true),
+        Float80::quietNaN(), Float80::signalingNaN(),
+        Float80::fromBits(0x4000, 0x8000000000000000ULL),   // 2.0
+        Float80::fromBits(0x3FFE, 0x8000000000000000ULL),   // 0.5
+        Float80::fromBits(0x4005, 0xA000000000000000ULL),   // 40.0
+        Float80::fromBits(0xC005, 0xA000000000000000ULL),   // -40.0
+        Float80::fromBits(0x0001, 0x8000000000000000ULL),   // Smallest normal
+        Float80::fromBits(0x0000, 0x4000000000000000ULL),   // Denormal
+        Float80::fromBits(0x7FFE, 0xFFFFFFFFFFFFFFFFULL),   // Largest finite
+        Float80::fromBits(0x3FFF, 0x8000000000000001ULL),   // 1 + epsilon
+    };
+    const int poolSize = sizeof(pool) / sizeof(pool[0]);
+
+    for (int i = 0; i < 8; i++) {
+
+        u32 r = randomizer.rand();
+        if (r % 3 == 0) {
+
+            // Pick a special value
+            s.fpr[i] = pool[(r >> 8) % poolSize];
+
+        } else {
+
+            // Create a random normalized number with a moderate exponent
+            u64 man = (u64(randomizer.rand()) << 32 | randomizer.rand()) | (1ULL << 63);
+            u16 exp = u16(0x3FFF - 40 + randomizer.rand() % 80);
+            u16 sign = (randomizer.rand() & 1) << 15;
+            s.fpr[i] = Float80::fromBits(sign | exp, man);
+        }
+    }
+
+    // Control register: Random rounding mode and precision, no exception enables
+    s.fpcr = randomizer.rand() & 0xF0;
+    s.fpsr = randomizer.rand() & 0x0F000000;
+    s.fpiar = randomizer.rand();
 }
 
 void passed()
@@ -367,6 +461,12 @@ void runSingleTest(Setup &s, u16 op)
     resetMusashi(s);
     resetMoira(s);
 
+    bool fpu = isFpuOpcode(op);
+    if (fpu) {
+        resetMusashiFpu(s);
+        resetMoiraFpu(s);
+    }
+
     // Run the binutils disassembler
     runBinutils(s, mur);
 
@@ -381,6 +481,10 @@ void runSingleTest(Setup &s, u16 op)
     moclk[1] += mor.elapsed[1];
 
     // Compare
+    if (fpu) {
+        recordMusashiFpu(mur);
+        recordMoiraFpu(mor);
+    }
     compare(s, mur, mor);
 }
 
@@ -661,6 +765,29 @@ void compare(Setup &s, Result &r1, Result &r2)
                 printf("\nCACHE REGISTER MISMATCH FOUND");
                 error = true;
             }
+            if (isFpuOpcode(s.opcode)) {
+
+                if (!compareFPR(r1, r2)) {
+                    printf("\nFLOATING-POINT REGISTER MISMATCH FOUND");
+                    error = true;
+                }
+                if (!compareFPCR(r1, r2)) {
+                    printf("\nFPCR MISMATCH FOUND");
+                    error = true;
+                }
+                if (!compareFPSR(r1, r2)) {
+                    printf("\nFPSR MISMATCH FOUND");
+                    error = true;
+                }
+                if (!compareFPIAR(r1, r2)) {
+                    printf("\nFPIAR MISMATCH FOUND");
+                    error = true;
+                }
+                if (!compareMemory()) {
+                    printf("\nMEMORY MISMATCH FOUND");
+                    error = true;
+                }
+            }
             if (sandbox.getErrors()) {
                 printf("\nSANDBOX ERRORS REPORTED");
                 error = true;
@@ -686,6 +813,16 @@ void compare(Setup &s, Result &r1, Result &r2)
 
         printf("Moira:   ");
         dumpResult(r2);
+
+        if (isFpuOpcode(s.opcode)) {
+            for (int i = 0; i < 8; i++) {
+                printf("FP%d: setup %s  Musashi %s  Moira %s\n", i,
+                       s.fpr[i].str().c_str(), r1.fpr[i].str().c_str(), r2.fpr[i].str().c_str());
+            }
+            printf("FPCR: %08x / %08x / %08x (setup / Musashi / Moira)\n", s.fpcr, r1.fpcr, r2.fpcr);
+            printf("FPSR: %08x / %08x / %08x\n", s.fpsr, r1.fpsr, r2.fpsr);
+            printf("FPIAR: %08x / %08x / %08x\n\n", s.fpiar, r1.fpiar, r2.fpiar);
+        }
 
         bugReport();
     }
@@ -809,6 +946,17 @@ bool compareCAxR(Result &r1, Result &r2)
     return r1.cacr == r2.cacr && r1.caar == r2.caar;
 }
 
+bool compareFPR(Result &r1, Result &r2)
+{
+    for (int i = 0; i < 8; i++) if (!r1.fpr[i].identical(r2.fpr[i])) return false;
+    return true;
+}
+
+bool compareFPCR(Result &r1, Result &r2) { return r1.fpcr == r2.fpcr; }
+bool compareFPSR(Result &r1, Result &r2) { return r1.fpsr == r2.fpsr; }
+bool compareFPIAR(Result &r1, Result &r2) { return r1.fpiar == r2.fpiar; }
+bool compareMemory() { return memcmp(musashiMem, moiraMem, sizeof(musashiMem)) == 0; }
+
 bool compareCycles(Result &r1, Result &r2)
 {
     assert(r1.opcode == r2.opcode);
@@ -818,6 +966,9 @@ bool compareCycles(Result &r1, Result &r2)
 
     // Exclude some instructions
     if (I == Instr::TAS) return true;
+
+    // FPU timing is not emulated yet
+    if (isFpuOpcode(r1.opcode)) return true;
 
     /* Timing comparison is off for every model beyond the 68000 and 68010
      * while the instruction cache is emulated. Those models (68020 and up)

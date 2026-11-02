@@ -85,6 +85,10 @@ struct Setup {
     u16     dfc;
     u32     cacr;
     u32     caar;
+    Float80 fpr[8];
+    u32     fpcr;
+    u32     fpsr;
+    u32     fpiar;
     u8      mem[0x10000];
 };
 
@@ -107,6 +111,10 @@ struct Result {
     u32     dfc;
     u32     cacr;
     u32     caar;
+    Float80 fpr[8];
+    u32     fpcr;
+    u32     fpsr;
+    u32     fpiar;
     char    dasmMoira[128];
     int     dasmCntMoira;
     char    dasmBinutils[128];
@@ -133,10 +141,13 @@ void setupMusashi();
 void setupMoira();
 
 void setupTestEnvironment(Setup &s, long round);
+void setupFpuEnvironment(Setup &s);
 void setupTestInstruction(Setup &s, u32 pc, u16 opcode);
 
 void resetMusashi(Setup &s);
 void resetMoira(Setup &s);
+void resetMusashiFpu(Setup &s);
+void resetMoiraFpu(Setup &s);
 
 
 //
@@ -167,6 +178,8 @@ bool skip(u16 op);
 
 void recordMusashiRegisters(Result &r);
 void recordMoiraRegisters(Result &r);
+void recordMusashiFpu(Result &r);
+void recordMoiraFpu(Result &r);
 
 void compare(Setup &s, Result &r1, Result &r2);
 bool compareDasm(Result &r1, Result &r2);
@@ -182,5 +195,12 @@ bool compareSFC(Result &r1, Result &r2);
 bool compareDFC(Result &r1, Result &r2);
 bool compareCAxR(Result &r1, Result &r2);
 bool compareCycles(Result &r1, Result &r2);
+bool compareFPR(Result &r1, Result &r2);
+bool compareFPCR(Result &r1, Result &r2);
+bool compareFPSR(Result &r1, Result &r2);
+bool compareFPIAR(Result &r1, Result &r2);
+bool compareMemory();
+
+bool isFpuOpcode(u16 op);
 
 void bugReport();
