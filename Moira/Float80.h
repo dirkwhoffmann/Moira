@@ -64,7 +64,8 @@ struct FloatFlags {
     static constexpr u8 OVFL        = 0x04;   ///< Overflow
     static constexpr u8 DIV_BY_ZERO = 0x08;
     static constexpr u8 INVALID     = 0x10;
-    static constexpr u8 ALL         = 0x1F;
+    static constexpr u8 SNAN        = 0x20;   ///< Signaling NaN operand (no SoftFloat counterpart)
+    static constexpr u8 ALL         = 0x3F;
 };
 
 class FloatEnv {
@@ -150,7 +151,7 @@ public:
     // Special values
     static constexpr Float80 zero(bool negative = false) { return { u16(negative ? 0x8000 : 0), 0 }; }
     static constexpr Float80 one(bool negative = false) { return { u16(negative ? 0xBFFF : 0x3FFF), 1ULL << 63 }; }
-    static constexpr Float80 infinity(bool negative = false) { return { u16(negative ? 0xFFFF : 0x7FFF), 1ULL << 63 }; }
+    static constexpr Float80 infinity(bool negative = false) { return { u16(negative ? 0xFFFF : 0x7FFF), 0 }; }
     static constexpr Float80 quietNaN(bool negative = false) { return { u16(negative ? 0xFFFF : 0x7FFF), 0xC000000000000000ULL }; }
     static constexpr Float80 signalingNaN(bool negative = false) { return { u16(negative ? 0xFFFF : 0x7FFF), 0xA000000000000000ULL }; }
 

@@ -49,7 +49,7 @@ static void testIntegers()
 
     // Special values
     CHECK(FpuFormats::toInteger(Float80::infinity(true), 32) == INT32_MIN);
-    CHECK(FpuFormats::toInteger(Float80::quietNaN(), 32) == INT32_MAX);
+    CHECK(FpuFormats::toInteger(Float80::quietNaN(), 32) == i32(0xC0000000));      // High bits of the mantissa
     CHECK(FloatEnv::flags() & FloatFlags::INVALID);
 }
 
@@ -422,7 +422,7 @@ static void testNaNConversions()
     // Signaling NaNs stay signaling, quiet NaNs stay quiet, and no flags are raised
     auto snan = FpuFormats::fromSingle(0x7F800001);
     CHECK(snan.isSignalingNaN());
-    CHECK(same(snan, Float80::fromBits(0x7FFF, 0x8000000000000000ULL | 1ULL << 40)));
+    CHECK(same(snan, Float80::fromBits(0x7FFF, 1ULL << 40)));      // Without integer bit, as the 68k FPUs do it
     CHECK(FpuFormats::fromSingle(0xFFC00000).isQuietNaN() && FpuFormats::fromSingle(0xFFC00000).sign());
     CHECK(FpuFormats::fromDouble(0x7FF0000000000001ULL).isSignalingNaN());
     CHECK(FpuFormats::fromDouble(0x7FF8000000000001ULL).isQuietNaN());

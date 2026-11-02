@@ -21,20 +21,28 @@ namespace moira {
 
 namespace {
 
-// Conversion between Float80 and the SoftFloat representation
+/* Conversion between Float80 and the SoftFloat representation
+ *
+ * Float80 uses the encoding of the Motorola FPUs, whereas SoftFloat follows
+ * the x87. The two differ in the representation of infinity: The 68k FPUs
+ * store an infinity with an all-zero mantissa, the x87 sets the integer bit.
+ * The conversion functions translate between the two. The remaining
+ * differences (denormals, exponent range) are handled elsewhere.
+ */
 inline extFloat80_t
 toSF(const Float80 &x)
 {
     extFloat80_t result;
     result.signExp = x.signExp();
-    result.signif = x.mantissa();
+    result.signif = x.isInfinite() ? (1ULL << 63) : x.mantissa();
     return result;
 }
 
 inline Float80
 fromSF(const extFloat80_t &x)
 {
-    return Float80::fromBits(x.signExp, x.signif);
+    bool infinity = (x.signExp & 0x7FFF) == 0x7FFF && (x.signif << 1) == 0;
+    return Float80::fromBits(x.signExp, infinity ? 0 : x.signif);
 }
 
 inline uint_fast8_t

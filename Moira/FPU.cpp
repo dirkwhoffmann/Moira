@@ -136,6 +136,7 @@ FPU::collectFlags()
     if (flags & FloatFlags::OVFL)           mask |= FPEXP::OVFL;
     if (flags & FloatFlags::DIV_BY_ZERO)    mask |= FPEXP::DZ;
     if (flags & FloatFlags::INVALID)        mask |= FPEXP::OPERR;
+    if (flags & FloatFlags::SNAN)           mask |= FPEXP::SNAN;
 
     if (mask) setExcStatusBit(mask);
     FloatEnv::clearFlags();
@@ -229,6 +230,7 @@ truncatedQuotient(const Float80 &a, const Float80 &b)
 Float80
 FPU::round(const Float80 &value)
 {
+    if (auto nan = resolveNan(value)) return *nan;
     if (!value.isFinite() || value.isZero()) return value;
 
     // The exponent field of denormalized numbers counts as 1
@@ -281,15 +283,15 @@ FPU::resolveNan(const Float80 &op)
 Float80
 FPU::fabs(const Float80 &value)
 {
-    if (auto nan = resolveNan(value)) return nan->abs();
-    return value.abs();
+    if (auto nan = resolveNan(value)) return *nan;
+    return round(value.abs());
 }
 
 Float80
 FPU::fneg(const Float80 &value)
 {
-    if (auto nan = resolveNan(value)) return -*nan;
-    return -value;
+    if (auto nan = resolveNan(value)) return *nan;
+    return round(-value);
 }
 
 Float80
@@ -390,7 +392,13 @@ FPU::fscal(const Float80 &dst, const Float80 &src)
     // Infinities and zeroes are unaffected by scaling
     if (dst.isInfinite() || dst.isZero()) return dst;
 
-    return invoke([&] { return dst.scale(src); });
+    // An overflow doesn't raise the inexact exception
+    auto saved = FloatEnv::flags();
+    FloatEnv::clearFlags();
+    auto result = dst.scale(src);
+    if (FloatEnv::flags() & FloatFlags::OVFL) FloatEnv::clearFlags(FloatFlags::INEXACT);
+    FloatEnv::raiseFlags(saved);
+    return result;
 }
 
 Float80
@@ -398,12 +406,17 @@ FPU::fsglmul(const Float80 &dst, const Float80 &src)
 {
     if (auto nan = resolveNan(dst, src)) return *nan;
 
-    // Round both operands to single precision, then multiply
+    // The operands are truncated to single precision, the product is rounded to
+    // single precision
+    auto truncate = [](const Float80 &x) {
+
+        if (!x.isFinite() || x.biasedExponent() == 0) return x;
+        return Float80::fromBits(x.signExp(), x.mantissa() & 0xFFFFFF0000000000ULL);
+    };
+
     FloatEnv::Scope scope;
     FloatEnv::setPrecision(Precision::SINGLE);
-    auto a = invokeSilently([&] { return round(dst); });
-    auto b = invokeSilently([&] { return round(src); });
-    return invoke([&] { return a * b; });
+    return invoke([&] { return truncate(dst) * truncate(src); });
 }
 
 Float80
@@ -411,12 +424,10 @@ FPU::fsgldiv(const Float80 &dst, const Float80 &src)
 {
     if (auto nan = resolveNan(dst, src)) return *nan;
 
-    // Round both operands to single precision, then divide
+    // The quotient of the unmodified operands is rounded to single precision
     FloatEnv::Scope scope;
     FloatEnv::setPrecision(Precision::SINGLE);
-    auto a = invokeSilently([&] { return round(dst); });
-    auto b = invokeSilently([&] { return round(src); });
-    return invoke([&] { return a / b; });
+    return invoke([&] { return dst / src; });
 }
 
 Float80

@@ -58,6 +58,31 @@ add_executable(fpuExecTests Runner/FpuExecTests.cpp)
 target_link_libraries(fpuExecTests moira)
 target_include_directories(fpuExecTests PUBLIC ${CMAKE_SOURCE_DIR}/Moira)
 
+# Add the reference tests against Amiberry's floating-point back-end (optional)
+set(AMIBERRY_DIR "" CACHE PATH "Amiberry source tree (enables the fpuRefTests target)")
+if (AMIBERRY_DIR)
+  add_library(amiberryref STATIC
+  Runner/Amiberry/AmiberryRef.cpp
+  ${AMIBERRY_DIR}/src/softfloat/softfloat.cpp
+  ${AMIBERRY_DIR}/src/softfloat/softfloat_decimal.cpp
+  ${AMIBERRY_DIR}/src/softfloat/softfloat_fpsp.cpp
+  ${AMIBERRY_DIR}/src/fpp_softfloat.cpp
+  )
+  target_include_directories(amiberryref PRIVATE
+  ${CMAKE_SOURCE_DIR}/Runner/Amiberry/shim
+  ${CMAKE_SOURCE_DIR}/Runner/Amiberry
+  ${AMIBERRY_DIR}/src/include
+  ${AMIBERRY_DIR}/src
+  )
+  target_include_directories(amiberryref PUBLIC ${CMAKE_SOURCE_DIR}/Runner/Amiberry)
+  target_compile_options(amiberryref PRIVATE -w)
+
+  add_executable(fpuRefTests Runner/FpuRefTests.cpp)
+  target_link_libraries(fpuRefTests moira amiberryref)
+  target_include_directories(fpuRefTests PUBLIC ${CMAKE_SOURCE_DIR}/Moira ${CMAKE_SOURCE_DIR}/Runner)
+  add_test(FpuRefTests fpuRefTests)
+endif()
+
 # Add tests
 add_test(UnitTest testRunner)
 add_test(FpuExecTests fpuExecTests)
