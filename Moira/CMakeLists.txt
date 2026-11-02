@@ -5,7 +5,11 @@ MoiraCore68000.cpp
 MoiraCore68010.cpp
 MoiraCore68020.cpp
 MoiraDebugger.cpp
+Float80.cpp
 )
+
+file(GLOB MOIRA_SOFTFLOAT_SRC ${CMAKE_CURRENT_SOURCE_DIR}/softfloat/*.c)
+target_sources(moira PRIVATE ${MOIRA_SOFTFLOAT_SRC})
 
 if (NOT MSVC)
     target_compile_options(moira PUBLIC -Wno-unused-parameter)
