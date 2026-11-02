@@ -49,5 +49,11 @@ ${CMAKE_SOURCE_DIR}/Runner/Binutils
 ${CMAKE_SOURCE_DIR}/Runner/Musashi
 )
 
+# Add the FPU unit tests
+add_executable(fpuTests Runner/FpuTests.cpp)
+target_link_libraries(fpuTests moira)
+target_include_directories(fpuTests PUBLIC ${CMAKE_SOURCE_DIR}/Moira)
+
 # Add tests
 add_test(UnitTest testRunner)
+add_test(FpuTests fpuTests)

@@ -154,6 +154,15 @@ Float80::fromDouble(double value)
 }
 
 Float80
+Float80::roundPack(bool sign, i32 exp, u64 sig, u64 extra)
+{
+    if (sig == 0 && extra == 0) return zero(sign);
+    if (sig == 0) { sig = extra; extra = 0; exp -= 64; }
+
+    return fromSF(moira_softfloat_normRoundPackToExtF80(sign, exp, sig, extra, moira_sf_getPrecision()));
+}
+
+Float80
 Float80::fromLongDouble(long double value)
 {
     if constexpr (LDBL_MANT_DIG == 64 && std::endian::native == std::endian::little) {

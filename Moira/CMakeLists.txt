@@ -6,6 +6,8 @@ MoiraCore68010.cpp
 MoiraCore68020.cpp
 MoiraDebugger.cpp
 Float80.cpp
+FpuFormats.cpp
+FPU.cpp
 )
 
 file(GLOB MOIRA_SOFTFLOAT_SRC ${CMAKE_CURRENT_SOURCE_DIR}/softfloat/*.c)

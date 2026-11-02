@@ -137,6 +137,16 @@ public:
     static Float80 fromDouble(double value);
     static Float80 fromLongDouble(long double value);
 
+    /* Composes a number from an unrounded significand. The value is
+     * sig:extra * 2^(exp - bias - 63), where 'exp' is the biased exponent that
+     * applies if 'sig' is normalized (bit 63 set). A 'sig' that is not
+     * normalized is normalized first. The bits in 'extra' lie below 'sig' and
+     * are rounded away according to the current floating-point environment
+     * (rounding mode and precision). Raises the inexact, underflow and
+     * overflow flags as needed.
+     */
+    static Float80 roundPack(bool sign, i32 exp, u64 sig, u64 extra = 0);
+
     // Special values
     static constexpr Float80 zero(bool negative = false) { return { u16(negative ? 0x8000 : 0), 0 }; }
     static constexpr Float80 one(bool negative = false) { return { u16(negative ? 0xBFFF : 0x3FFF), 1ULL << 63 }; }
