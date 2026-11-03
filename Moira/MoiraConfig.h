@@ -19,7 +19,9 @@
  *
  * Enable to improve accuracy, disable it to enhance performance.
  */
+#ifndef MOIRA_PRECISE_TIMING
 #define MOIRA_PRECISE_TIMING false
+#endif
 
 /* Set to true to implement the CPU interface as virtual functions.
  *
@@ -85,7 +87,9 @@
  *
  * Set to false for improved accuracy.
  */
+#ifndef MOIRA_MIMIC_MUSASHI
 #define MOIRA_MIMIC_MUSASHI true
+#endif
 
 /* The following macro appears at the beginning of each instruction handler.
  * Moira will call 'willExecute(...)' for all listed instructions.

@@ -12,6 +12,10 @@
 #include <cstdio>
 #include <cstdarg>
 #include <ctime>
+#include <string>
+#ifdef HAVE_AMIBERRY
+#include "Amiberry/AmiberryCpu.h"
+#endif
 
 TestCPU *moiracpu;
 Sandbox sandbox;
@@ -36,11 +40,21 @@ static int binutilsFprintf(FILE* f, const char* format, ...)
     return n;
 }
 
+#ifdef HAVE_AMIBERRY
+static bool amiberryRef;
+static void setupAmiberry();
+#else
+static const bool amiberryRef = false;
+#endif
+
 void selectModel(moira::Model model)
 {
     cpuModel = model;
 
     setupMusashi();
+#ifdef HAVE_AMIBERRY
+    if (amiberryRef) setupAmiberry();
+#endif
     setupBinutils();
     setupMoira();
 }
@@ -93,6 +107,86 @@ void setupBinutils()
         dinfo->fprintf_func(dinfo->stream, "%u", addr);
     };
 }
+
+//
+// Amiberry as reference (optional, select with REFERENCE=amiberry)
+//
+
+#ifdef HAVE_AMIBERRY
+
+static bool amiberryRefInit = (amiberryRef = getenv("REFERENCE") && std::string(getenv("REFERENCE")) == "amiberry");
+static amicpu::State amiState;
+
+static void amiberryWrite(int size, u32 addr, u32 value, u32 fc, u64 cycle)
+{
+    if (CHECK_MEM_WRITES)
+        sandbox.record(size == 1 ? POKE8 : POKE16, addr, cycle, fc, size == 1 ? u8(value) : u16(value));
+}
+
+static void setupAmiberry()
+{
+    using amicpu::Cpu;
+    Cpu model =
+    cpuModel == Model::M68000   ? Cpu::M68000 :
+    cpuModel == Model::M68010   ? Cpu::M68010 :
+    cpuModel == Model::M68EC020 ? Cpu::M68EC020 :
+    cpuModel == Model::M68020   ? Cpu::M68020 :
+    cpuModel == Model::M68EC030 ? Cpu::M68EC030 :
+    cpuModel == Model::M68030   ? Cpu::M68030 :
+    cpuModel == Model::M68EC040 ? Cpu::M68EC040 :
+    cpuModel == Model::M68LC040 ? Cpu::M68LC040 : Cpu::M68040;
+
+    amicpu::init(model, musashiMem, amiberryWrite);
+}
+
+static void runAmiberry(Setup &s, Result &r)
+{
+    amicpu::State st;
+
+    for (int i = 0; i < 8; i++) st.d[i] = s.d[i];
+    for (int i = 0; i < 7; i++) st.a[i] = s.a[i];
+    st.usp = 0;
+    st.isp = 0x2000;
+    st.msp = 0;
+    st.pc = s.pc;
+    st.sr = (s.supervisor ? 0x2000 : 0) | 0x0700 | s.ccr;
+    st.vbr = s.vbr;
+    st.sfc = s.sfc;
+    st.dfc = s.dfc;
+    st.cacr = s.cacr;
+    st.caar = s.caar;
+    for (int i = 0; i < 8; i++) {
+        st.fpse[i] = s.fpr[i].signExp();
+        st.fpman[i] = s.fpr[i].mantissa();
+    }
+    st.fpcr = s.fpcr;
+    st.fpsr = s.fpsr;
+    st.fpiar = s.fpiar;
+
+    amicpu::setState(st);
+    clock_t elapsed = clock();
+    amicpu::step();
+    r.elapsed[0] = clock() - elapsed;
+    r.cycles = int(amicpu::cycles());
+
+    amiState = amicpu::getState();
+    r.pc = amiState.pc;
+    r.sr = amiState.sr;
+    r.usp = amiState.usp;
+    r.isp = amiState.isp;
+    r.msp = amiState.msp;
+    r.fc = 0;
+    r.vbr = amiState.vbr;
+    r.sfc = amiState.sfc & 7;
+    r.dfc = amiState.dfc & 7;
+    r.cacr = amiState.cacr;
+    r.caar = amiState.caar;
+    for (int i = 0; i < 8; i++) r.d[i] = amiState.d[i];
+    for (int i = 0; i < 7; i++) r.a[i] = amiState.a[i];
+    r.a[7] = amiState.a7;
+}
+
+#endif
 
 void setupMusashi()
 {
@@ -242,6 +336,15 @@ void resetMoiraFpu(Setup &s)
 
 void recordMusashiFpu(Result &r)
 {
+#ifdef HAVE_AMIBERRY
+    if (amiberryRef) {
+        for (int i = 0; i < 8; i++) r.fpr[i] = Float80::fromBits(amiState.fpse[i], amiState.fpman[i]);
+        r.fpcr = amiState.fpcr;
+        r.fpsr = amiState.fpsr;
+        r.fpiar = amiState.fpiar;
+        return;
+    }
+#endif
     for (int i = 0; i < 8; i++) {
         r.fpr[i] = Float80::fromBits(REG_FP[i].high, REG_FP[i].low);
     }
@@ -278,6 +381,7 @@ void run(unsigned seed)
     printf("    Random seed : %d\n", seed);
     printf("     Exec range : %s\n", TOSTRING(doExec(opcode)));
     printf("     Dasm range : %s\n", TOSTRING(doDasm(opcode)));
+    printf("      Reference : %s\n", amiberryRef ? "Amiberry" : "Musashi");
 
     srand(seed);
     
@@ -470,8 +574,12 @@ void runSingleTest(Setup &s, u16 op)
     // Run the binutils disassembler
     runBinutils(s, mur);
 
-    // Run Musashi
+    // Run the reference CPU
     runMusashi(s, mur);
+#ifdef HAVE_AMIBERRY
+    // Moira is configured without address error emulation (MOIRA_EMULATE_ADDRESS_ERROR)
+    if (amiberryRef && (amicpu::lastException() == 3) && !MOIRA_EMULATE_ADDRESS_ERROR) return;
+#endif
     muclk[0] += mur.elapsed[0];
     muclk[1] += mur.elapsed[1];
 
@@ -529,9 +637,15 @@ void runMusashi(Setup &s, Result &r)
         printf("$%04x ($%04x): %s (Musashi)\n", r.oldpc, r.opcode, r.dasmMusashi);
     }
 
-    // Run the Musashi CPU
+    // Run the reference CPU
     if (doExec(r.opcode)) {
 
+#ifdef HAVE_AMIBERRY
+        if (amiberryRef) {
+            runAmiberry(s, r);
+            return;
+        }
+#endif
         clock_t elapsed = clock();
         r.cycles = m68k_execute(1);
         r.elapsed[0] = clock() - elapsed;
@@ -969,6 +1083,9 @@ bool compareCycles(Result &r1, Result &r2)
 
     // FPU timing is not emulated yet
     if (isFpuOpcode(r1.opcode)) return true;
+
+    // Amiberry's 68020+ cores aren't cycle-exact
+    if (amiberryRef && cpuModel != Model::M68000 && cpuModel != Model::M68010) return true;
 
     /* Timing comparison is off for every model beyond the 68000 and 68010
      * while the instruction cache is emulated. Those models (68020 and up)

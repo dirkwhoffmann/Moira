@@ -83,6 +83,48 @@ if (AMIBERRY_DIR)
   add_test(FpuRefTests fpuRefTests)
 endif()
 
+# Add Amiberry's CPU core as an alternative reference for the test runner (optional)
+if (AMIBERRY_DIR)
+  find_library(SDL3_LIBRARY SDL3 HINTS /opt/homebrew/lib /usr/local/lib)
+  find_path(SDL3_INCLUDE_DIR SDL3/SDL.h HINTS /opt/homebrew/include /usr/local/include)
+  if (SDL3_LIBRARY AND SDL3_INCLUDE_DIR)
+    set(AMI ${AMIBERRY_DIR}/src)
+    add_library(amiberrycpu STATIC
+    Runner/Amiberry/AmiberryCpu.cpp
+    Runner/Amiberry/AmiberryStubs.cpp
+    ${AMI}/newcpu_common.cpp
+    ${AMI}/cpustbl.cpp
+    ${AMI}/readcpu.cpp
+    ${AMI}/cpudefs.cpp
+    ${AMI}/cpummu.cpp
+    ${AMI}/cpummu30.cpp
+    ${AMI}/fpp.cpp
+    ${AMI}/fpp_softfloat.cpp
+    ${AMI}/softfloat/softfloat.cpp
+    ${AMI}/softfloat/softfloat_decimal.cpp
+    ${AMI}/softfloat/softfloat_fpsp.cpp
+    ${AMI}/cpuemu_0.cpp ${AMI}/cpuemu_11.cpp ${AMI}/cpuemu_13.cpp
+    ${AMI}/cpuemu_20.cpp ${AMI}/cpuemu_21.cpp ${AMI}/cpuemu_22.cpp
+    ${AMI}/cpuemu_23.cpp ${AMI}/cpuemu_24.cpp ${AMI}/cpuemu_31.cpp
+    ${AMI}/cpuemu_32.cpp ${AMI}/cpuemu_33.cpp ${AMI}/cpuemu_34.cpp
+    ${AMI}/cpuemu_35.cpp ${AMI}/cpuemu_40.cpp ${AMI}/cpuemu_50.cpp
+    )
+    set_target_properties(amiberrycpu PROPERTIES CXX_STANDARD 17)
+    target_compile_definitions(amiberrycpu PRIVATE AMIBERRY)
+    target_compile_options(amiberrycpu PRIVATE -w -O1)
+    target_include_directories(amiberrycpu PRIVATE
+    ${AMI} ${AMI}/include ${AMI}/osdep ${AMI}/archivers ${AMI}/threaddep
+    ${AMIBERRY_DIR}/external ${SDL3_INCLUDE_DIR})
+    target_include_directories(amiberrycpu PUBLIC ${CMAKE_SOURCE_DIR}/Runner/Amiberry)
+    target_link_libraries(amiberrycpu ${SDL3_LIBRARY})
+
+    target_compile_definitions(testRunner PRIVATE HAVE_AMIBERRY)
+    target_link_libraries(testRunner amiberrycpu)
+  else()
+    message(STATUS "SDL3 not found: Amiberry's CPU core is not available as reference")
+  endif()
+endif()
+
 # Add tests
 add_test(UnitTest testRunner)
 add_test(FpuExecTests fpuExecTests)
