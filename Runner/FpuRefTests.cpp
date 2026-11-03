@@ -18,7 +18,7 @@
 
 #include "FPU.h"
 #include "FpuFormats.h"
-#include "Amiberry/AmiberryRef.h"
+#include "AmiberryGlue/AmiberryRef.h"
 
 #include <cmath>
 #include <cstdio>

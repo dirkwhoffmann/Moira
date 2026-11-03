@@ -53,6 +53,9 @@
             ReferencedContainer = "container:Moira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <MetalAPIValidationSettings
+         isEnabled = "No">
+      </MetalAPIValidationSettings>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

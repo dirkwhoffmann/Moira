@@ -14,7 +14,7 @@
 #include <ctime>
 #include <string>
 #ifdef HAVE_AMIBERRY
-#include "Amiberry/AmiberryCpu.h"
+#include "AmiberryGlue/AmiberryCpu.h"
 #endif
 
 TestCPU *moiracpu;
@@ -114,7 +114,7 @@ void setupBinutils()
 
 #ifdef HAVE_AMIBERRY
 
-static bool amiberryRefInit = (amiberryRef = getenv("REFERENCE") && std::string(getenv("REFERENCE")) == "amiberry");
+static bool amiberryRefInit = (amiberryRef = MOIRA_MIMIC_AMIBERRY || (getenv("REFERENCE") && std::string(getenv("REFERENCE")) == "amiberry"));
 static amicpu::State amiState;
 
 static void amiberryWrite(int size, u32 addr, u32 value, u32 fc, u64 cycle)

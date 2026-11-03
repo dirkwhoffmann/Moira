@@ -13,15 +13,15 @@ set(CMAKE_CXX_EXTENSIONS False)
   
 # Add sub directories
 add_subdirectory(Moira)
-add_subdirectory(Runner/Binutils)
-add_subdirectory(Runner/Musashi)
+add_subdirectory(Runner/ThirdParty/Binutils)
+add_subdirectory(Runner/ThirdParty/Musashi)
 
 # Add the executable
 add_executable(testRunner
 Runner/main.cpp
 Runner/Testrunner.cpp
 Runner/TestCPU.cpp
-Runner/musashi.cpp
+Runner/ThirdParty/MusashiGlue/musashi.cpp
 Runner/Sandbox.cpp
 Runner/Randomizer.cpp
 )
@@ -45,8 +45,9 @@ target_include_directories(testRunner PUBLIC
 ${CMAKE_SOURCE_DIR}/.
 ${CMAKE_SOURCE_DIR}/Moira
 ${CMAKE_SOURCE_DIR}/Runner
-${CMAKE_SOURCE_DIR}/Runner/Binutils
-${CMAKE_SOURCE_DIR}/Runner/Musashi
+${CMAKE_SOURCE_DIR}/Runner/ThirdParty
+${CMAKE_SOURCE_DIR}/Runner/ThirdParty/Binutils
+${CMAKE_SOURCE_DIR}/Runner/ThirdParty/Musashi
 )
 
 # Add the FPU unit tests
@@ -59,27 +60,28 @@ target_link_libraries(fpuExecTests moira)
 target_include_directories(fpuExecTests PUBLIC ${CMAKE_SOURCE_DIR}/Moira)
 
 # Add the reference tests against Amiberry's floating-point back-end (optional)
-set(AMIBERRY_DIR "" CACHE PATH "Amiberry source tree (enables the fpuRefTests target)")
+# Amiberry sources (GPLv3, used by the test runner only)
+set(AMIBERRY_DIR ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/Amiberry CACHE PATH "Amiberry source tree")
 if (AMIBERRY_DIR)
   add_library(amiberryref STATIC
-  Runner/Amiberry/AmiberryRef.cpp
+  Runner/ThirdParty/AmiberryGlue/AmiberryRef.cpp
   ${AMIBERRY_DIR}/src/softfloat/softfloat.cpp
   ${AMIBERRY_DIR}/src/softfloat/softfloat_decimal.cpp
   ${AMIBERRY_DIR}/src/softfloat/softfloat_fpsp.cpp
   ${AMIBERRY_DIR}/src/fpp_softfloat.cpp
   )
   target_include_directories(amiberryref PRIVATE
-  ${CMAKE_SOURCE_DIR}/Runner/Amiberry/shim
-  ${CMAKE_SOURCE_DIR}/Runner/Amiberry
+  ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/AmiberryGlue/shim
+  ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/AmiberryGlue
   ${AMIBERRY_DIR}/src/include
   ${AMIBERRY_DIR}/src
   )
-  target_include_directories(amiberryref PUBLIC ${CMAKE_SOURCE_DIR}/Runner/Amiberry)
+  target_include_directories(amiberryref PUBLIC ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/AmiberryGlue)
   target_compile_options(amiberryref PRIVATE -w)
 
   add_executable(fpuRefTests Runner/FpuRefTests.cpp)
   target_link_libraries(fpuRefTests moira amiberryref)
-  target_include_directories(fpuRefTests PUBLIC ${CMAKE_SOURCE_DIR}/Moira ${CMAKE_SOURCE_DIR}/Runner)
+  target_include_directories(fpuRefTests PUBLIC ${CMAKE_SOURCE_DIR}/Moira ${CMAKE_SOURCE_DIR}/Runner ${CMAKE_SOURCE_DIR}/Runner/ThirdParty)
   add_test(FpuRefTests fpuRefTests)
 endif()
 
@@ -90,8 +92,8 @@ if (AMIBERRY_DIR)
   if (SDL3_LIBRARY AND SDL3_INCLUDE_DIR)
     set(AMI ${AMIBERRY_DIR}/src)
     add_library(amiberrycpu STATIC
-    Runner/Amiberry/AmiberryCpu.cpp
-    Runner/Amiberry/AmiberryStubs.cpp
+    Runner/ThirdParty/AmiberryGlue/AmiberryCpu.cpp
+    Runner/ThirdParty/AmiberryGlue/AmiberryStubs.cpp
     ${AMI}/newcpu_common.cpp
     ${AMI}/cpustbl.cpp
     ${AMI}/readcpu.cpp
@@ -114,8 +116,8 @@ if (AMIBERRY_DIR)
     target_compile_options(amiberrycpu PRIVATE -w -O1)
     target_include_directories(amiberrycpu PRIVATE
     ${AMI} ${AMI}/include ${AMI}/osdep ${AMI}/archivers ${AMI}/threaddep
-    ${AMIBERRY_DIR}/external ${SDL3_INCLUDE_DIR})
-    target_include_directories(amiberrycpu PUBLIC ${CMAKE_SOURCE_DIR}/Runner/Amiberry)
+    ${SDL3_INCLUDE_DIR})
+    target_include_directories(amiberrycpu PUBLIC ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/AmiberryGlue)
     target_link_libraries(amiberrycpu ${SDL3_LIBRARY})
 
     target_compile_definitions(testRunner PRIVATE HAVE_AMIBERRY)

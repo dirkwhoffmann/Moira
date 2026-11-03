@@ -88,7 +88,21 @@
  * Set to false for improved accuracy.
  */
 #ifndef MOIRA_MIMIC_MUSASHI
-#define MOIRA_MIMIC_MUSASHI true
+#define MOIRA_MIMIC_MUSASHI false
+#endif
+
+/* Enables Amiberry compatibility mode.
+ *
+ * When set to true, Moira adopts the behavior of Amiberry's CPU core where it
+ * differs from Musashi (e.g., the order of bus accesses). This mode is used by
+ * the test runner when Amiberry is selected as the reference implementation.
+ * To get meaningful results, MOIRA_MIMIC_MUSASHI should be set to false and
+ * MOIRA_PRECISE_TIMING to true in this mode.
+ *
+ * Set to false for improved accuracy.
+ */
+#ifndef MOIRA_MIMIC_AMIBERRY
+#define MOIRA_MIMIC_AMIBERRY true
 #endif
 
 /* The following macro appears at the beginning of each instruction handler.

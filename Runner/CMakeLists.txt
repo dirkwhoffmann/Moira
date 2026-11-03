@@ -1,6 +1,6 @@
 add_library(runner STATIC
 
-musashi.cpp
+ThirdParty/MusashiGlue/musashi.cpp
 Testrunner.cpp
 TestCPU.cpp
 Sandbox.cpp
@@ -20,6 +20,6 @@ target_include_directories(runner PUBLIC
 
 ${CMAKE_SOURCE_DIR}/.
 ${CMAKE_SOURCE_DIR}/M68k
-${CMAKE_SOURCE_DIR}/Musashi
+${CMAKE_SOURCE_DIR}/Runner/ThirdParty/Musashi
 ${CMAKE_SOURCE_DIR}/Moira
 )

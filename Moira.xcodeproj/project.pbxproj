@@ -7,14 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5028B10A288D9EC000047C20 /* musashi_softfloat.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B103288D9EC000047C20 /* musashi_softfloat.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		5028B10E288D9ECD00047C20 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B10D288D9ECD00047C20 /* m68kops.c */; settings = {COMPILER_FLAGS = "-w -fno-sanitize=undefined"; }; };
-		5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B114288D9EDC00047C20 /* m68kdasm.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		5028B11C288D9EDC00047C20 /* m68kcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B116288D9EDC00047C20 /* m68kcpu.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		502C09DF23C8D82600A179E1 /* MoiraDebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
-		502C09E223C8E16600A179E1 /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
+		50A300000000000000000004 /* FloatMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000001 /* FloatMath.cpp */; };
+		50A20000000000000000000A /* libAmiberryCpu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50A200000000000000000001 /* libAmiberryCpu.a */; };
+		5028B10A288D9EC000047C20 /* musashi_softfloat.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B103288D9EC000047C20 /* musashi_softfloat.c */; };
+		5028B10E288D9ECD00047C20 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B10D288D9ECD00047C20 /* m68kops.c */; };
+		5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B114288D9EDC00047C20 /* m68kdasm.c */; };
+		5028B11C288D9EDC00047C20 /* m68kcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B116288D9EDC00047C20 /* m68kcpu.c */; };
+		502C09DF23C8D82600A179E1 /* MoiraDebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */; };
+		502C09E223C8E16600A179E1 /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; };
 		5054686228A4CDDC00028727 /* Randomizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5054686028A4CDDC00028727 /* Randomizer.cpp */; };
-		505580EC23AFA14D0009F77F /* musashi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505580EA23AFA14D0009F77F /* musashi.cpp */; settings = {COMPILER_FLAGS = "-w"; }; };
+		505580EC23AFA14D0009F77F /* musashi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505580EA23AFA14D0009F77F /* musashi.cpp */; };
 		505A80C33098B1AD00E2E307 /* s_normSubnormalExtF80Sig.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AB3098B1AD00E2E307 /* s_normSubnormalExtF80Sig.c */; };
 		505A80C43098B1AD00E2E307 /* extF80_mul.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80823098B1AD00E2E307 /* extF80_mul.c */; };
 		505A80C53098B1AD00E2E307 /* extF80_add.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807C3098B1AD00E2E307 /* extF80_add.c */; };
@@ -78,15 +80,46 @@
 		505A81013098B1C600E2E307 /* Float80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81003098B1C600E2E307 /* Float80.cpp */; };
 		505A81063098E38500E2E307 /* FPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81033098E38500E2E307 /* FPU.cpp */; };
 		505A81073098E38500E2E307 /* FpuFormats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81053098E38500E2E307 /* FpuFormats.cpp */; };
-		507BE4AF23B66456000B37D2 /* Testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* Testrunner.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
-		50804EE22386A72C004D3EC2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E8C2386A72C004D3EC2 /* main.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
-		50804F352386A7DD004D3EC2 /* Moira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F332386A7DD004D3EC2 /* Moira.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
-		50C0123A28BBAD9B001EFB37 /* m68k-dis.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123628BBAD9B001EFB37 /* m68k-dis.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		50C0123B28BBAD9B001EFB37 /* m68k-opc.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123728BBAD9B001EFB37 /* m68k-opc.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		50CECEC723A924B000E07C65 /* Sandbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50CECEC523A924B000E07C65 /* Sandbox.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
-		A7499A3FCDD6B869B1ED1BA6 /* MoiraCore68010.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55703C9956D2BECD0F343A8F /* MoiraCore68010.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
-		B6F33308D2D0F45B428944A2 /* MoiraCore68000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61F3AFFB3C6CFCEC22A0FD23 /* MoiraCore68000.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
-		F33E4567A22AB4A162CCE6CC /* MoiraCore68020.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1654296120AA412377E9642D /* MoiraCore68020.cpp */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
+		505A81EE309A2F2A00E2E307 /* fpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81D7309A2F2A00E2E307 /* fpp.cpp */; };
+		505A81EF309A2F2A00E2E307 /* cpuemu_32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81CD309A2F2A00E2E307 /* cpuemu_32.cpp */; };
+		505A81F0309A2F2A00E2E307 /* softfloat_decimal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81BB309A2F2A00E2E307 /* softfloat_decimal.cpp */; };
+		505A81F1309A2F2A00E2E307 /* cpuemu_0.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81C4309A2F2A00E2E307 /* cpuemu_0.cpp */; };
+		505A81F2309A2F2A00E2E307 /* softfloat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81BA309A2F2A00E2E307 /* softfloat.cpp */; };
+		505A81F3309A2F2A00E2E307 /* cpuemu_21.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81C8309A2F2A00E2E307 /* cpuemu_21.cpp */; };
+		505A81F4309A2F2A00E2E307 /* cpuemu_11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81C5309A2F2A00E2E307 /* cpuemu_11.cpp */; };
+		505A81F5309A2F2A00E2E307 /* cpuemu_13.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81C6309A2F2A00E2E307 /* cpuemu_13.cpp */; };
+		505A81F6309A2F2A00E2E307 /* newcpu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81DA309A2F2A00E2E307 /* newcpu.cpp */; };
+		505A81F7309A2F2A00E2E307 /* cpuemu_33.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81CE309A2F2A00E2E307 /* cpuemu_33.cpp */; };
+		505A81F8309A2F2A00E2E307 /* cpuemu_23.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81CA309A2F2A00E2E307 /* cpuemu_23.cpp */; };
+		505A81F9309A2F2A00E2E307 /* AmiberryCpu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81E8309A2F2A00E2E307 /* AmiberryCpu.cpp */; };
+		505A81FA309A2F2A00E2E307 /* cpuemu_20.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81C7309A2F2A00E2E307 /* cpuemu_20.cpp */; };
+		505A81FB309A2F2A00E2E307 /* cpuemu_50.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81D2309A2F2A00E2E307 /* cpuemu_50.cpp */; };
+		505A81FC309A2F2A00E2E307 /* cpuemu_34.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81CF309A2F2A00E2E307 /* cpuemu_34.cpp */; };
+		505A81FD309A2F2A00E2E307 /* newcpu_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81DB309A2F2A00E2E307 /* newcpu_common.cpp */; };
+		505A81FE309A2F2A00E2E307 /* cpustbl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81D5309A2F2A00E2E307 /* cpustbl.cpp */; };
+		505A81FF309A2F2A00E2E307 /* softfloat_fpsp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81BC309A2F2A00E2E307 /* softfloat_fpsp.cpp */; };
+		505A8200309A2F2A00E2E307 /* AmiberryStubs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81EB309A2F2A00E2E307 /* AmiberryStubs.cpp */; };
+		505A8201309A2F2A00E2E307 /* AmiberryRef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81EA309A2F2A00E2E307 /* AmiberryRef.cpp */; };
+		505A8202309A2F2A00E2E307 /* cpudefs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81C3309A2F2A00E2E307 /* cpudefs.cpp */; };
+		505A8203309A2F2A00E2E307 /* fpp_softfloat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81D8309A2F2A00E2E307 /* fpp_softfloat.cpp */; };
+		505A8204309A2F2A00E2E307 /* readcpu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81DC309A2F2A00E2E307 /* readcpu.cpp */; };
+		505A8205309A2F2A00E2E307 /* cpummu30.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81D4309A2F2A00E2E307 /* cpummu30.cpp */; };
+		505A8206309A2F2A00E2E307 /* cpuemu_22.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81C9309A2F2A00E2E307 /* cpuemu_22.cpp */; };
+		505A8207309A2F2A00E2E307 /* cpuemu_35.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81D0309A2F2A00E2E307 /* cpuemu_35.cpp */; };
+		505A8208309A2F2A00E2E307 /* fpp_globals.inc in Sources */ = {isa = PBXBuildFile; fileRef = 505A81EC309A2F2A00E2E307 /* fpp_globals.inc */; };
+		505A8209309A2F2A00E2E307 /* cpummu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81D3309A2F2A00E2E307 /* cpummu.cpp */; };
+		505A820A309A2F2A00E2E307 /* cpuemu_24.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81CB309A2F2A00E2E307 /* cpuemu_24.cpp */; };
+		505A820B309A2F2A00E2E307 /* cpuemu_31.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81CC309A2F2A00E2E307 /* cpuemu_31.cpp */; };
+		505A820C309A2F2A00E2E307 /* cpuemu_40.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81D1309A2F2A00E2E307 /* cpuemu_40.cpp */; };
+		507BE4AF23B66456000B37D2 /* Testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* Testrunner.cpp */; };
+		50804EE22386A72C004D3EC2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E8C2386A72C004D3EC2 /* main.cpp */; };
+		50804F352386A7DD004D3EC2 /* Moira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F332386A7DD004D3EC2 /* Moira.cpp */; };
+		50C0123A28BBAD9B001EFB37 /* m68k-dis.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123628BBAD9B001EFB37 /* m68k-dis.c */; };
+		50C0123B28BBAD9B001EFB37 /* m68k-opc.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123728BBAD9B001EFB37 /* m68k-opc.c */; };
+		50CECEC723A924B000E07C65 /* Sandbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50CECEC523A924B000E07C65 /* Sandbox.cpp */; };
+		A7499A3FCDD6B869B1ED1BA6 /* MoiraCore68010.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55703C9956D2BECD0F343A8F /* MoiraCore68010.cpp */; };
+		B6F33308D2D0F45B428944A2 /* MoiraCore68000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61F3AFFB3C6CFCEC22A0FD23 /* MoiraCore68000.cpp */; };
+		F33E4567A22AB4A162CCE6CC /* MoiraCore68020.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1654296120AA412377E9642D /* MoiraCore68020.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -101,7 +134,21 @@
 		};
 /* End PBXCopyFilesBuildPhase section */
 
+/* Begin PBXContainerItemProxy section */
+		50A200000000000000000008 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 50804DFE2386A4CE004D3EC2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 50A200000000000000000004;
+			remoteInfo = AmiberryCpu;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		50A300000000000000000003 /* BigNum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BigNum.h; sourceTree = "<group>"; };
+		50A300000000000000000002 /* FloatMath.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FloatMath.h; sourceTree = "<group>"; };
+		50A300000000000000000001 /* FloatMath.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FloatMath.cpp; sourceTree = "<group>"; };
+		50A200000000000000000001 /* libAmiberryCpu.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libAmiberryCpu.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		08C7A9B1140D45BEA6DAD5A6 /* MoiraCache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraCache.h; sourceTree = "<group>"; };
 		1654296120AA412377E9642D /* MoiraCore68020.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraCore68020.cpp; sourceTree = "<group>"; };
 		38037577E0C9EA87178FAF59 /* MoiraCore_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraCore_cpp.h; sourceTree = "<group>"; };
@@ -211,6 +258,102 @@
 		505A81033098E38500E2E307 /* FPU.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FPU.cpp; sourceTree = "<group>"; };
 		505A81043098E38500E2E307 /* FpuFormats.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FpuFormats.h; sourceTree = "<group>"; };
 		505A81053098E38500E2E307 /* FpuFormats.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FpuFormats.cpp; sourceTree = "<group>"; };
+		505A8182309A2F2A00E2E307 /* byteswap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = byteswap.h; sourceTree = "<group>"; };
+		505A8183309A2F2A00E2E307 /* likely.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = likely.h; sourceTree = "<group>"; };
+		505A8184309A2F2A00E2E307 /* string.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = string.h; sourceTree = "<group>"; };
+		505A8185309A2F2A00E2E307 /* time.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = time.h; sourceTree = "<group>"; };
+		505A8186309A2F2A00E2E307 /* types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = "<group>"; };
+		505A8187309A2F2A00E2E307 /* vm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = vm.h; sourceTree = "<group>"; };
+		505A8189309A2F2A00E2E307 /* amiberry_gfx_mode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = amiberry_gfx_mode.h; sourceTree = "<group>"; };
+		505A818A309A2F2A00E2E307 /* ar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ar.h; sourceTree = "<group>"; };
+		505A818B309A2F2A00E2E307 /* audio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = audio.h; sourceTree = "<group>"; };
+		505A818C309A2F2A00E2E307 /* autoconf.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = autoconf.h; sourceTree = "<group>"; };
+		505A818D309A2F2A00E2E307 /* blitter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = blitter.h; sourceTree = "<group>"; };
+		505A818E309A2F2A00E2E307 /* commpipe.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = commpipe.h; sourceTree = "<group>"; };
+		505A818F309A2F2A00E2E307 /* cpu_prefetch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cpu_prefetch.h; sourceTree = "<group>"; };
+		505A8190309A2F2A00E2E307 /* cpu_thread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cpu_thread.h; sourceTree = "<group>"; };
+		505A8191309A2F2A00E2E307 /* cpuboard.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cpuboard.h; sourceTree = "<group>"; };
+		505A8192309A2F2A00E2E307 /* cpummu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cpummu.h; sourceTree = "<group>"; };
+		505A8193309A2F2A00E2E307 /* cpummu030.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cpummu030.h; sourceTree = "<group>"; };
+		505A8194309A2F2A00E2E307 /* custom.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = custom.h; sourceTree = "<group>"; };
+		505A8195309A2F2A00E2E307 /* debug.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = debug.h; sourceTree = "<group>"; };
+		505A8196309A2F2A00E2E307 /* debugmem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = debugmem.h; sourceTree = "<group>"; };
+		505A8197309A2F2A00E2E307 /* devices.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = devices.h; sourceTree = "<group>"; };
+		505A8198309A2F2A00E2E307 /* disasm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = disasm.h; sourceTree = "<group>"; };
+		505A8199309A2F2A00E2E307 /* events.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = events.h; sourceTree = "<group>"; };
+		505A819A309A2F2A00E2E307 /* fpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fpp.h; sourceTree = "<group>"; };
+		505A819B309A2F2A00E2E307 /* gui.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gui.h; sourceTree = "<group>"; };
+		505A819C309A2F2A00E2E307 /* inputdevice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = inputdevice.h; sourceTree = "<group>"; };
+		505A819D309A2F2A00E2E307 /* inputrecord.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = inputrecord.h; sourceTree = "<group>"; };
+		505A819E309A2F2A00E2E307 /* memory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = memory.h; sourceTree = "<group>"; };
+		505A819F309A2F2A00E2E307 /* mmu_common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mmu_common.h; sourceTree = "<group>"; };
+		505A81A0309A2F2A00E2E307 /* newcpu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = newcpu.h; sourceTree = "<group>"; };
+		505A81A1309A2F2A00E2E307 /* options.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = options.h; sourceTree = "<group>"; };
+		505A81A2309A2F2A00E2E307 /* readcpu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = readcpu.h; sourceTree = "<group>"; };
+		505A81A3309A2F2A00E2E307 /* sana2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sana2.h; sourceTree = "<group>"; };
+		505A81A4309A2F2A00E2E307 /* savestate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = savestate.h; sourceTree = "<group>"; };
+		505A81A5309A2F2A00E2E307 /* statusline.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = statusline.h; sourceTree = "<group>"; };
+		505A81A6309A2F2A00E2E307 /* sysdeps.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sysdeps.h; sourceTree = "<group>"; };
+		505A81A7309A2F2A00E2E307 /* traps.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = traps.h; sourceTree = "<group>"; };
+		505A81A8309A2F2A00E2E307 /* uae.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = uae.h; sourceTree = "<group>"; };
+		505A81AA309A2F2A00E2E307 /* compemu_arm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = compemu_arm.h; sourceTree = "<group>"; };
+		505A81AB309A2F2A00E2E307 /* compemu_midfunc_arm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = compemu_midfunc_arm.h; sourceTree = "<group>"; };
+		505A81AC309A2F2A00E2E307 /* compemu_midfunc_arm2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = compemu_midfunc_arm2.h; sourceTree = "<group>"; };
+		505A81AD309A2F2A00E2E307 /* comptbl_arm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = comptbl_arm.h; sourceTree = "<group>"; };
+		505A81AF309A2F2A00E2E307 /* compemu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = compemu.h; sourceTree = "<group>"; };
+		505A81B0309A2F2A00E2E307 /* comptbl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = comptbl.h; sourceTree = "<group>"; };
+		505A81B2309A2F2A00E2E307 /* m68k.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = m68k.h; sourceTree = "<group>"; };
+		505A81B3309A2F2A00E2E307 /* maccess.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = maccess.h; sourceTree = "<group>"; };
+		505A81B4309A2F2A00E2E307 /* rpt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rpt.h; sourceTree = "<group>"; };
+		505A81B6309A2F2A00E2E307 /* sysconfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sysconfig.h; sourceTree = "<group>"; };
+		505A81B7309A2F2A00E2E307 /* target.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = target.h; sourceTree = "<group>"; };
+		505A81B9309A2F2A00E2E307 /* softfloat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = softfloat.h; sourceTree = "<group>"; };
+		505A81BA309A2F2A00E2E307 /* softfloat.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = softfloat.cpp; sourceTree = "<group>"; };
+		505A81BB309A2F2A00E2E307 /* softfloat_decimal.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = softfloat_decimal.cpp; sourceTree = "<group>"; };
+		505A81BC309A2F2A00E2E307 /* softfloat_fpsp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = softfloat_fpsp.cpp; sourceTree = "<group>"; };
+		505A81BD309A2F2A00E2E307 /* softfloat_fpsp_tables.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = softfloat_fpsp_tables.h; sourceTree = "<group>"; };
+		505A81BE309A2F2A00E2E307 /* softfloat-macros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "softfloat-macros.h"; sourceTree = "<group>"; };
+		505A81BF309A2F2A00E2E307 /* softfloat-specialize.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "softfloat-specialize.h"; sourceTree = "<group>"; };
+		505A81C1309A2F2A00E2E307 /* thread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = thread.h; sourceTree = "<group>"; };
+		505A81C3309A2F2A00E2E307 /* cpudefs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cpudefs.cpp; sourceTree = "<group>"; };
+		505A81C4309A2F2A00E2E307 /* cpuemu_0.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cpuemu_0.cpp; sourceTree = "<group>"; };
+		505A81C5309A2F2A00E2E307 /* cpuemu_11.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cpuemu_11.cpp; sourceTree = "<group>"; };
+		505A81C6309A2F2A00E2E307 /* cpuemu_13.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cpuemu_13.cpp; sourceTree = "<group>"; };
+		505A81C7309A2F2A00E2E307 /* cpuemu_20.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cpuemu_20.cpp; sourceTree = "<group>"; };
+		505A81C8309A2F2A00E2E307 /* cpuemu_21.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cpuemu_21.cpp; sourceTree = "<group>"; };
+		505A81C9309A2F2A00E2E307 /* cpuemu_22.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cpuemu_22.cpp; sourceTree = "<group>"; };
+		505A81CA309A2F2A00E2E307 /* cpuemu_23.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cpuemu_23.cpp; sourceTree = "<group>"; };
+		505A81CB309A2F2A00E2E307 /* cpuemu_24.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cpuemu_24.cpp; sourceTree = "<group>"; };
+		505A81CC309A2F2A00E2E307 /* cpuemu_31.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cpuemu_31.cpp; sourceTree = "<group>"; };
+		505A81CD309A2F2A00E2E307 /* cpuemu_32.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cpuemu_32.cpp; sourceTree = "<group>"; };
+		505A81CE309A2F2A00E2E307 /* cpuemu_33.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cpuemu_33.cpp; sourceTree = "<group>"; };
+		505A81CF309A2F2A00E2E307 /* cpuemu_34.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cpuemu_34.cpp; sourceTree = "<group>"; };
+		505A81D0309A2F2A00E2E307 /* cpuemu_35.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cpuemu_35.cpp; sourceTree = "<group>"; };
+		505A81D1309A2F2A00E2E307 /* cpuemu_40.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cpuemu_40.cpp; sourceTree = "<group>"; };
+		505A81D2309A2F2A00E2E307 /* cpuemu_50.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cpuemu_50.cpp; sourceTree = "<group>"; };
+		505A81D3309A2F2A00E2E307 /* cpummu.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cpummu.cpp; sourceTree = "<group>"; };
+		505A81D4309A2F2A00E2E307 /* cpummu30.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cpummu30.cpp; sourceTree = "<group>"; };
+		505A81D5309A2F2A00E2E307 /* cpustbl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cpustbl.cpp; sourceTree = "<group>"; };
+		505A81D6309A2F2A00E2E307 /* cputbl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cputbl.h; sourceTree = "<group>"; };
+		505A81D7309A2F2A00E2E307 /* fpp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = fpp.cpp; sourceTree = "<group>"; };
+		505A81D8309A2F2A00E2E307 /* fpp_softfloat.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = fpp_softfloat.cpp; sourceTree = "<group>"; };
+		505A81D9309A2F2A00E2E307 /* inputevents.def */ = {isa = PBXFileReference; lastKnownFileType = text; path = inputevents.def; sourceTree = "<group>"; };
+		505A81DA309A2F2A00E2E307 /* newcpu.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = newcpu.cpp; sourceTree = "<group>"; };
+		505A81DB309A2F2A00E2E307 /* newcpu_common.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = newcpu_common.cpp; sourceTree = "<group>"; };
+		505A81DC309A2F2A00E2E307 /* readcpu.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = readcpu.cpp; sourceTree = "<group>"; };
+		505A81DE309A2F2A00E2E307 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		505A81DF309A2F2A00E2E307 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		505A81E1309A2F2A00E2E307 /* memory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = memory.h; sourceTree = "<group>"; };
+		505A81E2309A2F2A00E2E307 /* newcpu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = newcpu.h; sourceTree = "<group>"; };
+		505A81E3309A2F2A00E2E307 /* options.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = options.h; sourceTree = "<group>"; };
+		505A81E4309A2F2A00E2E307 /* sysconfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sysconfig.h; sourceTree = "<group>"; };
+		505A81E5309A2F2A00E2E307 /* sysdeps.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sysdeps.h; sourceTree = "<group>"; };
+		505A81E7309A2F2A00E2E307 /* AmiberryCpu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AmiberryCpu.h; sourceTree = "<group>"; };
+		505A81E8309A2F2A00E2E307 /* AmiberryCpu.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AmiberryCpu.cpp; sourceTree = "<group>"; };
+		505A81E9309A2F2A00E2E307 /* AmiberryRef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AmiberryRef.h; sourceTree = "<group>"; };
+		505A81EA309A2F2A00E2E307 /* AmiberryRef.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AmiberryRef.cpp; sourceTree = "<group>"; };
+		505A81EB309A2F2A00E2E307 /* AmiberryStubs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AmiberryStubs.cpp; sourceTree = "<group>"; };
+		505A81EC309A2F2A00E2E307 /* fpp_globals.inc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.pascal; path = fpp_globals.inc; sourceTree = "<group>"; };
 		505CA8AA28C7209200871439 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		507BE4AD23B66456000B37D2 /* Testrunner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Testrunner.cpp; sourceTree = "<group>"; };
 		507BE4AE23B66456000B37D2 /* Testrunner.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Testrunner.h; sourceTree = "<group>"; };
@@ -257,8 +400,24 @@
 		C20E21D44E8A477AB1A178E8 /* MoiraCache_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraCache_cpp.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXTargetDependency section */
+		50A200000000000000000009 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 50A200000000000000000004 /* AmiberryCpu */;
+			targetProxy = 50A200000000000000000008 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		50804E032386A4CE004D3EC2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				50A20000000000000000000A /* libAmiberryCpu.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50A200000000000000000003 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -305,15 +464,12 @@
 		5054686328A6642900028727 /* Runner */ = {
 			isa = PBXGroup;
 			children = (
-				509F15A92927CE9800BA8AC1 /* Bartman */,
-				50C0123D28BBADCF001EFB37 /* Binutils */,
-				5028B100288D9EA600047C20 /* Musashi */,
+				50A1000000000000000000A1 /* ThirdParty */,
 				50804E8C2386A72C004D3EC2 /* main.cpp */,
 				5054686428A6647B00028727 /* CMakeLists.txt */,
 				50953AE228895D5D0077C9E8 /* config.h */,
 				507BE4AE23B66456000B37D2 /* Testrunner.h */,
 				507BE4AD23B66456000B37D2 /* Testrunner.cpp */,
-				505580EA23AFA14D0009F77F /* musashi.cpp */,
 				502C09E123C8E16600A179E1 /* TestCPU.h */,
 				502C09E023C8E16600A179E1 /* TestCPU.cpp */,
 				50CECEC623A924B000E07C65 /* Sandbox.h */,
@@ -402,12 +558,202 @@
 			path = softfloat;
 			sourceTree = "<group>";
 		};
+		505A8188309A2F2A00E2E307 /* uae */ = {
+			isa = PBXGroup;
+			children = (
+				505A8182309A2F2A00E2E307 /* byteswap.h */,
+				505A8183309A2F2A00E2E307 /* likely.h */,
+				505A8184309A2F2A00E2E307 /* string.h */,
+				505A8185309A2F2A00E2E307 /* time.h */,
+				505A8186309A2F2A00E2E307 /* types.h */,
+				505A8187309A2F2A00E2E307 /* vm.h */,
+			);
+			path = uae;
+			sourceTree = "<group>";
+		};
+		505A81A9309A2F2A00E2E307 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				505A8188309A2F2A00E2E307 /* uae */,
+				505A8189309A2F2A00E2E307 /* amiberry_gfx_mode.h */,
+				505A818A309A2F2A00E2E307 /* ar.h */,
+				505A818B309A2F2A00E2E307 /* audio.h */,
+				505A818C309A2F2A00E2E307 /* autoconf.h */,
+				505A818D309A2F2A00E2E307 /* blitter.h */,
+				505A818E309A2F2A00E2E307 /* commpipe.h */,
+				505A818F309A2F2A00E2E307 /* cpu_prefetch.h */,
+				505A8190309A2F2A00E2E307 /* cpu_thread.h */,
+				505A8191309A2F2A00E2E307 /* cpuboard.h */,
+				505A8192309A2F2A00E2E307 /* cpummu.h */,
+				505A8193309A2F2A00E2E307 /* cpummu030.h */,
+				505A8194309A2F2A00E2E307 /* custom.h */,
+				505A8195309A2F2A00E2E307 /* debug.h */,
+				505A8196309A2F2A00E2E307 /* debugmem.h */,
+				505A8197309A2F2A00E2E307 /* devices.h */,
+				505A8198309A2F2A00E2E307 /* disasm.h */,
+				505A8199309A2F2A00E2E307 /* events.h */,
+				505A819A309A2F2A00E2E307 /* fpp.h */,
+				505A819B309A2F2A00E2E307 /* gui.h */,
+				505A819C309A2F2A00E2E307 /* inputdevice.h */,
+				505A819D309A2F2A00E2E307 /* inputrecord.h */,
+				505A819E309A2F2A00E2E307 /* memory.h */,
+				505A819F309A2F2A00E2E307 /* mmu_common.h */,
+				505A81A0309A2F2A00E2E307 /* newcpu.h */,
+				505A81A1309A2F2A00E2E307 /* options.h */,
+				505A81A2309A2F2A00E2E307 /* readcpu.h */,
+				505A81A3309A2F2A00E2E307 /* sana2.h */,
+				505A81A4309A2F2A00E2E307 /* savestate.h */,
+				505A81A5309A2F2A00E2E307 /* statusline.h */,
+				505A81A6309A2F2A00E2E307 /* sysdeps.h */,
+				505A81A7309A2F2A00E2E307 /* traps.h */,
+				505A81A8309A2F2A00E2E307 /* uae.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		505A81AE309A2F2A00E2E307 /* arm */ = {
+			isa = PBXGroup;
+			children = (
+				505A81AA309A2F2A00E2E307 /* compemu_arm.h */,
+				505A81AB309A2F2A00E2E307 /* compemu_midfunc_arm.h */,
+				505A81AC309A2F2A00E2E307 /* compemu_midfunc_arm2.h */,
+				505A81AD309A2F2A00E2E307 /* comptbl_arm.h */,
+			);
+			path = arm;
+			sourceTree = "<group>";
+		};
+		505A81B1309A2F2A00E2E307 /* jit */ = {
+			isa = PBXGroup;
+			children = (
+				505A81AE309A2F2A00E2E307 /* arm */,
+				505A81AF309A2F2A00E2E307 /* compemu.h */,
+				505A81B0309A2F2A00E2E307 /* comptbl.h */,
+			);
+			path = jit;
+			sourceTree = "<group>";
+		};
+		505A81B5309A2F2A00E2E307 /* machdep */ = {
+			isa = PBXGroup;
+			children = (
+				505A81B2309A2F2A00E2E307 /* m68k.h */,
+				505A81B3309A2F2A00E2E307 /* maccess.h */,
+				505A81B4309A2F2A00E2E307 /* rpt.h */,
+			);
+			path = machdep;
+			sourceTree = "<group>";
+		};
+		505A81B8309A2F2A00E2E307 /* osdep */ = {
+			isa = PBXGroup;
+			children = (
+				505A81B6309A2F2A00E2E307 /* sysconfig.h */,
+				505A81B7309A2F2A00E2E307 /* target.h */,
+			);
+			path = osdep;
+			sourceTree = "<group>";
+		};
+		505A81C0309A2F2A00E2E307 /* softfloat */ = {
+			isa = PBXGroup;
+			children = (
+				505A81B9309A2F2A00E2E307 /* softfloat.h */,
+				505A81BA309A2F2A00E2E307 /* softfloat.cpp */,
+				505A81BB309A2F2A00E2E307 /* softfloat_decimal.cpp */,
+				505A81BC309A2F2A00E2E307 /* softfloat_fpsp.cpp */,
+				505A81BD309A2F2A00E2E307 /* softfloat_fpsp_tables.h */,
+				505A81BE309A2F2A00E2E307 /* softfloat-macros.h */,
+				505A81BF309A2F2A00E2E307 /* softfloat-specialize.h */,
+			);
+			path = softfloat;
+			sourceTree = "<group>";
+		};
+		505A81C2309A2F2A00E2E307 /* threaddep */ = {
+			isa = PBXGroup;
+			children = (
+				505A81C1309A2F2A00E2E307 /* thread.h */,
+			);
+			path = threaddep;
+			sourceTree = "<group>";
+		};
+		505A81DD309A2F2A00E2E307 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				505A81A9309A2F2A00E2E307 /* include */,
+				505A81B1309A2F2A00E2E307 /* jit */,
+				505A81B5309A2F2A00E2E307 /* machdep */,
+				505A81B8309A2F2A00E2E307 /* osdep */,
+				505A81C0309A2F2A00E2E307 /* softfloat */,
+				505A81C2309A2F2A00E2E307 /* threaddep */,
+				505A81C3309A2F2A00E2E307 /* cpudefs.cpp */,
+				505A81C4309A2F2A00E2E307 /* cpuemu_0.cpp */,
+				505A81C5309A2F2A00E2E307 /* cpuemu_11.cpp */,
+				505A81C6309A2F2A00E2E307 /* cpuemu_13.cpp */,
+				505A81C7309A2F2A00E2E307 /* cpuemu_20.cpp */,
+				505A81C8309A2F2A00E2E307 /* cpuemu_21.cpp */,
+				505A81C9309A2F2A00E2E307 /* cpuemu_22.cpp */,
+				505A81CA309A2F2A00E2E307 /* cpuemu_23.cpp */,
+				505A81CB309A2F2A00E2E307 /* cpuemu_24.cpp */,
+				505A81CC309A2F2A00E2E307 /* cpuemu_31.cpp */,
+				505A81CD309A2F2A00E2E307 /* cpuemu_32.cpp */,
+				505A81CE309A2F2A00E2E307 /* cpuemu_33.cpp */,
+				505A81CF309A2F2A00E2E307 /* cpuemu_34.cpp */,
+				505A81D0309A2F2A00E2E307 /* cpuemu_35.cpp */,
+				505A81D1309A2F2A00E2E307 /* cpuemu_40.cpp */,
+				505A81D2309A2F2A00E2E307 /* cpuemu_50.cpp */,
+				505A81D3309A2F2A00E2E307 /* cpummu.cpp */,
+				505A81D4309A2F2A00E2E307 /* cpummu30.cpp */,
+				505A81D5309A2F2A00E2E307 /* cpustbl.cpp */,
+				505A81D6309A2F2A00E2E307 /* cputbl.h */,
+				505A81D7309A2F2A00E2E307 /* fpp.cpp */,
+				505A81D8309A2F2A00E2E307 /* fpp_softfloat.cpp */,
+				505A81D9309A2F2A00E2E307 /* inputevents.def */,
+				505A81DA309A2F2A00E2E307 /* newcpu.cpp */,
+				505A81DB309A2F2A00E2E307 /* newcpu_common.cpp */,
+				505A81DC309A2F2A00E2E307 /* readcpu.cpp */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+		505A81E0309A2F2A00E2E307 /* Amiberry */ = {
+			isa = PBXGroup;
+			children = (
+				505A81DD309A2F2A00E2E307 /* src */,
+				505A81DE309A2F2A00E2E307 /* LICENSE */,
+				505A81DF309A2F2A00E2E307 /* README.md */,
+			);
+			path = Amiberry;
+			sourceTree = "<group>";
+		};
+		505A81E6309A2F2A00E2E307 /* shim */ = {
+			isa = PBXGroup;
+			children = (
+				505A81E1309A2F2A00E2E307 /* memory.h */,
+				505A81E2309A2F2A00E2E307 /* newcpu.h */,
+				505A81E3309A2F2A00E2E307 /* options.h */,
+				505A81E4309A2F2A00E2E307 /* sysconfig.h */,
+				505A81E5309A2F2A00E2E307 /* sysdeps.h */,
+			);
+			path = shim;
+			sourceTree = "<group>";
+		};
+		505A81ED309A2F2A00E2E307 /* AmiberryGlue */ = {
+			isa = PBXGroup;
+			children = (
+				505A81E6309A2F2A00E2E307 /* shim */,
+				505A81E7309A2F2A00E2E307 /* AmiberryCpu.h */,
+				505A81E8309A2F2A00E2E307 /* AmiberryCpu.cpp */,
+				505A81E9309A2F2A00E2E307 /* AmiberryRef.h */,
+				505A81EA309A2F2A00E2E307 /* AmiberryRef.cpp */,
+				505A81EB309A2F2A00E2E307 /* AmiberryStubs.cpp */,
+				505A81EC309A2F2A00E2E307 /* fpp_globals.inc */,
+			);
+			path = AmiberryGlue;
+			sourceTree = "<group>";
+		};
 		50804DFD2386A4CE004D3EC2 = {
 			isa = PBXGroup;
 			children = (
 				50F80AAB23C9F16900F21D80 /* CMakeLists.txt */,
-				5054686328A6642900028727 /* Runner */,
 				50804E082386A4CE004D3EC2 /* Moira */,
+				5054686328A6642900028727 /* Runner */,
 				50804E072386A4CE004D3EC2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -415,6 +761,7 @@
 		50804E072386A4CE004D3EC2 /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				50A200000000000000000001 /* libAmiberryCpu.a */,
 				50804E062386A4CE004D3EC2 /* Moira */,
 			);
 			name = Products;
@@ -458,6 +805,9 @@
 				5010BDAC238A897400CFD010 /* StrWriter_cpp.h */,
 				505A81023098E38500E2E307 /* FPU.h */,
 				505A81033098E38500E2E307 /* FPU.cpp */,
+				50A300000000000000000001 /* FloatMath.cpp */,
+				50A300000000000000000002 /* FloatMath.h */,
+				50A300000000000000000003 /* BigNum.h */,
 				505A81043098E38500E2E307 /* FpuFormats.h */,
 				505A81053098E38500E2E307 /* FpuFormats.cpp */,
 				505A80FF3098B1C600E2E307 /* Float80.h */,
@@ -476,6 +826,27 @@
 				509F15AE2927CE9800BA8AC1 /* tsconfig.json */,
 			);
 			path = Bartman;
+			sourceTree = "<group>";
+		};
+		50A1000000000000000000A1 /* ThirdParty */ = {
+			isa = PBXGroup;
+			children = (
+				505A81E0309A2F2A00E2E307 /* Amiberry */,
+				505A81ED309A2F2A00E2E307 /* AmiberryGlue */,
+				509F15A92927CE9800BA8AC1 /* Bartman */,
+				50C0123D28BBADCF001EFB37 /* Binutils */,
+				5028B100288D9EA600047C20 /* Musashi */,
+				50A1000000000000000000A2 /* MusashiGlue */,
+			);
+			path = ThirdParty;
+			sourceTree = "<group>";
+		};
+		50A1000000000000000000A2 /* MusashiGlue */ = {
+			isa = PBXGroup;
+			children = (
+				505580EA23AFA14D0009F77F /* musashi.cpp */,
+			);
+			path = MusashiGlue;
 			sourceTree = "<group>";
 		};
 		50C0123D28BBADCF001EFB37 /* Binutils */ = {
@@ -505,11 +876,28 @@
 			buildRules = (
 			);
 			dependencies = (
+				50A200000000000000000009 /* PBXTargetDependency */,
 			);
 			name = Moira;
 			productName = Moira;
 			productReference = 50804E062386A4CE004D3EC2 /* Moira */;
 			productType = "com.apple.product-type.tool";
+		};
+		50A200000000000000000004 /* AmiberryCpu */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 50A200000000000000000005 /* Build configuration list for PBXNativeTarget "AmiberryCpu" */;
+			buildPhases = (
+				50A200000000000000000002 /* Sources */,
+				50A200000000000000000003 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AmiberryCpu;
+			productName = AmiberryCpu;
+			productReference = 50A200000000000000000001 /* libAmiberryCpu.a */;
+			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
 
@@ -540,6 +928,7 @@
 			projectRoot = "";
 			targets = (
 				50804E052386A4CE004D3EC2 /* Moira */,
+				50A200000000000000000004 /* AmiberryCpu */,
 			);
 		};
 /* End PBXProject section */
@@ -549,21 +938,24 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				505580EC23AFA14D0009F77F /* musashi.cpp in Sources */,
-				5028B11C288D9EDC00047C20 /* m68kcpu.c in Sources */,
-				50C0123B28BBAD9B001EFB37 /* m68k-opc.c in Sources */,
-				5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */,
-				5028B10E288D9ECD00047C20 /* m68kops.c in Sources */,
+				50A300000000000000000004 /* FloatMath.cpp in Sources */,
 				5028B10A288D9EC000047C20 /* musashi_softfloat.c in Sources */,
-				50C0123A28BBAD9B001EFB37 /* m68k-dis.c in Sources */,
-				5054686228A4CDDC00028727 /* Randomizer.cpp in Sources */,
-				50804F352386A7DD004D3EC2 /* Moira.cpp in Sources */,
-				B6F33308D2D0F45B428944A2 /* MoiraCore68000.cpp in Sources */,
-				A7499A3FCDD6B869B1ED1BA6 /* MoiraCore68010.cpp in Sources */,
-				F33E4567A22AB4A162CCE6CC /* MoiraCore68020.cpp in Sources */,
+				5028B10E288D9ECD00047C20 /* m68kops.c in Sources */,
+				5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */,
+				5028B11C288D9EDC00047C20 /* m68kcpu.c in Sources */,
 				502C09DF23C8D82600A179E1 /* MoiraDebugger.cpp in Sources */,
 				502C09E223C8E16600A179E1 /* TestCPU.cpp in Sources */,
+				505580EC23AFA14D0009F77F /* musashi.cpp in Sources */,
+				507BE4AF23B66456000B37D2 /* Testrunner.cpp in Sources */,
+				50804EE22386A72C004D3EC2 /* main.cpp in Sources */,
+				50804F352386A7DD004D3EC2 /* Moira.cpp in Sources */,
 				50CECEC723A924B000E07C65 /* Sandbox.cpp in Sources */,
+				A7499A3FCDD6B869B1ED1BA6 /* MoiraCore68010.cpp in Sources */,
+				B6F33308D2D0F45B428944A2 /* MoiraCore68000.cpp in Sources */,
+				F33E4567A22AB4A162CCE6CC /* MoiraCore68020.cpp in Sources */,
+				50C0123B28BBAD9B001EFB37 /* m68k-opc.c in Sources */,
+				50C0123A28BBAD9B001EFB37 /* m68k-dis.c in Sources */,
+				5054686228A4CDDC00028727 /* Randomizer.cpp in Sources */,
 				505A80C33098B1AD00E2E307 /* s_normSubnormalExtF80Sig.c in Sources */,
 				505A80C43098B1AD00E2E307 /* extF80_mul.c in Sources */,
 				505A80C53098B1AD00E2E307 /* extF80_add.c in Sources */,
@@ -627,8 +1019,41 @@
 				505A80FC3098B1AD00E2E307 /* f32_to_extF80.c in Sources */,
 				505A80FD3098B1AD00E2E307 /* s_shiftRightJam64Extra.c in Sources */,
 				505A80FE3098B1AD00E2E307 /* s_subMagsExtF80.c in Sources */,
-				507BE4AF23B66456000B37D2 /* Testrunner.cpp in Sources */,
-				50804EE22386A72C004D3EC2 /* main.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50A200000000000000000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				505A81EE309A2F2A00E2E307 /* fpp.cpp in Sources */,
+				505A81EF309A2F2A00E2E307 /* cpuemu_32.cpp in Sources */,
+				505A81F0309A2F2A00E2E307 /* softfloat_decimal.cpp in Sources */,
+				505A81F1309A2F2A00E2E307 /* cpuemu_0.cpp in Sources */,
+				505A81F2309A2F2A00E2E307 /* softfloat.cpp in Sources */,
+				505A81F3309A2F2A00E2E307 /* cpuemu_21.cpp in Sources */,
+				505A81F4309A2F2A00E2E307 /* cpuemu_11.cpp in Sources */,
+				505A81F5309A2F2A00E2E307 /* cpuemu_13.cpp in Sources */,
+				505A81F7309A2F2A00E2E307 /* cpuemu_33.cpp in Sources */,
+				505A81F8309A2F2A00E2E307 /* cpuemu_23.cpp in Sources */,
+				505A81F9309A2F2A00E2E307 /* AmiberryCpu.cpp in Sources */,
+				505A81FA309A2F2A00E2E307 /* cpuemu_20.cpp in Sources */,
+				505A81FB309A2F2A00E2E307 /* cpuemu_50.cpp in Sources */,
+				505A81FC309A2F2A00E2E307 /* cpuemu_34.cpp in Sources */,
+				505A81FD309A2F2A00E2E307 /* newcpu_common.cpp in Sources */,
+				505A81FE309A2F2A00E2E307 /* cpustbl.cpp in Sources */,
+				505A81FF309A2F2A00E2E307 /* softfloat_fpsp.cpp in Sources */,
+				505A8200309A2F2A00E2E307 /* AmiberryStubs.cpp in Sources */,
+				505A8202309A2F2A00E2E307 /* cpudefs.cpp in Sources */,
+				505A8203309A2F2A00E2E307 /* fpp_softfloat.cpp in Sources */,
+				505A8204309A2F2A00E2E307 /* readcpu.cpp in Sources */,
+				505A8205309A2F2A00E2E307 /* cpummu30.cpp in Sources */,
+				505A8206309A2F2A00E2E307 /* cpuemu_22.cpp in Sources */,
+				505A8207309A2F2A00E2E307 /* cpuemu_35.cpp in Sources */,
+				505A8209309A2F2A00E2E307 /* cpummu.cpp in Sources */,
+				505A820A309A2F2A00E2E307 /* cpuemu_24.cpp in Sources */,
+				505A820B309A2F2A00E2E307 /* cpuemu_31.cpp in Sources */,
+				505A820C309A2F2A00E2E307 /* cpuemu_40.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -697,6 +1122,71 @@
 			};
 			name = Debug;
 		};
+		50A400000000000000000001 /* Debug-Amiberry */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_MIMIC_MUSASHI=false",
+					"MOIRA_MIMIC_AMIBERRY=true",
+					"MOIRA_PRECISE_TIMING=true",
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug-Amiberry;
+		};
 		50804E0C2386A4CE004D3EC2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -758,10 +1248,54 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEAD_CODE_STRIPPING = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Runner",
+					"$(SRCROOT)/Runner/ThirdParty",
+					"$(SRCROOT)/Runner/ThirdParty/Binutils",
+					"$(SRCROOT)/Runner/ThirdParty/Musashi/**",
+					"$(SRCROOT)/Moira/**",
+					/opt/homebrew/include,
+				);
+				LIBRARY_SEARCH_PATHS = /opt/homebrew/lib;
+				OTHER_LDFLAGS = "-lSDL3";
+				USE_HEADERMAP = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					HAVE_AMIBERRY,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
+		};
+		50A400000000000000000002 /* Debug-Amiberry */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Runner",
+					"$(SRCROOT)/Runner/ThirdParty",
+					"$(SRCROOT)/Runner/ThirdParty/Binutils",
+					"$(SRCROOT)/Runner/ThirdParty/Musashi/**",
+					"$(SRCROOT)/Moira/**",
+					/opt/homebrew/include,
+				);
+				LIBRARY_SEARCH_PATHS = /opt/homebrew/lib;
+				OTHER_LDFLAGS = "-lSDL3";
+				USE_HEADERMAP = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_MIMIC_MUSASHI=false",
+					"MOIRA_MIMIC_AMIBERRY=true",
+					"MOIRA_PRECISE_TIMING=true",
+					"$(inherited)",
+					HAVE_AMIBERRY,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug-Amiberry;
 		};
 		50804E0F2386A4CE004D3EC2 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -770,8 +1304,107 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEAD_CODE_STRIPPING = YES;
 				GCC_OPTIMIZATION_LEVEL = s;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Runner",
+					"$(SRCROOT)/Runner/ThirdParty",
+					"$(SRCROOT)/Runner/ThirdParty/Binutils",
+					"$(SRCROOT)/Runner/ThirdParty/Musashi/**",
+					"$(SRCROOT)/Moira/**",
+					/opt/homebrew/include,
+				);
+				LIBRARY_SEARCH_PATHS = /opt/homebrew/lib;
+				OTHER_LDFLAGS = "-lSDL3";
+				USE_HEADERMAP = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					HAVE_AMIBERRY,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		50A200000000000000000006 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				EXECUTABLE_PREFIX = lib;
+				GCC_OPTIMIZATION_LEVEL = 1;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					AMIBERRY,
+				);
+				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src",
+					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/include",
+					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/osdep",
+					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/archivers",
+					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/threaddep",
+					"$(SRCROOT)/Runner/ThirdParty/AmiberryGlue",
+					/opt/homebrew/include,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+			};
+			name = Debug;
+		};
+		50A400000000000000000003 /* Debug-Amiberry */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				EXECUTABLE_PREFIX = lib;
+				GCC_OPTIMIZATION_LEVEL = 1;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_MIMIC_MUSASHI=false",
+					"MOIRA_MIMIC_AMIBERRY=true",
+					"MOIRA_PRECISE_TIMING=true",
+					"$(inherited)",
+					AMIBERRY,
+				);
+				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src",
+					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/include",
+					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/osdep",
+					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/archivers",
+					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/threaddep",
+					"$(SRCROOT)/Runner/ThirdParty/AmiberryGlue",
+					/opt/homebrew/include,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+			};
+			name = Debug-Amiberry;
+		};
+		50A200000000000000000007 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				EXECUTABLE_PREFIX = lib;
+				GCC_OPTIMIZATION_LEVEL = 1;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					AMIBERRY,
+				);
+				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src",
+					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/include",
+					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/osdep",
+					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/archivers",
+					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/threaddep",
+					"$(SRCROOT)/Runner/ThirdParty/AmiberryGlue",
+					/opt/homebrew/include,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
 			};
 			name = Release;
 		};
@@ -782,6 +1415,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				50804E0B2386A4CE004D3EC2 /* Debug */,
+				50A400000000000000000001 /* Debug-Amiberry */,
 				50804E0C2386A4CE004D3EC2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
@@ -791,7 +1425,18 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				50804E0E2386A4CE004D3EC2 /* Debug */,
+				50A400000000000000000002 /* Debug-Amiberry */,
 				50804E0F2386A4CE004D3EC2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		50A200000000000000000005 /* Build configuration list for PBXNativeTarget "AmiberryCpu" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				50A200000000000000000006 /* Debug */,
+				50A400000000000000000003 /* Debug-Amiberry */,
+				50A200000000000000000007 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

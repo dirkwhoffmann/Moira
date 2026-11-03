@@ -345,7 +345,7 @@ Moira::execAddRgEa(u16 opcode)
 
     looping<I>() ? noPrefetch<C>(2) : prefetch<C, POLL>();
 
-    writeM<C, M, S, MOIRA_MIMIC_MUSASHI ? 0 : REVERSE>(ea, result);
+    writeM<C, M, S, MOIRA_MIMIC_AMIBERRY ? REVERSE : 0>(ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -466,7 +466,7 @@ Moira::execAddiEa(u16 opcode)
     result = addsub<C, I, S>(src, data);
     prefetch<C>();
 
-    writeOp<C, M, S, POLL | (MOIRA_MIMIC_MUSASHI ? 0 : REVERSE)>(dst, ea, result);
+    writeOp<C, M, S, POLL | (MOIRA_MIMIC_AMIBERRY ? REVERSE : 0)>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -541,7 +541,7 @@ Moira::execAddqEa(u16 opcode)
     result = addsub<C, I, S>(src, data);
     prefetch<C, POLL>();
 
-    writeOp<C, M, S, MOIRA_MIMIC_MUSASHI ? 0 : REVERSE>(dst, ea, result);
+    writeOp<C, M, S, MOIRA_MIMIC_AMIBERRY ? REVERSE : 0>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -961,7 +961,7 @@ Moira::execBitDxEa(u16 opcode)
     data = bit<C, I>(data, b);
 
     if constexpr (I == Instr::BCLR && C == Core::C68010) { SYNC(2); }
-    if constexpr (I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
+    if constexpr (MOIRA_MIMIC_AMIBERRY && I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
 
     prefetch<C, POLL>();
     if constexpr (I != Instr::BTST) writeM<C, M, Byte>(ea, data);
@@ -3382,7 +3382,7 @@ Moira::execMovemRgEa(u16 opcode)
             // Write register contents into memory
             ea -= S;
             if constexpr (C == Core::C68020 && !MOIRA_MIMIC_MUSASHI) writeA(dst, ea);
-            writeM<C, M, S, REVERSE>(ea, reg.r[i]);
+            writeM<C, M, S, (MOIRA_MIMIC_MUSASHI || MOIRA_MIMIC_AMIBERRY) ? REVERSE : 0>(ea, reg.r[i]);
             cnt++;
         }
         if constexpr (C != Core::C68020 || MOIRA_MIMIC_MUSASHI) writeA(dst, ea);
