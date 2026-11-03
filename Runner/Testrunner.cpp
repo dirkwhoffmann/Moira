@@ -715,6 +715,9 @@ bool skipAccessCheck(u16 op)
     if (!amiberryRef) return false;
     if ((op & 0xF8C0) == 0xE8C0) return true;
 
+    // FPU opcodes may be legal for one side only (final memory contents are still compared)
+    if ((op & 0xFE00) == 0xF200) return true;
+
     // N and V are undefined for CHK2, which shows up in the exception frame
     auto instr = moiracpu->getInstrInfo(op).I;
     return instr == Instr::CHK2 || instr == Instr::CMP2;
@@ -955,7 +958,11 @@ void compare(Setup &s, Result &r1, Result &r2)
 
     if (doExec((int)s.opcode)) {
 
-        if (!skip(s.opcode)) {
+        // FPU opcodes where only one side raises line F (reserved bits set in the opcode or extension word)
+        bool legalityMismatch = amiberryRef && (s.opcode & 0xFE00) == 0xF200 &&
+                                ((r1.pc >> 12) == 1) != ((r2.pc >> 12) == 1);
+
+        if (!legalityMismatch && !skip(s.opcode)) {
 
             if (!comparePC(r1, r2)) {
                 printf("\nPROGRAM COUNTER MISMATCH FOUND");
@@ -1224,6 +1231,9 @@ bool compareFPSR(Result &r1, Result &r2)
     // Amiberry modifies FPSR even if the instruction ends up in a line F exception
     if (amiberryRef && (r1.pc >> 12) != 1) return true;
 
+    // Amiberry doesn't raise OPERR when it converts a signaling NaN to an integer
+    if (amiberryRef && (r1.fpsr & 0x4000)) return (r1.fpsr | 0x2000) == (r2.fpsr | 0x2000);
+
     return r1.fpsr == r2.fpsr;
 }
 bool compareFPIAR(Result &r1, Result &r2)
@@ -1232,7 +1242,7 @@ bool compareFPIAR(Result &r1, Result &r2)
     if (amiberryRef && (r1.pc >> 12) != 1) return true;
 
     // Amiberry skips the FPIAR update if a conversion in FMOVE <ea> raises an operand error
-    if (amiberryRef && (r1.fpsr & 0x2000)) return true;
+    if (amiberryRef && (r1.fpsr & 0x6000)) return true;
 
     return r1.fpiar == r2.fpiar;
 }
