@@ -11,6 +11,12 @@
 #define FPU_REQUIRED \
 if (!fpu.isPresent()) { execLineF<C, I, M, S>(opcode); return; }
 
+// The 68040 FPU updates FPIAR on every data operation, older FPUs only if an exception is enabled
+#define FPU_UPDATE_FPIAR \
+if constexpr (MOIRA_MIMIC_AMIBERRY) { \
+    if (cpuModel >= Model::M68EC040 || (fpu.getFPCR() & 0x7F00)) fpu.setFPIAR(getPC0()); \
+}
+
 #ifdef MOIRA_MAIN_TU
 
 bool
@@ -739,6 +745,7 @@ Moira::execFMove(u16 opcode)
     fpu.resetState = false;
     readI<C, Word>();
     fpu.clearExcStatusByte();
+    FPU_UPDATE_FPIAR
 
     {
         // FSMOVE and FDMOVE round to single or double precision
@@ -820,6 +827,7 @@ Moira::execFMovecr(u16 opcode)
     fpu.resetState = false;
     readI<C, Word>();
     fpu.clearExcStatusByte();
+    FPU_UPDATE_FPIAR
 
     {
         FPU::Scope scope(fpu);
@@ -1035,6 +1043,7 @@ Moira::execFGeneric(u16 opcode)
     fpu.resetState = false;
     readI<C, Word>();
     fpu.clearExcStatusByte();
+    FPU_UPDATE_FPIAR
 
     {
         FPU::Scope scope(fpu, precision);

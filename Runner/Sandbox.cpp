@@ -15,24 +15,37 @@
 void
 Sandbox::prepare(u16 opcode)
 {
-    enabled = doExec((int)opcode) && !skip(opcode);
+    enabled = doExec((int)opcode) && !skip(opcode) && !skipAccessCheck(opcode);
     recordCnt = replayCnt = 0;
+    for (bool &u : used) u = false;
     errors = 0;
 }
 
 void
 Sandbox::record(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
 {
+    if (byteGranular && type == POKE16) {
+        record(POKE8, addr, cycle, fc, u8(value >> 8));
+        record(POKE8, (addr + 1) & addrMask, cycle, fc, u8(value));
+        return;
+    }
+
     access[recordCnt] = AccessRecord { type, addr, value, cycle, fc };
 
     recordCnt++;
-    assert(recordCnt < 64);
+    assert(recordCnt < 256);
 }
 
 void
 Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
 {
     if (!enabled) return;
+
+    if (byteGranular && type == POKE16) {
+        replayPoke(POKE8, addr, cycle, fc, u8(value >> 8));
+        replayPoke(POKE8, (addr + 1) & addrMask, cycle, fc, u8(value));
+        return;
+    }
 
     auto info = moiracpu->getInstrInfo(opcode);
 
@@ -43,7 +56,8 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
     for (int i = 0; i < recordCnt; i++) {
 
         // Enable for strict checking
-        if (i != replayCnt) continue;
+        if (byteGranular) { if (used[i]) continue; }
+        else if (i != replayCnt) continue;
 
         // Check for a matching entry
         if (access[i].type != type) continue;
@@ -55,6 +69,7 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
         }
 
         // Match found
+        used[i] = true;
         replayCnt++;
         if (replayCnt > recordCnt) { break; }
         return;

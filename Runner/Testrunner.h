@@ -170,6 +170,7 @@ void runMusashi(Setup &s, Result &r);
 void runMoira(Setup &s, Result &r);
 
 bool skip(u16 op);
+bool skipAccessCheck(u16 op);
 
 
 //

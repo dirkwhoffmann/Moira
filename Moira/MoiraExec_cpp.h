@@ -345,7 +345,7 @@ Moira::execAddRgEa(u16 opcode)
 
     looping<I>() ? noPrefetch<C>(2) : prefetch<C, POLL>();
 
-    writeM<C, M, S, MOIRA_MIMIC_AMIBERRY ? REVERSE : 0>(ea, result);
+    writeM<C, M, S, (MOIRA_MIMIC_AMIBERRY && C != Core::C68020) ? REVERSE : 0>(ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -466,7 +466,7 @@ Moira::execAddiEa(u16 opcode)
     result = addsub<C, I, S>(src, data);
     prefetch<C>();
 
-    writeOp<C, M, S, POLL | (MOIRA_MIMIC_AMIBERRY ? REVERSE : 0)>(dst, ea, result);
+    writeOp<C, M, S, POLL | ((MOIRA_MIMIC_AMIBERRY && C != Core::C68020) ? REVERSE : 0)>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -541,7 +541,7 @@ Moira::execAddqEa(u16 opcode)
     result = addsub<C, I, S>(src, data);
     prefetch<C, POLL>();
 
-    writeOp<C, M, S, MOIRA_MIMIC_AMIBERRY ? REVERSE : 0>(dst, ea, result);
+    writeOp<C, M, S, (MOIRA_MIMIC_AMIBERRY && C != Core::C68020) ? REVERSE : 0>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -631,7 +631,7 @@ Moira::execAddxEa(u16 opcode)
 
     } else if constexpr (S == Long && C == Core::C68010 && !MOIRA_MIMIC_MUSASHI) {
 
-        writeM<C, M, S, MOIRA_MIMIC_AMIBERRY ? REVERSE : 0>(ea2, result);
+        writeM<C, M, S, (MOIRA_MIMIC_AMIBERRY && C != Core::C68020) ? REVERSE : 0>(ea2, result);
         looping<I>() ? noPrefetch<C>(S == Long ? 0 : 2) : prefetch<C, POLL>();
 
     } else {
@@ -706,7 +706,7 @@ Moira::execAndRgEa(u16 opcode)
 
     if constexpr (S == Long && isRegMode(M)) { SYNC_68000(4); SYNC_68010(2); }
 
-    if constexpr (MOIRA_MIMIC_MUSASHI) {
+    if constexpr (MOIRA_MIMIC_MUSASHI || (MOIRA_MIMIC_AMIBERRY && C == Core::C68020)) {
         writeOp<C, M, S>(dst, ea, result);
     } else {
         writeOp<C, M, S, REVERSE>(dst, ea, result);
@@ -762,7 +762,7 @@ Moira::execAndiEa(u16 opcode)
     result = logic<C, I, S>(src, data);
     prefetch<C, POLL>();
 
-    if constexpr (MOIRA_MIMIC_MUSASHI) {
+    if constexpr (MOIRA_MIMIC_MUSASHI || (MOIRA_MIMIC_AMIBERRY && C == Core::C68020)) {
         writeOp<C, M, S>(dst, ea, result);
     } else {
         writeOp<C, M, S, REVERSE>(dst, ea, result);
@@ -3375,6 +3375,7 @@ Moira::execMovemRgEa(u16 opcode)
     if constexpr (M == Mode(4)) {     // -(An)
 
         u32 ea = readA(dst);
+        [[maybe_unused]] u32 initial = ea;
 
         for (int i = 15; i >= 0; i--) {
 
@@ -3393,7 +3394,13 @@ Moira::execMovemRgEa(u16 opcode)
             // Write register contents into memory
             ea -= S;
             if constexpr (C == Core::C68020 && !MOIRA_MIMIC_MUSASHI) writeA(dst, ea);
-            writeM<C, M, S, (MOIRA_MIMIC_MUSASHI || MOIRA_MIMIC_AMIBERRY) ? REVERSE : 0>(ea, reg.r[i]);
+
+            // Amiberry stores the initial value minus the operand size
+            u32 value = reg.r[i];
+            if constexpr (MOIRA_MIMIC_AMIBERRY && C == Core::C68020) {
+                if (i == 8 + dst) value = initial - S;
+            }
+            writeM<C, M, S, (MOIRA_MIMIC_MUSASHI || MOIRA_MIMIC_AMIBERRY) ? REVERSE : 0>(ea, value);
             cnt++;
         }
         if constexpr (C != Core::C68020 || MOIRA_MIMIC_MUSASHI) writeA(dst, ea);
@@ -5691,6 +5698,12 @@ Moira::execUnpkPd(u16 opcode)
 
         writeOp<C, M, Byte>(ay, dst >> 8 & 0xFF);
         writeOp<C, M, Byte>(ay, dst & 0xFF);
+
+    } else if constexpr (MOIRA_MIMIC_AMIBERRY) {
+
+        // Amiberry writes the result as a single (possibly misaligned) word
+        reg.a[ay] -= 2;
+        write<C, AddrSpace::DATA, Word>(readA(ay), dst & 0xFFFF);
 
     } else {
 

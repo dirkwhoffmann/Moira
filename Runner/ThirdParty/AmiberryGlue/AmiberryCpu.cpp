@@ -25,6 +25,9 @@ inline uint32_t mask(uint32_t addr) { return addr & 0xFFFF; }
 
 // MOVES accesses the address space selected by the DFC register
 bool movesActive = false;
+bool pendingByte = false;
+uint32_t pendingValue = 0;
+uint64_t pendingCycle = 0;
 inline uint32_t fcOfWrite() { return movesActive ? (regs.dfc & 7) : regs.s ? 5 : 1; }
 
 }
@@ -60,7 +63,25 @@ uae_u32 memory_get_longi(uaecptr a) { return memory_get_long(a); }
 void memory_put_byte(uaecptr a, uae_u32 v)
 {
     if (addr24) a &= 0xFFFFFF;
-    if (writeHook) writeHook(1, a, v & 0xFF, fcOfWrite(), amicpu::cycles() + 2);
+
+    /* A misaligned word write that crosses the end of the 24-bit address
+     * space arrives as two byte writes. Report it as the word write it is.
+     */
+    if (writeHook && addr24) {
+        if (a == 0xFFFFFF) {
+            pendingByte = true;
+            pendingValue = v & 0xFF;
+            pendingCycle = amicpu::cycles() + 2;
+        } else if (pendingByte) {
+            pendingByte = false;
+            if (a == 0) writeHook(2, 0xFFFFFF, pendingValue << 8 | (v & 0xFF), fcOfWrite(), pendingCycle);
+            else { writeHook(1, 0xFFFFFF, pendingValue, fcOfWrite(), pendingCycle); writeHook(1, a, v & 0xFF, fcOfWrite(), amicpu::cycles() + 2); }
+        } else {
+            writeHook(1, a, v & 0xFF, fcOfWrite(), amicpu::cycles() + 2);
+        }
+    } else if (writeHook) {
+        writeHook(1, a, v & 0xFF, fcOfWrite(), amicpu::cycles() + 2);
+    }
     mem[mask(a)] = uint8_t(v);
 }
 
@@ -222,11 +243,14 @@ void setState(const State &s)
     regs.cacr = s.cacr;
     regs.caar = s.caar;
 
+    // Start with empty caches
+    flush_cpu_caches(true);
+
     for (int i = 0; i < 8; i++) {
         regs.fp[i].fpx.high = s.fpse[i];
         regs.fp[i].fpx.low = s.fpman[i];
     }
-    regs.fpcr = s.fpcr;
+    fpp_set_fpcr(s.fpcr);
     regs.fpsr = s.fpsr;
     regs.fpiar = s.fpiar;
 
@@ -255,9 +279,9 @@ State getState()
 
     s.pc = m68k_getpc();
 
-    // The cycle-exact cores leave the PC at the STOP instruction while the CPU
+    // Amiberry leaves the PC at the STOP instruction while the CPU
     // is stopped. On hardware, it points to the following instruction.
-    if (regs.stopped && currprefs.cpu_model <= 68010) s.pc += 4;
+    if (regs.stopped) s.pc += 4;
 
     s.sr = regs.sr;
     s.vbr = regs.vbr;
@@ -285,6 +309,7 @@ bool step()
     lastExc = 0;
 
     movesActive = false;
+    pendingByte = false;
 
     TRY(prb) {
 
@@ -333,6 +358,13 @@ bool step()
         regs.spcflags = 0;
 
     } ENDTRY
+
+    // Report a byte write at the very end of the address space that wasn't
+    // followed by a wrapped second byte
+    if (pendingByte && writeHook) {
+        pendingByte = false;
+        writeHook(1, 0xFFFFFF, pendingValue, fcOfWrite(), pendingCycle);
+    }
 
     return !exit && !regs.halted;
 }

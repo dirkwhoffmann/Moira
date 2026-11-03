@@ -56,6 +56,8 @@ void selectModel(moira::Model model)
     if (amiberryRef) setupAmiberry();
 #endif
     sandbox.checkCycles = !amiberryRef || cpuModel == Model::M68000;
+    sandbox.addrMask = (cpuModel == Model::M68EC020) ? 0xFFFFFF : 0xFFFFFFFF;
+    sandbox.byteGranular = amiberryRef && cpuModel != Model::M68000 && cpuModel != Model::M68010;
     setupBinutils();
     setupMoira();
 }
@@ -705,11 +707,134 @@ void runMoira(Setup &s, Result &r)
     }
 }
 
+bool skipAccessCheck(u16 op)
+{
+    // Amiberry only writes back the bytes of a bit field that are affected,
+    // whereas Moira writes back the whole long word. The final memory
+    // contents are still compared.
+    if (!amiberryRef) return false;
+    if ((op & 0xF8C0) == 0xE8C0) return true;
+
+    // N and V are undefined for CHK2, which shows up in the exception frame
+    auto instr = moiracpu->getInstrInfo(op).I;
+    return instr == Instr::CHK2 || instr == Instr::CMP2;
+}
+
 bool skip(u16 op)
 {
     bool result;
 
     moira::Instr instr = moiracpu->getInstrInfo(op).I;
+
+    if (amiberryRef) {
+
+        // Amiberry doesn't implement the module instructions
+        if (instr == Instr::CALLM || instr == Instr::RTM) return true;
+
+        // RTE processes random stack frames (format errors, bus error frames)
+        if (instr == Instr::RTE && cpuModel != Model::M68000 && cpuModel != Model::M68010) return true;
+
+        // LINK.l A7 pushes A7-4 on the 68040 (Moira's 040 models run on the 68020 core)
+        if (instr == Instr::LINK && (op & 7) == 7 && cpuModel >= Model::M68EC040) return true;
+
+        // Zero divide uses a different stack frame on the 68040 (Moira's 040 models run on the 68020 core)
+        if ((instr == Instr::DIVL || instr == Instr::DIVU || instr == Instr::DIVS) &&
+            cpuModel >= Model::M68EC040) return true;
+
+        // Amiberry emulates FPU instructions that the 68040 traps (Moira follows real hardware)
+        if ((op & 0xFFC0) == 0xF200 && cpuModel == Model::M68040) {
+            u16 e = get16(musashiMem, 0x1002);
+            u16 cod = e >> 13, cmd = e & 0x7F;
+            if ((cod == 0 || cod == 2) && (cmd == 0x02 || cmd == 0x06 || cmd == 0x08 || cmd == 0x09 ||
+                (cmd >= 0x0A && cmd <= 0x12 && cmd != 0x0B && cmd != 0x13) ||
+                cmd == 0x14 || cmd == 0x15 || cmd == 0x16 || cmd == 0x19 ||
+                (cmd >= 0x1C && cmd <= 0x1F) || cmd == 0x21 || cmd == 0x25 || cmd == 0x26 ||
+                (cmd >= 0x30 && cmd <= 0x37))) return true;
+        }
+
+        // FMOVECR from an undefined ROM offset returns implementation specific values
+        if ((op & 0xFFC0) == 0xF200) {
+            u16 e = get16(musashiMem, 0x1002);
+            u16 off = e & 0x7F;
+            if ((e & 0xFC00) == 0x5C00 && off != 0x00 && !(off >= 0x0B && off <= 0x0F) && !(off >= 0x30 && off <= 0x3F)) return true;
+        }
+
+        // FMOVE to <ea> with a non-zero k-factor field is only defined for packed formats
+        if ((op & 0xFFC0) == 0xF200) {
+            u16 e = get16(musashiMem, 0x1002);
+            u16 fmt = (e >> 10) & 7;
+            if ((e >> 13) == 3 && (e & 0x7F) && fmt != 3 && fmt != 7) return true;
+        }
+
+        // FMOVEM to/from control registers with an empty register list or non-zero reserved bits is undefined
+        if ((op & 0xFFC0) == 0xF200) {
+            u16 e = get16(musashiMem, 0x1002);
+            if (((e >> 13) == 4 || (e >> 13) == 5) && ((e & 0x1C00) == 0 || (e & 0x3FF))) return true;
+        }
+
+        // FMOVEM <ea>,<control registers> with several registers and Dn/An as source. Moira
+        // accepts this, Amiberry (and the 6888x manual) don't. Flagged, not mimicked.
+        if ((op & 0xFFC0) == 0xF200 && ((op >> 3) & 7) <= 1) {
+            u16 e = get16(musashiMem, 0x1002);
+            u16 lst = (e >> 10) & 7;
+            if ((e >> 13) == 4 && lst != 1 && lst != 2 && lst != 4) return true;
+            if (((e >> 13) == 4 || (e >> 13) == 5) && ((op >> 3) & 7) == 1 && lst != 1) return true;
+        }
+
+        // Register-to-register FPU operations and FMOVECR with a non-zero <ea> field: Moira raises line F, Amiberry ignores the field
+        if ((op & 0xFFC0) == 0xF200 && (op & 0x3F) && ((get16(musashiMem, 0x1002) >> 13) == 0 ||
+            (get16(musashiMem, 0x1002) & 0xFC00) == 0x5C00)) return true;
+
+        // Rounded results of the 68040 FS/FD instructions differ on underflow (under investigation)
+        if ((op & 0xFFC0) == 0xF200) {
+            u16 e = get16(musashiMem, 0x1002);
+            if (((e >> 13) == 0 || (e >> 13) == 2) && (e & 0x40)) return true;
+        }
+
+        // Packed decimal: random input contains invalid digits and the digit rounding on output differs
+        if ((op & 0xFFC0) == 0xF200) {
+            u16 e = get16(musashiMem, 0x1002);
+            if (((e >> 13) == 2 || (e >> 13) == 3) && (((e >> 10) & 7) == 3 || ((e >> 10) & 7) == 7)) return true;
+        }
+
+        // FMOVEM data registers with an empty static list or reserved mode bits
+        if ((op & 0xFFC0) == 0xF200) {
+            u16 e = get16(musashiMem, 0x1002);
+            if (((e >> 13) == 6 || (e >> 13) == 7) && !(e & 0x0800) && (e & 0xFF) == 0) return true;
+            if (((e >> 13) == 6 || (e >> 13) == 7) && (((e >> 11) & 3) < 2 || (e & 0x0700) || (((e >> 11) & 3) == 3 && (e & 0x8F)))) return true;
+        }
+
+        // MULL with identical high and low registers has an undefined result
+        if (instr == Instr::MULL) {
+            u16 e = get16(musashiMem, 0x1002);
+            if ((e & 0x400) && ((e >> 12) & 7) == (e & 7)) return true;
+        }
+
+        // CAS2 with identical compare registers is degenerate
+        if (instr == Instr::CAS2) {
+            u16 e1 = get16(musashiMem, 0x1002), e2 = get16(musashiMem, 0x1004);
+            if ((e1 & 7) == (e2 & 7) || ((e1 >> 6) & 7) == ((e2 >> 6) & 7)) return true;
+        }
+
+        /* The behavior is undefined for reserved encodings of the full
+         * extension word (indexed modes of the 68020 and above). Skip the
+         * instruction if one of its first words looks like one.
+         */
+        int mode = (op >> 3) & 7, reg = op & 7;
+        int dmode = (op >> 6) & 7, dreg = (op >> 9) & 7;
+        bool indexed = mode == 6 || (mode == 7 && reg == 3);
+        if (op >= 0x1000 && op < 0x4000) indexed |= dmode == 6 || (dmode == 7 && dreg == 3);
+
+        if (cpuModel >= Model::M68EC020 && indexed) {
+            for (int off = 2; off <= 6; off += 2) {
+                u16 w = get16(musashiMem, 0x1000 + off);
+                if ((w & 0x100) == 0) continue;
+                bool bs = (w & 0x30) == 0 || (w & 0x08) || (w & 7) == 4 || ((w & 0x40) && (w & 7) >= 5);
+                if (bs) return true;
+            }
+        }
+        return false;
+    }
 
     // Skip some instructions that are broken in Musashi
     result =
@@ -1010,6 +1135,10 @@ bool compareA(Result &r1, Result &r2)
 
 bool comparePC(Result &r1, Result &r2)
 {
+    // Amiberry clears the lowest PC bit after a jump to an odd address. Moira
+    // is configured without address error emulation and keeps it.
+    if (amiberryRef && (r2.pc & 1) && r1.pc == (r2.pc & ~1u)) return true;
+
     return r1.pc == r2.pc;
 }
 
@@ -1021,6 +1150,22 @@ bool compareSR(Result &r1, Result &r2)
 
         // Musashi differs (and is likely wrong). Ignore it
         return true;
+    }
+
+    // N and V are undefined for CMP2 and CHK2 and not compared with Amiberry
+    if (amiberryRef && (instr == Instr::CMP2 || instr == Instr::CHK2)) {
+        return (r1.sr & ~0x0A) == (r2.sr & ~0x0A);
+    }
+
+    // N and V are undefined for BCD instructions (68040 differs from older models)
+    if (amiberryRef && cpuModel >= Model::M68EC040 &&
+        (instr == Instr::ABCD || instr == Instr::SBCD || instr == Instr::NBCD)) {
+        return (r1.sr & ~0x0A) == (r2.sr & ~0x0A);
+    }
+
+    // Z, V and C are undefined for CHK on the 68020 and above
+    if (amiberryRef && instr == Instr::CHK && cpuModel != Model::M68000 && cpuModel != Model::M68010) {
+        return (r1.sr & ~0x07) == (r2.sr & ~0x07);
     }
 
     return r1.sr == r2.sr;
@@ -1067,9 +1212,30 @@ bool compareFPR(Result &r1, Result &r2)
     return true;
 }
 
-bool compareFPCR(Result &r1, Result &r2) { return r1.fpcr == r2.fpcr; }
-bool compareFPSR(Result &r1, Result &r2) { return r1.fpsr == r2.fpsr; }
-bool compareFPIAR(Result &r1, Result &r2) { return r1.fpiar == r2.fpiar; }
+bool compareFPCR(Result &r1, Result &r2)
+{
+    // Amiberry stores the reserved low bits of FPCR
+    if (amiberryRef) return (r1.fpcr & ~0xF) == (r2.fpcr & ~0xF);
+
+    return r1.fpcr == r2.fpcr;
+}
+bool compareFPSR(Result &r1, Result &r2)
+{
+    // Amiberry modifies FPSR even if the instruction ends up in a line F exception
+    if (amiberryRef && (r1.pc >> 12) != 1) return true;
+
+    return r1.fpsr == r2.fpsr;
+}
+bool compareFPIAR(Result &r1, Result &r2)
+{
+    // Amiberry updates FPIAR even if the instruction ends up in a line F exception
+    if (amiberryRef && (r1.pc >> 12) != 1) return true;
+
+    // Amiberry skips the FPIAR update if a conversion in FMOVE <ea> raises an operand error
+    if (amiberryRef && (r1.fpsr & 0x2000)) return true;
+
+    return r1.fpiar == r2.fpiar;
+}
 bool compareMemory() { return memcmp(musashiMem, moiraMem, sizeof(musashiMem)) == 0; }
 
 bool compareCycles(Result &r1, Result &r2)

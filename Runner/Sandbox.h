@@ -42,7 +42,8 @@ class Sandbox {
 
     bool enabled;
 
-    AccessRecord access[64];
+    AccessRecord access[256];
+    bool used[256];
     int recordCnt;
     int replayCnt;
     long errors;
@@ -51,6 +52,10 @@ public:
 
     // Set to false if the reference doesn't provide exact access timing
     bool checkCycles = true;
+
+    // Compare writes byte by byte (misaligned accesses are split differently)
+    bool byteGranular = false;
+    u32 addrMask = 0xFFFFFFFF;
 
     Sandbox() { };
     void prepare(u16 opcode);
