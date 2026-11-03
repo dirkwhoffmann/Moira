@@ -65,7 +65,6 @@ uae_u8 ce_banktype[65536], ce_cachable[65536];
 uae_u32 start_pc;
 uae_u8 *start_pc_p;
 void *pushall_call_handler;
-op_properties prop[65536];
 void fp_init_native(void) { }
 
 //
@@ -184,8 +183,10 @@ SDL_ThreadID uae_thread_get_id(SDL_Thread *) { return 0; }
 
 // Disassembler and JIT
 uae_u32 m68k_disasm_2(TCHAR *, int, uaecptr, uae_u16 *, int, uaecptr *, int, uae_u32 *, uae_u32 *, uaecptr, int) { return 0; }
+#if defined(JIT) && defined(CPU_AARCH64)
 void build_comp() { }
 void compile_block(cpu_history *, int, int) { }
+#endif
 
 // Memory access with side effects
 bool cpuboard_fc_check(uae_u32, uae_u32 *, int, bool) { return false; }

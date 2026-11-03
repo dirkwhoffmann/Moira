@@ -1300,6 +1300,7 @@
 		50804E0F2386A4CE004D3EC2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = arm64; /* Homebrew's SDL3 is arm64 only */
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEAD_CODE_STRIPPING = YES;
@@ -1333,6 +1334,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					AMIBERRY,
+					AMIBERRY_NO_JIT,
 				);
 				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;
 				HEADER_SEARCH_PATHS = (
@@ -1363,6 +1365,7 @@
 					"MOIRA_PRECISE_TIMING=true",
 					"$(inherited)",
 					AMIBERRY,
+					AMIBERRY_NO_JIT,
 				);
 				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;
 				HEADER_SEARCH_PATHS = (
@@ -1384,12 +1387,14 @@
 		50A200000000000000000007 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = arm64; /* Homebrew's SDL3 is arm64 only */
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				EXECUTABLE_PREFIX = lib;
 				GCC_OPTIMIZATION_LEVEL = 1;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					AMIBERRY,
+					AMIBERRY_NO_JIT,
 				);
 				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;
 				HEADER_SEARCH_PATHS = (

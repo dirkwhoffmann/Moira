@@ -105,6 +105,16 @@
 #define MOIRA_MIMIC_AMIBERRY true
 #endif
 
+// Amiberry's bus access timing can only be reproduced with precise timing
+#if MOIRA_MIMIC_AMIBERRY && !MOIRA_PRECISE_TIMING
+#undef MOIRA_PRECISE_TIMING
+#define MOIRA_PRECISE_TIMING true
+#endif
+
+#if MOIRA_MIMIC_AMIBERRY && MOIRA_MIMIC_MUSASHI
+#error "MOIRA_MIMIC_AMIBERRY and MOIRA_MIMIC_MUSASHI are mutually exclusive"
+#endif
+
 /* The following macro appears at the beginning of each instruction handler.
  * Moira will call 'willExecute(...)' for all listed instructions.
  */

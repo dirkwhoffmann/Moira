@@ -112,7 +112,7 @@ if (AMIBERRY_DIR)
     ${AMI}/cpuemu_35.cpp ${AMI}/cpuemu_40.cpp ${AMI}/cpuemu_50.cpp
     )
     set_target_properties(amiberrycpu PROPERTIES CXX_STANDARD 17)
-    target_compile_definitions(amiberrycpu PRIVATE AMIBERRY)
+    target_compile_definitions(amiberrycpu PRIVATE AMIBERRY AMIBERRY_NO_JIT)
     target_compile_options(amiberrycpu PRIVATE -w -O1)
     target_include_directories(amiberrycpu PRIVATE
     ${AMI} ${AMI}/include ${AMI}/osdep ${AMI}/archivers ${AMI}/threaddep
