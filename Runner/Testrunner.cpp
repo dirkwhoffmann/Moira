@@ -55,6 +55,7 @@ void selectModel(moira::Model model)
 #ifdef HAVE_AMIBERRY
     if (amiberryRef) setupAmiberry();
 #endif
+    sandbox.checkCycles = !amiberryRef || cpuModel == Model::M68000;
     setupBinutils();
     setupMoira();
 }
@@ -1084,8 +1085,11 @@ bool compareCycles(Result &r1, Result &r2)
     // FPU timing is not emulated yet
     if (isFpuOpcode(r1.opcode)) return true;
 
-    // Amiberry's 68020+ cores aren't cycle-exact
-    if (amiberryRef && cpuModel != Model::M68000 && cpuModel != Model::M68010) return true;
+    /* Amiberry's cores are only used as a timing reference for the 68000. The
+     * 68010 timing is partially copied from the 68000, and the 68020+ cores
+     * aren't cycle-exact.
+     */
+    if (amiberryRef && cpuModel != Model::M68000) return true;
 
     /* Timing comparison is off for every model beyond the 68000 and 68010
      * while the instruction cache is emulated. Those models (68020 and up)

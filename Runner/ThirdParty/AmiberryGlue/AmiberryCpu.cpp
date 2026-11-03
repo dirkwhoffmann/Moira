@@ -23,6 +23,10 @@ bool addr24 = false;
 
 inline uint32_t mask(uint32_t addr) { return addr & 0xFFFF; }
 
+// MOVES accesses the address space selected by the DFC register
+bool movesActive = false;
+inline uint32_t fcOfWrite() { return movesActive ? (regs.dfc & 7) : regs.s ? 5 : 1; }
+
 }
 
 //
@@ -56,14 +60,14 @@ uae_u32 memory_get_longi(uaecptr a) { return memory_get_long(a); }
 void memory_put_byte(uaecptr a, uae_u32 v)
 {
     if (addr24) a &= 0xFFFFFF;
-    if (writeHook) writeHook(1, a, v & 0xFF, regs.s ? 5 : 1, amicpu::cycles() + 2);
+    if (writeHook) writeHook(1, a, v & 0xFF, fcOfWrite(), amicpu::cycles() + 2);
     mem[mask(a)] = uint8_t(v);
 }
 
 void memory_put_word(uaecptr a, uae_u32 v)
 {
     if (addr24) a &= 0xFFFFFF;
-    if (writeHook) writeHook(2, a, v & 0xFFFF, regs.s ? 5 : 1, amicpu::cycles() + 2);
+    if (writeHook) writeHook(2, a, v & 0xFFFF, fcOfWrite(), amicpu::cycles() + 2);
     mem[mask(a)] = uint8_t(v >> 8);
     mem[mask(a + 1)] = uint8_t(v);
 }
@@ -71,7 +75,7 @@ void memory_put_word(uaecptr a, uae_u32 v)
 void memory_put_long(uaecptr a, uae_u32 v)
 {
     if (addr24) a &= 0xFFFFFF;
-    if (writeHook) { writeHook(2, a, v >> 16, regs.s ? 5 : 1, amicpu::cycles() + 2); writeHook(2, a + 2, v & 0xFFFF, regs.s ? 5 : 1, amicpu::cycles() + 2); }
+    if (writeHook) { writeHook(2, a, v >> 16, fcOfWrite(), amicpu::cycles() + 2); writeHook(2, a + 2, v & 0xFFFF, fcOfWrite(), amicpu::cycles() + 2); }
     mem[mask(a)] = uint8_t(v >> 24);
     mem[mask(a + 1)] = uint8_t(v >> 16);
     mem[mask(a + 2)] = uint8_t(v >> 8);
@@ -95,7 +99,7 @@ static uint64_t cycleCounter = 0;
 static int lastExc = 0;
 
 // Called whenever an exception is processed
-void debug_exception(int nr) { lastExc = nr; }
+void debug_exception(int nr) { lastExc = nr; movesActive = false; }
 
 void do_cycles_ce(int cycles) { cycleCounter += cycles; }
 void do_cycles_ce020(int cycles) { cycleCounter += cycles; }
@@ -213,8 +217,8 @@ void setState(const State &s)
     MakeFromSR();
 
     regs.vbr = s.vbr;
-    regs.sfc = s.sfc;
-    regs.dfc = s.dfc;
+    regs.sfc = s.sfc & 7;   // SFC and DFC are 3-bit registers
+    regs.dfc = s.dfc & 7;
     regs.cacr = s.cacr;
     regs.caar = s.caar;
 
@@ -280,12 +284,15 @@ bool step()
     cycleCounter = 0;
     lastExc = 0;
 
+    movesActive = false;
+
     TRY(prb) {
 
         if (currprefs.cpu_model <= 68010) {
 
             // Cycle-exact 68000/68010 core
             r->opcode = r->ir;
+            movesActive = (r->opcode & 0xFF00) == 0x0E00;
             r->instruction_pc = m68k_getpc();
             (*cpufunctbl_noret[r->opcode])(r->opcode);
             if (!regs.loop_mode) regs.ird = regs.opcode;
@@ -296,6 +303,7 @@ bool step()
             // Prefetch-accurate 68020/68030 core
             r->instruction_pc = m68k_getpc();
             r->opcode = regs.irc;
+            movesActive = (r->opcode & 0xFF00) == 0x0E00;
             int cycles = (*cpufunctbl[r->opcode])(r->opcode);
             cycleCounter = adjust_cycles(cycles >> 16);
 
@@ -304,6 +312,7 @@ bool step()
             // 68040 core
             r->instruction_pc = m68k_getpc();
             r->opcode = get_iword_cache_040(0);
+            movesActive = (r->opcode & 0xFF00) == 0x0E00;
             (*cpufunctbl_noret[r->opcode])(r->opcode);
         }
 

@@ -49,6 +49,9 @@ class Sandbox {
 
 public:
 
+    // Set to false if the reference doesn't provide exact access timing
+    bool checkCycles = true;
+
     Sandbox() { };
     void prepare(u16 opcode);
     long getErrors() { return errors; }

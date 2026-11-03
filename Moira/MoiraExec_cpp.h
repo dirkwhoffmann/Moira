@@ -631,7 +631,7 @@ Moira::execAddxEa(u16 opcode)
 
     } else if constexpr (S == Long && C == Core::C68010 && !MOIRA_MIMIC_MUSASHI) {
 
-        writeM<C, M, S>(ea2, result);
+        writeM<C, M, S, MOIRA_MIMIC_AMIBERRY ? REVERSE : 0>(ea2, result);
         looping<I>() ? noPrefetch<C>(S == Long ? 0 : 2) : prefetch<C, POLL>();
 
     } else {
