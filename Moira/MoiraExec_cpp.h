@@ -2478,6 +2478,17 @@ Moira::execJsr(u16 opcode)
                 throw AddressError(makeFrame(ea));
             }
 
+            if constexpr (MOIRA_MIMIC_AMIBERRY) {
+
+                // Fetch the first word of the subroutine before pushing
+                u32 ret = reg.pc;
+                queue.irc = (u16)read<C, AddrSpace::PROG, Word>(ea);
+                push<C, Long>(ret);
+                reg.pc = ea;
+                prefetch<C, POLL>();
+                break;
+            }
+
             // Save return address on stack
             push<C, Long>(reg.pc);
 

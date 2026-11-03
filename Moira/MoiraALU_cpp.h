@@ -1063,7 +1063,7 @@ Moira::cyclesDiv(u32 op1, u16 op2) const
         int mcycles  = (dividend < 0) ? 7 : 6;
 
         // Check if quotient is larger than 16 bit
-        if ((abs(dividend) >> 16) >= abs(divisor)) {
+        if (((dividend < 0 ? 0u - (u32)dividend : (u32)dividend) >> 16) >= (u32)abs(divisor)) {
 
             result = (mcycles + 2) * 2;
 
@@ -1124,7 +1124,7 @@ Moira::cyclesDiv(u32 op1, u16 op2) const
         int mcycles  = (dividend < 0) ? 120 : 118;
 
         // Check if quotient is larger than 16 bit
-        if ((abs(dividend) >> 16) >= abs(divisor)) {
+        if (((dividend < 0 ? 0u - (u32)dividend : (u32)dividend) >> 16) >= (u32)abs(divisor)) {
 
             result = 16;
 

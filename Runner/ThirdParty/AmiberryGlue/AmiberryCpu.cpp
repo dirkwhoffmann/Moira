@@ -250,6 +250,11 @@ State getState()
     s.msp = supervisor && master ? regs.regs[15] : regs.msp;
 
     s.pc = m68k_getpc();
+
+    // The cycle-exact cores leave the PC at the STOP instruction while the CPU
+    // is stopped. On hardware, it points to the following instruction.
+    if (regs.stopped && currprefs.cpu_model <= 68010) s.pc += 4;
+
     s.sr = regs.sr;
     s.vbr = regs.vbr;
     s.sfc = regs.sfc;
