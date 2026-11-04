@@ -13,8 +13,8 @@
 #include <cstdarg>
 #include <ctime>
 #include <string>
-#ifdef HAVE_AMIBERRY
-#include "AmiberryGlue/AmiberryCpu.h"
+#ifdef HAVE_UAE
+#include "UAEGlue/UAECpu.h"
 #endif
 
 TestCPU *moiracpu;
@@ -40,11 +40,11 @@ static int binutilsFprintf(FILE* f, const char* format, ...)
     return n;
 }
 
-#ifdef HAVE_AMIBERRY
-static bool amiberryRef;
-static void setupAmiberry();
+#ifdef HAVE_UAE
+static bool uaeRef;
+static void setupUAE();
 #else
-static const bool amiberryRef = false;
+static const bool uaeRef = false;
 #endif
 
 void selectModel(moira::Model model)
@@ -52,12 +52,12 @@ void selectModel(moira::Model model)
     cpuModel = model;
 
     setupMusashi();
-#ifdef HAVE_AMIBERRY
-    if (amiberryRef) setupAmiberry();
+#ifdef HAVE_UAE
+    if (uaeRef) setupUAE();
 #endif
-    sandbox.checkCycles = !amiberryRef || cpuModel == Model::M68000;
+    sandbox.checkCycles = !uaeRef || cpuModel == Model::M68000;
     sandbox.addrMask = (cpuModel == Model::M68EC020) ? 0xFFFFFF : 0xFFFFFFFF;
-    sandbox.byteGranular = amiberryRef && cpuModel != Model::M68000 && cpuModel != Model::M68010;
+    sandbox.byteGranular = uaeRef && cpuModel != Model::M68000 && cpuModel != Model::M68010;
     setupBinutils();
     setupMoira();
 }
@@ -112,23 +112,23 @@ void setupBinutils()
 }
 
 //
-// Amiberry as reference (optional, select with REFERENCE=amiberry)
+// UAE as reference (optional, select with REFERENCE=uae)
 //
 
-#ifdef HAVE_AMIBERRY
+#ifdef HAVE_UAE
 
-static bool amiberryRefInit = (amiberryRef = MOIRA_MIMIC_AMIBERRY || (getenv("REFERENCE") && std::string(getenv("REFERENCE")) == "amiberry"));
-static amicpu::State amiState;
+static bool uaeRefInit = (uaeRef = MOIRA_MIMIC_UAE || (getenv("REFERENCE") && std::string(getenv("REFERENCE")) == "uae"));
+static uaecpu::State amiState;
 
-static void amiberryWrite(int size, u32 addr, u32 value, u32 fc, u64 cycle)
+static void uaeWrite(int size, u32 addr, u32 value, u32 fc, u64 cycle)
 {
     if (CHECK_MEM_WRITES)
         sandbox.record(size == 1 ? POKE8 : POKE16, addr, cycle, fc, size == 1 ? u8(value) : u16(value));
 }
 
-static void setupAmiberry()
+static void setupUAE()
 {
-    using amicpu::Cpu;
+    using uaecpu::Cpu;
     Cpu model =
     cpuModel == Model::M68000   ? Cpu::M68000 :
     cpuModel == Model::M68010   ? Cpu::M68010 :
@@ -139,12 +139,12 @@ static void setupAmiberry()
     cpuModel == Model::M68EC040 ? Cpu::M68EC040 :
     cpuModel == Model::M68LC040 ? Cpu::M68LC040 : Cpu::M68040;
 
-    amicpu::init(model, musashiMem, amiberryWrite);
+    uaecpu::init(model, musashiMem, uaeWrite);
 }
 
-static void runAmiberry(Setup &s, Result &r)
+static void runUAE(Setup &s, Result &r)
 {
-    amicpu::State st;
+    uaecpu::State st;
 
     for (int i = 0; i < 8; i++) st.d[i] = s.d[i];
     for (int i = 0; i < 7; i++) st.a[i] = s.a[i];
@@ -166,13 +166,13 @@ static void runAmiberry(Setup &s, Result &r)
     st.fpsr = s.fpsr;
     st.fpiar = s.fpiar;
 
-    amicpu::setState(st);
+    uaecpu::setState(st);
     clock_t elapsed = clock();
-    amicpu::step();
+    uaecpu::step();
     r.elapsed[0] = clock() - elapsed;
-    r.cycles = int(amicpu::cycles());
+    r.cycles = int(uaecpu::cycles());
 
-    amiState = amicpu::getState();
+    amiState = uaecpu::getState();
     r.pc = amiState.pc;
     r.sr = amiState.sr;
     r.usp = amiState.usp;
@@ -339,8 +339,8 @@ void resetMoiraFpu(Setup &s)
 
 void recordMusashiFpu(Result &r)
 {
-#ifdef HAVE_AMIBERRY
-    if (amiberryRef) {
+#ifdef HAVE_UAE
+    if (uaeRef) {
         for (int i = 0; i < 8; i++) r.fpr[i] = Float80::fromBits(amiState.fpse[i], amiState.fpman[i]);
         r.fpcr = amiState.fpcr;
         r.fpsr = amiState.fpsr;
@@ -384,7 +384,7 @@ void run(unsigned seed)
     printf("    Random seed : %d\n", seed);
     printf("     Exec range : %s\n", TOSTRING(doExec(opcode)));
     printf("     Dasm range : %s\n", TOSTRING(doDasm(opcode)));
-    printf("      Reference : %s\n", amiberryRef ? "Amiberry" : "Musashi");
+    printf("      Reference : %s\n", uaeRef ? "UAE" : "Musashi");
 
     srand(seed);
     
@@ -579,9 +579,9 @@ void runSingleTest(Setup &s, u16 op)
 
     // Run the reference CPU
     runMusashi(s, mur);
-#ifdef HAVE_AMIBERRY
+#ifdef HAVE_UAE
     // Moira is configured without address error emulation (MOIRA_EMULATE_ADDRESS_ERROR)
-    if (amiberryRef && (amicpu::lastException() == 3) && !MOIRA_EMULATE_ADDRESS_ERROR) return;
+    if (uaeRef && (uaecpu::lastException() == 3) && !MOIRA_EMULATE_ADDRESS_ERROR) return;
 #endif
     muclk[0] += mur.elapsed[0];
     muclk[1] += mur.elapsed[1];
@@ -643,9 +643,9 @@ void runMusashi(Setup &s, Result &r)
     // Run the reference CPU
     if (doExec(r.opcode)) {
 
-#ifdef HAVE_AMIBERRY
-        if (amiberryRef) {
-            runAmiberry(s, r);
+#ifdef HAVE_UAE
+        if (uaeRef) {
+            runUAE(s, r);
             return;
         }
 #endif
@@ -709,10 +709,10 @@ void runMoira(Setup &s, Result &r)
 
 bool skipAccessCheck(u16 op)
 {
-    // Amiberry only writes back the bytes of a bit field that are affected,
+    // UAE only writes back the bytes of a bit field that are affected,
     // whereas Moira writes back the whole long word. The final memory
     // contents are still compared.
-    if (!amiberryRef) return false;
+    if (!uaeRef) return false;
     if ((op & 0xF8C0) == 0xE8C0) return true;
 
     // FPU opcodes may be legal for one side only (final memory contents are still compared)
@@ -729,9 +729,9 @@ bool skip(u16 op)
 
     moira::Instr instr = moiracpu->getInstrInfo(op).I;
 
-    if (amiberryRef) {
+    if (uaeRef) {
 
-        // Amiberry doesn't implement the module instructions
+        // UAE doesn't implement the module instructions
         if (instr == Instr::CALLM || instr == Instr::RTM) return true;
 
         // RTE processes random stack frames (format errors, bus error frames)
@@ -744,7 +744,7 @@ bool skip(u16 op)
         if ((instr == Instr::DIVL || instr == Instr::DIVU || instr == Instr::DIVS) &&
             cpuModel >= Model::M68EC040) return true;
 
-        // Amiberry emulates FPU instructions that the 68040 traps (Moira follows real hardware)
+        // UAE emulates FPU instructions that the 68040 traps (Moira follows real hardware)
         if ((op & 0xFFC0) == 0xF200 && cpuModel == Model::M68040) {
             u16 e = get16(musashiMem, 0x1002);
             u16 cod = e >> 13, cmd = e & 0x7F;
@@ -776,7 +776,7 @@ bool skip(u16 op)
         }
 
         // FMOVEM <ea>,<control registers> with several registers and Dn/An as source. Moira
-        // accepts this, Amiberry (and the 6888x manual) don't. Flagged, not mimicked.
+        // accepts this, UAE (and the 6888x manual) don't. Flagged, not mimicked.
         if ((op & 0xFFC0) == 0xF200 && ((op >> 3) & 7) <= 1) {
             u16 e = get16(musashiMem, 0x1002);
             u16 lst = (e >> 10) & 7;
@@ -784,7 +784,7 @@ bool skip(u16 op)
             if (((e >> 13) == 4 || (e >> 13) == 5) && ((op >> 3) & 7) == 1 && lst != 1) return true;
         }
 
-        // Register-to-register FPU operations and FMOVECR with a non-zero <ea> field: Moira raises line F, Amiberry ignores the field
+        // Register-to-register FPU operations and FMOVECR with a non-zero <ea> field: Moira raises line F, UAE ignores the field
         if ((op & 0xFFC0) == 0xF200 && (op & 0x3F) && ((get16(musashiMem, 0x1002) >> 13) == 0 ||
             (get16(musashiMem, 0x1002) & 0xFC00) == 0x5C00)) return true;
 
@@ -959,10 +959,13 @@ void compare(Setup &s, Result &r1, Result &r2)
     if (doExec((int)s.opcode)) {
 
         // FPU opcodes where only one side raises line F (reserved bits set in the opcode or extension word)
-        bool legalityMismatch = amiberryRef && (s.opcode & 0xFE00) == 0xF200 &&
+        bool legalityMismatch = uaeRef && (s.opcode & 0xFE00) == 0xF200 &&
                                 ((r1.pc >> 12) == 1) != ((r2.pc >> 12) == 1);
 
-        if (!legalityMismatch && !skip(s.opcode)) {
+        // The FPCR precision value 3 is reserved. UAE and Moira round tiny results differently in this mode.
+        bool reservedPrecision = uaeRef && (s.opcode & 0xFE00) == 0xF200 && (s.fpcr & 0xC0) == 0xC0;
+
+        if (!legalityMismatch && !reservedPrecision && !skip(s.opcode)) {
 
             if (!comparePC(r1, r2)) {
                 printf("\nPROGRAM COUNTER MISMATCH FOUND");
@@ -1142,9 +1145,9 @@ bool compareA(Result &r1, Result &r2)
 
 bool comparePC(Result &r1, Result &r2)
 {
-    // Amiberry clears the lowest PC bit after a jump to an odd address. Moira
+    // UAE clears the lowest PC bit after a jump to an odd address. Moira
     // is configured without address error emulation and keeps it.
-    if (amiberryRef && (r2.pc & 1) && r1.pc == (r2.pc & ~1u)) return true;
+    if (uaeRef && (r2.pc & 1) && r1.pc == (r2.pc & ~1u)) return true;
 
     return r1.pc == r2.pc;
 }
@@ -1159,19 +1162,19 @@ bool compareSR(Result &r1, Result &r2)
         return true;
     }
 
-    // N and V are undefined for CMP2 and CHK2 and not compared with Amiberry
-    if (amiberryRef && (instr == Instr::CMP2 || instr == Instr::CHK2)) {
+    // N and V are undefined for CMP2 and CHK2 and not compared with UAE
+    if (uaeRef && (instr == Instr::CMP2 || instr == Instr::CHK2)) {
         return (r1.sr & ~0x0A) == (r2.sr & ~0x0A);
     }
 
     // N and V are undefined for BCD instructions (68040 differs from older models)
-    if (amiberryRef && cpuModel >= Model::M68EC040 &&
+    if (uaeRef && cpuModel >= Model::M68EC040 &&
         (instr == Instr::ABCD || instr == Instr::SBCD || instr == Instr::NBCD)) {
         return (r1.sr & ~0x0A) == (r2.sr & ~0x0A);
     }
 
     // Z, V and C are undefined for CHK on the 68020 and above
-    if (amiberryRef && instr == Instr::CHK && cpuModel != Model::M68000 && cpuModel != Model::M68010) {
+    if (uaeRef && instr == Instr::CHK && cpuModel != Model::M68000 && cpuModel != Model::M68010) {
         return (r1.sr & ~0x07) == (r2.sr & ~0x07);
     }
 
@@ -1221,28 +1224,28 @@ bool compareFPR(Result &r1, Result &r2)
 
 bool compareFPCR(Result &r1, Result &r2)
 {
-    // Amiberry stores the reserved low bits of FPCR
-    if (amiberryRef) return (r1.fpcr & ~0xF) == (r2.fpcr & ~0xF);
+    // UAE stores the reserved low bits of FPCR
+    if (uaeRef) return (r1.fpcr & ~0xF) == (r2.fpcr & ~0xF);
 
     return r1.fpcr == r2.fpcr;
 }
 bool compareFPSR(Result &r1, Result &r2)
 {
-    // Amiberry modifies FPSR even if the instruction ends up in a line F exception
-    if (amiberryRef && (r1.pc >> 12) != 1) return true;
+    // UAE modifies FPSR even if the instruction ends up in a line F exception
+    if (uaeRef && (r1.pc >> 12) != 1) return true;
 
-    // Amiberry doesn't raise OPERR when it converts a signaling NaN to an integer
-    if (amiberryRef && (r1.fpsr & 0x4000)) return (r1.fpsr | 0x2000) == (r2.fpsr | 0x2000);
+    // UAE doesn't raise OPERR when it converts a signaling NaN to an integer
+    if (uaeRef && (r1.fpsr & 0x4000)) return (r1.fpsr | 0x2000) == (r2.fpsr | 0x2000);
 
     return r1.fpsr == r2.fpsr;
 }
 bool compareFPIAR(Result &r1, Result &r2)
 {
-    // Amiberry updates FPIAR even if the instruction ends up in a line F exception
-    if (amiberryRef && (r1.pc >> 12) != 1) return true;
+    // UAE updates FPIAR even if the instruction ends up in a line F exception
+    if (uaeRef && (r1.pc >> 12) != 1) return true;
 
-    // Amiberry skips the FPIAR update if a conversion in FMOVE <ea> raises an operand error
-    if (amiberryRef && (r1.fpsr & 0x6000)) return true;
+    // UAE skips the FPIAR update if a conversion in FMOVE <ea> raises an operand error
+    if (uaeRef && (r1.fpsr & 0x6000)) return true;
 
     return r1.fpiar == r2.fpiar;
 }
@@ -1261,11 +1264,11 @@ bool compareCycles(Result &r1, Result &r2)
     // FPU timing is not emulated yet
     if (isFpuOpcode(r1.opcode)) return true;
 
-    /* Amiberry's cores are only used as a timing reference for the 68000. The
+    /* UAE's cores are only used as a timing reference for the 68000. The
      * 68010 timing is partially copied from the 68000, and the 68020+ cores
      * aren't cycle-exact.
      */
-    if (amiberryRef && cpuModel != Model::M68000) return true;
+    if (uaeRef && cpuModel != Model::M68000) return true;
 
     /* Timing comparison is off for every model beyond the 68000 and 68010
      * while the instruction cache is emulated. Those models (68020 and up)
@@ -1273,7 +1276,7 @@ bool compareCycles(Result &r1, Result &r2)
      * MoiraInit_cpp.h), which routes instruction fetches through the cache.
      * Musashi does not model the 68020's instruction cache, so its cycle
      * counts assume every fetch goes straight to the bus. Moira's
-     * cache-aware fetch timing (tuned against WinUAE/Amiberry, not Musashi)
+     * cache-aware fetch timing (tuned against WinUAE/UAE, not Musashi)
      * legitimately diverges from that flat model.
      */
     if constexpr (MOIRA_EMULATE_ICACHE) {

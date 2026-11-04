@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		50A300000000000000000004 /* FloatMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000001 /* FloatMath.cpp */; };
-		50A20000000000000000000A /* libAmiberryCpu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50A200000000000000000001 /* libAmiberryCpu.a */; };
+		50A20000000000000000000A /* libUAECpu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50A200000000000000000001 /* libUAECpu.a */; };
 		5028B10A288D9EC000047C20 /* musashi_softfloat.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B103288D9EC000047C20 /* musashi_softfloat.c */; };
 		5028B10E288D9ECD00047C20 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B10D288D9ECD00047C20 /* m68kops.c */; };
 		5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B114288D9EDC00047C20 /* m68kdasm.c */; };
@@ -91,15 +91,15 @@
 		505A81F6309A2F2A00E2E307 /* newcpu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81DA309A2F2A00E2E307 /* newcpu.cpp */; };
 		505A81F7309A2F2A00E2E307 /* cpuemu_33.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81CE309A2F2A00E2E307 /* cpuemu_33.cpp */; };
 		505A81F8309A2F2A00E2E307 /* cpuemu_23.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81CA309A2F2A00E2E307 /* cpuemu_23.cpp */; };
-		505A81F9309A2F2A00E2E307 /* AmiberryCpu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81E8309A2F2A00E2E307 /* AmiberryCpu.cpp */; };
+		505A81F9309A2F2A00E2E307 /* UAECpu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81E8309A2F2A00E2E307 /* UAECpu.cpp */; };
 		505A81FA309A2F2A00E2E307 /* cpuemu_20.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81C7309A2F2A00E2E307 /* cpuemu_20.cpp */; };
 		505A81FB309A2F2A00E2E307 /* cpuemu_50.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81D2309A2F2A00E2E307 /* cpuemu_50.cpp */; };
 		505A81FC309A2F2A00E2E307 /* cpuemu_34.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81CF309A2F2A00E2E307 /* cpuemu_34.cpp */; };
 		505A81FD309A2F2A00E2E307 /* newcpu_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81DB309A2F2A00E2E307 /* newcpu_common.cpp */; };
 		505A81FE309A2F2A00E2E307 /* cpustbl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81D5309A2F2A00E2E307 /* cpustbl.cpp */; };
 		505A81FF309A2F2A00E2E307 /* softfloat_fpsp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81BC309A2F2A00E2E307 /* softfloat_fpsp.cpp */; };
-		505A8200309A2F2A00E2E307 /* AmiberryStubs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81EB309A2F2A00E2E307 /* AmiberryStubs.cpp */; };
-		505A8201309A2F2A00E2E307 /* AmiberryRef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81EA309A2F2A00E2E307 /* AmiberryRef.cpp */; };
+		505A8200309A2F2A00E2E307 /* UAEStubs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81EB309A2F2A00E2E307 /* UAEStubs.cpp */; };
+		505A8201309A2F2A00E2E307 /* UAERef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81EA309A2F2A00E2E307 /* UAERef.cpp */; };
 		505A8202309A2F2A00E2E307 /* cpudefs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81C3309A2F2A00E2E307 /* cpudefs.cpp */; };
 		505A8203309A2F2A00E2E307 /* fpp_softfloat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81D8309A2F2A00E2E307 /* fpp_softfloat.cpp */; };
 		505A8204309A2F2A00E2E307 /* readcpu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81DC309A2F2A00E2E307 /* readcpu.cpp */; };
@@ -140,7 +140,7 @@
 			containerPortal = 50804DFE2386A4CE004D3EC2 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 50A200000000000000000004;
-			remoteInfo = AmiberryCpu;
+			remoteInfo = UAECpu;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -148,7 +148,7 @@
 		50A300000000000000000003 /* BigNum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BigNum.h; sourceTree = "<group>"; };
 		50A300000000000000000002 /* FloatMath.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FloatMath.h; sourceTree = "<group>"; };
 		50A300000000000000000001 /* FloatMath.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FloatMath.cpp; sourceTree = "<group>"; };
-		50A200000000000000000001 /* libAmiberryCpu.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libAmiberryCpu.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		50A200000000000000000001 /* libUAECpu.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libUAECpu.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		08C7A9B1140D45BEA6DAD5A6 /* MoiraCache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraCache.h; sourceTree = "<group>"; };
 		1654296120AA412377E9642D /* MoiraCore68020.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraCore68020.cpp; sourceTree = "<group>"; };
 		38037577E0C9EA87178FAF59 /* MoiraCore_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraCore_cpp.h; sourceTree = "<group>"; };
@@ -264,7 +264,7 @@
 		505A8185309A2F2A00E2E307 /* time.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = time.h; sourceTree = "<group>"; };
 		505A8186309A2F2A00E2E307 /* types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = "<group>"; };
 		505A8187309A2F2A00E2E307 /* vm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = vm.h; sourceTree = "<group>"; };
-		505A8189309A2F2A00E2E307 /* amiberry_gfx_mode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = amiberry_gfx_mode.h; sourceTree = "<group>"; };
+		505A8189309A2F2A00E2E307 /* uae_gfx_mode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = uae_gfx_mode.h; sourceTree = "<group>"; };
 		505A818A309A2F2A00E2E307 /* ar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ar.h; sourceTree = "<group>"; };
 		505A818B309A2F2A00E2E307 /* audio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = audio.h; sourceTree = "<group>"; };
 		505A818C309A2F2A00E2E307 /* autoconf.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = autoconf.h; sourceTree = "<group>"; };
@@ -348,11 +348,11 @@
 		505A81E3309A2F2A00E2E307 /* options.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = options.h; sourceTree = "<group>"; };
 		505A81E4309A2F2A00E2E307 /* sysconfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sysconfig.h; sourceTree = "<group>"; };
 		505A81E5309A2F2A00E2E307 /* sysdeps.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sysdeps.h; sourceTree = "<group>"; };
-		505A81E7309A2F2A00E2E307 /* AmiberryCpu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AmiberryCpu.h; sourceTree = "<group>"; };
-		505A81E8309A2F2A00E2E307 /* AmiberryCpu.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AmiberryCpu.cpp; sourceTree = "<group>"; };
-		505A81E9309A2F2A00E2E307 /* AmiberryRef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AmiberryRef.h; sourceTree = "<group>"; };
-		505A81EA309A2F2A00E2E307 /* AmiberryRef.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AmiberryRef.cpp; sourceTree = "<group>"; };
-		505A81EB309A2F2A00E2E307 /* AmiberryStubs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AmiberryStubs.cpp; sourceTree = "<group>"; };
+		505A81E7309A2F2A00E2E307 /* UAECpu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UAECpu.h; sourceTree = "<group>"; };
+		505A81E8309A2F2A00E2E307 /* UAECpu.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = UAECpu.cpp; sourceTree = "<group>"; };
+		505A81E9309A2F2A00E2E307 /* UAERef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UAERef.h; sourceTree = "<group>"; };
+		505A81EA309A2F2A00E2E307 /* UAERef.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = UAERef.cpp; sourceTree = "<group>"; };
+		505A81EB309A2F2A00E2E307 /* UAEStubs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = UAEStubs.cpp; sourceTree = "<group>"; };
 		505A81EC309A2F2A00E2E307 /* fpp_globals.inc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.pascal; path = fpp_globals.inc; sourceTree = "<group>"; };
 		505CA8AA28C7209200871439 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		507BE4AD23B66456000B37D2 /* Testrunner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Testrunner.cpp; sourceTree = "<group>"; };
@@ -403,7 +403,7 @@
 /* Begin PBXTargetDependency section */
 		50A200000000000000000009 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 50A200000000000000000004 /* AmiberryCpu */;
+			target = 50A200000000000000000004 /* UAECpu */;
 			targetProxy = 50A200000000000000000008 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -413,7 +413,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				50A20000000000000000000A /* libAmiberryCpu.a in Frameworks */,
+				50A20000000000000000000A /* libUAECpu.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -575,7 +575,7 @@
 			isa = PBXGroup;
 			children = (
 				505A8188309A2F2A00E2E307 /* uae */,
-				505A8189309A2F2A00E2E307 /* amiberry_gfx_mode.h */,
+				505A8189309A2F2A00E2E307 /* uae_gfx_mode.h */,
 				505A818A309A2F2A00E2E307 /* ar.h */,
 				505A818B309A2F2A00E2E307 /* audio.h */,
 				505A818C309A2F2A00E2E307 /* autoconf.h */,
@@ -712,14 +712,14 @@
 			path = src;
 			sourceTree = "<group>";
 		};
-		505A81E0309A2F2A00E2E307 /* Amiberry */ = {
+		505A81E0309A2F2A00E2E307 /* UAE */ = {
 			isa = PBXGroup;
 			children = (
 				505A81DD309A2F2A00E2E307 /* src */,
 				505A81DE309A2F2A00E2E307 /* LICENSE */,
 				505A81DF309A2F2A00E2E307 /* README.md */,
 			);
-			path = Amiberry;
+			path = UAE;
 			sourceTree = "<group>";
 		};
 		505A81E6309A2F2A00E2E307 /* shim */ = {
@@ -734,18 +734,18 @@
 			path = shim;
 			sourceTree = "<group>";
 		};
-		505A81ED309A2F2A00E2E307 /* AmiberryGlue */ = {
+		505A81ED309A2F2A00E2E307 /* UAEGlue */ = {
 			isa = PBXGroup;
 			children = (
 				505A81E6309A2F2A00E2E307 /* shim */,
-				505A81E7309A2F2A00E2E307 /* AmiberryCpu.h */,
-				505A81E8309A2F2A00E2E307 /* AmiberryCpu.cpp */,
-				505A81E9309A2F2A00E2E307 /* AmiberryRef.h */,
-				505A81EA309A2F2A00E2E307 /* AmiberryRef.cpp */,
-				505A81EB309A2F2A00E2E307 /* AmiberryStubs.cpp */,
+				505A81E7309A2F2A00E2E307 /* UAECpu.h */,
+				505A81E8309A2F2A00E2E307 /* UAECpu.cpp */,
+				505A81E9309A2F2A00E2E307 /* UAERef.h */,
+				505A81EA309A2F2A00E2E307 /* UAERef.cpp */,
+				505A81EB309A2F2A00E2E307 /* UAEStubs.cpp */,
 				505A81EC309A2F2A00E2E307 /* fpp_globals.inc */,
 			);
-			path = AmiberryGlue;
+			path = UAEGlue;
 			sourceTree = "<group>";
 		};
 		50804DFD2386A4CE004D3EC2 = {
@@ -761,7 +761,7 @@
 		50804E072386A4CE004D3EC2 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				50A200000000000000000001 /* libAmiberryCpu.a */,
+				50A200000000000000000001 /* libUAECpu.a */,
 				50804E062386A4CE004D3EC2 /* Moira */,
 			);
 			name = Products;
@@ -831,8 +831,8 @@
 		50A1000000000000000000A1 /* ThirdParty */ = {
 			isa = PBXGroup;
 			children = (
-				505A81E0309A2F2A00E2E307 /* Amiberry */,
-				505A81ED309A2F2A00E2E307 /* AmiberryGlue */,
+				505A81E0309A2F2A00E2E307 /* UAE */,
+				505A81ED309A2F2A00E2E307 /* UAEGlue */,
 				509F15A92927CE9800BA8AC1 /* Bartman */,
 				50C0123D28BBADCF001EFB37 /* Binutils */,
 				5028B100288D9EA600047C20 /* Musashi */,
@@ -883,9 +883,9 @@
 			productReference = 50804E062386A4CE004D3EC2 /* Moira */;
 			productType = "com.apple.product-type.tool";
 		};
-		50A200000000000000000004 /* AmiberryCpu */ = {
+		50A200000000000000000004 /* UAECpu */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 50A200000000000000000005 /* Build configuration list for PBXNativeTarget "AmiberryCpu" */;
+			buildConfigurationList = 50A200000000000000000005 /* Build configuration list for PBXNativeTarget "UAECpu" */;
 			buildPhases = (
 				50A200000000000000000002 /* Sources */,
 				50A200000000000000000003 /* Frameworks */,
@@ -894,9 +894,9 @@
 			);
 			dependencies = (
 			);
-			name = AmiberryCpu;
-			productName = AmiberryCpu;
-			productReference = 50A200000000000000000001 /* libAmiberryCpu.a */;
+			name = UAECpu;
+			productName = UAECpu;
+			productReference = 50A200000000000000000001 /* libUAECpu.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
@@ -928,7 +928,7 @@
 			projectRoot = "";
 			targets = (
 				50804E052386A4CE004D3EC2 /* Moira */,
-				50A200000000000000000004 /* AmiberryCpu */,
+				50A200000000000000000004 /* UAECpu */,
 			);
 		};
 /* End PBXProject section */
@@ -1036,14 +1036,14 @@
 				505A81F5309A2F2A00E2E307 /* cpuemu_13.cpp in Sources */,
 				505A81F7309A2F2A00E2E307 /* cpuemu_33.cpp in Sources */,
 				505A81F8309A2F2A00E2E307 /* cpuemu_23.cpp in Sources */,
-				505A81F9309A2F2A00E2E307 /* AmiberryCpu.cpp in Sources */,
+				505A81F9309A2F2A00E2E307 /* UAECpu.cpp in Sources */,
 				505A81FA309A2F2A00E2E307 /* cpuemu_20.cpp in Sources */,
 				505A81FB309A2F2A00E2E307 /* cpuemu_50.cpp in Sources */,
 				505A81FC309A2F2A00E2E307 /* cpuemu_34.cpp in Sources */,
 				505A81FD309A2F2A00E2E307 /* newcpu_common.cpp in Sources */,
 				505A81FE309A2F2A00E2E307 /* cpustbl.cpp in Sources */,
 				505A81FF309A2F2A00E2E307 /* softfloat_fpsp.cpp in Sources */,
-				505A8200309A2F2A00E2E307 /* AmiberryStubs.cpp in Sources */,
+				505A8200309A2F2A00E2E307 /* UAEStubs.cpp in Sources */,
 				505A8202309A2F2A00E2E307 /* cpudefs.cpp in Sources */,
 				505A8203309A2F2A00E2E307 /* fpp_softfloat.cpp in Sources */,
 				505A8204309A2F2A00E2E307 /* readcpu.cpp in Sources */,
@@ -1122,7 +1122,7 @@
 			};
 			name = Debug;
 		};
-		50A400000000000000000001 /* Debug-Amiberry */ = {
+		50A400000000000000000001 /* Debug-UAE */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -1168,7 +1168,7 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_MIMIC_MUSASHI=false",
-					"MOIRA_MIMIC_AMIBERRY=true",
+					"MOIRA_MIMIC_UAE=true",
 					"MOIRA_PRECISE_TIMING=true",
 					"DEBUG=1",
 					"$(inherited)",
@@ -1185,7 +1185,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
-			name = Debug-Amiberry;
+			name = Debug-UAE;
 		};
 		50804E0C2386A4CE004D3EC2 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -1261,14 +1261,14 @@
 				USE_HEADERMAP = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
-					HAVE_AMIBERRY,
+					HAVE_UAE,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
 		};
-		50A400000000000000000002 /* Debug-Amiberry */ = {
+		50A400000000000000000002 /* Debug-UAE */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "-";
@@ -1287,15 +1287,15 @@
 				USE_HEADERMAP = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_MIMIC_MUSASHI=false",
-					"MOIRA_MIMIC_AMIBERRY=true",
+					"MOIRA_MIMIC_UAE=true",
 					"MOIRA_PRECISE_TIMING=true",
 					"$(inherited)",
-					HAVE_AMIBERRY,
+					HAVE_UAE,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
-			name = Debug-Amiberry;
+			name = Debug-UAE;
 		};
 		50804E0F2386A4CE004D3EC2 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -1318,7 +1318,7 @@
 				USE_HEADERMAP = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
-					HAVE_AMIBERRY,
+					HAVE_UAE,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1335,15 +1335,16 @@
 					"$(inherited)",
 					AMIBERRY,
 					AMIBERRY_NO_JIT,
+					AMIBERRY_NO_THREADED_CPU,
 				);
 				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src",
-					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/include",
-					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/osdep",
-					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/archivers",
-					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/threaddep",
-					"$(SRCROOT)/Runner/ThirdParty/AmiberryGlue",
+					"$(SRCROOT)/Runner/ThirdParty/UAE/src",
+					"$(SRCROOT)/Runner/ThirdParty/UAE/src/include",
+					"$(SRCROOT)/Runner/ThirdParty/UAE/src/osdep",
+					"$(SRCROOT)/Runner/ThirdParty/UAE/src/archivers",
+					"$(SRCROOT)/Runner/ThirdParty/UAE/src/threaddep",
+					"$(SRCROOT)/Runner/ThirdParty/UAEGlue",
 					/opt/homebrew/include,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
@@ -1353,7 +1354,7 @@
 			};
 			name = Debug;
 		};
-		50A400000000000000000003 /* Debug-Amiberry */ = {
+		50A400000000000000000003 /* Debug-UAE */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
@@ -1361,20 +1362,21 @@
 				GCC_OPTIMIZATION_LEVEL = 1;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_MIMIC_MUSASHI=false",
-					"MOIRA_MIMIC_AMIBERRY=true",
+					"MOIRA_MIMIC_UAE=true",
 					"MOIRA_PRECISE_TIMING=true",
 					"$(inherited)",
 					AMIBERRY,
 					AMIBERRY_NO_JIT,
+					AMIBERRY_NO_THREADED_CPU,
 				);
 				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src",
-					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/include",
-					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/osdep",
-					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/archivers",
-					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/threaddep",
-					"$(SRCROOT)/Runner/ThirdParty/AmiberryGlue",
+					"$(SRCROOT)/Runner/ThirdParty/UAE/src",
+					"$(SRCROOT)/Runner/ThirdParty/UAE/src/include",
+					"$(SRCROOT)/Runner/ThirdParty/UAE/src/osdep",
+					"$(SRCROOT)/Runner/ThirdParty/UAE/src/archivers",
+					"$(SRCROOT)/Runner/ThirdParty/UAE/src/threaddep",
+					"$(SRCROOT)/Runner/ThirdParty/UAEGlue",
 					/opt/homebrew/include,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
@@ -1382,7 +1384,7 @@
 				SKIP_INSTALL = YES;
 				USE_HEADERMAP = NO;
 			};
-			name = Debug-Amiberry;
+			name = Debug-UAE;
 		};
 		50A200000000000000000007 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -1395,15 +1397,16 @@
 					"$(inherited)",
 					AMIBERRY,
 					AMIBERRY_NO_JIT,
+					AMIBERRY_NO_THREADED_CPU,
 				);
 				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src",
-					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/include",
-					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/osdep",
-					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/archivers",
-					"$(SRCROOT)/Runner/ThirdParty/Amiberry/src/threaddep",
-					"$(SRCROOT)/Runner/ThirdParty/AmiberryGlue",
+					"$(SRCROOT)/Runner/ThirdParty/UAE/src",
+					"$(SRCROOT)/Runner/ThirdParty/UAE/src/include",
+					"$(SRCROOT)/Runner/ThirdParty/UAE/src/osdep",
+					"$(SRCROOT)/Runner/ThirdParty/UAE/src/archivers",
+					"$(SRCROOT)/Runner/ThirdParty/UAE/src/threaddep",
+					"$(SRCROOT)/Runner/ThirdParty/UAEGlue",
 					/opt/homebrew/include,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
@@ -1420,7 +1423,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				50804E0B2386A4CE004D3EC2 /* Debug */,
-				50A400000000000000000001 /* Debug-Amiberry */,
+				50A400000000000000000001 /* Debug-UAE */,
 				50804E0C2386A4CE004D3EC2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
@@ -1430,17 +1433,17 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				50804E0E2386A4CE004D3EC2 /* Debug */,
-				50A400000000000000000002 /* Debug-Amiberry */,
+				50A400000000000000000002 /* Debug-UAE */,
 				50804E0F2386A4CE004D3EC2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		50A200000000000000000005 /* Build configuration list for PBXNativeTarget "AmiberryCpu" */ = {
+		50A200000000000000000005 /* Build configuration list for PBXNativeTarget "UAECpu" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				50A200000000000000000006 /* Debug */,
-				50A400000000000000000003 /* Debug-Amiberry */,
+				50A400000000000000000003 /* Debug-UAE */,
 				50A200000000000000000007 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;

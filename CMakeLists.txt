@@ -59,41 +59,41 @@ add_executable(fpuExecTests Runner/FpuExecTests.cpp)
 target_link_libraries(fpuExecTests moira)
 target_include_directories(fpuExecTests PUBLIC ${CMAKE_SOURCE_DIR}/Moira)
 
-# Add the reference tests against Amiberry's floating-point back-end (optional)
-# Amiberry sources (GPLv3, used by the test runner only)
-set(AMIBERRY_DIR ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/Amiberry CACHE PATH "Amiberry source tree")
-if (AMIBERRY_DIR)
-  add_library(amiberryref STATIC
-  Runner/ThirdParty/AmiberryGlue/AmiberryRef.cpp
-  ${AMIBERRY_DIR}/src/softfloat/softfloat.cpp
-  ${AMIBERRY_DIR}/src/softfloat/softfloat_decimal.cpp
-  ${AMIBERRY_DIR}/src/softfloat/softfloat_fpsp.cpp
-  ${AMIBERRY_DIR}/src/fpp_softfloat.cpp
+# Add the reference tests against UAE's floating-point back-end (optional)
+# UAE sources (GPLv3, used by the test runner only)
+set(UAE_DIR ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAE CACHE PATH "UAE source tree")
+if (UAE_DIR)
+  add_library(uaeref STATIC
+  Runner/ThirdParty/UAEGlue/UAERef.cpp
+  ${UAE_DIR}/src/softfloat/softfloat.cpp
+  ${UAE_DIR}/src/softfloat/softfloat_decimal.cpp
+  ${UAE_DIR}/src/softfloat/softfloat_fpsp.cpp
+  ${UAE_DIR}/src/fpp_softfloat.cpp
   )
-  target_include_directories(amiberryref PRIVATE
-  ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/AmiberryGlue/shim
-  ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/AmiberryGlue
-  ${AMIBERRY_DIR}/src/include
-  ${AMIBERRY_DIR}/src
+  target_include_directories(uaeref PRIVATE
+  ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAEGlue/shim
+  ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAEGlue
+  ${UAE_DIR}/src/include
+  ${UAE_DIR}/src
   )
-  target_include_directories(amiberryref PUBLIC ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/AmiberryGlue)
-  target_compile_options(amiberryref PRIVATE -w)
+  target_include_directories(uaeref PUBLIC ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAEGlue)
+  target_compile_options(uaeref PRIVATE -w)
 
   add_executable(fpuRefTests Runner/FpuRefTests.cpp)
-  target_link_libraries(fpuRefTests moira amiberryref)
+  target_link_libraries(fpuRefTests moira uaeref)
   target_include_directories(fpuRefTests PUBLIC ${CMAKE_SOURCE_DIR}/Moira ${CMAKE_SOURCE_DIR}/Runner ${CMAKE_SOURCE_DIR}/Runner/ThirdParty)
   add_test(FpuRefTests fpuRefTests)
 endif()
 
-# Add Amiberry's CPU core as an alternative reference for the test runner (optional)
-if (AMIBERRY_DIR)
+# Add UAE's CPU core as an alternative reference for the test runner (optional)
+if (UAE_DIR)
   find_library(SDL3_LIBRARY SDL3 HINTS /opt/homebrew/lib /usr/local/lib)
   find_path(SDL3_INCLUDE_DIR SDL3/SDL.h HINTS /opt/homebrew/include /usr/local/include)
   if (SDL3_LIBRARY AND SDL3_INCLUDE_DIR)
-    set(AMI ${AMIBERRY_DIR}/src)
-    add_library(amiberrycpu STATIC
-    Runner/ThirdParty/AmiberryGlue/AmiberryCpu.cpp
-    Runner/ThirdParty/AmiberryGlue/AmiberryStubs.cpp
+    set(AMI ${UAE_DIR}/src)
+    add_library(uaecpu STATIC
+    Runner/ThirdParty/UAEGlue/UAECpu.cpp
+    Runner/ThirdParty/UAEGlue/UAEStubs.cpp
     ${AMI}/newcpu_common.cpp
     ${AMI}/cpustbl.cpp
     ${AMI}/readcpu.cpp
@@ -111,19 +111,19 @@ if (AMIBERRY_DIR)
     ${AMI}/cpuemu_32.cpp ${AMI}/cpuemu_33.cpp ${AMI}/cpuemu_34.cpp
     ${AMI}/cpuemu_35.cpp ${AMI}/cpuemu_40.cpp ${AMI}/cpuemu_50.cpp
     )
-    set_target_properties(amiberrycpu PROPERTIES CXX_STANDARD 17)
-    target_compile_definitions(amiberrycpu PRIVATE AMIBERRY AMIBERRY_NO_JIT)
-    target_compile_options(amiberrycpu PRIVATE -w -O1)
-    target_include_directories(amiberrycpu PRIVATE
+    set_target_properties(uaecpu PROPERTIES CXX_STANDARD 17)
+    target_compile_definitions(uaecpu PRIVATE AMIBERRY AMIBERRY_NO_JIT AMIBERRY_NO_THREADED_CPU)
+    target_compile_options(uaecpu PRIVATE -w -O1)
+    target_include_directories(uaecpu PRIVATE
     ${AMI} ${AMI}/include ${AMI}/osdep ${AMI}/archivers ${AMI}/threaddep
     ${SDL3_INCLUDE_DIR})
-    target_include_directories(amiberrycpu PUBLIC ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/AmiberryGlue)
-    target_link_libraries(amiberrycpu ${SDL3_LIBRARY})
+    target_include_directories(uaecpu PUBLIC ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAEGlue)
+    target_link_libraries(uaecpu ${SDL3_LIBRARY})
 
-    target_compile_definitions(testRunner PRIVATE HAVE_AMIBERRY)
-    target_link_libraries(testRunner amiberrycpu)
+    target_compile_definitions(testRunner PRIVATE HAVE_UAE)
+    target_link_libraries(testRunner uaecpu)
   else()
-    message(STATUS "SDL3 not found: Amiberry's CPU core is not available as reference")
+    message(STATUS "SDL3 not found: UAE's CPU core is not available as reference")
   endif()
 endif()
 

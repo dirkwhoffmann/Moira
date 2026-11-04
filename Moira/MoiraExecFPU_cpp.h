@@ -13,7 +13,7 @@ if (!fpu.isPresent()) { execLineF<C, I, M, S>(opcode); return; }
 
 // The 68040 FPU updates FPIAR on every data operation, older FPUs only if an exception is enabled
 #define FPU_UPDATE_FPIAR \
-if constexpr (MOIRA_MIMIC_AMIBERRY) { \
+if constexpr (MOIRA_MIMIC_UAE) { \
     if (cpuModel >= Model::M68EC040 || (fpu.getFPCR() & 0x7F00)) fpu.setFPIAR(getPC0()); \
 }
 
@@ -1135,7 +1135,13 @@ Moira::execFGeneric(u16 opcode)
             default:                fatalError;
         }
 
-        d = fpu.round(result);
+        // FSGLMUL and FSGLDIV round to single precision by themselves and keep the extended exponent
+        // range. Rounding to the FPCR precision again would clamp the exponent (e.g. in double mode).
+        if constexpr (I == Instr::FSGLMUL || I == Instr::FSGLDIV) {
+            d = result;
+        } else {
+            d = fpu.round(result);
+        }
         fpu.setConditionCodes(d);
 
         done:;

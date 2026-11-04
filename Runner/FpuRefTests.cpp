@@ -8,7 +8,7 @@
 // -----------------------------------------------------------------------------
 
 /* Compares Moira's FPU arithmetic and format conversions against the
- * floating-point back-end of Amiberry (see AmiberryRef.h). Both sides get the
+ * floating-point back-end of UAE (see UAERef.h). Both sides get the
  * same randomly chosen operands, rounding modes and precisions. Result bits and
  * exception status bits are compared. Mismatches are collected and summarized,
  * so one run shows all kinds of deviations at once.
@@ -18,7 +18,7 @@
 
 #include "FPU.h"
 #include "FpuFormats.h"
-#include "AmiberryGlue/AmiberryRef.h"
+#include "UAEGlue/UAERef.h"
 
 #include <cmath>
 #include <cstdio>
@@ -230,7 +230,7 @@ void testArithmetic(int model, long iterations)
     bool is040 = model == 68040;
     FPU fpu;
     fpu.setModel(is040 ? FPUModel::INTERNAL : FPUModel::M68882);
-    amiref::init(model);
+    uaeref::init(model);
 
     for (long i = 0; i < iterations; i++) {
 
@@ -250,8 +250,8 @@ void testArithmetic(int model, long iterations)
             u32 exc = fpu.fpsr & 0xFF00;
 
             // Reference
-            amiref::Result ref;
-            if (!amiref::arith(d.cmd, dst.signExp(), dst.mantissa(), src.signExp(), src.mantissa(), fpcr, ref)) {
+            uaeref::Result ref;
+            if (!uaeref::arith(d.cmd, dst.signExp(), dst.mantissa(), src.signExp(), src.mantissa(), fpcr, ref)) {
                 printf("Reference doesn't implement command %02x\n", d.cmd);
                 continue;
             }
@@ -268,12 +268,12 @@ void testArithmetic(int model, long iterations)
                 bool zeroByInf = (d.op == Op::MOD || d.op == Op::REM) && dst.isZero() && src.isInfinite();
                 // The reference returns a zero significand with the minimum exponent of the format
                 bool pseudoZero = ref.man == 0 && (ref.se & 0x7FFF) != 0 && (ref.se & 0x7FFF) != 0x7FFF;
-                if (pseudoZero && res.isZero() && res.sign() == bool(ref.se & 0x8000) && (exc == ref.exc || (exc | amiref::UNFL) == ref.exc)) { rep.known(); continue; }
+                if (pseudoZero && res.isZero() && res.sign() == bool(ref.se & 0x8000) && (exc == ref.exc || (exc | uaeref::UNFL) == ref.exc)) { rep.known(); continue; }
 
                 bool overflow = (res.signExp() & 0x7FFF) == 0x7FFF || (exc & FPEXP::OVFL);
-                if ((overflow && sameValue && exc == (ref.exc | amiref::INEX2)) ||      // Inexact exception on overflow
+                if ((overflow && sameValue && exc == (ref.exc | uaeref::INEX2)) ||      // Inexact exception on overflow
                     (d.op == Op::SUB && infOperand && !is040 && (exc == ref.exc)) ||    // 6888x quirk
-                    (zeroByInf && res.isZero() && ref.man == 0 && res.sign() == bool(ref.se & 0x8000) && (exc | amiref::UNFL) == ref.exc)) {
+                    (zeroByInf && res.isZero() && ref.man == 0 && res.sign() == bool(ref.se & 0x8000) && (exc | uaeref::UNFL) == ref.exc)) {
                     rep.known();
                     continue;
                 }
@@ -328,7 +328,7 @@ void testTranscendentals(long iterations)
 {
     FPU fpu;
     fpu.setModel(FPUModel::M68882);
-    amiref::init(68882);
+    uaeref::init(68882);
 
     for (long i = 0; i < iterations; i++) {
 
@@ -347,8 +347,8 @@ void testTranscendentals(long iterations)
             }
             u32 exc = fpu.fpsr & 0xFF00;
 
-            amiref::Result ref;
-            if (!amiref::arith(d.cmd, 0, 0, src.signExp(), src.mantissa(), fpcr, ref)) {
+            uaeref::Result ref;
+            if (!uaeref::arith(d.cmd, 0, 0, src.signExp(), src.mantissa(), fpcr, ref)) {
                 printf("Reference doesn't implement command %02x\n", d.cmd);
                 continue;
             }
@@ -380,7 +380,7 @@ void testTranscendentals(long iterations)
             if (!closeValue && src.isFinite() && src.exponent() < -40 && res.identical(src)) closeValue = true;
 
             // The reference omits the inexact flag if an overflow or underflow occurs
-            if (!sameExc && (exc & (FPEXP::OVFL | FPEXP::UNFL)) && exc == (ref.exc | amiref::INEX2)) sameExc = true;
+            if (!sameExc && (exc & (FPEXP::OVFL | FPEXP::UNFL)) && exc == (ref.exc | uaeref::INEX2)) sameExc = true;
             if (closeValue && !sameValue) rep.known();
 
             if (!closeValue || !sameExc) {
@@ -425,7 +425,7 @@ void testConversions(int model, long iterations)
     std::string tag = model == 68040 ? " (040)" : " (6888x)";
     FPU fpu;
     fpu.setModel(model == 68040 ? FPUModel::INTERNAL : FPUModel::M68882);
-    amiref::init(model);
+    uaeref::init(model);
 
     for (long i = 0; i < iterations; i++) {
 
@@ -437,7 +437,7 @@ void testConversions(int model, long iterations)
         {
             u32 raw = genSingle();
             Float80 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::fromSingle(raw); }
-            auto ref = amiref::fromSingle(raw, fpcr);
+            auto ref = uaeref::fromSingle(raw, fpcr);
             Reporter rep("single -> extended" + tag);
             if (v.signExp() != ref.se || v.mantissa() != ref.man || (fpu.fpsr & 0xFF00) != ref.exc)
                 rep.fail("raw=%08x\n   moira=%s exc=%04x   ref=%s exc=%04x", raw, str(v).c_str(),
@@ -448,7 +448,7 @@ void testConversions(int model, long iterations)
         {
             u64 raw = genDouble();
             Float80 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::fromDouble(raw); }
-            auto ref = amiref::fromDouble(raw, fpcr);
+            auto ref = uaeref::fromDouble(raw, fpcr);
             Reporter rep("double -> extended" + tag);
             if (v.signExp() != ref.se || v.mantissa() != ref.man || (fpu.fpsr & 0xFF00) != ref.exc)
                 rep.fail("raw=%016llx\n   moira=%s exc=%04x   ref=%s exc=%04x", (unsigned long long)raw,
@@ -459,9 +459,9 @@ void testConversions(int model, long iterations)
         {
             Float80 x = genOperand();
             u32 raw; { fpu.setFPSR(0); FPU::Scope s(fpu); raw = FpuFormats::toSingle(x); }
-            auto ref = amiref::toSingle(x.signExp(), x.mantissa(), fpcr);
+            auto ref = uaeref::toSingle(x.signExp(), x.mantissa(), fpcr);
             Reporter rep("extended -> single" + tag);
-            if (raw == ref.raw[0] && (fpu.fpsr & FPEXP::OVFL) && (fpu.fpsr & 0xFF00) == (ref.exc | amiref::INEX2)) rep.known(); else
+            if (raw == ref.raw[0] && (fpu.fpsr & FPEXP::OVFL) && (fpu.fpsr & 0xFF00) == (ref.exc | uaeref::INEX2)) rep.known(); else
             if (raw != ref.raw[0] || (fpu.fpsr & 0xFF00) != ref.exc)
                 rep.fail("fpcr=%02x x=%s\n   moira=%08x exc=%04x   ref=%08x exc=%04x", fpcr, str(x).c_str(),
                          raw, fpu.fpsr & 0xFF00, ref.raw[0], ref.exc);
@@ -471,10 +471,10 @@ void testConversions(int model, long iterations)
         {
             Float80 x = genOperand();
             u64 raw; { fpu.setFPSR(0); FPU::Scope s(fpu); raw = FpuFormats::toDouble(x); }
-            auto ref = amiref::toDouble(x.signExp(), x.mantissa(), fpcr);
+            auto ref = uaeref::toDouble(x.signExp(), x.mantissa(), fpcr);
             u64 refRaw = u64(ref.raw[0]) << 32 | ref.raw[1];
             Reporter rep("extended -> double" + tag);
-            if (raw == refRaw && (fpu.fpsr & FPEXP::OVFL) && (fpu.fpsr & 0xFF00) == (ref.exc | amiref::INEX2)) rep.known(); else
+            if (raw == refRaw && (fpu.fpsr & FPEXP::OVFL) && (fpu.fpsr & 0xFF00) == (ref.exc | uaeref::INEX2)) rep.known(); else
             if (raw != refRaw || (fpu.fpsr & 0xFF00) != ref.exc)
                 rep.fail("fpcr=%02x x=%s\n   moira=%016llx exc=%04x   ref=%016llx exc=%04x", fpcr, str(x).c_str(),
                          (unsigned long long)raw, fpu.fpsr & 0xFF00, (unsigned long long)refRaw, ref.exc);
@@ -485,11 +485,11 @@ void testConversions(int model, long iterations)
 
             Float80 x = genOperand();
             i32 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::toInteger(x, bits); }
-            auto ref = amiref::toInteger(x.signExp(), x.mantissa(), bits, fpcr);
+            auto ref = uaeref::toInteger(x.signExp(), x.mantissa(), bits, fpcr);
             u32 mask = bits == 8 ? 0xFF : bits == 16 ? 0xFFFF : 0xFFFFFFFF;
             Reporter rep("extended -> int" + std::to_string(bits) + tag);
             u32 ourExc = fpu.fpsr & 0xFF00;
-            if ((u32(v) & mask) == (u32(ref.ival) & mask) && x.isSignalingNaN() && (ourExc & ~amiref::OPERR) == ref.exc) rep.known(); else   // Reference omits OPERR
+            if ((u32(v) & mask) == (u32(ref.ival) & mask) && x.isSignalingNaN() && (ourExc & ~uaeref::OPERR) == ref.exc) rep.known(); else   // Reference omits OPERR
             if ((u32(v) & mask) != (u32(ref.ival) & mask) || (fpu.fpsr & 0xFF00) != ref.exc)
                 rep.fail("fpcr=%02x x=%s\n   moira=%08x exc=%04x   ref=%08x exc=%04x", fpcr, str(x).c_str(),
                          u32(v) & mask, fpu.fpsr & 0xFF00, u32(ref.ival) & mask, ref.exc);
@@ -501,7 +501,7 @@ void testConversions(int model, long iterations)
             int k = int(rng() % 128) - 64;
             if (rng() % 2) k = 1 + int(rng() % 17);
             u32 w[3] = {}; { fpu.setFPSR(0); FPU::Scope s(fpu); FpuFormats::toPacked(x, k, w); }
-            auto ref = amiref::toPacked(x.signExp(), x.mantissa(), k, fpcr);
+            auto ref = uaeref::toPacked(x.signExp(), x.mantissa(), k, fpcr);
             Reporter rep("extended -> packed" + tag);
             bool sameWords = w[0] == ref.raw[0] && w[1] == ref.raw[1] && w[2] == ref.raw[2];
             auto digits = [](const u32 (&x)[3]) {
@@ -525,7 +525,7 @@ void testConversions(int model, long iterations)
             lastDigit = lastDigit || carry;
             bool mismatch = !sameWords || (fpu.fpsr & 0xFF00) != ref.exc;
             if (mismatch && ((k == 1 || k == 2 || k == 3) || lastDigit ||      // The reference is off by one in directed rounding modes                                           // Reference rounds to k-1 digits
-                             (sameWords && ref.exc == ((fpu.fpsr & 0xFF00) | amiref::INEX2)))) rep.known(); else
+                             (sameWords && ref.exc == ((fpu.fpsr & 0xFF00) | uaeref::INEX2)))) rep.known(); else
             if (w[0] != ref.raw[0] || w[1] != ref.raw[1] || w[2] != ref.raw[2] || (fpu.fpsr & 0xFF00) != ref.exc)
                 rep.fail("fpcr=%02x k=%d x=%s\n   moira=%08x %08x %08x exc=%04x   ref=%08x %08x %08x exc=%04x",
                          fpcr, k, str(x).c_str(), w[0], w[1], w[2], fpu.fpsr & 0xFF00,
@@ -545,7 +545,7 @@ void testConversions(int model, long iterations)
             Float80 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::fromPacked(w); }
             u32 exc = fpu.fpsr & 0xFF00;
             if (exc & FPEXP::INEX2) exc = (exc & ~FPEXP::INEX2) | FPEXP::INEX1;
-            auto ref = amiref::fromPacked(w, fpcr);
+            auto ref = uaeref::fromPacked(w, fpcr);
             Reporter rep("packed -> extended" + tag);
             u64 diff = v.mantissa() > ref.man ? v.mantissa() - ref.man : ref.man - v.mantissa();
             if (v.signExp() == ref.se && exc == ref.exc && diff <= 256 && diff != 0) rep.known(); else
@@ -566,7 +566,7 @@ int main(int argc, char **argv)
     if (const char *n = getenv("FPUREF_MAXPRINT")) maxPrinted = atoi(n);
     rng.seed(seed);
 
-    printf("Moira FPU vs. Amiberry: %ld iterations, seed %u%s\n\n", iterations, seed, clean ? " (clean)" : "");
+    printf("Moira FPU vs. UAE: %ld iterations, seed %u%s\n\n", iterations, seed, clean ? " (clean)" : "");
 
     for (int model : { 68882, 68040 }) {
         testArithmetic(model, iterations);

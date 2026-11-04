@@ -1,0 +1,342 @@
+/*
+  * UAE - The Un*x Amiga Emulator
+  *
+  * Target specific stuff, Amiberry version
+  */
+
+#pragma once
+#ifdef _WIN32
+/* Include <windows.h> with WIN32_LEAN_AND_MEAN to get real Windows types
+   (HINSTANCE, HWND, HKEY, LPARAM, WPARAM, GUID, etc.) without pulling in
+   COM/OLE/RPC headers that would conflict with std::byte via rpcndr.h.
+   This MUST come before sysdeps.h (which has "using namespace std;"). */
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
+#include <SDL3/SDL.h>
+#include <vector>
+
+#include "options.h"
+#include "sana2.h"
+
+#define TARGET_NAME _T("amiberry")
+
+#define NO_MAIN_IN_MAIN_C
+
+#define OPTIONSFILENAME _T("default")
+
+#define MAKEBD(x,y,z) ((((x) - 2000) * 10000 + (y)) * 100 + (z))
+#define GETBDY(x) ((x) / 1000000 + 2000)
+#define GETBDM(x) (((x) - (((x) / 10000) * 10000)) / 100)
+#define GETBDD(x) ((x) % 100)
+
+// Version/beta/date all come from CMake compile definitions
+#define AMIBERRYBETA _T(AMIBERRY_VERSION_PRE_RELEASE)
+#define AMIBERRYPUBLICBETA AMIBERRY_IS_PRE_RELEASE
+
+#define AMIBERRYDATE MAKEBD(AMIBERRY_BUILD_YEAR, AMIBERRY_BUILD_MONTH, AMIBERRY_BUILD_DAY)
+
+#define _AMIBERRY_STRINGIFY(x) #x
+#define _AMIBERRY_TOSTRING(x) _AMIBERRY_STRINGIFY(x)
+#define COPYRIGHT _T("Copyright (C) " _AMIBERRY_TOSTRING(AMIBERRY_BUILD_YEAR) " Dimitris Panokostas")
+
+#ifndef AMIBERRYEXTRA
+#define AMIBERRYEXTRA _T("")
+#endif
+#ifndef AMIBERRYREV
+#define AMIBERRYREV _T("")
+#endif
+
+#define IHF_WINDOWHIDDEN 6
+
+extern std::string get_version_string();
+extern std::string get_copyright_notice();
+extern std::string get_sdl_version_string();
+
+STATIC_INLINE FILE* uae_tfopen(const TCHAR* path, const TCHAR* mode)
+{
+	return fopen(path, mode);
+}
+
+// Expose prefix_with_application_directory from amiberry_filesys,
+// so we can use it to open the main configuration file on OS X
+extern int mouseactive;
+extern int mouse_monid;
+extern int minimized;
+extern int monitor_off;
+extern bool joystick_refresh_needed;
+extern void handle_joy_device_event(unsigned int which, bool removed);
+extern std::string screenshot_filename;
+
+extern void logging_init();
+
+extern bool my_kbd_handler(int, int, int, bool);
+extern bool my_kbd_host_hotkey_handler(int, int, bool, bool, bool, bool);
+extern void clearallkeys();
+extern int getcapslock();
+
+extern void releasecapture(const struct AmigaMonitor*);
+extern void enablecapture(int monid);
+extern void disablecapture();
+extern void suppresscapture();
+extern void activationtoggle(int monid, bool inactiveonly);
+extern bool create_screenshot();
+extern int save_thumb(const std::string& path);
+extern int amiberry_get_active_input_monitor();
+extern int amiberry_resolve_active_input_monitor();
+
+extern amiberry_hotkey get_hotkey_from_config(const std::string& config_option);
+extern amiberry_hotkey enter_gui_key;
+extern SDL_GamepadButton enter_gui_button;
+extern amiberry_hotkey quit_key;
+extern amiberry_hotkey action_replay_key;
+extern amiberry_hotkey fullscreen_key;
+extern amiberry_hotkey minimize_key;
+extern amiberry_hotkey left_amiga_key;
+extern amiberry_hotkey right_amiga_key;
+extern amiberry_hotkey vkbd_key;
+extern amiberry_hotkey screenshot_key;
+extern amiberry_hotkey debugger_key;
+
+extern int emulating;
+extern bool config_loaded;
+
+extern int z3_base_adr;
+extern bool volatile flip_in_progress;
+
+extern void setmouseactive(int monid, int active);
+extern void minimizewindow(int monid);
+extern void updatemouseclip(struct AmigaMonitor*);
+extern void updatewinrect(struct AmigaMonitor*, bool);
+int getdpiforwindow(int monid);
+void amiberry_gui_init();
+void gui_widgets_init();
+void run_gui();
+void gui_widgets_halt();
+void amiberry_gui_halt();
+void init_max_signals();
+void wait_for_vsync();
+unsigned long target_lastsynctime();
+extern struct netdriverdata* ndd[MAX_TOTAL_NET_DEVICES + 1];
+extern int net_enumerated;
+extern struct netdriverdata** target_ethernet_enumerate();
+extern void target_startup_msg(const TCHAR* title, const TCHAR* msg);
+extern int multithread_enabled;
+extern bool host_detect_slow_sbc(void);
+
+void save_amiberry_settings();
+bool save_amiberry_settings_with_result();
+void update_display(struct uae_prefs*);
+void clearscreen();
+void graphics_subshutdown();
+
+extern void wait_keyrelease();
+extern void keyboard_settrans();
+
+extern void* open_tablet(SDL_Window* window);
+extern int close_tablet(void*);
+extern void send_tablet(int x, int y, int z, int pres, uae_u32 buttons, int flags, int ax, int ay, int az, int rx, int ry, int rz, SDL_Rect* r);
+extern void send_tablet_proximity(int);
+
+extern bool can_have_1gb();
+
+#if defined(__MACH__) || defined(__ANDROID__)
+// from amifilesys.cpp
+string prefix_with_application_directory_path(string currentpath);
+#endif
+
+extern std::string get_configuration_path();
+extern void get_configuration_path(char* out, int size);
+extern std::string get_base_content_path();
+extern std::vector<std::string> get_base_content_missing_directories(const std::string& newpath);
+extern void set_base_content_path(const std::string& newpath);
+extern void create_missing_directories_for_base_content_path(const std::string& newpath);
+extern void set_configuration_path(const std::string& newpath);
+extern std::string get_nvram_path();
+extern void set_nvram_path(const std::string& newpath);
+extern std::string get_plugins_path();
+extern void set_plugins_path(const std::string& newpath);
+extern std::string get_floppy_sounds_path();
+extern void set_floppy_sounds_path(const std::string& newpath);
+extern std::string get_saveimage_path();
+extern void set_saveimage_path(const std::string& newpath);
+extern std::string get_ripper_path();
+extern void set_ripper_path(const std::string& newpath);
+extern std::string get_inputrecordings_path();
+extern void set_inputrecordings_path(const std::string& newpath);
+extern std::string get_video_path();
+extern void set_video_path(const std::string& newpath);
+extern void set_screenshot_path(const std::string& newpath);
+extern std::string get_savestate_path();
+extern void set_savestate_path(const std::string& newpath);
+extern void set_themes_path(const std::string& newpath);
+extern void set_shaders_path(const std::string& newpath);
+extern std::string get_controllers_path();
+extern void set_controllers_path(const std::string& newpath);
+
+extern std::string get_retroarch_file();
+extern void set_retroarch_file(const std::string& newpath);
+
+extern std::string get_savedatapath(bool force_internal);
+extern std::string get_whdbootpath();
+extern void set_whdbootpath(const std::string& newpath);
+extern std::string get_whdload_arch_path();
+extern void set_whdload_arch_path(const std::string& newpath);
+extern std::string get_floppy_path();
+extern void set_floppy_path(const std::string& newpath);
+extern std::string get_harddrive_path();
+extern void set_harddrive_path(const std::string& newpath);
+extern std::string get_cdrom_path();
+extern std::string get_cdrom_browse_path();
+extern std::string get_cdrom_browse_path(const std::string& currentPath);
+extern void set_cdrom_path(const std::string& newpath);
+extern std::string get_themes_path();
+extern std::string get_shaders_path();
+extern std::string get_bezels_path();
+extern void set_bezels_path(const std::string& newpath);
+
+extern bool get_logfile_enabled();
+extern void set_logfile_enabled(bool enabled);
+extern std::string get_logfile_path();
+extern void set_logfile_path(const std::string& newpath);
+
+extern std::string get_rom_path();
+extern void set_rom_path(const std::string& newpath);
+extern std::string get_rp9_path();
+extern void set_rp9_path(const std::string& newpath);
+extern void get_rp9_path(char* out, int size);
+extern std::string get_screenshot_path();
+
+extern bool get_portable_mode();
+#if !defined(__MACH__) && !defined(__ANDROID__)
+extern bool can_toggle_portable_mode(std::string* reason_out);
+extern bool set_portable_mode(bool enable);
+#endif
+extern bool should_show_legacy_cleanup_prompt();
+extern std::vector<std::string> get_legacy_cleanup_prompt_items();
+extern bool legacy_cleanup_uses_trash();
+extern bool cleanup_legacy_items(std::vector<std::string>& failed_items);
+extern void postpone_legacy_cleanup_prompt();
+extern void dismiss_legacy_cleanup_prompt();
+extern void reset_default_paths();
+extern void create_missing_amiberry_folders();
+
+extern void extract_filename(const char* str, char* buffer);
+extern std::string extract_filename(const std::string& path);
+extern void extract_path(const char* str, char* buffer);
+extern std::string extract_path(const std::string& filename);
+extern void remove_file_extension(char* filename);
+extern std::string remove_file_extension(const std::string& filename);
+extern void set_last_active_config_from_media(const char* filename);
+extern void ReadConfigFileList();
+extern void configurations_panel_reset();
+extern void read_rom_list(bool);
+extern int scan_roms(int show);
+
+extern bool resumepaused(int priority);
+extern bool resumepaused_without_mouse_capture(int priority);
+extern bool setpaused(int priority);
+extern void unsetminimized(int monid);
+extern void setminimized(int monid);
+
+extern void setpriority(int prio);
+void init_colors(int monid);
+
+#include <vector>
+#include <string>
+
+#define MAX_MRU_LIST 40
+
+extern std::vector<std::string> lstMRUDiskList;
+extern std::vector<std::string> lstMRUCDList;
+extern std::vector<std::string> lstMRUWhdloadList;
+
+extern std::string last_floppy_dir;
+
+extern void add_file_to_mru_list(std::vector<std::string>& vec, const std::string& file);
+
+int count_HDs(const struct uae_prefs* p);
+extern void gui_force_rtarea_hdchange();
+extern int isfocus();
+extern void gui_restart();
+extern bool hardfile_testrdb(const char* filename);
+
+extern bool host_poweroff;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+void trace_begin(void);
+void trace_end(void);
+#ifdef __cplusplus
+}
+#endif
+
+STATIC_INLINE int max(int x, int y)
+{
+	return x > y ? x : y;
+}
+
+#ifdef USE_JIT_FPU
+#ifdef __cplusplus
+extern "C" {
+#endif
+void save_host_fp_regs(void* buf);
+void restore_host_fp_regs(void* buf);
+#ifdef __cplusplus
+}
+#endif
+#endif
+
+// Amiberry stub types for Win32 API handles/types.
+// On Windows: real types come from <windows.h> included above.
+// On non-Windows: provide dummy types so the codebase compiles.
+#ifndef _WIN32
+typedef void* HINSTANCE;
+typedef void* HMODULE;
+typedef SDL_Window* HWND;
+typedef void* HKEY;
+typedef void* OSVERSIONINFO;
+typedef int BOOL;
+typedef long LPARAM;
+typedef unsigned long WPARAM;
+typedef unsigned short WORD;
+typedef unsigned int UINT;
+typedef long LONG;
+typedef unsigned long ULONG; /* used by WinUAE's cpummu.cpp */
+typedef wchar_t* LPCWSTR;
+typedef long GUID;
+#ifndef WINAPI
+#define WINAPI
+#endif
+#endif
+
+#define MAX_SOUND_DEVICES 100
+#define SOUND_DEVICE_DS 1
+#define SOUND_DEVICE_AL 2
+#define SOUND_DEVICE_PA 3
+#define SOUND_DEVICE_WASAPI 4
+#define SOUND_DEVICE_WASAPI_EXCLUSIVE 5
+#define SOUND_DEVICE_XAUDIO2 6
+#define SOUND_DEVICE_SDL2 7
+
+struct sound_device
+{
+	GUID guid;
+#ifdef AMIBERRY
+	int id;
+#endif
+	TCHAR* name;
+	TCHAR* alname;
+	TCHAR* cfgname;
+	TCHAR* prefix;
+	int panum;
+	int type;
+};
+extern struct sound_device* sound_devices[MAX_SOUND_DEVICES];
+extern struct sound_device* record_devices[MAX_SOUND_DEVICES];

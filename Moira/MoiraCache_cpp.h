@@ -53,7 +53,7 @@ Moira::fillInstructionCache(u32 addr)
     // program switches the cache off. Bit 1 (F) is deliberately not part of
     // this condition. Freezing only prevents new entries from being
     // allocated; entries that are already valid keep hitting. Both match
-    // fill_icache020() in WinUAE / Amiberry.
+    // fill_icache020() in WinUAE.
     
     if ((reg.cacr & 1) && iCache.cache[idx].valid && iCache.cache[idx].tag == tag) {
         

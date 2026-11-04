@@ -57,12 +57,12 @@ Moira::writeStackFrame0000(u16 sr, u32 pc, u16 nr)
             } else {
 
                 U32_DEC(reg.sp, 8);
-                if constexpr (MOIRA_MIMIC_AMIBERRY && C == Core::C68010) {
+                if constexpr (MOIRA_MIMIC_UAE && C == Core::C68010) {
                     write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & ~1, pc & 0xFFFF);
                     write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & ~1, sr);
                     write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & ~1, pc >> 16);
                     write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & ~1, 4 * nr);
-                } else if constexpr (MOIRA_MIMIC_AMIBERRY && C == Core::C68020) {
+                } else if constexpr (MOIRA_MIMIC_UAE && C == Core::C68020) {
                     write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & ~1, 4 * nr);
                     write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & ~1, pc >> 16);
                     write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & ~1, pc & 0xFFFF);

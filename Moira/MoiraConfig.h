@@ -91,28 +91,29 @@
 #define MOIRA_MIMIC_MUSASHI false
 #endif
 
-/* Enables Amiberry compatibility mode.
+/* Enables UAE compatibility mode.
  *
- * When set to true, Moira adopts the behavior of Amiberry's CPU core where it
- * differs from Musashi (e.g., the order of bus accesses). This mode is used by
- * the test runner when Amiberry is selected as the reference implementation.
+ * When set to true, Moira adopts the behavior of the UAE Amiga emulator's CPU
+ * core (as used in WinUAE and Amiberry) where it differs from Musashi (e.g.,
+ * the order of bus accesses). This mode is used by
+ * the test runner when UAE is selected as the reference implementation.
  * To get meaningful results, MOIRA_MIMIC_MUSASHI should be set to false and
  * MOIRA_PRECISE_TIMING to true in this mode.
  *
  * Set to false for improved accuracy.
  */
-#ifndef MOIRA_MIMIC_AMIBERRY
-#define MOIRA_MIMIC_AMIBERRY true
+#ifndef MOIRA_MIMIC_UAE
+#define MOIRA_MIMIC_UAE true
 #endif
 
-// Amiberry's bus access timing can only be reproduced with precise timing
-#if MOIRA_MIMIC_AMIBERRY && !MOIRA_PRECISE_TIMING
+// UAE's bus access timing can only be reproduced with precise timing
+#if MOIRA_MIMIC_UAE && !MOIRA_PRECISE_TIMING
 #undef MOIRA_PRECISE_TIMING
 #define MOIRA_PRECISE_TIMING true
 #endif
 
-#if MOIRA_MIMIC_AMIBERRY && MOIRA_MIMIC_MUSASHI
-#error "MOIRA_MIMIC_AMIBERRY and MOIRA_MIMIC_MUSASHI are mutually exclusive"
+#if MOIRA_MIMIC_UAE && MOIRA_MIMIC_MUSASHI
+#error "MOIRA_MIMIC_UAE and MOIRA_MIMIC_MUSASHI are mutually exclusive"
 #endif
 
 /* The following macro appears at the beginning of each instruction handler.
