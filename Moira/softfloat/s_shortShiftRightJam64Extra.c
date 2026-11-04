@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "platform.h"
 #include "primitiveTypes.h"
 
-#ifndef moira_softfloat_shortShiftRightJam64Extra
+#ifndef softfloat_shortShiftRightJam64Extra
 
 struct uint64_extra
  moira_softfloat_shortShiftRightJam64Extra(

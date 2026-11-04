@@ -12,7 +12,7 @@
 #include "MoiraDebugger.h"
 #include "FPU.h"
 
-namespace moira {
+namespace MOIRA_NAMESPACE {
 
 namespace Version {
 

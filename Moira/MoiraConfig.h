@@ -7,6 +7,16 @@
 
 #pragma once
 
+/* Name of the namespace that contains all of Moira.
+ *
+ * Compile with -DMOIRA_NAMESPACE=<name> to build several differently configured
+ * Moira libraries that can be linked into the same program (e.g., for testing).
+ * If you do, also set MOIRA_SOFTFLOAT_PREFIX (see softfloat/moira_prefix.h).
+ */
+#ifndef MOIRA_NAMESPACE
+#define MOIRA_NAMESPACE moira
+#endif
+
 /* Set to true to enable precise timing mode (68000 and 68010 only).
  *
  * When disabled, Moira calls the 'sync' function at the end of each instruction,

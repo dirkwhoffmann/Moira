@@ -14,7 +14,7 @@
 #include <cstring>
 #include <cstdio>
 
-namespace moira {
+namespace MOIRA_NAMESPACE {
 
 
 //

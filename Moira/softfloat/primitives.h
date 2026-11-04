@@ -41,7 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include "primitiveTypes.h"
 
-#ifndef moira_softfloat_shortShiftRightJam64
+#ifndef softfloat_shortShiftRightJam64
 /*----------------------------------------------------------------------------
 | Shifts 'a' right by the number of bits given in 'dist', which must be in
 | the range 1 to 63.  If any nonzero bits are shifted off, they are "jammed"
@@ -57,7 +57,7 @@ uint64_t moira_softfloat_shortShiftRightJam64( uint64_t a, uint_fast8_t dist );
 #endif
 #endif
 
-#ifndef moira_softfloat_shiftRightJam32
+#ifndef softfloat_shiftRightJam32
 /*----------------------------------------------------------------------------
 | Shifts 'a' right by the number of bits given in 'dist', which must not
 | be zero.  If any nonzero bits are shifted off, they are "jammed" into the
@@ -78,7 +78,7 @@ uint32_t moira_softfloat_shiftRightJam32( uint32_t a, uint_fast16_t dist );
 #endif
 #endif
 
-#ifndef moira_softfloat_shiftRightJam64
+#ifndef softfloat_shiftRightJam64
 /*----------------------------------------------------------------------------
 | Shifts 'a' right by the number of bits given in 'dist', which must not
 | be zero.  If any nonzero bits are shifted off, they are "jammed" into the
@@ -163,7 +163,7 @@ uint_fast8_t softfloat_countLeadingZeros64( uint64_t a );
 extern const uint16_t moira_softfloat_approxRecip_1k0s[16];
 extern const uint16_t moira_softfloat_approxRecip_1k1s[16];
 
-#ifndef moira_softfloat_approxRecip32_1
+#ifndef softfloat_approxRecip32_1
 /*----------------------------------------------------------------------------
 | Returns an approximation to the reciprocal of the number represented by 'a',
 | where 'a' is interpreted as an unsigned fixed-point number with one integer
@@ -185,7 +185,7 @@ uint32_t moira_softfloat_approxRecip32_1( uint32_t a );
 extern const uint16_t moira_softfloat_approxRecipSqrt_1k0s[16];
 extern const uint16_t moira_softfloat_approxRecipSqrt_1k1s[16];
 
-#ifndef moira_softfloat_approxRecipSqrt32_1
+#ifndef softfloat_approxRecipSqrt32_1
 /*----------------------------------------------------------------------------
 | Returns an approximation to the reciprocal of the square root of the number
 | represented by 'a', where 'a' is interpreted as an unsigned fixed-point
@@ -229,7 +229,7 @@ bool softfloat_eq128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 );
 #endif
 #endif
 
-#ifndef moira_softfloat_le128
+#ifndef softfloat_le128
 /*----------------------------------------------------------------------------
 | Returns true if the 128-bit unsigned integer formed by concatenating 'a64'
 | and 'a0' is less than or equal to the 128-bit unsigned integer formed by
@@ -244,7 +244,7 @@ bool moira_softfloat_le128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0
 #endif
 #endif
 
-#ifndef moira_softfloat_lt128
+#ifndef softfloat_lt128
 /*----------------------------------------------------------------------------
 | Returns true if the 128-bit unsigned integer formed by concatenating 'a64'
 | and 'a0' is less than the 128-bit unsigned integer formed by concatenating
@@ -259,7 +259,7 @@ bool moira_softfloat_lt128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0
 #endif
 #endif
 
-#ifndef moira_softfloat_shortShiftLeft128
+#ifndef softfloat_shortShiftLeft128
 /*----------------------------------------------------------------------------
 | Shifts the 128 bits formed by concatenating 'a64' and 'a0' left by the
 | number of bits given in 'dist', which must be in the range 1 to 63.
@@ -301,7 +301,7 @@ struct uint128
 #endif
 #endif
 
-#ifndef moira_softfloat_shortShiftRightJam64Extra
+#ifndef softfloat_shortShiftRightJam64Extra
 /*----------------------------------------------------------------------------
 | This function is the same as 'moira_softfloat_shiftRightJam64Extra' (below),
 | except that 'dist' must be in the range 1 to 63.
@@ -378,7 +378,7 @@ struct uint128_extra
 #endif
 #endif
 
-#ifndef moira_softfloat_shiftRightJam64Extra
+#ifndef softfloat_shiftRightJam64Extra
 /*----------------------------------------------------------------------------
 | Shifts the 128 bits formed by concatenating 'a' and 'extra' right by 64
 | _plus_ the number of bits given in 'dist', which must not be zero.  This
@@ -419,7 +419,7 @@ struct uint64_extra
 #endif
 #endif
 
-#ifndef moira_softfloat_shiftRightJam128
+#ifndef softfloat_shiftRightJam128
 /*----------------------------------------------------------------------------
 | Shifts the 128 bits formed by concatenating 'a64' and 'a0' right by the
 | number of bits given in 'dist', which must not be zero.  If any nonzero bits
@@ -475,7 +475,7 @@ void
      const uint64_t *aPtr, uint_fast32_t dist, uint64_t *zPtr );
 #endif
 
-#ifndef moira_softfloat_add128
+#ifndef softfloat_add128
 /*----------------------------------------------------------------------------
 | Returns the sum of the 128-bit integer formed by concatenating 'a64' and
 | 'a0' and the 128-bit integer formed by concatenating 'b64' and 'b0'.  The
@@ -510,7 +510,7 @@ void
      const uint64_t *aPtr, const uint64_t *bPtr, uint64_t *zPtr );
 #endif
 
-#ifndef moira_softfloat_sub128
+#ifndef softfloat_sub128
 /*----------------------------------------------------------------------------
 | Returns the difference of the 128-bit integer formed by concatenating 'a64'
 | and 'a0' and the 128-bit integer formed by concatenating 'b64' and 'b0'.

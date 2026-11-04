@@ -11,7 +11,7 @@
 #include <bit>
 #include <vector>
 
-namespace moira {
+namespace MOIRA_NAMESPACE {
 
 namespace {
 

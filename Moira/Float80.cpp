@@ -18,7 +18,7 @@ extern "C" {
 #include "softfloat/internals.h"
 }
 
-namespace moira {
+namespace MOIRA_NAMESPACE {
 
 namespace {
 

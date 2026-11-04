@@ -33,7 +33,7 @@
 #include <vector>
 #include <stdexcept>
 
-namespace moira {
+namespace MOIRA_NAMESPACE {
 
 using namespace Flag;
 

@@ -11,7 +11,7 @@
 #include "StrWriter.h"
 #include <unordered_map>
 
-namespace moira {
+namespace MOIRA_NAMESPACE {
 
 //
 // A single breakpoint, watchpoint, or catchpoint

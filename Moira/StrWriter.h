@@ -7,7 +7,7 @@
 
 #pragma once
 
-namespace moira {
+namespace MOIRA_NAMESPACE {
 
 //
 // Wrapper structures controlling the output format

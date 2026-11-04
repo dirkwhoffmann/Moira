@@ -12,7 +12,7 @@
 #include <bit>
 #include <vector>
 
-namespace moira {
+namespace MOIRA_NAMESPACE {
 
 /* A minimal arbitrary-precision unsigned integer. It is only used for the
  * conversion from and to packed decimal numbers, which have to be exact. The

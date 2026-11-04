@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include "platform.h"
 
-#ifndef moira_softfloat_shiftRightJam32
+#ifndef softfloat_shiftRightJam32
 
 uint32_t moira_softfloat_shiftRightJam32( uint32_t a, uint_fast16_t dist )
 {

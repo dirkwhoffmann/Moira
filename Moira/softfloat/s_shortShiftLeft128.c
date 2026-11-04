@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "platform.h"
 #include "primitiveTypes.h"
 
-#ifndef moira_softfloat_shortShiftLeft128
+#ifndef softfloat_shortShiftLeft128
 
 struct uint128
  moira_softfloat_shortShiftLeft128( uint64_t a64, uint64_t a0, uint_fast8_t dist )

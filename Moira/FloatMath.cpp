@@ -11,7 +11,7 @@
 #include <bit>
 #include <cmath>
 
-namespace moira {
+namespace MOIRA_NAMESPACE {
 
 namespace {
 

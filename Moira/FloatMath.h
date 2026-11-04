@@ -9,7 +9,7 @@
 
 #include "Float80.h"
 
-namespace moira {
+namespace MOIRA_NAMESPACE {
 
 /* Transcendental functions on Float80
  *

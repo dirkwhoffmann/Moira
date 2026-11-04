@@ -13,7 +13,7 @@
 #include <string>
 #include <optional>
 
-namespace moira {
+namespace MOIRA_NAMESPACE {
 
 //
 // Basic data types

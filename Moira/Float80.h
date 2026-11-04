@@ -9,7 +9,7 @@
 
 #include "MoiraTypes.h"
 
-namespace moira {
+namespace MOIRA_NAMESPACE {
 
 /* Float80 is an 80-bit extended precision floating-point number, i.e., the
  * x87 / Motorola 68881 "extended" format:

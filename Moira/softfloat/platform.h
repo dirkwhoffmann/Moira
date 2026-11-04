@@ -12,6 +12,8 @@ defined here so that C and C++ translation units agree on them.
 #ifndef moira_softfloat_platform_h
 #define moira_softfloat_platform_h 1
 
+#include "moira_prefix.h"
+
 // Use the 64-bit integer implementation (required for the extF80_t functions)
 #ifndef SOFTFLOAT_FAST_INT64
 #define SOFTFLOAT_FAST_INT64

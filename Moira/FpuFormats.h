@@ -9,7 +9,7 @@
 
 #include "Float80.h"
 
-namespace moira {
+namespace MOIRA_NAMESPACE {
 
 /* The Motorola floating-point unit supports seven data formats:
  *

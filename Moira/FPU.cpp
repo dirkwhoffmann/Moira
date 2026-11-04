@@ -10,7 +10,7 @@
 #include "FloatMath.h"
 #include <bit>
 
-namespace moira {
+namespace MOIRA_NAMESPACE {
 
 void
 FPU::reset()

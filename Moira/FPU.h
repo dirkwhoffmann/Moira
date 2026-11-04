@@ -11,7 +11,7 @@
 #include "FpuFormats.h"
 #include <optional>
 
-namespace moira {
+namespace MOIRA_NAMESPACE {
 
 // Supported FPU models
 enum class FPUModel

@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include "platform.h"
 
-#ifndef moira_softfloat_le128
+#ifndef softfloat_le128
 
 bool moira_softfloat_le128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 )
 {
