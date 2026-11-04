@@ -38,3 +38,10 @@ The glue code that drives the core lives in `../UAEGlue`.
 
 When updating from a newer WinUAE, copy the files listed above and reapply
 these changes.
+
+## SDL
+
+UAE (Amiberry flavour) includes `<SDL3/SDL.h>` for a handful of string helpers and
+thread types. The CPU core does not use SDL, so the build puts
+`../UAEGlue/sdl-shim` first on the include path. Its `SDL3/SDL.h` maps the few
+referenced symbols to the C library. SDL does not need to be installed.

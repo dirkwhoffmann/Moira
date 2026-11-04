@@ -101,9 +101,9 @@ endif()
 
 # Add UAE's CPU core as an alternative reference for the test runner (optional)
 if (UAE_DIR)
-  find_library(SDL3_LIBRARY SDL3 HINTS /opt/homebrew/lib /usr/local/lib)
-  find_path(SDL3_INCLUDE_DIR SDL3/SDL.h HINTS /opt/homebrew/include /usr/local/include)
-  if (SDL3_LIBRARY AND SDL3_INCLUDE_DIR)
+  # UAE includes <SDL3/SDL.h> for a few string helpers. The CPU core doesn't need
+  # SDL, so a minimal shim header is used instead (see UAEGlue/sdl-shim).
+  if (TRUE)
     set(AMI ${UAE_DIR}/src)
     add_library(uaecpu STATIC
     Runner/ThirdParty/UAEGlue/UAECpu.cpp
@@ -130,10 +130,9 @@ if (UAE_DIR)
     target_compile_definitions(uaecpu PRIVATE AMIBERRY AMIBERRY_NO_JIT AMIBERRY_NO_THREADED_CPU)
     target_compile_options(uaecpu PRIVATE -w -O1)
     target_include_directories(uaecpu PRIVATE
-    ${AMI} ${AMI}/include ${AMI}/osdep ${AMI}/archivers ${AMI}/threaddep
-    ${SDL3_INCLUDE_DIR})
+    ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAEGlue/sdl-shim
+    ${AMI} ${AMI}/include ${AMI}/osdep ${AMI}/archivers ${AMI}/threaddep)
     target_include_directories(uaecpu PUBLIC ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAEGlue)
-    target_link_libraries(uaecpu ${SDL3_LIBRARY})
 
     foreach(T testRunner runnerShared runnerUAE runnerMusashi)
       target_compile_definitions(${T} PRIVATE HAVE_UAE)
@@ -141,8 +140,6 @@ if (UAE_DIR)
     target_link_libraries(testRunner uaecpu)
     target_link_libraries(runnerUAE PUBLIC uaecpu)
     target_link_libraries(runnerMusashi PUBLIC uaecpu)
-  else()
-    message(STATUS "SDL3 not found: UAE's CPU core is not available as reference")
   endif()
 endif()
 

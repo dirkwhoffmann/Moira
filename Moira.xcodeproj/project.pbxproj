@@ -7,79 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		50A300000000000000000004 /* FloatMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000001 /* FloatMath.cpp */; };
 		50A20000000000000000000A /* libUAECpu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50A200000000000000000001 /* libUAECpu.a */; };
 		5028B10A288D9EC000047C20 /* musashi_softfloat.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B103288D9EC000047C20 /* musashi_softfloat.c */; };
 		5028B10E288D9ECD00047C20 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B10D288D9ECD00047C20 /* m68kops.c */; };
 		5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B114288D9EDC00047C20 /* m68kdasm.c */; };
 		5028B11C288D9EDC00047C20 /* m68kcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B116288D9EDC00047C20 /* m68kcpu.c */; };
-		502C09DF23C8D82600A179E1 /* MoiraDebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */; };
-		502C09E223C8E16600A179E1 /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; };
 		5054686228A4CDDC00028727 /* Randomizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5054686028A4CDDC00028727 /* Randomizer.cpp */; };
 		505580EC23AFA14D0009F77F /* musashi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505580EA23AFA14D0009F77F /* musashi.cpp */; };
-		505A80C33098B1AD00E2E307 /* s_normSubnormalExtF80Sig.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AB3098B1AD00E2E307 /* s_normSubnormalExtF80Sig.c */; };
-		505A80C43098B1AD00E2E307 /* extF80_mul.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80823098B1AD00E2E307 /* extF80_mul.c */; };
-		505A80C53098B1AD00E2E307 /* extF80_add.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807C3098B1AD00E2E307 /* extF80_add.c */; };
-		505A80C63098B1AD00E2E307 /* extF80_div.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807D3098B1AD00E2E307 /* extF80_div.c */; };
-		505A80C73098B1AD00E2E307 /* s_approxRecip32_1.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809A3098B1AD00E2E307 /* s_approxRecip32_1.c */; };
-		505A80C83098B1AD00E2E307 /* moira_env.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80913098B1AD00E2E307 /* moira_env.c */; };
-		505A80C93098B1AD00E2E307 /* extF80_roundToInt.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80843098B1AD00E2E307 /* extF80_roundToInt.c */; };
-		505A80CA3098B1AD00E2E307 /* softfloat_raiseFlags.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BE3098B1AD00E2E307 /* softfloat_raiseFlags.c */; };
-		505A80CB3098B1AD00E2E307 /* s_commonNaNToF32UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809E3098B1AD00E2E307 /* s_commonNaNToF32UI.c */; };
-		505A80CC3098B1AD00E2E307 /* s_mul64To128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A93098B1AD00E2E307 /* s_mul64To128.c */; };
-		505A80CD3098B1AD00E2E307 /* extF80_sub.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80863098B1AD00E2E307 /* extF80_sub.c */; };
-		505A80CE3098B1AD00E2E307 /* s_normRoundPackToExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AA3098B1AD00E2E307 /* s_normRoundPackToExtF80.c */; };
-		505A80CF3098B1AD00E2E307 /* s_normSubnormalF64Sig.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AD3098B1AD00E2E307 /* s_normSubnormalF64Sig.c */; };
-		505A80D03098B1AD00E2E307 /* s_shortShiftRightJam64Extra.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BA3098B1AD00E2E307 /* s_shortShiftRightJam64Extra.c */; };
-		505A80D13098B1AD00E2E307 /* s_f64UIToCommonNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A53098B1AD00E2E307 /* s_f64UIToCommonNaN.c */; };
-		505A80D23098B1AD00E2E307 /* s_shortShiftRightJam64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B93098B1AD00E2E307 /* s_shortShiftRightJam64.c */; };
-		505A80D33098B1AD00E2E307 /* s_f32UIToCommonNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A43098B1AD00E2E307 /* s_f32UIToCommonNaN.c */; };
-		505A80D43098B1AD00E2E307 /* s_add128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80973098B1AD00E2E307 /* s_add128.c */; };
-		505A80D53098B1AD00E2E307 /* extF80_rem.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80833098B1AD00E2E307 /* extF80_rem.c */; };
-		505A80D63098B1AD00E2E307 /* s_roundPackToF64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B13098B1AD00E2E307 /* s_roundPackToF64.c */; };
-		505A80D73098B1AD00E2E307 /* s_commonNaNToF64UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809F3098B1AD00E2E307 /* s_commonNaNToF64UI.c */; };
-		505A80D83098B1AD00E2E307 /* s_extF80UIToCommonNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A33098B1AD00E2E307 /* s_extF80UIToCommonNaN.c */; };
-		505A80D93098B1AD00E2E307 /* s_approxRecipSqrt_1Ks.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809B3098B1AD00E2E307 /* s_approxRecipSqrt_1Ks.c */; };
-		505A80DA3098B1AD00E2E307 /* s_commonNaNToExtF80UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809D3098B1AD00E2E307 /* s_commonNaNToExtF80UI.c */; };
-		505A80DB3098B1AD00E2E307 /* s_lt128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A73098B1AD00E2E307 /* s_lt128.c */; };
-		505A80DC3098B1AD00E2E307 /* s_shiftRightJam128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B73098B1AD00E2E307 /* s_shiftRightJam128.c */; };
-		505A80DD3098B1AD00E2E307 /* s_roundPackToF32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B03098B1AD00E2E307 /* s_roundPackToF32.c */; };
-		505A80DE3098B1AD00E2E307 /* s_countLeadingZeros64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A23098B1AD00E2E307 /* s_countLeadingZeros64.c */; };
-		505A80DF3098B1AD00E2E307 /* extF80_to_f64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80883098B1AD00E2E307 /* extF80_to_f64.c */; };
-		505A80E03098B1AD00E2E307 /* extF80_sqrt.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80853098B1AD00E2E307 /* extF80_sqrt.c */; };
-		505A80E13098B1AD00E2E307 /* s_shiftRightJam32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B43098B1AD00E2E307 /* s_shiftRightJam32.c */; };
-		505A80E23098B1AD00E2E307 /* s_normSubnormalF32Sig.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AC3098B1AD00E2E307 /* s_normSubnormalF32Sig.c */; };
-		505A80E33098B1AD00E2E307 /* s_roundToI32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B23098B1AD00E2E307 /* s_roundToI32.c */; };
-		505A80E43098B1AD00E2E307 /* s_addMagsExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80983098B1AD00E2E307 /* s_addMagsExtF80.c */; };
-		505A80E53098B1AD00E2E307 /* f64_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808C3098B1AD00E2E307 /* f64_to_extF80.c */; };
-		505A80E63098B1AD00E2E307 /* softfloat_state.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BF3098B1AD00E2E307 /* softfloat_state.c */; };
-		505A80E73098B1AD00E2E307 /* i32_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808D3098B1AD00E2E307 /* i32_to_extF80.c */; };
-		505A80E83098B1AD00E2E307 /* s_mul64ByShifted32To128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A83098B1AD00E2E307 /* s_mul64ByShifted32To128.c */; };
-		505A80E93098B1AD00E2E307 /* s_le128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A63098B1AD00E2E307 /* s_le128.c */; };
-		505A80EA3098B1AD00E2E307 /* s_countLeadingZeros32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A13098B1AD00E2E307 /* s_countLeadingZeros32.c */; };
-		505A80EB3098B1AD00E2E307 /* extF80_to_i64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808A3098B1AD00E2E307 /* extF80_to_i64.c */; };
-		505A80EC3098B1AD00E2E307 /* s_countLeadingZeros8.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A03098B1AD00E2E307 /* s_countLeadingZeros8.c */; };
-		505A80ED3098B1AD00E2E307 /* extF80_eq.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807E3098B1AD00E2E307 /* extF80_eq.c */; };
-		505A80EE3098B1AD00E2E307 /* extF80_to_f32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80873098B1AD00E2E307 /* extF80_to_f32.c */; };
-		505A80EF3098B1AD00E2E307 /* s_propagateNaNExtF80UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AE3098B1AD00E2E307 /* s_propagateNaNExtF80UI.c */; };
-		505A80F03098B1AD00E2E307 /* s_sub128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BB3098B1AD00E2E307 /* s_sub128.c */; };
-		505A80F13098B1AD00E2E307 /* s_approxRecipSqrt32_1.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809C3098B1AD00E2E307 /* s_approxRecipSqrt32_1.c */; };
-		505A80F23098B1AD00E2E307 /* s_approxRecip_1Ks.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80993098B1AD00E2E307 /* s_approxRecip_1Ks.c */; };
-		505A80F33098B1AD00E2E307 /* i64_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808E3098B1AD00E2E307 /* i64_to_extF80.c */; };
-		505A80F43098B1AD00E2E307 /* extF80_isSignalingNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807F3098B1AD00E2E307 /* extF80_isSignalingNaN.c */; };
-		505A80F53098B1AD00E2E307 /* s_shortShiftLeft128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B83098B1AD00E2E307 /* s_shortShiftLeft128.c */; };
-		505A80F63098B1AD00E2E307 /* s_roundPackToExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AF3098B1AD00E2E307 /* s_roundPackToExtF80.c */; };
-		505A80F73098B1AD00E2E307 /* s_shiftRightJam64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B53098B1AD00E2E307 /* s_shiftRightJam64.c */; };
-		505A80F83098B1AD00E2E307 /* extF80_to_i32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80893098B1AD00E2E307 /* extF80_to_i32.c */; };
-		505A80F93098B1AD00E2E307 /* extF80_le.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80803098B1AD00E2E307 /* extF80_le.c */; };
-		505A80FA3098B1AD00E2E307 /* s_roundToI64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B33098B1AD00E2E307 /* s_roundToI64.c */; };
-		505A80FB3098B1AD00E2E307 /* extF80_lt.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80813098B1AD00E2E307 /* extF80_lt.c */; };
-		505A80FC3098B1AD00E2E307 /* f32_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808B3098B1AD00E2E307 /* f32_to_extF80.c */; };
-		505A80FD3098B1AD00E2E307 /* s_shiftRightJam64Extra.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B63098B1AD00E2E307 /* s_shiftRightJam64Extra.c */; };
-		505A80FE3098B1AD00E2E307 /* s_subMagsExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BC3098B1AD00E2E307 /* s_subMagsExtF80.c */; };
-		505A81013098B1C600E2E307 /* Float80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81003098B1C600E2E307 /* Float80.cpp */; };
-		505A81063098E38500E2E307 /* FPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81033098E38500E2E307 /* FPU.cpp */; };
-		505A81073098E38500E2E307 /* FpuFormats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81053098E38500E2E307 /* FpuFormats.cpp */; };
 		505A81EE309A2F2A00E2E307 /* fpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81D7309A2F2A00E2E307 /* fpp.cpp */; };
 		505A81EF309A2F2A00E2E307 /* cpuemu_32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81CD309A2F2A00E2E307 /* cpuemu_32.cpp */; };
 		505A81F0309A2F2A00E2E307 /* softfloat_decimal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81BB309A2F2A00E2E307 /* softfloat_decimal.cpp */; };
@@ -112,15 +46,157 @@
 		505A820A309A2F2A00E2E307 /* cpuemu_24.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81CB309A2F2A00E2E307 /* cpuemu_24.cpp */; };
 		505A820B309A2F2A00E2E307 /* cpuemu_31.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81CC309A2F2A00E2E307 /* cpuemu_31.cpp */; };
 		505A820C309A2F2A00E2E307 /* cpuemu_40.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81D1309A2F2A00E2E307 /* cpuemu_40.cpp */; };
-		507BE4AF23B66456000B37D2 /* Testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* Testrunner.cpp */; };
 		50804EE22386A72C004D3EC2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804E8C2386A72C004D3EC2 /* main.cpp */; };
-		50804F352386A7DD004D3EC2 /* Moira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F332386A7DD004D3EC2 /* Moira.cpp */; };
 		50C0123A28BBAD9B001EFB37 /* m68k-dis.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123628BBAD9B001EFB37 /* m68k-dis.c */; };
 		50C0123B28BBAD9B001EFB37 /* m68k-opc.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123728BBAD9B001EFB37 /* m68k-opc.c */; };
 		50CECEC723A924B000E07C65 /* Sandbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50CECEC523A924B000E07C65 /* Sandbox.cpp */; };
-		A7499A3FCDD6B869B1ED1BA6 /* MoiraCore68010.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55703C9956D2BECD0F343A8F /* MoiraCore68010.cpp */; };
-		B6F33308D2D0F45B428944A2 /* MoiraCore68000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61F3AFFB3C6CFCEC22A0FD23 /* MoiraCore68000.cpp */; };
-		F33E4567A22AB4A162CCE6CC /* MoiraCore68020.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1654296120AA412377E9642D /* MoiraCore68020.cpp */; };
+		50B100000000000000000003 /* Shared.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50B100000000000000000001 /* Shared.cpp */; };
+		50B100000000000000000008 /* FloatMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000001 /* FloatMath.cpp */; };
+		50B100000000000000000009 /* MoiraDebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */; };
+		50B10000000000000000000A /* Moira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F332386A7DD004D3EC2 /* Moira.cpp */; };
+		50B10000000000000000000B /* MoiraCore68010.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55703C9956D2BECD0F343A8F /* MoiraCore68010.cpp */; };
+		50B10000000000000000000C /* MoiraCore68000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61F3AFFB3C6CFCEC22A0FD23 /* MoiraCore68000.cpp */; };
+		50B10000000000000000000D /* MoiraCore68020.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1654296120AA412377E9642D /* MoiraCore68020.cpp */; };
+		50B10000000000000000000E /* s_normSubnormalExtF80Sig.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AB3098B1AD00E2E307 /* s_normSubnormalExtF80Sig.c */; };
+		50B10000000000000000000F /* extF80_mul.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80823098B1AD00E2E307 /* extF80_mul.c */; };
+		50B100000000000000000010 /* extF80_add.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807C3098B1AD00E2E307 /* extF80_add.c */; };
+		50B100000000000000000011 /* extF80_div.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807D3098B1AD00E2E307 /* extF80_div.c */; };
+		50B100000000000000000012 /* FPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81033098E38500E2E307 /* FPU.cpp */; };
+		50B100000000000000000013 /* FpuFormats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81053098E38500E2E307 /* FpuFormats.cpp */; };
+		50B100000000000000000014 /* s_approxRecip32_1.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809A3098B1AD00E2E307 /* s_approxRecip32_1.c */; };
+		50B100000000000000000015 /* moira_env.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80913098B1AD00E2E307 /* moira_env.c */; };
+		50B100000000000000000016 /* extF80_roundToInt.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80843098B1AD00E2E307 /* extF80_roundToInt.c */; };
+		50B100000000000000000017 /* softfloat_raiseFlags.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BE3098B1AD00E2E307 /* softfloat_raiseFlags.c */; };
+		50B100000000000000000018 /* s_commonNaNToF32UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809E3098B1AD00E2E307 /* s_commonNaNToF32UI.c */; };
+		50B100000000000000000019 /* s_mul64To128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A93098B1AD00E2E307 /* s_mul64To128.c */; };
+		50B10000000000000000001A /* extF80_sub.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80863098B1AD00E2E307 /* extF80_sub.c */; };
+		50B10000000000000000001B /* s_normRoundPackToExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AA3098B1AD00E2E307 /* s_normRoundPackToExtF80.c */; };
+		50B10000000000000000001C /* s_normSubnormalF64Sig.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AD3098B1AD00E2E307 /* s_normSubnormalF64Sig.c */; };
+		50B10000000000000000001D /* s_shortShiftRightJam64Extra.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BA3098B1AD00E2E307 /* s_shortShiftRightJam64Extra.c */; };
+		50B10000000000000000001E /* s_f64UIToCommonNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A53098B1AD00E2E307 /* s_f64UIToCommonNaN.c */; };
+		50B10000000000000000001F /* s_shortShiftRightJam64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B93098B1AD00E2E307 /* s_shortShiftRightJam64.c */; };
+		50B100000000000000000020 /* s_f32UIToCommonNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A43098B1AD00E2E307 /* s_f32UIToCommonNaN.c */; };
+		50B100000000000000000021 /* s_add128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80973098B1AD00E2E307 /* s_add128.c */; };
+		50B100000000000000000022 /* extF80_rem.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80833098B1AD00E2E307 /* extF80_rem.c */; };
+		50B100000000000000000023 /* s_roundPackToF64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B13098B1AD00E2E307 /* s_roundPackToF64.c */; };
+		50B100000000000000000024 /* s_commonNaNToF64UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809F3098B1AD00E2E307 /* s_commonNaNToF64UI.c */; };
+		50B100000000000000000025 /* s_extF80UIToCommonNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A33098B1AD00E2E307 /* s_extF80UIToCommonNaN.c */; };
+		50B100000000000000000026 /* s_approxRecipSqrt_1Ks.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809B3098B1AD00E2E307 /* s_approxRecipSqrt_1Ks.c */; };
+		50B100000000000000000027 /* s_commonNaNToExtF80UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809D3098B1AD00E2E307 /* s_commonNaNToExtF80UI.c */; };
+		50B100000000000000000028 /* s_lt128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A73098B1AD00E2E307 /* s_lt128.c */; };
+		50B100000000000000000029 /* s_shiftRightJam128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B73098B1AD00E2E307 /* s_shiftRightJam128.c */; };
+		50B10000000000000000002A /* s_roundPackToF32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B03098B1AD00E2E307 /* s_roundPackToF32.c */; };
+		50B10000000000000000002B /* s_countLeadingZeros64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A23098B1AD00E2E307 /* s_countLeadingZeros64.c */; };
+		50B10000000000000000002C /* extF80_to_f64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80883098B1AD00E2E307 /* extF80_to_f64.c */; };
+		50B10000000000000000002D /* Float80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81003098B1C600E2E307 /* Float80.cpp */; };
+		50B10000000000000000002E /* extF80_sqrt.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80853098B1AD00E2E307 /* extF80_sqrt.c */; };
+		50B10000000000000000002F /* s_shiftRightJam32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B43098B1AD00E2E307 /* s_shiftRightJam32.c */; };
+		50B100000000000000000030 /* s_normSubnormalF32Sig.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AC3098B1AD00E2E307 /* s_normSubnormalF32Sig.c */; };
+		50B100000000000000000031 /* s_roundToI32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B23098B1AD00E2E307 /* s_roundToI32.c */; };
+		50B100000000000000000032 /* s_addMagsExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80983098B1AD00E2E307 /* s_addMagsExtF80.c */; };
+		50B100000000000000000033 /* f64_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808C3098B1AD00E2E307 /* f64_to_extF80.c */; };
+		50B100000000000000000034 /* softfloat_state.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BF3098B1AD00E2E307 /* softfloat_state.c */; };
+		50B100000000000000000035 /* i32_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808D3098B1AD00E2E307 /* i32_to_extF80.c */; };
+		50B100000000000000000036 /* s_mul64ByShifted32To128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A83098B1AD00E2E307 /* s_mul64ByShifted32To128.c */; };
+		50B100000000000000000037 /* s_le128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A63098B1AD00E2E307 /* s_le128.c */; };
+		50B100000000000000000038 /* s_countLeadingZeros32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A13098B1AD00E2E307 /* s_countLeadingZeros32.c */; };
+		50B100000000000000000039 /* extF80_to_i64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808A3098B1AD00E2E307 /* extF80_to_i64.c */; };
+		50B10000000000000000003A /* s_countLeadingZeros8.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A03098B1AD00E2E307 /* s_countLeadingZeros8.c */; };
+		50B10000000000000000003B /* extF80_eq.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807E3098B1AD00E2E307 /* extF80_eq.c */; };
+		50B10000000000000000003C /* extF80_to_f32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80873098B1AD00E2E307 /* extF80_to_f32.c */; };
+		50B10000000000000000003D /* s_propagateNaNExtF80UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AE3098B1AD00E2E307 /* s_propagateNaNExtF80UI.c */; };
+		50B10000000000000000003E /* s_sub128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BB3098B1AD00E2E307 /* s_sub128.c */; };
+		50B10000000000000000003F /* s_approxRecipSqrt32_1.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809C3098B1AD00E2E307 /* s_approxRecipSqrt32_1.c */; };
+		50B100000000000000000040 /* s_approxRecip_1Ks.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80993098B1AD00E2E307 /* s_approxRecip_1Ks.c */; };
+		50B100000000000000000041 /* i64_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808E3098B1AD00E2E307 /* i64_to_extF80.c */; };
+		50B100000000000000000042 /* extF80_isSignalingNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807F3098B1AD00E2E307 /* extF80_isSignalingNaN.c */; };
+		50B100000000000000000043 /* s_shortShiftLeft128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B83098B1AD00E2E307 /* s_shortShiftLeft128.c */; };
+		50B100000000000000000044 /* s_roundPackToExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AF3098B1AD00E2E307 /* s_roundPackToExtF80.c */; };
+		50B100000000000000000045 /* s_shiftRightJam64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B53098B1AD00E2E307 /* s_shiftRightJam64.c */; };
+		50B100000000000000000046 /* extF80_to_i32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80893098B1AD00E2E307 /* extF80_to_i32.c */; };
+		50B100000000000000000047 /* extF80_le.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80803098B1AD00E2E307 /* extF80_le.c */; };
+		50B100000000000000000048 /* s_roundToI64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B33098B1AD00E2E307 /* s_roundToI64.c */; };
+		50B100000000000000000049 /* extF80_lt.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80813098B1AD00E2E307 /* extF80_lt.c */; };
+		50B10000000000000000004A /* f32_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808B3098B1AD00E2E307 /* f32_to_extF80.c */; };
+		50B10000000000000000004B /* s_shiftRightJam64Extra.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B63098B1AD00E2E307 /* s_shiftRightJam64Extra.c */; };
+		50B10000000000000000004C /* s_subMagsExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BC3098B1AD00E2E307 /* s_subMagsExtF80.c */; };
+		50B100000000000000000053 /* libMoiraUAE.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50B100000000000000000004 /* libMoiraUAE.a */; };
+		50B100000000000000000058 /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; };
+		50B100000000000000000059 /* Testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* Testrunner.cpp */; };
+		50B100000000000000000060 /* libRunnerUAE.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50B100000000000000000054 /* libRunnerUAE.a */; };
+		50B100000000000000000065 /* FloatMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000001 /* FloatMath.cpp */; };
+		50B100000000000000000066 /* MoiraDebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */; };
+		50B100000000000000000067 /* Moira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F332386A7DD004D3EC2 /* Moira.cpp */; };
+		50B100000000000000000068 /* MoiraCore68010.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55703C9956D2BECD0F343A8F /* MoiraCore68010.cpp */; };
+		50B100000000000000000069 /* MoiraCore68000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61F3AFFB3C6CFCEC22A0FD23 /* MoiraCore68000.cpp */; };
+		50B10000000000000000006A /* MoiraCore68020.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1654296120AA412377E9642D /* MoiraCore68020.cpp */; };
+		50B10000000000000000006B /* s_normSubnormalExtF80Sig.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AB3098B1AD00E2E307 /* s_normSubnormalExtF80Sig.c */; };
+		50B10000000000000000006C /* extF80_mul.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80823098B1AD00E2E307 /* extF80_mul.c */; };
+		50B10000000000000000006D /* extF80_add.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807C3098B1AD00E2E307 /* extF80_add.c */; };
+		50B10000000000000000006E /* extF80_div.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807D3098B1AD00E2E307 /* extF80_div.c */; };
+		50B10000000000000000006F /* FPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81033098E38500E2E307 /* FPU.cpp */; };
+		50B100000000000000000070 /* FpuFormats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81053098E38500E2E307 /* FpuFormats.cpp */; };
+		50B100000000000000000071 /* s_approxRecip32_1.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809A3098B1AD00E2E307 /* s_approxRecip32_1.c */; };
+		50B100000000000000000072 /* moira_env.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80913098B1AD00E2E307 /* moira_env.c */; };
+		50B100000000000000000073 /* extF80_roundToInt.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80843098B1AD00E2E307 /* extF80_roundToInt.c */; };
+		50B100000000000000000074 /* softfloat_raiseFlags.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BE3098B1AD00E2E307 /* softfloat_raiseFlags.c */; };
+		50B100000000000000000075 /* s_commonNaNToF32UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809E3098B1AD00E2E307 /* s_commonNaNToF32UI.c */; };
+		50B100000000000000000076 /* s_mul64To128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A93098B1AD00E2E307 /* s_mul64To128.c */; };
+		50B100000000000000000077 /* extF80_sub.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80863098B1AD00E2E307 /* extF80_sub.c */; };
+		50B100000000000000000078 /* s_normRoundPackToExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AA3098B1AD00E2E307 /* s_normRoundPackToExtF80.c */; };
+		50B100000000000000000079 /* s_normSubnormalF64Sig.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AD3098B1AD00E2E307 /* s_normSubnormalF64Sig.c */; };
+		50B10000000000000000007A /* s_shortShiftRightJam64Extra.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BA3098B1AD00E2E307 /* s_shortShiftRightJam64Extra.c */; };
+		50B10000000000000000007B /* s_f64UIToCommonNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A53098B1AD00E2E307 /* s_f64UIToCommonNaN.c */; };
+		50B10000000000000000007C /* s_shortShiftRightJam64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B93098B1AD00E2E307 /* s_shortShiftRightJam64.c */; };
+		50B10000000000000000007D /* s_f32UIToCommonNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A43098B1AD00E2E307 /* s_f32UIToCommonNaN.c */; };
+		50B10000000000000000007E /* s_add128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80973098B1AD00E2E307 /* s_add128.c */; };
+		50B10000000000000000007F /* extF80_rem.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80833098B1AD00E2E307 /* extF80_rem.c */; };
+		50B100000000000000000080 /* s_roundPackToF64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B13098B1AD00E2E307 /* s_roundPackToF64.c */; };
+		50B100000000000000000081 /* s_commonNaNToF64UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809F3098B1AD00E2E307 /* s_commonNaNToF64UI.c */; };
+		50B100000000000000000082 /* s_extF80UIToCommonNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A33098B1AD00E2E307 /* s_extF80UIToCommonNaN.c */; };
+		50B100000000000000000083 /* s_approxRecipSqrt_1Ks.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809B3098B1AD00E2E307 /* s_approxRecipSqrt_1Ks.c */; };
+		50B100000000000000000084 /* s_commonNaNToExtF80UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809D3098B1AD00E2E307 /* s_commonNaNToExtF80UI.c */; };
+		50B100000000000000000085 /* s_lt128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A73098B1AD00E2E307 /* s_lt128.c */; };
+		50B100000000000000000086 /* s_shiftRightJam128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B73098B1AD00E2E307 /* s_shiftRightJam128.c */; };
+		50B100000000000000000087 /* s_roundPackToF32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B03098B1AD00E2E307 /* s_roundPackToF32.c */; };
+		50B100000000000000000088 /* s_countLeadingZeros64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A23098B1AD00E2E307 /* s_countLeadingZeros64.c */; };
+		50B100000000000000000089 /* extF80_to_f64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80883098B1AD00E2E307 /* extF80_to_f64.c */; };
+		50B10000000000000000008A /* Float80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81003098B1C600E2E307 /* Float80.cpp */; };
+		50B10000000000000000008B /* extF80_sqrt.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80853098B1AD00E2E307 /* extF80_sqrt.c */; };
+		50B10000000000000000008C /* s_shiftRightJam32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B43098B1AD00E2E307 /* s_shiftRightJam32.c */; };
+		50B10000000000000000008D /* s_normSubnormalF32Sig.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AC3098B1AD00E2E307 /* s_normSubnormalF32Sig.c */; };
+		50B10000000000000000008E /* s_roundToI32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B23098B1AD00E2E307 /* s_roundToI32.c */; };
+		50B10000000000000000008F /* s_addMagsExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80983098B1AD00E2E307 /* s_addMagsExtF80.c */; };
+		50B100000000000000000090 /* f64_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808C3098B1AD00E2E307 /* f64_to_extF80.c */; };
+		50B100000000000000000091 /* softfloat_state.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BF3098B1AD00E2E307 /* softfloat_state.c */; };
+		50B100000000000000000092 /* i32_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808D3098B1AD00E2E307 /* i32_to_extF80.c */; };
+		50B100000000000000000093 /* s_mul64ByShifted32To128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A83098B1AD00E2E307 /* s_mul64ByShifted32To128.c */; };
+		50B100000000000000000094 /* s_le128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A63098B1AD00E2E307 /* s_le128.c */; };
+		50B100000000000000000095 /* s_countLeadingZeros32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A13098B1AD00E2E307 /* s_countLeadingZeros32.c */; };
+		50B100000000000000000096 /* extF80_to_i64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808A3098B1AD00E2E307 /* extF80_to_i64.c */; };
+		50B100000000000000000097 /* s_countLeadingZeros8.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A03098B1AD00E2E307 /* s_countLeadingZeros8.c */; };
+		50B100000000000000000098 /* extF80_eq.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807E3098B1AD00E2E307 /* extF80_eq.c */; };
+		50B100000000000000000099 /* extF80_to_f32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80873098B1AD00E2E307 /* extF80_to_f32.c */; };
+		50B10000000000000000009A /* s_propagateNaNExtF80UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AE3098B1AD00E2E307 /* s_propagateNaNExtF80UI.c */; };
+		50B10000000000000000009B /* s_sub128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BB3098B1AD00E2E307 /* s_sub128.c */; };
+		50B10000000000000000009C /* s_approxRecipSqrt32_1.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809C3098B1AD00E2E307 /* s_approxRecipSqrt32_1.c */; };
+		50B10000000000000000009D /* s_approxRecip_1Ks.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80993098B1AD00E2E307 /* s_approxRecip_1Ks.c */; };
+		50B10000000000000000009E /* i64_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808E3098B1AD00E2E307 /* i64_to_extF80.c */; };
+		50B10000000000000000009F /* extF80_isSignalingNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807F3098B1AD00E2E307 /* extF80_isSignalingNaN.c */; };
+		50B1000000000000000000A0 /* s_shortShiftLeft128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B83098B1AD00E2E307 /* s_shortShiftLeft128.c */; };
+		50B1000000000000000000A1 /* s_roundPackToExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AF3098B1AD00E2E307 /* s_roundPackToExtF80.c */; };
+		50B1000000000000000000A2 /* s_shiftRightJam64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B53098B1AD00E2E307 /* s_shiftRightJam64.c */; };
+		50B1000000000000000000A3 /* extF80_to_i32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80893098B1AD00E2E307 /* extF80_to_i32.c */; };
+		50B1000000000000000000A4 /* extF80_le.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80803098B1AD00E2E307 /* extF80_le.c */; };
+		50B1000000000000000000A5 /* s_roundToI64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B33098B1AD00E2E307 /* s_roundToI64.c */; };
+		50B1000000000000000000A6 /* extF80_lt.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80813098B1AD00E2E307 /* extF80_lt.c */; };
+		50B1000000000000000000A7 /* f32_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808B3098B1AD00E2E307 /* f32_to_extF80.c */; };
+		50B1000000000000000000A8 /* s_shiftRightJam64Extra.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B63098B1AD00E2E307 /* s_shiftRightJam64Extra.c */; };
+		50B1000000000000000000A9 /* s_subMagsExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BC3098B1AD00E2E307 /* s_subMagsExtF80.c */; };
+		50B1000000000000000000B0 /* libMoiraMusashi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50B100000000000000000061 /* libMoiraMusashi.a */; };
+		50B1000000000000000000B5 /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; };
+		50B1000000000000000000B6 /* Testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* Testrunner.cpp */; };
+		50B1000000000000000000BD /* libRunnerMusashi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50B1000000000000000000B1 /* libRunnerMusashi.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -142,6 +218,34 @@
 			proxyType = 1;
 			remoteGlobalIDString = 50A200000000000000000004;
 			remoteInfo = UAECpu;
+		};
+		50B100000000000000000051 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 50804DFE2386A4CE004D3EC2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 50B100000000000000000007;
+			remoteInfo = MoiraUAE;
+		};
+		50B10000000000000000005E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 50804DFE2386A4CE004D3EC2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 50B100000000000000000057;
+			remoteInfo = RunnerUAE;
+		};
+		50B1000000000000000000AE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 50804DFE2386A4CE004D3EC2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 50B100000000000000000064;
+			remoteInfo = MoiraMusashi;
+		};
+		50B1000000000000000000BB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 50804DFE2386A4CE004D3EC2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 50B1000000000000000000B4;
+			remoteInfo = RunnerMusashi;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -400,6 +504,12 @@
 		55703C9956D2BECD0F343A8F /* MoiraCore68010.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraCore68010.cpp; sourceTree = "<group>"; };
 		61F3AFFB3C6CFCEC22A0FD23 /* MoiraCore68000.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraCore68000.cpp; sourceTree = "<group>"; };
 		C20E21D44E8A477AB1A178E8 /* MoiraCache_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraCache_cpp.h; sourceTree = "<group>"; };
+		50B100000000000000000001 /* Shared.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Shared.cpp; sourceTree = "<group>"; };
+		50B100000000000000000002 /* Shared.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Shared.h; sourceTree = "<group>"; };
+		50B100000000000000000004 /* libMoiraUAE.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libMoiraUAE.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		50B100000000000000000054 /* libRunnerUAE.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRunnerUAE.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		50B100000000000000000061 /* libMoiraMusashi.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libMoiraMusashi.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		50B1000000000000000000B1 /* libRunnerMusashi.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRunnerMusashi.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXTargetDependency section */
@@ -407,6 +517,26 @@
 			isa = PBXTargetDependency;
 			target = 50A200000000000000000004 /* UAECpu */;
 			targetProxy = 50A200000000000000000008 /* PBXContainerItemProxy */;
+		};
+		50B100000000000000000052 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 50B100000000000000000007 /* MoiraUAE */;
+			targetProxy = 50B100000000000000000051 /* PBXContainerItemProxy */;
+		};
+		50B10000000000000000005F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 50B100000000000000000057 /* RunnerUAE */;
+			targetProxy = 50B10000000000000000005E /* PBXContainerItemProxy */;
+		};
+		50B1000000000000000000AF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 50B100000000000000000064 /* MoiraMusashi */;
+			targetProxy = 50B1000000000000000000AE /* PBXContainerItemProxy */;
+		};
+		50B1000000000000000000BC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 50B1000000000000000000B4 /* RunnerMusashi */;
+			targetProxy = 50B1000000000000000000BB /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -416,10 +546,42 @@
 			buildActionMask = 2147483647;
 			files = (
 				50A20000000000000000000A /* libUAECpu.a in Frameworks */,
+				50B100000000000000000053 /* libMoiraUAE.a in Frameworks */,
+				50B100000000000000000060 /* libRunnerUAE.a in Frameworks */,
+				50B1000000000000000000B0 /* libMoiraMusashi.a in Frameworks */,
+				50B1000000000000000000BD /* libRunnerMusashi.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		50A200000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50B100000000000000000006 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50B100000000000000000056 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50B100000000000000000063 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50B1000000000000000000B3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -471,6 +633,8 @@
 				5054686428A6647B00028727 /* CMakeLists.txt */,
 				50953AE228895D5D0077C9E8 /* config.h */,
 				507BE4AE23B66456000B37D2 /* Testrunner.h */,
+				50B100000000000000000002 /* Shared.h */,
+				50B100000000000000000001 /* Shared.cpp */,
 				507BE4AD23B66456000B37D2 /* Testrunner.cpp */,
 				502C09E123C8E16600A179E1 /* TestCPU.h */,
 				502C09E023C8E16600A179E1 /* TestCPU.cpp */,
@@ -765,6 +929,10 @@
 			isa = PBXGroup;
 			children = (
 				50A200000000000000000001 /* libUAECpu.a */,
+				50B100000000000000000004 /* libMoiraUAE.a */,
+				50B100000000000000000054 /* libRunnerUAE.a */,
+				50B100000000000000000061 /* libMoiraMusashi.a */,
+				50B1000000000000000000B1 /* libRunnerMusashi.a */,
 				50804E062386A4CE004D3EC2 /* Moira */,
 			);
 			name = Products;
@@ -880,6 +1048,10 @@
 			);
 			dependencies = (
 				50A200000000000000000009 /* PBXTargetDependency */,
+				50B100000000000000000052 /* PBXTargetDependency */,
+				50B10000000000000000005F /* PBXTargetDependency */,
+				50B1000000000000000000AF /* PBXTargetDependency */,
+				50B1000000000000000000BC /* PBXTargetDependency */,
 			);
 			name = Moira;
 			productName = Moira;
@@ -900,6 +1072,70 @@
 			name = UAECpu;
 			productName = UAECpu;
 			productReference = 50A200000000000000000001 /* libUAECpu.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		50B100000000000000000007 /* MoiraUAE */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 50B100000000000000000050 /* Build configuration list for PBXNativeTarget "MoiraUAE" */;
+			buildPhases = (
+				50B100000000000000000005 /* Sources */,
+				50B100000000000000000006 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MoiraUAE;
+			productName = MoiraUAE;
+			productReference = 50B100000000000000000004 /* libMoiraUAE.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		50B100000000000000000057 /* RunnerUAE */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 50B10000000000000000005D /* Build configuration list for PBXNativeTarget "RunnerUAE" */;
+			buildPhases = (
+				50B100000000000000000055 /* Sources */,
+				50B100000000000000000056 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RunnerUAE;
+			productName = RunnerUAE;
+			productReference = 50B100000000000000000054 /* libRunnerUAE.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		50B100000000000000000064 /* MoiraMusashi */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 50B1000000000000000000AD /* Build configuration list for PBXNativeTarget "MoiraMusashi" */;
+			buildPhases = (
+				50B100000000000000000062 /* Sources */,
+				50B100000000000000000063 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MoiraMusashi;
+			productName = MoiraMusashi;
+			productReference = 50B100000000000000000061 /* libMoiraMusashi.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		50B1000000000000000000B4 /* RunnerMusashi */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 50B1000000000000000000BA /* Build configuration list for PBXNativeTarget "RunnerMusashi" */;
+			buildPhases = (
+				50B1000000000000000000B2 /* Sources */,
+				50B1000000000000000000B3 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RunnerMusashi;
+			productName = RunnerMusashi;
+			productReference = 50B1000000000000000000B1 /* libRunnerMusashi.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
@@ -932,6 +1168,10 @@
 			targets = (
 				50804E052386A4CE004D3EC2 /* Moira */,
 				50A200000000000000000004 /* UAECpu */,
+				50B100000000000000000007 /* MoiraUAE */,
+				50B100000000000000000057 /* RunnerUAE */,
+				50B100000000000000000064 /* MoiraMusashi */,
+				50B1000000000000000000B4 /* RunnerMusashi */,
 			);
 		};
 /* End PBXProject section */
@@ -941,87 +1181,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				50A300000000000000000004 /* FloatMath.cpp in Sources */,
 				5028B10A288D9EC000047C20 /* musashi_softfloat.c in Sources */,
 				5028B10E288D9ECD00047C20 /* m68kops.c in Sources */,
 				5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */,
 				5028B11C288D9EDC00047C20 /* m68kcpu.c in Sources */,
-				502C09DF23C8D82600A179E1 /* MoiraDebugger.cpp in Sources */,
-				502C09E223C8E16600A179E1 /* TestCPU.cpp in Sources */,
 				505580EC23AFA14D0009F77F /* musashi.cpp in Sources */,
-				507BE4AF23B66456000B37D2 /* Testrunner.cpp in Sources */,
 				50804EE22386A72C004D3EC2 /* main.cpp in Sources */,
-				50804F352386A7DD004D3EC2 /* Moira.cpp in Sources */,
 				50CECEC723A924B000E07C65 /* Sandbox.cpp in Sources */,
-				A7499A3FCDD6B869B1ED1BA6 /* MoiraCore68010.cpp in Sources */,
-				B6F33308D2D0F45B428944A2 /* MoiraCore68000.cpp in Sources */,
-				F33E4567A22AB4A162CCE6CC /* MoiraCore68020.cpp in Sources */,
 				50C0123B28BBAD9B001EFB37 /* m68k-opc.c in Sources */,
 				50C0123A28BBAD9B001EFB37 /* m68k-dis.c in Sources */,
 				5054686228A4CDDC00028727 /* Randomizer.cpp in Sources */,
-				505A80C33098B1AD00E2E307 /* s_normSubnormalExtF80Sig.c in Sources */,
-				505A80C43098B1AD00E2E307 /* extF80_mul.c in Sources */,
-				505A80C53098B1AD00E2E307 /* extF80_add.c in Sources */,
-				505A80C63098B1AD00E2E307 /* extF80_div.c in Sources */,
-				505A81063098E38500E2E307 /* FPU.cpp in Sources */,
-				505A81073098E38500E2E307 /* FpuFormats.cpp in Sources */,
-				505A80C73098B1AD00E2E307 /* s_approxRecip32_1.c in Sources */,
-				505A80C83098B1AD00E2E307 /* moira_env.c in Sources */,
-				505A80C93098B1AD00E2E307 /* extF80_roundToInt.c in Sources */,
-				505A80CA3098B1AD00E2E307 /* softfloat_raiseFlags.c in Sources */,
-				505A80CB3098B1AD00E2E307 /* s_commonNaNToF32UI.c in Sources */,
-				505A80CC3098B1AD00E2E307 /* s_mul64To128.c in Sources */,
-				505A80CD3098B1AD00E2E307 /* extF80_sub.c in Sources */,
-				505A80CE3098B1AD00E2E307 /* s_normRoundPackToExtF80.c in Sources */,
-				505A80CF3098B1AD00E2E307 /* s_normSubnormalF64Sig.c in Sources */,
-				505A80D03098B1AD00E2E307 /* s_shortShiftRightJam64Extra.c in Sources */,
-				505A80D13098B1AD00E2E307 /* s_f64UIToCommonNaN.c in Sources */,
-				505A80D23098B1AD00E2E307 /* s_shortShiftRightJam64.c in Sources */,
-				505A80D33098B1AD00E2E307 /* s_f32UIToCommonNaN.c in Sources */,
-				505A80D43098B1AD00E2E307 /* s_add128.c in Sources */,
-				505A80D53098B1AD00E2E307 /* extF80_rem.c in Sources */,
-				505A80D63098B1AD00E2E307 /* s_roundPackToF64.c in Sources */,
-				505A80D73098B1AD00E2E307 /* s_commonNaNToF64UI.c in Sources */,
-				505A80D83098B1AD00E2E307 /* s_extF80UIToCommonNaN.c in Sources */,
-				505A80D93098B1AD00E2E307 /* s_approxRecipSqrt_1Ks.c in Sources */,
-				505A80DA3098B1AD00E2E307 /* s_commonNaNToExtF80UI.c in Sources */,
-				505A80DB3098B1AD00E2E307 /* s_lt128.c in Sources */,
-				505A80DC3098B1AD00E2E307 /* s_shiftRightJam128.c in Sources */,
-				505A80DD3098B1AD00E2E307 /* s_roundPackToF32.c in Sources */,
-				505A80DE3098B1AD00E2E307 /* s_countLeadingZeros64.c in Sources */,
-				505A80DF3098B1AD00E2E307 /* extF80_to_f64.c in Sources */,
-				505A81013098B1C600E2E307 /* Float80.cpp in Sources */,
-				505A80E03098B1AD00E2E307 /* extF80_sqrt.c in Sources */,
-				505A80E13098B1AD00E2E307 /* s_shiftRightJam32.c in Sources */,
-				505A80E23098B1AD00E2E307 /* s_normSubnormalF32Sig.c in Sources */,
-				505A80E33098B1AD00E2E307 /* s_roundToI32.c in Sources */,
-				505A80E43098B1AD00E2E307 /* s_addMagsExtF80.c in Sources */,
-				505A80E53098B1AD00E2E307 /* f64_to_extF80.c in Sources */,
-				505A80E63098B1AD00E2E307 /* softfloat_state.c in Sources */,
-				505A80E73098B1AD00E2E307 /* i32_to_extF80.c in Sources */,
-				505A80E83098B1AD00E2E307 /* s_mul64ByShifted32To128.c in Sources */,
-				505A80E93098B1AD00E2E307 /* s_le128.c in Sources */,
-				505A80EA3098B1AD00E2E307 /* s_countLeadingZeros32.c in Sources */,
-				505A80EB3098B1AD00E2E307 /* extF80_to_i64.c in Sources */,
-				505A80EC3098B1AD00E2E307 /* s_countLeadingZeros8.c in Sources */,
-				505A80ED3098B1AD00E2E307 /* extF80_eq.c in Sources */,
-				505A80EE3098B1AD00E2E307 /* extF80_to_f32.c in Sources */,
-				505A80EF3098B1AD00E2E307 /* s_propagateNaNExtF80UI.c in Sources */,
-				505A80F03098B1AD00E2E307 /* s_sub128.c in Sources */,
-				505A80F13098B1AD00E2E307 /* s_approxRecipSqrt32_1.c in Sources */,
-				505A80F23098B1AD00E2E307 /* s_approxRecip_1Ks.c in Sources */,
-				505A80F33098B1AD00E2E307 /* i64_to_extF80.c in Sources */,
-				505A80F43098B1AD00E2E307 /* extF80_isSignalingNaN.c in Sources */,
-				505A80F53098B1AD00E2E307 /* s_shortShiftLeft128.c in Sources */,
-				505A80F63098B1AD00E2E307 /* s_roundPackToExtF80.c in Sources */,
-				505A80F73098B1AD00E2E307 /* s_shiftRightJam64.c in Sources */,
-				505A80F83098B1AD00E2E307 /* extF80_to_i32.c in Sources */,
-				505A80F93098B1AD00E2E307 /* extF80_le.c in Sources */,
-				505A80FA3098B1AD00E2E307 /* s_roundToI64.c in Sources */,
-				505A80FB3098B1AD00E2E307 /* extF80_lt.c in Sources */,
-				505A80FC3098B1AD00E2E307 /* f32_to_extF80.c in Sources */,
-				505A80FD3098B1AD00E2E307 /* s_shiftRightJam64Extra.c in Sources */,
-				505A80FE3098B1AD00E2E307 /* s_subMagsExtF80.c in Sources */,
+				50B100000000000000000003 /* Shared.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1058,6 +1228,176 @@
 				505A820A309A2F2A00E2E307 /* cpuemu_24.cpp in Sources */,
 				505A820B309A2F2A00E2E307 /* cpuemu_31.cpp in Sources */,
 				505A820C309A2F2A00E2E307 /* cpuemu_40.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50B100000000000000000005 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				50B100000000000000000008 /* FloatMath.cpp in Sources */,
+				50B100000000000000000009 /* MoiraDebugger.cpp in Sources */,
+				50B10000000000000000000A /* Moira.cpp in Sources */,
+				50B10000000000000000000B /* MoiraCore68010.cpp in Sources */,
+				50B10000000000000000000C /* MoiraCore68000.cpp in Sources */,
+				50B10000000000000000000D /* MoiraCore68020.cpp in Sources */,
+				50B10000000000000000000E /* s_normSubnormalExtF80Sig.c in Sources */,
+				50B10000000000000000000F /* extF80_mul.c in Sources */,
+				50B100000000000000000010 /* extF80_add.c in Sources */,
+				50B100000000000000000011 /* extF80_div.c in Sources */,
+				50B100000000000000000012 /* FPU.cpp in Sources */,
+				50B100000000000000000013 /* FpuFormats.cpp in Sources */,
+				50B100000000000000000014 /* s_approxRecip32_1.c in Sources */,
+				50B100000000000000000015 /* moira_env.c in Sources */,
+				50B100000000000000000016 /* extF80_roundToInt.c in Sources */,
+				50B100000000000000000017 /* softfloat_raiseFlags.c in Sources */,
+				50B100000000000000000018 /* s_commonNaNToF32UI.c in Sources */,
+				50B100000000000000000019 /* s_mul64To128.c in Sources */,
+				50B10000000000000000001A /* extF80_sub.c in Sources */,
+				50B10000000000000000001B /* s_normRoundPackToExtF80.c in Sources */,
+				50B10000000000000000001C /* s_normSubnormalF64Sig.c in Sources */,
+				50B10000000000000000001D /* s_shortShiftRightJam64Extra.c in Sources */,
+				50B10000000000000000001E /* s_f64UIToCommonNaN.c in Sources */,
+				50B10000000000000000001F /* s_shortShiftRightJam64.c in Sources */,
+				50B100000000000000000020 /* s_f32UIToCommonNaN.c in Sources */,
+				50B100000000000000000021 /* s_add128.c in Sources */,
+				50B100000000000000000022 /* extF80_rem.c in Sources */,
+				50B100000000000000000023 /* s_roundPackToF64.c in Sources */,
+				50B100000000000000000024 /* s_commonNaNToF64UI.c in Sources */,
+				50B100000000000000000025 /* s_extF80UIToCommonNaN.c in Sources */,
+				50B100000000000000000026 /* s_approxRecipSqrt_1Ks.c in Sources */,
+				50B100000000000000000027 /* s_commonNaNToExtF80UI.c in Sources */,
+				50B100000000000000000028 /* s_lt128.c in Sources */,
+				50B100000000000000000029 /* s_shiftRightJam128.c in Sources */,
+				50B10000000000000000002A /* s_roundPackToF32.c in Sources */,
+				50B10000000000000000002B /* s_countLeadingZeros64.c in Sources */,
+				50B10000000000000000002C /* extF80_to_f64.c in Sources */,
+				50B10000000000000000002D /* Float80.cpp in Sources */,
+				50B10000000000000000002E /* extF80_sqrt.c in Sources */,
+				50B10000000000000000002F /* s_shiftRightJam32.c in Sources */,
+				50B100000000000000000030 /* s_normSubnormalF32Sig.c in Sources */,
+				50B100000000000000000031 /* s_roundToI32.c in Sources */,
+				50B100000000000000000032 /* s_addMagsExtF80.c in Sources */,
+				50B100000000000000000033 /* f64_to_extF80.c in Sources */,
+				50B100000000000000000034 /* softfloat_state.c in Sources */,
+				50B100000000000000000035 /* i32_to_extF80.c in Sources */,
+				50B100000000000000000036 /* s_mul64ByShifted32To128.c in Sources */,
+				50B100000000000000000037 /* s_le128.c in Sources */,
+				50B100000000000000000038 /* s_countLeadingZeros32.c in Sources */,
+				50B100000000000000000039 /* extF80_to_i64.c in Sources */,
+				50B10000000000000000003A /* s_countLeadingZeros8.c in Sources */,
+				50B10000000000000000003B /* extF80_eq.c in Sources */,
+				50B10000000000000000003C /* extF80_to_f32.c in Sources */,
+				50B10000000000000000003D /* s_propagateNaNExtF80UI.c in Sources */,
+				50B10000000000000000003E /* s_sub128.c in Sources */,
+				50B10000000000000000003F /* s_approxRecipSqrt32_1.c in Sources */,
+				50B100000000000000000040 /* s_approxRecip_1Ks.c in Sources */,
+				50B100000000000000000041 /* i64_to_extF80.c in Sources */,
+				50B100000000000000000042 /* extF80_isSignalingNaN.c in Sources */,
+				50B100000000000000000043 /* s_shortShiftLeft128.c in Sources */,
+				50B100000000000000000044 /* s_roundPackToExtF80.c in Sources */,
+				50B100000000000000000045 /* s_shiftRightJam64.c in Sources */,
+				50B100000000000000000046 /* extF80_to_i32.c in Sources */,
+				50B100000000000000000047 /* extF80_le.c in Sources */,
+				50B100000000000000000048 /* s_roundToI64.c in Sources */,
+				50B100000000000000000049 /* extF80_lt.c in Sources */,
+				50B10000000000000000004A /* f32_to_extF80.c in Sources */,
+				50B10000000000000000004B /* s_shiftRightJam64Extra.c in Sources */,
+				50B10000000000000000004C /* s_subMagsExtF80.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50B100000000000000000055 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				50B100000000000000000058 /* TestCPU.cpp in Sources */,
+				50B100000000000000000059 /* Testrunner.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50B100000000000000000062 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				50B100000000000000000065 /* FloatMath.cpp in Sources */,
+				50B100000000000000000066 /* MoiraDebugger.cpp in Sources */,
+				50B100000000000000000067 /* Moira.cpp in Sources */,
+				50B100000000000000000068 /* MoiraCore68010.cpp in Sources */,
+				50B100000000000000000069 /* MoiraCore68000.cpp in Sources */,
+				50B10000000000000000006A /* MoiraCore68020.cpp in Sources */,
+				50B10000000000000000006B /* s_normSubnormalExtF80Sig.c in Sources */,
+				50B10000000000000000006C /* extF80_mul.c in Sources */,
+				50B10000000000000000006D /* extF80_add.c in Sources */,
+				50B10000000000000000006E /* extF80_div.c in Sources */,
+				50B10000000000000000006F /* FPU.cpp in Sources */,
+				50B100000000000000000070 /* FpuFormats.cpp in Sources */,
+				50B100000000000000000071 /* s_approxRecip32_1.c in Sources */,
+				50B100000000000000000072 /* moira_env.c in Sources */,
+				50B100000000000000000073 /* extF80_roundToInt.c in Sources */,
+				50B100000000000000000074 /* softfloat_raiseFlags.c in Sources */,
+				50B100000000000000000075 /* s_commonNaNToF32UI.c in Sources */,
+				50B100000000000000000076 /* s_mul64To128.c in Sources */,
+				50B100000000000000000077 /* extF80_sub.c in Sources */,
+				50B100000000000000000078 /* s_normRoundPackToExtF80.c in Sources */,
+				50B100000000000000000079 /* s_normSubnormalF64Sig.c in Sources */,
+				50B10000000000000000007A /* s_shortShiftRightJam64Extra.c in Sources */,
+				50B10000000000000000007B /* s_f64UIToCommonNaN.c in Sources */,
+				50B10000000000000000007C /* s_shortShiftRightJam64.c in Sources */,
+				50B10000000000000000007D /* s_f32UIToCommonNaN.c in Sources */,
+				50B10000000000000000007E /* s_add128.c in Sources */,
+				50B10000000000000000007F /* extF80_rem.c in Sources */,
+				50B100000000000000000080 /* s_roundPackToF64.c in Sources */,
+				50B100000000000000000081 /* s_commonNaNToF64UI.c in Sources */,
+				50B100000000000000000082 /* s_extF80UIToCommonNaN.c in Sources */,
+				50B100000000000000000083 /* s_approxRecipSqrt_1Ks.c in Sources */,
+				50B100000000000000000084 /* s_commonNaNToExtF80UI.c in Sources */,
+				50B100000000000000000085 /* s_lt128.c in Sources */,
+				50B100000000000000000086 /* s_shiftRightJam128.c in Sources */,
+				50B100000000000000000087 /* s_roundPackToF32.c in Sources */,
+				50B100000000000000000088 /* s_countLeadingZeros64.c in Sources */,
+				50B100000000000000000089 /* extF80_to_f64.c in Sources */,
+				50B10000000000000000008A /* Float80.cpp in Sources */,
+				50B10000000000000000008B /* extF80_sqrt.c in Sources */,
+				50B10000000000000000008C /* s_shiftRightJam32.c in Sources */,
+				50B10000000000000000008D /* s_normSubnormalF32Sig.c in Sources */,
+				50B10000000000000000008E /* s_roundToI32.c in Sources */,
+				50B10000000000000000008F /* s_addMagsExtF80.c in Sources */,
+				50B100000000000000000090 /* f64_to_extF80.c in Sources */,
+				50B100000000000000000091 /* softfloat_state.c in Sources */,
+				50B100000000000000000092 /* i32_to_extF80.c in Sources */,
+				50B100000000000000000093 /* s_mul64ByShifted32To128.c in Sources */,
+				50B100000000000000000094 /* s_le128.c in Sources */,
+				50B100000000000000000095 /* s_countLeadingZeros32.c in Sources */,
+				50B100000000000000000096 /* extF80_to_i64.c in Sources */,
+				50B100000000000000000097 /* s_countLeadingZeros8.c in Sources */,
+				50B100000000000000000098 /* extF80_eq.c in Sources */,
+				50B100000000000000000099 /* extF80_to_f32.c in Sources */,
+				50B10000000000000000009A /* s_propagateNaNExtF80UI.c in Sources */,
+				50B10000000000000000009B /* s_sub128.c in Sources */,
+				50B10000000000000000009C /* s_approxRecipSqrt32_1.c in Sources */,
+				50B10000000000000000009D /* s_approxRecip_1Ks.c in Sources */,
+				50B10000000000000000009E /* i64_to_extF80.c in Sources */,
+				50B10000000000000000009F /* extF80_isSignalingNaN.c in Sources */,
+				50B1000000000000000000A0 /* s_shortShiftLeft128.c in Sources */,
+				50B1000000000000000000A1 /* s_roundPackToExtF80.c in Sources */,
+				50B1000000000000000000A2 /* s_shiftRightJam64.c in Sources */,
+				50B1000000000000000000A3 /* extF80_to_i32.c in Sources */,
+				50B1000000000000000000A4 /* extF80_le.c in Sources */,
+				50B1000000000000000000A5 /* s_roundToI64.c in Sources */,
+				50B1000000000000000000A6 /* extF80_lt.c in Sources */,
+				50B1000000000000000000A7 /* f32_to_extF80.c in Sources */,
+				50B1000000000000000000A8 /* s_shiftRightJam64Extra.c in Sources */,
+				50B1000000000000000000A9 /* s_subMagsExtF80.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50B1000000000000000000B2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				50B1000000000000000000B5 /* TestCPU.cpp in Sources */,
+				50B1000000000000000000B6 /* Testrunner.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1257,10 +1597,7 @@
 					"$(SRCROOT)/Runner/ThirdParty/Binutils",
 					"$(SRCROOT)/Runner/ThirdParty/Musashi/**",
 					"$(SRCROOT)/Moira/**",
-					/opt/homebrew/include,
 				);
-				LIBRARY_SEARCH_PATHS = /opt/homebrew/lib;
-				OTHER_LDFLAGS = "-lSDL3";
 				USE_HEADERMAP = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -1283,14 +1620,9 @@
 					"$(SRCROOT)/Runner/ThirdParty/Binutils",
 					"$(SRCROOT)/Runner/ThirdParty/Musashi/**",
 					"$(SRCROOT)/Moira/**",
-					/opt/homebrew/include,
 				);
-				LIBRARY_SEARCH_PATHS = /opt/homebrew/lib;
-				OTHER_LDFLAGS = "-lSDL3";
 				USE_HEADERMAP = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					"MOIRA_COMPATIBILITY=UAE",
-					"MOIRA_PRECISE_TIMING=true",
 					"$(inherited)",
 					HAVE_UAE,
 				);
@@ -1302,7 +1634,6 @@
 		50804E0F2386A4CE004D3EC2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = arm64; /* Homebrew's SDL3 is arm64 only */
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEAD_CODE_STRIPPING = YES;
@@ -1313,10 +1644,7 @@
 					"$(SRCROOT)/Runner/ThirdParty/Binutils",
 					"$(SRCROOT)/Runner/ThirdParty/Musashi/**",
 					"$(SRCROOT)/Moira/**",
-					/opt/homebrew/include,
 				);
-				LIBRARY_SEARCH_PATHS = /opt/homebrew/lib;
-				OTHER_LDFLAGS = "-lSDL3";
 				USE_HEADERMAP = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -1341,13 +1669,13 @@
 				);
 				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Runner/ThirdParty/UAEGlue/sdl-shim",
 					"$(SRCROOT)/Runner/ThirdParty/UAE/src",
 					"$(SRCROOT)/Runner/ThirdParty/UAE/src/include",
 					"$(SRCROOT)/Runner/ThirdParty/UAE/src/osdep",
 					"$(SRCROOT)/Runner/ThirdParty/UAE/src/archivers",
 					"$(SRCROOT)/Runner/ThirdParty/UAE/src/threaddep",
 					"$(SRCROOT)/Runner/ThirdParty/UAEGlue",
-					/opt/homebrew/include,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1372,13 +1700,13 @@
 				);
 				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Runner/ThirdParty/UAEGlue/sdl-shim",
 					"$(SRCROOT)/Runner/ThirdParty/UAE/src",
 					"$(SRCROOT)/Runner/ThirdParty/UAE/src/include",
 					"$(SRCROOT)/Runner/ThirdParty/UAE/src/osdep",
 					"$(SRCROOT)/Runner/ThirdParty/UAE/src/archivers",
 					"$(SRCROOT)/Runner/ThirdParty/UAE/src/threaddep",
 					"$(SRCROOT)/Runner/ThirdParty/UAEGlue",
-					/opt/homebrew/include,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1390,7 +1718,6 @@
 		50A200000000000000000007 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = arm64; /* Homebrew's SDL3 is arm64 only */
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				EXECUTABLE_PREFIX = lib;
 				GCC_OPTIMIZATION_LEVEL = 1;
@@ -1402,14 +1729,290 @@
 				);
 				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Runner/ThirdParty/UAEGlue/sdl-shim",
 					"$(SRCROOT)/Runner/ThirdParty/UAE/src",
 					"$(SRCROOT)/Runner/ThirdParty/UAE/src/include",
 					"$(SRCROOT)/Runner/ThirdParty/UAE/src/osdep",
 					"$(SRCROOT)/Runner/ThirdParty/UAE/src/archivers",
 					"$(SRCROOT)/Runner/ThirdParty/UAE/src/threaddep",
 					"$(SRCROOT)/Runner/ThirdParty/UAEGlue",
-					/opt/homebrew/include,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+			};
+			name = Release;
+		};
+		50B10000000000000000004D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_NAMESPACE=moiraUAE",
+					"MOIRA_SOFTFLOAT_PREFIX=moiraUAE_",
+					"MOIRA_COMPATIBILITY=UAE",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Moira/**",
+				);
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+			};
+			name = Debug;
+		};
+		50B10000000000000000004E /* Debug-UAE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_NAMESPACE=moiraUAE",
+					"MOIRA_SOFTFLOAT_PREFIX=moiraUAE_",
+					"MOIRA_COMPATIBILITY=UAE",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Moira/**",
+				);
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+			};
+			name = Debug-UAE;
+		};
+		50B10000000000000000004F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_NAMESPACE=moiraUAE",
+					"MOIRA_SOFTFLOAT_PREFIX=moiraUAE_",
+					"MOIRA_COMPATIBILITY=UAE",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Moira/**",
+				);
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+			};
+			name = Release;
+		};
+		50B10000000000000000005A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_NAMESPACE=moiraUAE",
+					"MOIRA_SOFTFLOAT_PREFIX=moiraUAE_",
+					"MOIRA_COMPATIBILITY=UAE",
+					"$(inherited)",
+					"RUNNER_NAMESPACE=runnerUAE",
+					HAVE_UAE,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Runner",
+					"$(SRCROOT)/Runner/ThirdParty",
+					"$(SRCROOT)/Runner/ThirdParty/Binutils",
+					"$(SRCROOT)/Runner/ThirdParty/Musashi/**",
+					"$(SRCROOT)/Moira/**",
+				);
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+			};
+			name = Debug;
+		};
+		50B10000000000000000005B /* Debug-UAE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_NAMESPACE=moiraUAE",
+					"MOIRA_SOFTFLOAT_PREFIX=moiraUAE_",
+					"MOIRA_COMPATIBILITY=UAE",
+					"$(inherited)",
+					"RUNNER_NAMESPACE=runnerUAE",
+					HAVE_UAE,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Runner",
+					"$(SRCROOT)/Runner/ThirdParty",
+					"$(SRCROOT)/Runner/ThirdParty/Binutils",
+					"$(SRCROOT)/Runner/ThirdParty/Musashi/**",
+					"$(SRCROOT)/Moira/**",
+				);
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+			};
+			name = Debug-UAE;
+		};
+		50B10000000000000000005C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_NAMESPACE=moiraUAE",
+					"MOIRA_SOFTFLOAT_PREFIX=moiraUAE_",
+					"MOIRA_COMPATIBILITY=UAE",
+					"$(inherited)",
+					"RUNNER_NAMESPACE=runnerUAE",
+					HAVE_UAE,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Runner",
+					"$(SRCROOT)/Runner/ThirdParty",
+					"$(SRCROOT)/Runner/ThirdParty/Binutils",
+					"$(SRCROOT)/Runner/ThirdParty/Musashi/**",
+					"$(SRCROOT)/Moira/**",
+				);
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+			};
+			name = Release;
+		};
+		50B1000000000000000000AA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_NAMESPACE=moiraMusashi",
+					"MOIRA_SOFTFLOAT_PREFIX=moiraMusashi_",
+					"MOIRA_COMPATIBILITY=MUSASHI",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Moira/**",
+				);
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+			};
+			name = Debug;
+		};
+		50B1000000000000000000AB /* Debug-UAE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_NAMESPACE=moiraMusashi",
+					"MOIRA_SOFTFLOAT_PREFIX=moiraMusashi_",
+					"MOIRA_COMPATIBILITY=MUSASHI",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Moira/**",
+				);
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+			};
+			name = Debug-UAE;
+		};
+		50B1000000000000000000AC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_NAMESPACE=moiraMusashi",
+					"MOIRA_SOFTFLOAT_PREFIX=moiraMusashi_",
+					"MOIRA_COMPATIBILITY=MUSASHI",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Moira/**",
+				);
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+			};
+			name = Release;
+		};
+		50B1000000000000000000B7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_NAMESPACE=moiraMusashi",
+					"MOIRA_SOFTFLOAT_PREFIX=moiraMusashi_",
+					"MOIRA_COMPATIBILITY=MUSASHI",
+					"$(inherited)",
+					"RUNNER_NAMESPACE=runnerMusashi",
+					HAVE_UAE,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Runner",
+					"$(SRCROOT)/Runner/ThirdParty",
+					"$(SRCROOT)/Runner/ThirdParty/Binutils",
+					"$(SRCROOT)/Runner/ThirdParty/Musashi/**",
+					"$(SRCROOT)/Moira/**",
+				);
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+			};
+			name = Debug;
+		};
+		50B1000000000000000000B8 /* Debug-UAE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_NAMESPACE=moiraMusashi",
+					"MOIRA_SOFTFLOAT_PREFIX=moiraMusashi_",
+					"MOIRA_COMPATIBILITY=MUSASHI",
+					"$(inherited)",
+					"RUNNER_NAMESPACE=runnerMusashi",
+					HAVE_UAE,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Runner",
+					"$(SRCROOT)/Runner/ThirdParty",
+					"$(SRCROOT)/Runner/ThirdParty/Binutils",
+					"$(SRCROOT)/Runner/ThirdParty/Musashi/**",
+					"$(SRCROOT)/Moira/**",
+				);
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+			};
+			name = Debug-UAE;
+		};
+		50B1000000000000000000B9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_NAMESPACE=moiraMusashi",
+					"MOIRA_SOFTFLOAT_PREFIX=moiraMusashi_",
+					"MOIRA_COMPATIBILITY=MUSASHI",
+					"$(inherited)",
+					"RUNNER_NAMESPACE=runnerMusashi",
+					HAVE_UAE,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Runner",
+					"$(SRCROOT)/Runner/ThirdParty",
+					"$(SRCROOT)/Runner/ThirdParty/Binutils",
+					"$(SRCROOT)/Runner/ThirdParty/Musashi/**",
+					"$(SRCROOT)/Moira/**",
+				);
+				EXECUTABLE_PREFIX = lib;
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1446,6 +2049,46 @@
 				50A200000000000000000006 /* Debug */,
 				50A400000000000000000003 /* Debug-UAE */,
 				50A200000000000000000007 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		50B100000000000000000050 /* Build configuration list for PBXNativeTarget "MoiraUAE" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				50B10000000000000000004D /* Debug */,
+				50B10000000000000000004E /* Debug-UAE */,
+				50B10000000000000000004F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		50B10000000000000000005D /* Build configuration list for PBXNativeTarget "RunnerUAE" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				50B10000000000000000005A /* Debug */,
+				50B10000000000000000005B /* Debug-UAE */,
+				50B10000000000000000005C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		50B1000000000000000000AD /* Build configuration list for PBXNativeTarget "MoiraMusashi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				50B1000000000000000000AA /* Debug */,
+				50B1000000000000000000AB /* Debug-UAE */,
+				50B1000000000000000000AC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		50B1000000000000000000BA /* Build configuration list for PBXNativeTarget "RunnerMusashi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				50B1000000000000000000B7 /* Debug */,
+				50B1000000000000000000B8 /* Debug-UAE */,
+				50B1000000000000000000B9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
