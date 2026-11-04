@@ -11,7 +11,8 @@
  *
  * Compile with -DMOIRA_NAMESPACE=<name> to build several differently configured
  * Moira libraries that can be linked into the same program (e.g., for testing).
- * If you do, also set MOIRA_SOFTFLOAT_PREFIX (see softfloat/moira_prefix.h).
+ * SoftFloat is plain C and independent of the configuration. It is compiled once
+ * and shared by all copies.
  */
 #ifndef MOIRA_NAMESPACE
 #define MOIRA_NAMESPACE moira

@@ -15,7 +15,7 @@ namespace MOIRA_NAMESPACE {
  *
  * The functions are evaluated with a 128-bit significand and rounded once to
  * the current precision and rounding mode of the floating-point environment
- * (FloatEnv). Hence, results are accurate to far better than one unit in the
+ * of the operand (see SoftFloat). Hence, results are accurate to far better than one unit in the
  * last place (but, like on the real hardware, not necessarily correctly
  * rounded). Results that are mathematically exact (e.g., 2^n, log2(2^n),
  * sin(0)) are returned exactly.

@@ -13,6 +13,9 @@
 
 using namespace moira;
 
+// The floating-point environment of numbers that are not bound to an FPU
+static SoftFloat &sf = SoftFloat::standard();
+
 static int failures = 0;
 static int checks = 0;
 
@@ -23,55 +26,55 @@ static bool same(const Float80 &a, const Float80 &b) { return a.identical(b); }
 
 static void testIntegers()
 {
-    FloatEnv::Scope scope;
-    FloatEnv::clearFlags();
+    SoftFloat::Scope scope(sf);
+    sf.clearFlags();
 
     CHECK(FpuFormats::toInteger(Float80::fromInt(42), 8) == 42);
-    CHECK(FloatEnv::flags() == 0);
+    CHECK(sf.flags() == 0);
     CHECK(FpuFormats::toInteger(Float80::fromInt(-129), 8) == -128);
-    CHECK(FloatEnv::flags() & FloatFlags::INVALID);
-    FloatEnv::clearFlags();
+    CHECK(sf.flags() & FloatFlags::INVALID);
+    sf.clearFlags();
     CHECK(FpuFormats::toInteger(Float80::fromInt(70000), 16) == 32767);
     CHECK(FpuFormats::toInteger(Float80::fromInt(-3000000000LL), 32) == INT32_MIN);
-    FloatEnv::clearFlags();
+    sf.clearFlags();
 
     // Rounding modes
     auto x = Float80::fromDouble(2.5);
-    FloatEnv::setRoundingMode(RoundingMode::NEAREST);
+    sf.setRoundingMode(RoundingMode::NEAREST);
     CHECK(FpuFormats::toInteger(x, 32) == 2);
-    FloatEnv::setRoundingMode(RoundingMode::UP);
+    sf.setRoundingMode(RoundingMode::UP);
     CHECK(FpuFormats::toInteger(x, 32) == 3);
-    FloatEnv::setRoundingMode(RoundingMode::DOWN);
+    sf.setRoundingMode(RoundingMode::DOWN);
     CHECK(FpuFormats::toInteger(Float80::fromDouble(-2.5), 32) == -3);
-    FloatEnv::setRoundingMode(RoundingMode::ZERO);
+    sf.setRoundingMode(RoundingMode::ZERO);
     CHECK(FpuFormats::toInteger(Float80::fromDouble(-2.5), 32) == -2);
-    CHECK(FloatEnv::flags() & FloatFlags::INEXACT);
-    FloatEnv::clearFlags();
+    CHECK(sf.flags() & FloatFlags::INEXACT);
+    sf.clearFlags();
 
     // Special values
     CHECK(FpuFormats::toInteger(Float80::infinity(true), 32) == INT32_MIN);
     CHECK(FpuFormats::toInteger(Float80::quietNaN(), 32) == i32(0xC0000000));      // High bits of the mantissa
-    CHECK(FloatEnv::flags() & FloatFlags::INVALID);
+    CHECK(sf.flags() & FloatFlags::INVALID);
 }
 
 static void testFloats()
 {
-    FloatEnv::Scope scope;
-    FloatEnv::clearFlags();
+    SoftFloat::Scope scope(sf);
+    sf.clearFlags();
 
     CHECK(FpuFormats::toSingle(Float80::one()) == 0x3F800000);
     CHECK(FpuFormats::toDouble(Float80::one()) == 0x3FF0000000000000ULL);
     CHECK(same(FpuFormats::fromSingle(0x3F800000), Float80::one()));
     CHECK(same(FpuFormats::fromDouble(0xBFF0000000000000ULL), Float80::one(true)));
     CHECK(same(FpuFormats::fromSingle(0x7F800000), Float80::infinity()));
-    CHECK(FloatEnv::flags() == 0);
+    CHECK(sf.flags() == 0);
 
     // Rounding of 1/3 to single and double
     auto third = Float80::one() / Float80::fromInt(3);
     CHECK(FpuFormats::toDouble(third) == 0x3FD5555555555555ULL);
     CHECK(FpuFormats::toSingle(third) == 0x3EAAAAAB);
-    CHECK(FloatEnv::flags() & FloatFlags::INEXACT);
-    FloatEnv::clearFlags();
+    CHECK(sf.flags() & FloatFlags::INEXACT);
+    sf.clearFlags();
 
     // Extended precision in memory
     u32 w[3];
@@ -82,8 +85,8 @@ static void testFloats()
 
 static void testPackedIn()
 {
-    FloatEnv::Scope scope;
-    FloatEnv::clearFlags();
+    SoftFloat::Scope scope(sf);
+    sf.clearFlags();
 
     // 1.0E0
     u32 one[3] = { 0x00000001, 0, 0 };
@@ -92,14 +95,14 @@ static void testPackedIn()
     // -1.5E2
     u32 m150[3] = { 0x80020001, 0x50000000, 0 };
     CHECK(same(FpuFormats::fromPacked(m150), Float80::fromInt(-150)));
-    CHECK(FloatEnv::flags() == 0);
+    CHECK(sf.flags() == 0);
 
     // 1.0E-5 is not exactly representable
     u32 tiny[3] = { 0x40050001, 0, 0 };
     auto r = FpuFormats::fromPacked(tiny);
     CHECK(r.toDouble() == 1e-5);
-    CHECK(FloatEnv::flags() & FloatFlags::INEXACT);
-    FloatEnv::clearFlags();
+    CHECK(sf.flags() & FloatFlags::INEXACT);
+    sf.clearFlags();
 
     // 1.0E4000 and 1.0E-4000 (the exponent has four digits)
     u32 big[3] = { 0x00004001 | (4u << 12), 0, 0 };
@@ -119,18 +122,18 @@ static void testPackedIn()
     u32 huge[3] = { 0x00005001 | 0, 0, 0 };
     huge[0] = 0x00000001 | (9u << 12) | (9u << 24) | (9u << 20) | (9u << 16);
     CHECK(FpuFormats::fromPacked(huge).isInfinite());
-    CHECK(FloatEnv::flags() & FloatFlags::OVFL);
+    CHECK(sf.flags() & FloatFlags::OVFL);
 }
 
 static void testPackedOut()
 {
-    FloatEnv::Scope scope;
-    FloatEnv::clearFlags();
+    SoftFloat::Scope scope(sf);
+    sf.clearFlags();
     u32 w[3];
 
     FpuFormats::toPacked(Float80::one(), 17, w);
     CHECK(w[0] == 0x00000001 && w[1] == 0 && w[2] == 0);
-    CHECK(FloatEnv::flags() == 0);
+    CHECK(sf.flags() == 0);
 
     FpuFormats::toPacked(Float80::fromInt(-150), 17, w);
     CHECK(w[0] == 0x80020001 && w[1] == 0x50000000 && w[2] == 0);
@@ -142,32 +145,32 @@ static void testPackedOut()
     // 1/3 with 17 digits: 3.3333333333333333E-1 (inexact)
     FpuFormats::toPacked(Float80::one() / Float80::fromInt(3), 17, w);
     CHECK(w[0] == 0x40010003 && w[1] == 0x33333333 && w[2] == 0x33333333);
-    CHECK(FloatEnv::flags() & FloatFlags::INEXACT);
-    FloatEnv::clearFlags();
+    CHECK(sf.flags() & FloatFlags::INEXACT);
+    sf.clearFlags();
 
     // k-factor: three significant digits of 2/3 -> 6.67E-1
     FpuFormats::toPacked(Float80::fromInt(2) / Float80::fromInt(3), 3, w);
     CHECK(w[0] == 0x40010006 && w[1] == 0x67000000 && w[2] == 0);
-    FloatEnv::setRoundingMode(RoundingMode::ZERO);
+    sf.setRoundingMode(RoundingMode::ZERO);
     FpuFormats::toPacked(Float80::fromInt(2) / Float80::fromInt(3), 3, w);
     CHECK(w[1] == 0x66000000);
-    FloatEnv::setRoundingMode(RoundingMode::NEAREST);
-    FloatEnv::clearFlags();
+    sf.setRoundingMode(RoundingMode::NEAREST);
+    sf.clearFlags();
 
     // Negative k-factor: two digits right of the decimal point (123.456 -> 123.46)
     FpuFormats::toPacked(Float80::fromDouble(123.456), -2, w);
     CHECK(w[0] == 0x00020001 && w[1] == 0x23460000);
-    FloatEnv::clearFlags();
+    sf.clearFlags();
 
     // Rounding carries into a new digit: 9.99 with k = 2 -> 1.0E1
     FpuFormats::toPacked(Float80::fromDouble(9.99), 2, w);
     CHECK(w[0] == 0x00010001 && w[1] == 0);
 
     // k > 17 raises the invalid flag
-    FloatEnv::clearFlags();
+    sf.clearFlags();
     FpuFormats::toPacked(Float80::one(), 18, w);
-    CHECK(FloatEnv::flags() & FloatFlags::INVALID);
-    FloatEnv::clearFlags();
+    CHECK(sf.flags() & FloatFlags::INVALID);
+    sf.clearFlags();
 
     // Special values
     FpuFormats::toPacked(Float80::zero(true), 17, w);
@@ -182,7 +185,7 @@ static void testPackedOut()
 
 static void testPackedRoundTrip()
 {
-    FloatEnv::Scope scope;
+    SoftFloat::Scope scope(sf);
     double values[] = { 1.0, 0.1, 123456.789, 1e300, 1e-300, 4.9406564584124654e-324,
                         2.2250738585072014e-308, 1.7976931348623157e308, 3.141592653589793,
                         -2.718281828459045, 1e22, 1e23, 9007199254740993.0 };
@@ -190,7 +193,7 @@ static void testPackedRoundTrip()
     for (double d : values) {
 
         u32 w[3];
-        FloatEnv::clearFlags();
+        sf.clearFlags();
         FpuFormats::toPacked(Float80::fromDouble(d), 17, w);
         auto back = FpuFormats::fromPacked(w);
 
@@ -271,7 +274,7 @@ static void testArithmetic()
     CHECK(same(fpu.fintrz(F(-2.7)), F(-2)));
     CHECK(same(fpu.fintrz(F(2.7)), F(2)));
     CHECK(same(fpu.fint(Float80::infinity(true)), Float80::infinity(true)));
-    CHECK(FloatEnv::roundingMode() == RoundingMode::NEAREST);
+    CHECK(sf.roundingMode() == RoundingMode::NEAREST);
     fpu.setFPSR(0);
 
     // FGETEXP and FGETMAN
@@ -293,14 +296,14 @@ static void testArithmetic()
         CHECK(same(minNormal * half, Float80::fromBits(0x0000, 1ULL << 63)));
         CHECK((fpu.fpsr & FPEXP::UNFL) == 0);
         CHECK(same(minNormal * Float80::fromBits(0x3FFD, 1ULL << 63), Float80::fromBits(0x0000, 1ULL << 62)));
-        CHECK(FloatEnv::flags() & FloatFlags::UNFL);
-        FloatEnv::clearFlags();
+        CHECK(sf.flags() & FloatFlags::UNFL);
+        sf.clearFlags();
 
         // Denormal operands are scaled by the 68k convention
         CHECK(same(Float80::fromBits(0x0000, 5) + Float80::fromBits(0x0000, 6), Float80::fromBits(0x0000, 11)));
         CHECK(same(Float80::fromBits(0x0000, 1ULL << 63) + Float80::fromBits(0x0000, 1ULL << 63), minNormal));
         CHECK(same(Float80::fromBits(0x0000, 5) / Float80::fromBits(0x3FFE, 1ULL << 63), Float80::fromBits(0x0000, 10)));
-        FloatEnv::clearFlags();
+        sf.clearFlags();
     }
     CHECK(same(fpu.fgetman(F(10)), F(1.25)));
     CHECK(same(fpu.fgetman(F(-0.1)), Float80::fromBits(0xBFFF, Float80::fromDouble(0.1).mantissa())));
@@ -396,7 +399,7 @@ static void testArithmetic()
     CHECK(same(fpu.fsglmul(F(3), F(5)), F(15)));
     CHECK(same(fpu.fsgldiv(F(15), F(5)), F(3)));
     CHECK(((fpu.fsgldiv(F(1), F(3))).mantissa() & 0x000000FFFFFFFFFFULL) == 0);
-    CHECK(FloatEnv::precision() == Precision::EXTENDED);
+    CHECK(sf.precision() == Precision::EXTENDED);
     fpu.setFPSR(0);
 }
 
@@ -408,7 +411,7 @@ static void testRoundingPrecision()
     // FSADD / FDADD style operations
     {
         FPU::Scope scope(fpu, Precision::SINGLE);
-        CHECK(FloatEnv::precision() == Precision::SINGLE);
+        CHECK(fpu.sf.precision() == Precision::SINGLE);
         auto r = fpu.fdiv(Float80::one(), Float80::fromInt(3));
         CHECK(r.mantissa() == 0xAAAAAB0000000000ULL);
     }
@@ -417,7 +420,7 @@ static void testRoundingPrecision()
         auto r = fpu.fdiv(Float80::one(), Float80::fromInt(3));
         CHECK(r.mantissa() == 0xAAAAAAAAAAAAA800ULL);
     }
-    CHECK(FloatEnv::precision() == Precision::EXTENDED);
+    CHECK(sf.precision() == Precision::EXTENDED);
 
     // Rounding of a value (FMOVE FPm,FPn)
     {
@@ -440,8 +443,8 @@ static void testRoundingPrecision()
 
 static void testNaNConversions()
 {
-    FloatEnv::Scope scope;
-    FloatEnv::clearFlags();
+    SoftFloat::Scope scope(sf);
+    sf.clearFlags();
 
     // Signaling NaNs stay signaling, quiet NaNs stay quiet, and no flags are raised
     auto snan = FpuFormats::fromSingle(0x7F800001);
@@ -450,7 +453,7 @@ static void testNaNConversions()
     CHECK(FpuFormats::fromSingle(0xFFC00000).isQuietNaN() && FpuFormats::fromSingle(0xFFC00000).sign());
     CHECK(FpuFormats::fromDouble(0x7FF0000000000001ULL).isSignalingNaN());
     CHECK(FpuFormats::fromDouble(0x7FF8000000000001ULL).isQuietNaN());
-    CHECK(FloatEnv::flags() == 0);
+    CHECK(sf.flags() == 0);
 
     // The conversion back truncates the payload
     CHECK(FpuFormats::toSingle(FpuFormats::fromSingle(0x7FC12345)) == 0x7FC12345);
@@ -482,13 +485,13 @@ static void testFPU()
     {
         fpu.setFPCR(FPCR::PREC_SINGLE | FPCR::RND_ZERO);
         FPU::Scope scope(fpu);
-        CHECK(FloatEnv::roundingMode() == RoundingMode::ZERO);
-        CHECK(FloatEnv::precision() == Precision::SINGLE);
-        auto r = Float80::one() / Float80::fromInt(3);
+        CHECK(fpu.sf.roundingMode() == RoundingMode::ZERO);
+        CHECK(fpu.sf.precision() == Precision::SINGLE);
+        auto r = Float80::one().in(fpu.sf) / Float80::fromInt(3);
         CHECK(r.mantissa() == 0xAAAAAA0000000000ULL);
     }
-    CHECK(FloatEnv::roundingMode() == RoundingMode::NEAREST);
-    CHECK(FloatEnv::precision() == Precision::EXTENDED);
+    CHECK(fpu.sf.roundingMode() == RoundingMode::NEAREST);
+    CHECK(fpu.sf.precision() == Precision::EXTENDED);
     CHECK(fpu.fpsr & FPEXP::INEX2);
     CHECK(fpu.fpsr & (1 << 3));
     CHECK(!(fpu.fpsr & FPEXP::DZ));
@@ -496,7 +499,7 @@ static void testFPU()
     fpu.setFPSR(0);
     {
         FPU::Scope scope(fpu);
-        (void)(Float80::one() / Float80::zero());
+        (void)(Float80::one().in(fpu.sf) / Float80::zero());
     }
     CHECK(fpu.fpsr & FPEXP::DZ);
     CHECK(fpu.fpsr & (1 << 4));
@@ -583,9 +586,9 @@ static void testTranscendental()
     CHECK(near(sb, -0.87218360541826730978L));
 
     // Exceptions
-    FloatEnv::clearFlags();
+    fpu.sf.clearFlags();
     Float80 r = fpu.fsin(Float80::infinity());
-    CHECK(r.isNaN() && (FloatEnv::flags() & FloatFlags::INVALID));
+    CHECK(r.isNaN() && (fpu.sf.flags() & FloatFlags::INVALID));
     CHECK(fpu.fasin(Float80::fromInt(2)).isNaN());
     CHECK(fpu.flogn(Float80::fromInt(-1)).isNaN());
     CHECK(same(fpu.flogn(Float80::zero()), Float80::infinity(true)));

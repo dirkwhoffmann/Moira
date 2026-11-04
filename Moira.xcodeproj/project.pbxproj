@@ -7,6 +7,124 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		50C100000000000000000001 /* extF80_add.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A807C3098B1AD00E2E307 /* extF80_add.cpp */; };
+		50C100000000000000000002 /* extF80_add.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A807C3098B1AD00E2E307 /* extF80_add.cpp */; };
+		50C100000000000000000003 /* extF80_div.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A807D3098B1AD00E2E307 /* extF80_div.cpp */; };
+		50C100000000000000000004 /* extF80_div.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A807D3098B1AD00E2E307 /* extF80_div.cpp */; };
+		50C100000000000000000005 /* extF80_eq.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A807E3098B1AD00E2E307 /* extF80_eq.cpp */; };
+		50C100000000000000000006 /* extF80_eq.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A807E3098B1AD00E2E307 /* extF80_eq.cpp */; };
+		50C100000000000000000007 /* extF80_isSignalingNaN.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A807F3098B1AD00E2E307 /* extF80_isSignalingNaN.cpp */; };
+		50C100000000000000000008 /* extF80_isSignalingNaN.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A807F3098B1AD00E2E307 /* extF80_isSignalingNaN.cpp */; };
+		50C100000000000000000009 /* extF80_le.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80803098B1AD00E2E307 /* extF80_le.cpp */; };
+		50C10000000000000000000A /* extF80_le.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80803098B1AD00E2E307 /* extF80_le.cpp */; };
+		50C10000000000000000000B /* extF80_lt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80813098B1AD00E2E307 /* extF80_lt.cpp */; };
+		50C10000000000000000000C /* extF80_lt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80813098B1AD00E2E307 /* extF80_lt.cpp */; };
+		50C10000000000000000000D /* extF80_mul.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80823098B1AD00E2E307 /* extF80_mul.cpp */; };
+		50C10000000000000000000E /* extF80_mul.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80823098B1AD00E2E307 /* extF80_mul.cpp */; };
+		50C10000000000000000000F /* extF80_rem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80833098B1AD00E2E307 /* extF80_rem.cpp */; };
+		50C100000000000000000010 /* extF80_rem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80833098B1AD00E2E307 /* extF80_rem.cpp */; };
+		50C100000000000000000011 /* extF80_roundToInt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80843098B1AD00E2E307 /* extF80_roundToInt.cpp */; };
+		50C100000000000000000012 /* extF80_roundToInt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80843098B1AD00E2E307 /* extF80_roundToInt.cpp */; };
+		50C100000000000000000013 /* extF80_sqrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80853098B1AD00E2E307 /* extF80_sqrt.cpp */; };
+		50C100000000000000000014 /* extF80_sqrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80853098B1AD00E2E307 /* extF80_sqrt.cpp */; };
+		50C100000000000000000015 /* extF80_sub.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80863098B1AD00E2E307 /* extF80_sub.cpp */; };
+		50C100000000000000000016 /* extF80_sub.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80863098B1AD00E2E307 /* extF80_sub.cpp */; };
+		50C100000000000000000017 /* extF80_to_f32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80873098B1AD00E2E307 /* extF80_to_f32.cpp */; };
+		50C100000000000000000018 /* extF80_to_f32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80873098B1AD00E2E307 /* extF80_to_f32.cpp */; };
+		50C100000000000000000019 /* extF80_to_f64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80883098B1AD00E2E307 /* extF80_to_f64.cpp */; };
+		50C10000000000000000001A /* extF80_to_f64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80883098B1AD00E2E307 /* extF80_to_f64.cpp */; };
+		50C10000000000000000001B /* extF80_to_i32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80893098B1AD00E2E307 /* extF80_to_i32.cpp */; };
+		50C10000000000000000001C /* extF80_to_i32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80893098B1AD00E2E307 /* extF80_to_i32.cpp */; };
+		50C10000000000000000001D /* extF80_to_i64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A808A3098B1AD00E2E307 /* extF80_to_i64.cpp */; };
+		50C10000000000000000001E /* extF80_to_i64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A808A3098B1AD00E2E307 /* extF80_to_i64.cpp */; };
+		50C10000000000000000001F /* f32_to_extF80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A808B3098B1AD00E2E307 /* f32_to_extF80.cpp */; };
+		50C100000000000000000020 /* f32_to_extF80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A808B3098B1AD00E2E307 /* f32_to_extF80.cpp */; };
+		50C100000000000000000021 /* f64_to_extF80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A808C3098B1AD00E2E307 /* f64_to_extF80.cpp */; };
+		50C100000000000000000022 /* f64_to_extF80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A808C3098B1AD00E2E307 /* f64_to_extF80.cpp */; };
+		50C100000000000000000023 /* i32_to_extF80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A808D3098B1AD00E2E307 /* i32_to_extF80.cpp */; };
+		50C100000000000000000024 /* i32_to_extF80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A808D3098B1AD00E2E307 /* i32_to_extF80.cpp */; };
+		50C100000000000000000025 /* i64_to_extF80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A808E3098B1AD00E2E307 /* i64_to_extF80.cpp */; };
+		50C100000000000000000026 /* i64_to_extF80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A808E3098B1AD00E2E307 /* i64_to_extF80.cpp */; };
+		50C100000000000000000027 /* s_add128.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80973098B1AD00E2E307 /* s_add128.cpp */; };
+		50C100000000000000000028 /* s_add128.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80973098B1AD00E2E307 /* s_add128.cpp */; };
+		50C100000000000000000029 /* s_addMagsExtF80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80983098B1AD00E2E307 /* s_addMagsExtF80.cpp */; };
+		50C10000000000000000002A /* s_addMagsExtF80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80983098B1AD00E2E307 /* s_addMagsExtF80.cpp */; };
+		50C10000000000000000002B /* s_approxRecip_1Ks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80993098B1AD00E2E307 /* s_approxRecip_1Ks.cpp */; };
+		50C10000000000000000002C /* s_approxRecip_1Ks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80993098B1AD00E2E307 /* s_approxRecip_1Ks.cpp */; };
+		50C10000000000000000002D /* s_approxRecip32_1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A809A3098B1AD00E2E307 /* s_approxRecip32_1.cpp */; };
+		50C10000000000000000002E /* s_approxRecip32_1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A809A3098B1AD00E2E307 /* s_approxRecip32_1.cpp */; };
+		50C10000000000000000002F /* s_approxRecipSqrt_1Ks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A809B3098B1AD00E2E307 /* s_approxRecipSqrt_1Ks.cpp */; };
+		50C100000000000000000030 /* s_approxRecipSqrt_1Ks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A809B3098B1AD00E2E307 /* s_approxRecipSqrt_1Ks.cpp */; };
+		50C100000000000000000031 /* s_approxRecipSqrt32_1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A809C3098B1AD00E2E307 /* s_approxRecipSqrt32_1.cpp */; };
+		50C100000000000000000032 /* s_approxRecipSqrt32_1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A809C3098B1AD00E2E307 /* s_approxRecipSqrt32_1.cpp */; };
+		50C100000000000000000033 /* s_commonNaNToExtF80UI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A809D3098B1AD00E2E307 /* s_commonNaNToExtF80UI.cpp */; };
+		50C100000000000000000034 /* s_commonNaNToExtF80UI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A809D3098B1AD00E2E307 /* s_commonNaNToExtF80UI.cpp */; };
+		50C100000000000000000035 /* s_commonNaNToF32UI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A809E3098B1AD00E2E307 /* s_commonNaNToF32UI.cpp */; };
+		50C100000000000000000036 /* s_commonNaNToF32UI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A809E3098B1AD00E2E307 /* s_commonNaNToF32UI.cpp */; };
+		50C100000000000000000037 /* s_commonNaNToF64UI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A809F3098B1AD00E2E307 /* s_commonNaNToF64UI.cpp */; };
+		50C100000000000000000038 /* s_commonNaNToF64UI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A809F3098B1AD00E2E307 /* s_commonNaNToF64UI.cpp */; };
+		50C100000000000000000039 /* s_countLeadingZeros8.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A03098B1AD00E2E307 /* s_countLeadingZeros8.cpp */; };
+		50C10000000000000000003A /* s_countLeadingZeros8.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A03098B1AD00E2E307 /* s_countLeadingZeros8.cpp */; };
+		50C10000000000000000003B /* s_countLeadingZeros32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A13098B1AD00E2E307 /* s_countLeadingZeros32.cpp */; };
+		50C10000000000000000003C /* s_countLeadingZeros32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A13098B1AD00E2E307 /* s_countLeadingZeros32.cpp */; };
+		50C10000000000000000003D /* s_countLeadingZeros64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A23098B1AD00E2E307 /* s_countLeadingZeros64.cpp */; };
+		50C10000000000000000003E /* s_countLeadingZeros64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A23098B1AD00E2E307 /* s_countLeadingZeros64.cpp */; };
+		50C10000000000000000003F /* s_extF80UIToCommonNaN.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A33098B1AD00E2E307 /* s_extF80UIToCommonNaN.cpp */; };
+		50C100000000000000000040 /* s_extF80UIToCommonNaN.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A33098B1AD00E2E307 /* s_extF80UIToCommonNaN.cpp */; };
+		50C100000000000000000041 /* s_f32UIToCommonNaN.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A43098B1AD00E2E307 /* s_f32UIToCommonNaN.cpp */; };
+		50C100000000000000000042 /* s_f32UIToCommonNaN.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A43098B1AD00E2E307 /* s_f32UIToCommonNaN.cpp */; };
+		50C100000000000000000043 /* s_f64UIToCommonNaN.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A53098B1AD00E2E307 /* s_f64UIToCommonNaN.cpp */; };
+		50C100000000000000000044 /* s_f64UIToCommonNaN.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A53098B1AD00E2E307 /* s_f64UIToCommonNaN.cpp */; };
+		50C100000000000000000045 /* s_le128.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A63098B1AD00E2E307 /* s_le128.cpp */; };
+		50C100000000000000000046 /* s_le128.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A63098B1AD00E2E307 /* s_le128.cpp */; };
+		50C100000000000000000047 /* s_lt128.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A73098B1AD00E2E307 /* s_lt128.cpp */; };
+		50C100000000000000000048 /* s_lt128.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A73098B1AD00E2E307 /* s_lt128.cpp */; };
+		50C100000000000000000049 /* s_mul64ByShifted32To128.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A83098B1AD00E2E307 /* s_mul64ByShifted32To128.cpp */; };
+		50C10000000000000000004A /* s_mul64ByShifted32To128.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A83098B1AD00E2E307 /* s_mul64ByShifted32To128.cpp */; };
+		50C10000000000000000004B /* s_mul64To128.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A93098B1AD00E2E307 /* s_mul64To128.cpp */; };
+		50C10000000000000000004C /* s_mul64To128.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A93098B1AD00E2E307 /* s_mul64To128.cpp */; };
+		50C10000000000000000004D /* s_normRoundPackToExtF80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AA3098B1AD00E2E307 /* s_normRoundPackToExtF80.cpp */; };
+		50C10000000000000000004E /* s_normRoundPackToExtF80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AA3098B1AD00E2E307 /* s_normRoundPackToExtF80.cpp */; };
+		50C10000000000000000004F /* s_normSubnormalExtF80Sig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AB3098B1AD00E2E307 /* s_normSubnormalExtF80Sig.cpp */; };
+		50C100000000000000000050 /* s_normSubnormalExtF80Sig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AB3098B1AD00E2E307 /* s_normSubnormalExtF80Sig.cpp */; };
+		50C100000000000000000051 /* s_normSubnormalF32Sig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AC3098B1AD00E2E307 /* s_normSubnormalF32Sig.cpp */; };
+		50C100000000000000000052 /* s_normSubnormalF32Sig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AC3098B1AD00E2E307 /* s_normSubnormalF32Sig.cpp */; };
+		50C100000000000000000053 /* s_normSubnormalF64Sig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AD3098B1AD00E2E307 /* s_normSubnormalF64Sig.cpp */; };
+		50C100000000000000000054 /* s_normSubnormalF64Sig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AD3098B1AD00E2E307 /* s_normSubnormalF64Sig.cpp */; };
+		50C100000000000000000055 /* s_propagateNaNExtF80UI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AE3098B1AD00E2E307 /* s_propagateNaNExtF80UI.cpp */; };
+		50C100000000000000000056 /* s_propagateNaNExtF80UI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AE3098B1AD00E2E307 /* s_propagateNaNExtF80UI.cpp */; };
+		50C100000000000000000057 /* s_roundPackToExtF80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AF3098B1AD00E2E307 /* s_roundPackToExtF80.cpp */; };
+		50C100000000000000000058 /* s_roundPackToExtF80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AF3098B1AD00E2E307 /* s_roundPackToExtF80.cpp */; };
+		50C100000000000000000059 /* s_roundPackToF32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B03098B1AD00E2E307 /* s_roundPackToF32.cpp */; };
+		50C10000000000000000005A /* s_roundPackToF32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B03098B1AD00E2E307 /* s_roundPackToF32.cpp */; };
+		50C10000000000000000005B /* s_roundPackToF64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B13098B1AD00E2E307 /* s_roundPackToF64.cpp */; };
+		50C10000000000000000005C /* s_roundPackToF64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B13098B1AD00E2E307 /* s_roundPackToF64.cpp */; };
+		50C10000000000000000005D /* s_roundToI32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B23098B1AD00E2E307 /* s_roundToI32.cpp */; };
+		50C10000000000000000005E /* s_roundToI32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B23098B1AD00E2E307 /* s_roundToI32.cpp */; };
+		50C10000000000000000005F /* s_roundToI64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B33098B1AD00E2E307 /* s_roundToI64.cpp */; };
+		50C100000000000000000060 /* s_roundToI64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B33098B1AD00E2E307 /* s_roundToI64.cpp */; };
+		50C100000000000000000061 /* s_shiftRightJam32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B43098B1AD00E2E307 /* s_shiftRightJam32.cpp */; };
+		50C100000000000000000062 /* s_shiftRightJam32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B43098B1AD00E2E307 /* s_shiftRightJam32.cpp */; };
+		50C100000000000000000063 /* s_shiftRightJam64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B53098B1AD00E2E307 /* s_shiftRightJam64.cpp */; };
+		50C100000000000000000064 /* s_shiftRightJam64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B53098B1AD00E2E307 /* s_shiftRightJam64.cpp */; };
+		50C100000000000000000065 /* s_shiftRightJam64Extra.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B63098B1AD00E2E307 /* s_shiftRightJam64Extra.cpp */; };
+		50C100000000000000000066 /* s_shiftRightJam64Extra.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B63098B1AD00E2E307 /* s_shiftRightJam64Extra.cpp */; };
+		50C100000000000000000067 /* s_shiftRightJam128.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B73098B1AD00E2E307 /* s_shiftRightJam128.cpp */; };
+		50C100000000000000000068 /* s_shiftRightJam128.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B73098B1AD00E2E307 /* s_shiftRightJam128.cpp */; };
+		50C100000000000000000069 /* s_shortShiftLeft128.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B83098B1AD00E2E307 /* s_shortShiftLeft128.cpp */; };
+		50C10000000000000000006A /* s_shortShiftLeft128.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B83098B1AD00E2E307 /* s_shortShiftLeft128.cpp */; };
+		50C10000000000000000006B /* s_shortShiftRightJam64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B93098B1AD00E2E307 /* s_shortShiftRightJam64.cpp */; };
+		50C10000000000000000006C /* s_shortShiftRightJam64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B93098B1AD00E2E307 /* s_shortShiftRightJam64.cpp */; };
+		50C10000000000000000006D /* s_shortShiftRightJam64Extra.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BA3098B1AD00E2E307 /* s_shortShiftRightJam64Extra.cpp */; };
+		50C10000000000000000006E /* s_shortShiftRightJam64Extra.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BA3098B1AD00E2E307 /* s_shortShiftRightJam64Extra.cpp */; };
+		50C10000000000000000006F /* s_sub128.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BB3098B1AD00E2E307 /* s_sub128.cpp */; };
+		50C100000000000000000070 /* s_sub128.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BB3098B1AD00E2E307 /* s_sub128.cpp */; };
+		50C100000000000000000071 /* s_subMagsExtF80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BC3098B1AD00E2E307 /* s_subMagsExtF80.cpp */; };
+		50C100000000000000000072 /* s_subMagsExtF80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BC3098B1AD00E2E307 /* s_subMagsExtF80.cpp */; };
+		50C100000000000000000073 /* softfloat_raiseFlags.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BE3098B1AD00E2E307 /* softfloat_raiseFlags.cpp */; };
+		50C100000000000000000074 /* softfloat_raiseFlags.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BE3098B1AD00E2E307 /* softfloat_raiseFlags.cpp */; };
+		50C100000000000000000075 /* SoftFloat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50C2000000000000000000C1 /* SoftFloat.cpp */; };
+		50C100000000000000000076 /* SoftFloat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50C2000000000000000000C1 /* SoftFloat.cpp */; };
 		50A20000000000000000000A /* libUAECpu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50A200000000000000000001 /* libUAECpu.a */; };
 		5028B10A288D9EC000047C20 /* musashi_softfloat.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B103288D9EC000047C20 /* musashi_softfloat.c */; };
 		5028B10E288D9ECD00047C20 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B10D288D9ECD00047C20 /* m68kops.c */; };
@@ -57,69 +175,9 @@
 		50B10000000000000000000B /* MoiraCore68010.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55703C9956D2BECD0F343A8F /* MoiraCore68010.cpp */; };
 		50B10000000000000000000C /* MoiraCore68000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61F3AFFB3C6CFCEC22A0FD23 /* MoiraCore68000.cpp */; };
 		50B10000000000000000000D /* MoiraCore68020.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1654296120AA412377E9642D /* MoiraCore68020.cpp */; };
-		50B10000000000000000000E /* s_normSubnormalExtF80Sig.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AB3098B1AD00E2E307 /* s_normSubnormalExtF80Sig.c */; };
-		50B10000000000000000000F /* extF80_mul.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80823098B1AD00E2E307 /* extF80_mul.c */; };
-		50B100000000000000000010 /* extF80_add.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807C3098B1AD00E2E307 /* extF80_add.c */; };
-		50B100000000000000000011 /* extF80_div.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807D3098B1AD00E2E307 /* extF80_div.c */; };
 		50B100000000000000000012 /* FPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81033098E38500E2E307 /* FPU.cpp */; };
 		50B100000000000000000013 /* FpuFormats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81053098E38500E2E307 /* FpuFormats.cpp */; };
-		50B100000000000000000014 /* s_approxRecip32_1.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809A3098B1AD00E2E307 /* s_approxRecip32_1.c */; };
-		50B100000000000000000015 /* moira_env.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80913098B1AD00E2E307 /* moira_env.c */; };
-		50B100000000000000000016 /* extF80_roundToInt.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80843098B1AD00E2E307 /* extF80_roundToInt.c */; };
-		50B100000000000000000017 /* softfloat_raiseFlags.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BE3098B1AD00E2E307 /* softfloat_raiseFlags.c */; };
-		50B100000000000000000018 /* s_commonNaNToF32UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809E3098B1AD00E2E307 /* s_commonNaNToF32UI.c */; };
-		50B100000000000000000019 /* s_mul64To128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A93098B1AD00E2E307 /* s_mul64To128.c */; };
-		50B10000000000000000001A /* extF80_sub.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80863098B1AD00E2E307 /* extF80_sub.c */; };
-		50B10000000000000000001B /* s_normRoundPackToExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AA3098B1AD00E2E307 /* s_normRoundPackToExtF80.c */; };
-		50B10000000000000000001C /* s_normSubnormalF64Sig.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AD3098B1AD00E2E307 /* s_normSubnormalF64Sig.c */; };
-		50B10000000000000000001D /* s_shortShiftRightJam64Extra.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BA3098B1AD00E2E307 /* s_shortShiftRightJam64Extra.c */; };
-		50B10000000000000000001E /* s_f64UIToCommonNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A53098B1AD00E2E307 /* s_f64UIToCommonNaN.c */; };
-		50B10000000000000000001F /* s_shortShiftRightJam64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B93098B1AD00E2E307 /* s_shortShiftRightJam64.c */; };
-		50B100000000000000000020 /* s_f32UIToCommonNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A43098B1AD00E2E307 /* s_f32UIToCommonNaN.c */; };
-		50B100000000000000000021 /* s_add128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80973098B1AD00E2E307 /* s_add128.c */; };
-		50B100000000000000000022 /* extF80_rem.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80833098B1AD00E2E307 /* extF80_rem.c */; };
-		50B100000000000000000023 /* s_roundPackToF64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B13098B1AD00E2E307 /* s_roundPackToF64.c */; };
-		50B100000000000000000024 /* s_commonNaNToF64UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809F3098B1AD00E2E307 /* s_commonNaNToF64UI.c */; };
-		50B100000000000000000025 /* s_extF80UIToCommonNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A33098B1AD00E2E307 /* s_extF80UIToCommonNaN.c */; };
-		50B100000000000000000026 /* s_approxRecipSqrt_1Ks.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809B3098B1AD00E2E307 /* s_approxRecipSqrt_1Ks.c */; };
-		50B100000000000000000027 /* s_commonNaNToExtF80UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809D3098B1AD00E2E307 /* s_commonNaNToExtF80UI.c */; };
-		50B100000000000000000028 /* s_lt128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A73098B1AD00E2E307 /* s_lt128.c */; };
-		50B100000000000000000029 /* s_shiftRightJam128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B73098B1AD00E2E307 /* s_shiftRightJam128.c */; };
-		50B10000000000000000002A /* s_roundPackToF32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B03098B1AD00E2E307 /* s_roundPackToF32.c */; };
-		50B10000000000000000002B /* s_countLeadingZeros64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A23098B1AD00E2E307 /* s_countLeadingZeros64.c */; };
-		50B10000000000000000002C /* extF80_to_f64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80883098B1AD00E2E307 /* extF80_to_f64.c */; };
 		50B10000000000000000002D /* Float80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81003098B1C600E2E307 /* Float80.cpp */; };
-		50B10000000000000000002E /* extF80_sqrt.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80853098B1AD00E2E307 /* extF80_sqrt.c */; };
-		50B10000000000000000002F /* s_shiftRightJam32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B43098B1AD00E2E307 /* s_shiftRightJam32.c */; };
-		50B100000000000000000030 /* s_normSubnormalF32Sig.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AC3098B1AD00E2E307 /* s_normSubnormalF32Sig.c */; };
-		50B100000000000000000031 /* s_roundToI32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B23098B1AD00E2E307 /* s_roundToI32.c */; };
-		50B100000000000000000032 /* s_addMagsExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80983098B1AD00E2E307 /* s_addMagsExtF80.c */; };
-		50B100000000000000000033 /* f64_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808C3098B1AD00E2E307 /* f64_to_extF80.c */; };
-		50B100000000000000000034 /* softfloat_state.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BF3098B1AD00E2E307 /* softfloat_state.c */; };
-		50B100000000000000000035 /* i32_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808D3098B1AD00E2E307 /* i32_to_extF80.c */; };
-		50B100000000000000000036 /* s_mul64ByShifted32To128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A83098B1AD00E2E307 /* s_mul64ByShifted32To128.c */; };
-		50B100000000000000000037 /* s_le128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A63098B1AD00E2E307 /* s_le128.c */; };
-		50B100000000000000000038 /* s_countLeadingZeros32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A13098B1AD00E2E307 /* s_countLeadingZeros32.c */; };
-		50B100000000000000000039 /* extF80_to_i64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808A3098B1AD00E2E307 /* extF80_to_i64.c */; };
-		50B10000000000000000003A /* s_countLeadingZeros8.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A03098B1AD00E2E307 /* s_countLeadingZeros8.c */; };
-		50B10000000000000000003B /* extF80_eq.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807E3098B1AD00E2E307 /* extF80_eq.c */; };
-		50B10000000000000000003C /* extF80_to_f32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80873098B1AD00E2E307 /* extF80_to_f32.c */; };
-		50B10000000000000000003D /* s_propagateNaNExtF80UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AE3098B1AD00E2E307 /* s_propagateNaNExtF80UI.c */; };
-		50B10000000000000000003E /* s_sub128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BB3098B1AD00E2E307 /* s_sub128.c */; };
-		50B10000000000000000003F /* s_approxRecipSqrt32_1.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809C3098B1AD00E2E307 /* s_approxRecipSqrt32_1.c */; };
-		50B100000000000000000040 /* s_approxRecip_1Ks.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80993098B1AD00E2E307 /* s_approxRecip_1Ks.c */; };
-		50B100000000000000000041 /* i64_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808E3098B1AD00E2E307 /* i64_to_extF80.c */; };
-		50B100000000000000000042 /* extF80_isSignalingNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807F3098B1AD00E2E307 /* extF80_isSignalingNaN.c */; };
-		50B100000000000000000043 /* s_shortShiftLeft128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B83098B1AD00E2E307 /* s_shortShiftLeft128.c */; };
-		50B100000000000000000044 /* s_roundPackToExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AF3098B1AD00E2E307 /* s_roundPackToExtF80.c */; };
-		50B100000000000000000045 /* s_shiftRightJam64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B53098B1AD00E2E307 /* s_shiftRightJam64.c */; };
-		50B100000000000000000046 /* extF80_to_i32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80893098B1AD00E2E307 /* extF80_to_i32.c */; };
-		50B100000000000000000047 /* extF80_le.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80803098B1AD00E2E307 /* extF80_le.c */; };
-		50B100000000000000000048 /* s_roundToI64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B33098B1AD00E2E307 /* s_roundToI64.c */; };
-		50B100000000000000000049 /* extF80_lt.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80813098B1AD00E2E307 /* extF80_lt.c */; };
-		50B10000000000000000004A /* f32_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808B3098B1AD00E2E307 /* f32_to_extF80.c */; };
-		50B10000000000000000004B /* s_shiftRightJam64Extra.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B63098B1AD00E2E307 /* s_shiftRightJam64Extra.c */; };
-		50B10000000000000000004C /* s_subMagsExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BC3098B1AD00E2E307 /* s_subMagsExtF80.c */; };
 		50B100000000000000000053 /* libMoiraUAE.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50B100000000000000000004 /* libMoiraUAE.a */; };
 		50B100000000000000000058 /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; };
 		50B100000000000000000059 /* Testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* Testrunner.cpp */; };
@@ -130,69 +188,9 @@
 		50B100000000000000000068 /* MoiraCore68010.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55703C9956D2BECD0F343A8F /* MoiraCore68010.cpp */; };
 		50B100000000000000000069 /* MoiraCore68000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61F3AFFB3C6CFCEC22A0FD23 /* MoiraCore68000.cpp */; };
 		50B10000000000000000006A /* MoiraCore68020.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1654296120AA412377E9642D /* MoiraCore68020.cpp */; };
-		50B10000000000000000006B /* s_normSubnormalExtF80Sig.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AB3098B1AD00E2E307 /* s_normSubnormalExtF80Sig.c */; };
-		50B10000000000000000006C /* extF80_mul.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80823098B1AD00E2E307 /* extF80_mul.c */; };
-		50B10000000000000000006D /* extF80_add.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807C3098B1AD00E2E307 /* extF80_add.c */; };
-		50B10000000000000000006E /* extF80_div.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807D3098B1AD00E2E307 /* extF80_div.c */; };
 		50B10000000000000000006F /* FPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81033098E38500E2E307 /* FPU.cpp */; };
 		50B100000000000000000070 /* FpuFormats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81053098E38500E2E307 /* FpuFormats.cpp */; };
-		50B100000000000000000071 /* s_approxRecip32_1.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809A3098B1AD00E2E307 /* s_approxRecip32_1.c */; };
-		50B100000000000000000072 /* moira_env.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80913098B1AD00E2E307 /* moira_env.c */; };
-		50B100000000000000000073 /* extF80_roundToInt.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80843098B1AD00E2E307 /* extF80_roundToInt.c */; };
-		50B100000000000000000074 /* softfloat_raiseFlags.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BE3098B1AD00E2E307 /* softfloat_raiseFlags.c */; };
-		50B100000000000000000075 /* s_commonNaNToF32UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809E3098B1AD00E2E307 /* s_commonNaNToF32UI.c */; };
-		50B100000000000000000076 /* s_mul64To128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A93098B1AD00E2E307 /* s_mul64To128.c */; };
-		50B100000000000000000077 /* extF80_sub.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80863098B1AD00E2E307 /* extF80_sub.c */; };
-		50B100000000000000000078 /* s_normRoundPackToExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AA3098B1AD00E2E307 /* s_normRoundPackToExtF80.c */; };
-		50B100000000000000000079 /* s_normSubnormalF64Sig.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AD3098B1AD00E2E307 /* s_normSubnormalF64Sig.c */; };
-		50B10000000000000000007A /* s_shortShiftRightJam64Extra.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BA3098B1AD00E2E307 /* s_shortShiftRightJam64Extra.c */; };
-		50B10000000000000000007B /* s_f64UIToCommonNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A53098B1AD00E2E307 /* s_f64UIToCommonNaN.c */; };
-		50B10000000000000000007C /* s_shortShiftRightJam64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B93098B1AD00E2E307 /* s_shortShiftRightJam64.c */; };
-		50B10000000000000000007D /* s_f32UIToCommonNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A43098B1AD00E2E307 /* s_f32UIToCommonNaN.c */; };
-		50B10000000000000000007E /* s_add128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80973098B1AD00E2E307 /* s_add128.c */; };
-		50B10000000000000000007F /* extF80_rem.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80833098B1AD00E2E307 /* extF80_rem.c */; };
-		50B100000000000000000080 /* s_roundPackToF64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B13098B1AD00E2E307 /* s_roundPackToF64.c */; };
-		50B100000000000000000081 /* s_commonNaNToF64UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809F3098B1AD00E2E307 /* s_commonNaNToF64UI.c */; };
-		50B100000000000000000082 /* s_extF80UIToCommonNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A33098B1AD00E2E307 /* s_extF80UIToCommonNaN.c */; };
-		50B100000000000000000083 /* s_approxRecipSqrt_1Ks.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809B3098B1AD00E2E307 /* s_approxRecipSqrt_1Ks.c */; };
-		50B100000000000000000084 /* s_commonNaNToExtF80UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809D3098B1AD00E2E307 /* s_commonNaNToExtF80UI.c */; };
-		50B100000000000000000085 /* s_lt128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A73098B1AD00E2E307 /* s_lt128.c */; };
-		50B100000000000000000086 /* s_shiftRightJam128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B73098B1AD00E2E307 /* s_shiftRightJam128.c */; };
-		50B100000000000000000087 /* s_roundPackToF32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B03098B1AD00E2E307 /* s_roundPackToF32.c */; };
-		50B100000000000000000088 /* s_countLeadingZeros64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A23098B1AD00E2E307 /* s_countLeadingZeros64.c */; };
-		50B100000000000000000089 /* extF80_to_f64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80883098B1AD00E2E307 /* extF80_to_f64.c */; };
 		50B10000000000000000008A /* Float80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81003098B1C600E2E307 /* Float80.cpp */; };
-		50B10000000000000000008B /* extF80_sqrt.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80853098B1AD00E2E307 /* extF80_sqrt.c */; };
-		50B10000000000000000008C /* s_shiftRightJam32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B43098B1AD00E2E307 /* s_shiftRightJam32.c */; };
-		50B10000000000000000008D /* s_normSubnormalF32Sig.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AC3098B1AD00E2E307 /* s_normSubnormalF32Sig.c */; };
-		50B10000000000000000008E /* s_roundToI32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B23098B1AD00E2E307 /* s_roundToI32.c */; };
-		50B10000000000000000008F /* s_addMagsExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80983098B1AD00E2E307 /* s_addMagsExtF80.c */; };
-		50B100000000000000000090 /* f64_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808C3098B1AD00E2E307 /* f64_to_extF80.c */; };
-		50B100000000000000000091 /* softfloat_state.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BF3098B1AD00E2E307 /* softfloat_state.c */; };
-		50B100000000000000000092 /* i32_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808D3098B1AD00E2E307 /* i32_to_extF80.c */; };
-		50B100000000000000000093 /* s_mul64ByShifted32To128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A83098B1AD00E2E307 /* s_mul64ByShifted32To128.c */; };
-		50B100000000000000000094 /* s_le128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A63098B1AD00E2E307 /* s_le128.c */; };
-		50B100000000000000000095 /* s_countLeadingZeros32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A13098B1AD00E2E307 /* s_countLeadingZeros32.c */; };
-		50B100000000000000000096 /* extF80_to_i64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808A3098B1AD00E2E307 /* extF80_to_i64.c */; };
-		50B100000000000000000097 /* s_countLeadingZeros8.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80A03098B1AD00E2E307 /* s_countLeadingZeros8.c */; };
-		50B100000000000000000098 /* extF80_eq.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807E3098B1AD00E2E307 /* extF80_eq.c */; };
-		50B100000000000000000099 /* extF80_to_f32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80873098B1AD00E2E307 /* extF80_to_f32.c */; };
-		50B10000000000000000009A /* s_propagateNaNExtF80UI.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AE3098B1AD00E2E307 /* s_propagateNaNExtF80UI.c */; };
-		50B10000000000000000009B /* s_sub128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BB3098B1AD00E2E307 /* s_sub128.c */; };
-		50B10000000000000000009C /* s_approxRecipSqrt32_1.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A809C3098B1AD00E2E307 /* s_approxRecipSqrt32_1.c */; };
-		50B10000000000000000009D /* s_approxRecip_1Ks.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80993098B1AD00E2E307 /* s_approxRecip_1Ks.c */; };
-		50B10000000000000000009E /* i64_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808E3098B1AD00E2E307 /* i64_to_extF80.c */; };
-		50B10000000000000000009F /* extF80_isSignalingNaN.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A807F3098B1AD00E2E307 /* extF80_isSignalingNaN.c */; };
-		50B1000000000000000000A0 /* s_shortShiftLeft128.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B83098B1AD00E2E307 /* s_shortShiftLeft128.c */; };
-		50B1000000000000000000A1 /* s_roundPackToExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80AF3098B1AD00E2E307 /* s_roundPackToExtF80.c */; };
-		50B1000000000000000000A2 /* s_shiftRightJam64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B53098B1AD00E2E307 /* s_shiftRightJam64.c */; };
-		50B1000000000000000000A3 /* extF80_to_i32.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80893098B1AD00E2E307 /* extF80_to_i32.c */; };
-		50B1000000000000000000A4 /* extF80_le.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80803098B1AD00E2E307 /* extF80_le.c */; };
-		50B1000000000000000000A5 /* s_roundToI64.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B33098B1AD00E2E307 /* s_roundToI64.c */; };
-		50B1000000000000000000A6 /* extF80_lt.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80813098B1AD00E2E307 /* extF80_lt.c */; };
-		50B1000000000000000000A7 /* f32_to_extF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A808B3098B1AD00E2E307 /* f32_to_extF80.c */; };
-		50B1000000000000000000A8 /* s_shiftRightJam64Extra.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80B63098B1AD00E2E307 /* s_shiftRightJam64Extra.c */; };
-		50B1000000000000000000A9 /* s_subMagsExtF80.c in Sources */ = {isa = PBXBuildFile; fileRef = 505A80BC3098B1AD00E2E307 /* s_subMagsExtF80.c */; };
 		50B1000000000000000000B0 /* libMoiraMusashi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50B100000000000000000061 /* libMoiraMusashi.a */; };
 		50B1000000000000000000B5 /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; };
 		50B1000000000000000000B6 /* Testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* Testrunner.cpp */; };
@@ -250,6 +248,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		50C2000000000000000000C1 /* SoftFloat.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SoftFloat.cpp; sourceTree = "<group>"; };
+		50C2000000000000000000A1 /* SoftFloat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SoftFloat.h; sourceTree = "<group>"; };
 		50A300000000000000000003 /* BigNum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BigNum.h; sourceTree = "<group>"; };
 		50A300000000000000000002 /* FloatMath.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FloatMath.h; sourceTree = "<group>"; };
 		50A300000000000000000001 /* FloatMath.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FloatMath.cpp; sourceTree = "<group>"; };
@@ -287,74 +287,71 @@
 		5054686428A6647B00028727 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		505580EA23AFA14D0009F77F /* musashi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = musashi.cpp; sourceTree = "<group>"; };
 		505A807B3098B1AD00E2E307 /* COPYING.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING.txt; sourceTree = "<group>"; };
-		505A807C3098B1AD00E2E307 /* extF80_add.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = extF80_add.c; sourceTree = "<group>"; };
-		505A807D3098B1AD00E2E307 /* extF80_div.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = extF80_div.c; sourceTree = "<group>"; };
-		505A807E3098B1AD00E2E307 /* extF80_eq.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = extF80_eq.c; sourceTree = "<group>"; };
-		505A807F3098B1AD00E2E307 /* extF80_isSignalingNaN.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = extF80_isSignalingNaN.c; sourceTree = "<group>"; };
-		505A80803098B1AD00E2E307 /* extF80_le.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = extF80_le.c; sourceTree = "<group>"; };
-		505A80813098B1AD00E2E307 /* extF80_lt.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = extF80_lt.c; sourceTree = "<group>"; };
-		505A80823098B1AD00E2E307 /* extF80_mul.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = extF80_mul.c; sourceTree = "<group>"; };
-		505A80833098B1AD00E2E307 /* extF80_rem.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = extF80_rem.c; sourceTree = "<group>"; };
-		505A80843098B1AD00E2E307 /* extF80_roundToInt.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = extF80_roundToInt.c; sourceTree = "<group>"; };
-		505A80853098B1AD00E2E307 /* extF80_sqrt.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = extF80_sqrt.c; sourceTree = "<group>"; };
-		505A80863098B1AD00E2E307 /* extF80_sub.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = extF80_sub.c; sourceTree = "<group>"; };
-		505A80873098B1AD00E2E307 /* extF80_to_f32.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = extF80_to_f32.c; sourceTree = "<group>"; };
-		505A80883098B1AD00E2E307 /* extF80_to_f64.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = extF80_to_f64.c; sourceTree = "<group>"; };
-		505A80893098B1AD00E2E307 /* extF80_to_i32.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = extF80_to_i32.c; sourceTree = "<group>"; };
-		505A808A3098B1AD00E2E307 /* extF80_to_i64.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = extF80_to_i64.c; sourceTree = "<group>"; };
-		505A808B3098B1AD00E2E307 /* f32_to_extF80.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = f32_to_extF80.c; sourceTree = "<group>"; };
-		505A808C3098B1AD00E2E307 /* f64_to_extF80.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = f64_to_extF80.c; sourceTree = "<group>"; };
-		505A808D3098B1AD00E2E307 /* i32_to_extF80.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = i32_to_extF80.c; sourceTree = "<group>"; };
-		505A808E3098B1AD00E2E307 /* i64_to_extF80.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = i64_to_extF80.c; sourceTree = "<group>"; };
+		505A807C3098B1AD00E2E307 /* extF80_add.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = extF80_add.cpp; sourceTree = "<group>"; };
+		505A807D3098B1AD00E2E307 /* extF80_div.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = extF80_div.cpp; sourceTree = "<group>"; };
+		505A807E3098B1AD00E2E307 /* extF80_eq.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = extF80_eq.cpp; sourceTree = "<group>"; };
+		505A807F3098B1AD00E2E307 /* extF80_isSignalingNaN.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = extF80_isSignalingNaN.cpp; sourceTree = "<group>"; };
+		505A80803098B1AD00E2E307 /* extF80_le.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = extF80_le.cpp; sourceTree = "<group>"; };
+		505A80813098B1AD00E2E307 /* extF80_lt.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = extF80_lt.cpp; sourceTree = "<group>"; };
+		505A80823098B1AD00E2E307 /* extF80_mul.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = extF80_mul.cpp; sourceTree = "<group>"; };
+		505A80833098B1AD00E2E307 /* extF80_rem.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = extF80_rem.cpp; sourceTree = "<group>"; };
+		505A80843098B1AD00E2E307 /* extF80_roundToInt.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = extF80_roundToInt.cpp; sourceTree = "<group>"; };
+		505A80853098B1AD00E2E307 /* extF80_sqrt.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = extF80_sqrt.cpp; sourceTree = "<group>"; };
+		505A80863098B1AD00E2E307 /* extF80_sub.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = extF80_sub.cpp; sourceTree = "<group>"; };
+		505A80873098B1AD00E2E307 /* extF80_to_f32.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = extF80_to_f32.cpp; sourceTree = "<group>"; };
+		505A80883098B1AD00E2E307 /* extF80_to_f64.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = extF80_to_f64.cpp; sourceTree = "<group>"; };
+		505A80893098B1AD00E2E307 /* extF80_to_i32.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = extF80_to_i32.cpp; sourceTree = "<group>"; };
+		505A808A3098B1AD00E2E307 /* extF80_to_i64.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = extF80_to_i64.cpp; sourceTree = "<group>"; };
+		505A808B3098B1AD00E2E307 /* f32_to_extF80.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = f32_to_extF80.cpp; sourceTree = "<group>"; };
+		505A808C3098B1AD00E2E307 /* f64_to_extF80.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = f64_to_extF80.cpp; sourceTree = "<group>"; };
+		505A808D3098B1AD00E2E307 /* i32_to_extF80.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = i32_to_extF80.cpp; sourceTree = "<group>"; };
+		505A808E3098B1AD00E2E307 /* i64_to_extF80.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = i64_to_extF80.cpp; sourceTree = "<group>"; };
 		505A808F3098B1AD00E2E307 /* internals.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = internals.h; sourceTree = "<group>"; };
-		505A80903098B1AD00E2E307 /* moira_env.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = moira_env.h; sourceTree = "<group>"; };
-		505A80913098B1AD00E2E307 /* moira_env.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = moira_env.c; sourceTree = "<group>"; };
 		505A80923098B1AD00E2E307 /* opts-GCC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "opts-GCC.h"; sourceTree = "<group>"; };
 		505A80933098B1AD00E2E307 /* platform.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = platform.h; sourceTree = "<group>"; };
 		505A80943098B1AD00E2E307 /* primitives.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = primitives.h; sourceTree = "<group>"; };
 		505A80953098B1AD00E2E307 /* primitiveTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = primitiveTypes.h; sourceTree = "<group>"; };
 		505A80963098B1AD00E2E307 /* README.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
-		505A80973098B1AD00E2E307 /* s_add128.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_add128.c; sourceTree = "<group>"; };
-		505A80983098B1AD00E2E307 /* s_addMagsExtF80.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_addMagsExtF80.c; sourceTree = "<group>"; };
-		505A80993098B1AD00E2E307 /* s_approxRecip_1Ks.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_approxRecip_1Ks.c; sourceTree = "<group>"; };
-		505A809A3098B1AD00E2E307 /* s_approxRecip32_1.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_approxRecip32_1.c; sourceTree = "<group>"; };
-		505A809B3098B1AD00E2E307 /* s_approxRecipSqrt_1Ks.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_approxRecipSqrt_1Ks.c; sourceTree = "<group>"; };
-		505A809C3098B1AD00E2E307 /* s_approxRecipSqrt32_1.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_approxRecipSqrt32_1.c; sourceTree = "<group>"; };
-		505A809D3098B1AD00E2E307 /* s_commonNaNToExtF80UI.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_commonNaNToExtF80UI.c; sourceTree = "<group>"; };
-		505A809E3098B1AD00E2E307 /* s_commonNaNToF32UI.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_commonNaNToF32UI.c; sourceTree = "<group>"; };
-		505A809F3098B1AD00E2E307 /* s_commonNaNToF64UI.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_commonNaNToF64UI.c; sourceTree = "<group>"; };
-		505A80A03098B1AD00E2E307 /* s_countLeadingZeros8.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_countLeadingZeros8.c; sourceTree = "<group>"; };
-		505A80A13098B1AD00E2E307 /* s_countLeadingZeros32.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_countLeadingZeros32.c; sourceTree = "<group>"; };
-		505A80A23098B1AD00E2E307 /* s_countLeadingZeros64.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_countLeadingZeros64.c; sourceTree = "<group>"; };
-		505A80A33098B1AD00E2E307 /* s_extF80UIToCommonNaN.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_extF80UIToCommonNaN.c; sourceTree = "<group>"; };
-		505A80A43098B1AD00E2E307 /* s_f32UIToCommonNaN.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_f32UIToCommonNaN.c; sourceTree = "<group>"; };
-		505A80A53098B1AD00E2E307 /* s_f64UIToCommonNaN.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_f64UIToCommonNaN.c; sourceTree = "<group>"; };
-		505A80A63098B1AD00E2E307 /* s_le128.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_le128.c; sourceTree = "<group>"; };
-		505A80A73098B1AD00E2E307 /* s_lt128.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_lt128.c; sourceTree = "<group>"; };
-		505A80A83098B1AD00E2E307 /* s_mul64ByShifted32To128.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_mul64ByShifted32To128.c; sourceTree = "<group>"; };
-		505A80A93098B1AD00E2E307 /* s_mul64To128.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_mul64To128.c; sourceTree = "<group>"; };
-		505A80AA3098B1AD00E2E307 /* s_normRoundPackToExtF80.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_normRoundPackToExtF80.c; sourceTree = "<group>"; };
-		505A80AB3098B1AD00E2E307 /* s_normSubnormalExtF80Sig.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_normSubnormalExtF80Sig.c; sourceTree = "<group>"; };
-		505A80AC3098B1AD00E2E307 /* s_normSubnormalF32Sig.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_normSubnormalF32Sig.c; sourceTree = "<group>"; };
-		505A80AD3098B1AD00E2E307 /* s_normSubnormalF64Sig.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_normSubnormalF64Sig.c; sourceTree = "<group>"; };
-		505A80AE3098B1AD00E2E307 /* s_propagateNaNExtF80UI.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_propagateNaNExtF80UI.c; sourceTree = "<group>"; };
-		505A80AF3098B1AD00E2E307 /* s_roundPackToExtF80.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_roundPackToExtF80.c; sourceTree = "<group>"; };
-		505A80B03098B1AD00E2E307 /* s_roundPackToF32.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_roundPackToF32.c; sourceTree = "<group>"; };
-		505A80B13098B1AD00E2E307 /* s_roundPackToF64.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_roundPackToF64.c; sourceTree = "<group>"; };
-		505A80B23098B1AD00E2E307 /* s_roundToI32.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_roundToI32.c; sourceTree = "<group>"; };
-		505A80B33098B1AD00E2E307 /* s_roundToI64.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_roundToI64.c; sourceTree = "<group>"; };
-		505A80B43098B1AD00E2E307 /* s_shiftRightJam32.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_shiftRightJam32.c; sourceTree = "<group>"; };
-		505A80B53098B1AD00E2E307 /* s_shiftRightJam64.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_shiftRightJam64.c; sourceTree = "<group>"; };
-		505A80B63098B1AD00E2E307 /* s_shiftRightJam64Extra.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_shiftRightJam64Extra.c; sourceTree = "<group>"; };
-		505A80B73098B1AD00E2E307 /* s_shiftRightJam128.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_shiftRightJam128.c; sourceTree = "<group>"; };
-		505A80B83098B1AD00E2E307 /* s_shortShiftLeft128.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_shortShiftLeft128.c; sourceTree = "<group>"; };
-		505A80B93098B1AD00E2E307 /* s_shortShiftRightJam64.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_shortShiftRightJam64.c; sourceTree = "<group>"; };
-		505A80BA3098B1AD00E2E307 /* s_shortShiftRightJam64Extra.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_shortShiftRightJam64Extra.c; sourceTree = "<group>"; };
-		505A80BB3098B1AD00E2E307 /* s_sub128.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_sub128.c; sourceTree = "<group>"; };
-		505A80BC3098B1AD00E2E307 /* s_subMagsExtF80.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = s_subMagsExtF80.c; sourceTree = "<group>"; };
-		505A80BD3098B1AD00E2E307 /* softfloat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = softfloat.h; sourceTree = "<group>"; };
-		505A80BE3098B1AD00E2E307 /* softfloat_raiseFlags.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = softfloat_raiseFlags.c; sourceTree = "<group>"; };
-		505A80BF3098B1AD00E2E307 /* softfloat_state.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = softfloat_state.c; sourceTree = "<group>"; };
+		505A80973098B1AD00E2E307 /* s_add128.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_add128.cpp; sourceTree = "<group>"; };
+		505A80983098B1AD00E2E307 /* s_addMagsExtF80.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_addMagsExtF80.cpp; sourceTree = "<group>"; };
+		505A80993098B1AD00E2E307 /* s_approxRecip_1Ks.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_approxRecip_1Ks.cpp; sourceTree = "<group>"; };
+		505A809A3098B1AD00E2E307 /* s_approxRecip32_1.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_approxRecip32_1.cpp; sourceTree = "<group>"; };
+		505A809B3098B1AD00E2E307 /* s_approxRecipSqrt_1Ks.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_approxRecipSqrt_1Ks.cpp; sourceTree = "<group>"; };
+		505A809C3098B1AD00E2E307 /* s_approxRecipSqrt32_1.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_approxRecipSqrt32_1.cpp; sourceTree = "<group>"; };
+		505A809D3098B1AD00E2E307 /* s_commonNaNToExtF80UI.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_commonNaNToExtF80UI.cpp; sourceTree = "<group>"; };
+		505A809E3098B1AD00E2E307 /* s_commonNaNToF32UI.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_commonNaNToF32UI.cpp; sourceTree = "<group>"; };
+		505A809F3098B1AD00E2E307 /* s_commonNaNToF64UI.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_commonNaNToF64UI.cpp; sourceTree = "<group>"; };
+		505A80A03098B1AD00E2E307 /* s_countLeadingZeros8.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_countLeadingZeros8.cpp; sourceTree = "<group>"; };
+		505A80A13098B1AD00E2E307 /* s_countLeadingZeros32.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_countLeadingZeros32.cpp; sourceTree = "<group>"; };
+		505A80A23098B1AD00E2E307 /* s_countLeadingZeros64.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_countLeadingZeros64.cpp; sourceTree = "<group>"; };
+		505A80A33098B1AD00E2E307 /* s_extF80UIToCommonNaN.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_extF80UIToCommonNaN.cpp; sourceTree = "<group>"; };
+		505A80A43098B1AD00E2E307 /* s_f32UIToCommonNaN.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_f32UIToCommonNaN.cpp; sourceTree = "<group>"; };
+		505A80A53098B1AD00E2E307 /* s_f64UIToCommonNaN.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_f64UIToCommonNaN.cpp; sourceTree = "<group>"; };
+		505A80A63098B1AD00E2E307 /* s_le128.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_le128.cpp; sourceTree = "<group>"; };
+		505A80A73098B1AD00E2E307 /* s_lt128.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_lt128.cpp; sourceTree = "<group>"; };
+		505A80A83098B1AD00E2E307 /* s_mul64ByShifted32To128.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_mul64ByShifted32To128.cpp; sourceTree = "<group>"; };
+		505A80A93098B1AD00E2E307 /* s_mul64To128.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_mul64To128.cpp; sourceTree = "<group>"; };
+		505A80AA3098B1AD00E2E307 /* s_normRoundPackToExtF80.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_normRoundPackToExtF80.cpp; sourceTree = "<group>"; };
+		505A80AB3098B1AD00E2E307 /* s_normSubnormalExtF80Sig.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_normSubnormalExtF80Sig.cpp; sourceTree = "<group>"; };
+		505A80AC3098B1AD00E2E307 /* s_normSubnormalF32Sig.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_normSubnormalF32Sig.cpp; sourceTree = "<group>"; };
+		505A80AD3098B1AD00E2E307 /* s_normSubnormalF64Sig.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_normSubnormalF64Sig.cpp; sourceTree = "<group>"; };
+		505A80AE3098B1AD00E2E307 /* s_propagateNaNExtF80UI.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_propagateNaNExtF80UI.cpp; sourceTree = "<group>"; };
+		505A80AF3098B1AD00E2E307 /* s_roundPackToExtF80.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_roundPackToExtF80.cpp; sourceTree = "<group>"; };
+		505A80B03098B1AD00E2E307 /* s_roundPackToF32.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_roundPackToF32.cpp; sourceTree = "<group>"; };
+		505A80B13098B1AD00E2E307 /* s_roundPackToF64.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_roundPackToF64.cpp; sourceTree = "<group>"; };
+		505A80B23098B1AD00E2E307 /* s_roundToI32.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_roundToI32.cpp; sourceTree = "<group>"; };
+		505A80B33098B1AD00E2E307 /* s_roundToI64.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_roundToI64.cpp; sourceTree = "<group>"; };
+		505A80B43098B1AD00E2E307 /* s_shiftRightJam32.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_shiftRightJam32.cpp; sourceTree = "<group>"; };
+		505A80B53098B1AD00E2E307 /* s_shiftRightJam64.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_shiftRightJam64.cpp; sourceTree = "<group>"; };
+		505A80B63098B1AD00E2E307 /* s_shiftRightJam64Extra.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_shiftRightJam64Extra.cpp; sourceTree = "<group>"; };
+		505A80B73098B1AD00E2E307 /* s_shiftRightJam128.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_shiftRightJam128.cpp; sourceTree = "<group>"; };
+		505A80B83098B1AD00E2E307 /* s_shortShiftLeft128.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_shortShiftLeft128.cpp; sourceTree = "<group>"; };
+		505A80B93098B1AD00E2E307 /* s_shortShiftRightJam64.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_shortShiftRightJam64.cpp; sourceTree = "<group>"; };
+		505A80BA3098B1AD00E2E307 /* s_shortShiftRightJam64Extra.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_shortShiftRightJam64Extra.cpp; sourceTree = "<group>"; };
+		505A80BB3098B1AD00E2E307 /* s_sub128.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_sub128.cpp; sourceTree = "<group>"; };
+		505A80BC3098B1AD00E2E307 /* s_subMagsExtF80.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = s_subMagsExtF80.cpp; sourceTree = "<group>"; };
+		505A80BD3098B1AD00E2E307 /* softfloat_enums.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = softfloat_enums.h; sourceTree = "<group>"; };
+		505A80BE3098B1AD00E2E307 /* softfloat_raiseFlags.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = softfloat_raiseFlags.cpp; sourceTree = "<group>"; };
 		505A80C03098B1AD00E2E307 /* softfloat_types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = softfloat_types.h; sourceTree = "<group>"; };
 		505A80C13098B1AD00E2E307 /* specialize.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = specialize.h; sourceTree = "<group>"; };
 		505A80FF3098B1C600E2E307 /* Float80.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Float80.h; sourceTree = "<group>"; };
@@ -650,74 +647,71 @@
 			isa = PBXGroup;
 			children = (
 				505A807B3098B1AD00E2E307 /* COPYING.txt */,
-				505A807C3098B1AD00E2E307 /* extF80_add.c */,
-				505A807D3098B1AD00E2E307 /* extF80_div.c */,
-				505A807E3098B1AD00E2E307 /* extF80_eq.c */,
-				505A807F3098B1AD00E2E307 /* extF80_isSignalingNaN.c */,
-				505A80803098B1AD00E2E307 /* extF80_le.c */,
-				505A80813098B1AD00E2E307 /* extF80_lt.c */,
-				505A80823098B1AD00E2E307 /* extF80_mul.c */,
-				505A80833098B1AD00E2E307 /* extF80_rem.c */,
-				505A80843098B1AD00E2E307 /* extF80_roundToInt.c */,
-				505A80853098B1AD00E2E307 /* extF80_sqrt.c */,
-				505A80863098B1AD00E2E307 /* extF80_sub.c */,
-				505A80873098B1AD00E2E307 /* extF80_to_f32.c */,
-				505A80883098B1AD00E2E307 /* extF80_to_f64.c */,
-				505A80893098B1AD00E2E307 /* extF80_to_i32.c */,
-				505A808A3098B1AD00E2E307 /* extF80_to_i64.c */,
-				505A808B3098B1AD00E2E307 /* f32_to_extF80.c */,
-				505A808C3098B1AD00E2E307 /* f64_to_extF80.c */,
-				505A808D3098B1AD00E2E307 /* i32_to_extF80.c */,
-				505A808E3098B1AD00E2E307 /* i64_to_extF80.c */,
+				505A807C3098B1AD00E2E307 /* extF80_add.cpp */,
+				505A807D3098B1AD00E2E307 /* extF80_div.cpp */,
+				505A807E3098B1AD00E2E307 /* extF80_eq.cpp */,
+				505A807F3098B1AD00E2E307 /* extF80_isSignalingNaN.cpp */,
+				505A80803098B1AD00E2E307 /* extF80_le.cpp */,
+				505A80813098B1AD00E2E307 /* extF80_lt.cpp */,
+				505A80823098B1AD00E2E307 /* extF80_mul.cpp */,
+				505A80833098B1AD00E2E307 /* extF80_rem.cpp */,
+				505A80843098B1AD00E2E307 /* extF80_roundToInt.cpp */,
+				505A80853098B1AD00E2E307 /* extF80_sqrt.cpp */,
+				505A80863098B1AD00E2E307 /* extF80_sub.cpp */,
+				505A80873098B1AD00E2E307 /* extF80_to_f32.cpp */,
+				505A80883098B1AD00E2E307 /* extF80_to_f64.cpp */,
+				505A80893098B1AD00E2E307 /* extF80_to_i32.cpp */,
+				505A808A3098B1AD00E2E307 /* extF80_to_i64.cpp */,
+				505A808B3098B1AD00E2E307 /* f32_to_extF80.cpp */,
+				505A808C3098B1AD00E2E307 /* f64_to_extF80.cpp */,
+				505A808D3098B1AD00E2E307 /* i32_to_extF80.cpp */,
+				505A808E3098B1AD00E2E307 /* i64_to_extF80.cpp */,
 				505A808F3098B1AD00E2E307 /* internals.h */,
-				505A80903098B1AD00E2E307 /* moira_env.h */,
-				505A80913098B1AD00E2E307 /* moira_env.c */,
 				505A80923098B1AD00E2E307 /* opts-GCC.h */,
 				505A80933098B1AD00E2E307 /* platform.h */,
 				505A80943098B1AD00E2E307 /* primitives.h */,
 				505A80953098B1AD00E2E307 /* primitiveTypes.h */,
 				505A80963098B1AD00E2E307 /* README.txt */,
-				505A80973098B1AD00E2E307 /* s_add128.c */,
-				505A80983098B1AD00E2E307 /* s_addMagsExtF80.c */,
-				505A80993098B1AD00E2E307 /* s_approxRecip_1Ks.c */,
-				505A809A3098B1AD00E2E307 /* s_approxRecip32_1.c */,
-				505A809B3098B1AD00E2E307 /* s_approxRecipSqrt_1Ks.c */,
-				505A809C3098B1AD00E2E307 /* s_approxRecipSqrt32_1.c */,
-				505A809D3098B1AD00E2E307 /* s_commonNaNToExtF80UI.c */,
-				505A809E3098B1AD00E2E307 /* s_commonNaNToF32UI.c */,
-				505A809F3098B1AD00E2E307 /* s_commonNaNToF64UI.c */,
-				505A80A03098B1AD00E2E307 /* s_countLeadingZeros8.c */,
-				505A80A13098B1AD00E2E307 /* s_countLeadingZeros32.c */,
-				505A80A23098B1AD00E2E307 /* s_countLeadingZeros64.c */,
-				505A80A33098B1AD00E2E307 /* s_extF80UIToCommonNaN.c */,
-				505A80A43098B1AD00E2E307 /* s_f32UIToCommonNaN.c */,
-				505A80A53098B1AD00E2E307 /* s_f64UIToCommonNaN.c */,
-				505A80A63098B1AD00E2E307 /* s_le128.c */,
-				505A80A73098B1AD00E2E307 /* s_lt128.c */,
-				505A80A83098B1AD00E2E307 /* s_mul64ByShifted32To128.c */,
-				505A80A93098B1AD00E2E307 /* s_mul64To128.c */,
-				505A80AA3098B1AD00E2E307 /* s_normRoundPackToExtF80.c */,
-				505A80AB3098B1AD00E2E307 /* s_normSubnormalExtF80Sig.c */,
-				505A80AC3098B1AD00E2E307 /* s_normSubnormalF32Sig.c */,
-				505A80AD3098B1AD00E2E307 /* s_normSubnormalF64Sig.c */,
-				505A80AE3098B1AD00E2E307 /* s_propagateNaNExtF80UI.c */,
-				505A80AF3098B1AD00E2E307 /* s_roundPackToExtF80.c */,
-				505A80B03098B1AD00E2E307 /* s_roundPackToF32.c */,
-				505A80B13098B1AD00E2E307 /* s_roundPackToF64.c */,
-				505A80B23098B1AD00E2E307 /* s_roundToI32.c */,
-				505A80B33098B1AD00E2E307 /* s_roundToI64.c */,
-				505A80B43098B1AD00E2E307 /* s_shiftRightJam32.c */,
-				505A80B53098B1AD00E2E307 /* s_shiftRightJam64.c */,
-				505A80B63098B1AD00E2E307 /* s_shiftRightJam64Extra.c */,
-				505A80B73098B1AD00E2E307 /* s_shiftRightJam128.c */,
-				505A80B83098B1AD00E2E307 /* s_shortShiftLeft128.c */,
-				505A80B93098B1AD00E2E307 /* s_shortShiftRightJam64.c */,
-				505A80BA3098B1AD00E2E307 /* s_shortShiftRightJam64Extra.c */,
-				505A80BB3098B1AD00E2E307 /* s_sub128.c */,
-				505A80BC3098B1AD00E2E307 /* s_subMagsExtF80.c */,
-				505A80BD3098B1AD00E2E307 /* softfloat.h */,
-				505A80BE3098B1AD00E2E307 /* softfloat_raiseFlags.c */,
-				505A80BF3098B1AD00E2E307 /* softfloat_state.c */,
+				505A80973098B1AD00E2E307 /* s_add128.cpp */,
+				505A80983098B1AD00E2E307 /* s_addMagsExtF80.cpp */,
+				505A80993098B1AD00E2E307 /* s_approxRecip_1Ks.cpp */,
+				505A809A3098B1AD00E2E307 /* s_approxRecip32_1.cpp */,
+				505A809B3098B1AD00E2E307 /* s_approxRecipSqrt_1Ks.cpp */,
+				505A809C3098B1AD00E2E307 /* s_approxRecipSqrt32_1.cpp */,
+				505A809D3098B1AD00E2E307 /* s_commonNaNToExtF80UI.cpp */,
+				505A809E3098B1AD00E2E307 /* s_commonNaNToF32UI.cpp */,
+				505A809F3098B1AD00E2E307 /* s_commonNaNToF64UI.cpp */,
+				505A80A03098B1AD00E2E307 /* s_countLeadingZeros8.cpp */,
+				505A80A13098B1AD00E2E307 /* s_countLeadingZeros32.cpp */,
+				505A80A23098B1AD00E2E307 /* s_countLeadingZeros64.cpp */,
+				505A80A33098B1AD00E2E307 /* s_extF80UIToCommonNaN.cpp */,
+				505A80A43098B1AD00E2E307 /* s_f32UIToCommonNaN.cpp */,
+				505A80A53098B1AD00E2E307 /* s_f64UIToCommonNaN.cpp */,
+				505A80A63098B1AD00E2E307 /* s_le128.cpp */,
+				505A80A73098B1AD00E2E307 /* s_lt128.cpp */,
+				505A80A83098B1AD00E2E307 /* s_mul64ByShifted32To128.cpp */,
+				505A80A93098B1AD00E2E307 /* s_mul64To128.cpp */,
+				505A80AA3098B1AD00E2E307 /* s_normRoundPackToExtF80.cpp */,
+				505A80AB3098B1AD00E2E307 /* s_normSubnormalExtF80Sig.cpp */,
+				505A80AC3098B1AD00E2E307 /* s_normSubnormalF32Sig.cpp */,
+				505A80AD3098B1AD00E2E307 /* s_normSubnormalF64Sig.cpp */,
+				505A80AE3098B1AD00E2E307 /* s_propagateNaNExtF80UI.cpp */,
+				505A80AF3098B1AD00E2E307 /* s_roundPackToExtF80.cpp */,
+				505A80B03098B1AD00E2E307 /* s_roundPackToF32.cpp */,
+				505A80B13098B1AD00E2E307 /* s_roundPackToF64.cpp */,
+				505A80B23098B1AD00E2E307 /* s_roundToI32.cpp */,
+				505A80B33098B1AD00E2E307 /* s_roundToI64.cpp */,
+				505A80B43098B1AD00E2E307 /* s_shiftRightJam32.cpp */,
+				505A80B53098B1AD00E2E307 /* s_shiftRightJam64.cpp */,
+				505A80B63098B1AD00E2E307 /* s_shiftRightJam64Extra.cpp */,
+				505A80B73098B1AD00E2E307 /* s_shiftRightJam128.cpp */,
+				505A80B83098B1AD00E2E307 /* s_shortShiftLeft128.cpp */,
+				505A80B93098B1AD00E2E307 /* s_shortShiftRightJam64.cpp */,
+				505A80BA3098B1AD00E2E307 /* s_shortShiftRightJam64Extra.cpp */,
+				505A80BB3098B1AD00E2E307 /* s_sub128.cpp */,
+				505A80BC3098B1AD00E2E307 /* s_subMagsExtF80.cpp */,
+				505A80BD3098B1AD00E2E307 /* softfloat_enums.h */,
+				505A80BE3098B1AD00E2E307 /* softfloat_raiseFlags.cpp */,
 				505A80C03098B1AD00E2E307 /* softfloat_types.h */,
 				505A80C13098B1AD00E2E307 /* specialize.h */,
 			);
@@ -983,6 +977,8 @@
 				505A81053098E38500E2E307 /* FpuFormats.cpp */,
 				505A80FF3098B1C600E2E307 /* Float80.h */,
 				505A81003098B1C600E2E307 /* Float80.cpp */,
+				50C2000000000000000000A1 /* SoftFloat.h */,
+				50C2000000000000000000C1 /* SoftFloat.cpp */,
 			);
 			path = Moira;
 			sourceTree = "<group>";
@@ -1241,69 +1237,68 @@
 				50B10000000000000000000B /* MoiraCore68010.cpp in Sources */,
 				50B10000000000000000000C /* MoiraCore68000.cpp in Sources */,
 				50B10000000000000000000D /* MoiraCore68020.cpp in Sources */,
-				50B10000000000000000000E /* s_normSubnormalExtF80Sig.c in Sources */,
-				50B10000000000000000000F /* extF80_mul.c in Sources */,
-				50B100000000000000000010 /* extF80_add.c in Sources */,
-				50B100000000000000000011 /* extF80_div.c in Sources */,
 				50B100000000000000000012 /* FPU.cpp in Sources */,
 				50B100000000000000000013 /* FpuFormats.cpp in Sources */,
-				50B100000000000000000014 /* s_approxRecip32_1.c in Sources */,
-				50B100000000000000000015 /* moira_env.c in Sources */,
-				50B100000000000000000016 /* extF80_roundToInt.c in Sources */,
-				50B100000000000000000017 /* softfloat_raiseFlags.c in Sources */,
-				50B100000000000000000018 /* s_commonNaNToF32UI.c in Sources */,
-				50B100000000000000000019 /* s_mul64To128.c in Sources */,
-				50B10000000000000000001A /* extF80_sub.c in Sources */,
-				50B10000000000000000001B /* s_normRoundPackToExtF80.c in Sources */,
-				50B10000000000000000001C /* s_normSubnormalF64Sig.c in Sources */,
-				50B10000000000000000001D /* s_shortShiftRightJam64Extra.c in Sources */,
-				50B10000000000000000001E /* s_f64UIToCommonNaN.c in Sources */,
-				50B10000000000000000001F /* s_shortShiftRightJam64.c in Sources */,
-				50B100000000000000000020 /* s_f32UIToCommonNaN.c in Sources */,
-				50B100000000000000000021 /* s_add128.c in Sources */,
-				50B100000000000000000022 /* extF80_rem.c in Sources */,
-				50B100000000000000000023 /* s_roundPackToF64.c in Sources */,
-				50B100000000000000000024 /* s_commonNaNToF64UI.c in Sources */,
-				50B100000000000000000025 /* s_extF80UIToCommonNaN.c in Sources */,
-				50B100000000000000000026 /* s_approxRecipSqrt_1Ks.c in Sources */,
-				50B100000000000000000027 /* s_commonNaNToExtF80UI.c in Sources */,
-				50B100000000000000000028 /* s_lt128.c in Sources */,
-				50B100000000000000000029 /* s_shiftRightJam128.c in Sources */,
-				50B10000000000000000002A /* s_roundPackToF32.c in Sources */,
-				50B10000000000000000002B /* s_countLeadingZeros64.c in Sources */,
-				50B10000000000000000002C /* extF80_to_f64.c in Sources */,
 				50B10000000000000000002D /* Float80.cpp in Sources */,
-				50B10000000000000000002E /* extF80_sqrt.c in Sources */,
-				50B10000000000000000002F /* s_shiftRightJam32.c in Sources */,
-				50B100000000000000000030 /* s_normSubnormalF32Sig.c in Sources */,
-				50B100000000000000000031 /* s_roundToI32.c in Sources */,
-				50B100000000000000000032 /* s_addMagsExtF80.c in Sources */,
-				50B100000000000000000033 /* f64_to_extF80.c in Sources */,
-				50B100000000000000000034 /* softfloat_state.c in Sources */,
-				50B100000000000000000035 /* i32_to_extF80.c in Sources */,
-				50B100000000000000000036 /* s_mul64ByShifted32To128.c in Sources */,
-				50B100000000000000000037 /* s_le128.c in Sources */,
-				50B100000000000000000038 /* s_countLeadingZeros32.c in Sources */,
-				50B100000000000000000039 /* extF80_to_i64.c in Sources */,
-				50B10000000000000000003A /* s_countLeadingZeros8.c in Sources */,
-				50B10000000000000000003B /* extF80_eq.c in Sources */,
-				50B10000000000000000003C /* extF80_to_f32.c in Sources */,
-				50B10000000000000000003D /* s_propagateNaNExtF80UI.c in Sources */,
-				50B10000000000000000003E /* s_sub128.c in Sources */,
-				50B10000000000000000003F /* s_approxRecipSqrt32_1.c in Sources */,
-				50B100000000000000000040 /* s_approxRecip_1Ks.c in Sources */,
-				50B100000000000000000041 /* i64_to_extF80.c in Sources */,
-				50B100000000000000000042 /* extF80_isSignalingNaN.c in Sources */,
-				50B100000000000000000043 /* s_shortShiftLeft128.c in Sources */,
-				50B100000000000000000044 /* s_roundPackToExtF80.c in Sources */,
-				50B100000000000000000045 /* s_shiftRightJam64.c in Sources */,
-				50B100000000000000000046 /* extF80_to_i32.c in Sources */,
-				50B100000000000000000047 /* extF80_le.c in Sources */,
-				50B100000000000000000048 /* s_roundToI64.c in Sources */,
-				50B100000000000000000049 /* extF80_lt.c in Sources */,
-				50B10000000000000000004A /* f32_to_extF80.c in Sources */,
-				50B10000000000000000004B /* s_shiftRightJam64Extra.c in Sources */,
-				50B10000000000000000004C /* s_subMagsExtF80.c in Sources */,
+				50C100000000000000000001 /* extF80_add.cpp in Sources */,
+				50C100000000000000000003 /* extF80_div.cpp in Sources */,
+				50C100000000000000000005 /* extF80_eq.cpp in Sources */,
+				50C100000000000000000007 /* extF80_isSignalingNaN.cpp in Sources */,
+				50C100000000000000000009 /* extF80_le.cpp in Sources */,
+				50C10000000000000000000B /* extF80_lt.cpp in Sources */,
+				50C10000000000000000000D /* extF80_mul.cpp in Sources */,
+				50C10000000000000000000F /* extF80_rem.cpp in Sources */,
+				50C100000000000000000011 /* extF80_roundToInt.cpp in Sources */,
+				50C100000000000000000013 /* extF80_sqrt.cpp in Sources */,
+				50C100000000000000000015 /* extF80_sub.cpp in Sources */,
+				50C100000000000000000017 /* extF80_to_f32.cpp in Sources */,
+				50C100000000000000000019 /* extF80_to_f64.cpp in Sources */,
+				50C10000000000000000001B /* extF80_to_i32.cpp in Sources */,
+				50C10000000000000000001D /* extF80_to_i64.cpp in Sources */,
+				50C10000000000000000001F /* f32_to_extF80.cpp in Sources */,
+				50C100000000000000000021 /* f64_to_extF80.cpp in Sources */,
+				50C100000000000000000023 /* i32_to_extF80.cpp in Sources */,
+				50C100000000000000000025 /* i64_to_extF80.cpp in Sources */,
+				50C100000000000000000027 /* s_add128.cpp in Sources */,
+				50C100000000000000000029 /* s_addMagsExtF80.cpp in Sources */,
+				50C10000000000000000002B /* s_approxRecip_1Ks.cpp in Sources */,
+				50C10000000000000000002D /* s_approxRecip32_1.cpp in Sources */,
+				50C10000000000000000002F /* s_approxRecipSqrt_1Ks.cpp in Sources */,
+				50C100000000000000000031 /* s_approxRecipSqrt32_1.cpp in Sources */,
+				50C100000000000000000033 /* s_commonNaNToExtF80UI.cpp in Sources */,
+				50C100000000000000000035 /* s_commonNaNToF32UI.cpp in Sources */,
+				50C100000000000000000037 /* s_commonNaNToF64UI.cpp in Sources */,
+				50C100000000000000000039 /* s_countLeadingZeros8.cpp in Sources */,
+				50C10000000000000000003B /* s_countLeadingZeros32.cpp in Sources */,
+				50C10000000000000000003D /* s_countLeadingZeros64.cpp in Sources */,
+				50C10000000000000000003F /* s_extF80UIToCommonNaN.cpp in Sources */,
+				50C100000000000000000041 /* s_f32UIToCommonNaN.cpp in Sources */,
+				50C100000000000000000043 /* s_f64UIToCommonNaN.cpp in Sources */,
+				50C100000000000000000045 /* s_le128.cpp in Sources */,
+				50C100000000000000000047 /* s_lt128.cpp in Sources */,
+				50C100000000000000000049 /* s_mul64ByShifted32To128.cpp in Sources */,
+				50C10000000000000000004B /* s_mul64To128.cpp in Sources */,
+				50C10000000000000000004D /* s_normRoundPackToExtF80.cpp in Sources */,
+				50C10000000000000000004F /* s_normSubnormalExtF80Sig.cpp in Sources */,
+				50C100000000000000000051 /* s_normSubnormalF32Sig.cpp in Sources */,
+				50C100000000000000000053 /* s_normSubnormalF64Sig.cpp in Sources */,
+				50C100000000000000000055 /* s_propagateNaNExtF80UI.cpp in Sources */,
+				50C100000000000000000057 /* s_roundPackToExtF80.cpp in Sources */,
+				50C100000000000000000059 /* s_roundPackToF32.cpp in Sources */,
+				50C10000000000000000005B /* s_roundPackToF64.cpp in Sources */,
+				50C10000000000000000005D /* s_roundToI32.cpp in Sources */,
+				50C10000000000000000005F /* s_roundToI64.cpp in Sources */,
+				50C100000000000000000061 /* s_shiftRightJam32.cpp in Sources */,
+				50C100000000000000000063 /* s_shiftRightJam64.cpp in Sources */,
+				50C100000000000000000065 /* s_shiftRightJam64Extra.cpp in Sources */,
+				50C100000000000000000067 /* s_shiftRightJam128.cpp in Sources */,
+				50C100000000000000000069 /* s_shortShiftLeft128.cpp in Sources */,
+				50C10000000000000000006B /* s_shortShiftRightJam64.cpp in Sources */,
+				50C10000000000000000006D /* s_shortShiftRightJam64Extra.cpp in Sources */,
+				50C10000000000000000006F /* s_sub128.cpp in Sources */,
+				50C100000000000000000071 /* s_subMagsExtF80.cpp in Sources */,
+				50C100000000000000000073 /* softfloat_raiseFlags.cpp in Sources */,
+				50C100000000000000000075 /* SoftFloat.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1326,69 +1321,68 @@
 				50B100000000000000000068 /* MoiraCore68010.cpp in Sources */,
 				50B100000000000000000069 /* MoiraCore68000.cpp in Sources */,
 				50B10000000000000000006A /* MoiraCore68020.cpp in Sources */,
-				50B10000000000000000006B /* s_normSubnormalExtF80Sig.c in Sources */,
-				50B10000000000000000006C /* extF80_mul.c in Sources */,
-				50B10000000000000000006D /* extF80_add.c in Sources */,
-				50B10000000000000000006E /* extF80_div.c in Sources */,
 				50B10000000000000000006F /* FPU.cpp in Sources */,
 				50B100000000000000000070 /* FpuFormats.cpp in Sources */,
-				50B100000000000000000071 /* s_approxRecip32_1.c in Sources */,
-				50B100000000000000000072 /* moira_env.c in Sources */,
-				50B100000000000000000073 /* extF80_roundToInt.c in Sources */,
-				50B100000000000000000074 /* softfloat_raiseFlags.c in Sources */,
-				50B100000000000000000075 /* s_commonNaNToF32UI.c in Sources */,
-				50B100000000000000000076 /* s_mul64To128.c in Sources */,
-				50B100000000000000000077 /* extF80_sub.c in Sources */,
-				50B100000000000000000078 /* s_normRoundPackToExtF80.c in Sources */,
-				50B100000000000000000079 /* s_normSubnormalF64Sig.c in Sources */,
-				50B10000000000000000007A /* s_shortShiftRightJam64Extra.c in Sources */,
-				50B10000000000000000007B /* s_f64UIToCommonNaN.c in Sources */,
-				50B10000000000000000007C /* s_shortShiftRightJam64.c in Sources */,
-				50B10000000000000000007D /* s_f32UIToCommonNaN.c in Sources */,
-				50B10000000000000000007E /* s_add128.c in Sources */,
-				50B10000000000000000007F /* extF80_rem.c in Sources */,
-				50B100000000000000000080 /* s_roundPackToF64.c in Sources */,
-				50B100000000000000000081 /* s_commonNaNToF64UI.c in Sources */,
-				50B100000000000000000082 /* s_extF80UIToCommonNaN.c in Sources */,
-				50B100000000000000000083 /* s_approxRecipSqrt_1Ks.c in Sources */,
-				50B100000000000000000084 /* s_commonNaNToExtF80UI.c in Sources */,
-				50B100000000000000000085 /* s_lt128.c in Sources */,
-				50B100000000000000000086 /* s_shiftRightJam128.c in Sources */,
-				50B100000000000000000087 /* s_roundPackToF32.c in Sources */,
-				50B100000000000000000088 /* s_countLeadingZeros64.c in Sources */,
-				50B100000000000000000089 /* extF80_to_f64.c in Sources */,
 				50B10000000000000000008A /* Float80.cpp in Sources */,
-				50B10000000000000000008B /* extF80_sqrt.c in Sources */,
-				50B10000000000000000008C /* s_shiftRightJam32.c in Sources */,
-				50B10000000000000000008D /* s_normSubnormalF32Sig.c in Sources */,
-				50B10000000000000000008E /* s_roundToI32.c in Sources */,
-				50B10000000000000000008F /* s_addMagsExtF80.c in Sources */,
-				50B100000000000000000090 /* f64_to_extF80.c in Sources */,
-				50B100000000000000000091 /* softfloat_state.c in Sources */,
-				50B100000000000000000092 /* i32_to_extF80.c in Sources */,
-				50B100000000000000000093 /* s_mul64ByShifted32To128.c in Sources */,
-				50B100000000000000000094 /* s_le128.c in Sources */,
-				50B100000000000000000095 /* s_countLeadingZeros32.c in Sources */,
-				50B100000000000000000096 /* extF80_to_i64.c in Sources */,
-				50B100000000000000000097 /* s_countLeadingZeros8.c in Sources */,
-				50B100000000000000000098 /* extF80_eq.c in Sources */,
-				50B100000000000000000099 /* extF80_to_f32.c in Sources */,
-				50B10000000000000000009A /* s_propagateNaNExtF80UI.c in Sources */,
-				50B10000000000000000009B /* s_sub128.c in Sources */,
-				50B10000000000000000009C /* s_approxRecipSqrt32_1.c in Sources */,
-				50B10000000000000000009D /* s_approxRecip_1Ks.c in Sources */,
-				50B10000000000000000009E /* i64_to_extF80.c in Sources */,
-				50B10000000000000000009F /* extF80_isSignalingNaN.c in Sources */,
-				50B1000000000000000000A0 /* s_shortShiftLeft128.c in Sources */,
-				50B1000000000000000000A1 /* s_roundPackToExtF80.c in Sources */,
-				50B1000000000000000000A2 /* s_shiftRightJam64.c in Sources */,
-				50B1000000000000000000A3 /* extF80_to_i32.c in Sources */,
-				50B1000000000000000000A4 /* extF80_le.c in Sources */,
-				50B1000000000000000000A5 /* s_roundToI64.c in Sources */,
-				50B1000000000000000000A6 /* extF80_lt.c in Sources */,
-				50B1000000000000000000A7 /* f32_to_extF80.c in Sources */,
-				50B1000000000000000000A8 /* s_shiftRightJam64Extra.c in Sources */,
-				50B1000000000000000000A9 /* s_subMagsExtF80.c in Sources */,
+				50C100000000000000000002 /* extF80_add.cpp in Sources */,
+				50C100000000000000000004 /* extF80_div.cpp in Sources */,
+				50C100000000000000000006 /* extF80_eq.cpp in Sources */,
+				50C100000000000000000008 /* extF80_isSignalingNaN.cpp in Sources */,
+				50C10000000000000000000A /* extF80_le.cpp in Sources */,
+				50C10000000000000000000C /* extF80_lt.cpp in Sources */,
+				50C10000000000000000000E /* extF80_mul.cpp in Sources */,
+				50C100000000000000000010 /* extF80_rem.cpp in Sources */,
+				50C100000000000000000012 /* extF80_roundToInt.cpp in Sources */,
+				50C100000000000000000014 /* extF80_sqrt.cpp in Sources */,
+				50C100000000000000000016 /* extF80_sub.cpp in Sources */,
+				50C100000000000000000018 /* extF80_to_f32.cpp in Sources */,
+				50C10000000000000000001A /* extF80_to_f64.cpp in Sources */,
+				50C10000000000000000001C /* extF80_to_i32.cpp in Sources */,
+				50C10000000000000000001E /* extF80_to_i64.cpp in Sources */,
+				50C100000000000000000020 /* f32_to_extF80.cpp in Sources */,
+				50C100000000000000000022 /* f64_to_extF80.cpp in Sources */,
+				50C100000000000000000024 /* i32_to_extF80.cpp in Sources */,
+				50C100000000000000000026 /* i64_to_extF80.cpp in Sources */,
+				50C100000000000000000028 /* s_add128.cpp in Sources */,
+				50C10000000000000000002A /* s_addMagsExtF80.cpp in Sources */,
+				50C10000000000000000002C /* s_approxRecip_1Ks.cpp in Sources */,
+				50C10000000000000000002E /* s_approxRecip32_1.cpp in Sources */,
+				50C100000000000000000030 /* s_approxRecipSqrt_1Ks.cpp in Sources */,
+				50C100000000000000000032 /* s_approxRecipSqrt32_1.cpp in Sources */,
+				50C100000000000000000034 /* s_commonNaNToExtF80UI.cpp in Sources */,
+				50C100000000000000000036 /* s_commonNaNToF32UI.cpp in Sources */,
+				50C100000000000000000038 /* s_commonNaNToF64UI.cpp in Sources */,
+				50C10000000000000000003A /* s_countLeadingZeros8.cpp in Sources */,
+				50C10000000000000000003C /* s_countLeadingZeros32.cpp in Sources */,
+				50C10000000000000000003E /* s_countLeadingZeros64.cpp in Sources */,
+				50C100000000000000000040 /* s_extF80UIToCommonNaN.cpp in Sources */,
+				50C100000000000000000042 /* s_f32UIToCommonNaN.cpp in Sources */,
+				50C100000000000000000044 /* s_f64UIToCommonNaN.cpp in Sources */,
+				50C100000000000000000046 /* s_le128.cpp in Sources */,
+				50C100000000000000000048 /* s_lt128.cpp in Sources */,
+				50C10000000000000000004A /* s_mul64ByShifted32To128.cpp in Sources */,
+				50C10000000000000000004C /* s_mul64To128.cpp in Sources */,
+				50C10000000000000000004E /* s_normRoundPackToExtF80.cpp in Sources */,
+				50C100000000000000000050 /* s_normSubnormalExtF80Sig.cpp in Sources */,
+				50C100000000000000000052 /* s_normSubnormalF32Sig.cpp in Sources */,
+				50C100000000000000000054 /* s_normSubnormalF64Sig.cpp in Sources */,
+				50C100000000000000000056 /* s_propagateNaNExtF80UI.cpp in Sources */,
+				50C100000000000000000058 /* s_roundPackToExtF80.cpp in Sources */,
+				50C10000000000000000005A /* s_roundPackToF32.cpp in Sources */,
+				50C10000000000000000005C /* s_roundPackToF64.cpp in Sources */,
+				50C10000000000000000005E /* s_roundToI32.cpp in Sources */,
+				50C100000000000000000060 /* s_roundToI64.cpp in Sources */,
+				50C100000000000000000062 /* s_shiftRightJam32.cpp in Sources */,
+				50C100000000000000000064 /* s_shiftRightJam64.cpp in Sources */,
+				50C100000000000000000066 /* s_shiftRightJam64Extra.cpp in Sources */,
+				50C100000000000000000068 /* s_shiftRightJam128.cpp in Sources */,
+				50C10000000000000000006A /* s_shortShiftLeft128.cpp in Sources */,
+				50C10000000000000000006C /* s_shortShiftRightJam64.cpp in Sources */,
+				50C10000000000000000006E /* s_shortShiftRightJam64Extra.cpp in Sources */,
+				50C100000000000000000070 /* s_sub128.cpp in Sources */,
+				50C100000000000000000072 /* s_subMagsExtF80.cpp in Sources */,
+				50C100000000000000000074 /* softfloat_raiseFlags.cpp in Sources */,
+				50C100000000000000000076 /* SoftFloat.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1749,7 +1743,6 @@
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_NAMESPACE=moiraUAE",
-					"MOIRA_SOFTFLOAT_PREFIX=moiraUAE_",
 					"MOIRA_COMPATIBILITY=UAE",
 					"$(inherited)",
 				);
@@ -1769,7 +1762,6 @@
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_NAMESPACE=moiraUAE",
-					"MOIRA_SOFTFLOAT_PREFIX=moiraUAE_",
 					"MOIRA_COMPATIBILITY=UAE",
 					"$(inherited)",
 				);
@@ -1789,7 +1781,6 @@
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_NAMESPACE=moiraUAE",
-					"MOIRA_SOFTFLOAT_PREFIX=moiraUAE_",
 					"MOIRA_COMPATIBILITY=UAE",
 					"$(inherited)",
 				);
@@ -1809,7 +1800,6 @@
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_NAMESPACE=moiraUAE",
-					"MOIRA_SOFTFLOAT_PREFIX=moiraUAE_",
 					"MOIRA_COMPATIBILITY=UAE",
 					"$(inherited)",
 					"RUNNER_NAMESPACE=runnerUAE",
@@ -1835,7 +1825,6 @@
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_NAMESPACE=moiraUAE",
-					"MOIRA_SOFTFLOAT_PREFIX=moiraUAE_",
 					"MOIRA_COMPATIBILITY=UAE",
 					"$(inherited)",
 					"RUNNER_NAMESPACE=runnerUAE",
@@ -1861,7 +1850,6 @@
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_NAMESPACE=moiraUAE",
-					"MOIRA_SOFTFLOAT_PREFIX=moiraUAE_",
 					"MOIRA_COMPATIBILITY=UAE",
 					"$(inherited)",
 					"RUNNER_NAMESPACE=runnerUAE",
@@ -1887,7 +1875,6 @@
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_NAMESPACE=moiraMusashi",
-					"MOIRA_SOFTFLOAT_PREFIX=moiraMusashi_",
 					"MOIRA_COMPATIBILITY=MUSASHI",
 					"$(inherited)",
 				);
@@ -1907,7 +1894,6 @@
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_NAMESPACE=moiraMusashi",
-					"MOIRA_SOFTFLOAT_PREFIX=moiraMusashi_",
 					"MOIRA_COMPATIBILITY=MUSASHI",
 					"$(inherited)",
 				);
@@ -1927,7 +1913,6 @@
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_NAMESPACE=moiraMusashi",
-					"MOIRA_SOFTFLOAT_PREFIX=moiraMusashi_",
 					"MOIRA_COMPATIBILITY=MUSASHI",
 					"$(inherited)",
 				);
@@ -1947,7 +1932,6 @@
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_NAMESPACE=moiraMusashi",
-					"MOIRA_SOFTFLOAT_PREFIX=moiraMusashi_",
 					"MOIRA_COMPATIBILITY=MUSASHI",
 					"$(inherited)",
 					"RUNNER_NAMESPACE=runnerMusashi",
@@ -1973,7 +1957,6 @@
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_NAMESPACE=moiraMusashi",
-					"MOIRA_SOFTFLOAT_PREFIX=moiraMusashi_",
 					"MOIRA_COMPATIBILITY=MUSASHI",
 					"$(inherited)",
 					"RUNNER_NAMESPACE=runnerMusashi",
@@ -1999,7 +1982,6 @@
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_NAMESPACE=moiraMusashi",
-					"MOIRA_SOFTFLOAT_PREFIX=moiraMusashi_",
 					"MOIRA_COMPATIBILITY=MUSASHI",
 					"$(inherited)",
 					"RUNNER_NAMESPACE=runnerMusashi",

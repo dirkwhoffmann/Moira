@@ -105,7 +105,10 @@ public:
     // Emulated FPU model
     FPUModel model = FPUModel::INTERNAL;
 
-    // Floating-point data registers FP0 to FP7
+    // The floating-point environment (rounding mode, precision, exception flags)
+    SoftFloat sf;
+
+    // Floating-point data registers FP0 to FP7 (bound to the environment above)
     Float80 fpr[8];
 
     // Control register
@@ -127,7 +130,11 @@ public:
 
 public:
 
-    FPU() { reset(); }
+    FPU() { for (auto &reg : fpr) reg.bind(sf); reset(); }
+
+    // The registers refer to the environment, so an FPU must not be copied
+    FPU(const FPU &) = delete;
+    FPU &operator=(const FPU &) = delete;
 
     // Initializes all registers with their reset values
     void reset();
@@ -203,9 +210,10 @@ public:
 public:
 
     /* All arithmetic is carried out by Float80. Float80 takes the rounding
-     * mode and the rounding precision from the (thread-local) FloatEnv and
-     * reports exceptions by raising flags in it. A Scope object connects the
-     * FPU to this environment: When created, it loads the rounding mode and
+     * mode and the rounding precision from the environment it is bound to and
+     * reports exceptions by raising flags in it. The registers of the FPU are
+     * bound to its own SoftFloat object. A Scope object connects the FPU to
+     * this environment: When created, it loads the rounding mode and
      * precision from FPCR and clears the exception flags. When destroyed, it
      * transfers the raised exceptions into the exception status byte of FPSR
      * and restores the previous environment.
@@ -218,7 +226,7 @@ public:
     class Scope {
 
         FPU &fpu;
-        FloatEnv::Scope saved;
+        SoftFloat::Scope saved;
 
     public:
 
@@ -229,7 +237,7 @@ public:
         ~Scope();
     };
 
-    // Transfers the exception flags of FloatEnv into FPSR and clears them
+    // Transfers the exception flags of the environment into FPSR and clears them
     void collectFlags();
 
 

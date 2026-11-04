@@ -40,10 +40,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include "primitiveTypes.h"
-#include "softfloat.h"
+#include "softfloat_enums.h"
+
+#include "../MoiraConfig.h"
+
+namespace MOIRA_NAMESPACE {
+
 
 /*----------------------------------------------------------------------------
-| Default value for 'moira_softfloat_detectTininess'.
+| Default value for 'env.tininess'.
 *----------------------------------------------------------------------------*/
 #define init_detectTininess softfloat_tininess_afterRounding
 
@@ -135,13 +140,13 @@ uint_fast16_t
 | location pointed to by 'zPtr'.  If the NaN is a signaling NaN, the invalid
 | exception is raised.
 *----------------------------------------------------------------------------*/
-void moira_softfloat_f32UIToCommonNaN( uint_fast32_t uiA, struct commonNaN *zPtr );
+void softfloat_f32UIToCommonNaN( uint_fast32_t uiA, struct commonNaN *zPtr );
 
 /*----------------------------------------------------------------------------
 | Converts the common NaN pointed to by 'aPtr' into a 32-bit floating-point
 | NaN, and returns the bit pattern of this value as an unsigned integer.
 *----------------------------------------------------------------------------*/
-uint_fast32_t moira_softfloat_commonNaNToF32UI( const struct commonNaN *aPtr );
+uint_fast32_t softfloat_commonNaNToF32UI( const struct commonNaN *aPtr );
 
 /*----------------------------------------------------------------------------
 | Interpreting 'uiA' and 'uiB' as the bit patterns of two 32-bit floating-
@@ -170,13 +175,13 @@ uint_fast32_t
 | location pointed to by 'zPtr'.  If the NaN is a signaling NaN, the invalid
 | exception is raised.
 *----------------------------------------------------------------------------*/
-void moira_softfloat_f64UIToCommonNaN( uint_fast64_t uiA, struct commonNaN *zPtr );
+void softfloat_f64UIToCommonNaN( uint_fast64_t uiA, struct commonNaN *zPtr );
 
 /*----------------------------------------------------------------------------
 | Converts the common NaN pointed to by 'aPtr' into a 64-bit floating-point
 | NaN, and returns the bit pattern of this value as an unsigned integer.
 *----------------------------------------------------------------------------*/
-uint_fast64_t moira_softfloat_commonNaNToF64UI( const struct commonNaN *aPtr );
+uint_fast64_t softfloat_commonNaNToF64UI( const struct commonNaN *aPtr );
 
 /*----------------------------------------------------------------------------
 | Interpreting 'uiA' and 'uiB' as the bit patterns of two 64-bit floating-
@@ -216,7 +221,7 @@ uint_fast64_t
 | exception is raised.
 *----------------------------------------------------------------------------*/
 void
- moira_softfloat_extF80UIToCommonNaN(
+ softfloat_extF80UIToCommonNaN(
      uint_fast16_t uiA64, uint_fast64_t uiA0, struct commonNaN *zPtr );
 
 /*----------------------------------------------------------------------------
@@ -224,7 +229,7 @@ void
 | floating-point NaN, and returns the bit pattern of this value as an unsigned
 | integer.
 *----------------------------------------------------------------------------*/
-struct uint128 moira_softfloat_commonNaNToExtF80UI( const struct commonNaN *aPtr );
+struct uint128 softfloat_commonNaNToExtF80UI( const struct commonNaN *aPtr );
 
 /*----------------------------------------------------------------------------
 | Interpreting the unsigned integer formed from concatenating 'uiA64' and
@@ -236,7 +241,7 @@ struct uint128 moira_softfloat_commonNaNToExtF80UI( const struct commonNaN *aPtr
 | invalid exception is raised.
 *----------------------------------------------------------------------------*/
 struct uint128
- moira_softfloat_propagateNaNExtF80UI(
+ softfloat_propagateNaNExtF80UI(
      uint_fast16_t uiA64,
      uint_fast64_t uiA0,
      uint_fast16_t uiB64,
@@ -371,6 +376,9 @@ void
      const uint32_t *aWPtr, const uint32_t *bWPtr, uint32_t *zWPtr );
 
 #endif
+
+
+}
 
 #endif
 

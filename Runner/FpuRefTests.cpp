@@ -436,7 +436,7 @@ void testConversions(int model, long iterations)
         // Single precision to extended
         {
             u32 raw = genSingle();
-            Float80 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::fromSingle(raw); }
+            Float80 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::fromSingle(raw, fpu.sf); }
             auto ref = uaeref::fromSingle(raw, fpcr);
             Reporter rep("single -> extended" + tag);
             if (v.signExp() != ref.se || v.mantissa() != ref.man || (fpu.fpsr & 0xFF00) != ref.exc)
@@ -447,7 +447,7 @@ void testConversions(int model, long iterations)
         // Double precision to extended
         {
             u64 raw = genDouble();
-            Float80 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::fromDouble(raw); }
+            Float80 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::fromDouble(raw, fpu.sf); }
             auto ref = uaeref::fromDouble(raw, fpcr);
             Reporter rep("double -> extended" + tag);
             if (v.signExp() != ref.se || v.mantissa() != ref.man || (fpu.fpsr & 0xFF00) != ref.exc)
@@ -458,7 +458,7 @@ void testConversions(int model, long iterations)
         // Extended to single
         {
             Float80 x = genOperand();
-            u32 raw; { fpu.setFPSR(0); FPU::Scope s(fpu); raw = FpuFormats::toSingle(x); }
+            u32 raw; { fpu.setFPSR(0); FPU::Scope s(fpu); raw = FpuFormats::toSingle(x.in(fpu.sf)); }
             auto ref = uaeref::toSingle(x.signExp(), x.mantissa(), fpcr);
             Reporter rep("extended -> single" + tag);
             if (raw == ref.raw[0] && (fpu.fpsr & FPEXP::OVFL) && (fpu.fpsr & 0xFF00) == (ref.exc | uaeref::INEX2)) rep.known(); else
@@ -470,7 +470,7 @@ void testConversions(int model, long iterations)
         // Extended to double
         {
             Float80 x = genOperand();
-            u64 raw; { fpu.setFPSR(0); FPU::Scope s(fpu); raw = FpuFormats::toDouble(x); }
+            u64 raw; { fpu.setFPSR(0); FPU::Scope s(fpu); raw = FpuFormats::toDouble(x.in(fpu.sf)); }
             auto ref = uaeref::toDouble(x.signExp(), x.mantissa(), fpcr);
             u64 refRaw = u64(ref.raw[0]) << 32 | ref.raw[1];
             Reporter rep("extended -> double" + tag);
@@ -484,7 +484,7 @@ void testConversions(int model, long iterations)
         for (int bits : { 8, 16, 32 }) {
 
             Float80 x = genOperand();
-            i32 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::toInteger(x, bits); }
+            i32 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::toInteger(x.in(fpu.sf), bits); }
             auto ref = uaeref::toInteger(x.signExp(), x.mantissa(), bits, fpcr);
             u32 mask = bits == 8 ? 0xFF : bits == 16 ? 0xFFFF : 0xFFFFFFFF;
             Reporter rep("extended -> int" + std::to_string(bits) + tag);
@@ -500,7 +500,7 @@ void testConversions(int model, long iterations)
             Float80 x = genOperand();
             int k = int(rng() % 128) - 64;
             if (rng() % 2) k = 1 + int(rng() % 17);
-            u32 w[3] = {}; { fpu.setFPSR(0); FPU::Scope s(fpu); FpuFormats::toPacked(x, k, w); }
+            u32 w[3] = {}; { fpu.setFPSR(0); FPU::Scope s(fpu); FpuFormats::toPacked(x.in(fpu.sf), k, w); }
             auto ref = uaeref::toPacked(x.signExp(), x.mantissa(), k, fpcr);
             Reporter rep("extended -> packed" + tag);
             bool sameWords = w[0] == ref.raw[0] && w[1] == ref.raw[1] && w[2] == ref.raw[2];
@@ -542,7 +542,7 @@ void testConversions(int model, long iterations)
             // Exponent digits must be BCD
             u32 e = rng() % 1000;
             w[0] = (w[0] & 0xC000000F) | ((e / 100) << 24) | (((e / 10) % 10) << 20) | ((e % 10) << 16);
-            Float80 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::fromPacked(w); }
+            Float80 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::fromPacked(w, fpu.sf); }
             u32 exc = fpu.fpsr & 0xFF00;
             if (exc & FPEXP::INEX2) exc = (exc & ~FPEXP::INEX2) | FPEXP::INEX1;
             auto ref = uaeref::fromPacked(w, fpcr);

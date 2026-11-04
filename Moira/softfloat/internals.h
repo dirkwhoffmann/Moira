@@ -42,6 +42,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "primitives.h"
 #include "softfloat_types.h"
 
+#include "../MoiraConfig.h"
+
+namespace MOIRA_NAMESPACE {
+
+
 union ui16_f16 { uint16_t ui; float16_t f; };
 union ui16_bf16 { uint16_t ui; bfloat16_t f; };
 union ui32_f32 { uint32_t ui; float32_t f; };
@@ -69,11 +74,11 @@ uint_fast64_t
 uint_fast64_t softfloat_roundMToUI64( bool, uint32_t *, uint_fast8_t, bool );
 #endif
 
-int_fast32_t moira_softfloat_roundToI32( bool, uint_fast64_t, uint_fast8_t, bool );
+int_fast32_t softfloat_roundToI32( bool, uint_fast64_t, uint_fast8_t, bool );
 
 #ifdef SOFTFLOAT_FAST_INT64
 int_fast64_t
- moira_softfloat_roundToI64(
+ softfloat_roundToI64(
      bool, uint_fast64_t, uint_fast64_t, uint_fast8_t, bool );
 #else
 int_fast64_t softfloat_roundMToI64( bool, uint32_t *, uint_fast8_t, bool );
@@ -122,9 +127,9 @@ struct exp8_sig16 softfloat_normSubnormalBF16Sig( uint_fast16_t );
 #define isNaNF32UI( a ) (((~(a) & 0x7F800000) == 0) && ((a) & 0x007FFFFF))
 
 struct exp16_sig32 { int_fast16_t exp; uint_fast32_t sig; };
-struct exp16_sig32 moira_softfloat_normSubnormalF32Sig( uint_fast32_t );
+struct exp16_sig32 softfloat_normSubnormalF32Sig( uint_fast32_t );
 
-float32_t moira_softfloat_roundPackToF32( bool, int_fast16_t, uint_fast32_t );
+float32_t softfloat_roundPackToF32( bool, int_fast16_t, uint_fast32_t );
 float32_t softfloat_normRoundPackToF32( bool, int_fast16_t, uint_fast32_t );
 
 float32_t softfloat_addMagsF32( uint_fast32_t, uint_fast32_t );
@@ -143,9 +148,9 @@ float32_t
 #define isNaNF64UI( a ) (((~(a) & UINT64_C( 0x7FF0000000000000 )) == 0) && ((a) & UINT64_C( 0x000FFFFFFFFFFFFF )))
 
 struct exp16_sig64 { int_fast16_t exp; uint_fast64_t sig; };
-struct exp16_sig64 moira_softfloat_normSubnormalF64Sig( uint_fast64_t );
+struct exp16_sig64 softfloat_normSubnormalF64Sig( uint_fast64_t );
 
-float64_t moira_softfloat_roundPackToF64( bool, int_fast16_t, uint_fast64_t );
+float64_t softfloat_roundPackToF64( bool, int_fast16_t, uint_fast64_t );
 float64_t softfloat_normRoundPackToF64( bool, int_fast16_t, uint_fast64_t );
 
 float64_t softfloat_addMagsF64( uint_fast64_t, uint_fast64_t, bool );
@@ -168,20 +173,20 @@ float64_t
 *----------------------------------------------------------------------------*/
 
 struct exp32_sig64 { int_fast32_t exp; uint64_t sig; };
-struct exp32_sig64 moira_softfloat_normSubnormalExtF80Sig( uint_fast64_t );
+struct exp32_sig64 softfloat_normSubnormalExtF80Sig( uint_fast64_t );
 
 extFloat80_t
- moira_softfloat_roundPackToExtF80(
+ softfloat_roundPackToExtF80(
      bool, int_fast32_t, uint_fast64_t, uint_fast64_t, uint_fast8_t );
 extFloat80_t
- moira_softfloat_normRoundPackToExtF80(
+ softfloat_normRoundPackToExtF80(
      bool, int_fast32_t, uint_fast64_t, uint_fast64_t, uint_fast8_t );
 
 extFloat80_t
- moira_softfloat_addMagsExtF80(
+ softfloat_addMagsExtF80(
      uint_fast16_t, uint_fast64_t, uint_fast16_t, uint_fast64_t, bool );
 extFloat80_t
- moira_softfloat_subMagsExtF80(
+ softfloat_subMagsExtF80(
      uint_fast16_t, uint_fast64_t, uint_fast16_t, uint_fast64_t, bool );
 
 /*----------------------------------------------------------------------------
@@ -286,6 +291,9 @@ void
  );
 
 #endif
+
+
+}
 
 #endif
 

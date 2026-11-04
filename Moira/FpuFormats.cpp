@@ -38,6 +38,7 @@ int bcd(u32 w, int shift) { return int((w >> shift) & 0xF); }
 i32
 FpuFormats::toInteger(const Float80 &value, int bits)
 {
+    auto &sf = value.env();
     i64 hi = (1LL << (bits - 1)) - 1;
     i64 lo = -hi - 1;
 
@@ -45,17 +46,17 @@ FpuFormats::toInteger(const Float80 &value, int bits)
 
         // The result consists of the most significant bits of the (quieted) mantissa
         u64 man = value.mantissa();
-        if (value.isSignalingNaN()) { FloatEnv::raiseFlags(FloatFlags::SNAN); man |= 1ULL << 62; }
-        FloatEnv::raiseFlags(FloatFlags::INVALID);
+        if (value.isSignalingNaN()) { sf.raiseFlags(FloatFlags::SNAN); man |= 1ULL << 62; }
+        sf.raiseFlags(FloatFlags::INVALID);
         return (i32)(u32)(man >> (64 - bits));
     }
     if (value.isInfinite()) {
 
-        FloatEnv::raiseFlags(FloatFlags::INVALID);
+        sf.raiseFlags(FloatFlags::INVALID);
         return (i32)(value.sign() ? lo : hi);
     }
 
-    auto saved = FloatEnv::flags();
+    auto saved = sf.flags();
     auto rounded = value.roundToInt();
 
     if (rounded.exponent() < 63) {
@@ -65,9 +66,9 @@ FpuFormats::toInteger(const Float80 &value, int bits)
     }
 
     // An overflow is reported as an operand error without the inexact exception
-    FloatEnv::clearFlags();
-    FloatEnv::raiseFlags(saved);
-    FloatEnv::raiseFlags(FloatFlags::INVALID);
+    sf.clearFlags();
+    sf.raiseFlags(saved);
+    sf.raiseFlags(FloatFlags::INVALID);
     return (i32)(value.sign() ? lo : hi);
 }
 
@@ -77,43 +78,44 @@ FpuFormats::toInteger(const Float80 &value, int bits)
 //
 
 Float80
-FpuFormats::fromSingle(u32 raw)
+FpuFormats::fromSingle(u32 raw, SoftFloat &sf)
 {
     // NaNs are converted bit by bit to keep their payload and their signaling state
     if ((raw & 0x7F800000) == 0x7F800000 && (raw & 0x007FFFFF)) {
         return Float80::fromBits(u16((raw >> 16) & 0x8000) | 0x7FFF,
-                                 u64(raw & 0x007FFFFF) << 40);
+                                 u64(raw & 0x007FFFFF) << 40).in(sf);
     }
 
     // Denormals keep their unnormalized significand and the smallest normal exponent
     if ((raw & 0x7F800000) == 0 && (raw & 0x007FFFFF)) {
-        return Float80::fromBits(u16((raw >> 16) & 0x8000) | 0x3F81, u64(raw & 0x007FFFFF) << 40);
+        return Float80::fromBits(u16((raw >> 16) & 0x8000) | 0x3F81, u64(raw & 0x007FFFFF) << 40).in(sf);
     }
-    return Float80::fromFloat(std::bit_cast<float>(raw));
+    return Float80::fromFloat(std::bit_cast<float>(raw), sf);
 }
 
 Float80
-FpuFormats::fromDouble(u64 raw)
+FpuFormats::fromDouble(u64 raw, SoftFloat &sf)
 {
     if ((raw & 0x7FF0000000000000ULL) == 0x7FF0000000000000ULL && (raw & 0x000FFFFFFFFFFFFFULL)) {
         return Float80::fromBits(u16((raw >> 48) & 0x8000) | 0x7FFF,
-                                 (raw & 0x000FFFFFFFFFFFFFULL) << 11);
+                                 (raw & 0x000FFFFFFFFFFFFFULL) << 11).in(sf);
     }
 
     if ((raw & 0x7FF0000000000000ULL) == 0 && (raw & 0x000FFFFFFFFFFFFFULL)) {
-        return Float80::fromBits(u16((raw >> 48) & 0x8000) | 0x3C01, (raw & 0x000FFFFFFFFFFFFFULL) << 11);
+        return Float80::fromBits(u16((raw >> 48) & 0x8000) | 0x3C01, (raw & 0x000FFFFFFFFFFFFFULL) << 11).in(sf);
     }
-    return Float80::fromDouble(std::bit_cast<double>(raw));
+    return Float80::fromDouble(std::bit_cast<double>(raw), sf);
 }
 
 u32
 FpuFormats::toSingle(const Float80 &value)
 {
+    auto &sf = value.env();
     if (value.isNaN()) {
 
         // Truncate the payload, but make sure the result remains a NaN
         u32 frac = u32((value.mantissa() >> 40) & 0x007FFFFF);
-        if (value.isSignalingNaN()) { FloatEnv::raiseFlags(FloatFlags::SNAN); frac |= 0x00400000; }
+        if (value.isSignalingNaN()) { sf.raiseFlags(FloatFlags::SNAN); frac |= 0x00400000; }
         if (frac == 0) frac = 0x00400000;
         return u32(value.sign()) << 31 | 0x7F800000 | frac;
     }
@@ -123,10 +125,11 @@ FpuFormats::toSingle(const Float80 &value)
 u64
 FpuFormats::toDouble(const Float80 &value)
 {
+    auto &sf = value.env();
     if (value.isNaN()) {
 
         u64 frac = (value.mantissa() >> 11) & 0x000FFFFFFFFFFFFFULL;
-        if (value.isSignalingNaN()) { FloatEnv::raiseFlags(FloatFlags::SNAN); frac |= 0x0008000000000000ULL; }
+        if (value.isSignalingNaN()) { sf.raiseFlags(FloatFlags::SNAN); frac |= 0x0008000000000000ULL; }
         if (frac == 0) frac = 0x0008000000000000ULL;
         return u64(value.sign()) << 63 | 0x7FF0000000000000ULL | frac;
     }
@@ -139,9 +142,9 @@ FpuFormats::toDouble(const Float80 &value)
 //
 
 Float80
-FpuFormats::fromExtended(const u32 (&w)[3])
+FpuFormats::fromExtended(const u32 (&w)[3], SoftFloat &sf)
 {
-    return Float80::fromBits(u16(w[0] >> 16), u64(w[1]) << 32 | w[2]);
+    return Float80::fromBits(u16(w[0] >> 16), u64(w[1]) << 32 | w[2]).in(sf);
 }
 
 void
@@ -158,12 +161,12 @@ FpuFormats::toExtended(const Float80 &value, u32 (&w)[3])
 //
 
 Float80
-FpuFormats::fromPacked(const u32 (&w)[3])
+FpuFormats::fromPacked(const u32 (&w)[3], SoftFloat &sf)
 {
     // The conversion is carried out in extended precision. A reduced precision
     // is applied by the instruction that uses the value.
-    FloatEnv::Scope scope;
-    FloatEnv::setPrecision(Precision::EXTENDED);
+    SoftFloat::Scope scope(sf);
+    sf.setPrecision(Precision::EXTENDED);
 
     bool sm = w[0] >> 31;
     bool se = (w[0] >> 30) & 1;
@@ -172,7 +175,7 @@ FpuFormats::fromPacked(const u32 (&w)[3])
     if (((w[0] >> 16) & 0xFFF) == 0xFFF) {
 
         u64 man = u64(w[1]) << 32 | w[2];
-        return Float80::fromBits(sm ? 0xFFFF : 0x7FFF, man);
+        return Float80::fromBits(sm ? 0xFFFF : 0x7FFF, man).in(sf);
     }
 
     // Extract the exponent
@@ -184,15 +187,15 @@ FpuFormats::fromPacked(const u32 (&w)[3])
     for (int i = 28; i >= 0; i -= 4) digits = digits * 10 + bcd(w[1], i);
     for (int i = 28; i >= 0; i -= 4) digits = digits * 10 + bcd(w[2], i);
 
-    if (digits == 0) return Float80::zero(sm);
+    if (digits == 0) return Float80::zero(sm).in(sf);
 
     // The value is digits * 10^e
     int e = exp - 16;
     u64 sig, extra;
 
     // Check for obvious overflows and underflows to keep the integers small
-    if (e > 6000)  return Float80::roundPack(sm, 0x7FFF, 1ULL << 63);
-    if (e < -6000) return Float80::roundPack(sm, 0, 1ULL << 63);
+    if (e > 6000)  return Float80::roundPack(sm, 0x7FFF, 1ULL << 63, 0, sf);
+    if (e < -6000) return Float80::roundPack(sm, 0, 1ULL << 63, 0, sf);
 
     if (e >= 0) {
 
@@ -202,7 +205,7 @@ FpuFormats::fromPacked(const u32 (&w)[3])
 
         int len;
         top128(n, sig, extra, len);
-        return Float80::roundPack(sm, 0x3FFF + len - 1, sig, extra);
+        return Float80::roundPack(sm, 0x3FFF + len - 1, sig, extra, sf);
 
     } else {
 
@@ -218,13 +221,14 @@ FpuFormats::fromPacked(const u32 (&w)[3])
         int len;
         top128(q, sig, extra, len);
         if (!rem.isZero()) extra |= 1;
-        return Float80::roundPack(sm, 0x3FFF + len - 1 - shift, sig, extra);
+        return Float80::roundPack(sm, 0x3FFF + len - 1 - shift, sig, extra, sf);
     }
 }
 
 void
 FpuFormats::toPacked(const Float80 &value, int k, u32 (&w)[3])
 {
+    auto &sf = value.env();
     w[0] = w[1] = w[2] = 0;
     u32 sign = value.sign() ? 0x80000000 : 0;
 
@@ -236,7 +240,7 @@ FpuFormats::toPacked(const Float80 &value, int k, u32 (&w)[3])
 
             // Signaling NaNs are converted to quiet NaNs
             u64 man = value.mantissa();
-            if (value.isSignalingNaN()) { FloatEnv::raiseFlags(FloatFlags::SNAN); man |= 1ULL << 62; }
+            if (value.isSignalingNaN()) { sf.raiseFlags(FloatFlags::SNAN); man |= 1ULL << 62; }
             w[1] = u32(man >> 32);
             w[2] = u32(man);
         }
@@ -247,7 +251,7 @@ FpuFormats::toPacked(const Float80 &value, int k, u32 (&w)[3])
     if (value.isZero()) { w[0] = sign; return; }
 
     // Check the k-factor
-    if (k > 17) { FloatEnv::raiseFlags(FloatFlags::INVALID); k = 17; }
+    if (k > 17) { sf.raiseFlags(FloatFlags::INVALID); k = 17; }
 
     // Represent the value as man * 2^p
     Big man(value.mantissa());
@@ -290,7 +294,7 @@ FpuFormats::toPacked(const Float80 &value, int k, u32 (&w)[3])
         // Round the quotient
         bool up = false;
         if (inexact) {
-            switch (FloatEnv::roundingMode()) {
+            switch (sf.roundingMode()) {
 
                 case RoundingMode::NEAREST: {
                     Big twice = rem; twice.shl1(false);
@@ -310,7 +314,7 @@ FpuFormats::toPacked(const Float80 &value, int k, u32 (&w)[3])
             if (s.isZero()) {
 
                 // The result is zero, but keeps the exponent of the least significant digit
-                if (inexact) FloatEnv::raiseFlags(FloatFlags::INEXACT);
+                if (inexact) sf.raiseFlags(FloatFlags::INEXACT);
                 int ae = std::abs(t);
                 w[0] = sign | (t < 0 ? 0x40000000 : 0)
                      | u32(ae / 1000 % 10) << 12 | u32(ae / 100 % 10) << 24 | u32(ae / 10 % 10) << 20 | u32(ae % 10) << 16;
@@ -330,13 +334,13 @@ FpuFormats::toPacked(const Float80 &value, int k, u32 (&w)[3])
         break;
     }
 
-    if (inexact) FloatEnv::raiseFlags(FloatFlags::INEXACT);
+    if (inexact) sf.raiseFlags(FloatFlags::INEXACT);
 
     // Assemble the exponent
     int ae = std::abs(e10);
 
     // The exponent doesn't fit into three digits
-    if (ae >= 1000) FloatEnv::raiseFlags(FloatFlags::INVALID);
+    if (ae >= 1000) sf.raiseFlags(FloatFlags::INVALID);
     u32 exp = u32(ae / 1000 % 10) << 12 | u32(ae / 100 % 10) << 24 | u32(ae / 10 % 10) << 20 | u32(ae % 10) << 16;
     w[0] = sign | (e10 < 0 ? 0x40000000 : 0) | exp;
 

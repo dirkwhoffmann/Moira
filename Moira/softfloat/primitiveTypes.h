@@ -39,6 +39,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdint.h>
 
+#include "../MoiraConfig.h"
+
+namespace MOIRA_NAMESPACE {
+
+
 #ifdef SOFTFLOAT_FAST_INT64
 
 #ifdef LITTLEENDIAN
@@ -80,6 +85,9 @@ struct uint128_extra { struct uint128 v; uint64_t extra; };
 #define indexMultiwordLoBut( total, n ) (n)
 #define INIT_UINTM4( v3, v2, v1, v0 ) { v3, v2, v1, v0 }
 #endif
+
+
+}
 
 #endif
 

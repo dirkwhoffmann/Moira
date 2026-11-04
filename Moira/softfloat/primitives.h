@@ -41,6 +41,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include "primitiveTypes.h"
 
+#include "../MoiraConfig.h"
+
+namespace MOIRA_NAMESPACE {
+
+
 #ifndef softfloat_shortShiftRightJam64
 /*----------------------------------------------------------------------------
 | Shifts 'a' right by the number of bits given in 'dist', which must be in
@@ -50,10 +55,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *----------------------------------------------------------------------------*/
 #if defined INLINE_LEVEL && (2 <= INLINE_LEVEL)
 INLINE
-uint64_t moira_softfloat_shortShiftRightJam64( uint64_t a, uint_fast8_t dist )
+uint64_t softfloat_shortShiftRightJam64( uint64_t a, uint_fast8_t dist )
     { return a>>dist | ((a & (((uint_fast64_t) 1<<dist) - 1)) != 0); }
 #else
-uint64_t moira_softfloat_shortShiftRightJam64( uint64_t a, uint_fast8_t dist );
+uint64_t softfloat_shortShiftRightJam64( uint64_t a, uint_fast8_t dist );
 #endif
 #endif
 
@@ -68,13 +73,13 @@ uint64_t moira_softfloat_shortShiftRightJam64( uint64_t a, uint_fast8_t dist );
 | is zero or nonzero.
 *----------------------------------------------------------------------------*/
 #if defined INLINE_LEVEL && (2 <= INLINE_LEVEL)
-INLINE uint32_t moira_softfloat_shiftRightJam32( uint32_t a, uint_fast16_t dist )
+INLINE uint32_t softfloat_shiftRightJam32( uint32_t a, uint_fast16_t dist )
 {
     return
         (dist < 31) ? a>>dist | ((uint32_t) (a<<(-dist & 31)) != 0) : (a != 0);
 }
 #else
-uint32_t moira_softfloat_shiftRightJam32( uint32_t a, uint_fast16_t dist );
+uint32_t softfloat_shiftRightJam32( uint32_t a, uint_fast16_t dist );
 #endif
 #endif
 
@@ -89,13 +94,13 @@ uint32_t moira_softfloat_shiftRightJam32( uint32_t a, uint_fast16_t dist );
 | is zero or nonzero.
 *----------------------------------------------------------------------------*/
 #if defined INLINE_LEVEL && (3 <= INLINE_LEVEL)
-INLINE uint64_t moira_softfloat_shiftRightJam64( uint64_t a, uint_fast32_t dist )
+INLINE uint64_t softfloat_shiftRightJam64( uint64_t a, uint_fast32_t dist )
 {
     return
         (dist < 63) ? a>>dist | ((uint64_t) (a<<(-dist & 63)) != 0) : (a != 0);
 }
 #else
-uint64_t moira_softfloat_shiftRightJam64( uint64_t a, uint_fast32_t dist );
+uint64_t softfloat_shiftRightJam64( uint64_t a, uint_fast32_t dist );
 #endif
 #endif
 
@@ -104,7 +109,7 @@ uint64_t moira_softfloat_shiftRightJam64( uint64_t a, uint_fast32_t dist );
 | into the number of leading 0 bits before the most-significant 1 of that
 | integer.  For integer zero (index 0), the corresponding table element is 8.
 *----------------------------------------------------------------------------*/
-extern const uint_least8_t moira_softfloat_countLeadingZeros8[256];
+extern const uint_least8_t softfloat_countLeadingZeros8[256];
 
 #ifndef softfloat_countLeadingZeros16
 /*----------------------------------------------------------------------------
@@ -119,7 +124,7 @@ INLINE uint_fast8_t softfloat_countLeadingZeros16( uint16_t a )
         count = 0;
         a >>= 8;
     }
-    count += moira_softfloat_countLeadingZeros8[a];
+    count += softfloat_countLeadingZeros8[a];
     return count;
 }
 #else
@@ -144,7 +149,7 @@ INLINE uint_fast8_t softfloat_countLeadingZeros32( uint32_t a )
         count += 8;
         a <<= 8;
     }
-    count += moira_softfloat_countLeadingZeros8[a>>24];
+    count += softfloat_countLeadingZeros8[a>>24];
     return count;
 }
 #else
@@ -160,8 +165,8 @@ uint_fast8_t softfloat_countLeadingZeros32( uint32_t a );
 uint_fast8_t softfloat_countLeadingZeros64( uint64_t a );
 #endif
 
-extern const uint16_t moira_softfloat_approxRecip_1k0s[16];
-extern const uint16_t moira_softfloat_approxRecip_1k1s[16];
+extern const uint16_t softfloat_approxRecip_1k0s[16];
+extern const uint16_t softfloat_approxRecip_1k1s[16];
 
 #ifndef softfloat_approxRecip32_1
 /*----------------------------------------------------------------------------
@@ -176,14 +181,14 @@ extern const uint16_t moira_softfloat_approxRecip_1k1s[16];
 | (units in the last place).
 *----------------------------------------------------------------------------*/
 #ifdef SOFTFLOAT_FAST_DIV64TO32
-#define moira_softfloat_approxRecip32_1( a ) ((uint32_t) (UINT64_C( 0x7FFFFFFFFFFFFFFF ) / (uint32_t) (a)))
+#define softfloat_approxRecip32_1( a ) ((uint32_t) (UINT64_C( 0x7FFFFFFFFFFFFFFF ) / (uint32_t) (a)))
 #else
-uint32_t moira_softfloat_approxRecip32_1( uint32_t a );
+uint32_t softfloat_approxRecip32_1( uint32_t a );
 #endif
 #endif
 
-extern const uint16_t moira_softfloat_approxRecipSqrt_1k0s[16];
-extern const uint16_t moira_softfloat_approxRecipSqrt_1k1s[16];
+extern const uint16_t softfloat_approxRecipSqrt_1k0s[16];
+extern const uint16_t softfloat_approxRecipSqrt_1k1s[16];
 
 #ifndef softfloat_approxRecipSqrt32_1
 /*----------------------------------------------------------------------------
@@ -204,7 +209,7 @@ extern const uint16_t moira_softfloat_approxRecipSqrt_1k1s[16];
 | returned is also always within the range 0.5 to 1; thus, the most-
 | significant bit of the result is always set.
 *----------------------------------------------------------------------------*/
-uint32_t moira_softfloat_approxRecipSqrt32_1( unsigned int oddExpA, uint32_t a );
+uint32_t softfloat_approxRecipSqrt32_1( unsigned int oddExpA, uint32_t a );
 #endif
 
 #ifdef SOFTFLOAT_FAST_INT64
@@ -237,10 +242,10 @@ bool softfloat_eq128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 );
 *----------------------------------------------------------------------------*/
 #if defined INLINE_LEVEL && (2 <= INLINE_LEVEL)
 INLINE
-bool moira_softfloat_le128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 )
+bool softfloat_le128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 )
     { return (a64 < b64) || ((a64 == b64) && (a0 <= b0)); }
 #else
-bool moira_softfloat_le128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 );
+bool softfloat_le128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 );
 #endif
 #endif
 
@@ -252,10 +257,10 @@ bool moira_softfloat_le128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0
 *----------------------------------------------------------------------------*/
 #if defined INLINE_LEVEL && (2 <= INLINE_LEVEL)
 INLINE
-bool moira_softfloat_lt128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 )
+bool softfloat_lt128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 )
     { return (a64 < b64) || ((a64 == b64) && (a0 < b0)); }
 #else
-bool moira_softfloat_lt128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 );
+bool softfloat_lt128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 );
 #endif
 #endif
 
@@ -267,7 +272,7 @@ bool moira_softfloat_lt128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0
 #if defined INLINE_LEVEL && (2 <= INLINE_LEVEL)
 INLINE
 struct uint128
- moira_softfloat_shortShiftLeft128( uint64_t a64, uint64_t a0, uint_fast8_t dist )
+ softfloat_shortShiftLeft128( uint64_t a64, uint64_t a0, uint_fast8_t dist )
 {
     struct uint128 z;
     z.v64 = a64<<dist | a0>>(-dist & 63);
@@ -276,7 +281,7 @@ struct uint128
 }
 #else
 struct uint128
- moira_softfloat_shortShiftLeft128( uint64_t a64, uint64_t a0, uint_fast8_t dist );
+ softfloat_shortShiftLeft128( uint64_t a64, uint64_t a0, uint_fast8_t dist );
 #endif
 #endif
 
@@ -303,13 +308,13 @@ struct uint128
 
 #ifndef softfloat_shortShiftRightJam64Extra
 /*----------------------------------------------------------------------------
-| This function is the same as 'moira_softfloat_shiftRightJam64Extra' (below),
+| This function is the same as 'softfloat_shiftRightJam64Extra' (below),
 | except that 'dist' must be in the range 1 to 63.
 *----------------------------------------------------------------------------*/
 #if defined INLINE_LEVEL && (2 <= INLINE_LEVEL)
 INLINE
 struct uint64_extra
- moira_softfloat_shortShiftRightJam64Extra(
+ softfloat_shortShiftRightJam64Extra(
      uint64_t a, uint64_t extra, uint_fast8_t dist )
 {
     struct uint64_extra z;
@@ -319,7 +324,7 @@ struct uint64_extra
 }
 #else
 struct uint64_extra
- moira_softfloat_shortShiftRightJam64Extra(
+ softfloat_shortShiftRightJam64Extra(
      uint64_t a, uint64_t extra, uint_fast8_t dist );
 #endif
 #endif
@@ -398,7 +403,7 @@ struct uint128_extra
 #if defined INLINE_LEVEL && (4 <= INLINE_LEVEL)
 INLINE
 struct uint64_extra
- moira_softfloat_shiftRightJam64Extra(
+ softfloat_shiftRightJam64Extra(
      uint64_t a, uint64_t extra, uint_fast32_t dist )
 {
     struct uint64_extra z;
@@ -414,7 +419,7 @@ struct uint64_extra
 }
 #else
 struct uint64_extra
- moira_softfloat_shiftRightJam64Extra(
+ softfloat_shiftRightJam64Extra(
      uint64_t a, uint64_t extra, uint_fast32_t dist );
 #endif
 #endif
@@ -431,7 +436,7 @@ struct uint64_extra
 | original 128 bits are all zeros.
 *----------------------------------------------------------------------------*/
 struct uint128
- moira_softfloat_shiftRightJam128( uint64_t a64, uint64_t a0, uint_fast32_t dist );
+ softfloat_shiftRightJam128( uint64_t a64, uint64_t a0, uint_fast32_t dist );
 #endif
 
 #ifndef softfloat_shiftRightJam128Extra
@@ -484,7 +489,7 @@ void
 #if defined INLINE_LEVEL && (2 <= INLINE_LEVEL)
 INLINE
 struct uint128
- moira_softfloat_add128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 )
+ softfloat_add128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 )
 {
     struct uint128 z;
     z.v0 = a0 + b0;
@@ -493,7 +498,7 @@ struct uint128
 }
 #else
 struct uint128
- moira_softfloat_add128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 );
+ softfloat_add128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 );
 #endif
 #endif
 
@@ -519,7 +524,7 @@ void
 #if defined INLINE_LEVEL && (2 <= INLINE_LEVEL)
 INLINE
 struct uint128
- moira_softfloat_sub128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 )
+ softfloat_sub128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 )
 {
     struct uint128 z;
     z.v0 = a0 - b0;
@@ -529,7 +534,7 @@ struct uint128
 }
 #else
 struct uint128
- moira_softfloat_sub128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 );
+ softfloat_sub128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 );
 #endif
 #endif
 
@@ -1155,6 +1160,9 @@ void
 #endif
 
 #endif
+
+
+}
 
 #endif
 

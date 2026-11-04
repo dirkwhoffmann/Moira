@@ -38,6 +38,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define softfloat_types_h 1
 
 #include <stdint.h>
+#include "platform.h"
+
+#include "../MoiraConfig.h"
+
+namespace MOIRA_NAMESPACE {
+
 
 /*----------------------------------------------------------------------------
 | Types used to pass 16-bit, 32-bit, 64-bit, and 128-bit floating-point
@@ -77,6 +83,9 @@ struct extFloat80M { uint16_t signExp; uint64_t signif; };
 | significand of the native type.
 *----------------------------------------------------------------------------*/
 typedef struct extFloat80M extFloat80_t;
+
+
+}
 
 #endif
 

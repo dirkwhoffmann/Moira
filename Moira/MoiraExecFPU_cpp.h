@@ -171,10 +171,10 @@ Moira::readFpuOpRg(int n, FpuFormat fmt)
 {
     switch (fmt) {
 
-        case FpuFormat::BYTE:       return FpuFormats::fromInteger((i8)reg.d[n]);
-        case FpuFormat::WORD:       return FpuFormats::fromInteger((i16)reg.d[n]);
-        case FpuFormat::LONG:       return FpuFormats::fromInteger((i32)reg.d[n]);
-        case FpuFormat::SINGLE:     return FpuFormats::fromSingle(reg.d[n]);
+        case FpuFormat::BYTE:       return FpuFormats::fromInteger((i8)reg.d[n], fpu.sf);
+        case FpuFormat::WORD:       return FpuFormats::fromInteger((i16)reg.d[n], fpu.sf);
+        case FpuFormat::LONG:       return FpuFormats::fromInteger((i32)reg.d[n], fpu.sf);
+        case FpuFormat::SINGLE:     return FpuFormats::fromSingle(reg.d[n], fpu.sf);
 
         default:                    throw IllegalInstruction();
     }
@@ -187,23 +187,23 @@ Moira::readFpuOpIm(FpuFormat fmt)
 
     switch (fmt) {
 
-        case FpuFormat::BYTE:       return FpuFormats::fromInteger((i8)readI<C, Word>());
-        case FpuFormat::WORD:       return FpuFormats::fromInteger((i16)readI<C, Word>());
-        case FpuFormat::LONG:       return FpuFormats::fromInteger((i32)readI<C, Long>());
-        case FpuFormat::SINGLE:     return FpuFormats::fromSingle(readI<C, Long>());
+        case FpuFormat::BYTE:       return FpuFormats::fromInteger((i8)readI<C, Word>(), fpu.sf);
+        case FpuFormat::WORD:       return FpuFormats::fromInteger((i16)readI<C, Word>(), fpu.sf);
+        case FpuFormat::LONG:       return FpuFormats::fromInteger((i32)readI<C, Long>(), fpu.sf);
+        case FpuFormat::SINGLE:     return FpuFormats::fromSingle(readI<C, Long>(), fpu.sf);
 
         case FpuFormat::DOUBLE:
         {
             u64 hi = readI<C, Long>();
             u64 lo = readI<C, Long>();
-            return FpuFormats::fromDouble(hi << 32 | lo);
+            return FpuFormats::fromDouble(hi << 32 | lo, fpu.sf);
         }
         case FpuFormat::EXTENDED:
         {
             w[0] = readI<C, Long>();
             w[1] = readI<C, Long>();
             w[2] = readI<C, Long>();
-            return FpuFormats::fromExtended(w);
+            return FpuFormats::fromExtended(w, fpu.sf);
         }
         case FpuFormat::PACKED:
         case FpuFormat::PACKED_DYN:
@@ -211,7 +211,7 @@ Moira::readFpuOpIm(FpuFormat fmt)
             w[0] = readI<C, Long>();
             w[1] = readI<C, Long>();
             w[2] = readI<C, Long>();
-            return FpuFormats::fromPacked(w);
+            return FpuFormats::fromPacked(w, fpu.sf);
         }
     }
     throw IllegalInstruction();
@@ -228,32 +228,32 @@ Moira::readFpuOpEa(int n, u32 ea, FpuFormat fmt)
         {
             auto data = readM<C, M, Byte>(ea);
             updateAn<M, Byte>(n);
-            return FpuFormats::fromInteger((i8)data);
+            return FpuFormats::fromInteger((i8)data, fpu.sf);
         }
         case FpuFormat::WORD:
         {
             auto data = readM<C, M, Word>(ea);
             updateAn<M, Word>(n);
-            return FpuFormats::fromInteger((i16)data);
+            return FpuFormats::fromInteger((i16)data, fpu.sf);
         }
         case FpuFormat::LONG:
         {
             auto data = readM<C, M, Long>(ea);
             updateAn<M, Long>(n);
-            return FpuFormats::fromInteger((i32)data);
+            return FpuFormats::fromInteger((i32)data, fpu.sf);
         }
         case FpuFormat::SINGLE:
         {
             auto data = readM<C, M, Long>(ea);
             updateAn<M, Long>(n);
-            return FpuFormats::fromSingle(data);
+            return FpuFormats::fromSingle(data, fpu.sf);
         }
         case FpuFormat::DOUBLE:
         {
             u64 hi = readM<C, M, Long>(ea);
             u64 lo = readM<C, M, Long>(U32_ADD(ea, 4));
             updateAn<M, Quad>(n);
-            return FpuFormats::fromDouble(hi << 32 | lo);
+            return FpuFormats::fromDouble(hi << 32 | lo, fpu.sf);
         }
         case FpuFormat::EXTENDED:
         {
@@ -261,7 +261,7 @@ Moira::readFpuOpEa(int n, u32 ea, FpuFormat fmt)
             w[1] = readM<C, M, Long>(U32_ADD(ea, 4));
             w[2] = readM<C, M, Long>(U32_ADD(ea, 8));
             updateAn<M, Extended>(n);
-            return FpuFormats::fromExtended(w);
+            return FpuFormats::fromExtended(w, fpu.sf);
         }
         case FpuFormat::PACKED:
         case FpuFormat::PACKED_DYN:
@@ -270,7 +270,7 @@ Moira::readFpuOpEa(int n, u32 ea, FpuFormat fmt)
             w[1] = readM<C, M, Long>(U32_ADD(ea, 4));
             w[2] = readM<C, M, Long>(U32_ADD(ea, 8));
             updateAn<M, Extended>(n);
-            return FpuFormats::fromPacked(w);
+            return FpuFormats::fromPacked(w, fpu.sf);
         }
     }
     throw IllegalInstruction();
@@ -750,8 +750,8 @@ Moira::execFMove(u16 opcode)
     {
         // FSMOVE and FDMOVE round to single or double precision
         FPU::Scope scope(fpu);
-        if (cmd == 0x40) FloatEnv::setPrecision(Precision::SINGLE);
-        if (cmd == 0x44) FloatEnv::setPrecision(Precision::DOUBLE);
+        if (cmd == 0x40) fpu.sf.setPrecision(Precision::SINGLE);
+        if (cmd == 0x44) fpu.sf.setPrecision(Precision::DOUBLE);
 
         switch (cod) {
 
@@ -770,12 +770,12 @@ Moira::execFMove(u16 opcode)
                 if (format == FpuFormat::PACKED) {
 
                     // Packed decimal numbers are converted exactly, the inexact flag has its own bit
-                    FloatEnv::Scope exact;
-                    FloatEnv::setPrecision(Precision::EXTENDED);
-                    FloatEnv::clearFlags();
+                    SoftFloat::Scope exact(fpu.sf);
+                    fpu.sf.setPrecision(Precision::EXTENDED);
+                    fpu.sf.clearFlags();
                     value = readFpuOp<C, M>(reg, format);
-                    if (FloatEnv::flags() & FloatFlags::INEXACT) fpu.setExcStatusBit(FPEXP::INEX1);
-                    FloatEnv::clearFlags(FloatFlags::INEXACT);
+                    if (fpu.sf.flags() & FloatFlags::INEXACT) fpu.setExcStatusBit(FPEXP::INEX1);
+                    fpu.sf.clearFlags(FloatFlags::INEXACT);
 
                 } else {
 
@@ -1055,12 +1055,12 @@ Moira::execFGeneric(u16 opcode)
 
             if (FpuFormat(src) == FpuFormat::PACKED) {
 
-                FloatEnv::Scope exact;
-                FloatEnv::setPrecision(Precision::EXTENDED);
-                FloatEnv::clearFlags();
+                SoftFloat::Scope exact(fpu.sf);
+                fpu.sf.setPrecision(Precision::EXTENDED);
+                fpu.sf.clearFlags();
                 val = readFpuOp<C, M>(reg, FpuFormat(src));
-                if (FloatEnv::flags() & FloatFlags::INEXACT) fpu.setExcStatusBit(FPEXP::INEX1);
-                FloatEnv::clearFlags(FloatFlags::INEXACT);
+                if (fpu.sf.flags() & FloatFlags::INEXACT) fpu.setExcStatusBit(FPEXP::INEX1);
+                fpu.sf.clearFlags(FloatFlags::INEXACT);
 
             } else {
 

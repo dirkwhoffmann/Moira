@@ -42,6 +42,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include "primitiveTypes.h"
 
+#include "../MoiraConfig.h"
+
+namespace MOIRA_NAMESPACE {
+
+
 #ifdef SOFTFLOAT_BUILTIN_CLZ
 
 INLINE uint_fast8_t softfloat_countLeadingZeros16( uint16_t a )
@@ -109,6 +114,9 @@ void
 #endif
 
 #endif
+
+
+}
 
 #endif
 

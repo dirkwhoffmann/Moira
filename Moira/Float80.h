@@ -8,6 +8,7 @@
 #pragma once
 
 #include "MoiraTypes.h"
+#include "SoftFloat.h"
 
 namespace MOIRA_NAMESPACE {
 
@@ -27,94 +28,15 @@ namespace MOIRA_NAMESPACE {
  * non-canonical encodings (unnormals, pseudo-denormals) that the hardware
  * accepts as operands.
  *
- * The result of an operation is controlled by the floating-point environment
- * (FloatEnv): the rounding mode and the rounding precision are read from it,
- * and the IEEE exception flags raised by the operation are accumulated in it.
- * The environment is thread-local, which means that independent computations
- * on different threads don't interfere.
+ * The result of an operation is controlled by a floating-point environment
+ * (see SoftFloat): the rounding mode and the rounding precision are read from
+ * it, and the IEEE exception flags raised by the operation are accumulated in
+ * it. A number can be bound to a SoftFloat object, which is then used by all
+ * operations on the number, and passed on to the results. Operations on numbers
+ * that are not bound to any object use a thread-local standard environment
+ * (SoftFloat::standard()). If the operands of a binary operation are bound to
+ * different objects, the environment of the left operand takes precedence.
  */
-
-//
-// Floating-point environment
-//
-
-enum class RoundingMode : int {
-
-    NEAREST = 0,    ///< Round to nearest, ties to even
-    ZERO    = 1,    ///< Round toward zero
-    DOWN    = 2,    ///< Round toward negative infinity
-    UP      = 3     ///< Round toward positive infinity
-};
-
-/* The rounding precision limits the number of mantissa bits of a result. The
- * exponent range is always the one of the extended format.
- */
-enum class Precision : int {
-
-    SINGLE   = 32,  ///< 24 mantissa bits
-    DOUBLE   = 64,  ///< 53 mantissa bits
-    EXTENDED = 80   ///< 64 mantissa bits
-};
-
-// Exception flags. They are sticky: Once raised, a flag stays set until cleared.
-struct FloatFlags {
-
-    static constexpr u8 INEXACT     = 0x01;
-    static constexpr u8 UNFL        = 0x02;   ///< Underflow
-    static constexpr u8 OVFL        = 0x04;   ///< Overflow
-    static constexpr u8 DIV_BY_ZERO = 0x08;
-    static constexpr u8 INVALID     = 0x10;
-    static constexpr u8 SNAN        = 0x20;   ///< Signaling NaN operand (no SoftFloat counterpart)
-    static constexpr u8 ALL         = 0x3F;
-};
-
-class FloatEnv {
-
-public:
-
-    // Rounding mode (default: NEAREST)
-    static RoundingMode roundingMode();
-    static void setRoundingMode(RoundingMode mode);
-
-    // Rounding precision (default: EXTENDED)
-    static Precision precision();
-    static void setPrecision(Precision precision);
-
-    /* The exponent range of results. If the precision is SINGLE or DOUBLE, the
-     * Motorola FPUs limit the exponent range to the one of the corresponding
-     * format (default: true). FSGLMUL and FSGLDIV only reduce the mantissa
-     * and keep the extended exponent range.
-     */
-    static bool limitsExponent();
-    static void setLimitsExponent(bool value);
-
-    // Exception flags (see FloatFlags)
-    static u8 flags();
-    static void clearFlags(u8 mask = FloatFlags::ALL);
-    static void raiseFlags(u8 mask);
-
-    /* Saves the environment on construction and restores it on destruction.
-     * The flags are not restored by default, so exceptions raised inside the
-     * scope stay visible afterwards. Pass 'true' to discard them.
-     */
-    class Scope {
-
-        RoundingMode savedMode;
-        Precision savedPrecision;
-        bool savedLimits;
-        u8 savedFlags;
-        bool restoreFlags;
-
-    public:
-
-        explicit Scope(bool restoreFlags = false);
-        ~Scope();
-
-        Scope(const Scope &) = delete;
-        Scope &operator=(const Scope &) = delete;
-    };
-};
-
 
 //
 // Float80
@@ -127,6 +49,9 @@ class Float80 {
 
     // Mantissa (including the integer bit)
     u64 man = 0;
+
+    // Floating-point environment (nullptr if the number is not bound)
+    SoftFloat *envp = nullptr;
 
 public:
 
@@ -142,10 +67,33 @@ public:
     static constexpr Float80 fromBits(u16 signExp, u64 mantissa) { return { signExp, mantissa }; }
 
     // Converts from other number formats
-    static Float80 fromInt(i64 value);
-    static Float80 fromFloat(float value);
-    static Float80 fromDouble(double value);
+    static Float80 fromInt(i64 value, SoftFloat &sf = SoftFloat::standard());
+    static Float80 fromFloat(float value, SoftFloat &sf = SoftFloat::standard());
+    static Float80 fromDouble(double value, SoftFloat &sf = SoftFloat::standard());
     static Float80 fromLongDouble(long double value);
+
+    /* Binds the number to a floating-point environment. The first variant
+     * returns a bound copy. The second variant binds the number itself.
+     */
+    Float80 in(SoftFloat &sf) const;
+    void bind(SoftFloat &sf) { envp = (&sf == &SoftFloat::standard()) ? nullptr : &sf; }
+    bool isBound() const { return envp != nullptr; }
+
+    /* The environment is a property of the storage location rather than of the
+     * value. Assigning an unbound number to a bound one keeps the environment of
+     * the destination. This way, a register that is bound to an FPU stays bound,
+     * regardless of where the assigned value came from.
+     */
+    constexpr Float80(const Float80 &) = default;
+    constexpr Float80 &operator=(const Float80 &rhs)
+    {
+        se = rhs.se; man = rhs.man;
+        if (rhs.envp) envp = rhs.envp;
+        return *this;
+    }
+
+    // Returns the environment used by operations on this number
+    SoftFloat &env() const { return envp ? *envp : SoftFloat::standard(); }
 
     /* Composes a number from an unrounded significand. The value is
      * sig:extra * 2^(exp - bias - 63), where 'exp' is the biased exponent that
@@ -155,7 +103,7 @@ public:
      * (rounding mode and precision). Raises the inexact, underflow and
      * overflow flags as needed.
      */
-    static Float80 roundPack(bool sign, i32 exp, u64 sig, u64 extra = 0);
+    static Float80 roundPack(bool sign, i32 exp, u64 sig, u64 extra = 0, SoftFloat &sf = SoftFloat::standard());
 
     // Rounds to the current precision and exponent range (FMOVE, FABS, FNEG)
     Float80 rounded() const;

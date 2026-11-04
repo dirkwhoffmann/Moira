@@ -24,7 +24,7 @@ namespace MOIRA_NAMESPACE {
  * Internally, all values are represented as Float80. The functions in this
  * file convert between Float80 and the memory representations of the formats
  * listed above. They are pure functions of their arguments and the current
- * floating-point environment (FloatEnv): The rounding mode and precision are
+ * floating-point environment (SoftFloat): The rounding mode and precision are
  * read from it, and exceptions are reported by raising the corresponding
  * FloatFlags. Translating these flags into FPSR bits is up to the FPU.
  */
@@ -42,7 +42,7 @@ struct FpuFormats {
     //
 
     // Integers convert to Float80 without loss of precision
-    static Float80 fromInteger(i32 value) { return Float80::fromInt(value); }
+    static Float80 fromInteger(i32 value, SoftFloat &sf = SoftFloat::standard()) { return Float80::fromInt(value, sf); }
 
     /* Converts to an integer of 'bits' width (8, 16, or 32). The value is
      * rounded according to the current rounding mode. If it doesn't fit, the
@@ -57,8 +57,8 @@ struct FpuFormats {
     //
 
     // Conversions to Float80 are exact (signaling NaNs raise the invalid flag)
-    static Float80 fromSingle(u32 raw);
-    static Float80 fromDouble(u64 raw);
+    static Float80 fromSingle(u32 raw, SoftFloat &sf = SoftFloat::standard());
+    static Float80 fromDouble(u64 raw, SoftFloat &sf = SoftFloat::standard());
 
     // Conversions from Float80 are rounded according to the current rounding mode
     static u32 toSingle(const Float80 &value);
@@ -75,7 +75,7 @@ struct FpuFormats {
      *   w[1]: Mantissa (high)
      *   w[2]: Mantissa (low)
      */
-    static Float80 fromExtended(const u32 (&w)[3]);
+    static Float80 fromExtended(const u32 (&w)[3], SoftFloat &sf = SoftFloat::standard());
     static void toExtended(const Float80 &value, u32 (&w)[3]);
 
 
@@ -96,7 +96,7 @@ struct FpuFormats {
      *
      * Infinities and NaNs are marked by an exponent field of 0xFFF.
      */
-    static Float80 fromPacked(const u32 (&w)[3]);
+    static Float80 fromPacked(const u32 (&w)[3], SoftFloat &sf = SoftFloat::standard());
 
     /* Converts to packed decimal. The parameter 'k' is the k-factor. For
      * positive values, it is the number of significant digits (1...17). For

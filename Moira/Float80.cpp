@@ -6,17 +6,10 @@
 // -----------------------------------------------------------------------------
 
 #include "Float80.h"
-#include "softfloat/platform.h"
-#include "softfloat/moira_env.h"
 #include <algorithm>
 #include <bit>
 #include <cfloat>
 #include <cstring>
-
-extern "C" {
-#include "softfloat/softfloat.h"
-#include "softfloat/internals.h"
-}
 
 namespace MOIRA_NAMESPACE {
 
@@ -46,14 +39,6 @@ fromSF(const extFloat80_t &x)
     return Float80::fromBits(x.signExp, infinity ? 0 : x.signif);
 }
 
-inline uint_fast8_t
-roundingModeOf()
-{
-    return moira_sf_getRoundingMode();
-}
-
-thread_local bool limitExponent = true;
-
 using u128 = unsigned __int128;
 
 /* Returns the offset of the exponent range in effect. With a reduced precision,
@@ -61,11 +46,11 @@ using u128 = unsigned __int128;
  * 0x3C00), unless the limit is switched off.
  */
 inline i32
-exponentOffset()
+exponentOffset(SoftFloat &sf)
 {
-    if (!limitExponent) return 0;
+    if (!sf.limitsExponent()) return 0;
 
-    switch (FloatEnv::precision()) {
+    switch (sf.precision()) {
 
         case Precision::SINGLE:     return 0x3F80;
         case Precision::DOUBLE:     return 0x3C00;
@@ -91,14 +76,14 @@ exponentOffset()
  *    and the integer bit set is thus a regular result that is not tiny.
  */
 Float80
-roundToFormat(bool sign, i32 exp, u64 sig, u64 extra = 0)
+roundToFormat(SoftFloat &sf, bool sign, i32 exp, u64 sig, u64 extra = 0)
 {
-    auto precision = FloatEnv::precision();
+    auto precision = sf.precision();
     int bits = precision == Precision::SINGLE ? 24 : precision == Precision::DOUBLE ? 53 : 64;
-    i32 offset = exponentOffset();
+    i32 offset = exponentOffset(sf);
     i32 lowest = offset ? offset + 1 : 0;
     i32 maxExp = 0x7FFE - offset;
-    auto mode = FloatEnv::roundingMode();
+    auto mode = sf.roundingMode();
 
     u128 t = u128(sig) << 64 | extra;
     bool sticky = false;
@@ -140,7 +125,7 @@ roundToFormat(bool sign, i32 exp, u64 sig, u64 extra = 0)
     // Overflow
     if (exp > maxExp) {
 
-        FloatEnv::raiseFlags(FloatFlags::OVFL | FloatFlags::INEXACT);
+        sf.raiseFlags(FloatFlags::OVFL | FloatFlags::INEXACT);
         bool towardsZero = mode == RoundingMode::ZERO ||
                            (sign && mode == RoundingMode::UP) || (!sign && mode == RoundingMode::DOWN);
         u64 largest = bits == 64 ? ~0ULL : (~0ULL << (64 - bits));
@@ -148,8 +133,8 @@ roundToFormat(bool sign, i32 exp, u64 sig, u64 extra = 0)
                            : Float80::infinity(sign);
     }
 
-    if (inexact) FloatEnv::raiseFlags(FloatFlags::INEXACT);
-    if (tiny) FloatEnv::raiseFlags(FloatFlags::UNFL);
+    if (inexact) sf.raiseFlags(FloatFlags::INEXACT);
+    if (tiny) sf.raiseFlags(FloatFlags::UNFL);
 
     // A result that rounds to zero is a regular zero
     if (kept == 0) return Float80::zero(sign);
@@ -194,18 +179,25 @@ isRegular(const Float80 &x)
     return x.biasedExponent() != 0 && x.integerBit();
 }
 
+// Selects the environment of a binary operation (the left operand takes precedence)
+inline SoftFloat &
+envOf(const Float80 &a, const Float80 &b)
+{
+    return a.isBound() ? a.env() : b.env();
+}
+
 enum class Op { ADD, SUB, MUL, DIV, SQRT };
 
 Float80
-plain(Op op, const Float80 &a, const Float80 &b)
+plain(SoftFloat &sf, Op op, const Float80 &a, const Float80 &b)
 {
     switch (op) {
 
-        case Op::ADD:   return fromSF(moira_extF80_add(toSF(a), toSF(b)));
-        case Op::SUB:   return fromSF(moira_extF80_sub(toSF(a), toSF(b)));
-        case Op::MUL:   return fromSF(moira_extF80_mul(toSF(a), toSF(b)));
-        case Op::DIV:   return fromSF(moira_extF80_div(toSF(a), toSF(b)));
-        case Op::SQRT:  return fromSF(moira_extF80_sqrt(toSF(a)));
+        case Op::ADD:   return fromSF(sf.add(toSF(a), toSF(b)));
+        case Op::SUB:   return fromSF(sf.sub(toSF(a), toSF(b)));
+        case Op::MUL:   return fromSF(sf.mul(toSF(a), toSF(b)));
+        case Op::DIV:   return fromSF(sf.div(toSF(a), toSF(b)));
+        case Op::SQRT:  return fromSF(sf.sqrt(toSF(a)));
     }
     return Float80();
 }
@@ -220,7 +212,7 @@ plain(Op op, const Float80 &a, const Float80 &b)
  * result bits including a sticky flag, which are then rounded by roundToFormat.
  */
 Float80
-exactOp(Op op, const Float80 &a, const Float80 &b)
+exactOp(SoftFloat &sf, Op op, const Float80 &a, const Float80 &b)
 {
     constexpr i32 mid = Float80::bias;
 
@@ -262,26 +254,26 @@ exactOp(Op op, const Float80 &a, const Float80 &b)
         }
     }
 
-    auto saved = FloatEnv::flags();
-    auto mode = FloatEnv::roundingMode();
-    auto precision = FloatEnv::precision();
-    i32 offset = exponentOffset();
+    auto saved = sf.flags();
+    auto mode = sf.roundingMode();
+    auto precision = sf.precision();
+    i32 offset = exponentOffset(sf);
     i32 lowest = offset ? offset + 1 : 0;
     i32 maxExp = 0x7FFE - offset;
 
-    FloatEnv::clearFlags();
-    FloatEnv::setPrecision(Precision::EXTENDED);
+    sf.clearFlags();
+    sf.setPrecision(Precision::EXTENDED);
 
     // Run 1: Execute the operation with the selected rounding mode
-    auto r1 = plain(op, ra, rb);
-    auto flags1 = FloatEnv::flags();
+    auto r1 = plain(sf, op, ra, rb);
+    auto flags1 = sf.flags();
 
     // Special results are final (zeros, NaNs, division by zero, ...)
     if (!r1.isFinite() || r1.isZero()) {
 
-        FloatEnv::setPrecision(precision);
-        FloatEnv::clearFlags();
-        FloatEnv::raiseFlags(saved | flags1);
+        sf.setPrecision(precision);
+        sf.clearFlags();
+        sf.raiseFlags(saved | flags1);
         return r1;
     }
 
@@ -289,29 +281,29 @@ exactOp(Op op, const Float80 &a, const Float80 &b)
     i32 exp1 = r1.biasedExponent() + delta;
     auto final1 = [&] {
 
-        FloatEnv::clearFlags();
-        FloatEnv::raiseFlags(saved | flags1);
-        if (exp1 > maxExp) return roundToFormat(r1.sign(), exp1, r1.mantissa());
+        sf.clearFlags();
+        sf.raiseFlags(saved | flags1);
+        if (exp1 > maxExp) return roundToFormat(sf, r1.sign(), exp1, r1.mantissa());
         return Float80::fromBits(u16(exp1 | (r1.sign() ? 0x8000 : 0)), r1.mantissa());
     };
     if (precision == Precision::EXTENDED && exp1 >= lowest + 1) return final1();
 
     // Run 2: Truncate to get the exact result bits and a sticky flag
-    FloatEnv::clearFlags();
-    FloatEnv::setRoundingMode(RoundingMode::ZERO);
-    auto r2 = plain(op, ra, rb);
-    bool sticky = FloatEnv::flags() & FloatFlags::INEXACT;
+    sf.clearFlags();
+    sf.setRoundingMode(RoundingMode::ZERO);
+    auto r2 = plain(sf, op, ra, rb);
+    bool sticky = sf.flags() & FloatFlags::INEXACT;
 
-    FloatEnv::setRoundingMode(mode);
-    FloatEnv::setPrecision(precision);
-    FloatEnv::clearFlags();
-    FloatEnv::raiseFlags(saved);
+    sf.setRoundingMode(mode);
+    sf.setPrecision(precision);
+    sf.clearFlags();
+    sf.raiseFlags(saved);
 
     // Tininess is detected before rounding
     i32 exp2 = r2.biasedExponent() + delta;
     if (precision == Precision::EXTENDED && exp2 >= lowest) return final1();
 
-    return roundToFormat(r2.sign(), r2.biasedExponent() + delta, r2.mantissa(), sticky ? 1 : 0);
+    return roundToFormat(sf, r2.sign(), r2.biasedExponent() + delta, r2.mantissa(), sticky ? 1 : 0);
 }
 
 /* Executes an arithmetic operation. Regular operands are first processed by
@@ -320,19 +312,19 @@ exactOp(Op op, const Float80 &a, const Float80 &b)
  * executed by exactOp.
  */
 Float80
-arith(Op op, const Float80 &a, const Float80 &b = Float80())
+arith(SoftFloat &sf, Op op, const Float80 &a, const Float80 &b = Float80())
 {
     bool unary = op == Op::SQRT;
 
     if (isRegular(a) && (unary || isRegular(b))) {
 
-        auto saved = FloatEnv::flags();
-        FloatEnv::clearFlags();
-        auto result = plain(op, a, b);
-        auto flags = FloatEnv::flags();
+        auto saved = sf.flags();
+        sf.clearFlags();
+        auto result = plain(sf, op, a, b);
+        auto flags = sf.flags();
 
         // Check if the result is safely inside the range of the format
-        i32 offset = exponentOffset();
+        i32 offset = exponentOffset(sf);
         bool special = !result.isFinite() || result.isZero();
         bool overflown = result.isInfinite() && (flags & FloatFlags::OVFL);
         bool lost = result.isZero() && (flags & (FloatFlags::INEXACT | FloatFlags::UNFL));
@@ -340,115 +332,19 @@ arith(Op op, const Float80 &a, const Float80 &b = Float80())
         bool inside = special ? !overflown && !lost : (exp >= offset + 2 && exp <= 0x7FFE - offset - 1);
 
         if (inside) {
-            FloatEnv::raiseFlags(saved);
+            sf.raiseFlags(saved);
             return result;
         }
-        FloatEnv::clearFlags();
-        FloatEnv::raiseFlags(saved);
+        sf.clearFlags();
+        sf.raiseFlags(saved);
     }
 
     // NaNs and infinities are processed as they are
-    if (!a.isFinite() || (!unary && !b.isFinite())) return plain(op, a, b);
+    if (!a.isFinite() || (!unary && !b.isFinite())) return plain(sf, op, a, b);
 
-    return exactOp(op, a, b);
+    return exactOp(sf, op, a, b);
 }
 
-}
-
-
-//
-// FloatEnv
-//
-
-RoundingMode
-FloatEnv::roundingMode()
-{
-    switch (moira_sf_getRoundingMode()) {
-
-        case softfloat_round_minMag:    return RoundingMode::ZERO;
-        case softfloat_round_min:       return RoundingMode::DOWN;
-        case softfloat_round_max:       return RoundingMode::UP;
-        default:                        return RoundingMode::NEAREST;
-    }
-}
-
-void
-FloatEnv::setRoundingMode(RoundingMode mode)
-{
-    switch (mode) {
-
-        case RoundingMode::NEAREST: moira_sf_setRoundingMode(softfloat_round_near_even); break;
-        case RoundingMode::ZERO:    moira_sf_setRoundingMode(softfloat_round_minMag); break;
-        case RoundingMode::DOWN:    moira_sf_setRoundingMode(softfloat_round_min); break;
-        case RoundingMode::UP:      moira_sf_setRoundingMode(softfloat_round_max); break;
-    }
-}
-
-Precision
-FloatEnv::precision()
-{
-    switch (moira_sf_getPrecision()) {
-
-        case 32:    return Precision::SINGLE;
-        case 64:    return Precision::DOUBLE;
-        default:    return Precision::EXTENDED;
-    }
-}
-
-void
-FloatEnv::setPrecision(Precision precision)
-{
-    moira_sf_setPrecision((uint_fast8_t)precision);
-}
-
-bool
-FloatEnv::limitsExponent()
-{
-    return limitExponent;
-}
-
-void
-FloatEnv::setLimitsExponent(bool value)
-{
-    limitExponent = value;
-}
-
-u8
-FloatEnv::flags()
-{
-    return (u8)moira_sf_getFlags();
-}
-
-void
-FloatEnv::clearFlags(u8 mask)
-{
-    moira_sf_setFlags((uint_fast8_t)(moira_sf_getFlags() & ~mask));
-}
-
-void
-FloatEnv::raiseFlags(u8 mask)
-{
-    moira_sf_setFlags((uint_fast8_t)(moira_sf_getFlags() | (mask & FloatFlags::ALL)));
-}
-
-FloatEnv::Scope::Scope(bool restoreFlags) : restoreFlags(restoreFlags)
-{
-    savedMode = FloatEnv::roundingMode();
-    savedPrecision = FloatEnv::precision();
-    savedLimits = FloatEnv::limitsExponent();
-    savedFlags = FloatEnv::flags();
-}
-
-FloatEnv::Scope::~Scope()
-{
-    FloatEnv::setRoundingMode(savedMode);
-    FloatEnv::setPrecision(savedPrecision);
-    FloatEnv::setLimitsExponent(savedLimits);
-
-    if (restoreFlags) {
-        FloatEnv::clearFlags();
-        FloatEnv::raiseFlags(savedFlags);
-    }
 }
 
 
@@ -457,30 +353,39 @@ FloatEnv::Scope::~Scope()
 //
 
 Float80
-Float80::fromInt(i64 value)
+Float80::in(SoftFloat &sf) const
+{
+    // Numbers in the standard environment stay unbound (they may be used by other threads)
+    Float80 result = *this;
+    result.bind(sf);
+    return result;
+}
+
+Float80
+Float80::fromInt(i64 value, SoftFloat &sf)
 {
     // The conversion is always exact
-    return fromSF(moira_i64_to_extF80(value));
+    return fromSF(sf.fromI64(value)).in(sf);
 }
 
 Float80
-Float80::fromFloat(float value)
+Float80::fromFloat(float value, SoftFloat &sf)
 {
     // The conversion is always exact. Signaling NaNs raise the invalid flag.
-    return fromSF(moira_f32_to_extF80(float32_t{ std::bit_cast<u32>(value) }));
+    return fromSF(sf.fromF32(float32_t{ std::bit_cast<u32>(value) })).in(sf);
 }
 
 Float80
-Float80::fromDouble(double value)
+Float80::fromDouble(double value, SoftFloat &sf)
 {
     // The conversion is always exact. Signaling NaNs raise the invalid flag.
-    return fromSF(moira_f64_to_extF80(float64_t{ std::bit_cast<u64>(value) }));
+    return fromSF(sf.fromF64(float64_t{ std::bit_cast<u64>(value) })).in(sf);
 }
 
 Float80
-Float80::roundPack(bool sign, i32 exp, u64 sig, u64 extra)
+Float80::roundPack(bool sign, i32 exp, u64 sig, u64 extra, SoftFloat &sf)
 {
-    if (sig == 0 && extra == 0) return zero(sign);
+    if (sig == 0 && extra == 0) return zero(sign).in(sf);
     if (sig == 0) { sig = extra; extra = 0; exp -= 64; }
 
     int shift = std::countl_zero(sig);
@@ -488,7 +393,7 @@ Float80::roundPack(bool sign, i32 exp, u64 sig, u64 extra)
     extra <<= shift;
     exp -= shift;
 
-    return roundToFormat(sign, exp, sig, extra);
+    return roundToFormat(sf, sign, exp, sig, extra).in(sf);
 }
 
 Float80
@@ -497,10 +402,11 @@ Float80::rounded() const
     if (!isFinite() || mantissa() == 0) return *this;
 
     // Regular extended precision values are not changed
-    if (isRegular(*this) && exponentOffset() == 0 && FloatEnv::precision() == Precision::EXTENDED) return *this;
+    auto &sf = env();
+    if (isRegular(*this) && exponentOffset(sf) == 0 && sf.precision() == Precision::EXTENDED) return *this;
 
     Num n(*this);
-    return roundToFormat(n.sign, n.exp, n.sig);
+    return roundToFormat(sf, n.sign, n.exp, n.sig).in(sf);
 }
 
 Float80
@@ -529,37 +435,37 @@ Float80::fromLongDouble(long double value)
 i32
 Float80::toInt32() const
 {
-    return moira_extF80_to_i32(toSF(*this), roundingModeOf(), true);
+    return env().toI32(toSF(*this), env().env.roundingMode, true);
 }
 
 i32
 Float80::toInt32Truncated() const
 {
-    return moira_extF80_to_i32(toSF(*this), softfloat_round_minMag, true);
+    return env().toI32(toSF(*this), softfloat_round_minMag, true);
 }
 
 i64
 Float80::toInt64() const
 {
-    return moira_extF80_to_i64(toSF(*this), roundingModeOf(), true);
+    return env().toI64(toSF(*this), env().env.roundingMode, true);
 }
 
 i64
 Float80::toInt64Truncated() const
 {
-    return moira_extF80_to_i64(toSF(*this), softfloat_round_minMag, true);
+    return env().toI64(toSF(*this), softfloat_round_minMag, true);
 }
 
 float
 Float80::toFloat() const
 {
-    return std::bit_cast<float>(moira_extF80_to_f32(toSF(*this)).v);
+    return std::bit_cast<float>(env().toF32(toSF(*this)).v);
 }
 
 double
 Float80::toDouble() const
 {
-    return std::bit_cast<double>(moira_extF80_to_f64(toSF(*this)).v);
+    return std::bit_cast<double>(env().toF64(toSF(*this)).v);
 }
 
 long double
@@ -595,67 +501,80 @@ Float80
 Float80::operator-() const
 {
     // Flipping the sign is exact and raises no exception
-    return fromBits(u16(se ^ 0x8000), man);
+    Float80 result = *this;
+    result.se ^= 0x8000;
+    return result;
 }
 
 Float80
 Float80::abs() const
 {
-    return fromBits(u16(se & 0x7FFF), man);
+    Float80 result = *this;
+    result.se &= 0x7FFF;
+    return result;
 }
 
 Float80
 Float80::operator+(const Float80 &rhs) const
 {
-    return arith(Op::ADD, *this, rhs);
+    auto &sf = envOf(*this, rhs);
+    return arith(sf, Op::ADD, *this, rhs).in(sf);
 }
 
 Float80
 Float80::operator-(const Float80 &rhs) const
 {
-    return arith(Op::SUB, *this, rhs);
+    auto &sf = envOf(*this, rhs);
+    return arith(sf, Op::SUB, *this, rhs).in(sf);
 }
 
 Float80
 Float80::operator*(const Float80 &rhs) const
 {
-    return arith(Op::MUL, *this, rhs);
+    auto &sf = envOf(*this, rhs);
+    return arith(sf, Op::MUL, *this, rhs).in(sf);
 }
 
 Float80
 Float80::operator/(const Float80 &rhs) const
 {
-    return arith(Op::DIV, *this, rhs);
+    auto &sf = envOf(*this, rhs);
+    return arith(sf, Op::DIV, *this, rhs).in(sf);
 }
 
 Float80
 Float80::sqrt() const
 {
-    return arith(Op::SQRT, *this);
+    auto &sf = env();
+    return arith(sf, Op::SQRT, *this).in(sf);
 }
 
 Float80
 Float80::rem(const Float80 &rhs) const
 {
-    return fromSF(moira_extF80_rem(toSF(*this), toSF(rhs)));
+    auto &sf = envOf(*this, rhs);
+    return fromSF(sf.rem(toSF(*this), toSF(rhs))).in(sf);
 }
 
 Float80
 Float80::roundToInt() const
 {
-    return fromSF(moira_extF80_roundToInt(toSF(*this), roundingModeOf(), true));
+    auto &sf = env();
+    return fromSF(sf.roundToInt(toSF(*this), sf.env.roundingMode, true)).in(sf);
 }
 
 Float80
 Float80::scale(const Float80 &rhs) const
 {
+    auto &sf = envOf(*this, rhs);
+
     // NaNs propagate (and signaling NaNs raise the invalid flag)
     if (isNaN() || rhs.isNaN()) return *this + rhs;
 
     // Scaling by an infinite factor is undefined
     if (rhs.isInfinite()) {
-        FloatEnv::raiseFlags(FloatFlags::INVALID);
-        return quietNaN();
+        sf.raiseFlags(FloatFlags::INVALID);
+        return quietNaN().in(sf);
     }
 
     // Zeros and infinities are not changed
@@ -668,17 +587,17 @@ Float80::scale(const Float80 &rhs) const
         n = rhs.sign() ? -0x100000 : 0x100000;
     } else {
         // Truncating discards the fraction without being inexact
-        auto saved = FloatEnv::flags();
+        auto saved = sf.flags();
         n = rhs.toInt32Truncated();
-        FloatEnv::clearFlags();
-        FloatEnv::raiseFlags(saved);
+        sf.clearFlags();
+        sf.raiseFlags(saved);
     }
 
     // Normalize the mantissa
     Num x(*this);
 
     // The rounding step takes care of overflows and underflows
-    return roundToFormat(x.sign, x.exp + std::clamp(n, -0x100000, 0x100000), x.sig);
+    return roundToFormat(sf, x.sign, x.exp + std::clamp(n, -0x100000, 0x100000), x.sig).in(sf);
 }
 
 
@@ -689,19 +608,19 @@ Float80::scale(const Float80 &rhs) const
 bool
 Float80::operator==(const Float80 &rhs) const
 {
-    return moira_extF80_eq(toSF(*this), toSF(rhs));
+    return envOf(*this, rhs).eq(toSF(*this), toSF(rhs));
 }
 
 bool
 Float80::operator<(const Float80 &rhs) const
 {
-    return moira_extF80_lt(toSF(*this), toSF(rhs));
+    return envOf(*this, rhs).lt(toSF(*this), toSF(rhs));
 }
 
 bool
 Float80::operator<=(const Float80 &rhs) const
 {
-    return moira_extF80_le(toSF(*this), toSF(rhs));
+    return envOf(*this, rhs).le(toSF(*this), toSF(rhs));
 }
 
 }
