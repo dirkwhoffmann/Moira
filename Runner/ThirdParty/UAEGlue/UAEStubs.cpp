@@ -24,6 +24,9 @@
 #include "ar.h"
 #include "debug.h"
 #include "disasm.h"
+#include <cstdarg>
+#include <cstring>
+#include <cctype>
 #include "inputrecord.h"
 #include "savestate.h"
 #include "autoconf.h"
@@ -39,7 +42,6 @@
 struct uae_prefs currprefs, changed_prefs;
 struct gui_info gui_data;
 struct ev eventtab[ev_max];
-struct cpum2c m2cregs[1] = {};
 
 int config_changed, config_changed_flags;
 int debugging, exception_debugging, debug_dma;
@@ -182,8 +184,43 @@ int uae_start_thread(const char *, uae_thread_function, void *, uae_thread_id *)
 int uae_wait_thread(uae_thread_id *) { return 0; }
 SDL_ThreadID uae_thread_get_id(SDL_Thread *) { return 0; }
 
-// Disassembler and JIT
-uae_u32 m68k_disasm_2(TCHAR *, int, uaecptr, uae_u16 *, int, uaecptr *, int, uae_u32 *, uae_u32 *, uaecptr, int) { return 0; }
+// Disassembler (disasm.cpp) support
+TCHAR *buf_out(TCHAR *buffer, int *bufsize, const TCHAR *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    int n = vsnprintf(buffer, *bufsize - 1, format, args);
+    va_end(args);
+    if (n < 0) n = 0;
+    *bufsize -= n;
+    return buffer + n;
+}
+void f_out(FILE *f, const TCHAR *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    vfprintf(f, format, args);
+    va_end(args);
+}
+void my_trim(TCHAR *s)
+{
+    char *p = s;
+    while (*p == ' ') p++;
+    memmove(s, p, strlen(p) + 1);
+    size_t n = strlen(s);
+    while (n && s[n - 1] == ' ') s[--n] = 0;
+}
+void to_lower(TCHAR *s, int len) { for (; *s && len--; s++) *s = tolower(*s); }
+void to_upper(TCHAR *s, int len) { for (; *s && len--; s++) *s = toupper(*s); }
+int debug_safe_addr(uaecptr, int) { return 1; }
+bool debugger_get_library_symbol(uaecptr, uaecptr, TCHAR *, size_t) { return false; }
+int debugmem_get_segment(uaecptr, bool *, bool *, TCHAR *, size_t, TCHAR *, size_t) { return 0; }
+int debugmem_get_sourceline(uaecptr, TCHAR *, int) { return -1; }
+int debugmem_get_symbol(uaecptr, TCHAR *, int) { return 0; }
+uae_u32 get_iword_debug(uaecptr a) { return get_word_debug(a); }
+uae_u32 get_ilong_debug(uaecptr a) { return get_long_debug(a); }
+
+// JIT
 #if defined(JIT) && defined(CPU_AARCH64)
 void build_comp() { }
 void compile_block(cpu_history *, int, int) { }

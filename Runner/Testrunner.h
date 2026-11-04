@@ -122,6 +122,10 @@ struct Result {
     int     dasmCntBinutils;
     char    dasmMusashi[128];
     int     dasmCntMusashi;
+    char    dasmUAE[128];
+    int     dasmCntUAE;
+    char    dasmMoiraUAE[128];      // Moira's output used for the comparison with UAE
+    int     dasmCntMoiraUAE;
     int     cycles;
     clock_t elapsed[2];
 };

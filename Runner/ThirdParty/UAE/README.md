@@ -29,6 +29,12 @@ The glue code that drives the core lives in `../UAEGlue`.
   `AMIBERRY_NO_THREADED_CPU` (WinUAE's `newcpu.cpp` has its own threaded CPU
   that is incompatible with Amiberry's).
 * `osdep/target.h`: `typedef unsigned long ULONG` (used by `cpummu.cpp`).
+* `src/disasm.cpp` (WinUAE's disassembler, with `include/disasm.h`): five call
+  sites are patched to reach the debugger-independent glue (memory access,
+  `debugmem_get_sourceline`, ...). The support functions it needs live in
+  `../UAEGlue/UAEStubs.cpp`; the runner calls it via `uaecpu::disassemble()`
+  and compares its output with Moira's `Syntax::UAE` output as an exact string
+  (see `dasmEqualUAE` in `Runner/Testrunner.cpp` for the few exemptions).
 
 When updating from a newer WinUAE, copy the files listed above and reapply
 these changes.

@@ -646,6 +646,13 @@ void runReference(Setup &s, Result &r)
         printf("$%04x ($%04x): %s (Musashi)\n", r.oldpc, r.opcode, r.dasmMusashi);
     }
 
+#ifdef HAVE_UAE
+    // Run UAE's disassembler
+    r.dasmUAE[0] = 0;
+    r.dasmCntUAE = 0;
+    if (uaeRef) r.dasmCntUAE = uaecpu::disassemble(s.pc, r.dasmUAE, sizeof(r.dasmUAE));
+#endif
+
     // Run the reference CPU
     if (doExec(r.opcode)) {
 
@@ -674,6 +681,7 @@ void runMoira(Setup &s, Result &r)
 
         // Disassemble the instruction in Musashi format
         moiracpu->setDasmSyntax(Syntax::MUSASHI);
+        moiracpu->setDasmLetterCase(LetterCase::MIXED_CASE);
         moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
         clock_t elapsed = clock();
         r.dasmCntMusashi = moiracpu->disassemble(r.dasmMusashi, r.oldpc);
@@ -687,6 +695,12 @@ void runMoira(Setup &s, Result &r)
 #endif
         moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 10, .plainZero = true });
         r.dasmCntBinutils = moiracpu->disassemble(r.dasmBinutils, r.oldpc);
+
+        // Disassemble the instruction in Moira's own format (compared with UAE)
+        moiracpu->setDasmSyntax(Syntax::UAE);
+        moiracpu->setDasmLetterCase(LetterCase::LOWER_CASE);
+        moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
+        r.dasmCntMoiraUAE = moiracpu->disassemble(r.dasmMoiraUAE, r.oldpc);
     }
 
     // Run the Moira CPU
@@ -1084,6 +1098,39 @@ void compare(Setup &s, Result &rRef, Result &rMoira)
     }
 }
 
+
+//
+// Comparing disassembler output with UAE
+//
+
+// Returns true if the two disassembler outputs match. Instructions that either
+// side regards as illegal are not compared, because the two disassemblers
+// differ in how they report them.
+bool dasmEqualUAE(const char *uae, const char *moira)
+{
+    auto starts = [](const char *s, const char *prefix) { return strncasecmp(s, prefix, strlen(prefix)) == 0; };
+
+    if (starts(uae, "illegal") || starts(uae, "[") || starts(uae, "f-line") || starts(uae, "f?")) return true;
+    if (starts(uae, "movec")) return strcasecmp(uae, moira) == 0;   // UAE prints some control registers in upper case
+    if (strstr(uae, "(68020+)")) return true;
+    if (starts(uae, "fmovecr") || strstr(uae, "#+") || strstr(uae, "#-") || (starts(uae, "fmove.p") && strstr(uae, ",#$")) || strstr(uae, "/#$")) {
+        return true;   // Floating-point constants are printed in a different notation
+    }   // Addressing mode not available on the selected model
+    if (starts(moira, "dc.w") || isdigit((unsigned char)moira[0])) return true;
+
+    return strcmp(uae, moira) == 0;
+}
+
+static bool noUAEDasmForCoprocessor(u16 opcode)
+{
+    switch (cpuModel) {
+        case Model::M68EC020: case Model::M68EC030: case Model::M68EC040: case Model::M68LC040:
+            return opcode >= 0xF000;
+        default:
+            return false;
+    }
+}
+
 bool compareDasm(Result &rRef, Result &rMoira)
 {
     auto I = moiracpu->getInstrInfo(rRef.opcode).I;
@@ -1116,6 +1163,9 @@ bool compareDasm(Result &rRef, Result &rMoira)
         if (rRef.dasmCntMusashi != rMoira.dasmCntMusashi) return false;
         if (strcmp(rRef.dasmMusashi, rMoira.dasmMusashi) != 0) return false;
     }
+
+    // Compare with UAE's disassembler (UAE decodes coprocessor opcodes regardless of the model)
+    if (uaeRef && !noUAEDasmForCoprocessor(rRef.opcode) && !dasmEqualUAE(rRef.dasmUAE, rMoira.dasmMoiraUAE)) return false;
 
     // Compare with binutils
     if (!skipBinutils) {

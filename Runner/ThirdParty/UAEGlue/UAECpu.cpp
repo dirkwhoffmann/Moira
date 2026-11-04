@@ -18,6 +18,7 @@ static bool blitter_cycle_exact = false;
 static int cpu_thread_tid = 0;
 
 #include "newcpu.cpp"
+#include "disasm.h"
 
 namespace {
 
@@ -304,6 +305,32 @@ State getState()
     s.fpsr = regs.fpsr;
     s.fpiar = regs.fpiar;
     return s;
+}
+
+int disassemble(uint32_t addr, char *out, size_t size)
+{
+    // The disassembler is configured once. No instruction words, effective
+    // addresses or operand values. Lowercase and '$' for hex numbers.
+    static bool configured = false;
+    if (!configured) {
+        disasm_flags = DISASM_FLAG_LC_MNEMO | DISASM_FLAG_LC_REG | DISASM_FLAG_LC_SIZE | DISASM_FLAG_LC_HEX;
+        strcpy(disasm_hexprefix, "$");
+        disasm_init();
+        configured = true;
+    }
+
+    char buf[2048];
+    uaecptr next = addr;
+    m68k_disasm_2(buf, sizeof buf, addr, nullptr, 0, &next, 1, nullptr, nullptr, 0xffffffff, 0);
+
+    // Remove the leading address (8 hex digits and a blank) and trailing white space
+    char *p = buf;
+    if (strlen(p) > 9 && p[8] == ' ') p += 9;
+    size_t n = strlen(p);
+    while (n && isspace((unsigned char)p[n - 1])) p[--n] = 0;
+
+    snprintf(out, size, "%s", p);
+    return int(next - addr);
 }
 
 bool step()

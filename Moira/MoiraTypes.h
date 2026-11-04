@@ -121,7 +121,8 @@ enum class Syntax
     MOIRA_MIT,
     GNU,                    // Legacy styles (for testing)
     GNU_MIT,                // Legacy styles (for testing)
-    MUSASHI                 // Musashi compatibility
+    MUSASHI,                // Musashi compatibility
+    UAE                     // UAE compatibility (used for testing)
 };
 
 // Letter case preferences for disassembly output

@@ -95,6 +95,7 @@
 		505A81FA309A2F2A00E2E307 /* cpuemu_20.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81C7309A2F2A00E2E307 /* cpuemu_20.cpp */; };
 		505A81FB309A2F2A00E2E307 /* cpuemu_50.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81D2309A2F2A00E2E307 /* cpuemu_50.cpp */; };
 		505A81FC309A2F2A00E2E307 /* cpuemu_34.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81CF309A2F2A00E2E307 /* cpuemu_34.cpp */; };
+		50A400000000000000000F02 /* disasm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A400000000000000000F01 /* disasm.cpp */; };
 		505A81FD309A2F2A00E2E307 /* newcpu_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81DB309A2F2A00E2E307 /* newcpu_common.cpp */; };
 		505A81FE309A2F2A00E2E307 /* cpustbl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81D5309A2F2A00E2E307 /* cpustbl.cpp */; };
 		505A81FF309A2F2A00E2E307 /* softfloat_fpsp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81BC309A2F2A00E2E307 /* softfloat_fpsp.cpp */; };
@@ -339,6 +340,7 @@
 		505A81D8309A2F2A00E2E307 /* fpp_softfloat.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = fpp_softfloat.cpp; sourceTree = "<group>"; };
 		505A81D9309A2F2A00E2E307 /* inputevents.def */ = {isa = PBXFileReference; lastKnownFileType = text; path = inputevents.def; sourceTree = "<group>"; };
 		505A81DA309A2F2A00E2E307 /* newcpu.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = newcpu.cpp; sourceTree = "<group>"; };
+		50A400000000000000000F01 /* disasm.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = disasm.cpp; sourceTree = "<group>"; };
 		505A81DB309A2F2A00E2E307 /* newcpu_common.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = newcpu_common.cpp; sourceTree = "<group>"; };
 		505A81DC309A2F2A00E2E307 /* readcpu.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = readcpu.cpp; sourceTree = "<group>"; };
 		505A81DE309A2F2A00E2E307 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
@@ -706,6 +708,7 @@
 				505A81D8309A2F2A00E2E307 /* fpp_softfloat.cpp */,
 				505A81D9309A2F2A00E2E307 /* inputevents.def */,
 				505A81DA309A2F2A00E2E307 /* newcpu.cpp */,
+				50A400000000000000000F01 /* disasm.cpp */,
 				505A81DB309A2F2A00E2E307 /* newcpu_common.cpp */,
 				505A81DC309A2F2A00E2E307 /* readcpu.cpp */,
 			);
@@ -1040,6 +1043,7 @@
 				505A81FA309A2F2A00E2E307 /* cpuemu_20.cpp in Sources */,
 				505A81FB309A2F2A00E2E307 /* cpuemu_50.cpp in Sources */,
 				505A81FC309A2F2A00E2E307 /* cpuemu_34.cpp in Sources */,
+				50A400000000000000000F02 /* disasm.cpp in Sources */,
 				505A81FD309A2F2A00E2E307 /* newcpu_common.cpp in Sources */,
 				505A81FE309A2F2A00E2E307 /* cpustbl.cpp in Sources */,
 				505A81FF309A2F2A00E2E307 /* softfloat_fpsp.cpp in Sources */,

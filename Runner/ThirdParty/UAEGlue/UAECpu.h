@@ -10,6 +10,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
 /* UAE's CPU core (GPLv3) wrapped as a reference for the test runner.
  *
@@ -52,6 +53,11 @@ State getState();
 
 // Executes a single instruction (or exception). Returns false if the CPU halted.
 bool step();
+
+// Disassembles the instruction at addr in the memory area (UAE's disassembler).
+// The text has no address and no instruction words (lowercase, '$' for hex).
+// Returns the instruction length in bytes.
+int disassemble(uint32_t addr, char *out, size_t size);
 
 // Vector number of the last exception taken by the last step (0 if none)
 int lastException();

@@ -95,6 +95,7 @@ if (UAE_DIR)
     Runner/ThirdParty/UAEGlue/UAECpu.cpp
     Runner/ThirdParty/UAEGlue/UAEStubs.cpp
     ${AMI}/newcpu_common.cpp
+    ${AMI}/disasm.cpp
     ${AMI}/cpustbl.cpp
     ${AMI}/readcpu.cpp
     ${AMI}/cpudefs.cpp
