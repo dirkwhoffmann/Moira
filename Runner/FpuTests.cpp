@@ -5,6 +5,7 @@
 // Published under the terms of the MIT License
 // -----------------------------------------------------------------------------
 
+#include "MoiraConfig.h"
 #include "FPU.h"
 #include <cstdio>
 #include <cstdlib>
@@ -323,10 +324,11 @@ static void testArithmetic()
     CHECK((fpu.fpsr & FPSR::CC_MASK) == 0);
     fpu.fcmp(Float80::infinity(), Float80::infinity());
     CHECK((fpu.fpsr & FPSR::CC_MASK) == FPSR::CC_Z);
+    // UAE compatibility mode never sets the I flag (UAE compares magnitudes instead of subtracting)
     fpu.fcmp(Float80::infinity(), F(1));
-    CHECK((fpu.fpsr & FPSR::CC_MASK) == FPSR::CC_I);
+    CHECK((fpu.fpsr & FPSR::CC_MASK) == (MOIRA_MIMIC_UAE ? 0 : FPSR::CC_I));
     fpu.fcmp(F(1), Float80::infinity());
-    CHECK((fpu.fpsr & FPSR::CC_MASK) == (FPSR::CC_I | FPSR::CC_N));
+    CHECK((fpu.fpsr & FPSR::CC_MASK) == (MOIRA_MIMIC_UAE ? FPSR::CC_N : (FPSR::CC_I | FPSR::CC_N)));
     fpu.fcmp(qnan, F(1));
     CHECK((fpu.fpsr & FPSR::CC_MASK) == FPSR::CC_NAN);
     CHECK(!(fpu.fpsr & (FPEXP::INEX2 | FPEXP::OVFL | FPEXP::OPERR)));

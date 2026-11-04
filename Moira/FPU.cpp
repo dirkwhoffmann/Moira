@@ -5,6 +5,7 @@
 // Published under the terms of the MIT License
 // -----------------------------------------------------------------------------
 
+#include "MoiraConfig.h"
 #include "FPU.h"
 #include "FloatMath.h"
 #include <bit>
@@ -686,6 +687,29 @@ void
 FPU::fcmp(const Float80 &dst, const Float80 &src)
 {
     if (auto nan = resolveNan(dst, src)) { setConditionCodes(*nan); return; }
+
+    if constexpr (MOIRA_MIMIC_UAE) {
+
+        // UAE doesn't compute the difference. It compares exponents and significands and
+        // produces +-1 or +-0, so the I flag is never set (not even for infinite operands).
+        constexpr u64 one = 0x8000000000000000ULL;
+        u16 aExp = dst.biasedExponent(), bExp = src.biasedExponent();
+        u64 aSig = dst.mantissa(), bSig = src.mantissa();
+        bool aSign = dst.sign(), bSign = src.sign();
+        auto pack = [](bool sign, u16 exp, u64 man) { return Float80::fromBits(u16((sign ? 0x8000 : 0) | exp), man); };
+
+        Float80 r;
+        if      (bExp < aExp)                r = pack(aSign, 0x3FFF, one);
+        else if (aExp < bExp)                r = pack(!bSign, 0x3FFF, one);
+        else if (aExp == 0x7FFF)             r = aSign == bSign ? pack(aSign, 0, 0) : pack(aSign, 0x3FFF, one);
+        else if (bSig < aSig)                r = pack(aSign, 0x3FFF, one);
+        else if (aSig < bSig)                r = pack(!bSign, 0x3FFF, one);
+        else if (aSig == 0)                  r = pack(aSign, 0, 0);
+        else if (aSign == bSign)             r = pack(false, 0, 0);
+        else                                 r = pack(aSign, 0x3FFF, one);
+        setConditionCodes(r);
+        return;
+    }
 
     // The condition codes reflect the difference dst - src
     Float80 diff;
