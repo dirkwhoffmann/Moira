@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "MoiraConfig.h"
 #include <cstdint>
 #include <cstddef>
 #include <string>
@@ -102,6 +103,16 @@ enum class Core
     C68010,                 // Used by M68010
     C68020                  // Used by all other models
 };
+
+// Compatibility modes (selected at compile time via MOIRA_COMPATIBILITY)
+enum class Compatibility
+{
+    DEFAULT,                // Moira's own behavior
+    MUSASHI,                // Mimic the Musashi emulator
+    UAE                     // Mimic the UAE Amiga emulator (WinUAE, Amiberry)
+};
+
+inline constexpr Compatibility compat = Compatibility::MOIRA_COMPATIBILITY;
 
 // Syntax styles for disassembly output
 enum class Syntax

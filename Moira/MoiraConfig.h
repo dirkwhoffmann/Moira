@@ -79,41 +79,38 @@
  */
 #define MOIRA_ENABLE_DASM true
 
-/* Enables Musashi compatibility mode.
+/* Selects the compatibility mode.
  *
- * When set to true, Moira runs in a special mode designed for compatibility
- * with the Musashi emulator. This mode is primarily used by the test runner
- * application to compare Moira's behavior against Musashi.
+ * Moira can mimic the behavior of other 68k emulators where they differ from
+ * each other (e.g., the order of bus accesses). The following values are
+ * available (see enum class Compatibility in MoiraTypes.h):
  *
- * Set to false for improved accuracy.
+ *   DEFAULT: Moira's own behavior (improved accuracy).
+ *   MUSASHI: Compatibility with the Musashi emulator. This mode is used by the
+ *            test runner to compare Moira's behavior against Musashi.
+ *   UAE:     Compatibility with the CPU core of the UAE Amiga emulator (as used
+ *            in WinUAE and Amiberry). This mode is used by the test runner when
+ *            UAE is selected as the reference implementation. It requires
+ *            precise timing, which is enabled automatically.
+ *
+ * Code should test the mode via the constant 'compat' (e.g.,
+ * 'if constexpr (compat == Compatibility::UAE)').
  */
-#ifndef MOIRA_MIMIC_MUSASHI
-#define MOIRA_MIMIC_MUSASHI false
+#ifndef MOIRA_COMPATIBILITY
+#define MOIRA_COMPATIBILITY UAE
 #endif
 
-/* Enables UAE compatibility mode.
- *
- * When set to true, Moira adopts the behavior of the UAE Amiga emulator's CPU
- * core (as used in WinUAE and Amiberry) where it differs from Musashi (e.g.,
- * the order of bus accesses). This mode is used by
- * the test runner when UAE is selected as the reference implementation.
- * To get meaningful results, MOIRA_MIMIC_MUSASHI should be set to false and
- * MOIRA_PRECISE_TIMING to true in this mode.
- *
- * Set to false for improved accuracy.
- */
-#ifndef MOIRA_MIMIC_UAE
-#define MOIRA_MIMIC_UAE true
-#endif
+// Helper to evaluate the mode in the preprocessor
+#define MOIRA_COMPAT_IS_DEFAULT 0
+#define MOIRA_COMPAT_IS_MUSASHI 0
+#define MOIRA_COMPAT_IS_UAE 1
+#define MOIRA_COMPAT_CAT_(a, b) a##b
+#define MOIRA_COMPAT_CAT(a, b) MOIRA_COMPAT_CAT_(a, b)
 
 // UAE's bus access timing can only be reproduced with precise timing
-#if MOIRA_MIMIC_UAE && !MOIRA_PRECISE_TIMING
+#if MOIRA_COMPAT_CAT(MOIRA_COMPAT_IS_, MOIRA_COMPATIBILITY) && !MOIRA_PRECISE_TIMING
 #undef MOIRA_PRECISE_TIMING
 #define MOIRA_PRECISE_TIMING true
-#endif
-
-#if MOIRA_MIMIC_UAE && MOIRA_MIMIC_MUSASHI
-#error "MOIRA_MIMIC_UAE and MOIRA_MIMIC_MUSASHI are mutually exclusive"
 #endif
 
 /* The following macro appears at the beginning of each instruction handler.

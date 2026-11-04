@@ -976,9 +976,9 @@ Moira::cyclesBit(u8 bit) const
     switch (I)
     {
         case Instr::BTST: return 2;
-        case Instr::BCLR: return MOIRA_MIMIC_MUSASHI ? 6 : (bit > 15 ? 6 : 4);
+        case Instr::BCLR: return (compat == Compatibility::MUSASHI) ? 6 : (bit > 15 ? 6 : 4);
         case Instr::BSET:
-        case Instr::BCHG: return MOIRA_MIMIC_MUSASHI ? 4 : (bit > 15 ? 4 : 2);
+        case Instr::BCHG: return (compat == Compatibility::MUSASHI) ? 4 : (bit > 15 ? 4 : 2);
 
         default:
             fatalError;

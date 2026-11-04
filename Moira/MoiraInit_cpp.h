@@ -825,7 +825,7 @@ Moira::createJumpTable4([[maybe_unused]] Model model, bool regDasm)
     ________SSMMMXXX(opcode, Instr::CMPI, 0b100000000000, Byte | Word | Long, CmpiRg, CIMS)
     ________SSMMMXXX(opcode, Instr::CMPI, 0b001111111000, Byte | Word | Long, CmpiEa, CIMS)
 
-    if constexpr (C >= (MOIRA_MIMIC_UAE ? Core::C68020 : Core::C68010)) {
+    if constexpr (C >= ((compat == Compatibility::UAE) ? Core::C68020 : Core::C68010)) {
 
         ________SSMMMXXX(opcode, Instr::CMPI, 0b000000000110, Byte | Word | Long, CmpiEa, CIMS)
     }

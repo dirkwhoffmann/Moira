@@ -688,7 +688,7 @@ FPU::fcmp(const Float80 &dst, const Float80 &src)
 {
     if (auto nan = resolveNan(dst, src)) { setConditionCodes(*nan); return; }
 
-    if constexpr (MOIRA_MIMIC_UAE) {
+    if constexpr ((compat == Compatibility::UAE)) {
 
         // UAE doesn't compute the difference. It compares exponents and significands and
         // produces +-1 or +-0, so the I flag is never set (not even for infinite operands).

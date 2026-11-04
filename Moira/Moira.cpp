@@ -377,7 +377,7 @@ Moira::execute()
             }
 
             POLL_IPL;
-            sync(MOIRA_MIMIC_MUSASHI ? 1 : 2);
+            sync((compat == Compatibility::MUSASHI) ? 1 : 2);
             return;
         }
 

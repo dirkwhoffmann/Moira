@@ -117,7 +117,7 @@ void setupBinutils()
 
 #ifdef HAVE_UAE
 
-static bool uaeRefInit = (uaeRef = MOIRA_MIMIC_UAE || (getenv("REFERENCE") && std::string(getenv("REFERENCE")) == "uae"));
+static bool uaeRefInit = (uaeRef = (compat == Compatibility::UAE) || (getenv("REFERENCE") && std::string(getenv("REFERENCE")) == "uae"));
 static uaecpu::State amiState;
 
 static void uaeWrite(int size, u32 addr, u32 value, u32 fc, u64 cycle)
