@@ -7,7 +7,7 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#include "Testrunner.h"
+#include "Shared.h"
 
 extern "C" unsigned int m68k_read_memory_8(unsigned int addr)
 {

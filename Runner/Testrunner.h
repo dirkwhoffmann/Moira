@@ -15,58 +15,28 @@
 #include <string.h>
 #include <time.h>
 
-#include "Sandbox.h"
-#include "Randomizer.h"
+#include "Shared.h"
+
+// The runner is compiled once per Moira configuration. RUNNER_NAMESPACE is the
+// namespace of the runner instance, MOIRA_NAMESPACE the one of the Moira core
+// it tests (e.g. runnerUAE and moiraUAE).
+#ifndef RUNNER_NAMESPACE
+#define RUNNER_NAMESPACE runner
+#endif
+
 #include "TestCPU.h"
-
-extern "C" {
-
-// Musashi. It serves as the disassembler reference in all modes and as the
-// reference CPU unless the UAE compatibility mode is selected.
-#include "m68k.h"
-#include "m68kcpu.h"
-#include "m68kops.h"
-}
-
-#include "config.h"
-
-using namespace moira;
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
 
+namespace RUNNER_NAMESPACE {
+
+using namespace MOIRA_NAMESPACE;
+
 extern class TestCPU *moiracpu;
-extern Sandbox sandbox;
-extern Randomizer randomizer;
-extern u8 refMem[0x10000];      // Memory of the reference CPU (Musashi or UAE)
 extern u8 moiraMem[0x10000];
-extern u32 musashiFC;           // Function code of the last Musashi bus access
-extern moira::Model cpuModel;
+extern MOIRA_NAMESPACE::Model cpuModel;
 extern u16 opcode;
-
-// Binutils
-struct meminfo { unsigned char bytes[0x10000]; unsigned len; };
-extern meminfo mi;
-extern disassemble_info di;
-
-inline u8 get8(u8 *p, u32 addr) {
-    return p[addr & 0xFFFF];
-}
-inline u16 get16(u8 *p, u32 addr) {
-    return (u16)(get8(p, addr) << 8 | get8(p, addr + 1));
-}
-inline u32 get32(u8 *p, u32 addr) {
-    return (u32)(get16(p, addr) << 16 | get16(p, addr + 2));
-}
-inline void set8(u8 *p, u32 addr, u8 val) {
-    p[addr & 0xFFFF] = val;
-}
-inline void set16(u8 *p, u32 addr, u16 val) {
-    set8(p, addr, val >> 8); set8(p, addr + 1, val & 0xFF);
-}
-inline void set32(u8 *p, u32 addr, u32 val) {
-    set16(p, addr, val >> 16); set16(p, addr + 2, val & 0xFFFF);
-}
 
 // A test setup
 struct Setup {
@@ -138,7 +108,7 @@ const u32 pc = 0x1000;
 // Preparing a test
 //
 
-void selectModel(moira::Model model);
+void selectModel(MOIRA_NAMESPACE::Model model);
 const char *selectedModel();
 
 void setupBinutils();
@@ -210,3 +180,5 @@ bool compareMemory();
 bool isFpuOpcode(u16 op);
 
 void bugReport();
+
+} // namespace RUNNER_NAMESPACE

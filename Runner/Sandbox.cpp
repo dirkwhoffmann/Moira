@@ -8,14 +8,14 @@
 // -----------------------------------------------------------------------------
 
 #include "config.h"
-#include "Testrunner.h"
-#include "MoiraConfig.h"
+#include "Shared.h"
 #include "Sandbox.h"
 
 void
-Sandbox::prepare(u16 opcode)
+Sandbox::prepare(bool enable, bool ignore)
 {
-    enabled = doExec((int)opcode) && !skip(opcode) && !skipAccessCheck(opcode);
+    enabled = enable;
+    ignored = ignore;
     recordCnt = replayCnt = 0;
     for (bool &u : used) u = false;
     errors = 0;
@@ -47,11 +47,8 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
         return;
     }
 
-    auto info = moiracpu->getInstrInfo(opcode);
-
     // Ignore some opcodes that are handled differently by Moira
-    if (info.I == Instr::CLR && info.S == Long) return;
-    if (info.I == Instr::CHK && cpuModel != Model::M68000) return;
+    if (ignored) return;
 
     for (int i = 0; i < recordCnt; i++) {
 
@@ -64,7 +61,7 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
         if (access[i].addr != addr) continue;
         if (access[i].value != value) continue;
         if (access[i].fc != fc) continue;
-        if (!(compat == Compatibility::MUSASHI) && checkCycles) {
+        if (checkCycles) {
             if (access[i].cycle != cycle) continue;
         }
 

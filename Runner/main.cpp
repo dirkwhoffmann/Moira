@@ -8,13 +8,30 @@
 // -----------------------------------------------------------------------------
 
 #include "config.h"
-#include "Testrunner.h"
+#include "Shared.h"
+#include <string.h>
+
+// One test runner instance per Moira configuration (see Testrunner.h)
+namespace runnerUAE     { void run(); }
+namespace runnerMusashi { void run(); }
 
 int main(int argc, char **argv)
 {
-    moiracpu = new TestCPU();
+    bool all = argc < 2;
+    bool uae = all || !strcmp(argv[1], "uae");
+    bool musashi = all || !strcmp(argv[1], "musashi");
 
-    run();
+    if (!uae && !musashi) {
+        printf("Usage: %s [uae|musashi]\n", argv[0]);
+        return 1;
+    }
+
+#ifdef HAVE_UAE
+    if (uae) runnerUAE::run();
+#else
+    if (uae) printf("UAE is not available in this build.\n");
+#endif
+    if (musashi) runnerMusashi::run();
 
     return 0;
 }

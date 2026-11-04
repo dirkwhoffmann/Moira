@@ -10,6 +10,9 @@
 #include "config.h"
 #include "Testrunner.h"
 
+namespace RUNNER_NAMESPACE {
+using namespace MOIRA_NAMESPACE;
+
 /* Signals the CPU clock to advance.
  */
 void
@@ -122,18 +125,20 @@ TestCPU::write32 (u32 addr, u32 val) const
 /* Returns the interrupt vector in IRQ_USER mode
  */
 u16
-TestCPU::readIrqUserVector(moira::u8 level) const { return 0; }
+TestCPU::readIrqUserVector(u8 level) const { return 0; }
 
 /* Breakpoint handler
  *
  * Moira calls this function to signal that a breakpoint has been reached.
  */
 void
-TestCPU::didReachBreakpoint(moira::u32 addr) { }
+TestCPU::didReachBreakpoint(u32 addr) { }
 
 /* Watchpoint handler
  *
  * Moira calls this function to signal that a watchpoint has been reached.
  */
 void
-TestCPU::didReachWatchpoint(moira::u32 addr) { }
+TestCPU::didReachWatchpoint(u32 addr) { }
+
+}

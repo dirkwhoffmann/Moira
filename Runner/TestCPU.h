@@ -11,14 +11,14 @@
 
 #include "Moira.h"
 
-using namespace moira;
+namespace RUNNER_NAMESPACE {
 
-class TestCPU : public Moira {
+class TestCPU : public MOIRA_NAMESPACE::Moira {
 
 public:
 
     // Grant the test runner access to the FPU state
-    using Moira::fpu;
+    using MOIRA_NAMESPACE::Moira::fpu;
 
 private:
 
@@ -35,3 +35,5 @@ private:
     void didReachBreakpoint(u32 addr) override;
     void didReachWatchpoint(u32 addr) override;
 };
+
+}

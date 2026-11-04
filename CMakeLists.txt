@@ -16,32 +16,45 @@ add_subdirectory(Moira)
 add_subdirectory(Runner/ThirdParty/Binutils)
 add_subdirectory(Runner/ThirdParty/Musashi)
 
-# Add the executable
-add_executable(testRunner
-Runner/main.cpp
-Runner/Testrunner.cpp
-Runner/TestCPU.cpp
-Runner/ThirdParty/MusashiGlue/musashi.cpp
+# Shared runner state (reference cores call back into it, so it exists once)
+add_library(runnerShared STATIC
+Runner/Shared.cpp
 Runner/Sandbox.cpp
 Runner/Randomizer.cpp
+Runner/ThirdParty/MusashiGlue/musashi.cpp
 )
-target_link_libraries(testRunner binutils)
-target_link_libraries(testRunner moira)
-target_link_libraries(testRunner musashi)
+
+# One runner instance per Moira configuration. Each is compiled against its own
+# Moira library and lives in its own namespace.
+function(add_runner_variant NAME MOIRALIB)
+  add_library(${NAME} STATIC
+  Runner/Testrunner.cpp
+  Runner/TestCPU.cpp
+  )
+  target_compile_definitions(${NAME} PUBLIC RUNNER_NAMESPACE=${NAME})
+  target_link_libraries(${NAME} PUBLIC ${MOIRALIB})
+endfunction()
+
+add_runner_variant(runnerUAE moiraUAE)
+add_runner_variant(runnerMusashi moiraMusashi)
+
+# Add the executable
+add_executable(testRunner Runner/main.cpp)
+target_link_libraries(testRunner runnerUAE runnerMusashi runnerShared binutils musashi)
 
 # Add compile options
+foreach(T testRunner runnerShared runnerUAE runnerMusashi)
 if(MSVC)
-  target_compile_options(testRunner PUBLIC /wd4100 /wd4201 /wd4324 /wd4458)
+  target_compile_options(${T} PUBLIC /wd4100 /wd4201 /wd4324 /wd4458)
 else()
-  target_compile_options(testRunner PUBLIC -Wno-unused-parameter)
-  target_compile_options(testRunner PUBLIC -Wno-unused-variable)
-  target_compile_options(testRunner PUBLIC -Wno-gnu-anonymous-struct)
-  target_compile_options(testRunner PUBLIC -Wno-nested-anon-types)
+  target_compile_options(${T} PUBLIC -Wno-unused-parameter)
+  target_compile_options(${T} PUBLIC -Wno-unused-variable)
+  target_compile_options(${T} PUBLIC -Wno-gnu-anonymous-struct)
+  target_compile_options(${T} PUBLIC -Wno-nested-anon-types)
 endif()
 
 # Add include paths
-target_include_directories(testRunner PUBLIC
-
+target_include_directories(${T} PUBLIC
 ${CMAKE_SOURCE_DIR}/.
 ${CMAKE_SOURCE_DIR}/Moira
 ${CMAKE_SOURCE_DIR}/Runner
@@ -49,6 +62,7 @@ ${CMAKE_SOURCE_DIR}/Runner/ThirdParty
 ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/Binutils
 ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/Musashi
 )
+endforeach()
 
 # Add the FPU unit tests
 add_executable(fpuTests Runner/FpuTests.cpp)
@@ -121,8 +135,12 @@ if (UAE_DIR)
     target_include_directories(uaecpu PUBLIC ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAEGlue)
     target_link_libraries(uaecpu ${SDL3_LIBRARY})
 
-    target_compile_definitions(testRunner PRIVATE HAVE_UAE)
+    foreach(T testRunner runnerShared runnerUAE runnerMusashi)
+      target_compile_definitions(${T} PRIVATE HAVE_UAE)
+    endforeach()
     target_link_libraries(testRunner uaecpu)
+    target_link_libraries(runnerUAE PUBLIC uaecpu)
+    target_link_libraries(runnerMusashi PUBLIC uaecpu)
   else()
     message(STATUS "SDL3 not found: UAE's CPU core is not available as reference")
   endif()

@@ -9,12 +9,12 @@
 
 #pragma once
 
-#include "MoiraTypes.h"
+#include <stdint.h>
 
-using moira::u8;
-using moira::u16;
-using moira::u32;
-using moira::u64;
+typedef uint8_t  u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
 
 enum AccessType {
     PEEK8,
@@ -41,6 +41,7 @@ struct AccessRecord {
 class Sandbox {
 
     bool enabled;
+    bool ignored;
 
     AccessRecord access[256];
     bool used[256];
@@ -58,7 +59,8 @@ public:
     u32 addrMask = 0xFFFFFFFF;
 
     Sandbox() { };
-    void prepare(u16 opcode);
+    // enable: check the accesses. ignore: skip the replay (handled differently by Moira)
+    void prepare(bool enable, bool ignore);
     long getErrors() { return errors; }
     void record(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value);
     void replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value);

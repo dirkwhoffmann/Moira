@@ -17,18 +17,14 @@
 #include "UAEGlue/UAECpu.h"
 #endif
 
-TestCPU *moiracpu;
-Sandbox sandbox;
-Randomizer randomizer;
-u8 refMem[0x10000];
-u8 moiraMem[0x10000];
-u32 musashiFC = 0;
-moira::Model cpuModel = Model::M68000;
-u16 opcode = 0;
+namespace RUNNER_NAMESPACE {
 
-// Binutils
-meminfo mi;
-disassemble_info di;
+using namespace MOIRA_NAMESPACE;
+
+TestCPU *moiracpu;
+u8 moiraMem[0x10000];
+MOIRA_NAMESPACE::Model cpuModel = Model::M68000;
+u16 opcode = 0;
 
 static int binutilsFprintf(FILE* f, const char* format, ...)
 {
@@ -40,17 +36,18 @@ static int binutilsFprintf(FILE* f, const char* format, ...)
     return n;
 }
 
+// The reference core is determined by the compatibility mode of the tested Moira
 #ifdef HAVE_UAE
-static bool uaeRef;
+static constexpr bool uaeRef = (compat == Compatibility::UAE);
 static void setupUAE();
 #else
-static const bool uaeRef = false;
+static constexpr bool uaeRef = false;
 #endif
 
 // Name of the CPU core that serves as reference
 static const char *refName() { return uaeRef ? "UAE" : "Musashi"; }
 
-void selectModel(moira::Model model)
+void selectModel(MOIRA_NAMESPACE::Model model)
 {
     cpuModel = model;
 
@@ -58,7 +55,7 @@ void selectModel(moira::Model model)
 #ifdef HAVE_UAE
     if (uaeRef) setupUAE();
 #endif
-    sandbox.checkCycles = !uaeRef || cpuModel == Model::M68000;
+    sandbox.checkCycles = (compat != Compatibility::MUSASHI) && (!uaeRef || cpuModel == Model::M68000);
     sandbox.addrMask = (cpuModel == Model::M68EC020) ? 0xFFFFFF : 0xFFFFFFFF;
     sandbox.byteGranular = uaeRef && cpuModel != Model::M68000 && cpuModel != Model::M68010;
     setupBinutils();
@@ -120,7 +117,6 @@ void setupBinutils()
 
 #ifdef HAVE_UAE
 
-static bool uaeRefInit = (uaeRef = (compat == Compatibility::UAE) || (getenv("REFERENCE") && std::string(getenv("REFERENCE")) == "uae"));
 static uaecpu::State uaeState;
 
 static void uaeWrite(int size, u32 addr, u32 value, u32 fc, u64 cycle)
@@ -243,7 +239,7 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
 {
     static long mvc = 0;
 
-    moira::Instr instr = moiracpu->getInstrInfo(opcode).I;
+    MOIRA_NAMESPACE::Instr instr = moiracpu->getInstrInfo(opcode).I;
 
     // Prepare special extension words for some instructions
     switch (instr) {
@@ -390,7 +386,9 @@ void run(unsigned seed)
     printf("      Reference : %s\n", refName());
 
     srand(seed);
-    
+
+    if (!moiracpu) moiracpu = new TestCPU();
+
     for (long i = 1; i <= ROUNDS; i++) {
 
         printf("\nRound %ld:\n\n", i);
@@ -430,7 +428,7 @@ void runCPU(long round)
         for (int op = 0x0000; op <= 0xFFFF; op++) {
 
             if constexpr (SKIP_ILLEGAL) {
-                if (moiracpu->getInstrInfo(op).I == moira::Instr::ILLEGAL) continue;
+                if (moiracpu->getInstrInfo(op).I == MOIRA_NAMESPACE::Instr::ILLEGAL) continue;
             }
 
             // FPU opcodes are covered by runFPU
@@ -467,6 +465,12 @@ void runMMU(long round)
 void runFPU(long round)
 {
     if (!moiracpu->hasFPU()) return;
+
+    // Musashi's FPU is not a reliable reference
+    if (!uaeRef) {
+        printf("%s FPU skipped (no reliable %s reference)\n", selectedModel(), refName());
+        return;
+    }
 
     Setup setup;
 
@@ -566,7 +570,13 @@ void runSingleTest(Setup &s, u16 op)
     setupTestInstruction(s, pc, op);
 
     // Reset the sandbox (memory accesses observer)
-    sandbox.prepare(op);
+    {
+        auto info = moiracpu->getInstrInfo(op);
+        bool enable = doExec((int)op) && !skip(op) && !skipAccessCheck(op);
+        bool ignore = (info.I == Instr::CLR && info.S == Long) ||
+                      (info.I == Instr::CHK && cpuModel != Model::M68000);
+        sandbox.prepare(enable, ignore);
+    }
 
     // Prepare
     resetMusashi(s);
@@ -747,7 +757,7 @@ bool skip(u16 op)
 {
     bool result;
 
-    moira::Instr instr = moiracpu->getInstrInfo(op).I;
+    MOIRA_NAMESPACE::Instr instr = moiracpu->getInstrInfo(op).I;
 
     if (uaeRef) {
 
@@ -1182,7 +1192,7 @@ bool compareDasm(Result &rRef, Result &rMoira)
 bool compareD(Result &rRef, Result &rMoira)
 {
     assert(rRef.opcode == rMoira.opcode);
-    moira::Instr instr = moiracpu->getInstrInfo(rRef.opcode).I;
+    MOIRA_NAMESPACE::Instr instr = moiracpu->getInstrInfo(rRef.opcode).I;
     if (instr == Instr::DIVU || instr == Instr::DIVS)
     {
         // The reference CPUs differ in some corner cases
@@ -1211,7 +1221,7 @@ bool comparePC(Result &rRef, Result &rMoira)
 bool compareSR(Result &rRef, Result &rMoira)
 {
     assert(rRef.opcode == rMoira.opcode);
-    moira::Instr instr = moiracpu->getInstrInfo(rRef.opcode).I;
+    MOIRA_NAMESPACE::Instr instr = moiracpu->getInstrInfo(rRef.opcode).I;
     if (instr == Instr::DIVU || instr == Instr::DIVS) {
 
         // The reference CPU differs (and is likely wrong). Ignore it
@@ -1356,3 +1366,5 @@ void bugReport()
     printf("Thanks you!\n\n");
     exit(1);
 }
+
+} // namespace RUNNER_NAMESPACE
