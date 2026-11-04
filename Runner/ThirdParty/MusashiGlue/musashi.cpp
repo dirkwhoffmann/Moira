@@ -11,12 +11,12 @@
 
 extern "C" unsigned int m68k_read_memory_8(unsigned int addr)
 {
-    return get8(musashiMem, addr);
+    return get8(refMem, addr);
 }
 
 extern "C" unsigned int m68k_read_memory_16(unsigned int addr)
 {
-    return get16(musashiMem, addr);
+    return get16(refMem, addr);
 }
 
 extern "C" unsigned int m68k_read_memory_32(unsigned int addr)
@@ -42,14 +42,14 @@ extern "C" void m68k_write_memory_8(unsigned int addr, unsigned int value)
 {
     if (CHECK_MEM_WRITES)
         sandbox.record(POKE8, addr, 0, musashiFC, (u8)value);
-    set8(musashiMem, addr, (u8)value);
+    set8(refMem, addr, (u8)value);
 }
 
 extern "C" void m68k_write_memory_16(unsigned int addr, unsigned int value)
 {
     if (CHECK_MEM_WRITES)
         sandbox.record(POKE16, addr, 0, musashiFC, (u16)value);
-    set16(musashiMem, addr, (u16)value);
+    set16(refMem, addr, (u16)value);
 }
 
 extern "C" void m68k_write_memory_32(unsigned int addr, unsigned int value)

@@ -21,7 +21,8 @@
 
 extern "C" {
 
-// Musashi
+// Musashi. It serves as the disassembler reference in all modes and as the
+// reference CPU unless the UAE compatibility mode is selected.
 #include "m68k.h"
 #include "m68kcpu.h"
 #include "m68kops.h"
@@ -37,9 +38,9 @@ using namespace moira;
 extern class TestCPU *moiracpu;
 extern Sandbox sandbox;
 extern Randomizer randomizer;
-extern u8 musashiMem[0x10000];
+extern u8 refMem[0x10000];      // Memory of the reference CPU (Musashi or UAE)
 extern u8 moiraMem[0x10000];
-extern u32 musashiFC;
+extern u32 musashiFC;           // Function code of the last Musashi bus access
 extern moira::Model cpuModel;
 extern u16 opcode;
 
@@ -144,7 +145,7 @@ void setupTestEnvironment(Setup &s, long round);
 void setupFpuEnvironment(Setup &s);
 void setupTestInstruction(Setup &s, u32 pc, u16 opcode);
 
-void resetMusashi(Setup &s);
+void resetMusashi(Setup &s);        // Resets the Musashi core (the UAE core is set up in runUAE)
 void resetMoira(Setup &s);
 void resetMusashiFpu(Setup &s);
 void resetMoiraFpu(Setup &s);
@@ -166,7 +167,7 @@ void runSingleTest(Setup &s, u16 op);
 void runSingleTest(Setup &s, u16 op, u16 ext);
 
 void runBinutils(Setup &s, Result &r);
-void runMusashi(Setup &s, Result &r);
+void runReference(Setup &s, Result &r);   // Runs the reference CPU (Musashi or UAE)
 void runMoira(Setup &s, Result &r);
 
 bool skip(u16 op);
@@ -179,27 +180,27 @@ bool skipAccessCheck(u16 op);
 
 void recordMusashiRegisters(Result &r);
 void recordMoiraRegisters(Result &r);
-void recordMusashiFpu(Result &r);
+void recordRefFpu(Result &r);
 void recordMoiraFpu(Result &r);
 
-void compare(Setup &s, Result &r1, Result &r2);
-bool compareDasm(Result &r1, Result &r2);
-bool compareD(Result &r1, Result &r2);
-bool compareA(Result &r1, Result &r2);
-bool comparePC(Result &r1, Result &r2);
-bool compareSR(Result &r1, Result &r2);
-bool compareUSP(Result &r1, Result &r2);
-bool compareISP(Result &r1, Result &r2);
-bool compareMSP(Result &r1, Result &r2);
-bool compareVBR(Result &r1, Result &r2);
-bool compareSFC(Result &r1, Result &r2);
-bool compareDFC(Result &r1, Result &r2);
-bool compareCAxR(Result &r1, Result &r2);
-bool compareCycles(Result &r1, Result &r2);
-bool compareFPR(Result &r1, Result &r2);
-bool compareFPCR(Result &r1, Result &r2);
-bool compareFPSR(Result &r1, Result &r2);
-bool compareFPIAR(Result &r1, Result &r2);
+void compare(Setup &s, Result &rRef, Result &rMoira);
+bool compareDasm(Result &rRef, Result &rMoira);
+bool compareD(Result &rRef, Result &rMoira);
+bool compareA(Result &rRef, Result &rMoira);
+bool comparePC(Result &rRef, Result &rMoira);
+bool compareSR(Result &rRef, Result &rMoira);
+bool compareUSP(Result &rRef, Result &rMoira);
+bool compareISP(Result &rRef, Result &rMoira);
+bool compareMSP(Result &rRef, Result &rMoira);
+bool compareVBR(Result &rRef, Result &rMoira);
+bool compareSFC(Result &rRef, Result &rMoira);
+bool compareDFC(Result &rRef, Result &rMoira);
+bool compareCAxR(Result &rRef, Result &rMoira);
+bool compareCycles(Result &rRef, Result &rMoira);
+bool compareFPR(Result &rRef, Result &rMoira);
+bool compareFPCR(Result &rRef, Result &rMoira);
+bool compareFPSR(Result &rRef, Result &rMoira);
+bool compareFPIAR(Result &rRef, Result &rMoira);
 bool compareMemory();
 
 bool isFpuOpcode(u16 op);
