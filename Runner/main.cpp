@@ -11,9 +11,11 @@
 #include "Shared.h"
 #include <string.h>
 
-// One test runner instance per Moira configuration (see Testrunner.h)
-namespace runnerUAE     { void run(); }
-namespace runnerMusashi { void run(); }
+#include "Testrunner.h"
+
+// Each Moira configuration provides an adapter for the runner (see MoiraAdapter.cpp)
+namespace moiraUAE::runner     { std::unique_ptr<::runner::MoiraAdapter> create(); }
+namespace moiraMusashi::runner { std::unique_ptr<::runner::MoiraAdapter> create(); }
 
 int main(int argc, char **argv)
 {
@@ -27,11 +29,11 @@ int main(int argc, char **argv)
     }
 
 #ifdef HAVE_UAE
-    if (uae) runnerUAE::run();
+    if (uae) runner::run(*moiraUAE::runner::create());
 #else
     if (uae) printf("UAE is not available in this build.\n");
 #endif
-    if (musashi) runnerMusashi::run();
+    if (musashi) runner::run(*moiraMusashi::runner::create());
 
     return 0;
 }

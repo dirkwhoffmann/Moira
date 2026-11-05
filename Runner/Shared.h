@@ -11,10 +11,9 @@
 
 // State shared by all test runner instances.
 //
-// The runner is compiled once per Moira configuration (see Testrunner.h). The
-// reference cores (Musashi, UAE, Binutils) are plain C/C++ libraries with global
-// state, and the instances run one after another. Everything those libraries need
-// to call back into lives here and exists exactly once.
+// The reference cores (Musashi, UAE, Binutils) are plain C/C++ libraries with
+// global state. Everything those libraries need to call back into lives here and
+// exists exactly once.
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,6 +38,7 @@ extern disassemble_info di;
 
 extern Sandbox sandbox;
 extern Randomizer randomizer;
+extern u8 moiraMem[0x10000];    // Memory of the tested Moira core
 extern u8 refMem[0x10000];      // Memory of the reference CPU (Musashi or UAE)
 extern u32 musashiFC;           // Function code of the last Musashi bus access
 

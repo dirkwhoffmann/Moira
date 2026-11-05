@@ -17,13 +17,12 @@
 #include "UAEGlue/UAECpu.h"
 #endif
 
-namespace RUNNER_NAMESPACE {
+namespace runner {
 
-using namespace MOIRA_NAMESPACE;
+using namespace moira;
 
-TestCPU *moiracpu;
-u8 moiraMem[0x10000];
-MOIRA_NAMESPACE::Model cpuModel = Model::M68000;
+MoiraAdapter *moiracpu = nullptr;
+Model cpuModel = Model::M68000;
 u16 opcode = 0;
 
 static int binutilsFprintf(FILE* f, const char* format, ...)
@@ -38,7 +37,7 @@ static int binutilsFprintf(FILE* f, const char* format, ...)
 
 // The reference core is determined by the compatibility mode of the tested Moira
 #ifdef HAVE_UAE
-static constexpr bool uaeRef = (compat == Compatibility::UAE);
+static bool uaeRef = false;
 static void setupUAE();
 #else
 static constexpr bool uaeRef = false;
@@ -47,7 +46,16 @@ static constexpr bool uaeRef = false;
 // Name of the CPU core that serves as reference
 static const char *refName() { return uaeRef ? "UAE" : "Musashi"; }
 
-void selectModel(MOIRA_NAMESPACE::Model model)
+// Converts between Moira's value types and the neutral types of the runner
+static Instr instrOf(u16 op) { return Instr(moiracpu->getInstrInfo(op).I); }
+static std::string fpStr(const FpReg &r)
+{
+    char buf[32];
+    snprintf(buf, sizeof(buf), "0x%04X:%016llX", (unsigned)r.se, (unsigned long long)r.man);
+    return buf;
+}
+
+void selectModel(Model model)
 {
     cpuModel = model;
 
@@ -55,11 +63,11 @@ void selectModel(MOIRA_NAMESPACE::Model model)
 #ifdef HAVE_UAE
     if (uaeRef) setupUAE();
 #endif
-    sandbox.checkCycles = (compat != Compatibility::MUSASHI) && (!uaeRef || cpuModel == Model::M68000);
+    sandbox.checkCycles = (moiracpu->compat() != int(Compatibility::MUSASHI)) && (!uaeRef || cpuModel == Model::M68000);
     sandbox.addrMask = (cpuModel == Model::M68EC020) ? 0xFFFFFF : 0xFFFFFFFF;
     sandbox.byteGranular = uaeRef && cpuModel != Model::M68000 && cpuModel != Model::M68010;
     setupBinutils();
-    setupMoira();
+    moiracpu->setModel(int(cpuModel));
 }
 
 const char *selectedModel()
@@ -158,8 +166,8 @@ static void runUAE(Setup &s, Result &r)
     st.cacr = s.cacr;
     st.caar = s.caar;
     for (int i = 0; i < 8; i++) {
-        st.fpse[i] = s.fpr[i].signExp();
-        st.fpman[i] = s.fpr[i].mantissa();
+        st.fpse[i] = s.fpr[i].se;
+        st.fpman[i] = s.fpr[i].man;
     }
     st.fpcr = s.fpcr;
     st.fpsr = s.fpsr;
@@ -208,11 +216,6 @@ void setupMusashi()
     }
 }
 
-void setupMoira()
-{
-    moiracpu->setModel(cpuModel);
-}
-
 void setupTestEnvironment(Setup &s, long round)
 {
     s.round = round;
@@ -239,7 +242,7 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
 {
     static long mvc = 0;
 
-    MOIRA_NAMESPACE::Instr instr = moiracpu->getInstrInfo(opcode).I;
+    Instr instr = instrOf(opcode);
 
     // Prepare special extension words for some instructions
     switch (instr) {
@@ -297,50 +300,22 @@ void resetMusashi(Setup &s)
     s.supervisor ? m68ki_set_sm_flag(SFLAG_SET) : m68ki_set_sm_flag(SFLAG_CLEAR);
 }
 
-void resetMoira(Setup &s)
-{
-    moiracpu->reset();
-    moiracpu->setClock(0);
-
-    for (int i = 0; i < 8; i++) {
-        moiracpu->setD(i,s.d[i]);
-    }
-    for (int i = 0; i < 7; i++) {
-        moiracpu->setA(i,s.a[i]);
-    }
-    moiracpu->setVBR(s.vbr);
-    moiracpu->setSFC(s.sfc);
-    moiracpu->setDFC(s.dfc);
-    moiracpu->setCCR(s.ccr);
-    moiracpu->setCACR(s.cacr);
-    moiracpu->setCAAR(s.caar);
-    moiracpu->setSupervisorMode(s.supervisor);
-}
-
 void resetMusashiFpu(Setup &s)
 {
     for (int i = 0; i < 8; i++) {
-        REG_FP[i].high = s.fpr[i].signExp();
-        REG_FP[i].low = s.fpr[i].mantissa();
+        REG_FP[i].high = s.fpr[i].se;
+        REG_FP[i].low = s.fpr[i].man;
     }
     REG_FPCR = s.fpcr;
     REG_FPSR = s.fpsr;
     REG_FPIAR = s.fpiar;
 }
 
-void resetMoiraFpu(Setup &s)
-{
-    for (int i = 0; i < 8; i++) moiracpu->fpu.fpr[i] = s.fpr[i];
-    moiracpu->fpu.setFPCR(s.fpcr);
-    moiracpu->fpu.setFPSR(s.fpsr);
-    moiracpu->fpu.setFPIAR(s.fpiar);
-}
-
 void recordRefFpu(Result &r)
 {
 #ifdef HAVE_UAE
     if (uaeRef) {
-        for (int i = 0; i < 8; i++) r.fpr[i] = Float80::fromBits(uaeState.fpse[i], uaeState.fpman[i]);
+        for (int i = 0; i < 8; i++) r.fpr[i] = { uaeState.fpse[i], uaeState.fpman[i] };
         r.fpcr = uaeState.fpcr;
         r.fpsr = uaeState.fpsr;
         r.fpiar = uaeState.fpiar;
@@ -348,35 +323,32 @@ void recordRefFpu(Result &r)
     }
 #endif
     for (int i = 0; i < 8; i++) {
-        r.fpr[i] = Float80::fromBits(REG_FP[i].high, REG_FP[i].low);
+        r.fpr[i] = { u16(REG_FP[i].high), u64(REG_FP[i].low) };
     }
     r.fpcr = REG_FPCR;
     r.fpsr = REG_FPSR;
     r.fpiar = REG_FPIAR;
 }
 
-void recordMoiraFpu(Result &r)
-{
-    for (int i = 0; i < 8; i++) r.fpr[i] = moiracpu->fpu.fpr[i];
-    r.fpcr = moiracpu->fpu.getFPCR();
-    r.fpsr = moiracpu->fpu.getFPSR();
-    r.fpiar = moiracpu->fpu.getFPIAR();
-}
-
 clock_t refclk[2] = {0,0}, moiraclk[2] = {0,0};
 
-void run()
+void run(MoiraAdapter &adapter)
 {
     std::time_t t = std::time(0);
     std::tm* now = std::localtime(&t);
 
-    run(1900 + now->tm_year + now->tm_yday);
+    run(adapter, 1900 + now->tm_year + now->tm_yday);
 }
 
-void run(unsigned seed)
+void run(MoiraAdapter &adapter, unsigned seed)
 {
+    moiracpu = &adapter;
+#ifdef HAVE_UAE
+    uaeRef = adapter.compat() == int(Compatibility::UAE);
+#endif
+
     printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2026\n");
-    printf("Core %s\n\n", Moira::build().c_str());
+    printf("Core %s\n\n", moiracpu->build().c_str());
     printf("The test program runs Moira against %s with randomly generated data.\n", refName());
     printf("\n");
     printf("    Test rounds : %ld\n", ROUNDS);
@@ -386,8 +358,6 @@ void run(unsigned seed)
     printf("      Reference : %s\n", refName());
 
     srand(seed);
-
-    if (!moiracpu) moiracpu = new TestCPU();
 
     for (long i = 1; i <= ROUNDS; i++) {
 
@@ -428,7 +398,7 @@ void runCPU(long round)
         for (int op = 0x0000; op <= 0xFFFF; op++) {
 
             if constexpr (SKIP_ILLEGAL) {
-                if (moiracpu->getInstrInfo(op).I == MOIRA_NAMESPACE::Instr::ILLEGAL) continue;
+                if (instrOf(u16(op)) == Instr::ILLEGAL) continue;
             }
 
             // FPU opcodes are covered by runFPU
@@ -502,20 +472,20 @@ bool isFpuOpcode(u16 op)
 void setupFpuEnvironment(Setup &s)
 {
     // A pool of interesting values
-    static const Float80 pool[] = {
+    static const FpReg pool[] = {
 
-        Float80::zero(), Float80::zero(true),
-        Float80::one(), Float80::one(true),
-        Float80::infinity(), Float80::infinity(true),
-        Float80::quietNaN(), Float80::signalingNaN(),
-        Float80::fromBits(0x4000, 0x8000000000000000ULL),   // 2.0
-        Float80::fromBits(0x3FFE, 0x8000000000000000ULL),   // 0.5
-        Float80::fromBits(0x4005, 0xA000000000000000ULL),   // 40.0
-        Float80::fromBits(0xC005, 0xA000000000000000ULL),   // -40.0
-        Float80::fromBits(0x0001, 0x8000000000000000ULL),   // Smallest normal
-        Float80::fromBits(0x0000, 0x4000000000000000ULL),   // Denormal
-        Float80::fromBits(0x7FFE, 0xFFFFFFFFFFFFFFFFULL),   // Largest finite
-        Float80::fromBits(0x3FFF, 0x8000000000000001ULL),   // 1 + epsilon
+        { 0x0000, 0 }, { 0x8000, 0 },                                       // +0, -0
+        { 0x3FFF, 1ULL << 63 }, { 0xBFFF, 1ULL << 63 },                     // +1, -1
+        { 0x7FFF, 0 }, { 0xFFFF, 0 },                                       // +inf, -inf
+        { 0x7FFF, 0xC000000000000000ULL }, { 0x7FFF, 0xA000000000000000ULL }, // Quiet and signaling NaN
+        { 0x4000, 0x8000000000000000ULL },                                  // 2.0
+        { 0x3FFE, 0x8000000000000000ULL },                                  // 0.5
+        { 0x4005, 0xA000000000000000ULL },                                  // 40.0
+        { 0xC005, 0xA000000000000000ULL },                                  // -40.0
+        { 0x0001, 0x8000000000000000ULL },                                  // Smallest normal
+        { 0x0000, 0x4000000000000000ULL },                                  // Denormal
+        { 0x7FFE, 0xFFFFFFFFFFFFFFFFULL },                                  // Largest finite
+        { 0x3FFF, 0x8000000000000001ULL },                                  // 1 + epsilon
     };
     const int poolSize = sizeof(pool) / sizeof(pool[0]);
 
@@ -533,7 +503,7 @@ void setupFpuEnvironment(Setup &s)
             u64 man = (u64(randomizer.rand()) << 32 | randomizer.rand()) | (1ULL << 63);
             u16 exp = u16(0x3FFF - 40 + randomizer.rand() % 80);
             u16 sign = (randomizer.rand() & 1) << 15;
-            s.fpr[i] = Float80::fromBits(sign | exp, man);
+            s.fpr[i] = { u16(sign | exp), man };
         }
     }
 
@@ -573,19 +543,19 @@ void runSingleTest(Setup &s, u16 op)
     {
         auto info = moiracpu->getInstrInfo(op);
         bool enable = doExec((int)op) && !skip(op) && !skipAccessCheck(op);
-        bool ignore = (info.I == Instr::CLR && info.S == Long) ||
-                      (info.I == Instr::CHK && cpuModel != Model::M68000);
+        bool ignore = (Instr(info.I) == Instr::CLR && info.S == Long) ||
+                      (Instr(info.I) == Instr::CHK && cpuModel != Model::M68000);
         sandbox.prepare(enable, ignore);
     }
 
     // Prepare
     resetMusashi(s);
-    resetMoira(s);
+    moiracpu->reset(s);
 
     bool fpu = isFpuOpcode(op);
     if (fpu) {
         resetMusashiFpu(s);
-        resetMoiraFpu(s);
+        moiracpu->resetFpu(s);
     }
 
     // Run the binutils disassembler
@@ -601,14 +571,14 @@ void runSingleTest(Setup &s, u16 op)
     refclk[1] += refResult.elapsed[1];
 
     // Run Moira
-    runMoira(s, moiraResult);
+    moiracpu->run(moiraResult);
     moiraclk[0] += moiraResult.elapsed[0];
     moiraclk[1] += moiraResult.elapsed[1];
 
     // Compare
     if (fpu) {
         recordRefFpu(refResult);
-        recordMoiraFpu(moiraResult);
+        moiracpu->recordFpu(moiraResult);
     }
     compare(s, refResult, moiraResult);
 }
@@ -680,63 +650,6 @@ void runReference(Setup &s, Result &r)
     }
 }
 
-void runMoira(Setup &s, Result &r)
-{
-    r.oldpc = moiracpu->getPC();
-    r.opcode = get16(moiraMem, r.oldpc);
-    r.elapsed[0] = r.elapsed[1] = 0;
-
-    // Disassemble the instruction
-    if (doDasm(r.opcode)) {
-
-        // Disassemble the instruction in Musashi format
-        moiracpu->setDasmSyntax(Syntax::MUSASHI);
-        moiracpu->setDasmLetterCase(LetterCase::MIXED_CASE);
-        moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
-        clock_t elapsed = clock();
-        r.dasmCntMusashi = moiracpu->disassemble(r.dasmMusashi, r.oldpc);
-        r.elapsed[1] = clock() - elapsed;
-
-        // Disassemble the instruction in GNU format (binutils)
-#ifdef MOTOROLA
-        moiracpu->setDasmSyntax(Syntax::GNU);
-#else
-        moiracpu->setDasmSyntax(Syntax::GNU_MIT);
-#endif
-        moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 10, .plainZero = true });
-        r.dasmCntBinutils = moiracpu->disassemble(r.dasmBinutils, r.oldpc);
-
-        // Disassemble the instruction in Moira's own format (compared with UAE)
-        moiracpu->setDasmSyntax(Syntax::UAE);
-        moiracpu->setDasmLetterCase(LetterCase::LOWER_CASE);
-        moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
-        r.dasmCntMoiraUAE = moiracpu->disassemble(r.dasmMoiraUAE, r.oldpc);
-    }
-
-    // Run the Moira CPU
-    if (doExec(r.opcode)) {
-
-        u32 pc = moiracpu->getPC();
-        u16 op = get16(moiraMem, pc);
-
-        int64_t cycles = moiracpu->getClock();
-
-        if (VERBOSE)
-            printf("$%04x ($%04x): %s (Moira)\n", r.oldpc, r.opcode, r.dasmMusashi);
-
-        // Execute instruction
-        clock_t elapsed = clock();
-        moiracpu->execute();
-        r.elapsed[0] = clock() - elapsed;
-
-        // Record the result
-        r.cycles = (int)(moiracpu->getClock() - cycles);
-        r.oldpc = pc;
-        r.opcode = op;
-        recordMoiraRegisters(r);
-    }
-}
-
 bool skipAccessCheck(u16 op)
 {
     // UAE only writes back the bytes of a bit field that are affected,
@@ -749,7 +662,7 @@ bool skipAccessCheck(u16 op)
     if ((op & 0xFE00) == 0xF200) return true;
 
     // N and V are undefined for CHK2, which shows up in the exception frame
-    auto instr = moiracpu->getInstrInfo(op).I;
+    auto instr = instrOf(op);
     return instr == Instr::CHK2 || instr == Instr::CMP2;
 }
 
@@ -757,7 +670,7 @@ bool skip(u16 op)
 {
     bool result;
 
-    MOIRA_NAMESPACE::Instr instr = moiracpu->getInstrInfo(op).I;
+    Instr instr = instrOf(op);
 
     if (uaeRef) {
 
@@ -908,23 +821,6 @@ void recordMusashiRegisters(Result &r)
         r.d[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_D0 + i));
         r.a[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_A0 + i));
     }
-}
-
-void recordMoiraRegisters(Result &r)
-{
-    r.pc = moiracpu->getPC();
-    r.sr = moiracpu->getSR();
-    r.usp = moiracpu->getUSP();
-    r.isp = moiracpu->getISP();
-    r.msp = moiracpu->getMSP();
-    r.fc = moiracpu->readFC();
-    r.vbr = moiracpu->getVBR();
-    r.sfc = moiracpu->getSFC();
-    r.dfc = moiracpu->getDFC();
-    r.cacr = moiracpu->getCACR();
-    r.caar = moiracpu->getCAAR();
-    for (int i = 0; i < 8; i++) r.d[i] = moiracpu->getD(i);
-    for (int i = 0; i < 8; i++) r.a[i] = moiracpu->getA(i);
 }
 
 void dumpSetup(Setup &s)
@@ -1097,7 +993,7 @@ void compare(Setup &s, Result &rRef, Result &rMoira)
         if (isFpuOpcode(s.opcode)) {
             for (int i = 0; i < 8; i++) {
                 printf("FP%d: setup %s  %s %s  Moira %s\n", i,
-                       s.fpr[i].str().c_str(), refName(), rRef.fpr[i].str().c_str(), rMoira.fpr[i].str().c_str());
+                       fpStr(s.fpr[i]).c_str(), refName(), fpStr(rRef.fpr[i]).c_str(), fpStr(rMoira.fpr[i]).c_str());
             }
             printf("FPCR: %08x / %08x / %08x (setup / %s / Moira)\n", s.fpcr, rRef.fpcr, rMoira.fpcr, refName());
             printf("FPSR: %08x / %08x / %08x\n", s.fpsr, rRef.fpsr, rMoira.fpsr);
@@ -1143,7 +1039,7 @@ static bool noUAEDasmForCoprocessor(u16 opcode)
 
 bool compareDasm(Result &rRef, Result &rMoira)
 {
-    auto I = moiracpu->getInstrInfo(rRef.opcode).I;
+    auto I = instrOf(rRef.opcode);
 
     bool skipMusashi = rRef.opcode >= 0xF000;
     bool skipBinutils = false;
@@ -1192,7 +1088,7 @@ bool compareDasm(Result &rRef, Result &rMoira)
 bool compareD(Result &rRef, Result &rMoira)
 {
     assert(rRef.opcode == rMoira.opcode);
-    MOIRA_NAMESPACE::Instr instr = moiracpu->getInstrInfo(rRef.opcode).I;
+    Instr instr = instrOf(rRef.opcode);
     if (instr == Instr::DIVU || instr == Instr::DIVS)
     {
         // The reference CPUs differ in some corner cases
@@ -1221,7 +1117,7 @@ bool comparePC(Result &rRef, Result &rMoira)
 bool compareSR(Result &rRef, Result &rMoira)
 {
     assert(rRef.opcode == rMoira.opcode);
-    MOIRA_NAMESPACE::Instr instr = moiracpu->getInstrInfo(rRef.opcode).I;
+    Instr instr = instrOf(rRef.opcode);
     if (instr == Instr::DIVU || instr == Instr::DIVS) {
 
         // The reference CPU differs (and is likely wrong). Ignore it
@@ -1284,7 +1180,7 @@ bool compareCAxR(Result &rRef, Result &rMoira)
 
 bool compareFPR(Result &rRef, Result &rMoira)
 {
-    for (int i = 0; i < 8; i++) if (!rRef.fpr[i].identical(rMoira.fpr[i])) return false;
+    for (int i = 0; i < 8; i++) if (!(rRef.fpr[i] == rMoira.fpr[i])) return false;
     return true;
 }
 
@@ -1320,9 +1216,10 @@ bool compareMemory() { return memcmp(refMem, moiraMem, sizeof(refMem)) == 0; }
 bool compareCycles(Result &rRef, Result &rMoira)
 {
     assert(rRef.opcode == rMoira.opcode);
-    auto I = moiracpu->getInstrInfo(rRef.opcode).I;
-    auto S = moiracpu->getInstrInfo(rRef.opcode).S;
-    auto M = moiracpu->getInstrInfo(rRef.opcode).M;
+    auto info = moiracpu->getInstrInfo(rRef.opcode);
+    auto I = Instr(info.I);
+    auto S = info.S;
+    auto M = Mode(info.M);
 
     // Exclude some instructions
     if (I == Instr::TAS) return true;
@@ -1367,4 +1264,4 @@ void bugReport()
     exit(1);
 }
 
-} // namespace RUNNER_NAMESPACE
+} // namespace runner

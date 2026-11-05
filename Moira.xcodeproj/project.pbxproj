@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		50C300000000000000000003 /* Testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* Testrunner.cpp */; };
 		50C100000000000000000001 /* extF80_add.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A807C3098B1AD00E2E307 /* extF80_add.cpp */; };
 		50C100000000000000000002 /* extF80_add.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A807C3098B1AD00E2E307 /* extF80_add.cpp */; };
 		50C100000000000000000003 /* extF80_div.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A807D3098B1AD00E2E307 /* extF80_div.cpp */; };
@@ -180,7 +181,7 @@
 		50B10000000000000000002D /* Float80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81003098B1C600E2E307 /* Float80.cpp */; };
 		50B100000000000000000053 /* libMoiraUAE.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50B100000000000000000004 /* libMoiraUAE.a */; };
 		50B100000000000000000058 /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; };
-		50B100000000000000000059 /* Testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* Testrunner.cpp */; };
+		50B100000000000000000059 /* MoiraAdapter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50C300000000000000000001 /* MoiraAdapter.cpp */; };
 		50B100000000000000000060 /* libRunnerUAE.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50B100000000000000000054 /* libRunnerUAE.a */; };
 		50B100000000000000000065 /* FloatMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000001 /* FloatMath.cpp */; };
 		50B100000000000000000066 /* MoiraDebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */; };
@@ -193,7 +194,7 @@
 		50B10000000000000000008A /* Float80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81003098B1C600E2E307 /* Float80.cpp */; };
 		50B1000000000000000000B0 /* libMoiraMusashi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50B100000000000000000061 /* libMoiraMusashi.a */; };
 		50B1000000000000000000B5 /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; };
-		50B1000000000000000000B6 /* Testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* Testrunner.cpp */; };
+		50B1000000000000000000B6 /* MoiraAdapter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50C300000000000000000001 /* MoiraAdapter.cpp */; };
 		50B1000000000000000000BD /* libRunnerMusashi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50B1000000000000000000B1 /* libRunnerMusashi.a */; };
 /* End PBXBuildFile section */
 
@@ -248,6 +249,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		50C300000000000000000001 /* MoiraAdapter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraAdapter.cpp; sourceTree = "<group>"; };
+		50C300000000000000000002 /* RunnerTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RunnerTypes.h; sourceTree = "<group>"; };
 		50C2000000000000000000C1 /* SoftFloat.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SoftFloat.cpp; sourceTree = "<group>"; };
 		50C2000000000000000000A1 /* SoftFloat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SoftFloat.h; sourceTree = "<group>"; };
 		50A300000000000000000003 /* BigNum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BigNum.h; sourceTree = "<group>"; };
@@ -635,6 +638,8 @@
 				507BE4AD23B66456000B37D2 /* Testrunner.cpp */,
 				502C09E123C8E16600A179E1 /* TestCPU.h */,
 				502C09E023C8E16600A179E1 /* TestCPU.cpp */,
+				50C300000000000000000001 /* MoiraAdapter.cpp */,
+				50C300000000000000000002 /* RunnerTypes.h */,
 				50CECEC623A924B000E07C65 /* Sandbox.h */,
 				50CECEC523A924B000E07C65 /* Sandbox.cpp */,
 				5054686128A4CDDC00028727 /* Randomizer.h */,
@@ -1188,6 +1193,7 @@
 				50C0123A28BBAD9B001EFB37 /* m68k-dis.c in Sources */,
 				5054686228A4CDDC00028727 /* Randomizer.cpp in Sources */,
 				50B100000000000000000003 /* Shared.cpp in Sources */,
+				50C300000000000000000003 /* Testrunner.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1307,7 +1313,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				50B100000000000000000058 /* TestCPU.cpp in Sources */,
-				50B100000000000000000059 /* Testrunner.cpp in Sources */,
+				50B100000000000000000059 /* MoiraAdapter.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1391,7 +1397,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				50B1000000000000000000B5 /* TestCPU.cpp in Sources */,
-				50B1000000000000000000B6 /* Testrunner.cpp in Sources */,
+				50B1000000000000000000B6 /* MoiraAdapter.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1806,7 +1812,6 @@
 					"MOIRA_COMPATIBILITY=UAE",
 					"MOIRA_PRECISE_TIMING=true",
 					"$(inherited)",
-					"RUNNER_NAMESPACE=runnerUAE",
 					HAVE_UAE,
 				);
 				HEADER_SEARCH_PATHS = (
@@ -1832,7 +1837,6 @@
 					"MOIRA_COMPATIBILITY=UAE",
 					"MOIRA_PRECISE_TIMING=true",
 					"$(inherited)",
-					"RUNNER_NAMESPACE=runnerUAE",
 					HAVE_UAE,
 				);
 				HEADER_SEARCH_PATHS = (
@@ -1858,7 +1862,6 @@
 					"MOIRA_COMPATIBILITY=UAE",
 					"MOIRA_PRECISE_TIMING=true",
 					"$(inherited)",
-					"RUNNER_NAMESPACE=runnerUAE",
 					HAVE_UAE,
 				);
 				HEADER_SEARCH_PATHS = (
@@ -1940,7 +1943,6 @@
 					"MOIRA_NAMESPACE=moiraMusashi",
 					"MOIRA_COMPATIBILITY=MUSASHI",
 					"$(inherited)",
-					"RUNNER_NAMESPACE=runnerMusashi",
 					HAVE_UAE,
 				);
 				HEADER_SEARCH_PATHS = (
@@ -1965,7 +1967,6 @@
 					"MOIRA_NAMESPACE=moiraMusashi",
 					"MOIRA_COMPATIBILITY=MUSASHI",
 					"$(inherited)",
-					"RUNNER_NAMESPACE=runnerMusashi",
 					HAVE_UAE,
 				);
 				HEADER_SEARCH_PATHS = (
@@ -1990,7 +1991,6 @@
 					"MOIRA_NAMESPACE=moiraMusashi",
 					"MOIRA_COMPATIBILITY=MUSASHI",
 					"$(inherited)",
-					"RUNNER_NAMESPACE=runnerMusashi",
 					HAVE_UAE,
 				);
 				HEADER_SEARCH_PATHS = (

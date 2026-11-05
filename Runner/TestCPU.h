@@ -10,15 +10,17 @@
 #pragma once
 
 #include "Moira.h"
+#include "RunnerTypes.h"
+#include "RunnerTypes.h"
 
-namespace RUNNER_NAMESPACE {
+namespace MOIRA_NAMESPACE::runner {
 
-class TestCPU : public MOIRA_NAMESPACE::Moira {
+class TestCPU : public Moira {
 
 public:
 
     // Grant the test runner access to the FPU state
-    using MOIRA_NAMESPACE::Moira::fpu;
+    using Moira::fpu;
 
 private:
 

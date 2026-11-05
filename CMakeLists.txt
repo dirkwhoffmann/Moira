@@ -16,27 +16,29 @@ add_subdirectory(Moira)
 add_subdirectory(Runner/ThirdParty/Binutils)
 add_subdirectory(Runner/ThirdParty/Musashi)
 
-# Shared runner state (reference cores call back into it, so it exists once)
+# The test runner. It is compiled once and talks to the tested Moira cores through
+# the adapter interface in RunnerTypes.h. It only uses Moira's enumerations (Instr,
+# Model, ...) and needs no Moira library.
 add_library(runnerShared STATIC
+Runner/Testrunner.cpp
 Runner/Shared.cpp
 Runner/Sandbox.cpp
 Runner/Randomizer.cpp
 Runner/ThirdParty/MusashiGlue/musashi.cpp
 )
 
-# One runner instance per Moira configuration. Each is compiled against its own
-# Moira library and lives in its own namespace.
-function(add_runner_variant NAME MOIRALIB)
+# One adapter per Moira configuration. It connects the runner to a core that is
+# compiled with its own settings and lives in its own namespace.
+function(add_runner_adapter NAME MOIRALIB)
   add_library(${NAME} STATIC
-  Runner/Testrunner.cpp
+  Runner/MoiraAdapter.cpp
   Runner/TestCPU.cpp
   )
-  target_compile_definitions(${NAME} PUBLIC RUNNER_NAMESPACE=${NAME})
-  target_link_libraries(${NAME} PUBLIC ${MOIRALIB})
+  target_link_libraries(${NAME} PRIVATE ${MOIRALIB})
 endfunction()
 
-add_runner_variant(runnerUAE moiraUAE)
-add_runner_variant(runnerMusashi moiraMusashi)
+add_runner_adapter(runnerUAE moiraUAE)
+add_runner_adapter(runnerMusashi moiraMusashi)
 
 # Add the executable
 add_executable(testRunner Runner/main.cpp)
