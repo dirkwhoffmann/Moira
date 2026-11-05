@@ -167,7 +167,7 @@ template <Core C, Mode M> Float80 readFpuOpEa(int n, u32 ea, FpuFormat fmt);
 
 template <Core C, Mode M> void writeFpuOp(int n, const Float80 &val, FpuFormat fmt, int k);
 template <Core C> void writeFpuOpRg(int n, const Float80 &val, FpuFormat fmt);
-template <Core C, Mode M> void writeFpuOpEa(int n, u32 ea, const Float80 &val, FpuFormat fmt, int k, bool round);
+template <Core C, Mode M> void writeFpuOpEa(int n, u32 ea, const Float80 &val, FpuFormat fmt, int k);
 
 // Computes the effective address of a floating-point operand
 template <Core C, Mode M> u32 computeFpuEA(int n, FpuFormat fmt);

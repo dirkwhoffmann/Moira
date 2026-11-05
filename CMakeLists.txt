@@ -16,55 +16,38 @@ add_subdirectory(Moira)
 add_subdirectory(Runner/ThirdParty/Binutils)
 add_subdirectory(Runner/ThirdParty/Musashi)
 
-# The test runner. It is compiled once and talks to the tested Moira cores through
-# the adapter interface in RunnerTypes.h. It only uses Moira's enumerations (Instr,
-# Model, ...) and needs no Moira library.
-add_library(runnerShared STATIC
+# The test runner. It is built once per tested Moira core (testRunnerUAE tests
+# moiraUAE against UAE, testRunnerMusashi tests moiraMusashi against Musashi).
+set(RUNNER_SRC
+Runner/main.cpp
 Runner/Testrunner.cpp
+Runner/TestCPU.cpp
 Runner/Shared.cpp
 Runner/Sandbox.cpp
 Runner/Randomizer.cpp
 Runner/ThirdParty/MusashiGlue/musashi.cpp
 )
 
-# One adapter per Moira configuration. It connects the runner to a core that is
-# compiled with its own settings and lives in its own namespace.
-function(add_runner_adapter NAME MOIRALIB)
-  add_library(${NAME} STATIC
-  Runner/MoiraAdapter.cpp
-  Runner/TestCPU.cpp
+function(add_test_runner NAME MOIRALIB)
+  add_executable(${NAME} ${RUNNER_SRC})
+  target_link_libraries(${NAME} PRIVATE ${MOIRALIB} binutils musashi)
+  if(MSVC)
+    target_compile_options(${NAME} PRIVATE /wd4100 /wd4201 /wd4324 /wd4458)
+  else()
+    target_compile_options(${NAME} PRIVATE -Wno-unused-parameter -Wno-unused-variable
+      -Wno-gnu-anonymous-struct -Wno-nested-anon-types)
+  endif()
+  target_include_directories(${NAME} PRIVATE
+  ${CMAKE_SOURCE_DIR}/.
+  ${CMAKE_SOURCE_DIR}/Moira
+  ${CMAKE_SOURCE_DIR}/Runner
+  ${CMAKE_SOURCE_DIR}/Runner/ThirdParty
+  ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/Binutils
+  ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/Musashi
   )
-  target_link_libraries(${NAME} PRIVATE ${MOIRALIB})
 endfunction()
 
-add_runner_adapter(runnerUAE moiraUAE)
-add_runner_adapter(runnerMusashi moiraMusashi)
-
-# Add the executable
-add_executable(testRunner Runner/main.cpp)
-target_link_libraries(testRunner runnerUAE runnerMusashi runnerShared binutils musashi)
-
-# Add compile options
-foreach(T testRunner runnerShared runnerUAE runnerMusashi)
-if(MSVC)
-  target_compile_options(${T} PUBLIC /wd4100 /wd4201 /wd4324 /wd4458)
-else()
-  target_compile_options(${T} PUBLIC -Wno-unused-parameter)
-  target_compile_options(${T} PUBLIC -Wno-unused-variable)
-  target_compile_options(${T} PUBLIC -Wno-gnu-anonymous-struct)
-  target_compile_options(${T} PUBLIC -Wno-nested-anon-types)
-endif()
-
-# Add include paths
-target_include_directories(${T} PUBLIC
-${CMAKE_SOURCE_DIR}/.
-${CMAKE_SOURCE_DIR}/Moira
-${CMAKE_SOURCE_DIR}/Runner
-${CMAKE_SOURCE_DIR}/Runner/ThirdParty
-${CMAKE_SOURCE_DIR}/Runner/ThirdParty/Binutils
-${CMAKE_SOURCE_DIR}/Runner/ThirdParty/Musashi
-)
-endforeach()
+add_test_runner(testRunnerMusashi moiraMusashi)
 
 # Add the FPU unit tests
 add_executable(fpuTests Runner/FpuTests.cpp)
@@ -136,16 +119,16 @@ if (UAE_DIR)
     ${AMI} ${AMI}/include ${AMI}/osdep ${AMI}/archivers ${AMI}/threaddep)
     target_include_directories(uaecpu PUBLIC ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAEGlue)
 
-    foreach(T testRunner runnerShared runnerUAE runnerMusashi)
-      target_compile_definitions(${T} PRIVATE HAVE_UAE)
-    endforeach()
-    target_link_libraries(testRunner uaecpu)
-    target_link_libraries(runnerUAE PUBLIC uaecpu)
-    target_link_libraries(runnerMusashi PUBLIC uaecpu)
+    add_test_runner(testRunnerUAE moiraUAE)
+    target_compile_definitions(testRunnerUAE PRIVATE HAVE_UAE)
+    target_link_libraries(testRunnerUAE PRIVATE uaecpu)
   endif()
 endif()
 
 # Add tests
-add_test(UnitTest testRunner)
+add_test(UnitTestMusashi testRunnerMusashi)
+if (UAE_DIR)
+  add_test(UnitTestUAE testRunnerUAE)
+endif()
 add_test(FpuExecTests fpuExecTests)
 add_test(FpuTests fpuTests)

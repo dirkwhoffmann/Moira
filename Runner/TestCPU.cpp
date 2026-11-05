@@ -8,10 +8,10 @@
 // -----------------------------------------------------------------------------
 
 #include "config.h"
-#include "TestCPU.h"
+#include "Testrunner.h"
 
-namespace MOIRA_NAMESPACE::runner {
-
+namespace runner {
+using namespace MOIRA_NAMESPACE;
 
 /* Signals the CPU clock to advance.
  */

@@ -285,7 +285,7 @@ Moira::writeFpuOp(int n, const Float80 &val, FpuFormat fmt, int k)
     if constexpr (M != Mode::AN && M != Mode::IM && M != Mode::IP) {
 
         u32 ea = computeFpuEA<C, M>(n, fmt);
-        writeFpuOpEa<C, M>(n, ea, val, fmt, k, true);
+        writeFpuOpEa<C, M>(n, ea, val, fmt, k);
     }
 }
 
@@ -304,7 +304,7 @@ Moira::writeFpuOpRg(int n, const Float80 &val, FpuFormat fmt)
 }
 
 template <Core C, Mode M> void
-Moira::writeFpuOpEa(int n, u32 ea, const Float80 &val, FpuFormat fmt, int k, bool round)
+Moira::writeFpuOpEa(int n, u32 ea, const Float80 &val, FpuFormat fmt, int k)
 {
     u32 w[3];
 
@@ -344,8 +344,8 @@ Moira::writeFpuOpEa(int n, u32 ea, const Float80 &val, FpuFormat fmt, int k, boo
         }
         case FpuFormat::EXTENDED:
         {
-            // FMOVEM stores the register contents as they are, FMOVE rounds them
-            FpuFormats::toExtended(round ? fpu.round(val) : val, w);
+            // The register contents are stored as they are (no rounding to the FPCR precision)
+            FpuFormats::toExtended(val, w);
             writeM<C, M, Word>(ea, w[0] >> 16);
             writeM<C, M, Word>(U32_ADD(ea, 2), 0);
             writeM<C, M, Long>(U32_ADD(ea, 4), w[1]);
@@ -953,7 +953,7 @@ Moira::execFMovem(u16 opcode)
                         if (load) {
                             fpu.fpr[i] = readFpuOpEa<C, M>(reg, ea, FpuFormat::EXTENDED);
                         } else {
-                            writeFpuOpEa<C, M>(reg, ea, fpu.fpr[i], FpuFormat::EXTENDED, 0, false);
+                            writeFpuOpEa<C, M>(reg, ea, fpu.fpr[i], FpuFormat::EXTENDED, 0);
                         }
                         U32_DEC(ea, 12);
                     }
@@ -968,7 +968,7 @@ Moira::execFMovem(u16 opcode)
                         if (load) {
                             fpu.fpr[i] = readFpuOpEa<C, M>(reg, ea, FpuFormat::EXTENDED);
                         } else {
-                            writeFpuOpEa<C, M>(reg, ea, fpu.fpr[i], FpuFormat::EXTENDED, 0, false);
+                            writeFpuOpEa<C, M>(reg, ea, fpu.fpr[i], FpuFormat::EXTENDED, 0);
                         }
                         U32_INC(ea, 12);
                     }
@@ -1137,7 +1137,11 @@ Moira::execFGeneric(u16 opcode)
 
         // FSGLMUL and FSGLDIV round to single precision by themselves and keep the extended exponent
         // range. Rounding to the FPCR precision again would clamp the exponent (e.g. in double mode).
-        if constexpr (I == Instr::FSGLMUL || I == Instr::FSGLDIV) {
+        // FINT, FINTRZ, FGETEXP and FGETMAN produce exact results that are not rounded to the FPCR
+        // precision (this matches UAE).
+        if constexpr (I == Instr::FSGLMUL || I == Instr::FSGLDIV ||
+                      I == Instr::FINT || I == Instr::FINTRZ ||
+                      I == Instr::FGETEXP || I == Instr::FGETMAN) {
             d = result;
         } else {
             d = fpu.round(result);

@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "50804E052386A4CE004D3EC2"
-               BuildableName = "Moira"
-               BlueprintName = "Moira"
+               BlueprintIdentifier = "50D10000000000000000000F"
+               BuildableName = "testRunnerUAE"
+               BlueprintName = "testRunnerUAE"
                ReferencedContainer = "container:Moira.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -47,9 +47,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "50804E052386A4CE004D3EC2"
-            BuildableName = "Moira"
-            BlueprintName = "Moira"
+            BlueprintIdentifier = "50D10000000000000000000F"
+            BuildableName = "testRunnerUAE"
+            BlueprintName = "testRunnerUAE"
             ReferencedContainer = "container:Moira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -67,9 +67,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "50804E052386A4CE004D3EC2"
-            BuildableName = "Moira"
-            BlueprintName = "Moira"
+            BlueprintIdentifier = "50D10000000000000000000F"
+            BuildableName = "testRunnerUAE"
+            BlueprintName = "testRunnerUAE"
             ReferencedContainer = "container:Moira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

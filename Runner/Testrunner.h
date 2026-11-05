@@ -15,48 +15,114 @@
 #include <string.h>
 #include <time.h>
 
-#include "RunnerTypes.h"
+#include "Shared.h"
 
-// The runner is compiled once. It uses Moira's value types (Instr, Model, ...)
-// from the default namespace and talks to the tested core through a MoiraAdapter.
-#include "MoiraTypes.h"
+#include "TestCPU.h"
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
 
 namespace runner {
 
-using namespace moira;
+using namespace MOIRA_NAMESPACE;
 
-extern MoiraAdapter *moiracpu;
-extern Model cpuModel;
+extern class TestCPU *moiracpu;
+extern MOIRA_NAMESPACE::Model cpuModel;
 extern u16 opcode;
+
+// A test setup
+struct Setup {
+
+    long    round;
+    u8      ccr;
+    bool    supervisor;
+    u32     pc;
+    u16     opcode;
+    u16     ext1;
+    u16     ext2;
+    u16     ext3;
+    u32     d[8];
+    u32     a[8];
+    u16     vbr;
+    u16     sfc;
+    u16     dfc;
+    u32     cacr;
+    u32     caar;
+    Float80 fpr[8];
+    u32     fpcr;
+    u32     fpsr;
+    u32     fpiar;
+    u8      mem[0x10000];
+};
+
+// A test result
+struct Result {
+
+    u16     dasmResult;
+    u32     oldpc;
+    u16     opcode;
+    u32     pc;
+    u32     usp;
+    u32     isp;
+    u32     msp;
+    u32     d[8];
+    u32     a[8];
+    u16     sr;
+    u32     fc;
+    u32     vbr;
+    u32     sfc;
+    u32     dfc;
+    u32     cacr;
+    u32     caar;
+    Float80 fpr[8];
+    u32     fpcr;
+    u32     fpsr;
+    u32     fpiar;
+    char    dasmMoira[128];
+    int     dasmCntMoira;
+    char    dasmBinutils[128];
+    int     dasmCntBinutils;
+    char    dasmMusashi[128];
+    int     dasmCntMusashi;
+    char    dasmUAE[128];
+    int     dasmCntUAE;
+    char    dasmMoiraUAE[128];      // Moira's output used for the comparison with UAE
+    int     dasmCntMoiraUAE;
+    int     cycles;
+    clock_t elapsed[2];
+};
+
+// Location of the tested instruction in memory
+const u32 pc = 0x1000;
 
 
 //
 // Preparing a test
 //
 
-void selectModel(Model model);
+void selectModel(MOIRA_NAMESPACE::Model model);
 const char *selectedModel();
 
 void setupBinutils();
 void setupMusashi();
+void setupMoira();
 
 void setupTestEnvironment(Setup &s, long round);
 void setupFpuEnvironment(Setup &s);
 void setupTestInstruction(Setup &s, u32 pc, u16 opcode);
 
 void resetMusashi(Setup &s);        // Resets the Musashi core (the UAE core is set up in runUAE)
+void resetMoira(Setup &s);
 void resetMusashiFpu(Setup &s);
+void resetMoiraFpu(Setup &s);
 
 
 //
 // Performing a test
 //
 
-void run(MoiraAdapter &adapter);
-void run(MoiraAdapter &adapter, unsigned seed);
+void run();
+void run(unsigned seed);
 
 void runCPU(long round);
 void runMMU(long round);
@@ -68,6 +134,7 @@ void runSingleTest(Setup &s, u16 op, u16 ext);
 
 void runBinutils(Setup &s, Result &r);
 void runReference(Setup &s, Result &r);   // Runs the reference CPU (Musashi or UAE)
+void runMoira(Setup &s, Result &r);
 
 bool skip(u16 op);
 bool skipAccessCheck(u16 op);
@@ -78,7 +145,9 @@ bool skipAccessCheck(u16 op);
 //
 
 void recordMusashiRegisters(Result &r);
+void recordMoiraRegisters(Result &r);
 void recordRefFpu(Result &r);
+void recordMoiraFpu(Result &r);
 
 void compare(Setup &s, Result &rRef, Result &rMoira);
 bool compareDasm(Result &rRef, Result &rMoira);

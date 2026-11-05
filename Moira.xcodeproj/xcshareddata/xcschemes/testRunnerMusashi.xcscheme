@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "50804E052386A4CE004D3EC2"
-               BuildableName = "Moira"
-               BlueprintName = "Moira"
+               BuildableName = "testRunnerMusashi"
+               BlueprintName = "testRunnerMusashi"
                ReferencedContainer = "container:Moira.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -48,8 +48,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "50804E052386A4CE004D3EC2"
-            BuildableName = "Moira"
-            BlueprintName = "Moira"
+            BuildableName = "testRunnerMusashi"
+            BlueprintName = "testRunnerMusashi"
             ReferencedContainer = "container:Moira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -68,8 +68,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "50804E052386A4CE004D3EC2"
-            BuildableName = "Moira"
-            BlueprintName = "Moira"
+            BuildableName = "testRunnerMusashi"
+            BlueprintName = "testRunnerMusashi"
             ReferencedContainer = "container:Moira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

@@ -8,32 +8,21 @@
 // -----------------------------------------------------------------------------
 
 #include "config.h"
-#include "Shared.h"
-#include <string.h>
-
 #include "Testrunner.h"
-
-// Each Moira configuration provides an adapter for the runner (see MoiraAdapter.cpp)
-namespace moiraUAE::runner     { std::unique_ptr<::runner::MoiraAdapter> create(); }
-namespace moiraMusashi::runner { std::unique_ptr<::runner::MoiraAdapter> create(); }
+#include <string.h>
 
 int main(int argc, char **argv)
 {
-    bool all = argc < 2;
-    bool uae = all || !strcmp(argv[1], "uae");
-    bool musashi = all || !strcmp(argv[1], "musashi");
+    // Without an explicit seed, the seed is derived from the current date
+    if (argc == 1) { runner::run(); return 0; }
 
-    if (!uae && !musashi) {
-        printf("Usage: %s [uae|musashi]\n", argv[0]);
-        return 1;
+    if (argc == 3 && !strcmp(argv[1], "--seed")) {
+
+        char *end = nullptr;
+        unsigned seed = (unsigned)strtoul(argv[2], &end, 0);
+        if (!*end) { runner::run(seed); return 0; }
     }
 
-#ifdef HAVE_UAE
-    if (uae) runner::run(*moiraUAE::runner::create());
-#else
-    if (uae) printf("UAE is not available in this build.\n");
-#endif
-    if (musashi) runner::run(*moiraMusashi::runner::create());
-
-    return 0;
+    printf("Usage: %s [--seed <n>]\n", argv[0]);
+    return 1;
 }
