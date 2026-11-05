@@ -121,7 +121,6 @@ void resetMoiraFpu(Setup &s);
 // Performing a test
 //
 
-void run();
 void run(unsigned seed);
 
 void runCPU(long round);

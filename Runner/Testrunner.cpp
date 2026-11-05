@@ -13,9 +13,7 @@
 #include <cstdarg>
 #include <ctime>
 #include <string>
-#ifdef HAVE_UAE
 #include "UAEGlue/UAECpu.h"
-#endif
 
 namespace runner {
 
@@ -36,29 +34,32 @@ static int binutilsFprintf(FILE* f, const char* format, ...)
 }
 
 // The reference core is determined by the compatibility mode of the tested Moira
-#ifdef HAVE_UAE
 static constexpr bool uaeRef = (compat == Compatibility::UAE);
 static void setupUAE();
-#else
-static constexpr bool uaeRef = false;
-#endif
-
-// Name of the CPU core that serves as reference
-static const char *refName() { return uaeRef ? "UAE" : "Musashi"; }
 
 void selectModel(MOIRA_NAMESPACE::Model model)
 {
     cpuModel = model;
 
     setupMusashi();
-#ifdef HAVE_UAE
     if (uaeRef) setupUAE();
-#endif
     sandbox.checkCycles = (compat != Compatibility::MUSASHI) && (!uaeRef || cpuModel == Model::M68000);
     sandbox.addrMask = (cpuModel == Model::M68EC020) ? 0xFFFFFF : 0xFFFFFFFF;
     sandbox.byteGranular = uaeRef && cpuModel != Model::M68000 && cpuModel != Model::M68010;
     setupBinutils();
     setupMoira();
+}
+
+const char *reference()
+{
+    switch (compat) {
+
+        case Compatibility::MUSASHI: return "Musashi";
+        case Compatibility::UAE:     return "UAE";
+    
+        default:
+            return "???";
+    }
 }
 
 const char *selectedModel()
@@ -114,7 +115,6 @@ void setupBinutils()
 // UAE as reference (optional, select with REFERENCE=uae)
 //
 
-#ifdef HAVE_UAE
 
 static uaecpu::State uaeState;
 
@@ -187,7 +187,6 @@ static void runUAE(Setup &s, Result &r)
     r.a[7] = uaeState.a7;
 }
 
-#endif
 
 void setupMusashi()
 {
@@ -337,7 +336,6 @@ void resetMoiraFpu(Setup &s)
 
 void recordRefFpu(Result &r)
 {
-#ifdef HAVE_UAE
     if (uaeRef) {
         for (int i = 0; i < 8; i++) r.fpr[i] = Float80::fromBits(uaeState.fpse[i], uaeState.fpman[i]);
         r.fpcr = uaeState.fpcr;
@@ -345,7 +343,6 @@ void recordRefFpu(Result &r)
         r.fpiar = uaeState.fpiar;
         return;
     }
-#endif
     for (int i = 0; i < 8; i++) {
         r.fpr[i] = Float80::fromBits(REG_FP[i].high, REG_FP[i].low);
     }
@@ -364,25 +361,17 @@ void recordMoiraFpu(Result &r)
 
 clock_t refclk[2] = {0,0}, moiraclk[2] = {0,0};
 
-void run()
-{
-    std::time_t t = std::time(0);
-    std::tm* now = std::localtime(&t);
-
-    run(1900 + now->tm_year + now->tm_yday);
-}
-
 void run(unsigned seed)
 {
     printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2026\n");
     printf("Core %s\n\n", Moira::build().c_str());
-    printf("The test program runs Moira against %s with randomly generated data.\n", refName());
+    printf("The test program runs Moira against %s with randomly generated data.\n", reference());
     printf("\n");
     printf("    Test rounds : %ld\n", ROUNDS);
     printf("    Random seed : %d\n", seed);
     printf("     Exec range : %s\n", TOSTRING(doExec(opcode)));
     printf("     Dasm range : %s\n", TOSTRING(doDasm(opcode)));
-    printf("      Reference : %s\n", refName());
+    // printf("      Reference : %s\n", reference());
 
     srand(seed);
 
@@ -467,7 +456,7 @@ void runFPU(long round)
 
     // Musashi's FPU is not a reliable reference
     if (!uaeRef) {
-        printf("%s FPU skipped (no reliable %s reference)\n", selectedModel(), refName());
+        printf("%s FPU skipped (no reliable %s reference)\n", selectedModel(), reference());
         return;
     }
 
@@ -553,7 +542,7 @@ void passed()
 
         printf(" (Moira: %.2fs  %s: %.2fs)",
                mo / double(CLOCKS_PER_SEC),
-               refName(),
+               reference(),
                mu / double(CLOCKS_PER_SEC));
     }
     printf("\n");
@@ -592,10 +581,8 @@ void runSingleTest(Setup &s, u16 op)
 
     // Run the reference CPU (and the Musashi disassembler)
     runReference(s, refResult);
-#ifdef HAVE_UAE
     // Moira is configured without address error emulation (MOIRA_EMULATE_ADDRESS_ERROR)
     if (uaeRef && (uaecpu::lastException() == 3) && !MOIRA_EMULATE_ADDRESS_ERROR) return;
-#endif
     refclk[0] += refResult.elapsed[0];
     refclk[1] += refResult.elapsed[1];
 
@@ -655,22 +642,18 @@ void runReference(Setup &s, Result &r)
         printf("$%04x ($%04x): %s (Musashi)\n", r.oldpc, r.opcode, r.dasmMusashi);
     }
 
-#ifdef HAVE_UAE
     // Run UAE's disassembler
     r.dasmUAE[0] = 0;
     r.dasmCntUAE = 0;
     if (uaeRef) r.dasmCntUAE = uaecpu::disassemble(s.pc, r.dasmUAE, sizeof(r.dasmUAE));
-#endif
 
     // Run the reference CPU
     if (doExec(r.opcode)) {
 
-#ifdef HAVE_UAE
         if (uaeRef) {
             runUAE(s, r);
             return;
         }
-#endif
         clock_t elapsed = clock();
         r.cycles = m68k_execute(1);
         r.elapsed[0] = clock() - elapsed;
@@ -765,6 +748,10 @@ bool skip(u16 op)
 
         // RTE processes random stack frames (format errors, bus error frames)
         if (instr == Instr::RTE && cpuModel != Model::M68000 && cpuModel != Model::M68010) return true;
+
+        // The 68010 supports the bus error stack frame (format $8), which Moira doesn't process.
+        // The format word sits at offset 6 of the frame (the supervisor stack pointer is $2000).
+        if (instr == Instr::RTE && cpuModel == Model::M68010 && (get16(refMem, 0x2006) >> 12) == 8) return true;
 
         // LINK.l A7 pushes A7-4 on the 68040 (Moira's 040 models run on the 68020 core)
         if (instr == Instr::LINK && (op & 7) == 7 && cpuModel >= Model::M68EC040) return true;
@@ -1087,7 +1074,7 @@ void compare(Setup &s, Result &rRef, Result &rMoira)
         printf("Setup:   ");
         dumpSetup(s);
 
-        printf("%-8s ", (std::string(refName()) + ":").c_str());
+        printf("%-7s: ", reference());
         dumpResult(rRef);
 
         printf("Moira:   ");
@@ -1096,9 +1083,9 @@ void compare(Setup &s, Result &rRef, Result &rMoira)
         if (isFpuOpcode(s.opcode)) {
             for (int i = 0; i < 8; i++) {
                 printf("FP%d: setup %s  %s %s  Moira %s\n", i,
-                       s.fpr[i].str().c_str(), refName(), rRef.fpr[i].str().c_str(), rMoira.fpr[i].str().c_str());
+                       s.fpr[i].str().c_str(), reference(), rRef.fpr[i].str().c_str(), rMoira.fpr[i].str().c_str());
             }
-            printf("FPCR: %08x / %08x / %08x (setup / %s / Moira)\n", s.fpcr, rRef.fpcr, rMoira.fpcr, refName());
+            printf("FPCR: %08x / %08x / %08x (setup / %s / Moira)\n", s.fpcr, rRef.fpcr, rMoira.fpcr, reference());
             printf("FPSR: %08x / %08x / %08x\n", s.fpsr, rRef.fpsr, rMoira.fpsr);
             printf("FPIAR: %08x / %08x / %08x\n\n", s.fpiar, rRef.fpiar, rMoira.fpiar);
         }

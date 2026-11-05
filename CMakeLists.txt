@@ -30,7 +30,7 @@ Runner/ThirdParty/MusashiGlue/musashi.cpp
 
 function(add_test_runner NAME MOIRALIB)
   add_executable(${NAME} ${RUNNER_SRC})
-  target_link_libraries(${NAME} PRIVATE ${MOIRALIB} binutils musashi)
+  target_link_libraries(${NAME} PRIVATE ${MOIRALIB} binutils musashi uaecpu)
   if(MSVC)
     target_compile_options(${NAME} PRIVATE /wd4100 /wd4201 /wd4324 /wd4458)
   else()
@@ -48,6 +48,7 @@ function(add_test_runner NAME MOIRALIB)
 endfunction()
 
 add_test_runner(testRunnerMusashi moiraMusashi)
+add_test_runner(testRunnerUAE moiraUAE)
 
 # Add the FPU unit tests
 add_executable(fpuTests Runner/FpuTests.cpp)
@@ -58,77 +59,65 @@ add_executable(fpuExecTests Runner/FpuExecTests.cpp)
 target_link_libraries(fpuExecTests moira)
 target_include_directories(fpuExecTests PUBLIC ${CMAKE_SOURCE_DIR}/Moira)
 
-# Add the reference tests against UAE's floating-point back-end (optional)
-# UAE sources (GPLv3, used by the test runner only)
+# UAE sources (GPLv3, used by the test runners only)
 set(UAE_DIR ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAE CACHE PATH "UAE source tree")
-if (UAE_DIR)
-  add_library(uaeref STATIC
-  Runner/ThirdParty/UAEGlue/UAERef.cpp
-  ${UAE_DIR}/src/softfloat/softfloat.cpp
-  ${UAE_DIR}/src/softfloat/softfloat_decimal.cpp
-  ${UAE_DIR}/src/softfloat/softfloat_fpsp.cpp
-  ${UAE_DIR}/src/fpp_softfloat.cpp
-  )
-  target_include_directories(uaeref PRIVATE
-  ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAEGlue/shim
-  ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAEGlue
-  ${UAE_DIR}/src/include
-  ${UAE_DIR}/src
-  )
-  target_include_directories(uaeref PUBLIC ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAEGlue)
-  target_compile_options(uaeref PRIVATE -w)
+add_library(uaeref STATIC
+Runner/ThirdParty/UAEGlue/UAERef.cpp
+${UAE_DIR}/src/softfloat/softfloat.cpp
+${UAE_DIR}/src/softfloat/softfloat_decimal.cpp
+${UAE_DIR}/src/softfloat/softfloat_fpsp.cpp
+${UAE_DIR}/src/fpp_softfloat.cpp
+)
+target_include_directories(uaeref PRIVATE
+${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAEGlue/shim
+${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAEGlue
+${UAE_DIR}/src/include
+${UAE_DIR}/src
+)
+target_include_directories(uaeref PUBLIC ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAEGlue)
+target_compile_options(uaeref PRIVATE -w)
 
-  add_executable(fpuRefTests Runner/FpuRefTests.cpp)
-  target_link_libraries(fpuRefTests moira uaeref)
-  target_include_directories(fpuRefTests PUBLIC ${CMAKE_SOURCE_DIR}/Moira ${CMAKE_SOURCE_DIR}/Runner ${CMAKE_SOURCE_DIR}/Runner/ThirdParty)
-  add_test(FpuRefTests fpuRefTests)
-endif()
+add_executable(fpuRefTests Runner/FpuRefTests.cpp)
+target_link_libraries(fpuRefTests moira uaeref)
+target_include_directories(fpuRefTests PUBLIC ${CMAKE_SOURCE_DIR}/Moira ${CMAKE_SOURCE_DIR}/Runner ${CMAKE_SOURCE_DIR}/Runner/ThirdParty)
+add_test(FpuRefTests fpuRefTests)
 
-# Add UAE's CPU core as an alternative reference for the test runner (optional)
-if (UAE_DIR)
-  # UAE includes <SDL3/SDL.h> for a few string helpers. The CPU core doesn't need
-  # SDL, so a minimal shim header is used instead (see UAEGlue/sdl-shim).
-  if (TRUE)
-    set(AMI ${UAE_DIR}/src)
-    add_library(uaecpu STATIC
-    Runner/ThirdParty/UAEGlue/UAECpu.cpp
-    Runner/ThirdParty/UAEGlue/UAEStubs.cpp
-    ${AMI}/newcpu_common.cpp
-    ${AMI}/disasm.cpp
-    ${AMI}/cpustbl.cpp
-    ${AMI}/readcpu.cpp
-    ${AMI}/cpudefs.cpp
-    ${AMI}/cpummu.cpp
-    ${AMI}/cpummu30.cpp
-    ${AMI}/fpp.cpp
-    ${AMI}/fpp_softfloat.cpp
-    ${AMI}/softfloat/softfloat.cpp
-    ${AMI}/softfloat/softfloat_decimal.cpp
-    ${AMI}/softfloat/softfloat_fpsp.cpp
-    ${AMI}/cpuemu_0.cpp ${AMI}/cpuemu_11.cpp ${AMI}/cpuemu_13.cpp
-    ${AMI}/cpuemu_20.cpp ${AMI}/cpuemu_21.cpp ${AMI}/cpuemu_22.cpp
-    ${AMI}/cpuemu_23.cpp ${AMI}/cpuemu_24.cpp ${AMI}/cpuemu_31.cpp
-    ${AMI}/cpuemu_32.cpp ${AMI}/cpuemu_33.cpp ${AMI}/cpuemu_34.cpp
-    ${AMI}/cpuemu_35.cpp ${AMI}/cpuemu_40.cpp ${AMI}/cpuemu_50.cpp
-    )
-    set_target_properties(uaecpu PROPERTIES CXX_STANDARD 17)
-    target_compile_definitions(uaecpu PRIVATE AMIBERRY AMIBERRY_NO_JIT AMIBERRY_NO_THREADED_CPU)
-    target_compile_options(uaecpu PRIVATE -w -O1)
-    target_include_directories(uaecpu PRIVATE
-    ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAEGlue/sdl-shim
-    ${AMI} ${AMI}/include ${AMI}/osdep ${AMI}/archivers ${AMI}/threaddep)
-    target_include_directories(uaecpu PUBLIC ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAEGlue)
+# Add UAE's CPU core (the reference of testRunnerUAE)
+# UAE includes <SDL3/SDL.h> for a few string helpers. The CPU core doesn't need
+# SDL, so a minimal shim header is used instead (see UAEGlue/sdl-shim).
+set(AMI ${UAE_DIR}/src)
+add_library(uaecpu STATIC
+Runner/ThirdParty/UAEGlue/UAECpu.cpp
+Runner/ThirdParty/UAEGlue/UAEStubs.cpp
+${AMI}/newcpu_common.cpp
+${AMI}/disasm.cpp
+${AMI}/cpustbl.cpp
+${AMI}/readcpu.cpp
+${AMI}/cpudefs.cpp
+${AMI}/cpummu.cpp
+${AMI}/cpummu30.cpp
+${AMI}/fpp.cpp
+${AMI}/fpp_softfloat.cpp
+${AMI}/softfloat/softfloat.cpp
+${AMI}/softfloat/softfloat_decimal.cpp
+${AMI}/softfloat/softfloat_fpsp.cpp
+${AMI}/cpuemu_0.cpp ${AMI}/cpuemu_11.cpp ${AMI}/cpuemu_13.cpp
+${AMI}/cpuemu_20.cpp ${AMI}/cpuemu_21.cpp ${AMI}/cpuemu_22.cpp
+${AMI}/cpuemu_23.cpp ${AMI}/cpuemu_24.cpp ${AMI}/cpuemu_31.cpp
+${AMI}/cpuemu_32.cpp ${AMI}/cpuemu_33.cpp ${AMI}/cpuemu_34.cpp
+${AMI}/cpuemu_35.cpp ${AMI}/cpuemu_40.cpp ${AMI}/cpuemu_50.cpp
+)
+set_target_properties(uaecpu PROPERTIES CXX_STANDARD 17)
+target_compile_definitions(uaecpu PRIVATE AMIBERRY AMIBERRY_NO_JIT AMIBERRY_NO_THREADED_CPU)
+target_compile_options(uaecpu PRIVATE -w -O1)
+target_include_directories(uaecpu PRIVATE
+${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAEGlue/sdl-shim
+${AMI} ${AMI}/include ${AMI}/osdep ${AMI}/archivers ${AMI}/threaddep)
+target_include_directories(uaecpu PUBLIC ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAEGlue)
 
-    add_test_runner(testRunnerUAE moiraUAE)
-    target_compile_definitions(testRunnerUAE PRIVATE HAVE_UAE)
-    target_link_libraries(testRunnerUAE PRIVATE uaecpu)
-  endif()
-endif()
 
 # Add tests
 add_test(UnitTestMusashi testRunnerMusashi)
-if (UAE_DIR)
-  add_test(UnitTestUAE testRunnerUAE)
-endif()
+add_test(UnitTestUAE testRunnerUAE)
 add_test(FpuExecTests fpuExecTests)
 add_test(FpuTests fpuTests)

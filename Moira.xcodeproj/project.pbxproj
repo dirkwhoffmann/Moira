@@ -201,6 +201,7 @@
 		50D10000000000000000000C /* Shared.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50B100000000000000000001 /* Shared.cpp */; };
 		50D10000000000000000000D /* Testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* Testrunner.cpp */; };
 		50D10000000000000000000E /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; };
+		50D2000000000000000000A3 /* libUAECpu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50A200000000000000000001 /* libUAECpu.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -224,6 +225,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 50B100000000000000000064;
 			remoteInfo = MoiraMusashi;
+		};
+		50D2000000000000000000A2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 50804DFE2386A4CE004D3EC2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 50A200000000000000000004;
+			remoteInfo = UAECpu;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -506,6 +514,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				50B1000000000000000000B0 /* libMoiraMusashi.a in Frameworks */,
+				50D2000000000000000000A3 /* libUAECpu.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -997,6 +1006,7 @@
 			);
 			dependencies = (
 				50B1000000000000000000AF /* PBXTargetDependency */,
+				50D2000000000000000000A1 /* PBXTargetDependency */,
 			);
 			name = testRunnerMusashi;
 			productName = testRunnerMusashi;
@@ -1350,6 +1360,11 @@
 			isa = PBXTargetDependency;
 			target = 50B100000000000000000064 /* MoiraMusashi */;
 			targetProxy = 50B1000000000000000000AE /* PBXContainerItemProxy */;
+		};
+		50D2000000000000000000A1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 50A200000000000000000004 /* UAECpu */;
+			targetProxy = 50D2000000000000000000A2 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1813,7 +1828,6 @@
 					"MOIRA_COMPATIBILITY=UAE",
 					"MOIRA_PRECISE_TIMING=true",
 					"$(inherited)",
-					HAVE_UAE,
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/Runner",
@@ -1839,7 +1853,6 @@
 					"MOIRA_COMPATIBILITY=UAE",
 					"MOIRA_PRECISE_TIMING=true",
 					"$(inherited)",
-					HAVE_UAE,
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/Runner",
@@ -1866,7 +1879,6 @@
 					"MOIRA_COMPATIBILITY=UAE",
 					"MOIRA_PRECISE_TIMING=true",
 					"$(inherited)",
-					HAVE_UAE,
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/Runner",
