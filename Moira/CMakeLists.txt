@@ -36,11 +36,12 @@ endif()
 # Differently configured copies of Moira that can be linked into one binary.
 # Each copy lives in its own C++ namespace (MOIRA_NAMESPACE).
 # The definitions are PUBLIC, so consumers compile against the same configuration.
-function(add_moira_variant NAME COMPAT)
+function(add_moira_variant NAME COMPAT PRECISE)
     add_library(${NAME} STATIC ${MOIRA_SRC})
     target_compile_definitions(${NAME} PUBLIC
         MOIRA_NAMESPACE=${NAME}
-        MOIRA_COMPATIBILITY=${COMPAT})
+        MOIRA_COMPATIBILITY=${COMPAT}
+        MOIRA_PRECISE_TIMING=${PRECISE})
     target_include_directories(${NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
     if (NOT MSVC)
         target_compile_options(${NAME} PUBLIC -Wno-unused-parameter -Wno-unused-but-set-parameter
@@ -53,5 +54,5 @@ function(add_moira_variant NAME COMPAT)
     endif()
 endfunction()
 
-add_moira_variant(moiraUAE UAE)
-add_moira_variant(moiraMusashi MUSASHI)
+add_moira_variant(moiraUAE UAE true)
+add_moira_variant(moiraMusashi MUSASHI false)

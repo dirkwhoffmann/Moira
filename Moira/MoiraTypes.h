@@ -114,6 +114,10 @@ enum class Compatibility
 
 inline constexpr Compatibility compat = Compatibility::MOIRA_COMPATIBILITY;
 
+// UAE's bus access timing can only be reproduced with precise timing
+static_assert(compat != Compatibility::UAE || MOIRA_PRECISE_TIMING,
+              "MOIRA_COMPATIBILITY=UAE requires MOIRA_PRECISE_TIMING=true");
+
 // Syntax styles for disassembly output
 enum class Syntax
 {

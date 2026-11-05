@@ -10,9 +10,7 @@
 /* Name of the namespace that contains all of Moira.
  *
  * Compile with -DMOIRA_NAMESPACE=<name> to build several differently configured
- * Moira libraries that can be linked into the same program (e.g., for testing).
- * SoftFloat is plain C and independent of the configuration. It is compiled once
- * and shared by all copies.
+ * Moira libraries that can be linked into the same program.
  */
 #ifndef MOIRA_NAMESPACE
 #define MOIRA_NAMESPACE moira
@@ -45,7 +43,9 @@
  *
  * Enable to adhere to the standard OOP paradigm, disable to gain speed.
  */
+#ifndef MOIRA_VIRTUAL_API
 #define MOIRA_VIRTUAL_API true
+#endif
 
 /* Set to true to enable address error checking.
  *
@@ -54,7 +54,9 @@
  *
  * Enable to improve accuracy, disable to gain speed.
  */
+#ifndef MOIRA_EMULATE_ADDRESS_ERROR
 #define MOIRA_EMULATE_ADDRESS_ERROR false
+#endif
 
 /* Set to true to emulate function code pins FC0 - FC2.
  *
@@ -64,7 +66,9 @@
  *
  * Enable to improve accuracy, disable to gain speed.
  */
+#ifndef MOIRA_EMULATE_FC
 #define MOIRA_EMULATE_FC true
+#endif
 
 /* Set to true to emulate the 68020 instruction cache.
  *
@@ -77,7 +81,9 @@
  *
  * Enable to improve accuracy, disable to gain speed.
  */
+#ifndef MOIRA_EMULATE_ICACHE
 #define MOIRA_EMULATE_ICACHE true
+#endif
 
 /* Set to true to enable the disassembler.
  *
@@ -88,48 +94,37 @@
  *
  * Disable to save space.
  */
+#ifndef MOIRA_ENABLE_DASM
 #define MOIRA_ENABLE_DASM true
+#endif
 
 /* Selects the compatibility mode.
  *
- * Moira can mimic the behavior of other 68k emulators where they differ from
- * each other (e.g., the order of bus accesses). The following values are
- * available (see enum class Compatibility in MoiraTypes.h):
+ * Moira can mimic some of the behavior of other 68k emulators where they differ
+ * from each other (e.g., the order of bus accesses). The following values are
+ * available:
  *
- *   DEFAULT: Moira's own behavior (improved accuracy).
+ *   DEFAULT: Moira's own behavior.
  *   MUSASHI: Compatibility with the Musashi emulator. This mode is used by the
  *            test runner to compare Moira's behavior against Musashi.
  *   UAE:     Compatibility with the CPU core of the UAE Amiga emulator (as used
  *            in WinUAE and Amiberry). This mode is used by the test runner when
- *            UAE is selected as the reference implementation. It requires
- *            precise timing, which is enabled automatically.
- *
- * Code should test the mode via the constant 'compat' (e.g.,
- * 'if constexpr (compat == Compatibility::UAE)').
+ *            UAE is selected as the reference implementation.
  */
 #ifndef MOIRA_COMPATIBILITY
-#define MOIRA_COMPATIBILITY UAE
-#endif
-
-// Helper to evaluate the mode in the preprocessor
-#define MOIRA_COMPAT_IS_DEFAULT 0
-#define MOIRA_COMPAT_IS_MUSASHI 0
-#define MOIRA_COMPAT_IS_UAE 1
-#define MOIRA_COMPAT_CAT_(a, b) a##b
-#define MOIRA_COMPAT_CAT(a, b) MOIRA_COMPAT_CAT_(a, b)
-
-// UAE's bus access timing can only be reproduced with precise timing
-#if MOIRA_COMPAT_CAT(MOIRA_COMPAT_IS_, MOIRA_COMPATIBILITY) && !MOIRA_PRECISE_TIMING
-#undef MOIRA_PRECISE_TIMING
-#define MOIRA_PRECISE_TIMING true
+#define MOIRA_COMPATIBILITY DEFAULT
 #endif
 
 /* The following macro appears at the beginning of each instruction handler.
  * Moira will call 'willExecute(...)' for all listed instructions.
  */
-#define MOIRA_WILL_EXECUTE    I == Instr::STOP || I == Instr::TAS || I == Instr::BKPT
+#ifndef MOIRA_WILL_EXECUTE
+#define MOIRA_WILL_EXECUTE I == Instr::STOP || I == Instr::TAS || I == Instr::BKPT
+#endif
 
 /* The following macro appear at the end of each instruction handler.
  * Moira will call 'didExecute(...)' for all listed instructions.
  */
+#ifndef MOIRA_DID_EXECUTE
 #define MOIRA_DID_EXECUTE I == Instr::RESET
+#endif

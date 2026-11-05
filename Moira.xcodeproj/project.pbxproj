@@ -1744,6 +1744,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_NAMESPACE=moiraUAE",
 					"MOIRA_COMPATIBILITY=UAE",
+					"MOIRA_PRECISE_TIMING=true",
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
@@ -1763,6 +1764,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_NAMESPACE=moiraUAE",
 					"MOIRA_COMPATIBILITY=UAE",
+					"MOIRA_PRECISE_TIMING=true",
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
@@ -1782,6 +1784,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_NAMESPACE=moiraUAE",
 					"MOIRA_COMPATIBILITY=UAE",
+					"MOIRA_PRECISE_TIMING=true",
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
@@ -1801,6 +1804,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_NAMESPACE=moiraUAE",
 					"MOIRA_COMPATIBILITY=UAE",
+					"MOIRA_PRECISE_TIMING=true",
 					"$(inherited)",
 					"RUNNER_NAMESPACE=runnerUAE",
 					HAVE_UAE,
@@ -1826,6 +1830,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_NAMESPACE=moiraUAE",
 					"MOIRA_COMPATIBILITY=UAE",
+					"MOIRA_PRECISE_TIMING=true",
 					"$(inherited)",
 					"RUNNER_NAMESPACE=runnerUAE",
 					HAVE_UAE,
@@ -1851,6 +1856,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_NAMESPACE=moiraUAE",
 					"MOIRA_COMPATIBILITY=UAE",
+					"MOIRA_PRECISE_TIMING=true",
 					"$(inherited)",
 					"RUNNER_NAMESPACE=runnerUAE",
 					HAVE_UAE,
