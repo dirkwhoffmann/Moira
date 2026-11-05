@@ -14,6 +14,8 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
+#include <optional>
+#include <vector>
 
 #include "Shared.h"
 
@@ -100,6 +102,10 @@ const u32 pc = 0x1000;
 // Preparing a test
 //
 
+const std::vector<MOIRA_NAMESPACE::Model> &allModels();
+const char *modelName(MOIRA_NAMESPACE::Model model);
+std::optional<MOIRA_NAMESPACE::Model> parseModel(const char *name);
+
 void selectModel(MOIRA_NAMESPACE::Model model);
 const char *selectedModel();
 
@@ -121,7 +127,7 @@ void resetMoiraFpu(Setup &s);
 // Performing a test
 //
 
-void run(unsigned seed);
+void run(unsigned seed, const std::vector<MOIRA_NAMESPACE::Model> &models);
 
 void runCPU(long round);
 void runMMU(long round);

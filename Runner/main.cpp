@@ -11,31 +11,42 @@
 #include "Testrunner.h"
 #include <string.h>
 
+static void usage(const char *prog)
+{
+    printf("Usage: %s [--seed <n>] [--cpu <model>]...\n", prog);
+    printf("  --seed <n>      Seed of the random number generator (default: derived from the date)\n");
+    printf("  --cpu <model>   CPU model to test (default: all models). May be repeated.\n");
+    printf("                  Models:");
+    for (auto model : runner::allModels()) printf(" %s", runner::modelName(model));
+    printf("\n");
+}
+
 int main(int argc, char **argv)
 {
-    std::optional<unsigned> seed;
-    
-    if (argc == 1) {
-        
-        std::time_t t = std::time(0);
-        std::tm* now = std::localtime(&t);
-        seed = 1900 + now->tm_year + now->tm_yday;
-    
-    }
-    
-    if (argc == 3 && !strcmp(argv[1], "--seed")) {
+    // Without an explicit seed, the seed is derived from the current date
+    std::time_t t = std::time(0);
+    std::tm *now = std::localtime(&t);
+    unsigned seed = 1900 + now->tm_year + now->tm_yday;
 
-        char *end = nullptr;
-        unsigned value = (unsigned)strtoul(argv[2], &end, 0);
-        if (*end == '\0') seed = value;
-    }
-    
-    if (!seed) {
-        
-        printf("Usage: %s [--seed <n>]\n", argv[0]);
+    std::vector<MOIRA_NAMESPACE::Model> models;
+
+    for (int i = 1; i < argc; i++) {
+
+        if (!strcmp(argv[i], "--seed") && i + 1 < argc) {
+
+            char *end = nullptr;
+            seed = (unsigned)strtoul(argv[++i], &end, 0);
+            if (*end == '\0') continue;
+
+        } else if (!strcmp(argv[i], "--cpu") && i + 1 < argc) {
+
+            if (auto model = runner::parseModel(argv[++i])) { models.push_back(*model); continue; }
+        }
+
+        usage(argv[0]);
         return 1;
     }
-    
-    runner::run(*seed);
+
+    runner::run(seed, models.empty() ? runner::allModels() : models);
     return 0;
 }

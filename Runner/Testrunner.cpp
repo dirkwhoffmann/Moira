@@ -13,6 +13,7 @@
 #include <cstdarg>
 #include <ctime>
 #include <string>
+#include <strings.h>
 #include "UAEGlue/UAECpu.h"
 
 namespace runner {
@@ -62,23 +63,44 @@ const char *reference()
     }
 }
 
+static const struct { Model model; const char *name; } modelTable[] = {
+
+    { Model::M68000,   "68000" },
+    { Model::M68010,   "68010" },
+    { Model::M68EC020, "EC020" },
+    { Model::M68020,   "68020" },
+    { Model::M68EC030, "EC030" },
+    { Model::M68030,   "68030" },
+    { Model::M68EC040, "EC040" },
+    { Model::M68LC040, "LC040" },
+    { Model::M68040,   "68040" }
+};
+
+const std::vector<Model> &allModels()
+{
+    static const std::vector<Model> all = []() {
+        std::vector<Model> result;
+        for (auto &m : modelTable) result.push_back(m.model);
+        return result;
+    }();
+    return all;
+}
+
+const char *modelName(Model model)
+{
+    for (auto &m : modelTable) if (m.model == model) return m.name;
+    return "???";
+}
+
+std::optional<Model> parseModel(const char *name)
+{
+    for (auto &m : modelTable) if (strcasecmp(m.name, name) == 0) return m.model;
+    return std::nullopt;
+}
+
 const char *selectedModel()
 {
-    switch (cpuModel) {
-
-        case Model::M68000:    return "68000";
-        case Model::M68010:    return "68010";
-        case Model::M68EC020:  return "EC020";
-        case Model::M68020:    return "68020";
-        case Model::M68EC030:  return "EC030";
-        case Model::M68030:    return "68030";
-        case Model::M68EC040:  return "EC040";
-        case Model::M68LC040:  return "LC040";
-        case Model::M68040:    return "68040";
-
-        default:
-            return "???";
-    }
+    return modelName(cpuModel);
 }
 
 void setupBinutils()
@@ -361,17 +383,17 @@ void recordMoiraFpu(Result &r)
 
 clock_t refclk[2] = {0,0}, moiraclk[2] = {0,0};
 
-void run(unsigned seed)
+void run(unsigned seed, const std::vector<Model> &models)
 {
     printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2026\n");
     printf("Core %s\n\n", Moira::build().c_str());
-    printf("The test program runs Moira against %s with randomly generated data.\n", reference());
+    printf("The test program runs Moira against a reference CPU with randomly generated data.\n");
     printf("\n");
     printf("    Test rounds : %ld\n", ROUNDS);
     printf("    Random seed : %d\n", seed);
     printf("     Exec range : %s\n", TOSTRING(doExec(opcode)));
     printf("     Dasm range : %s\n", TOSTRING(doDasm(opcode)));
-    // printf("      Reference : %s\n", reference());
+    printf("      Reference : %s\n", reference());
 
     srand(seed);
 
@@ -381,19 +403,16 @@ void run(unsigned seed)
 
         printf("\nRound %ld:\n\n", i);
 
-        while (1) {
+        for (Model model : models) {
 
             // Select the CPU core
+            cpuModel = model;
             selectModel(cpuModel);
 
             // Execute tests
             if constexpr (CHECK_CPU) runCPU(i);
             if constexpr (CHECK_MMU) runMMU(i);
             if constexpr (CHECK_FPU) runFPU(i);
-
-            // Switch the CPU core
-            if (cpuModel == Model::M68040) break;
-            cpuModel = Model(int(cpuModel) + 1);
         }
     }
 
