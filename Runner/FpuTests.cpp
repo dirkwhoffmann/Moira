@@ -6,7 +6,7 @@
 // -----------------------------------------------------------------------------
 
 #include "MoiraConfig.h"
-#include "FPU.h"
+#include "FPU/FPU.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>

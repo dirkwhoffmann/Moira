@@ -10,7 +10,7 @@
 #include "MoiraConfig.h"
 #include "MoiraTypes.h"
 #include "MoiraDebugger.h"
-#include "FPU.h"
+#include "FPU/FPU.h"
 
 namespace MOIRA_NAMESPACE {
 

@@ -1,0 +1,1007 @@
+// -----------------------------------------------------------------------------
+// This file is part of Moira - A Motorola 68k emulator
+//
+// Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de
+// Published under the terms of the MIT License
+// -----------------------------------------------------------------------------
+
+#include "../MoiraConfig.h"
+#include "FPU.h"
+#include "FloatMath.h"
+#include <bit>
+
+namespace MOIRA_NAMESPACE {
+
+void
+FPU::reset()
+{
+    // After reset, all data registers contain a non-signaling NaN
+    for (auto &reg : fpr) reg = Float80::quietNaN();
+
+    fpiar = 0;
+    fpsr = 0;
+    fpcr = 0;
+
+    resetState = true;
+}
+
+bool
+FPU::isSupported(Instr I) const
+{
+    switch (I) {
+
+        // Instructions that are only available on the 6888x. The 68040 traps them.
+        case Instr::FACOS:     case Instr::FASIN:     case Instr::FATANH:    case Instr::FCOS:
+        case Instr::FCOSH:     case Instr::FETOX:     case Instr::FETOXM1:   case Instr::FGETEXP:
+        case Instr::FGETMAN:   case Instr::FLOG10:    case Instr::FLOG2:     case Instr::FLOGN:
+        case Instr::FLOGNP1:   case Instr::FMOD:      case Instr::FREM:      case Instr::FSCAL:
+        case Instr::FSIN:      case Instr::FSINCOS:   case Instr::FSINH:     case Instr::FTAN:
+        case Instr::FTANH:     case Instr::FTENTOX:   case Instr::FTWOTOX:   case Instr::FATAN:
+            return model != FPUModel::INTERNAL;
+
+        // Instructions that are only available on the 68040
+        case Instr::FSABS:     case Instr::FDABS:     case Instr::FSADD:     case Instr::FDADD:
+        case Instr::FSDIV:     case Instr::FDDIV:     case Instr::FSMOVE:    case Instr::FDMOVE:
+        case Instr::FSMUL:     case Instr::FDMUL:     case Instr::FSNEG:     case Instr::FDNEG:
+        case Instr::FSSQRT:    case Instr::FDSQRT:    case Instr::FSSUB:     case Instr::FDSUB:
+            return model == FPUModel::INTERNAL;
+
+        default:
+            return true;
+    }
+}
+
+Precision
+FPU::getPrecision() const
+{
+    switch (fpcr & FPCR::PREC_MASK) {
+
+        case FPCR::PREC_EXTENDED:   return Precision::EXTENDED;
+        case FPCR::PREC_SINGLE:     return Precision::SINGLE;
+        default:                    return Precision::DOUBLE;
+    }
+}
+
+RoundingMode
+FPU::getRoundingMode() const
+{
+    switch (fpcr & FPCR::RND_MASK) {
+
+        case FPCR::RND_NEAREST:     return RoundingMode::NEAREST;
+        case FPCR::RND_ZERO:        return RoundingMode::ZERO;
+        case FPCR::RND_DOWN:        return RoundingMode::DOWN;
+        default:                    return RoundingMode::UP;
+    }
+}
+
+void
+FPU::setExcStatusBit(u32 mask)
+{
+    fpsr |= mask & FPSR::EXC_MASK;
+
+    // Update the accrued exception byte (sticky bits)
+    if (fpsr & (FPEXP::BSUN | FPEXP::SNAN | FPEXP::OPERR))      fpsr |= 1 << 7;
+    if (fpsr & FPEXP::OVFL)                                     fpsr |= 1 << 6;
+    if ((fpsr & FPEXP::UNFL) && (fpsr & FPEXP::INEX2))          fpsr |= 1 << 5;
+    if (fpsr & FPEXP::DZ)                                       fpsr |= 1 << 4;
+    if (fpsr & (FPEXP::INEX1 | FPEXP::INEX2 | FPEXP::OVFL))     fpsr |= 1 << 3;
+}
+
+void
+FPU::setConditionCodes(const Float80 &value)
+{
+    fpsr &= ~FPSR::CC_MASK;
+
+    if (value.isNegative()) fpsr |= FPSR::CC_N;
+    if (value.isZero())     fpsr |= FPSR::CC_Z;
+    if (value.isInfinite()) fpsr |= FPSR::CC_I;
+    if (value.isNaN())      fpsr |= FPSR::CC_NAN;
+}
+
+bool
+FPU::test(unsigned condition)
+{
+    condition &= 0x1F;
+
+    bool n = fpsr & FPSR::CC_N;
+    bool z = fpsr & FPSR::CC_Z;
+    bool nan = fpsr & FPSR::CC_NAN;
+
+    // The signaling variants raise BSUN if the operands were unordered
+    if ((condition & 0x10) && nan) setExcStatusBit(FPEXP::BSUN);
+
+    switch (condition & 0xF) {
+
+        case 0x0:   return false;                           // F, SF
+        case 0x1:   return z;                               // EQ, SEQ
+        case 0x2:   return !(nan || z || n);                // OGT, GT
+        case 0x3:   return z || !(nan || n);                // OGE, GE
+        case 0x4:   return n && !(nan || z);                // OLT, LT
+        case 0x5:   return z || (n && !nan);                // OLE, LE
+        case 0x6:   return !(nan || z);                     // OGL, GL
+        case 0x7:   return !nan;                            // OR, GLE
+        case 0x8:   return nan;                             // UN, NGLE
+        case 0x9:   return nan || z;                        // UEQ, NGL
+        case 0xA:   return nan || !(n || z);                // UGT, NLE
+        case 0xB:   return nan || z || !n;                  // UGE, NLT
+        case 0xC:   return nan || (n && !z);                // ULT, NGE
+        case 0xD:   return nan || z || n;                   // ULE, NGT
+        case 0xE:   return !z;                              // NE, SNE
+        default:    return true;                            // T, ST
+    }
+}
+
+void
+FPU::setQuotientByte(u8 byte)
+{
+    fpsr = (fpsr & ~FPSR::QUOTIENT_MASK) | u32(byte) << 16;
+}
+
+void
+FPU::setQuotientByte(u8 byte, bool sign)
+{
+    setQuotientByte((byte & 0x7F) | (sign ? 0x80 : 0x00));
+}
+
+FPU::Scope::Scope(FPU &fpu) : fpu(fpu), saved(fpu.sf)
+{
+    fpu.sf.setRoundingMode(fpu.getRoundingMode());
+    fpu.sf.setPrecision(fpu.getPrecision());
+    fpu.sf.clearFlags();
+}
+
+FPU::Scope::Scope(FPU &fpu, Precision precision) : Scope(fpu)
+{
+    fpu.sf.setPrecision(precision);
+}
+
+FPU::Scope::~Scope()
+{
+    fpu.collectFlags();
+}
+
+void
+FPU::collectFlags()
+{
+    auto flags = sf.flags();
+    u32 mask = 0;
+
+    if (flags & FloatFlags::INEXACT)        mask |= FPEXP::INEX2;
+    if (flags & FloatFlags::UNFL)           mask |= FPEXP::UNFL;
+    if (flags & FloatFlags::OVFL)           mask |= FPEXP::OVFL;
+    if (flags & FloatFlags::DIV_BY_ZERO)    mask |= FPEXP::DZ;
+    if (flags & FloatFlags::INVALID)        mask |= FPEXP::OPERR;
+    if (flags & FloatFlags::SNAN)           mask |= FPEXP::SNAN;
+
+    if (mask) setExcStatusBit(mask);
+    sf.clearFlags();
+}
+
+//
+// Arithmetic
+//
+
+namespace {
+
+/* Runs an operation that must not produce NaN operands. If the operation
+ * reports an invalid operation, the x87 default NaN produced by SoftFloat is
+ * replaced by the default NaN of the 68k FPUs.
+ */
+template <typename F> Float80
+invoke(SoftFloat &sf, F operation)
+{
+    auto saved = sf.flags();
+    sf.clearFlags();
+
+    auto result = operation();
+
+    if ((sf.flags() & FloatFlags::INVALID) && result.isNaN()) {
+        result = FPU::defaultNaN();
+    }
+    sf.raiseFlags(saved);
+    return result;
+}
+
+// Runs an operation in extended precision with rounding to nearest
+template <typename F> Float80
+invokeExact(SoftFloat &sf, F operation)
+{
+    SoftFloat::Scope scope(sf);
+    sf.setPrecision(Precision::EXTENDED);
+    sf.setRoundingMode(RoundingMode::NEAREST);
+    return invoke(sf, operation);
+}
+
+/* FSGLMUL and FSGLDIV round the significand to single precision, but keep the
+ * extended exponent range. If an overflow yields the largest finite number,
+ * all significand bits are set.
+ */
+Float80 singleOverflow(SoftFloat &sf, const Float80 &result)
+{
+    if ((sf.flags() & FloatFlags::OVFL) && result.isFinite() && result.biasedExponent() == 0x7FFE) {
+        return Float80::fromBits(result.signExp(), ~0ULL);
+    }
+    return result;
+}
+
+/* The result of dividing the magnitudes of two finite nonzero numbers a and b.
+ * The remainder has the value 'rem' * 2^(unit - bias - 63) and the quotient
+ * is given by its least significant bits.
+ */
+using u128 = unsigned __int128;
+
+struct Division {
+
+    u64 quotient = 0;
+    u128 rem = 0;
+    u128 divisor = 0;
+    i32 unit = 0;
+    bool small = false;     // The magnitude of a is less than half the magnitude of b
+};
+
+Division
+divide(const Float80 &a, const Float80 &b)
+{
+    auto normalize = [](const Float80 &x, i32 &e) {
+        int shift = std::countl_zero(x.mantissa());
+        e = x.biasedExponent() - shift;
+        return x.mantissa() << shift;
+    };
+
+    Division d;
+    i32 ea, eb;
+    u64 ma = normalize(a, ea), mb = normalize(b, eb);
+    i32 diff = ea - eb;
+
+    // Magnitudes that differ by more than a factor of 2 have a zero quotient
+    if (diff < -1) {
+        d.rem = ma; d.divisor = u128(mb) << 2; d.unit = ea; d.small = true;
+        return d;
+    }
+    if (diff == -1) {
+        d.rem = ma; d.divisor = u128(mb) << 1; d.unit = ea;
+        return d;
+    }
+
+    // Binary long division of ma * 2^diff by mb. Only the last bits of the quotient are of interest.
+    u128 rem = 0;
+    u64 q = 0;
+    for (i32 i = 63; i >= -diff; i--) {
+
+        rem = rem << 1 | (i >= 0 ? (ma >> i) & 1 : 0);
+        bool bit = rem >= mb;
+        if (bit) rem -= mb;
+        q = q << 1 | bit;
+    }
+    d.quotient = q;
+    d.rem = rem;
+    d.divisor = mb;
+    d.unit = eb;
+    return d;
+}
+
+// Converts the remainder of a division into a number
+Float80
+remainder(SoftFloat &sf, const Division &d, bool sign)
+{
+    if (d.rem == 0) return Float80::zero(sign);
+
+    int length = 128 - (d.rem >> 64 ? std::countl_zero(u64(d.rem >> 64)) : 64 + std::countl_zero(u64(d.rem)));
+    u64 sig = length > 64 ? u64(d.rem >> (length - 64)) : u64(d.rem << (64 - length));
+    return Float80::roundPack(sign, d.unit + length - 64, sig, 0, sf);
+}
+
+}
+
+Float80
+FPU::round(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return value.rounded();
+}
+
+std::optional<Float80>
+FPU::resolveNan(const Float80 &op1, const Float80 &op2)
+{
+    /* MC68881/MC68882 Floating-Point Coprocessor User's Manual:
+     *
+     * 4.5.4.1 NON-SIGNALING NANS
+     *
+     * "If either, but not both, operand of an operation is a NAN, and it is a
+     *  non-signaling NAN, then that NAN is returned as the result. If both
+     *  operands are non-signaling NANs, then the destination operand
+     *  non-signaling NAN is returned as the result.
+     *
+     * 4.5.4.2 SIGNALING NANS
+     *
+     * If either operand to an operation is a signaling NAN (SNAN), then the
+     * SNAN bit is set in the FPSR EXC byte. If the SNAN trap enable bit is
+     * set in the FPCR ENABLE byte, then the trap is taken and the destination
+     * is not modified. If the SNAN trap enable bit is not set, then the SNAN
+     * is converted to a non-signaling NAN (by setting the SNAN bit in the
+     * operand to a one), and the operation continues as described in the
+     * preceding section for non-signaling NANs."
+     */
+    if (!op1.isNaN() && !op2.isNaN()) return std::nullopt;
+
+    auto quiet = [&](const Float80 &op) {
+
+        if (op.isSignalingNaN()) setExcStatusBit(FPEXP::SNAN);
+        return Float80::fromBits(op.signExp(), op.mantissa() | (1ULL << 62));
+    };
+
+    // Both operands are processed, because both can raise the SNAN exception
+    auto r1 = quiet(op1);
+    auto r2 = quiet(op2);
+
+    return op1.isNaN() ? r1 : r2;
+}
+
+std::optional<Float80>
+FPU::resolveNan(const Float80 &op)
+{
+    return resolveNan(op, Float80::zero());
+}
+
+Float80
+FPU::moveOutExtended(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    if (value.biasedExponent() != 0 || value.mantissa() == 0) return value;
+
+    // The value is a denormal number
+    sf.raiseFlags(FloatFlags::UNFL);
+    bool sign = value.sign();
+    u16 signBit = sign ? 0x8000 : 0;
+
+    auto precision = sf.precision();
+    if (precision == Precision::EXTENDED) {
+
+        // No bits get lost (a pseudo denormal number becomes a normalized number)
+        return Float80::fromBits(u16(signBit | (value.mantissa() >> 63)), value.mantissa());
+    }
+
+    /* The exponent of a denormal number is far below the range of the selected
+     * precision. Only a sticky bit remains, which is rounded according to the
+     * rounding mode. The result carries the smallest exponent of the format.
+     */
+    bool single = precision == Precision::SINGLE;
+    u64 mask = single ? 0xFFFFFFFFFFULL : 0x7FFULL;
+    u16 exponent = single ? 0x3F81 : 0x3C01;
+
+    u64 increment;
+    switch (sf.roundingMode()) {
+
+        case RoundingMode::NEAREST: increment = (mask + 1) >> 1; break;
+        case RoundingMode::ZERO:    increment = 0; break;
+        case RoundingMode::DOWN:    increment = sign ? mask : 0; break;
+        default:                    increment = sign ? 0 : mask; break;
+    }
+    sf.raiseFlags(FloatFlags::INEXACT);
+    return Float80::fromBits(u16(signBit | exponent), (1 + increment) & ~mask);
+}
+
+Float80
+FPU::fabs(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return round(value.abs());
+}
+
+Float80
+FPU::fneg(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return round(-value);
+}
+
+Float80
+FPU::fsqrt(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke(sf, [&] { return value.sqrt(); });
+}
+
+Float80
+FPU::fsin(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke(sf, [&] { return FloatMath::sin(value); });
+}
+
+Float80
+FPU::fcos(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke(sf, [&] { return FloatMath::cos(value); });
+}
+
+Float80
+FPU::ftan(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke(sf, [&] { return FloatMath::tan(value); });
+}
+
+Float80
+FPU::fasin(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke(sf, [&] { return FloatMath::asin(value); });
+}
+
+Float80
+FPU::facos(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke(sf, [&] { return FloatMath::acos(value); });
+}
+
+Float80
+FPU::fatan(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke(sf, [&] { return FloatMath::atan(value); });
+}
+
+Float80
+FPU::fsinh(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke(sf, [&] { return FloatMath::sinh(value); });
+}
+
+Float80
+FPU::fcosh(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke(sf, [&] { return FloatMath::cosh(value); });
+}
+
+Float80
+FPU::ftanh(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke(sf, [&] { return FloatMath::tanh(value); });
+}
+
+Float80
+FPU::fatanh(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke(sf, [&] { return FloatMath::atanh(value); });
+}
+
+Float80
+FPU::fetox(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke(sf, [&] { return FloatMath::etox(value); });
+}
+
+Float80
+FPU::fetoxm1(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke(sf, [&] { return FloatMath::etoxm1(value); });
+}
+
+Float80
+FPU::ftwotox(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke(sf, [&] { return FloatMath::twotox(value); });
+}
+
+Float80
+FPU::ftentox(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke(sf, [&] { return FloatMath::tentox(value); });
+}
+
+Float80
+FPU::flogn(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke(sf, [&] { return FloatMath::logn(value); });
+}
+
+Float80
+FPU::flognp1(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke(sf, [&] { return FloatMath::lognp1(value); });
+}
+
+Float80
+FPU::flog2(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke(sf, [&] { return FloatMath::log2(value); });
+}
+
+Float80
+FPU::flog10(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return invoke(sf, [&] { return FloatMath::log10(value); });
+}
+
+void
+FPU::fsincos(const Float80 &value_, Float80 &sine, Float80 &cosine)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) { sine = cosine = *nan; return; }
+    sine = invoke(sf, [&] { FloatMath::sincos(value, sine, cosine); return sine; });
+    if (sine.isNaN()) cosine = sine;
+}
+
+Float80
+FPU::fint(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    return value.roundToInt();
+}
+
+Float80
+FPU::fintrz(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+
+    SoftFloat::Scope scope(sf);
+    sf.setRoundingMode(RoundingMode::ZERO);
+    return value.roundToInt();
+}
+
+Float80
+FPU::fgetexp(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+
+    if (value.isInfinite()) { setExcStatusBit(FPEXP::OPERR); return defaultNaN(); }
+    if (value.isZero()) return value;
+
+    // The exponent of a denormalized number is determined after normalization
+    i32 e = i32(value.biasedExponent()) - Float80::bias - std::countl_zero(value.mantissa());
+    return Float80::fromInt(e, sf);
+}
+
+Float80
+FPU::fgetman(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+
+    if (value.isInfinite()) { setExcStatusBit(FPEXP::OPERR); return defaultNaN(); }
+    if (value.isZero()) return value;
+
+    u64 man = value.mantissa() << std::countl_zero(value.mantissa());
+    return Float80::fromBits(u16((value.sign() ? 0x8000 : 0) | Float80::bias), man);
+}
+
+Float80
+FPU::ftst(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    auto result = value;
+    if (auto nan = resolveNan(value)) result = *nan;
+
+    setConditionCodes(result);
+    return result;
+}
+
+Float80
+FPU::fadd(const Float80 &dst_, const Float80 &src_)
+{
+    Float80 dst = dst_.in(sf);
+    Float80 src = src_.in(sf);
+    if (auto nan = resolveNan(dst, src)) return *nan;
+    return invoke(sf, [&] { return dst + src; });
+}
+
+Float80
+FPU::fsub(const Float80 &dst_, const Float80 &src_)
+{
+    Float80 dst = dst_.in(sf);
+    Float80 src = src_.in(sf);
+    if (auto nan = resolveNan(dst, src)) return *nan;
+    return invoke(sf, [&] { return dst - src; });
+}
+
+Float80
+FPU::fmul(const Float80 &dst_, const Float80 &src_)
+{
+    Float80 dst = dst_.in(sf);
+    Float80 src = src_.in(sf);
+    if (auto nan = resolveNan(dst, src)) return *nan;
+    return invoke(sf, [&] { return dst * src; });
+}
+
+Float80
+FPU::fdiv(const Float80 &dst_, const Float80 &src_)
+{
+    Float80 dst = dst_.in(sf);
+    Float80 src = src_.in(sf);
+    if (auto nan = resolveNan(dst, src)) return *nan;
+    return invoke(sf, [&] { return dst / src; });
+}
+
+Float80
+FPU::fscal(const Float80 &dst_, const Float80 &src_)
+{
+    Float80 dst = dst_.in(sf);
+    Float80 src = src_.in(sf);
+    if (auto nan = resolveNan(dst, src)) return *nan;
+
+    // Scaling by an infinite value is invalid
+    if (src.isInfinite()) { setExcStatusBit(FPEXP::OPERR); return defaultNaN(); }
+
+    // Infinities and zeroes are unaffected by scaling
+    if (dst.isInfinite() || dst.isZero()) return dst;
+
+    return invoke(sf, [&] { return dst.scale(src); });
+}
+
+Float80
+FPU::fsglmul(const Float80 &dst_, const Float80 &src_)
+{
+    Float80 dst = dst_.in(sf);
+    Float80 src = src_.in(sf);
+    if (auto nan = resolveNan(dst, src)) return *nan;
+
+    // The operands are truncated to single precision, the product is rounded to
+    // single precision
+    auto truncate = [&](const Float80 &x) {
+
+        // The 24 most significant bits after normalization are kept
+        if (!x.isFinite() || x.mantissa() == 0) return x;
+        int lead = 63 - std::countl_zero(x.mantissa());
+        u64 mask = lead > 23 ? ~((1ULL << (lead - 23)) - 1) : ~0ULL;
+        return Float80::fromBits(x.signExp(), x.mantissa() & mask).in(sf);
+    };
+
+    SoftFloat::Scope scope(sf);
+    sf.setPrecision(Precision::SINGLE);
+    sf.setLimitsExponent(false);
+    return singleOverflow(sf, invoke(sf, [&] { return truncate(dst) * truncate(src); }));
+}
+
+Float80
+FPU::fsgldiv(const Float80 &dst_, const Float80 &src_)
+{
+    Float80 dst = dst_.in(sf);
+    Float80 src = src_.in(sf);
+    if (auto nan = resolveNan(dst, src)) return *nan;
+
+    // The quotient of the unmodified operands is rounded to single precision
+    SoftFloat::Scope scope(sf);
+    sf.setPrecision(Precision::SINGLE);
+    sf.setLimitsExponent(false);
+    return singleOverflow(sf, invoke(sf, [&] { return dst / src; }));
+}
+
+/* A zero remainder is built by normalizing a zero significand, which drags the
+ * exponent down by 128. Depending on the rounding precision, this can leave the
+ * exponent range, in which case an underflow or overflow is reported.
+ */
+static Float80 zeroRemainder(SoftFloat &sf, const Float80 &dst, const Float80 &src, bool sign)
+{
+    // Exponents are normalized if the operand is a denormal number
+    auto exponent = [](const Float80 &v) {
+        return v.biasedExponent() ? int(v.biasedExponent()) : 1 - __builtin_clzll(v.mantissa());
+    };
+    int bExp = exponent(src);
+    int diff = std::max(exponent(dst) - bExp, 0);
+
+    // Mimic the quotient loops of the reference
+    diff -= 64;
+    while (diff > 0) diff -= 62;
+    diff += 64;
+    int zExp = bExp + diff - 128;
+
+    // Exponent offset and mask of the discarded significand bits
+    auto precision = sf.precision();
+    int offset = precision == Precision::SINGLE ? 0x3F80 : precision == Precision::DOUBLE ? 0x3C00 : 0;
+    u64 discarded = precision == Precision::SINGLE ? 0xFFFFFFFFFFULL : precision == Precision::DOUBLE ? 0x7FFULL : 0;
+
+    if (precision != Precision::EXTENDED && zExp > 0x7FFE - offset) {
+
+        // Overflow
+        sf.raiseFlags(FloatFlags::OVFL);
+        auto mode = sf.roundingMode();
+        bool largest = mode == RoundingMode::ZERO ||
+                       (sign && mode == RoundingMode::UP) || (!sign && mode == RoundingMode::DOWN);
+        return largest ? Float80::fromBits(u16((sign ? 0x8000 : 0) | (0x7FFE - offset)), ~discarded)
+                       : Float80::infinity(sign);
+    }
+    if (zExp < offset + (precision == Precision::EXTENDED ? 0 : 1)) sf.raiseFlags(FloatFlags::UNFL);
+
+    return Float80::zero(sign);
+}
+
+Float80
+FPU::fmod(const Float80 &dst_, const Float80 &src_)
+{
+    Float80 dst = dst_.in(sf);
+    Float80 src = src_.in(sf);
+    if (auto nan = resolveNan(dst, src)) return *nan;
+
+    // Invalid operations (dst infinite, src zero) have no quotient
+    if (dst.isInfinite() || src.isZero()) return invokeExact(sf, [&] { return dst.rem(src); });
+
+    bool negative = dst.sign() != src.sign();
+    if (src.isInfinite() || dst.isZero()) {
+
+        setQuotientByte(0, negative);
+
+        // A zero destination is normalized for an infinite source, which raises UNFL
+        if (src.isInfinite() && dst.isZero()) sf.raiseFlags(FloatFlags::UNFL);
+        return dst.rounded();
+    }
+
+    // The remainder is computed exactly and then rounded like any other result
+    auto d = divide(dst, src);
+    setQuotientByte(u8(d.quotient & 0x7F), negative);
+
+    return d.rem == 0 ? zeroRemainder(sf, dst, src, dst.sign()) : remainder(sf, d, dst.sign());
+}
+
+Float80
+FPU::frem(const Float80 &dst_, const Float80 &src_)
+{
+    Float80 dst = dst_.in(sf);
+    Float80 src = src_.in(sf);
+    if (auto nan = resolveNan(dst, src)) return *nan;
+
+    if (dst.isInfinite() || src.isZero()) return invokeExact(sf, [&] { return dst.rem(src); });
+
+    bool negative = dst.sign() != src.sign();
+    if (src.isInfinite() || dst.isZero()) {
+
+        setQuotientByte(0, negative);
+
+        // A zero destination is normalized for an infinite source, which raises UNFL
+        if (src.isInfinite() && dst.isZero()) sf.raiseFlags(FloatFlags::UNFL);
+        return dst.rounded();
+    }
+
+    auto d = divide(dst, src);
+    bool sign = dst.sign();
+
+    // Round the quotient to the nearest integer (ties to even)
+    u128 twice = d.rem << 1;
+    if (twice > d.divisor || (twice == d.divisor && (d.quotient & 1))) {
+        d.quotient++;
+        d.rem = d.divisor - d.rem;
+        sign = !sign;
+    }
+    setQuotientByte(u8(d.quotient & 0x7F), negative);
+
+    // A destination smaller than half the source is returned unrounded
+    if (d.small) return dst;
+
+    return d.rem == 0 ? zeroRemainder(sf, dst, src, sign) : remainder(sf, d, sign);
+}
+
+void
+FPU::fcmp(const Float80 &dst_, const Float80 &src_)
+{
+    Float80 dst = dst_.in(sf);
+    Float80 src = src_.in(sf);
+
+    // Only the 68040 keeps the sign of a NaN (the N flag is set for a negative NaN)
+    if (model != FPUModel::INTERNAL) {
+        if (dst.isNaN()) dst = dst.abs();
+        if (src.isNaN()) src = src.abs();
+    }
+    if (auto nan = resolveNan(dst, src)) { setConditionCodes(*nan); return; }
+
+    // Unnormal operands are normalized first (as far as the exponent allows)
+    auto normalize = [](const Float80 &v) {
+
+        u16 exp = v.biasedExponent();
+        u64 man = v.mantissa();
+        if (exp == 0 || exp == 0x7FFF) return v;
+        if (man == 0) return Float80::zero(v.sign());
+
+        int shift = std::min<int>(std::countl_zero(man), exp);
+        return Float80::fromBits(u16((v.sign() ? 0x8000 : 0) | (exp - shift)), man << shift);
+    };
+    dst = normalize(dst);
+    src = normalize(src);
+
+    /* The difference isn't computed. The operands' exponents and significands are
+     * compared instead, which produces +-1 or +-0. Hence, the I flag is never set
+     * (not even for infinite operands).
+     */
+    constexpr u64 one = 0x8000000000000000ULL;
+    u16 aExp = dst.biasedExponent(), bExp = src.biasedExponent();
+    u64 aSig = dst.mantissa(), bSig = src.mantissa();
+    bool aSign = dst.sign(), bSign = src.sign();
+    auto pack = [](bool sign, u16 exp, u64 man) { return Float80::fromBits(u16((sign ? 0x8000 : 0) | exp), man); };
+
+    Float80 r;
+    if      (bExp < aExp)                r = pack(aSign, 0x3FFF, one);
+    else if (aExp < bExp)                r = pack(!bSign, 0x3FFF, one);
+    else if (aExp == 0x7FFF)             r = aSign == bSign ? pack(aSign, 0, 0) : pack(aSign, 0x3FFF, one);
+    else if (bSig < aSig)                r = pack(aSign, 0x3FFF, one);
+    else if (aSig < bSig)                r = pack(!bSign, 0x3FFF, one);
+    else if (aSig == 0)                  r = pack(aSign, 0, 0);
+    else if (aSign == bSign)             r = pack(false, 0, 0);
+    else                                 r = pack(aSign, 0x3FFF, one);
+    setConditionCodes(r);
+}
+
+Float80
+FPU::readCR(unsigned nr)
+{
+    struct RomEntry { u16 hi; u64 lo; i64 r1; i64 r2; bool inex; };
+
+    static constexpr RomEntry rom1[] = {
+
+        { 0x4000, 0xc90fdaa22168c235, -1,  0,  1 }, // 0x00: Pi
+        { 0x4001, 0xfe00068200000000,  0,  0,  0 }, // 0x01: Undocumented
+        { 0x4001, 0xffc0050380000000,  0,  0,  0 }, // 0x02: Undocumented
+        { 0x2000, 0x7FFFFFFF00000000,  0,  0,  0 }, // 0x03: Undocumented
+        { 0x0000, 0xFFFFFFFFFFFFFFFF,  0,  0,  0 }, // 0x04: Undocumented
+        { 0x3C00, 0xFFFFFFFFFFFFF800,  0,  0,  0 }, // 0x05: Undocumented
+        { 0x3F80, 0xFFFFFF0000000000,  0,  0,  0 }, // 0x06: Undocumented
+        { 0x0001, 0xF65D8D9C00000000,  0,  0,  0 }, // 0x07: Undocumented
+        { 0x7FFF, 0x401E000000000000,  0,  0,  0 }, // 0x08: Undocumented
+        { 0x43F3, 0xE000000000000000,  0,  0,  0 }, // 0x09: Undocumented
+        { 0x4072, 0xC000000000000000,  0,  0,  0 }, // 0x0A: Undocumented
+        { 0x3ffd, 0x9a209a84fbcff798,  0,  1,  1 }, // 0x0B: Log10(2)
+        { 0x4000, 0xadf85458a2bb4a9a,  0,  1,  1 }, // 0x0C: E
+        { 0x3fff, 0xb8aa3b295c17f0bc, -1,  0,  1 }, // 0x0D: Log2(e)
+        { 0x3ffd, 0xde5bd8a937287195,  0,  0,  0 }, // 0x0E: Log10(e)
+        { 0x0000, 0x0000000000000000,  0,  0,  0 }  // 0x0F: 0.0
+    };
+
+    static constexpr RomEntry rom2[] = {
+
+        { 0x3ffe, 0xb17217f7d1cf79ac, -1,  0,  1  }, // 0x30: Ln(2)
+        { 0x4000, 0x935d8dddaaa8ac17, -1,  0,  1  }, // 0x31: Ln(10)
+        { 0x3FFF, 0x8000000000000000,  0,  0,  0  }, // 0x32: 10^0
+        { 0x4002, 0xA000000000000000,  0,  0,  0  }, // 0x33: 10^1
+        { 0x4005, 0xC800000000000000,  0,  0,  0  }, // 0x34: 10^2
+        { 0x400C, 0x9C40000000000000,  0,  0,  0  }, // 0x35: 10^4
+        { 0x4019, 0xBEBC200000000000,  0,  0,  0  }, // 0x36: 10^8
+        { 0x4034, 0x8E1BC9BF04000000,  0,  0,  0  }, // 0x37: 10^16
+        { 0x4069, 0x9DC5ADA82B70B59E, -1,  0,  1  }, // 0x38: 10^32
+        { 0x40D3, 0xC2781F49FFCFA6D5,  0,  1,  1  }, // 0x39: 10^64
+        { 0x41A8, 0x93BA47C980E98CE0, -1,  0,  1  }, // 0x3A: 10^128
+        { 0x4351, 0xAA7EEBFB9DF9DE8E, -1,  0,  1  }, // 0x3B: 10^256
+        { 0x46A3, 0xE319A0AEA60E91C7, -1,  0,  1  }, // 0x3C: 10^512
+        { 0x4D48, 0xC976758681750C17,  0,  1,  1  }, // 0x3D: 10^1024
+        { 0x5A92, 0x9E8B3B5DC53D5DE5, -1,  0,  1  }, // 0x3E: 10^2048
+        { 0x7525, 0xC46052028A20979B, -1,  0,  1  }  // 0x3F: 10^4096
+    };
+
+    auto readRom = [&](const RomEntry &entry) {
+
+        u64 lo = entry.lo;
+
+        // Adjust the last digit if the rounding mode requires it
+        switch (fpcr & FPCR::RND_MASK) {
+
+            case FPCR::RND_ZERO:    lo += entry.r1; break;
+            case FPCR::RND_DOWN:    lo += entry.r1; break;
+            case FPCR::RND_UP:      lo += entry.r2; break;
+        }
+
+        // Mark the value as inexact if necessary
+        if (entry.inex) setExcStatusBit(FPEXP::INEX2);
+
+        return Float80::fromBits(entry.hi, lo).in(sf);
+    };
+
+    // Values outside the two ranges seem to produce a Guru on the real machine
+    if (nr < 0x10) return readRom(rom1[nr]);
+    if (nr >= 0x30 && nr < 0x40) return readRom(rom2[nr - 0x30]);
+
+    return Float80::zero().in(sf);
+}
+
+int
+FPU::stateFrameSize(FpuFrameType type) const
+{
+    switch (type) {
+
+        case FpuFrameType::IDLE:
+
+            switch (model) {
+                case FPUModel::INTERNAL:    return 0;
+                case FPUModel::M68881:      return 24;
+                case FPUModel::M68882:      return 56;
+            }
+            break;
+
+        case FpuFrameType::UNIMP:
+
+            return model == FPUModel::INTERNAL ? 44 : 0;
+
+        case FpuFrameType::BUSY:
+
+            switch (model) {
+                case FPUModel::INTERNAL:    return 92;
+                case FPUModel::M68881:      return 180;
+                case FPUModel::M68882:      return 212;
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    return 0;
+}
+
+int
+FPU::stateFrameSize(u32 fmtWord) const
+{
+    return (fmtWord >> 16) & 0xFF;
+}
+
+FpuFrameType
+FPU::typeOfFrame(u32 fmtWord) const
+{
+    int size = stateFrameSize(fmtWord);
+
+    if (size == stateFrameSize(FpuFrameType::NULL_FRAME)) return FpuFrameType::NULL_FRAME;
+    if (size == stateFrameSize(FpuFrameType::IDLE)) return FpuFrameType::IDLE;
+    if (size == stateFrameSize(FpuFrameType::UNIMP)) return FpuFrameType::UNIMP;
+    if (size == stateFrameSize(FpuFrameType::BUSY)) return FpuFrameType::BUSY;
+
+    return FpuFrameType::INVALID;
+}
+
+u32
+FPU::computeFormatWord(FpuFrameType type) const
+{
+    switch (type) {
+
+        case FpuFrameType::IDLE:
+
+            // The 68040 uses a different version number than the 6888x
+            if (model == FPUModel::INTERNAL) return 0x41000000;
+            return 0x1F000000 | u32(stateFrameSize(type)) << 16;
+
+        case FpuFrameType::UNIMP:
+        case FpuFrameType::BUSY:
+
+            return 0x1F000000 | u32(stateFrameSize(type)) << 16;
+
+        default:
+
+            return 0;
+    }
+}
+
+}

@@ -22,8 +22,8 @@
 #include <time.h>
 
 #include "MoiraTypes.h"
-#include "Float80.h"
-#include "FPU.h"
+#include "FPU/Float80.h"
+#include "FPU/FPU.h"
 #include "Sandbox.h"
 #include "Randomizer.h"
 #include "config.h"

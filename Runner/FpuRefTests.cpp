@@ -16,8 +16,8 @@
  * Usage: fpuRefTests [iterations [seed [clean]]]
  */
 
-#include "FPU.h"
-#include "FpuFormats.h"
+#include "FPU/FPU.h"
+#include "FPU/FpuFormats.h"
 #include "UAEGlue/UAERef.h"
 
 #include <cmath>

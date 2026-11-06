@@ -901,10 +901,29 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		50804E082386A4CE004D3EC2 /* Moira */ = {
+		50E0000000000000000000F1 /* FPU */ = {
 			isa = PBXGroup;
 			children = (
 				505A80C23098B1AD00E2E307 /* softfloat */,
+				505A81023098E38500E2E307 /* FPU.h */,
+				505A81033098E38500E2E307 /* FPU.cpp */,
+				50A300000000000000000003 /* BigNum.h */,
+				505A80FF3098B1C600E2E307 /* Float80.h */,
+				505A81003098B1C600E2E307 /* Float80.cpp */,
+				50C2000000000000000000A1 /* SoftFloat.h */,
+				50C2000000000000000000C1 /* SoftFloat.cpp */,
+				50A300000000000000000001 /* FloatMath.cpp */,
+				50A300000000000000000002 /* FloatMath.h */,
+				505A81043098E38500E2E307 /* FpuFormats.h */,
+				505A81053098E38500E2E307 /* FpuFormats.cpp */,
+			);
+			path = FPU;
+			sourceTree = "<group>";
+		};
+		50804E082386A4CE004D3EC2 /* Moira */ = {
+			isa = PBXGroup;
+			children = (
+				50E0000000000000000000F1 /* FPU */,
 				50F80AA723C9E4EC00F21D80 /* CMakeLists.txt */,
 				505CA8AA28C7209200871439 /* LICENSE */,
 				509ABE1323BA356E00BD91A8 /* MoiraConfig.h */,
@@ -937,17 +956,6 @@
 				502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */,
 				5010BDAD238A897400CFD010 /* StrWriter.h */,
 				5010BDAC238A897400CFD010 /* StrWriter_cpp.h */,
-				505A81023098E38500E2E307 /* FPU.h */,
-				505A81033098E38500E2E307 /* FPU.cpp */,
-				50A300000000000000000001 /* FloatMath.cpp */,
-				50A300000000000000000002 /* FloatMath.h */,
-				50A300000000000000000003 /* BigNum.h */,
-				505A81043098E38500E2E307 /* FpuFormats.h */,
-				505A81053098E38500E2E307 /* FpuFormats.cpp */,
-				505A80FF3098B1C600E2E307 /* Float80.h */,
-				505A81003098B1C600E2E307 /* Float80.cpp */,
-				50C2000000000000000000A1 /* SoftFloat.h */,
-				50C2000000000000000000C1 /* SoftFloat.cpp */,
 			);
 			path = Moira;
 			sourceTree = "<group>";

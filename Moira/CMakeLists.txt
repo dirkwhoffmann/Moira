@@ -1,4 +1,4 @@
-file(GLOB MOIRA_SOFTFLOAT_SRC ${CMAKE_CURRENT_SOURCE_DIR}/softfloat/*.cpp)
+file(GLOB MOIRA_SOFTFLOAT_SRC ${CMAKE_CURRENT_SOURCE_DIR}/FPU/softfloat/*.cpp)
 
 set(MOIRA_SRC
 
@@ -7,11 +7,11 @@ MoiraCore68000.cpp
 MoiraCore68010.cpp
 MoiraCore68020.cpp
 MoiraDebugger.cpp
-Float80.cpp
-FloatMath.cpp
-FpuFormats.cpp
-FPU.cpp
-SoftFloat.cpp
+FPU/Float80.cpp
+FPU/FloatMath.cpp
+FPU/FpuFormats.cpp
+FPU/FPU.cpp
+FPU/SoftFloat.cpp
 ${MOIRA_SOFTFLOAT_SRC}
 )
 
