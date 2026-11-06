@@ -13,9 +13,7 @@ if (!fpu.isPresent()) { execLineF<C, I, M, S>(opcode); return; }
 
 // The 68040 FPU updates FPIAR on every data operation, older FPUs only if an exception is enabled
 #define FPU_UPDATE_FPIAR \
-if constexpr ((compat == Compatibility::UAE)) { \
-    if (cpuModel >= Model::M68EC040 || (fpu.getFPCR() & 0x7F00)) fpu.setFPIAR(getPC0()); \
-}
+if (cpuModel >= Model::M68EC040 || (fpu.getFPCR() & 0x7F00)) fpu.setFPIAR(getPC0());
 
 #ifdef MOIRA_MAIN_TU
 
@@ -807,10 +805,8 @@ Moira::execFMove(u16 opcode)
                 if (format == FpuFormat::EXTENDED) {
                     if (auto nan = fpu.resolveNan(value)) value = *nan;
 
-                    // UAE reports an underflow if a denormal number is moved out
-                    if constexpr (compat == Compatibility::UAE) {
-                        if (value.isDenormal()) fpu.setExcStatusBit(FPEXP::UNFL);
-                    }
+                    // Moving out a denormal number reports an underflow
+                    if (value.isDenormal()) fpu.setExcStatusBit(FPEXP::UNFL);
                 }
 
                 writeFpuOp<C, M>(reg, value, format, k);

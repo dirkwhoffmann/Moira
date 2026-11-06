@@ -212,17 +212,6 @@ invokeExact(SoftFloat &sf, F operation)
     return invoke(sf, operation);
 }
 
-// Runs an operation and discards all exceptions it raises
-template <typename F> Float80
-invokeSilently(SoftFloat &sf, F operation)
-{
-    auto saved = sf.flags();
-    auto result = operation();
-    sf.clearFlags();
-    sf.raiseFlags(saved);
-    return result;
-}
-
 /* FSGLMUL and FSGLDIV round the significand to single precision, but keep the
  * extended exponent range. If an overflow yields the largest finite number,
  * all significand bits are set.
@@ -679,9 +668,11 @@ FPU::fsgldiv(const Float80 &dst_, const Float80 &src_)
     return singleOverflow(sf, invoke(sf, [&] { return dst / src; }));
 }
 
-// UAE builds a zero remainder by normalizing a zero significand, which drags the exponent
-// down by 128. It raises UNFL if the exponent leaves the range of the rounding precision.
-static bool uaeZeroRemainderUnderflows(const Float80 &dst, const Float80 &src, Precision precision)
+/* A zero remainder is built by normalizing a zero significand, which drags the
+ * exponent down by 128. Depending on the rounding precision, this can leave the
+ * exponent range, in which case an underflow or overflow is reported.
+ */
+static Float80 zeroRemainder(SoftFloat &sf, const Float80 &dst, const Float80 &src, bool sign)
 {
     // Exponents are normalized if the operand is a denormal number
     auto exponent = [](const Float80 &v) {
@@ -694,9 +685,26 @@ static bool uaeZeroRemainderUnderflows(const Float80 &dst, const Float80 &src, P
     diff -= 64;
     while (diff > 0) diff -= 62;
     diff += 64;
+    int zExp = bExp + diff - 128;
 
-    int limit = precision == Precision::SINGLE ? 0x3F81 : precision == Precision::DOUBLE ? 0x3C01 : 0;
-    return bExp + diff - 128 < limit;
+    // Exponent offset and mask of the discarded significand bits
+    auto precision = sf.precision();
+    int offset = precision == Precision::SINGLE ? 0x3F80 : precision == Precision::DOUBLE ? 0x3C00 : 0;
+    u64 discarded = precision == Precision::SINGLE ? 0xFFFFFFFFFFULL : precision == Precision::DOUBLE ? 0x7FFULL : 0;
+
+    if (precision != Precision::EXTENDED && zExp > 0x7FFE - offset) {
+
+        // Overflow
+        sf.raiseFlags(FloatFlags::OVFL);
+        auto mode = sf.roundingMode();
+        bool largest = mode == RoundingMode::ZERO ||
+                       (sign && mode == RoundingMode::UP) || (!sign && mode == RoundingMode::DOWN);
+        return largest ? Float80::fromBits(u16((sign ? 0x8000 : 0) | (0x7FFE - offset)), ~discarded)
+                       : Float80::infinity(sign);
+    }
+    if (zExp < offset + (precision == Precision::EXTENDED ? 0 : 1)) sf.raiseFlags(FloatFlags::UNFL);
+
+    return Float80::zero(sign);
 }
 
 Float80
@@ -714,10 +722,8 @@ FPU::fmod(const Float80 &dst_, const Float80 &src_)
 
         setQuotientByte(0, negative);
 
-        // UAE normalizes a zero destination for an infinite source, which raises UNFL
-        if constexpr (compat == Compatibility::UAE) {
-            if (src.isInfinite() && dst.isZero()) sf.raiseFlags(FloatFlags::UNFL);
-        }
+        // A zero destination is normalized for an infinite source, which raises UNFL
+        if (src.isInfinite() && dst.isZero()) sf.raiseFlags(FloatFlags::UNFL);
         return dst.rounded();
     }
 
@@ -725,12 +731,7 @@ FPU::fmod(const Float80 &dst_, const Float80 &src_)
     auto d = divide(dst, src);
     setQuotientByte(u8(d.quotient & 0x7F), negative);
 
-    auto result = remainder(sf, d, dst.sign());
-
-    if constexpr (compat == Compatibility::UAE) {
-        if (result.isZero() && uaeZeroRemainderUnderflows(dst, src, getPrecision())) sf.raiseFlags(FloatFlags::UNFL);
-    }
-    return result;
+    return d.rem == 0 ? zeroRemainder(sf, dst, src, dst.sign()) : remainder(sf, d, dst.sign());
 }
 
 Float80
@@ -747,10 +748,8 @@ FPU::frem(const Float80 &dst_, const Float80 &src_)
 
         setQuotientByte(0, negative);
 
-        // UAE normalizes a zero destination for an infinite source, which raises UNFL
-        if constexpr (compat == Compatibility::UAE) {
-            if (src.isInfinite() && dst.isZero()) sf.raiseFlags(FloatFlags::UNFL);
-        }
+        // A zero destination is normalized for an infinite source, which raises UNFL
+        if (src.isInfinite() && dst.isZero()) sf.raiseFlags(FloatFlags::UNFL);
         return dst.rounded();
     }
 
@@ -769,12 +768,7 @@ FPU::frem(const Float80 &dst_, const Float80 &src_)
     // A destination smaller than half the source is returned unrounded
     if (d.small) return dst;
 
-    auto result = remainder(sf, d, sign);
-
-    if constexpr (compat == Compatibility::UAE) {
-        if (result.isZero() && uaeZeroRemainderUnderflows(dst, src, getPrecision())) sf.raiseFlags(FloatFlags::UNFL);
-    }
-    return result;
+    return d.rem == 0 ? zeroRemainder(sf, dst, src, sign) : remainder(sf, d, sign);
 }
 
 void
@@ -783,46 +777,33 @@ FPU::fcmp(const Float80 &dst_, const Float80 &src_)
     Float80 dst = dst_.in(sf);
     Float80 src = src_.in(sf);
 
-    // UAE: Only the 68040 keeps the sign of a NaN (the N flag is set for a negative NaN)
-    if constexpr ((compat == Compatibility::UAE)) {
-        if (model != FPUModel::INTERNAL) {
-            if (dst.isNaN()) dst = dst.abs();
-            if (src.isNaN()) src = src.abs();
-        }
+    // Only the 68040 keeps the sign of a NaN (the N flag is set for a negative NaN)
+    if (model != FPUModel::INTERNAL) {
+        if (dst.isNaN()) dst = dst.abs();
+        if (src.isNaN()) src = src.abs();
     }
     if (auto nan = resolveNan(dst, src)) { setConditionCodes(*nan); return; }
 
-    if constexpr ((compat == Compatibility::UAE)) {
+    /* The difference isn't computed. The operands' exponents and significands are
+     * compared instead, which produces +-1 or +-0. Hence, the I flag is never set
+     * (not even for infinite operands).
+     */
+    constexpr u64 one = 0x8000000000000000ULL;
+    u16 aExp = dst.biasedExponent(), bExp = src.biasedExponent();
+    u64 aSig = dst.mantissa(), bSig = src.mantissa();
+    bool aSign = dst.sign(), bSign = src.sign();
+    auto pack = [](bool sign, u16 exp, u64 man) { return Float80::fromBits(u16((sign ? 0x8000 : 0) | exp), man); };
 
-        // UAE doesn't compute the difference. It compares exponents and significands and
-        // produces +-1 or +-0, so the I flag is never set (not even for infinite operands).
-        constexpr u64 one = 0x8000000000000000ULL;
-        u16 aExp = dst.biasedExponent(), bExp = src.biasedExponent();
-        u64 aSig = dst.mantissa(), bSig = src.mantissa();
-        bool aSign = dst.sign(), bSign = src.sign();
-        auto pack = [](bool sign, u16 exp, u64 man) { return Float80::fromBits(u16((sign ? 0x8000 : 0) | exp), man); };
-
-        Float80 r;
-        if      (bExp < aExp)                r = pack(aSign, 0x3FFF, one);
-        else if (aExp < bExp)                r = pack(!bSign, 0x3FFF, one);
-        else if (aExp == 0x7FFF)             r = aSign == bSign ? pack(aSign, 0, 0) : pack(aSign, 0x3FFF, one);
-        else if (bSig < aSig)                r = pack(aSign, 0x3FFF, one);
-        else if (aSig < bSig)                r = pack(!bSign, 0x3FFF, one);
-        else if (aSig == 0)                  r = pack(aSign, 0, 0);
-        else if (aSign == bSign)             r = pack(false, 0, 0);
-        else                                 r = pack(aSign, 0x3FFF, one);
-        setConditionCodes(r);
-        return;
-    }
-
-    // The condition codes reflect the difference dst - src
-    Float80 diff;
-    if (dst.isInfinite() && src.isInfinite() && dst.sign() == src.sign()) {
-        diff = Float80::zero();
-    } else {
-        diff = invokeSilently(sf, [&] { return invokeExact(sf, [&] { return dst - src; }); });
-    }
-    setConditionCodes(diff);
+    Float80 r;
+    if      (bExp < aExp)                r = pack(aSign, 0x3FFF, one);
+    else if (aExp < bExp)                r = pack(!bSign, 0x3FFF, one);
+    else if (aExp == 0x7FFF)             r = aSign == bSign ? pack(aSign, 0, 0) : pack(aSign, 0x3FFF, one);
+    else if (bSig < aSig)                r = pack(aSign, 0x3FFF, one);
+    else if (aSig < bSig)                r = pack(!bSign, 0x3FFF, one);
+    else if (aSig == 0)                  r = pack(aSign, 0, 0);
+    else if (aSign == bSign)             r = pack(false, 0, 0);
+    else                                 r = pack(aSign, 0x3FFF, one);
+    setConditionCodes(r);
 }
 
 Float80
