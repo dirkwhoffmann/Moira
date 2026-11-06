@@ -44,7 +44,6 @@ const char *selectedModel();
 const char *reference();
 
 void setupMoira();
-
 void setupTestEnvironment(Setup &s, long round);
 void setupFpuEnvironment(Setup &s);
 void setupTestInstruction(Setup &s, u32 pc, u16 opcode);
@@ -72,6 +71,9 @@ void runMoira(Setup &s, Result &r);
 
 bool skip(u16 op);
 bool skipAccessCheck(u16 op);
+
+bool isFpuOpcode(u16 op);
+bool isIllegalOpcode(u16 op);
 
 
 //
@@ -102,8 +104,6 @@ bool compareFPSR(Result &rRef, Result &rMoira);
 bool compareFPIAR(Result &rRef, Result &rMoira);
 bool compareMemory();
 
-bool isFpuOpcode(u16 op);
-
 void bugReport();
 
-} // namespace runner
+}

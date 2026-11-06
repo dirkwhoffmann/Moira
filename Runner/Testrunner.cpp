@@ -240,23 +240,24 @@ void run(unsigned seed, long rounds, const std::vector<Model> &models)
 
 void runCPU(long round)
 {
+    static const int CPU_SETUPS = 32;
+    
     Setup setup;
 
     printf("%s CPU ", selectedModel()); fflush(stdout);
 
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < CPU_SETUPS; i++) {
 
         printf("."); fflush(stdout);
 
-        setupTestEnvironment(setup, round * 32 + i);
+        setupTestEnvironment(setup, round * CPU_SETUPS + i);
 
         for (int op = 0x0000; op <= 0xFFFF; op++) {
 
-            if constexpr (SKIP_ILLEGAL) {
-                if (moiracpu->getInstrInfo(op).I == Instr::ILLEGAL) continue;
-            }
+            // Skip illegal opcodes if requested
+            if constexpr (SKIP_ILLEGAL) { if (isIllegalOpcode(u16(op))) continue; }
 
-            // FPU opcodes are covered by runFPU
+            // Skip instructions covered by runFPU
             if (isFpuOpcode(u16(op))) continue;
 
             // Execute both CPU cores
@@ -269,19 +270,24 @@ void runCPU(long round)
 void runMMU(long round)
 {
     if (!moiracpu->hasMMU()) return;
-
+ 
+    static const int MMU_SETUPS = 4;
     Setup setup;
 
     printf("%s MMU ", selectedModel()); fflush(stdout);
-    setupTestEnvironment(setup, round);
 
-    for (int op = 0xF000; op <= 0xF03F; op++) {
+    for (int i = 0; i < MMU_SETUPS; i++) {
 
-        if ((op % 2) == 0) { printf("."); fflush(stdout); }
+        setupTestEnvironment(setup, round * MMU_SETUPS + i);
 
-        for (int ext = 0x0000; ext <= 0xFFFF; ext++) {
+        for (int op = 0xF000; op <= 0xF03F; op++) {
 
-            runSingleTest(setup, u16(op), u16(ext));
+            if ((op % 8) == 0) { printf("."); fflush(stdout); }
+
+            for (int ext = 0x0000; ext <= 0xFFFF; ext++) {
+
+                runSingleTest(setup, u16(op), u16(ext));
+            }
         }
     }
     passed();
@@ -291,12 +297,12 @@ void runFPU(long round)
 {
     if (!moiracpu->hasFPU()) return;
 
-    // Musashi's FPU is not a reliable reference
-    if (!useUAE) {
-        printf("%s FPU skipped (no reliable %s reference)\n", selectedModel(), reference());
+    if (useMusashi) {
+        printf("%s FPU skipped (no reliable reference)\n", selectedModel());
         return;
     }
 
+    static const int FPU_SETUPS = 4;
     Setup setup;
 
     printf("%s FPU ", selectedModel()); fflush(stdout);
@@ -310,6 +316,8 @@ void runFPU(long round)
 
         for (int op = 0xF200; op <= 0xF23F; op++) {
 
+            if ((op % 8) == 0) { printf("."); fflush(stdout); }
+            
             for (int ext = 0x0000; ext <= 0xFFFF; ext++) {
 
                 runSingleTest(setup, u16(op), u16(ext));
@@ -322,6 +330,11 @@ void runFPU(long round)
 bool isFpuOpcode(u16 op)
 {
     return (op & 0xFF00) == 0xF200 && moiracpu != nullptr && moiracpu->hasFPU();
+}
+
+bool isIllegalOpcode(u16 op)
+{
+    return moiracpu->getInstrInfo(op).I == Instr::ILLEGAL;
 }
 
 void setupFpuEnvironment(Setup &s)
@@ -357,7 +370,7 @@ void setupFpuEnvironment(Setup &s)
             // Create a random normalized number with a moderate exponent
             u64 man = (u64(randomizer.rand()) << 32 | randomizer.rand()) | (1ULL << 63);
             u16 exp = u16(0x3FFF - 40 + randomizer.rand() % 80);
-            u16 sign = (randomizer.rand() & 1) << 15;
+            u16 sign = u16((randomizer.rand() & 1) << 15);
             s.fpr[i] = Float80::fromBits(sign | exp, man);
         }
     }
@@ -388,26 +401,23 @@ void passed()
 void runSingleTest(Setup &s, u16 op)
 {
     Result refResult, moiraResult;
-
+    
     opcode = op;
-
+    bool fpu = isFpuOpcode(op);
+    
     // Prepare the test case with the selected instruction
     setupTestInstruction(s, pc, op);
+    
+    // Reset sandbox (memory accesses observer)
+    auto info = moiracpu->getInstrInfo(op);
+    bool enable = doExec(op) && !skip(op) && !skipAccessCheck(op);
+    bool ignore = (info.I == Instr::CLR && info.S == Long) ||
+    (info.I == Instr::CHK && cpuModel != Model::M68000);
+    sandbox.prepare(enable, ignore);
 
-    // Reset the sandbox (memory accesses observer)
-    {
-        auto info = moiracpu->getInstrInfo(op);
-        bool enable = doExec((int)op) && !skip(op) && !skipAccessCheck(op);
-        bool ignore = (info.I == Instr::CLR && info.S == Long) ||
-                      (info.I == Instr::CHK && cpuModel != Model::M68000);
-        sandbox.prepare(enable, ignore);
-    }
-
-    // Prepare
+    // Reset CPUs
     resetMusashi(s);
     resetMoira(s);
-
-    bool fpu = isFpuOpcode(op);
     if (fpu) {
         resetMusashiFpu(s);
         resetMoiraFpu(s);

@@ -23,9 +23,6 @@ static const bool CHECK_MMU = true;
 // Set to true to execute FPU tests for capable CPUs
 static const bool CHECK_FPU = true;
 
-// Number of random setups per FPU test round
-static const int FPU_SETUPS = 4;
-
 // Set to true to skip the execution of illegal instructions
 static const bool SKIP_ILLEGAL = true;
 
