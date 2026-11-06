@@ -38,7 +38,9 @@ static uaecpu::State uaeState;
 
 void disassembleUAE(const runner::Setup &s, runner::Result &r)
 {
+    clock_t elapsed = clock();
     r.dasmCntUAE = uaecpu::disassemble(s.pc, r.dasmUAE, sizeof(r.dasmUAE));
+    r.elapsed[1] = clock() - elapsed;
 }
 
 void resetUAE(const runner::Setup &s, bool fpu)

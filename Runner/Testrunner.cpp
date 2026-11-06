@@ -89,8 +89,8 @@ void selectModel(Model model)
 {
     cpuModel = model;
 
-    setupMusashi(cpuModel);
-    setupUAE(cpuModel);
+    if (useMusashi) setupMusashi(cpuModel);
+    if (useUAE) setupUAE(cpuModel);
     setupBinutils(cpuModel);
     setupMoira();
 
@@ -415,7 +415,7 @@ void runSingleTest(Setup &s, u16 op)
     sandbox.prepare(enable, ignore);
 
     // Reset CPUs
-    resetMusashi(s, fpu);
+    if (useMusashi) resetMusashi(s, fpu);
     if (useUAE) resetUAE(s, fpu);
     resetMoira(s, fpu);
 
@@ -448,20 +448,24 @@ void runSingleTest(Setup &s, u16 op, u16 ext)
     runSingleTest(s, op);
 }
 
-// Disassembles the instruction with Musashi's disassembler (the reference for disassembly in
-// both modes) and executes it on the reference CPU (Musashi or, if selected, UAE)
+// Disassembles the instruction with the reference disassembler (Musashi or UAE)
+// and executes it on the reference CPU
 void runReference(Setup &s, Result &r)
 {
-    disassembleMusashi(s, r);
+    r.oldpc = s.pc;
+    r.opcode = get16(refMem, r.oldpc);
+    r.elapsed[0] = r.elapsed[1] = 0;
+
+    // Run the reference disassembler
+    r.dasmMusashi[0] = r.dasmUAE[0] = 0;
+    r.dasmCntMusashi = r.dasmCntUAE = 0;
+    if (useMusashi) disassembleMusashi(s, r);
+    if (useUAE) disassembleUAE(s, r);
 
     if (VERBOSE) {
-        printf("$%04x ($%04x): %s (Musashi)\n", r.oldpc, r.opcode, r.dasmMusashi);
+        printf("$%04x ($%04x): %s (%s)\n", r.oldpc, r.opcode,
+               useUAE ? r.dasmUAE : r.dasmMusashi, reference());
     }
-
-    // Run UAE's disassembler
-    r.dasmUAE[0] = 0;
-    r.dasmCntUAE = 0;
-    if (useUAE) disassembleUAE(s, r);
 
     // Run the reference CPU
     if (doExec(r.opcode)) {
@@ -480,12 +484,14 @@ void runMoira(Setup &s, Result &r)
     if (doDasm(r.opcode)) {
 
         // Disassemble the instruction in Musashi format
-        moiracpu->setDasmSyntax(Syntax::MUSASHI);
-        moiracpu->setDasmLetterCase(LetterCase::MIXED_CASE);
-        moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
-        clock_t elapsed = clock();
-        r.dasmCntMusashi = moiracpu->disassemble(r.dasmMusashi, r.oldpc);
-        r.elapsed[1] = clock() - elapsed;
+        if (useMusashi) {
+            moiracpu->setDasmSyntax(Syntax::MUSASHI);
+            moiracpu->setDasmLetterCase(LetterCase::MIXED_CASE);
+            moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
+            clock_t elapsed = clock();
+            r.dasmCntMusashi = moiracpu->disassemble(r.dasmMusashi, r.oldpc);
+            r.elapsed[1] = clock() - elapsed;
+        }
 
         // Disassemble the instruction in GNU format (binutils)
 #ifdef MOTOROLA
@@ -496,11 +502,15 @@ void runMoira(Setup &s, Result &r)
         moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 10, .plainZero = true });
         r.dasmCntBinutils = moiracpu->disassemble(r.dasmBinutils, r.oldpc);
 
-        // Disassemble the instruction in Moira's own format (compared with UAE)
-        moiracpu->setDasmSyntax(Syntax::UAE);
-        moiracpu->setDasmLetterCase(LetterCase::LOWER_CASE);
-        moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
-        r.dasmCntMoiraUAE = moiracpu->disassemble(r.dasmMoiraUAE, r.oldpc);
+        // Disassemble the instruction in UAE format
+        if (useUAE) {
+            moiracpu->setDasmSyntax(Syntax::UAE);
+            moiracpu->setDasmLetterCase(LetterCase::LOWER_CASE);
+            moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
+            clock_t elapsed = clock();
+            r.dasmCntMoiraUAE = moiracpu->disassemble(r.dasmMoiraUAE, r.oldpc);
+            r.elapsed[1] = clock() - elapsed;
+        }
     }
 
     // Run the Moira CPU
@@ -512,7 +522,7 @@ void runMoira(Setup &s, Result &r)
         int64_t cycles = moiracpu->getClock();
 
         if (VERBOSE)
-            printf("$%04x ($%04x): %s (Moira)\n", r.oldpc, r.opcode, r.dasmMusashi);
+            printf("$%04x ($%04x): %s (Moira)\n", r.oldpc, r.opcode, r.dasmBinutils);
 
         // Execute instruction
         clock_t elapsed = clock();
@@ -853,8 +863,13 @@ void compare(Setup &s, Result &rRef, Result &rMoira)
     if (error) {
 
         printf("\n");
-        printf("\nInstruction:  Musashi: [%d] '%s'", rRef.dasmCntMusashi, rRef.dasmMusashi);
-        printf("\n                Moira: [%d] '%s'\n", rMoira.dasmCntMusashi, rMoira.dasmMusashi);
+        if (useUAE) {
+            printf("\nInstruction:      UAE: [%d] '%s'", rRef.dasmCntUAE, rRef.dasmUAE);
+            printf("\n                Moira: [%d] '%s'\n", rMoira.dasmCntMoiraUAE, rMoira.dasmMoiraUAE);
+        } else {
+            printf("\nInstruction:  Musashi: [%d] '%s'", rRef.dasmCntMusashi, rRef.dasmMusashi);
+            printf("\n                Moira: [%d] '%s'\n", rMoira.dasmCntMusashi, rMoira.dasmMusashi);
+        }
 
         printf("\n             Binutils: [%d] '%s'", rRef.dasmCntBinutils, rRef.dasmBinutils);
         printf("\n                Moira: [%d] '%s'\n", rMoira.dasmCntBinutils, rMoira.dasmBinutils);
@@ -920,7 +935,7 @@ bool compareDasm(Result &rRef, Result &rMoira)
 {
     auto I = moiracpu->getInstrInfo(rRef.opcode).I;
 
-    bool skipMusashi = rRef.opcode >= 0xF000;
+    bool skipMusashi = !useMusashi || rRef.opcode >= 0xF000;
     bool skipBinutils = false;
 
     switch (cpuModel) {

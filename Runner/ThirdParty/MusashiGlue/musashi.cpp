@@ -126,13 +126,8 @@ void resetMusashi(const runner::Setup &s, bool fpu)
     }
 }
 
-// Also determines the address and opcode of the instruction to execute
 void disassembleMusashi(const runner::Setup &s, runner::Result &r)
 {
-    r.oldpc = m68k_get_reg(NULL, M68K_REG_PC);
-    r.opcode = get16(refMem, r.oldpc);
-    r.elapsed[0] = r.elapsed[1] = 0;
-
     clock_t elapsed = clock();
     r.dasmCntMusashi = m68k_disassemble(r.dasmMusashi, s.pc, musashiType);
     r.elapsed[1] = clock() - elapsed;
