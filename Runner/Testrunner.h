@@ -21,9 +21,6 @@
 
 #include "TestCPU.h"
 
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-
 namespace runner {
 
 using namespace moira;
@@ -42,6 +39,9 @@ std::optional<Model> parseModel(const char *name);
 
 void selectModel(Model model);
 const char *selectedModel();
+
+// Returns the name of the reference CPU (determined by the compatibility mode)
+const char *reference();
 
 void setupMoira();
 

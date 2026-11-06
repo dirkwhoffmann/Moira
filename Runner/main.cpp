@@ -11,6 +11,9 @@
 #include "Testrunner.h"
 #include <string.h>
 
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+
 static void usage(const char *prog)
 {
     printf("Usage: %s [--seed <n>] [--cpu <model>]...\n", prog);
@@ -46,6 +49,16 @@ int main(int argc, char **argv)
         usage(argv[0]);
         return 1;
     }
+
+    printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2026\n");
+    printf("Core %s\n\n", moira::Moira::build().c_str());
+    printf("The test program runs Moira against a reference CPU with randomly generated data.\n");
+    printf("\n");
+    printf("    Test rounds : %ld\n", ROUNDS);
+    printf("    Random seed : %d\n", seed);
+    printf("     Exec range : %s\n", TOSTRING(doExec(opcode)));
+    printf("     Dasm range : %s\n", TOSTRING(doDasm(opcode)));
+    printf("      Reference : %s\n", runner::reference());
 
     runner::run(seed, models.empty() ? runner::allModels() : models);
     return 0;

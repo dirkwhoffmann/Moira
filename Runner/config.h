@@ -51,7 +51,4 @@ static const bool PROFILE_DASM = false;
 // Uncomment to create M68881 compatible disassembler output
 // #define ENABLE_M68881
 
-// Uncomment to disable assertion checking
-// #define NDEBUG
-
 #include <assert.h>

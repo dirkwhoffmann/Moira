@@ -29,6 +29,10 @@ TestCPU *moiracpu;
 Model cpuModel = Model::M68000;
 u16 opcode = 0;
 
+// Speed comparison
+clock_t refclk[2] = {0,0};
+clock_t moiraclk[2] = {0,0};
+
 static const struct { Model model; const char *name; } modelTable[] = {
 
     { Model::M68000,   "68000" },
@@ -64,7 +68,7 @@ std::optional<Model> parseModel(const char *name)
     return std::nullopt;
 }
 
-static const char *reference()
+const char *reference()
 {
     switch (compat) {
 
@@ -192,7 +196,14 @@ void resetMoiraFpu(Setup &s)
 
 void recordRefFpu(Result &r)
 {
-    if (useUAE) recordUAEFpu(r); else recordMusashiFpu(r);
+    switch (compat) {
+
+        case Compatibility::MUSASHI: recordMusashiFpu(r); break;
+        case Compatibility::UAE:     recordUAEFpu(r); break;
+    
+        default:
+            assert(false);
+    }
 }
 
 void recordMoiraFpu(Result &r)
@@ -203,20 +214,8 @@ void recordMoiraFpu(Result &r)
     r.fpiar = moiracpu->fpu.getFPIAR();
 }
 
-clock_t refclk[2] = {0,0}, moiraclk[2] = {0,0};
-
 void run(unsigned seed, const std::vector<Model> &models)
 {
-    printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2026\n");
-    printf("Core %s\n\n", Moira::build().c_str());
-    printf("The test program runs Moira against a reference CPU with randomly generated data.\n");
-    printf("\n");
-    printf("    Test rounds : %ld\n", ROUNDS);
-    printf("    Random seed : %d\n", seed);
-    printf("     Exec range : %s\n", TOSTRING(doExec(opcode)));
-    printf("     Dasm range : %s\n", TOSTRING(doDasm(opcode)));
-    printf("      Reference : %s\n", reference());
-
     srand(seed);
 
     if (!moiracpu) moiracpu = new TestCPU();
