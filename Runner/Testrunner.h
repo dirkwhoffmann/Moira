@@ -57,7 +57,7 @@ void resetMoiraFpu(Setup &s);
 // Performing a test
 //
 
-void run(unsigned seed, const std::vector<Model> &models);
+void run(unsigned seed, long rounds, const std::vector<Model> &models);
 
 void runCPU(long round);
 void runMMU(long round);

@@ -16,8 +16,9 @@
 
 static void usage(const char *prog)
 {
-    printf("Usage: %s [--seed <n>] [--cpu <model>]...\n", prog);
+    printf("Usage: %s [--seed <n>] [--rounds <n>] [--cpu <model>]...\n", prog);
     printf("  --seed <n>      Seed of the random number generator (default: derived from the date)\n");
+    printf("  --rounds <n>    Number of test rounds (default: 1)\n");
     printf("  --cpu <model>   CPU model to test (default: all models). May be repeated.\n");
     printf("                  Models:");
     for (auto model : runner::allModels()) printf(" %s", runner::modelName(model));
@@ -31,6 +32,7 @@ int main(int argc, char **argv)
     std::tm *now = std::localtime(&t);
     unsigned seed = 1900 + now->tm_year + now->tm_yday;
 
+    long rounds = 1;
     std::vector<moira::Model> models;
 
     for (int i = 1; i < argc; i++) {
@@ -40,6 +42,12 @@ int main(int argc, char **argv)
             char *end = nullptr;
             seed = (unsigned)strtoul(argv[++i], &end, 0);
             if (*end == '\0') continue;
+
+        } else if (!strcmp(argv[i], "--rounds") && i + 1 < argc) {
+
+            char *end = nullptr;
+            rounds = strtol(argv[++i], &end, 0);
+            if (*end == '\0' && rounds > 0) continue;
 
         } else if (!strcmp(argv[i], "--cpu") && i + 1 < argc) {
 
@@ -54,12 +62,15 @@ int main(int argc, char **argv)
     printf("Core %s\n\n", moira::Moira::build().c_str());
     printf("The test program runs Moira against a reference CPU with randomly generated data.\n");
     printf("\n");
-    printf("    Test rounds : %ld\n", ROUNDS);
+    printf("    Test rounds : %ld\n", rounds);
     printf("    Random seed : %d\n", seed);
     printf("     Exec range : %s\n", TOSTRING(doExec(opcode)));
     printf("     Dasm range : %s\n", TOSTRING(doDasm(opcode)));
     printf("      Reference : %s\n", runner::reference());
 
-    runner::run(seed, models.empty() ? runner::allModels() : models);
+    runner::run(seed, rounds, models.empty() ? runner::allModels() : models);
+
+    printf("\n");
+    printf("All tests completed\n");
     return 0;
 }

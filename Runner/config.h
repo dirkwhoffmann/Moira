@@ -10,7 +10,6 @@
 #pragma once
 
 // Number of test rounds
-static const long ROUNDS = 1;
 
 // Set to true to verify all memory write operations
 static const bool CHECK_MEM_WRITES = true;

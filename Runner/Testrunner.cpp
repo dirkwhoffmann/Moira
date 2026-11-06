@@ -214,13 +214,13 @@ void recordMoiraFpu(Result &r)
     r.fpiar = moiracpu->fpu.getFPIAR();
 }
 
-void run(unsigned seed, const std::vector<Model> &models)
+void run(unsigned seed, long rounds, const std::vector<Model> &models)
 {
     srand(seed);
 
     if (!moiracpu) moiracpu = new TestCPU();
 
-    for (long i = 1; i <= ROUNDS; i++) {
+    for (long i = 1; i <= rounds; i++) {
 
         printf("\nRound %ld:\n\n", i);
 
@@ -236,9 +236,6 @@ void run(unsigned seed, const std::vector<Model> &models)
             if constexpr (CHECK_FPU) runFPU(i);
         }
     }
-
-    printf("\n");
-    printf("All tests completed\n");
 }
 
 void runCPU(long round)
