@@ -202,6 +202,8 @@
 		50D10000000000000000000D /* Testrunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* Testrunner.cpp */; };
 		50D10000000000000000000E /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; };
 		50D2000000000000000000A3 /* libUAECpu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50A200000000000000000001 /* libUAECpu.a */; };
+		50E1000000000000000000F3 /* binutils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E1000000000000000000F1 /* binutils.cpp */; };
+		50E1000000000000000000F4 /* binutils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E1000000000000000000F1 /* binutils.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -494,6 +496,8 @@
 		50C2000000000000000000C1 /* SoftFloat.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SoftFloat.cpp; sourceTree = "<group>"; };
 		50CECEC523A924B000E07C65 /* Sandbox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Sandbox.cpp; sourceTree = "<group>"; };
 		50CECEC623A924B000E07C65 /* Sandbox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sandbox.h; sourceTree = "<group>"; };
+		50D100000000000000000010 /* testRunnerUAE */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testRunnerUAE; sourceTree = BUILT_PRODUCTS_DIR; };
+		50E1000000000000000000F1 /* binutils.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = binutils.cpp; sourceTree = "<group>"; };
 		50EC62EE289DB14500398CBD /* MoiraMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraMacros.h; sourceTree = "<group>"; };
 		50F549DE288E817600D5D559 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F80AA723C9E4EC00F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -505,7 +509,6 @@
 		55703C9956D2BECD0F343A8F /* MoiraCore68010.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraCore68010.cpp; sourceTree = "<group>"; };
 		61F3AFFB3C6CFCEC22A0FD23 /* MoiraCore68000.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraCore68000.cpp; sourceTree = "<group>"; };
 		C20E21D44E8A477AB1A178E8 /* MoiraCache_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraCache_cpp.h; sourceTree = "<group>"; };
-		50D100000000000000000010 /* testRunnerUAE */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testRunnerUAE; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -964,6 +967,7 @@
 				505A81ED309A2F2A00E2E307 /* UAEGlue */,
 				509F15A92927CE9800BA8AC1 /* Bartman */,
 				50C0123D28BBADCF001EFB37 /* Binutils */,
+				50E1000000000000000000F2 /* BinutilsGlue */,
 				5028B100288D9EA600047C20 /* Musashi */,
 				50A1000000000000000000A2 /* MusashiGlue */,
 			);
@@ -989,6 +993,14 @@
 				50C0123E28BBADEA001EFB37 /* m68k-main.cpp */,
 			);
 			path = Binutils;
+			sourceTree = "<group>";
+		};
+		50E1000000000000000000F2 /* BinutilsGlue */ = {
+			isa = PBXGroup;
+			children = (
+				50E1000000000000000000F1 /* binutils.cpp */,
+			);
+			path = BinutilsGlue;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1126,6 +1138,7 @@
 				5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */,
 				5028B11C288D9EDC00047C20 /* m68kcpu.c in Sources */,
 				505580EC23AFA14D0009F77F /* musashi.cpp in Sources */,
+				50E1000000000000000000F3 /* binutils.cpp in Sources */,
 				50804EE22386A72C004D3EC2 /* main.cpp in Sources */,
 				50CECEC723A924B000E07C65 /* Sandbox.cpp in Sources */,
 				50C0123B28BBAD9B001EFB37 /* m68k-opc.c in Sources */,
@@ -1332,6 +1345,7 @@
 				50D100000000000000000004 /* m68kdasm.c in Sources */,
 				50D100000000000000000005 /* m68kcpu.c in Sources */,
 				50D100000000000000000006 /* musashi.cpp in Sources */,
+				50E1000000000000000000F4 /* binutils.cpp in Sources */,
 				50D100000000000000000007 /* main.cpp in Sources */,
 				50D100000000000000000008 /* Sandbox.cpp in Sources */,
 				50D100000000000000000009 /* m68k-opc.c in Sources */,

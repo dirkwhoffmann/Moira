@@ -24,16 +24,6 @@ TestCPU *moiracpu;
 Model cpuModel = Model::M68000;
 u16 opcode = 0;
 
-static int binutilsFprintf(FILE* f, const char* format, ...)
-{
-    std::va_list ap;
-    va_start(ap, format);
-    char* buf = (char*)f;
-    const int l = strlen(buf);
-    const int n = vsnprintf(buf + l, sizeof(Result::dasmBinutils) - l, format, ap);va_end(ap);
-    return n;
-}
-
 // The reference core is determined by the compatibility mode of the tested Moira
 static constexpr bool uaeRef = (compat == Compatibility::UAE);
 static void setupUAE();

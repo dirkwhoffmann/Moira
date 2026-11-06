@@ -82,7 +82,7 @@ struct Result {
     u32     fpiar;
     char    dasmMoira[128];
     int     dasmCntMoira;
-    char    dasmBinutils[128];
+    char    dasmBinutils[BINUTILS_BUFFER_SIZE];
     int     dasmCntBinutils;
     char    dasmMusashi[128];
     int     dasmCntMusashi;

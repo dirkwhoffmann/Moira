@@ -26,6 +26,7 @@ Runner/Shared.cpp
 Runner/Sandbox.cpp
 Runner/Randomizer.cpp
 Runner/ThirdParty/MusashiGlue/musashi.cpp
+Runner/ThirdParty/BinutilsGlue/binutils.cpp
 )
 
 function(add_test_runner NAME MOIRALIB)

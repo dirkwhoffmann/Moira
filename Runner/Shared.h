@@ -36,6 +36,10 @@ struct meminfo { unsigned char bytes[0x10000]; unsigned len; };
 extern meminfo mi;
 extern disassemble_info di;
 
+// Size of the buffer that receives the disassembly of the binutils disassembler
+static const size_t BINUTILS_BUFFER_SIZE = 128;
+int binutilsFprintf(FILE* f, const char* format, ...);
+
 extern Sandbox sandbox;
 extern Randomizer randomizer;
 extern u8 moiraMem[0x10000];    // Memory of the tested Moira core
