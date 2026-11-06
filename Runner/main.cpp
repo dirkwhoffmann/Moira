@@ -28,7 +28,7 @@ int main(int argc, char **argv)
     std::tm *now = std::localtime(&t);
     unsigned seed = 1900 + now->tm_year + now->tm_yday;
 
-    std::vector<MOIRA_NAMESPACE::Model> models;
+    std::vector<moira::Model> models;
 
     for (int i = 1; i < argc; i++) {
 

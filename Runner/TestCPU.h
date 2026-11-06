@@ -13,12 +13,12 @@
 
 namespace runner {
 
-class TestCPU : public MOIRA_NAMESPACE::Moira {
+class TestCPU : public moira::Moira {
 
 public:
 
     // Grant the test runner access to the FPU state
-    using MOIRA_NAMESPACE::Moira::fpu;
+    using moira::Moira::fpu;
 
 private:
 

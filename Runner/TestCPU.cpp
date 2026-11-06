@@ -11,7 +11,7 @@
 #include "Testrunner.h"
 
 namespace runner {
-using namespace MOIRA_NAMESPACE;
+using namespace moira;
 
 /* Signals the CPU clock to advance.
  */

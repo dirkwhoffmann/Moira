@@ -33,13 +33,13 @@ if(MINGW)
     target_compile_options(moira PUBLIC -Wa,-mbig-obj)
 endif()
 
-# Differently configured copies of Moira that can be linked into one binary.
-# Each copy lives in its own C++ namespace (MOIRA_NAMESPACE).
+# Differently configured copies of Moira (used by the test runners).
 # The definitions are PUBLIC, so consumers compile against the same configuration.
+# All copies live in the default namespace, so a program can link only one of them.
+# To link several copies into one program, give each its own MOIRA_NAMESPACE.
 function(add_moira_variant NAME COMPAT PRECISE)
     add_library(${NAME} STATIC ${MOIRA_SRC})
     target_compile_definitions(${NAME} PUBLIC
-        MOIRA_NAMESPACE=${NAME}
         MOIRA_COMPATIBILITY=${COMPAT}
         MOIRA_PRECISE_TIMING=${PRECISE})
     target_include_directories(${NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

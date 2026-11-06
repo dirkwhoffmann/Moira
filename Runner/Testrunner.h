@@ -26,10 +26,10 @@
 
 namespace runner {
 
-using namespace MOIRA_NAMESPACE;
+using namespace moira;
 
 extern class TestCPU *moiracpu;
-extern MOIRA_NAMESPACE::Model cpuModel;
+extern Model cpuModel;
 extern u16 opcode;
 
 // A test setup
@@ -102,11 +102,11 @@ const u32 pc = 0x1000;
 // Preparing a test
 //
 
-const std::vector<MOIRA_NAMESPACE::Model> &allModels();
-const char *modelName(MOIRA_NAMESPACE::Model model);
-std::optional<MOIRA_NAMESPACE::Model> parseModel(const char *name);
+const std::vector<Model> &allModels();
+const char *modelName(Model model);
+std::optional<Model> parseModel(const char *name);
 
-void selectModel(MOIRA_NAMESPACE::Model model);
+void selectModel(Model model);
 const char *selectedModel();
 
 void setupBinutils();
@@ -127,7 +127,7 @@ void resetMoiraFpu(Setup &s);
 // Performing a test
 //
 
-void run(unsigned seed, const std::vector<MOIRA_NAMESPACE::Model> &models);
+void run(unsigned seed, const std::vector<Model> &models);
 
 void runCPU(long round);
 void runMMU(long round);

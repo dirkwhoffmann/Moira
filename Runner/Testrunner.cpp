@@ -18,10 +18,10 @@
 
 namespace runner {
 
-using namespace MOIRA_NAMESPACE;
+using namespace moira;
 
 TestCPU *moiracpu;
-MOIRA_NAMESPACE::Model cpuModel = Model::M68000;
+Model cpuModel = Model::M68000;
 u16 opcode = 0;
 
 static int binutilsFprintf(FILE* f, const char* format, ...)
@@ -38,7 +38,7 @@ static int binutilsFprintf(FILE* f, const char* format, ...)
 static constexpr bool uaeRef = (compat == Compatibility::UAE);
 static void setupUAE();
 
-void selectModel(MOIRA_NAMESPACE::Model model)
+void selectModel(Model model)
 {
     cpuModel = model;
 
@@ -259,7 +259,7 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
 {
     static long mvc = 0;
 
-    MOIRA_NAMESPACE::Instr instr = moiracpu->getInstrInfo(opcode).I;
+    Instr instr = moiracpu->getInstrInfo(opcode).I;
 
     // Prepare special extension words for some instructions
     switch (instr) {
@@ -435,7 +435,7 @@ void runCPU(long round)
         for (int op = 0x0000; op <= 0xFFFF; op++) {
 
             if constexpr (SKIP_ILLEGAL) {
-                if (moiracpu->getInstrInfo(op).I == MOIRA_NAMESPACE::Instr::ILLEGAL) continue;
+                if (moiracpu->getInstrInfo(op).I == Instr::ILLEGAL) continue;
             }
 
             // FPU opcodes are covered by runFPU
@@ -758,7 +758,7 @@ bool skip(u16 op)
 {
     bool result;
 
-    MOIRA_NAMESPACE::Instr instr = moiracpu->getInstrInfo(op).I;
+    Instr instr = moiracpu->getInstrInfo(op).I;
 
     if (uaeRef) {
 
@@ -1197,7 +1197,7 @@ bool compareDasm(Result &rRef, Result &rMoira)
 bool compareD(Result &rRef, Result &rMoira)
 {
     assert(rRef.opcode == rMoira.opcode);
-    MOIRA_NAMESPACE::Instr instr = moiracpu->getInstrInfo(rRef.opcode).I;
+    Instr instr = moiracpu->getInstrInfo(rRef.opcode).I;
     if (instr == Instr::DIVU || instr == Instr::DIVS)
     {
         // The reference CPUs differ in some corner cases
@@ -1226,7 +1226,7 @@ bool comparePC(Result &rRef, Result &rMoira)
 bool compareSR(Result &rRef, Result &rMoira)
 {
     assert(rRef.opcode == rMoira.opcode);
-    MOIRA_NAMESPACE::Instr instr = moiracpu->getInstrInfo(rRef.opcode).I;
+    Instr instr = moiracpu->getInstrInfo(rRef.opcode).I;
     if (instr == Instr::DIVU || instr == Instr::DIVS) {
 
         // The reference CPU differs (and is likely wrong). Ignore it
