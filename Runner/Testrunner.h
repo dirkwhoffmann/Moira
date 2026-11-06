@@ -65,7 +65,7 @@ void passed();
 void runSingleTest(Setup &s, u16 op);
 void runSingleTest(Setup &s, u16 op, u16 ext);
 
-void runReference(Setup &s, Result &r);   // Runs the reference CPU (Musashi or UAE)
+void runReference(Setup &s, Result &r); 
 void runMoira(Setup &s, Result &r);
 
 bool skip(u16 op);

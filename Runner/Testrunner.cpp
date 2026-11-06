@@ -459,18 +459,25 @@ void runReference(Setup &s, Result &r)
     r.oldpc = s.pc;
     r.opcode = get16(refMem, r.oldpc);
     r.elapsed[0] = r.elapsed[1] = 0;
-
-    // Run the reference disassembler
     r.dasmMusashi[0] = r.dasmUAE[0] = 0;
     r.dasmCntMusashi = r.dasmCntUAE = 0;
-    if (useMusashi) disassembleMusashi(s, r);
-    if (useUAE) disassembleUAE(s, r);
 
-    // Run the reference CPU
-    if (doExec(r.opcode)) {
+    switch (compat) {
 
-        if (useMusashi) executeMusashi(r);
-        if (useUAE) executeUAE(r);        
+        case Compatibility::MUSASHI:
+
+            if (doDasm(r.opcode)) disassembleMusashi(s, r);
+            if (doExec(r.opcode)) executeMusashi(r);
+            break;
+
+        case Compatibility::UAE:
+
+            if (doDasm(r.opcode)) disassembleUAE(s, r);
+            if (doExec(r.opcode)) executeUAE(r);
+            break;
+
+        default:
+            assert(false);
     }
 }
 
@@ -480,8 +487,20 @@ void runMoira(Setup &s, Result &r)
     r.opcode = get16(moiraMem, r.oldpc);
     r.elapsed[0] = r.elapsed[1] = 0;
 
+    //
     // Disassemble the instruction
+    //
+    
     if (doDasm(r.opcode)) {
+
+        // Disassemble the instruction in GNU format (binutils)
+#ifdef MOTOROLA
+        moiracpu->setDasmSyntax(Syntax::GNU);
+#else
+        moiracpu->setDasmSyntax(Syntax::GNU_MIT);
+#endif
+        moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 10, .plainZero = true });
+        r.dasmCntBinutils = moiracpu->disassemble(r.dasmBinutils, r.oldpc);
 
         // Disassemble the instruction in Musashi format
         if (useMusashi) {
@@ -492,15 +511,6 @@ void runMoira(Setup &s, Result &r)
             r.dasmCntMusashi = moiracpu->disassemble(r.dasmMusashi, r.oldpc);
             r.elapsed[1] = clock() - elapsed;
         }
-
-        // Disassemble the instruction in GNU format (binutils)
-#ifdef MOTOROLA
-        moiracpu->setDasmSyntax(Syntax::GNU);
-#else
-        moiracpu->setDasmSyntax(Syntax::GNU_MIT);
-#endif
-        moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 10, .plainZero = true });
-        r.dasmCntBinutils = moiracpu->disassemble(r.dasmBinutils, r.oldpc);
 
         // Disassemble the instruction in UAE format
         if (useUAE) {
@@ -513,7 +523,10 @@ void runMoira(Setup &s, Result &r)
         }
     }
 
-    // Run the Moira CPU
+    //
+    // Execute the instruction
+    //
+    
     if (doExec(r.opcode)) {
 
         u32 pc = moiracpu->getPC();
