@@ -115,7 +115,7 @@ void setupTestEnvironment(Setup &s, long round);
 void setupFpuEnvironment(Setup &s);
 void setupTestInstruction(Setup &s, u32 pc, u16 opcode);
 
-void resetMusashi(Setup &s);        // Resets the Musashi core (the UAE core is set up in runUAE)
+void resetMusashi(Setup &s);
 void resetMoira(Setup &s);
 void resetMusashiFpu(Setup &s);
 void resetMoiraFpu(Setup &s);

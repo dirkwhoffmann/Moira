@@ -30,18 +30,6 @@ TestCPU *moiracpu;
 Model cpuModel = Model::M68000;
 u16 opcode = 0;
 
-static const char *reference()
-{
-    switch (compat) {
-
-        case Compatibility::MUSASHI: return "Musashi";
-        case Compatibility::UAE:     return "UAE";
-    
-        default:
-            return "???";
-    }
-}
-
 static const struct { Model model; const char *name; } modelTable[] = {
 
     { Model::M68000,   "68000" },
@@ -77,6 +65,18 @@ std::optional<Model> parseModel(const char *name)
     return std::nullopt;
 }
 
+static const char *reference()
+{
+    switch (compat) {
+
+        case Compatibility::MUSASHI: return "Musashi";
+        case Compatibility::UAE:     return "UAE";
+    
+        default:
+            return "???";
+    }
+}
+
 const char *selectedModel()
 {
     return modelName(cpuModel);
@@ -87,18 +87,19 @@ void selectModel(Model model)
     cpuModel = model;
 
     setupMusashi(cpuModel);
-    if (useUAE) setupUAE(cpuModel);
+    setupUAE(cpuModel);
+    setupBinutils(cpuModel);
+    setupMoira();
+
+    // Configure the sandbox
     sandbox.checkCycles = useUAE && cpuModel == Model::M68000;
     sandbox.addrMask = (cpuModel == Model::M68EC020) ? 0xFFFFFF : 0xFFFFFFFF;
     sandbox.byteGranular = useUAE && cpuModel != Model::M68000 && cpuModel != Model::M68010;
-    setupBinutils(cpuModel);
-    setupMoira();
 }
 
 //
-// UAE as reference (optional, select with REFERENCE=uae)
+// UAE as reference
 //
-
 
 static uaecpu::State uaeState;
 
@@ -106,6 +107,8 @@ static void runUAE(Setup &s, Result &r)
 {
     uaecpu::State st;
 
+    // Setup
+    
     for (int i = 0; i < 8; i++) st.d[i] = s.d[i];
     for (int i = 0; i < 7; i++) st.a[i] = s.a[i];
     st.usp = 0;
@@ -118,20 +121,23 @@ static void runUAE(Setup &s, Result &r)
     st.dfc = s.dfc;
     st.cacr = s.cacr;
     st.caar = s.caar;
-    for (int i = 0; i < 8; i++) {
-        st.fpse[i] = s.fpr[i].signExp();
-        st.fpman[i] = s.fpr[i].mantissa();
-    }
+    for (int i = 0; i < 8; i++) st.fpse[i] = s.fpr[i].signExp();
+    for (int i = 0; i < 8; i++) st.fpman[i] = s.fpr[i].mantissa();
     st.fpcr = s.fpcr;
     st.fpsr = s.fpsr;
     st.fpiar = s.fpiar;
 
     uaecpu::setState(st);
+
+    // Run
+
     clock_t elapsed = clock();
     uaecpu::step();
     r.elapsed[0] = clock() - elapsed;
     r.cycles = int(uaecpu::cycles());
 
+    // Analyze
+    
     uaeState = uaecpu::getState();
     r.pc = uaeState.pc;
     r.sr = uaeState.sr;
