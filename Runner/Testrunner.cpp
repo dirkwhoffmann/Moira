@@ -407,14 +407,14 @@ void runSingleTest(Setup &s, u16 op)
     // Prepare the test case with the selected instruction
     setupTestInstruction(s, pc, op);
     
-    // Reset sandbox (memory accesses observer)
+    // Reset the sandbox
     auto info = moiracpu->getInstrInfo(op);
     bool enable = doExec(op) && !skip(op) && !skipAccessCheck(op);
     bool ignore = (info.I == Instr::CLR && info.S == Long) ||
     (info.I == Instr::CHK && cpuModel != Model::M68000);
     sandbox.prepare(enable, ignore);
 
-    // Reset CPUs
+    // Reset all CPUs
     if (useMusashi) resetMusashi(s, fpu);
     if (useUAE) resetUAE(s, fpu);
     resetMoira(s, fpu);
@@ -422,7 +422,11 @@ void runSingleTest(Setup &s, u16 op)
     // Run the binutils disassembler
     disassembleBinutils(refResult);
 
-    // Run the reference CPU (and the Musashi disassembler)
+    if (VERBOSE) {
+        printf("$%04x ($%04x): %s\n", s.pc, op, refResult.dasmBinutils);
+    }
+
+    // Run the reference CPU
     runReference(s, refResult);
     // Moira is configured without address error emulation (MOIRA_EMULATE_ADDRESS_ERROR)
     if (useUAE && (lastExceptionUAE() == 3) && !MOIRA_EMULATE_ADDRESS_ERROR) return;
@@ -462,15 +466,11 @@ void runReference(Setup &s, Result &r)
     if (useMusashi) disassembleMusashi(s, r);
     if (useUAE) disassembleUAE(s, r);
 
-    if (VERBOSE) {
-        printf("$%04x ($%04x): %s (%s)\n", r.oldpc, r.opcode,
-               useUAE ? r.dasmUAE : r.dasmMusashi, reference());
-    }
-
     // Run the reference CPU
     if (doExec(r.opcode)) {
 
-        if (useUAE) executeUAE(r); else executeMusashi(r);
+        if (useMusashi) executeMusashi(r);
+        if (useUAE) executeUAE(r);        
     }
 }
 
