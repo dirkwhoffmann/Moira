@@ -68,7 +68,8 @@ void runSingleTest(Setup &s, u16 op, u16 ext);
 void runReference(Setup &s, Result &r); 
 void runMoira(Setup &s, Result &r);
 
-bool skip(u16 op);
+bool skip(const Setup &s);                                           // Skips a test case based on its setup
+bool skipCompare(const Setup &s, const Result &rRef, const Result &rMoira); // Skips a test case based on its results
 bool skipAccessCheck(u16 op);
 
 bool isFpuOpcode(u16 op);

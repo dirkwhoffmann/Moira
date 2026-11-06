@@ -387,7 +387,7 @@ void runSingleTest(Setup &s, u16 op)
     
     // Reset the sandbox
     auto info = moiracpu->getInstrInfo(op);
-    bool enable = doExec(op) && !skip(op) && !skipAccessCheck(op);
+    bool enable = doExec(op) && !skip(s) && !skipAccessCheck(op);
     bool ignore = (info.I == Instr::CLR && info.S == Long) ||
     (info.I == Instr::CHK && cpuModel != Model::M68000);
     sandbox.prepare(enable, ignore);
@@ -540,13 +540,17 @@ bool skipAccessCheck(u16 op)
     return instr == Instr::CHK2 || instr == Instr::CMP2;
 }
 
-bool skip(u16 op)
+bool skip(const Setup &s)
 {
     bool result;
 
+    u16 op = s.opcode;
     Instr instr = moiracpu->getInstrInfo(op).I;
 
     if (useUAE) {
+
+        // The FPCR precision value 3 is reserved. UAE and Moira round tiny results differently in this mode.
+        if ((op & 0xFE00) == 0xF200 && (s.fpcr & 0xC0) == 0xC0) return true;
 
         // UAE doesn't implement the module instructions
         if (instr == Instr::CALLM || instr == Instr::RTM) return true;
@@ -751,6 +755,15 @@ void dumpResult(Result &r)
     printf("\n\n");
 }
 
+// Skips cases that can only be recognized by looking at the results
+bool skipCompare(const Setup &s, const Result &rRef, const Result &rMoira)
+{
+    // FPU opcodes where only one side raises line F (reserved bits set in the opcode or extension word)
+    if (useUAE && (s.opcode & 0xFE00) == 0xF200 && ((rRef.pc >> 12) == 1) != ((rMoira.pc >> 12) == 1)) return true;
+
+    return false;
+}
+
 void compare(Setup &s, Result &rRef, Result &rMoira)
 {
     bool error = false;
@@ -765,14 +778,7 @@ void compare(Setup &s, Result &rRef, Result &rMoira)
 
     if (doExec((int)s.opcode)) {
 
-        // FPU opcodes where only one side raises line F (reserved bits set in the opcode or extension word)
-        bool legalityMismatch = useUAE && (s.opcode & 0xFE00) == 0xF200 &&
-                                ((rRef.pc >> 12) == 1) != ((rMoira.pc >> 12) == 1);
-
-        // The FPCR precision value 3 is reserved. UAE and Moira round tiny results differently in this mode.
-        bool reservedPrecision = useUAE && (s.opcode & 0xFE00) == 0xF200 && (s.fpcr & 0xC0) == 0xC0;
-
-        if (!legalityMismatch && !reservedPrecision && !skip(s.opcode)) {
+        if (!skip(s) && !skipCompare(s, rRef, rMoira)) {
 
             if (!comparePC(rRef, rMoira)) {
                 printf("\nPROGRAM COUNTER MISMATCH FOUND");
