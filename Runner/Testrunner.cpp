@@ -20,23 +20,26 @@ namespace runner {
 
 using namespace moira;
 
+// The reference core (determined by the compatibility mode of the tested Moira)
+static constexpr bool useUAE     = (compat == Compatibility::UAE);
+static constexpr bool useMusashi = (compat == Compatibility::MUSASHI);
+
+// The Moira instance under test
 TestCPU *moiracpu;
+
+// The currently tested CPU type and instruction
 Model cpuModel = Model::M68000;
 u16 opcode = 0;
-
-// The reference core is determined by the compatibility mode of the tested Moira
-static constexpr bool uaeRef = (compat == Compatibility::UAE);
-static void setupUAE();
 
 void selectModel(Model model)
 {
     cpuModel = model;
 
     setupMusashi();
-    if (uaeRef) setupUAE();
-    sandbox.checkCycles = (compat != Compatibility::MUSASHI) && (!uaeRef || cpuModel == Model::M68000);
+    if (useUAE) setupUAE();
+    sandbox.checkCycles = (compat != Compatibility::MUSASHI) && (!useUAE || cpuModel == Model::M68000);
     sandbox.addrMask = (cpuModel == Model::M68EC020) ? 0xFFFFFF : 0xFFFFFFFF;
-    sandbox.byteGranular = uaeRef && cpuModel != Model::M68000 && cpuModel != Model::M68010;
+    sandbox.byteGranular = useUAE && cpuModel != Model::M68000 && cpuModel != Model::M68010;
     setupBinutils();
     setupMoira();
 }
@@ -136,7 +139,7 @@ static void uaeWrite(int size, u32 addr, u32 value, u32 fc, u64 cycle)
         sandbox.record(size == 1 ? POKE8 : POKE16, addr, cycle, fc, size == 1 ? u8(value) : u16(value));
 }
 
-static void setupUAE()
+void setupUAE()
 {
     using uaecpu::Cpu;
     Cpu model =
@@ -348,7 +351,7 @@ void resetMoiraFpu(Setup &s)
 
 void recordRefFpu(Result &r)
 {
-    if (uaeRef) {
+    if (useUAE) {
         for (int i = 0; i < 8; i++) r.fpr[i] = Float80::fromBits(uaeState.fpse[i], uaeState.fpman[i]);
         r.fpcr = uaeState.fpcr;
         r.fpsr = uaeState.fpsr;
@@ -464,7 +467,7 @@ void runFPU(long round)
     if (!moiracpu->hasFPU()) return;
 
     // Musashi's FPU is not a reliable reference
-    if (!uaeRef) {
+    if (!useUAE) {
         printf("%s FPU skipped (no reliable %s reference)\n", selectedModel(), reference());
         return;
     }
@@ -591,7 +594,7 @@ void runSingleTest(Setup &s, u16 op)
     // Run the reference CPU (and the Musashi disassembler)
     runReference(s, refResult);
     // Moira is configured without address error emulation (MOIRA_EMULATE_ADDRESS_ERROR)
-    if (uaeRef && (uaecpu::lastException() == 3) && !MOIRA_EMULATE_ADDRESS_ERROR) return;
+    if (useUAE && (uaecpu::lastException() == 3) && !MOIRA_EMULATE_ADDRESS_ERROR) return;
     refclk[0] += refResult.elapsed[0];
     refclk[1] += refResult.elapsed[1];
 
@@ -654,12 +657,12 @@ void runReference(Setup &s, Result &r)
     // Run UAE's disassembler
     r.dasmUAE[0] = 0;
     r.dasmCntUAE = 0;
-    if (uaeRef) r.dasmCntUAE = uaecpu::disassemble(s.pc, r.dasmUAE, sizeof(r.dasmUAE));
+    if (useUAE) r.dasmCntUAE = uaecpu::disassemble(s.pc, r.dasmUAE, sizeof(r.dasmUAE));
 
     // Run the reference CPU
     if (doExec(r.opcode)) {
 
-        if (uaeRef) {
+        if (useUAE) {
             runUAE(s, r);
             return;
         }
@@ -733,7 +736,7 @@ bool skipAccessCheck(u16 op)
     // UAE only writes back the bytes of a bit field that are affected,
     // whereas Moira writes back the whole long word. The final memory
     // contents are still compared.
-    if (!uaeRef) return false;
+    if (!useUAE) return false;
     if ((op & 0xF8C0) == 0xE8C0) return true;
 
     // FPU opcodes may be legal for one side only (final memory contents are still compared)
@@ -750,7 +753,7 @@ bool skip(u16 op)
 
     Instr instr = moiracpu->getInstrInfo(op).I;
 
-    if (uaeRef) {
+    if (useUAE) {
 
         // UAE doesn't implement the module instructions
         if (instr == Instr::CALLM || instr == Instr::RTM) return true;
@@ -984,11 +987,11 @@ void compare(Setup &s, Result &rRef, Result &rMoira)
     if (doExec((int)s.opcode)) {
 
         // FPU opcodes where only one side raises line F (reserved bits set in the opcode or extension word)
-        bool legalityMismatch = uaeRef && (s.opcode & 0xFE00) == 0xF200 &&
+        bool legalityMismatch = useUAE && (s.opcode & 0xFE00) == 0xF200 &&
                                 ((rRef.pc >> 12) == 1) != ((rMoira.pc >> 12) == 1);
 
         // The FPCR precision value 3 is reserved. UAE and Moira round tiny results differently in this mode.
-        bool reservedPrecision = uaeRef && (s.opcode & 0xFE00) == 0xF200 && (s.fpcr & 0xC0) == 0xC0;
+        bool reservedPrecision = useUAE && (s.opcode & 0xFE00) == 0xF200 && (s.fpcr & 0xC0) == 0xC0;
 
         if (!legalityMismatch && !reservedPrecision && !skip(s.opcode)) {
 
@@ -1170,7 +1173,7 @@ bool compareDasm(Result &rRef, Result &rMoira)
     }
 
     // Compare with UAE's disassembler (UAE decodes coprocessor opcodes regardless of the model)
-    if (uaeRef && !noUAEDasmForCoprocessor(rRef.opcode) && !dasmEqualUAE(rRef.dasmUAE, rMoira.dasmMoiraUAE)) return false;
+    if (useUAE && !noUAEDasmForCoprocessor(rRef.opcode) && !dasmEqualUAE(rRef.dasmUAE, rMoira.dasmMoiraUAE)) return false;
 
     // Compare with binutils
     if (!skipBinutils) {
@@ -1208,7 +1211,7 @@ bool comparePC(Result &rRef, Result &rMoira)
 {
     // UAE clears the lowest PC bit after a jump to an odd address. Moira
     // is configured without address error emulation and keeps it.
-    if (uaeRef && (rMoira.pc & 1) && rRef.pc == (rMoira.pc & ~1u)) return true;
+    if (useUAE && (rMoira.pc & 1) && rRef.pc == (rMoira.pc & ~1u)) return true;
 
     return rRef.pc == rMoira.pc;
 }
@@ -1224,18 +1227,18 @@ bool compareSR(Result &rRef, Result &rMoira)
     }
 
     // N and V are undefined for CMP2 and CHK2 and not compared with UAE
-    if (uaeRef && (instr == Instr::CMP2 || instr == Instr::CHK2)) {
+    if (useUAE && (instr == Instr::CMP2 || instr == Instr::CHK2)) {
         return (rRef.sr & ~0x0A) == (rMoira.sr & ~0x0A);
     }
 
     // N and V are undefined for BCD instructions (68040 differs from older models)
-    if (uaeRef && cpuModel >= Model::M68EC040 &&
+    if (useUAE && cpuModel >= Model::M68EC040 &&
         (instr == Instr::ABCD || instr == Instr::SBCD || instr == Instr::NBCD)) {
         return (rRef.sr & ~0x0A) == (rMoira.sr & ~0x0A);
     }
 
     // Z, V and C are undefined for CHK on the 68020 and above
-    if (uaeRef && instr == Instr::CHK && cpuModel != Model::M68000 && cpuModel != Model::M68010) {
+    if (useUAE && instr == Instr::CHK && cpuModel != Model::M68000 && cpuModel != Model::M68010) {
         return (rRef.sr & ~0x07) == (rMoira.sr & ~0x07);
     }
 
@@ -1285,7 +1288,7 @@ bool compareFPR(Result &rRef, Result &rMoira)
 
         // On underflow, UAE returns a zero significand with the minimum exponent of the
         // format instead of a true zero (same exemption as in FpuRefTests)
-        if (uaeRef) {
+        if (useUAE) {
             auto &ref = rRef.fpr[i], &moira = rMoira.fpr[i];
             bool pseudoZero = ref.mantissa() == 0 && ref.biasedExponent() != 0 && ref.biasedExponent() != 0x7FFF;
             if (pseudoZero && moira.isZero() && moira.sign() == ref.sign()) continue;
@@ -1298,34 +1301,34 @@ bool compareFPR(Result &rRef, Result &rMoira)
 bool compareFPCR(Result &rRef, Result &rMoira)
 {
     // UAE stores the reserved low bits of FPCR
-    if (uaeRef) return (rRef.fpcr & ~0xF) == (rMoira.fpcr & ~0xF);
+    if (useUAE) return (rRef.fpcr & ~0xF) == (rMoira.fpcr & ~0xF);
 
     return rRef.fpcr == rMoira.fpcr;
 }
 bool compareFPSR(Result &rRef, Result &rMoira)
 {
     // UAE modifies FPSR even if the instruction ends up in a line F exception
-    if (uaeRef && (rRef.pc >> 12) != 1) return true;
+    if (useUAE && (rRef.pc >> 12) != 1) return true;
 
     /* An overflow always implies an inexact result. UAE only raises INEX2 if the
      * rounding discards non-zero bits, which isn't the case if the operand is a
      * huge unnormalized number whose low mantissa bits are zero after normalization.
      */
     u32 ref = rRef.fpsr, moira = rMoira.fpsr;
-    if (uaeRef && (ref & 0x1000) && (moira & 0x1000)) { ref |= 0x0200; moira |= 0x0200; }
+    if (useUAE && (ref & 0x1000) && (moira & 0x1000)) { ref |= 0x0200; moira |= 0x0200; }
 
     // UAE doesn't raise OPERR when it converts a signaling NaN to an integer
-    if (uaeRef && (ref & 0x4000)) return (ref | 0x2000) == (moira | 0x2000);
+    if (useUAE && (ref & 0x4000)) return (ref | 0x2000) == (moira | 0x2000);
 
     return ref == moira;
 }
 bool compareFPIAR(Result &rRef, Result &rMoira)
 {
     // UAE updates FPIAR even if the instruction ends up in a line F exception
-    if (uaeRef && (rRef.pc >> 12) != 1) return true;
+    if (useUAE && (rRef.pc >> 12) != 1) return true;
 
     // UAE skips the FPIAR update if a conversion in FMOVE <ea> raises an operand error
-    if (uaeRef && (rRef.fpsr & 0x6000)) return true;
+    if (useUAE && (rRef.fpsr & 0x6000)) return true;
 
     return rRef.fpiar == rMoira.fpiar;
 }
@@ -1348,7 +1351,7 @@ bool compareCycles(Result &rRef, Result &rMoira)
      * 68010 timing is partially copied from the 68000, and the 68020+ cores
      * aren't cycle-exact.
      */
-    if (uaeRef && cpuModel != Model::M68000) return true;
+    if (useUAE && cpuModel != Model::M68000) return true;
 
     /* Timing comparison is off for every model beyond the 68000 and 68010
      * while the instruction cache is emulated. Those models (68020 and up)

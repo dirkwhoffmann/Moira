@@ -110,6 +110,7 @@ void selectModel(Model model);
 const char *selectedModel();
 
 void setupBinutils();
+void setupUAE();
 void setupMusashi();
 void setupMoira();
 
