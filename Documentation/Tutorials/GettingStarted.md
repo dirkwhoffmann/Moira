@@ -34,7 +34,7 @@ make
 
 ## Running 
 
-If built as explained above, two applications are created. `testRunnerMusashi` iterates over all opcodes, runs Moira and Musashi in parallel, and compares the results. `testRunnerUAE` does the same with the CPU core of UAE as reference. It is only built if the UAE sources are available. Both accept the options `--seed <n>` (seed of the random number generator) and `--rounds <n>` (number of test rounds, default 1). If everything works as expected, it will terminate after a few minutes. If a discrepancy is detected, an error report is generated. In such cases, please file a bug on GitHub. Any help in identifying and resolving remaining issues is greatly appreciated.
+If built as explained above, two applications are created. `testRunnerMusashi` iterates over all opcodes, runs Moira and Musashi in parallel, and compares the results. `testRunnerUAE` does the same with the CPU core of UAE as reference. It is only built if the UAE sources are available. Both accept the options `--seed <n>` (seed of the random number generator) `--rounds <n>` (number of test rounds, default 1), `--cpu <model>` (CPU models to test) and `--fpu <model>` (FPU models to test in the FPU stage). Both `--cpu` and `--fpu` can be repeated; by default, all models are tested. If everything works as expected, it will terminate after a few minutes. If a discrepancy is detected, an error report is generated. In such cases, please file a bug on GitHub. Any help in identifying and resolving remaining issues is greatly appreciated.
 
 
 ````text

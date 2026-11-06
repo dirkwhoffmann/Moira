@@ -17,9 +17,10 @@ static void uaeWrite(int size, u32 addr, u32 value, u32 fc, u64 cycle)
         sandbox.record(size == 1 ? POKE8 : POKE16, addr, cycle, fc, size == 1 ? u8(value) : u16(value));
 }
 
-void setupUAE(moira::Model model)
+void setupUAE(moira::Model model, moira::FPUModel fpuModel)
 {
     using uaecpu::Cpu;
+    using uaecpu::Fpu;
     Cpu cpu =
     model == moira::Model::M68000   ? Cpu::M68000 :
     model == moira::Model::M68010   ? Cpu::M68010 :
@@ -30,7 +31,12 @@ void setupUAE(moira::Model model)
     model == moira::Model::M68EC040 ? Cpu::M68EC040 :
     model == moira::Model::M68LC040 ? Cpu::M68LC040 : Cpu::M68040;
 
-    uaecpu::init(cpu, refMem, uaeWrite);
+    Fpu fpu =
+    fpuModel == moira::FPUModel::M68881   ? Fpu::M68881 :
+    fpuModel == moira::FPUModel::M68882   ? Fpu::M68882 :
+    fpuModel == moira::FPUModel::INTERNAL ? Fpu::Internal : Fpu::None;
+
+    uaecpu::init(cpu, fpu, refMem, uaeWrite);
 }
 
 // The state after the last execution

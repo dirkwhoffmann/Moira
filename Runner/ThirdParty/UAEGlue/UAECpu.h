@@ -40,12 +40,13 @@ struct State {
 };
 
 enum class Cpu { M68000, M68010, M68020, M68EC020, M68030, M68EC030, M68040, M68LC040, M68EC040 };
+enum class Fpu { None, M68881, M68882, Internal };
 
 // Write observer: size is 1 or 2 bytes, fc is the function code of the access
 typedef void (*WriteHook)(int size, uint32_t addr, uint32_t value, uint32_t fc, uint64_t cycle);
 
-// Selects the CPU model and the memory area (65536 bytes)
-void init(Cpu model, uint8_t *memory, WriteHook hook);
+// Selects the CPU and FPU model and the memory area (65536 bytes)
+void init(Cpu model, Fpu fpu, uint8_t *memory, WriteHook hook);
 
 // Loads and reads back the processor state
 void setState(const State &s);

@@ -23,6 +23,7 @@
 
 #include "MoiraTypes.h"
 #include "Float80.h"
+#include "FPU.h"
 #include "Sandbox.h"
 #include "Randomizer.h"
 #include "config.h"
@@ -45,7 +46,7 @@ static const size_t BINUTILS_BUFFER_SIZE = 128;
 // Initializes the reference libraries for a CPU model (implemented in the glue layer)
 void setupBinutils(moira::Model model);
 void setupMusashi(moira::Model model);
-void setupUAE(moira::Model model);
+void setupUAE(moira::Model model, moira::FPUModel fpu);
 
 extern Sandbox sandbox;
 extern Randomizer randomizer;

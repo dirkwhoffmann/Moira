@@ -27,6 +27,7 @@ TestCPU *moiracpu;
 
 // The currently tested CPU type and instruction
 Model cpuModel = Model::M68000;
+FPUModel fpuModel = FPUModel::NONE;
 u16 opcode = 0;
 
 // Speed comparison
@@ -68,6 +69,52 @@ std::optional<Model> parseModel(const char *name)
     return std::nullopt;
 }
 
+static const struct { FPUModel model; const char *name; } fpuTable[] = {
+
+    { FPUModel::M68881,   "68881" },
+    { FPUModel::M68882,   "68882" },
+    { FPUModel::INTERNAL, "internal" }
+};
+
+const std::vector<FPUModel> &allFpuModels()
+{
+    static const std::vector<FPUModel> all = []() {
+        std::vector<FPUModel> result;
+        for (auto &m : fpuTable) result.push_back(m.model);
+        return result;
+    }();
+    return all;
+}
+
+const char *fpuModelName(FPUModel model)
+{
+    for (auto &m : fpuTable) if (m.model == model) return m.name;
+    return "none";
+}
+
+std::optional<FPUModel> parseFpuModel(const char *name)
+{
+    for (auto &m : fpuTable) if (strcasecmp(m.name, name) == 0) return m.model;
+    return std::nullopt;
+}
+
+bool isCompatible(Model cpu, FPUModel fpu)
+{
+    switch (fpu) {
+
+        case FPUModel::INTERNAL:
+            return cpu == Model::M68040;
+
+        case FPUModel::M68881:
+        case FPUModel::M68882:
+            return cpu == Model::M68020 || cpu == Model::M68EC020 ||
+                   cpu == Model::M68030 || cpu == Model::M68EC030;
+
+        default:
+            return false;
+    }
+}
+
 const char *reference()
 {
     switch (compat) {
@@ -89,8 +136,11 @@ void selectModel(Model model)
 {
     cpuModel = model;
 
+    // Only the 68040 has a built-in FPU. External FPUs are installed with selectFpu.
+    fpuModel = (cpuModel == Model::M68040) ? FPUModel::INTERNAL : FPUModel::NONE;
+
     if (useMusashi) setupMusashi(cpuModel);
-    if (useUAE) setupUAE(cpuModel);
+    if (useUAE) setupUAE(cpuModel, fpuModel);
     setupBinutils(cpuModel);
     setupMoira();
 
@@ -103,6 +153,15 @@ void selectModel(Model model)
 void setupMoira()
 {
     moiracpu->setModel(cpuModel);
+    moiracpu->fpu.setModel(fpuModel);
+}
+
+void selectFpu(FPUModel fpu)
+{
+    fpuModel = fpu;
+
+    if (useUAE) setupUAE(cpuModel, fpuModel);
+    setupMoira();
 }
 
 void setupTestEnvironment(Setup &s, long round)
@@ -191,7 +250,7 @@ void resetMoira(Setup &s)
     moiracpu->fpu.setFPIAR(s.fpiar);
 }
 
-void run(unsigned seed, long rounds, const std::vector<Model> &models)
+void run(unsigned seed, long rounds, const std::vector<Model> &cpus, const std::vector<FPUModel> &fpus)
 {
     srand(seed);
 
@@ -201,16 +260,28 @@ void run(unsigned seed, long rounds, const std::vector<Model> &models)
 
         printf("\nRound %ld:\n\n", i);
 
-        for (Model model : models) {
+        for (Model cpu : cpus) {
 
             // Select the CPU core
-            cpuModel = model;
-            selectModel(cpuModel);
+            selectModel(cpu);
 
             // Execute tests
             if constexpr (CHECK_CPU) runCPU(i);
             if constexpr (CHECK_MMU) runMMU(i);
-            if constexpr (CHECK_FPU) runFPU(i);
+
+            // Run the FPU tests for all FPUs that can be combined with this CPU
+            if constexpr (CHECK_FPU) {
+
+                for (FPUModel fpu : fpus) {
+
+                    if (!isCompatible(cpu, fpu)) continue;
+                    selectFpu(fpu);
+                    runFPU(i);
+
+                    // Without a reference FPU, there is nothing more to report
+                    if (useMusashi) break;
+                }
+            }
         }
     }
 }
@@ -221,7 +292,7 @@ void runCPU(long round)
     
     Setup setup;
 
-    printf("%s CPU ", selectedModel()); fflush(stdout);
+    printf("%11s CPU : ", selectedModel()); fflush(stdout);
 
     for (int i = 0; i < CPU_SETUPS; i++) {
 
@@ -251,7 +322,7 @@ void runMMU(long round)
     static const int MMU_SETUPS = 4;
     Setup setup;
 
-    printf("%s MMU ", selectedModel()); fflush(stdout);
+    printf("%11s MMU : ", selectedModel()); fflush(stdout);
 
     for (int i = 0; i < MMU_SETUPS; i++) {
 
@@ -272,8 +343,7 @@ void runMMU(long round)
 
 void runFPU(long round)
 {
-    if (!moiracpu->hasFPU()) return;
-
+    // Musashi's FPU is not a reliable reference
     if (useMusashi) {
         printf("%s FPU skipped (no reliable reference)\n", selectedModel());
         return;
@@ -282,7 +352,11 @@ void runFPU(long round)
     static const int FPU_SETUPS = 4;
     Setup setup;
 
-    printf("%s FPU ", selectedModel()); fflush(stdout);
+    if (fpuModel == FPUModel::INTERNAL)
+        printf("%11s FPU : ", selectedModel());
+    else
+        printf("%5s+%5s FPU : ", selectedModel(), fpuModelName(fpuModel));
+    fflush(stdout);
 
     for (int i = 0; i < FPU_SETUPS; i++) {
 
@@ -306,7 +380,7 @@ void runFPU(long round)
 
 bool isFpuOpcode(u16 op)
 {
-    return (op & 0xFF00) == 0xF200 && moiracpu != nullptr && moiracpu->hasFPU();
+    return (op & 0xFF00) == 0xF200 && moiracpu != nullptr && moiracpu->fpu.isPresent();
 }
 
 bool isIllegalOpcode(u16 op)
@@ -1173,7 +1247,7 @@ bool compareCycles(Result &rRef, Result &rMoira)
 
 void bugReport()
 {
-    printf("Please send a bug report to: dirk.hoffmann@me.com\n");
+    printf("Please report the bug at https://github.com/dirkwhoffmann/Moira\n");
     printf("Thanks you!\n\n");
     exit(1);
 }

@@ -16,12 +16,16 @@
 
 static void usage(const char *prog)
 {
-    printf("Usage: %s [--seed <n>] [--rounds <n>] [--cpu <model>]...\n", prog);
+    printf("Usage: %s [--seed <n>] [--rounds <n>] [--cpu <model>]... [--fpu <model>]...\n", prog);
     printf("  --seed <n>      Seed of the random number generator (default: derived from the date)\n");
     printf("  --rounds <n>    Number of test rounds (default: 1)\n");
     printf("  --cpu <model>   CPU model to test (default: all models). May be repeated.\n");
     printf("                  Models:");
     for (auto model : runner::allModels()) printf(" %s", runner::modelName(model));
+    printf("\n");
+    printf("  --fpu <model>   FPU model to test in the FPU stage (default: all models). May be repeated.\n");
+    printf("                  Models:");
+    for (auto model : runner::allFpuModels()) printf(" %s", runner::fpuModelName(model));
     printf("\n");
 }
 
@@ -33,7 +37,8 @@ int main(int argc, char **argv)
     unsigned seed = 1900 + now->tm_year + now->tm_yday;
 
     long rounds = 1;
-    std::vector<moira::Model> models;
+    std::vector<moira::Model> cpus;
+    std::vector<moira::FPUModel> fpus;
 
     for (int i = 1; i < argc; i++) {
 
@@ -51,7 +56,11 @@ int main(int argc, char **argv)
 
         } else if (!strcmp(argv[i], "--cpu") && i + 1 < argc) {
 
-            if (auto model = runner::parseModel(argv[++i])) { models.push_back(*model); continue; }
+            if (auto model = runner::parseModel(argv[++i])) { cpus.push_back(*model); continue; }
+
+        } else if (!strcmp(argv[i], "--fpu") && i + 1 < argc) {
+
+            if (auto model = runner::parseFpuModel(argv[++i])) { fpus.push_back(*model); continue; }
         }
 
         usage(argv[0]);
@@ -68,7 +77,9 @@ int main(int argc, char **argv)
     printf("     Dasm range : %s\n", TOSTRING(doDasm(opcode)));
     printf("      Reference : %s\n", runner::reference());
 
-    runner::run(seed, rounds, models.empty() ? runner::allModels() : models);
+    runner::run(seed, rounds,
+                cpus.empty() ? runner::allModels() : cpus,
+                fpus.empty() ? runner::allFpuModels() : fpus);
 
     printf("\n");
     printf("All tests completed\n");

@@ -27,6 +27,7 @@ using namespace moira;
 
 extern class TestCPU *moiracpu;
 extern Model cpuModel;
+extern FPUModel fpuModel;
 extern u16 opcode;
 
 //
@@ -37,7 +38,15 @@ const std::vector<Model> &allModels();
 const char *modelName(Model model);
 std::optional<Model> parseModel(const char *name);
 
+const std::vector<FPUModel> &allFpuModels();
+const char *fpuModelName(FPUModel model);
+std::optional<FPUModel> parseFpuModel(const char *name);
+
+// Returns true if the FPU can be installed in a system with the given CPU
+bool isCompatible(Model cpu, FPUModel fpu);
+
 void selectModel(Model model);
+void selectFpu(FPUModel fpu);
 const char *selectedModel();
 
 // Returns the name of the reference CPU (determined by the compatibility mode)
@@ -55,7 +64,7 @@ void resetMoira(Setup &s);
 // Performing a test
 //
 
-void run(unsigned seed, long rounds, const std::vector<Model> &models);
+void run(unsigned seed, long rounds, const std::vector<Model> &cpus, const std::vector<FPUModel> &fpus);
 
 void runCPU(long round);
 void runMMU(long round);

@@ -163,7 +163,7 @@ void wait_cpu_cycle_write_ce020(uaecptr addr, int mode, uae_u32 v) { wait_cpu_cy
 
 namespace uaecpu {
 
-void init(Cpu model, uint8_t *memory, WriteHook hook)
+void init(Cpu model, Fpu fpu, uint8_t *memory, WriteHook hook)
 {
     mem = memory;
 
@@ -196,7 +196,7 @@ void init(Cpu model, uint8_t *memory, WriteHook hook)
     p.cpu_memory_cycle_exact = false;
     p.cachesize = 0;
     p.mmu_model = 0;
-    p.fpu_model = 0;
+    p.fpu_model = fpu == Fpu::M68881 ? 68881 : fpu == Fpu::M68882 ? 68882 : fpu == Fpu::Internal ? 68040 : 0;
     p.fpu_mode = 1;
     p.fpu_no_unimplemented = false;
     p.int_no_unimplemented = false;
@@ -213,7 +213,7 @@ void init(Cpu model, uint8_t *memory, WriteHook hook)
         case Cpu::M68030:    p.cpu_model = 68030; break;
         case Cpu::M68LC040:
         case Cpu::M68EC040:  p.cpu_model = 68040; break;
-        case Cpu::M68040:    p.cpu_model = 68040; p.fpu_model = 68040; break;
+        case Cpu::M68040:    p.cpu_model = 68040; break;
     }
     addr24 = p.address_space_24;
     currprefs = changed_prefs;
