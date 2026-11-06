@@ -755,9 +755,13 @@ void dumpResult(Result &r)
     printf("\n\n");
 }
 
-// Skips cases that can only be recognized by looking at the results
+// Decides whether the results of a test case are excluded from the comparison
 bool skipCompare(const Setup &s, const Result &rRef, const Result &rMoira)
 {
+    // Cases that can be recognized by looking at the setup
+    if (skip(s)) return true;
+
+    // Cases that can only be recognized by looking at the results
     // FPU opcodes where only one side raises line F (reserved bits set in the opcode or extension word)
     if (useUAE && (s.opcode & 0xFE00) == 0xF200 && ((rRef.pc >> 12) == 1) != ((rMoira.pc >> 12) == 1)) return true;
 
@@ -768,7 +772,7 @@ void compare(Setup &s, Result &rRef, Result &rMoira)
 {
     bool error = false;
 
-    if (doDasm((int)s.opcode)) {
+    if (doDasm(s.opcode)) {
 
         if (!compareDasm(rRef, rMoira)) {
             printf("\nDISASSEMBLER MISMATCH FOUND");
@@ -776,9 +780,9 @@ void compare(Setup &s, Result &rRef, Result &rMoira)
         }
     }
 
-    if (doExec((int)s.opcode)) {
+    if (doExec(s.opcode)) {
 
-        if (!skip(s) && !skipCompare(s, rRef, rMoira)) {
+        if (!skipCompare(s, rRef, rMoira)) {
 
             if (!comparePC(rRef, rMoira)) {
                 printf("\nPROGRAM COUNTER MISMATCH FOUND");
@@ -864,11 +868,11 @@ void compare(Setup &s, Result &rRef, Result &rMoira)
         if (useUAE) {
             printf("\nInstruction:      UAE: [%d] '%s'", rRef.dasmCntUAE, rRef.dasmUAE);
             printf("\n                Moira: [%d] '%s'\n", rMoira.dasmCntMoiraUAE, rMoira.dasmMoiraUAE);
-        } else {
+        }
+        if (useMusashi) {
             printf("\nInstruction:  Musashi: [%d] '%s'", rRef.dasmCntMusashi, rRef.dasmMusashi);
             printf("\n                Moira: [%d] '%s'\n", rMoira.dasmCntMusashi, rMoira.dasmMusashi);
         }
-
         printf("\n             Binutils: [%d] '%s'", rRef.dasmCntBinutils, rRef.dasmBinutils);
         printf("\n                Moira: [%d] '%s'\n", rMoira.dasmCntBinutils, rMoira.dasmBinutils);
         printf("\n");
