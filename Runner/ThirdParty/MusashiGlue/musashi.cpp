@@ -71,20 +71,103 @@ extern "C" void my_fc_handler(unsigned int fc)
 extern "C" int read_sp_on_reset(void) { return 0x2000; }
 extern "C" int read_pc_on_reset(void) { return 0x1000; }
 
+// The CPU type of the selected model (needed by the disassembler)
+static unsigned musashiType = M68K_CPU_TYPE_68000;
+
 void setupMusashi(moira::Model model)
 {
     m68k_init();
 
     switch (model) {
 
-        case moira::Model::M68000:    m68k_set_cpu_type(M68K_CPU_TYPE_68000);     break;
-        case moira::Model::M68010:    m68k_set_cpu_type(M68K_CPU_TYPE_68010);     break;
-        case moira::Model::M68EC020:  m68k_set_cpu_type(M68K_CPU_TYPE_68EC020);   break;
-        case moira::Model::M68020:    m68k_set_cpu_type(M68K_CPU_TYPE_68020);     break;
-        case moira::Model::M68EC030:  m68k_set_cpu_type(M68K_CPU_TYPE_68EC030);   break;
-        case moira::Model::M68030:    m68k_set_cpu_type(M68K_CPU_TYPE_68030);     break;
-        case moira::Model::M68EC040:  m68k_set_cpu_type(M68K_CPU_TYPE_68EC040);   break;
-        case moira::Model::M68LC040:  m68k_set_cpu_type(M68K_CPU_TYPE_68LC040);   break;
-        case moira::Model::M68040:    m68k_set_cpu_type(M68K_CPU_TYPE_68040);     break;
+        case moira::Model::M68000:    musashiType = M68K_CPU_TYPE_68000;     break;
+        case moira::Model::M68010:    musashiType = M68K_CPU_TYPE_68010;     break;
+        case moira::Model::M68EC020:  musashiType = M68K_CPU_TYPE_68EC020;   break;
+        case moira::Model::M68020:    musashiType = M68K_CPU_TYPE_68020;     break;
+        case moira::Model::M68EC030:  musashiType = M68K_CPU_TYPE_68EC030;   break;
+        case moira::Model::M68030:    musashiType = M68K_CPU_TYPE_68030;     break;
+        case moira::Model::M68EC040:  musashiType = M68K_CPU_TYPE_68EC040;   break;
+        case moira::Model::M68LC040:  musashiType = M68K_CPU_TYPE_68LC040;   break;
+        case moira::Model::M68040:    musashiType = M68K_CPU_TYPE_68040;     break;
     }
+    m68k_set_cpu_type(musashiType);
+}
+
+void resetMusashi(const runner::Setup &s)
+{
+    m68k_set_reg(M68K_REG_USP, 0);
+    m68k_set_reg(M68K_REG_ISP, 0);
+    m68k_set_reg(M68K_REG_MSP, 0);
+
+    m68k_pulse_reset();
+
+    for (int i = 0; i < 8; i++) {
+        m68k_set_reg((m68k_register_t)(M68K_REG_D0 + i), s.d[i]);
+    }
+    for (int i = 0; i < 7; i++) {
+        m68k_set_reg((m68k_register_t)(M68K_REG_A0 + i), s.a[i]);
+    }
+    m68k_set_reg(M68K_REG_VBR, s.vbr);
+    m68k_set_reg(M68K_REG_SFC, s.sfc);
+    m68k_set_reg(M68K_REG_DFC, s.dfc);
+    m68k_set_reg(M68K_REG_CACR, s.cacr);
+    m68k_set_reg(M68K_REG_CAAR, s.caar);
+    m68ki_set_ccr(s.ccr);
+    s.supervisor ? m68ki_set_sm_flag(SFLAG_SET) : m68ki_set_sm_flag(SFLAG_CLEAR);
+}
+
+void resetMusashiFpu(const runner::Setup &s)
+{
+    for (int i = 0; i < 8; i++) {
+        REG_FP[i].high = s.fpr[i].signExp();
+        REG_FP[i].low = s.fpr[i].mantissa();
+    }
+    REG_FPCR = s.fpcr;
+    REG_FPSR = s.fpsr;
+    REG_FPIAR = s.fpiar;
+}
+
+// Also determines the address and opcode of the instruction to execute
+void disassembleMusashi(const runner::Setup &s, runner::Result &r)
+{
+    r.oldpc = m68k_get_reg(NULL, M68K_REG_PC);
+    r.opcode = get16(refMem, r.oldpc);
+    r.elapsed[0] = r.elapsed[1] = 0;
+
+    clock_t elapsed = clock();
+    r.dasmCntMusashi = m68k_disassemble(r.dasmMusashi, s.pc, musashiType);
+    r.elapsed[1] = clock() - elapsed;
+}
+
+void executeMusashi(runner::Result &r)
+{
+    clock_t elapsed = clock();
+    r.cycles = m68k_execute(1);
+    r.elapsed[0] = clock() - elapsed;
+
+    r.pc = m68k_get_reg(NULL, M68K_REG_PC);
+    r.sr = (u16)m68k_get_reg(NULL, M68K_REG_SR);
+    r.usp = m68k_get_reg(NULL, M68K_REG_USP);
+    r.isp = m68k_get_reg(NULL, M68K_REG_ISP);
+    r.msp = m68k_get_reg(NULL, M68K_REG_MSP);
+    r.fc = musashiFC;
+    r.vbr = m68k_get_reg(NULL, M68K_REG_VBR);
+    r.sfc = m68k_get_reg(NULL, M68K_REG_SFC);
+    r.dfc = m68k_get_reg(NULL, M68K_REG_DFC);
+    r.cacr = m68k_get_reg(NULL, M68K_REG_CACR);
+    r.caar = m68k_get_reg(NULL, M68K_REG_CAAR);
+    for (int i = 0; i < 8; i++) {
+        r.d[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_D0 + i));
+        r.a[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_A0 + i));
+    }
+}
+
+void recordMusashiFpu(runner::Result &r)
+{
+    for (int i = 0; i < 8; i++) {
+        r.fpr[i] = moira::Float80::fromBits(REG_FP[i].high, REG_FP[i].low);
+    }
+    r.fpcr = REG_FPCR;
+    r.fpsr = REG_FPSR;
+    r.fpiar = REG_FPIAR;
 }

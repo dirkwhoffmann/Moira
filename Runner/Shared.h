@@ -19,8 +19,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <time.h>
 
 #include "MoiraTypes.h"
+#include "Float80.h"
 #include "Sandbox.h"
 #include "Randomizer.h"
 #include "config.h"
@@ -69,3 +71,99 @@ inline void set16(u8 *p, u32 addr, u16 val) {
 inline void set32(u8 *p, u32 addr, u32 val) {
     set16(p, addr, val >> 16); set16(p, addr + 2, val & 0xFFFF);
 }
+
+//
+// Test data
+//
+
+namespace runner {
+
+using moira::Float80;
+
+// A test setup
+struct Setup {
+
+    long    round;
+    u8      ccr;
+    bool    supervisor;
+    u32     pc;
+    u16     opcode;
+    u16     ext1;
+    u16     ext2;
+    u16     ext3;
+    u32     d[8];
+    u32     a[8];
+    u16     vbr;
+    u16     sfc;
+    u16     dfc;
+    u32     cacr;
+    u32     caar;
+    Float80 fpr[8];
+    u32     fpcr;
+    u32     fpsr;
+    u32     fpiar;
+    u8      mem[0x10000];
+};
+
+// A test result
+struct Result {
+
+    u16     dasmResult;
+    u32     oldpc;
+    u16     opcode;
+    u32     pc;
+    u32     usp;
+    u32     isp;
+    u32     msp;
+    u32     d[8];
+    u32     a[8];
+    u16     sr;
+    u32     fc;
+    u32     vbr;
+    u32     sfc;
+    u32     dfc;
+    u32     cacr;
+    u32     caar;
+    Float80 fpr[8];
+    u32     fpcr;
+    u32     fpsr;
+    u32     fpiar;
+    char    dasmMoira[128];
+    int     dasmCntMoira;
+    char    dasmBinutils[BINUTILS_BUFFER_SIZE];
+    int     dasmCntBinutils;
+    char    dasmMusashi[128];
+    int     dasmCntMusashi;
+    char    dasmUAE[128];
+    int     dasmCntUAE;
+    char    dasmMoiraUAE[128];      // Moira's output used for the comparison with UAE
+    int     dasmCntMoiraUAE;
+    int     cycles;
+    clock_t elapsed[2];
+};
+
+// Location of the tested instruction in memory
+const u32 pc = 0x1000;
+
+}
+
+
+//
+// Reference CPUs (implemented in the glue layer)
+//
+
+// Binutils
+void disassembleBinutils(runner::Result &r);
+
+// Musashi
+void resetMusashi(const runner::Setup &s);
+void resetMusashiFpu(const runner::Setup &s);
+void disassembleMusashi(const runner::Setup &s, runner::Result &r);
+void executeMusashi(runner::Result &r);
+void recordMusashiFpu(runner::Result &r);
+
+// UAE
+void disassembleUAE(const runner::Setup &s, runner::Result &r);
+void executeUAE(const runner::Setup &s, runner::Result &r);
+void recordUAEFpu(runner::Result &r);
+int lastExceptionUAE();

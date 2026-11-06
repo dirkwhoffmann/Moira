@@ -13,7 +13,6 @@
 #include <ctime>
 #include <string>
 #include <strings.h>
-#include "UAEGlue/UAECpu.h"
 
 namespace runner {
 
@@ -97,65 +96,6 @@ void selectModel(Model model)
     sandbox.byteGranular = useUAE && cpuModel != Model::M68000 && cpuModel != Model::M68010;
 }
 
-//
-// UAE as reference
-//
-
-static uaecpu::State uaeState;
-
-static void runUAE(Setup &s, Result &r)
-{
-    uaecpu::State st;
-
-    // Setup
-    
-    for (int i = 0; i < 8; i++) st.d[i] = s.d[i];
-    for (int i = 0; i < 7; i++) st.a[i] = s.a[i];
-    st.usp = 0;
-    st.isp = 0x2000;
-    st.msp = 0;
-    st.pc = s.pc;
-    st.sr = (s.supervisor ? 0x2000 : 0) | 0x0700 | s.ccr;
-    st.vbr = s.vbr;
-    st.sfc = s.sfc;
-    st.dfc = s.dfc;
-    st.cacr = s.cacr;
-    st.caar = s.caar;
-    for (int i = 0; i < 8; i++) st.fpse[i] = s.fpr[i].signExp();
-    for (int i = 0; i < 8; i++) st.fpman[i] = s.fpr[i].mantissa();
-    st.fpcr = s.fpcr;
-    st.fpsr = s.fpsr;
-    st.fpiar = s.fpiar;
-
-    uaecpu::setState(st);
-
-    // Run
-
-    clock_t elapsed = clock();
-    uaecpu::step();
-    r.elapsed[0] = clock() - elapsed;
-    r.cycles = int(uaecpu::cycles());
-
-    // Analyze
-    
-    uaeState = uaecpu::getState();
-    r.pc = uaeState.pc;
-    r.sr = uaeState.sr;
-    r.usp = uaeState.usp;
-    r.isp = uaeState.isp;
-    r.msp = uaeState.msp;
-    r.fc = 0;
-    r.vbr = uaeState.vbr;
-    r.sfc = uaeState.sfc & 7;
-    r.dfc = uaeState.dfc & 7;
-    r.cacr = uaeState.cacr;
-    r.caar = uaeState.caar;
-    for (int i = 0; i < 8; i++) r.d[i] = uaeState.d[i];
-    for (int i = 0; i < 7; i++) r.a[i] = uaeState.a[i];
-    r.a[7] = uaeState.a7;
-}
-
-
 void setupMoira()
 {
     moiracpu->setModel(cpuModel);
@@ -222,29 +162,6 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
     memcpy(moiraMem, s.mem, sizeof(moiraMem));
 }
 
-void resetMusashi(Setup &s)
-{
-    m68k_set_reg(M68K_REG_USP, 0);
-    m68k_set_reg(M68K_REG_ISP, 0);
-    m68k_set_reg(M68K_REG_MSP, 0);
-
-    m68k_pulse_reset();
-
-    for (int i = 0; i < 8; i++) {
-        m68k_set_reg((m68k_register_t)(M68K_REG_D0 + i), s.d[i]);
-    }
-    for (int i = 0; i < 7; i++) {
-        m68k_set_reg((m68k_register_t)(M68K_REG_A0 + i), s.a[i]);
-    }
-    m68k_set_reg(M68K_REG_VBR, s.vbr);
-    m68k_set_reg(M68K_REG_SFC, s.sfc);
-    m68k_set_reg(M68K_REG_DFC, s.dfc);
-    m68k_set_reg(M68K_REG_CACR, s.cacr);
-    m68k_set_reg(M68K_REG_CAAR, s.caar);
-    m68ki_set_ccr(s.ccr);
-    s.supervisor ? m68ki_set_sm_flag(SFLAG_SET) : m68ki_set_sm_flag(SFLAG_CLEAR);
-}
-
 void resetMoira(Setup &s)
 {
     moiracpu->reset();
@@ -265,17 +182,6 @@ void resetMoira(Setup &s)
     moiracpu->setSupervisorMode(s.supervisor);
 }
 
-void resetMusashiFpu(Setup &s)
-{
-    for (int i = 0; i < 8; i++) {
-        REG_FP[i].high = s.fpr[i].signExp();
-        REG_FP[i].low = s.fpr[i].mantissa();
-    }
-    REG_FPCR = s.fpcr;
-    REG_FPSR = s.fpsr;
-    REG_FPIAR = s.fpiar;
-}
-
 void resetMoiraFpu(Setup &s)
 {
     for (int i = 0; i < 8; i++) moiracpu->fpu.fpr[i] = s.fpr[i];
@@ -286,19 +192,7 @@ void resetMoiraFpu(Setup &s)
 
 void recordRefFpu(Result &r)
 {
-    if (useUAE) {
-        for (int i = 0; i < 8; i++) r.fpr[i] = Float80::fromBits(uaeState.fpse[i], uaeState.fpman[i]);
-        r.fpcr = uaeState.fpcr;
-        r.fpsr = uaeState.fpsr;
-        r.fpiar = uaeState.fpiar;
-        return;
-    }
-    for (int i = 0; i < 8; i++) {
-        r.fpr[i] = Float80::fromBits(REG_FP[i].high, REG_FP[i].low);
-    }
-    r.fpcr = REG_FPCR;
-    r.fpsr = REG_FPSR;
-    r.fpiar = REG_FPIAR;
+    if (useUAE) recordUAEFpu(r); else recordMusashiFpu(r);
 }
 
 void recordMoiraFpu(Result &r)
@@ -524,12 +418,12 @@ void runSingleTest(Setup &s, u16 op)
     }
 
     // Run the binutils disassembler
-    runBinutils(s, refResult);
+    disassembleBinutils(refResult);
 
     // Run the reference CPU (and the Musashi disassembler)
     runReference(s, refResult);
     // Moira is configured without address error emulation (MOIRA_EMULATE_ADDRESS_ERROR)
-    if (useUAE && (uaecpu::lastException() == 3) && !MOIRA_EMULATE_ADDRESS_ERROR) return;
+    if (useUAE && (lastExceptionUAE() == 3) && !MOIRA_EMULATE_ADDRESS_ERROR) return;
     refclk[0] += refResult.elapsed[0];
     refclk[1] += refResult.elapsed[1];
 
@@ -552,38 +446,11 @@ void runSingleTest(Setup &s, u16 op, u16 ext)
     runSingleTest(s, op);
 }
 
-void runBinutils(Setup &s, Result &r)
-{
-    memcpy(mi.bytes, moiraMem, sizeof(mi.bytes));
-    mi.len = 0x10000;
-
-    di.stream = (FILE*)r.dasmBinutils;
-    r.dasmBinutils[0] = 0;
-    r.dasmCntBinutils = print_insn_m68k(pc, &di);
-}
-
-// Disassembles the instruction with Musashi's disassembler and executes it on the
-// reference CPU (Musashi or, if selected, UAE)
+// Disassembles the instruction with Musashi's disassembler (the reference for disassembly in
+// both modes) and executes it on the reference CPU (Musashi or, if selected, UAE)
 void runReference(Setup &s, Result &r)
 {
-    r.oldpc = m68k_get_reg(NULL, M68K_REG_PC);
-    r.opcode = get16(refMem, r.oldpc);
-    r.elapsed[0] = r.elapsed[1] = 0;
-
-    // Run the Musashi disassembler (used in both modes, because it is the reference for disassembly)
-    auto type =
-    cpuModel == Model::M68000   ? M68K_CPU_TYPE_68000 :
-    cpuModel == Model::M68010   ? M68K_CPU_TYPE_68010 :
-    cpuModel == Model::M68EC020 ? M68K_CPU_TYPE_68EC020 :
-    cpuModel == Model::M68020   ? M68K_CPU_TYPE_68020 :
-    cpuModel == Model::M68EC030 ? M68K_CPU_TYPE_68EC030 :
-    cpuModel == Model::M68030   ? M68K_CPU_TYPE_68030 :
-    cpuModel == Model::M68EC040 ? M68K_CPU_TYPE_68EC040 :
-    cpuModel == Model::M68LC040 ? M68K_CPU_TYPE_68LC040 : M68K_CPU_TYPE_68040;
-
-    clock_t elapsed = clock();
-    r.dasmCntMusashi = m68k_disassemble(r.dasmMusashi, s.pc, type);
-    r.elapsed[1] = clock() - elapsed;
+    disassembleMusashi(s, r);
 
     if (VERBOSE) {
         printf("$%04x ($%04x): %s (Musashi)\n", r.oldpc, r.opcode, r.dasmMusashi);
@@ -592,20 +459,12 @@ void runReference(Setup &s, Result &r)
     // Run UAE's disassembler
     r.dasmUAE[0] = 0;
     r.dasmCntUAE = 0;
-    if (useUAE) r.dasmCntUAE = uaecpu::disassemble(s.pc, r.dasmUAE, sizeof(r.dasmUAE));
+    if (useUAE) disassembleUAE(s, r);
 
     // Run the reference CPU
     if (doExec(r.opcode)) {
 
-        if (useUAE) {
-            runUAE(s, r);
-            return;
-        }
-        clock_t elapsed = clock();
-        r.cycles = m68k_execute(1);
-        r.elapsed[0] = clock() - elapsed;
-
-        recordMusashiRegisters(r);
+        if (useUAE) executeUAE(s, r); else executeMusashi(r);
     }
 }
 
@@ -822,25 +681,6 @@ bool skip(u16 op)
     }
 
     return result;
-}
-
-void recordMusashiRegisters(Result &r)
-{
-    r.pc = m68k_get_reg(NULL, M68K_REG_PC);
-    r.sr = (u16)m68k_get_reg(NULL, M68K_REG_SR);
-    r.usp = m68k_get_reg(NULL, M68K_REG_USP);
-    r.isp = m68k_get_reg(NULL, M68K_REG_ISP);
-    r.msp = m68k_get_reg(NULL, M68K_REG_MSP);
-    r.fc = musashiFC;
-    r.vbr = m68k_get_reg(NULL, M68K_REG_VBR);
-    r.sfc = m68k_get_reg(NULL, M68K_REG_SFC);
-    r.dfc = m68k_get_reg(NULL, M68K_REG_DFC);
-    r.cacr = m68k_get_reg(NULL, M68K_REG_CACR);
-    r.caar = m68k_get_reg(NULL, M68K_REG_CAAR);
-    for (int i = 0; i < 8; i++) {
-        r.d[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_D0 + i));
-        r.a[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_A0 + i));
-    }
 }
 
 void recordMoiraRegisters(Result &r)

@@ -51,3 +51,13 @@ void setupBinutils(moira::Model model)
         dinfo->fprintf_func(dinfo->stream, "%u", addr);
     };
 }
+
+void disassembleBinutils(runner::Result &r)
+{
+    memcpy(mi.bytes, moiraMem, sizeof(mi.bytes));
+    mi.len = 0x10000;
+
+    di.stream = (FILE*)r.dasmBinutils;
+    r.dasmBinutils[0] = 0;
+    r.dasmCntBinutils = print_insn_m68k(runner::pc, &di);
+}
