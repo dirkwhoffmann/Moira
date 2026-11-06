@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "MoiraTypes.h"
 #include "Sandbox.h"
 #include "Randomizer.h"
 #include "config.h"
@@ -38,7 +39,11 @@ extern disassemble_info di;
 
 // Size of the buffer that receives the disassembly of the binutils disassembler
 static const size_t BINUTILS_BUFFER_SIZE = 128;
-int binutilsFprintf(FILE* f, const char* format, ...);
+
+// Initializes the reference libraries for a CPU model (implemented in the glue layer)
+void setupBinutils(moira::Model model);
+void setupMusashi(moira::Model model);
+void setupUAE(moira::Model model);
 
 extern Sandbox sandbox;
 extern Randomizer randomizer;

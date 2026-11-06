@@ -109,9 +109,6 @@ std::optional<Model> parseModel(const char *name);
 void selectModel(Model model);
 const char *selectedModel();
 
-void setupBinutils();
-void setupUAE();
-void setupMusashi();
 void setupMoira();
 
 void setupTestEnvironment(Setup &s, long round);

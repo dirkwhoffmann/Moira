@@ -70,3 +70,21 @@ extern "C" void my_fc_handler(unsigned int fc)
 
 extern "C" int read_sp_on_reset(void) { return 0x2000; }
 extern "C" int read_pc_on_reset(void) { return 0x1000; }
+
+void setupMusashi(moira::Model model)
+{
+    m68k_init();
+
+    switch (model) {
+
+        case moira::Model::M68000:    m68k_set_cpu_type(M68K_CPU_TYPE_68000);     break;
+        case moira::Model::M68010:    m68k_set_cpu_type(M68K_CPU_TYPE_68010);     break;
+        case moira::Model::M68EC020:  m68k_set_cpu_type(M68K_CPU_TYPE_68EC020);   break;
+        case moira::Model::M68020:    m68k_set_cpu_type(M68K_CPU_TYPE_68020);     break;
+        case moira::Model::M68EC030:  m68k_set_cpu_type(M68K_CPU_TYPE_68EC030);   break;
+        case moira::Model::M68030:    m68k_set_cpu_type(M68K_CPU_TYPE_68030);     break;
+        case moira::Model::M68EC040:  m68k_set_cpu_type(M68K_CPU_TYPE_68EC040);   break;
+        case moira::Model::M68LC040:  m68k_set_cpu_type(M68K_CPU_TYPE_68LC040);   break;
+        case moira::Model::M68040:    m68k_set_cpu_type(M68K_CPU_TYPE_68040);     break;
+    }
+}

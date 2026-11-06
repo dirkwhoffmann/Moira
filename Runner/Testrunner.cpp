@@ -10,7 +10,6 @@
 #include "config.h"
 #include "Testrunner.h"
 #include <cstdio>
-#include <cstdarg>
 #include <ctime>
 #include <string>
 #include <strings.h>
@@ -31,20 +30,7 @@ TestCPU *moiracpu;
 Model cpuModel = Model::M68000;
 u16 opcode = 0;
 
-void selectModel(Model model)
-{
-    cpuModel = model;
-
-    setupMusashi();
-    if (useUAE) setupUAE();
-    sandbox.checkCycles = (compat != Compatibility::MUSASHI) && (!useUAE || cpuModel == Model::M68000);
-    sandbox.addrMask = (cpuModel == Model::M68EC020) ? 0xFFFFFF : 0xFFFFFFFF;
-    sandbox.byteGranular = useUAE && cpuModel != Model::M68000 && cpuModel != Model::M68010;
-    setupBinutils();
-    setupMoira();
-}
-
-const char *reference()
+static const char *reference()
 {
     switch (compat) {
 
@@ -96,34 +82,17 @@ const char *selectedModel()
     return modelName(cpuModel);
 }
 
-void setupBinutils()
+void selectModel(Model model)
 {
-    switch (cpuModel) {
+    cpuModel = model;
 
-        case Model::M68000:    di.mach = MACH_68000; break;
-        case Model::M68010:    di.mach = MACH_68010; break;
-        case Model::M68EC020:  // Not supported by binutils
-        case Model::M68020:    di.mach = MACH_68020; break;
-        case Model::M68EC030:  // Not supported by binutils
-        case Model::M68030:    di.mach = MACH_68030; break;
-        case Model::M68EC040:  // Not supported by binutils
-        case Model::M68LC040:  // Not supported by binutils
-        case Model::M68040:    di.mach = MACH_68040; break;
-    }
-
-    // di.stream = binutilsStream;
-    di.caller_private = &mi;
-    di.memory_error_func = [](int, bfd_vma, struct disassemble_info*) {};
-    di.read_memory_func = [](bfd_vma memaddr, bfd_byte* myaddr, unsigned int length, struct disassemble_info* dinfo) -> int {
-        meminfo* mi = static_cast<meminfo*>(dinfo->caller_private);
-        while (length--)
-            *myaddr++ = memaddr < mi->len ? mi->bytes[memaddr++] : 0;
-        return 0; // return <> 0 to indicate error
-    };
-    di.fprintf_func = &binutilsFprintf;
-    di.print_address_func = [](bfd_vma addr, struct disassemble_info* dinfo) {
-        dinfo->fprintf_func(dinfo->stream, "%u", addr);
-    };
+    setupMusashi(cpuModel);
+    if (useUAE) setupUAE(cpuModel);
+    sandbox.checkCycles = useUAE && cpuModel == Model::M68000;
+    sandbox.addrMask = (cpuModel == Model::M68EC020) ? 0xFFFFFF : 0xFFFFFFFF;
+    sandbox.byteGranular = useUAE && cpuModel != Model::M68000 && cpuModel != Model::M68010;
+    setupBinutils(cpuModel);
+    setupMoira();
 }
 
 //
@@ -132,28 +101,6 @@ void setupBinutils()
 
 
 static uaecpu::State uaeState;
-
-static void uaeWrite(int size, u32 addr, u32 value, u32 fc, u64 cycle)
-{
-    if (CHECK_MEM_WRITES)
-        sandbox.record(size == 1 ? POKE8 : POKE16, addr, cycle, fc, size == 1 ? u8(value) : u16(value));
-}
-
-void setupUAE()
-{
-    using uaecpu::Cpu;
-    Cpu model =
-    cpuModel == Model::M68000   ? Cpu::M68000 :
-    cpuModel == Model::M68010   ? Cpu::M68010 :
-    cpuModel == Model::M68EC020 ? Cpu::M68EC020 :
-    cpuModel == Model::M68020   ? Cpu::M68020 :
-    cpuModel == Model::M68EC030 ? Cpu::M68EC030 :
-    cpuModel == Model::M68030   ? Cpu::M68030 :
-    cpuModel == Model::M68EC040 ? Cpu::M68EC040 :
-    cpuModel == Model::M68LC040 ? Cpu::M68LC040 : Cpu::M68040;
-
-    uaecpu::init(model, refMem, uaeWrite);
-}
 
 static void runUAE(Setup &s, Result &r)
 {
@@ -202,24 +149,6 @@ static void runUAE(Setup &s, Result &r)
     r.a[7] = uaeState.a7;
 }
 
-
-void setupMusashi()
-{
-    m68k_init();
-
-    switch (cpuModel) {
-
-        case Model::M68000:    m68k_set_cpu_type(M68K_CPU_TYPE_68000);     break;
-        case Model::M68010:    m68k_set_cpu_type(M68K_CPU_TYPE_68010);     break;
-        case Model::M68EC020:  m68k_set_cpu_type(M68K_CPU_TYPE_68EC020);   break;
-        case Model::M68020:    m68k_set_cpu_type(M68K_CPU_TYPE_68020);     break;
-        case Model::M68EC030:  m68k_set_cpu_type(M68K_CPU_TYPE_68EC030);   break;
-        case Model::M68030:    m68k_set_cpu_type(M68K_CPU_TYPE_68030);     break;
-        case Model::M68EC040:  m68k_set_cpu_type(M68K_CPU_TYPE_68EC040);   break;
-        case Model::M68LC040:  m68k_set_cpu_type(M68K_CPU_TYPE_68LC040);   break;
-        case Model::M68040:    m68k_set_cpu_type(M68K_CPU_TYPE_68040);     break;
-    }
-}
 
 void setupMoira()
 {

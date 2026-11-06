@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		50E1000000000000000000F6 /* uae.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E1000000000000000000F5 /* uae.cpp */; };
+		50E1000000000000000000F7 /* uae.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E1000000000000000000F5 /* uae.cpp */; };
 		5028B10A288D9EC000047C20 /* musashi_softfloat.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B103288D9EC000047C20 /* musashi_softfloat.c */; };
 		5028B10E288D9ECD00047C20 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B10D288D9ECD00047C20 /* m68kops.c */; };
 		5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B114288D9EDC00047C20 /* m68kdasm.c */; };
@@ -250,6 +252,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		50E1000000000000000000F5 /* uae.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = uae.cpp; sourceTree = "<group>"; };
 		08C7A9B1140D45BEA6DAD5A6 /* MoiraCache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraCache.h; sourceTree = "<group>"; };
 		1654296120AA412377E9642D /* MoiraCore68020.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraCore68020.cpp; sourceTree = "<group>"; };
 		38037577E0C9EA87178FAF59 /* MoiraCore_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraCore_cpp.h; sourceTree = "<group>"; };
@@ -864,6 +867,7 @@
 		505A81ED309A2F2A00E2E307 /* UAEGlue */ = {
 			isa = PBXGroup;
 			children = (
+				50E1000000000000000000F5 /* uae.cpp */,
 				505A81E6309A2F2A00E2E307 /* shim */,
 				505A81E7309A2F2A00E2E307 /* UAECpu.h */,
 				505A81E8309A2F2A00E2E307 /* UAECpu.cpp */,
@@ -1139,6 +1143,7 @@
 				5028B11C288D9EDC00047C20 /* m68kcpu.c in Sources */,
 				505580EC23AFA14D0009F77F /* musashi.cpp in Sources */,
 				50E1000000000000000000F3 /* binutils.cpp in Sources */,
+				50E1000000000000000000F6 /* uae.cpp in Sources */,
 				50804EE22386A72C004D3EC2 /* main.cpp in Sources */,
 				50CECEC723A924B000E07C65 /* Sandbox.cpp in Sources */,
 				50C0123B28BBAD9B001EFB37 /* m68k-opc.c in Sources */,
@@ -1346,6 +1351,7 @@
 				50D100000000000000000005 /* m68kcpu.c in Sources */,
 				50D100000000000000000006 /* musashi.cpp in Sources */,
 				50E1000000000000000000F4 /* binutils.cpp in Sources */,
+				50E1000000000000000000F7 /* uae.cpp in Sources */,
 				50D100000000000000000007 /* main.cpp in Sources */,
 				50D100000000000000000008 /* Sandbox.cpp in Sources */,
 				50D100000000000000000009 /* m68k-opc.c in Sources */,
