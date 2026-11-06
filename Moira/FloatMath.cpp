@@ -723,6 +723,11 @@ tanh_(SoftFloat &sf, const Float80 &x)
     W e = expm1W(scale(abs(fromFloat80(x)), 1));
     W r = e / (e + two());
     r.neg = x.sign();
+
+    // For large arguments, the quotient rounds to 1, but the exact result is slightly smaller.
+    // Use the closest value below 1 to let the rounding mode take effect.
+    if (r.e == one().e && r.m == one().m) { r.e -= 1; r.m = ~u128(0); }
+
     return finish(sf, r);
 }
 

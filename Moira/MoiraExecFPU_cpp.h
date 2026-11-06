@@ -806,6 +806,11 @@ Moira::execFMove(u16 opcode)
                 // (FMOVEM, in contrast, transfers the register contents unchanged)
                 if (format == FpuFormat::EXTENDED) {
                     if (auto nan = fpu.resolveNan(value)) value = *nan;
+
+                    // UAE reports an underflow if a denormal number is moved out
+                    if constexpr (compat == Compatibility::UAE) {
+                        if (value.isDenormal()) fpu.setExcStatusBit(FPEXP::UNFL);
+                    }
                 }
 
                 writeFpuOp<C, M>(reg, value, format, k);
@@ -1146,10 +1151,11 @@ Moira::execFGeneric(u16 opcode)
         // FSGLMUL and FSGLDIV round to single precision by themselves and keep the extended exponent
         // range. Rounding to the FPCR precision again would clamp the exponent (e.g. in double mode).
         // FINT, FINTRZ, FGETEXP and FGETMAN produce exact results that are not rounded to the FPCR
-        // precision (this matches UAE).
+        // precision (this matches UAE). The same applies to FREM, which returns a destination smaller
+        // than half the source unchanged and rounds all other results by itself.
         if constexpr (I == Instr::FSGLMUL || I == Instr::FSGLDIV ||
                       I == Instr::FINT || I == Instr::FINTRZ ||
-                      I == Instr::FGETEXP || I == Instr::FGETMAN) {
+                      I == Instr::FGETEXP || I == Instr::FGETMAN || I == Instr::FREM) {
             d = result;
         } else {
             d = fpu.round(result);

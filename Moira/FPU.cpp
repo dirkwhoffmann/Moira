@@ -679,6 +679,26 @@ FPU::fsgldiv(const Float80 &dst_, const Float80 &src_)
     return singleOverflow(sf, invoke(sf, [&] { return dst / src; }));
 }
 
+// UAE builds a zero remainder by normalizing a zero significand, which drags the exponent
+// down by 128. It raises UNFL if the exponent leaves the range of the rounding precision.
+static bool uaeZeroRemainderUnderflows(const Float80 &dst, const Float80 &src, Precision precision)
+{
+    // Exponents are normalized if the operand is a denormal number
+    auto exponent = [](const Float80 &v) {
+        return v.biasedExponent() ? int(v.biasedExponent()) : 1 - __builtin_clzll(v.mantissa());
+    };
+    int bExp = exponent(src);
+    int diff = std::max(exponent(dst) - bExp, 0);
+
+    // Mimic the quotient loops of the reference
+    diff -= 64;
+    while (diff > 0) diff -= 62;
+    diff += 64;
+
+    int limit = precision == Precision::SINGLE ? 0x3F81 : precision == Precision::DOUBLE ? 0x3C01 : 0;
+    return bExp + diff - 128 < limit;
+}
+
 Float80
 FPU::fmod(const Float80 &dst_, const Float80 &src_)
 {
@@ -690,13 +710,27 @@ FPU::fmod(const Float80 &dst_, const Float80 &src_)
     if (dst.isInfinite() || src.isZero()) return invokeExact(sf, [&] { return dst.rem(src); });
 
     bool negative = dst.sign() != src.sign();
-    if (src.isInfinite() || dst.isZero()) { setQuotientByte(0, negative); return dst.rounded(); }
+    if (src.isInfinite() || dst.isZero()) {
+
+        setQuotientByte(0, negative);
+
+        // UAE normalizes a zero destination for an infinite source, which raises UNFL
+        if constexpr (compat == Compatibility::UAE) {
+            if (src.isInfinite() && dst.isZero()) sf.raiseFlags(FloatFlags::UNFL);
+        }
+        return dst.rounded();
+    }
 
     // The remainder is computed exactly and then rounded like any other result
     auto d = divide(dst, src);
     setQuotientByte(u8(d.quotient & 0x7F), negative);
 
-    return remainder(sf, d, dst.sign());
+    auto result = remainder(sf, d, dst.sign());
+
+    if constexpr (compat == Compatibility::UAE) {
+        if (result.isZero() && uaeZeroRemainderUnderflows(dst, src, getPrecision())) sf.raiseFlags(FloatFlags::UNFL);
+    }
+    return result;
 }
 
 Float80
@@ -709,7 +743,16 @@ FPU::frem(const Float80 &dst_, const Float80 &src_)
     if (dst.isInfinite() || src.isZero()) return invokeExact(sf, [&] { return dst.rem(src); });
 
     bool negative = dst.sign() != src.sign();
-    if (src.isInfinite() || dst.isZero()) { setQuotientByte(0, negative); return dst.rounded(); }
+    if (src.isInfinite() || dst.isZero()) {
+
+        setQuotientByte(0, negative);
+
+        // UAE normalizes a zero destination for an infinite source, which raises UNFL
+        if constexpr (compat == Compatibility::UAE) {
+            if (src.isInfinite() && dst.isZero()) sf.raiseFlags(FloatFlags::UNFL);
+        }
+        return dst.rounded();
+    }
 
     auto d = divide(dst, src);
     bool sign = dst.sign();
@@ -726,7 +769,12 @@ FPU::frem(const Float80 &dst_, const Float80 &src_)
     // A destination smaller than half the source is returned unrounded
     if (d.small) return dst;
 
-    return remainder(sf, d, sign);
+    auto result = remainder(sf, d, sign);
+
+    if constexpr (compat == Compatibility::UAE) {
+        if (result.isZero() && uaeZeroRemainderUnderflows(dst, src, getPrecision())) sf.raiseFlags(FloatFlags::UNFL);
+    }
+    return result;
 }
 
 void
@@ -734,6 +782,14 @@ FPU::fcmp(const Float80 &dst_, const Float80 &src_)
 {
     Float80 dst = dst_.in(sf);
     Float80 src = src_.in(sf);
+
+    // UAE: Only the 68040 keeps the sign of a NaN (the N flag is set for a negative NaN)
+    if constexpr ((compat == Compatibility::UAE)) {
+        if (model != FPUModel::INTERNAL) {
+            if (dst.isNaN()) dst = dst.abs();
+            if (src.isNaN()) src = src.abs();
+        }
+    }
     if (auto nan = resolveNan(dst, src)) { setConditionCodes(*nan); return; }
 
     if constexpr ((compat == Compatibility::UAE)) {
