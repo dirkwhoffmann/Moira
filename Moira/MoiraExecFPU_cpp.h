@@ -800,13 +800,10 @@ Moira::execFMove(u16 opcode)
 
                 auto value = fpu.fpr[dst];
 
-                // A signaling NaN is reported and converted to a non-signaling NaN
+                // Signaling NaNs and denormal numbers are reported and converted
                 // (FMOVEM, in contrast, transfers the register contents unchanged)
                 if (format == FpuFormat::EXTENDED) {
-                    if (auto nan = fpu.resolveNan(value)) value = *nan;
-
-                    // Moving out a denormal number reports an underflow
-                    if (value.isDenormal()) fpu.setExcStatusBit(FPEXP::UNFL);
+                    value = fpu.moveOutExtended(value);
                 }
 
                 writeFpuOp<C, M>(reg, value, format, k);

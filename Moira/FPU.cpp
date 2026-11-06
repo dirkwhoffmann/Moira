@@ -345,6 +345,45 @@ FPU::resolveNan(const Float80 &op)
 }
 
 Float80
+FPU::moveOutExtended(const Float80 &value_)
+{
+    Float80 value = value_.in(sf);
+    if (auto nan = resolveNan(value)) return *nan;
+    if (value.biasedExponent() != 0 || value.mantissa() == 0) return value;
+
+    // The value is a denormal number
+    sf.raiseFlags(FloatFlags::UNFL);
+    bool sign = value.sign();
+    u16 signBit = sign ? 0x8000 : 0;
+
+    auto precision = sf.precision();
+    if (precision == Precision::EXTENDED) {
+
+        // No bits get lost (a pseudo denormal number becomes a normalized number)
+        return Float80::fromBits(u16(signBit | (value.mantissa() >> 63)), value.mantissa());
+    }
+
+    /* The exponent of a denormal number is far below the range of the selected
+     * precision. Only a sticky bit remains, which is rounded according to the
+     * rounding mode. The result carries the smallest exponent of the format.
+     */
+    bool single = precision == Precision::SINGLE;
+    u64 mask = single ? 0xFFFFFFFFFFULL : 0x7FFULL;
+    u16 exponent = single ? 0x3F81 : 0x3C01;
+
+    u64 increment;
+    switch (sf.roundingMode()) {
+
+        case RoundingMode::NEAREST: increment = (mask + 1) >> 1; break;
+        case RoundingMode::ZERO:    increment = 0; break;
+        case RoundingMode::DOWN:    increment = sign ? mask : 0; break;
+        default:                    increment = sign ? 0 : mask; break;
+    }
+    sf.raiseFlags(FloatFlags::INEXACT);
+    return Float80::fromBits(u16(signBit | exponent), (1 + increment) & ~mask);
+}
+
+Float80
 FPU::fabs(const Float80 &value_)
 {
     Float80 value = value_.in(sf);
@@ -783,6 +822,20 @@ FPU::fcmp(const Float80 &dst_, const Float80 &src_)
         if (src.isNaN()) src = src.abs();
     }
     if (auto nan = resolveNan(dst, src)) { setConditionCodes(*nan); return; }
+
+    // Unnormal operands are normalized first (as far as the exponent allows)
+    auto normalize = [](const Float80 &v) {
+
+        u16 exp = v.biasedExponent();
+        u64 man = v.mantissa();
+        if (exp == 0 || exp == 0x7FFF) return v;
+        if (man == 0) return Float80::zero(v.sign());
+
+        int shift = std::min<int>(std::countl_zero(man), exp);
+        return Float80::fromBits(u16((v.sign() ? 0x8000 : 0) | (exp - shift)), man << shift);
+    };
+    dst = normalize(dst);
+    src = normalize(src);
 
     /* The difference isn't computed. The operands' exponents and significands are
      * compared instead, which produces +-1 or +-0. Hence, the I flag is never set

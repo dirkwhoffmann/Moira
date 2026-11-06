@@ -277,6 +277,11 @@ public:
     std::optional<Float80> resolveNan(const Float80 &op1, const Float80 &op2);
     std::optional<Float80> resolveNan(const Float80 &op);
 
+    // Prepares a register value for FMOVE FPn,<ea> in extended format. A signaling NaN is
+    // reported and quieted. A denormal number is reported as tiny and rounded to the
+    // precision in effect.
+    Float80 moveOutExtended(const Float80 &value);
+
     // Monadic operations
     Float80 fabs(const Float80 &value);
     Float80 fneg(const Float80 &value);
