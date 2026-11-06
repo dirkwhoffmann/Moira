@@ -800,7 +800,15 @@ Moira::execFMove(u16 opcode)
                     k = i8(k | (k & 0x40) << 1);
                 }
 
-                writeFpuOp<C, M>(reg, fpu.fpr[dst], format, k);
+                auto value = fpu.fpr[dst];
+
+                // A signaling NaN is reported and converted to a non-signaling NaN
+                // (FMOVEM, in contrast, transfers the register contents unchanged)
+                if (format == FpuFormat::EXTENDED) {
+                    if (auto nan = fpu.resolveNan(value)) value = *nan;
+                }
+
+                writeFpuOp<C, M>(reg, value, format, k);
                 break;
             }
         }
