@@ -48,7 +48,7 @@ void setupTestEnvironment(Setup &s, long round);
 void setupFpuEnvironment(Setup &s);
 void setupTestInstruction(Setup &s, u32 pc, u16 opcode);
 
-void resetMoira(Setup &s, bool fpu = false);
+void resetMoira(Setup &s);
 
 
 //
@@ -80,8 +80,6 @@ bool isIllegalOpcode(u16 op);
 //
 
 void recordMoiraRegisters(Result &r);
-void recordRefFpu(Result &r);
-void recordMoiraFpu(Result &r);
 
 void compare(Setup &s, Result &rRef, Result &rMoira);
 bool compareDasm(Result &rRef, Result &rMoira);

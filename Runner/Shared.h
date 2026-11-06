@@ -156,14 +156,12 @@ const u32 pc = 0x1000;
 void disassembleBinutils(runner::Result &r);
 
 // Musashi
-void resetMusashi(const runner::Setup &s, bool fpu = false);
+void resetMusashi(const runner::Setup &s);
 void disassembleMusashi(const runner::Setup &s, runner::Result &r);
 void executeMusashi(runner::Result &r);
-void recordMusashiFpu(runner::Result &r);
 
 // UAE
 void disassembleUAE(const runner::Setup &s, runner::Result &r);
-void resetUAE(const runner::Setup &s, bool fpu = false);
+void resetUAE(const runner::Setup &s);
 void executeUAE(runner::Result &r);
-void recordUAEFpu(runner::Result &r);
 int lastExceptionUAE();

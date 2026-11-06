@@ -93,7 +93,7 @@ void setupMusashi(moira::Model model)
     m68k_set_cpu_type(musashiType);
 }
 
-void resetMusashi(const runner::Setup &s, bool fpu)
+void resetMusashi(const runner::Setup &s)
 {
     m68k_set_reg(M68K_REG_USP, 0);
     m68k_set_reg(M68K_REG_ISP, 0);
@@ -115,15 +115,13 @@ void resetMusashi(const runner::Setup &s, bool fpu)
     m68ki_set_ccr(s.ccr);
     s.supervisor ? m68ki_set_sm_flag(SFLAG_SET) : m68ki_set_sm_flag(SFLAG_CLEAR);
 
-    if (fpu) {
-        for (int i = 0; i < 8; i++) {
-            REG_FP[i].high = s.fpr[i].signExp();
-            REG_FP[i].low = s.fpr[i].mantissa();
-        }
-        REG_FPCR = s.fpcr;
-        REG_FPSR = s.fpsr;
-        REG_FPIAR = s.fpiar;
+    for (int i = 0; i < 8; i++) {
+        REG_FP[i].high = s.fpr[i].signExp();
+        REG_FP[i].low = s.fpr[i].mantissa();
     }
+    REG_FPCR = s.fpcr;
+    REG_FPSR = s.fpsr;
+    REG_FPIAR = s.fpiar;
 }
 
 void disassembleMusashi(const runner::Setup &s, runner::Result &r)
@@ -154,10 +152,7 @@ void executeMusashi(runner::Result &r)
         r.d[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_D0 + i));
         r.a[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_A0 + i));
     }
-}
 
-void recordMusashiFpu(runner::Result &r)
-{
     for (int i = 0; i < 8; i++) {
         r.fpr[i] = moira::Float80::fromBits(REG_FP[i].high, REG_FP[i].low);
     }
@@ -165,3 +160,4 @@ void recordMusashiFpu(runner::Result &r)
     r.fpsr = REG_FPSR;
     r.fpiar = REG_FPIAR;
 }
+

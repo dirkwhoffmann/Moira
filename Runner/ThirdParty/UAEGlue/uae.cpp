@@ -43,7 +43,7 @@ void disassembleUAE(const runner::Setup &s, runner::Result &r)
     r.elapsed[1] = clock() - elapsed;
 }
 
-void resetUAE(const runner::Setup &s, bool fpu)
+void resetUAE(const runner::Setup &s)
 {
     uaecpu::State st;
 
@@ -60,13 +60,11 @@ void resetUAE(const runner::Setup &s, bool fpu)
     st.cacr = s.cacr;
     st.caar = s.caar;
 
-    if (fpu) {
-        for (int i = 0; i < 8; i++) st.fpse[i] = s.fpr[i].signExp();
-        for (int i = 0; i < 8; i++) st.fpman[i] = s.fpr[i].mantissa();
-        st.fpcr = s.fpcr;
-        st.fpsr = s.fpsr;
-        st.fpiar = s.fpiar;
-    }
+    for (int i = 0; i < 8; i++) st.fpse[i] = s.fpr[i].signExp();
+    for (int i = 0; i < 8; i++) st.fpman[i] = s.fpr[i].mantissa();
+    st.fpcr = s.fpcr;
+    st.fpsr = s.fpsr;
+    st.fpiar = s.fpiar;
 
     uaecpu::setState(st);
 }
@@ -93,10 +91,7 @@ void executeUAE(runner::Result &r)
     for (int i = 0; i < 8; i++) r.d[i] = uaeState.d[i];
     for (int i = 0; i < 7; i++) r.a[i] = uaeState.a[i];
     r.a[7] = uaeState.a7;
-}
 
-void recordUAEFpu(runner::Result &r)
-{
     for (int i = 0; i < 8; i++) r.fpr[i] = moira::Float80::fromBits(uaeState.fpse[i], uaeState.fpman[i]);
     r.fpcr = uaeState.fpcr;
     r.fpsr = uaeState.fpsr;

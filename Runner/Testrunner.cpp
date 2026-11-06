@@ -166,7 +166,7 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
     memcpy(moiraMem, s.mem, sizeof(moiraMem));
 }
 
-void resetMoira(Setup &s, bool fpu)
+void resetMoira(Setup &s)
 {
     moiracpu->reset();
     moiracpu->setClock(0);
@@ -185,32 +185,10 @@ void resetMoira(Setup &s, bool fpu)
     moiracpu->setCAAR(s.caar);
     moiracpu->setSupervisorMode(s.supervisor);
 
-    if (fpu) {
-        for (int i = 0; i < 8; i++) moiracpu->fpu.fpr[i] = s.fpr[i];
-        moiracpu->fpu.setFPCR(s.fpcr);
-        moiracpu->fpu.setFPSR(s.fpsr);
-        moiracpu->fpu.setFPIAR(s.fpiar);
-    }
-}
-
-void recordRefFpu(Result &r)
-{
-    switch (compat) {
-
-        case Compatibility::MUSASHI: recordMusashiFpu(r); break;
-        case Compatibility::UAE:     recordUAEFpu(r); break;
-    
-        default:
-            assert(false);
-    }
-}
-
-void recordMoiraFpu(Result &r)
-{
-    for (int i = 0; i < 8; i++) r.fpr[i] = moiracpu->fpu.fpr[i];
-    r.fpcr = moiracpu->fpu.getFPCR();
-    r.fpsr = moiracpu->fpu.getFPSR();
-    r.fpiar = moiracpu->fpu.getFPIAR();
+    for (int i = 0; i < 8; i++) moiracpu->fpu.fpr[i] = s.fpr[i];
+    moiracpu->fpu.setFPCR(s.fpcr);
+    moiracpu->fpu.setFPSR(s.fpsr);
+    moiracpu->fpu.setFPIAR(s.fpiar);
 }
 
 void run(unsigned seed, long rounds, const std::vector<Model> &models)
@@ -415,9 +393,9 @@ void runSingleTest(Setup &s, u16 op)
     sandbox.prepare(enable, ignore);
 
     // Reset all CPUs
-    if (useMusashi) resetMusashi(s, fpu);
-    if (useUAE) resetUAE(s, fpu);
-    resetMoira(s, fpu);
+    if (useMusashi) resetMusashi(s);
+    if (useUAE) resetUAE(s);
+    resetMoira(s);
 
     // Run the binutils disassembler
     disassembleBinutils(refResult);
@@ -439,10 +417,6 @@ void runSingleTest(Setup &s, u16 op)
     moiraclk[1] += moiraResult.elapsed[1];
 
     // Compare
-    if (fpu) {
-        recordRefFpu(refResult);
-        recordMoiraFpu(moiraResult);
-    }
     compare(s, refResult, moiraResult);
 }
 
@@ -723,6 +697,11 @@ void recordMoiraRegisters(Result &r)
     r.caar = moiracpu->getCAAR();
     for (int i = 0; i < 8; i++) r.d[i] = moiracpu->getD(i);
     for (int i = 0; i < 8; i++) r.a[i] = moiracpu->getA(i);
+
+    for (int i = 0; i < 8; i++) r.fpr[i] = moiracpu->fpu.fpr[i];
+    r.fpcr = moiracpu->fpu.getFPCR();
+    r.fpsr = moiracpu->fpu.getFPSR();
+    r.fpiar = moiracpu->fpu.getFPIAR();
 }
 
 void dumpSetup(Setup &s)
