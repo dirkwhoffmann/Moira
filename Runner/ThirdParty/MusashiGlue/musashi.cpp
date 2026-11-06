@@ -93,7 +93,7 @@ void setupMusashi(moira::Model model)
     m68k_set_cpu_type(musashiType);
 }
 
-void resetMusashi(const runner::Setup &s)
+void resetMusashi(const runner::Setup &s, bool fpu)
 {
     m68k_set_reg(M68K_REG_USP, 0);
     m68k_set_reg(M68K_REG_ISP, 0);
@@ -114,17 +114,16 @@ void resetMusashi(const runner::Setup &s)
     m68k_set_reg(M68K_REG_CAAR, s.caar);
     m68ki_set_ccr(s.ccr);
     s.supervisor ? m68ki_set_sm_flag(SFLAG_SET) : m68ki_set_sm_flag(SFLAG_CLEAR);
-}
 
-void resetMusashiFpu(const runner::Setup &s)
-{
-    for (int i = 0; i < 8; i++) {
-        REG_FP[i].high = s.fpr[i].signExp();
-        REG_FP[i].low = s.fpr[i].mantissa();
+    if (fpu) {
+        for (int i = 0; i < 8; i++) {
+            REG_FP[i].high = s.fpr[i].signExp();
+            REG_FP[i].low = s.fpr[i].mantissa();
+        }
+        REG_FPCR = s.fpcr;
+        REG_FPSR = s.fpsr;
+        REG_FPIAR = s.fpiar;
     }
-    REG_FPCR = s.fpcr;
-    REG_FPSR = s.fpsr;
-    REG_FPIAR = s.fpiar;
 }
 
 // Also determines the address and opcode of the instruction to execute

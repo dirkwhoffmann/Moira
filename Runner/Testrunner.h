@@ -48,8 +48,7 @@ void setupTestEnvironment(Setup &s, long round);
 void setupFpuEnvironment(Setup &s);
 void setupTestInstruction(Setup &s, u32 pc, u16 opcode);
 
-void resetMoira(Setup &s);
-void resetMoiraFpu(Setup &s);
+void resetMoira(Setup &s, bool fpu = false);
 
 
 //

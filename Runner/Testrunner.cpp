@@ -166,7 +166,7 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
     memcpy(moiraMem, s.mem, sizeof(moiraMem));
 }
 
-void resetMoira(Setup &s)
+void resetMoira(Setup &s, bool fpu)
 {
     moiracpu->reset();
     moiracpu->setClock(0);
@@ -184,14 +184,13 @@ void resetMoira(Setup &s)
     moiracpu->setCACR(s.cacr);
     moiracpu->setCAAR(s.caar);
     moiracpu->setSupervisorMode(s.supervisor);
-}
 
-void resetMoiraFpu(Setup &s)
-{
-    for (int i = 0; i < 8; i++) moiracpu->fpu.fpr[i] = s.fpr[i];
-    moiracpu->fpu.setFPCR(s.fpcr);
-    moiracpu->fpu.setFPSR(s.fpsr);
-    moiracpu->fpu.setFPIAR(s.fpiar);
+    if (fpu) {
+        for (int i = 0; i < 8; i++) moiracpu->fpu.fpr[i] = s.fpr[i];
+        moiracpu->fpu.setFPCR(s.fpcr);
+        moiracpu->fpu.setFPSR(s.fpsr);
+        moiracpu->fpu.setFPIAR(s.fpiar);
+    }
 }
 
 void recordRefFpu(Result &r)
@@ -416,12 +415,9 @@ void runSingleTest(Setup &s, u16 op)
     sandbox.prepare(enable, ignore);
 
     // Reset CPUs
-    resetMusashi(s);
-    resetMoira(s);
-    if (fpu) {
-        resetMusashiFpu(s);
-        resetMoiraFpu(s);
-    }
+    resetMusashi(s, fpu);
+    if (useUAE) resetUAE(s, fpu);
+    resetMoira(s, fpu);
 
     // Run the binutils disassembler
     disassembleBinutils(refResult);
@@ -470,7 +466,7 @@ void runReference(Setup &s, Result &r)
     // Run the reference CPU
     if (doExec(r.opcode)) {
 
-        if (useUAE) executeUAE(s, r); else executeMusashi(r);
+        if (useUAE) executeUAE(r); else executeMusashi(r);
     }
 }
 

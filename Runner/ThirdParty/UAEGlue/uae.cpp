@@ -41,11 +41,9 @@ void disassembleUAE(const runner::Setup &s, runner::Result &r)
     r.dasmCntUAE = uaecpu::disassemble(s.pc, r.dasmUAE, sizeof(r.dasmUAE));
 }
 
-void executeUAE(const runner::Setup &s, runner::Result &r)
+void resetUAE(const runner::Setup &s, bool fpu)
 {
     uaecpu::State st;
-
-    // Setup
 
     for (int i = 0; i < 8; i++) st.d[i] = s.d[i];
     for (int i = 0; i < 7; i++) st.a[i] = s.a[i];
@@ -59,22 +57,24 @@ void executeUAE(const runner::Setup &s, runner::Result &r)
     st.dfc = s.dfc;
     st.cacr = s.cacr;
     st.caar = s.caar;
-    for (int i = 0; i < 8; i++) st.fpse[i] = s.fpr[i].signExp();
-    for (int i = 0; i < 8; i++) st.fpman[i] = s.fpr[i].mantissa();
-    st.fpcr = s.fpcr;
-    st.fpsr = s.fpsr;
-    st.fpiar = s.fpiar;
+
+    if (fpu) {
+        for (int i = 0; i < 8; i++) st.fpse[i] = s.fpr[i].signExp();
+        for (int i = 0; i < 8; i++) st.fpman[i] = s.fpr[i].mantissa();
+        st.fpcr = s.fpcr;
+        st.fpsr = s.fpsr;
+        st.fpiar = s.fpiar;
+    }
 
     uaecpu::setState(st);
+}
 
-    // Run
-
+void executeUAE(runner::Result &r)
+{
     clock_t elapsed = clock();
     uaecpu::step();
     r.elapsed[0] = clock() - elapsed;
     r.cycles = int(uaecpu::cycles());
-
-    // Analyze
 
     uaeState = uaecpu::getState();
     r.pc = uaeState.pc;
