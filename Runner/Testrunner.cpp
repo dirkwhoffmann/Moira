@@ -252,6 +252,14 @@ void resetMoira(Setup &s)
     moiracpu->fpu.setFPCR(s.fpcr);
     moiracpu->fpu.setFPSR(s.fpsr);
     moiracpu->fpu.setFPIAR(s.fpiar);
+
+    moiracpu->mmu.crp = s.crp;
+    moiracpu->mmu.srp = s.srp;
+    moiracpu->mmu.tc = s.tc;
+    moiracpu->mmu.tt0 = s.tt0;
+    moiracpu->mmu.tt1 = s.tt1;
+    moiracpu->mmu.mmusr = s.mmusr;
+    for (auto &e : moiracpu->mmu.atc) e.valid = false;
 }
 
 void run(unsigned seed, long rounds, const std::vector<Model> &cpus, const std::vector<FPUModel> &fpus)
@@ -322,33 +330,6 @@ void runCPU(long round)
 
             // Execute both CPU cores
             runSingleTest(setup, u16(op));
-        }
-    }
-    passed(moiraclk[0], refclk[0]);
-}
-
-void runMMU(long round)
-{
-    if (!moiracpu->hasMMU()) return;
- 
-    static const int MMU_SETUPS = 4;
-    Setup setup;
-    resetClocks();
-
-    printf("%11s MMU : CORE ", selectedModel()); fflush(stdout);
-
-    for (int i = 0; i < MMU_SETUPS; i++) {
-
-        setupTestEnvironment(setup, round * MMU_SETUPS + i);
-
-        for (int op = 0xF000; op <= 0xF03F; op++) {
-
-            if ((op % 8) == 0) { printf("."); fflush(stdout); }
-
-            for (int ext = 0x0000; ext <= 0xFFFF; ext++) {
-
-                runSingleTest(setup, u16(op), u16(ext));
-            }
         }
     }
     passed(moiraclk[0], refclk[0]);
@@ -444,6 +425,48 @@ TranslationSetup randomTranslationSetup()
     return t;
 }
 
+}
+
+static bool mmuCompare = false;
+
+void runMMU(long round)
+{
+    if (!moiracpu->hasMMU()) return;
+
+    // Let UAE execute MMU instructions and compare the MMU registers
+    mmuCompare = useUAE && cpuModel == Model::M68030;
+    if (mmuCompare) enableMMUUAE(true);
+ 
+    static const int MMU_SETUPS = 4;
+    Setup setup;
+    resetClocks();
+
+    printf("%11s MMU : CORE ", selectedModel()); fflush(stdout);
+
+    for (int i = 0; i < MMU_SETUPS; i++) {
+
+        setupTestEnvironment(setup, round * MMU_SETUPS + i);
+
+        // Start with a valid (but disabled) translation setup
+        TranslationSetup t = randomTranslationSetup();
+        setup.tc = t.tc & 0x7FFFFFFF;
+        setup.crp = t.crp;
+        setup.srp = t.srp;
+        setup.tt0 = t.tt0;
+        setup.tt1 = t.tt1;
+
+        for (int op = 0xF000; op <= 0xF03F; op++) {
+
+            if ((op % 8) == 0) { printf("."); fflush(stdout); }
+
+            for (int ext = 0x0000; ext <= 0xFFFF; ext++) {
+
+                runSingleTest(setup, u16(op), u16(ext));
+            }
+        }
+    }
+    if (mmuCompare) { enableMMUUAE(false); mmuCompare = false; }
+    passed(moiraclk[0], refclk[0]);
 }
 
 void runMMUTranslate(long round)
@@ -673,6 +696,13 @@ void runDasmFPU(long round)
     passed(moiraclk[1], refclk[1]);
 }
 
+bool misalignedRead = false;
+
+bool isMmuOpcode(u16 op)
+{
+    return mmuCompare && (op & 0xFFC0) == 0xF000;
+}
+
 bool isFpuOpcode(u16 op)
 {
     return (op & 0xFF00) == 0xF200 && moiracpu != nullptr && moiracpu->fpu.isPresent();
@@ -725,6 +755,14 @@ void setupFpuEnvironment(Setup &s)
     s.fpcr = randomizer.rand() & 0xF0;
     s.fpsr = randomizer.rand() & 0x0F000000;
     s.fpiar = randomizer.rand();
+
+    // MMU registers (translation stays disabled initially)
+    s.crp = u64(randomizer.rand()) << 32 | randomizer.rand();
+    s.srp = u64(randomizer.rand()) << 32 | randomizer.rand();
+    s.tc = randomizer.rand() & 0x7FFFFFFF;
+    s.tt0 = randomizer.rand();
+    s.tt1 = randomizer.rand();
+    s.mmusr = randomizer.rand() & 0xEE47;
 }
 
 void passed(clock_t moira, clock_t ref)
@@ -756,6 +794,7 @@ void runSingleTest(Setup &s, u16 op)
     bool ignore = (info.I == Instr::CLR && info.S == Long) ||
     (info.I == Instr::CHK && cpuModel != Model::M68000);
     sandbox.prepare(enable, ignore);
+    misalignedRead = false;
 
     // Reset all CPUs
     if (useMusashi) resetMusashi(s);
@@ -928,6 +967,9 @@ bool skipAccessCheck(u16 op)
     // FPU opcodes may be legal for one side only (final memory contents are still compared)
     if ((op & 0xFE00) == 0xF200) return true;
 
+    // The same applies to MMU opcodes
+    if (isMmuOpcode(op)) return true;
+
     // N and V are undefined for CHK2, which shows up in the exception frame
     auto instr = moiracpu->getInstrInfo(op).I;
     return instr == Instr::CHK2 || instr == Instr::CMP2;
@@ -1099,6 +1141,13 @@ void recordMoiraRegisters(Result &r)
     r.fpcr = moiracpu->fpu.getFPCR();
     r.fpsr = moiracpu->fpu.getFPSR();
     r.fpiar = moiracpu->fpu.getFPIAR();
+
+    r.crp = moiracpu->mmu.crp;
+    r.srp = moiracpu->mmu.srp;
+    r.tc = moiracpu->mmu.tc;
+    r.tt0 = moiracpu->mmu.tt0;
+    r.tt1 = moiracpu->mmu.tt1;
+    r.mmusr = moiracpu->mmu.mmusr;
 }
 
 void dumpDasm(Setup &s, Result &rRef, Result &rMoira)
@@ -1172,6 +1221,38 @@ bool skipCompare(const Setup &s, const Result &rRef, const Result &rMoira)
     // Cases that can only be recognized by looking at the results
     // FPU opcodes where only one side raises line F (reserved bits set in the opcode or extension word)
     if (useUAE && (s.opcode & 0xFE00) == 0xF200 && ((rRef.pc >> 12) == 1) != ((rMoira.pc >> 12) == 1)) return true;
+
+    // MMU opcodes: Compare only instructions that execute on both sides. Exception handling of
+    // invalid extension words differs (UAE raises a privilege violation for some of them).
+    if (isMmuOpcode(s.opcode)) {
+        auto completed = [](const Result &r) { return r.pc > 0x1000 && r.pc <= 0x1010; };
+        if (!completed(rRef) || !completed(rMoira)) return true;
+
+        // UAE fetches the extension words of indexed addressing modes incorrectly
+        if ((s.opcode >> 3 & 7) == 6) return true;
+
+        // UAE reads misaligned long words incorrectly
+        if (misalignedRead) return true;
+
+        // UAE applies the (An)+ and -(An) side effect to PFLUSH and PLOAD
+        if ((s.opcode >> 3 & 7) == 3 || (s.opcode >> 3 & 7) == 4) return true;
+
+        // PFLUSH without effective address: UAE still skips the extension words of the EA field
+        if ((s.ext1 >> 13) == 1 && ((s.ext1 >> 8 & 31) == 4 || (s.ext1 >> 8 & 31) == 0x10) && (s.opcode & 0x3F) > 0x17) return true;
+
+        // Table walks with translation disabled are meaningless (covered by the XLAT stage)
+        u16 ext = s.ext1, mode = ext >> 8 & 31;
+        if (!(s.tc & 0x80000000) && ((ext >> 13) == 4 || ((ext >> 13) == 1 && (mode == 0 || mode == 2)))) return true;
+
+        // PMOVE to TC with an invalid configuration raises the MMU configuration exception, which Moira doesn't emulate
+        auto invalidTC = [](u32 tc) {
+            if (!(tc & 0x80000000)) return false;
+            int ps = tc >> 20 & 15, is = tc >> 16 & 15, sum = ps + is;
+            for (int i = 12; i >= 0; i -= 4) { int b = tc >> i & 15; if (!b) break; sum += b; }
+            return ps < 8 || sum != 32;
+        };
+        if (invalidTC(rRef.tc)) return true;
+    }
 
     return false;
 }
@@ -1255,6 +1336,10 @@ void compare(Setup &s, Result &rRef, Result &rMoira)
                     error = true;
                 }
             }
+            if (mmuCompare && !compareMMU(rRef, rMoira)) {
+                printf("\nMMU REGISTER MISMATCH FOUND");
+                error = true;
+            }
             if (sandbox.getErrors()) {
                 printf("\nSANDBOX ERRORS REPORTED");
                 error = true;
@@ -1281,6 +1366,17 @@ void compare(Setup &s, Result &rRef, Result &rMoira)
 
         printf("Moira:   ");
         dumpResult(rMoira);
+
+        if (isMmuOpcode(s.opcode)) {
+            printf("CRP:   %016llx / %016llx / %016llx (setup / %s / Moira)\n",
+                   (unsigned long long)s.crp, (unsigned long long)rRef.crp, (unsigned long long)rMoira.crp, reference());
+            printf("SRP:   %016llx / %016llx / %016llx\n",
+                   (unsigned long long)s.srp, (unsigned long long)rRef.srp, (unsigned long long)rMoira.srp);
+            printf("TC:    %08x / %08x / %08x\n", s.tc, rRef.tc, rMoira.tc);
+            printf("TT0:   %08x / %08x / %08x\n", s.tt0, rRef.tt0, rMoira.tt0);
+            printf("TT1:   %08x / %08x / %08x\n", s.tt1, rRef.tt1, rMoira.tt1);
+            printf("MMUSR: %04x / %04x / %04x\n\n", s.mmusr & 0xFFFF, rRef.mmusr & 0xFFFF, rMoira.mmusr & 0xFFFF);
+        }
 
         if (isFpuOpcode(s.opcode)) {
             for (int i = 0; i < 8; i++) {
@@ -1591,6 +1687,12 @@ bool compareFPIAR(Result &rRef, Result &rMoira)
     if (useUAE && (rRef.fpsr & 0x6000)) return true;
 
     return rRef.fpiar == rMoira.fpiar;
+}
+bool compareMMU(Result &rRef, Result &rMoira)
+{
+    return rRef.crp == rMoira.crp && rRef.srp == rMoira.srp &&
+           rRef.tc == rMoira.tc && rRef.tt0 == rMoira.tt0 && rRef.tt1 == rMoira.tt1 &&
+           (rRef.mmusr & 0xFFFF) == (rMoira.mmusr & 0xFFFF);
 }
 bool compareMemory() { return memcmp(refMem, moiraMem, sizeof(refMem)) == 0; }
 

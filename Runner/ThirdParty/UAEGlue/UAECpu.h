@@ -36,6 +36,9 @@ struct State {
     uint64_t fpman[8] = {};
     uint32_t fpcr = 0, fpsr = 0, fpiar = 0;
 
+    uint64_t crp = 0, srp = 0;  // 68030 MMU registers
+    uint32_t tc = 0, tt0 = 0, tt1 = 0, mmusr = 0;
+
     uint32_t a7 = 0;            // Active stack pointer (output only)
 };
 
@@ -62,6 +65,8 @@ int disassemble(uint32_t addr, char *out, size_t size);
 
 // Address translation of the 68030 MMU (UAE's table walk, no instruction involved)
 void setMMU(uint64_t crp, uint64_t srp, uint32_t tc, uint32_t tt0, uint32_t tt1);
+// Enables the 68030 MMU for instruction execution (PMOVE, PTEST, ...)
+void enableMMU(bool enable);
 void flushATC();
 bool translate(uint32_t addr, bool super, bool data, bool write, uint32_t *physical);
 bool ptest(uint32_t addr, uint8_t fc, bool write, uint32_t level, uint32_t *mmusr, uint32_t *descr);

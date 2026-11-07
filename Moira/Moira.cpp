@@ -493,7 +493,8 @@ Moira::processException(const std::exception &exc)
 
         if (auto be = dynamic_cast<const BusError *>(&exc); be) {
 
-            execBusError<C>(be->stackFrame);
+            // A bus error while processing a bus error is a double bus fault
+            try { execBusError<C>(be->stackFrame); } catch (const BusError &) { halt(); }
             return;
         }
 

@@ -90,7 +90,9 @@ bool skip(const Setup &s);                                           // Skips a 
 bool skipCompare(const Setup &s, const Result &rRef, const Result &rMoira); // Skips the comparison (includes skip)
 bool skipAccessCheck(u16 op);
 
+extern bool misalignedRead;
 bool isFpuOpcode(u16 op);
+bool isMmuOpcode(u16 op);
 bool isIllegalOpcode(u16 op);
 
 
@@ -118,6 +120,7 @@ bool compareFPR(Result &rRef, Result &rMoira);
 bool compareFPCR(Result &rRef, Result &rMoira);
 bool compareFPSR(Result &rRef, Result &rMoira);
 bool compareFPIAR(Result &rRef, Result &rMoira);
+bool compareMMU(Result &rRef, Result &rMoira);
 bool compareMemory();
 
 void dumpDasm(Setup &s, Result &rRef, Result &rMoira);

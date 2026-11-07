@@ -33,7 +33,7 @@ static const bool SKIP_ILLEGAL = true;
 static const bool VERBOSE = false;
 
 // Change to limit the range of executed instructions
-#define doExec(opcode) ((opcode) <= 0xEFFF || isFpuOpcode(opcode))
+#define doExec(opcode) ((opcode) <= 0xEFFF || isFpuOpcode(opcode) || isMmuOpcode(opcode))
 
 // Change to limit the range of disassembled instructions
 #define doDasm(opcode) (opcode >= 0x0000 && opcode <= 0xFFFF)

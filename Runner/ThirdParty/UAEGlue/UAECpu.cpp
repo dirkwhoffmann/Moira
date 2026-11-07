@@ -25,6 +25,7 @@ namespace {
 uint8_t *mem = nullptr;
 uaecpu::WriteHook writeHook = nullptr;
 uaecpu::Cpu cpuType = uaecpu::Cpu::M68000;
+bool mmuExec = false;
 bool addr24 = false;
 
 inline uint32_t mask(uint32_t addr) { return addr & 0xFFFF; }
@@ -261,6 +262,17 @@ void setState(const State &s)
     regs.fpsr = s.fpsr;
     regs.fpiar = s.fpiar;
 
+    if (mmuExec) {
+        mmu030_reset(1);
+        crp_030 = s.crp;
+        srp_030 = s.srp;
+        tc_030 = s.tc;
+        tt0_030 = s.tt0;
+        tt1_030 = s.tt1;
+        mmusr_030 = uint16_t(s.mmusr);
+        mmu030_decode_tc(tc_030, false);
+    }
+
     regs.stopped = 0;
     regs.halted = 0;
     regs.spcflags = 0;
@@ -304,10 +316,28 @@ State getState()
     s.fpcr = regs.fpcr;
     s.fpsr = regs.fpsr;
     s.fpiar = regs.fpiar;
+
+    if (mmuExec) {
+        s.crp = crp_030;
+        s.srp = srp_030;
+        s.tc = tc_030;
+        s.tt0 = tt0_030;
+        s.tt1 = tt1_030;
+        s.mmusr = mmusr_030;
+    }
     return s;
 }
 
 static uint32_t mmuTC = 0;
+void enableMMU(bool enable)
+{
+    mmuExec = enable && cpuType == Cpu::M68030;
+    changed_prefs.mmu_model = mmuExec ? 68030 : 0;
+    currprefs = changed_prefs;
+    build_cpufunctbl();
+    set_x_funcs();
+    mmu030_set_funcs();
+}
 
 void flushATC()
 {
@@ -350,8 +380,9 @@ bool ptest(uint32_t addr, uint8_t fc, bool write, uint32_t level, uint32_t *mmus
 
     tc_030 = 0;
     mmu030_decode_tc(tc_030, false);
-    currprefs.mmu_model = 0;
+    currprefs.mmu_model = mmuExec ? 68030 : 0;
     set_x_funcs();
+    mmu030_set_funcs();
     return !illegal;
 }
 
@@ -385,8 +416,9 @@ bool translate(uint32_t addr, bool super, bool data, bool write, uint32_t *physi
     // Switch the MMU off again, so it doesn't affect instruction execution
     tc_030 = 0;
     mmu030_decode_tc(tc_030, false);
-    currprefs.mmu_model = 0;
+    currprefs.mmu_model = mmuExec ? 68030 : 0;
     set_x_funcs();
+    mmu030_set_funcs();
     return success;
 }
 

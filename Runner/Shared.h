@@ -103,6 +103,12 @@ struct Setup {
     u32     fpcr;
     u32     fpsr;
     u32     fpiar;
+    u64     crp;
+    u64     srp;
+    u32     tc;
+    u32     tt0;
+    u32     tt1;
+    u32     mmusr;
     u8      mem[0x10000];
 };
 
@@ -129,6 +135,12 @@ struct Result {
     u32     fpcr;
     u32     fpsr;
     u32     fpiar;
+    u64     crp;
+    u64     srp;
+    u32     tc;
+    u32     tt0;
+    u32     tt1;
+    u32     mmusr;
     char    dasmMoira[128];
     int     dasmCntMoira;
     char    dasmBinutils[BINUTILS_BUFFER_SIZE];
@@ -167,6 +179,7 @@ void resetUAE(const runner::Setup &s);
 void executeUAE(runner::Result &r);
 int lastExceptionUAE();
 void setMMUUAE(u64 crp, u64 srp, u32 tc, u32 tt0, u32 tt1);
+void enableMMUUAE(bool enable);
 void flushATCUAE();
 bool ptestUAE(u32 addr, u8 fc, bool write, u32 level, u32 *mmusr, u32 *descr);
 bool translateUAE(u32 addr, bool super, bool data, bool write, u32 *physical);

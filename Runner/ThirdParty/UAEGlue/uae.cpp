@@ -71,6 +71,7 @@ void resetUAE(const runner::Setup &s)
     st.fpcr = s.fpcr;
     st.fpsr = s.fpsr;
     st.fpiar = s.fpiar;
+    st.crp = s.crp; st.srp = s.srp; st.tc = s.tc; st.tt0 = s.tt0; st.tt1 = s.tt1; st.mmusr = s.mmusr;
 
     uaecpu::setState(st);
 }
@@ -102,6 +103,8 @@ void executeUAE(runner::Result &r)
     r.fpcr = uaeState.fpcr;
     r.fpsr = uaeState.fpsr;
     r.fpiar = uaeState.fpiar;
+    r.crp = uaeState.crp; r.srp = uaeState.srp; r.tc = uaeState.tc;
+    r.tt0 = uaeState.tt0; r.tt1 = uaeState.tt1; r.mmusr = uaeState.mmusr;
 }
 
 int lastExceptionUAE()
@@ -127,4 +130,9 @@ bool ptestUAE(u32 addr, u8 fc, bool write, u32 level, u32 *mmusr, u32 *descr)
 void flushATCUAE()
 {
     uaecpu::flushATC();
+}
+
+void enableMMUUAE(bool enable)
+{
+    uaecpu::enableMMU(enable);
 }

@@ -927,11 +927,9 @@ Moira::execPFlush40(u16 opcode)
 {
     AVAILABILITY(Core::C68020)
 
-
     auto reg  = _____________xxx (opcode);
     auto mode = ___________xx___ (opcode);
     
-
     switch (mode) {
 
         case 0:
@@ -980,6 +978,31 @@ Moira::execPLoad(u16 opcode)
     FINALIZE
 }
 
+// Checks if a PMOVE instruction can be executed (stricter than the disassembler check)
+template <Mode M> static bool
+isExecutablePMove(u16 ext)
+{
+    auto fmt  = ext >> 13 & 0b111;
+    auto preg = ext >> 10 & 0b111;
+    bool rw   = ext & 0x200;
+    bool fd   = ext & 0x100;
+
+    // Only memory and control alterable addressing modes are allowed
+    if (M == Mode::DN || M == Mode::AN || M == Mode::PI || M == Mode::PD ||
+        M == Mode::DIPC || M == Mode::IXPC || M == Mode::IM || M == Mode::IP) return false;
+
+    // The lower byte must be zero, and reading a register can't flush the ATC
+    if ((ext & 0xFF) || (rw && fd)) return false;
+
+    switch (fmt) {
+
+        case 0:  return preg == 2 || preg == 3;
+        case 2:  return preg == 0 || preg == 2 || preg == 3;
+        case 3:  return preg == 0 && !fd;
+        default: return false;
+    }
+}
+
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execPMove(u16 opcode)
 {
@@ -991,7 +1014,7 @@ Moira::execPMove(u16 opcode)
     bool rw   = ______x_________ (ext);
 
     // Catch illegal extension words
-    if (!isValidExtMMU(I, M, opcode, ext)) {
+    if (!isValidExtMMU(I, M, opcode, ext) || !isExecutablePMove<M>(ext)) {
 
         execIllegal<C, Instr::ILLEGAL, M, S>(opcode);
         return;
@@ -1155,15 +1178,13 @@ Moira::execPTest(u16 opcode)
 
     (void)readI<C, Word>();
 
-    u32 ea = 0;
-
     // Compute effective address
-    ea = computeEA<C, M, Long>(rg);
+    u32 ea = computeEA<C, M, Long>(rg);
 
-    u8 fcode = mmuFC(ext);
+    // u8 fcode = mmuFC(ext);
 
     u32 descrAddr;
-    mmu.mmusr = mmuPTest<C>(ea, fcode, !rw, lvl, &descrAddr);
+    mmu.mmusr = mmuPTest<C>(ea, mmuFC(ext), !rw, lvl, &descrAddr);
     if (a) writeA(areg, descrAddr);
 
     prefetch<C, POLL>();
@@ -1180,10 +1201,6 @@ Moira::execPTest40(u16 opcode)
     auto rg  = _____________xxx (opcode);
     auto rw  = __________x_____ (opcode);
         
-    if (rw) {
-    } else {
-    }
-
     u32 ea = 0; u32 data;
     readOp<C, M, Long>(rg, &ea, &data);
     
