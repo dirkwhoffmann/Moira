@@ -18,6 +18,14 @@ struct MmuContext {
     bool wp;
     bool su;
 
+    // Properties of the access
+    bool super;
+    u8 fc;
+
+    // Page size mask and the letter of the last indexed table
+    u32 pageMask;
+    char lastTable;
+
     // The logical address that triggered the lookup (reported in bus error frames)
     u32 faultAddr;
 
@@ -40,6 +48,16 @@ struct MmuContext {
 
         // Return the upper word
         return u32(addrBits >> 32);
+    }
+
+    // Indicates a supervisor violation (supervisor-only descriptor, user access)
+    bool violation() { return su && !super; }
+
+    // Returns the next index without consuming it
+    u32 peekAddrBits() {
+
+        MmuContext copy = *this;
+        return copy.nextAddrBits();
     }
 
     u32 remainingAddrBits() {
@@ -238,14 +256,36 @@ Moira::translate(u32 addr, u8 fc)
     return mmuLookup<C, write>(addr, fc);
 }
 
+template <Core C> bool
+Moira::translateAddress(u32 addr, u8 fc, bool write, u32 &physical)
+{
+    try {
+        physical = write ? translate<C, true>(addr, fc) : translate<C, false>(addr, fc);
+        return true;
+    } catch (const BusError &) {
+        return false;
+    }
+}
+
 template <Core C, bool write> u32
 Moira::mmuLookup(u32 addr, u8 fc)
 {
     MmuContext context { .addrBits = addr, .indexBits = mmu.tc << 12 };
     context.faultAddr = addr;
+    context.super = fc & 4;
+    context.fc = fc & 7;
+    context.pageMask = (1u << (mmu.tc >> 20 & 0xF)) - 1;
+
+    bool fcl = mmu.tc & (1 << 24);
+
+    // Determine the last table. A table is indexed by each non-zero TIx field.
+    // If function code lookup is enabled, there is an additional table.
+    int tables = 0;
+    while (tables < 4 && (mmu.tc >> (12 - 4 * tables) & 0xF)) tables++;
+    context.lastTable = char('A' + tables - 1 + (fcl ? 1 : 0));
 
     // Start with the SRP or CRP
-    u64 rp = (reg.sr.s && (mmu.tc & 0x02000000)) ? mmu.srp : mmu.crp;
+    u64 rp = (context.super && (mmu.tc & 0x02000000)) ? mmu.srp : mmu.crp;
 
     // +------------------------------------------------+
     // | ROOT POINTER (CRP/SRP)                         |
@@ -279,51 +319,44 @@ Moira::mmuLookup(u32 addr, u8 fc)
     // Apply the initial shift (ignore some bits)
     (void)context.nextAddrBits();
 
-
     // Check the descriptor type
     switch (dt) {
 
         case 1:
         {
-            /* Early termination. No translation table exists, all memory
-             * accesses are calculated by adding the TableA address to the
-             * logical address specified.
+            /* Early termination. No translation table exists. The physical
+             * address is the sum of the TableA address and the logical address
+             * (without the ignored bits). The limit applies to the first index
+             * unless function code lookup is enabled.
              */
-            return taddr + addr;
+            if (!fcl) {
+
+                u32 index = context.peekAddrBits();
+                if (index < context.lowerLimit || index > context.upperLimit) {
+                    throw BusError(makeFrame<write ? AE_WRITE : 0>(context.faultAddr));
+                }
+            }
+            return (u32(rp) & 0xFFFFFF00 & ~context.pageMask) + context.remainingAddrBits();
         }
         case 2:
-        {
-            bool fcl = mmu.tc & ( 1 << 24);
-
-            if (fcl) {
-
-                u32 offset = readFC();
-
-                return mmuLookupShort<C, write>('A', taddr, offset, context);
-
-            } else {
-
-                u32 offset = context.nextAddrBits();
-
-                return mmuLookupShort<C, write>('A', taddr, offset, context);
-            }
-        }
         case 3:
         {
-            bool fcl = mmu.tc & ( 1 << 24);
+            u32 offset;
 
             if (fcl) {
 
-                u32 offset = readFC();
-
-                return mmuLookupLong<C, write>('A', taddr, offset, context);
+                // The function code is used as the first index (no limit check)
+                offset = context.fc;
+                context.lowerLimit = 0;
+                context.upperLimit = 0xFFFF;
 
             } else {
 
-                u32 offset = context.nextAddrBits();
-
-                return mmuLookupLong<C, write>('A', taddr, offset, context);
+                offset = context.nextAddrBits();
             }
+
+            return dt == 2 ? mmuLookupShort<C, write>('A', taddr, offset, context)
+                           : mmuLookupLong<C, write>('A', taddr, offset, context);
         }
         default:
 
@@ -356,8 +389,6 @@ Moira::mmuLookupShort(char table, u32 taddr, u32 offset, struct MmuContext &c)
             // +------------------------------------------------+
             // | SHORT FORMAT INVALID DESCRIPTOR                |
             // +-----+--------+---------------------------------+
-            // | Bit | Length | Contents                        |
-            // +-----+--------+---------------------------------+
             // | 00  |   02   | Descriptor Type (DT)            |
             // | 02  |   30   | Unused                          |
             // +-----+--------+---------------------------------+
@@ -373,100 +404,86 @@ Moira::mmuLookupShort(char table, u32 taddr, u32 offset, struct MmuContext &c)
             // +-----+--------+---------------------------------+
             // | 00  |   02   | Descriptor Type (DT)            |
             // | 02  |   01   | Write Protect (WP)              |
-            // | 03  |   01   | Update (U)                      |
+            // | 03  |   01   | Used (U)                        |
             // | 04  |   01   | Modified (M)                    |
-            // | 05  |   01   | Reserved ( must be 0 )          |
+            // | 05  |   01   | Reserved                        |
             // | 06  |   01   | Cache Inhibit (CI)              |
-            // | 07  |   01   | Reserved ( must be 0 )          |
+            // | 07  |   01   | Reserved                        |
             // | 08  |   24   | Page Address                    |
             // +-----+--------+---------------------------------+
 
             // Record WP
-            if constexpr (write) c.wp |= descriptor & 0x4;
+            c.wp |= descriptor & 0x4;
 
-            // Set U and M bit
-            u64 desc2 = descriptor | (1LL << 3);
-            if constexpr (write) { desc2 |= (1LL << 4); }
-            write16(taddr + 4 * offset + 2, (u16)desc2);
+            // Update the U bit and the M bit (the latter only if the page is writable)
+            if (!c.violation()) {
 
-            physAddr = (descriptor & 0xFFFFFF00) + c.remainingAddrBits();
-
-            if (table == 'D') {
-
-
-            } else {
-
+                u32 desc2 = descriptor | 0x8;
+                if constexpr (write) { if (!c.wp) desc2 |= 0x10; }
+                if (desc2 != descriptor) write16(taddr + 4 * offset + 2, (u16)desc2);
             }
+
+            // The page offset consists of the unused index bits and the page offset
+            physAddr = (descriptor & 0xFFFFFF00 & ~c.pageMask) + c.remainingAddrBits();
             break;
         }
         default:
         {
-            if (table == 'D') {
+            // +------------------------------------------------+
+            // | SHORT FORMAT TABLE DESCRIPTOR                  |
+            // +-----+--------+---------------------------------+
+            // | Bit | Length | Contents                        |
+            // +-----+--------+---------------------------------+
+            // | 00  |   02   | Descriptor Type (DT)            |
+            // | 02  |   01   | Write Protect (WP)              |
+            // | 03  |   01   | Used (U)                        |
+            // | 04  |   28   | Table Address                   |
+            // +-----+--------+---------------------------------+
 
-                // +------------------------------------------------+
-                // | SHORT FORMAT INDIRECT DESCRIPTOR               |
-                // +-----+--------+---------------------------------+
-                // | Bit | Length | Contents                        |
-                // +-----+--------+---------------------------------+
-                // | 00  |   02   | Descriptor Type (DT)            |
-                // | 02  |   30   | Descriptor Address              |
-                // +-----+--------+---------------------------------+
+            if (table > c.lastTable) {
 
+                // An indirect descriptor must point to a page descriptor
+                throw BusError(makeFrame<write ? AE_WRITE : 0>(c.faultAddr));
+            }
+
+            if (table == c.lastTable) {
+
+                // Indirect descriptor. The pointer is used as is. Neither
+                // the protection bits nor the U bit are evaluated.
+                c.lowerLimit = 0;
+                c.upperLimit = 0xFFFF;
                 taddr = descriptor & 0xFFFFFFFC;
 
-
-                physAddr = mmuLookupShort<C, write>(table + 1, taddr, 0, c);
+                physAddr = dt == 2 ? mmuLookupShort<C, write>(table + 1, taddr, 0, c)
+                                   : mmuLookupLong<C, write>(table + 1, taddr, 0, c);
 
             } else {
 
-                // +------------------------------------------------+
-                // | SHORT FORMAT TABLE DESCRIPTOR                  |
-                // +-----+--------+---------------------------------+
-                // | Bit | Length | Contents                        |
-                // +-----+--------+---------------------------------+
-                // | 00  |   02   | Descriptor Type (DT)            |
-                // | 02  |   01   | Write Protect (WP)              |
-                // | 03  |   01   | Update (U)                      |
-                // | 04  |   28   | Table Address                   |
-                // +-----+--------+---------------------------------+
-
                 // Record WP
-                if constexpr (write) c.wp |= descriptor & 0x4;
+                c.wp |= descriptor & 0x4;
 
-                // Set U bit
-                u64 desc2 = descriptor | (1LL << 3);
-                write16(taddr + 4 * offset + 2, (u16)desc2);
+                // Update the U bit
+                if (!c.violation() && !(descriptor & 0x8)) write16(taddr + 4 * offset + 2, (u16)(descriptor | 0x8));
 
-                u32 offset = c.nextAddrBits();
-
+                offset = c.nextAddrBits();
                 taddr = descriptor & 0xFFFFFFF0;
 
-                // Short descriptors carry no limit. The limit of the root
-                // pointer has already been checked for the current level.
-                if constexpr (write) { c.wp |= descriptor & 0x4; }
+                // Short descriptors don't carry a limit
                 c.lowerLimit = 0;
                 c.upperLimit = 0xFFFF;
 
-                if (dt == 2) {
-                    physAddr = mmuLookupShort<C, write>(table + 1, taddr, offset, c);
-                } else {
-                    physAddr = mmuLookupLong<C, write>(table + 1, taddr, offset, c);
-                }
+                physAddr = dt == 2 ? mmuLookupShort<C, write>(table + 1, taddr, offset, c)
+                                   : mmuLookupLong<C, write>(table + 1, taddr, offset, c);
             }
             break;
         }
     }
 
     // Check for write protection
-    if constexpr (write) {
-        if (c.wp) {
-
-            throw BusError(makeFrame<write ? AE_WRITE : 0>(c.faultAddr));
-        }
-    }
+    if constexpr (write) { if (c.wp) throw BusError(makeFrame<AE_WRITE>(c.faultAddr)); }
 
     // Check for supervisor protection
-    if (c.su && !reg.sr.s) throw BusError(makeFrame<write ? AE_WRITE : 0>(c.faultAddr));
+    if (c.violation()) throw BusError(makeFrame<write ? AE_WRITE : 0>(c.faultAddr));
 
     return physAddr;
 }
@@ -485,201 +502,99 @@ Moira::mmuLookupLong(char table, u32 taddr, u32 offset, struct MmuContext &c)
     // Read table entry
     u64 descriptor = readMMU64(taddr + 8 * offset);
 
-    // Extract descriptor type
-    u32 dt = u32(descriptor >> 32) & 0x3;
+    // The upper word contains the flags, the lower word the address
+    u32 flags = u32(descriptor >> 32);
+    u32 addr  = u32(descriptor);
 
-    // Evaluate the limit field
-    if (descriptor & (1LL << 63)) {
-        c.lowerLimit = u32(descriptor >> 48) & 0x7FFF;
-        c.upperLimit = 0xFFFF;
-    } else {
-        c.lowerLimit = 0;
-        c.upperLimit = u32(descriptor >> 48) & 0x7FFF;
+    // Extract descriptor type
+    u32 dt = flags & 0x3;
+
+    // +------------------------------------------------+
+    // | LONG FORMAT DESCRIPTORS                        |
+    // +-----+--------+---------------------------------+
+    // | Bit | Length | Contents                        |
+    // +-----+--------+---------------------------------+
+    // | 00  |   02   | Descriptor Type (DT)            |
+    // | 02  |   01   | Write Protect (WP)              |
+    // | 03  |   01   | Used (U)                        |
+    // | 04  |   01   | Modified (M)  (page only)       |
+    // | 06  |   01   | Cache Inhibit (CI) (page only)  |
+    // | 08  |   01   | Supervisor Only (S)             |
+    // | 16  |   15   | Limit                           |
+    // | 31  |   01   | L/U                             |
+    // | 32  |   32   | Table or page address           |
+    // +-----+--------+---------------------------------+
+
+    if (dt == 0) throw BusError(makeFrame<write ? AE_WRITE : 0>(c.faultAddr));
+
+    if (dt > 1 && table > c.lastTable) {
+
+        // An indirect descriptor must point to a page descriptor
+        throw BusError(makeFrame<write ? AE_WRITE : 0>(c.faultAddr));
     }
 
-    switch (dt) {
+    if (dt > 1 && table == c.lastTable) {
 
-        case 0:
-        {
-            // +------------------------------------------------+
-            // | LONG FORMAT INVALID DESCRIPTOR                 |
-            // +-----+--------+---------------------------------+
-            // | Bit | Length | Contents                        |
-            // +-----+--------+---------------------------------+
-            // | LongWord0                                      |
-            // +-----+--------+---------------------------------+
-            // | 00  |   02   | Descriptor Type (DT)            |
-            // | 02  |   30   | Unused                          |
-            // +-----+--------+---------------------------------+
-            // | LongWord1                                      |
-            // +-----+--------+---------------------------------+
-            // | 00  |   32   | Unused                          |
-            // +-----+--------+---------------------------------+
+        // Indirect descriptor. The pointer is used as is. Neither
+        // the protection bits nor the U bit are evaluated.
+        c.lowerLimit = 0;
+        c.upperLimit = 0xFFFF;
+        taddr = addr & 0xFFFFFFFC;
 
-            throw BusError(makeFrame<write ? AE_WRITE : 0>(c.faultAddr));
-        }
-        case 1:
-        {
-            // Record WP and S bit
-            if constexpr (write) c.wp |= (descriptor >> 32) & 0x4;
-            c.su |= (descriptor >> 32) & 0x100;
+        physAddr = dt == 2 ? mmuLookupShort<C, write>(table + 1, taddr, 0, c)
+                           : mmuLookupLong<C, write>(table + 1, taddr, 0, c);
 
-            // Set U and M bit
-            u64 desc2 = (descriptor >> 32) | (1LL << 3);
-            if constexpr (write) { desc2 |= (1LL << 4); }
-            write16(taddr + 8 * offset + 2, (u16)desc2);
+    } else {
 
-            physAddr = (descriptor & 0xFFFFFF00) + c.remainingAddrBits();
+        // Record WP and S bit
+        c.wp |= flags & 0x4;
+        c.su |= flags & 0x100;
 
-            if (table == 'D') {
+        if (dt == 1) {
 
-                // +------------------------------------------------+
-                // | LONG FORMAT PAGE DESCRIPTOR                    |
-                // +-----+--------+---------------------------------+
-                // | Bit | Length | Contents                        |
-                // +-----+--------+---------------------------------+
-                // | LongWord0                                      |
-                // +-----+--------+---------------------------------+
-                // | 00  |   02   | Descriptor Type (DT)            |
-                // | 02  |   01   | Write Protect (WP)              |
-                // | 03  |   01   | Update (U)                      |
-                // | 04  |   01   | Modified (M)                    |
-                // | 05  |   01   | Reserved ( must be 0 )          |
-                // | 06  |   01   | Cache Inhibit (CI)              |
-                // | 07  |   01   | Reserved ( must be 0 )          |
-                // | 08  |   01   | Supervisor (S)                  |
-                // | 09  |   07   | Reserved ( must be 1111110 )    |
-                // | 16  |   16   | Unused                          |
-                // +-----+--------+---------------------------------+
-                // | LongWord1                                      |
-                // +-----+--------+---------------------------------+
-                // | 00  |   07   | Unused                          |
-                // | 08  |   24   | Page Address                    |
-                // +-----+--------+---------------------------------+
+            // Page descriptor (or early termination)
+            if (!c.violation()) {
 
-
-            } else {
-
-                // +------------------------------------------------+
-                // | LONG FORMAT EARLY TERMINATION PAGE DESCRIPTOR  |
-                // +-----+--------+---------------------------------+
-                // | Bit | Length | Contents                        |
-                // +-----+--------+---------------------------------+
-                // | LongWord0                                      |
-                // +-----+--------+---------------------------------+
-                // | 00  |   02   | Descriptor Type (DT)            |
-                // | 02  |   01   | Write Protect (WP)              |
-                // | 03  |   01   | Update (U)                      |
-                // | 04  |   01   | Modified (M)                    |
-                // | 05  |   01   | Reserved ( must be 0 )          |
-                // | 06  |   01   | Cache Inhibit (CI)              |
-                // | 07  |   01   | Reserved ( must be 0 )          |
-                // | 08  |   01   | Supervisor (S)                  |
-                // | 09  |   07   | Reserved ( must be 1111110 )    |
-                // | 16  |   15   | Limit                           |
-                // | 31  |   01   | L/U                             |
-                // +-----+--------+---------------------------------+
-                // | LongWord1                                      |
-                // +-----+--------+---------------------------------+
-                // | 00  |   07   | Unused                          |
-                // | 08  |   24   | Page Address                    |
-                // +-----+--------+---------------------------------+
-
+                u32 flags2 = flags | 0x8;
+                if constexpr (write) { if (!c.wp) flags2 |= 0x10; }
+                if (flags2 != flags) write16(taddr + 8 * offset + 2, (u16)flags2);
             }
-            break;
-        }
-        default:
-        {
-            if (table == 'D') {
 
-                // +------------------------------------------------+
-                // | LONG FORMAT INDIRECT DESCRIPTOR                |
-                // +-----+--------+---------------------------------+
-                // | Bit | Length | Contents                        |
-                // +-----+--------+---------------------------------+
-                // | LongWord0                                      |
-                // +-----+--------+---------------------------------+
-                // | 00  |   02   | Descriptor Type (DT)            |
-                // | 02  |   30   | Unused                          |
-                // +-----+--------+---------------------------------+
-                // | LongWord1                                      |
-                // +-----+--------+---------------------------------+
-                // | 00  |   02   | Unused                          |
-                // | 02  |   30   | Descriptor Address              |
-                // +-----+--------+---------------------------------+
+            // In case of early termination, the limit applies to the next index
+            if (table < c.lastTable) {
 
-                taddr = descriptor & 0xFFFFFFFC;
-
-
-                physAddr = mmuLookupLong<C, write>(table, taddr, 0, c);
-
-            } else {
-
-                // +------------------------------------------------+
-                // | LONG FORMAT TABLE DESCRIPTOR                   |
-                // +-----+--------+---------------------------------+
-                // | Bit | Length | Contents                        |
-                // +-----+--------+---------------------------------+
-                // | LongWord0                                      |
-                // +-----+--------+---------------------------------+
-                // | 00  |   02   | Descriptor Type (DT)            |
-                // | 02  |   01   | Write Protect (WP)              |
-                // | 03  |   01   | Update (U)                      |
-                // | 04  |   04   | Reserved ( must be 0000 )       |
-                // | 08  |   01   | Supervisor (S)                  |
-                // | 09  |   07   | Reserved ( must be 1111110 )    |
-                // | 16  |   15   | Limit                           |
-                // | 31  |   01   | L/U                             |
-                // +-----+--------+---------------------------------+
-                // | LongWord1                                      |
-                // +-----+--------+---------------------------------+
-                // | 00  |   04   | Unused                          |
-                // | 04  |   28   | Table Address                   |
-                // +-----+--------+---------------------------------+
-
-                // Record WP and S bit
-                if constexpr (write) c.wp |= (descriptor >> 32) & 0x4;
-                c.su |= (descriptor >> 32) & 0x100;
-
-                // Set U bit
-                u64 desc2 = (descriptor >> 32) | (1LL << 3);
-                write16(taddr + 8 * offset + 2, (u16)desc2);
-
-                u32 offset = c.nextAddrBits();
-
-                taddr = descriptor & 0xFFFFFFF0;
-
-
-                // Check offset range
-                if (offset < c.lowerLimit || offset > c.upperLimit) {
-
+                u32 index = c.peekAddrBits();
+                u32 limit = flags >> 16 & 0x7FFF;
+                if ((flags & 0x80000000) ? index < limit : index > limit) {
                     throw BusError(makeFrame<write ? AE_WRITE : 0>(c.faultAddr));
                 }
-
-                c.lowerLimit = 0;
-                c.upperLimit = 0xFFFF;
-
-                if (dt == 2) {
-                    physAddr = mmuLookupShort<C, write>(table + 1, taddr, offset, c);
-                } else {
-                    physAddr = mmuLookupLong<C, write>(table + 1, taddr, offset, c);
-                }
             }
-            break;
+
+            physAddr = (addr & 0xFFFFFF00 & ~c.pageMask) + c.remainingAddrBits();
+
+        } else {
+
+            // Table descriptor. Update the U bit.
+            if (!c.violation() && !(flags & 0x8)) write16(taddr + 8 * offset + 2, (u16)(flags | 0x8));
+
+            offset = c.nextAddrBits();
+            taddr = addr & 0xFFFFFFF0;
+
+            // The limit applies to the next index
+            u32 limit = flags >> 16 & 0x7FFF;
+            if (flags & 0x80000000) { c.lowerLimit = limit; c.upperLimit = 0xFFFF; }
+            else                    { c.lowerLimit = 0; c.upperLimit = limit; }
+
+            physAddr = dt == 2 ? mmuLookupShort<C, write>(table + 1, taddr, offset, c)
+                               : mmuLookupLong<C, write>(table + 1, taddr, offset, c);
         }
     }
 
     // Check for write protection
-    if constexpr (write) {
-        if (c.wp) {
-
-            throw BusError(makeFrame<write ? AE_WRITE : 0>(c.faultAddr));
-        }
-    }
+    if constexpr (write) { if (c.wp) throw BusError(makeFrame<AE_WRITE>(c.faultAddr)); }
 
     // Check for supervisor protection
-    // TODO: THIS CAN PROBABLY BE DELETET. NO S BIT IN SHORT DESCRIPTORS
-    if (c.su && !reg.sr.s) throw BusError(makeFrame<write ? AE_WRITE : 0>(c.faultAddr));
+    if (c.violation()) throw BusError(makeFrame<write ? AE_WRITE : 0>(c.faultAddr));
 
     return physAddr;
 }
@@ -688,7 +603,6 @@ template <Core C, bool write> u32
 Moira::mmuDryRun(u32 addr, u8 fc, u32 *mmusr)
 {
     MmuContext context { .addrBits = addr, .indexBits = mmu.tc << 12 };
-    context.faultAddr = addr;
     *mmusr = 0;
 
     // Start with the SRP or CRP

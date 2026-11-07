@@ -60,6 +60,10 @@ bool step();
 // Returns the instruction length in bytes.
 int disassemble(uint32_t addr, char *out, size_t size);
 
+// Address translation of the 68030 MMU (UAE's table walk, no instruction involved)
+void setMMU(uint64_t crp, uint64_t srp, uint32_t tc, uint32_t tt0, uint32_t tt1);
+bool translate(uint32_t addr, bool super, bool data, bool write, uint32_t *physical);
+
 // Vector number of the last exception taken by the last step (0 if none)
 int lastException();
 

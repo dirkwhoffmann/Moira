@@ -68,6 +68,7 @@ void run(unsigned seed, long rounds, const std::vector<Model> &cpus, const std::
 
 void runCPU(long round);
 void runMMU(long round);
+void runMMUTranslate(long round);
 void runFPU(long round);
 void runDasmCPU(long round);
 void runDasmMMU(long round);

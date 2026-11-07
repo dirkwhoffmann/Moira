@@ -822,6 +822,14 @@ private:
     // Translates a logical address to a physical address
     template <Core C, bool write> u32 translate(u32 addr, u8 fc);
 
+public:
+
+    // Translates a logical address without executing an instruction. Returns
+    // false if the translation would cause a bus error (used for testing).
+    template <Core C> bool translateAddress(u32 addr, u8 fc, bool write, u32 &physical);
+
+private:
+
     // Looks up a physical address from the MMU table
     template <Core C, bool write> u32 mmuLookup(u32 addr, u8 fc);
     template <Core C, bool write> u32 mmuLookupShort(char table, u32 taddr, u32 offset, struct MmuContext &con);

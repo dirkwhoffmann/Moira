@@ -644,7 +644,7 @@ Moira::read(u32 addr)
     }
 
     // Derive the physical address
-    addr = translate<C, false>(addr, fc);
+    addr = translate<C, false>(addr, readFC());
 
     // Check if a watchpoint has been reached
     if ((flags & State::CHECK_WP) && debugger.watchpointMatches(addr, S)) {
@@ -707,7 +707,7 @@ Moira::readInstr(u32 addr)
     }
 
     // Derive the physical address
-    addr = translate<C, false>(addr, FC::USER_PROG);
+    addr = translate<C, false>(addr, readFC());
 
     // Check if a watchpoint has been reached
     if ((flags & State::CHECK_WP) && debugger.watchpointMatches(addr, Word)) {
@@ -757,7 +757,7 @@ Moira::write(u32 addr, u32 val)
     }
 
     // Derive the physical address
-    addr = translate<C, true>(addr, fc);
+    addr = translate<C, true>(addr, readFC());
 
     // Check if a watchpoint has been reached
     if ((flags & State::CHECK_WP) && debugger.watchpointMatches(addr, S)) {

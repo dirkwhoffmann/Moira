@@ -307,6 +307,53 @@ State getState()
     return s;
 }
 
+static uint32_t mmuTC = 0;
+
+void setMMU(uint64_t crp, uint64_t srp, uint32_t tc, uint32_t tt0, uint32_t tt1)
+{
+    crp_030 = crp;
+    srp_030 = srp;
+    tc_030 = mmuTC = tc;
+    tt0_030 = tt0;
+    tt1_030 = tt1;
+}
+
+bool translate(uint32_t addr, bool super, bool data, bool write, uint32_t *physical)
+{
+    bool success = false;
+
+    // The MMU functions are only active for the 68030 MMU model
+    currprefs.mmu_model = 68030;
+    mmu030_set_funcs();
+    regs.s = super;
+    tc_030 = mmuTC;
+    mmu030_decode_tc(tc_030, false);
+    mmu030_flush_atc_all();
+
+    // Perform a real memory access. Unlike mmu030_translate, which always walks
+    // the tables as if a read access was performed, this updates the descriptors
+    // exactly as a read or write access does.
+    uint32_t fc = (super ? 4 : 0) | (data ? 1 : 2);
+    static uint8_t backup[0x10000];
+    memcpy(backup, mem, sizeof backup);
+
+    TRY(prb) {
+        if (write) mmu030_put_byte(addr, 0, fc); else mmu030_get_byte(addr, fc);
+        *physical = mmu030_translate(addr, super, data, write);
+        if (write) mem[mask(*physical)] = backup[mask(*physical)];
+        success = true;
+    } CATCH(prb) {
+        success = false;
+    } ENDTRY
+
+    // Switch the MMU off again, so it doesn't affect instruction execution
+    tc_030 = 0;
+    mmu030_decode_tc(tc_030, false);
+    currprefs.mmu_model = 0;
+    set_x_funcs();
+    return success;
+}
+
 int disassemble(uint32_t addr, char *out, size_t size)
 {
     // The disassembler is configured once. No instruction words, effective

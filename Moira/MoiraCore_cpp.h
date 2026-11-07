@@ -50,5 +50,6 @@ using namespace Flag;
  */
 
 template void Moira::createJumpTable<MOIRA_CORE>(Model, bool);
+template bool Moira::translateAddress<MOIRA_CORE>(u32, u8, bool, u32 &);
 
 }

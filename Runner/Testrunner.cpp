@@ -10,6 +10,8 @@
 #include "config.h"
 #include "Testrunner.h"
 #include <cstdio>
+#include <cstring>
+#include <algorithm>
 #include <ctime>
 #include <string>
 #include <strings.h>
@@ -269,7 +271,7 @@ void run(unsigned seed, long rounds, const std::vector<Model> &cpus, const std::
 
             // Execute tests
             if constexpr (CHECK_CPU) runCPU(i);
-            if constexpr (CHECK_MMU) runMMU(i);
+            if constexpr (CHECK_MMU) { runMMU(i); if (useUAE && cpu == Model::M68030) runMMUTranslate(i); }
 
             // Test the disassembler
             if constexpr (CHECK_DASM) {
@@ -350,6 +352,154 @@ void runMMU(long round)
         }
     }
     passed(moiraclk[0], refclk[0]);
+}
+
+//
+// MMU address translation
+//
+
+namespace {
+
+struct TranslationSetup {
+
+    u32 tc;
+    u64 crp;
+    u64 srp;
+    int levels;
+    int bits[4];
+};
+
+// Fills the memory with descriptor-like data
+void fillWithDescriptors()
+{
+    for (int i = 0; i < 0x10000; i += 4) {
+
+        u32 w;
+        int kind = rand() % 8;
+
+        if (kind < 4) {
+            // Short descriptor
+            w = (u32(rand()) & 0xFFFFFFF0) | (rand() % 4) | (rand() & 0xC);
+            if (rand() % 6 == 0) w &= ~3u;
+        } else if (kind < 6) {
+            // Upper half of a long descriptor (limit, flags, DT)
+            u32 limit = (rand() % 3 == 0) ? 0x7FFF : u32(rand() % 70);
+            w = (rand() % 6 == 0 ? 0x80000000 : 0) | limit << 16 | (rand() & 0x0100) | (rand() & 0x1C) | (rand() % 4);
+            if (rand() % 6 == 0) w &= ~3u;
+        } else {
+            // Lower half of a long descriptor (address)
+            w = (rand() & 0xFFF0) | (rand() % 3 == 0 ? u32(rand()) << 16 : 0);
+        }
+        refMem[i] = moiraMem[i] = u8(w >> 24);
+        refMem[i + 1] = moiraMem[i + 1] = u8(w >> 16);
+        refMem[i + 2] = moiraMem[i + 2] = u8(w >> 8);
+        refMem[i + 3] = moiraMem[i + 3] = u8(w);
+    }
+}
+
+TranslationSetup randomTranslationSetup()
+{
+    TranslationSetup t;
+
+    // Page size, initial shift, and table index bits (sum must be 32)
+    int ps = 8 + rand() % 8;
+    int is = rand() % 3 == 0 ? rand() % 6 : 0;
+    int rest = 32 - ps - is;
+
+    do {
+        t.levels = 2 + rand() % 3;
+        int left = rest;
+        for (int i = 0; i < 4; i++) t.bits[i] = 0;
+        for (int i = 0; i < t.levels; i++) {
+            int minLeft = t.levels - i - 1;
+            int maxBits = std::min(6, left - minLeft);
+            int b = (i == t.levels - 1) ? left : 1 + rand() % maxBits;
+            t.bits[i] = b;
+            left -= b;
+        }
+        if (left != 0) t.levels = 0;
+    } while (t.levels == 0 || t.bits[t.levels - 1] > 6 || t.bits[t.levels - 1] < 1);
+
+    t.tc = 0x80000000 | (rand() % 2 ? 0x02000000 : 0) | (rand() % 4 == 0 ? 0x01000000 : 0) | ps << 20 | is << 16
+         | t.bits[0] << 12 | t.bits[1] << 8 | t.bits[2] << 4 | t.bits[3];
+
+    auto rootPointer = [&]() {
+        u64 limit = rand() % 3 == 0 ? 0x7FFF : rand() % 70;
+        u64 lu = rand() % 6 == 0;
+        u64 dt = 1 + rand() % 3;
+        return lu << 63 | limit << 48 | dt << 32 | u64(rand() & 0xFFF0);
+    };
+    t.crp = rootPointer();
+    t.srp = rootPointer();
+    return t;
+}
+
+}
+
+void runMMUTranslate(long round)
+{
+    static const int TABLE_SETUPS = 256;
+    static const int ADDRESSES = 512;
+
+    long successes = 0, faults = 0;
+    resetClocks();
+    printf("%11s MMU : XLAT ", selectedModel()); fflush(stdout);
+
+    for (int i = 0; i < TABLE_SETUPS; i++) {
+
+        if (i % 16 == 0) { printf("."); fflush(stdout); }
+
+        fillWithDescriptors();
+        auto t = randomTranslationSetup();
+
+        // Configure both MMUs
+        setMMUUAE(t.crp, t.srp, t.tc, 0, 0);
+        moiracpu->mmu.crp = t.crp;
+        moiracpu->mmu.srp = t.srp;
+        moiracpu->mmu.tc = t.tc;
+        moiracpu->mmu.tt0 = 0;
+        moiracpu->mmu.tt1 = 0;
+
+        for (int j = 0; j < ADDRESSES; j++) {
+
+            // Pick an address that is likely to be covered by the tables
+            u32 addr = u32(rand()) << (rand() % 17);
+            if (rand() % 4 == 0) addr &= 0xFFFF;
+            bool super = rand() % 2, data = rand() % 2, write = data && rand() % 2;
+            u8 fc = (super ? 4 : 0) | (data ? 1 : 2);
+
+            // UAE's ATC lookup is undefined for write accesses if the root pointer
+            // terminates the walk, because the M bit has nowhere to live.
+            u64 rp = (super && (t.tc & 0x02000000)) ? t.srp : t.crp;
+            if (write && ((rp >> 32) & 3) == 1) write = false;   // (also with FCL: FC lookup is skipped)
+
+            // Translate with both MMUs
+            u32 physRef = 0, physMoira = 0;
+            bool okRef = translateUAE(addr, super, data, write, &physRef);
+            moiracpu->setSupervisorMode(super);
+            sandbox.prepare(false, true);     // Don't record the descriptor updates
+            bool okMoira = moiracpu->translateAddress<moira::Core::C68020>(addr, fc, write, physMoira);
+
+            (okRef ? successes : faults)++;
+            bool equal = okRef == okMoira && (!okRef || physRef == physMoira) && !memcmp(refMem, moiraMem, sizeof(refMem));
+            if (equal) continue;
+
+            printf("\n\nTRANSLATION MISMATCH FOUND\n\n");
+            printf("Setup %d.%d: TC: %08x  CRP: %016llx  SRP: %016llx\n", i, j, t.tc, t.crp, t.srp);
+            printf("Access: addr %08x  FC %d  %s\n", addr, fc, write ? "write" : "read");
+            printf("UAE  : %s %08x\n", okRef ? "ok   " : "fault", physRef);
+            printf("Moira: %s %08x\n", okMoira ? "ok   " : "fault", physMoira);
+            for (int k = 0; k < 0x10000; k++) {
+                if (refMem[k] != moiraMem[k]) {
+                    printf("Memory differs at %04x: UAE %02x Moira %02x\n", k, refMem[k], moiraMem[k]);
+                    break;
+                }
+            }
+            exit(1);
+        }
+    }
+    passed(0, 0);
+    printf("%11s           %ld translations, %ld faults\n", "", successes, faults);
 }
 
 void runFPU(long round)

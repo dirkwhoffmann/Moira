@@ -19,6 +19,7 @@ public:
 
     // Grant the test runner access to the FPU state
     using moira::Moira::fpu;
+    using moira::Moira::mmu;
 
 private:
 
