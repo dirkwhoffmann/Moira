@@ -40,7 +40,7 @@ Moira::dasmFDbcc(StrWriter &str, u32 &addr, u16 op, Instr I, Mode M, Size S) con
     // Catch illegal extension words
     if (str.style.syntax == Syntax::GNU || str.style.syntax == Syntax::GNU_MIT) {
 
-        if (!isValidExtFPU(I, M, op, ext)) {
+        if (!isValidExtFPU(I, M, op, ext, dasmModel)) {
 
             addr = old;
             dasmIllegal(str, addr, op, I, M, S);
@@ -212,7 +212,7 @@ Moira::dasmFScc(StrWriter &str, u32 &addr, u16 op, Instr I, Mode M, Size S) cons
     // Catch illegal extension words
     if (str.style.syntax == Syntax::GNU || str.style.syntax == Syntax::GNU_MIT) {
 
-        if (!isValidExtFPU(I, M, op, ext)) {
+        if (!isValidExtFPU(I, M, op, ext, dasmModel)) {
 
             addr = old;
             dasmIllegal(str, addr, op, I, M, S);
@@ -233,7 +233,7 @@ Moira::dasmFTrapcc(StrWriter &str, u32 &addr, u16 op, Instr I, Mode M, Size S) c
     // Catch illegal extension words
     if (str.style.syntax == Syntax::GNU || str.style.syntax == Syntax::GNU_MIT) {
 
-        if (!isValidExtFPU(I, M, op, ext)) {
+        if (!isValidExtFPU(I, M, op, ext, dasmModel)) {
 
             addr = old;
             dasmIllegal(str, addr, op, I, M, S);
@@ -484,7 +484,7 @@ Moira::dasmFMove(StrWriter &str, u32 &addr, u16 op, Instr I, Mode M, Size S) con
     // Catch illegal extension words
     if (str.style.syntax == Syntax::GNU || str.style.syntax == Syntax::GNU_MIT) {
 
-        if (!isValidExtFPU(I, M, op, ext)) {
+        if (!isValidExtFPU(I, M, op, ext, dasmModel)) {
 
             addr = old;
             dasmIllegal(str, addr, op, I, M, S);
@@ -619,7 +619,7 @@ Moira::dasmFMovecr(StrWriter &str, u32 &addr, u16 op, Instr I, Mode M, Size S) c
     // Catch illegal extension words
     if (str.style.syntax == Syntax::GNU || str.style.syntax == Syntax::GNU_MIT) {
 
-        if (!isValidExtFPU(I, M, op, ext)) {
+        if (!isValidExtFPU(I, M, op, ext, dasmModel)) {
 
             addr = old;
             dasmIllegal(str, addr, op, I, M, S);
@@ -647,7 +647,7 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op, Instr I, Mode M, Size S) co
     // Catch illegal extension words
     if (str.style.syntax == Syntax::GNU || str.style.syntax == Syntax::GNU_MIT) {
 
-        if (!isValidExtFPU(I, M, op, ext)) {
+        if (!isValidExtFPU(I, M, op, ext, dasmModel)) {
 
             addr = old;
             dasmIllegal(str, addr, op, I, M, S);

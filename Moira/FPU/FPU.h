@@ -158,6 +158,10 @@ public:
 
     // Returns the precision and rounding mode, as specified in the FPCR
     Precision getPrecision() const;
+
+    // Returns the rounding precision of an instruction. FS* and FD* instructions
+    // round to single or double precision. All other instructions use the FPCR.
+    Precision getPrecision(Instr I) const;
     RoundingMode getRoundingMode() const;
 
 

@@ -62,6 +62,26 @@ FPU::getPrecision() const
     }
 }
 
+Precision
+FPU::getPrecision(Instr I) const
+{
+    switch (I) {
+
+        case Instr::FSABS: case Instr::FSADD: case Instr::FSDIV: case Instr::FSMUL:
+        case Instr::FSNEG: case Instr::FSSQRT: case Instr::FSSUB:
+
+            return Precision::SINGLE;
+
+        case Instr::FDABS: case Instr::FDADD: case Instr::FDDIV: case Instr::FDMUL:
+        case Instr::FDNEG: case Instr::FDSQRT: case Instr::FDSUB:
+
+            return Precision::DOUBLE;
+
+        default:
+            return getPrecision();
+    }
+}
+
 RoundingMode
 FPU::getRoundingMode() const
 {

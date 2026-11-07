@@ -8,15 +8,14 @@
 // The following definitions are not templated. They are compiled into the
 // main translation unit only (see MoiraCore_cpp.h).
 
-// The 68040 FPU updates FPIAR on every data operation, older FPUs only if an exception is enabled
-#define FPU_UPDATE_FPIAR \
-if (cpuModel >= Model::M68EC040 || (fpu.getFPCR() & 0x7F00)) fpu.setFPIAR(getPC0());
-
 #ifdef MOIRA_MAIN_TU
 
 bool
-Moira::isValidExtFPU(Instr I, Mode M, u16 op, u32 ext) const
+Moira::isValidExtFPU(Instr I, Mode M, u16 op, u32 ext, Model model) const
 {
+    // Some FMOVE variants (FSMOVE, FDMOVE) exist on the 68040 FPU only
+    auto has040Fpu = model == Model::M68040;
+
     auto cod  = xxx_____________ (ext);
     auto mode = ___xx___________ (ext);
     auto fmt  = ___xxx__________ (ext);
@@ -42,13 +41,13 @@ Moira::isValidExtFPU(Instr I, Mode M, u16 op, u32 ext) const
                 case 0b010:
 
                     if (M == Mode::IP) break;
-                    if (fmt == 0b111) break;
-                    if (M == Mode::DN && (fmt == 0b010 || fmt == 0b011 || fmt == 0b101)) break;
+                    if ((cmd == 0x40 || cmd == 0x44) && !has040Fpu) break;
                     return true;
 
                 case 0b000:
 
                     if (cmd == 0 && cod == 0 && (op & 0x3F)) break;
+                    if (cmd != 0 && !has040Fpu) break;
                     return true;
 
                 case 0b011:
@@ -536,7 +535,7 @@ Moira::execFDbcc(u16 opcode)
     auto dn  = _____________xxx (opcode);
 
     // Catch illegal extension words
-    if (!isValidExtFPU(I, M, opcode, ext)) { execLineF<C, I, M, S>(opcode); return; }
+    if (!isValidExtFPU(I, M, opcode, ext, cpuModel)) { execLineF<C, I, M, S>(opcode); return; }
 
     if (fpu.model != FPUModel::INTERNAL) fpu.resetState = false;
     readI<C, Word>();
@@ -651,7 +650,7 @@ Moira::execFScc(u16 opcode)
     auto dst = _____________xxx (opcode);
 
     // Catch illegal extension words
-    if (!isValidExtFPU(I, M, opcode, ext)) { execLineF<C, I, M, S>(opcode); return; }
+    if (!isValidExtFPU(I, M, opcode, ext, cpuModel)) { execLineF<C, I, M, S>(opcode); return; }
 
     if (fpu.model != FPUModel::INTERNAL) fpu.resetState = false;
     readI<C, Word>();
@@ -682,7 +681,7 @@ Moira::execFTrapcc(u16 opcode)
     auto ext = queue.irc;
 
     // Catch illegal extension words
-    if (!isValidExtFPU(I, M, opcode, ext)) { execLineF<C, I, M, S>(opcode); return; }
+    if (!isValidExtFPU(I, M, opcode, ext, cpuModel)) { execLineF<C, I, M, S>(opcode); return; }
 
     if (fpu.model != FPUModel::INTERNAL) fpu.resetState = false;
     readI<C, Word>();
@@ -719,23 +718,23 @@ Moira::execFMove(u16 opcode)
     auto cmd = _________xxxxxxx (ext);
 
     // Catch illegal extension words and operand formats
-    bool illegal = !isValidExtFPU(I, M, opcode, ext);
+    bool illegal = !isValidExtFPU(I, M, opcode, ext, cpuModel);
 
-    // FSMOVE and FDMOVE as well as extended opcodes of FMOVE FPm,FPn exist on
-    // the 68040 only. (This is a property of the installed FPU, so isValidExtFPU,
-    // which the disassembler uses as well, cannot decide it.)
+    // The disassembler accepts the following combinations, because binutils does
     if (cod == 0b010) {
-        if (cmd == 0x40 && fpu.model != FPUModel::INTERNAL) illegal = true;
-        if (cmd == 0x44 && fpu.model != FPUModel::INTERNAL) illegal = true;
+        if (fmt == 0b111) illegal = true;
+        if (M == Mode::DN && (fmt == 0b010 || fmt == 0b011 || fmt == 0b101)) illegal = true;
     }
-    if (cod == 0b000 && cmd != 0x00 && fpu.model != FPUModel::INTERNAL) illegal = true;
 
     if (illegal) { execLineF<C, I, M, S>(opcode); return; }
 
     fpu.resetState = false;
     readI<C, Word>();
     fpu.clearExcStatusByte();
-    FPU_UPDATE_FPIAR
+
+    // The 68040 FPU updates FPIAR on every data operation, older FPUs only if an
+    // exception other than BSUN is enabled (only conditional instructions raise BSUN)
+    if (cpuModel >= Model::M68EC040 || (fpu.getFPCR() & 0x7F00)) fpu.setFPIAR(getPC0());
 
     {
         // FSMOVE and FDMOVE round to single or double precision
@@ -819,12 +818,15 @@ Moira::execFMovecr(u16 opcode)
     auto ofs = _________xxxxxxx (ext);
 
     // Catch illegal extension words
-    if (!isValidExtFPU(I, M, opcode, ext)) { execLineF<C, I, M, S>(opcode); return; }
+    if (!isValidExtFPU(I, M, opcode, ext, cpuModel)) { execLineF<C, I, M, S>(opcode); return; }
 
     fpu.resetState = false;
     readI<C, Word>();
     fpu.clearExcStatusByte();
-    FPU_UPDATE_FPIAR
+
+    // The 68040 FPU updates FPIAR on every data operation, older FPUs only if an
+    // exception other than BSUN is enabled (only conditional instructions raise BSUN)
+    if (cpuModel >= Model::M68EC040 || (fpu.getFPCR() & 0x7F00)) fpu.setFPIAR(getPC0());
 
     {
         FPU::Scope scope(fpu);
@@ -851,7 +853,7 @@ Moira::execFMovem(u16 opcode)
     auto rrr = _________xxx____ (ext);
 
     // Catch illegal extension words
-    if (!isValidExtFPU(I, M, opcode, ext)) { execLineF<C, I, M, S>(opcode); return; }
+    if (!isValidExtFPU(I, M, opcode, ext, cpuModel)) { execLineF<C, I, M, S>(opcode); return; }
 
     fpu.resetState = false;
     readI<C, Word>();
@@ -985,60 +987,36 @@ Moira::execFGeneric(u16 opcode)
     AVAILABILITY(Core::C68000)
 
     auto ext = queue.irc;
-    auto rm  = (ext >> 14) & 1;                            // Bit 14: Source is an <ea>
     auto src = ___xxx__________ (ext);
     auto dst = ______xxx_______ (ext);
     auto reg = _____________xxx (opcode);
 
-    // Determine the rounding precision of the instruction
-    Precision precision = fpu.getPrecision();
-    switch (I) {
+    auto precision = fpu.getPrecision(I);
+    auto illegal = !fpu.isSupported(I);
 
-        case Instr::FSABS: case Instr::FSADD: case Instr::FSDIV: case Instr::FSMUL:
-        case Instr::FSNEG: case Instr::FSSQRT: case Instr::FSSUB:
+    // Bit 14 of the extension byte indicated whether source is an <ea>
+    auto rm  = (ext >> 14) & 1;
 
-            precision = Precision::SINGLE; break;
-
-        case Instr::FDABS: case Instr::FDADD: case Instr::FDDIV: case Instr::FDMUL:
-        case Instr::FDNEG: case Instr::FDSQRT: case Instr::FDSUB:
-
-            precision = Precision::DOUBLE; break;
-
-        default:
-            break;
-    }
-
-    // Instructions that are not implemented in hardware (or not at all) cause a line F exception
-    constexpr bool implemented =
-    I == Instr::FABS || I == Instr::FADD || I == Instr::FCMP || I == Instr::FDIV ||
-    I == Instr::FMUL || I == Instr::FNEG || I == Instr::FSQRT || I == Instr::FSUB ||
-    I == Instr::FTST || I == Instr::FINT || I == Instr::FINTRZ || I == Instr::FGETEXP ||
-    I == Instr::FGETMAN || I == Instr::FMOD || I == Instr::FREM || I == Instr::FSCAL ||
-    I == Instr::FSGLDIV || I == Instr::FSGLMUL ||
-    I == Instr::FSABS || I == Instr::FDABS || I == Instr::FSADD || I == Instr::FDADD ||
-    I == Instr::FSDIV || I == Instr::FDDIV || I == Instr::FSMUL || I == Instr::FDMUL ||
-    I == Instr::FSNEG || I == Instr::FDNEG || I == Instr::FSSQRT || I == Instr::FDSQRT ||
-    I == Instr::FSSUB || I == Instr::FDSUB ||
-    I == Instr::FSIN || I == Instr::FCOS || I == Instr::FTAN || I == Instr::FASIN ||
-    I == Instr::FACOS || I == Instr::FATAN || I == Instr::FSINH || I == Instr::FCOSH ||
-    I == Instr::FTANH || I == Instr::FATANH || I == Instr::FETOX || I == Instr::FETOXM1 ||
-    I == Instr::FTWOTOX || I == Instr::FTENTOX || I == Instr::FLOGN || I == Instr::FLOGNP1 ||
-    I == Instr::FLOG2 || I == Instr::FLOG10 || I == Instr::FSINCOS;
-
-    bool illegal = !implemented || !fpu.isSupported(I);
-
-    // Source format 111 is reserved. Only 32-bit formats can be read from a data register.
     if (rm) {
+
+        // Source format 111 is reserved. Only 32-bit formats can be read from a data register.
         if (src == 0b111) illegal = true;
         if (M == Mode::DN && (src == 0b010 || src == 0b011 || src == 0b101)) illegal = true;
     }
 
-    if (illegal) { execLineF<C, I, M, S>(opcode); return; }
+    if (illegal) {
+        
+        execLineF<C, I, M, S>(opcode);
+        return;
+    }
 
     fpu.resetState = false;
     readI<C, Word>();
     fpu.clearExcStatusByte();
-    FPU_UPDATE_FPIAR
+
+    // The 68040 FPU updates FPIAR on every data operation, older FPUs only if an
+    // exception other than BSUN is enabled (only conditional instructions raise BSUN)
+    if (cpuModel >= Model::M68EC040 || (fpu.getFPCR() & 0x7F00)) fpu.setFPIAR(getPC0());
 
     {
         FPU::Scope scope(fpu, precision);
@@ -1074,37 +1052,57 @@ Moira::execFGeneric(u16 opcode)
 
             case Instr::FTST:       fpu.ftst(val); goto done;
             case Instr::FCMP:       fpu.fcmp(d, val); goto done;
-
-            case Instr::FABS: case Instr::FSABS: case Instr::FDABS:
-                                    result = fpu.fabs(val); break;
-            case Instr::FNEG: case Instr::FSNEG: case Instr::FDNEG:
-                                    result = fpu.fneg(val); break;
-            case Instr::FSQRT: case Instr::FSSQRT: case Instr::FDSQRT:
-                                    result = fpu.fsqrt(val); break;
+            case Instr::FABS:
+            case Instr::FSABS:
+            case Instr::FDABS:      result = fpu.fabs(val); break;
+            case Instr::FNEG:
+            case Instr::FSNEG:
+            case Instr::FDNEG:      result = fpu.fneg(val); break;
+            case Instr::FSQRT:
+            case Instr::FSSQRT:
+            case Instr::FDSQRT:     result = fpu.fsqrt(val); break;
             case Instr::FINT:       result = fpu.fint(val); break;
             case Instr::FINTRZ:     result = fpu.fintrz(val); break;
             case Instr::FGETEXP:    result = fpu.fgetexp(val); break;
             case Instr::FGETMAN:    result = fpu.fgetman(val); break;
-            case Instr::FSIN:        result = fpu.fsin(val); break;
-            case Instr::FCOS:        result = fpu.fcos(val); break;
-            case Instr::FTAN:        result = fpu.ftan(val); break;
-            case Instr::FASIN:       result = fpu.fasin(val); break;
-            case Instr::FACOS:       result = fpu.facos(val); break;
-            case Instr::FATAN:       result = fpu.fatan(val); break;
-            case Instr::FSINH:       result = fpu.fsinh(val); break;
-            case Instr::FCOSH:       result = fpu.fcosh(val); break;
-            case Instr::FTANH:       result = fpu.ftanh(val); break;
-            case Instr::FATANH:      result = fpu.fatanh(val); break;
-            case Instr::FETOX:       result = fpu.fetox(val); break;
-            case Instr::FETOXM1:     result = fpu.fetoxm1(val); break;
-            case Instr::FTWOTOX:     result = fpu.ftwotox(val); break;
-            case Instr::FTENTOX:     result = fpu.ftentox(val); break;
-            case Instr::FLOGN:       result = fpu.flogn(val); break;
-            case Instr::FLOGNP1:     result = fpu.flognp1(val); break;
-            case Instr::FLOG2:       result = fpu.flog2(val); break;
-            case Instr::FLOG10:      result = fpu.flog10(val); break;
-
+            case Instr::FSIN:       result = fpu.fsin(val); break;
+            case Instr::FCOS:       result = fpu.fcos(val); break;
+            case Instr::FTAN:       result = fpu.ftan(val); break;
+            case Instr::FASIN:      result = fpu.fasin(val); break;
+            case Instr::FACOS:      result = fpu.facos(val); break;
+            case Instr::FATAN:      result = fpu.fatan(val); break;
+            case Instr::FSINH:      result = fpu.fsinh(val); break;
+            case Instr::FCOSH:      result = fpu.fcosh(val); break;
+            case Instr::FTANH:      result = fpu.ftanh(val); break;
+            case Instr::FATANH:     result = fpu.fatanh(val); break;
+            case Instr::FETOX:      result = fpu.fetox(val); break;
+            case Instr::FETOXM1:    result = fpu.fetoxm1(val); break;
+            case Instr::FTWOTOX:    result = fpu.ftwotox(val); break;
+            case Instr::FTENTOX:    result = fpu.ftentox(val); break;
+            case Instr::FLOGN:      result = fpu.flogn(val); break;
+            case Instr::FLOGNP1:    result = fpu.flognp1(val); break;
+            case Instr::FLOG2:      result = fpu.flog2(val); break;
+            case Instr::FLOG10:     result = fpu.flog10(val); break;
+            case Instr::FADD:
+            case Instr::FSADD:
+            case Instr::FDADD:      result = fpu.fadd(d, val); break;
+            case Instr::FSUB:
+            case Instr::FSSUB:
+            case Instr::FDSUB:      result = fpu.fsub(d, val); break;
+            case Instr::FMUL:
+            case Instr::FSMUL:
+            case Instr::FDMUL:      result = fpu.fmul(d, val); break;
+            case Instr::FDIV:
+            case Instr::FSDIV:
+            case Instr::FDDIV:      result = fpu.fdiv(d, val); break;
+            case Instr::FSGLMUL:    result = fpu.fsglmul(d, val); break;
+            case Instr::FSGLDIV:    result = fpu.fsgldiv(d, val); break;
+            case Instr::FMOD:       result = fpu.fmod(d, val); break;
+            case Instr::FREM:       result = fpu.frem(d, val); break;
+            case Instr::FSCAL:      result = fpu.fscal(d, val); break;
+                
             case Instr::FSINCOS: {
+                
                 Float80 sine, cosine;
                 fpu.fsincos(val, sine, cosine);
                 auto &c = fpu.fpr[ext & 7];
@@ -1113,21 +1111,8 @@ Moira::execFGeneric(u16 opcode)
                 break;
             }
 
-            case Instr::FADD: case Instr::FSADD: case Instr::FDADD:
-                                    result = fpu.fadd(d, val); break;
-            case Instr::FSUB: case Instr::FSSUB: case Instr::FDSUB:
-                                    result = fpu.fsub(d, val); break;
-            case Instr::FMUL: case Instr::FSMUL: case Instr::FDMUL:
-                                    result = fpu.fmul(d, val); break;
-            case Instr::FDIV: case Instr::FSDIV: case Instr::FDDIV:
-                                    result = fpu.fdiv(d, val); break;
-            case Instr::FSGLMUL:    result = fpu.fsglmul(d, val); break;
-            case Instr::FSGLDIV:    result = fpu.fsgldiv(d, val); break;
-            case Instr::FMOD:       result = fpu.fmod(d, val); break;
-            case Instr::FREM:       result = fpu.frem(d, val); break;
-            case Instr::FSCAL:      result = fpu.fscal(d, val); break;
-
-            default:                fatalError;
+            default:
+                fatalError;
         }
 
         // FSGLMUL and FSGLDIV round to single precision by themselves and keep the extended exponent
@@ -1135,6 +1120,7 @@ Moira::execFGeneric(u16 opcode)
         // FINT, FINTRZ, FGETEXP and FGETMAN produce exact results that are not rounded to the FPCR
         // precision (this matches UAE). The same applies to FREM, which returns a destination smaller
         // than half the source unchanged and rounds all other results by itself.
+        
         if constexpr (I == Instr::FSGLMUL || I == Instr::FSGLDIV ||
                       I == Instr::FINT || I == Instr::FINTRZ ||
                       I == Instr::FGETEXP || I == Instr::FGETMAN || I == Instr::FREM) {

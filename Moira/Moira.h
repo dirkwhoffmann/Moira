@@ -734,7 +734,7 @@ private:
     bool isValidExtMMU(Instr I, Mode M, u16 op, u32 ext) const;
     
     // Validates extension words for FPU-related instructions
-    bool isValidExtFPU(Instr I, Mode M, u16 op, u32 ext) const;
+    bool isValidExtFPU(Instr I, Mode M, u16 op, u32 ext, Model model) const;
     
     
     //
