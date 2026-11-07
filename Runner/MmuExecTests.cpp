@@ -424,6 +424,48 @@ static void testTransparentTranslation()
     CHECK(!(cpu.mmu.mmusr & 0x40));
 }
 
+static void testTranslationBypass()
+{
+    TestCPU cpu;
+    setupShortTables(cpu);
+    cpu.write32(0x2004, 0x11111111);
+    cpu.write32(0x5004, 0x22222222);
+    cpu.reg.a[0] = 0x2004;
+
+    // Without TT, the page is relocated
+    cpu.run({ 0x2010 });
+    CHECK(cpu.reg.d[0] == 0x22222222);
+
+    // TT0: Address 0x00xxxxxx, any function code, read and write
+    cpu.mmu.tt0 = 1 << 15 | 1 << 8 | 7;
+    cpu.run({ 0x2010 });
+    CHECK(cpu.reg.d[0] == 0x11111111);
+
+    // A different address base doesn't match
+    cpu.mmu.tt0 = 0x20000000 | 1 << 15 | 1 << 8 | 7;
+    cpu.run({ 0x2010 });
+    CHECK(cpu.reg.d[0] == 0x22222222);
+
+    // Ignoring all address bits matches everything
+    cpu.mmu.tt0 = 0x20000000 | 0xFF << 16 | 1 << 15 | 1 << 8 | 7;
+    cpu.run({ 0x2010 });
+    CHECK(cpu.reg.d[0] == 0x11111111);
+
+    // TT1 works the same way, and a read-only TT (RWM = 0, RW = 1) ignores writes
+    cpu.mmu.tt0 = 0;
+    cpu.mmu.tt1 = 1 << 15 | 1 << 9 | 0xFF << 16 | 7;
+    cpu.run({ 0x2010 });
+    CHECK(cpu.reg.d[0] == 0x11111111);
+    cpu.reg.d[1] = 0xDEADBEEF;
+    cpu.run({ 0x2081 });                        // MOVE.L D1,(A0) is translated
+    CHECK(cpu.read32(0x5004) == 0xDEADBEEF);
+
+    // Function code mismatch
+    cpu.mmu.tt1 = 1 << 15 | 1 << 8 | 0xFF << 16 | 1 << 4;   // User data only
+    cpu.run({ 0x2010 });                        // Supervisor data access
+    CHECK(cpu.reg.d[0] == 0xDEADBEEF);
+}
+
 static void testModels()
 {
     // Only the 68030 and 68040 have an MMU
@@ -446,6 +488,7 @@ int main()
     testPMove();
     testEnableDisable();
     testTransparentTranslation();
+    testTranslationBypass();
 
     printf("%d checks, %d failures\n", checks, failures);
     return failures ? EXIT_FAILURE : EXIT_SUCCESS;

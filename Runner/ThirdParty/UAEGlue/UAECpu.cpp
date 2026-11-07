@@ -314,8 +314,18 @@ void setMMU(uint64_t crp, uint64_t srp, uint32_t tc, uint32_t tt0, uint32_t tt1)
     crp_030 = crp;
     srp_030 = srp;
     tc_030 = mmuTC = tc;
-    tt0_030 = tt0;
-    tt1_030 = tt1;
+    tt0_030 = tt1_030 = 0;
+
+    // UAE decodes the transparent translation registers in PMOVE only. Run
+    // PMOVE (A0),TTx with the value stored in a scratch area of the memory.
+    uint8_t backup[4];
+    memcpy(backup, mem + 0xFFF0, 4);
+    for (int i = 0; i < 2; i++) {
+        uint32_t tt = i ? tt1 : tt0;
+        for (int j = 0; j < 4; j++) mem[0xFFF0 + j] = uint8_t(tt >> (24 - 8 * j));
+        mmu_op30_pmove(0, 0xF010, uint16_t((i ? 0x03 : 0x02) << 10), 0xFFF0);
+    }
+    memcpy(mem + 0xFFF0, backup, 4);
 }
 
 bool translate(uint32_t addr, bool super, bool data, bool write, uint32_t *physical)

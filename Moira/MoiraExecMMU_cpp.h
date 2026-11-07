@@ -249,6 +249,10 @@ Moira::translate(u32 addr, u8 fc)
     // Only proceed if the selected CPU model has a MMU
     if (!hasMMU()) return addr;
 
+    // Accesses to the CPU space and accesses matching a transparent translation
+    // register are not translated
+    if (fc == 7 || testTT(mmu.tt0, addr, fc, !write) || testTT(mmu.tt1, addr, fc, !write)) return addr;
+
     //
     // TODO: LOOKUP IN CACHE
     //

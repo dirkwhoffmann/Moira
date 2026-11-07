@@ -365,6 +365,8 @@ struct TranslationSetup {
     u32 tc;
     u64 crp;
     u64 srp;
+    u32 tt0;
+    u32 tt1;
     int levels;
     int bits[4];
 };
@@ -429,6 +431,14 @@ TranslationSetup randomTranslationSetup()
         u64 dt = 1 + rand() % 3;
         return lu << 63 | limit << 48 | dt << 32 | u64(rand() & 0xFFF0);
     };
+    auto transparentTranslation = [&]() {
+        if (rand() % 2) return u32(0);
+        u32 mask = (0xFF00 >> (rand() % 9)) & 0xFF;
+        return u32(rand() & 0xFF) << 24 | mask << 16 | 0x8000 | u32(rand() % 2) << 10
+             | u32(rand() % 2) << 9 | u32(rand() % 2) << 8 | u32(rand() % 8) << 4 | u32(rand() % 8);
+    };
+    t.tt0 = transparentTranslation();
+    t.tt1 = transparentTranslation();
     t.crp = rootPointer();
     t.srp = rootPointer();
     return t;
@@ -453,12 +463,12 @@ void runMMUTranslate(long round)
         auto t = randomTranslationSetup();
 
         // Configure both MMUs
-        setMMUUAE(t.crp, t.srp, t.tc, 0, 0);
+        setMMUUAE(t.crp, t.srp, t.tc, t.tt0, t.tt1);
         moiracpu->mmu.crp = t.crp;
         moiracpu->mmu.srp = t.srp;
         moiracpu->mmu.tc = t.tc;
-        moiracpu->mmu.tt0 = 0;
-        moiracpu->mmu.tt1 = 0;
+        moiracpu->mmu.tt0 = t.tt0;
+        moiracpu->mmu.tt1 = t.tt1;
 
         for (int j = 0; j < ADDRESSES; j++) {
 
@@ -485,7 +495,7 @@ void runMMUTranslate(long round)
             if (equal) continue;
 
             printf("\n\nTRANSLATION MISMATCH FOUND\n\n");
-            printf("Setup %d.%d: TC: %08x  CRP: %016llx  SRP: %016llx\n", i, j, t.tc, t.crp, t.srp);
+            printf("Setup %d.%d: TC: %08x  CRP: %016llx  SRP: %016llx  TT0: %08x  TT1: %08x\n", i, j, t.tc, t.crp, t.srp, t.tt0, t.tt1);
             printf("Access: addr %08x  FC %d  %s\n", addr, fc, write ? "write" : "read");
             printf("UAE  : %s %08x\n", okRef ? "ok   " : "fault", physRef);
             printf("Moira: %s %08x\n", okMoira ? "ok   " : "fault", physMoira);
