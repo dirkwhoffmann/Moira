@@ -72,6 +72,9 @@ protected:
     // The CPU's register set
     Registers reg {};
 
+    // The memory management unit
+    MMU mmu {};
+
     // The floating-point unit
     FPU fpu {};
     
@@ -392,6 +395,10 @@ protected:
     
     // Called when the CPU enters the HALT state
     virtual void cpuDidHalt() { }
+
+    // Called when the MMU is enabled or disabled
+    virtual void mmuDidEnable() { }
+    virtual void mmuDidDisable() { }
     
     
     //
@@ -492,6 +499,10 @@ protected:
     
     // Called when the CPU enters the HALT state
     void cpuDidHalt();
+
+    // Called when the MMU is enabled or disabled
+    void mmuDidEnable();
+    void mmuDidDisable();
     
     
     //
@@ -791,6 +802,38 @@ private:
     
     // Selects the IRQ vector based on the interrupt level
     u16 getIrqVector(u8 level) const;
+
+
+    //
+    // Running the MMU
+    //
+
+private:
+
+    // Sets an MMU register
+    void setTC(u32 value);
+    void setTT0(u64 value);
+    void setTT1(u64 value);
+
+    // Reads a long word or a quad word from memory (used for table lookups)
+    u32 readMMU32(u32 addr) const { return read32(addr); }
+    u64 readMMU64(u32 addr) const { return u64(read32(addr)) << 32 | read32(addr + 4); }
+
+    // Translates a logical address to a physical address
+    template <Core C, bool write> u32 translate(u32 addr, u8 fc);
+
+    // Looks up a physical address from the MMU table
+    template <Core C, bool write> u32 mmuLookup(u32 addr, u8 fc);
+    template <Core C, bool write> u32 mmuLookupShort(char table, u32 taddr, u32 offset, struct MmuContext &con);
+    template <Core C, bool write> u32 mmuLookupLong(char table, u32 taddr, u32 offset, struct MmuContext &con);
+
+    // Looks up a physical address from the MMU table without causing side effects
+    template <Core C, bool write> u32 mmuDryRun(u32 addr, u8 fc, u32 *mmusr);
+    template <Core C, bool write> u32 mmuDryRunShort(u32 taddr, u32 offset, struct MmuContext &con, u32 *mmusr);
+    template <Core C, bool write> u32 mmuDryRunLong(u32 taddr, u32 offset, struct MmuContext &con, u32 *mmusr);
+
+    // Experimental
+    bool testTT(u32 ttx, u32 addr, u8 fc, bool rw);
     
 private:
     

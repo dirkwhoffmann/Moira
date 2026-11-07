@@ -63,6 +63,9 @@ template <Core C, Mode M, Size S, Flags F = 0> u32 computeEAfull(u32 an);
 template <Core C, Mode M, Size S = Word, Flags F = 0>
 void readOp(int n, u32 *ea, u32 *result);
 
+// Reads a 64-bit operand (used by the MMU)
+template <Core C, Mode M, Flags F = 0> void readOp64(int n, u32 *ea, u64 *result);
+
 
 /* Writes an operand
  *
@@ -71,6 +74,9 @@ void readOp(int n, u32 *ea, u32 *result);
  */
 template <Core C, Mode M, Size S, Flags F = 0> void writeOp(int n, u32 val);
 template <Core C, Mode M, Size S, Flags F = 0> void writeOp(int n, u32 ea, u32 val);
+
+// Writes a 64-bit operand (used by the MMU)
+template <Core C, Mode M, Flags F = 0> void writeOp64(int n, u64 val);
 
 // Emulates the address register modification for modes (An)+, (An)- (DEPRECATED)
 template <Mode M, Size S> void updateAn(int n);

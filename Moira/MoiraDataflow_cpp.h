@@ -337,6 +337,46 @@ Moira::writeOp(int n, u32 ea, u32 val)
     }
 }
 
+template <Core C, Mode M, Flags F> void
+Moira::readOp64(int n, u32 *ea, u64 *result)
+{
+    assert(M != Mode::DN && M != Mode::AN && M != Mode::IM);
+
+    // Compute effective address
+    *ea = computeEA<C, M, Long, F>(n);
+
+    // Read the first long word
+    updateAnPD<M, Long>(n);
+    u64 hi = readM<C, M, Long, F>(*ea);
+    updateAnPI<M, Long>(n);
+
+    // Read the second long word
+    u64 lo = readM<C, M, Long, F>(*ea + 4);
+    updateAnPD<M, Long>(n);
+    updateAnPI<M, Long>(n);
+
+    *result = hi << 32 | lo;
+}
+
+template <Core C, Mode M, Flags F> void
+Moira::writeOp64(int n, u64 val)
+{
+    assert(M != Mode::DN && M != Mode::AN && M != Mode::IM);
+
+    // Compute effective address
+    u32 ea = computeEA<C, M, Long>(n);
+
+    // Write the first long word
+    updateAnPD<M, Long>(n);
+    writeM<C, M, Long, F>(ea, u32(val >> 32));
+    updateAnPI<M, Long>(n);
+
+    // Write the second long word
+    writeM<C, M, Long, F>(ea + 4, u32(val));
+    updateAnPD<M, Long>(n);
+    updateAnPI<M, Long>(n);
+}
+
 // The following definitions are not templated. They are compiled into the
 // main translation unit only (see MoiraCore_cpp.h).
 #ifdef MOIRA_MAIN_TU
@@ -594,13 +634,17 @@ Moira::read(u32 addr)
     u32 result;
 
     // Update function code pins
-    setFC(AS == AddrSpace::DATA ? FC::USER_DATA : FC::USER_PROG);
+    u8 fc = AS == AddrSpace::DATA ? FC::USER_DATA : FC::USER_PROG;
+    setFC(fc);
     SYNC(2);
 
     // Check for address errors
     if (misaligned<C, S>(addr)) {
         throw AddressError(makeFrame<F>(addr));
     }
+
+    // Derive the physical address
+    addr = translate<C, false>(addr, fc);
 
     // Check if a watchpoint has been reached
     if ((flags & State::CHECK_WP) && debugger.watchpointMatches(addr, S)) {
@@ -662,6 +706,9 @@ Moira::readInstr(u32 addr)
         throw AddressError(makeFrame<F>(addr));
     }
 
+    // Derive the physical address
+    addr = translate<C, false>(addr, FC::USER_PROG);
+
     // Check if a watchpoint has been reached
     if ((flags & State::CHECK_WP) && debugger.watchpointMatches(addr, Word)) {
         didReachWatchpoint(addr);
@@ -700,13 +747,17 @@ template <Core C, AddrSpace AS, Size S, Flags F> void
 Moira::write(u32 addr, u32 val)
 {
     // Update function code pins
-    setFC(AS == AddrSpace::DATA ? FC::USER_DATA : FC::USER_PROG);
+    u8 fc = AS == AddrSpace::DATA ? FC::USER_DATA : FC::USER_PROG;
+    setFC(fc);
     SYNC(2);
 
     // Check for address errors
     if (misaligned<C, S>(addr)) {
         throw AddressError(makeFrame<F|AE_WRITE>(addr));
     }
+
+    // Derive the physical address
+    addr = translate<C, true>(addr, fc);
 
     // Check if a watchpoint has been reached
     if ((flags & State::CHECK_WP) && debugger.watchpointMatches(addr, S)) {

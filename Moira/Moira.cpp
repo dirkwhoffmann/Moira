@@ -242,6 +242,7 @@ Moira::addrMask() const
 void
 Moira::reset()
 {
+    mmu = { };
     fpu.reset();
 
     switch (cpuModel) {
