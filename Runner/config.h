@@ -23,6 +23,9 @@ static const bool CHECK_MMU = true;
 // Set to true to execute FPU tests for capable CPUs
 static const bool CHECK_FPU = true;
 
+// Set to true to run the disassembler tests
+static const bool CHECK_DASM = true;
+
 // Set to true to skip the execution of illegal instructions
 static const bool SKIP_ILLEGAL = true;
 

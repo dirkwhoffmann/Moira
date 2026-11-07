@@ -69,13 +69,21 @@ void run(unsigned seed, long rounds, const std::vector<Model> &cpus, const std::
 void runCPU(long round);
 void runMMU(long round);
 void runFPU(long round);
+void runDasmCPU(long round);
+void runDasmMMU(long round);
+void runDasmFPU(long round);
 void passed();
 
 void runSingleTest(Setup &s, u16 op);
 void runSingleTest(Setup &s, u16 op, u16 ext);
 
-void runReference(Setup &s, Result &r); 
+void runDasmSingleTest(Setup &s, u16 op);
+void runDasmSingleTest(Setup &s, u16 op, u16 ext);
+
+void runReference(Setup &s, Result &r);
 void runMoira(Setup &s, Result &r);
+void disassembleReference(Setup &s, Result &r);
+void disassembleMoira(Setup &s, Result &r);
 
 bool skip(const Setup &s);                                           // Skips a test case based on its setup
 bool skipCompare(const Setup &s, const Result &rRef, const Result &rMoira); // Skips the comparison (includes skip)
@@ -111,6 +119,7 @@ bool compareFPSR(Result &rRef, Result &rMoira);
 bool compareFPIAR(Result &rRef, Result &rMoira);
 bool compareMemory();
 
+void dumpDasm(Setup &s, Result &rRef, Result &rMoira);
 void bugReport();
 
 }
