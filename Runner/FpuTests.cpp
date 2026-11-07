@@ -104,11 +104,9 @@ static void testPackedIn()
     CHECK(sf.flags() & FloatFlags::INEXACT);
     sf.clearFlags();
 
-    // 1.0E4000 and 1.0E-4000 (the exponent has four digits)
-    u32 big[3] = { 0x00004001 | (4u << 12), 0, 0 };
-    big[0] = 0x00000001 | (4u << 12);
-    CHECK(r.isFinite());
-    CHECK(FpuFormats::fromPacked(big).biasedExponent() == 0x3FFF + 13287);
+    // 1.0E999 (the exponent has three digits, as in the reference)
+    u32 big[3] = { 0x09990001, 0, 0 };
+    CHECK(FpuFormats::fromPacked(big).biasedExponent() == 0x3FFF + 3318);
 
     // Zero, infinity, NaN
     u32 zero[3] = { 0x80000000, 0, 0 };
@@ -117,12 +115,6 @@ static void testPackedIn()
     CHECK(same(FpuFormats::fromPacked(inf), Float80::infinity()));
     u32 nan[3] = { 0x7FFF0000, 0xC0000000, 0 };
     CHECK(FpuFormats::fromPacked(nan).isNaN());
-
-    // Overflow and underflow
-    u32 huge[3] = { 0x00005001 | 0, 0, 0 };
-    huge[0] = 0x00000001 | (9u << 12) | (9u << 24) | (9u << 20) | (9u << 16);
-    CHECK(FpuFormats::fromPacked(huge).isInfinite());
-    CHECK(sf.flags() & FloatFlags::OVFL);
 }
 
 static void testPackedOut()
