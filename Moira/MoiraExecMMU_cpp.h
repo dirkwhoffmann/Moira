@@ -441,13 +441,8 @@ Moira::mmuLookupShort(char table, u32 taddr, u32 offset, struct MmuContext &c)
 
                 taddr = descriptor & 0xFFFFFFF0;
 
-
-                // Check offset range
-                if (offset < c.lowerLimit || offset > c.upperLimit) {
-
-                    throw BusError(makeFrame<write ? AE_WRITE : 0>(c.faultAddr));
-                }
-
+                // Short descriptors carry no limit. The limit of the root
+                // pointer has already been checked for the current level.
                 if constexpr (write) { c.wp |= descriptor & 0x4; }
                 c.lowerLimit = 0;
                 c.upperLimit = 0xFFFF;

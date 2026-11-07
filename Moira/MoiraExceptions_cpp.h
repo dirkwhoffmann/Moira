@@ -333,6 +333,8 @@ Moira::execBusError(StackFrame frame, int delay)
     // Write stack frame
     if constexpr (C == Core::C68000) {
         writeStackFrameAEBE<C>(frame);
+    } else if constexpr (C == Core::C68020) {
+        writeStackFrame1011<C>(status, frame.pc, reg.pc0, 2);
     } else {
         writeStackFrame1000<C>(frame, status, frame.pc, reg.pc0, 2, frame.addr);
     }

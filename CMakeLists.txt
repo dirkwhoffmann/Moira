@@ -61,6 +61,11 @@ add_executable(fpuExecTests Runner/FpuExecTests.cpp)
 target_link_libraries(fpuExecTests moira)
 target_include_directories(fpuExecTests PUBLIC ${CMAKE_SOURCE_DIR}/Moira)
 
+# Add the MMU unit tests
+add_executable(mmuExecTests Runner/MmuExecTests.cpp)
+target_link_libraries(mmuExecTests moira)
+target_include_directories(mmuExecTests PUBLIC ${CMAKE_SOURCE_DIR}/Moira)
+
 # UAE sources (GPLv3, used by the test runners only)
 set(UAE_DIR ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/UAE CACHE PATH "UAE source tree")
 add_library(uaeref STATIC
@@ -122,4 +127,5 @@ target_include_directories(uaecpu PUBLIC ${CMAKE_SOURCE_DIR}/Runner/ThirdParty/U
 add_test(UnitTestMusashi testRunnerMusashi)
 add_test(UnitTestUAE testRunnerUAE)
 add_test(FpuExecTests fpuExecTests)
+add_test(MmuExecTests mmuExecTests)
 add_test(FpuTests fpuTests)
