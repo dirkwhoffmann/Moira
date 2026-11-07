@@ -1047,11 +1047,13 @@ Moira::execFGeneric(u16 opcode)
 
         auto &d = fpu.fpr[dst];
         Float80 result;
+        bool roundResult = true;
+        bool setCodes = true;
 
         switch (I) {
 
-            case Instr::FTST:       fpu.ftst(val); goto done;
-            case Instr::FCMP:       fpu.fcmp(d, val); goto done;
+            case Instr::FTST:       fpu.ftst(val); result = d; roundResult = setCodes = false; break;
+            case Instr::FCMP:       fpu.fcmp(d, val); result = d; roundResult = setCodes = false; break;
             case Instr::FABS:
             case Instr::FSABS:
             case Instr::FDABS:      result = fpu.fabs(val); break;
@@ -1061,10 +1063,10 @@ Moira::execFGeneric(u16 opcode)
             case Instr::FSQRT:
             case Instr::FSSQRT:
             case Instr::FDSQRT:     result = fpu.fsqrt(val); break;
-            case Instr::FINT:       result = fpu.fint(val); break;
-            case Instr::FINTRZ:     result = fpu.fintrz(val); break;
-            case Instr::FGETEXP:    result = fpu.fgetexp(val); break;
-            case Instr::FGETMAN:    result = fpu.fgetman(val); break;
+            case Instr::FINT:       result = fpu.fint(val); roundResult = false; break;
+            case Instr::FINTRZ:     result = fpu.fintrz(val); roundResult = false; break;
+            case Instr::FGETEXP:    result = fpu.fgetexp(val); roundResult = false; break;
+            case Instr::FGETMAN:    result = fpu.fgetman(val); roundResult = false; break;
             case Instr::FSIN:       result = fpu.fsin(val); break;
             case Instr::FCOS:       result = fpu.fcos(val); break;
             case Instr::FTAN:       result = fpu.ftan(val); break;
@@ -1095,10 +1097,10 @@ Moira::execFGeneric(u16 opcode)
             case Instr::FDIV:
             case Instr::FSDIV:
             case Instr::FDDIV:      result = fpu.fdiv(d, val); break;
-            case Instr::FSGLMUL:    result = fpu.fsglmul(d, val); break;
-            case Instr::FSGLDIV:    result = fpu.fsgldiv(d, val); break;
+            case Instr::FSGLMUL:    result = fpu.fsglmul(d, val); roundResult = false; break;
+            case Instr::FSGLDIV:    result = fpu.fsgldiv(d, val); roundResult = false; break;
             case Instr::FMOD:       result = fpu.fmod(d, val); break;
-            case Instr::FREM:       result = fpu.frem(d, val); break;
+            case Instr::FREM:       result = fpu.frem(d, val); roundResult = false; break;
             case Instr::FSCAL:      result = fpu.fscal(d, val); break;
                 
             case Instr::FSINCOS: {
@@ -1115,22 +1117,8 @@ Moira::execFGeneric(u16 opcode)
                 fatalError;
         }
 
-        // FSGLMUL and FSGLDIV round to single precision by themselves and keep the extended exponent
-        // range. Rounding to the FPCR precision again would clamp the exponent (e.g. in double mode).
-        // FINT, FINTRZ, FGETEXP and FGETMAN produce exact results that are not rounded to the FPCR
-        // precision (this matches UAE). The same applies to FREM, which returns a destination smaller
-        // than half the source unchanged and rounds all other results by itself.
-        
-        if constexpr (I == Instr::FSGLMUL || I == Instr::FSGLDIV ||
-                      I == Instr::FINT || I == Instr::FINTRZ ||
-                      I == Instr::FGETEXP || I == Instr::FGETMAN || I == Instr::FREM) {
-            d = result;
-        } else {
-            d = fpu.round(result);
-        }
-        fpu.setConditionCodes(d);
-
-        done:;
+        d = roundResult ? fpu.round(result) : result;
+        if (setCodes) fpu.setConditionCodes(d);
     }
 
     prefetch<C, POLL>();
