@@ -1109,7 +1109,7 @@ bool dasmEqualUAE(const char *uae, const char *moira)
 
     if (starts(uae, "illegal") || starts(uae, "[") || starts(uae, "f-line") || starts(uae, "f?")) return true;
     if (starts(uae, "movec")) return strcasecmp(uae, moira) == 0;   // UAE prints some control registers in upper case
-    if (strstr(uae, "(68020+)")) return true;
+    if (strstr(uae, "(68020+)") || strstr(uae, "(68040+)")) return true;   // Not available on the selected model
     if (starts(uae, "fmovecr") || strstr(uae, "#+") || strstr(uae, "#-") || (starts(uae, "fmove.p") && strstr(uae, ",#$")) || strstr(uae, "/#$")) {
         return true;   // Floating-point constants are printed in a different notation
     }   // Addressing mode not available on the selected model
