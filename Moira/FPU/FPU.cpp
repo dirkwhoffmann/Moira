@@ -957,6 +957,7 @@ FPU::stateFrameSize(FpuFrameType type) const
         case FpuFrameType::IDLE:
 
             switch (model) {
+                case FPUModel::NONE:        break;
                 case FPUModel::INTERNAL:    return 0;
                 case FPUModel::M68881:      return 24;
                 case FPUModel::M68882:      return 56;
@@ -970,6 +971,7 @@ FPU::stateFrameSize(FpuFrameType type) const
         case FpuFrameType::BUSY:
 
             switch (model) {
+                case FPUModel::NONE:        break;
                 case FPUModel::INTERNAL:    return 92;
                 case FPUModel::M68881:      return 180;
                 case FPUModel::M68882:      return 212;
