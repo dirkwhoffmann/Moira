@@ -1154,6 +1154,9 @@ bool compareDasm(Result &rRef, Result &rMoira)
             break;
     }
 
+    // Binutils decodes FPU instructions only for the 68040 (ENABLE_M68881 is off)
+    skipBinutils |= (rRef.opcode & 0xFE00) == 0xF200 && moiracpu->has6888x();
+
     // Compare with the Musashi disassembler
     if (!skipMusashi) {
 

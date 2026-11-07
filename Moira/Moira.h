@@ -200,6 +200,12 @@ public:
 
     // Installs, replaces, or removes the FPU (rebuilds the jump table)
     void setFpuModel(FPUModel model);
+
+    // Checks if a model provides a coprocessor interface (to attach a 6888x)
+    static bool hasCoproInterface(Model model);
+
+    // Checks if an external floating-point coprocessor (68881 or 68882) is attached
+    bool has6888x() const;
     
     // Configures the syntax style for disassembly output
     void setDasmSyntax(Syntax value);

@@ -127,6 +127,25 @@ Moira::setFpuModel(FPUModel model)
     }
 }
 
+bool
+Moira::hasCoproInterface(Model model)
+{
+    switch (model) {
+
+        case Model::M68EC020:
+        case Model::M68020:
+        case Model::M68EC030:
+        case Model::M68030:     return true;
+        default:                return false;
+    }
+}
+
+bool
+Moira::has6888x() const
+{
+    return fpu.getModel() == FPUModel::M68881 || fpu.getModel() == FPUModel::M68882;
+}
+
 void
 Moira::setDasmSyntax(Syntax value)
 {
