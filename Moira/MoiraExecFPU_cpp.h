@@ -42,6 +42,8 @@ Moira::isValidExtFPU(Instr I, Mode M, u16 op, u32 ext) const
                 case 0b010:
 
                     if (M == Mode::IP) break;
+                    if (fmt == 0b111) break;
+                    if (M == Mode::DN && (fmt == 0b010 || fmt == 0b011 || fmt == 0b101)) break;
                     return true;
 
                 case 0b000:
@@ -67,6 +69,7 @@ Moira::isValidExtFPU(Instr I, Mode M, u16 op, u32 ext) const
 
                     return true;
             }
+            return false;
 
         case Instr::FMOVEM:
 
@@ -718,9 +721,10 @@ Moira::execFMove(u16 opcode)
     // Catch illegal extension words and operand formats
     bool illegal = !isValidExtFPU(I, M, opcode, ext);
 
+    // FSMOVE and FDMOVE as well as extended opcodes of FMOVE FPm,FPn exist on
+    // the 68040 only. (This is a property of the installed FPU, so isValidExtFPU,
+    // which the disassembler uses as well, cannot decide it.)
     if (cod == 0b010) {
-        if (fmt == 0b111) illegal = true;
-        if (M == Mode::DN && (fmt == 0b010 || fmt == 0b011 || fmt == 0b101)) illegal = true;
         if (cmd == 0x40 && fpu.model != FPUModel::INTERNAL) illegal = true;
         if (cmd == 0x44 && fpu.model != FPUModel::INTERNAL) illegal = true;
     }
