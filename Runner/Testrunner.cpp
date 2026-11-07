@@ -483,6 +483,29 @@ void runMMUTranslate(long round)
             u64 rp = (super && (t.tc & 0x02000000)) ? t.srp : t.crp;
             if (write && ((rp >> 32) & 3) == 1) write = false;   // (also with FCL: FC lookup is skipped)
 
+            // Run PTEST on both MMUs (no side effects)
+            {
+                u32 level = rand() % 6;
+                bool pwrite = rand() % 2;
+                u32 statusRef = 0, descrRef = 0, descrMoira = 0;
+                ptestUAE(addr, fc, pwrite, level, &statusRef, &descrRef);
+                moiracpu->setSupervisorMode(super);
+                sandbox.prepare(false, true);
+                u32 statusMoira = moiracpu->testAddress<moira::Core::C68020>(addr, fc, pwrite, level, descrMoira);
+
+                // The descriptor address is only returned for levels > 0
+                bool equal = statusRef == statusMoira && (level == 0 || descrRef == descrMoira) && !memcmp(refMem, moiraMem, sizeof(refMem));
+                if (!equal) {
+
+                    printf("\n\nPTEST MISMATCH FOUND\n\n");
+                    printf("Setup %d.%d: TC: %08x  CRP: %016llx  SRP: %016llx  TT0: %08x  TT1: %08x\n", i, j, t.tc, t.crp, t.srp, t.tt0, t.tt1);
+                    printf("PTEST%c: addr %08x  FC %d  level %d\n", pwrite ? 'W' : 'R', addr, fc, level);
+                    printf("UAE  : MMUSR %04x  descriptor %08x\n", statusRef, descrRef);
+                    printf("Moira: MMUSR %04x  descriptor %08x\n", statusMoira, descrMoira);
+                    exit(1);
+                }
+            }
+
             // Translate with both MMUs
             u32 physRef = 0, physMoira = 0;
             bool okRef = translateUAE(addr, super, data, write, &physRef);

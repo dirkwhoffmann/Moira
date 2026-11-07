@@ -466,6 +466,55 @@ static void testTranslationBypass()
     CHECK(cpu.reg.d[0] == 0xDEADBEEF);
 }
 
+static void testPTest()
+{
+    TestCPU cpu;
+    setupShortTables(cpu);
+    cpu.mmu.tc = TC_E | TC_4K_2L;
+
+    // PTESTR #1,(A0),#2,A1 (user data, level 2, return the descriptor address)
+    auto ptest = [&](u32 addr, bool read, int level, bool a) {
+        cpu.reg.a[0] = addr;
+        cpu.reg.a[1] = 0xDEAD0000;
+        cpu.run({ 0xF010, u16(0x8000 | level << 10 | read << 9 | a << 8 | a << 5 | 0x11) });
+    };
+
+    // Valid page: Two levels, no error bits
+    ptest(0x2000, true, 2, true);
+    CHECK((cpu.mmu.mmusr & 0xEE07) == 2);
+    CHECK(cpu.reg.a[1] == tableB + 4 * 2);
+
+    // Level 1 stops at the table descriptor
+    ptest(0x2000, true, 1, true);
+    CHECK((cpu.mmu.mmusr & 0xEE07) == 1);
+    CHECK(cpu.reg.a[1] == tableA);
+
+    // Invalid page
+    ptest(0x3000, true, 7, true);
+    CHECK((cpu.mmu.mmusr & 0x0400) == 0x0400);
+    CHECK(cpu.reg.a[1] == tableB + 4 * 3);
+
+    // Write-protected page
+    ptest(0x4000, false, 7, false);
+    CHECK((cpu.mmu.mmusr & 0x0800) == 0x0800);
+    CHECK(cpu.reg.a[1] == 0xDEAD0000);              // A bit not set
+
+    // PTEST doesn't modify the tables
+    u32 before = cpu.read32(tableB + 4 * 5);
+    ptest(0x5000, false, 7, false);
+    CHECK(cpu.read32(tableB + 4 * 5) == before);
+
+    // Level 0 without TT: The ATC is empty
+    ptest(0x2000, true, 0, false);
+    CHECK((cpu.mmu.mmusr & 0x0400) == 0x0400);
+
+    // The A bit is illegal for level 0
+    cpu.write32(4 * 4, 0x1900);                     // Illegal instruction vector
+    cpu.write32(11 * 4, 0x1900);                    // Line F vector
+    ptest(0x2000, true, 0, true);
+    CHECK(cpu.reg.pc0 == 0x1900);
+}
+
 static void testModels()
 {
     // Only the 68030 and 68040 have an MMU
@@ -489,6 +538,7 @@ int main()
     testEnableDisable();
     testTransparentTranslation();
     testTranslationBypass();
+    testPTest();
 
     printf("%d checks, %d failures\n", checks, failures);
     return failures ? EXIT_FAILURE : EXIT_SUCCESS;

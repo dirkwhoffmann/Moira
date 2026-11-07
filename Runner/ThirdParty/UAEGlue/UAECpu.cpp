@@ -328,6 +328,29 @@ void setMMU(uint64_t crp, uint64_t srp, uint32_t tc, uint32_t tt0, uint32_t tt1)
     memcpy(mem + 0xFFF0, backup, 4);
 }
 
+bool ptest(uint32_t addr, uint8_t fc, bool write, uint32_t level, uint32_t *mmusr, uint32_t *descr)
+{
+    currprefs.mmu_model = 68030;
+    mmu030_set_funcs();
+    regs.s = fc & 4;
+    tc_030 = mmuTC;
+    mmu030_decode_tc(tc_030, false);
+    mmu030_flush_atc_all();
+
+    // PTEST{R|W} #fc,(A0),#level{,A1}
+    uint16_t next = uint16_t(0x8000 | level << 10 | (write ? 0 : 1) << 9 | (level ? 1 : 0) << 8 | 1 << 5 | 0x10 | (fc & 7));
+    regs.regs[8 + 1] = 0xDEADBEEF;
+    bool illegal = mmu_op30_ptest(0, 0xF010, next, addr);
+    *mmusr = mmusr_030;
+    *descr = regs.regs[8 + 1];
+
+    tc_030 = 0;
+    mmu030_decode_tc(tc_030, false);
+    currprefs.mmu_model = 0;
+    set_x_funcs();
+    return !illegal;
+}
+
 bool translate(uint32_t addr, bool super, bool data, bool write, uint32_t *physical)
 {
     bool success = false;

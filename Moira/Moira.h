@@ -827,18 +827,21 @@ public:
     // Translates a logical address without executing an instruction. Returns
     // false if the translation would cause a bus error (used for testing).
     template <Core C> bool translateAddress(u32 addr, u8 fc, bool write, u32 &physical);
+    template <Core C> u32 testAddress(u32 addr, u8 fc, bool write, u32 level, u32 &descrAddr);
 
 private:
 
-    // Looks up a physical address from the MMU table
+    // Looks up a physical address from the MMU table. Throws a bus error on failure.
     template <Core C, bool write> u32 mmuLookup(u32 addr, u8 fc);
+
+    // Walks the translation tables. In PTEST mode, no descriptors are modified
+    // and the walk ends at the given level (or at the page descriptor if 0).
+    template <Core C, bool write> u32 mmuWalk(u32 addr, u8 fc, struct MmuContext &con, bool ptest, u32 level);
     template <Core C, bool write> u32 mmuLookupShort(char table, u32 taddr, u32 offset, struct MmuContext &con);
     template <Core C, bool write> u32 mmuLookupLong(char table, u32 taddr, u32 offset, struct MmuContext &con);
 
-    // Looks up a physical address from the MMU table without causing side effects
-    template <Core C, bool write> u32 mmuDryRun(u32 addr, u8 fc, u32 *mmusr);
-    template <Core C, bool write> u32 mmuDryRunShort(u32 taddr, u32 offset, struct MmuContext &con, u32 *mmusr);
-    template <Core C, bool write> u32 mmuDryRunLong(u32 taddr, u32 offset, struct MmuContext &con, u32 *mmusr);
+    // Emulates PTEST. Returns the MMUSR value and the address of the last descriptor.
+    template <Core C> u32 mmuPTest(u32 addr, u8 fc, bool write, u32 level, u32 *descrAddr);
 
     // Experimental
     bool testTT(u32 ttx, u32 addr, u8 fc, bool rw);

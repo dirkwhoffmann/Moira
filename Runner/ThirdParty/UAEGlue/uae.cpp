@@ -118,3 +118,8 @@ bool translateUAE(u32 addr, bool super, bool data, bool write, u32 *physical)
 {
     return uaecpu::translate(addr, super, data, write, physical);
 }
+
+bool ptestUAE(u32 addr, u8 fc, bool write, u32 level, u32 *mmusr, u32 *descr)
+{
+    return uaecpu::ptest(addr, fc, write, level, mmusr, descr);
+}

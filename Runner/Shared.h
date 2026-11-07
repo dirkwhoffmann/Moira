@@ -167,4 +167,5 @@ void resetUAE(const runner::Setup &s);
 void executeUAE(runner::Result &r);
 int lastExceptionUAE();
 void setMMUUAE(u64 crp, u64 srp, u32 tc, u32 tt0, u32 tt1);
+bool ptestUAE(u32 addr, u8 fc, bool write, u32 level, u32 *mmusr, u32 *descr);
 bool translateUAE(u32 addr, bool super, bool data, bool write, u32 *physical);
