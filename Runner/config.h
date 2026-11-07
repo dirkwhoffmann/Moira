@@ -32,12 +32,6 @@ static const bool SKIP_ILLEGAL = true;
 // Set to true for verbose output
 static const bool VERBOSE = false;
 
-// Set to true to measure the CPU speed
-static const bool PROFILE_CPU = true;
-
-// Set to true to measure the disassembler speed
-static const bool PROFILE_DASM = false;
-
 // Change to limit the range of executed instructions
 #define doExec(opcode) ((opcode) <= 0xEFFF || isFpuOpcode(opcode))
 

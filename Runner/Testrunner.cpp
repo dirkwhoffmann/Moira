@@ -34,6 +34,8 @@ u16 opcode = 0;
 clock_t refclk[2] = {0,0};
 clock_t moiraclk[2] = {0,0};
 
+static void resetClocks() { refclk[0] = refclk[1] = moiraclk[0] = moiraclk[1] = 0; }
+
 static const struct { Model model; const char *name; } modelTable[] = {
 
     { Model::M68000,   "68000" },
@@ -298,6 +300,7 @@ void runCPU(long round)
     static const int CPU_SETUPS = 32;
     
     Setup setup;
+    resetClocks();
 
     printf("%11s CPU : CORE ", selectedModel()); fflush(stdout);
 
@@ -319,7 +322,7 @@ void runCPU(long round)
             runSingleTest(setup, u16(op));
         }
     }
-    passed();
+    passed(moiraclk[0], refclk[0]);
 }
 
 void runMMU(long round)
@@ -328,6 +331,7 @@ void runMMU(long round)
  
     static const int MMU_SETUPS = 4;
     Setup setup;
+    resetClocks();
 
     printf("%11s MMU : CORE ", selectedModel()); fflush(stdout);
 
@@ -345,7 +349,7 @@ void runMMU(long round)
             }
         }
     }
-    passed();
+    passed(moiraclk[0], refclk[0]);
 }
 
 void runFPU(long round)
@@ -358,6 +362,7 @@ void runFPU(long round)
 
     static const int FPU_SETUPS = 4;
     Setup setup;
+    resetClocks();
 
     if (fpuModel == FPUModel::INTERNAL)
         printf("%11s FPU : CORE ", selectedModel());
@@ -380,7 +385,7 @@ void runFPU(long round)
             }
         }
     }
-    passed();
+    passed(moiraclk[0], refclk[0]);
 }
 
 void runDasmCPU(long round)
@@ -388,6 +393,7 @@ void runDasmCPU(long round)
     static const int CPU_SETUPS = 32;
 
     Setup setup;
+    resetClocks();
 
     printf("%11s CPU : DASM ", selectedModel()); fflush(stdout);
 
@@ -407,7 +413,7 @@ void runDasmCPU(long round)
             runDasmSingleTest(setup, u16(op));
         }
     }
-    passed();
+    passed(moiraclk[1], refclk[1]);
 }
 
 void runDasmMMU(long round)
@@ -416,6 +422,7 @@ void runDasmMMU(long round)
 
     static const int MMU_SETUPS = 4;
     Setup setup;
+    resetClocks();
 
     printf("%11s MMU : DASM ", selectedModel()); fflush(stdout);
 
@@ -433,13 +440,14 @@ void runDasmMMU(long round)
             }
         }
     }
-    passed();
+    passed(moiraclk[1], refclk[1]);
 }
 
 void runDasmFPU(long round)
 {
     static const int FPU_SETUPS = 4;
     Setup setup;
+    resetClocks();
 
     if (fpuModel == FPUModel::INTERNAL)
         printf("%11s FPU : DASM ", selectedModel());
@@ -461,7 +469,7 @@ void runDasmFPU(long round)
             }
         }
     }
-    passed();
+    passed(moiraclk[1], refclk[1]);
 }
 
 bool isFpuOpcode(u16 op)
@@ -518,21 +526,12 @@ void setupFpuEnvironment(Setup &s)
     s.fpiar = randomizer.rand();
 }
 
-void passed()
+void passed(clock_t moira, clock_t ref)
 {
-    printf(" PASSED ");
-    if (PROFILE_DASM || PROFILE_CPU) {
-
-        clock_t mu = 0, mo = 0;
-        if (PROFILE_CPU) { mu += refclk[0]; mo += moiraclk[0]; }
-        if (PROFILE_DASM) { mu += refclk[1]; mo += moiraclk[1]; }
-
-        printf(" (Moira: %.2fs  %s: %.2fs)",
-               mo / double(CLOCKS_PER_SEC),
-               reference(),
-               mu / double(CLOCKS_PER_SEC));
-    }
-    printf("\n");
+    printf(" PASSED  (Moira: %.2fs  %s: %.2fs)\n",
+           double(moira) / double(CLOCKS_PER_SEC),
+           reference(),
+           double(ref) / double(CLOCKS_PER_SEC));
 }
 
 void runSingleTest(Setup &s, u16 op, u16 ext)

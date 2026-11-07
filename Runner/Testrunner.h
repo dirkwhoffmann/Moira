@@ -72,7 +72,7 @@ void runFPU(long round);
 void runDasmCPU(long round);
 void runDasmMMU(long round);
 void runDasmFPU(long round);
-void passed();
+void passed(clock_t moira, clock_t ref);
 
 void runSingleTest(Setup &s, u16 op);
 void runSingleTest(Setup &s, u16 op, u16 ext);
