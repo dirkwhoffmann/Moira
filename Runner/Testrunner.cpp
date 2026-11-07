@@ -470,7 +470,16 @@ void runMMUTranslate(long round)
         moiracpu->mmu.tt0 = t.tt0;
         moiracpu->mmu.tt1 = t.tt1;
 
+        u32 lastAddr = 0; u8 lastFC = 1;
+
         for (int j = 0; j < ADDRESSES; j++) {
+
+            // Flush the ATCs regularly. This keeps the number of cached pages below
+            // the ATC size, so that the (pseudo-LRU) replacement strategy doesn't matter.
+            if (j % 16 == 0) {
+                flushATCUAE();
+                for (auto &e : moiracpu->mmu.atc) e.valid = false;
+            }
 
             // Pick an address that is likely to be covered by the tables
             u32 addr = u32(rand()) << (rand() % 17);
@@ -486,12 +495,20 @@ void runMMUTranslate(long round)
             // Run PTEST on both MMUs (no side effects)
             {
                 u32 level = rand() % 6;
+                u32 paddr = addr, pfc = fc;
+                if (level == 0) {
+
+                    // UAE compares the unmasked address with the ATC entries. Use the
+                    // page of an earlier access to get ATC hits.
+                    paddr = (rand() % 4 ? lastAddr : addr) & ~((1u << (t.tc >> 20 & 0xF)) - 1);
+                    if (rand() % 4) pfc = lastFC;
+                }
                 bool pwrite = rand() % 2;
                 u32 statusRef = 0, descrRef = 0, descrMoira = 0;
-                ptestUAE(addr, fc, pwrite, level, &statusRef, &descrRef);
+                ptestUAE(paddr, pfc, pwrite, level, &statusRef, &descrRef);
                 moiracpu->setSupervisorMode(super);
                 sandbox.prepare(false, true);
-                u32 statusMoira = moiracpu->testAddress<moira::Core::C68020>(addr, fc, pwrite, level, descrMoira);
+                u32 statusMoira = moiracpu->testAddress<moira::Core::C68020>(paddr, pfc, pwrite, level, descrMoira);
 
                 // The descriptor address is only returned for levels > 0
                 bool equal = statusRef == statusMoira && (level == 0 || descrRef == descrMoira) && !memcmp(refMem, moiraMem, sizeof(refMem));
@@ -499,7 +516,7 @@ void runMMUTranslate(long round)
 
                     printf("\n\nPTEST MISMATCH FOUND\n\n");
                     printf("Setup %d.%d: TC: %08x  CRP: %016llx  SRP: %016llx  TT0: %08x  TT1: %08x\n", i, j, t.tc, t.crp, t.srp, t.tt0, t.tt1);
-                    printf("PTEST%c: addr %08x  FC %d  level %d\n", pwrite ? 'W' : 'R', addr, fc, level);
+                    printf("PTEST%c: addr %08x  FC %d  level %d\n", pwrite ? 'W' : 'R', paddr, pfc, level);
                     printf("UAE  : MMUSR %04x  descriptor %08x\n", statusRef, descrRef);
                     printf("Moira: MMUSR %04x  descriptor %08x\n", statusMoira, descrMoira);
                     exit(1);
@@ -514,6 +531,7 @@ void runMMUTranslate(long round)
             bool okMoira = moiracpu->translateAddress<moira::Core::C68020>(addr, fc, write, physMoira);
 
             (okRef ? successes : faults)++;
+            lastAddr = addr; lastFC = fc;
             bool equal = okRef == okMoira && (!okRef || physRef == physMoira) && !memcmp(refMem, moiraMem, sizeof(refMem));
             if (equal) continue;
 

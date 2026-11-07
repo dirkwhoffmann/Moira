@@ -124,6 +124,99 @@ Moira::setTT1(u64 value)
 
 }
 
+void
+Moira::atcTouch(int line)
+{
+    // Mark the entry as recently used. If all history bits are set, clear all but this one.
+    mmu.atc[line].mru = true;
+
+    for (auto &e : mmu.atc) if (!e.mru) return;
+    for (auto &e : mmu.atc) e.mru = false;
+    mmu.atc[line].mru = true;
+}
+
+int
+Moira::atcFind(u32 addr, u8 fc, bool write)
+{
+    u32 page = addr & ~pageMask();
+
+    for (int i = 0; i < ATC_ENTRIES; i++) {
+
+        auto &e = mmu.atc[i];
+        if (!e.valid || e.logical != page || e.fc != fc) continue;
+
+        // A write access to a page that hasn't been marked as modified yet
+        // needs a table walk to set the M bit. The entry is invalidated.
+        if (!write || e.modified || e.writeProtect || e.busError) {
+
+            atcTouch(i);
+            return i;
+        }
+        e.valid = false;
+    }
+    return -1;
+}
+
+int
+Moira::atcInsert(u32 addr, u8 fc, u32 physical, u32 status)
+{
+    // Take the first free entry. If there is none, replace the first entry without history bit.
+    int line = 0;
+    for (; line < ATC_ENTRIES && mmu.atc[line].valid; line++) { }
+    if (line == ATC_ENTRIES) {
+        for (line = 0; line < ATC_ENTRIES && mmu.atc[line].mru; line++) { }
+        if (line == ATC_ENTRIES) line = 0;
+    }
+    atcTouch(line);
+
+    auto &e = mmu.atc[line];
+    e.logical = addr & ~pageMask();
+    e.physical = physical & ~pageMask();
+    e.fc = fc;
+    e.valid = true;
+    e.busError = status & (MMUSR_INVALID | MMUSR_SUPERVISOR_ONLY);
+    e.writeProtect = status & MMUSR_WRITE_PROTECTED;
+    e.modified = status & MMUSR_MODIFIED;
+    return line;
+}
+
+void
+Moira::atcFlush()
+{
+    for (auto &e : mmu.atc) e.valid = false;
+}
+
+void
+Moira::atcFlush(u8 fcBase, u8 fcMask)
+{
+    for (auto &e : mmu.atc) if ((fcBase & fcMask) == (e.fc & fcMask)) e.valid = false;
+}
+
+void
+Moira::atcFlushPage(u32 addr)
+{
+    for (auto &e : mmu.atc) if (e.logical == (addr & ~pageMask())) e.valid = false;
+}
+
+void
+Moira::atcFlushPage(u32 addr, u8 fcBase, u8 fcMask)
+{
+    for (auto &e : mmu.atc) {
+        if (e.logical == (addr & ~pageMask()) && (fcBase & fcMask) == (e.fc & fcMask)) e.valid = false;
+    }
+}
+
+u8
+Moira::mmuFC(u16 ext) const
+{
+    switch (ext & 0x18) {
+
+        case 0x10: return ext & 7;
+        case 0x08: return reg.d[ext & 7] & 7;
+        default:   return (ext & 1) ? u8(reg.dfc) : u8(reg.sfc);
+    }
+}
+
 bool
 Moira::testTT(u32 ttx, u32 addr, u8 fc, bool rw)
 {
@@ -303,17 +396,35 @@ Moira::translateAddress(u32 addr, u8 fc, bool write, u32 &physical)
 template <Core C, bool write> u32
 Moira::mmuLookup(u32 addr, u8 fc)
 {
-    MmuContext context;
-    u32 physAddr = mmuWalk<C, write>(addr, fc, context, false, 0);
-    u32 status = context.status();
+    int line = atcFind(addr, fc, write);
+
+    if (line < 0) {
+
+        // The translation is not cached. Walk the tables and create an ATC entry.
+        MmuContext context;
+        u32 physAddr = mmuWalk<C, write>(addr, fc, context, false, 0);
+        line = atcInsert(addr, fc, physAddr, context.status());
+    }
+    auto &e = mmu.atc[line];
 
     // Invalid descriptors and supervisor violations cause a bus error. So do
     // write accesses to write-protected pages.
-    if ((status & (MMUSR_INVALID | MMUSR_SUPERVISOR_ONLY)) || (write && (status & MMUSR_WRITE_PROTECTED))) {
+    if (e.busError || (write && e.writeProtect)) {
 
         throw BusError(makeFrame<write ? AE_WRITE : 0>(addr));
     }
-    return physAddr;
+    return e.physical | (addr & pageMask());
+}
+
+template <Core C> void
+Moira::mmuLoad(u32 addr, u8 fc, bool write)
+{
+    atcFlushPage(addr);
+
+    MmuContext context;
+    u32 physAddr = write ? mmuWalk<C, true>(addr, fc, context, false, 0)
+                         : mmuWalk<C, false>(addr, fc, context, false, 0);
+    atcInsert(addr, fc, physAddr, context.status());
 }
 
 template <Core C> u32
@@ -327,11 +438,23 @@ Moira::mmuPTest(u32 addr, u8 fc, bool write, u32 level, u32 *descrAddr)
 {
     *descrAddr = 0;
 
-    // Level 0 searches the ATC, which isn't emulated. The ATC is always empty.
+    // Level 0 searches the ATC
     if (level == 0) {
 
-        bool match = testTT(mmu.tt0, addr, fc, !write) || testTT(mmu.tt1, addr, fc, !write);
-        return match ? MMUSR_TRANSPARENT_ACCESS : MMUSR_INVALID;
+        if (testTT(mmu.tt0, addr, fc, !write) || testTT(mmu.tt1, addr, fc, !write)) {
+            return MMUSR_TRANSPARENT_ACCESS;
+        }
+
+        u32 page = addr & ~pageMask();
+        for (auto &e : mmu.atc) {
+
+            if (!e.valid || e.logical != page || e.fc != fc) continue;
+
+            return (e.busError ? MMUSR_BUS_ERROR | MMUSR_INVALID : 0)
+                 | (e.writeProtect ? MMUSR_WRITE_PROTECTED : 0)
+                 | (e.modified ? MMUSR_MODIFIED : 0);
+        }
+        return MMUSR_INVALID;
     }
 
     MmuContext context;
@@ -741,10 +864,10 @@ Moira::execPFlush(u16 opcode)
 {
     AVAILABILITY(Core::C68020)
 
-
     u16 ext   = queue.irc;
     auto reg  = _____________xxx (opcode);
     auto mode = ___xxx__________ (ext);
+    auto mask = ________xxx_____ (ext);
 
     // Catch illegal extension words
     if (!isValidExtMMU(I, M, opcode, ext)) {
@@ -755,12 +878,20 @@ Moira::execPFlush(u16 opcode)
 
     (void)readI<C, Word>();
 
+    u8 fcBase = mmuFC(ext);
+
     if (mode == 0b110) {
-        
-        u32 ea; u32 data;
-        readOp<C, M>(reg, &ea, &data);
+
+        // Flush by function code and effective address
+        u32 ea = computeEA<C, M, Long>(reg);
+        atcFlushPage(ea, fcBase, mask);
+
+    } else {
+
+        // Flush by function code
+        atcFlush(fcBase, mask);
     }
-    
+
     prefetch<C, POLL>();
 
     CYCLES_68020(8);
@@ -772,7 +903,6 @@ Moira::execPFlusha(u16 opcode)
 {
     AVAILABILITY(Core::C68020)
 
-
     u16 ext = queue.irc;
 
     // Catch illegal extension words
@@ -783,7 +913,9 @@ Moira::execPFlusha(u16 opcode)
     }
 
     (void)readI<C, Word>();
-    
+
+    atcFlush();
+
     prefetch<C, POLL>();
 
     CYCLES_68020(8);
@@ -830,10 +962,6 @@ Moira::execPLoad(u16 opcode)
     auto reg  = _____________xxx (opcode);
     auto rw   = ______x_________ (ext);
 
-    if (rw) {
-    } else {
-    }
-    
     // Catch illegal extension words
     if (!isValidExtMMU(I, M, opcode, ext)) {
 
@@ -842,12 +970,12 @@ Moira::execPLoad(u16 opcode)
     }
 
     (void)readI<C, Word>();
-        
-    u32 ea; u32 data;
-    readOp<C, M>(reg, &ea, &data);
-    
+
+    u32 ea = computeEA<C, M, Long>(reg);
+    mmuLoad<C>(ea, mmuFC(ext), !rw);
+
     prefetch<C, POLL>();
-    
+
     CYCLES_68020(8);
     FINALIZE
 }
@@ -900,6 +1028,9 @@ Moira::execPMove(u16 opcode)
             }
             break;
     }
+
+    // Writing a translation register flushes the ATC unless the FD bit is set
+    if (!rw && fmt != 3 && !(ext & 0x100)) atcFlush();
 
     prefetch<C, POLL>();
 
@@ -1029,11 +1160,7 @@ Moira::execPTest(u16 opcode)
     // Compute effective address
     ea = computeEA<C, M, Long>(rg);
 
-    // Determine the function code
-    u8 fcode;
-    if      (fc & 0b10000) { fcode = fc & 0b111; }
-    else if (fc & 0b01000) { fcode = readD<Long>(fc & 0b111) & 0b111; }
-    else                   { fcode = (fc & 1) ? (u8)reg.dfc : (u8)reg.sfc; }
+    u8 fcode = mmuFC(ext);
 
     u32 descrAddr;
     mmu.mmusr = mmuPTest<C>(ea, fcode, !rw, lvl, &descrAddr);

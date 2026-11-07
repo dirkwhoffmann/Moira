@@ -123,3 +123,8 @@ bool ptestUAE(u32 addr, u8 fc, bool write, u32 level, u32 *mmusr, u32 *descr)
 {
     return uaecpu::ptest(addr, fc, write, level, mmusr, descr);
 }
+
+void flushATCUAE()
+{
+    uaecpu::flushATC();
+}

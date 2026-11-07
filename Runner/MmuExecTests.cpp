@@ -515,6 +515,73 @@ static void testPTest()
     CHECK(cpu.reg.pc0 == 0x1900);
 }
 
+static void testATC()
+{
+    TestCPU cpu;
+    setupShortTables(cpu);
+    cpu.write32(0x5004, 0x11111111);
+    cpu.write32(0x6004, 0x22222222);
+
+    auto load = [&](u32 addr) { cpu.reg.a[0] = addr; cpu.run({ 0x2010 }); return cpu.reg.d[0]; };
+    auto ptest0 = [&](u32 addr, int fc) {
+        cpu.reg.a[0] = addr;
+        cpu.run({ 0xF010, u16(0x8000 | 1 << 9 | 0x10 | fc) });
+        return cpu.mmu.mmusr;
+    };
+
+    // Before the first access, the ATC doesn't know the page
+    CHECK(ptest0(0x2000, 5) == 0x0400);
+
+    // Translation creates an ATC entry (supervisor data, FC = 5)
+    CHECK(load(0x2004) == 0x11111111);
+    CHECK(ptest0(0x2000, 5) == 0);
+    CHECK(ptest0(0x2000, 1) == 0x0400);
+
+    // Changing the table has no effect while the entry is cached
+    cpu.write32(tableB + 4 * 2, 0x6000 | 1);
+    CHECK(load(0x2004) == 0x11111111);
+
+    // PFLUSHA drops the entry
+    cpu.run({ 0xF000, 0x2400 });
+    CHECK(ptest0(0x2000, 5) == 0x0400);
+    CHECK(load(0x2004) == 0x22222222);
+
+    // PFLUSH #5,#7,(A0) flushes a single page ...
+    cpu.write32(tableB + 4 * 2, 0x5000 | 1);
+    cpu.reg.a[0] = 0x2000;
+    cpu.run({ 0xF010, 0x3800 | 7 << 5 | 0x10 | 5 });
+    CHECK(load(0x2004) == 0x11111111);
+
+    // ... and PFLUSH #1,#7 flushes by function code only (nothing to flush here)
+    cpu.write32(tableB + 4 * 2, 0x6000 | 1);
+    cpu.run({ 0xF000, 0x3000 | 7 << 5 | 0x10 | 1 });
+    CHECK(load(0x2004) == 0x11111111);
+    cpu.run({ 0xF000, 0x3000 | 7 << 5 | 0x10 | 5 });
+    CHECK(load(0x2004) == 0x22222222);
+
+    // PMOVE to a translation register flushes the ATC
+    cpu.write32(tableB + 4 * 2, 0x5000 | 1);
+    cpu.reg.a[0] = 0x1800;                          // (identity mapped)
+    cpu.write32(0x1800, 0x7FFF0002);
+    cpu.write32(0x1804, tableA);
+    cpu.run({ 0xF010, 0x4C00 });                    // PMOVE (A0),CRP
+    CHECK(load(0x2004) == 0x11111111);
+
+    // PLOAD creates an entry, including the write-protect state
+    cpu.run({ 0xF000, 0x2400 });
+    cpu.reg.a[0] = 0x4000;
+    cpu.run({ 0xF010, 0x2000 | 0x10 | 5 });         // PLOADW #5,(A0)
+    CHECK(ptest0(0x4000, 5) == 0x0800);
+
+    // Invalid pages are cached, too
+    cpu.run({ 0xF000, 0x2400 });
+    cpu.write32(0x3004, 0);
+    cpu.reg.a[0] = 0x3004;
+    cpu.write32(2 * 4, 0x1800);
+    cpu.run({ 0x2010 });                            // Bus error
+    CHECK(ptest0(0x3000, 5) == 0x8400);
+}
+
 static void testModels()
 {
     // Only the 68030 and 68040 have an MMU
@@ -539,6 +606,7 @@ int main()
     testTransparentTranslation();
     testTranslationBypass();
     testPTest();
+    testATC();
 
     printf("%d checks, %d failures\n", checks, failures);
     return failures ? EXIT_FAILURE : EXIT_SUCCESS;

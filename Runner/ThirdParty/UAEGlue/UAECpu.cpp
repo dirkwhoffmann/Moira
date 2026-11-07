@@ -309,6 +309,11 @@ State getState()
 
 static uint32_t mmuTC = 0;
 
+void flushATC()
+{
+    mmu030_flush_atc_all();
+}
+
 void setMMU(uint64_t crp, uint64_t srp, uint32_t tc, uint32_t tt0, uint32_t tt1)
 {
     crp_030 = crp;
@@ -335,7 +340,6 @@ bool ptest(uint32_t addr, uint8_t fc, bool write, uint32_t level, uint32_t *mmus
     regs.s = fc & 4;
     tc_030 = mmuTC;
     mmu030_decode_tc(tc_030, false);
-    mmu030_flush_atc_all();
 
     // PTEST{R|W} #fc,(A0),#level{,A1}
     uint16_t next = uint16_t(0x8000 | level << 10 | (write ? 0 : 1) << 9 | (level ? 1 : 0) << 8 | 1 << 5 | 0x10 | (fc & 7));
@@ -361,7 +365,6 @@ bool translate(uint32_t addr, bool super, bool data, bool write, uint32_t *physi
     regs.s = super;
     tc_030 = mmuTC;
     mmu030_decode_tc(tc_030, false);
-    mmu030_flush_atc_all();
 
     // Perform a real memory access. Unlike mmu030_translate, which always walks
     // the tables as if a read access was performed, this updates the descriptors

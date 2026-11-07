@@ -819,6 +819,22 @@ private:
     u32 readMMU32(u32 addr) const { return read32(addr); }
     u64 readMMU64(u32 addr) const { return u64(read32(addr)) << 32 | read32(addr + 4); }
 
+    // Address translation cache
+    u32 pageMask() const { return (1u << (mmu.tc >> 20 & 0xF)) - 1; }
+    int atcFind(u32 addr, u8 fc, bool write);
+    int atcInsert(u32 addr, u8 fc, u32 physical, u32 status);
+    void atcFlush();
+    void atcFlush(u8 fcBase, u8 fcMask);
+    void atcFlushPage(u32 addr);
+    void atcFlushPage(u32 addr, u8 fcBase, u8 fcMask);
+    void atcTouch(int line);
+
+    // Extracts the function code from the extension word of an MMU instruction
+    u8 mmuFC(u16 ext) const;
+
+    // Loads an ATC entry (PLOAD)
+    template <Core C> void mmuLoad(u32 addr, u8 fc, bool write);
+
     // Translates a logical address to a physical address
     template <Core C, bool write> u32 translate(u32 addr, u8 fc);
 
