@@ -24,6 +24,14 @@ REGISTER_DASM(id,name,I,M,S) \
 REGISTER_INFO(id,name,I,M,S) \
 }
 
+// Same as CIMS, but registers the execution handler only if an FPU is present.
+// Otherwise, the opcode keeps its line F handler.
+#define CIMSfpu(id,name,I,M,S) { \
+if (fpu.isPresent()) exec[id] = EXEC_HANDLER(name,C,I,M,S); \
+REGISTER_DASM(id,name,I,M,S) \
+REGISTER_INFO(id,name,I,M,S) \
+}
+
 #define CIMSloop(id,name,I,M,S) { \
 assert(loop[id] == nullptr); \
 loop[id] = EXEC_HANDLER(name,Core::C68010,I##_LOOP,M,S); \
@@ -2084,7 +2092,9 @@ Moira::createJumpTable12(Model model, bool regDasm)
      * replace the generic coprocessor interface. The disassembler keeps showing
      * generic coprocessor instructions, because the disassembler cannot know if
      * an FPU is present. To see FPU instructions, use the 68040 as disassembler
-     * model.
+     * model. The execution handlers are only registered if an FPU is present.
+     * Otherwise, the FPU opcodes keep their line F handlers. The jump table is
+     * rebuilt whenever the FPU model changes (see setFpuModel).
      */
     const bool dasmFPU = regDasm && model == Model::M68040;
     if (model == Model::M68EC020 || model == Model::M68020 || model == Model::M68EC030 ||
@@ -2093,31 +2103,31 @@ Moira::createJumpTable12(Model model, bool regDasm)
         [[maybe_unused]] const bool regDasm = dasmFPU;
 
         opcode = parse("1111 0010 100- ----");
-        ___________XXXXX(opcode, Instr::FBcc, Mode::IP, Word, FBcc, CIMS)
+        ___________XXXXX(opcode, Instr::FBcc, Mode::IP, Word, FBcc, CIMSfpu)
 
         opcode = parse("1111 0010 110- ----");
-        ___________XXXXX(opcode, Instr::FBcc, Mode::IP, Long, FBcc, CIMS)
+        ___________XXXXX(opcode, Instr::FBcc, Mode::IP, Long, FBcc, CIMSfpu)
 
         opcode = parse("1111 0010 00-- ----");
-        __________XXXXXX(opcode, Instr::cpGEN, Mode::IP, Unsized, FGen, CIMS)
-        __________MMMXXX(opcode, Instr::cpGEN, 0b111111111111, Unsized, FGen, CIMS)
+        __________XXXXXX(opcode, Instr::cpGEN, Mode::IP, Unsized, FGen, CIMSfpu)
+        __________MMMXXX(opcode, Instr::cpGEN, 0b111111111111, Unsized, FGen, CIMSfpu)
 
         opcode = parse("1111 0011 01-- ----");
-        __________MMMXXX(opcode, Instr::FRESTORE, 0b001101111110, Word, FRestore, CIMS)
+        __________MMMXXX(opcode, Instr::FRESTORE, 0b001101111110, Word, FRestore, CIMSfpu)
 
         opcode = parse("1111 0011 00-- ----");
-        __________MMMXXX(opcode, Instr::FSAVE, 0b001011111000, Word, FSave, CIMS)
+        __________MMMXXX(opcode, Instr::FSAVE, 0b001011111000, Word, FSave, CIMSfpu)
 
         opcode = parse("1111 0010 0111 1---");
-        ________________(opcode | 0b010, Instr::FTRAPcc, Mode::IP, Word, FTrapcc, CIMS)
-        ________________(opcode | 0b011, Instr::FTRAPcc, Mode::IP, Long, FTrapcc, CIMS)
-        ________________(opcode | 0b100, Instr::FTRAPcc, Mode::IP, Unsized, FTrapcc, CIMS)
+        ________________(opcode | 0b010, Instr::FTRAPcc, Mode::IP, Word, FTrapcc, CIMSfpu)
+        ________________(opcode | 0b011, Instr::FTRAPcc, Mode::IP, Long, FTrapcc, CIMSfpu)
+        ________________(opcode | 0b100, Instr::FTRAPcc, Mode::IP, Unsized, FTrapcc, CIMSfpu)
 
         opcode = parse("1111 0010 01-- ----");
-        __________MMMXXX(opcode, Instr::FScc, 0b101111111000, Byte, FScc, CIMS)
+        __________MMMXXX(opcode, Instr::FScc, 0b101111111000, Byte, FScc, CIMSfpu)
 
         opcode = parse("1111 0010 0100 1---");
-        _____________XXX(opcode, Instr::FDBcc, Mode::IP, Word, FDbcc, CIMS)
+        _____________XXX(opcode, Instr::FDBcc, Mode::IP, Word, FDbcc, CIMSfpu)
     }
 }
 

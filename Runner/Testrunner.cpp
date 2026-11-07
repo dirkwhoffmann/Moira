@@ -155,7 +155,7 @@ void selectModel(Model model)
 void setupMoira()
 {
     moiracpu->setModel(cpuModel);
-    moiracpu->fpu.setModel(fpuModel);
+    moiracpu->setFpuModel(fpuModel);
 }
 
 void selectFpu(FPUModel fpu)

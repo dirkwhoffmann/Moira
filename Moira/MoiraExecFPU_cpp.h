@@ -7,9 +7,6 @@
 
 // The following definitions are not templated. They are compiled into the
 // main translation unit only (see MoiraCore_cpp.h).
-// Floating-point instructions cause a line F exception if no FPU is installed
-#define FPU_REQUIRED \
-if (!fpu.isPresent()) { execLineF<C, I, M, S>(opcode); return; }
 
 // The 68040 FPU updates FPIAR on every data operation, older FPUs only if an exception is enabled
 #define FPU_UPDATE_FPIAR \
@@ -373,7 +370,6 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execFGen(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
-    FPU_REQUIRED
 
     auto ext = queue.irc;
     auto cod = xxx_____________(ext);
@@ -490,7 +486,6 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execFBcc(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
-    FPU_REQUIRED
 
     u32 oldpc = reg.pc;
 
@@ -533,7 +528,6 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execFDbcc(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
-    FPU_REQUIRED
 
     auto ext = queue.irc;
     auto dn  = _____________xxx (opcode);
@@ -577,7 +571,6 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execFNop(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
-    FPU_REQUIRED
 
     // FNOP is encoded as FBcc.W with condition F and displacement 0
     readExt<C>();
@@ -590,7 +583,6 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execFRestore(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
-    FPU_REQUIRED
     SUPERVISOR_MODE_ONLY
 
     auto n = _____________xxx (opcode);
@@ -625,7 +617,6 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execFSave(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
-    FPU_REQUIRED
     SUPERVISOR_MODE_ONLY
 
     auto n = _____________xxx (opcode);
@@ -652,7 +643,6 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execFScc(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
-    FPU_REQUIRED
 
     auto ext = queue.irc;
     auto dst = _____________xxx (opcode);
@@ -685,7 +675,6 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execFTrapcc(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
-    FPU_REQUIRED
 
     auto ext = queue.irc;
 
@@ -718,7 +707,6 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execFMove(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
-    FPU_REQUIRED
 
     auto ext = queue.irc;
     auto reg = _____________xxx (opcode);
@@ -821,7 +809,6 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execFMovecr(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
-    FPU_REQUIRED
 
     auto ext = queue.irc;
     auto dst = ______xxx_______ (ext);
@@ -851,7 +838,6 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execFMovem(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
-    FPU_REQUIRED
 
     auto ext = queue.irc;
     auto reg = _____________xxx (opcode);
@@ -993,7 +979,6 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execFGeneric(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
-    FPU_REQUIRED
 
     auto ext = queue.irc;
     auto rm  = (ext >> 14) & 1;                            // Bit 14: Source is an <ea>

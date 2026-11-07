@@ -45,7 +45,7 @@ public:
     TestCPU(FPUModel fpuModel = FPUModel::M68882, Model cpuModel = Model::M68040)
     {
         setModel(cpuModel);
-        fpu.setModel(fpuModel);
+        setFpuModel(fpuModel);
 
         // Reset vector
         write32(0, 0x8000);
@@ -594,13 +594,28 @@ static void testModels()
         CHECK(cpu2.reg.pc0 == 0x9000);
     }
 
+    // Installing and removing an FPU at runtime switches the handlers
+    {
+        TestCPU cpu(FPUModel::M68882, Model::M68030);
+        cpu.write32(11 * 4, 0x9000);
+        cpu.setFpuModel(FPUModel::NONE);
+        cpu.run({ 0xF200, 0x4000 });
+        CHECK(cpu.reg.pc0 == 0x9000);
+
+        TestCPU cpu2(FPUModel::NONE, Model::M68030);
+        cpu2.write32(11 * 4, 0x9000);
+        cpu2.setFpuModel(FPUModel::M68882);
+        cpu2.run({ 0xF200, 0x4000 });
+        CHECK(cpu2.reg.pc0 != 0x9000);
+    }
+
     // The 68040 has a built-in FPU, other models start without one
     {
         TestCPU cpu(FPUModel::INTERNAL, Model::M68040);
         CHECK(cpu.fpu.getModel() == FPUModel::INTERNAL);
         cpu.setModel(Model::M68030);
         CHECK(!cpu.fpu.isPresent());
-        cpu.fpu.setModel(FPUModel::M68882);
+        cpu.setFpuModel(FPUModel::M68882);
         cpu.setModel(Model::M68020);
         CHECK(cpu.fpu.getModel() == FPUModel::M68882);              // An installed 6888x stays
         cpu.setModel(Model::M68040);

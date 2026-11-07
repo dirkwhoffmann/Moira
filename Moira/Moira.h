@@ -197,6 +197,9 @@ public:
     // Sets the emulated CPU models
     void setModel(Model cpuModel, Model dasmModel);
     void setModel(Model model) { setModel(model, model); }
+
+    // Installs, replaces, or removes the FPU (rebuilds the jump table)
+    void setFpuModel(FPUModel model);
     
     // Configures the syntax style for disassembly output
     void setDasmSyntax(Syntax value);
