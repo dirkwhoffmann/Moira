@@ -12,16 +12,14 @@
 
 namespace MOIRA_NAMESPACE {
 
-/* Float80 is an 80-bit extended precision floating-point number, i.e., the
- * x87 / Motorola 68881 "extended" format:
+/* Float80 implements the Motorola 68881 80-bit extended precision format:
  *
- *   bit 79      : sign
- *   bits 64..78 : biased exponent (bias 0x3FFF)
- *   bits 0..63  : mantissa, including an explicit integer bit (bit 63)
+ *   Bit 79      : Sign bit
+ *   Bits 64..78 : Biased exponent (bias 0x3FFF)
+ *   Bits 0..63  : Mantissa, including an explicit integer bit (bit 63)
  *
  * All arithmetic is carried out in software (Berkeley SoftFloat), so results
- * are bit-exact and identical on all platforms, independent of the width of
- * the host's 'long double'.
+ * are bit-exact and identical on all platforms.
  *
  * The class is a plain value type. It stores the raw bits of the number and
  * makes no attempt to normalize them. In particular, it can represent the
@@ -37,10 +35,6 @@ namespace MOIRA_NAMESPACE {
  * (SoftFloat::standard()). If the operands of a binary operation are bound to
  * different objects, the environment of the left operand takes precedence.
  */
-
-//
-// Float80
-//
 
 class Float80 {
 
@@ -117,7 +111,7 @@ public:
 
 
     //
-    // Accessing the raw bits
+    // Accessing raw bits
     //
 
     constexpr u16 signExp() const { return se; }
