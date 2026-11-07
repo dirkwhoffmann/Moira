@@ -682,8 +682,19 @@ sinh_(SoftFloat &sf, const Float80 &x)
 
     // sinh(x) = (E + E / (E + 1)) / 2, where E = e^|x| - 1
     W v = abs(fromFloat80(x));
-    W e = expm1W(v);
-    W r = scale(e + e / (e + one()), -1);
+    W r;
+
+    if (cmpAbs(v, scale(one(), -32)) < 0) {
+
+        // For tiny arguments, sinh(x) = x + x^3 / 6 is slightly larger than x. Don't compute it via
+        // expm1, because rounding errors could push the result below x and signal a false underflow.
+        r = v + scale(v, -65);
+
+    } else {
+
+        W e = expm1W(v);
+        r = scale(e + e / (e + one()), -1);
+    }
     r.neg = x.sign();
     return finish(sf, r);
 }

@@ -623,6 +623,18 @@ static void testModels()
     }
 }
 
+static void testTinySinh()
+{
+    TestCPU cpu(FPUModel::M68882, Model::M68030);
+
+    // FSINH.S #2^-126,FP0 with single-precision rounding: The result is inexact, but not tiny
+    cpu.fpu.setFPCR(0x40);
+    cpu.fpu.setFPSR(0);
+    cpu.run({ 0xF23C, 0x4402, 0x0080, 0x0000 });
+    CHECK(same(cpu.fpu.fpr[0], Float80::fromBits(0x3F81, 0x8000000000000000ULL)));
+    CHECK((cpu.fpu.fpsr & 0xFF00) == 0x0200);
+}
+
 int main()
 {
     testMove();
@@ -634,6 +646,7 @@ int main()
     testControl();
     testTranscendental();
     testModels();
+    testTinySinh();
 
     printf("%d checks, %d failures\n", checks, failures);
     return failures ? EXIT_FAILURE : EXIT_SUCCESS;

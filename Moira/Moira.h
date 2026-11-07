@@ -812,8 +812,8 @@ private:
 
     // Sets an MMU register
     void setTC(u32 value);
-    void setTT0(u64 value);
-    void setTT1(u64 value);
+    void setTT0(u32 value);
+    void setTT1(u32 value);
 
     // Reads a long word or a quad word from memory (used for table lookups)
     u32 readMMU32(u32 addr) const { return read32(addr); }

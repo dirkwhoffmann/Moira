@@ -113,15 +113,15 @@ Moira::setTC(u32 value)
 }
 
 void
-Moira::setTT0(u64 value)
+Moira::setTT0(u32 value)
 {
-
+    mmu.tt0 = value;
 }
 
 void
-Moira::setTT1(u64 value)
+Moira::setTT1(u32 value)
 {
-
+    mmu.tt1 = value;
 }
 
 void
@@ -1121,13 +1121,13 @@ Moira::execPMove(u16 opcode, MmuReg mmuReg, bool rw)
             case MmuReg::TT0:
 
                 readOp<C, M, Long>(reg, &ea, &data32);
-                mmu.tt0 = data32;
+                setTT0(data32);
                 break;
 
             case MmuReg::TT1:
 
                 readOp<C, M, Long>(reg, &ea, &data32);
-                mmu.tt1 = data32;
+                setTT1(data32);
                 break;
 
             case MmuReg::TC:
