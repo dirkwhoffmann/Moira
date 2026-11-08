@@ -531,7 +531,7 @@ void runMMUTranslate(long round)
                 ptestUAE(paddr, pfc, pwrite, level, &statusRef, &descrRef);
                 moiracpu->setSupervisorMode(super);
                 sandbox.prepare(false, true);
-                u32 statusMoira = moiracpu->testAddress<moira::Core::C68020>(paddr, pfc, pwrite, level, descrMoira);
+                u32 statusMoira = moiracpu->mmu.test(paddr, pfc, pwrite, level, descrMoira);
 
                 // The descriptor address is only returned for levels > 0
                 bool equal = statusRef == statusMoira && (level == 0 || descrRef == descrMoira) && !memcmp(refMem, moiraMem, sizeof(refMem));
@@ -551,7 +551,9 @@ void runMMUTranslate(long round)
             bool okRef = translateUAE(addr, super, data, write, &physRef);
             moiracpu->setSupervisorMode(super);
             sandbox.prepare(false, true);     // Don't record the descriptor updates
-            bool okMoira = moiracpu->translateAddress<moira::Core::C68020>(addr, fc, write, physMoira);
+            auto translated = moiracpu->mmu.translate(addr, fc, write);
+            bool okMoira = translated.has_value();
+            if (okMoira) physMoira = *translated;
 
             (okRef ? successes : faults)++;
             lastAddr = addr; lastFC = fc;

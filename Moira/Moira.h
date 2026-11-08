@@ -30,6 +30,7 @@ class Moira {
     friend class Breakpoints;
     friend class Watchpoints;
     friend class Catchpoints;
+    friend class MMU;
     
     
     //
@@ -74,7 +75,7 @@ protected:
     Registers reg {};
 
     // The memory management unit
-    MMU mmu {};
+    MMU mmu = MMU(*this);
 
     // The floating-point unit
     FPU fpu {};
@@ -812,40 +813,12 @@ private:
 
 private:
 
-    // Sets an MMU register
-    void setTC(u32 value);
-    void setTT0(u32 value);
-    void setTT1(u32 value);
-
     // Extracts the function code from the extension word of an MMU instruction
     u8 mmuFC(u16 ext) const;
-
-    // Loads an ATC entry (PLOAD)
-    template <Core C> void mmuLoad(u32 addr, u8 fc, bool write);
 
     // Translates a logical address to a physical address
     template <Core C, bool write> u32 translate(u32 addr, u8 fc);
 
-public:
-
-    // Translates a logical address without executing an instruction. Returns
-    // false if the translation would cause a bus error (used for testing).
-    template <Core C> bool translateAddress(u32 addr, u8 fc, bool write, u32 &physical);
-    template <Core C> u32 testAddress(u32 addr, u8 fc, bool write, u32 level, u32 &descrAddr);
-
-private:
-
-    // Looks up a physical address from the MMU table. Throws a bus error on failure.
-    template <Core C, bool write> u32 mmuLookup(u32 addr, u8 fc);
-
-    // Walks the translation tables. In PTEST mode, no descriptors are modified
-    // and the walk ends at the given level (or at the page descriptor if 0).
-    template <Core C, bool write> u32 mmuWalk(u32 addr, u8 fc, struct MmuContext &con, bool ptest, u32 level);
-    template <Core C, bool write> u32 mmuLookupShort(char table, u32 taddr, u32 offset, struct MmuContext &con);
-    template <Core C, bool write> u32 mmuLookupLong(char table, u32 taddr, u32 offset, struct MmuContext &con);
-
-    // Emulates PTEST. Returns the MMUSR value and the address of the last descriptor.
-    template <Core C> u32 mmuPTest(u32 addr, u8 fc, bool write, u32 level, u32 *descrAddr);
 
 private:
     

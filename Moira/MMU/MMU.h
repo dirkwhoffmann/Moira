@@ -12,17 +12,24 @@
 
 namespace MOIRA_NAMESPACE {
 
-// Supported MMU models
+struct MmuContext;
+
 enum class MMUModel
 {
-    NONE,           // No MMU installed (MMU instructions cause a line F exception)
-    INTERNAL        // MMU built into the 68030 and 68040
+    NONE,                   // No MMU installed (MMU instructions cause a line F exception)
+    INTERNAL                // MMU built into the 68030 and 68040
 };
 
-// MMU registers addressable by PMOVE
-enum class MmuReg { TT0, TT1, MMUSR, CRP, SRP, TC };
+enum class MmuReg {
+    
+    TT0,                    // Transparent translation register 0
+    TT1,                    // Transparent translation register 1
+    MMUSR,                  // MMU Status register
+    CRP,                    // CPU Root pointer
+    SRP,                    // Supervisor Root pointer
+    TC                      // Translation control register
+};
 
-// An entry of the address translation cache (ATC)
 struct AtcEntry {
 
     u32 logical;            // Logical page address
@@ -35,19 +42,23 @@ struct AtcEntry {
     bool mru;               // History bit used by the replacement algorithm
 };
 
-static constexpr int ATC_ENTRIES = 22;
+// Cache size
+static constexpr int ATC_ENTRIES                = 22;
 
-// MMU status register (MMUSR) bits
-static constexpr u32 MMUSR_BUS_ERROR          = 1 << 15;
-static constexpr u32 MMUSR_LIMIT_VIOLATION    = 1 << 14;
-static constexpr u32 MMUSR_SUPERVISOR_ONLY    = 1 << 13;
-static constexpr u32 MMUSR_WRITE_PROTECTED    = 1 << 11;
-static constexpr u32 MMUSR_INVALID            = 1 << 10;
-static constexpr u32 MMUSR_MODIFIED           = 1 << 9;
-static constexpr u32 MMUSR_TRANSPARENT_ACCESS = 1 << 6;
-static constexpr u32 MMUSR_NUMBER_OF_LEVELS   = 0b111;
+// Status register bits
+static constexpr u32 MMUSR_BUS_ERROR            = 1 << 15;
+static constexpr u32 MMUSR_LIMIT_VIOLATION      = 1 << 14;
+static constexpr u32 MMUSR_SUPERVISOR_ONLY      = 1 << 13;
+static constexpr u32 MMUSR_WRITE_PROTECTED      = 1 << 11;
+static constexpr u32 MMUSR_INVALID              = 1 << 10;
+static constexpr u32 MMUSR_MODIFIED             = 1 << 9;
+static constexpr u32 MMUSR_TRANSPARENT_ACCESS   = 1 << 6;
+static constexpr u32 MMUSR_NUMBER_OF_LEVELS     = 0b111;
 
 class MMU {
+
+    // The CPU this MMU belongs to
+    class Moira &moira;
 
 public:
 
@@ -78,7 +89,7 @@ public:
 
 public:
 
-    MMU() { reset(); }
+    MMU(Moira &ref) : moira(ref) { reset(); }
 
     // Initializes all registers and invalidates the ATC
     void reset();
@@ -94,6 +105,14 @@ public:
     bool isPresent() const { return model != MMUModel::NONE; }
     void setModel(MMUModel newModel) { model = newModel; }
 
+    // Indicates whether address translation is active
+    bool isEnabled() const { return (tc & 0x80000000) && isPresent(); }
+
+    // Setters
+    void setTC(u32 value);
+    void setTT0(u32 value);
+    void setTT1(u32 value);
+
 
     //
     // Translating
@@ -106,6 +125,15 @@ public:
 
     // Checks whether an access matches a transparent translation register
     static bool testTT(u32 ttx, u32 addr, u8 fc, bool rw);
+
+    // Translates a logical address to a physical address
+    std::optional<u32> translate(u32 addr, u8 fc, bool write);
+
+    // Creates an ATC entry for a logical address (PLOAD)
+    void load(u32 addr, u8 fc, bool write);
+
+    // Returns the MMUSR value and the address of the last descriptor (PTEST)
+    u32 test(u32 addr, u8 fc, bool write, u32 level, u32 &descrAddr);
 
 
     //
@@ -120,7 +148,7 @@ public:
     // Creates an ATC entry and returns its line number
     int atcInsert(u32 addr, u8 fc, u32 physical, u32 status);
 
-    // Invalidates entries
+    // Invalidates one or more ATC entries
     void atcFlush();
     void atcFlush(u8 fcBase, u8 fcMask);
     void atcFlushPage(u32 addr);
@@ -136,6 +164,16 @@ private:
 
     // Marks an entry as recently used
     void atcTouch(int line);
+
+    // Walks the translation tables
+    u32 walk(u32 addr, u8 fc, bool write, MmuContext &c);
+
+    // Walks the translation tables without side effects (PTEST mode)
+    u32 walk(u32 addr, u8 fc, bool write, MmuContext &c, bool ptest, u32 level);
+
+    // Helpers called inside the walk function
+    u32 lookupShort(char table, u32 taddr, u32 offset, bool write, MmuContext &c);
+    u32 lookupLong(char table, u32 taddr, u32 offset, bool write, MmuContext &c);
 };
 
 }
