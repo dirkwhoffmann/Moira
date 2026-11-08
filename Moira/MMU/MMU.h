@@ -123,6 +123,9 @@ public:
     // Returns the page size mask as defined in the translation control register
     u32 pageMask() const { return (1u << (tc >> 20 & 0xF)) - 1; }
 
+    // Returns the number of tables indexed by the logical address
+    int numTables() const;
+
     // Checks whether an access matches one of the transparent translation registers
     bool testTT(u32 addr, u8 fc, bool rw) const;
 

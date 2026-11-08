@@ -149,6 +149,16 @@ MMU::setTT1(u32 value)
 // Translation
 //
 
+int
+MMU::numTables() const
+{
+    // A table exists for each leading non-zero TIx field in the TC register
+    for (int i = 0; i < 4; i++) {
+        if ((tc >> (12 - 4 * i) & 0xF) == 0) return i;
+    }
+    return 4;
+}
+
 bool
 MMU::testTT(u32 addr, u8 fc, bool rw) const
 {
@@ -245,7 +255,7 @@ MMU::test(u32 addr, u8 fc, bool write, u32 level, u32 &descrAddr)
     MmuContext context;
     (void)walk(addr, fc, false, context, true, level);
 
-    if (context.depth) descrAddr = context.descrAddr;
+    descrAddr = context.descrAddr;
     return context.status();
 }
 
@@ -377,21 +387,20 @@ MMU::walk(u32 addr, u8 fc, bool write, MmuContext &c)
 u32
 MMU::walk(u32 addr, u8 fc, bool write, MmuContext &c, bool ptest, u32 level)
 {
-    c = MmuContext { .addrBits = addr, .indexBits = tc << 12 };
-    c.faultAddr = addr;
-    c.super = fc & 4;
-    c.fc = fc & 7;
-    c.pageMask = (1u << (tc >> 20 & 0xF)) - 1;
-    c.ptest = ptest;
-    c.level = level;
-
     bool fcl = tc & (1 << 24);
 
-    // Determine the last table. A table is indexed by each non-zero TIx field.
-    // If function code lookup is enabled, there is an additional table.
-    int tables = 0;
-    while (tables < 4 && (tc >> (12 - 4 * tables) & 0xF)) tables++;
-    c.lastTable = char('A' + tables - 1 + (fcl ? 1 : 0));
+    c = MmuContext {
+
+        .addrBits   = addr,
+        .indexBits  = tc << 12,
+        .super      = bool(fc & 4),
+        .fc         = u8(fc & 7),
+        .ptest      = ptest,
+        .level      = level,
+        .pageMask   = pageMask(),
+        .lastTable  = char('A' + numTables() - 1 + (fcl ? 1 : 0)),
+        .faultAddr  = addr
+    };
 
     // Start with the SRP or CRP
     u64 rp = (c.super && (tc & 0x02000000)) ? srp : crp;
@@ -435,11 +444,11 @@ MMU::walk(u32 addr, u8 fc, bool write, MmuContext &c, bool ptest, u32 level)
 
             case 1:
             {
-                /* Early termination. No translation table exists. The physical
-                 * address is the sum of the TableA address and the logical address
-                 * (without the ignored bits). The limit applies to the first index
-                 * unless function code lookup is enabled.
-                 */
+                // Early termination. No translation table exists. The physical
+                // address is the sum of the TableA address and the logical address
+                // (without the ignored bits). The limit applies to the first index
+                // unless function code lookup is enabled.
+
                 if (!fcl) {
 
                     u32 index = c.peekAddrBits();
@@ -471,7 +480,6 @@ MMU::walk(u32 addr, u8 fc, bool write, MmuContext &c, bool ptest, u32 level)
             }
             default:
 
-                // TODO: WHICH EXCEPTION? (MMU CONFIG ERROR? BUS ERROR?)
                 c.stop(MMUSR_INVALID);
         }
 
@@ -487,10 +495,9 @@ MMU::lookupShort(char table, u32 taddr, u32 offset, bool write, MmuContext &c)
 
     // Check offset
     if (offset < c.lowerLimit || offset > c.upperLimit) {
-
         c.stop(MMUSR_LIMIT_VIOLATION | MMUSR_INVALID);
     }
-
+    
     // Read table entry
     u32 descrAddr = taddr + 4 * offset;
     u32 descriptor = moira.read32(descrAddr);
@@ -614,7 +621,6 @@ MMU::lookupLong(char table, u32 taddr, u32 offset, bool write, MmuContext &c)
 
     // Check offset
     if (offset < c.lowerLimit || offset > c.upperLimit) {
-
         c.stop(MMUSR_LIMIT_VIOLATION | MMUSR_INVALID);
     }
 
