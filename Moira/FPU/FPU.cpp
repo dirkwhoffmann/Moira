@@ -37,14 +37,14 @@ FPU::isSupported(Instr I) const
         case Instr::FLOGNP1:   case Instr::FMOD:      case Instr::FREM:      case Instr::FSCAL:
         case Instr::FSIN:      case Instr::FSINCOS:   case Instr::FSINH:     case Instr::FTAN:
         case Instr::FTANH:     case Instr::FTENTOX:   case Instr::FTWOTOX:   case Instr::FATAN:
-            return model != FPUModel::INTERNAL;
+            return model != FPUModel::BUILTIN;
 
         // Instructions that are only available on the 68040
         case Instr::FSABS:     case Instr::FDABS:     case Instr::FSADD:     case Instr::FDADD:
         case Instr::FSDIV:     case Instr::FDDIV:     case Instr::FSMOVE:    case Instr::FDMOVE:
         case Instr::FSMUL:     case Instr::FDMUL:     case Instr::FSNEG:     case Instr::FDNEG:
         case Instr::FSSQRT:    case Instr::FDSQRT:    case Instr::FSSUB:     case Instr::FDSUB:
-            return model == FPUModel::INTERNAL;
+            return model == FPUModel::BUILTIN;
 
         default:
             return true;
@@ -759,7 +759,7 @@ FPU::fcmp(const MFloat80 &dst_, const MFloat80 &src_)
     MFloat80 dst = dst_, src = src_;
 
     // Only the 68040 keeps the sign of a NaN (the N flag is set for a negative NaN)
-    if (model != FPUModel::INTERNAL) {
+    if (model != FPUModel::BUILTIN) {
         if (dst.isNaN()) dst = dst.abs();
         if (src.isNaN()) src = src.abs();
     }
@@ -880,7 +880,7 @@ FPU::stateFrameSize(FpuFrameType type) const
 
             switch (model) {
                 case FPUModel::NONE:        break;
-                case FPUModel::INTERNAL:    return 0;
+                case FPUModel::BUILTIN:    return 0;
                 case FPUModel::M68881:      return 24;
                 case FPUModel::M68882:      return 56;
             }
@@ -888,13 +888,13 @@ FPU::stateFrameSize(FpuFrameType type) const
 
         case FpuFrameType::UNIMP:
 
-            return model == FPUModel::INTERNAL ? 44 : 0;
+            return model == FPUModel::BUILTIN ? 44 : 0;
 
         case FpuFrameType::BUSY:
 
             switch (model) {
                 case FPUModel::NONE:        break;
-                case FPUModel::INTERNAL:    return 92;
+                case FPUModel::BUILTIN:    return 92;
                 case FPUModel::M68881:      return 180;
                 case FPUModel::M68882:      return 212;
             }
@@ -934,7 +934,7 @@ FPU::computeFormatWord(FpuFrameType type) const
         case FpuFrameType::IDLE:
 
             // The 68040 uses a different version number than the 6888x
-            if (model == FPUModel::INTERNAL) return 0x41000000;
+            if (model == FPUModel::BUILTIN) return 0x41000000;
             return 0x1F000000 | u32(stateFrameSize(type)) << 16;
 
         case FpuFrameType::UNIMP:

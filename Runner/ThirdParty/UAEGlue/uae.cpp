@@ -34,7 +34,7 @@ void setupUAE(moira::Model model, moira::FPUModel fpuModel)
     Fpu fpu =
     fpuModel == moira::FPUModel::M68881   ? Fpu::M68881 :
     fpuModel == moira::FPUModel::M68882   ? Fpu::M68882 :
-    fpuModel == moira::FPUModel::INTERNAL ? Fpu::Internal : Fpu::None;
+    fpuModel == moira::FPUModel::BUILTIN ? Fpu::Internal : Fpu::None;
 
     uaecpu::init(cpu, fpu, refMem, uaeWrite);
 }

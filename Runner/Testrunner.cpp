@@ -77,7 +77,7 @@ static const struct { FPUModel model; const char *name; } fpuTable[] = {
 
     { FPUModel::M68881,   "68881" },
     { FPUModel::M68882,   "68882" },
-    { FPUModel::INTERNAL, "internal" }
+    { FPUModel::BUILTIN, "builtin" }
 };
 
 const std::vector<FPUModel> &allFpuModels()
@@ -106,7 +106,7 @@ bool isCompatible(Model cpu, FPUModel fpu)
 {
     switch (fpu) {
 
-        case FPUModel::INTERNAL:
+        case FPUModel::BUILTIN:
             return cpu == Model::M68040;
 
         case FPUModel::M68881:
@@ -141,7 +141,7 @@ void selectModel(Model model)
     cpuModel = model;
 
     // Only the 68040 has a built-in FPU. External FPUs are installed with selectFpu.
-    fpuModel = (cpuModel == Model::M68040) ? FPUModel::INTERNAL : FPUModel::NONE;
+    fpuModel = (cpuModel == Model::M68040) ? FPUModel::BUILTIN : FPUModel::NONE;
 
     if (useMusashi) setupMusashi(cpuModel);
     if (useUAE) setupUAE(cpuModel, fpuModel);
@@ -590,7 +590,7 @@ void runFPU(long round)
     Setup setup;
     resetClocks();
 
-    if (fpuModel == FPUModel::INTERNAL)
+    if (fpuModel == FPUModel::BUILTIN)
         printf("%11s FPU : CORE ", selectedModel());
     else
         printf("%5s+%5s FPU : CORE ", selectedModel(), fpuModelName(fpuModel));
@@ -675,7 +675,7 @@ void runDasmFPU(long round)
     Setup setup;
     resetClocks();
 
-    if (fpuModel == FPUModel::INTERNAL)
+    if (fpuModel == FPUModel::BUILTIN)
         printf("%11s FPU : DASM ", selectedModel());
     else
         printf("%5s+%5s FPU : DASM ", selectedModel(), fpuModelName(fpuModel));

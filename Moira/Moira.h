@@ -41,6 +41,10 @@ protected:
     
     // Emulated CPU model
     Model cpuModel = Model::M68000;
+
+    // Selected FPU and MMU (the effective ones are stored in fpu and mmu)
+    FPUModel fpuModel = FPUModel::BUILTIN;
+    MMUModel mmuModel = MMUModel::BUILTIN;
     
     // Instruction set used by the disassembler
     Model dasmModel = Model::M68000;
@@ -166,6 +170,9 @@ protected:
     
     // Creates or updates the jump tables for execution and disassembly
     void createJumpTable(Model cpuModel, Model dasmModel);
+
+    // Determines the effective FPU and MMU from the CPU model and the selection
+    void updateUnits();
     void createJumpTable(Model model) { createJumpTable(model, model); }
     
 private:
@@ -203,8 +210,17 @@ public:
     void setModel(Model cpuModel, Model dasmModel);
     void setModel(Model model) { setModel(model, model); }
 
-    // Installs, replaces, or removes the FPU (rebuilds the jump table)
+    /* Selects the FPU and MMU to emulate. NONE removes the unit, even if the
+     * CPU provides one (e.g., to emulate a 68LC040 or 68EC030 with a 68040 or
+     * 68030). BUILTIN uses the unit of the CPU, if any. An external FPU (68881,
+     * 68882) is only attached to CPUs with a coprocessor interface. On a 68040,
+     * it selects the built-in FPU. The selection is kept when the CPU model
+     * changes. Both units are present by default if the CPU provides them.
+     */
     void setFpuModel(FPUModel model);
+    void setMmuModel(MMUModel model);
+    FPUModel getFpuModel() const { return fpuModel; }
+    MMUModel getMmuModel() const { return mmuModel; }
 
     // Checks if a model provides a coprocessor interface (to attach a 6888x)
     static bool hasCoproInterface(Model model);

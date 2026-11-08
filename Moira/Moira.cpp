@@ -99,16 +99,7 @@ Moira::setModel(Model cpuModel, Model dasmModel)
         this->cpuModel = cpuModel;
         this->dasmModel = dasmModel;
 
-        // The 68040 has a built-in FPU. All other models start without an FPU
-        // (an external 6888x can be installed by calling setFpuModel).
-        if (cpuModel == Model::M68040) {
-            fpu.setModel(FPUModel::INTERNAL);
-        } else if (fpu.getModel() == FPUModel::INTERNAL) {
-            fpu.setModel(FPUModel::NONE);
-        }
-
-        // The 68030 and the 68040 have a built-in MMU
-        mmu.setModel(hasMMU(cpuModel) ? MMUModel::INTERNAL : MMUModel::NONE);
+        updateUnits();
 
         createJumpTable(cpuModel, dasmModel);
 
@@ -119,15 +110,43 @@ Moira::setModel(Model cpuModel, Model dasmModel)
 }
 
 void
+Moira::updateUnits()
+{
+    // The 68040 has a built-in FPU. The 68020 and 68030 can be connected to a
+    // 6888x via the coprocessor interface. All other models have no FPU.
+    FPUModel effectiveFpu = FPUModel::NONE;
+
+    if (fpuModel != FPUModel::NONE) {
+
+        if (cpuModel == Model::M68040) {
+            effectiveFpu = FPUModel::BUILTIN;
+        } else if (hasCoproInterface(cpuModel) && fpuModel != FPUModel::BUILTIN) {
+            effectiveFpu = fpuModel;
+        }
+    }
+    fpu.setModel(effectiveFpu);
+
+    // The 68030 and the 68040 have a built-in MMU
+    mmu.setModel(mmuModel == MMUModel::BUILTIN && hasMMU(cpuModel) ? MMUModel::BUILTIN : MMUModel::NONE);
+}
+
+void
 Moira::setFpuModel(FPUModel model)
 {
-    if (fpu.getModel() != model) {
+    fpuModel = model;
 
-        fpu.setModel(model);
+    FPUModel old = fpu.getModel();
+    updateUnits();
 
-        // The FPU handlers are only registered if an FPU is present
-        createJumpTable(cpuModel, dasmModel);
-    }
+    // The FPU handlers are only registered if an FPU is present
+    if (fpu.getModel() != old) createJumpTable(cpuModel, dasmModel);
+}
+
+void
+Moira::setMmuModel(MMUModel model)
+{
+    mmuModel = model;
+    updateUnits();
 }
 
 bool

@@ -589,6 +589,17 @@ static void testModels()
     CHECK(!TestCPU(Model::M68020).hasMMU());
     CHECK(TestCPU(Model::M68030).hasMMU());
     CHECK(TestCPU(Model::M68040).hasMMU());
+
+    // NONE removes the MMU (e.g., to emulate a 68EC030). The selection survives a CPU change.
+    TestCPU cpu(Model::M68030);
+    cpu.setMmuModel(MMUModel::NONE);
+    CHECK(!cpu.hasMMU());
+    cpu.setModel(Model::M68040);
+    CHECK(!cpu.hasMMU());
+    cpu.setMmuModel(MMUModel::BUILTIN);
+    CHECK(cpu.hasMMU());
+    cpu.setModel(Model::M68020);
+    CHECK(!cpu.hasMMU());
 }
 
 int main()

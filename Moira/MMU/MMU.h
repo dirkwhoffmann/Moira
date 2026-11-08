@@ -16,8 +16,8 @@ struct MmuContext;
 
 enum class MMUModel
 {
-    NONE,                   // No MMU installed (MMU instructions cause a line F exception)
-    INTERNAL                // MMU built into the 68030 and 68040
+    NONE,                   // The MMU is not emulated (MMU instructions cause a line F exception)
+    BUILTIN                 // Use the MMU of the CPU (68030, 68040), other CPUs have none
 };
 
 enum class MmuReg {
@@ -62,7 +62,8 @@ class MMU {
 
 public:
 
-    // Emulated MMU model
+    // The MMU that is effectively present (resolved by Moira from the CPU model
+    // and the selected MMU model)
     MMUModel model = MMUModel::NONE;
 
     // Root pointers (CPU and Supervisor)

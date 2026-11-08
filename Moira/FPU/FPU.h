@@ -16,10 +16,10 @@ namespace MOIRA_NAMESPACE {
 // Supported FPU models
 enum class FPUModel
 {
-    NONE,           // No FPU installed (floating-point instructions cause a line F exception)
-    INTERNAL,       // FPU built into the 68040
-    M68881,         // External FPU
-    M68882          // External FPU
+    NONE,           // The FPU is not emulated (floating-point instructions cause a line F exception)
+    BUILTIN,        // Use the FPU of the CPU (the 68040 has one, other CPUs have none)
+    M68881,         // External FPU (requires a coprocessor interface, i.e., a 68020 or 68030)
+    M68882          // External FPU (requires a coprocessor interface, i.e., a 68020 or 68030)
 };
 
 // Types of FSAVE state frames
@@ -102,8 +102,9 @@ class FPU {
 
 public:
 
-    // Emulated FPU model
-    FPUModel model = FPUModel::INTERNAL;
+    // The FPU that is effectively present (resolved by Moira from the CPU model
+    // and the selected FPU model, hence never BUILTIN on a CPU without an FPU)
+    FPUModel model = FPUModel::NONE;
 
     // The floating-point environment (rounding mode, precision, exception flags)
     FpuEnv env;

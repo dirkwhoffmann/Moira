@@ -229,7 +229,7 @@ void testArithmetic(int model, long iterations)
 {
     bool is040 = model == 68040;
     FPU fpu;
-    fpu.setModel(is040 ? FPUModel::INTERNAL : FPUModel::M68882);
+    fpu.setModel(is040 ? FPUModel::BUILTIN : FPUModel::M68882);
     uaeref::init(model);
 
     for (long i = 0; i < iterations; i++) {
@@ -485,7 +485,7 @@ void testConversions(int model, long iterations)
 {
     std::string tag = model == 68040 ? " (040)" : " (6888x)";
     FPU fpu;
-    fpu.setModel(model == 68040 ? FPUModel::INTERNAL : FPUModel::M68882);
+    fpu.setModel(model == 68040 ? FPUModel::BUILTIN : FPUModel::M68882);
     uaeref::init(model);
 
     for (long i = 0; i < iterations; i++) {

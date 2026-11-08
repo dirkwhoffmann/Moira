@@ -492,7 +492,7 @@ Moira::execFBcc(u16 opcode)
     u32 oldpc = reg.pc;
 
     // Conditional instructions don't leave the reset state of the 68040
-    if (fpu.model != FPUModel::INTERNAL) fpu.resetState = false;
+    if (fpu.model != FPUModel::BUILTIN) fpu.resetState = false;
 
     if (fpu.test(opcode & 0x1F)) {
 
@@ -537,7 +537,7 @@ Moira::execFDbcc(u16 opcode)
     // Catch illegal extension words
     if (!isValidExtFPU(I, M, opcode, ext, cpuModel)) { execLineF<C, I, M, S>(opcode); return; }
 
-    if (fpu.model != FPUModel::INTERNAL) fpu.resetState = false;
+    if (fpu.model != FPUModel::BUILTIN) fpu.resetState = false;
     readI<C, Word>();
 
     if (!fpu.test(ext & 0x3F)) {
@@ -652,7 +652,7 @@ Moira::execFScc(u16 opcode)
     // Catch illegal extension words
     if (!isValidExtFPU(I, M, opcode, ext, cpuModel)) { execLineF<C, I, M, S>(opcode); return; }
 
-    if (fpu.model != FPUModel::INTERNAL) fpu.resetState = false;
+    if (fpu.model != FPUModel::BUILTIN) fpu.resetState = false;
     readI<C, Word>();
 
     u32 data = fpu.test(ext & 0x3F) ? 0xFF : 0;
@@ -683,7 +683,7 @@ Moira::execFTrapcc(u16 opcode)
     // Catch illegal extension words
     if (!isValidExtFPU(I, M, opcode, ext, cpuModel)) { execLineF<C, I, M, S>(opcode); return; }
 
-    if (fpu.model != FPUModel::INTERNAL) fpu.resetState = false;
+    if (fpu.model != FPUModel::BUILTIN) fpu.resetState = false;
     readI<C, Word>();
 
     // Skip the optional operand

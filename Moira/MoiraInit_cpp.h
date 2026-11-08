@@ -2086,7 +2086,7 @@ Moira::createJumpTable12(Model model, bool regDasm)
      * their line F handlers. The jump table is rebuilt whenever the FPU model
      * changes (see setFpuModel).
      */
-    if (model == Model::M68040 || (hasCoproInterface(model) && has6888x())) {
+    if ((model == Model::M68040 && fpuModel != FPUModel::NONE) || (hasCoproInterface(model) && has6888x())) {
 
         opcode = parse("1111 0010 100- ----");
         ___________XXXXX(opcode, Instr::FBcc, Mode::IP, Word, FBcc, CIMS)
