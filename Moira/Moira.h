@@ -33,6 +33,8 @@ class Moira {
     friend class Catchpoints;
     friend class MMU;
     friend class Cache;
+    friend class ICache;
+    friend class DCache;
     
     
     //
@@ -98,9 +100,9 @@ protected:
     // Prefetch queue for fetching instructions
     PrefetchQueue queue {};
 
-    // Instruction cache (68020 and up) and data cache (68030)
-    Cache iCache = Cache(*this, Cache::Kind::INSTRUCTION);
-    Cache dCache = Cache(*this, Cache::Kind::DATA);
+    // Instruction cache (68020 and up) and data cache (68030 and up)
+    ICache iCache = ICache(*this);
+    DCache dCache = DCache(*this);
 
     // Indicates that the data cache is enabled
     bool dCacheOn = false;

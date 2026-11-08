@@ -92,9 +92,6 @@ class Cache {
 
 public:
 
-    // Selects the cache role: Both kinds are controlled by different CACR bits
-    enum class Kind { INSTRUCTION, DATA };
-
     // The 68020 has one longword per line, the 68030 and the 68040 models have four
     enum class Layout { M68020, M68030 };
 
@@ -103,20 +100,17 @@ public:
 private:
 
     // The CPU this cache belongs to
+protected:
+
     class Moira &moira;
 
-    Kind kind;
+private:
+
     Layout layout = Layout::M68020;
 
     u32 tags[numLongwords] = { };       // One per line (the 68030 layout uses the first 16)
     u32 data[numLongwords] = { };       // Indexed by addr[7:2]
     bool valid[numLongwords] = { };     // One flag per longword, indexed by addr[7:2]
-
-    // Instruction cache only: The longword that has been fetched last
-    CacheLatch latch = { 0xffffffff, 0xffffffff };
-
-    // The CACR bits that control this cache
-    u32 enableBit, freezeBit, burstBit, clearEntryBit, clearBit;
 
 
     //
@@ -125,7 +119,8 @@ private:
 
 public:
 
-    Cache(Moira &ref, Kind k);
+    Cache(Moira &ref) : moira(ref) { }
+    virtual ~Cache() = default;
 
     // Selects the layout of the emulated CPU model and invalidates all entries
     void update();
@@ -142,16 +137,16 @@ public:
     int numLines() const { return numLongwords / numLongs(); }
 
     // Indicates whether the emulated CPU model has this cache
-    bool present() const;
+    virtual bool present() const = 0;
 
     // Indicates whether the cache is present and enabled in the CACR
-    bool enabled() const;
+    virtual bool enabled() const = 0;
 
     // Indicates whether the CACR freezes the cache (no new entries are allocated)
-    bool frozen() const;
+    virtual bool frozen() const = 0;
 
-    // Indicates whether burst fills are possible
-    bool bursting() const;
+    // Indicates whether the CACR enables burst fills
+    virtual bool burstEnabled() const = 0;
 
 
     //
@@ -161,43 +156,15 @@ public:
 public:
 
     // Invalidates all lines (CACR.CI, CACR.CD)
-    void flush();
+    virtual void flush();
 
     // Invalidates the longword that an address maps to (CACR.CEI, CACR.CED)
     void invalidate(u32 addr);
 
-    // Forgets the longword that has been fetched last (instruction cache)
-    void flushLatch() { latch = { 0xffffffff, 0xffffffff }; }
-
     // Performs the actions that are triggered by writing to the CACR
-    void cacrDidChange(u32 value);
+    virtual void cacrDidChange(u32 value) = 0;
 
-
-    //
-    // Accessing the cache
-    //
-
-public:
-
-    /* Instruction cache: Reads an instruction word via the latch and the
-     * cache. On a miss, the line is filled from the bus. The function reports
-     * whether a bus access was made and returns the physical address.
-     */
-    u16 fetch(u32 addr, bool &busAccess, u32 &phys);
-
-    /* Data cache: Reads an aligned longword. Returns false if the access has
-     * to bypass the cache (the page is cache-inhibited). May throw a bus error.
-     */
-    bool readLong(u32 addr, u8 fc, u32 &result);
-
-    /* Data cache: Reflects a write access (the cache is write-through, so the
-     * caller has already written to the bus). The mask selects the bytes of
-     * the aligned longword that have been written. The ci flag tells whether
-     * the page is cache-inhibited.
-     */
-    void write(u32 addr, bool supervisor, u32 mask, u32 value, bool ci);
-
-private:
+protected:
 
     // Maps an address to the position of its longword in the data array
     static int slot(u32 addr) { return int(addr >> 2) & 63; }
@@ -249,14 +216,81 @@ private:
         return count;
     }
 
-    // Serves an instruction fetch that is not covered by the latch; returns true on a miss
-    bool fill(u32 base, u32 &phys);
+    // Indicates whether the CPU model supports burst fills (68030)
+    bool burstCapable() const;
 
     // Reads an aligned longword from the bus, split according to the width of the addressed port
     u32 busReadLong(u32 addr);
 
     // Fetches the missing longwords of a line right behind the longword that has just been loaded
     void burstFill(u32 logical, u32 physical, bool supervisor);
+};
+
+
+/* Instruction cache (68020 and up)
+ *
+ * Moira keeps a one-entry latch in front of the cache that records the
+ * longword fetched last.
+ */
+class ICache final : public Cache {
+
+    // The longword that has been fetched last
+    CacheLatch latch = { 0xffffffff, 0xffffffff };
+
+public:
+
+    using Cache::Cache;
+
+    bool present() const override { return true; }
+    bool enabled() const override;
+    bool frozen() const override;
+    bool burstEnabled() const override;
+
+    void flush() override;
+    void cacrDidChange(u32 value) override;
+
+    // Forgets the longword that has been fetched last
+    void flushLatch() { latch = { 0xffffffff, 0xffffffff }; }
+
+    /* Reads an instruction word via the latch and the cache. On a miss, the
+     * line is filled from the bus. The function reports whether a bus access
+     * was made and returns the physical address.
+     */
+    u16 fetch(u32 addr, bool &busAccess, u32 &phys);
+
+private:
+
+    // Serves an instruction fetch that is not covered by the latch; returns true on a miss
+    bool fill(u32 base, u32 &phys);
+};
+
+
+/* Data cache (68030)
+ */
+class DCache final : public Cache {
+
+public:
+
+    using Cache::Cache;
+
+    bool present() const override;
+    bool enabled() const override;
+    bool frozen() const override;
+    bool burstEnabled() const override;
+
+    void cacrDidChange(u32 value) override;
+
+    /* Reads an aligned longword. Returns false if the access has to bypass
+     * the cache (the page is cache-inhibited). May throw a bus error.
+     */
+    bool readLong(u32 addr, u8 fc, u32 &result);
+
+    /* Reflects a write access (the cache is write-through, so the caller has
+     * already written to the bus). The mask selects the bytes of the aligned
+     * longword that have been written. The ci flag tells whether the page is
+     * cache-inhibited.
+     */
+    void write(u32 addr, bool supervisor, u32 mask, u32 value, bool ci);
 };
 
 }

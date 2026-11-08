@@ -5,20 +5,6 @@
 // Published under the terms of the MIT License
 // -----------------------------------------------------------------------------
 
-Cache::Cache(Moira &ref, Kind k) : moira(ref), kind(k)
-{
-    if (kind == Kind::INSTRUCTION) {
-
-        enableBit = CACR::E; freezeBit = CACR::F; burstBit = CACR::IBE;
-        clearEntryBit = CACR::CE; clearBit = CACR::C;
-
-    } else {
-
-        enableBit = CACR::ED; freezeBit = CACR::FD; burstBit = CACR::DBE;
-        clearEntryBit = CACR::CED; clearBit = CACR::CD;
-    }
-}
-
 void
 Cache::update()
 {
@@ -28,56 +14,21 @@ Cache::update()
 }
 
 bool
-Cache::present() const
+Cache::burstCapable() const
 {
-    if (kind == Kind::INSTRUCTION) return true;
-
-    // A data cache is only emulated for the 68030
     return moira.cpuModel == Model::M68030 || moira.cpuModel == Model::M68EC030;
-}
-
-bool
-Cache::enabled() const
-{
-    return present() && (moira.reg.cacr & enableBit);
-}
-
-bool
-Cache::frozen() const
-{
-    return moira.reg.cacr & freezeBit;
-}
-
-bool
-Cache::bursting() const
-{
-    // Burst fills are a 68030 feature
-    return (moira.reg.cacr & burstBit) && (moira.cpuModel == Model::M68030 || moira.cpuModel == Model::M68EC030);
 }
 
 void
 Cache::flush()
 {
     for (auto &v : valid) v = false;
-    flushLatch();
 }
 
 void
 Cache::invalidate(u32 addr)
 {
     valid[slot(addr)] = false;
-}
-
-void
-Cache::cacrDidChange(u32 value)
-{
-    if (!present()) return;
-
-    // Setting the clear-entry bit invalidates the entry for the address in CAAR
-    if (value & clearEntryBit) invalidate(moira.reg.caar);
-
-    // Setting the clear bit invalidates all entries
-    if (value & clearBit) flush();
 }
 
 u32
@@ -116,7 +67,42 @@ Cache::burstFill(u32 logical, u32 physical, bool supervisor)
 }
 
 bool
-Cache::fill(u32 base, u32 &phys)
+ICache::enabled() const
+{
+    return moira.reg.cacr & CACR::E;
+}
+
+bool
+ICache::frozen() const
+{
+    return moira.reg.cacr & CACR::F;
+}
+
+bool
+ICache::burstEnabled() const
+{
+    return moira.reg.cacr & CACR::IBE;
+}
+
+void
+ICache::flush()
+{
+    Cache::flush();
+    flushLatch();
+}
+
+void
+ICache::cacrDidChange(u32 value)
+{
+    // Setting the CE bit invalidates the entry for the address in CAAR
+    if (value & CACR::CE) invalidate(moira.reg.caar);
+
+    // Setting the C bit invalidates all entries
+    if (value & CACR::C) flush();
+}
+
+bool
+ICache::fill(u32 base, u32 &phys)
 {
     bool supervisor = moira.reg.sr.s;
     phys = base;
@@ -153,7 +139,7 @@ Cache::fill(u32 base, u32 &phys)
 
         insert(base, supervisor, value);
 
-        if (bursting() && validCount(base) == 1 && portSize(moira.dsack(phys)) == 4) {
+        if (burstEnabled() && burstCapable() && validCount(base) == 1 && portSize(moira.dsack(phys)) == 4) {
             burstFill(base, phys, supervisor);
         }
     }
@@ -166,7 +152,7 @@ Cache::fill(u32 base, u32 &phys)
 }
 
 u16
-Cache::fetch(u32 addr, bool &busAccess, u32 &phys)
+ICache::fetch(u32 addr, bool &busAccess, u32 &phys)
 {
 #if MOIRA_EMULATE_ICACHE
 
@@ -197,7 +183,44 @@ Cache::fetch(u32 addr, bool &busAccess, u32 &phys)
 }
 
 bool
-Cache::readLong(u32 addr, u8 fc, u32 &result)
+DCache::present() const
+{
+    // A data cache is only emulated for the 68030
+    return burstCapable();
+}
+
+bool
+DCache::enabled() const
+{
+    return present() && (moira.reg.cacr & CACR::ED);
+}
+
+bool
+DCache::frozen() const
+{
+    return moira.reg.cacr & CACR::FD;
+}
+
+bool
+DCache::burstEnabled() const
+{
+    return moira.reg.cacr & CACR::DBE;
+}
+
+void
+DCache::cacrDidChange(u32 value)
+{
+    if (!present()) return;
+
+    // Setting the CED bit invalidates the entry for the address in CAAR
+    if (value & CACR::CED) invalidate(moira.reg.caar);
+
+    // Setting the CD bit invalidates all entries
+    if (value & CACR::CD) flush();
+}
+
+bool
+DCache::readLong(u32 addr, u8 fc, u32 &result)
 {
     bool supervisor = fc & 4;
 
@@ -219,7 +242,7 @@ Cache::readLong(u32 addr, u8 fc, u32 &result)
 
         insert(addr, supervisor, result);
 
-        if (bursting() && validCount(addr) == 1 && portSize(moira.dsack(phys)) == 4) {
+        if (burstEnabled() && burstCapable() && validCount(addr) == 1 && portSize(moira.dsack(phys)) == 4) {
             burstFill(addr, phys, supervisor);
         }
     }
@@ -227,7 +250,7 @@ Cache::readLong(u32 addr, u8 fc, u32 &result)
 }
 
 void
-Cache::write(u32 addr, bool supervisor, u32 mask, u32 value, bool ci)
+DCache::write(u32 addr, bool supervisor, u32 mask, u32 value, bool ci)
 {
     bool writeAllocate = moira.reg.cacr & CACR::WA;
     bool full = mask == 0xFFFFFFFF;
