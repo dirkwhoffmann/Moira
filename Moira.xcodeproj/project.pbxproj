@@ -57,6 +57,8 @@
 		50E00000000000000000A004 /* MMU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E00000000000000000A002 /* MMU.cpp */; };
 		50B100000000000000000013 /* FpuFormats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81053098E38500E2E307 /* FpuFormats.cpp */; };
 		50B10000000000000000002D /* Float80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81003098B1C600E2E307 /* Float80.cpp */; };
+		50B10000000000000000F001 /* MFloat80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000013 /* MFloat80.cpp */; };
+		50B10000000000000000F003 /* FpuEnv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000014 /* FpuEnv.cpp */; };
 		50B100000000000000000053 /* libMoiraUAE.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50B100000000000000000004 /* libMoiraUAE.a */; };
 		50B100000000000000000065 /* FloatMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000001 /* FloatMath.cpp */; };
 		50B100000000000000000066 /* MoiraDebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */; };
@@ -68,6 +70,8 @@
 		50E00000000000000000A005 /* MMU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E00000000000000000A002 /* MMU.cpp */; };
 		50B100000000000000000070 /* FpuFormats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81053098E38500E2E307 /* FpuFormats.cpp */; };
 		50B10000000000000000008A /* Float80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81003098B1C600E2E307 /* Float80.cpp */; };
+		50B10000000000000000F002 /* MFloat80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000013 /* MFloat80.cpp */; };
+		50B10000000000000000F004 /* FpuEnv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000014 /* FpuEnv.cpp */; };
 		50B1000000000000000000B0 /* libMoiraMusashi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50B100000000000000000061 /* libMoiraMusashi.a */; };
 		50C0123A28BBAD9B001EFB37 /* m68k-dis.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123628BBAD9B001EFB37 /* m68k-dis.c */; };
 		50C0123B28BBAD9B001EFB37 /* m68k-opc.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123728BBAD9B001EFB37 /* m68k-opc.c */; };
@@ -357,6 +361,10 @@
 		505A80C13098B1AD00E2E307 /* specialize.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = specialize.h; sourceTree = "<group>"; };
 		505A80FF3098B1C600E2E307 /* Float80.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Float80.h; sourceTree = "<group>"; };
 		505A81003098B1C600E2E307 /* Float80.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Float80.cpp; sourceTree = "<group>"; };
+		50A300000000000000000011 /* MFloat80.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MFloat80.h; sourceTree = "<group>"; };
+		50A300000000000000000012 /* FpuEnv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FpuEnv.h; sourceTree = "<group>"; };
+		50A300000000000000000013 /* MFloat80.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MFloat80.cpp; sourceTree = "<group>"; };
+		50A300000000000000000014 /* FpuEnv.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FpuEnv.cpp; sourceTree = "<group>"; };
 		505A81023098E38500E2E307 /* FPU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FPU.h; sourceTree = "<group>"; };
 		505A81033098E38500E2E307 /* FPU.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FPU.cpp; sourceTree = "<group>"; };
 		50E00000000000000000A001 /* MMU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MMU.h; sourceTree = "<group>"; };
@@ -913,6 +921,10 @@
 				505A81033098E38500E2E307 /* FPU.cpp */,
 				505A80FF3098B1C600E2E307 /* Float80.h */,
 				505A81003098B1C600E2E307 /* Float80.cpp */,
+				50A300000000000000000011 /* MFloat80.h */,
+				50A300000000000000000012 /* FpuEnv.h */,
+				50A300000000000000000013 /* MFloat80.cpp */,
+				50A300000000000000000014 /* FpuEnv.cpp */,
 				50C2000000000000000000A1 /* SoftFloat.h */,
 				50C2000000000000000000C1 /* SoftFloat.cpp */,
 				50A300000000000000000001 /* FloatMath.cpp */,
@@ -1227,6 +1239,8 @@
 				50E00000000000000000A004 /* MMU.cpp in Sources */,
 				50B100000000000000000013 /* FpuFormats.cpp in Sources */,
 				50B10000000000000000002D /* Float80.cpp in Sources */,
+				50B10000000000000000F001 /* MFloat80.cpp in Sources */,
+				50B10000000000000000F003 /* FpuEnv.cpp in Sources */,
 				50C100000000000000000001 /* extF80_add.cpp in Sources */,
 				50C100000000000000000003 /* extF80_div.cpp in Sources */,
 				50C100000000000000000005 /* extF80_eq.cpp in Sources */,
@@ -1303,6 +1317,8 @@
 				50E00000000000000000A005 /* MMU.cpp in Sources */,
 				50B100000000000000000070 /* FpuFormats.cpp in Sources */,
 				50B10000000000000000008A /* Float80.cpp in Sources */,
+				50B10000000000000000F002 /* MFloat80.cpp in Sources */,
+				50B10000000000000000F004 /* FpuEnv.cpp in Sources */,
 				50C100000000000000000002 /* extF80_add.cpp in Sources */,
 				50C100000000000000000004 /* extF80_div.cpp in Sources */,
 				50C100000000000000000006 /* extF80_eq.cpp in Sources */,

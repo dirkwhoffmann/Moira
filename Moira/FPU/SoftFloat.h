@@ -11,38 +11,9 @@
 #include "../MoiraTypes.h"
 #include "softfloat/softfloat_enums.h"
 #include "softfloat/primitiveTypes.h"
+#include "FpuEnv.h"
 
 namespace MOIRA_NAMESPACE {
-
-enum class RoundingMode : int {
-
-    NEAREST = 0,    ///< Round to nearest, ties to even
-    ZERO    = 1,    ///< Round toward zero
-    DOWN    = 2,    ///< Round toward negative infinity
-    UP      = 3     ///< Round toward positive infinity
-};
-
-/* The rounding precision limits the number of mantissa bits of a result. The
- * exponent range is always the one of the extended format.
- */
-enum class Precision : int {
-
-    SINGLE   = 32,  ///< 24 mantissa bits
-    DOUBLE   = 64,  ///< 53 mantissa bits
-    EXTENDED = 80   ///< 64 mantissa bits
-};
-
-// Exception flags. They are sticky: Once raised, a flag stays set until cleared.
-struct FloatFlags {
-
-    static constexpr u8 INEXACT     = 0x01;
-    static constexpr u8 UNFL        = 0x02;   ///< Underflow
-    static constexpr u8 OVFL        = 0x04;   ///< Overflow
-    static constexpr u8 DIV_BY_ZERO = 0x08;
-    static constexpr u8 INVALID     = 0x10;
-    static constexpr u8 SNAN        = 0x20;   ///< Signaling NaN operand (no SoftFloat counterpart)
-    static constexpr u8 ALL         = 0x3F;
-};
 
 /* SoftFloat is a C++ port of the extended-precision part of Berkeley SoftFloat
  * (Release 3e), which is used by Moira to carry out all floating-point

@@ -8,6 +8,8 @@ MoiraCore68010.cpp
 MoiraCore68020.cpp
 MoiraDebugger.cpp
 FPU/Float80.cpp
+FPU/MFloat80.cpp
+FPU/FpuEnv.cpp
 FPU/FloatMath.cpp
 FPU/FpuFormats.cpp
 FPU/FPU.cpp
