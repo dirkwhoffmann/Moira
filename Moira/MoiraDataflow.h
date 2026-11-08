@@ -103,6 +103,9 @@ template <Core C, AddrSpace AS, Size S, Flags F = 0> u32 read(u32 addr);
 // Reads from memory without consulting the data cache
 template <Core C, Size S, Flags F = 0> u32 readBus(u32 addr);
 
+// Reads data via the data cache (68030)
+template <Core C, Size S, Flags F = 0> u32 readDataCache(u32 addr);
+
 // Reads an instruction word, either from memory or the instruction cache
 template <Core C, Flags F = 0> u16 readInstr(u32 addr);
 
@@ -115,6 +118,9 @@ template <Core C, AddrSpace AS, Size S, Flags F = 0> void write(u32 addr, u32 va
 
 // Writes to memory without updating the data cache
 template <Core C, Size S, Flags F = 0> void writeBus(u32 addr, u32 val, bool *ci = nullptr);
+
+// Writes data via the data cache (68030)
+template <Core C, Size S, Flags F = 0> void writeDataCache(u32 addr, u32 val);
 
 /* Bus transfer helpers used by read() and write() to split a wide access
  * into the bus cycles a narrower port requires. Factored out because the

@@ -727,7 +727,7 @@ Moira::readInstr(u32 addr)
 
         bool busAccess;
         u32 phys;
-        u16 result = readInstructionCache(addr & addrMask<C>(), busAccess, phys);
+        u16 result = iCache.fetch(addr & addrMask<C>(), busAccess, phys);
         budget.cp += busAccess ? (portSize(dsack(phys)) == 4 ? 0 : 4) : -2;
 
         return result;
@@ -841,36 +841,6 @@ Moira::writeBus(u32 addr, u32 val, bool *ci)
 // Data cache (68030)
 //
 
-template <Core C> bool
-Moira::readDataLong(u32 addr, u8 fc, u32 &result)
-{
-    bool supervisor = fc & 4;
-
-    // Serve the longword from the cache if possible
-    if (dCache.hit(addr, supervisor)) {
-        result = dCache.read(addr);
-        return true;
-    }
-
-    // On a miss, the MMU provides the physical address and the cache-inhibit attribute
-    bool ci;
-    u32 phys = translate<C, false, Long>(addr, fc, &ci) & addrMask<C>() & ~3;
-    if (ci) return false;
-
-    // Load the entire longword, regardless of the size of the access
-    result = busReadLong(phys);
-
-    if (!(reg.cacr & CACR::FD)) {
-
-        dCache.insert(addr, supervisor, result);
-
-        if ((reg.cacr & CACR::DBE) && dCache.validCount(addr) == 1 && portSize(dsack(phys)) == 4) {
-            burstFill(dCache, addr, phys, supervisor);
-        }
-    }
-    return true;
-}
-
 template <Core C, Size S, Flags F> u32
 Moira::readDataCache(u32 addr)
 {
@@ -881,7 +851,7 @@ Moira::readDataCache(u32 addr)
     u32 v1, v2 = 0;
 
     // Read the longword (or the two longwords if the access crosses a boundary)
-    if (!readDataLong<C>(addr & ~3, fc, v1) || (spans && !readDataLong<C>((addr & ~3) + 4, fc, v2))) {
+    if (!dCache.readLong(addr & ~3, fc, v1) || (spans && !dCache.readLong((addr & ~3) + 4, fc, v2))) {
 
         // The page is cache-inhibited
         return readBus<C, S, F>(addr);
@@ -914,31 +884,11 @@ Moira::writeDataCache(u32 addr, u32 val)
     u64 mask = (S == Long ? 0xFFFFFFFFULL : S == Word ? 0xFFFFULL : 0xFFULL) << (64 - 8 * offset - 8 * S);
     u64 data = (u64(val) << (64 - 8 * offset - 8 * S)) & mask;
 
-    bool allocate = (reg.cacr & CACR::WA) && !(reg.cacr & CACR::FD) && !ci;
-
     for (int i = 0; i < 2; i++) {
 
         u32 m = i == 0 ? u32(mask >> 32) : u32(mask);
         u32 d = i == 0 ? u32(data >> 32) : u32(data);
-        u32 a = (addr & ~3) + 4 * i;
-        if (!m) continue;
-
-        if (dCache.hit(a, supervisor)) {
-
-            auto &line = dCache.line(a);
-            int lw = dCache.longword(a);
-
-            if (ci && m == 0xFFFFFFFF && (reg.cacr & CACR::WA)) {
-                dCache.invalidate(a);
-            } else {
-                line.data[lw] = (line.data[lw] & ~m) | d;
-            }
-
-        } else if (allocate && m == 0xFFFFFFFF) {
-
-            // Write allocate: An aligned longword write creates an entry
-            dCache.insert(a, supervisor, d);
-        }
+        if (m) dCache.write((addr & ~3) + 4 * i, supervisor, m, d, ci);
     }
 }
 
@@ -1067,7 +1017,7 @@ Moira::fullPrefetch()
 {
     assert(!misaligned<C>(reg.pc));
 
-    flushInstructionLatch();
+    iCache.flushLatch();
     queue.irc = readInstr<C>(reg.pc);
     if (delay) SYNC(delay);
     prefetch<C, F>();

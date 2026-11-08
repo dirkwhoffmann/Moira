@@ -26,7 +26,7 @@ using namespace Flag;
 
 #include "MoiraInit_cpp.h"
 #include "MoiraALU_cpp.h"
-#include "MoiraCache_cpp.h"
+#include "Cache_cpp.h"
 #include "MoiraDataflow_cpp.h"
 #include "MoiraExceptions_cpp.h"
 #include "MoiraExec_cpp.h"
@@ -104,8 +104,9 @@ Moira::setModel(Model cpuModel, Model dasmModel)
         createJumpTable(cpuModel, dasmModel);
 
         reg.cacr &= cacrMask();
-        updateCaches();
-        flushInstructionCache();
+        iCache.update();
+        dCache.update();
+        dCacheOn = dCache.enabled();
         flags &= ~State::LOOPING;
     }
 }
@@ -299,8 +300,8 @@ Moira::reset()
     fcSource = 0;
     budget = { };
 
-    flushInstructionCache();
-    flushDataCache();
+    iCache.flush();
+    dCache.flush();
     dCacheOn = false;
 
     SYNC(16);
@@ -676,20 +677,12 @@ Moira::setSR(u16 val)
 void
 Moira::setCACR(u32 val)
 {
-    // Setting the CE bit invalidates the entry for the address in CAAR
-    if (val & CACR::CE) invalidateCacheEntry(reg.caar);
-
-    // Setting the C bit invalidates all entries
-    if (val & CACR::C) flushInstructionCache();
-
-    // The same applies to the data cache (68030)
-    if (hasDataCache()) {
-        if (val & CACR::CED) invalidateDataCacheEntry(reg.caar);
-        if (val & CACR::CD) flushDataCache();
-    }
+    // Setting the clear bits invalidates (parts of) the caches
+    iCache.cacrDidChange(val);
+    dCache.cacrDidChange(val);
 
     reg.cacr = val & cacrMask();
-    dCacheOn = hasDataCache() && (reg.cacr & CACR::ED);
+    dCacheOn = dCache.enabled();
     didChangeCACR(val);
 }
 

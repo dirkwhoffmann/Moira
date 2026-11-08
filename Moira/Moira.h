@@ -32,6 +32,7 @@ class Moira {
     friend class Watchpoints;
     friend class Catchpoints;
     friend class MMU;
+    friend class Cache;
     
     
     //
@@ -98,9 +99,8 @@ protected:
     PrefetchQueue queue {};
 
     // Instruction cache (68020 and up) and data cache (68030)
-    Cache iCache {};
-    Cache dCache {};
-    CacheLatch iLatch {};
+    Cache iCache = Cache(*this, Cache::Kind::INSTRUCTION);
+    Cache dCache = Cache(*this, Cache::Kind::DATA);
 
     // Indicates that the data cache is enabled
     bool dCacheOn = false;
@@ -869,7 +869,6 @@ private:
     
 #include "MoiraInit.h"
 #include "MoiraALU.h"
-#include "MoiraCache.h"
 #include "MoiraDataflow.h"
 #include "MoiraExceptions.h"
 #include "MoiraDasm.h"

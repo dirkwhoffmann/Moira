@@ -73,7 +73,7 @@
 /* Set to true to emulate the 68020 instruction cache.
  *
  * The 68020 caches instruction fetches in a small on-chip cache (see
- * MoiraCache.h). When this option is disabled, every instruction fetch is
+ * Cache.h). When this option is disabled, every instruction fetch is
  * treated as a cache miss and goes straight to the bus, which is faster to
  * emulate but does not reproduce the cycle savings a real cache provides.
  * This setting has no effect for other supported models, which have no
