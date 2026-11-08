@@ -167,7 +167,7 @@ Moira::writeStackFrame1001(u16 sr, u32 pc, u32 ia, u16 nr)
 }
 
 template <Core C> void
-Moira::writeStackFrame1010(u16 sr, u32 pc, u16 nr)
+Moira::writeStackFrame1010(u16 sr, u32 pc, u16 nr, u16 ssw, u32 addr)
 {
     // Internal registers
     push<C, Word>(0);
@@ -181,7 +181,7 @@ Moira::writeStackFrame1010(u16 sr, u32 pc, u16 nr)
     push<C, Word>(0);
 
     // Data cycle fault address
-    push<C, Long>(0);
+    push<C, Long>(addr);
 
     // Instruction pipe stage B
     push<C, Word>(0);
@@ -190,7 +190,7 @@ Moira::writeStackFrame1010(u16 sr, u32 pc, u16 nr)
     push<C, Word>(0);
 
     // Special status word
-    push<C, Word>(0);
+    push<C, Word>(ssw);
 
     // Internal register
     push<C, Word>(0);
@@ -206,7 +206,7 @@ Moira::writeStackFrame1010(u16 sr, u32 pc, u16 nr)
 }
 
 template <Core C> void
-Moira::writeStackFrame1011(u16 sr, u32 pc, u32 ia, u16 nr)
+Moira::writeStackFrame1011(u16 sr, u32 pc, u32 ia, u16 nr, u16 ssw, u32 addr)
 {
     // Internal registers
     push<C, Long>(0);
@@ -247,7 +247,7 @@ Moira::writeStackFrame1011(u16 sr, u32 pc, u32 ia, u16 nr)
     push<C, Word>(0);
 
     // Data cycle fault address
-    push<C, Long>(0);
+    push<C, Long>(addr);
 
     // Instruction pipe stage B
     push<C, Word>(0);
@@ -256,7 +256,7 @@ Moira::writeStackFrame1011(u16 sr, u32 pc, u32 ia, u16 nr)
     push<C, Word>(0);
 
     // Special status register
-    push<C, Word>(0);
+    push<C, Word>(ssw);
 
     // Internal register
     push<C, Word>(0);
@@ -334,7 +334,18 @@ Moira::execBusError(StackFrame frame, int delay)
     if constexpr (C == Core::C68000) {
         writeStackFrameAEBE<C>(frame);
     } else if constexpr (C == Core::C68020) {
-        writeStackFrame1011<C>(status, frame.pc, reg.pc0, 2);
+
+        /* The 68030 reports the cause of the fault in the special status word
+         * and the logical fault address. A fault in a write cycle is reported
+         * with the short format ($A), all others with the long format ($B).
+         */
+        if (cpuModel >= Model::M68EC030 && !(frame.ssw & SSW030::RW) && (frame.ssw & SSW030::DF)) {
+            writeStackFrame1010<C>(status, reg.pc0, 2, frame.ssw, frame.addr);
+        } else if (cpuModel >= Model::M68EC030) {
+            writeStackFrame1011<C>(status, frame.pc, reg.pc0, 2, frame.ssw, frame.addr);
+        } else {
+            writeStackFrame1011<C>(status, frame.pc, reg.pc0, 2);
+        }
     } else {
         writeStackFrame1000<C>(frame, status, frame.pc, reg.pc0, 2, frame.addr);
     }

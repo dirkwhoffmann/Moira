@@ -87,13 +87,13 @@ enum class Model
 {
     M68000,                 // Cycle-exact emulation
     M68010,                 // Cycle-exact emulation
-    M68EC020,               // Non-cycle exaxt emulation
-    M68020,                 // Non-cycle exaxt emulation
-    M68EC030,               // Disassembler only
-    M68030,                 // Disassembler only
-    M68EC040,               // Disassembler only
-    M68LC040,               // Disassembler only
-    M68040                  // Disassembler only
+    M68EC020,               // Non-cycle exact emulation
+    M68020,                 // Non-cycle exact emulation
+    M68EC030,               // Non-cycle exact emulation (68020 core, no MMU)
+    M68030,                 // Non-cycle exact emulation (68020 core, 68030 MMU)
+    M68EC040,               // Non-cycle exact emulation (68020 core, no FPU, no MMU)
+    M68LC040,               // Non-cycle exact emulation (68020 core, no FPU, 68030-style MMU)
+    M68040                  // Non-cycle exact emulation (68020 core, FPU, 68030-style MMU)
 };
 
 // Execution cores
@@ -432,6 +432,21 @@ struct DasmStyle
 // Flags and masks
 //
 
+// Special status word of the 68030 (bus fault stack frames)
+namespace SSW030 {
+
+static constexpr u16 FC     = 0x8000;   // Fault on stage C of the instruction pipe
+static constexpr u16 FB     = 0x4000;   // Fault on stage B of the instruction pipe
+static constexpr u16 RC     = 0x2000;   // Rerun flag for stage C
+static constexpr u16 RB     = 0x1000;   // Rerun flag for stage B
+static constexpr u16 DF     = 0x0100;   // Fault on a data cycle
+static constexpr u16 RM     = 0x0080;   // Read-modify-write cycle
+static constexpr u16 RW     = 0x0040;   // Read cycle (0 = write cycle)
+static constexpr u16 SIZ_B  = 0x0010;   // Transfer size: byte
+static constexpr u16 SIZ_W  = 0x0020;   // Transfer size: word
+static constexpr u16 SIZ_L  = 0x0000;   // Transfer size: long word
+}
+
 /* Function codes for CPU privilege levels and address space separation.
  *
  * The M68k CPU provides three function code pins (FC2–FC0) indicating the
@@ -504,6 +519,9 @@ static constexpr int CHECK_WP       = (1 << 8);
 
 // Enables checking for catchpoints.
 static constexpr int CHECK_CP       = (1 << 9);
+
+// Set while address translation is active. Keeps the fast path of execute() free of MMU checks.
+static constexpr int MMU_ACTIVE     = (1 << 10);
 
 }
 

@@ -122,6 +122,7 @@ bool compareFPSR(Result &rRef, Result &rMoira);
 bool compareFPIAR(Result &rRef, Result &rMoira);
 bool compareMMU(Result &rRef, Result &rMoira);
 bool compareMemory();
+void printMemoryDiff();
 
 void dumpDasm(Setup &s, Result &rRef, Result &rMoira);
 void bugReport();

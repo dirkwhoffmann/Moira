@@ -47,6 +47,13 @@ protected:
     
     // Selected MMU model
     MMUModel mmuModel = MMUModel::BUILTIN;
+
+    /* Register state at the beginning of the current instruction. If an MMU
+     * is active, a bus fault aborts the instruction. The registers are rolled
+     * back to this state, so that the instruction can be restarted by RTE.
+     */
+    Registers savedReg;
+    bool savedRegValid = false;
     
     // Instruction set used by the disassembler
     Model dasmModel = Model::M68000;
@@ -173,6 +180,16 @@ protected:
     // Creates or updates the jump tables for execution and disassembly
     void createJumpTable(Model cpuModel, Model dasmModel);
 
+    // Rolls the registers back to the state saved at the start of the instruction
+    void restoreRegisters();
+
+    // Remembers the registers at the beginning of an instruction (see savedReg)
+    void saveRegisters()
+    {
+        // The registers are only needed if a bus fault can occur
+        if (flags & State::MMU_ACTIVE) { savedReg = reg; savedRegValid = true; }
+    }
+
     // Determines the effective FPU and MMU from the CPU model and the selection
     void updateUnits();
     void createJumpTable(Model model) { createJumpTable(model, model); }
@@ -221,6 +238,10 @@ public:
      */
     void setFpuModel(FPUModel model);
     void setMmuModel(MMUModel model);
+
+    // Synchronizes internal state with the MMU registers. Needs to be called
+    // if the translation control register is modified without setTC.
+    void updateMmuFlag();
     FPUModel getFpuModel() const { return fpuModel; }
     MMUModel getMmuModel() const { return mmuModel; }
 
@@ -835,7 +856,7 @@ private:
     u8 mmuFC(u16 ext) const;
 
     // Translates a logical address to a physical address
-    template <Core C, bool write> u32 translate(u32 addr, u8 fc);
+    template <Core C, bool write, Size S> u32 translate(u32 addr, u8 fc);
 
 
 private:

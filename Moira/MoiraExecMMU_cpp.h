@@ -136,7 +136,7 @@ Moira::isValidExtMMU(Instr I, Mode M, u16 op, u32 ext) const
 // Address translation
 //
 
-template <Core C, bool write> u32
+template <Core C, bool write, Size S> u32
 Moira::translate(u32 addr, u8 fc)
 {
     // Only proceed if a MMU capable core is present
@@ -146,7 +146,20 @@ Moira::translate(u32 addr, u8 fc)
     if (!mmu.isEnabled()) return addr;
 
     auto physical = mmu.translate(addr, fc, write);
-    if (!physical) throw BusError(makeFrame<write ? AE_WRITE : 0>(addr));
+    if (!physical) {
+
+        auto frame = makeFrame<write ? AE_WRITE : 0>(addr);
+
+        // Special status word: A fault in program space belongs to the
+        // instruction pipe, all other faults belong to a data cycle.
+        u16 size = S == Byte ? SSW030::SIZ_B : S == Word ? SSW030::SIZ_W : SSW030::SIZ_L;
+        bool prog = (fc & 3) == 2;
+
+        frame.ssw = (prog ? SSW030::FB | SSW030::RB : SSW030::DF) | size | (fc & 7);
+        if (!write) frame.ssw |= SSW030::RW;
+
+        throw BusError(frame);
+    }
 
     return *physical;
 }

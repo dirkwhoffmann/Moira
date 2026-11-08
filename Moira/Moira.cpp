@@ -128,6 +128,7 @@ Moira::updateUnits()
 
     // The 68030 and the 68040 have a built-in MMU
     mmu.setModel(mmuModel == MMUModel::BUILTIN && hasMMU(cpuModel) ? MMUModel::BUILTIN : MMUModel::NONE);
+    updateMmuFlag();
 }
 
 void
@@ -394,6 +395,9 @@ Moira::execute()
         // Slow path: Process flags one by one
         //
 
+        // Registers are only saved while an instruction is executed
+        savedRegValid = false;
+
         if (flags & (HALTED | TRACE_EXC | TRACING)) {
 
             // Only continue if the CPU is not halted
@@ -447,6 +451,7 @@ Moira::execute()
         }
 
         // Execute the instruction
+        saveRegisters();
         reg.pc += 2;
 
         if (flags & LOOPING) {
@@ -490,6 +495,31 @@ Moira::execute(i64 cycles)
 }
 
 void
+Moira::updateMmuFlag()
+{
+    if (mmu.isEnabled()) {
+        flags |= State::MMU_ACTIVE;
+    } else {
+        flags &= ~State::MMU_ACTIVE;
+        savedRegValid = false;
+    }
+}
+
+void
+Moira::restoreRegisters()
+{
+    u8 ipl = reg.ipl;
+    reg = savedReg;
+    reg.ipl = ipl;
+    savedRegValid = false;
+
+    // Bring the dependent flags in sync with the restored status register
+    flags &= ~(State::TRACING | State::TRACE_EXC);
+    if (reg.sr.t1) flags |= State::TRACING;
+    flags |= State::CHECK_IRQ;
+}
+
+void
 Moira::executeUntil(i64 cycle)
 {
     while (clock < cycle) { execute(); }
@@ -520,6 +550,9 @@ Moira::processException(const std::exception &exc)
         }
 
         if (auto be = dynamic_cast<const BusError *>(&exc); be) {
+
+            // Abort the current instruction. It will be restarted by RTE.
+            if (savedRegValid) restoreRegisters();
 
             // A bus error while processing a bus error is a double bus fault
             try { execBusError<C>(be->stackFrame); } catch (const BusError &) { halt(); }

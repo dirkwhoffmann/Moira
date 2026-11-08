@@ -277,7 +277,7 @@ i32 estimateDecimalExponent(i32 exp, u64 sig)
 
     // Compute |e + f| as a number with 64 fractional bits
     i32 e = exp - 0x3FFF;
-    u64 f = (sig ^ 1ULL << 63) << 1;
+    u128 f = u128(sig ^ 1ULL << 63) << 1;
     u128 v = u128(e < 0 ? -e : e) << 64;
     v = e < 0 ? v - f : v + f;
 

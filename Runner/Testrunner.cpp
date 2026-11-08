@@ -256,6 +256,7 @@ void resetMoira(Setup &s)
     moiracpu->mmu.crp = s.crp;
     moiracpu->mmu.srp = s.srp;
     moiracpu->mmu.tc = s.tc;
+    moiracpu->updateMmuFlag();
     moiracpu->mmu.tt0 = s.tt0;
     moiracpu->mmu.tt1 = s.tt1;
     moiracpu->mmu.mmusr = s.mmusr;
@@ -1335,6 +1336,7 @@ void compare(Setup &s, Result &rRef, Result &rMoira)
                 }
                 if (!compareMemory()) {
                     printf("\nMEMORY MISMATCH FOUND");
+                    printMemoryDiff();
                     error = true;
                 }
             }
@@ -1697,6 +1699,18 @@ bool compareMMU(Result &rRef, Result &rMoira)
            (rRef.mmusr & 0xFFFF) == (rMoira.mmusr & 0xFFFF);
 }
 bool compareMemory() { return memcmp(refMem, moiraMem, sizeof(refMem)) == 0; }
+
+// Prints the first differing bytes of the two memory images
+void printMemoryDiff()
+{
+    int shown = 0;
+    for (size_t i = 0; i < sizeof(refMem) && shown < 16; i++) {
+        if (refMem[i] != moiraMem[i]) {
+            printf("\n  Memory[%05zx]: UAE %02x  Moira %02x", i, refMem[i], moiraMem[i]);
+            shown++;
+        }
+    }
+}
 
 bool compareCycles(Result &rRef, Result &rMoira)
 {

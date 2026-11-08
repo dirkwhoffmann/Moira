@@ -5160,6 +5160,17 @@ Moira::execRte(u16 opcode)
                     (void)pop<C, Long>();
                     break;
 
+                } else if (format == 0b1010) {  // Short bus fault frame
+
+                    // Status register, program counter, format and vector offset
+                    newsr = (u16)pop<C, Word>();
+                    newpc = pop<C, Long>();
+                    (void)pop<C, Word>();
+
+                    // Special status word, instruction pipe, fault address, internal registers
+                    for (int i = 0; i < 6; i++) (void)pop<C, Long>();
+                    break;
+
                 } else if (format == 0b1011) {
 
                     // Status register

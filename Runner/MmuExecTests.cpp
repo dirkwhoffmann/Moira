@@ -55,6 +55,9 @@ public:
         reset();
     }
 
+    // Continues the program at a given address
+    void jump(u32 addr) { debugger.jump(addr); }
+
     // Executes a sequence of words as a program
     void run(std::initializer_list<u16> words, int instructions = 1)
     {
@@ -108,6 +111,7 @@ static void setupShortTables(TestCPU &cpu)
     cpu.mmu.crp = rootPointer(tableA, 2);
     cpu.mmu.srp = cpu.mmu.crp;
     cpu.mmu.tc  = TC_E | TC_4K_2L;
+    cpu.updateMmuFlag();
 
     // Bus error vector
     cpu.write32(2 * 4, 0x1800);
@@ -118,6 +122,7 @@ static void testDisabled()
     TestCPU cpu;
     setupShortTables(cpu);
     cpu.mmu.tc = TC_4K_2L;                          // E bit is cleared
+    cpu.updateMmuFlag();
 
     // Without the E bit, logical addresses are physical addresses
     cpu.write32(0x2004, 0xCAFEBABE);
@@ -242,6 +247,7 @@ static void testEarlyTermination()
     // The root pointer terminates the lookup: Physical = Table address + Logical address
     cpu.mmu.crp = cpu.mmu.srp = rootPointer(0x20000, 1);
     cpu.mmu.tc  = TC_E | TC_4K_2L;
+    cpu.updateMmuFlag();
 
     // Move the code and the stack to the new location
     cpu.write16(0x20000 + TestCPU::codeStart, 0x2010);
@@ -311,6 +317,7 @@ static void testSupervisorRootPointer()
     // With SRE set, the supervisor uses the SRP and the user uses the CRP.
     // The user map is empty.
     cpu.mmu.tc  = TC_E | TC_SRE | TC_4K_2L;
+    cpu.updateMmuFlag();
     cpu.mmu.crp = rootPointer(tableA + 0x800, 2);   // Table without valid descriptors
 
     // Supervisor mode
@@ -400,6 +407,7 @@ static void testEnableDisable()
 
     // RESET disables the MMU
     cpu.mmu.tc = TC_E | TC_4K_2L;
+    cpu.updateMmuFlag();
     cpu.mmu.crp = cpu.mmu.srp = rootPointer(0, 1);
     cpu.run({ 0x4E70 });
     CHECK(!(cpu.mmu.tc & TC_E));
@@ -471,6 +479,7 @@ static void testPTest()
     TestCPU cpu;
     setupShortTables(cpu);
     cpu.mmu.tc = TC_E | TC_4K_2L;
+    cpu.updateMmuFlag();
 
     // PTESTR #1,(A0),#2,A1 (user data, level 2, return the descriptor address)
     auto ptest = [&](u32 addr, bool read, int level, bool a) {
@@ -582,6 +591,102 @@ static void testATC()
     CHECK(ptest0(0x3000, 5) == 0x8400);
 }
 
+
+static void testBusFaultFrames()
+{
+    // A read fault pushes a long bus fault frame (format $B)
+    {
+        TestCPU cpu;
+        setupShortTables(cpu);
+        cpu.reg.a[0] = 0x3000;
+        cpu.run({ 0x2018 });                        // MOVE.L (A0)+,D0
+
+        u32 sp = cpu.reg.sp;
+        CHECK(sp == TestCPU::stackStart - 92);
+        CHECK(cpu.read16(sp + 6) == (0xB000 | 2 * 4));
+        CHECK(cpu.read32(sp + 2) == TestCPU::codeStart);                // Restart address
+        CHECK(cpu.read16(sp + 0x0A) == (SSW030::DF | SSW030::RW | SSW030::SIZ_L | FC::SUPERVISOR_DATA));
+        CHECK(cpu.read32(sp + 0x10) == 0x3000);                         // Fault address
+        CHECK(cpu.reg.a[0] == 0x3000);                                  // A0 has been rolled back
+    }
+
+    // A write fault pushes a short bus fault frame (format $A)
+    {
+        TestCPU cpu;
+        setupShortTables(cpu);
+        cpu.reg.a[0] = 0x4000;
+        cpu.reg.d[1] = 0x22222222;
+        cpu.run({ 0x20C1 });                        // MOVE.L D1,(A0)+
+
+        u32 sp = cpu.reg.sp;
+        CHECK(sp == TestCPU::stackStart - 32);
+        CHECK(cpu.read16(sp + 6) == (0xA000 | 2 * 4));
+        CHECK(cpu.read16(sp + 0x0A) == (SSW030::DF | SSW030::SIZ_L | FC::SUPERVISOR_DATA));
+        CHECK(cpu.read32(sp + 0x10) == 0x4000);
+        CHECK(cpu.reg.a[0] == 0x4000);
+    }
+
+    // A byte access reports its size
+    {
+        TestCPU cpu;
+        setupShortTables(cpu);
+        cpu.reg.a[0] = 0x3001;
+        cpu.run({ 0x1010 });                        // MOVE.B (A0),D0
+        CHECK((cpu.read16(cpu.reg.sp + 0x0A) & 0x30) == SSW030::SIZ_B);
+    }
+
+    // The instruction is restarted when the handler returns with RTE
+    {
+        TestCPU cpu;
+        setupShortTables(cpu);
+        cpu.write32(0x8004, 0xCAFEBABE);
+        cpu.write16(0x1800, 0x4E73);                // RTE
+        cpu.reg.a[0] = 0x3004;
+        cpu.reg.sr.ipl = 0;
+        cpu.run({ 0x2018 });                        // MOVE.L (A0)+,D0
+        CHECK(cpu.reg.pc0 == 0x1800);
+
+        // Map the page and return
+        cpu.write32(tableB + 4 * 3, 0x8000 | 1);
+        cpu.mmu.atcFlush();
+        cpu.execute();                              // RTE
+        CHECK(cpu.reg.sp == TestCPU::stackStart);
+        CHECK(cpu.reg.pc0 == TestCPU::codeStart);
+        cpu.execute();                              // MOVE.L (A0)+,D0
+        CHECK(cpu.reg.d[0] == 0xCAFEBABE);
+        CHECK(cpu.reg.a[0] == 0x3008);
+    }
+
+    // A fault while prefetching the next instruction aborts the current one
+    {
+        TestCPU cpu;
+        setupShortTables(cpu);
+        cpu.write32(tableB + 4 * 5, 0x7000 | 1);
+        cpu.write16(0x7FFC, 0x5291);                // ADDQ.L #1,(A1) at logical address 0x5FFC
+        cpu.write16(0x7FFE, 0x4E71);                // Followed by a NOP in the same page
+        cpu.write32(0x5000, 41);                    // Logical address 0x2000
+        cpu.write16(0x1800, 0x4E73);                // RTE
+        cpu.reg.a[1] = 0x2000;
+        cpu.jump(0x5FFC);                           // The next page (0x6000) is invalid
+        cpu.execute();
+
+        u32 sp = cpu.reg.sp;
+        CHECK(cpu.read16(sp + 6) == (0xB000 | 2 * 4));
+        CHECK(cpu.read32(sp + 2) == 0x5FFC);        // Restart address
+        CHECK(cpu.read16(sp + 0x0A) == (SSW030::FB | SSW030::RB | SSW030::RW | SSW030::SIZ_W | FC::SUPERVISOR_PROG));
+        CHECK(cpu.read32(sp + 0x10) == 0x6000);
+        CHECK(cpu.read32(0x5000) == 41);            // The memory is still untouched
+
+        // Map the page and return. The memory is updated exactly once.
+        cpu.write32(tableB + 4 * 6, 0x9000 | 1);
+        cpu.mmu.atcFlush();
+        cpu.execute();                              // RTE
+        cpu.execute();                              // ADDQ.L #1,(A1)
+        CHECK(cpu.read32(0x5000) == 42);
+        CHECK(cpu.reg.pc0 == 0x5FFE);
+    }
+}
+
 static void testModels()
 {
     // Only the 68030 and 68040 have an MMU
@@ -609,6 +714,7 @@ int main()
     testShortTables();
     testUpdateBits();
     testFaults();
+    testBusFaultFrames();
     testEarlyTermination();
     testLongTables();
     testSupervisorRootPointer();
