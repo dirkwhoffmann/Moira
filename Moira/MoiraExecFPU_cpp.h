@@ -784,9 +784,9 @@ Moira::execFMove(u16 opcode)
 
                 if (format == FpuFormat::PACKED || format == FpuFormat::PACKED_DYN) {
 
-                    // The k-factor is a sign-extended 7-bit value
+                    // The k-factor is a sign-extended 7-bit value (bit 7 of a register is ignored)
                     k = (format == FpuFormat::PACKED) ? cmd : readD(cmd >> 4 & 7);
-                    k = i8(k | (k & 0x40) << 1);
+                    k = i8(k << 1) >> 1;
                 }
 
                 auto value = fpu.fpr[dst];
