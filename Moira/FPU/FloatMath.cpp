@@ -521,7 +521,7 @@ MFloat80 finish(FpuEnv &env, const W &w)
 MFloat80 invalid(FpuEnv &env)
 {
     env.raiseFlags(FloatFlags::INVALID);
-    return MFloat80::quietNaN();
+    return MFloat80::defaultNaN();
 }
 
 MFloat80 divideByZero(FpuEnv &env, bool negative)

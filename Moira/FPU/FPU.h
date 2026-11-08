@@ -267,7 +267,7 @@ public:
 public:
 
     // The default NaN returned by invalid operations
-    static MFloat80 defaultNaN() { return MFloat80::fromBits(0x7FFF, 0xFFFFFFFFFFFFFFFFULL); }
+    static MFloat80 defaultNaN() { return MFloat80::defaultNaN(); }
 
     // Rounds a value to the precision and rounding mode of the environment
     MFloat80 round(const MFloat80 &value);

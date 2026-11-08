@@ -63,6 +63,8 @@ public:
     static constexpr MFloat80 one(bool negative = false) { return { u16(negative ? 0xBFFF : 0x3FFF), 1ULL << 63 }; }
     static constexpr MFloat80 infinity(bool negative = false) { return { u16(negative ? 0xFFFF : 0x7FFF), 0 }; }
     static constexpr MFloat80 quietNaN(bool negative = false) { return { u16(negative ? 0xFFFF : 0x7FFF), 0xC000000000000000ULL }; }
+    // The result of an invalid operation (positive, all mantissa bits set)
+    static constexpr MFloat80 defaultNaN() { return { 0x7FFF, 0xFFFFFFFFFFFFFFFFULL }; }
     static constexpr MFloat80 signalingNaN(bool negative = false) { return { u16(negative ? 0xFFFF : 0x7FFF), 0xA000000000000000ULL }; }
 
 

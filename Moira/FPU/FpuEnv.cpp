@@ -296,7 +296,7 @@ MFloat80
 FpuEnv::invalidOperation()
 {
     raiseFlags(FloatFlags::INVALID);
-    return MFloat80::fromBits(0xFFFF, 0xC000000000000000ULL);
+    return MFloat80::defaultNaN();
 }
 
 

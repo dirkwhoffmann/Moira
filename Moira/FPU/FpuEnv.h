@@ -125,7 +125,7 @@ public:
     MFloat80 div(const MFloat80 &a, const MFloat80 &b);
     MFloat80 sqrt(const MFloat80 &a);
 
-    // Raises the invalid flag and returns the default NaN
+    // Raises the invalid flag and returns the default NaN of the 68k FPUs
     MFloat80 invalidOperation();
 
     // Rounds to an integral value according to the current rounding mode

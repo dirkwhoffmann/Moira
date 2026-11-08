@@ -203,35 +203,6 @@ FPU::collectFlags()
 
 namespace {
 
-/* Runs an operation that must not produce NaN operands. If the operation
- * reports an invalid operation, the x87 default NaN produced by FpuEnv is
- * replaced by the default NaN of the 68k FPUs.
- */
-template <typename F> MFloat80
-invoke(FpuEnv &env, F operation)
-{
-    auto saved = env.flags();
-    env.clearFlags();
-
-    auto result = operation();
-
-    if ((env.flags() & FloatFlags::INVALID) && result.isNaN()) {
-        result = FPU::defaultNaN();
-    }
-    env.raiseFlags(saved);
-    return result;
-}
-
-// Runs an operation in extended precision with rounding to nearest
-template <typename F> MFloat80
-invokeExact(FpuEnv &env, F operation)
-{
-    FpuEnv::Scope scope(env);
-    env.setPrecision(Precision::EXTENDED);
-    env.setRoundingMode(RoundingMode::NEAREST);
-    return invoke(env, operation);
-}
-
 /* FSGLMUL and FSGLDIV round the significand to single precision, but keep the
  * extended exponent range. If an overflow yields the largest finite number,
  * all significand bits are set.
@@ -419,141 +390,140 @@ MFloat80
 FPU::fsqrt(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(env, [&] { return env.sqrt(value); });
+    return env.sqrt(value);
 }
 
 MFloat80
 FPU::fsin(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(env, [&] { return FloatMath::sin(env, value); });
+    return FloatMath::sin(env, value);
 }
 
 MFloat80
 FPU::fcos(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(env, [&] { return FloatMath::cos(env, value); });
+    return FloatMath::cos(env, value);
 }
 
 MFloat80
 FPU::ftan(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(env, [&] { return FloatMath::tan(env, value); });
+    return FloatMath::tan(env, value);
 }
 
 MFloat80
 FPU::fasin(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(env, [&] { return FloatMath::asin(env, value); });
+    return FloatMath::asin(env, value);
 }
 
 MFloat80
 FPU::facos(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(env, [&] { return FloatMath::acos(env, value); });
+    return FloatMath::acos(env, value);
 }
 
 MFloat80
 FPU::fatan(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(env, [&] { return FloatMath::atan(env, value); });
+    return FloatMath::atan(env, value);
 }
 
 MFloat80
 FPU::fsinh(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(env, [&] { return FloatMath::sinh(env, value); });
+    return FloatMath::sinh(env, value);
 }
 
 MFloat80
 FPU::fcosh(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(env, [&] { return FloatMath::cosh(env, value); });
+    return FloatMath::cosh(env, value);
 }
 
 MFloat80
 FPU::ftanh(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(env, [&] { return FloatMath::tanh(env, value); });
+    return FloatMath::tanh(env, value);
 }
 
 MFloat80
 FPU::fatanh(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(env, [&] { return FloatMath::atanh(env, value); });
+    return FloatMath::atanh(env, value);
 }
 
 MFloat80
 FPU::fetox(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(env, [&] { return FloatMath::etox(env, value); });
+    return FloatMath::etox(env, value);
 }
 
 MFloat80
 FPU::fetoxm1(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(env, [&] { return FloatMath::etoxm1(env, value); });
+    return FloatMath::etoxm1(env, value);
 }
 
 MFloat80
 FPU::ftwotox(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(env, [&] { return FloatMath::twotox(env, value); });
+    return FloatMath::twotox(env, value);
 }
 
 MFloat80
 FPU::ftentox(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(env, [&] { return FloatMath::tentox(env, value); });
+    return FloatMath::tentox(env, value);
 }
 
 MFloat80
 FPU::flogn(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(env, [&] { return FloatMath::logn(env, value); });
+    return FloatMath::logn(env, value);
 }
 
 MFloat80
 FPU::flognp1(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(env, [&] { return FloatMath::lognp1(env, value); });
+    return FloatMath::lognp1(env, value);
 }
 
 MFloat80
 FPU::flog2(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(env, [&] { return FloatMath::log2(env, value); });
+    return FloatMath::log2(env, value);
 }
 
 MFloat80
 FPU::flog10(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(env, [&] { return FloatMath::log10(env, value); });
+    return FloatMath::log10(env, value);
 }
 
 void
 FPU::fsincos(const MFloat80 &value, MFloat80 &sine, MFloat80 &cosine)
 {
     if (auto nan = resolveNan(value)) { sine = cosine = *nan; return; }
-    sine = invoke(env, [&] { FloatMath::sincos(env, value, sine, cosine); return sine; });
-    if (sine.isNaN()) cosine = sine;
+    FloatMath::sincos(env, value, sine, cosine);
 }
 
 MFloat80
@@ -612,28 +582,28 @@ MFloat80
 FPU::fadd(const MFloat80 &dst, const MFloat80 &src)
 {
     if (auto nan = resolveNan(dst, src)) return *nan;
-    return invoke(env, [&] { return env.add(dst, src); });
+    return env.add(dst, src);
 }
 
 MFloat80
 FPU::fsub(const MFloat80 &dst, const MFloat80 &src)
 {
     if (auto nan = resolveNan(dst, src)) return *nan;
-    return invoke(env, [&] { return env.sub(dst, src); });
+    return env.sub(dst, src);
 }
 
 MFloat80
 FPU::fmul(const MFloat80 &dst, const MFloat80 &src)
 {
     if (auto nan = resolveNan(dst, src)) return *nan;
-    return invoke(env, [&] { return env.mul(dst, src); });
+    return env.mul(dst, src);
 }
 
 MFloat80
 FPU::fdiv(const MFloat80 &dst, const MFloat80 &src)
 {
     if (auto nan = resolveNan(dst, src)) return *nan;
-    return invoke(env, [&] { return env.div(dst, src); });
+    return env.div(dst, src);
 }
 
 MFloat80
@@ -647,7 +617,7 @@ FPU::fscal(const MFloat80 &dst, const MFloat80 &src)
     // Infinities and zeroes are unaffected by scaling
     if (dst.isInfinite() || dst.isZero()) return dst;
 
-    return invoke(env, [&] { return env.scale(dst, src); });
+    return env.scale(dst, src);
 }
 
 MFloat80
@@ -669,7 +639,7 @@ FPU::fsglmul(const MFloat80 &dst, const MFloat80 &src)
     FpuEnv::Scope scope(env);
     env.setPrecision(Precision::SINGLE);
     env.setLimitsExponent(false);
-    return singleOverflow(env, invoke(env, [&] { return env.mul(truncate(dst), truncate(src)); }));
+    return singleOverflow(env, env.mul(truncate(dst), truncate(src)));
 }
 
 MFloat80
@@ -681,7 +651,7 @@ FPU::fsgldiv(const MFloat80 &dst, const MFloat80 &src)
     FpuEnv::Scope scope(env);
     env.setPrecision(Precision::SINGLE);
     env.setLimitsExponent(false);
-    return singleOverflow(env, invoke(env, [&] { return env.div(dst, src); }));
+    return singleOverflow(env, env.div(dst, src));
 }
 
 /* A zero remainder is built by normalizing a zero significand, which drags the
@@ -729,7 +699,7 @@ FPU::fmod(const MFloat80 &dst, const MFloat80 &src)
     if (auto nan = resolveNan(dst, src)) return *nan;
 
     // Invalid operations (dst infinite, src zero) have no quotient
-    if (dst.isInfinite() || src.isZero()) return invokeExact(env, [&] { return env.invalidOperation(); });
+    if (dst.isInfinite() || src.isZero()) return env.invalidOperation();
 
     bool negative = dst.sign() != src.sign();
     if (src.isInfinite() || dst.isZero()) {
@@ -753,7 +723,7 @@ FPU::frem(const MFloat80 &dst, const MFloat80 &src)
 {
     if (auto nan = resolveNan(dst, src)) return *nan;
 
-    if (dst.isInfinite() || src.isZero()) return invokeExact(env, [&] { return env.invalidOperation(); });
+    if (dst.isInfinite() || src.isZero()) return env.invalidOperation();
 
     bool negative = dst.sign() != src.sign();
     if (src.isInfinite() || dst.isZero()) {
