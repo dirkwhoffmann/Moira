@@ -42,8 +42,10 @@ protected:
     // Emulated CPU model
     Model cpuModel = Model::M68000;
 
-    // Selected FPU and MMU (the effective ones are stored in fpu and mmu)
+    // Selected FPU model
     FPUModel fpuModel = FPUModel::BUILTIN;
+    
+    // Selected MMU model
     MMUModel mmuModel = MMUModel::BUILTIN;
     
     // Instruction set used by the disassembler
