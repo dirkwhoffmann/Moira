@@ -16,19 +16,30 @@ struct MmuWalkStop { };
 // MMU context used while walking the translation tables
 struct MmuContext {
 
+    // The logical address, positioned such that the next table index sits in
+    // the upper word. Each call to nextAddrBits() shifts the next index there.
     u64 addrBits;
+
+    // The index sizes from the translation control register (TC). The nibbles
+    // for the initial shift and the table indices are consumed one by one.
     u64 indexBits;
+
+    // Total number of address bits consumed so far, computed out of the initial
+    // shift and the table indices.
     u8  shiftCnt;
 
+    // Permitted range of the next table index, derived from the limit field of
+    // the root pointer or of the previous descriptor
     u32 lowerLimit;
     u32 upperLimit;
 
-    bool wp;
-    bool su;
+    // Protection bits accumulated over all descriptors visited so far
+    bool wp;                // Write protect
+    bool su;                // Supervisor only
 
     // Properties of the access
-    bool super;
-    u8 fc;
+    bool super;             // Supervisor access (bit 2 of the function code)
+    u8 fc;                  // Function code
 
     // Dry run (PTEST): Walk the tables without side effects. If 'level' is
     // non-zero, the walk ends at the descriptor with that number.
@@ -39,20 +50,22 @@ struct MmuContext {
     u32 depth;
     u32 descrAddr;
 
-    // Status bits collected during the walk
+    // Status bits collected during the walk (the L and I bits of the MMUSR)
     u32 flags;
+
+    // Indicates that the page has been modified (M bit of the page descriptor)
     bool modified;
 
-    // Page size mask and the letter of the last indexed table
+    // Mask covering the page offset (derived from the page size in the TC register)
     u32 pageMask;
+
+    // The letter ('A' to 'E') of the last table that is indexed by the logical address
     char lastTable;
 
-    // The logical address that triggered the lookup (reported in bus error frames)
+    // The logical address that triggered the lookup
     u32 faultAddr;
 
-    u32 getAddrBits() const { return u32(addrBits >> 32); }
-    u32 getIndexBits() const { return u32(indexBits >> 32); }
-
+    // Consumes the next index size and returns the corresponding address bits
     u32 nextAddrBits() {
 
         // Shift the new index into the upper word
@@ -71,14 +84,18 @@ struct MmuContext {
         return u32(addrBits >> 32);
     }
 
+    // Returns the next address bits without consuming them
     u32 peekAddrBits() const {
 
         MmuContext copy = *this;
         return copy.nextAddrBits();
     }
     
-    // Terminates the walk
-    [[noreturn]] void stop(u32 bits = 0) { flags |= bits; throw MmuWalkStop(); }
+    // Returns the number of address bits that haven't been consumed yet
+    u32 remainingAddrBits() const { return u32(addrBits) >> shiftCnt; }
+
+    // Indicates a supervisor violation (supervisor-only descriptor, user access)
+    bool violation() const { return su && !super; }
 
     // Returns the MMU status register value
     u32 status() const {
@@ -89,12 +106,9 @@ struct MmuContext {
         | (modified ? MMUSR_MODIFIED : 0)
         | (depth & MMUSR_NUMBER_OF_LEVELS);
     }
-
-    // Indicates a supervisor violation (supervisor-only descriptor, user access)
-    bool violation() const { return su && !super; }
     
-    // Returns the number of address bits that haven't been consumed yet
-    u32 remainingAddrBits() const { return u32(addrBits) >> shiftCnt; }
+    // Terminates the walk
+    [[noreturn]] void stop(u32 bits = 0) { flags |= bits; throw MmuWalkStop(); }
 };
 
 void
@@ -136,6 +150,12 @@ MMU::setTT1(u32 value)
 //
 
 bool
+MMU::testTT(u32 addr, u8 fc, bool rw) const
+{
+    return testTT(tt0, addr, fc, rw) || testTT(tt1, addr, fc, rw);
+}
+
+bool
 MMU::testTT(u32 ttx, u32 addr, u8 fc, bool rw)
 {
     auto addrBase = ________xxxxxxxx (ttx >> 24);
@@ -164,28 +184,27 @@ MMU::testTT(u32 ttx, u32 addr, u8 fc, bool rw)
 std::optional<u32>
 MMU::translate(u32 addr, u8 fc, bool write)
 {
-    // Accesses to the CPU space and accesses matching a transparent translation
-    // register are not translated
-    if (fc == 7 || testTT(tt0, addr, fc, !write) || testTT(tt1, addr, fc, !write)) return addr;
+    // Check if transparent translation applies
+    if (fc == 7 || testTT(addr, fc, !write)) return addr;
 
-    int line;
+    // Check the cache
+    auto line = atcFind(addr, fc, write);
 
-    if (auto hit = atcFind(addr, fc, write)) {
+    // On a cache miss, walk the tables and update the cache
+    if (!line) {
 
-        line = *hit;
-
-    } else {
-
-        // The translation is not cached. Walk the tables and create an ATC entry.
         MmuContext context;
-        u32 physAddr = walk(addr, fc, write, context, false, 0);
+        u32 physAddr = walk(addr, fc, write, context);
         line = atcInsert(addr, fc, physAddr, context.status());
     }
-    auto &e = atc[line];
+    
+    auto &e = atc[*line];
 
-    // Invalid descriptors and supervisor violations cause a bus error. So do
-    // write accesses to write-protected pages.
-    if (e.busError || (write && e.wp)) return std::nullopt;
+    // Invalid descriptors and supervisor violations cause a bus error
+    if (e.busError) return std::nullopt;
+
+    // And so do write accesses to write-protected pages
+    if (write && e.wp) return std::nullopt;
 
     return e.physical | (addr & pageMask());
 }
@@ -208,9 +227,8 @@ MMU::test(u32 addr, u8 fc, bool write, u32 level, u32 &descrAddr)
     // Level 0 searches the ATC
     if (level == 0) {
 
-        if (testTT(tt0, addr, fc, !write) || testTT(tt1, addr, fc, !write)) {
-            return MMUSR_TRANSPARENT_ACCESS;
-        }
+        // Check for transparent translation
+        if (testTT(addr, fc, !write)) return MMUSR_TRANSPARENT_ACCESS;
 
         u32 page = addr & ~pageMask();
         for (auto &e : atc) {

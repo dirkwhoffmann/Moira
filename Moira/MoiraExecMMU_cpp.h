@@ -544,7 +544,7 @@ Moira::execPTest40(u16 opcode)
     readOp<C, M, Long>(rg, &ea, &data);
     
     u8 fcode = u8(reg.dfc);
-    if (MMU::testTT(mmu.tt0, ea, fcode, rw) || MMU::testTT(mmu.tt1, ea, fcode, rw)) {
+    if (mmu.testTT(ea, fcode, rw)) {
         mmu.mmusr |= 0x40;
     } else {
         mmu.mmusr &= ~0x40;

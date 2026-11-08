@@ -123,8 +123,8 @@ public:
     // Returns the page size mask as defined in the translation control register
     u32 pageMask() const { return (1u << (tc >> 20 & 0xF)) - 1; }
 
-    // Checks whether an access matches a transparent translation register
-    static bool testTT(u32 ttx, u32 addr, u8 fc, bool rw);
+    // Checks whether an access matches one of the transparent translation registers
+    bool testTT(u32 addr, u8 fc, bool rw) const;
 
     // Translates a logical address to a physical address
     std::optional<u32> translate(u32 addr, u8 fc, bool write);
@@ -164,6 +164,9 @@ private:
 
     // Marks an entry as recently used
     void atcTouch(int line);
+
+    // Checks whether an access matches a single transparent translation register
+    static bool testTT(u32 ttx, u32 addr, u8 fc, bool rw);
 
     // Walks the translation tables
     u32 walk(u32 addr, u8 fc, bool write, MmuContext &c);
