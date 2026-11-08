@@ -11,6 +11,7 @@
 #include "MoiraTypes.h"
 #include "MoiraDebugger.h"
 #include "FPU/FPU.h"
+#include "MMU/MMU.h"
 
 namespace MOIRA_NAMESPACE {
 
@@ -245,6 +246,7 @@ public:
     
     // Checks if the emulated CPU model has a memory management unit (MMU)
     bool hasMMU() const;
+    static bool hasMMU(Model model);
     
     // Checks if the emulated CPU model has a floating-point unit (FPU)
     bool hasFPU() const;
@@ -815,17 +817,6 @@ private:
     void setTT0(u32 value);
     void setTT1(u32 value);
 
-    // Derives the bitmask from the translation control register
-    u32 pageMask() const { return (1u << (mmu.tc >> 20 & 0xF)) - 1; }
-    
-    std::optional<int> atcFind(u32 addr, u8 fc, bool write);
-    int atcInsert(u32 addr, u8 fc, u32 physical, u32 status);
-    void atcFlush();
-    void atcFlush(u8 fcBase, u8 fcMask);
-    void atcFlushPage(u32 addr);
-    void atcFlushPage(u32 addr, u8 fcBase, u8 fcMask);
-    void atcTouch(int line);
-
     // Extracts the function code from the extension word of an MMU instruction
     u8 mmuFC(u16 ext) const;
 
@@ -856,9 +847,6 @@ private:
     // Emulates PTEST. Returns the MMUSR value and the address of the last descriptor.
     template <Core C> u32 mmuPTest(u32 addr, u8 fc, bool write, u32 level, u32 *descrAddr);
 
-    // Experimental
-    bool testTT(u32 ttx, u32 addr, u8 fc, bool rw);
-    
 private:
     
 #include "MoiraInit.h"

@@ -404,47 +404,6 @@ struct CycleBudget { // 68020 only
     int stalled {};
 };
 
-//
-// MMU types
-//
-
-enum class MmuReg { TT0, TT1, MMUSR, CRP, SRP, TC };
-
-// An entry of the address translation cache (ATC)
-struct AtcEntry {
-
-    u32 logical;            // Logical page address
-    u32 physical;           // Physical page address
-    u8  fc;                 // Function code
-    bool valid;
-    bool busError;          // The translation failed (invalid descriptor or supervisor violation)
-    bool writeProtect;
-    bool modified;
-    bool mru;               // History bit used by the replacement algorithm
-};
-
-static constexpr int ATC_ENTRIES = 22;
-
-struct MMU {
-
-    u64 crp;                // Cpu Root Pointer
-    u64 srp;                // Supervisor Root Pointer
-    u32 tc;                 // Translation Control Register
-    u32 tt0;                // Transparent Translation Register 0
-    u32 tt1;                // Transparent Translation Register 1
-    u32 mmusr;              // MMU status register
-    AtcEntry atc[ATC_ENTRIES]; // Address translation cache
-};
-
-static constexpr u32 MMUSR_BUS_ERROR          = 1 << 15;
-static constexpr u32 MMUSR_LIMIT_VIOLATION    = 1 << 14;
-static constexpr u32 MMUSR_SUPERVISOR_ONLY    = 1 << 13;
-static constexpr u32 MMUSR_WRITE_PROTECTED    = 1 << 11;
-static constexpr u32 MMUSR_INVALID            = 1 << 10;
-static constexpr u32 MMUSR_MODIFIED           = 1 << 9;
-static constexpr u32 MMUSR_TRANSPARENT_ACCESS = 1 << 6;
-static constexpr u32 MMUSR_NUMBER_OF_LEVELS   = 0b111;
-
 struct InstrInfo
 {
     Instr I;

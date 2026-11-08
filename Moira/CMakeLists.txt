@@ -12,6 +12,7 @@ FPU/FloatMath.cpp
 FPU/FpuFormats.cpp
 FPU/FPU.cpp
 FPU/SoftFloat.cpp
+MMU/MMU.cpp
 ${MOIRA_SOFTFLOAT_SRC}
 )
 

@@ -107,6 +107,9 @@ Moira::setModel(Model cpuModel, Model dasmModel)
             fpu.setModel(FPUModel::NONE);
         }
 
+        // The 68030 and the 68040 have a built-in MMU
+        mmu.setModel(hasMMU(cpuModel) ? MMUModel::INTERNAL : MMUModel::NONE);
+
         createJumpTable(cpuModel, dasmModel);
 
         reg.cacr &= cacrMask();
@@ -188,9 +191,9 @@ Moira::hasCPI() const
 }
 
 bool
-Moira::hasMMU() const
+Moira::hasMMU(Model model)
 {
-    switch (cpuModel) {
+    switch (model) {
 
         case Model::M68030: case Model::M68LC040: case Model::M68040:
             return true;
@@ -198,6 +201,12 @@ Moira::hasMMU() const
         default:
             return false;
     }
+}
+
+bool
+Moira::hasMMU() const
+{
+    return mmu.isPresent();
 }
 
 bool
@@ -242,7 +251,7 @@ Moira::addrMask() const
 void
 Moira::reset()
 {
-    mmu = { };
+    mmu.reset();
     fpu.reset();
 
     switch (cpuModel) {

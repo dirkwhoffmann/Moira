@@ -124,89 +124,6 @@ Moira::setTT1(u32 value)
     mmu.tt1 = value;
 }
 
-void
-Moira::atcTouch(int line)
-{
-    // Mark the entry as recently used
-    mmu.atc[line].mru = true;
-
-    // If all history bits are set, clear all but this one
-    for (auto &e : mmu.atc) if (!e.mru) return;
-    for (auto &e : mmu.atc) e.mru = false;
-    mmu.atc[line].mru = true;
-}
-
-std::optional<int>
-Moira::atcFind(u32 addr, u8 fc, bool write)
-{
-    u32 page = addr & ~pageMask();
-
-    for (int i = 0; i < ATC_ENTRIES; i++) {
-
-        auto &e = mmu.atc[i];
-        if (!e.valid || e.logical != page || e.fc != fc) continue;
-
-        // A write access to a page that hasn't been marked as modified yet
-        // needs a table walk to set the M bit. The entry is invalidated.
-        if (!write || e.modified || e.writeProtect || e.busError) {
-
-            atcTouch(i);
-            return i;
-        }
-        e.valid = false;
-    }
-    return std::nullopt;
-}
-
-int
-Moira::atcInsert(u32 addr, u8 fc, u32 physical, u32 status)
-{
-    // Take the first free entry. If there is none, replace the first entry without history bit.
-    int line = 0;
-    for (; line < ATC_ENTRIES && mmu.atc[line].valid; line++) { }
-    if (line == ATC_ENTRIES) {
-        for (line = 0; line < ATC_ENTRIES && mmu.atc[line].mru; line++) { }
-        if (line == ATC_ENTRIES) line = 0;
-    }
-    atcTouch(line);
-
-    auto &e = mmu.atc[line];
-    e.logical = addr & ~pageMask();
-    e.physical = physical & ~pageMask();
-    e.fc = fc;
-    e.valid = true;
-    e.busError = status & (MMUSR_INVALID | MMUSR_SUPERVISOR_ONLY);
-    e.writeProtect = status & MMUSR_WRITE_PROTECTED;
-    e.modified = status & MMUSR_MODIFIED;
-    return line;
-}
-
-void
-Moira::atcFlush()
-{
-    for (auto &e : mmu.atc) e.valid = false;
-}
-
-void
-Moira::atcFlush(u8 fcBase, u8 fcMask)
-{
-    for (auto &e : mmu.atc) if ((fcBase & fcMask) == (e.fc & fcMask)) e.valid = false;
-}
-
-void
-Moira::atcFlushPage(u32 addr)
-{
-    for (auto &e : mmu.atc) if (e.logical == (addr & ~pageMask())) e.valid = false;
-}
-
-void
-Moira::atcFlushPage(u32 addr, u8 fcBase, u8 fcMask)
-{
-    for (auto &e : mmu.atc) {
-        if (e.logical == (addr & ~pageMask()) && (fcBase & fcMask) == (e.fc & fcMask)) e.valid = false;
-    }
-}
-
 u8
 Moira::mmuFC(u16 ext) const
 {
@@ -216,32 +133,6 @@ Moira::mmuFC(u16 ext) const
         case 0x08: return reg.d[ext & 7] & 7;
         default:   return (ext & 1) ? u8(reg.dfc) : u8(reg.sfc);
     }
-}
-
-bool
-Moira::testTT(u32 ttx, u32 addr, u8 fc, bool rw)
-{
-    u32 addrBase = ttx >> 24 & 0xFF;
-    u32 addrMask = ttx >> 16 & 0xFF;
-    auto e       = x_______________ (ttx);
-    auto rwb     = ______x_________ (ttx);
-    auto rwm     = _______x________ (ttx);
-    auto fcBase  = _________xxx____ (ttx);
-    auto fcMask  = _____________xxx (ttx);
-    
-    if (!e) {
-        return false;
-    }
-    if ((addr >> 24 | addrMask) != (addrBase | addrMask)) {
-        return false;
-    }
-    if ((fc | fcMask) != (fcBase | fcMask)) {
-        return false;
-    }
-    if ((rw | rwm) != (rwb | rwm)) {
-        return false;
-    }
-    return true;
 }
 
 bool
@@ -374,7 +265,7 @@ Moira::translate(u32 addr, u8 fc)
 
     // Accesses to the CPU space and accesses matching a transparent translation
     // register are not translated
-    if (fc == 7 || testTT(mmu.tt0, addr, fc, !write) || testTT(mmu.tt1, addr, fc, !write)) return addr;
+    if (fc == 7 || MMU::testTT(mmu.tt0, addr, fc, !write) || MMU::testTT(mmu.tt1, addr, fc, !write)) return addr;
 
     //
     // TODO: LOOKUP IN CACHE
@@ -399,7 +290,7 @@ Moira::mmuLookup(u32 addr, u8 fc)
 {
     int line;
 
-    if (auto hit = atcFind(addr, fc, write)) {
+    if (auto hit = mmu.atcFind(addr, fc, write)) {
 
         line = *hit;
 
@@ -408,28 +299,28 @@ Moira::mmuLookup(u32 addr, u8 fc)
         // The translation is not cached. Walk the tables and create an ATC entry.
         MmuContext context;
         u32 physAddr = mmuWalk<C, write>(addr, fc, context, false, 0);
-        line = atcInsert(addr, fc, physAddr, context.status());
+        line = mmu.atcInsert(addr, fc, physAddr, context.status());
     }
     auto &e = mmu.atc[line];
 
     // Invalid descriptors and supervisor violations cause a bus error. So do
     // write accesses to write-protected pages.
-    if (e.busError || (write && e.writeProtect)) {
+    if (e.busError || (write && e.wp)) {
 
         throw BusError(makeFrame<write ? AE_WRITE : 0>(addr));
     }
-    return e.physical | (addr & pageMask());
+    return e.physical | (addr & mmu.pageMask());
 }
 
 template <Core C> void
 Moira::mmuLoad(u32 addr, u8 fc, bool write)
 {
-    atcFlushPage(addr);
+    mmu.atcFlushPage(addr);
 
     MmuContext context;
     u32 physAddr = write ? mmuWalk<C, true>(addr, fc, context, false, 0)
                          : mmuWalk<C, false>(addr, fc, context, false, 0);
-    atcInsert(addr, fc, physAddr, context.status());
+    mmu.atcInsert(addr, fc, physAddr, context.status());
 }
 
 template <Core C> u32
@@ -446,17 +337,17 @@ Moira::mmuPTest(u32 addr, u8 fc, bool write, u32 level, u32 *descrAddr)
     // Level 0 searches the ATC
     if (level == 0) {
 
-        if (testTT(mmu.tt0, addr, fc, !write) || testTT(mmu.tt1, addr, fc, !write)) {
+        if (MMU::testTT(mmu.tt0, addr, fc, !write) || MMU::testTT(mmu.tt1, addr, fc, !write)) {
             return MMUSR_TRANSPARENT_ACCESS;
         }
 
-        u32 page = addr & ~pageMask();
+        u32 page = addr & ~mmu.pageMask();
         for (auto &e : mmu.atc) {
 
             if (!e.valid || e.logical != page || e.fc != fc) continue;
 
             return (e.busError ? MMUSR_BUS_ERROR | MMUSR_INVALID : 0)
-                 | (e.writeProtect ? MMUSR_WRITE_PROTECTED : 0)
+                 | (e.wp ? MMUSR_WRITE_PROTECTED : 0)
                  | (e.modified ? MMUSR_MODIFIED : 0);
         }
         return MMUSR_INVALID;
@@ -889,12 +780,12 @@ Moira::execPFlush(u16 opcode)
 
         // Flush by function code and effective address
         u32 ea = computeEA<C, M, Long>(reg);
-        atcFlushPage(ea, fcBase, mask);
+        mmu.atcFlushPage(ea, fcBase, mask);
 
     } else {
 
         // Flush by function code
-        atcFlush(fcBase, mask);
+        mmu.atcFlush(fcBase, mask);
     }
 
     prefetch<C, POLL>();
@@ -919,7 +810,7 @@ Moira::execPFlusha(u16 opcode)
 
     (void)readI<C, Word>();
 
-    atcFlush();
+    mmu.atcFlush();
 
     prefetch<C, POLL>();
 
@@ -1058,7 +949,7 @@ Moira::execPMove(u16 opcode)
     }
 
     // Writing a translation register flushes the ATC unless the FD bit is set
-    if (!rw && fmt != 3 && !(ext & 0x100)) atcFlush();
+    if (!rw && fmt != 3 && !(ext & 0x100)) mmu.atcFlush();
 
     prefetch<C, POLL>();
 
@@ -1210,7 +1101,7 @@ Moira::execPTest40(u16 opcode)
     readOp<C, M, Long>(rg, &ea, &data);
     
     u8 fcode = u8(reg.dfc);
-    if (testTT(mmu.tt0, ea, fcode, rw) || testTT(mmu.tt1, ea, fcode, rw)) {
+    if (MMU::testTT(mmu.tt0, ea, fcode, rw) || MMU::testTT(mmu.tt1, ea, fcode, rw)) {
         mmu.mmusr |= 0x40;
     } else {
         mmu.mmusr &= ~0x40;
