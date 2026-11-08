@@ -39,7 +39,7 @@ struct AtcEntry {
     bool busError;          // Translation error bit
     bool wp;                // Write protection bit
     bool modified;          // Modification bit
-    bool mru;               // History bit used by the replacement algorithm
+    bool history;           // Set if the entry was used recently (guides the replacement policy)
 };
 
 // Cache size

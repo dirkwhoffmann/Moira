@@ -317,28 +317,50 @@ Moira::execPLoad(u16 opcode)
     FINALIZE
 }
 
-// Checks if a PMOVE instruction can be executed (stricter than the disassembler check)
+/* Checks if a PMOVE instruction can be executed (stricter than the disassembler check).
+ *
+ * The rules follow the instruction description in Motorola's M68000 Family
+ * Programmer's Reference (PMOVE for the 68030):
+ *
+ *   Extension word, TC / SRP / CRP:  010 rrr w f 00000000    (rrr: TC = 000, SRP = 010, CRP = 011)
+ *   Extension word, TT0 / TT1:       000 rrr w f 00000000    (rrr: TT0 = 010, TT1 = 011)
+ *   Extension word, MMUSR:           011 000 w 000000000
+ *
+ * The effective address must be a memory-alterable or control mode, i.e., one of (An), (d16,An),
+ * (d8,An,Xn) and its extended forms, (xxx).W, and (xxx).L. Dn, An, (An)+, -(An), the PC-relative
+ * modes, and immediate data are not allowed.
+ *
+ * Note: The description doesn't say what happens if FD is set for a transfer from a register to
+ * memory. Such an encoding is rejected, because the flush disable bit is meaningless in this case.
+ */
 template <Mode M> static bool
 isExecutablePMove(u16 ext)
 {
-    auto fmt  = ext >> 13 & 0b111;
-    auto preg = ext >> 10 & 0b111;
-    bool rw   = ext & 0x200;
-    bool fd   = ext & 0x100;
+    auto fmt  = ext >> 13 & 0b111;      // Register group
+    auto preg = ext >> 10 & 0b111;      // Register within the group
+    bool rw   = ext & 0x200;            // 1: Register to memory
+    bool fd   = ext & 0x100;            // 1: Don't flush the ATC
 
-    // Only memory and control alterable addressing modes are allowed
-    if (M == Mode::DN || M == Mode::AN || M == Mode::PI || M == Mode::PD ||
-        M == Mode::DIPC || M == Mode::IXPC || M == Mode::IM || M == Mode::IP) return false;
+    // Check the effective address mode
+    switch (M) {
 
-    // The lower byte must be zero, and reading a register can't flush the ATC
-    if ((ext & 0xFF) || (rw && fd)) return false;
+        case Mode::AI: case Mode::DI: case Mode::IX: case Mode::AW: case Mode::AL: break;
+        default: return false;
+    }
 
+    // The lower byte is reserved
+    if (ext & 0xFF) return false;
+
+    // FD is meaningless when a register is stored
+    if (rw && fd) return false;
+
+    // Check the register selection
     switch (fmt) {
 
-        case 0:  return preg == 2 || preg == 3;
-        case 2:  return preg == 0 || preg == 2 || preg == 3;
-        case 3:  return preg == 0 && !fd;
-        default: return false;
+        case 0b000: return preg == 0b010 || preg == 0b011;                  // TT0, TT1
+        case 0b010: return preg == 0b000 || preg == 0b010 || preg == 0b011; // TC, SRP, CRP
+        case 0b011: return preg == 0b000 && !fd;                            // MMUSR
+        default:    return false;
     }
 }
 

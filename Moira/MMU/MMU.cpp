@@ -266,13 +266,13 @@ MMU::test(u32 addr, u8 fc, bool write, u32 level, u32 &descrAddr)
 void
 MMU::atcTouch(int line)
 {
-    // Mark the entry as recently used
-    atc[line].mru = true;
+    // Flag the entry as recently used
+    atc[line].history = true;
 
-    // If all history bits are set, clear all but this one
-    for (auto &e : atc) if (!e.mru) return;
-    for (auto &e : atc) e.mru = false;
-    atc[line].mru = true;
+    // If all history bits are set, clear all but the new one
+    for (auto &e : atc) if (!e.history) return;
+    for (auto &e : atc) e.history = false;
+    atc[line].history = true;
 }
 
 std::optional<int>
@@ -316,7 +316,7 @@ MMU::atcFindFree()
 std::optional<int>
 MMU::atcFindUnused()
 {
-    for (int i = 0; i < ATC_ENTRIES; i++) if (!atc[i].mru) return i;
+    for (int i = 0; i < ATC_ENTRIES; i++) if (!atc[i].history) return i;
     return std::nullopt;
 }
 

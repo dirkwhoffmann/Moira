@@ -802,32 +802,23 @@ etoxm1_(SoftFloat &sf, const Float80 &x)
     if (x.isInfinite()) {
         return x.sign() ? Float80::one(true) : x;
     }
-    // For tiny arguments, the result is x - 2^-16382 (rounded as requested), which sets the
-    // underflow flag if x is a power of two at the lower end of the destination range.
-    // This is the way the 68040 FPSP computes it, and UAE does the same.
-    if ((x.signExp() & 0x7FFF) < 0x3FBE) {
+    /* For tiny arguments, e^x - 1 equals x within the precision of the extended format. What
+     * remains to be done is to raise the right flags and to round the result as requested.
+     * The reference behavior is to add the smallest normal number with a negative sign (using
+     * the precision and rounding mode of the instruction). This lets the result land just
+     * below x in directed rounding modes and makes it tiny if x is a power of two at the lower
+     * end of the destination range. The addend is only applied if it doesn't dominate x (if the
+     * exponent field is at least 0x33). Otherwise, x is simply rounded to the destination format.
+     * Note: The threshold and the addend can't be derived from the math. They reproduce the
+     * observable behavior of the reference.
+     */
+    if ((x.signExp() & 0x7FFF) < Float80::bias - 65) {
 
-        auto tiny = Float80::fromBits(0x8001, 1ULL << 63);
+        if ((x.signExp() & 0x7FFF) < 0x33) return finish(sf, fromFloat80(x));
 
-        if ((x.signExp() & 0x7FFF) < 0x0033) {
-
-            // Scale up and down to avoid a spurious intermediate underflow
-            auto up = Float80::fromBits(0x3FFF + 140, 1ULL << 63);
-            auto down = Float80::fromBits(0x3FFF - 140, 1ULL << 63);
-            Float80 t;
-            {
-                SoftFloat::Scope scope(sf);
-                sf.setPrecision(Precision::EXTENDED);
-                sf.setRoundingMode(RoundingMode::NEAREST);
-                t = (x * up) + tiny;
-            }
-            auto r = t * down;
-            sf.raiseFlags(FloatFlags::INEXACT);
-            return r;
-        }
-        auto r = x + tiny;
+        auto result = x + Float80::fromBits(0x8001, 1ULL << 63);
         sf.raiseFlags(FloatFlags::INEXACT);
-        return r;
+        return result;
     }
 
     W v = fromFloat80(x);

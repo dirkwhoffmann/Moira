@@ -396,6 +396,67 @@ void testTranscendentals(long iterations)
 }
 
 //
+// FETOXM1 with tiny arguments (all rounding precisions and modes)
+//
+
+void testTinyEtoxm1(long iterations)
+{
+    FPU fpu;
+    fpu.setModel(FPUModel::M68882);
+    uaeref::init(68882);
+
+    // Powers of two at the lower end of the single, double, and extended range
+    static const u16 boundaries[] = { 0x3F81, 0x3C01, 0x0001 };
+
+    for (long i = 0; i < iterations * 4; i++) {
+
+        bool neg = rng() & 1;
+        u16 sign = neg ? 0x8000 : 0;
+        u64 rnd = rng();
+        u64 man = rnd | (1ULL << 63);
+        u16 exp;
+
+        switch (rng() % 4) {
+
+            case 0:  exp = boundaries[rng() % 3]; man = 1ULL << 63; break;                 // Exactly at the boundary
+            case 1:  exp = boundaries[rng() % 3]; man += i64(rng() % 5) - 2; break;         // Next to the boundary
+            case 2:  exp = u16(rng() % 0x60); if (exp == 0) man &= ~(1ULL << 63); break;    // (Almost) denormal
+            default: exp = u16(rng() % 0x3FBE); break;                                      // Anywhere below 2^-65
+        }
+        Float80 src = Float80::fromBits(sign | exp, man);
+        if (src.isZero()) continue;
+
+        u32 fpcr = genFPCR();
+
+        fpu.reset();
+        fpu.setFPCR(fpcr);
+        fpu.setFPSR(0);
+        Float80 res;
+        {
+            FPU::Scope scope(fpu);
+            res = fpu.round(fpu.fetoxm1(src));
+        }
+        u32 exc = fpu.fpsr & 0xFF00;
+
+        uaeref::Result ref;
+        if (!uaeref::arith(0x08, 0, 0, src.signExp(), src.mantissa(), fpcr, ref)) continue;
+
+        Reporter rep("fetoxm1 (tiny)");
+        bool sameValue = res.signExp() == ref.se && res.mantissa() == ref.man;
+
+        // The reference returns a zero significand with the minimum exponent of the format
+        bool pseudoZero = ref.man == 0 && (ref.se & 0x7FFF) != 0 && (ref.se & 0x7FFF) != 0x7FFF;
+        if (pseudoZero && res.isZero() && res.sign() == bool(ref.se & 0x8000) && exc == ref.exc) { rep.known(); continue; }
+
+        if (!sameValue || exc != ref.exc) {
+            rep.category = classify(fpcr, { src });
+            rep.fail("fpcr=%02x src=%s\n   moira=%s exc=%04x   ref=%s exc=%04x", fpcr, str(src).c_str(),
+                     str(res).c_str(), exc, str(ref.se, ref.man).c_str(), ref.exc);
+        }
+    }
+}
+
+//
 // Conversions
 //
 
@@ -571,7 +632,7 @@ int main(int argc, char **argv)
     for (int model : { 68882, 68040 }) {
         testArithmetic(model, iterations);
         testConversions(model, iterations);
-        if (model != 68040) testTranscendentals(iterations);
+        if (model != 68040) { testTranscendentals(iterations); testTinyEtoxm1(iterations); }
     }
 
     long failures = 0;
