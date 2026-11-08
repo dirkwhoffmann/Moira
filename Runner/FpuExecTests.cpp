@@ -633,6 +633,12 @@ static void testTinySinh()
     cpu.run({ 0xF23C, 0x4402, 0x0080, 0x0000 });
     CHECK(same(cpu.fpu.fpr[0], Float80::fromBits(0x3F81, 0x8000000000000000ULL)));
     CHECK((cpu.fpu.fpsr & 0xFF00) == 0x0200);
+
+    // FETOXM1.S #2^-126,FP0: The 68k computes x - 2^-16382 for tiny arguments, which is tiny (like UAE)
+    cpu.fpu.setFPSR(0);
+    cpu.run({ 0xF23C, 0x4408, 0x0080, 0x0000 });
+    CHECK(same(cpu.fpu.fpr[0], Float80::fromBits(0x3F81, 0x8000000000000000ULL)));
+    CHECK((cpu.fpu.fpsr & 0xFF00) == 0x0A00);
 }
 
 int main()

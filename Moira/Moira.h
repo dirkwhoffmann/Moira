@@ -815,13 +815,10 @@ private:
     void setTT0(u32 value);
     void setTT1(u32 value);
 
-    // Reads a long word or a quad word from memory (used for table lookups)
-    u32 readMMU32(u32 addr) const { return read32(addr); }
-    u64 readMMU64(u32 addr) const { return u64(read32(addr)) << 32 | read32(addr + 4); }
-
-    // Address translation cache
+    // Derives the bitmask from the translation control register
     u32 pageMask() const { return (1u << (mmu.tc >> 20 & 0xF)) - 1; }
-    int atcFind(u32 addr, u8 fc, bool write);
+    
+    std::optional<int> atcFind(u32 addr, u8 fc, bool write);
     int atcInsert(u32 addr, u8 fc, u32 physical, u32 status);
     void atcFlush();
     void atcFlush(u8 fcBase, u8 fcMask);

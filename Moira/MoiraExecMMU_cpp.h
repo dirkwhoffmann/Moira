@@ -127,15 +127,16 @@ Moira::setTT1(u32 value)
 void
 Moira::atcTouch(int line)
 {
-    // Mark the entry as recently used. If all history bits are set, clear all but this one.
+    // Mark the entry as recently used
     mmu.atc[line].mru = true;
 
+    // If all history bits are set, clear all but this one
     for (auto &e : mmu.atc) if (!e.mru) return;
     for (auto &e : mmu.atc) e.mru = false;
     mmu.atc[line].mru = true;
 }
 
-int
+std::optional<int>
 Moira::atcFind(u32 addr, u8 fc, bool write)
 {
     u32 page = addr & ~pageMask();
@@ -154,7 +155,7 @@ Moira::atcFind(u32 addr, u8 fc, bool write)
         }
         e.valid = false;
     }
-    return -1;
+    return std::nullopt;
 }
 
 int
@@ -396,9 +397,13 @@ Moira::translateAddress(u32 addr, u8 fc, bool write, u32 &physical)
 template <Core C, bool write> u32
 Moira::mmuLookup(u32 addr, u8 fc)
 {
-    int line = atcFind(addr, fc, write);
+    int line;
 
-    if (line < 0) {
+    if (auto hit = atcFind(addr, fc, write)) {
+
+        line = *hit;
+
+    } else {
 
         // The translation is not cached. Walk the tables and create an ATC entry.
         MmuContext context;
@@ -583,7 +588,7 @@ Moira::mmuLookupShort(char table, u32 taddr, u32 offset, struct MmuContext &c)
 
     // Read table entry
     u32 descrAddr = taddr + 4 * offset;
-    u32 descriptor = readMMU32(descrAddr);
+    u32 descriptor = read32(descrAddr);
     c.depth++;
     c.descrAddr = descrAddr;
 
@@ -710,7 +715,7 @@ Moira::mmuLookupLong(char table, u32 taddr, u32 offset, struct MmuContext &c)
 
     // Read table entry
     u32 descrAddr = taddr + 8 * offset;
-    u64 descriptor = readMMU64(descrAddr);
+    u64 descriptor = u64(read32(descrAddr)) << 32 | read32(descrAddr + 4);
     c.depth++;
     c.descrAddr = descrAddr;
 
