@@ -144,195 +144,164 @@ FpuFormats::toExtended(const MFloat80 &value, u32 (&w)[3])
 
 namespace {
 
-/* The packed decimal conversion follows the reference implementation (UAE),
- * which computes with 128-bit values and the corresponding FpuEnv helpers
- * (add128, mul64To128, mul128To256, estimateDiv128To64, ...).
+/* Packed-decimal conversion needs more precision than an extended-precision
+ * value offers, because a power of ten has to be applied to a 64-bit mantissa.
+ * The conversion therefore works on binary numbers with a 128-bit significand
+ * (BinFloat). The significand is normalized, i.e., the value of a BinFloat is
+ *
+ *     sig / 2^127 * 2^(exp - 0x3FFF)
+ *
+ * Multiplication and division truncate to 128 bits and merge all discarded bits
+ * into the least significant bit (sticky bit). A power of ten is built by
+ * repeated squaring in which intermediate results are rounded to 64 bits, which
+ * is the source of the (reproducible) deviations from a correctly rounded
+ * conversion in rare cases.
  */
 
-// A 192-bit value
-struct U192 { u64 h; u128 l; };
+struct BinFloat { i32 exp; u128 sig; };
 
-// A 128-bit extended-precision intermediate value (the significand includes
-// the integer bit and is stored in the upper 64 bits for a plain extended value)
-struct Dec { i32 exp; u128 sig; };
-
-// Multiplies a 128-bit value by a 64-bit value
-U192 mul128By64(u128 a, u64 b)
-{
-    u128 low = u128(lo64(a)) * b;
-    u128 mid = u128(hi64(a)) * b + hi64(low);
-
-    return { hi64(mid), makeU128(lo64(mid), lo64(low)) };
-}
-
-U192 sub(U192 a, U192 b) { return { a.h - b.h - (a.l < b.l), a.l - b.l }; }
-
-U192 add(U192 a, U192 b)
-{
-    u128 l = a.l + b.l;
-    return { a.h + b.h + (l < a.l), l };
-}
-
-// Returns an approximation to the 64-bit quotient of a 128-bit value divided by b.
-// The divisor must be at least 2^63. The approximation lies between q and q + 2.
-u64 estimateDiv128To64(u64 a0, u64 a1, u64 b)
-{
-    if (b <= a0) return ~u64(0);
-
-    u64 b0 = b >> 32;
-    u64 z = (b0 << 32 <= a0) ? 0xFFFFFFFF00000000ULL : (a0 / b0) << 32;
-    u128 rem = makeU128(a0, a1) - u128(b) * z;
-
-    while (i64(hi64(rem)) < 0) {
-        z -= 0x100000000ULL;
-        rem += makeU128(b0, b << 32);
-    }
-    u64 r0 = hi64(rem) << 32 | lo64(rem) >> 32;
-    z |= (b0 << 32 <= r0) ? 0xFFFFFFFFULL : r0 / b0;
-    return z;
-}
-
-// Rounds a 128-bit significand to 64 bits
-void roundTo64(bool sign, Dec &a, RoundingMode mode)
-{
-    u64 s0 = hi64(a.sig), s1 = lo64(a.sig);
-    bool nearest = mode == RoundingMode::NEAREST;
-    bool inc = i64(s1) < 0;
-
-    if (!nearest) {
-        if (mode == RoundingMode::ZERO) inc = false;
-        else if (sign) inc = mode == RoundingMode::DOWN && s1;
-        else inc = mode == RoundingMode::UP && s1;
-    }
-    if (inc) {
-        if (++s0 == 0) { a.exp++; s0 = 1ULL << 63; }
-        else if ((s1 << 1) == 0 && nearest) s0 &= ~1ULL;
-    } else if (s0 == 0) {
-        a.exp = 0;
-    }
-    a.sig = makeU128(s0, 0);
-}
-
-Dec mul(Dec a, Dec b)
+BinFloat mul(const BinFloat &a, const BinFloat &b)
 {
     u128 hi, lo;
     mul128To256(a.sig, b.sig, hi, lo);
-    hi |= lo != 0;
 
-    Dec z = { a.exp + b.exp - 0x3FFE, hi };
-    if (0 < i64(hi64(z.sig))) { z.sig <<= 1; z.exp--; }
+    BinFloat z { a.exp + b.exp - 0x3FFE, hi | (lo != 0) };
+    if (!(z.sig >> 127)) { z.sig <<= 1; z.exp--; }
     return z;
 }
 
-Dec mulRounded(Dec a, Dec b, RoundingMode mode)
+BinFloat div(BinFloat a, const BinFloat &b)
 {
-    roundTo64(false, b, mode);
-    Dec z = mul(a, b);
-    roundTo64(false, z, mode);
-    return z;
-}
+    // Make sure that the quotient is less than one
+    i32 exp = a.exp - b.exp + 0x3FFE;
+    if (a.sig >= b.sig) { a.sig >>= 1; exp++; }
 
-Dec div(Dec a, Dec b)
-{
-    u64 b0 = hi64(b.sig);
-    i32 zExp = a.exp - b.exp + 0x3FFE;
-    if (b.sig <= a.sig) { a.sig >>= 1; zExp++; }
-
-    u64 z0 = estimateDiv128To64(hi64(a.sig), lo64(a.sig), b0);
-    U192 rem = sub(U192{ hi64(a.sig), makeU128(lo64(a.sig), 0) }, mul128By64(b.sig, z0));
-    while (i64(rem.h) < 0) { z0--; rem = add(rem, U192{ 0, b.sig }); }
-
-    u64 z1 = estimateDiv128To64(hi64(rem.l), lo64(rem.l), b0);
-    if ((z1 & 0x3FFF) <= 4) {
-        U192 term = mul128By64(b.sig, z1);
-        rem = sub(U192{ hi64(rem.l), makeU128(lo64(rem.l), 0) }, term);
-        while (i64(rem.h) < 0) { z1--; rem = add(rem, U192{ 0, b.sig }); }
-        z1 |= (rem.h | (rem.l != 0)) != 0;
+    // Compute the 128 fraction bits of a / b, one bit at a time
+    u128 q = 0, r = a.sig;
+    for (int i = 0; i < 128; i++) {
+        bool carry = r >> 127;
+        r <<= 1;
+        q <<= 1;
+        if (carry || r >= b.sig) { r -= b.sig; q |= 1; }
     }
-    return { zExp, makeU128(z0, z1) };
+    return { exp, q | (r != 0) };
 }
 
-// Computes 10^scale with 128-bit precision
-// The rounding direction is chosen such that the sign of the final result is respected
-Dec tenToInt(bool mSign, bool eSign, int scale, RoundingMode mode)
+// Tells whether discarding the fraction 'frac' increments the magnitude
+bool incrementsMagnitude(bool negative, RoundingMode mode, u64 frac)
 {
     switch (mode) {
-        case RoundingMode::DOWN: if (mSign != eSign) mode = RoundingMode::UP; break;
-        case RoundingMode::UP:   if (mSign != eSign) mode = RoundingMode::DOWN; break;
-        case RoundingMode::ZERO: mode = eSign ? RoundingMode::UP : RoundingMode::DOWN; break;
-        default: break;
+        case RoundingMode::NEAREST: return (frac >> 63) != 0;
+        case RoundingMode::DOWN:    return negative && frac;
+        case RoundingMode::UP:      return !negative && frac;
+        default:                    return false;
     }
-    Dec a = { 0x3FFF, makeU128(1ULL << 63, 0) };
-    Dec m = { 0x4002, makeU128(0xA000000000000000ULL, 0) };
+}
 
-    for (; scale; scale >>= 1) {
-        if (scale & 1) a = mulRounded(a, m, mode);
-        m = mul(m, m);
+// Rounds the 64.64 fixed-point number 'ip.frac' to an integer
+u64 roundInteger(bool negative, RoundingMode mode, u64 ip, u64 frac)
+{
+    if (!incrementsMagnitude(negative, mode, frac)) return ip;
+
+    ip++;
+    if (mode == RoundingMode::NEAREST && frac == 1ULL << 63) ip &= ~1ULL;
+    return ip;
+}
+
+// Rounds the significand to 64 bits (the lower half is cleared)
+BinFloat round64(bool negative, BinFloat a, RoundingMode mode)
+{
+    u64 ip = hi64(a.sig);
+    u64 r = roundInteger(negative, mode, ip, lo64(a.sig));
+
+    if (r == 0) {
+        if (ip) { a.exp++; r = 1ULL << 63; }    // Carry out of the significand
+        else    { a.exp = 0; }                  // Zero
     }
+    a.sig = makeU128(r, 0);
     return a;
 }
 
-u64 tenToIntDec(int scale)
+// Rounds the scaled value to an integer
+u64 roundMagnitude(bool negative, const BinFloat &z, RoundingMode mode, bool &inexact)
 {
-    u64 x = 1, m = 10;
-    for (; scale; scale >>= 1) { if (scale & 1) x *= m; m *= m; }
-    return x;
+    u128 fixed = shiftRightJam128(z.sig, 0x403E - z.exp);
+
+    inexact = lo64(fixed) != 0;
+    return roundInteger(negative, mode, hi64(fixed), lo64(fixed));
 }
 
-// Converts the scaled value to an integer
-u64 toInt64(bool sign, Dec z, RoundingMode mode, bool &inexact)
+/* Selects the rounding mode for a power of ten. The factor is rounded such
+ * that the final result moves in the direction of the requested mode. If the
+ * factor is a divisor (inverse), the direction is reversed.
+ */
+RoundingMode factorMode(RoundingMode mode, bool negative, bool inverse)
 {
-    u128 s = shiftRightJam128(z.sig, 0x403E - z.exp);
-    u64 s0 = hi64(s), s1 = lo64(s);
-    bool nearest = mode == RoundingMode::NEAREST;
-    bool inc = i64(s1) < 0;
-
-    if (!nearest) {
-        if (mode == RoundingMode::ZERO) inc = false;
-        else if (sign) inc = mode == RoundingMode::DOWN && s1;
-        else inc = mode == RoundingMode::UP && s1;
+    switch (mode) {
+        case RoundingMode::DOWN: return negative != inverse ? RoundingMode::UP : RoundingMode::DOWN;
+        case RoundingMode::UP:   return negative != inverse ? RoundingMode::DOWN : RoundingMode::UP;
+        case RoundingMode::ZERO: return inverse ? RoundingMode::UP : RoundingMode::DOWN;
+        default:                 return mode;
     }
-    if (inc) {
-        ++s0;
-        if ((s1 << 1) == 0 && nearest) s0 &= ~1ULL;
-    }
-    inexact = s1 != 0;
-    return s0;
 }
 
-// Estimates floor(log10(value)) from the exponent and the significand
-i32 getDecimalExponent(i32 aExp, u64 aSig)
+// Computes 10^n
+BinFloat powerOfTen(int n, RoundingMode mode)
 {
-    if (aSig == 0 || aExp == 0x3FFF) return 0;
-    if (aExp < 0) return -4932;
+    BinFloat result { 0x3FFF, makeU128(1ULL << 63, 0) };
+    BinFloat square { 0x4002, makeU128(0xA000000000000000ULL, 0) };
 
-    aSig ^= 1ULL << 63;
-    aExp -= 0x3FFF;
-    bool zSign = aExp < 0;
-    aExp = zSign ? -aExp : aExp;
-    int shiftCount = 31 - std::countl_zero(u32(aExp));
-    i32 zExp = 0x3FFF + shiftCount;
-    u128 z;
+    for (; n; n >>= 1) {
+        if (n & 1) result = round64(false, mul(result, round64(false, square, mode)), mode);
+        square = mul(square, square);
+    }
+    return result;
+}
 
-    if (shiftCount < 0) {
-        z = makeU128(aSig, 0) << -shiftCount;
-    } else {
-        z = makeU128(aSig, 0) >> shiftCount;
-        u128 e = makeU128(u64(aExp) << (63 - shiftCount), 0);
-        z = zSign ? e - z : e + z;
+// Computes 10^n as an integer
+u64 integerPowerOfTen(int n)
+{
+    u64 result = 1;
+    while (n-- > 0) result *= 10;
+    return result;
+}
+
+/* Estimates the decimal exponent of a value. The binary logarithm is
+ * approximated by the sum of the binary exponent and the fraction of the
+ * significand. The estimate can be off by one in either direction.
+ */
+i32 estimateDecimalExponent(i32 exp, u64 sig)
+{
+    if (sig == 0 || exp == 0x3FFF) return 0;
+    if (exp < 0) return -4932;
+
+    // Compute |e + f| as a number with 64 fractional bits
+    i32 e = exp - 0x3FFF;
+    u64 f = (sig ^ 1ULL << 63) << 1;
+    u128 v = u128(e < 0 ? -e : e) << 64;
+    v = e < 0 ? v - f : v + f;
+
+    // Multiply by log10(2) (as a 0.128 fixed-point number) and round to an integer
+    u128 hi, lo;
+    mul128To256(v, makeU128(0x4D104D427DE7FBCCULL, 0x47C4ACD605BE48BCULL), hi, lo);
+    u64 n = hi64(hi) + (lo64(hi) >> 63);
+
+    return e < 0 ? -i32(n) : i32(n);
+}
+
+// Number of digits to generate for a given k-factor
+int digitCount(int &k, i32 &exp10, FpuEnv &env)
+{
+    // A positive k-factor requests k significant digits
+    if (k > 0) {
+        if (k > 17) { k = 17; env.raiseFlags(FloatFlags::INVALID); }
+        return k;
     }
 
-    int lz = std::min(63, clz128(z));
-    z <<= lz;
-    zExp -= lz;
-
-    // Multiply by log10(2)
-    Dec d = mul({ zExp, z }, { 0x3FFD, makeU128(0x9A209A84FBCFF798ULL, 0x8F8959AC0B7C9178ULL) });
-    u128 s = shiftRightJam128(d.sig, 0x403E - d.exp);
-    u64 s0 = hi64(s), s1 = lo64(s);
-    if (i64(s1) < 0) { ++s0; s0 &= ~(u64((s1 << 1) == 0)); }
-
-    return (i32)(zSign ? (0 - s0) : s0);
+    // Otherwise, -k digits are requested right of the decimal point
+    int len = std::clamp(exp10 + 1 - k, 1, 17);
+    if (k > exp10) exp10 = k;
+    return len;
 }
 
 }
@@ -349,45 +318,42 @@ FpuFormats::fromPacked(FpuEnv &env, const u32 (&w)[3])
     FpuEnv::Scope scope(env);
     env.setPrecision(Precision::EXTENDED);
 
-    bool sm = w[0] >> 31;
+    bool negative = w[0] >> 31;
 
     // Infinities and NaNs
     if (((w[0] >> 16) & 0x7FFF) == 0x7FFF) {
 
         u64 man = u64(w[1]) << 32 | w[2];
-        return MFloat80::fromBits(sm ? 0xFFFF : 0x7FFF, man);
+        return MFloat80::fromBits(negative ? 0xFFFF : 0x7FFF, man);
     }
 
     // Zero (the exponent is irrelevant if the mantissa is zero)
-    if (!(w[0] & 0xF) && !w[1] && !w[2]) return MFloat80::zero(sm);
+    if (!(w[0] & 0xF) && !w[1] && !w[2]) return MFloat80::zero(negative);
 
-    /* The conversion follows the algorithm of the reference implementation
-     * (UAE's floatdecimal_to_floatx80). The mantissa is scaled by a power of
-     * ten that is approximated with 128-bit precision.
-     */
-
-    // Extract the exponent (three digits)
-    i32 exp = bcd(w[0], 24) * 100 + bcd(w[0], 20) * 10 + bcd(w[0], 16);
-    bool se = (w[0] >> 30) & 1;
-    if (se) exp = -exp;
-    exp -= 16;
-    if (exp < 0) { exp = -exp; se = true; }
-
-    // Extract the mantissa
+    // Read the 17 mantissa digits as an integer
     u64 mant = w[0] & 0xF;
     for (int i = 28; i >= 0; i -= 4) mant = mant * 10 + ((w[1] >> i) & 0xF);
     for (int i = 28; i >= 0; i -= 4) mant = mant * 10 + ((w[2] >> i) & 0xF);
 
+    // Read the three exponent digits. The integer mantissa is 10^16 times
+    // larger than the decimal mantissa, which is compensated in the exponent.
+    i32 exp10 = bcd(w[0], 24) * 100 + bcd(w[0], 20) * 10 + bcd(w[0], 16);
+    if ((w[0] >> 30) & 1) exp10 = -exp10;
+    exp10 -= 16;
+
     // Scale the mantissa
+    RoundingMode mode = env.roundingMode();
+    bool inverse = exp10 < 0;
+    BinFloat factor = powerOfTen(inverse ? -exp10 : exp10, factorMode(mode, negative, inverse));
+
     int shift = std::countl_zero(mant);
-    Dec z = { 0x403E - shift, makeU128(mant << shift, 0) };
-    Dec x = tenToInt(sm, se, exp & 0x3FFF, env.roundingMode());
-    z = se ? div(z, x) : mul(z, x);
+    BinFloat z { 0x403E - shift, makeU128(mant << shift, 0) };
+    z = inverse ? div(z, factor) : mul(z, factor);
 
     if (lo64(z.sig)) env.raiseFlags(FloatFlags::INEXACT);
-    roundTo64(sm, z, env.roundingMode());
+    z = round64(negative, z, mode);
 
-    return MFloat80::fromBits(u16(sm << 15 | z.exp), hi64(z.sig));
+    return MFloat80::fromBits(u16(negative << 15 | z.exp), hi64(z.sig));
 }
 
 void
@@ -414,84 +380,63 @@ FpuFormats::toPacked(FpuEnv &env, const MFloat80 &value, int k, u32 (&w)[3])
     // Zero
     if (value.isZero()) { w[0] = sign; return; }
 
-    /* The conversion follows the algorithm of the reference implementation
-     * (UAE's floatx80_to_floatdecimal). It scales the value by a power of ten
-     * that is approximated with 128-bit precision. Hence, the digits may differ
-     * from the correctly rounded result in rare cases, which is the behavior
-     * of the real hardware.
-     */
-    u64 aSig = value.mantissa();
-    i32 aExp = (i32)value.biasedExponent();
-    bool aSign = value.sign();
+    u64 sig = value.mantissa();
+    i32 exp = (i32)value.biasedExponent();
+    bool negative = value.sign();
+    RoundingMode mode = env.roundingMode();
 
-    // Normalize denormals. As in the reference, the exponent of a denormal is regarded as 0 (not 1)
-    if (aExp == 0) {
-        int shift = std::countl_zero(aSig);
-        aExp = -shift;
-        aSig <<= shift;
+    // Normalize denormals. The exponent of a denormal is regarded as 0 (not 1).
+    if (exp == 0) {
+        int shift = std::countl_zero(sig);
+        exp = -shift;
+        sig <<= shift;
     }
 
-    i32 kfactor = k;
-    i32 ilog = getDecimalExponent(aExp, aSig);
-    RoundingMode mode = env.roundingMode();
-    bool retried = false;
-    i32 len;
-    u64 decSig;
+    /* The value is scaled by a power of ten such that the requested digits
+     * form an integer. Because the exponent is only estimated, the result
+     * might have too many or too few digits. In this case, the estimate is
+     * corrected and the scaling is repeated once.
+     */
+    i32 exp10 = estimateDecimalExponent(exp, sig);
+    int len;
+    u64 digits;
 
-    for (;;) {
+    for (int pass = 0; ; pass++) {
 
-        if (kfactor > 0) {
-            if (kfactor > 17) { kfactor = 17; env.raiseFlags(FloatFlags::INVALID); }
-            len = kfactor;
-        } else {
-            len = std::clamp(ilog + 1 - kfactor, 1, 17);
-            if (kfactor > ilog) ilog = kfactor;
-        }
+        len = digitCount(k, exp10, env);
 
-        bool lambda = false;
-        i32 iscale = ilog + 1 - len;
-        if (iscale < 0) { lambda = true; iscale = -iscale; }
-
-        Dec x = tenToInt(lambda, false, iscale, mode);
-        Dec z = { aExp, makeU128(aSig, 0) };
-        z = lambda ? mul(z, x) : div(z, x);
+        i32 scale = exp10 + 1 - len;
+        bool up = scale < 0;
+        BinFloat factor = powerOfTen(up ? -scale : scale, factorMode(mode, up, false));
+        BinFloat z { exp, makeU128(sig, 0) };
+        z = up ? mul(z, factor) : div(z, factor);
 
         bool inexact;
-        decSig = toInt64(aSign, z, mode, inexact);
+        digits = roundMagnitude(negative, z, mode, inexact);
         if (inexact) env.raiseFlags(FloatFlags::INEXACT);
 
-        if (!retried) {
+        u64 smallest = integerPowerOfTen(len - 1);
+        if (pass == 1 || (digits >= smallest && digits <= smallest * 10)) break;
 
-            u64 decX = tenToIntDec(len - 1);
-            if (decSig < decX) { ilog -= 1; retried = true; continue; }
-            if (decSig > decX * 10) { ilog += 1; retried = true; continue; }
-        }
-        break;
+        exp10 += digits < smallest ? -1 : 1;
     }
 
-    // Assemble the exponent
-    u32 exponent = u32(ilog < 0 ? -ilog : ilog);
-    if (exponent > 999) env.raiseFlags(FloatFlags::INVALID);
+    // Assemble the exponent (four digits)
+    u32 e = u32(exp10 < 0 ? -exp10 : exp10);
+    if (e > 999) env.raiseFlags(FloatFlags::INVALID);
 
-    u32 packExp = 0, packExp4 = 0;
-    for (int i = 3; i >= 0; i--) {
-        u32 digit = exponent % 10;
-        exponent /= 10;
-        if (i == 0) packExp4 = digit; else packExp |= digit << (12 - i * 4);
+    u32 expWord = (e / 100 % 10) << 24 | (e / 10 % 10) << 20 | (e % 10) << 16 | (e / 1000) << 12;
+
+    // Assemble the mantissa (the first digit goes into w[0], the rest into w[1] and w[2])
+    u64 fraction = 0;
+    for (int i = len - 1; i > 0; i--) {
+        fraction |= (digits % 10) << (64 - i * 4);
+        digits /= 10;
     }
 
-    // Assemble the mantissa
-    u32 packInt = 0;
-    u64 packFrac = 0;
-    for (int i = len - 1; i >= 0; i--) {
-        u64 digit = decSig % 10;
-        decSig /= 10;
-        if (i == 0) packInt = (u32)digit; else packFrac |= digit << (64 - i * 4);
-    }
-
-    w[0] = sign | (ilog < 0 ? 0x40000000 : 0) | packExp << 16 | packExp4 << 12 | packInt;
-    w[1] = u32(packFrac >> 32);
-    w[2] = u32(packFrac);
+    w[0] = sign | (exp10 < 0 ? 0x40000000 : 0) | expWord | u32(digits % 10);
+    w[1] = u32(fraction >> 32);
+    w[2] = u32(fraction);
 }
 
 }
