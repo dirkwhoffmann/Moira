@@ -6,7 +6,6 @@
 // -----------------------------------------------------------------------------
 
 #include "FpuFormats.h"
-#include "BigNum.h"
 #include <algorithm>
 #include <bit>
 #include <vector>

@@ -485,7 +485,6 @@
 		50A200000000000000000001 /* libUAECpu.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libUAECpu.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		50A300000000000000000001 /* FloatMath.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FloatMath.cpp; sourceTree = "<group>"; };
 		50A300000000000000000002 /* FloatMath.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FloatMath.h; sourceTree = "<group>"; };
-		50A300000000000000000003 /* BigNum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BigNum.h; sourceTree = "<group>"; };
 		50A400000000000000000F01 /* disasm.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = disasm.cpp; sourceTree = "<group>"; };
 		50B100000000000000000001 /* Shared.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Shared.cpp; sourceTree = "<group>"; };
 		50B100000000000000000002 /* Shared.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Shared.h; sourceTree = "<group>"; };
@@ -911,7 +910,6 @@
 				505A80C23098B1AD00E2E307 /* softfloat */,
 				505A81023098E38500E2E307 /* FPU.h */,
 				505A81033098E38500E2E307 /* FPU.cpp */,
-				50A300000000000000000003 /* BigNum.h */,
 				505A80FF3098B1C600E2E307 /* Float80.h */,
 				505A81003098B1C600E2E307 /* Float80.cpp */,
 				50C2000000000000000000A1 /* SoftFloat.h */,

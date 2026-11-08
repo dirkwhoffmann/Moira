@@ -577,6 +577,12 @@ static void testTranscendental()
     Float80 sb = fpu.fsin(big);
     CHECK(near(sb, -0.87218360541826730978L));
 
+    // The same over the whole exponent range (reference values computed offline)
+    CHECK(near(fpu.fsin(Float80::fromBits(0x43E7, 0xC90FDAA22168C235ULL)), 5.4615075860254161593e-2L));
+    CHECK(near(fpu.fsin(Float80::fromBits(0x5387, 0x9234567812345678ULL)), 2.0921589978593592610e-1L));
+    CHECK(near(fpu.fsin(Float80::fromBits(0x7FFE, 0xFFFFFFFFFFFFFFFFULL)), 9.9215109912352649594e-1L));
+    CHECK(near(fpu.fsin(Float80::fromBits(0x4010, 0xB504F333F9DE6484ULL)), -3.9742371557085848144e-1L));
+
     // Exceptions
     fpu.sf.clearFlags();
     Float80 r = fpu.fsin(Float80::infinity());
