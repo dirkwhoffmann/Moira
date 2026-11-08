@@ -485,6 +485,7 @@
 		50A200000000000000000001 /* libUAECpu.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libUAECpu.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		50A300000000000000000001 /* FloatMath.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FloatMath.cpp; sourceTree = "<group>"; };
 		50A300000000000000000002 /* FloatMath.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FloatMath.h; sourceTree = "<group>"; };
+		50A300000000000000000010 /* Wide.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Wide.h; sourceTree = "<group>"; };
 		50A400000000000000000F01 /* disasm.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = disasm.cpp; sourceTree = "<group>"; };
 		50B100000000000000000001 /* Shared.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Shared.cpp; sourceTree = "<group>"; };
 		50B100000000000000000002 /* Shared.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Shared.h; sourceTree = "<group>"; };
@@ -916,6 +917,7 @@
 				50C2000000000000000000C1 /* SoftFloat.cpp */,
 				50A300000000000000000001 /* FloatMath.cpp */,
 				50A300000000000000000002 /* FloatMath.h */,
+				50A300000000000000000010 /* Wide.h */,
 				505A81043098E38500E2E307 /* FpuFormats.h */,
 				505A81053098E38500E2E307 /* FpuFormats.cpp */,
 			);

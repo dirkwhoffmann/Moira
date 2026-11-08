@@ -6,6 +6,7 @@
 // -----------------------------------------------------------------------------
 
 #include "FpuFormats.h"
+#include "Wide.h"
 #include <algorithm>
 #include <bit>
 #include <vector>
@@ -147,112 +148,32 @@ FpuFormats::toExtended(const Float80 &value, u32 (&w)[3])
 namespace {
 
 /* The packed decimal conversion follows the reference implementation (UAE),
- * which computes with 128-bit values that are stored as pairs of 64-bit words.
- * The helpers below correspond to the macros of the SoftFloat library (add128,
- * sub128, mul64To128, mul128To256, estimateDiv128To64, ...). No compiler
- * specific 128-bit integer type is used.
+ * which computes with 128-bit values and the corresponding SoftFloat helpers
+ * (add128, mul64To128, mul128To256, estimateDiv128To64, ...).
  */
 
-// A 128-bit value
-struct U128 { u64 hi, lo; };
-
 // A 192-bit value
-struct U192 { u64 h; U128 l; };
+struct U192 { u64 h; u128 l; };
 
 // A 128-bit extended-precision intermediate value (the significand includes
 // the integer bit and is stored in the upper 64 bits for a plain extended value)
-struct Dec { i32 exp; U128 sig; };
-
-U128 add(U128 a, U128 b)
-{
-    u64 lo = a.lo + b.lo;
-    return { a.hi + b.hi + (lo < a.lo), lo };
-}
-
-U128 sub(U128 a, U128 b)
-{
-    return { a.hi - b.hi - (a.lo < b.lo), a.lo - b.lo };
-}
-
-bool lt(U128 a, U128 b) { return a.hi < b.hi || (a.hi == b.hi && a.lo < b.lo); }
-bool le(U128 a, U128 b) { return !lt(b, a); }
-bool isZero(U128 a) { return (a.hi | a.lo) == 0; }
-
-// Shifts (the count must be in the range 0 to 127)
-U128 shl(U128 a, int count)
-{
-    if (count == 0) return a;
-    if (count < 64) return { a.hi << count | a.lo >> (64 - count), a.lo << count };
-    return { a.lo << (count - 64), 0 };
-}
-
-U128 shr(U128 a, int count)
-{
-    if (count == 0) return a;
-    if (count < 64) return { a.hi >> count, a.hi << (64 - count) | a.lo >> count };
-    return { 0, a.hi >> (count - 64) };
-}
-
-// Shifts right and sets the least significant bit if any one-bit was shifted out
-U128 shiftJam(U128 a, int count)
-{
-    if (count <= 0) return a;
-    if (count >= 128) return { 0, !isZero(a) };
-
-    U128 z = shr(a, count);
-    z.lo |= !isZero(shl(a, 128 - count));
-    return z;
-}
-
-// Multiplies two 64-bit values
-U128 mul64(u64 a, u64 b)
-{
-    u32 aLow = u32(a), aHigh = u32(a >> 32);
-    u32 bLow = u32(b), bHigh = u32(b >> 32);
-
-    u64 z1 = u64(aLow) * bLow;
-    u64 zMiddleA = u64(aLow) * bHigh;
-    u64 zMiddleB = u64(aHigh) * bLow;
-    u64 z0 = u64(aHigh) * bHigh;
-
-    zMiddleA += zMiddleB;
-    z0 += (u64(zMiddleA < zMiddleB) << 32) + (zMiddleA >> 32);
-    zMiddleA <<= 32;
-    z1 += zMiddleA;
-    z0 += z1 < zMiddleA;
-
-    return { z0, z1 };
-}
+struct Dec { i32 exp; u128 sig; };
 
 // Multiplies a 128-bit value by a 64-bit value
-U192 mul128By64(U128 a, u64 b)
+U192 mul128By64(u128 a, u64 b)
 {
-    U128 low = mul64(a.lo, b);
-    U128 high = mul64(a.hi, b);
-    U128 mid = add(high, { 0, low.hi });
+    u128 low = u128(lo64(a)) * b;
+    u128 mid = u128(hi64(a)) * b + hi64(low);
 
-    return { mid.hi, { mid.lo, low.lo } };
+    return { hi64(mid), makeU128(lo64(mid), lo64(low)) };
 }
 
-// Multiplies two 128-bit values
-void mul256(U128 a, U128 b, U128 &hi, U128 &lo)
-{
-    U128 p11 = mul64(a.lo, b.lo);
-    U128 p10 = mul64(a.lo, b.hi);
-    U128 p01 = mul64(a.hi, b.lo);
-    U128 p00 = mul64(a.hi, b.hi);
-
-    U128 mid = add(add({ 0, p11.hi }, { 0, p10.lo }), { 0, p01.lo });
-    lo = { p11.lo, mid.lo };
-    hi = add(add(add(p00, { 0, p10.hi }), { 0, p01.hi }), { 0, mid.hi });
-}
-
-U192 sub(U192 a, U192 b) { return { a.h - b.h - lt(a.l, b.l), sub(a.l, b.l) }; }
+U192 sub(U192 a, U192 b) { return { a.h - b.h - (a.l < b.l), a.l - b.l }; }
 
 U192 add(U192 a, U192 b)
 {
-    U128 l = add(a.l, b.l);
-    return { a.h + b.h + lt(l, a.l), l };
+    u128 l = a.l + b.l;
+    return { a.h + b.h + (l < a.l), l };
 }
 
 // Returns an approximation to the 64-bit quotient of a 128-bit value divided by b.
@@ -263,13 +184,13 @@ u64 estimateDiv128To64(u64 a0, u64 a1, u64 b)
 
     u64 b0 = b >> 32;
     u64 z = (b0 << 32 <= a0) ? 0xFFFFFFFF00000000ULL : (a0 / b0) << 32;
-    U128 rem = sub({ a0, a1 }, mul64(b, z));
+    u128 rem = makeU128(a0, a1) - u128(b) * z;
 
-    while (i64(rem.hi) < 0) {
+    while (i64(hi64(rem)) < 0) {
         z -= 0x100000000ULL;
-        rem = add(rem, { b0, b << 32 });
+        rem += makeU128(b0, b << 32);
     }
-    u64 r0 = rem.hi << 32 | rem.lo >> 32;
+    u64 r0 = hi64(rem) << 32 | lo64(rem) >> 32;
     z |= (b0 << 32 <= r0) ? 0xFFFFFFFFULL : r0 / b0;
     return z;
 }
@@ -277,7 +198,7 @@ u64 estimateDiv128To64(u64 a0, u64 a1, u64 b)
 // Rounds a 128-bit significand to 64 bits
 void roundTo64(bool sign, Dec &a, RoundingMode mode)
 {
-    u64 s0 = a.sig.hi, s1 = a.sig.lo;
+    u64 s0 = hi64(a.sig), s1 = lo64(a.sig);
     bool nearest = mode == RoundingMode::NEAREST;
     bool inc = i64(s1) < 0;
 
@@ -292,17 +213,17 @@ void roundTo64(bool sign, Dec &a, RoundingMode mode)
     } else if (s0 == 0) {
         a.exp = 0;
     }
-    a.sig = { s0, 0 };
+    a.sig = makeU128(s0, 0);
 }
 
 Dec mul(Dec a, Dec b)
 {
-    U128 hi, lo;
-    mul256(a.sig, b.sig, hi, lo);
-    hi.lo |= !isZero(lo);
+    u128 hi, lo;
+    mul128To256(a.sig, b.sig, hi, lo);
+    hi |= lo != 0;
 
     Dec z = { a.exp + b.exp - 0x3FFE, hi };
-    if (0 < i64(z.sig.hi)) { z.sig = shl(z.sig, 1); z.exp--; }
+    if (0 < i64(hi64(z.sig))) { z.sig <<= 1; z.exp--; }
     return z;
 }
 
@@ -316,22 +237,22 @@ Dec mulRounded(Dec a, Dec b, RoundingMode mode)
 
 Dec div(Dec a, Dec b)
 {
-    u64 b0 = b.sig.hi;
+    u64 b0 = hi64(b.sig);
     i32 zExp = a.exp - b.exp + 0x3FFE;
-    if (le(b.sig, a.sig)) { a.sig = shr(a.sig, 1); zExp++; }
+    if (b.sig <= a.sig) { a.sig >>= 1; zExp++; }
 
-    u64 z0 = estimateDiv128To64(a.sig.hi, a.sig.lo, b0);
-    U192 rem = sub(U192{ a.sig.hi, { a.sig.lo, 0 } }, mul128By64(b.sig, z0));
+    u64 z0 = estimateDiv128To64(hi64(a.sig), lo64(a.sig), b0);
+    U192 rem = sub(U192{ hi64(a.sig), makeU128(lo64(a.sig), 0) }, mul128By64(b.sig, z0));
     while (i64(rem.h) < 0) { z0--; rem = add(rem, U192{ 0, b.sig }); }
 
-    u64 z1 = estimateDiv128To64(rem.l.hi, rem.l.lo, b0);
+    u64 z1 = estimateDiv128To64(hi64(rem.l), lo64(rem.l), b0);
     if ((z1 & 0x3FFF) <= 4) {
         U192 term = mul128By64(b.sig, z1);
-        rem = sub(U192{ rem.l.hi, { rem.l.lo, 0 } }, term);
+        rem = sub(U192{ hi64(rem.l), makeU128(lo64(rem.l), 0) }, term);
         while (i64(rem.h) < 0) { z1--; rem = add(rem, U192{ 0, b.sig }); }
-        z1 |= (rem.h | !isZero(rem.l)) != 0;
+        z1 |= (rem.h | (rem.l != 0)) != 0;
     }
-    return { zExp, { z0, z1 } };
+    return { zExp, makeU128(z0, z1) };
 }
 
 // Computes 10^scale with 128-bit precision
@@ -344,8 +265,8 @@ Dec tenToInt(bool mSign, bool eSign, int scale, RoundingMode mode)
         case RoundingMode::ZERO: mode = eSign ? RoundingMode::UP : RoundingMode::DOWN; break;
         default: break;
     }
-    Dec a = { 0x3FFF, { 1ULL << 63, 0 } };
-    Dec m = { 0x4002, { 0xA000000000000000ULL, 0 } };
+    Dec a = { 0x3FFF, makeU128(1ULL << 63, 0) };
+    Dec m = { 0x4002, makeU128(0xA000000000000000ULL, 0) };
 
     for (; scale; scale >>= 1) {
         if (scale & 1) a = mulRounded(a, m, mode);
@@ -364,8 +285,8 @@ u64 tenToIntDec(int scale)
 // Converts the scaled value to an integer
 u64 toInt64(bool sign, Dec z, RoundingMode mode, bool &inexact)
 {
-    U128 s = shiftJam(z.sig, 0x403E - z.exp);
-    u64 s0 = s.hi, s1 = s.lo;
+    u128 s = shiftRightJam128(z.sig, 0x403E - z.exp);
+    u64 s0 = hi64(s), s1 = lo64(s);
     bool nearest = mode == RoundingMode::NEAREST;
     bool inc = i64(s1) < 0;
 
@@ -394,24 +315,24 @@ i32 getDecimalExponent(i32 aExp, u64 aSig)
     aExp = zSign ? -aExp : aExp;
     int shiftCount = 31 - std::countl_zero(u32(aExp));
     i32 zExp = 0x3FFF + shiftCount;
-    U128 z;
+    u128 z;
 
     if (shiftCount < 0) {
-        z = shl({ aSig, 0 }, -shiftCount);
+        z = makeU128(aSig, 0) << -shiftCount;
     } else {
-        z = shr({ aSig, 0 }, shiftCount);
-        U128 e = { u64(aExp) << (63 - shiftCount), 0 };
-        z = zSign ? sub(e, z) : add(e, z);
+        z = makeU128(aSig, 0) >> shiftCount;
+        u128 e = makeU128(u64(aExp) << (63 - shiftCount), 0);
+        z = zSign ? e - z : e + z;
     }
 
-    int lz = std::min(63, z.hi ? std::countl_zero(z.hi) : 64);
-    z = shl(z, lz);
+    int lz = std::min(63, clz128(z));
+    z <<= lz;
     zExp -= lz;
 
     // Multiply by log10(2)
-    Dec d = mul({ zExp, z }, { 0x3FFD, { 0x9A209A84FBCFF798ULL, 0x8F8959AC0B7C9178ULL } });
-    U128 s = shiftJam(d.sig, 0x403E - d.exp);
-    u64 s0 = s.hi, s1 = s.lo;
+    Dec d = mul({ zExp, z }, { 0x3FFD, makeU128(0x9A209A84FBCFF798ULL, 0x8F8959AC0B7C9178ULL) });
+    u128 s = shiftRightJam128(d.sig, 0x403E - d.exp);
+    u64 s0 = hi64(s), s1 = lo64(s);
     if (i64(s1) < 0) { ++s0; s0 &= ~(u64((s1 << 1) == 0)); }
 
     return (i32)(zSign ? (0 - s0) : s0);
@@ -462,14 +383,14 @@ FpuFormats::fromPacked(const u32 (&w)[3], SoftFloat &sf)
 
     // Scale the mantissa
     int shift = std::countl_zero(mant);
-    Dec z = { 0x403E - shift, { mant << shift, 0 } };
+    Dec z = { 0x403E - shift, makeU128(mant << shift, 0) };
     Dec x = tenToInt(sm, se, exp & 0x3FFF, sf.roundingMode());
     z = se ? div(z, x) : mul(z, x);
 
-    if (z.sig.lo) sf.raiseFlags(FloatFlags::INEXACT);
+    if (lo64(z.sig)) sf.raiseFlags(FloatFlags::INEXACT);
     roundTo64(sm, z, sf.roundingMode());
 
-    return Float80::fromBits(u16(sm << 15 | z.exp), z.sig.hi).in(sf);
+    return Float80::fromBits(u16(sm << 15 | z.exp), hi64(z.sig)).in(sf);
 }
 
 void
@@ -536,7 +457,7 @@ FpuFormats::toPacked(const Float80 &value, int k, u32 (&w)[3])
         if (iscale < 0) { lambda = true; iscale = -iscale; }
 
         Dec x = tenToInt(lambda, false, iscale, mode);
-        Dec z = { aExp, { aSig, 0 } };
+        Dec z = { aExp, makeU128(aSig, 0) };
         z = lambda ? mul(z, x) : div(z, x);
 
         bool inexact;

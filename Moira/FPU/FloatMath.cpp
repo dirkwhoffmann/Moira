@@ -6,6 +6,7 @@
 // -----------------------------------------------------------------------------
 
 #include "FloatMath.h"
+#include "Wide.h"
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -13,8 +14,6 @@
 namespace MOIRA_NAMESPACE {
 
 namespace {
-
-using u128 = unsigned __int128;
 
 
 //
@@ -36,12 +35,6 @@ struct W {
 
     bool zero() const { return m == 0; }
 };
-
-int clz128(u128 x)
-{
-    u64 hi = u64(x >> 64);
-    return hi ? std::countl_zero(hi) : 64 + std::countl_zero(u64(x));
-}
 
 // Creates a number of value m * 2^(e - 127)
 W norm(bool neg, i32 e, u128 m)
@@ -74,19 +67,10 @@ double toDouble(const W &w)
 
 W operator-(W a) { a.neg = !a.neg; return a; }
 
-// Returns the high 128 bits of a 256-bit product
-u128 mulhi(u128 a, u128 b)
-{
-    u64 a0 = u64(a), a1 = u64(a >> 64), b0 = u64(b), b1 = u64(b >> 64);
-    u128 p00 = u128(a0) * b0, p01 = u128(a0) * b1, p10 = u128(a1) * b0, p11 = u128(a1) * b1;
-    u128 mid = (p00 >> 64) + u64(p01) + u64(p10);
-    return p11 + (p01 >> 64) + (p10 >> 64) + (mid >> 64);
-}
-
 W operator*(const W &a, const W &b)
 {
     if (a.zero() || b.zero()) { W z; z.neg = a.neg != b.neg; return z; }
-    return norm(a.neg != b.neg, a.e + b.e + 1, mulhi(a.m, b.m));
+    return norm(a.neg != b.neg, a.e + b.e + 1, mulHigh128(a.m, b.m));
 }
 
 W operator+(W a, W b)
