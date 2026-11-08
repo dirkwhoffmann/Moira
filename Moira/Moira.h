@@ -10,6 +10,7 @@
 #include "MoiraConfig.h"
 #include "MoiraTypes.h"
 #include "MoiraDebugger.h"
+#include "Cache.h"
 #include "FPU/FPU.h"
 #include "MMU/MMU.h"
 
@@ -96,8 +97,13 @@ protected:
     // Prefetch queue for fetching instructions
     PrefetchQueue queue {};
 
-    // Instruction cache (68020 only)
-    InstructionCache iCache {};
+    // Instruction cache (68020 and up) and data cache (68030)
+    Cache iCache {};
+    Cache dCache {};
+    CacheLatch iLatch {};
+
+    // Indicates that the data cache is enabled
+    bool dCacheOn = false;
 
     // Speed trackers (68020 only)
     CycleBudget budget {};
@@ -856,7 +862,7 @@ private:
     u8 mmuFC(u16 ext) const;
 
     // Translates a logical address to a physical address
-    template <Core C, bool write, Size S> u32 translate(u32 addr, u8 fc);
+    template <Core C, bool write, Size S> u32 translate(u32 addr, u8 fc, bool *ci = nullptr);
 
 
 private:

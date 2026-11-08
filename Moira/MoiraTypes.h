@@ -369,27 +369,10 @@ struct PrefetchQueue {
     u16 ird;                    // The instruction currently being executed
 };
 
-struct CacheLine {
-
-    u32 data;
-    u32 tag;
-    bool valid;
-};
-
 struct CacheLatch {
 
     u32 addr;
     u32 data;
-};
-
-struct InstructionCache {
-
-    static constexpr int lineCnt = 64;
-    static constexpr u32 idxMask = 0x000000FC;
-    static constexpr u32 tagMask = 0xFFFFFF00;
-
-    CacheLine cache[lineCnt];
-    CacheLatch latch;
 };
 
 struct CycleBudget { // 68020 only
@@ -431,6 +414,22 @@ struct DasmStyle
 //
 // Flags and masks
 //
+
+// Cache control register bits (68020 and 68030)
+namespace CACR {
+
+static constexpr u32 E      = 1 << 0;   // Enable instruction cache
+static constexpr u32 F      = 1 << 1;   // Freeze instruction cache
+static constexpr u32 CE     = 1 << 2;   // Clear instruction cache entry
+static constexpr u32 C      = 1 << 3;   // Clear instruction cache
+static constexpr u32 IBE    = 1 << 4;   // Enable instruction burst fills (68030)
+static constexpr u32 ED     = 1 << 8;   // Enable data cache (68030)
+static constexpr u32 FD     = 1 << 9;   // Freeze data cache (68030)
+static constexpr u32 CED    = 1 << 10;  // Clear data cache entry (68030)
+static constexpr u32 CD     = 1 << 11;  // Clear data cache (68030)
+static constexpr u32 DBE    = 1 << 12;  // Enable data burst fills (68030)
+static constexpr u32 WA     = 1 << 13;  // Write allocate (68030)
+}
 
 // Special status word of the 68030 (bus fault stack frames)
 namespace SSW030 {

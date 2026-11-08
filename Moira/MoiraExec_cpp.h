@@ -4587,8 +4587,15 @@ Moira::execDivlMoira(u16 opcode, bool *divByZero)
         {
             auto result = divlsMoira<Word>(dividend, divisor);
 
-            writeD(dh, result.second);
-            writeD(dl, result.first);
+            if(!reg.sr.v) {
+
+                writeD(dh, result.second);
+                writeD(dl, result.first);
+
+            } else {
+
+                setUndefinedDIVSL<C, S>(i64(i32(dividend)), divisor);
+            }
             break;
         }
         case 0b11:

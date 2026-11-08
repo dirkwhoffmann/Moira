@@ -841,7 +841,6 @@ Moira::divlsMoira(i64 a, u32 src)
 
     if ((u64)a == 0x8000000000000000UL && (i32)src == -1) {
 
-        assert(S == Word);
         reg.sr.v = 1;
         return { u32(0), u32(0) };
 
@@ -853,7 +852,6 @@ Moira::divlsMoira(i64 a, u32 src)
         if ((quotient & u64(0xffffffff80000000)) != 0
             && (quotient & u64(0xffffffff80000000)) != u64(0xffffffff80000000)) {
 
-            assert(S != Word);
             reg.sr.v = 1;
             return { u32(0), u32(0) };
 

@@ -26,15 +26,26 @@ public:
 
     using Moira::reg;
     using Moira::mmu;
+    using Moira::iCache;
 
     mutable std::vector<u8> ram = std::vector<u8>(1 << 20);
 
     int enabled = 0;
     int disabled = 0;
 
-    u8 read8(u32 addr) const override { return ram[addr & 0xFFFFF]; }
+    // Bus statistics (data region only, i.e., addresses >= 0x20000)
+    mutable std::vector<u32> longReads;
+    mutable int smallReads = 0;
+    u8 portDsack = DSACK_16;
+
+    u8 dsack(u32 addr) const override { return portDsack; }
+    u8 read8(u32 addr) const override { if ((addr & 0xFFFFF) >= 0x20000) smallReads++; return ram[addr & 0xFFFFF]; }
     u16 read16(u32 addr) const override { return read8(addr) << 8 | read8(addr + 1); }
-    u32 read32(u32 addr) const override { return read16(addr) << 16 | read16(addr + 2); }
+    u32 read32(u32 addr) const override
+    {
+        if ((addr & 0xFFFFF) >= 0x20000) longReads.push_back(addr & 0xFFFFF);
+        return ram[addr & 0xFFFFF] << 24 | ram[(addr + 1) & 0xFFFFF] << 16 | ram[(addr + 2) & 0xFFFFF] << 8 | ram[(addr + 3) & 0xFFFFF];
+    }
     void write8(u32 addr, u8 val) const override { ram[addr & 0xFFFFF] = val; }
     void write16(u32 addr, u16 val) const override { write8(addr, val >> 8); write8(addr + 1, val & 0xFF); }
     void write32(u32 addr, u32 val) const override { write16(addr, val >> 16); write16(addr + 2, val & 0xFFFF); }
@@ -707,8 +718,192 @@ static void testModels()
     CHECK(!cpu.hasMMU());
 }
 
+static constexpr u32 dataBase = 0x20000;
+
+static void testDataCache()
+{
+    // Without a cache, data accesses always reach the bus
+    {
+        TestCPU cpu;
+        cpu.write32(dataBase, 0x11223344);
+        cpu.reg.a[0] = dataBase;
+        cpu.run({ 0x2010, 0x2010 }, 2);             // MOVE.L (A0),D0 (twice)
+        CHECK(cpu.reg.d[0] == 0x11223344);
+        CHECK(cpu.smallReads == 8);
+    }
+
+    // With the cache enabled, the second access is a hit
+    {
+        TestCPU cpu;
+        cpu.write32(dataBase, 0x11223344);
+        cpu.setCACR(CACR::ED);
+        cpu.reg.a[0] = dataBase;
+        cpu.run({ 0x2010, 0x2010 }, 2);
+        CHECK(cpu.reg.d[0] == 0x11223344);
+        CHECK(cpu.smallReads == 4);                 // One longword fetch via a 16-bit port
+
+        // Subword accesses are served from the cached longword
+        cpu.run({ 0x1028, 0x0003 }, 1);             // MOVE.B 3(A0),D0
+        CHECK((cpu.reg.d[0] & 0xFF) == 0x44);
+        CHECK(cpu.smallReads == 4);
+    }
+
+    // Write-through: Memory is updated, a cached longword is updated, too
+    {
+        TestCPU cpu;
+        cpu.write32(dataBase, 0x11223344);
+        cpu.setCACR(CACR::ED);
+        cpu.reg.a[0] = dataBase;
+        cpu.run({ 0x2010 });                        // Fill
+        cpu.reg.d[1] = 0xAA;
+        cpu.run({ 0x1141, 0x0001 });                // MOVE.B D1,1(A0)
+        CHECK(cpu.ram[dataBase + 1] == 0xAA);
+        int reads = cpu.smallReads;
+        cpu.run({ 0x2010 });
+        CHECK(cpu.reg.d[0] == 0x11AA3344);
+        CHECK(cpu.smallReads == reads);
+    }
+
+    // A write miss does not allocate, unless WA is set
+    {
+        TestCPU cpu;
+        cpu.setCACR(CACR::ED);
+        cpu.reg.a[0] = dataBase;
+        cpu.reg.d[1] = 0x55667788;
+        cpu.run({ 0x2081 });                        // MOVE.L D1,(A0)
+        cpu.run({ 0x2010 });
+        CHECK(cpu.smallReads == 4);
+
+        TestCPU cpu2;
+        cpu2.setCACR(CACR::ED | CACR::WA);
+        cpu2.reg.a[0] = dataBase;
+        cpu2.reg.d[1] = 0x55667788;
+        cpu2.run({ 0x2081 });
+        cpu2.run({ 0x2010 });
+        CHECK(cpu2.smallReads == 0);
+        CHECK(cpu2.reg.d[0] == 0x55667788);
+    }
+
+    // Clearing and freezing
+    {
+        TestCPU cpu;
+        cpu.write32(dataBase, 0x11223344);
+        cpu.setCACR(CACR::ED | CACR::FD);
+        cpu.reg.a[0] = dataBase;
+        cpu.run({ 0x2010, 0x2010 }, 2);
+        CHECK(cpu.smallReads == 8);                 // Frozen: no allocation
+
+        cpu.setCACR(CACR::ED);
+        cpu.run({ 0x2010, 0x2010 }, 2);
+        CHECK(cpu.smallReads == 12);
+        cpu.setCACR(CACR::ED | CACR::CD);           // Clear
+        cpu.run({ 0x2010 });
+        CHECK(cpu.smallReads == 16);
+
+        cpu.setCACR(CACR::ED | CACR::CED);          // Clear entry selected by CAAR
+        cpu.setCAAR(dataBase);
+        cpu.setCACR(CACR::ED | CACR::CED);
+        cpu.run({ 0x2010 });
+        CHECK(cpu.smallReads == 20);
+    }
+
+    // Logical tagging: A hit does not involve the MMU
+    {
+        TestCPU cpu;
+        setupShortTables(cpu);
+        cpu.write32(0x5000, 0xCAFEBABE);            // Physical page of logical 0x2000
+        cpu.setCACR(CACR::ED);
+        cpu.reg.a[0] = 0x2000;
+        cpu.run({ 0x2010 });
+        CHECK(cpu.reg.d[0] == 0xCAFEBABE);
+
+        // Invalidate the page, the cached longword is still reachable
+        cpu.write32(tableB + 4 * 2, 0);
+        cpu.mmu.atcFlush();
+        cpu.run({ 0x2010 });
+        CHECK(cpu.reg.d[0] == 0xCAFEBABE);
+        CHECK(cpu.reg.sp == TestCPU::stackStart);   // No exception
+    }
+
+    // Cache-inhibited pages bypass the cache
+    {
+        TestCPU cpu;
+        setupShortTables(cpu);
+        cpu.write32(tableB + 4 * 2, 0x5000 | 1 | 0x40);     // CI bit
+        cpu.write32(0x5000, 0xCAFEBABE);
+        cpu.setCACR(CACR::ED);
+        cpu.reg.a[0] = 0x2000;
+        cpu.run({ 0x2010, 0x2010 }, 2);
+        CHECK(cpu.reg.d[0] == 0xCAFEBABE);
+        CHECK(cpu.smallReads == 0);                 // (data region only counts >= 0x20000)
+        cpu.write32(0x5000, 0x01020304);
+        cpu.run({ 0x2010 });
+        CHECK(cpu.reg.d[0] == 0x01020304);          // Not cached
+    }
+
+    // Burst fills: with a 32-bit port, a miss fetches the entire line in wrap-around order
+    {
+        TestCPU cpu;
+        cpu.portDsack = DSACK_32;
+        for (int i = 0; i < 4; i++) cpu.write32(dataBase + 4 * i, 0x01010101 * (i + 1));
+
+        // Without DBE: one longword
+        cpu.setCACR(CACR::ED);
+        cpu.reg.a[0] = dataBase + 8;
+        cpu.run({ 0x2010 });
+        CHECK(cpu.longReads.size() == 1);
+
+        // With DBE: four longwords, starting with the missed one
+        TestCPU cpu2;
+        cpu2.portDsack = DSACK_32;
+        for (int i = 0; i < 4; i++) cpu2.write32(dataBase + 4 * i, 0x01010101 * (i + 1));
+        cpu2.setCACR(CACR::ED | CACR::DBE);
+        cpu2.reg.a[0] = dataBase + 8;
+        cpu2.run({ 0x2010 });
+        CHECK(cpu2.longReads.size() == 4);
+        if (cpu2.longReads.size() == 4) {
+            CHECK(cpu2.longReads[0] == dataBase + 8);
+            CHECK(cpu2.longReads[1] == dataBase + 12);
+            CHECK(cpu2.longReads[2] == dataBase + 0);
+            CHECK(cpu2.longReads[3] == dataBase + 4);
+        }
+        cpu2.reg.a[0] = dataBase + 4;
+        cpu2.run({ 0x2010 });
+        CHECK(cpu2.longReads.size() == 4);          // Hit
+        CHECK(cpu2.reg.d[0] == 0x02020202);
+
+        // No burst through a 16-bit port
+        TestCPU cpu3;
+        cpu3.setCACR(CACR::ED | CACR::DBE);
+        cpu3.reg.a[0] = dataBase + 8;
+        cpu3.run({ 0x2010 });
+        CHECK(cpu3.smallReads == 4);
+    }
+
+    // The 68020 has no data cache
+    {
+        TestCPU cpu(Model::M68020);
+        cpu.write32(dataBase, 0x11223344);
+        cpu.setCACR(0x3313);
+        cpu.reg.a[0] = dataBase;
+        cpu.run({ 0x2010, 0x2010 }, 2);
+        CHECK(cpu.smallReads == 8);
+    }
+
+    // The instruction cache of the 68030 holds four longwords per line, the 68020 one
+    {
+        TestCPU cpu;
+        CHECK(cpu.iCache.numLongs() == 4);
+        CHECK(cpu.iCache.numLines() == 16);
+        cpu.setModel(Model::M68020);
+        CHECK(cpu.iCache.numLongs() == 1);
+        CHECK(cpu.iCache.numLines() == 64);
+    }
+}
+
 int main()
 {
+    testDataCache();
     testModels();
     testDisabled();
     testShortTables();

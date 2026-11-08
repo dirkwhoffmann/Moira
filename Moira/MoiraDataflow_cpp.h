@@ -631,8 +631,6 @@ Moira::writeLongSplit(u32 addr, u32 val)
 template <Core C, AddrSpace AS, Size S, Flags F> u32
 Moira::read(u32 addr)
 {
-    u32 result;
-
     // Update function code pins
     u8 fc = AS == AddrSpace::DATA ? FC::USER_DATA : FC::USER_PROG;
     setFC(fc);
@@ -642,6 +640,19 @@ Moira::read(u32 addr)
     if (misaligned<C, S>(addr)) {
         throw AddressError(makeFrame<F>(addr));
     }
+
+    // Route data accesses through the data cache (68030)
+    if constexpr (C == Core::C68020 && AS == AddrSpace::DATA) {
+        if (dCacheOn) return readDataCache<C, S, F>(addr);
+    }
+
+    return readBus<C, S, F>(addr);
+}
+
+template <Core C, Size S, Flags F> u32
+Moira::readBus(u32 addr)
+{
+    u32 result;
 
     // Derive the physical address
     addr = translate<C, false, S>(addr, readFC());
@@ -706,31 +717,38 @@ Moira::readInstr(u32 addr)
         throw AddressError(makeFrame<F>(addr));
     }
 
-    // Derive the physical address
-    addr = translate<C, false, Word>(addr, readFC());
-
-    // Check if a watchpoint has been reached
-    if ((flags & State::CHECK_WP) && debugger.watchpointMatches(addr, Word)) {
-        didReachWatchpoint(addr);
-    }
-
-    if constexpr (F & POLL) POLL_IPL;
-
-    u16 result;
     if constexpr (C == Core::C68020) {
 
-        // Route read access through the instruction cache
+        // The caches are addressed logically. The MMU is only involved on a miss.
+        if ((flags & State::CHECK_WP) && debugger.watchpointMatches(addr, Word)) {
+            didReachWatchpoint(addr);
+        }
+        if constexpr (F & POLL) POLL_IPL;
+
         bool busAccess;
-        result = readInstructionCache(addr & addrMask<C>(), busAccess);
-        budget.cp += busAccess ? (portSize(dsack(addr & addrMask<C>())) == 4 ? 0 : 4) : -2;
+        u32 phys;
+        u16 result = readInstructionCache(addr & addrMask<C>(), busAccess, phys);
+        budget.cp += busAccess ? (portSize(dsack(phys)) == 4 ? 0 : 4) : -2;
+
+        return result;
 
     } else {
 
-        result = read16(addr & addrMask<C>());
-        SYNC(2);
-    }
+        // Derive the physical address
+        addr = translate<C, false, Word>(addr, readFC());
 
-    return result;
+        // Check if a watchpoint has been reached
+        if ((flags & State::CHECK_WP) && debugger.watchpointMatches(addr, Word)) {
+            didReachWatchpoint(addr);
+        }
+
+        if constexpr (F & POLL) POLL_IPL;
+
+        u16 result = read16(addr & addrMask<C>());
+        SYNC(2);
+
+        return result;
+    }
 }
 
 template <Core C, Mode M, Size S, Flags F> void
@@ -756,8 +774,19 @@ Moira::write(u32 addr, u32 val)
         throw AddressError(makeFrame<F|AE_WRITE>(addr));
     }
 
+    // Keep the data cache coherent (68030)
+    if constexpr (C == Core::C68020 && AS == AddrSpace::DATA) {
+        if (dCacheOn) { writeDataCache<C, S, F>(addr, val); return; }
+    }
+
+    writeBus<C, S, F>(addr, val);
+}
+
+template <Core C, Size S, Flags F> void
+Moira::writeBus(u32 addr, u32 val, bool *ci)
+{
     // Derive the physical address
-    addr = translate<C, true, S>(addr, readFC());
+    addr = translate<C, true, S>(addr, readFC(), ci);
 
     // Check if a watchpoint has been reached
     if ((flags & State::CHECK_WP) && debugger.watchpointMatches(addr, S)) {
@@ -804,6 +833,111 @@ Moira::write(u32 addr, u32 val)
 
             write2x16<C,F>(addr & addrMask<C>(), (addr + 2) & addrMask<C>(),
                               val >> 16, val & 0xFFFF);
+        }
+    }
+}
+
+//
+// Data cache (68030)
+//
+
+template <Core C> bool
+Moira::readDataLong(u32 addr, u8 fc, u32 &result)
+{
+    bool supervisor = fc & 4;
+
+    // Serve the longword from the cache if possible
+    if (dCache.hit(addr, supervisor)) {
+        result = dCache.read(addr);
+        return true;
+    }
+
+    // On a miss, the MMU provides the physical address and the cache-inhibit attribute
+    bool ci;
+    u32 phys = translate<C, false, Long>(addr, fc, &ci) & addrMask<C>() & ~3;
+    if (ci) return false;
+
+    // Load the entire longword, regardless of the size of the access
+    result = busReadLong(phys);
+
+    if (!(reg.cacr & CACR::FD)) {
+
+        dCache.insert(addr, supervisor, result);
+
+        if ((reg.cacr & CACR::DBE) && dCache.validCount(addr) == 1 && portSize(dsack(phys)) == 4) {
+            burstFill(dCache, addr, phys, supervisor);
+        }
+    }
+    return true;
+}
+
+template <Core C, Size S, Flags F> u32
+Moira::readDataCache(u32 addr)
+{
+    u8 fc = readFC();
+
+    u32 offset = addr & 3;
+    bool spans = offset + S > 4;
+    u32 v1, v2 = 0;
+
+    // Read the longword (or the two longwords if the access crosses a boundary)
+    if (!readDataLong<C>(addr & ~3, fc, v1) || (spans && !readDataLong<C>((addr & ~3) + 4, fc, v2))) {
+
+        // The page is cache-inhibited
+        return readBus<C, S, F>(addr);
+    }
+
+    // Check if a watchpoint has been reached
+    if ((flags & State::CHECK_WP) && debugger.watchpointMatches(addr, S)) {
+        didReachWatchpoint(addr);
+    }
+
+    if constexpr (F & POLL) POLL_IPL;
+
+    u64 window = u64(v1) << 32 | v2;
+    u32 mask = S == Long ? 0xFFFFFFFF : S == Word ? 0xFFFF : 0xFF;
+    return u32(window >> (64 - 8 * offset - 8 * S)) & mask;
+}
+
+template <Core C, Size S, Flags F> void
+Moira::writeDataCache(u32 addr, u32 val)
+{
+    u8 fc = readFC();
+    bool supervisor = fc & 4;
+
+    // The cache is write-through. The bus write also reveals the cache-inhibit attribute.
+    bool ci;
+    writeBus<C, S, F>(addr, val, &ci);
+
+    // Place the value in a 64 bit window that covers the two longwords an access can touch
+    u32 offset = addr & 3;
+    u64 mask = (S == Long ? 0xFFFFFFFFULL : S == Word ? 0xFFFFULL : 0xFFULL) << (64 - 8 * offset - 8 * S);
+    u64 data = (u64(val) << (64 - 8 * offset - 8 * S)) & mask;
+
+    bool allocate = (reg.cacr & CACR::WA) && !(reg.cacr & CACR::FD) && !ci;
+
+    for (int i = 0; i < 2; i++) {
+
+        u32 m = i == 0 ? u32(mask >> 32) : u32(mask);
+        u32 d = i == 0 ? u32(data >> 32) : u32(data);
+        u32 a = (addr & ~3) + 4 * i;
+        if (!m) continue;
+
+        if (dCache.hit(a, supervisor)) {
+
+            auto &line = dCache.line(a);
+            int lw = dCache.longword(a);
+
+            if (ci && m == 0xFFFFFFFF && (reg.cacr & CACR::WA)) {
+                dCache.invalidate(a);
+            } else {
+                line.data[lw] = (line.data[lw] & ~m) | d;
+            }
+
+        } else if (allocate && m == 0xFFFFFFFF) {
+
+            // Write allocate: An aligned longword write creates an entry
+            dCache.insert(a, supervisor, d);
         }
     }
 }

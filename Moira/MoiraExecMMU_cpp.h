@@ -137,15 +137,17 @@ Moira::isValidExtMMU(Instr I, Mode M, u16 op, u32 ext) const
 //
 
 template <Core C, bool write, Size S> u32
-Moira::translate(u32 addr, u8 fc)
+Moira::translate(u32 addr, u8 fc, bool *ci)
 {
+    if (ci) *ci = false;
+
     // Only proceed if a MMU capable core is present
     if constexpr (C == Core::C68000 || C == Core::C68010) return addr;
 
     // Only proceed if the MMU is present and enabled
     if (!mmu.isEnabled()) return addr;
 
-    auto physical = mmu.translate(addr, fc, write);
+    auto physical = mmu.translate(addr, fc, write, ci);
     if (!physical) {
 
         auto frame = makeFrame<write ? AE_WRITE : 0>(addr);

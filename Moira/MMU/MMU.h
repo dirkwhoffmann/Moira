@@ -39,6 +39,7 @@ struct AtcEntry {
     bool busError;          // Translation error bit
     bool wp;                // Write protection bit
     bool modified;          // Modification bit
+    bool ci;                // Cache inhibit bit
     bool history;           // Set if the entry was used recently (guides the replacement policy)
 };
 
@@ -130,8 +131,9 @@ public:
     // Checks whether an access matches one of the transparent translation registers
     bool testTT(u32 addr, u8 fc, bool rw) const;
 
-    // Translates a logical address to a physical address
-    std::optional<u32> translate(u32 addr, u8 fc, bool write);
+    // Translates a logical address to a physical address. If 'ci' is provided,
+    // it is set if the access must bypass the on-chip caches.
+    std::optional<u32> translate(u32 addr, u8 fc, bool write, bool *ci = nullptr);
 
     // Creates an ATC entry for a logical address (PLOAD)
     void load(u32 addr, u8 fc, bool write);
@@ -150,7 +152,7 @@ public:
     std::optional<int> atcFind(u32 addr, u8 fc, bool write);
 
     // Creates an ATC entry and returns its line number
-    int atcInsert(u32 addr, u8 fc, u32 physical, u32 status);
+    int atcInsert(u32 addr, u8 fc, u32 physical, u32 status, bool ci);
 
     // Invalidates one or more ATC entries
     void atcFlush();

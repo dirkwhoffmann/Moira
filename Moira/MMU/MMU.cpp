@@ -56,6 +56,9 @@ struct MmuContext {
     // Indicates that the page has been modified (M bit of the page descriptor)
     bool modified;
 
+    // Cache inhibit bit of the page descriptor
+    bool ci;
+
     // Mask covering the page offset (derived from the page size in the TC register)
     u32 pageMask;
 
@@ -194,10 +197,17 @@ MMU::testTT(u32 ttx, u32 addr, u8 fc, bool rw)
 }
 
 std::optional<u32>
-MMU::translate(u32 addr, u8 fc, bool write)
+MMU::translate(u32 addr, u8 fc, bool write, bool *ci)
 {
-    // Check if transparent translation applies
-    if (fc == 7 || testTT(addr, fc, !write)) return addr;
+    if (ci) *ci = false;
+
+    // CPU space accesses are not translated and not cached
+    if (fc == 7) { if (ci) *ci = true; return addr; }
+
+    // Check if transparent translation applies (the TT registers have a CI bit, too)
+    for (u32 ttx : { tt0, tt1 }) {
+        if (testTT(ttx, addr, fc, !write)) { if (ci) *ci = ttx & (1 << 10); return addr; }
+    }
 
     // Check the cache
     auto line = atcFind(addr, fc, write);
@@ -207,7 +217,7 @@ MMU::translate(u32 addr, u8 fc, bool write)
 
         MmuContext context;
         u32 physAddr = walk(addr, fc, write, context);
-        line = atcInsert(addr, fc, physAddr, context.status());
+        line = atcInsert(addr, fc, physAddr, context.status(), context.ci);
     }
     
     auto &e = atc[*line];
@@ -218,6 +228,7 @@ MMU::translate(u32 addr, u8 fc, bool write)
     // And so do write accesses to write-protected pages
     if (write && e.wp) return std::nullopt;
 
+    if (ci) *ci = e.ci;
     return e.physical | (addr & pageMask());
 }
 
@@ -228,7 +239,7 @@ MMU::load(u32 addr, u8 fc, bool write)
 
     MmuContext context;
     u32 physAddr = walk(addr, fc, write, context, false, 0);
-    atcInsert(addr, fc, physAddr, context.status());
+    atcInsert(addr, fc, physAddr, context.status(), context.ci);
 }
 
 u32
@@ -323,7 +334,7 @@ MMU::atcFindUnused()
 }
 
 int
-MMU::atcInsert(u32 addr, u8 fc, u32 physical, u32 status)
+MMU::atcInsert(u32 addr, u8 fc, u32 physical, u32 status, bool ci)
 {
     // Find the first free entry
     auto line = atcFindFree();
@@ -346,6 +357,7 @@ MMU::atcInsert(u32 addr, u8 fc, u32 physical, u32 status)
     e.busError  = status & (MMUSR_INVALID | MMUSR_SUPERVISOR_ONLY);
     e.wp        = status & MMUSR_WRITE_PROTECTED;
     e.modified  = status & MMUSR_MODIFIED;
+    e.ci        = ci;
 
     return *line;
 }
@@ -539,8 +551,9 @@ MMU::lookupShort(char table, u32 taddr, u32 offset, bool write, MmuContext &c)
             // | 08  |   24   | Page Address                    |
             // +-----+--------+---------------------------------+
 
-            // Record WP
+            // Record WP and CI
             c.wp |= descriptor & 0x4;
+            c.ci = descriptor & 0x40;
 
             // Update the U bit and the M bit (the latter only if the page is writable)
             if (!c.ptest && !c.violation()) {
@@ -685,6 +698,8 @@ MMU::lookupLong(char table, u32 taddr, u32 offset, bool write, MmuContext &c)
         if (dt == 1) {
 
             // Page descriptor (or early termination)
+            c.ci = flags & 0x40;
+
             if (!c.ptest && !c.violation()) {
 
                 u32 flags2 = flags | 0x8;

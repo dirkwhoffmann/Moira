@@ -5,67 +5,95 @@
 // Published under the terms of the MIT License
 // -----------------------------------------------------------------------------
 
-/* The 68020 instruction cache
+/* On-chip caches
  *
- * The 68020 has a small on-chip cache for instruction fetches only; data
- * accesses always go to the bus. It holds 64 lines of one longword each, is
- * direct-mapped (no set associativity), and is indexed by the address, so
- * each of the 16K possible longword addresses maps to exactly one of the 64
- * lines
+ * The 68020 has an instruction cache of 64 longwords. The 68030 has an
+ * instruction cache and a data cache of 256 bytes each, organized as 16 lines
+ * of four longwords. The 68040 models use the 68030 layout for the instruction
+ * cache. A data cache is only emulated for the 68030. See Cache.h for details
+ * on the organization.
  *
- *   index = -------- -------- -------- xxxxxx--      ( (addr >> 2) & 63   )
- *   tag   = xxxxxxxx xxxxxxxx xxxxxxxx -------S      ( S | (addr & ~0xFF) )
+ * Both caches are addressed logically. A hit is served without involving the
+ * MMU, which means that it can neither fault nor update the translation tables.
+ * Only a miss translates the address, which also reveals the cache-inhibit
+ * attribute of the page. Inhibited accesses bypass the caches.
  *
- * where S is the supervisor bit. Folding it into the tag keeps user and
- * supervisor code from aliasing the same line, mirroring the real CPU's
- * separate treatment of the two modes.
+ * The Cache Control Register (CACR) controls the caches:
  *
- * A line becomes valid when it is filled on a miss and is tagged with the
- * address (and S bit) it was fetched for. On a later access, the line at
- * the computed index is used only if it is valid and its tag matches -
- * otherwise it's a miss and the line is refilled from the bus.
+ *   68020                              68030
+ *   Bit 0 (E)  Enable                  Bit 0 (EI)  Enable instruction cache
+ *   Bit 1 (F)  Freeze                  Bit 1 (FI)  Freeze instruction cache
+ *   Bit 2 (CE) Clear entry             Bit 2 (CEI) Clear instruction cache entry
+ *   Bit 3 (C)  Clear                   Bit 3 (CI)  Clear instruction cache
+ *                                      Bit 4 (IBE) Enable instruction burst fills
+ *                                      Bit 8 (ED)  Enable data cache
+ *                                      Bit 9 (FD)  Freeze data cache
+ *                                      Bit 10 (CED) Clear data cache entry
+ *                                      Bit 11 (CD) Clear data cache
+ *                                      Bit 12 (DBE) Enable data burst fills
+ *                                      Bit 13 (WA) Write allocate
  *
- * The Cache Control Register (CACR) gates the whole mechanism:
+ * Clearing the enable bit bypasses the cache entirely. Lookups never hit and
+ * fills never happen. This has to be checked on every lookup, not just on fill,
+ * or the CPU would keep executing stale opcodes after a program disables the
+ * cache mid-flight. Freezing stops new entries from being allocated, but entries
+ * that are already valid keep being served as hits (and are updated by writes).
+ * The clear-entry bits invalidate the longword selected by the CAAR register.
  *
- *   Bit 0 (E)  Enable. Cleared, the cache is bypassed entirely - lookups
- *              never hit and fills never happen, so every fetch goes to
- *              the bus. This has to be checked on every lookup, not just
- *              on fill, or the CPU would keep executing stale opcodes
- *              after a program disables the cache mid-flight.
- *   Bit 1 (F)  Freeze. With E set, freezing stops new lines from being
- *              allocated on a miss, but lines that are already valid keep
- *              being served as hits.
- *   Bit 2 (CE) Clear entry, together with CAAR selecting the line.
- *   Bit 3 (C)  Clear all - invalidates every line.
+ * A miss reads the missing longword. If burst fills are enabled, the cache is
+ * not frozen and the port is 32 bits wide, the remaining longwords of the
+ * line are fetched right behind it (in wrap-around order). A burst fill is
+ * only started if the missed longword is the line's only valid entry. A narrower
+ * port needs two or four smaller transactions per longword and doesn't burst.
+ *
+ * The data cache is write-through. Every write reaches the bus. A write hit
+ * updates the cached bytes. With write allocate (WA), an aligned longword write
+ * allocates the entry. Writes never allocate in an inhibited page.
  *
  * Moira additionally keeps a one-entry "latch" (CacheLatch) in front of the
- * cache array. It records the longword last fetched, keyed by its base
- * address; a hit on the latch needs no cache lookup and no bus cycle at
- * all, modeling the CPU re-reading the same longword for the high and low
+ * instruction cache. It records the longword last fetched, keyed by its base
+ * address; a hit on the latch needs no cache lookup and no bus cycle at all,
+ * modeling the CPU re-reading the same longword for the high and low
  * instruction word of a single fetch, or for consecutive fetches that
  * happen to land in the same longword.
- *
- * A cache line is filled with a single 32 bit bus transaction on a 32 bit
- * port; a narrower port (see dsack) needs two or four smaller transactions.
  */
 
-// Invalidates all cache lines and clears the latch (CACR bit 3, "clear all")
+// Invalidates all lines of the instruction cache and clears the latch (CACR.CI)
 void flushInstructionCache();
 
 // Clears the latch only, forcing the next fetch to consult the cache again
 void flushInstructionLatch();
 
-// Invalidates the single line the given address maps to (CACR bit 2, "clear entry")
+// Invalidates the longword of the instruction cache that an address maps to (CACR.CEI)
 void invalidateCacheEntry(u32 addr);
 
-// Maps an address to its cache line index
-u32 cacheIdx(u32 addr) const;
+// Invalidates all lines of the data cache (CACR.CD)
+void flushDataCache();
 
-// Computes the tag a line must carry to be considered valid for the given address
-u32 cacheTag(u32 addr) const;
+// Invalidates the longword of the data cache that an address maps to (CACR.CED)
+void invalidateDataCacheEntry(u32 addr);
 
-// Serves addr from the cache or refills the line from the bus; returns true on a miss
-bool fillInstructionCache(u32 addr);
+// Selects the cache layout of the emulated CPU and updates the cache state
+void updateCaches();
+
+// Indicates whether the emulated CPU model has a data cache
+bool hasDataCache() const;
+
+// Serves a longword from the instruction cache or refills the line from the bus; returns true on a miss
+bool fillInstructionCache(u32 addr, u32 &phys);
 
 // Reads one instruction word via the latch/cache, reporting whether a bus access was made
-u16 readInstructionCache(u32 addr, bool &busAccess);
+u16 readInstructionCache(u32 addr, bool &busAccess, u32 &phys);
+
+// Reads an aligned longword from the bus, split according to the width of the addressed port
+u32 busReadLong(u32 addr);
+
+// Fetches the missing longwords of a line right behind the longword that has just been loaded
+void burstFill(Cache &cache, u32 logical, u32 physical, bool supervisor);
+
+// Reads data via the data cache
+template <Core C, Size S, Flags F> u32 readDataCache(u32 addr);
+template <Core C> bool readDataLong(u32 addr, u8 fc, u32 &result);
+
+// Writes data via the data cache
+template <Core C, Size S, Flags F> void writeDataCache(u32 addr, u32 val);
