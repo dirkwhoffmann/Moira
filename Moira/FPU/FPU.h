@@ -106,10 +106,10 @@ public:
     FPUModel model = FPUModel::INTERNAL;
 
     // The floating-point environment (rounding mode, precision, exception flags)
-    SoftFloat sf;
+    FpuEnv env;
 
-    // Floating-point data registers FP0 to FP7 (bound to the environment above)
-    Float80 fpr[8];
+    // Floating-point data registers FP0 to FP7
+    MFloat80 fpr[8];
 
     // Control register
     u32 fpcr = 0;
@@ -130,11 +130,7 @@ public:
 
 public:
 
-    FPU() { for (auto &reg : fpr) reg.bind(sf); reset(); }
-
-    // The registers refer to the environment, so an FPU must not be copied
-    FPU(const FPU &) = delete;
-    FPU &operator=(const FPU &) = delete;
+    FPU() { reset(); }
 
     // Initializes all registers with their reset values
     void reset();
@@ -189,7 +185,7 @@ public:
     void setExcStatusBit(u32 mask);
 
     // Sets the condition code byte according to a value
-    void setConditionCodes(const Float80 &value);
+    void setConditionCodes(const MFloat80 &value);
     void setConditionCodes(int reg) { setConditionCodes(fpr[reg & 7]); }
 
     /* Evaluates a floating-point condition (the 5 least significant bits of
@@ -213,24 +209,23 @@ public:
 
 public:
 
-    /* All arithmetic is carried out by Float80. Float80 takes the rounding
-     * mode and the rounding precision from the environment it is bound to and
-     * reports exceptions by raising flags in it. The registers of the FPU are
-     * bound to its own SoftFloat object. A Scope object connects the FPU to
-     * this environment: When created, it loads the rounding mode and
+    /* All arithmetic is carried out by the floating-point environment (FpuEnv),
+     * which takes the rounding mode and the rounding precision from its settings
+     * and reports exceptions by raising flags. A Scope object connects the FPU
+     * to this environment: When created, it loads the rounding mode and
      * precision from FPCR and clears the exception flags. When destroyed, it
      * transfers the raised exceptions into the exception status byte of FPSR
      * and restores the previous environment.
      *
      *     {
      *         FPU::Scope scope(fpu);
-     *         fpu.fpr[0] = fpu.fpr[1] + fpu.fpr[2];
+     *         fpu.fpr[0] = fpu.env.add(fpu.fpr[1], fpu.fpr[2]);
      *     }
      */
     class Scope {
 
         FPU &fpu;
-        SoftFloat::Scope saved;
+        FpuEnv::Scope saved;
 
     public:
 
@@ -250,11 +245,11 @@ public:
     //
 
     /* The functions in this section implement the arithmetic of the Motorola
-     * FPUs on top of Float80. They have to be called inside a Scope, because
+     * FPUs on top of FpuEnv. They have to be called inside a Scope, because
      * they use the rounding mode and precision of the floating-point
      * environment and report exceptions by raising flags in it.
      *
-     * The functions differ from plain Float80 arithmetic in the way special
+     * The functions differ from plain FpuEnv arithmetic in the way special
      * values are handled:
      *
      *  - NaN operands are resolved before the operation is carried out. A
@@ -272,68 +267,68 @@ public:
 public:
 
     // The default NaN returned by invalid operations
-    static Float80 defaultNaN() { return Float80::fromBits(0x7FFF, 0xFFFFFFFFFFFFFFFFULL); }
+    static MFloat80 defaultNaN() { return MFloat80::fromBits(0x7FFF, 0xFFFFFFFFFFFFFFFFULL); }
 
     // Rounds a value to the precision and rounding mode of the environment
-    Float80 round(const Float80 &value);
+    MFloat80 round(const MFloat80 &value);
 
     // Resolves NaN operands (returns nothing if there is no NaN)
-    std::optional<Float80> resolveNan(const Float80 &op1, const Float80 &op2);
-    std::optional<Float80> resolveNan(const Float80 &op);
+    std::optional<MFloat80> resolveNan(const MFloat80 &op1, const MFloat80 &op2);
+    std::optional<MFloat80> resolveNan(const MFloat80 &op);
 
     // Prepares a register value for FMOVE FPn,<ea> in extended format. A signaling NaN is
     // reported and quieted. A denormal number is reported as tiny and rounded to the
     // precision in effect.
-    Float80 moveOutExtended(const Float80 &value);
+    MFloat80 moveOutExtended(const MFloat80 &value);
 
     // Monadic operations
-    Float80 fabs(const Float80 &value);
-    Float80 fneg(const Float80 &value);
-    Float80 fsqrt(const Float80 &value);
-    Float80 fint(const Float80 &value);
-    Float80 fintrz(const Float80 &value);
-    Float80 fgetexp(const Float80 &value);
-    Float80 fsin(const Float80 &value);
-    Float80 fcos(const Float80 &value);
-    Float80 ftan(const Float80 &value);
-    Float80 fasin(const Float80 &value);
-    Float80 facos(const Float80 &value);
-    Float80 fatan(const Float80 &value);
-    Float80 fsinh(const Float80 &value);
-    Float80 fcosh(const Float80 &value);
-    Float80 ftanh(const Float80 &value);
-    Float80 fatanh(const Float80 &value);
-    Float80 fetox(const Float80 &value);
-    Float80 fetoxm1(const Float80 &value);
-    Float80 ftwotox(const Float80 &value);
-    Float80 ftentox(const Float80 &value);
-    Float80 flogn(const Float80 &value);
-    Float80 flognp1(const Float80 &value);
-    Float80 flog2(const Float80 &value);
-    Float80 flog10(const Float80 &value);
-    void fsincos(const Float80 &value, Float80 &sine, Float80 &cosine);
-    Float80 fgetman(const Float80 &value);
+    MFloat80 fabs(const MFloat80 &value);
+    MFloat80 fneg(const MFloat80 &value);
+    MFloat80 fsqrt(const MFloat80 &value);
+    MFloat80 fint(const MFloat80 &value);
+    MFloat80 fintrz(const MFloat80 &value);
+    MFloat80 fgetexp(const MFloat80 &value);
+    MFloat80 fsin(const MFloat80 &value);
+    MFloat80 fcos(const MFloat80 &value);
+    MFloat80 ftan(const MFloat80 &value);
+    MFloat80 fasin(const MFloat80 &value);
+    MFloat80 facos(const MFloat80 &value);
+    MFloat80 fatan(const MFloat80 &value);
+    MFloat80 fsinh(const MFloat80 &value);
+    MFloat80 fcosh(const MFloat80 &value);
+    MFloat80 ftanh(const MFloat80 &value);
+    MFloat80 fatanh(const MFloat80 &value);
+    MFloat80 fetox(const MFloat80 &value);
+    MFloat80 fetoxm1(const MFloat80 &value);
+    MFloat80 ftwotox(const MFloat80 &value);
+    MFloat80 ftentox(const MFloat80 &value);
+    MFloat80 flogn(const MFloat80 &value);
+    MFloat80 flognp1(const MFloat80 &value);
+    MFloat80 flog2(const MFloat80 &value);
+    MFloat80 flog10(const MFloat80 &value);
+    void fsincos(const MFloat80 &value, MFloat80 &sine, MFloat80 &cosine);
+    MFloat80 fgetman(const MFloat80 &value);
 
     // Sets the condition codes according to a value (FTST)
-    Float80 ftst(const Float80 &value);
+    MFloat80 ftst(const MFloat80 &value);
 
     // Dyadic operations
-    Float80 fadd(const Float80 &dst, const Float80 &src);
-    Float80 fsub(const Float80 &dst, const Float80 &src);
-    Float80 fmul(const Float80 &dst, const Float80 &src);
-    Float80 fdiv(const Float80 &dst, const Float80 &src);
-    Float80 fscal(const Float80 &dst, const Float80 &src);
+    MFloat80 fadd(const MFloat80 &dst, const MFloat80 &src);
+    MFloat80 fsub(const MFloat80 &dst, const MFloat80 &src);
+    MFloat80 fmul(const MFloat80 &dst, const MFloat80 &src);
+    MFloat80 fdiv(const MFloat80 &dst, const MFloat80 &src);
+    MFloat80 fscal(const MFloat80 &dst, const MFloat80 &src);
 
     // Single precision multiplication and division (FSGLMUL, FSGLDIV)
-    Float80 fsglmul(const Float80 &dst, const Float80 &src);
-    Float80 fsgldiv(const Float80 &dst, const Float80 &src);
+    MFloat80 fsglmul(const MFloat80 &dst, const MFloat80 &src);
+    MFloat80 fsgldiv(const MFloat80 &dst, const MFloat80 &src);
 
     // Remainders. These functions update the quotient byte in FPSR.
-    Float80 fmod(const Float80 &dst, const Float80 &src);
-    Float80 frem(const Float80 &dst, const Float80 &src);
+    MFloat80 fmod(const MFloat80 &dst, const MFloat80 &src);
+    MFloat80 frem(const MFloat80 &dst, const MFloat80 &src);
 
     // Compares two values and sets the condition codes (FCMP)
-    void fcmp(const Float80 &dst, const Float80 &src);
+    void fcmp(const MFloat80 &dst, const MFloat80 &src);
 
 
     //
@@ -343,7 +338,7 @@ public:
 public:
 
     // Reads a value from the constant ROM (FMOVECR). Sets INEX2 if the value is inexact.
-    Float80 readCR(unsigned nr);
+    MFloat80 readCR(unsigned nr);
 
 
     //

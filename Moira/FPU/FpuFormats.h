@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "Float80.h"
+#include "FpuEnv.h"
 
 namespace MOIRA_NAMESPACE {
 
@@ -21,10 +21,10 @@ namespace MOIRA_NAMESPACE {
  *    Extended Precision Real (X)
  *    Packed Decimal String Real (P)
  *
- * Internally, all values are represented as Float80. The functions in this
- * file convert between Float80 and the memory representations of the formats
+ * Internally, all values are represented as MFloat80. The functions in this
+ * file convert between MFloat80 and the memory representations of the formats
  * listed above. They are pure functions of their arguments and the current
- * floating-point environment (SoftFloat): The rounding mode and precision are
+ * floating-point environment (FpuEnv): The rounding mode and precision are
  * read from it, and exceptions are reported by raising the corresponding
  * FloatFlags. Translating these flags into FPSR bits is up to the FPU.
  */
@@ -41,28 +41,28 @@ struct FpuFormats {
     // Integers (B, W, L)
     //
 
-    // Integers convert to Float80 without loss of precision
-    static Float80 fromInteger(i32 value, SoftFloat &sf = SoftFloat::standard()) { return Float80::fromInt(value, sf); }
+    // Integers convert to MFloat80 without loss of precision
+    static MFloat80 fromInteger(i32 value) { return MFloat80::fromInt(value); }
 
     /* Converts to an integer of 'bits' width (8, 16, or 32). The value is
      * rounded according to the current rounding mode. If it doesn't fit, the
      * invalid flag is raised and the largest value of matching sign is
      * returned (NaNs return the largest positive value).
      */
-    static i32 toInteger(const Float80 &value, int bits);
+    static i32 toInteger(FpuEnv &env, const MFloat80 &value, int bits);
 
 
     //
     // Single and double precision (S, D)
     //
 
-    // Conversions to Float80 are exact (signaling NaNs raise the invalid flag)
-    static Float80 fromSingle(u32 raw, SoftFloat &sf = SoftFloat::standard());
-    static Float80 fromDouble(u64 raw, SoftFloat &sf = SoftFloat::standard());
+    // Conversions to MFloat80 are exact (signaling NaNs raise the invalid flag)
+    static MFloat80 fromSingle(FpuEnv &env, u32 raw);
+    static MFloat80 fromDouble(FpuEnv &env, u64 raw);
 
-    // Conversions from Float80 are rounded according to the current rounding mode
-    static u32 toSingle(const Float80 &value);
-    static u64 toDouble(const Float80 &value);
+    // Conversions from MFloat80 are rounded according to the current rounding mode
+    static u32 toSingle(FpuEnv &env, const MFloat80 &value);
+    static u64 toDouble(FpuEnv &env, const MFloat80 &value);
 
 
     //
@@ -75,8 +75,8 @@ struct FpuFormats {
      *   w[1]: Mantissa (high)
      *   w[2]: Mantissa (low)
      */
-    static Float80 fromExtended(const u32 (&w)[3], SoftFloat &sf = SoftFloat::standard());
-    static void toExtended(const Float80 &value, u32 (&w)[3]);
+    static MFloat80 fromExtended(const u32 (&w)[3]);
+    static void toExtended(const MFloat80 &value, u32 (&w)[3]);
 
 
     //
@@ -96,7 +96,7 @@ struct FpuFormats {
      *
      * Infinities and NaNs are marked by an exponent field of 0xFFF.
      */
-    static Float80 fromPacked(const u32 (&w)[3], SoftFloat &sf = SoftFloat::standard());
+    static MFloat80 fromPacked(FpuEnv &env, const u32 (&w)[3]);
 
     /* Converts to packed decimal. The parameter 'k' is the k-factor. For
      * positive values, it is the number of significant digits (1...17). For
@@ -105,7 +105,7 @@ struct FpuFormats {
      * and raises the invalid flag. The mantissa is rounded according to the
      * current rounding mode. The inexact flag is raised if digits are lost.
      */
-    static void toPacked(const Float80 &value, int k, u32 (&w)[3]);
+    static void toPacked(FpuEnv &env, const MFloat80 &value, int k, u32 (&w)[3]);
 };
 
 }

@@ -22,7 +22,7 @@
 #include <time.h>
 
 #include "MoiraTypes.h"
-#include "FPU/Float80.h"
+#include "FPU/MFloat80.h"
 #include "FPU/FPU.h"
 #include "Sandbox.h"
 #include "Randomizer.h"
@@ -79,7 +79,7 @@ inline void set32(u8 *p, u32 addr, u32 val) {
 
 namespace runner {
 
-using moira::Float80;
+using moira::MFloat80;
 
 // A test setup
 struct Setup {
@@ -99,7 +99,7 @@ struct Setup {
     u16     dfc;
     u32     cacr;
     u32     caar;
-    Float80 fpr[8];
+    MFloat80 fpr[8];
     u32     fpcr;
     u32     fpsr;
     u32     fpiar;
@@ -131,7 +131,7 @@ struct Result {
     u32     dfc;
     u32     cacr;
     u32     caar;
-    Float80 fpr[8];
+    MFloat80 fpr[8];
     u32     fpcr;
     u32     fpsr;
     u32     fpiar;

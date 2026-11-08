@@ -13,6 +13,8 @@
 
 #include "MoiraConfig.h"
 #include "FPU/FPU.h"
+#include "FPU/Float80.h"
+#include "FPU/SoftFloat.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>

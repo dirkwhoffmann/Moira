@@ -14,13 +14,15 @@
 
 using namespace moira;
 
+static FpuEnv env;
+
 static int failures = 0;
 static int checks = 0;
 
 #define CHECK(cond) do { checks++; if (!(cond)) { failures++; \
     printf("FAILED %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
 
-static bool same(const Float80 &a, const Float80 &b) { return a.identical(b); }
+static bool same(const MFloat80 &a, const MFloat80 &b) { return a.identical(b); }
 
 /* A minimal system consisting of 1 MB of RAM
  */
@@ -68,7 +70,7 @@ public:
     u32 pcOffset() const { return reg.pc0 - codeStart; }
 };
 
-static Float80 F(double d) { return Float80::fromDouble(d); }
+static MFloat80 F(double d) { return env.fromDouble(d); }
 static void put32(TestCPU &cpu, u32 addr, u32 val) { cpu.write32(addr, val); }
 
 static void testMove()
@@ -78,19 +80,19 @@ static void testMove()
     // FMOVE.L D0,FP0
     cpu.reg.d[0] = 42;
     cpu.run({ 0xF200, 0x4000 });
-    CHECK(same(cpu.fpu.fpr[0], Float80::fromInt(42)));
+    CHECK(same(cpu.fpu.fpr[0], MFloat80::fromInt(42)));
     CHECK((cpu.fpu.fpsr & FPSR::CC_MASK) == 0);
 
     // FMOVE.W D1,FP1 (negative)
     cpu.reg.d[1] = 0xFFFF;
     cpu.run({ 0xF201, 0x5080 });
-    CHECK(same(cpu.fpu.fpr[1], Float80::fromInt(-1)));
+    CHECK(same(cpu.fpu.fpr[1], MFloat80::fromInt(-1)));
     CHECK((cpu.fpu.fpsr & FPSR::CC_MASK) == FPSR::CC_N);
 
     // FMOVE.B D2,FP2
     cpu.reg.d[2] = 0x1280;
     cpu.run({ 0xF202, 0x5900 });
-    CHECK(same(cpu.fpu.fpr[2], Float80::fromInt(-128)));
+    CHECK(same(cpu.fpu.fpr[2], MFloat80::fromInt(-128)));
 
     // FMOVE.S D0,FP3: 1.5f
     cpu.reg.d[0] = 0x3FC00000;
@@ -104,7 +106,7 @@ static void testMove()
 
     // FMOVE.X #imm,FP5
     cpu.run({ 0xF23C, 0x4A80, 0x4000, 0x0000, 0xC90F, 0xDAA2, 0x2168, 0xC235 });
-    CHECK(same(cpu.fpu.fpr[5], Float80::fromBits(0x4000, 0xC90FDAA22168C235ULL)));
+    CHECK(same(cpu.fpu.fpr[5], MFloat80::fromBits(0x4000, 0xC90FDAA22168C235ULL)));
 
     // FMOVE FP4,FP6
     cpu.run({ 0xF200, 0x1300 });
@@ -135,12 +137,12 @@ static void testMove()
     CHECK(cpu.read16(0x3008) == 0x4000 && cpu.read16(0x300A) == 0);
     CHECK(cpu.read32(0x300C) == 0xC90FDAA2 && cpu.read32(0x3010) == 0x2168C235);
     cpu.run({ 0xF229, 0x4800, 0x0008 });
-    CHECK(same(cpu.fpu.fpr[0], Float80::fromBits(0x4000, 0xC90FDAA22168C235ULL)));
+    CHECK(same(cpu.fpu.fpr[0], MFloat80::fromBits(0x4000, 0xC90FDAA22168C235ULL)));
 
     // Single precision rounding of a register-to-register move (FSMOVE needs the 68040)
     {
         TestCPU c040(FPUModel::INTERNAL);
-        c040.fpu.fpr[0] = Float80::one() / Float80::fromInt(3);
+        c040.fpu.fpr[0] = env.div(MFloat80::one(), MFloat80::fromInt(3));
         c040.run({ 0xF200, 0x0040 | (1 << 7) });
         CHECK(c040.fpu.fpr[1].mantissa() == 0xAAAAAB0000000000ULL);
     }
@@ -152,7 +154,7 @@ static void testPacked()
 
     // FMOVE.P #-1.5E2,FP0
     cpu.run({ 0xF23C, 0x4C00, 0x8002, 0x0001, 0x5000, 0x0000, 0x0000, 0x0000 });
-    CHECK(same(cpu.fpu.fpr[0], Float80::fromInt(-150)));
+    CHECK(same(cpu.fpu.fpr[0], MFloat80::fromInt(-150)));
 
     // FMOVE.P FP0,(A0) with k-factor 17 (static)
     cpu.reg.a[0] = 0x2000;
@@ -160,7 +162,7 @@ static void testPacked()
     CHECK(cpu.read32(0x2000) == 0x80020001 && cpu.read32(0x2004) == 0x50000000 && cpu.read32(0x2008) == 0);
 
     // Dynamic k-factor: D1 = 3 digits of 1/3
-    cpu.fpu.fpr[1] = Float80::one() / Float80::fromInt(3);
+    cpu.fpu.fpr[1] = env.div(MFloat80::one(), MFloat80::fromInt(3));
     cpu.reg.d[1] = 3;
     cpu.run({ 0xF210, 0x7C00 | (1 << 7) | (1 << 4) });
     CHECK(cpu.read32(0x2000) == 0x40010003 && cpu.read32(0x2004) == 0x33000000);
@@ -172,17 +174,17 @@ static void testMovecr()
     TestCPU cpu;
 
     cpu.run({ 0xF200, 0x5C00 });
-    CHECK(same(cpu.fpu.fpr[0], Float80::fromBits(0x4000, 0xC90FDAA22168C235ULL)));
+    CHECK(same(cpu.fpu.fpr[0], MFloat80::fromBits(0x4000, 0xC90FDAA22168C235ULL)));
     CHECK(cpu.fpu.fpsr & FPEXP::INEX2);
 
     cpu.run({ 0xF200, 0x5C00 | (2 << 7) | 0x33 });
-    CHECK(same(cpu.fpu.fpr[2], Float80::fromInt(10)));
+    CHECK(same(cpu.fpu.fpr[2], MFloat80::fromInt(10)));
     CHECK((cpu.fpu.fpsr & FPEXP::INEX2) == 0);
 
     // Rounding mode affects the constant
     cpu.fpu.setFPCR(FPCR::RND_ZERO);
     cpu.run({ 0xF200, 0x5C00 });
-    CHECK(same(cpu.fpu.fpr[0], Float80::fromBits(0x4000, 0xC90FDAA22168C234ULL)));
+    CHECK(same(cpu.fpu.fpr[0], MFloat80::fromBits(0x4000, 0xC90FDAA22168C234ULL)));
 }
 
 static void testMovem()
@@ -287,7 +289,7 @@ static void testArithmetic()
     CHECK(cpu.fpu.fpsr & FPEXP::DZ);
     CHECK(cpu.fpu.fpsr & (1 << 4));
 
-    cpu.fpu.fpr[4] = Float80::infinity();
+    cpu.fpu.fpr[4] = MFloat80::infinity();
     cpu.run({ 0xF200, 0x0023 | (5 << 10) | (4 << 7) });
     CHECK(same(cpu.fpu.fpr[4], FPU::defaultNaN()));
     CHECK(cpu.fpu.fpsr & FPEXP::OPERR);
@@ -310,9 +312,9 @@ static void testArithmetic()
 
     // 68040: FSADD rounds to single, FADD on 68040 is available too
     TestCPU c040(FPUModel::INTERNAL);
-    c040.fpu.fpr[0] = Float80::one() / Float80::fromInt(3);
-    c040.fpu.fpr[1] = Float80::zero();
-    c040.fpu.fpr[2] = Float80::zero();
+    c040.fpu.fpr[0] = env.div(MFloat80::one(), MFloat80::fromInt(3));
+    c040.fpu.fpr[1] = MFloat80::zero();
+    c040.fpu.fpr[2] = MFloat80::zero();
     c040.run({ 0xF200, 0x0062 | (0 << 10) | (1 << 7) });                      // FSADD FP0,FP1
     CHECK(c040.fpu.fpr[1].mantissa() == 0xAAAAAB0000000000ULL);
     c040.run({ 0xF200, 0x0066 | (0 << 10) | (2 << 7) });                      // FDADD FP0,FP2
@@ -351,8 +353,8 @@ static void testTraps()
 
 static void testTranscendental()
 {
-    auto near = [](const Float80 &a, double expected) {
-        double v = a.toDouble();
+    auto near = [](const MFloat80 &a, double expected) {
+        double v = env.toDouble(a);
         return std::fabs(v - expected) <= std::fabs(expected) * 1e-15;
     };
 
@@ -392,7 +394,7 @@ static void testTranscendental()
     // Invalid operands
     {
         TestCPU cpu;
-        cpu.fpu.fpr[0] = Float80::infinity();
+        cpu.fpu.fpr[0] = MFloat80::infinity();
         cpu.run({ 0xF200, 0x000E });                                        // FSIN FP0,FP0
         CHECK(cpu.fpu.fpr[0].isNaN());
         CHECK(cpu.fpu.fpsr & FPEXP::OPERR);
@@ -401,9 +403,9 @@ static void testTranscendental()
     // Logarithm of zero
     {
         TestCPU cpu;
-        cpu.fpu.fpr[0] = Float80::zero();
+        cpu.fpu.fpr[0] = MFloat80::zero();
         cpu.run({ 0xF200, 0x0014 });                                        // FLOGN FP0,FP0
-        CHECK(same(cpu.fpu.fpr[0], Float80::infinity(true)));
+        CHECK(same(cpu.fpu.fpr[0], MFloat80::infinity(true)));
         CHECK(cpu.fpu.fpsr & FPEXP::DZ);
     }
 }
@@ -526,7 +528,7 @@ static void testControl()
 
         cpu.run({ 0xF358 });
         CHECK(cpu.reg.a[0] == 0x3000);
-        CHECK(same(cpu.fpu.fpr[0], Float80::fromInt(7)));           // IDLE frames keep the registers
+        CHECK(same(cpu.fpu.fpr[0], MFloat80::fromInt(7)));           // IDLE frames keep the registers
 
         cpu.write32(0x2FFC, 0);
         cpu.reg.a[0] = 0x2FFC;
@@ -556,7 +558,7 @@ static void testModels()
         TestCPU cpu(FPUModel::M68882, Model::M68030);
         cpu.reg.d[0] = 42;
         cpu.run({ 0xF200, 0x4000 });                                // FMOVE.L D0,FP0
-        CHECK(same(cpu.fpu.fpr[0], Float80::fromInt(42)));
+        CHECK(same(cpu.fpu.fpr[0], MFloat80::fromInt(42)));
 
         cpu.fpu.fpr[0] = F(11);
         cpu.fpu.fpr[1] = F(3);
@@ -631,13 +633,13 @@ static void testTinySinh()
     cpu.fpu.setFPCR(0x40);
     cpu.fpu.setFPSR(0);
     cpu.run({ 0xF23C, 0x4402, 0x0080, 0x0000 });
-    CHECK(same(cpu.fpu.fpr[0], Float80::fromBits(0x3F81, 0x8000000000000000ULL)));
+    CHECK(same(cpu.fpu.fpr[0], MFloat80::fromBits(0x3F81, 0x8000000000000000ULL)));
     CHECK((cpu.fpu.fpsr & 0xFF00) == 0x0200);
 
     // FETOXM1.S #2^-126,FP0: The 68k computes x - 2^-16382 for tiny arguments, which is tiny (like UAE)
     cpu.fpu.setFPSR(0);
     cpu.run({ 0xF23C, 0x4408, 0x0080, 0x0000 });
-    CHECK(same(cpu.fpu.fpr[0], Float80::fromBits(0x3F81, 0x8000000000000000ULL)));
+    CHECK(same(cpu.fpu.fpr[0], MFloat80::fromBits(0x3F81, 0x8000000000000000ULL)));
     CHECK((cpu.fpu.fpsr & 0xFF00) == 0x0A00);
 }
 

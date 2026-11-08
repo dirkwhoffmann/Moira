@@ -154,7 +154,7 @@ void executeMusashi(runner::Result &r)
     }
 
     for (int i = 0; i < 8; i++) {
-        r.fpr[i] = moira::Float80::fromBits(REG_FP[i].high, REG_FP[i].low);
+        r.fpr[i] = moira::MFloat80::fromBits(REG_FP[i].high, REG_FP[i].low);
     }
     r.fpcr = REG_FPCR;
     r.fpsr = REG_FPSR;

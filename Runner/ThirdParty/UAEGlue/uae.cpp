@@ -99,7 +99,7 @@ void executeUAE(runner::Result &r)
     for (int i = 0; i < 7; i++) r.a[i] = uaeState.a[i];
     r.a[7] = uaeState.a7;
 
-    for (int i = 0; i < 8; i++) r.fpr[i] = moira::Float80::fromBits(uaeState.fpse[i], uaeState.fpman[i]);
+    for (int i = 0; i < 8; i++) r.fpr[i] = moira::MFloat80::fromBits(uaeState.fpse[i], uaeState.fpman[i]);
     r.fpcr = uaeState.fpcr;
     r.fpsr = uaeState.fpsr;
     r.fpiar = uaeState.fpiar;

@@ -16,7 +16,7 @@ void
 FPU::reset()
 {
     // After reset, all data registers contain a non-signaling NaN
-    for (auto &reg : fpr) reg = Float80::quietNaN();
+    for (auto &reg : fpr) reg = MFloat80::quietNaN();
 
     fpiar = 0;
     fpsr = 0;
@@ -108,7 +108,7 @@ FPU::setExcStatusBit(u32 mask)
 }
 
 void
-FPU::setConditionCodes(const Float80 &value)
+FPU::setConditionCodes(const MFloat80 &value)
 {
     fpsr &= ~FPSR::CC_MASK;
 
@@ -163,16 +163,16 @@ FPU::setQuotientByte(u8 byte, bool sign)
     setQuotientByte((byte & 0x7F) | (sign ? 0x80 : 0x00));
 }
 
-FPU::Scope::Scope(FPU &fpu) : fpu(fpu), saved(fpu.sf)
+FPU::Scope::Scope(FPU &fpu) : fpu(fpu), saved(fpu.env)
 {
-    fpu.sf.setRoundingMode(fpu.getRoundingMode());
-    fpu.sf.setPrecision(fpu.getPrecision());
-    fpu.sf.clearFlags();
+    fpu.env.setRoundingMode(fpu.getRoundingMode());
+    fpu.env.setPrecision(fpu.getPrecision());
+    fpu.env.clearFlags();
 }
 
 FPU::Scope::Scope(FPU &fpu, Precision precision) : Scope(fpu)
 {
-    fpu.sf.setPrecision(precision);
+    fpu.env.setPrecision(precision);
 }
 
 FPU::Scope::~Scope()
@@ -183,7 +183,7 @@ FPU::Scope::~Scope()
 void
 FPU::collectFlags()
 {
-    auto flags = sf.flags();
+    auto flags = env.flags();
     u32 mask = 0;
 
     if (flags & FloatFlags::INEXACT)        mask |= FPEXP::INEX2;
@@ -194,7 +194,7 @@ FPU::collectFlags()
     if (flags & FloatFlags::SNAN)           mask |= FPEXP::SNAN;
 
     if (mask) setExcStatusBit(mask);
-    sf.clearFlags();
+    env.clearFlags();
 }
 
 //
@@ -204,42 +204,42 @@ FPU::collectFlags()
 namespace {
 
 /* Runs an operation that must not produce NaN operands. If the operation
- * reports an invalid operation, the x87 default NaN produced by SoftFloat is
+ * reports an invalid operation, the x87 default NaN produced by FpuEnv is
  * replaced by the default NaN of the 68k FPUs.
  */
-template <typename F> Float80
-invoke(SoftFloat &sf, F operation)
+template <typename F> MFloat80
+invoke(FpuEnv &env, F operation)
 {
-    auto saved = sf.flags();
-    sf.clearFlags();
+    auto saved = env.flags();
+    env.clearFlags();
 
     auto result = operation();
 
-    if ((sf.flags() & FloatFlags::INVALID) && result.isNaN()) {
+    if ((env.flags() & FloatFlags::INVALID) && result.isNaN()) {
         result = FPU::defaultNaN();
     }
-    sf.raiseFlags(saved);
+    env.raiseFlags(saved);
     return result;
 }
 
 // Runs an operation in extended precision with rounding to nearest
-template <typename F> Float80
-invokeExact(SoftFloat &sf, F operation)
+template <typename F> MFloat80
+invokeExact(FpuEnv &env, F operation)
 {
-    SoftFloat::Scope scope(sf);
-    sf.setPrecision(Precision::EXTENDED);
-    sf.setRoundingMode(RoundingMode::NEAREST);
-    return invoke(sf, operation);
+    FpuEnv::Scope scope(env);
+    env.setPrecision(Precision::EXTENDED);
+    env.setRoundingMode(RoundingMode::NEAREST);
+    return invoke(env, operation);
 }
 
 /* FSGLMUL and FSGLDIV round the significand to single precision, but keep the
  * extended exponent range. If an overflow yields the largest finite number,
  * all significand bits are set.
  */
-Float80 singleOverflow(SoftFloat &sf, const Float80 &result)
+MFloat80 singleOverflow(FpuEnv &env, const MFloat80 &result)
 {
-    if ((sf.flags() & FloatFlags::OVFL) && result.isFinite() && result.biasedExponent() == 0x7FFE) {
-        return Float80::fromBits(result.signExp(), ~0ULL);
+    if ((env.flags() & FloatFlags::OVFL) && result.isFinite() && result.biasedExponent() == 0x7FFE) {
+        return MFloat80::fromBits(result.signExp(), ~0ULL);
     }
     return result;
 }
@@ -260,9 +260,9 @@ struct Division {
 };
 
 Division
-divide(const Float80 &a, const Float80 &b)
+divide(const MFloat80 &a, const MFloat80 &b)
 {
-    auto normalize = [](const Float80 &x, i32 &e) {
+    auto normalize = [](const MFloat80 &x, i32 &e) {
         int shift = std::countl_zero(x.mantissa());
         e = x.biasedExponent() - shift;
         return x.mantissa() << shift;
@@ -301,28 +301,27 @@ divide(const Float80 &a, const Float80 &b)
 }
 
 // Converts the remainder of a division into a number
-Float80
-remainder(SoftFloat &sf, const Division &d, bool sign)
+MFloat80
+remainder(FpuEnv &env, const Division &d, bool sign)
 {
-    if (d.rem == 0) return Float80::zero(sign);
+    if (d.rem == 0) return MFloat80::zero(sign);
 
     int length = 128 - (d.rem >> 64 ? std::countl_zero(u64(d.rem >> 64)) : 64 + std::countl_zero(u64(d.rem)));
     u64 sig = length > 64 ? u64(d.rem >> (length - 64)) : u64(d.rem << (64 - length));
-    return Float80::roundPack(sign, d.unit + length - 64, sig, 0, sf);
+    return env.roundPack(sign, d.unit + length - 64, sig, 0);
 }
 
 }
 
-Float80
-FPU::round(const Float80 &value_)
+MFloat80
+FPU::round(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return value.rounded();
+    return env.round(value);
 }
 
-std::optional<Float80>
-FPU::resolveNan(const Float80 &op1, const Float80 &op2)
+std::optional<MFloat80>
+FPU::resolveNan(const MFloat80 &op1, const MFloat80 &op2)
 {
     /* MC68881/MC68882 Floating-Point Coprocessor User's Manual:
      *
@@ -345,10 +344,10 @@ FPU::resolveNan(const Float80 &op1, const Float80 &op2)
      */
     if (!op1.isNaN() && !op2.isNaN()) return std::nullopt;
 
-    auto quiet = [&](const Float80 &op) {
+    auto quiet = [&](const MFloat80 &op) {
 
         if (op.isSignalingNaN()) setExcStatusBit(FPEXP::SNAN);
-        return Float80::fromBits(op.signExp(), op.mantissa() | (1ULL << 62));
+        return MFloat80::fromBits(op.signExp(), op.mantissa() | (1ULL << 62));
     };
 
     // Both operands are processed, because both can raise the SNAN exception
@@ -358,29 +357,28 @@ FPU::resolveNan(const Float80 &op1, const Float80 &op2)
     return op1.isNaN() ? r1 : r2;
 }
 
-std::optional<Float80>
-FPU::resolveNan(const Float80 &op)
+std::optional<MFloat80>
+FPU::resolveNan(const MFloat80 &op)
 {
-    return resolveNan(op, Float80::zero());
+    return resolveNan(op, MFloat80::zero());
 }
 
-Float80
-FPU::moveOutExtended(const Float80 &value_)
+MFloat80
+FPU::moveOutExtended(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
     if (value.biasedExponent() != 0 || value.mantissa() == 0) return value;
 
     // The value is a denormal number
-    sf.raiseFlags(FloatFlags::UNFL);
+    env.raiseFlags(FloatFlags::UNFL);
     bool sign = value.sign();
     u16 signBit = sign ? 0x8000 : 0;
 
-    auto precision = sf.precision();
+    auto precision = env.precision();
     if (precision == Precision::EXTENDED) {
 
         // No bits get lost (a pseudo denormal number becomes a normalized number)
-        return Float80::fromBits(u16(signBit | (value.mantissa() >> 63)), value.mantissa());
+        return MFloat80::fromBits(u16(signBit | (value.mantissa() >> 63)), value.mantissa());
     }
 
     /* The exponent of a denormal number is far below the range of the selected
@@ -392,244 +390,217 @@ FPU::moveOutExtended(const Float80 &value_)
     u16 exponent = single ? 0x3F81 : 0x3C01;
 
     u64 increment;
-    switch (sf.roundingMode()) {
+    switch (env.roundingMode()) {
 
         case RoundingMode::NEAREST: increment = (mask + 1) >> 1; break;
         case RoundingMode::ZERO:    increment = 0; break;
         case RoundingMode::DOWN:    increment = sign ? mask : 0; break;
         default:                    increment = sign ? 0 : mask; break;
     }
-    sf.raiseFlags(FloatFlags::INEXACT);
-    return Float80::fromBits(u16(signBit | exponent), (1 + increment) & ~mask);
+    env.raiseFlags(FloatFlags::INEXACT);
+    return MFloat80::fromBits(u16(signBit | exponent), (1 + increment) & ~mask);
 }
 
-Float80
-FPU::fabs(const Float80 &value_)
+MFloat80
+FPU::fabs(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
     return round(value.abs());
 }
 
-Float80
-FPU::fneg(const Float80 &value_)
+MFloat80
+FPU::fneg(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
     return round(-value);
 }
 
-Float80
-FPU::fsqrt(const Float80 &value_)
+MFloat80
+FPU::fsqrt(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(sf, [&] { return value.sqrt(); });
+    return invoke(env, [&] { return env.sqrt(value); });
 }
 
-Float80
-FPU::fsin(const Float80 &value_)
+MFloat80
+FPU::fsin(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(sf, [&] { return FloatMath::sin(value); });
+    return invoke(env, [&] { return FloatMath::sin(env, value); });
 }
 
-Float80
-FPU::fcos(const Float80 &value_)
+MFloat80
+FPU::fcos(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(sf, [&] { return FloatMath::cos(value); });
+    return invoke(env, [&] { return FloatMath::cos(env, value); });
 }
 
-Float80
-FPU::ftan(const Float80 &value_)
+MFloat80
+FPU::ftan(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(sf, [&] { return FloatMath::tan(value); });
+    return invoke(env, [&] { return FloatMath::tan(env, value); });
 }
 
-Float80
-FPU::fasin(const Float80 &value_)
+MFloat80
+FPU::fasin(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(sf, [&] { return FloatMath::asin(value); });
+    return invoke(env, [&] { return FloatMath::asin(env, value); });
 }
 
-Float80
-FPU::facos(const Float80 &value_)
+MFloat80
+FPU::facos(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(sf, [&] { return FloatMath::acos(value); });
+    return invoke(env, [&] { return FloatMath::acos(env, value); });
 }
 
-Float80
-FPU::fatan(const Float80 &value_)
+MFloat80
+FPU::fatan(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(sf, [&] { return FloatMath::atan(value); });
+    return invoke(env, [&] { return FloatMath::atan(env, value); });
 }
 
-Float80
-FPU::fsinh(const Float80 &value_)
+MFloat80
+FPU::fsinh(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(sf, [&] { return FloatMath::sinh(value); });
+    return invoke(env, [&] { return FloatMath::sinh(env, value); });
 }
 
-Float80
-FPU::fcosh(const Float80 &value_)
+MFloat80
+FPU::fcosh(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(sf, [&] { return FloatMath::cosh(value); });
+    return invoke(env, [&] { return FloatMath::cosh(env, value); });
 }
 
-Float80
-FPU::ftanh(const Float80 &value_)
+MFloat80
+FPU::ftanh(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(sf, [&] { return FloatMath::tanh(value); });
+    return invoke(env, [&] { return FloatMath::tanh(env, value); });
 }
 
-Float80
-FPU::fatanh(const Float80 &value_)
+MFloat80
+FPU::fatanh(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(sf, [&] { return FloatMath::atanh(value); });
+    return invoke(env, [&] { return FloatMath::atanh(env, value); });
 }
 
-Float80
-FPU::fetox(const Float80 &value_)
+MFloat80
+FPU::fetox(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(sf, [&] { return FloatMath::etox(value); });
+    return invoke(env, [&] { return FloatMath::etox(env, value); });
 }
 
-Float80
-FPU::fetoxm1(const Float80 &value_)
+MFloat80
+FPU::fetoxm1(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(sf, [&] { return FloatMath::etoxm1(value); });
+    return invoke(env, [&] { return FloatMath::etoxm1(env, value); });
 }
 
-Float80
-FPU::ftwotox(const Float80 &value_)
+MFloat80
+FPU::ftwotox(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(sf, [&] { return FloatMath::twotox(value); });
+    return invoke(env, [&] { return FloatMath::twotox(env, value); });
 }
 
-Float80
-FPU::ftentox(const Float80 &value_)
+MFloat80
+FPU::ftentox(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(sf, [&] { return FloatMath::tentox(value); });
+    return invoke(env, [&] { return FloatMath::tentox(env, value); });
 }
 
-Float80
-FPU::flogn(const Float80 &value_)
+MFloat80
+FPU::flogn(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(sf, [&] { return FloatMath::logn(value); });
+    return invoke(env, [&] { return FloatMath::logn(env, value); });
 }
 
-Float80
-FPU::flognp1(const Float80 &value_)
+MFloat80
+FPU::flognp1(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(sf, [&] { return FloatMath::lognp1(value); });
+    return invoke(env, [&] { return FloatMath::lognp1(env, value); });
 }
 
-Float80
-FPU::flog2(const Float80 &value_)
+MFloat80
+FPU::flog2(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(sf, [&] { return FloatMath::log2(value); });
+    return invoke(env, [&] { return FloatMath::log2(env, value); });
 }
 
-Float80
-FPU::flog10(const Float80 &value_)
+MFloat80
+FPU::flog10(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return invoke(sf, [&] { return FloatMath::log10(value); });
+    return invoke(env, [&] { return FloatMath::log10(env, value); });
 }
 
 void
-FPU::fsincos(const Float80 &value_, Float80 &sine, Float80 &cosine)
+FPU::fsincos(const MFloat80 &value, MFloat80 &sine, MFloat80 &cosine)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) { sine = cosine = *nan; return; }
-    sine = invoke(sf, [&] { FloatMath::sincos(value, sine, cosine); return sine; });
+    sine = invoke(env, [&] { FloatMath::sincos(env, value, sine, cosine); return sine; });
     if (sine.isNaN()) cosine = sine;
 }
 
-Float80
-FPU::fint(const Float80 &value_)
+MFloat80
+FPU::fint(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
-    return value.roundToInt();
+    return env.roundToInt(value);
 }
 
-Float80
-FPU::fintrz(const Float80 &value_)
+MFloat80
+FPU::fintrz(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
 
-    SoftFloat::Scope scope(sf);
-    sf.setRoundingMode(RoundingMode::ZERO);
-    return value.roundToInt();
+    FpuEnv::Scope scope(env);
+    env.setRoundingMode(RoundingMode::ZERO);
+    return env.roundToInt(value);
 }
 
-Float80
-FPU::fgetexp(const Float80 &value_)
+MFloat80
+FPU::fgetexp(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
 
     if (value.isInfinite()) { setExcStatusBit(FPEXP::OPERR); return defaultNaN(); }
     if (value.isZero()) return value;
 
     // The exponent of a denormalized number is determined after normalization
-    i32 e = i32(value.biasedExponent()) - Float80::bias - std::countl_zero(value.mantissa());
-    return Float80::fromInt(e, sf);
+    i32 e = i32(value.biasedExponent()) - MFloat80::bias - std::countl_zero(value.mantissa());
+    return MFloat80::fromInt(e);
 }
 
-Float80
-FPU::fgetman(const Float80 &value_)
+MFloat80
+FPU::fgetman(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     if (auto nan = resolveNan(value)) return *nan;
 
     if (value.isInfinite()) { setExcStatusBit(FPEXP::OPERR); return defaultNaN(); }
     if (value.isZero()) return value;
 
     u64 man = value.mantissa() << std::countl_zero(value.mantissa());
-    return Float80::fromBits(u16((value.sign() ? 0x8000 : 0) | Float80::bias), man);
+    return MFloat80::fromBits(u16((value.sign() ? 0x8000 : 0) | MFloat80::bias), man);
 }
 
-Float80
-FPU::ftst(const Float80 &value_)
+MFloat80
+FPU::ftst(const MFloat80 &value)
 {
-    Float80 value = value_.in(sf);
     auto result = value;
     if (auto nan = resolveNan(value)) result = *nan;
 
@@ -637,47 +608,37 @@ FPU::ftst(const Float80 &value_)
     return result;
 }
 
-Float80
-FPU::fadd(const Float80 &dst_, const Float80 &src_)
+MFloat80
+FPU::fadd(const MFloat80 &dst, const MFloat80 &src)
 {
-    Float80 dst = dst_.in(sf);
-    Float80 src = src_.in(sf);
     if (auto nan = resolveNan(dst, src)) return *nan;
-    return invoke(sf, [&] { return dst + src; });
+    return invoke(env, [&] { return env.add(dst, src); });
 }
 
-Float80
-FPU::fsub(const Float80 &dst_, const Float80 &src_)
+MFloat80
+FPU::fsub(const MFloat80 &dst, const MFloat80 &src)
 {
-    Float80 dst = dst_.in(sf);
-    Float80 src = src_.in(sf);
     if (auto nan = resolveNan(dst, src)) return *nan;
-    return invoke(sf, [&] { return dst - src; });
+    return invoke(env, [&] { return env.sub(dst, src); });
 }
 
-Float80
-FPU::fmul(const Float80 &dst_, const Float80 &src_)
+MFloat80
+FPU::fmul(const MFloat80 &dst, const MFloat80 &src)
 {
-    Float80 dst = dst_.in(sf);
-    Float80 src = src_.in(sf);
     if (auto nan = resolveNan(dst, src)) return *nan;
-    return invoke(sf, [&] { return dst * src; });
+    return invoke(env, [&] { return env.mul(dst, src); });
 }
 
-Float80
-FPU::fdiv(const Float80 &dst_, const Float80 &src_)
+MFloat80
+FPU::fdiv(const MFloat80 &dst, const MFloat80 &src)
 {
-    Float80 dst = dst_.in(sf);
-    Float80 src = src_.in(sf);
     if (auto nan = resolveNan(dst, src)) return *nan;
-    return invoke(sf, [&] { return dst / src; });
+    return invoke(env, [&] { return env.div(dst, src); });
 }
 
-Float80
-FPU::fscal(const Float80 &dst_, const Float80 &src_)
+MFloat80
+FPU::fscal(const MFloat80 &dst, const MFloat80 &src)
 {
-    Float80 dst = dst_.in(sf);
-    Float80 src = src_.in(sf);
     if (auto nan = resolveNan(dst, src)) return *nan;
 
     // Scaling by an infinite value is invalid
@@ -686,55 +647,51 @@ FPU::fscal(const Float80 &dst_, const Float80 &src_)
     // Infinities and zeroes are unaffected by scaling
     if (dst.isInfinite() || dst.isZero()) return dst;
 
-    return invoke(sf, [&] { return dst.scale(src); });
+    return invoke(env, [&] { return env.scale(dst, src); });
 }
 
-Float80
-FPU::fsglmul(const Float80 &dst_, const Float80 &src_)
+MFloat80
+FPU::fsglmul(const MFloat80 &dst, const MFloat80 &src)
 {
-    Float80 dst = dst_.in(sf);
-    Float80 src = src_.in(sf);
     if (auto nan = resolveNan(dst, src)) return *nan;
 
     // The operands are truncated to single precision, the product is rounded to
     // single precision
-    auto truncate = [&](const Float80 &x) {
+    auto truncate = [&](const MFloat80 &x) {
 
         // The 24 most significant bits after normalization are kept
         if (!x.isFinite() || x.mantissa() == 0) return x;
         int lead = 63 - std::countl_zero(x.mantissa());
         u64 mask = lead > 23 ? ~((1ULL << (lead - 23)) - 1) : ~0ULL;
-        return Float80::fromBits(x.signExp(), x.mantissa() & mask).in(sf);
+        return MFloat80::fromBits(x.signExp(), x.mantissa() & mask);
     };
 
-    SoftFloat::Scope scope(sf);
-    sf.setPrecision(Precision::SINGLE);
-    sf.setLimitsExponent(false);
-    return singleOverflow(sf, invoke(sf, [&] { return truncate(dst) * truncate(src); }));
+    FpuEnv::Scope scope(env);
+    env.setPrecision(Precision::SINGLE);
+    env.setLimitsExponent(false);
+    return singleOverflow(env, invoke(env, [&] { return env.mul(truncate(dst), truncate(src)); }));
 }
 
-Float80
-FPU::fsgldiv(const Float80 &dst_, const Float80 &src_)
+MFloat80
+FPU::fsgldiv(const MFloat80 &dst, const MFloat80 &src)
 {
-    Float80 dst = dst_.in(sf);
-    Float80 src = src_.in(sf);
     if (auto nan = resolveNan(dst, src)) return *nan;
 
     // The quotient of the unmodified operands is rounded to single precision
-    SoftFloat::Scope scope(sf);
-    sf.setPrecision(Precision::SINGLE);
-    sf.setLimitsExponent(false);
-    return singleOverflow(sf, invoke(sf, [&] { return dst / src; }));
+    FpuEnv::Scope scope(env);
+    env.setPrecision(Precision::SINGLE);
+    env.setLimitsExponent(false);
+    return singleOverflow(env, invoke(env, [&] { return env.div(dst, src); }));
 }
 
 /* A zero remainder is built by normalizing a zero significand, which drags the
  * exponent down by 128. Depending on the rounding precision, this can leave the
  * exponent range, in which case an underflow or overflow is reported.
  */
-static Float80 zeroRemainder(SoftFloat &sf, const Float80 &dst, const Float80 &src, bool sign)
+static MFloat80 zeroRemainder(FpuEnv &env, const MFloat80 &dst, const MFloat80 &src, bool sign)
 {
     // Exponents are normalized if the operand is a denormal number
-    auto exponent = [](const Float80 &v) {
+    auto exponent = [](const MFloat80 &v) {
         return v.biasedExponent() ? int(v.biasedExponent()) : 1 - __builtin_clzll(v.mantissa());
     };
     int bExp = exponent(src);
@@ -747,34 +704,32 @@ static Float80 zeroRemainder(SoftFloat &sf, const Float80 &dst, const Float80 &s
     int zExp = bExp + diff - 128;
 
     // Exponent offset and mask of the discarded significand bits
-    auto precision = sf.precision();
+    auto precision = env.precision();
     int offset = precision == Precision::SINGLE ? 0x3F80 : precision == Precision::DOUBLE ? 0x3C00 : 0;
     u64 discarded = precision == Precision::SINGLE ? 0xFFFFFFFFFFULL : precision == Precision::DOUBLE ? 0x7FFULL : 0;
 
     if (precision != Precision::EXTENDED && zExp > 0x7FFE - offset) {
 
         // Overflow
-        sf.raiseFlags(FloatFlags::OVFL);
-        auto mode = sf.roundingMode();
+        env.raiseFlags(FloatFlags::OVFL);
+        auto mode = env.roundingMode();
         bool largest = mode == RoundingMode::ZERO ||
                        (sign && mode == RoundingMode::UP) || (!sign && mode == RoundingMode::DOWN);
-        return largest ? Float80::fromBits(u16((sign ? 0x8000 : 0) | (0x7FFE - offset)), ~discarded)
-                       : Float80::infinity(sign);
+        return largest ? MFloat80::fromBits(u16((sign ? 0x8000 : 0) | (0x7FFE - offset)), ~discarded)
+                       : MFloat80::infinity(sign);
     }
-    if (zExp < offset + (precision == Precision::EXTENDED ? 0 : 1)) sf.raiseFlags(FloatFlags::UNFL);
+    if (zExp < offset + (precision == Precision::EXTENDED ? 0 : 1)) env.raiseFlags(FloatFlags::UNFL);
 
-    return Float80::zero(sign);
+    return MFloat80::zero(sign);
 }
 
-Float80
-FPU::fmod(const Float80 &dst_, const Float80 &src_)
+MFloat80
+FPU::fmod(const MFloat80 &dst, const MFloat80 &src)
 {
-    Float80 dst = dst_.in(sf);
-    Float80 src = src_.in(sf);
     if (auto nan = resolveNan(dst, src)) return *nan;
 
     // Invalid operations (dst infinite, src zero) have no quotient
-    if (dst.isInfinite() || src.isZero()) return invokeExact(sf, [&] { return dst.rem(src); });
+    if (dst.isInfinite() || src.isZero()) return invokeExact(env, [&] { return env.invalidOperation(); });
 
     bool negative = dst.sign() != src.sign();
     if (src.isInfinite() || dst.isZero()) {
@@ -782,25 +737,23 @@ FPU::fmod(const Float80 &dst_, const Float80 &src_)
         setQuotientByte(0, negative);
 
         // A zero destination is normalized for an infinite source, which raises UNFL
-        if (src.isInfinite() && dst.isZero()) sf.raiseFlags(FloatFlags::UNFL);
-        return dst.rounded();
+        if (src.isInfinite() && dst.isZero()) env.raiseFlags(FloatFlags::UNFL);
+        return env.round(dst);
     }
 
     // The remainder is computed exactly and then rounded like any other result
     auto d = divide(dst, src);
     setQuotientByte(u8(d.quotient & 0x7F), negative);
 
-    return d.rem == 0 ? zeroRemainder(sf, dst, src, dst.sign()) : remainder(sf, d, dst.sign());
+    return d.rem == 0 ? zeroRemainder(env, dst, src, dst.sign()) : remainder(env, d, dst.sign());
 }
 
-Float80
-FPU::frem(const Float80 &dst_, const Float80 &src_)
+MFloat80
+FPU::frem(const MFloat80 &dst, const MFloat80 &src)
 {
-    Float80 dst = dst_.in(sf);
-    Float80 src = src_.in(sf);
     if (auto nan = resolveNan(dst, src)) return *nan;
 
-    if (dst.isInfinite() || src.isZero()) return invokeExact(sf, [&] { return dst.rem(src); });
+    if (dst.isInfinite() || src.isZero()) return invokeExact(env, [&] { return env.invalidOperation(); });
 
     bool negative = dst.sign() != src.sign();
     if (src.isInfinite() || dst.isZero()) {
@@ -808,8 +761,8 @@ FPU::frem(const Float80 &dst_, const Float80 &src_)
         setQuotientByte(0, negative);
 
         // A zero destination is normalized for an infinite source, which raises UNFL
-        if (src.isInfinite() && dst.isZero()) sf.raiseFlags(FloatFlags::UNFL);
-        return dst.rounded();
+        if (src.isInfinite() && dst.isZero()) env.raiseFlags(FloatFlags::UNFL);
+        return env.round(dst);
     }
 
     auto d = divide(dst, src);
@@ -827,14 +780,13 @@ FPU::frem(const Float80 &dst_, const Float80 &src_)
     // A destination smaller than half the source is returned unrounded
     if (d.small) return dst;
 
-    return d.rem == 0 ? zeroRemainder(sf, dst, src, sign) : remainder(sf, d, sign);
+    return d.rem == 0 ? zeroRemainder(env, dst, src, sign) : remainder(env, d, sign);
 }
 
 void
-FPU::fcmp(const Float80 &dst_, const Float80 &src_)
+FPU::fcmp(const MFloat80 &dst_, const MFloat80 &src_)
 {
-    Float80 dst = dst_.in(sf);
-    Float80 src = src_.in(sf);
+    MFloat80 dst = dst_, src = src_;
 
     // Only the 68040 keeps the sign of a NaN (the N flag is set for a negative NaN)
     if (model != FPUModel::INTERNAL) {
@@ -844,15 +796,15 @@ FPU::fcmp(const Float80 &dst_, const Float80 &src_)
     if (auto nan = resolveNan(dst, src)) { setConditionCodes(*nan); return; }
 
     // Unnormal operands are normalized first (as far as the exponent allows)
-    auto normalize = [](const Float80 &v) {
+    auto normalize = [](const MFloat80 &v) {
 
         u16 exp = v.biasedExponent();
         u64 man = v.mantissa();
         if (exp == 0 || exp == 0x7FFF) return v;
-        if (man == 0) return Float80::zero(v.sign());
+        if (man == 0) return MFloat80::zero(v.sign());
 
         int shift = std::min<int>(std::countl_zero(man), exp);
-        return Float80::fromBits(u16((v.sign() ? 0x8000 : 0) | (exp - shift)), man << shift);
+        return MFloat80::fromBits(u16((v.sign() ? 0x8000 : 0) | (exp - shift)), man << shift);
     };
     dst = normalize(dst);
     src = normalize(src);
@@ -865,9 +817,9 @@ FPU::fcmp(const Float80 &dst_, const Float80 &src_)
     u16 aExp = dst.biasedExponent(), bExp = src.biasedExponent();
     u64 aSig = dst.mantissa(), bSig = src.mantissa();
     bool aSign = dst.sign(), bSign = src.sign();
-    auto pack = [](bool sign, u16 exp, u64 man) { return Float80::fromBits(u16((sign ? 0x8000 : 0) | exp), man); };
+    auto pack = [](bool sign, u16 exp, u64 man) { return MFloat80::fromBits(u16((sign ? 0x8000 : 0) | exp), man); };
 
-    Float80 r;
+    MFloat80 r;
     if      (bExp < aExp)                r = pack(aSign, 0x3FFF, one);
     else if (aExp < bExp)                r = pack(!bSign, 0x3FFF, one);
     else if (aExp == 0x7FFF)             r = aSign == bSign ? pack(aSign, 0, 0) : pack(aSign, 0x3FFF, one);
@@ -879,7 +831,7 @@ FPU::fcmp(const Float80 &dst_, const Float80 &src_)
     setConditionCodes(r);
 }
 
-Float80
+MFloat80
 FPU::readCR(unsigned nr)
 {
     struct RomEntry { u16 hi; u64 lo; i64 r1; i64 r2; bool inex; };
@@ -939,14 +891,14 @@ FPU::readCR(unsigned nr)
         // Mark the value as inexact if necessary
         if (entry.inex) setExcStatusBit(FPEXP::INEX2);
 
-        return Float80::fromBits(entry.hi, lo).in(sf);
+        return MFloat80::fromBits(entry.hi, lo);
     };
 
     // Values outside the two ranges seem to produce a Guru on the real machine
     if (nr < 0x10) return readRom(rom1[nr]);
     if (nr >= 0x30 && nr < 0x40) return readRom(rom2[nr - 0x30]);
 
-    return Float80::zero().in(sf);
+    return MFloat80::zero();
 }
 
 int

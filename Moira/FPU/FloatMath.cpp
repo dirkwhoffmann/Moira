@@ -25,7 +25,7 @@ namespace {
  * significand is normalized (bit 127 is set) unless the number is zero.
  *
  * The arithmetic truncates and is accurate to about 2^-126. All transcendental
- * functions are evaluated with this type and rounded to Float80 at the end.
+ * functions are evaluated with this type and rounded to MFloat80 at the end.
  */
 struct W {
 
@@ -51,7 +51,7 @@ W norm(bool neg, i32 e, u128 m)
 
 W fromU64(u64 v) { return norm(false, 127, v); }
 W fromI64(i64 v) { return norm(v < 0, 127, v < 0 ? u64(-v) : u64(v)); }
-W fromFloat80(const Float80 &x) { return norm(x.sign(), i32(x.biasedExponent()) - Float80::bias, u128(x.mantissa()) << 64); }
+W fromFloat80(const MFloat80 &x) { return norm(x.sign(), i32(x.biasedExponent()) - MFloat80::bias, u128(x.mantissa()) << 64); }
 
 W fromDouble(double d)
 {
@@ -507,31 +507,31 @@ W atanW(W x)
     return r;
 }
 
-/* Rounds a wide number to a Float80. Like the reference, we report every
+/* Rounds a wide number to a MFloat80. Like the reference, we report every
  * result of a transcendental function as inexact, even if it is exact (e.g.,
  * 2^n or ln(1)). Special operands that are resolved up front don't get here.
  */
-Float80 finish(SoftFloat &sf, const W &w)
+MFloat80 finish(FpuEnv &env, const W &w)
 {
-    sf.raiseFlags(FloatFlags::INEXACT);
-    if (w.zero()) return Float80::zero(w.neg);
-    return Float80::roundPack(w.neg, w.e + Float80::bias, u64(w.m >> 64), u64(w.m), sf);
+    env.raiseFlags(FloatFlags::INEXACT);
+    if (w.zero()) return MFloat80::zero(w.neg);
+    return env.roundPack(w.neg, w.e + MFloat80::bias, u64(w.m >> 64), u64(w.m));
 }
 
-Float80 invalid(SoftFloat &sf)
+MFloat80 invalid(FpuEnv &env)
 {
-    sf.raiseFlags(FloatFlags::INVALID);
-    return Float80::quietNaN();
+    env.raiseFlags(FloatFlags::INVALID);
+    return MFloat80::quietNaN();
 }
 
-Float80 divideByZero(SoftFloat &sf, bool negative)
+MFloat80 divideByZero(FpuEnv &env, bool negative)
 {
-    sf.raiseFlags(FloatFlags::DIV_BY_ZERO);
-    return Float80::infinity(negative);
+    env.raiseFlags(FloatFlags::DIV_BY_ZERO);
+    return MFloat80::infinity(negative);
 }
 
 // Returns pi/2 or pi/4 etc. with a sign
-Float80 signed_(SoftFloat &sf, const W &w, bool negative) { W r = w; r.neg = negative; return finish(sf, r); }
+MFloat80 signed_(FpuEnv &env, const W &w, bool negative) { W r = w; r.neg = negative; return finish(env, r); }
 
 }
 
@@ -541,11 +541,11 @@ Float80 signed_(SoftFloat &sf, const W &w, bool negative) { W r = w; r.neg = neg
 //
 
 static void
-sincos_(SoftFloat &sf, const Float80 &x, Float80 &sine, Float80 &cosine)
+sincos_(FpuEnv &env, const MFloat80 &x, MFloat80 &sine, MFloat80 &cosine)
 {
     if (x.isNaN()) { sine = cosine = x; return; }
-    if (x.isInfinite()) { sine = cosine = invalid(sf); return; }
-    if (x.isZero()) { sine = x; cosine = Float80::one(); return; }
+    if (x.isInfinite()) { sine = cosine = invalid(env); return; }
+    if (x.isZero()) { sine = x; cosine = MFloat80::one(); return; }
 
     int n;
     W r, s, c;
@@ -557,23 +557,20 @@ sincos_(SoftFloat &sf, const Float80 &x, Float80 &sine, Float80 &cosine)
     if (n & 2) { sv = -sv; cv = -cv; }
     if (x.sign()) sv = -sv;
 
-    sine = finish(sf, sv);
-    cosine = finish(sf, cv);
+    sine = finish(env, sv);
+    cosine = finish(env, cv);
 }
 
 void
-FloatMath::sincos(const Float80 &x, Float80 &sine, Float80 &cosine)
+FloatMath::sincos(FpuEnv &env, const MFloat80 &x, MFloat80 &sine, MFloat80 &cosine)
 {
-    auto &sf = x.env();
-    sincos_(sf, x, sine, cosine);
-    sine = sine.in(sf);
-    cosine = cosine.in(sf);
+    sincos_(env, x, sine, cosine);
 }
 
 namespace {
 
 // Computes sin and cos as wide numbers (the argument must be finite and nonzero)
-void sincosW(const Float80 &x, W &sv, W &cv)
+void sincosW(const MFloat80 &x, W &sv, W &cv)
 {
     int n;
     W r, s, c;
@@ -588,48 +585,46 @@ void sincosW(const Float80 &x, W &sv, W &cv)
 
 }
 
-static Float80
-sin_(SoftFloat &sf, const Float80 &x)
+static MFloat80
+sin_(FpuEnv &env, const MFloat80 &x)
 {
     if (x.isNaN() || x.isZero()) return x;
-    if (x.isInfinite()) return invalid(sf);
+    if (x.isInfinite()) return invalid(env);
 
     W sv, cv;
     sincosW(x, sv, cv);
-    return finish(sf, sv);
+    return finish(env, sv);
 }
 
-Float80
-FloatMath::sin(const Float80 &x)
+MFloat80
+FloatMath::sin(FpuEnv &env, const MFloat80 &x)
 {
-    auto &sf = x.env();
-    return sin_(sf, x).in(sf);
+    return sin_(env, x);
 }
 
-static Float80
-cos_(SoftFloat &sf, const Float80 &x)
+static MFloat80
+cos_(FpuEnv &env, const MFloat80 &x)
 {
     if (x.isNaN()) return x;
-    if (x.isInfinite()) return invalid(sf);
-    if (x.isZero()) return Float80::one();
+    if (x.isInfinite()) return invalid(env);
+    if (x.isZero()) return MFloat80::one();
 
     W sv, cv;
     sincosW(x, sv, cv);
-    return finish(sf, cv);
+    return finish(env, cv);
 }
 
-Float80
-FloatMath::cos(const Float80 &x)
+MFloat80
+FloatMath::cos(FpuEnv &env, const MFloat80 &x)
 {
-    auto &sf = x.env();
-    return cos_(sf, x).in(sf);
+    return cos_(env, x);
 }
 
-static Float80
-tan_(SoftFloat &sf, const Float80 &x)
+static MFloat80
+tan_(FpuEnv &env, const MFloat80 &x)
 {
     if (x.isNaN()) return x;
-    if (x.isInfinite()) return invalid(sf);
+    if (x.isInfinite()) return invalid(env);
     if (x.isZero()) return x;
 
     int n;
@@ -640,14 +635,13 @@ tan_(SoftFloat &sf, const Float80 &x)
     W t = (n & 1) ? -(c / s) : s / c;
     if (x.sign()) t = -t;
 
-    return finish(sf, t);
+    return finish(env, t);
 }
 
-Float80
-FloatMath::tan(const Float80 &x)
+MFloat80
+FloatMath::tan(FpuEnv &env, const MFloat80 &x)
 {
-    auto &sf = x.env();
-    return tan_(sf, x).in(sf);
+    return tan_(env, x);
 }
 
 
@@ -655,68 +649,65 @@ FloatMath::tan(const Float80 &x)
 // Inverse trigonometric functions
 //
 
-static Float80
-atan_(SoftFloat &sf, const Float80 &x)
+static MFloat80
+atan_(FpuEnv &env, const MFloat80 &x)
 {
     if (x.isNaN() || x.isZero()) return x;
-    if (x.isInfinite()) return signed_(sf, piOver2(), x.sign());
+    if (x.isInfinite()) return signed_(env, piOver2(), x.sign());
 
-    return finish(sf, atanW(fromFloat80(x)));
+    return finish(env, atanW(fromFloat80(x)));
 }
 
-Float80
-FloatMath::atan(const Float80 &x)
+MFloat80
+FloatMath::atan(FpuEnv &env, const MFloat80 &x)
 {
-    auto &sf = x.env();
-    return atan_(sf, x).in(sf);
+    return atan_(env, x);
 }
 
-static Float80
-asin_(SoftFloat &sf, const Float80 &x)
+static MFloat80
+asin_(FpuEnv &env, const MFloat80 &x)
 {
     if (x.isNaN() || x.isZero()) return x;
-    if (x.isInfinite()) return invalid(sf);
+    if (x.isInfinite()) return invalid(env);
 
     W v = fromFloat80(x);
     int c = cmpAbs(v, one());
-    if (c > 0) return invalid(sf);
-    if (c == 0) return signed_(sf, piOver2(), x.sign());
+    if (c > 0) return invalid(env);
+    if (c == 0) return signed_(env, piOver2(), x.sign());
 
     // asin(x) = atan(x / sqrt((1 - x)(1 + x)))
     W root = sqrt((one() - abs(v)) * (one() + abs(v)));
     W r = atanW(abs(v) / root);
     r.neg = x.sign();
-    return finish(sf, r);
+    return finish(env, r);
 }
 
-Float80
-FloatMath::asin(const Float80 &x)
+MFloat80
+FloatMath::asin(FpuEnv &env, const MFloat80 &x)
 {
-    auto &sf = x.env();
-    return asin_(sf, x).in(sf);
+    return asin_(env, x);
 }
 
-static Float80
-acos_(SoftFloat &sf, const Float80 &x)
+static MFloat80
+acos_(FpuEnv &env, const MFloat80 &x)
 {
     if (x.isNaN()) return x;
-    if (x.isInfinite()) return invalid(sf);
+    if (x.isInfinite()) return invalid(env);
 
     W v = fromFloat80(x);
     int c = cmpAbs(v, one());
-    if (c > 0) return invalid(sf);
-    if (c == 0) return x.sign() ? finish(sf, pi()) : Float80::zero();
+    if (c > 0) return invalid(env);
+    if (c == 0) return x.sign() ? finish(env, pi()) : MFloat80::zero();
 
     // acos(x) = 2 atan(sqrt((1 - x) / (1 + x)))
     W r = scale(atanW(sqrt((one() - v) / (one() + v))), 1);
-    return finish(sf, r);
+    return finish(env, r);
 }
 
-Float80
-FloatMath::acos(const Float80 &x)
+MFloat80
+FloatMath::acos(FpuEnv &env, const MFloat80 &x)
 {
-    auto &sf = x.env();
-    return acos_(sf, x).in(sf);
+    return acos_(env, x);
 }
 
 
@@ -724,8 +715,8 @@ FloatMath::acos(const Float80 &x)
 // Hyperbolic functions
 //
 
-static Float80
-sinh_(SoftFloat &sf, const Float80 &x)
+static MFloat80
+sinh_(FpuEnv &env, const MFloat80 &x)
 {
     if (x.isNaN() || x.isZero() || x.isInfinite()) return x;
 
@@ -745,39 +736,37 @@ sinh_(SoftFloat &sf, const Float80 &x)
         r = scale(e + e / (e + one()), -1);
     }
     r.neg = x.sign();
-    return finish(sf, r);
+    return finish(env, r);
 }
 
-Float80
-FloatMath::sinh(const Float80 &x)
+MFloat80
+FloatMath::sinh(FpuEnv &env, const MFloat80 &x)
 {
-    auto &sf = x.env();
-    return sinh_(sf, x).in(sf);
+    return sinh_(env, x);
 }
 
-static Float80
-cosh_(SoftFloat &sf, const Float80 &x)
+static MFloat80
+cosh_(FpuEnv &env, const MFloat80 &x)
 {
     if (x.isNaN()) return x;
-    if (x.isInfinite()) return Float80::infinity();
-    if (x.isZero()) return Float80::one();
+    if (x.isInfinite()) return MFloat80::infinity();
+    if (x.isZero()) return MFloat80::one();
 
     W e = expW(abs(fromFloat80(x)));
-    return finish(sf, scale(e + one() / e, -1));
+    return finish(env, scale(e + one() / e, -1));
 }
 
-Float80
-FloatMath::cosh(const Float80 &x)
+MFloat80
+FloatMath::cosh(FpuEnv &env, const MFloat80 &x)
 {
-    auto &sf = x.env();
-    return cosh_(sf, x).in(sf);
+    return cosh_(env, x);
 }
 
-static Float80
-tanh_(SoftFloat &sf, const Float80 &x)
+static MFloat80
+tanh_(FpuEnv &env, const MFloat80 &x)
 {
     if (x.isNaN() || x.isZero()) return x;
-    if (x.isInfinite()) return Float80::one(x.sign());
+    if (x.isInfinite()) return MFloat80::one(x.sign());
 
     // tanh(x) = E / (E + 2), where E = e^(2|x|) - 1
     W e = expm1W(scale(abs(fromFloat80(x)), 1));
@@ -788,38 +777,36 @@ tanh_(SoftFloat &sf, const Float80 &x)
     // Use the closest value below 1 to let the rounding mode take effect.
     if (r.e == one().e && r.m == one().m) { r.e -= 1; r.m = ~u128(0); }
 
-    return finish(sf, r);
+    return finish(env, r);
 }
 
-Float80
-FloatMath::tanh(const Float80 &x)
+MFloat80
+FloatMath::tanh(FpuEnv &env, const MFloat80 &x)
 {
-    auto &sf = x.env();
-    return tanh_(sf, x).in(sf);
+    return tanh_(env, x);
 }
 
-static Float80
-atanh_(SoftFloat &sf, const Float80 &x)
+static MFloat80
+atanh_(FpuEnv &env, const MFloat80 &x)
 {
     if (x.isNaN() || x.isZero()) return x;
-    if (x.isInfinite()) return invalid(sf);
+    if (x.isInfinite()) return invalid(env);
 
     W v = abs(fromFloat80(x));
     int c = cmpAbs(v, one());
-    if (c > 0) return invalid(sf);
-    if (c == 0) return divideByZero(sf, x.sign());
+    if (c > 0) return invalid(env);
+    if (c == 0) return divideByZero(env, x.sign());
 
     // atanh(x) = ln(1 + 2x / (1 - x)) / 2
     W r = scale(lognp1W(scale(v, 1) / (one() - v)), -1);
     r.neg = x.sign();
-    return finish(sf, r);
+    return finish(env, r);
 }
 
-Float80
-FloatMath::atanh(const Float80 &x)
+MFloat80
+FloatMath::atanh(FpuEnv &env, const MFloat80 &x)
 {
-    auto &sf = x.env();
-    return atanh_(sf, x).in(sf);
+    return atanh_(env, x);
 }
 
 
@@ -827,29 +814,28 @@ FloatMath::atanh(const Float80 &x)
 // Exponential functions
 //
 
-static Float80
-etox_(SoftFloat &sf, const Float80 &x)
+static MFloat80
+etox_(FpuEnv &env, const MFloat80 &x)
 {
     if (x.isNaN()) return x;
-    if (x.isInfinite()) return x.sign() ? Float80::zero() : x;
-    if (x.isZero()) return Float80::one();
+    if (x.isInfinite()) return x.sign() ? MFloat80::zero() : x;
+    if (x.isZero()) return MFloat80::one();
 
-    return finish(sf, expW(fromFloat80(x)));
+    return finish(env, expW(fromFloat80(x)));
 }
 
-Float80
-FloatMath::etox(const Float80 &x)
+MFloat80
+FloatMath::etox(FpuEnv &env, const MFloat80 &x)
 {
-    auto &sf = x.env();
-    return etox_(sf, x).in(sf);
+    return etox_(env, x);
 }
 
-static Float80
-etoxm1_(SoftFloat &sf, const Float80 &x)
+static MFloat80
+etoxm1_(FpuEnv &env, const MFloat80 &x)
 {
     if (x.isNaN() || x.isZero()) return x;
     if (x.isInfinite()) {
-        return x.sign() ? Float80::one(true) : x;
+        return x.sign() ? MFloat80::one(true) : x;
     }
     /* For tiny arguments, e^x - 1 equals x within the precision of the extended format. What
      * remains to be done is to raise the right flags and to round the result as requested.
@@ -861,36 +847,35 @@ etoxm1_(SoftFloat &sf, const Float80 &x)
      * Note: The threshold and the addend can't be derived from the math. They reproduce the
      * observable behavior of the reference.
      */
-    if ((x.signExp() & 0x7FFF) < Float80::bias - 65) {
+    if ((x.signExp() & 0x7FFF) < MFloat80::bias - 65) {
 
-        if ((x.signExp() & 0x7FFF) < 0x33) return finish(sf, fromFloat80(x));
+        if ((x.signExp() & 0x7FFF) < 0x33) return finish(env, fromFloat80(x));
 
-        auto result = x + Float80::fromBits(0x8001, 1ULL << 63);
-        sf.raiseFlags(FloatFlags::INEXACT);
+        auto result = env.add(x, MFloat80::fromBits(0x8001, 1ULL << 63));
+        env.raiseFlags(FloatFlags::INEXACT);
         return result;
     }
 
     W v = fromFloat80(x);
 
     // Large negative arguments yield -1 + epsilon
-    if (v.neg && v.e > 6) return finish(sf, norm(true, -1, ~u128(0)));
+    if (v.neg && v.e > 6) return finish(env, norm(true, -1, ~u128(0)));
 
-    return finish(sf, expm1W(v));
+    return finish(env, expm1W(v));
 }
 
-Float80
-FloatMath::etoxm1(const Float80 &x)
+MFloat80
+FloatMath::etoxm1(FpuEnv &env, const MFloat80 &x)
 {
-    auto &sf = x.env();
-    return etoxm1_(sf, x).in(sf);
+    return etoxm1_(env, x);
 }
 
-static Float80
-twotox_(SoftFloat &sf, const Float80 &x)
+static MFloat80
+twotox_(FpuEnv &env, const MFloat80 &x)
 {
     if (x.isNaN()) return x;
-    if (x.isInfinite()) return x.sign() ? Float80::zero() : x;
-    if (x.isZero()) return Float80::one();
+    if (x.isInfinite()) return x.sign() ? MFloat80::zero() : x;
+    if (x.isZero()) return MFloat80::one();
 
     W v = fromFloat80(x);
 
@@ -898,25 +883,24 @@ twotox_(SoftFloat &sf, const Float80 &x)
     if (x.exponent() >= 0 && x.exponent() < 20 && (x.mantissa() << (x.exponent() + 1)) == 0) {
 
         i64 n = i64(x.mantissa() >> (63 - x.exponent()));
-        return finish(sf, norm(false, x.sign() ? -i32(n) : i32(n), u128(1) << 127));
+        return finish(env, norm(false, x.sign() ? -i32(n) : i32(n), u128(1) << 127));
     }
     if (v.e > 20) v = norm(v.neg, 20, u128(1) << 127);
-    return finish(sf, expW(v * ln2()));
+    return finish(env, expW(v * ln2()));
 }
 
-Float80
-FloatMath::twotox(const Float80 &x)
+MFloat80
+FloatMath::twotox(FpuEnv &env, const MFloat80 &x)
 {
-    auto &sf = x.env();
-    return twotox_(sf, x).in(sf);
+    return twotox_(env, x);
 }
 
-static Float80
-tentox_(SoftFloat &sf, const Float80 &x)
+static MFloat80
+tentox_(FpuEnv &env, const MFloat80 &x)
 {
     if (x.isNaN()) return x;
-    if (x.isInfinite()) return x.sign() ? Float80::zero() : x;
-    if (x.isZero()) return Float80::one();
+    if (x.isInfinite()) return x.sign() ? MFloat80::zero() : x;
+    if (x.isZero()) return MFloat80::one();
 
     W v = fromFloat80(x);
 
@@ -927,18 +911,17 @@ tentox_(SoftFloat &sf, const Float80 &x)
         if (n <= 27) {
             u128 p = 1;
             for (i64 i = 0; i < n; i++) p *= 10;
-            return finish(sf, norm(false, 127, p));
+            return finish(env, norm(false, 127, p));
         }
     }
     if (v.e > 20) v = norm(v.neg, 20, u128(1) << 127);
-    return finish(sf, expW(v * ln10()));
+    return finish(env, expW(v * ln10()));
 }
 
-Float80
-FloatMath::tentox(const Float80 &x)
+MFloat80
+FloatMath::tentox(FpuEnv &env, const MFloat80 &x)
 {
-    auto &sf = x.env();
-    return tentox_(sf, x).in(sf);
+    return tentox_(env, x);
 }
 
 
@@ -950,59 +933,58 @@ namespace {
 
 enum class Base { E, TWO, TEN };
 
-Float80 logarithm(SoftFloat &sf, const Float80 &x, Base base)
+MFloat80 logarithm(FpuEnv &env, const MFloat80 &x, Base base)
 {
     if (x.isNaN()) return x;
-    if (x.isZero()) return divideByZero(sf, true);
-    if (x.sign()) return invalid(sf);
+    if (x.isZero()) return divideByZero(env, true);
+    if (x.sign()) return invalid(env);
     if (x.isInfinite()) return x;
 
     W v = fromFloat80(x);
 
     // Exact results
     if (base == Base::TWO && (x.mantissa() << 1) == 0) {
-        sf.raiseFlags(FloatFlags::INEXACT);
-        return Float80::fromInt(x.exponent(), sf);
+        env.raiseFlags(FloatFlags::INEXACT);
+        return MFloat80::fromInt(x.exponent());
     }
     if (base == Base::TEN) {
         u128 p = 1;
         for (int n = 0; n <= 27; n++, p *= 10) {
             W t = norm(false, 127, p);
-            if (v.e == t.e && v.m == t.m) { sf.raiseFlags(FloatFlags::INEXACT); return Float80::fromInt(n, sf); }
+            if (v.e == t.e && v.m == t.m) { env.raiseFlags(FloatFlags::INEXACT); return MFloat80::fromInt(n); }
         }
     }
     W r = lnW(v);
     if (base == Base::TWO) r = r * invLn2();
     if (base == Base::TEN) r = r / ln10();
-    return finish(sf, r);
+    return finish(env, r);
 }
 
 }
 
-Float80 FloatMath::logn(const Float80 &x) { auto &sf = x.env(); return logarithm(sf, x, Base::E).in(sf); }
-Float80 FloatMath::log2(const Float80 &x) { auto &sf = x.env(); return logarithm(sf, x, Base::TWO).in(sf); }
-Float80 FloatMath::log10(const Float80 &x) { auto &sf = x.env(); return logarithm(sf, x, Base::TEN).in(sf); }
+MFloat80 FloatMath::logn(FpuEnv &env, const MFloat80 &x) { return logarithm(env, x, Base::E); }
+MFloat80 FloatMath::log2(FpuEnv &env, const MFloat80 &x) { return logarithm(env, x, Base::TWO); }
+MFloat80 FloatMath::log10(FpuEnv &env, const MFloat80 &x) { return logarithm(env, x, Base::TEN); }
 
-static Float80
-lognp1_(SoftFloat &sf, const Float80 &x)
+static MFloat80
+lognp1_(FpuEnv &env, const MFloat80 &x)
 {
     if (x.isNaN() || x.isZero()) return x;
-    if (x.isInfinite()) return x.sign() ? invalid(sf) : x;
+    if (x.isInfinite()) return x.sign() ? invalid(env) : x;
 
     W v = fromFloat80(x);
     if (v.neg) {
         int c = cmpAbs(v, one());
-        if (c > 0) return invalid(sf);
-        if (c == 0) return divideByZero(sf, true);
+        if (c > 0) return invalid(env);
+        if (c == 0) return divideByZero(env, true);
     }
-    return finish(sf, lognp1W(v));
+    return finish(env, lognp1W(v));
 }
 
-Float80
-FloatMath::lognp1(const Float80 &x)
+MFloat80
+FloatMath::lognp1(FpuEnv &env, const MFloat80 &x)
 {
-    auto &sf = x.env();
-    return lognp1_(sf, x).in(sf);
+    return lognp1_(env, x);
 }
 
 }

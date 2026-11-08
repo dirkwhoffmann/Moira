@@ -149,7 +149,7 @@ Moira::computeFpuEA(int n, FpuFormat fmt)
     }
 }
 
-template <Core C, Mode M> Float80
+template <Core C, Mode M> MFloat80
 Moira::readFpuOp(int n, FpuFormat fmt)
 {
     if constexpr (M == Mode::DN) return readFpuOpRg<C>(n, fmt);
@@ -163,44 +163,44 @@ Moira::readFpuOp(int n, FpuFormat fmt)
     }
 }
 
-template <Core C> Float80
+template <Core C> MFloat80
 Moira::readFpuOpRg(int n, FpuFormat fmt)
 {
     switch (fmt) {
 
-        case FpuFormat::BYTE:       return FpuFormats::fromInteger((i8)reg.d[n], fpu.sf);
-        case FpuFormat::WORD:       return FpuFormats::fromInteger((i16)reg.d[n], fpu.sf);
-        case FpuFormat::LONG:       return FpuFormats::fromInteger((i32)reg.d[n], fpu.sf);
-        case FpuFormat::SINGLE:     return FpuFormats::fromSingle(reg.d[n], fpu.sf);
+        case FpuFormat::BYTE:       return FpuFormats::fromInteger((i8)reg.d[n]);
+        case FpuFormat::WORD:       return FpuFormats::fromInteger((i16)reg.d[n]);
+        case FpuFormat::LONG:       return FpuFormats::fromInteger((i32)reg.d[n]);
+        case FpuFormat::SINGLE:     return FpuFormats::fromSingle(fpu.env, reg.d[n]);
 
         default:                    throw IllegalInstruction();
     }
 }
 
-template <Core C> Float80
+template <Core C> MFloat80
 Moira::readFpuOpIm(FpuFormat fmt)
 {
     u32 w[3];
 
     switch (fmt) {
 
-        case FpuFormat::BYTE:       return FpuFormats::fromInteger((i8)readI<C, Word>(), fpu.sf);
-        case FpuFormat::WORD:       return FpuFormats::fromInteger((i16)readI<C, Word>(), fpu.sf);
-        case FpuFormat::LONG:       return FpuFormats::fromInteger((i32)readI<C, Long>(), fpu.sf);
-        case FpuFormat::SINGLE:     return FpuFormats::fromSingle(readI<C, Long>(), fpu.sf);
+        case FpuFormat::BYTE:       return FpuFormats::fromInteger((i8)readI<C, Word>());
+        case FpuFormat::WORD:       return FpuFormats::fromInteger((i16)readI<C, Word>());
+        case FpuFormat::LONG:       return FpuFormats::fromInteger((i32)readI<C, Long>());
+        case FpuFormat::SINGLE:     return FpuFormats::fromSingle(fpu.env, readI<C, Long>());
 
         case FpuFormat::DOUBLE:
         {
             u64 hi = readI<C, Long>();
             u64 lo = readI<C, Long>();
-            return FpuFormats::fromDouble(hi << 32 | lo, fpu.sf);
+            return FpuFormats::fromDouble(fpu.env, hi << 32 | lo);
         }
         case FpuFormat::EXTENDED:
         {
             w[0] = readI<C, Long>();
             w[1] = readI<C, Long>();
             w[2] = readI<C, Long>();
-            return FpuFormats::fromExtended(w, fpu.sf);
+            return FpuFormats::fromExtended(w);
         }
         case FpuFormat::PACKED:
         case FpuFormat::PACKED_DYN:
@@ -208,13 +208,13 @@ Moira::readFpuOpIm(FpuFormat fmt)
             w[0] = readI<C, Long>();
             w[1] = readI<C, Long>();
             w[2] = readI<C, Long>();
-            return FpuFormats::fromPacked(w, fpu.sf);
+            return FpuFormats::fromPacked(fpu.env, w);
         }
     }
     throw IllegalInstruction();
 }
 
-template <Core C, Mode M> Float80
+template <Core C, Mode M> MFloat80
 Moira::readFpuOpEa(int n, u32 ea, FpuFormat fmt)
 {
     u32 w[3];
@@ -225,32 +225,32 @@ Moira::readFpuOpEa(int n, u32 ea, FpuFormat fmt)
         {
             auto data = readM<C, M, Byte>(ea);
             updateAn<M, Byte>(n);
-            return FpuFormats::fromInteger((i8)data, fpu.sf);
+            return FpuFormats::fromInteger((i8)data);
         }
         case FpuFormat::WORD:
         {
             auto data = readM<C, M, Word>(ea);
             updateAn<M, Word>(n);
-            return FpuFormats::fromInteger((i16)data, fpu.sf);
+            return FpuFormats::fromInteger((i16)data);
         }
         case FpuFormat::LONG:
         {
             auto data = readM<C, M, Long>(ea);
             updateAn<M, Long>(n);
-            return FpuFormats::fromInteger((i32)data, fpu.sf);
+            return FpuFormats::fromInteger((i32)data);
         }
         case FpuFormat::SINGLE:
         {
             auto data = readM<C, M, Long>(ea);
             updateAn<M, Long>(n);
-            return FpuFormats::fromSingle(data, fpu.sf);
+            return FpuFormats::fromSingle(fpu.env, data);
         }
         case FpuFormat::DOUBLE:
         {
             u64 hi = readM<C, M, Long>(ea);
             u64 lo = readM<C, M, Long>(U32_ADD(ea, 4));
             updateAn<M, Quad>(n);
-            return FpuFormats::fromDouble(hi << 32 | lo, fpu.sf);
+            return FpuFormats::fromDouble(fpu.env, hi << 32 | lo);
         }
         case FpuFormat::EXTENDED:
         {
@@ -258,7 +258,7 @@ Moira::readFpuOpEa(int n, u32 ea, FpuFormat fmt)
             w[1] = readM<C, M, Long>(U32_ADD(ea, 4));
             w[2] = readM<C, M, Long>(U32_ADD(ea, 8));
             updateAn<M, Extended>(n);
-            return FpuFormats::fromExtended(w, fpu.sf);
+            return FpuFormats::fromExtended(w);
         }
         case FpuFormat::PACKED:
         case FpuFormat::PACKED_DYN:
@@ -267,14 +267,14 @@ Moira::readFpuOpEa(int n, u32 ea, FpuFormat fmt)
             w[1] = readM<C, M, Long>(U32_ADD(ea, 4));
             w[2] = readM<C, M, Long>(U32_ADD(ea, 8));
             updateAn<M, Extended>(n);
-            return FpuFormats::fromPacked(w, fpu.sf);
+            return FpuFormats::fromPacked(fpu.env, w);
         }
     }
     throw IllegalInstruction();
 }
 
 template <Core C, Mode M> void
-Moira::writeFpuOp(int n, const Float80 &val, FpuFormat fmt, int k)
+Moira::writeFpuOp(int n, const MFloat80 &val, FpuFormat fmt, int k)
 {
     if constexpr (M == Mode::DN) { writeFpuOpRg<C>(n, val, fmt); return; }
     if constexpr (M == Mode::AN || M == Mode::IM || M == Mode::IP) throw IllegalInstruction();
@@ -287,21 +287,21 @@ Moira::writeFpuOp(int n, const Float80 &val, FpuFormat fmt, int k)
 }
 
 template <Core C> void
-Moira::writeFpuOpRg(int n, const Float80 &val, FpuFormat fmt)
+Moira::writeFpuOpRg(int n, const MFloat80 &val, FpuFormat fmt)
 {
     switch (fmt) {
 
-        case FpuFormat::BYTE:       writeD<Byte>(n, FpuFormats::toInteger(val, 8)); break;
-        case FpuFormat::WORD:       writeD<Word>(n, FpuFormats::toInteger(val, 16)); break;
-        case FpuFormat::LONG:       writeD<Long>(n, FpuFormats::toInteger(val, 32)); break;
-        case FpuFormat::SINGLE:     writeD<Long>(n, FpuFormats::toSingle(val)); break;
+        case FpuFormat::BYTE:       writeD<Byte>(n, FpuFormats::toInteger(fpu.env, val, 8)); break;
+        case FpuFormat::WORD:       writeD<Word>(n, FpuFormats::toInteger(fpu.env, val, 16)); break;
+        case FpuFormat::LONG:       writeD<Long>(n, FpuFormats::toInteger(fpu.env, val, 32)); break;
+        case FpuFormat::SINGLE:     writeD<Long>(n, FpuFormats::toSingle(fpu.env, val)); break;
 
         default:                    throw IllegalInstruction();
     }
 }
 
 template <Core C, Mode M> void
-Moira::writeFpuOpEa(int n, u32 ea, const Float80 &val, FpuFormat fmt, int k)
+Moira::writeFpuOpEa(int n, u32 ea, const MFloat80 &val, FpuFormat fmt, int k)
 {
     u32 w[3];
 
@@ -309,31 +309,31 @@ Moira::writeFpuOpEa(int n, u32 ea, const Float80 &val, FpuFormat fmt, int k)
 
         case FpuFormat::BYTE:
         {
-            writeM<C, M, Byte>(ea, FpuFormats::toInteger(val, 8));
+            writeM<C, M, Byte>(ea, FpuFormats::toInteger(fpu.env, val, 8));
             updateAn<M, Byte>(n);
             break;
         }
         case FpuFormat::WORD:
         {
-            writeM<C, M, Word>(ea, FpuFormats::toInteger(val, 16));
+            writeM<C, M, Word>(ea, FpuFormats::toInteger(fpu.env, val, 16));
             updateAn<M, Word>(n);
             break;
         }
         case FpuFormat::LONG:
         {
-            writeM<C, M, Long>(ea, FpuFormats::toInteger(val, 32));
+            writeM<C, M, Long>(ea, FpuFormats::toInteger(fpu.env, val, 32));
             updateAn<M, Long>(n);
             break;
         }
         case FpuFormat::SINGLE:
         {
-            writeM<C, M, Long>(ea, FpuFormats::toSingle(val));
+            writeM<C, M, Long>(ea, FpuFormats::toSingle(fpu.env, val));
             updateAn<M, Long>(n);
             break;
         }
         case FpuFormat::DOUBLE:
         {
-            auto data = FpuFormats::toDouble(val);
+            auto data = FpuFormats::toDouble(fpu.env, val);
             writeM<C, M, Long>(ea, u32(data >> 32));
             writeM<C, M, Long>(U32_ADD(ea, 4), u32(data));
             updateAn<M, Quad>(n);
@@ -353,7 +353,7 @@ Moira::writeFpuOpEa(int n, u32 ea, const Float80 &val, FpuFormat fmt, int k)
         case FpuFormat::PACKED:
         case FpuFormat::PACKED_DYN:
         {
-            FpuFormats::toPacked(val, k, w);
+            FpuFormats::toPacked(fpu.env, val, k, w);
             writeM<C, M, Long>(ea, w[0]);
             writeM<C, M, Long>(U32_ADD(ea, 4), w[1]);
             writeM<C, M, Long>(U32_ADD(ea, 8), w[2]);
@@ -739,8 +739,8 @@ Moira::execFMove(u16 opcode)
     {
         // FSMOVE and FDMOVE round to single or double precision
         FPU::Scope scope(fpu);
-        if (cmd == 0x40) fpu.sf.setPrecision(Precision::SINGLE);
-        if (cmd == 0x44) fpu.sf.setPrecision(Precision::DOUBLE);
+        if (cmd == 0x40) fpu.env.setPrecision(Precision::SINGLE);
+        if (cmd == 0x44) fpu.env.setPrecision(Precision::DOUBLE);
 
         switch (cod) {
 
@@ -754,17 +754,17 @@ Moira::execFMove(u16 opcode)
             case 0b010:                                     // FMOVE <ea>,FPn
             {
                 auto format = FpuFormat(fmt);
-                Float80 value;
+                MFloat80 value;
 
                 if (format == FpuFormat::PACKED) {
 
                     // Packed decimal numbers are converted exactly, the inexact flag has its own bit
-                    SoftFloat::Scope exact(fpu.sf);
-                    fpu.sf.setPrecision(Precision::EXTENDED);
-                    fpu.sf.clearFlags();
+                    FpuEnv::Scope exact(fpu.env);
+                    fpu.env.setPrecision(Precision::EXTENDED);
+                    fpu.env.clearFlags();
                     value = readFpuOp<C, M>(reg, format);
-                    if (fpu.sf.flags() & FloatFlags::INEXACT) fpu.setExcStatusBit(FPEXP::INEX1);
-                    fpu.sf.clearFlags(FloatFlags::INEXACT);
+                    if (fpu.env.flags() & FloatFlags::INEXACT) fpu.setExcStatusBit(FPEXP::INEX1);
+                    fpu.env.clearFlags(FloatFlags::INEXACT);
 
                 } else {
 
@@ -1022,18 +1022,18 @@ Moira::execFGeneric(u16 opcode)
         FPU::Scope scope(fpu, precision);
 
         // Read the source operand
-        Float80 val;
+        MFloat80 val;
 
         if (rm) {
 
             if (FpuFormat(src) == FpuFormat::PACKED) {
 
-                SoftFloat::Scope exact(fpu.sf);
-                fpu.sf.setPrecision(Precision::EXTENDED);
-                fpu.sf.clearFlags();
+                FpuEnv::Scope exact(fpu.env);
+                fpu.env.setPrecision(Precision::EXTENDED);
+                fpu.env.clearFlags();
                 val = readFpuOp<C, M>(reg, FpuFormat(src));
-                if (fpu.sf.flags() & FloatFlags::INEXACT) fpu.setExcStatusBit(FPEXP::INEX1);
-                fpu.sf.clearFlags(FloatFlags::INEXACT);
+                if (fpu.env.flags() & FloatFlags::INEXACT) fpu.setExcStatusBit(FPEXP::INEX1);
+                fpu.env.clearFlags(FloatFlags::INEXACT);
 
             } else {
 
@@ -1046,7 +1046,7 @@ Moira::execFGeneric(u16 opcode)
         }
 
         auto &d = fpu.fpr[dst];
-        Float80 result;
+        MFloat80 result;
         bool roundResult = true;
         bool setCodes = true;
 
@@ -1105,7 +1105,7 @@ Moira::execFGeneric(u16 opcode)
                 
             case Instr::FSINCOS: {
                 
-                Float80 sine, cosine;
+                MFloat80 sine, cosine;
                 fpu.fsincos(val, sine, cosine);
                 auto &c = fpu.fpr[ext & 7];
                 c = fpu.round(cosine);

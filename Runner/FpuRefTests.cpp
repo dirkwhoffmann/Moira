@@ -51,17 +51,17 @@ int maxPrinted = 3;
 // Generating operands
 //
 
-Float80 genOperandRaw();
+MFloat80 genOperandRaw();
 
-Float80 genOperand()
+MFloat80 genOperand()
 {
     for (;;) {
-        Float80 v = genOperandRaw();
+        MFloat80 v = genOperandRaw();
         if (!clean || !(v.isNaN() || (v.biasedExponent() == 0 && !v.isZero()))) return v;
     }
 }
 
-Float80 genOperandRaw()
+MFloat80 genOperandRaw()
 {
     bool neg = rng() & 1;
     u16 sign = neg ? 0x8000 : 0;
@@ -70,18 +70,18 @@ Float80 genOperandRaw()
 
     switch (rng() % 16) {
 
-        case 0:  return Float80::zero(neg);
-        case 1:  return Float80::infinity(neg);
-        case 2:  return Float80::fromBits(sign | 0x7FFF, (3ULL << 62) | (payload & ((1ULL << 62) - 1)));
-        case 3:  return Float80::fromBits(sign | 0x7FFF, (1ULL << 63) | (payload & ((1ULL << 62) - 1)) | 1);
-        case 4:  return Float80::fromBits(sign, rnd & ~(1ULL << 63) ? (rnd & ~(1ULL << 63)) : 1);  // Denormal
-        case 5:  return Float80::fromBits(sign | (1 + rnd % 70), rnd | (1ULL << 63));              // Tiny
-        case 6:  return Float80::fromBits(sign | (0x7FFE - rnd % 70), rnd | (1ULL << 63));         // Huge
-        case 7:  return Float80::fromBits(sign | (0x3FFF - 3 + rnd % 7), rnd | (1ULL << 63));      // Around 1
-        case 8:  return Float80::fromInt(i64(rnd % 41) - 20);                                     // Small integers
-        case 9:  return Float80::fromBits(sign | (0x3FFF + 20 + rnd % 50), 0x8000000000000000ULL | (rnd & 0xFFFF000000000000ULL));
-        case 10: return Float80::fromBits(sign | (0x3FFF - 120 + rnd % 240), rnd | (1ULL << 63));
-        default: return Float80::fromBits(sign | (0x3FFF - 70 + rnd % 140), rnd | (1ULL << 63));
+        case 0:  return MFloat80::zero(neg);
+        case 1:  return MFloat80::infinity(neg);
+        case 2:  return MFloat80::fromBits(sign | 0x7FFF, (3ULL << 62) | (payload & ((1ULL << 62) - 1)));
+        case 3:  return MFloat80::fromBits(sign | 0x7FFF, (1ULL << 63) | (payload & ((1ULL << 62) - 1)) | 1);
+        case 4:  return MFloat80::fromBits(sign, rnd & ~(1ULL << 63) ? (rnd & ~(1ULL << 63)) : 1);  // Denormal
+        case 5:  return MFloat80::fromBits(sign | (1 + rnd % 70), rnd | (1ULL << 63));              // Tiny
+        case 6:  return MFloat80::fromBits(sign | (0x7FFE - rnd % 70), rnd | (1ULL << 63));         // Huge
+        case 7:  return MFloat80::fromBits(sign | (0x3FFF - 3 + rnd % 7), rnd | (1ULL << 63));      // Around 1
+        case 8:  return MFloat80::fromInt(i64(rnd % 41) - 20);                                     // Small integers
+        case 9:  return MFloat80::fromBits(sign | (0x3FFF + 20 + rnd % 50), 0x8000000000000000ULL | (rnd & 0xFFFF000000000000ULL));
+        case 10: return MFloat80::fromBits(sign | (0x3FFF - 120 + rnd % 240), rnd | (1ULL << 63));
+        default: return MFloat80::fromBits(sign | (0x3FFF - 70 + rnd % 140), rnd | (1ULL << 63));
     }
 }
 
@@ -97,7 +97,7 @@ u32 genFPCR()
 //
 
 // Classifies the operands of a mismatching test (helps to triage the results)
-std::string classify(u32 fpcr, std::initializer_list<Float80> operands)
+std::string classify(u32 fpcr, std::initializer_list<MFloat80> operands)
 {
     std::string c;
     for (auto &v : operands) {
@@ -109,8 +109,8 @@ std::string classify(u32 fpcr, std::initializer_list<Float80> operands)
     return c.empty() ? "other" : c;
 }
 
-std::string str(const Float80 &v) { return v.str(); }
-std::string str(u16 se, u64 man) { return Float80::fromBits(se, man).str(); }
+std::string str(const MFloat80 &v) { return v.str(); }
+std::string str(u16 se, u64 man) { return MFloat80::fromBits(se, man).str(); }
 
 struct Reporter {
 
@@ -188,9 +188,9 @@ const OpDesc ops[] = {
     { 0x6c, "fdsub",   Op::SUB,    false, true },
 };
 
-Float80 execMoira(FPU &fpu, const OpDesc &d, const Float80 &dst, const Float80 &src, u32 &quot)
+MFloat80 execMoira(FPU &fpu, const OpDesc &d, const MFloat80 &dst, const MFloat80 &src, u32 &quot)
 {
-    Float80 result;
+    MFloat80 result;
     quot = 0;
 
     // FS* and FD* instructions override the rounding precision
@@ -238,7 +238,7 @@ void testArithmetic(int model, long iterations)
 
             if (is040 ? d.only6888x : d.only040) continue;
 
-            Float80 dst = genOperand(), src = genOperand();
+            MFloat80 dst = genOperand(), src = genOperand();
             u32 fpcr = genFPCR();
 
             // Moira
@@ -246,7 +246,7 @@ void testArithmetic(int model, long iterations)
             fpu.setFPCR(fpcr);
             fpu.setFPSR(0);
             u32 quot;
-            Float80 res = execMoira(fpu, d, dst, src, quot);
+            MFloat80 res = execMoira(fpu, d, dst, src, quot);
             u32 exc = fpu.fpsr & 0xFF00;
 
             // Reference
@@ -297,7 +297,7 @@ void testArithmetic(int model, long iterations)
 struct TransDesc {
     u8 cmd;
     const char *name;
-    Float80 (FPU::*fn)(const Float80 &);
+    MFloat80 (FPU::*fn)(const MFloat80 &);
 };
 
 const TransDesc transOps[] = {
@@ -334,13 +334,13 @@ void testTranscendentals(long iterations)
 
         for (const TransDesc &d : transOps) {
 
-            Float80 src = genOperand();
+            MFloat80 src = genOperand();
             u32 fpcr = genFPCR() & ~0xC0u;      // Extended precision only
 
             fpu.reset();
             fpu.setFPCR(fpcr);
             fpu.setFPSR(0);
-            Float80 res;
+            MFloat80 res;
             {
                 FPU::Scope scope(fpu);
                 res = fpu.round((fpu.*d.fn)(src));
@@ -423,7 +423,7 @@ void testTinyEtoxm1(long iterations)
             case 2:  exp = u16(rng() % 0x60); if (exp == 0) man &= ~(1ULL << 63); break;    // (Almost) denormal
             default: exp = u16(rng() % 0x3FBE); break;                                      // Anywhere below 2^-65
         }
-        Float80 src = Float80::fromBits(sign | exp, man);
+        MFloat80 src = MFloat80::fromBits(sign | exp, man);
         if (src.isZero()) continue;
 
         u32 fpcr = genFPCR();
@@ -431,7 +431,7 @@ void testTinyEtoxm1(long iterations)
         fpu.reset();
         fpu.setFPCR(fpcr);
         fpu.setFPSR(0);
-        Float80 res;
+        MFloat80 res;
         {
             FPU::Scope scope(fpu);
             res = fpu.round(fpu.fetoxm1(src));
@@ -497,7 +497,7 @@ void testConversions(int model, long iterations)
         // Single precision to extended
         {
             u32 raw = genSingle();
-            Float80 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::fromSingle(raw, fpu.sf); }
+            MFloat80 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::fromSingle(fpu.env, raw); }
             auto ref = uaeref::fromSingle(raw, fpcr);
             Reporter rep("single -> extended" + tag);
             if (v.signExp() != ref.se || v.mantissa() != ref.man || (fpu.fpsr & 0xFF00) != ref.exc)
@@ -508,7 +508,7 @@ void testConversions(int model, long iterations)
         // Double precision to extended
         {
             u64 raw = genDouble();
-            Float80 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::fromDouble(raw, fpu.sf); }
+            MFloat80 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::fromDouble(fpu.env, raw); }
             auto ref = uaeref::fromDouble(raw, fpcr);
             Reporter rep("double -> extended" + tag);
             if (v.signExp() != ref.se || v.mantissa() != ref.man || (fpu.fpsr & 0xFF00) != ref.exc)
@@ -518,8 +518,8 @@ void testConversions(int model, long iterations)
 
         // Extended to single
         {
-            Float80 x = genOperand();
-            u32 raw; { fpu.setFPSR(0); FPU::Scope s(fpu); raw = FpuFormats::toSingle(x.in(fpu.sf)); }
+            MFloat80 x = genOperand();
+            u32 raw; { fpu.setFPSR(0); FPU::Scope s(fpu); raw = FpuFormats::toSingle(fpu.env, x); }
             auto ref = uaeref::toSingle(x.signExp(), x.mantissa(), fpcr);
             Reporter rep("extended -> single" + tag);
             if (raw == ref.raw[0] && (fpu.fpsr & FPEXP::OVFL) && (fpu.fpsr & 0xFF00) == (ref.exc | uaeref::INEX2)) rep.known(); else
@@ -530,8 +530,8 @@ void testConversions(int model, long iterations)
 
         // Extended to double
         {
-            Float80 x = genOperand();
-            u64 raw; { fpu.setFPSR(0); FPU::Scope s(fpu); raw = FpuFormats::toDouble(x.in(fpu.sf)); }
+            MFloat80 x = genOperand();
+            u64 raw; { fpu.setFPSR(0); FPU::Scope s(fpu); raw = FpuFormats::toDouble(fpu.env, x); }
             auto ref = uaeref::toDouble(x.signExp(), x.mantissa(), fpcr);
             u64 refRaw = u64(ref.raw[0]) << 32 | ref.raw[1];
             Reporter rep("extended -> double" + tag);
@@ -544,8 +544,8 @@ void testConversions(int model, long iterations)
         // Extended to integer
         for (int bits : { 8, 16, 32 }) {
 
-            Float80 x = genOperand();
-            i32 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::toInteger(x.in(fpu.sf), bits); }
+            MFloat80 x = genOperand();
+            i32 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::toInteger(fpu.env, x, bits); }
             auto ref = uaeref::toInteger(x.signExp(), x.mantissa(), bits, fpcr);
             u32 mask = bits == 8 ? 0xFF : bits == 16 ? 0xFFFF : 0xFFFFFFFF;
             Reporter rep("extended -> int" + std::to_string(bits) + tag);
@@ -558,10 +558,10 @@ void testConversions(int model, long iterations)
 
         // Extended to packed
         {
-            Float80 x = genOperand();
+            MFloat80 x = genOperand();
             int k = int(rng() % 128) - 64;
             if (rng() % 2) k = 1 + int(rng() % 17);
-            u32 w[3] = {}; { fpu.setFPSR(0); FPU::Scope s(fpu); FpuFormats::toPacked(x.in(fpu.sf), k, w); }
+            u32 w[3] = {}; { fpu.setFPSR(0); FPU::Scope s(fpu); FpuFormats::toPacked(fpu.env, x, k, w); }
             auto ref = uaeref::toPacked(x.signExp(), x.mantissa(), k, fpcr);
             Reporter rep("extended -> packed" + tag);
             bool sameWords = w[0] == ref.raw[0] && w[1] == ref.raw[1] && w[2] == ref.raw[2];
@@ -603,7 +603,7 @@ void testConversions(int model, long iterations)
             // Exponent digits must be BCD
             u32 e = rng() % 1000;
             w[0] = (w[0] & 0xC000000F) | ((e / 100) << 24) | (((e / 10) % 10) << 20) | ((e % 10) << 16);
-            Float80 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::fromPacked(w, fpu.sf); }
+            MFloat80 v; { fpu.setFPSR(0); FPU::Scope s(fpu); v = FpuFormats::fromPacked(fpu.env, w); }
             u32 exc = fpu.fpsr & 0xFF00;
             if (exc & FPEXP::INEX2) exc = (exc & ~FPEXP::INEX2) | FPEXP::INEX1;
             auto ref = uaeref::fromPacked(w, fpcr);

@@ -7,15 +7,15 @@
 
 #pragma once
 
-#include "Float80.h"
+#include "FpuEnv.h"
 
 namespace MOIRA_NAMESPACE {
 
-/* Transcendental functions on Float80
+/* Transcendental functions on MFloat80
  *
  * The functions are evaluated with a 128-bit significand and rounded once to
  * the current precision and rounding mode of the floating-point environment
- * of the operand (see SoftFloat). Hence, results are accurate to far better than one unit in the
+ * of the operand (see FpuEnv). Hence, results are accurate to far better than one unit in the
  * last place (but, like on the real hardware, not necessarily correctly
  * rounded). Results that are mathematically exact (e.g., 2^n, log2(2^n),
  * sin(0)) are returned exactly.
@@ -29,33 +29,33 @@ namespace MOIRA_NAMESPACE {
 struct FloatMath {
 
     // Trigonometric functions
-    static Float80 sin(const Float80 &x);
-    static Float80 cos(const Float80 &x);
-    static Float80 tan(const Float80 &x);
-    static void sincos(const Float80 &x, Float80 &sine, Float80 &cosine);
+    static MFloat80 sin(FpuEnv &env, const MFloat80 &x);
+    static MFloat80 cos(FpuEnv &env, const MFloat80 &x);
+    static MFloat80 tan(FpuEnv &env, const MFloat80 &x);
+    static void sincos(FpuEnv &env, const MFloat80 &x, MFloat80 &sine, MFloat80 &cosine);
 
     // Inverse trigonometric functions
-    static Float80 asin(const Float80 &x);
-    static Float80 acos(const Float80 &x);
-    static Float80 atan(const Float80 &x);
+    static MFloat80 asin(FpuEnv &env, const MFloat80 &x);
+    static MFloat80 acos(FpuEnv &env, const MFloat80 &x);
+    static MFloat80 atan(FpuEnv &env, const MFloat80 &x);
 
     // Hyperbolic functions
-    static Float80 sinh(const Float80 &x);
-    static Float80 cosh(const Float80 &x);
-    static Float80 tanh(const Float80 &x);
-    static Float80 atanh(const Float80 &x);
+    static MFloat80 sinh(FpuEnv &env, const MFloat80 &x);
+    static MFloat80 cosh(FpuEnv &env, const MFloat80 &x);
+    static MFloat80 tanh(FpuEnv &env, const MFloat80 &x);
+    static MFloat80 atanh(FpuEnv &env, const MFloat80 &x);
 
     // Exponential functions
-    static Float80 etox(const Float80 &x);         // e^x
-    static Float80 etoxm1(const Float80 &x);       // e^x - 1
-    static Float80 twotox(const Float80 &x);       // 2^x
-    static Float80 tentox(const Float80 &x);       // 10^x
+    static MFloat80 etox(FpuEnv &env, const MFloat80 &x);         // e^x
+    static MFloat80 etoxm1(FpuEnv &env, const MFloat80 &x);       // e^x - 1
+    static MFloat80 twotox(FpuEnv &env, const MFloat80 &x);       // 2^x
+    static MFloat80 tentox(FpuEnv &env, const MFloat80 &x);       // 10^x
 
     // Logarithms
-    static Float80 logn(const Float80 &x);         // ln(x)
-    static Float80 lognp1(const Float80 &x);       // ln(x + 1)
-    static Float80 log2(const Float80 &x);
-    static Float80 log10(const Float80 &x);
+    static MFloat80 logn(FpuEnv &env, const MFloat80 &x);         // ln(x)
+    static MFloat80 lognp1(FpuEnv &env, const MFloat80 &x);       // ln(x + 1)
+    static MFloat80 log2(FpuEnv &env, const MFloat80 &x);
+    static MFloat80 log10(FpuEnv &env, const MFloat80 &x);
 };
 
 }

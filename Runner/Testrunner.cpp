@@ -718,20 +718,20 @@ bool isIllegalOpcode(u16 op)
 void setupFpuEnvironment(Setup &s)
 {
     // A pool of interesting values
-    static const Float80 pool[] = {
+    static const MFloat80 pool[] = {
 
-        Float80::zero(), Float80::zero(true),
-        Float80::one(), Float80::one(true),
-        Float80::infinity(), Float80::infinity(true),
-        Float80::quietNaN(), Float80::signalingNaN(),
-        Float80::fromBits(0x4000, 0x8000000000000000ULL),   // 2.0
-        Float80::fromBits(0x3FFE, 0x8000000000000000ULL),   // 0.5
-        Float80::fromBits(0x4005, 0xA000000000000000ULL),   // 40.0
-        Float80::fromBits(0xC005, 0xA000000000000000ULL),   // -40.0
-        Float80::fromBits(0x0001, 0x8000000000000000ULL),   // Smallest normal
-        Float80::fromBits(0x0000, 0x4000000000000000ULL),   // Denormal
-        Float80::fromBits(0x7FFE, 0xFFFFFFFFFFFFFFFFULL),   // Largest finite
-        Float80::fromBits(0x3FFF, 0x8000000000000001ULL),   // 1 + epsilon
+        MFloat80::zero(), MFloat80::zero(true),
+        MFloat80::one(), MFloat80::one(true),
+        MFloat80::infinity(), MFloat80::infinity(true),
+        MFloat80::quietNaN(), MFloat80::signalingNaN(),
+        MFloat80::fromBits(0x4000, 0x8000000000000000ULL),   // 2.0
+        MFloat80::fromBits(0x3FFE, 0x8000000000000000ULL),   // 0.5
+        MFloat80::fromBits(0x4005, 0xA000000000000000ULL),   // 40.0
+        MFloat80::fromBits(0xC005, 0xA000000000000000ULL),   // -40.0
+        MFloat80::fromBits(0x0001, 0x8000000000000000ULL),   // Smallest normal
+        MFloat80::fromBits(0x0000, 0x4000000000000000ULL),   // Denormal
+        MFloat80::fromBits(0x7FFE, 0xFFFFFFFFFFFFFFFFULL),   // Largest finite
+        MFloat80::fromBits(0x3FFF, 0x8000000000000001ULL),   // 1 + epsilon
     };
     const int poolSize = sizeof(pool) / sizeof(pool[0]);
 
@@ -749,7 +749,7 @@ void setupFpuEnvironment(Setup &s)
             u64 man = (u64(randomizer.rand()) << 32 | randomizer.rand()) | (1ULL << 63);
             u16 exp = u16(0x3FFF - 40 + randomizer.rand() % 80);
             u16 sign = u16((randomizer.rand() & 1) << 15);
-            s.fpr[i] = Float80::fromBits(sign | exp, man);
+            s.fpr[i] = MFloat80::fromBits(sign | exp, man);
         }
     }
 
@@ -1613,7 +1613,7 @@ static bool identicalFPR(Result &rRef, Result &rMoira)
 }
 
 // Maps a finite value to an integer such that adjacent values differ by 1
-static __int128 ulpIndex(const Float80 &value)
+static __int128 ulpIndex(const MFloat80 &value)
 {
     __int128 e = value.biasedExponent();
     u64 man = value.mantissa();
