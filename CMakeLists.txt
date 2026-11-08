@@ -53,10 +53,6 @@ add_test_runner(testRunnerMusashi moiraMusashi)
 add_test_runner(testRunnerUAE moiraUAE)
 
 # Add the FPU unit tests
-add_executable(fpuEnvTests Runner/FpuEnvTests.cpp)
-target_link_libraries(fpuEnvTests moira)
-target_include_directories(fpuEnvTests PUBLIC ${CMAKE_SOURCE_DIR}/Moira)
-
 add_executable(fpuTests Runner/FpuTests.cpp)
 target_link_libraries(fpuTests moira)
 target_include_directories(fpuTests PUBLIC ${CMAKE_SOURCE_DIR}/Moira)
@@ -133,4 +129,3 @@ add_test(UnitTestUAE testRunnerUAE)
 add_test(FpuExecTests fpuExecTests)
 add_test(MmuExecTests mmuExecTests)
 add_test(FpuTests fpuTests)
-add_test(FpuEnvTests fpuEnvTests 100000)

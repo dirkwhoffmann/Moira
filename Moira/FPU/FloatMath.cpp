@@ -51,7 +51,7 @@ W norm(bool neg, i32 e, u128 m)
 
 W fromU64(u64 v) { return norm(false, 127, v); }
 W fromI64(i64 v) { return norm(v < 0, 127, v < 0 ? u64(-v) : u64(v)); }
-W fromFloat80(const MFloat80 &x) { return norm(x.sign(), i32(x.biasedExponent()) - MFloat80::bias, u128(x.mantissa()) << 64); }
+W fromMFloat80(const MFloat80 &x) { return norm(x.sign(), i32(x.biasedExponent()) - MFloat80::bias, u128(x.mantissa()) << 64); }
 
 W fromDouble(double d)
 {
@@ -549,7 +549,7 @@ sincos_(FpuEnv &env, const MFloat80 &x, MFloat80 &sine, MFloat80 &cosine)
 
     int n;
     W r, s, c;
-    reduce(fromFloat80(x), n, r);
+    reduce(fromMFloat80(x), n, r);
     sinCosSeries(r, s, c);
 
     W sv = (n & 1) ? c : s;
@@ -574,7 +574,7 @@ void sincosW(const MFloat80 &x, W &sv, W &cv)
 {
     int n;
     W r, s, c;
-    reduce(fromFloat80(x), n, r);
+    reduce(fromMFloat80(x), n, r);
     sinCosSeries(r, s, c);
 
     sv = (n & 1) ? c : s;
@@ -629,7 +629,7 @@ tan_(FpuEnv &env, const MFloat80 &x)
 
     int n;
     W r, s, c;
-    reduce(fromFloat80(x), n, r);
+    reduce(fromMFloat80(x), n, r);
     sinCosSeries(r, s, c);
 
     W t = (n & 1) ? -(c / s) : s / c;
@@ -655,7 +655,7 @@ atan_(FpuEnv &env, const MFloat80 &x)
     if (x.isNaN() || x.isZero()) return x;
     if (x.isInfinite()) return signed_(env, piOver2(), x.sign());
 
-    return finish(env, atanW(fromFloat80(x)));
+    return finish(env, atanW(fromMFloat80(x)));
 }
 
 MFloat80
@@ -670,7 +670,7 @@ asin_(FpuEnv &env, const MFloat80 &x)
     if (x.isNaN() || x.isZero()) return x;
     if (x.isInfinite()) return invalid(env);
 
-    W v = fromFloat80(x);
+    W v = fromMFloat80(x);
     int c = cmpAbs(v, one());
     if (c > 0) return invalid(env);
     if (c == 0) return signed_(env, piOver2(), x.sign());
@@ -694,7 +694,7 @@ acos_(FpuEnv &env, const MFloat80 &x)
     if (x.isNaN()) return x;
     if (x.isInfinite()) return invalid(env);
 
-    W v = fromFloat80(x);
+    W v = fromMFloat80(x);
     int c = cmpAbs(v, one());
     if (c > 0) return invalid(env);
     if (c == 0) return x.sign() ? finish(env, pi()) : MFloat80::zero();
@@ -721,7 +721,7 @@ sinh_(FpuEnv &env, const MFloat80 &x)
     if (x.isNaN() || x.isZero() || x.isInfinite()) return x;
 
     // sinh(x) = (E + E / (E + 1)) / 2, where E = e^|x| - 1
-    W v = abs(fromFloat80(x));
+    W v = abs(fromMFloat80(x));
     W r;
 
     if (cmpAbs(v, scale(one(), -32)) < 0) {
@@ -752,7 +752,7 @@ cosh_(FpuEnv &env, const MFloat80 &x)
     if (x.isInfinite()) return MFloat80::infinity();
     if (x.isZero()) return MFloat80::one();
 
-    W e = expW(abs(fromFloat80(x)));
+    W e = expW(abs(fromMFloat80(x)));
     return finish(env, scale(e + one() / e, -1));
 }
 
@@ -769,7 +769,7 @@ tanh_(FpuEnv &env, const MFloat80 &x)
     if (x.isInfinite()) return MFloat80::one(x.sign());
 
     // tanh(x) = E / (E + 2), where E = e^(2|x|) - 1
-    W e = expm1W(scale(abs(fromFloat80(x)), 1));
+    W e = expm1W(scale(abs(fromMFloat80(x)), 1));
     W r = e / (e + two());
     r.neg = x.sign();
 
@@ -792,7 +792,7 @@ atanh_(FpuEnv &env, const MFloat80 &x)
     if (x.isNaN() || x.isZero()) return x;
     if (x.isInfinite()) return invalid(env);
 
-    W v = abs(fromFloat80(x));
+    W v = abs(fromMFloat80(x));
     int c = cmpAbs(v, one());
     if (c > 0) return invalid(env);
     if (c == 0) return divideByZero(env, x.sign());
@@ -821,7 +821,7 @@ etox_(FpuEnv &env, const MFloat80 &x)
     if (x.isInfinite()) return x.sign() ? MFloat80::zero() : x;
     if (x.isZero()) return MFloat80::one();
 
-    return finish(env, expW(fromFloat80(x)));
+    return finish(env, expW(fromMFloat80(x)));
 }
 
 MFloat80
@@ -849,14 +849,14 @@ etoxm1_(FpuEnv &env, const MFloat80 &x)
      */
     if ((x.signExp() & 0x7FFF) < MFloat80::bias - 65) {
 
-        if ((x.signExp() & 0x7FFF) < 0x33) return finish(env, fromFloat80(x));
+        if ((x.signExp() & 0x7FFF) < 0x33) return finish(env, fromMFloat80(x));
 
         auto result = env.add(x, MFloat80::fromBits(0x8001, 1ULL << 63));
         env.raiseFlags(FloatFlags::INEXACT);
         return result;
     }
 
-    W v = fromFloat80(x);
+    W v = fromMFloat80(x);
 
     // Large negative arguments yield -1 + epsilon
     if (v.neg && v.e > 6) return finish(env, norm(true, -1, ~u128(0)));
@@ -877,7 +877,7 @@ twotox_(FpuEnv &env, const MFloat80 &x)
     if (x.isInfinite()) return x.sign() ? MFloat80::zero() : x;
     if (x.isZero()) return MFloat80::one();
 
-    W v = fromFloat80(x);
+    W v = fromMFloat80(x);
 
     // Integer exponents yield an exact result
     if (x.exponent() >= 0 && x.exponent() < 20 && (x.mantissa() << (x.exponent() + 1)) == 0) {
@@ -902,7 +902,7 @@ tentox_(FpuEnv &env, const MFloat80 &x)
     if (x.isInfinite()) return x.sign() ? MFloat80::zero() : x;
     if (x.isZero()) return MFloat80::one();
 
-    W v = fromFloat80(x);
+    W v = fromMFloat80(x);
 
     // 10^n is exact for 0 <= n <= 27
     if (!x.sign() && x.exponent() >= 0 && x.exponent() < 5 && (x.mantissa() << (x.exponent() + 1)) == 0) {
@@ -940,7 +940,7 @@ MFloat80 logarithm(FpuEnv &env, const MFloat80 &x, Base base)
     if (x.sign()) return invalid(env);
     if (x.isInfinite()) return x;
 
-    W v = fromFloat80(x);
+    W v = fromMFloat80(x);
 
     // Exact results
     if (base == Base::TWO && (x.mantissa() << 1) == 0) {
@@ -972,7 +972,7 @@ lognp1_(FpuEnv &env, const MFloat80 &x)
     if (x.isNaN() || x.isZero()) return x;
     if (x.isInfinite()) return x.sign() ? invalid(env) : x;
 
-    W v = fromFloat80(x);
+    W v = fromMFloat80(x);
     if (v.neg) {
         int c = cmpAbs(v, one());
         if (c > 0) return invalid(env);

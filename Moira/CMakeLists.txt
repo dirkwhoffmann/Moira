@@ -1,5 +1,3 @@
-file(GLOB MOIRA_SOFTFLOAT_SRC ${CMAKE_CURRENT_SOURCE_DIR}/FPU/softfloat/*.cpp)
-
 set(MOIRA_SRC
 
 Moira.cpp
@@ -7,15 +5,12 @@ MoiraCore68000.cpp
 MoiraCore68010.cpp
 MoiraCore68020.cpp
 MoiraDebugger.cpp
-FPU/Float80.cpp
 FPU/MFloat80.cpp
 FPU/FpuEnv.cpp
 FPU/FloatMath.cpp
 FPU/FpuFormats.cpp
 FPU/FPU.cpp
-FPU/SoftFloat.cpp
 MMU/MMU.cpp
-${MOIRA_SOFTFLOAT_SRC}
 )
 
 add_library(moira STATIC ${MOIRA_SRC})
