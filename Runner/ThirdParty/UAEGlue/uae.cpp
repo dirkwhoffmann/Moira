@@ -132,6 +132,24 @@ void flushATCUAE()
     uaecpu::flushATC();
 }
 
+void setMMU040UAE(u32 urp, u32 srp, u32 tc, u32 itt0, u32 itt1, u32 dtt0, u32 dtt1)
+{
+    uaecpu::setMMU040(urp, srp, tc, itt0, itt1, dtt0, dtt1);
+}
+
+void endMMU040UAE() { uaecpu::endMMU040(); }
+void flushATC040UAE() { uaecpu::flushATC040(); }
+
+bool translate040UAE(u32 addr, bool super, bool data, bool write, u32 *physical)
+{
+    return uaecpu::translate040(addr, super, data, write, physical);
+}
+
+u32 ptest040UAE(u32 addr, u8 dfc, bool write)
+{
+    return uaecpu::ptest040(addr, dfc, write);
+}
+
 void enableMMUUAE(bool enable)
 {
     uaecpu::enableMMU(enable);

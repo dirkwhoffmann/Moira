@@ -71,6 +71,13 @@ void flushATC();
 bool translate(uint32_t addr, bool super, bool data, bool write, uint32_t *physical);
 bool ptest(uint32_t addr, uint8_t fc, bool write, uint32_t level, uint32_t *mmusr, uint32_t *descr);
 
+// Address translation of the 68040 MMU
+void setMMU040(uint32_t urp, uint32_t srp, uint32_t tc, uint32_t itt0, uint32_t itt1, uint32_t dtt0, uint32_t dtt1);
+void endMMU040();
+void flushATC040();
+bool translate040(uint32_t addr, bool super, bool data, bool write, uint32_t *physical);
+uint32_t ptest040(uint32_t addr, uint8_t dfc, bool write);
+
 // Vector number of the last exception taken by the last step (0 if none)
 int lastException();
 

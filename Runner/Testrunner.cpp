@@ -280,7 +280,8 @@ void run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const st
 
             // Execute tests
             if constexpr (CHECK_CPU) runCPU(i);
-            if constexpr (CHECK_MMU) { runMMU(i); if (useUAE && cpu == CPUModel::M68030) runMMUTranslate(i); }
+            if constexpr (CHECK_MMU) { runMMU(i); if (useUAE && cpu == CPUModel::M68030) runMMUTranslate(i);
+                                    if (useUAE && cpu == CPUModel::M68040) runMMUTranslate040(i); }
 
             // Test the disassembler
             if constexpr (CHECK_DASM) {
@@ -424,6 +425,34 @@ TranslationSetup randomTranslationSetup()
     t.crp = rootPointer();
     t.srp = rootPointer();
     return t;
+}
+
+// Fills the memory with 68040 table descriptors
+void fillWith040Descriptors()
+{
+    for (int i = 0; i < 0x10000; i += 4) {
+
+        // Descriptor type: invalid, page, indirect, or table / page
+        int r = rand() % 100;
+        u32 type = r < 15 ? 0 : r < 55 ? 1 : r < 70 ? 2 : 3;
+
+        u32 w = (u32(rand()) & 0xFF00) | (u32(rand()) & 0xFC) | type;
+        if (rand() % 3 == 0) w &= ~0x7Cu;               // Clear W, U, M, CM, S
+        if (rand() % 4 == 0) w |= u32(rand() & 3) << 8; // U0, U1
+        if (rand() % 4 == 0) w |= 0x400;                // G
+        refMem[i] = moiraMem[i] = u8(w >> 24);
+        refMem[i + 1] = moiraMem[i + 1] = u8(w >> 16);
+        refMem[i + 2] = moiraMem[i + 2] = u8(w >> 8);
+        refMem[i + 3] = moiraMem[i + 3] = u8(w);
+    }
+}
+
+u32 randomTT040()
+{
+    if (rand() % 2) return 0;
+    u32 mask = (0xFF00 >> (rand() % 9)) & 0xFF;
+    return u32(rand() & 0xFF) << 24 | mask << 16 | 0x8000 | u32(rand() % 2) << 14 | u32(rand() % 2) << 13
+         | u32(rand() % 4 == 0) << 2 | u32(rand() % 4) << 5 | u32(rand() % 4) << 8;
 }
 
 }
@@ -575,6 +604,101 @@ void runMMUTranslate(long round)
             exit(1);
         }
     }
+    passed(0, 0);
+    printf("%11s           %ld translations, %ld faults\n", "", successes, faults);
+}
+
+void runMMUTranslate040(long round)
+{
+    static const int TABLE_SETUPS = 256;
+    static const int ADDRESSES = 512;
+
+    long successes = 0, faults = 0;
+    resetClocks();
+    printf("%11s MMU : XLAT ", selectedModel()); fflush(stdout);
+
+    auto &mmu = moiracpu->mmu.mmu040;
+
+    for (int i = 0; i < TABLE_SETUPS; i++) {
+
+        if (i % 16 == 0) { printf("."); fflush(stdout); }
+
+        fillWith040Descriptors();
+
+        u32 urp = u32(rand()) & 0xFE00, srp = u32(rand()) & 0xFE00;
+        u32 tc = 0x8000 | (rand() % 2 ? 0x4000 : 0);
+        u32 itt0 = randomTT040(), itt1 = randomTT040(), dtt0 = randomTT040(), dtt1 = randomTT040();
+
+        // Configure both MMUs
+        setMMU040UAE(urp, srp, tc, itt0, itt1, dtt0, dtt1);
+        mmu.urp = urp; mmu.srp = srp;
+        mmu.setITT0(itt0); mmu.setITT1(itt1); mmu.setDTT0(dtt0); mmu.setDTT1(dtt1);
+        mmu.setTC(tc);
+
+        for (int j = 0; j < ADDRESSES; j++) {
+
+            // Flush the ATCs regularly (UAE's ATC is 4-way set associative)
+            if (j % 8 == 0) { flushATC040UAE(); mmu.atcFlush(); }
+
+            u32 addr = u32(rand()) << (rand() % 17);
+            if (rand() % 4 == 0) addr &= 0xFFFF;
+            bool super = rand() % 2, data = rand() % 2, write = data && rand() % 2;
+            u8 fc = (super ? 4 : 0) | (data ? 1 : 2);
+
+            // PTEST
+            if (rand() % 4 == 0) {
+
+                bool pwrite = rand() % 2;
+                u32 statusRef = ptest040UAE(addr, fc, pwrite);
+                moiracpu->setSupervisorMode(super);
+                sandbox.prepare(false, true);
+                u32 statusMoira = mmu.test(addr, fc, pwrite);
+
+                if (statusRef != statusMoira || memcmp(refMem, moiraMem, sizeof(refMem))) {
+
+                    printf("\n\nPTEST MISMATCH FOUND\n\n");
+                    printf("Setup %d.%d: TC: %04x  URP: %08x  SRP: %08x\n", i, j, tc, urp, srp);
+                    printf("             ITT0: %08x  ITT1: %08x  DTT0: %08x  DTT1: %08x\n", itt0, itt1, dtt0, dtt1);
+                    printf("PTEST%c: addr %08x  FC %d\n", pwrite ? 'W' : 'R', addr, fc);
+                    printf("UAE  : MMUSR %08x\n", statusRef);
+                    printf("Moira: MMUSR %08x\n", statusMoira);
+                    endMMU040UAE();
+                    exit(1);
+                }
+                continue;
+            }
+
+            // Translate with both MMUs
+            u32 physRef = 0, physMoira = 0;
+            bool okRef = translate040UAE(addr, super, data, write, &physRef);
+            moiracpu->setSupervisorMode(super);
+            sandbox.prepare(false, true);     // Don't record the descriptor updates
+            auto translated = mmu.translate(addr, fc, write);
+            bool okMoira = translated.has_value();
+            if (okMoira) physMoira = *translated;
+
+            (okRef ? successes : faults)++;
+            bool equal = okRef == okMoira && (!okRef || physRef == physMoira) && !memcmp(refMem, moiraMem, sizeof(refMem));
+            if (equal) continue;
+
+            printf("\n\nTRANSLATION MISMATCH FOUND\n\n");
+            printf("Setup %d.%d: TC: %04x  URP: %08x  SRP: %08x\n", i, j, tc, urp, srp);
+            printf("             ITT0: %08x  ITT1: %08x  DTT0: %08x  DTT1: %08x\n", itt0, itt1, dtt0, dtt1);
+            printf("Access: addr %08x  FC %d  %s\n", addr, fc, write ? "write" : "read");
+            printf("UAE  : %s %08x\n", okRef ? "ok   " : "fault", physRef);
+            printf("Moira: %s %08x\n", okMoira ? "ok   " : "fault", physMoira);
+            for (int k = 0; k < 0x10000; k++) {
+                if (refMem[k] != moiraMem[k]) {
+                    printf("Memory differs at %04x: UAE %02x Moira %02x\n", k, refMem[k], moiraMem[k]);
+                    break;
+                }
+            }
+            endMMU040UAE();
+            exit(1);
+        }
+    }
+    endMMU040UAE();
+    mmu.setTC(0);
     passed(0, 0);
     printf("%11s           %ld translations, %ld faults\n", "", successes, faults);
 }

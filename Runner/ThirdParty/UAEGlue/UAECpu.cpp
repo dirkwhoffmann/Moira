@@ -422,6 +422,85 @@ bool translate(uint32_t addr, bool super, bool data, bool write, uint32_t *physi
     return success;
 }
 
+// The 68040 MMU is only active while one of the functions below runs
+void setMMU040(uint32_t urp, uint32_t srp, uint32_t tc, uint32_t itt0, uint32_t itt1, uint32_t dtt0, uint32_t dtt1)
+{
+    int model = currprefs.mmu_model;
+    bool ec = currprefs.mmu_ec;
+    currprefs.mmu_model = 68040;
+    currprefs.mmu_ec = false;
+
+    // Physical memory access used by the table walk
+    x_phys_get_byte = memory_get_byte;
+    x_phys_get_word = memory_get_word;
+    x_phys_get_long = memory_get_long;
+    x_phys_put_byte = memory_put_byte;
+    x_phys_put_word = memory_put_word;
+    x_phys_put_long = memory_put_long;
+
+    regs.urp = urp;
+    regs.srp = srp;
+    regs.itt0 = itt0;
+    regs.itt1 = itt1;
+    regs.dtt0 = dtt0;
+    regs.dtt1 = dtt1;
+    mmu_tt_modified();
+    mmu_set_tc(uint16_t(tc));
+    regs.mmu_enabled = false;
+
+    currprefs.mmu_model = model;
+    currprefs.mmu_ec = ec;
+}
+
+void endMMU040()
+{
+    regs.itt0 = regs.itt1 = regs.dtt0 = regs.dtt1 = 0;
+    mmu_tt_modified();
+    mmu_set_tc(0);
+}
+
+void flushATC040()
+{
+    mmu_flush_atc_all(true);
+}
+
+bool translate040(uint32_t addr, bool super, bool data, bool write, uint32_t *physical)
+{
+    bool success = false;
+
+    int model = currprefs.mmu_model;
+    currprefs.mmu_model = 68040;
+    regs.s = super;
+    regs.mmu_enabled = true;
+
+    // Same sequence as in mmu_get_byte and mmu_put_byte
+    TRY(prb) {
+        uint32_t phys = addr;
+        int res = write ? mmu_match_ttr_write(addr, super, data, 0, sz_byte)
+                        : mmu_match_ttr(addr, super, data);
+        if (res == TTR_NO_MATCH) phys = mmu_translate(addr, 0, super, data, write, sz_byte);
+        *physical = phys;
+        success = true;
+    } CATCH(prb) {
+        success = false;
+    } ENDTRY
+
+    regs.mmu_enabled = false;
+    currprefs.mmu_model = model;
+    return success;
+}
+
+uint32_t ptest040(uint32_t addr, uint8_t dfc, bool write)
+{
+    int model = currprefs.mmu_model;
+    currprefs.mmu_model = 68040;
+    regs.dfc = dfc & 7;
+    regs.regs[8] = addr;
+    mmu_op_real(write ? 0xF548 : 0xF568, 0);
+    currprefs.mmu_model = model;
+    return regs.mmusr;
+}
+
 int disassemble(uint32_t addr, char *out, size_t size)
 {
     // The disassembler is configured once. No instruction words, effective

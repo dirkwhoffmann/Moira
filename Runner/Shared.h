@@ -183,3 +183,8 @@ void enableMMUUAE(bool enable);
 void flushATCUAE();
 bool ptestUAE(u32 addr, u8 fc, bool write, u32 level, u32 *mmusr, u32 *descr);
 bool translateUAE(u32 addr, bool super, bool data, bool write, u32 *physical);
+void setMMU040UAE(u32 urp, u32 srp, u32 tc, u32 itt0, u32 itt1, u32 dtt0, u32 dtt1);
+void endMMU040UAE();
+void flushATC040UAE();
+bool translate040UAE(u32 addr, bool super, bool data, bool write, u32 *physical);
+u32 ptest040UAE(u32 addr, u8 dfc, bool write);
