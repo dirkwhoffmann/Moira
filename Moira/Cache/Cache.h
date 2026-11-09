@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "MoiraTypes.h"
+#include "../MoiraTypes.h"
 
 namespace MOIRA_NAMESPACE {
 

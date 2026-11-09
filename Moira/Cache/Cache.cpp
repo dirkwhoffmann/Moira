@@ -5,8 +5,8 @@
 // Published under the terms of the MIT License
 // -----------------------------------------------------------------------------
 
-#include "MoiraConfig.h"
-#include "Moira.h"
+#include "../MoiraConfig.h"
+#include "../Moira.h"
 
 namespace MOIRA_NAMESPACE {
 

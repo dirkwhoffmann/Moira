@@ -10,7 +10,7 @@
 #include "MoiraConfig.h"
 #include "MoiraTypes.h"
 #include "MoiraDebugger.h"
-#include "Cache.h"
+#include "Cache/Cache.h"
 #include "FPU/FPU.h"
 #include "MMU/MMU.h"
 
