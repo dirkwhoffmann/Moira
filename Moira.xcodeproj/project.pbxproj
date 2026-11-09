@@ -179,7 +179,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		50F200000000000000000002 /* example */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = example; sourceTree = BUILT_PRODUCTS_DIR; };
+		50F200000000000000000002 /* fibonacci */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fibonacci; sourceTree = BUILT_PRODUCTS_DIR; };
 		50F20000000000000000000B /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		50F100000000000000000002 /* libMoiraMAME.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libMoiraMAME.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		50F10000000000000000000C /* singleStepRunner */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = singleStepRunner; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -217,7 +217,6 @@
 		502C09E123C8E16600A179E1 /* TestCPU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestCPU.h; sourceTree = "<group>"; };
 		5054686028A4CDDC00028727 /* Randomizer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Randomizer.cpp; sourceTree = "<group>"; };
 		5054686128A4CDDC00028727 /* Randomizer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Randomizer.h; sourceTree = "<group>"; };
-		5054686428A6647B00028727 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		505580EA23AFA14D0009F77F /* musashi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = musashi.cpp; sourceTree = "<group>"; };
 		50A300000000000000000011 /* MFloat80.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MFloat80.h; sourceTree = "<group>"; };
 		50A300000000000000000012 /* FpuEnv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FpuEnv.h; sourceTree = "<group>"; };
@@ -450,12 +449,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		50F20000000000000000000A /* Example */ = {
+		50F20000000000000000000A /* Fibonacci */ = {
 			isa = PBXGroup;
 			children = (
 				50F20000000000000000000B /* main.cpp */,
 			);
-			path = Example;
+			name = Fibonacci;
+			path = Examples/Fibonacci;
 			sourceTree = "<group>";
 		};
 		50F10000000000000000001F /* SingleStep */ = {
@@ -502,13 +502,20 @@
 			path = musashi_softfloat;
 			sourceTree = "<group>";
 		};
-		5054686328A6642900028727 /* Runner */ = {
+		5054686328A6642900028727 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				50F300000000000000000001 /* Differential */,
 				50F10000000000000000001F /* SingleStep */,
 				50A1000000000000000000A1 /* ThirdParty */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		50F300000000000000000001 /* Differential */ = {
+			isa = PBXGroup;
+			children = (
 				50804E8C2386A72C004D3EC2 /* main.cpp */,
-				5054686428A6647B00028727 /* CMakeLists.txt */,
 				50953AE228895D5D0077C9E8 /* config.h */,
 				507BE4AE23B66456000B37D2 /* Testrunner.h */,
 				507BE4AD23B66456000B37D2 /* Testrunner.cpp */,
@@ -521,7 +528,7 @@
 				5054686128A4CDDC00028727 /* Randomizer.h */,
 				5054686028A4CDDC00028727 /* Randomizer.cpp */,
 			);
-			path = Runner;
+			path = Differential;
 			sourceTree = "<group>";
 		};
 		505A8188309A2F2A00E2E307 /* uae */ = {
@@ -721,8 +728,8 @@
 			children = (
 				50F80AAB23C9F16900F21D80 /* CMakeLists.txt */,
 				50804E082386A4CE004D3EC2 /* Moira */,
-				50F20000000000000000000A /* Example */,
-				5054686328A6642900028727 /* Runner */,
+				50F20000000000000000000A /* Fibonacci */,
+				5054686328A6642900028727 /* Tests */,
 				50804E072386A4CE004D3EC2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -737,7 +744,7 @@
 				50D100000000000000000010 /* testRunnerUAE */,
 				50F100000000000000000002 /* libMoiraMAME.a */,
 				50F10000000000000000000C /* singleStepRunner */,
-				50F200000000000000000002 /* example */,
+				50F200000000000000000002 /* fibonacci */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -989,9 +996,9 @@
 			productReference = 50F10000000000000000000C /* singleStepRunner */;
 			productType = "com.apple.product-type.tool";
 		};
-		50F200000000000000000001 /* example */ = {
+		50F200000000000000000001 /* fibonacci */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 50F200000000000000000005 /* Build configuration list for PBXNativeTarget "example" */;
+			buildConfigurationList = 50F200000000000000000005 /* Build configuration list for PBXNativeTarget "fibonacci" */;
 			buildPhases = (
 				50F200000000000000000003 /* Sources */,
 				50F200000000000000000004 /* Frameworks */,
@@ -1000,9 +1007,9 @@
 			);
 			dependencies = (
 			);
-			name = example;
-			productName = example;
-			productReference = 50F200000000000000000002 /* example */;
+			name = fibonacci;
+			productName = fibonacci;
+			productReference = 50F200000000000000000002 /* fibonacci */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -1040,7 +1047,7 @@
 				50B100000000000000000064 /* MoiraMusashi */,
 				50F100000000000000000001 /* MoiraMAME */,
 				50F10000000000000000000B /* singleStepRunner */,
-				50F200000000000000000001 /* example */,
+				50F200000000000000000001 /* fibonacci */,
 			);
 		};
 /* End PBXProject section */
@@ -1355,7 +1362,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/Runner/SingleStep",
+					"$(SRCROOT)/Tests/SingleStep",
 					"$(SRCROOT)/Moira/**",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
@@ -1377,7 +1384,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/Runner/SingleStep",
+					"$(SRCROOT)/Tests/SingleStep",
 					"$(SRCROOT)/Moira/**",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
@@ -1400,7 +1407,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/Runner/SingleStep",
+					"$(SRCROOT)/Tests/SingleStep",
 					"$(SRCROOT)/Moira/**",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
@@ -1537,10 +1544,10 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/Runner",
-					"$(SRCROOT)/Runner/ThirdParty",
-					"$(SRCROOT)/Runner/ThirdParty/Binutils",
-					"$(SRCROOT)/Runner/ThirdParty/Musashi/**",
+					"$(SRCROOT)/Tests/Differential",
+					"$(SRCROOT)/Tests/ThirdParty",
+					"$(SRCROOT)/Tests/ThirdParty/Binutils",
+					"$(SRCROOT)/Tests/ThirdParty/Musashi/**",
 					"$(SRCROOT)/Moira/**",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
@@ -1561,10 +1568,10 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/Runner",
-					"$(SRCROOT)/Runner/ThirdParty",
-					"$(SRCROOT)/Runner/ThirdParty/Binutils",
-					"$(SRCROOT)/Runner/ThirdParty/Musashi/**",
+					"$(SRCROOT)/Tests/Differential",
+					"$(SRCROOT)/Tests/ThirdParty",
+					"$(SRCROOT)/Tests/ThirdParty/Binutils",
+					"$(SRCROOT)/Tests/ThirdParty/Musashi/**",
 					"$(SRCROOT)/Moira/**",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
@@ -1587,13 +1594,13 @@
 				);
 				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/Runner/ThirdParty/UAEGlue/sdl-shim",
-					"$(SRCROOT)/Runner/ThirdParty/UAE/src",
-					"$(SRCROOT)/Runner/ThirdParty/UAE/src/include",
-					"$(SRCROOT)/Runner/ThirdParty/UAE/src/osdep",
-					"$(SRCROOT)/Runner/ThirdParty/UAE/src/archivers",
-					"$(SRCROOT)/Runner/ThirdParty/UAE/src/threaddep",
-					"$(SRCROOT)/Runner/ThirdParty/UAEGlue",
+					"$(SRCROOT)/Tests/ThirdParty/UAEGlue/sdl-shim",
+					"$(SRCROOT)/Tests/ThirdParty/UAE/src",
+					"$(SRCROOT)/Tests/ThirdParty/UAE/src/include",
+					"$(SRCROOT)/Tests/ThirdParty/UAE/src/osdep",
+					"$(SRCROOT)/Tests/ThirdParty/UAE/src/archivers",
+					"$(SRCROOT)/Tests/ThirdParty/UAE/src/threaddep",
+					"$(SRCROOT)/Tests/ThirdParty/UAEGlue",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1616,13 +1623,13 @@
 				);
 				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/Runner/ThirdParty/UAEGlue/sdl-shim",
-					"$(SRCROOT)/Runner/ThirdParty/UAE/src",
-					"$(SRCROOT)/Runner/ThirdParty/UAE/src/include",
-					"$(SRCROOT)/Runner/ThirdParty/UAE/src/osdep",
-					"$(SRCROOT)/Runner/ThirdParty/UAE/src/archivers",
-					"$(SRCROOT)/Runner/ThirdParty/UAE/src/threaddep",
-					"$(SRCROOT)/Runner/ThirdParty/UAEGlue",
+					"$(SRCROOT)/Tests/ThirdParty/UAEGlue/sdl-shim",
+					"$(SRCROOT)/Tests/ThirdParty/UAE/src",
+					"$(SRCROOT)/Tests/ThirdParty/UAE/src/include",
+					"$(SRCROOT)/Tests/ThirdParty/UAE/src/osdep",
+					"$(SRCROOT)/Tests/ThirdParty/UAE/src/archivers",
+					"$(SRCROOT)/Tests/ThirdParty/UAE/src/threaddep",
+					"$(SRCROOT)/Tests/ThirdParty/UAEGlue",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1706,10 +1713,10 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/Runner",
-					"$(SRCROOT)/Runner/ThirdParty",
-					"$(SRCROOT)/Runner/ThirdParty/Binutils",
-					"$(SRCROOT)/Runner/ThirdParty/Musashi/**",
+					"$(SRCROOT)/Tests/Differential",
+					"$(SRCROOT)/Tests/ThirdParty",
+					"$(SRCROOT)/Tests/ThirdParty/Binutils",
+					"$(SRCROOT)/Tests/ThirdParty/Musashi/**",
 					"$(SRCROOT)/Moira/**",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
@@ -1734,13 +1741,13 @@
 				);
 				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/Runner/ThirdParty/UAEGlue/sdl-shim",
-					"$(SRCROOT)/Runner/ThirdParty/UAE/src",
-					"$(SRCROOT)/Runner/ThirdParty/UAE/src/include",
-					"$(SRCROOT)/Runner/ThirdParty/UAE/src/osdep",
-					"$(SRCROOT)/Runner/ThirdParty/UAE/src/archivers",
-					"$(SRCROOT)/Runner/ThirdParty/UAE/src/threaddep",
-					"$(SRCROOT)/Runner/ThirdParty/UAEGlue",
+					"$(SRCROOT)/Tests/ThirdParty/UAEGlue/sdl-shim",
+					"$(SRCROOT)/Tests/ThirdParty/UAE/src",
+					"$(SRCROOT)/Tests/ThirdParty/UAE/src/include",
+					"$(SRCROOT)/Tests/ThirdParty/UAE/src/osdep",
+					"$(SRCROOT)/Tests/ThirdParty/UAE/src/archivers",
+					"$(SRCROOT)/Tests/ThirdParty/UAE/src/threaddep",
+					"$(SRCROOT)/Tests/ThirdParty/UAEGlue",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1860,10 +1867,10 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/Runner",
-					"$(SRCROOT)/Runner/ThirdParty",
-					"$(SRCROOT)/Runner/ThirdParty/Binutils",
-					"$(SRCROOT)/Runner/ThirdParty/Musashi/**",
+					"$(SRCROOT)/Tests/Differential",
+					"$(SRCROOT)/Tests/ThirdParty",
+					"$(SRCROOT)/Tests/ThirdParty/Binutils",
+					"$(SRCROOT)/Tests/ThirdParty/Musashi/**",
 					"$(SRCROOT)/Moira/**",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
@@ -1884,10 +1891,10 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/Runner",
-					"$(SRCROOT)/Runner/ThirdParty",
-					"$(SRCROOT)/Runner/ThirdParty/Binutils",
-					"$(SRCROOT)/Runner/ThirdParty/Musashi/**",
+					"$(SRCROOT)/Tests/Differential",
+					"$(SRCROOT)/Tests/ThirdParty",
+					"$(SRCROOT)/Tests/ThirdParty/Binutils",
+					"$(SRCROOT)/Tests/ThirdParty/Musashi/**",
 					"$(SRCROOT)/Moira/**",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
@@ -1909,10 +1916,10 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/Runner",
-					"$(SRCROOT)/Runner/ThirdParty",
-					"$(SRCROOT)/Runner/ThirdParty/Binutils",
-					"$(SRCROOT)/Runner/ThirdParty/Musashi/**",
+					"$(SRCROOT)/Tests/Differential",
+					"$(SRCROOT)/Tests/ThirdParty",
+					"$(SRCROOT)/Tests/ThirdParty/Binutils",
+					"$(SRCROOT)/Tests/ThirdParty/Musashi/**",
 					"$(SRCROOT)/Moira/**",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
@@ -1924,7 +1931,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		50F200000000000000000005 /* Build configuration list for PBXNativeTarget "example" */ = {
+		50F200000000000000000005 /* Build configuration list for PBXNativeTarget "fibonacci" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				50F200000000000000000006 /* Debug */,

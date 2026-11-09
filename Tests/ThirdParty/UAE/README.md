@@ -34,7 +34,7 @@ The glue code that drives the core lives in `../UAEGlue`.
   `debugmem_get_sourceline`, ...). The support functions it needs live in
   `../UAEGlue/UAEStubs.cpp`; the runner calls it via `uaecpu::disassemble()`
   and compares its output with Moira's `Syntax::UAE` output as an exact string
-  (see `dasmEqualUAE` in `Runner/Testrunner.cpp` for the few exemptions).
+  (see `dasmEqualUAE` in `Tests/Differential/Testrunner.cpp` for the few exemptions).
 
 When updating from a newer WinUAE, copy the files listed above and reapply
 these changes.

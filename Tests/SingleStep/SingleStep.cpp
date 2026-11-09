@@ -356,7 +356,7 @@ void usage(const char *prog)
 {
     printf("Usage: %s [--dir <folder>] [--only <text>]... [--limit <n>] [-v <n>] [--dump <file>]\n", prog);
     printf("  --dir <folder>   Folder containing the *.json.bin files of the SingleStepTests 68000 suite.\n");
-    printf("                   Default: $SST_DIR if set, otherwise the files shipped in Runner/ThirdParty/SingleStepTests\n");
+    printf("                   Default: $SST_DIR if set, otherwise the files shipped in Tests/ThirdParty/SingleStepTests\n");
     printf("  --only <text>    Only run files whose name contains <text>. May be repeated.\n");
     printf("  --limit <n>      Run at most <n> tests per file\n");
     printf("  -v <n>           Print the first <n> failures of each file\n");

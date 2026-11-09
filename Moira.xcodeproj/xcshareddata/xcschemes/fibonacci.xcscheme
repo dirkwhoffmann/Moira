@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "50F200000000000000000001"
-               BuildableName = "example"
-               BlueprintName = "example"
+               BuildableName = "fibonacci"
+               BlueprintName = "fibonacci"
                ReferencedContainer = "container:Moira.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -48,8 +48,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "50F200000000000000000001"
-            BuildableName = "example"
-            BlueprintName = "example"
+            BuildableName = "fibonacci"
+            BlueprintName = "fibonacci"
             ReferencedContainer = "container:Moira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -68,8 +68,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "50F200000000000000000001"
-            BuildableName = "example"
-            BlueprintName = "example"
+            BuildableName = "fibonacci"
+            BlueprintName = "fibonacci"
             ReferencedContainer = "container:Moira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
