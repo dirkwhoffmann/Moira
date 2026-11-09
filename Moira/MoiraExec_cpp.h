@@ -789,7 +789,16 @@ Moira::execAndiccr(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        u32 src = readI<C, S>();
+        u32 src;
+        if constexpr (compat == Compatibility::MAME) {
+
+            // MAME does not decrement the stacked PC if the refill fails
+            try { src = readI<C, S>(); } catch (BusError &e) { e.stackFrame.pc += 2; throw; }
+
+        } else {
+
+            src = readI<C, S>();
+        }
         u8  dst = getCCR();
         setCCR(u8(logic<C, I, S>(src, dst)));
         SYNC(8);
@@ -961,14 +970,29 @@ Moira::execBitDxEa(u16 opcode)
     u8 b = readD(src) & 0b111;
 
     u32 ea, data;
-    readOp<C, M, Byte>(dst, &ea, &data);
+    if constexpr (compat == Compatibility::MAME && C == Core::C68000) {
+
+        try { readOp<C, M, Byte, STD_AE_FRAME>(dst, &ea, &data); }
+        catch (BusError &e) {
+
+            // MAME does not decrement the stacked PC if the refill after an absolute address fails
+            if constexpr (M == Mode::AW || M == Mode::AL || M == Mode::IM) {
+                if ((e.stackFrame.fc & 3) == 2 && (M != Mode::AL || (e.stackFrame.addr & 0xFFFFFF) == ((reg.pc0 + 6) & 0xFFFFFF))) e.stackFrame.pc += 2;
+            }
+            throw;
+        }
+
+    } else {
+
+        readOp<C, M, Byte>(dst, &ea, &data);
+    }
 
     data = bit<C, I>(data, b);
 
     if constexpr (I == Instr::BCLR && C == Core::C68010) { SYNC(2); }
     if constexpr (compat == Compatibility::UAE && I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
 
-    prefetch<C, POLL | KEEP_IRD>();
+    prefetch<C, POLL | ((I == Instr::BTST && M != Mode::IM) ? 0 : KEEP_IRD)>();
 
     // MAME idles after the prefetch
     if constexpr (compat == Compatibility::MAME && I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
@@ -997,7 +1021,16 @@ Moira::execBitImDy(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    u8  src = (u8)readI<C, S>();
+    u8  src;
+    if constexpr (compat == Compatibility::MAME && C == Core::C68000) {
+
+        // MAME does not decrement the stacked PC if the refill fails
+        try { src = (u8)readI<C, S>(); } catch (BusError &e) { e.stackFrame.pc += 2; throw; }
+
+    } else {
+
+        src = (u8)readI<C, S>();
+    }
     int dst = _____________xxx(opcode);
 
     src &= 0b11111;
@@ -1021,16 +1054,25 @@ Moira::execBitImEa(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    u8  src = (u8)readI<C, S>();
+    u8  src;
+    if constexpr (compat == Compatibility::MAME && C == Core::C68000) {
+
+        // MAME does not decrement the stacked PC if the refill fails
+        try { src = (u8)readI<C, S>(); } catch (BusError &e) { e.stackFrame.pc += 2; throw; }
+
+    } else {
+
+        src = (u8)readI<C, S>();
+    }
     int dst = _____________xxx(opcode);
 
     src &= 0b111;
     u32 ea, data;
-    readOp<C, M, S>(dst, &ea, &data);
+    readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
     data = bit<C, I>(data, src);
 
-    prefetch<C, POLL | KEEP_IRD>();
+    prefetch<C, POLL | (I == Instr::BTST ? 0 : KEEP_IRD)>();
     if constexpr (I != Instr::BTST) writeM<C, M, S>(ea, data);
 
     [[maybe_unused]] auto c = I == Instr::BTST ? 0 : 4;
@@ -2521,8 +2563,15 @@ Moira::execJsr(u16 opcode)
                 // Fetch the first word of the subroutine before pushing
                 u32 ret = reg.pc;
                 reg.pc = ea;
-                queue.irc = (u16)read<C, AddrSpace::PROG, Word>(ea);
-                push<C, Long>(ret);
+                try {
+                    queue.irc = (u16)read<C, AddrSpace::PROG, Word>(ea);
+                    push<C, Long>(ret);
+                } catch (BusError &e) {
+
+                    // MAME stacks the return address of the subroutine call
+                    e.stackFrame.pc = ret;
+                    throw;
+                }
                 prefetch<C, POLL>();
                 break;
             }
@@ -5651,7 +5700,18 @@ Moira::execTasEa(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        readOp<C, M, Byte>(dst, &ea, &data);
+        constexpr Flags tas = AE_INC_PC;
+
+        if constexpr (compat == Compatibility::MAME && !isRegMode(M)) {
+
+            // MAME completes a failed read like a failed write
+            try { readOp<C, M, Byte, tas>(dst, &ea, &data); }
+            catch (BusError &e) { if ((e.stackFrame.fc & 3) != 2) e.stackFrame.code &= ~0x10; throw; }
+
+        } else {
+
+            readOp<C, M, Byte, tas>(dst, &ea, &data);
+        }
 
         reg.sr.n = NBIT<Byte>(data);
         reg.sr.z = ZERO<Byte>(data);
@@ -5660,9 +5720,9 @@ Moira::execTasEa(u16 opcode)
         data |= 0x80;
 
         if (!isRegMode(M)) SYNC(2);
-        writeOp<C, M, S>(dst, ea, data);
+        writeOp<C, M, S, tas>(dst, ea, data);
 
-        prefetch<C, POLL | KEEP_IRD>();
+        prefetch<C, POLL>();
 
     } else {
 
@@ -5682,7 +5742,7 @@ Moira::execTasEa(u16 opcode)
         // if (!isRegMode(M)) SYNC(2);
         writeOp<C, M, S>(dst, ea, data);
 
-        prefetch<C, POLL | KEEP_IRD>();
+        prefetch<C, POLL>();
         SYNC(2);
     }
 
