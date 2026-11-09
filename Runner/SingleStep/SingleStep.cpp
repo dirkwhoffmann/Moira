@@ -195,6 +195,7 @@ void dump(FILE *f, const char *file, const sst::Test &t, const Outcome &o, TestC
     if (cpu.getISP() != e.ssp) fprintf(f, "ssp:%08x:%08x ", e.ssp, cpu.getISP());
     if (!o.pc) fprintf(f, "pc:%06x:%06x ", e.pc & ADDR_MASK, (cpu.getPC() + pcOffset(t)) & ADDR_MASK);
     for (auto &[addr, val] : e.ram) if (cpu.read8(addr) != val) fprintf(f, "m%06x:%02x:%02x ", addr, val, cpu.read8(addr));
+    fprintf(f, "|ssp0=%08x usp0=%08x sp=%08x pc0=%06x sr0=%04x", t.initial.ssp, t.initial.usp, (e.sr & 0x2000) ? e.ssp : e.usp, t.initial.pc & ADDR_MASK, t.initial.sr);
     fprintf(f, "\n");
 }
 

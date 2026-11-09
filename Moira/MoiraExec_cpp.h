@@ -1366,6 +1366,12 @@ Moira::execBsr(u16 opcode)
             throw AddressError(makeFrame<AE_WRITE|AE_DATA>(reg.sp));
         }
         if (misaligned<C>(newpc)) {
+            if constexpr (compat == Compatibility::MAME) {
+
+                // MAME pushes the return address before it detects the misaligned target
+                push<C, Long>(retpc);
+                throw AddressError(makeFrame<AE_PROG>(newpc, newpc));
+            }
             throw AddressError(makeFrame(newpc));
         }
 
@@ -2170,6 +2176,8 @@ Moira::execDbcc(u16 opcode)
 
             // Check for address error
             if (misaligned<C, S>(newpc)) {
+                // MAME stores the address of the prefetched word as program counter
+                if constexpr (compat == Compatibility::MAME) throw AddressError(makeFrame<AE_INC_PC>(newpc));
                 throw AddressError(makeFrame<AE_INC_PC>(newpc, newpc));
             }
 
@@ -2488,6 +2496,8 @@ Moira::execJsr(u16 opcode)
 
             // Check for address errors
             if (isDspMode(M) && misaligned<C>(ea)) {
+                // MAME keeps the program counter in the stack frame unchanged
+                if constexpr (compat == Compatibility::MAME) throw AddressError(makeFrame(ea));
                 throw AddressError(makeFrame<AE_DEC_PC>(ea));
             }
             if (misaligned<C>(ea)) {
@@ -2888,7 +2898,8 @@ Moira::execMove4(u16 opcode)
 
     // Determine next address error stack frame format
     const u64 flags0 = AE_WRITE | AE_DATA;
-    const u64 flags1 = AE_WRITE | AE_DATA | AE_SET_CB3;
+    // MAME never sets bit 3 in the code word
+    const u64 flags1 = AE_WRITE | AE_DATA | (compat == Compatibility::MAME ? 0 : AE_SET_CB3);
     const u64 flags2 = AE_WRITE | AE_DATA;
     int format = (S == Long) ? 0 : (reg.sr.s || reg.sr.c) ? 2 : 1;
 
@@ -3333,7 +3344,7 @@ Moira::execMovemEaRg(u16 opcode)
     if (misaligned<C, S>(ea)) {
 
         setFC<M>();
-        if constexpr (M == Mode::IX || M == Mode::IXPC) {
+        if constexpr ((M == Mode::IX || M == Mode::IXPC) && compat != Compatibility::MAME) {
             throw AddressError(makeFrame<AE_DEC_PC|AE_SET_DF|AE_SET_RW>(ea));
         } else {
             throw AddressError(makeFrame<AE_INC_PC|AE_SET_DF|AE_SET_RW>(ea));
