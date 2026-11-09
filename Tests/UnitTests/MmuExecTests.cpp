@@ -5,18 +5,16 @@
 // Published under the terms of the MIT License
 // -----------------------------------------------------------------------------
 
+#include "doctest.h"
 #include "Moira.h"
-#include <cstdio>
 #include <cstdlib>
 #include <vector>
 
 using namespace moira;
 
-static int failures = 0;
-static int checks = 0;
+namespace {
 
-#define CHECK(cond) do { checks++; if (!(cond)) { failures++; \
-    printf("FAILED %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
+TEST_SUITE_BEGIN("MMU");
 
 /* A minimal system consisting of 1 MB of RAM
  */
@@ -97,19 +95,19 @@ public:
  *      0x4000     0x6000    (write protected)
  *      0x5000     0x7000
  */
-static constexpr u32 tableA = 0x10000;
-static constexpr u32 tableB = 0x11000;
+constexpr u32 tableA = 0x10000;
+constexpr u32 tableB = 0x11000;
 
-static constexpr u32 TC_E     = 1 << 31;
-static constexpr u32 TC_SRE   = 1 << 25;
-static constexpr u32 TC_4K_2L = 0xC << 20 | 0xA << 12 | 0xA << 8;   // PS = 12, IS = 0, TIA = 10, TIB = 10
+constexpr u32 TC_E     = 1 << 31;
+constexpr u32 TC_SRE   = 1 << 25;
+constexpr u32 TC_4K_2L = 0xC << 20 | 0xA << 12 | 0xA << 8;   // PS = 12, IS = 0, TIA = 10, TIB = 10
 
-static u64 rootPointer(u32 table, int dt, u16 limit = 0x7FFF, bool lu = false)
+u64 rootPointer(u32 table, int dt, u16 limit = 0x7FFF, bool lu = false)
 {
     return u64(lu) << 63 | u64(limit & 0x7FFF) << 48 | u64(dt) << 32 | table;
 }
 
-static void setupShortTables(TestCPU &cpu)
+void setupShortTables(TestCPU &cpu)
 {
     cpu.write32(tableA, tableB | 2);                // Table descriptor (short)
     cpu.write32(tableB + 4 * 0, 0x0000 | 1);        // Page descriptors (short)
@@ -128,7 +126,7 @@ static void setupShortTables(TestCPU &cpu)
     cpu.write32(2 * 4, 0x1800);
 }
 
-static void testDisabled()
+TEST_CASE("Disabled")
 {
     TestCPU cpu;
     setupShortTables(cpu);
@@ -142,7 +140,7 @@ static void testDisabled()
     CHECK(cpu.reg.d[0] == 0xCAFEBABE);
 }
 
-static void testShortTables()
+TEST_CASE("Short Tables")
 {
     TestCPU cpu;
     setupShortTables(cpu);
@@ -173,7 +171,7 @@ static void testShortTables()
     CHECK(cpu.reg.d[0] == 0x0BADF00D);
 }
 
-static void testUpdateBits()
+TEST_CASE("Update Bits")
 {
     TestCPU cpu;
     setupShortTables(cpu);
@@ -192,7 +190,7 @@ static void testUpdateBits()
     CHECK((cpu.read32(tableA) & 0x08) == 0x08);
 }
 
-static void testFaults()
+TEST_CASE("Faults")
 {
     // Access to an invalid page
     {
@@ -250,7 +248,7 @@ static void testFaults()
     }
 }
 
-static void testEarlyTermination()
+TEST_CASE("Early Termination")
 {
     TestCPU cpu;
     setupShortTables(cpu);
@@ -274,7 +272,7 @@ static void testEarlyTermination()
     CHECK(cpu.reg.d[0] == 0xCAFEBABE);
 }
 
-static void testLongTables()
+TEST_CASE("Long Tables")
 {
     TestCPU cpu;
     setupShortTables(cpu);
@@ -320,7 +318,7 @@ static void testLongTables()
     CHECK(cpu.read32(0x6000) == 0x11111111);
 }
 
-static void testSupervisorRootPointer()
+TEST_CASE("Supervisor Root Pointer")
 {
     TestCPU cpu;
     setupShortTables(cpu);
@@ -338,7 +336,7 @@ static void testSupervisorRootPointer()
     CHECK(cpu.reg.d[0] == 0xCAFEBABE);
 }
 
-static void testPMove()
+TEST_CASE("PMove")
 {
     TestCPU cpu;
     cpu.reg.a[0] = 0x2000;
@@ -352,7 +350,7 @@ static void testPMove()
     // PMOVE CRP,(A0)
     cpu.reg.a[0] = 0x2100;
     cpu.run({ 0xF010, 0x4E00 });
-    CHECK(cpu.read32(0x2100) == 0x7FFF0002 && cpu.read32(0x2104) == 0x00012340);
+    CHECK((cpu.read32(0x2100) == 0x7FFF0002 && cpu.read32(0x2104) == 0x00012340));
 
     // PMOVE (A0),SRP and PMOVE SRP,(A0)
     cpu.reg.a[0] = 0x2000;
@@ -362,7 +360,7 @@ static void testPMove()
     CHECK(cpu.mmu.mmu030.srp == 0x8001000100004560ULL);
     cpu.reg.a[0] = 0x2200;
     cpu.run({ 0xF010, 0x4A00 });
-    CHECK(cpu.read32(0x2200) == 0x80010001 && cpu.read32(0x2204) == 0x00004560);
+    CHECK((cpu.read32(0x2200) == 0x80010001 && cpu.read32(0x2204) == 0x00004560));
 
     // PMOVE (A0),TT0 / TT1 and back
     cpu.reg.a[0] = 0x2300;
@@ -388,7 +386,7 @@ static void testPMove()
     CHECK(cpu.read16(0x2410) == 0xA5A5);
 }
 
-static void testEnableDisable()
+TEST_CASE("Enable Disable")
 {
     TestCPU cpu;
     cpu.reg.a[0] = 0x2000;
@@ -398,7 +396,7 @@ static void testEnableDisable()
     cpu.write32(0x2000, TC_E | TC_4K_2L);
     cpu.run({ 0xF010, 0x4000 });
     CHECK(cpu.mmu.mmu030.tc == (TC_E | TC_4K_2L));
-    CHECK(cpu.enabled == 1 && cpu.disabled == 0);
+    CHECK((cpu.enabled == 1 && cpu.disabled == 0));
 
     // The MMU is active: Redirect the root pointer
     cpu.mmu.mmu030.crp = cpu.mmu.mmu030.srp = rootPointer(0x20000, 1);
@@ -409,7 +407,7 @@ static void testEnableDisable()
     cpu.write32(0x2000, TC_4K_2L);
     cpu.run({ 0xF010, 0x4000 });
     CHECK(cpu.mmu.mmu030.tc == TC_4K_2L);
-    CHECK(cpu.enabled == 1 && cpu.disabled == 1);
+    CHECK((cpu.enabled == 1 && cpu.disabled == 1));
 
     // PMOVE TC,(A0)
     cpu.reg.a[0] = 0x2100;
@@ -424,7 +422,7 @@ static void testEnableDisable()
     CHECK(!(cpu.mmu.mmu030.tc & TC_E));
 }
 
-static void testTransparentTranslation()
+TEST_CASE("Transparent Translation")
 {
     TestCPU cpu;
     cpu.reg.a[0] = 0x2000;
@@ -435,7 +433,7 @@ static void testTransparentTranslation()
     // PTESTR #1,(A0),#0 with a matching address
     cpu.reg.a[0] = 0x20001234;
     cpu.run({ 0xF010, 0x8000 | 1 << 9 | 0x11 });
-    CHECK(cpu.mmu.mmu030.mmusr & 0x40);
+    CHECK((cpu.mmu.mmu030.mmusr & 0x40));
 
     // Non-matching address
     cpu.reg.a[0] = 0x30001234;
@@ -443,7 +441,7 @@ static void testTransparentTranslation()
     CHECK(!(cpu.mmu.mmu030.mmusr & 0x40));
 }
 
-static void testTranslationBypass()
+TEST_CASE("Translation Bypass")
 {
     TestCPU cpu;
     setupShortTables(cpu);
@@ -485,7 +483,7 @@ static void testTranslationBypass()
     CHECK(cpu.reg.d[0] == 0xDEADBEEF);
 }
 
-static void testPTest()
+TEST_CASE("PTest")
 {
     TestCPU cpu;
     setupShortTables(cpu);
@@ -535,7 +533,7 @@ static void testPTest()
     CHECK(cpu.reg.pc0 == 0x1900);
 }
 
-static void testATC()
+TEST_CASE("ATC")
 {
     TestCPU cpu;
     setupShortTables(cpu);
@@ -603,7 +601,7 @@ static void testATC()
 }
 
 
-static void testBusFaultFrames()
+TEST_CASE("Bus Fault Frames")
 {
     // A read fault pushes a long bus fault frame (format $B)
     {
@@ -704,7 +702,7 @@ static void testBusFaultFrames()
     }
 }
 
-static void testModels()
+TEST_CASE("Models")
 {
     // Only the 68030 and 68040 have an MMU
     CHECK(!TestCPU(CPUModel::M68000).hasMMU());
@@ -749,9 +747,9 @@ static void testModels()
     }
 }
 
-static constexpr u32 dataBase = 0x20000;
+constexpr u32 dataBase = 0x20000;
 
-static void testDataCache()
+TEST_CASE("Data Cache")
 {
     // Without a cache, data accesses always reach the bus
     {
@@ -947,14 +945,14 @@ static void testDataCache()
  *      0x4000     0x6000    (write protected)
  *      0x5000     0x7000
  */
-static constexpr u32 rootTable    = 0x10000;
-static constexpr u32 pointerTable = 0x10200;
-static constexpr u32 pageTable    = 0x10400;
+constexpr u32 rootTable    = 0x10000;
+constexpr u32 pointerTable = 0x10200;
+constexpr u32 pageTable    = 0x10400;
 
-static constexpr u32 TC40_E = 1 << 15;
-static constexpr u32 TC40_P = 1 << 14;
+constexpr u32 TC40_E = 1 << 15;
+constexpr u32 TC40_P = 1 << 14;
 
-static void setupTables040(TestCPU &cpu, bool page8k = false)
+void setupTables040(TestCPU &cpu, bool page8k = false)
 {
     cpu.write32(rootTable, pointerTable | 2);
     cpu.write32(pointerTable, pageTable | 2);
@@ -986,7 +984,7 @@ static void setupTables040(TestCPU &cpu, bool page8k = false)
     cpu.reg.sfc = FC::SUPERVISOR_DATA;
 }
 
-static void testMMU040()
+TEST_CASE("MMU040")
 {
     // Address translation
     {
@@ -1301,26 +1299,6 @@ static void testMMU040()
     }
 }
 
-int main()
-{
-    testMMU040();
-    testDataCache();
-    testModels();
-    testDisabled();
-    testShortTables();
-    testUpdateBits();
-    testFaults();
-    testBusFaultFrames();
-    testEarlyTermination();
-    testLongTables();
-    testSupervisorRootPointer();
-    testPMove();
-    testEnableDisable();
-    testTransparentTranslation();
-    testTranslationBypass();
-    testPTest();
-    testATC();
+TEST_SUITE_END();
 
-    printf("%d checks, %d failures\n", checks, failures);
-    return failures ? EXIT_FAILURE : EXIT_SUCCESS;
 }

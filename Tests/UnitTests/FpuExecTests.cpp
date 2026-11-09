@@ -5,24 +5,22 @@
 // Published under the terms of the MIT License
 // -----------------------------------------------------------------------------
 
+#include "doctest.h"
 #include "Moira.h"
 #include <cmath>
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <vector>
 
 using namespace moira;
 
-static FpuEnv env;
+namespace {
 
-static int failures = 0;
-static int checks = 0;
+TEST_SUITE_BEGIN("FPU (executed)");
 
-#define CHECK(cond) do { checks++; if (!(cond)) { failures++; \
-    printf("FAILED %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
+FpuEnv env;
 
-static bool same(const MFloat80 &a, const MFloat80 &b) { return a.identical(b); }
+bool same(const MFloat80 &a, const MFloat80 &b) { return a.identical(b); }
 
 /* A minimal system consisting of 1 MB of RAM
  */
@@ -70,10 +68,10 @@ public:
     u32 pcOffset() const { return reg.pc0 - codeStart; }
 };
 
-static MFloat80 F(double d) { return env.fromDouble(d); }
-static void put32(TestCPU &cpu, u32 addr, u32 val) { cpu.write32(addr, val); }
+MFloat80 F(double d) { return env.fromDouble(d); }
+void put32(TestCPU &cpu, u32 addr, u32 val) { cpu.write32(addr, val); }
 
-static void testMove()
+TEST_CASE("Move")
 {
     TestCPU cpu;
 
@@ -126,7 +124,7 @@ static void testMove()
     cpu.reg.a[0] = 0x2010;
     cpu.run({ 0xF220, 0x7400 | (4 << 7) });
     CHECK(cpu.reg.a[0] == 0x2008);
-    CHECK(cpu.read32(0x2008) == 0x40040000 && cpu.read32(0x200C) == 0);
+    CHECK((cpu.read32(0x2008) == 0x40040000 && cpu.read32(0x200C) == 0));
     cpu.run({ 0xF218, 0x5400 | (7 << 7) });
     CHECK(cpu.reg.a[0] == 0x2010);
     CHECK(same(cpu.fpu.fpr[7], F(2.5)));
@@ -134,8 +132,8 @@ static void testMove()
     // FMOVE.X FP5,(8,A1) and back via FMOVE.X (8,A1),FP0
     cpu.reg.a[1] = 0x3000;
     cpu.run({ 0xF229, 0x6800 | (5 << 7), 0x0008 });
-    CHECK(cpu.read16(0x3008) == 0x4000 && cpu.read16(0x300A) == 0);
-    CHECK(cpu.read32(0x300C) == 0xC90FDAA2 && cpu.read32(0x3010) == 0x2168C235);
+    CHECK((cpu.read16(0x3008) == 0x4000 && cpu.read16(0x300A) == 0));
+    CHECK((cpu.read32(0x300C) == 0xC90FDAA2 && cpu.read32(0x3010) == 0x2168C235));
     cpu.run({ 0xF229, 0x4800, 0x0008 });
     CHECK(same(cpu.fpu.fpr[0], MFloat80::fromBits(0x4000, 0xC90FDAA22168C235ULL)));
 
@@ -148,7 +146,7 @@ static void testMove()
     }
 }
 
-static void testPacked()
+TEST_CASE("Packed")
 {
     TestCPU cpu;
 
@@ -159,23 +157,23 @@ static void testPacked()
     // FMOVE.P FP0,(A0) with k-factor 17 (static)
     cpu.reg.a[0] = 0x2000;
     cpu.run({ 0xF210, 0x6C00 | 0x0011 });
-    CHECK(cpu.read32(0x2000) == 0x80020001 && cpu.read32(0x2004) == 0x50000000 && cpu.read32(0x2008) == 0);
+    CHECK((cpu.read32(0x2000) == 0x80020001 && cpu.read32(0x2004) == 0x50000000 && cpu.read32(0x2008) == 0));
 
     // Dynamic k-factor: D1 = 3 digits of 1/3
     cpu.fpu.fpr[1] = env.div(MFloat80::one(), MFloat80::fromInt(3));
     cpu.reg.d[1] = 3;
     cpu.run({ 0xF210, 0x7C00 | (1 << 7) | (1 << 4) });
-    CHECK(cpu.read32(0x2000) == 0x40010003 && cpu.read32(0x2004) == 0x33000000);
-    CHECK(cpu.fpu.fpsr & FPEXP::INEX2);
+    CHECK((cpu.read32(0x2000) == 0x40010003 && cpu.read32(0x2004) == 0x33000000));
+    CHECK((cpu.fpu.fpsr & FPEXP::INEX2));
 }
 
-static void testMovecr()
+TEST_CASE("Movecr")
 {
     TestCPU cpu;
 
     cpu.run({ 0xF200, 0x5C00 });
     CHECK(same(cpu.fpu.fpr[0], MFloat80::fromBits(0x4000, 0xC90FDAA22168C235ULL)));
-    CHECK(cpu.fpu.fpsr & FPEXP::INEX2);
+    CHECK((cpu.fpu.fpsr & FPEXP::INEX2));
 
     cpu.run({ 0xF200, 0x5C00 | (2 << 7) | 0x33 });
     CHECK(same(cpu.fpu.fpr[2], MFloat80::fromInt(10)));
@@ -187,7 +185,7 @@ static void testMovecr()
     CHECK(same(cpu.fpu.fpr[0], MFloat80::fromBits(0x4000, 0xC90FDAA22168C234ULL)));
 }
 
-static void testMovem()
+TEST_CASE("Movem")
 {
     TestCPU cpu;
 
@@ -214,19 +212,19 @@ static void testMovem()
     cpu.reg.a[1] = 0x4000;
     cpu.reg.d[2] = 0xA0;
     cpu.run({ 0xF211, 0xF800 | (2 << 4) });
-    CHECK(cpu.read16(0x4000) == 0x3FFF && cpu.read16(0x400C) == 0x3FFF);
+    CHECK((cpu.read16(0x4000) == 0x3FFF && cpu.read16(0x400C) == 0x3FFF));
     CHECK(cpu.reg.a[1] == 0x4000);
 
     // Control registers
     cpu.reg.a[2] = 0x5000;
     cpu.run({ 0xF23C, 0x9000, 0x0000, 0x0010 });                        // FMOVE.L #$10,FPCR
-    CHECK(cpu.fpu.getFPCR() == 0x10 && cpu.fpu.getRoundingMode() == RoundingMode::ZERO);
+    CHECK((cpu.fpu.getFPCR() == 0x10 && cpu.fpu.getRoundingMode() == RoundingMode::ZERO));
     cpu.fpu.setFPCR(0);
     cpu.fpu.setFPIAR(0x12345678);
     cpu.fpu.setFPSR(0x08000000);
 
     cpu.run({ 0xF212, 0xA000 | 0x1C00 });                               // FMOVEM.L FPCR/FPSR/FPIAR,(A2)
-    CHECK(cpu.read32(0x5000) == 0 && cpu.read32(0x5004) == 0x08000000 && cpu.read32(0x5008) == 0x12345678);
+    CHECK((cpu.read32(0x5000) == 0 && cpu.read32(0x5004) == 0x08000000 && cpu.read32(0x5008) == 0x12345678));
 
     cpu.reg.d[4] = 0x20;
     cpu.run({ 0xF204, 0x9000 });                                        // FMOVE.L D4,FPCR
@@ -237,10 +235,10 @@ static void testMovem()
     cpu.reg.a[3] = 0x6000;
     cpu.run({ 0xF223, 0xA000 | 0x1C00 });                               // FMOVEM.L FPCR/FPSR/FPIAR,-(A3)
     CHECK(cpu.reg.a[3] == 0x6000 - 12);
-    CHECK(cpu.read32(0x6000 - 12) == 0x20 && cpu.read32(0x6000 - 4) == 0x12345678);
+    CHECK((cpu.read32(0x6000 - 12) == 0x20 && cpu.read32(0x6000 - 4) == 0x12345678));
 }
 
-static void testArithmetic()
+TEST_CASE("Arithmetic")
 {
     TestCPU cpu;
 
@@ -286,13 +284,13 @@ static void testArithmetic()
     cpu.fpu.fpr[5] = F(0);
     cpu.run({ 0xF200, 0x0020 | (5 << 10) | (4 << 7) });
     CHECK(cpu.fpu.fpr[4].isInfinite());
-    CHECK(cpu.fpu.fpsr & FPEXP::DZ);
-    CHECK(cpu.fpu.fpsr & (1 << 4));
+    CHECK((cpu.fpu.fpsr & FPEXP::DZ));
+    CHECK((cpu.fpu.fpsr & (1 << 4)));
 
     cpu.fpu.fpr[4] = MFloat80::infinity();
     cpu.run({ 0xF200, 0x0023 | (5 << 10) | (4 << 7) });
     CHECK(same(cpu.fpu.fpr[4], FPU::defaultNaN()));
-    CHECK(cpu.fpu.fpsr & FPEXP::OPERR);
+    CHECK((cpu.fpu.fpsr & FPEXP::OPERR));
     CHECK(!(cpu.fpu.fpsr & FPEXP::DZ));         // The exception status byte is cleared per instruction
 
     // FMOD / FREM
@@ -321,7 +319,7 @@ static void testArithmetic()
     CHECK(c040.fpu.fpr[2].mantissa() == 0xAAAAAAAAAAAAA800ULL);
 }
 
-static void testTraps()
+TEST_CASE("Traps")
 {
     // The 68040 does not implement FMOD in hardware. The instruction causes a line F exception.
     TestCPU cpu(FPUModel::BUILTIN, CPUModel::M68040);
@@ -351,7 +349,7 @@ static void testTraps()
     CHECK(cpu3.reg.pc0 == 0x9000);
 }
 
-static void testTranscendental()
+TEST_CASE("Transcendental")
 {
     auto near = [](const MFloat80 &a, double expected) {
         double v = env.toDouble(a);
@@ -397,7 +395,7 @@ static void testTranscendental()
         cpu.fpu.fpr[0] = MFloat80::infinity();
         cpu.run({ 0xF200, 0x000E });                                        // FSIN FP0,FP0
         CHECK(cpu.fpu.fpr[0].isNaN());
-        CHECK(cpu.fpu.fpsr & FPEXP::OPERR);
+        CHECK((cpu.fpu.fpsr & FPEXP::OPERR));
     }
 
     // Logarithm of zero
@@ -406,11 +404,11 @@ static void testTranscendental()
         cpu.fpu.fpr[0] = MFloat80::zero();
         cpu.run({ 0xF200, 0x0014 });                                        // FLOGN FP0,FP0
         CHECK(same(cpu.fpu.fpr[0], MFloat80::infinity(true)));
-        CHECK(cpu.fpu.fpsr & FPEXP::DZ);
+        CHECK((cpu.fpu.fpsr & FPEXP::DZ));
     }
 }
 
-static void testControl()
+TEST_CASE("Control")
 {
     // FBcc.W EQ: taken if Z is set
     {
@@ -440,8 +438,8 @@ static void testControl()
         cpu.run({ 0xF281, 0x0010 });                                // FBEQ
         CHECK(!(cpu.fpu.fpsr & FPEXP::BSUN));
         cpu.run({ 0xF291, 0x0010 });                                // FBSEQ
-        CHECK(cpu.fpu.fpsr & FPEXP::BSUN);
-        CHECK(cpu.fpu.fpsr & (1 << 7));                             // IOP
+        CHECK((cpu.fpu.fpsr & FPEXP::BSUN));
+        CHECK((cpu.fpu.fpsr & (1 << 7))); // IOP
     }
 
     // All conditions
@@ -551,7 +549,7 @@ static void testControl()
     }
 }
 
-static void testModels()
+TEST_CASE("Models")
 {
     // A 68030 with a 68882
     {
@@ -639,7 +637,7 @@ static void testModels()
     }
 }
 
-static void testTinySinh()
+TEST_CASE("Tiny Sinh")
 {
     TestCPU cpu(FPUModel::M68882, CPUModel::M68030);
 
@@ -657,19 +655,6 @@ static void testTinySinh()
     CHECK((cpu.fpu.fpsr & 0xFF00) == 0x0A00);
 }
 
-int main()
-{
-    testMove();
-    testPacked();
-    testMovecr();
-    testMovem();
-    testArithmetic();
-    testTraps();
-    testControl();
-    testTranscendental();
-    testModels();
-    testTinySinh();
+TEST_SUITE_END();
 
-    printf("%d checks, %d failures\n", checks, failures);
-    return failures ? EXIT_FAILURE : EXIT_SUCCESS;
 }

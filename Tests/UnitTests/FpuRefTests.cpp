@@ -13,9 +13,13 @@
  * exception status bits are compared. Mismatches are collected and summarized,
  * so one run shows all kinds of deviations at once.
  *
- * Usage: fpuRefTests [iterations [seed [clean]]]
+ * The run can be tuned through environment variables: FPUREF_ITERATIONS
+ * (default 2000), FPUREF_SEED (default 1), FPUREF_CLEAN (restricts the
+ * operands to Extended precision without NaNs and denormals) and
+ * FPUREF_MAXPRINT (number of mismatches printed per category).
  */
 
+#include "doctest.h"
 #include "FPU/FPU.h"
 #include "FPU/FpuFormats.h"
 #include "UAEGlue/UAERef.h"
@@ -619,13 +623,18 @@ void testConversions(int model, long iterations)
 
 }
 
-int main(int argc, char **argv)
+TEST_SUITE("FPU (reference)") {
+
+TEST_CASE("Moira FPU vs. UAE")
 {
-    long iterations = argc > 1 ? atol(argv[1]) : 2000;
-    unsigned seed = argc > 2 ? unsigned(atol(argv[2])) : 1;
-    clean = argc > 3 && std::string(argv[3]) == "clean";
-    if (const char *n = getenv("FPUREF_MAXPRINT")) maxPrinted = atoi(n);
+    auto env = [](const char *name) { return getenv(name); };
+
+    long iterations = env("FPUREF_ITERATIONS") ? atol(env("FPUREF_ITERATIONS")) : 2000;
+    unsigned seed = env("FPUREF_SEED") ? unsigned(atol(env("FPUREF_SEED"))) : 1;
+    clean = env("FPUREF_CLEAN") != nullptr;
+    if (env("FPUREF_MAXPRINT")) maxPrinted = atoi(env("FPUREF_MAXPRINT"));
     rng.seed(seed);
+    stats.clear();
 
     printf("Moira FPU vs. UAE: %ld iterations, seed %u%s\n\n", iterations, seed, clean ? " (clean)" : "");
 
@@ -642,6 +651,7 @@ int main(int argc, char **argv)
         for (auto &[cat, n] : s.categories) printf("      %-34s %6ld\n", cat.c_str(), n);
         failures += s.failures;
     }
-    printf("\n%ld mismatches\n", failures);
-    return failures ? 1 : 0;
+    CHECK(failures == 0);
+}
+
 }

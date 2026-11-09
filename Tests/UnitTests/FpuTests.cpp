@@ -5,6 +5,7 @@
 // Published under the terms of the MIT License
 // -----------------------------------------------------------------------------
 
+#include "doctest.h"
 #include "MoiraConfig.h"
 #include "FPU/FPU.h"
 #include <cstdio>
@@ -13,24 +14,22 @@
 
 using namespace moira;
 
+namespace {
+
+TEST_SUITE_BEGIN("FPU");
+
 // The floating-point environment of numbers that are not bound to an FPU
-static FpuEnv env;
-
-static int failures = 0;
-static int checks = 0;
-
-#define CHECK(cond) do { checks++; if (!(cond)) { failures++; \
-    printf("FAILED %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
+FpuEnv env;
 
 // Arithmetic of the standard environment
-static MFloat80 operator+(const MFloat80 &a, const MFloat80 &b) { return env.add(a, b); }
-static MFloat80 operator-(const MFloat80 &a, const MFloat80 &b) { return env.sub(a, b); }
-static MFloat80 operator*(const MFloat80 &a, const MFloat80 &b) { return env.mul(a, b); }
-static MFloat80 operator/(const MFloat80 &a, const MFloat80 &b) { return env.div(a, b); }
+MFloat80 operator+(const MFloat80 &a, const MFloat80 &b) { return env.add(a, b); }
+MFloat80 operator-(const MFloat80 &a, const MFloat80 &b) { return env.sub(a, b); }
+MFloat80 operator*(const MFloat80 &a, const MFloat80 &b) { return env.mul(a, b); }
+MFloat80 operator/(const MFloat80 &a, const MFloat80 &b) { return env.div(a, b); }
 
-static bool same(const MFloat80 &a, const MFloat80 &b) { return a.identical(b); }
+bool same(const MFloat80 &a, const MFloat80 &b) { return a.identical(b); }
 
-static void testIntegers()
+TEST_CASE("Integers")
 {
     FpuEnv::Scope scope(env);
     env.clearFlags();
@@ -38,7 +37,7 @@ static void testIntegers()
     CHECK(FpuFormats::toInteger(env, MFloat80::fromInt(42), 8) == 42);
     CHECK(env.flags() == 0);
     CHECK(FpuFormats::toInteger(env, MFloat80::fromInt(-129), 8) == -128);
-    CHECK(env.flags() & FloatFlags::INVALID);
+    CHECK((env.flags() & FloatFlags::INVALID));
     env.clearFlags();
     CHECK(FpuFormats::toInteger(env, MFloat80::fromInt(70000), 16) == 32767);
     CHECK(FpuFormats::toInteger(env, MFloat80::fromInt(-3000000000LL), 32) == INT32_MIN);
@@ -54,16 +53,16 @@ static void testIntegers()
     CHECK(FpuFormats::toInteger(env, env.fromDouble(-2.5), 32) == -3);
     env.setRoundingMode(RoundingMode::ZERO);
     CHECK(FpuFormats::toInteger(env, env.fromDouble(-2.5), 32) == -2);
-    CHECK(env.flags() & FloatFlags::INEXACT);
+    CHECK((env.flags() & FloatFlags::INEXACT));
     env.clearFlags();
 
     // Special values
     CHECK(FpuFormats::toInteger(env, MFloat80::infinity(true), 32) == INT32_MIN);
     CHECK(FpuFormats::toInteger(env, MFloat80::quietNaN(), 32) == i32(0xC0000000));      // High bits of the mantissa
-    CHECK(env.flags() & FloatFlags::INVALID);
+    CHECK((env.flags() & FloatFlags::INVALID));
 }
 
-static void testFloats()
+TEST_CASE("Floats")
 {
     FpuEnv::Scope scope(env);
     env.clearFlags();
@@ -79,17 +78,17 @@ static void testFloats()
     auto third = MFloat80::one() / MFloat80::fromInt(3);
     CHECK(FpuFormats::toDouble(env, third) == 0x3FD5555555555555ULL);
     CHECK(FpuFormats::toSingle(env, third) == 0x3EAAAAAB);
-    CHECK(env.flags() & FloatFlags::INEXACT);
+    CHECK((env.flags() & FloatFlags::INEXACT));
     env.clearFlags();
 
     // Extended precision in memory
     u32 w[3];
     FpuFormats::toExtended(MFloat80::fromBits(0xC001, 0xC000000000000000ULL), w);
-    CHECK(w[0] == 0xC0010000 && w[1] == 0xC0000000 && w[2] == 0);
+    CHECK((w[0] == 0xC0010000 && w[1] == 0xC0000000 && w[2] == 0));
     CHECK(same(FpuFormats::fromExtended(w), MFloat80::fromBits(0xC001, 0xC000000000000000ULL)));
 }
 
-static void testPackedIn()
+TEST_CASE("Packed In")
 {
     FpuEnv::Scope scope(env);
     env.clearFlags();
@@ -107,7 +106,7 @@ static void testPackedIn()
     u32 tiny[3] = { 0x40050001, 0, 0 };
     auto r = FpuFormats::fromPacked(env, tiny);
     CHECK(env.toDouble(r) == 1e-5);
-    CHECK(env.flags() & FloatFlags::INEXACT);
+    CHECK((env.flags() & FloatFlags::INEXACT));
     env.clearFlags();
 
     // 1.0E999 (the exponent has three digits, as in the reference)
@@ -123,32 +122,32 @@ static void testPackedIn()
     CHECK(FpuFormats::fromPacked(env, nan).isNaN());
 }
 
-static void testPackedOut()
+TEST_CASE("Packed Out")
 {
     FpuEnv::Scope scope(env);
     env.clearFlags();
     u32 w[3];
 
     FpuFormats::toPacked(env, MFloat80::one(), 17, w);
-    CHECK(w[0] == 0x00000001 && w[1] == 0 && w[2] == 0);
+    CHECK((w[0] == 0x00000001 && w[1] == 0 && w[2] == 0));
     CHECK(env.flags() == 0);
 
     FpuFormats::toPacked(env, MFloat80::fromInt(-150), 17, w);
-    CHECK(w[0] == 0x80020001 && w[1] == 0x50000000 && w[2] == 0);
+    CHECK((w[0] == 0x80020001 && w[1] == 0x50000000 && w[2] == 0));
 
     // 0.5 = 5.0E-1
     FpuFormats::toPacked(env, env.fromDouble(0.5), 17, w);
-    CHECK(w[0] == 0x40010005 && w[1] == 0 && w[2] == 0);
+    CHECK((w[0] == 0x40010005 && w[1] == 0 && w[2] == 0));
 
     // 1/3 with 17 digits: 3.3333333333333333E-1 (inexact)
     FpuFormats::toPacked(env, MFloat80::one() / MFloat80::fromInt(3), 17, w);
-    CHECK(w[0] == 0x40010003 && w[1] == 0x33333333 && w[2] == 0x33333333);
-    CHECK(env.flags() & FloatFlags::INEXACT);
+    CHECK((w[0] == 0x40010003 && w[1] == 0x33333333 && w[2] == 0x33333333));
+    CHECK((env.flags() & FloatFlags::INEXACT));
     env.clearFlags();
 
     // k-factor: three significant digits of 2/3 -> 6.67E-1
     FpuFormats::toPacked(env, MFloat80::fromInt(2) / MFloat80::fromInt(3), 3, w);
-    CHECK(w[0] == 0x40010006 && w[1] == 0x67000000 && w[2] == 0);
+    CHECK((w[0] == 0x40010006 && w[1] == 0x67000000 && w[2] == 0));
     env.setRoundingMode(RoundingMode::ZERO);
     FpuFormats::toPacked(env, MFloat80::fromInt(2) / MFloat80::fromInt(3), 3, w);
     CHECK(w[1] == 0x66000000);
@@ -157,31 +156,31 @@ static void testPackedOut()
 
     // Negative k-factor: two digits right of the decimal point (123.456 -> 123.46)
     FpuFormats::toPacked(env, env.fromDouble(123.456), -2, w);
-    CHECK(w[0] == 0x00020001 && w[1] == 0x23460000);
+    CHECK((w[0] == 0x00020001 && w[1] == 0x23460000));
     env.clearFlags();
 
     // Rounding carries into a new digit: 9.99 with k = 2 -> 1.0E1
     FpuFormats::toPacked(env, env.fromDouble(9.99), 2, w);
-    CHECK(w[0] == 0x00010001 && w[1] == 0);
+    CHECK((w[0] == 0x00010001 && w[1] == 0));
 
     // k > 17 raises the invalid flag
     env.clearFlags();
     FpuFormats::toPacked(env, MFloat80::one(), 18, w);
-    CHECK(env.flags() & FloatFlags::INVALID);
+    CHECK((env.flags() & FloatFlags::INVALID));
     env.clearFlags();
 
     // Special values
     FpuFormats::toPacked(env, MFloat80::zero(true), 17, w);
-    CHECK(w[0] == 0x80000000 && w[1] == 0 && w[2] == 0);
+    CHECK((w[0] == 0x80000000 && w[1] == 0 && w[2] == 0));
     FpuFormats::toPacked(env, MFloat80::infinity(true), 17, w);
-    CHECK(w[0] == 0xFFFF0000 && w[1] == 0 && w[2] == 0);
+    CHECK((w[0] == 0xFFFF0000 && w[1] == 0 && w[2] == 0));
 
     // Large exponents have four digits
     FpuFormats::toPacked(env, MFloat80::fromBits(0x3FFF + 13300, 1ULL << 63), 17, w);
-    CHECK((w[0] >> 12 & 0xF) == 4 && (w[0] >> 16 & 0xFFF) == 0x003);
+    CHECK(((w[0] >> 12 & 0xF) == 4 && (w[0] >> 16 & 0xFFF) == 0x003));
 }
 
-static void testPackedRoundTrip()
+TEST_CASE("Packed Round Trip")
 {
     FpuEnv::Scope scope(env);
     double values[] = { 1.0, 0.1, 123456.789, 1e300, 1e-300, 4.9406564584124654e-324,
@@ -200,9 +199,9 @@ static void testPackedRoundTrip()
     }
 }
 
-static MFloat80 F(double d) { return env.fromDouble(d); }
+MFloat80 F(double d) { return env.fromDouble(d); }
 
-static void testArithmetic()
+TEST_CASE("Arithmetic")
 {
     FPU fpu;
     FPU::Scope scope(fpu);
@@ -222,18 +221,18 @@ static void testArithmetic()
     // Exceptions
     fpu.fdiv(F(1), F(0));
     fpu.collectFlags();
-    CHECK(fpu.fpsr & FPEXP::DZ);
+    CHECK((fpu.fpsr & FPEXP::DZ));
     fpu.setFPSR(0);
     fpu.fdiv(F(1), F(3));
     fpu.collectFlags();
-    CHECK(fpu.fpsr & FPEXP::INEX2);
+    CHECK((fpu.fpsr & FPEXP::INEX2));
     fpu.setFPSR(0);
 
     // Invalid operations produce the positive default NaN
     auto defNaN = FPU::defaultNaN();
     CHECK(same(fpu.fmul(F(0), MFloat80::infinity()), defNaN));
     fpu.collectFlags();
-    CHECK(fpu.fpsr & FPEXP::OPERR);
+    CHECK((fpu.fpsr & FPEXP::OPERR));
     fpu.setFPSR(0);
     CHECK(same(fpu.fsub(MFloat80::infinity(), MFloat80::infinity()), defNaN));
     CHECK(same(fpu.fdiv(F(0), F(0)), defNaN));
@@ -254,15 +253,15 @@ static void testArithmetic()
     CHECK(same(fpu.fadd(qnan2, qnan), qnan2));
     CHECK(fpu.fpsr == 0);
     CHECK(same(fpu.fadd(F(1), snan), qnan));
-    CHECK(fpu.fpsr & FPEXP::SNAN);
+    CHECK((fpu.fpsr & FPEXP::SNAN));
     CHECK(!(fpu.fpsr & FPEXP::OPERR));
     fpu.setFPSR(0);
     CHECK(same(fpu.fadd(qnan2, snan), qnan2));
-    CHECK(fpu.fpsr & FPEXP::SNAN);
+    CHECK((fpu.fpsr & FPEXP::SNAN));
     fpu.setFPSR(0);
     CHECK(same(fpu.fsqrt(snan), qnan));
     CHECK(same(fpu.fint(snan), qnan));
-    CHECK(fpu.fpsr & FPEXP::SNAN);
+    CHECK((fpu.fpsr & FPEXP::SNAN));
     fpu.setFPSR(0);
 
     // FINT and FINTRZ
@@ -294,7 +293,7 @@ static void testArithmetic()
         CHECK(same(minNormal * half, MFloat80::fromBits(0x0000, 1ULL << 63)));
         CHECK((fpu.fpsr & FPEXP::UNFL) == 0);
         CHECK(same(minNormal * MFloat80::fromBits(0x3FFD, 1ULL << 63), MFloat80::fromBits(0x0000, 1ULL << 62)));
-        CHECK(env.flags() & FloatFlags::UNFL);
+        CHECK((env.flags() & FloatFlags::UNFL));
         env.clearFlags();
 
         // Denormal operands are scaled by the 68k convention
@@ -312,8 +311,8 @@ static void testArithmetic()
     fpu.ftst(F(-1));
     CHECK((fpu.fpsr & FPSR::CC_MASK) == FPSR::CC_N);
     fpu.ftst(snan);
-    CHECK(fpu.fpsr & FPSR::CC_NAN);
-    CHECK(fpu.fpsr & FPEXP::SNAN);
+    CHECK((fpu.fpsr & FPSR::CC_NAN));
+    CHECK((fpu.fpsr & FPEXP::SNAN));
     fpu.setFPSR(0);
 
     // FCMP
@@ -401,7 +400,7 @@ static void testArithmetic()
     fpu.setFPSR(0);
 }
 
-static void testRoundingPrecision()
+TEST_CASE("Rounding Precision")
 {
     FPU fpu;
     auto third = MFloat80::one() / MFloat80::fromInt(3);
@@ -435,11 +434,11 @@ static void testRoundingPrecision()
         CHECK(same(fpu.round(unnormal), MFloat80::one()));
         auto denormal = MFloat80::fromBits(0x0000, 0x4000000000000000ULL);
         auto r = fpu.round(denormal);
-        CHECK(r.isDenormal() && r.mantissa() == 0x4000000000000000ULL);
+        CHECK((r.isDenormal() && r.mantissa() == 0x4000000000000000ULL));
     }
 }
 
-static void testNaNConversions()
+TEST_CASE("NaN Conversions")
 {
     FpuEnv::Scope scope(env);
     env.clearFlags();
@@ -448,7 +447,7 @@ static void testNaNConversions()
     auto snan = FpuFormats::fromSingle(env, 0x7F800001);
     CHECK(snan.isSignalingNaN());
     CHECK(same(snan, MFloat80::fromBits(0x7FFF, 1ULL << 40)));      // Without integer bit, as the 68k FPUs do it
-    CHECK(FpuFormats::fromSingle(env, 0xFFC00000).isQuietNaN() && FpuFormats::fromSingle(env, 0xFFC00000).sign());
+    CHECK((FpuFormats::fromSingle(env, 0xFFC00000).isQuietNaN() && FpuFormats::fromSingle(env, 0xFFC00000).sign()));
     CHECK(FpuFormats::fromDouble(env, 0x7FF0000000000001ULL).isSignalingNaN());
     CHECK(FpuFormats::fromDouble(env, 0x7FF8000000000001ULL).isQuietNaN());
     CHECK(env.flags() == 0);
@@ -462,21 +461,21 @@ static void testNaNConversions()
     CHECK(FpuFormats::toDouble(env, MFloat80::fromBits(0x7FFF, 0x8000000000000001ULL)) == 0x7FF8000000000000ULL);
 }
 
-static void testFPU()
+TEST_CASE("FPU Object")
 {
     FPU fpu;
 
     // Reset state
     for (auto &reg : fpu.fpr) CHECK(same(reg, MFloat80::quietNaN()));
     CHECK(fpu.inResetState());
-    CHECK(fpu.getFPCR() == 0 && fpu.getFPSR() == 0);
+    CHECK((fpu.getFPCR() == 0 && fpu.getFPSR() == 0));
 
     // FPCR decoding
     fpu.setFPCR(0x00FF);
     CHECK(fpu.getFPCR() == 0x00F0);
-    CHECK(fpu.getPrecision() == Precision::DOUBLE && fpu.getRoundingMode() == RoundingMode::UP);
+    CHECK((fpu.getPrecision() == Precision::DOUBLE && fpu.getRoundingMode() == RoundingMode::UP));
     fpu.setFPCR(0x0040 | 0x0010);
-    CHECK(fpu.getPrecision() == Precision::SINGLE && fpu.getRoundingMode() == RoundingMode::ZERO);
+    CHECK((fpu.getPrecision() == Precision::SINGLE && fpu.getRoundingMode() == RoundingMode::ZERO));
     fpu.setFPCR(0);
 
     // The scope loads rounding mode and precision and collects the flags
@@ -490,8 +489,8 @@ static void testFPU()
     }
     CHECK(fpu.env.roundingMode() == RoundingMode::NEAREST);
     CHECK(fpu.env.precision() == Precision::EXTENDED);
-    CHECK(fpu.fpsr & FPEXP::INEX2);
-    CHECK(fpu.fpsr & (1 << 3));
+    CHECK((fpu.fpsr & FPEXP::INEX2));
+    CHECK((fpu.fpsr & (1 << 3)));
     CHECK(!(fpu.fpsr & FPEXP::DZ));
 
     fpu.setFPSR(0);
@@ -499,8 +498,8 @@ static void testFPU()
         FPU::Scope scope(fpu);
         (void)fpu.env.div(MFloat80::one(), MFloat80::zero());
     }
-    CHECK(fpu.fpsr & FPEXP::DZ);
-    CHECK(fpu.fpsr & (1 << 4));
+    CHECK((fpu.fpsr & FPEXP::DZ));
+    CHECK((fpu.fpsr & (1 << 4)));
 
     // Condition codes
     fpu.setConditionCodes(MFloat80::fromInt(-5));
@@ -510,7 +509,7 @@ static void testFPU()
     fpu.setConditionCodes(MFloat80::infinity());
     CHECK((fpu.fpsr & FPSR::CC_MASK) == FPSR::CC_I);
     fpu.setConditionCodes(MFloat80::quietNaN());
-    CHECK((fpu.fpsr & FPSR::CC_MASK) == (FPSR::CC_N | FPSR::CC_NAN) || (fpu.fpsr & FPSR::CC_MASK) == FPSR::CC_NAN);
+    CHECK(((fpu.fpsr & FPSR::CC_MASK) == (FPSR::CC_N | FPSR::CC_NAN) || (fpu.fpsr & FPSR::CC_MASK) == FPSR::CC_NAN));
 
     // Quotient byte
     fpu.setQuotientByte(0x15, true);
@@ -520,7 +519,7 @@ static void testFPU()
     fpu.setFPCR(0);
     fpu.setFPSR(0);
     CHECK(same(fpu.readCR(0x00), MFloat80::fromBits(0x4000, 0xc90fdaa22168c235)));
-    CHECK(fpu.fpsr & FPEXP::INEX2);
+    CHECK((fpu.fpsr & FPEXP::INEX2));
     CHECK(same(fpu.readCR(0x33), MFloat80::fromInt(10)));
     CHECK(same(fpu.readCR(0x0F), MFloat80::zero()));
 
@@ -532,7 +531,7 @@ static void testFPU()
     CHECK(fpu.stateFrameSize(FpuFrameType::BUSY) == 180);
 }
 
-static void testTranscendental()
+TEST_CASE("Transcendental")
 {
     FPU fpu;
     fpu.setModel(FPUModel::M68882);
@@ -576,7 +575,7 @@ static void testTranscendental()
     // sin(pi) is tiny, but not zero. Compare to the part of pi not covered by the 64-bit significand.
     MFloat80 pi = MFloat80::fromBits(0x4000, 0xC90FDAA22168C235ULL);
     MFloat80 s = fpu.fsin(pi);
-    CHECK(s.exponent() < -60 && s.exponent() > -70);
+    CHECK((s.exponent() < -60 && s.exponent() > -70));
 
     // Large arguments are reduced exactly (reference value computed offline)
     MFloat80 big = MFloat80::fromBits(0x3FFF + 100, 1ULL << 63);
@@ -592,7 +591,7 @@ static void testTranscendental()
     // Exceptions
     fpu.env.clearFlags();
     MFloat80 r = fpu.fsin(MFloat80::infinity());
-    CHECK(r.isNaN() && (fpu.env.flags() & FloatFlags::INVALID));
+    CHECK((r.isNaN() && (fpu.env.flags() & FloatFlags::INVALID)));
     CHECK(fpu.fasin(MFloat80::fromInt(2)).isNaN());
     CHECK(fpu.flogn(MFloat80::fromInt(-1)).isNaN());
     CHECK(same(fpu.flogn(MFloat80::zero()), MFloat80::infinity(true)));
@@ -605,19 +604,6 @@ static void testTranscendental()
     CHECK(same(cs, fpu.fcos(env.fromDouble(0.7))));
 }
 
-int main()
-{
-    testIntegers();
-    testFloats();
-    testPackedIn();
-    testPackedOut();
-    testPackedRoundTrip();
-    testArithmetic();
-    testRoundingPrecision();
-    testNaNConversions();
-    testFPU();
-    testTranscendental();
+TEST_SUITE_END();
 
-    printf("%d checks, %d failures\n", checks, failures);
-    return failures ? EXIT_FAILURE : EXIT_SUCCESS;
 }
