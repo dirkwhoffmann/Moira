@@ -109,7 +109,8 @@ enum class Compatibility
 {
     DEFAULT,                // Moira's own behavior
     MUSASHI,                // Mimic the Musashi emulator
-    UAE                     // Mimic the UAE Amiga emulator (WinUAE, Amiberry)
+    UAE,                    // Mimic the UAE Amiga emulator (WinUAE, Amiberry)
+    MAME                    // Mimic the MAME 68000 core (used by the SingleStepTests)
 };
 
 inline constexpr Compatibility compat = Compatibility::MOIRA_COMPATIBILITY;

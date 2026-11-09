@@ -1,0 +1,71 @@
+// -----------------------------------------------------------------------------
+// This file is part of Moira - A Motorola 68k emulator
+//
+// Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de
+// Published under the terms of the MIT License
+// -----------------------------------------------------------------------------
+
+#pragma once
+
+#include <cstdint>
+#include <string>
+#include <utility>
+#include <vector>
+
+namespace sst {
+
+/* Reader for the binary test files of the SingleStepTests 68000 suite
+ * (the v1 folder). The files are read directly. No conversion step is needed.
+ *
+ * File layout (all values are little endian, every block starts with its size
+ * in bytes, including the two header words, followed by a magic number):
+ *
+ *   File:         magic 0x1A3F5D71, number of tests, tests
+ *   Test:         size, magic 0xABC12367, name, initial state, final state, transactions
+ *   Name:         size, magic 0x89ABCDEF, string length, string
+ *   State:        size, magic 0x01234567, D0-D7, A0-A6, USP, SSP, SR, PC,
+ *                 two prefetch words, number of RAM entries, (address, word) pairs
+ *   Transactions: size, magic 0x456789AB, number of cycles, number of transactions, ...
+ *
+ * The bus transactions are not decoded (yet). Only the total cycle count is used.
+ */
+
+struct State {
+
+    uint32_t d[8] = { };
+    uint32_t a[7] = { };
+    uint32_t usp = 0;
+    uint32_t ssp = 0;
+    uint32_t sr = 0;
+    uint32_t pc = 0;                                // Address of the next prefetch
+    uint32_t prefetch[2] = { };                     // Instruction queue (IRD, IRC)
+    std::vector<std::pair<uint32_t, uint8_t>> ram;  // Bytes that are set or checked
+};
+
+struct Test {
+
+    std::string name;
+    State initial;
+    State final;
+    uint32_t cycles = 0;                            // Total number of CPU cycles
+};
+
+class File {
+
+    std::vector<uint8_t> data;
+    size_t pos = 0;
+    uint32_t remaining = 0;
+
+public:
+
+    // Loads a file. Returns false on failure.
+    bool open(const std::string &path);
+
+    // Returns the number of tests that have not been read yet
+    uint32_t tests() const { return remaining; }
+
+    // Reads the next test. Returns false if there are no more tests or if the file is damaged.
+    bool next(Test &test);
+};
+
+}

@@ -122,6 +122,8 @@
  *   UAE:     Compatibility with the CPU core of the UAE Amiga emulator (as used
  *            in WinUAE and Amiberry). This mode is used by the test runner when
  *            UAE is selected as the reference implementation.
+ *   MAME:    Compatibility with MAME's microcoded 68000 core, which generated the
+ *            SingleStepTests. This mode is used by the SingleStep runner.
  */
 #ifndef MOIRA_COMPATIBILITY
 #define MOIRA_COMPATIBILITY DEFAULT

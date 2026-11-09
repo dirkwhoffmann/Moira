@@ -52,6 +52,11 @@ endfunction()
 add_test_runner(testRunnerMusashi moiraMusashi)
 add_test_runner(testRunnerUAE moiraUAE)
 
+# The SingleStepTests runner (runs Moira against the SingleStepTests 68000 suite)
+add_executable(singleStepRunner Runner/SingleStep/SingleStep.cpp Runner/SingleStep/SSTFile.cpp)
+target_link_libraries(singleStepRunner PRIVATE moiraMAME)
+target_include_directories(singleStepRunner PRIVATE ${CMAKE_SOURCE_DIR}/Moira ${CMAKE_SOURCE_DIR}/Runner/SingleStep)
+
 # Add the FPU unit tests
 add_executable(fpuTests Runner/FpuTests.cpp)
 target_link_libraries(fpuTests moira)

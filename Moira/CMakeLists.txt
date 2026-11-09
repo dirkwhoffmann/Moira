@@ -56,3 +56,7 @@ endfunction()
 
 add_moira_variant(moiraUAE UAE true)
 add_moira_variant(moiraMusashi MUSASHI false)
+
+# The SingleStepTests runner needs address errors and exact timing
+add_moira_variant(moiraMAME MAME true)
+target_compile_definitions(moiraMAME PUBLIC MOIRA_EMULATE_ADDRESS_ERROR=true)
