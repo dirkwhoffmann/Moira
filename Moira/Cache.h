@@ -107,11 +107,13 @@ protected:
     // The CPU this cache belongs to
     class Moira &moira;
 
+    // Cached longwords, indexed by addr[7:2]
+    u32 data[capacity] = { };
+
 private:
 
-    // Cache entries
+    // Tags, one per line
     u32 tags[capacity] = { };
-    u32 data[capacity] = { };
 
     // Valid bits, one per longword
     bool valid[capacity] = { };
@@ -156,8 +158,9 @@ public:
     // Indicates whether the CACR freezes the cache (no new entries are allocated)
     virtual bool frozen() const = 0;
 
-    // Indicates whether burst fills are enabled (requires the 68030 layout and the burst bit in the CACR)
-    virtual bool burstEnabled() const = 0;
+    // Indicates whether a miss at a physical address is served by a burst fill.
+    // This requires the 68030 layout, the burst bit in the CACR and a 32 bit port.
+    virtual bool burstEnabled(u32 phys) const = 0;
 
     //
     // Mapping entries
@@ -189,12 +192,6 @@ protected:
     
     // Checks if the longword of an address is valid and carries the matching tag
     bool hit(u32 addr, bool supervisor) const;
-
-    // Reads a longword (the caller has checked for a hit)
-    u32 read(u32 addr) const;
-
-    // Replaces the bits selected by a mask in a cached longword (the caller has checked for a hit)
-    void update(u32 addr, u32 mask, u32 value);
 
     // Stores a longword
     void insert(u32 addr, bool supervisor, u32 value);
@@ -257,7 +254,7 @@ public:
 
     bool active() const override;
     bool frozen() const override;
-    bool burstEnabled() const override;
+    bool burstEnabled(u32 phys) const override;
 
     void flush() override;
     void cacrDidChange(u32 value) override;
@@ -271,7 +268,9 @@ public:
 
 private:
 
-    // Serves an instruction fetch that is not covered by the latch; returns true on a miss
+    /* Serves an instruction fetch that is not covered by the latch.
+     * Returns true on a miss.
+     */
     bool fill(u32 base, u32 &phys);
 };
 
@@ -288,7 +287,7 @@ public:
 
     bool active() const override;
     bool frozen() const override;
-    bool burstEnabled() const override;
+    bool burstEnabled(u32 phys) const override;
 
     void cacrDidChange(u32 value) override;
     void caarDidChange(u32 value) override;
@@ -298,7 +297,7 @@ public:
      * Returns false if the access has to bypass the cache, because the page
      * is cache-inhibited. May throw a bus error.
      */
-    bool readLong(u32 addr, u8 fc, u32 &result);
+    bool read(u32 addr, u8 fc, u32 &result);
 
     /* Reflects a write access (the cache is write-through, so the caller has
      * already written to the bus). The mask selects the bytes of the aligned

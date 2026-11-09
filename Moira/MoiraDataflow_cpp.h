@@ -851,7 +851,7 @@ Moira::readDataCache(u32 addr)
     u32 v1, v2 = 0;
 
     // Read the longword (or the two longwords if the access crosses a boundary)
-    if (!dCache.readLong(addr & ~3, fc, v1) || (spans && !dCache.readLong((addr & ~3) + 4, fc, v2))) {
+    if (!dCache.read(addr & ~3, fc, v1) || (spans && !dCache.read((addr & ~3) + 4, fc, v2))) {
 
         // The page is cache-inhibited
         return readBus<C, S, F>(addr);

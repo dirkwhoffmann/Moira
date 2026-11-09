@@ -148,6 +148,7 @@ Moira::translate(u32 addr, u8 fc, bool *ci)
     if (!mmu.isEnabled()) return addr;
 
     auto physical = mmu.translate(addr, fc, write, ci);
+    
     if (!physical) {
 
         auto frame = makeFrame<write ? AE_WRITE : 0>(addr);

@@ -35,20 +35,6 @@ Cache::invalidateLine(u32 addr)
     for (int i = 0; i < numLongs(); i++) valid[first(addr) + i] = false;
 }
 
-u32
-Cache::read(u32 addr) const
-{
-    return data[slot(addr)];
-}
-
-void
-Cache::update(u32 addr, u32 mask, u32 value)
-{
-    auto &d = data[slot(addr)];
-    
-    d = (d & ~mask) | (value & mask);
-}
-
 void
 Cache::insert(u32 addr, bool supervisor, u32 value)
 {
@@ -85,11 +71,11 @@ Cache::invalidate(u32 addr)
 void
 Cache::burstFill(u32 logical, u32 physical, bool supervisor)
 {
-    /* A burst fill loads the remaining longwords of the line right behind the
-     * one that has just been loaded. The MMU only translates the first
-     * longword. The others follow in the same physical line. The longword
-     * index wraps around within the line.
-     */
+    // A burst fill loads the remaining longwords of the line right behind the
+    // one that has just been loaded. The MMU translates the first longword.
+    // All others follow in the same physical line. The longword index wraps
+    // around within the line.
+    
     auto lbase = logical & ~15;
     auto pbase = physical & ~15;
     auto lw = longword(logical);
@@ -114,9 +100,9 @@ ICache::frozen() const
 }
 
 bool
-ICache::burstEnabled() const
+ICache::burstEnabled(u32 phys) const
 {
-    return getLayout() == Layout::M68030 && (moira.reg.cacr & CACR::IBE);
+    return getLayout() == Layout::M68030 && (moira.reg.cacr & CACR::IBE) && portSize(moira.dsack(phys)) == 4;
 }
 
 void
@@ -155,7 +141,7 @@ ICache::fill(u32 base, u32 &phys)
         // Cache hit
         //
 
-        latch = { base, read(base) };
+        latch = { base, data[slot(base)] };
         return false;
     
     } else {
@@ -166,7 +152,7 @@ ICache::fill(u32 base, u32 &phys)
         
         bool ci;
         
-        // Read from memory
+        // Read new value from memory
         phys = moira.translate<Core::C68020, false, Word>(base, moira.readFC(), &ci) & moira.addrMask() & ~3;
         u32 value = moira.readLongSplit<Core::C68020>(phys);
         
@@ -175,7 +161,7 @@ ICache::fill(u32 base, u32 &phys)
             
             insert(base, supervisor, value);
             
-            if (burstEnabled() && validCount(base) == 1 && portSize(moira.dsack(phys)) == 4) {
+            if (burstEnabled(phys) && validCount(base) == 1) {
                 burstFill(base, phys, supervisor);
             }
         }
@@ -190,23 +176,22 @@ ICache::fetch(u32 addr, bool &busAccess, u32 &phys)
 {
     if (!emulated) {
 
-        // Every fetch behaves like a permanent cache miss
+        // Fake a permanent cache miss
         busAccess = true;
-        phys = moira.translate<Core::C68020, false, Word>(addr, moira.readFC());
+        phys = moira.translate<Core::C68020, false, Word>(addr, moira.readFC()) & moira.addrMask();
         return moira.read16(phys);
     }
 
     auto base = addr & moira.addrMask() & ~3;
 
+    // Check if the latch provides the information we need
     if (latch.addr == base) {
 
-        // Direct hit
         busAccess = false;
         phys = addr;
 
     } else {
 
-        // Query the cache
         busAccess = fill(base, phys);
     }
 
@@ -226,9 +211,9 @@ DCache::frozen() const
 }
 
 bool
-DCache::burstEnabled() const
+DCache::burstEnabled(u32 phys) const
 {
-    return getLayout() == Layout::M68030 && (moira.reg.cacr & CACR::DBE);
+    return getLayout() == Layout::M68030 && (moira.reg.cacr & CACR::DBE) && portSize(moira.dsack(phys)) == 4;
 }
 
 void
@@ -250,13 +235,14 @@ DCache::caarDidChange(u32 value)
 }
 
 bool
-DCache::readLong(u32 addr, u8 fc, u32 &result)
+DCache::read(u32 addr, u8 fc, u32 &result)
 {
     bool supervisor = fc & 4;
 
     // Serve the longword from the cache if possible
     if (hit(addr, supervisor)) {
-        result = read(addr);
+        
+        result = data[slot(addr)];
         return true;
     }
 
@@ -272,7 +258,7 @@ DCache::readLong(u32 addr, u8 fc, u32 &result)
 
         insert(addr, supervisor, result);
 
-        if (burstEnabled() && validCount(addr) == 1 && portSize(moira.dsack(phys)) == 4) {
+        if (burstEnabled(phys) && validCount(addr) == 1) {
             burstFill(addr, phys, supervisor);
         }
     }
@@ -287,12 +273,16 @@ DCache::write(u32 addr, bool supervisor, u32 mask, u32 value, bool ci)
 
     if (hit(addr, supervisor)) {
 
-        // A full write to an inhibited page drops the entry if write allocation is on
+        // Drop the entry for a full write to an inhibited page
         if (ci && full && writeAllocate) {
+            
             invalidate(addr);
-        } else {
-            update(addr, mask, value);
+            return;
         }
+     
+        // Update the cache entry by replacing the bits selected by the mask
+        auto &d = data[slot(addr)];
+        d = (d & ~mask) | (value & mask);
 
     } else if (writeAllocate && !frozen() && !ci && full) {
 
