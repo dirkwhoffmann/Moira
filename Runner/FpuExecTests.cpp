@@ -44,7 +44,7 @@ public:
 
     static constexpr u32 codeStart = 0x1000;
 
-    TestCPU(FPUModel fpuModel = FPUModel::M68882, Model cpuModel = Model::M68030)
+    TestCPU(FPUModel fpuModel = FPUModel::M68882, CPUModel cpuModel = CPUModel::M68030)
     {
         setModel(cpuModel);
         setFpuModel(fpuModel);
@@ -141,7 +141,7 @@ static void testMove()
 
     // Single precision rounding of a register-to-register move (FSMOVE needs the 68040)
     {
-        TestCPU c040(FPUModel::BUILTIN, Model::M68040);
+        TestCPU c040(FPUModel::BUILTIN, CPUModel::M68040);
         c040.fpu.fpr[0] = env.div(MFloat80::one(), MFloat80::fromInt(3));
         c040.run({ 0xF200, 0x0040 | (1 << 7) });
         CHECK(c040.fpu.fpr[1].mantissa() == 0xAAAAAB0000000000ULL);
@@ -311,7 +311,7 @@ static void testArithmetic()
     CHECK(cpu.reg.a[0] == 0x210C);
 
     // 68040: FSADD rounds to single, FADD on 68040 is available too
-    TestCPU c040(FPUModel::BUILTIN, Model::M68040);
+    TestCPU c040(FPUModel::BUILTIN, CPUModel::M68040);
     c040.fpu.fpr[0] = env.div(MFloat80::one(), MFloat80::fromInt(3));
     c040.fpu.fpr[1] = MFloat80::zero();
     c040.fpu.fpr[2] = MFloat80::zero();
@@ -324,7 +324,7 @@ static void testArithmetic()
 static void testTraps()
 {
     // The 68040 does not implement FMOD in hardware. The instruction causes a line F exception.
-    TestCPU cpu(FPUModel::BUILTIN, Model::M68040);
+    TestCPU cpu(FPUModel::BUILTIN, CPUModel::M68040);
     cpu.write32(11 * 4, 0x9000);
     cpu.fpu.fpr[0] = F(11);
     cpu.fpu.fpr[1] = F(3);
@@ -345,7 +345,7 @@ static void testTraps()
     CHECK(cpu4.reg.pc0 == 0x9000);
 
     // Transcendental functions are not available on the 68040
-    TestCPU cpu3(FPUModel::BUILTIN, Model::M68040);
+    TestCPU cpu3(FPUModel::BUILTIN, CPUModel::M68040);
     cpu3.write32(11 * 4, 0x9000);
     cpu3.run({ 0xF200, 0x000E });                                           // FSIN FP0,FP0
     CHECK(cpu3.reg.pc0 == 0x9000);
@@ -510,7 +510,7 @@ static void testControl()
 
     // FSAVE and FRESTORE on the 68040
     {
-        TestCPU cpu(FPUModel::BUILTIN, Model::M68040);
+        TestCPU cpu(FPUModel::BUILTIN, CPUModel::M68040);
         cpu.reg.a[0] = 0x3000;
         cpu.write32(0x2FFC, 0xDEADBEEF);
         cpu.run({ 0xF320 });                                        // FSAVE -(A0) in reset state
@@ -555,7 +555,7 @@ static void testModels()
 {
     // A 68030 with a 68882
     {
-        TestCPU cpu(FPUModel::M68882, Model::M68030);
+        TestCPU cpu(FPUModel::M68882, CPUModel::M68030);
         cpu.reg.d[0] = 42;
         cpu.run({ 0xF200, 0x4000 });                                // FMOVE.L D0,FP0
         CHECK(same(cpu.fpu.fpr[0], MFloat80::fromInt(42)));
@@ -576,14 +576,14 @@ static void testModels()
 
     // A 68020 with a 68881
     {
-        TestCPU cpu(FPUModel::M68881, Model::M68020);
+        TestCPU cpu(FPUModel::M68881, CPUModel::M68020);
         cpu.fpu.fpr[1] = F(9);
         cpu.run({ 0xF200, 0x0504 });                                // FSQRT FP1,FP2
         CHECK(same(cpu.fpu.fpr[2], F(3)));
     }
 
     // Without an FPU, floating-point instructions cause a line F exception
-    for (auto model : { Model::M68020, Model::M68030, Model::M68EC040 }) {
+    for (auto model : { CPUModel::M68020, CPUModel::M68030, CPUModel::M68EC040 }) {
 
         TestCPU cpu(FPUModel::NONE, model);
         cpu.write32(11 * 4, 0x9000);
@@ -598,13 +598,13 @@ static void testModels()
 
     // Installing and removing an FPU at runtime switches the handlers
     {
-        TestCPU cpu(FPUModel::M68882, Model::M68030);
+        TestCPU cpu(FPUModel::M68882, CPUModel::M68030);
         cpu.write32(11 * 4, 0x9000);
         cpu.setFpuModel(FPUModel::NONE);
         cpu.run({ 0xF200, 0x4000 });
         CHECK(cpu.reg.pc0 == 0x9000);
 
-        TestCPU cpu2(FPUModel::NONE, Model::M68030);
+        TestCPU cpu2(FPUModel::NONE, CPUModel::M68030);
         cpu2.write32(11 * 4, 0x9000);
         cpu2.setFpuModel(FPUModel::M68882);
         cpu2.run({ 0xF200, 0x4000 });
@@ -613,23 +613,23 @@ static void testModels()
 
     // The selected FPU is resolved against the CPU model
     {
-        TestCPU cpu(FPUModel::BUILTIN, Model::M68040);
+        TestCPU cpu(FPUModel::BUILTIN, CPUModel::M68040);
         CHECK(cpu.fpu.getModel() == FPUModel::BUILTIN);
-        cpu.setModel(Model::M68030);
+        cpu.setModel(CPUModel::M68030);
         CHECK(!cpu.fpu.isPresent());                                // The 68030 has no built-in FPU
         cpu.setFpuModel(FPUModel::M68882);
         CHECK(cpu.fpu.getModel() == FPUModel::M68882);
-        cpu.setModel(Model::M68020);
+        cpu.setModel(CPUModel::M68020);
         CHECK(cpu.fpu.getModel() == FPUModel::M68882);              // The selection survives a CPU change
-        cpu.setModel(Model::M68040);
+        cpu.setModel(CPUModel::M68040);
         CHECK(cpu.fpu.getModel() == FPUModel::BUILTIN);             // The 68040 has no coprocessor interface
-        cpu.setModel(Model::M68000);
+        cpu.setModel(CPUModel::M68000);
         CHECK(!cpu.fpu.isPresent());
-        cpu.setModel(Model::M68030);
+        cpu.setModel(CPUModel::M68030);
         CHECK(cpu.fpu.getModel() == FPUModel::M68882);
 
         // NONE removes the unit even if the CPU has one
-        TestCPU cpu2(FPUModel::NONE, Model::M68040);
+        TestCPU cpu2(FPUModel::NONE, CPUModel::M68040);
         CHECK(!cpu2.fpu.isPresent());
         cpu2.write32(11 * 4, 0x9000);
         cpu2.run({ 0xF200, 0x4000 });
@@ -641,7 +641,7 @@ static void testModels()
 
 static void testTinySinh()
 {
-    TestCPU cpu(FPUModel::M68882, Model::M68030);
+    TestCPU cpu(FPUModel::M68882, CPUModel::M68030);
 
     // FSINH.S #2^-126,FP0 with single-precision rounding: The result is inexact, but not tiny
     cpu.fpu.setFPCR(0x40);

@@ -26,12 +26,15 @@ using namespace Flag;
 
 #include "MoiraInit_cpp.h"
 #include "MoiraALU_cpp.h"
-#include "Cache_cpp.h"
 #include "MoiraDataflow_cpp.h"
 #include "MoiraExceptions_cpp.h"
 #include "MoiraExec_cpp.h"
 #include "StrWriter_cpp.h"
 #include "MoiraDasm_cpp.h"
+
+// Instantiations used by the caches (see Cache.cpp)
+template u32 Moira::translate<Core::C68020, false, Word>(u32, u8, bool *);
+template u32 Moira::translate<Core::C68020, false, Long>(u32, u8, bool *);
 
 Moira::Moira()
 {
@@ -690,6 +693,8 @@ void
 Moira::setCAAR(u32 val)
 {
     reg.caar = val;
+    iCache.caarDidChange(val);
+    dCache.caarDidChange(val);
     didChangeCAAR(val);
 }
 

@@ -1,6 +1,7 @@
 set(MOIRA_SRC
 
 Moira.cpp
+Cache.cpp
 MoiraCore68000.cpp
 MoiraCore68010.cpp
 MoiraCore68020.cpp

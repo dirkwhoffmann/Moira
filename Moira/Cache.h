@@ -141,6 +141,7 @@ public:
 
 public:
 
+    // Returns layout properties
     Layout getLayout() const { return layout; }
     int numLongs() const { return layout == Layout::M68030 ? 4 : 1; }
     int numLines() const { return capacity / numLongs(); }
@@ -184,31 +185,16 @@ protected:
     //
     
     // Checks if the longword of an address is valid and carries the matching tag
-    bool hit(u32 addr, bool supervisor) const
-    {
-        return valid[slot(addr)] && tags[index(addr)] == tag(addr, supervisor);
-    }
+    bool hit(u32 addr, bool supervisor) const;
 
     // Reads a longword (the caller has checked for a hit)
-    u32 read(u32 addr) const { return data[slot(addr)]; }
+    u32 read(u32 addr) const;
 
     // Replaces the bits selected by a mask in a cached longword (the caller has checked for a hit)
-    void update(u32 addr, u32 mask, u32 value)
-    {
-        auto &d = data[slot(addr)];
-        d = (d & ~mask) | (value & mask);
-    }
+    void update(u32 addr, u32 mask, u32 value);
 
     // Stores a longword
-    void insert(u32 addr, bool supervisor, u32 value)
-    {
-        auto t = tag(addr, supervisor);
-
-        if (tags[index(addr)] != t) for (int i = 0; i < numLongs(); i++) valid[first(addr) + i] = false;
-        tags[index(addr)] = t;
-        data[slot(addr)] = value;
-        valid[slot(addr)] = true;
-    }
+    void insert(u32 addr, bool supervisor, u32 value);
 
     
     //
@@ -225,13 +211,11 @@ public:
 
 protected:
 
+    // Invalidates all longwords of the line an address maps to
+    void invalidateLine(u32 addr);
+
     // Returns the number of valid longwords in the line an address maps to
-    int validCount(u32 addr) const
-    {
-        int count = 0;
-        for (int i = 0; i < numLongs(); i++) count += valid[first(addr) + i];
-        return count;
-    }
+    int validCount(u32 addr) const;
 
     
 
@@ -250,8 +234,13 @@ protected:
     // Delegates
     //
     
+public:
+
     // Informs the cache that CACR contains a new value
     virtual void cacrDidChange(u32 value) = 0;
+
+    // Informs the cache that CAAR contains a new value
+    virtual void caarDidChange(u32 value);
 
     
 };
@@ -278,6 +267,7 @@ public:
 
     void flush() override;
     void cacrDidChange(u32 value) override;
+    void caarDidChange(u32 value) override;
 
     // Forgets the longword that has been fetched last
     void flushLatch() { latch = { 0xffffffff, 0xffffffff }; }
@@ -309,6 +299,7 @@ public:
     bool burstEnabled() const override;
 
     void cacrDidChange(u32 value) override;
+    void caarDidChange(u32 value) override;
 
     /* Reads an aligned longword. Returns false if the access has to bypass
      * the cache (the page is cache-inhibited). May throw a bus error.

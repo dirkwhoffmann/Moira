@@ -56,7 +56,7 @@ public:
     static constexpr u32 codeStart = 0x1000;
     static constexpr u32 stackStart = 0x0F00;
 
-    TestCPU(Model cpuModel = Model::M68030)
+    TestCPU(CPUModel cpuModel = CPUModel::M68030)
     {
         setModel(cpuModel);
 
@@ -701,20 +701,20 @@ static void testBusFaultFrames()
 static void testModels()
 {
     // Only the 68030 and 68040 have an MMU
-    CHECK(!TestCPU(Model::M68000).hasMMU());
-    CHECK(!TestCPU(Model::M68020).hasMMU());
-    CHECK(TestCPU(Model::M68030).hasMMU());
-    CHECK(TestCPU(Model::M68040).hasMMU());
+    CHECK(!TestCPU(CPUModel::M68000).hasMMU());
+    CHECK(!TestCPU(CPUModel::M68020).hasMMU());
+    CHECK(TestCPU(CPUModel::M68030).hasMMU());
+    CHECK(TestCPU(CPUModel::M68040).hasMMU());
 
     // NONE removes the MMU (e.g., to emulate a 68EC030). The selection survives a CPU change.
-    TestCPU cpu(Model::M68030);
+    TestCPU cpu(CPUModel::M68030);
     cpu.setMmuModel(MMUModel::NONE);
     CHECK(!cpu.hasMMU());
-    cpu.setModel(Model::M68040);
+    cpu.setModel(CPUModel::M68040);
     CHECK(!cpu.hasMMU());
     cpu.setMmuModel(MMUModel::BUILTIN);
     CHECK(cpu.hasMMU());
-    cpu.setModel(Model::M68020);
+    cpu.setModel(CPUModel::M68020);
     CHECK(!cpu.hasMMU());
 }
 
@@ -882,7 +882,7 @@ static void testDataCache()
 
     // The 68020 has no data cache
     {
-        TestCPU cpu(Model::M68020);
+        TestCPU cpu(CPUModel::M68020);
         cpu.write32(dataBase, 0x11223344);
         cpu.setCACR(0x3313);
         cpu.reg.a[0] = dataBase;
@@ -895,7 +895,7 @@ static void testDataCache()
         TestCPU cpu;
         CHECK(cpu.iCache.numLongs() == 4);
         CHECK(cpu.iCache.numLines() == 16);
-        cpu.setModel(Model::M68020);
+        cpu.setModel(CPUModel::M68020);
         CHECK(cpu.iCache.numLongs() == 1);
         CHECK(cpu.iCache.numLines() == 64);
     }

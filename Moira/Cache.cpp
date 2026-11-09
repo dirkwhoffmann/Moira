@@ -5,6 +5,11 @@
 // Published under the terms of the MIT License
 // -----------------------------------------------------------------------------
 
+#include "MoiraConfig.h"
+#include "Moira.h"
+
+namespace MOIRA_NAMESPACE {
+
 void
 Cache::reset(Layout l)
 {
@@ -15,8 +20,54 @@ Cache::reset(Layout l)
 void
 Cache::reset(CPUModel model)
 {
-    // The 68020 has a cache with one longword per line, all other models with a cache have four
     reset(model >= CPUModel::M68EC030 ? Layout::M68030 : Layout::M68020);
+}
+
+bool
+Cache::hit(u32 addr, bool supervisor) const
+{
+    return valid[slot(addr)] && tags[index(addr)] == tag(addr, supervisor);
+}
+
+void
+Cache::invalidateLine(u32 addr)
+{
+    for (int i = 0; i < numLongs(); i++) valid[first(addr) + i] = false;
+}
+
+u32
+Cache::read(u32 addr) const
+{
+    return data[slot(addr)];
+}
+
+void
+Cache::update(u32 addr, u32 mask, u32 value)
+{
+    auto &d = data[slot(addr)];
+    
+    d = (d & ~mask) | (value & mask);
+}
+
+void
+Cache::insert(u32 addr, bool supervisor, u32 value)
+{
+    auto t = tag(addr, supervisor);
+
+    // Invalidate the entire line if the tag differs
+    if (tags[index(addr)] != t) invalidateLine(addr);
+
+    tags[index(addr)] = t;
+    data[slot(addr)] = value;
+    valid[slot(addr)] = true;
+}
+
+int
+Cache::validCount(u32 addr) const
+{
+    int count = 0;
+    for (int i = 0; i < numLongs(); i++) count += valid[first(addr) + i];
+    return count;
 }
 
 bool
@@ -105,6 +156,12 @@ ICache::cacrDidChange(u32 value)
 
     // Setting the C bit invalidates all entries
     if (value & CACR::C) flush();
+}
+
+void
+ICache::caarDidChange(u32 value)
+{
+
 }
 
 bool
@@ -225,6 +282,12 @@ DCache::cacrDidChange(u32 value)
     if (value & CACR::CD) flush();
 }
 
+void
+DCache::caarDidChange(u32 value)
+{
+
+}
+
 bool
 DCache::readLong(u32 addr, u8 fc, u32 &result)
 {
@@ -275,4 +338,6 @@ DCache::write(u32 addr, bool supervisor, u32 mask, u32 value, bool ci)
         // An aligned longword write creates an entry
         insert(addr, supervisor, value);
     }
+}
+
 }
