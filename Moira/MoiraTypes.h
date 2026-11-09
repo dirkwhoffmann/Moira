@@ -575,6 +575,9 @@ static constexpr u64 AE_SET_IF      = (1 << 13);  ///< Set bit 13 in the special
 /// Timing flags
 static constexpr u64 IMPL_DEC       = (1 << 14);  // Omit 2 cycle delay in -(An) mode
 static constexpr u64 AE_KEEP_A     = (1 << 15);  ///< Don't advance (An)+ if the read fails (MAME mode)
+
+/// Prefetch flags
+static constexpr u64 KEEP_IRD      = (1 << 16);  ///< More bus cycles follow. The IRD is not replaced yet (MAME mode)
 }
 
 //

@@ -97,7 +97,7 @@ Moira::execShiftRg(u16 opcode)
     int cnt = readD(src) & 0x3F;
     int cyc = (S == Long ? 4 : 2) + 2 * cnt;
 
-    prefetch<C, POLL>();
+    prefetch<C, POLL | KEEP_IRD>();
     SYNC(cyc);
 
     writeD<S>(dst, shift<C, I, S>(cnt, readD<S>(dst)));
@@ -143,7 +143,7 @@ Moira::execShiftIm(u16 opcode)
     int cnt = src ? src : 8;
     int cyc = (S == Long ? 4 : 2) + 2 * cnt;
 
-    prefetch<C, POLL>();
+    prefetch<C, POLL | KEEP_IRD>();
     SYNC(cyc);
 
     writeD<S>(dst, shift<C, I, S>(cnt, readD<S>(dst)));
@@ -195,7 +195,7 @@ Moira::execShiftEa(u16 opcode)
     u32 ea, data;
     readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
 
-    looping<I>() ? noPrefetch<C>(4) : prefetch<C, POLL>();
+    looping<I>() ? noPrefetch<C>(4) : prefetch<C, POLL | KEEP_IRD>();
     writeM<C, M, S>(ea, shift<C, I, S>(1, data));
 
     if constexpr (I == Instr::ROR || I == Instr::ROL) {
@@ -248,7 +248,7 @@ Moira::execAbcdRg(u16 opcode)
 
     u32 result = bcd<C, I, Byte>(readD<Byte>(src), readD<Byte>(dst));
 
-    prefetch<C, POLL>();
+    prefetch<C, POLL | KEEP_IRD>();
     SYNC(2);
     writeD<Byte>(dst, result);
 
@@ -268,12 +268,12 @@ Moira::execAbcdEa(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     u32 ea1, ea2, data1, data2;
-    readOp<C, M, S>(src, &ea1, &data1);
+    readOp<C, M, S, AE_INC_PC>(src, &ea1, &data1);
     POLL_IPL;
-    readOp<C, M, S, IMPL_DEC>(dst, &ea2, &data2);
+    readOp<C, M, S, IMPL_DEC | AE_INC_PC>(dst, &ea2, &data2);
 
     u32 result = bcd<C, I, Byte>(data1, data2);
-    looping<I>() ? noPrefetch<C>(4) : prefetch<C>();
+    looping<I>() ? noPrefetch<C>(4) : prefetch<C, KEEP_IRD>();
 
     writeM<C, M, Byte>(ea2, result);
 
@@ -301,7 +301,7 @@ Moira::execAddEaRg(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        prefetch<C, POLL>();
+        prefetch<C, POLL | (S == Long ? KEEP_IRD : 0)>();
         if constexpr (S == Long) SYNC(2 + (isMemMode(M) ? 0 : 2));
 
     } else {
@@ -343,7 +343,7 @@ Moira::execAddRgEa(u16 opcode)
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
     result = addsub<C, I, S>(readD<S>(src), data);
 
-    looping<I>() ? noPrefetch<C>(2) : prefetch<C, POLL>();
+    looping<I>() ? noPrefetch<C>(2) : prefetch<C, POLL | KEEP_IRD>();
 
     writeM<C, M, S, ((compat == Compatibility::UAE || compat == Compatibility::MAME) && C != Core::C68020) ? REVERSE : 0>(ea, result);
 
@@ -378,7 +378,7 @@ Moira::execAdda(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        prefetch<C, POLL>();
+        prefetch<C, POLL | KEEP_IRD>();
         SYNC(2);
         if constexpr (S == Word || isRegMode(M) || isImmMode(M)) SYNC(2);
 
@@ -431,7 +431,7 @@ Moira::execAddiRg(u16 opcode)
     readOp<C, M, S>(dst, &ea, &data);
 
     result = addsub<C, I, S>(src, data);
-    prefetch<C, POLL>();
+    prefetch<C, POLL | (S == Long ? KEEP_IRD : 0)>();
 
     if constexpr (S == Long) { SYNC_68000(4); SYNC_68010(2); }
     writeD<S>(dst, result);
@@ -464,7 +464,7 @@ Moira::execAddiEa(u16 opcode)
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
     result = addsub<C, I, S>(src, data);
-    prefetch<C>();
+    prefetch<C, KEEP_IRD>();
 
     writeOp<C, M, S, POLL | (((compat == Compatibility::UAE || compat == Compatibility::MAME) && C != Core::C68020) ? REVERSE : 0)>(dst, ea, result);
 
@@ -493,7 +493,7 @@ Moira::execAddqDn(u16 opcode)
 
     if (src == 0) src = 8;
     u32 result = addsub<C, I, S>(src, readD<S>(dst));
-    prefetch<C, POLL>();
+    prefetch<C, POLL | (S == Long ? KEEP_IRD : 0)>();
 
     if constexpr (S == Long) SYNC(4);
     writeD<S>(dst, result);
@@ -515,7 +515,7 @@ Moira::execAddqAn(u16 opcode)
 
     if (src == 0) src = 8;
     u32 result = (I == Instr::ADDQ) ? U32_ADD(readA(dst), src) : U32_SUB(readA(dst), src);
-    prefetch<C, POLL>();
+    prefetch<C, POLL | KEEP_IRD>();
     SYNC(4);
     writeA(dst, result);
 
@@ -539,7 +539,7 @@ Moira::execAddqEa(u16 opcode)
 
     if (src == 0) src = 8;
     result = addsub<C, I, S>(src, data);
-    prefetch<C, POLL>();
+    prefetch<C, POLL | KEEP_IRD>();
 
     writeOp<C, M, S, ((compat == Compatibility::UAE || compat == Compatibility::MAME) && C != Core::C68020) ? REVERSE : 0>(dst, ea, result);
 
@@ -568,7 +568,7 @@ Moira::execAddxRg(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        prefetch<C, POLL>();
+        prefetch<C, POLL | (S == Long ? KEEP_IRD : 0)>();
         if constexpr (S == Long) SYNC(4);
 
     } else {
@@ -594,7 +594,7 @@ Moira::execAddxEa(u16 opcode)
 
     // MAME reads the lower word of a long operand first
     const u64 flags =
-    (S == Word) ? AE_INC_PC : (S == Long) ? AE_INC_PC | AE_INC_A | (compat == Compatibility::MAME ? REVERSE : 0) : 0;
+    (S == Word || S == Byte) ? AE_INC_PC : (S == Long) ? AE_INC_PC | AE_INC_A | (compat == Compatibility::MAME ? REVERSE : 0) : 0;
 
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
@@ -627,17 +627,17 @@ Moira::execAddxEa(u16 opcode)
     if constexpr (S == Long && C == Core::C68000 && !(compat == Compatibility::MUSASHI)) {
 
         writeM<C, M, Word, POLL>(ea2 + 2, result & 0xFFFF);
-        looping<I>() ? noPrefetch<C>() : prefetch<C>();
+        looping<I>() ? noPrefetch<C>() : prefetch<C, KEEP_IRD>();
         writeM<C, M, Word>(ea2, result >> 16);
 
     } else if constexpr (S == Long && C == Core::C68010 && !(compat == Compatibility::MUSASHI)) {
 
         writeM<C, M, S, ((compat == Compatibility::UAE || compat == Compatibility::MAME) && C != Core::C68020) ? REVERSE : 0>(ea2, result);
-        looping<I>() ? noPrefetch<C>(S == Long ? 0 : 2) : prefetch<C, POLL>();
+        looping<I>() ? noPrefetch<C>(S == Long ? 0 : 2) : prefetch<C, POLL | KEEP_IRD>();
 
     } else {
 
-        looping<I>() ? noPrefetch<C>(S == Long ? 0 : 2) : prefetch<C>();
+        looping<I>() ? noPrefetch<C>(S == Long ? 0 : 2) : prefetch<C, KEEP_IRD>();
         writeM<C, M, S>(ea2, result);
     }
 
@@ -664,7 +664,7 @@ Moira::execAndEaRg(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        looping<I>() ? noPrefetch<C>() : prefetch<C, POLL>();
+        looping<I>() ? noPrefetch<C>() : prefetch<C, POLL | (S == Long ? KEEP_IRD : 0)>();
         if constexpr (S == Long) SYNC(isRegMode(M) || isImmMode(M) ? 4 : 2);
 
     } else {
@@ -703,7 +703,7 @@ Moira::execAndRgEa(u16 opcode)
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
     u32 result = logic<C, I, S>(readD<S>(src), data);
-    looping<I>() ? noPrefetch<C>(2) : prefetch<C, POLL>();
+    looping<I>() ? noPrefetch<C>(2) : prefetch<C, POLL | KEEP_IRD>();
 
     if constexpr (S == Long && isRegMode(M)) { SYNC_68000(4); SYNC_68010(2); }
 
@@ -736,7 +736,7 @@ Moira::execAndiRg(u16 opcode)
     int dst = _____________xxx(opcode);
 
     u32 result = logic<C, I, S>(src, readD<S>(dst));
-    prefetch<C, POLL>();
+    prefetch<C, POLL | (S == Long ? KEEP_IRD : 0)>();
 
     if constexpr (S == Long) { SYNC_68000(4); SYNC_68010(2); }
     writeD<S>(dst, result);
@@ -761,7 +761,7 @@ Moira::execAndiEa(u16 opcode)
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
     result = logic<C, I, S>(src, data);
-    prefetch<C, POLL>();
+    prefetch<C, POLL | KEEP_IRD>();
 
     if constexpr ((compat == Compatibility::MUSASHI) || ((compat == Compatibility::UAE) && C == Core::C68020)) {
         writeOp<C, M, S>(dst, ea, result);
@@ -939,7 +939,7 @@ Moira::execBitDxDy(u16 opcode)
     u32 data = readD(dst);
     data = bit<C, I>(data, b);
 
-    prefetch<C, POLL>();
+    prefetch<C, POLL | KEEP_IRD>();
 
     SYNC(c);
     if constexpr (I != Instr::BTST) writeD(dst, data);
@@ -968,7 +968,7 @@ Moira::execBitDxEa(u16 opcode)
     if constexpr (I == Instr::BCLR && C == Core::C68010) { SYNC(2); }
     if constexpr (compat == Compatibility::UAE && I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
 
-    prefetch<C, POLL>();
+    prefetch<C, POLL | KEEP_IRD>();
 
     // MAME idles after the prefetch
     if constexpr (compat == Compatibility::MAME && I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
@@ -1004,7 +1004,7 @@ Moira::execBitImDy(u16 opcode)
     u32 data = readD(dst);
     data = bit<C, I>(data, src);
 
-    prefetch<C, POLL>();
+    prefetch<C, POLL | KEEP_IRD>();
 
     [[maybe_unused]] auto c = cyclesBit<C, I>(src);
     SYNC(c);
@@ -1030,7 +1030,7 @@ Moira::execBitImEa(u16 opcode)
 
     data = bit<C, I>(data, src);
 
-    prefetch<C, POLL>();
+    prefetch<C, POLL | KEEP_IRD>();
     if constexpr (I != Instr::BTST) writeM<C, M, S>(ea, data);
 
     [[maybe_unused]] auto c = I == Instr::BTST ? 0 : 4;
@@ -1775,7 +1775,7 @@ Moira::execClr(u16 opcode)
         u32 ea, data;
         readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-        prefetch<C, POLL>();
+        prefetch<C, POLL | ((!isRegMode(M) || S == Long) ? KEEP_IRD : 0)>();
 
         if constexpr (S == Long && isRegMode(M)) SYNC(2);
 
@@ -1833,7 +1833,7 @@ Moira::execClr(u16 opcode)
                 reg.sr.v = 0;
                 reg.sr.c = 0;
 
-                prefetch<C, POLL>();
+                prefetch<C, POLL | ((!isRegMode(M) || S == Long) ? KEEP_IRD : 0)>();
                 if constexpr (S == Long) {
                     writeOp<C, M, S, REVERSE | AE_INC_PC | AE_INC_A>(dst, ea, 0);
                 } else {
@@ -1849,7 +1849,7 @@ Moira::execClr(u16 opcode)
                 reg.sr.c = 0;
 
                 SYNC(2);
-                prefetch<C,POLL>();
+                prefetch<C, POLL | ((!isRegMode(M) || S == Long) ? KEEP_IRD : 0)>();
                 if constexpr (S == Long) {
                     writeOp<C, M, S, REVERSE | AE_INC_PC | AE_INC_A>(dst, ea, 0);
                 } else {
@@ -1860,7 +1860,7 @@ Moira::execClr(u16 opcode)
             case Mode::AW:
             case Mode::AL:
 
-                prefetch<C, POLL>();
+                prefetch<C, POLL | ((!isRegMode(M) || S == Long) ? KEEP_IRD : 0)>();
                 writeOp<C, M, S, REVERSE>(dst, ea, 0);
                 break;
 
@@ -1904,7 +1904,7 @@ Moira::execCmp(u16 opcode)
     if constexpr (C == Core::C68000) {
 
         cmp<C, S>(data, readD<S>(dst));
-        prefetch<C, POLL>();
+        prefetch<C, POLL | (S == Long ? KEEP_IRD : 0)>();
 
         if constexpr (S == Long) SYNC(2);
 
@@ -1952,7 +1952,7 @@ Moira::execCmpa(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        looping<I>() ? noPrefetch<C>() : prefetch<C, POLL>();
+        looping<I>() ? noPrefetch<C>() : prefetch<C, POLL | KEEP_IRD>();
         SYNC(2);
 
     } else {
@@ -1988,7 +1988,7 @@ Moira::execCmpiRg(u16 opcode)
     u32 src = readI<C, S>();
     int dst = _____________xxx(opcode);
 
-    prefetch<C, POLL>();
+    prefetch<C, POLL | (S == Long ? KEEP_IRD : 0)>();
 
     if constexpr (S == Long && C == Core::C68000) SYNC(2);
     cmp<C, S>(src, readD<S>(dst));
@@ -2356,7 +2356,7 @@ Moira::execExgDxDy(u16 opcode)
 
     std::swap(reg.d[src], reg.d[dst]);
 
-    prefetch<C, POLL>();
+    prefetch<C, POLL | KEEP_IRD>();
     SYNC(2);
 
     CYCLES_IP ( 0,  0,  0,       0,  0,  0,      6,  6,  2)
@@ -2375,7 +2375,7 @@ Moira::execExgAxDy(u16 opcode)
 
     std::swap(reg.a[src], reg.d[dst]);
 
-    prefetch<C, POLL>();
+    prefetch<C, POLL | KEEP_IRD>();
     SYNC(2);
 
     CYCLES_IP ( 0,  0,  0,       0,  0,  0,      6,  6,  2)
@@ -2394,7 +2394,7 @@ Moira::execExgAxAy(u16 opcode)
 
     std::swap(reg.a[src], reg.a[dst]);
 
-    prefetch<C, POLL>();
+    prefetch<C, POLL | KEEP_IRD>();
     SYNC(2);
 
     //           00  10  20        00  10  20        00  10  20
@@ -3836,7 +3836,7 @@ Moira::execMoveSrRg(u16 opcode)
 
     u32 ea, data;
     readOp<C, M, S>(dst, &ea, &data);
-    prefetch<C, POLL>();
+    prefetch<C, POLL | KEEP_IRD>();
 
     if constexpr (C == Core::C68000) SYNC(2);
     writeD<S>(dst, getSR());
@@ -3860,7 +3860,7 @@ Moira::execMoveSrEa(u16 opcode)
 
         u32 ea, data;
         readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
-        prefetch<C>();
+        prefetch<C, KEEP_IRD>();
 
         writeOp<C, M, S, POLL>(dst, ea, getSR());
 
@@ -4027,7 +4027,7 @@ Moira::execMulsMoira(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        prefetch<C, POLL>();
+        prefetch<C, POLL | KEEP_IRD>();
         result = muls<C>(data, readD<Word>(dst));
         [[maybe_unused]] auto cycles = cyclesMul<C, I>(u16(data));
         SYNC(cycles);
@@ -4053,7 +4053,7 @@ Moira::execMulsMusashi(u16 opcode)
 
     readOp<C, M, Word>(src, &ea, &data);
 
-    prefetch<C, POLL>();
+    prefetch<C, POLL | KEEP_IRD>();
     result = muls<C>(data, readD<Word>(dst));
 
     if constexpr (I == Instr::MULU) { SYNC_68000(50); SYNC_68010(26); }
@@ -4102,7 +4102,7 @@ Moira::execMuluMoira(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        prefetch<C, POLL>();
+        prefetch<C, POLL | KEEP_IRD>();
         result = mulu<C>(data, readD<Word>(dst));
         [[maybe_unused]] auto cycles = cyclesMul<C, I>(u16(data));
         SYNC(cycles);
@@ -4128,7 +4128,7 @@ Moira::execMuluMusashi(u16 opcode)
 
     readOp<C, M, Word>(src, &ea, &data);
 
-    prefetch<C, POLL>();
+    prefetch<C, POLL | KEEP_IRD>();
     result = mulu<C>(data, readD<Word>(dst));
 
     if constexpr (I == Instr::MULU) { SYNC_68000(50); SYNC_68010(26); }
@@ -4755,7 +4755,7 @@ Moira::execNbcdRg(u16 opcode)
 
     int reg = _____________xxx(opcode);
 
-    looping<I>() ? noPrefetch<C>() : prefetch<C, POLL>();
+    looping<I>() ? noPrefetch<C>() : prefetch<C, POLL | KEEP_IRD>();
     SYNC(2);
     writeD<Byte>(reg, bcd<C, Instr::SBCD, Byte>(readD<Byte>(reg), 0));
 
@@ -4782,7 +4782,7 @@ Moira::execNbcdEa(u16 opcode)
         else if constexpr (M == Mode::PD) noPrefetch<C>(4);
         else noPrefetch<C>(2);
     } else {
-        prefetch<C, POLL>();
+        prefetch<C, POLL | KEEP_IRD>();
     }
     writeM<C, M, Byte>(ea, bcd<C, Instr::SBCD, Byte>(data, 0));
 
@@ -4810,7 +4810,7 @@ Moira::execNegRg(u16 opcode)
     readOp<C, M, S>(dst, &ea, &data);
 
     data = logic<C, I, S>(data);
-    prefetch<C, POLL>();
+    prefetch<C, POLL | (S == Long ? KEEP_IRD : 0)>();
 
     if constexpr (S == Long) SYNC(2);
     writeD<S>(dst, data);
@@ -4833,7 +4833,7 @@ Moira::execNegEa(u16 opcode)
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
     data = logic<C, I, S>(data);
-    looping<I>() ? noPrefetch<C>(2) : prefetch<C, POLL>();
+    looping<I>() ? noPrefetch<C>(2) : prefetch<C, POLL | KEEP_IRD>();
 
     if constexpr ((compat == Compatibility::MUSASHI)) {
         writeOp<C, M, S>(dst, ea, data);
@@ -4982,7 +4982,7 @@ Moira::execPea(u16 opcode)
         if constexpr (C == Core::C68000) {
 
             push <C, Long> (ea);
-            prefetch<C, POLL>();
+            prefetch<C, POLL | KEEP_IRD>();
 
         } else {
 
@@ -4996,18 +4996,18 @@ Moira::execPea(u16 opcode)
         if constexpr (C == Core::C68000) {
 
             POLL_IPL;
-            prefetch<C>();
+            prefetch<C, KEEP_IRD>();
             push <C, Long> (ea);
 
         } else {
 
-            prefetch<C, POLL>();
+            prefetch<C, POLL | KEEP_IRD>();
             push <C, Long> (ea);
         }
 
     } else {
 
-        prefetch<C, POLL>();
+        prefetch<C, POLL | KEEP_IRD>();
         push <C, Long>(ea);
     }
 
@@ -5453,7 +5453,7 @@ Moira::execSccEa(u16 opcode)
 
         readOp<C, M, Byte>(dst, &ea, &data);
 
-        prefetch<C, POLL>();
+        prefetch<C, POLL | KEEP_IRD>();
         data = cond<I>() ? 0xFF : 0;
         writeOp<C, M, Byte>(dst, ea, data);
 
@@ -5468,7 +5468,7 @@ Moira::execSccEa(u16 opcode)
         if constexpr (M == Mode::PD) SYNC(2);
         if constexpr (M == Mode::IX) SYNC(2);
 
-        prefetch<C, POLL>();
+        prefetch<C, POLL | KEEP_IRD>();
         data = cond<I>() ? 0xFF : 0;
         writeOp<C, M, S>(dst, ea, data);
     }
@@ -5589,7 +5589,7 @@ Moira::execTasEa(u16 opcode)
         if (!isRegMode(M)) SYNC(2);
         writeOp<C, M, S>(dst, ea, data);
 
-        prefetch<C, POLL>();
+        prefetch<C, POLL | KEEP_IRD>();
 
     } else {
 
@@ -5609,7 +5609,7 @@ Moira::execTasEa(u16 opcode)
         // if (!isRegMode(M)) SYNC(2);
         writeOp<C, M, S>(dst, ea, data);
 
-        prefetch<C, POLL>();
+        prefetch<C, POLL | KEEP_IRD>();
         SYNC(2);
     }
 

@@ -391,6 +391,9 @@ Moira::execBusError(StackFrame frame, int delay)
     if (misaligned<C>(reg.sp)) throw DoubleFault();
 
     // Write stack frame
+    // MAME completes the faulting bus cycle and delays the frame instead of the vector fetch
+    if constexpr (compat == Compatibility::MAME && C == Core::C68000) sync(4);
+
     if constexpr (C == Core::C68000) {
         writeStackFrameAEBE<C>(frame);
     } else if constexpr (C == Core::C68020) {
@@ -427,7 +430,7 @@ Moira::execBusError(StackFrame frame, int delay)
     } else {
         writeStackFrame1000<C>(frame, status, frame.pc, reg.pc0, 2, frame.addr);
     }
-    SYNC(2);
+    if constexpr (!(compat == Compatibility::MAME && C == Core::C68000)) SYNC(2);
 
     // Jump to exception vector
     jumpToVector<C>(2);

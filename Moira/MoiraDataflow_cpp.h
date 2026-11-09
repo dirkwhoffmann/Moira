@@ -290,6 +290,11 @@ Moira::readOp(int n, u32 *ea, u32 *result)
                 // MAME advances the register before the bus error is reported
                 try { *result = readM<C, M, S, F>(*ea); } catch (const AddressError &) { updateAnPI<M, S>(n); throw; }
 
+            } else if constexpr (compat == Compatibility::MAME && C == Core::C68000 && M == Mode::PI) {
+
+                // MAME advances the register before a bus error is reported
+                try { *result = readM<C, M, S, F>(*ea); } catch (const BusError &) { updateAnPI<M, S>(n); throw; }
+
             } else {
 
                 *result = readM<C, M, S, F>(*ea);
@@ -1072,8 +1077,19 @@ Moira::prefetch()
     reg.pc0 = reg.pc;
     reg.pc += 2;
 
-    queue.ird = queue.irc;
-    queue.irc = readInstr<C, F>(reg.pc);
+    if constexpr (compat == Compatibility::MAME && C == Core::C68000 && (F & KEEP_IRD)) {
+
+        // MAME replaces the IRD when the last bus cycle of the instruction starts.
+        // The value is part of the stack frame if the prefetch fails.
+        u16 irc = readInstr<C, F>(reg.pc);
+        queue.ird = queue.irc;
+        queue.irc = irc;
+
+    } else {
+
+        queue.ird = queue.irc;
+        queue.irc = readInstr<C, F>(reg.pc);
+    }
     readBuffer = queue.irc;
 }
 
@@ -1105,7 +1121,13 @@ Moira::readExt()
     assert(!misaligned<C>(reg.pc));
 
     reg.pc += 2;
-    queue.irc = readInstr<C>(reg.pc);
+
+    // MAME stacks the address of the consumed extension word if the refill fails
+    if constexpr (compat == Compatibility::MAME && C == Core::C68000) {
+        queue.irc = readInstr<C, AE_DEC_PC>(reg.pc);
+    } else {
+        queue.irc = readInstr<C>(reg.pc);
+    }
 }
 
 template <Core C, Size S> u32
