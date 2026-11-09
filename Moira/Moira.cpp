@@ -104,8 +104,8 @@ Moira::setModel(CPUModel cpuModel, CPUModel dasmModel)
         createJumpTable(cpuModel, dasmModel);
 
         reg.cacr &= cacrMask();
-        iCache.update();
-        dCache.update();
+        iCache.reset(cpuModel);
+        dCache.reset(cpuModel);
         dCacheOn = dCache.enabled();
         flags &= ~State::LOOPING;
     }

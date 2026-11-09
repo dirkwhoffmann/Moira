@@ -6,11 +6,17 @@
 // -----------------------------------------------------------------------------
 
 void
-Cache::update()
+Cache::reset(Layout l)
+{
+    layout = l;
+    flush();
+}
+
+void
+Cache::reset(CPUModel model)
 {
     // The 68020 has a cache with one longword per line, all other models with a cache have four
-    layout = moira.cpuModel >= CPUModel::M68EC030 ? Layout::M68030 : Layout::M68020;
-    flush();
+    reset(model >= CPUModel::M68EC030 ? Layout::M68030 : Layout::M68020);
 }
 
 bool

@@ -4594,7 +4594,7 @@ Moira::execDivlMoira(u16 opcode, bool *divByZero)
 
             } else {
 
-                setUndefinedDIVSL<C, S>(i64(i32(dividend)), divisor);
+                setUndefinedDIVSL<C, Word>(i64(i32(dividend)), divisor);
             }
             break;
         }
