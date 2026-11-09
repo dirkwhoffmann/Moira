@@ -16,6 +16,7 @@
 
 namespace MOIRA_NAMESPACE {
 
+/// Version of this release
 namespace Version {
 
 inline constexpr int major = 5;
@@ -25,6 +26,32 @@ inline constexpr int beta  = 1;
 
 }
 
+/** The Motorola 68k CPU emulator
+ *
+ * %Moira emulates the 68000, 68010, 68020, 68030 and 68040 (including the
+ * 68EC and 68LC variants) together with an optional FPU and MMU. The class is
+ * abstract. To use it, derive your own CPU class and implement the memory
+ * access functions (see the protected functions below):
+ *
+ * ```cpp
+ * class CPU : public moira::Moira {
+ *     u8 read8(u32 addr) const override;
+ *     u16 read16(u32 addr) const override;
+ *     u32 read32(u32 addr) const override;
+ *     void write8(u32 addr, u8 val) const override;
+ *     void write16(u32 addr, u16 val) const override;
+ *     void write32(u32 addr, u32 val) const override;
+ * };
+ * ```
+ *
+ * The remaining virtual functions are optional delegates that inform the
+ * application about events such as breakpoints, exceptions or cache register
+ * changes.
+ *
+ * The interface functions are only virtual if the configuration option
+ * MOIRA_VIRTUAL_API is enabled (the default). Otherwise, they are expected to
+ * be provided by the application at compile time.
+ */
 class Moira {
     
     friend class Debugger;
@@ -79,7 +106,7 @@ protected:
     
 public:
     
-    // Debugger handling breakpoints, watchpoints, catchpoints, and instruction tracing
+    /// Debugger handling breakpoints, watchpoints, catchpoints, and instruction tracing
     Debugger debugger = Debugger(*this);
     
     
@@ -175,16 +202,16 @@ private:
     
 public:
     
-    // Constructs and initializes a Moira instance
+    /// Constructs and initializes a Moira instance
     Moira();
     
-    //  Destroys the Moira instance
+    /// Destroys the Moira instance
     virtual ~Moira();
     
-    // Returns a version string for this release
+    /// Returns a version string for this release
     static std::string version();
 
-    // Returns a build number string for this release
+    /// Returns a build number string for this release
     static std::string build();
     
 protected:
@@ -240,48 +267,63 @@ private:
     
 public:
     
-    // Sets the emulated CPU models
+    /// Sets the emulated CPU model and the model used by the disassembler
     void setModel(CPUModel cpuModel, CPUModel dasmModel);
+    /// Sets the emulated CPU model (the disassembler uses the same model)
     void setModel(CPUModel model) { setModel(model, model); }
 
-    /* Selects the FPU and MMU to emulate. NONE removes the unit, even if the
-     * CPU provides one (e.g., to emulate a 68LC040 or 68EC030 with a 68040 or
-     * 68030). BUILTIN uses the unit of the CPU, if any. An external FPU (68881,
-     * 68882) is only attached to CPUs with a coprocessor interface. On a 68040,
-     * it selects the built-in FPU. The selection is kept when the CPU model
-     * changes. Both units are present by default if the CPU provides them.
+    /** Selects the FPU to emulate.
+     *
+     * NONE removes the unit, even if the CPU provides one (e.g., to emulate a
+     * 68EC030 with a 68030). BUILTIN uses the unit of the CPU, if any. An
+     * external FPU (68881, 68882) is only attached to CPUs with a coprocessor
+     * interface. On a 68040, it selects the built-in FPU. The selection is kept
+     * when the CPU model changes. The unit is present by default if the CPU
+     * provides it.
      */
     void setFpuModel(FPUModel model);
+
+    /** Selects the MMU to emulate.
+     *
+     * NONE removes the unit, even if the CPU provides one (e.g., to emulate a
+     * 68LC040 or 68EC030). BUILTIN uses the unit of the CPU, if any. The
+     * selection is kept when the CPU model changes. The unit is present by
+     * default if the CPU provides it.
+     */
     void setMmuModel(MMUModel model);
 
-    // Synchronizes internal state with the MMU registers. Needs to be called
-    // if the translation control register is modified without setTC.
+    /// Synchronizes internal state with the MMU registers. Needs to be called
+    /// if the translation control register is modified without setTC.
     void updateMmuFlag();
+
+    /// Returns the selected FPU model
     FPUModel getFpuModel() const { return fpuModel; }
+
+    /// Returns the selected MMU model
     MMUModel getMmuModel() const { return mmuModel; }
 
-    // Checks if a model provides a coprocessor interface (to attach a 6888x)
+    /// Checks if a model provides a coprocessor interface (to attach a 6888x)
     static bool hasCoproInterface(CPUModel model);
 
-    // Checks if an external floating-point coprocessor (68881 or 68882) is attached
+    /// Checks if an external floating-point coprocessor (68881 or 68882) is attached
     bool has6888x() const;
     
-    // Configures the syntax style for disassembly output
+    /// Configures the syntax style for disassembly output
     void setDasmSyntax(Syntax value);
     
-    // Sets the number format for disassembly output
+    /// Sets the number format for disassembly output
     void setDasmNumberFormat(DasmNumberFormat value) { setNumberFormat(instrStyle, value); }
     
-    // Sets the letter case for disassembly output
+    /// Sets the letter case for disassembly output
     void setDasmLetterCase(LetterCase value);
     
-    // Sets the indentation for disassembly output
+    /// Sets the indentation for disassembly output
     void setDasmIndentation(int value) { instrStyle.tab = value; }
     
-    // Sets the number format for data dumps
+    /// Sets the number format for data dumps
     void setDumpNumberFormat(DasmNumberFormat value) { setNumberFormat(instrStyle, value); }
     
-    // Sets the indentation for data dumps
+    /// Sets the indentation for data dumps
     void setDumpIndentation(int value) { dataStyle.tab = value; }
     
 private:
@@ -296,20 +338,21 @@ private:
     
 public:
     
-    // Checks if the emulated CPU model has a coprocessor interface
+    /// Checks if the emulated CPU model has a coprocessor interface
     bool hasCPI() const;
     
-    // Checks if the emulated CPU model has a memory management unit (MMU)
+    /// Checks if the emulated CPU model has a memory management unit (MMU)
     bool hasMMU() const;
+    /// Checks if a given CPU model has a memory management unit (MMU)
     static bool hasMMU(CPUModel model);
     
-    // Checks if the emulated CPU model has a floating-point unit (FPU)
+    /// Checks if the emulated CPU model has a floating-point unit (FPU)
     bool hasFPU() const;
     
-    // Returns the cache register mask, indicating the accessible CACR bits
+    /// Returns the cache register mask, indicating the accessible CACR bits
     u32 cacrMask() const;
     
-    // Returns the address bus mask, which defines the CPU's addressable memory range
+    /// Returns the address bus mask, which defines the CPU's addressable memory range
     u32 addrMask() const;
     
 protected:
@@ -324,23 +367,23 @@ protected:
     
 public:
     
-    // Performs a hard reset, simulating the native power-up sequence
+    /// Performs a hard reset, simulating the native power-up sequence
     void reset();
     
-    // Executes a single instruction
+    /// Executes a single instruction
     void execute();
 
-    // Executes instructions for the given number of cycles.
-    //
-    // Note: Since the emulartor cannot stop in the middle of an instruction,
-    // the number of actually elapsed cycles may exceed the specified cycle
-    // budget.
+    /// Executes instructions for the given number of cycles.
+    ///
+    /// Note: Since the emulator cannot stop in the middle of an instruction,
+    /// the number of actually elapsed cycles may exceed the specified cycle
+    /// budget.
     void execute(i64 cycles);
     
-    // Executes instructions until a specific cycle count is reached.
+    /// Executes instructions until a specific cycle count is reached.
     void executeUntil(i64 cycle);
     
-    // Checks if the CPU is in a HALT state
+    /// Checks if the CPU is in a HALT state
     bool isHalted() const { return flags & State::HALTED; }
     
 private:
@@ -367,26 +410,30 @@ private:
     
 public:
     
-    // Disassembles an instruction and returns the instruction size in bytes
+    /// Disassembles an instruction and returns the instruction size in bytes
     int disassemble(char *str, u32 addr) const;
     
-    // Creates a textual representation of the status register
+    /// Creates a textual representation of the status register
     void disassembleSR(char *str) const { disassembleSR(str, reg.sr); }
     
-    // Creates a textual representation of a given status register
+    /// Creates a textual representation of a given status register
     void disassembleSR(char *str, const StatusRegister &sr) const;
     
-    // Converts an integer value to a textual representation
+    /// Converts an integer value to a textual representation
     void dump8(char *str, u8 value) const;
+    /// Converts an integer value to a textual representation
     void dump16(char *str, u16 value) const;
+    /// Converts an integer value to a textual representation
     void dump24(char *str, u32 value) const;
+    /// Converts an integer value to a textual representation
     void dump32(char *str, u32 value) const;
     
-    // Converts multiple 16-bit values to a textual representation
+    /// Converts multiple 16-bit values to a textual representation
     void dump16(char *str, u16 values[], int cnt) const;
+    /// Converts multiple 16-bit values to a textual representation
     void dump16(char *str, u32 addr, int cnt) const;
     
-    // Returns instruction metadata for a given opcode
+    /// Returns instruction metadata for a given opcode
     InstrInfo getInstrInfo(u16 op) const;
 
     //
@@ -417,29 +464,33 @@ protected:
     
 #if MOIRA_VIRTUAL_API == true
     
-    // Advances the internal clock by the specified number of cycles
+    /// Advances the internal clock by the specified number of cycles
     virtual void sync(int cycles) { clock += cycles; }
     
-    // Reads a value from memory
+    /// Reads a value from memory
     virtual u8 read8(u32 addr) const = 0;
+    /// Reads a value from memory
     virtual u16 read16(u32 addr) const = 0;
+    /// Reads a value from memory
     virtual u32 read32(u32 addr) const = 0;
 
-    // Reads a 16-bit value from memory during the reset routine
+    /// Reads a 16-bit value from memory during the reset routine
     virtual u16 read16OnReset(u32 addr) const { return read16(addr); }
 
-    // Reads a 16-bit value from memory for disassembly purposes
+    /// Reads a 16-bit value from memory for disassembly purposes
     virtual u16 read16Dasm(u32 addr) const { return read16(addr); }
 
-    // Writes a value into memory
+    /// Writes a value into memory
     virtual void write8(u32 addr, u8 val) const = 0;
+    /// Writes a value into memory
     virtual void write16(u32 addr, u16 val) const = 0;
+    /// Writes a value into memory
     virtual void write32(u32 addr, u32 val) const = 0;
 
-    // Returns the DSACK bits for the addressed device (68020)
+    /// Returns the DSACK bits for the addressed device (68020)
     virtual u8 dsack(u32 addr) const { return DSACK_16; }
 
-    // Provides the interrupt vector for a given interrupt level in USER mode
+    /// Provides the interrupt vector for a given interrupt level in USER mode
     virtual u16 readIrqUserVector(u8 level) const { return 0; }
 
     
@@ -447,14 +498,15 @@ protected:
     // State delegates
     //
     
-    // Called when the CPU is reset
+    /// Called when the CPU is reset
     virtual void cpuDidReset() { }
     
-    // Called when the CPU enters the HALT state
+    /// Called when the CPU enters the HALT state
     virtual void cpuDidHalt() { }
 
-    // Called when the MMU is enabled or disabled
+    /// Called when the MMU is enabled or disabled
     virtual void mmuDidEnable() { }
+    /// Called when the MMU is enabled or disabled
     virtual void mmuDidDisable() { }
     
     
@@ -462,10 +514,10 @@ protected:
     // Instruction delegates
     //
     
-    // Called before an instruction is executed
+    /// Called before an instruction is executed
     virtual void willExecute(const char *func, Instr I, Mode M, Size S, u16 opcode) { }
     
-    // Called after an instruction has been executed
+    /// Called after an instruction has been executed
     virtual void didExecute(const char *func, Instr I, Mode M, Size S, u16 opcode) { }
     
     
@@ -473,16 +525,16 @@ protected:
     // Exception delegates
     //
     
-    // Called before an exception is executed
+    /// Called before an exception is executed
     virtual void willExecute(M68kException exc, u16 vector) { }
     
-    // Called after an exception has been executed
+    /// Called after an exception has been executed
     virtual void didExecute(M68kException exc, u16 vector) { }
     
-    // Called when an interrupt is about to be processed
+    /// Called when an interrupt is about to be processed
     virtual void willInterrupt(u8 level) { }
     
-    // Called when the CPU jumps to an exception vector
+    /// Called when the CPU jumps to an exception vector
     virtual void didJumpToVector(int nr, u32 addr) { }
 
     
@@ -490,10 +542,10 @@ protected:
     // Cache register delegates
     //
     
-    // Called when the CACR register is modified
+    /// Called when the CACR register is modified
     virtual void didChangeCACR(u32 value) { }
     
-    // Called when the CAAR register is modified
+    /// Called when the CAAR register is modified
     virtual void didChangeCAAR(u32 value) { }
 
     
@@ -501,22 +553,22 @@ protected:
     // Debugger delegates
     //
     
-    // Called when a soft stop is reached
+    /// Called when a soft stop is reached
     virtual void didReachSoftstop(u32 addr) { }
     
-    // Called when a breakpoint is hit
+    /// Called when a breakpoint is hit
     virtual void didReachBreakpoint(u32 addr) { }
     
-    // Called when a watchpoint is hit
+    /// Called when a watchpoint is hit
     virtual void didReachWatchpoint(u32 addr) { }
     
-    // Called when a catchpoint is hit
+    /// Called when a catchpoint is hit
     virtual void didReachCatchpoint(u8 vector) { }
     
-    // Called when a software trap is hit
+    /// Called when a software trap is hit
     virtual void didReachSoftwareTrap(u32 addr) { }
 
-    // Called after an instruction has been appended to the log buffer
+    /// Called after an instruction has been appended to the log buffer
     virtual void didLogInstruction(const Registers &reg) { }
 
 #else
@@ -631,10 +683,10 @@ protected:
     
 public:
     
-    // Returns the current CPU clock cycle count (elapsed cycles since power-up)
+    /// Returns the current CPU clock cycle count (elapsed cycles since power-up)
     i64 getClock() const { return clock; }
     
-    // Sets the CPU clock cycle count
+    /// Sets the CPU clock cycle count
     void setClock(i64 val) { clock = val; }
     
     
@@ -644,72 +696,89 @@ public:
     
 public:
     
-    // Gets or sets the value of a data register (0 - 7)
+    /// Gets the value of a data register (0 - 7)
     u32 getD(int n) const { return readD(n); }
+    /// Sets the value of a data register (0 - 7)
     void setD(int n, u32 v) { writeD(n, v); }
     
-    // Gets or sets the value of an address register (0 - 7)
+    /// Gets the value of an address register (0 - 7)
     u32 getA(int n) const { return readA(n); }
+    /// Sets the value of an address register (0 - 7)
     void setA(int n, u32 v) { writeA(n, v); }
     
-    // Gets or sets the value of the program counter (PC)
+    /// Gets the value of the program counter (PC)
     u32 getPC() const { return reg.pc; }
+    /// Sets the value of the program counter (PC)
     void setPC(u32 val) { reg.pc = val; }
     
-    // Gets or sets the address of the currently executed instruction
+    /// Gets the address of the currently executed instruction
     u32 getPC0() const { return reg.pc0; }
+    /// Sets the address of the currently executed instruction
     void setPC0(u32 val) { reg.pc0 = val; }
     
-    // Gets or sets the IRC register, which is part of the prefetch queue
+    /// Gets the IRC register, which is part of the prefetch queue
     u16 getIRC() const { return queue.irc; }
+    /// Sets the IRC register, which is part of the prefetch queue
     void setIRC(u16 val) { queue.irc = val; }
     
-    // Gets or sets the IRD register, which is part of the prefetch queue
+    /// Gets the IRD register, which is part of the prefetch queue
     u16 getIRD() const { return queue.ird; }
+    /// Sets the IRD register, which is part of the prefetch queue
     void setIRD(u16 val) { queue.ird = val; }
     
-    // Gets or sets the value of the Condition Code Register (CCR)
+    /// Gets the value of the Condition Code Register (CCR)
     u8 getCCR() const;
+    /// Sets the value of the Condition Code Register (CCR)
     void setCCR(u8 val);
     
-    // Gets or sets the value of the Status Register (SR)
+    /// Gets the value of the Status Register (SR)
     u16 getSR() const;
+    /// Sets the value of the Status Register (SR)
     void setSR(u16 val);
     
-    // Gets or sets the current value of the stack pointer (SP)
+    /// Gets the current value of the stack pointer (SP)
     u32 getSP() const { return reg.sp; }
+    /// Sets the current value of the stack pointer (SP)
     void setSP(u32 val) { reg.sp = val; }
     
-    // Gets or sets the User Stack Pointer (USP)
+    /// Gets the User Stack Pointer (USP)
     u32 getUSP() const { return !reg.sr.s ? reg.sp : reg.usp; }
+    /// Sets the User Stack Pointer (USP)
     void setUSP(u32 val) { if (!reg.sr.s) reg.sp = val; else reg.usp = val; }
     
-    // Gets or sets the Interrupt Stack Pointer (ISP)
+    /// Gets the Interrupt Stack Pointer (ISP)
     u32 getISP() const { return (reg.sr.s && !reg.sr.m) ? reg.sp : reg.isp; }
+    /// Sets the Interrupt Stack Pointer (ISP)
     void setISP(u32 val) { if (reg.sr.s && !reg.sr.m) reg.sp = val; else reg.isp = val; }
     
-    // Gets or sets the Master Stack Pointer (MSP)
+    /// Gets the Master Stack Pointer (MSP)
     u32 getMSP() const { return (reg.sr.s && reg.sr.m) ? reg.sp : reg.msp; }
+    /// Sets the Master Stack Pointer (MSP)
     void setMSP(u32 val) { if (reg.sr.s && reg.sr.m) reg.sp = val; else reg.msp = val; }
     
-    // Gets or sets the Vector Base Register (VBR)
+    /// Gets the Vector Base Register (VBR)
     u32 getVBR() const { return reg.vbr; }
+    /// Sets the Vector Base Register (VBR)
     void setVBR(u32 val) { reg.vbr = val; }
     
-    // Gets or sets the Source Function Code (SFC)
+    /// Gets the Source Function Code (SFC)
     u32 getSFC() const { return reg.sfc; }
+    /// Sets the Source Function Code (SFC)
     void setSFC(u32 val) { reg.sfc = val & 0b111; }
     
-    // Gets or sets the Destination Function Code (DFC)
+    /// Gets the Destination Function Code (DFC)
     u32 getDFC() const { return reg.dfc; }
+    /// Sets the Destination Function Code (DFC)
     void setDFC(u32 val) { reg.dfc = val & 0b111; }
     
-    // Gets or sets the Cache Control Register (CACR)
+    /// Gets the Cache Control Register (CACR)
     u32 getCACR() const { return reg.cacr; }
+    /// Sets the Cache Control Register (CACR)
     void setCACR(u32 val);
     
-    // Gets or sets the Cache Address Register (CAAR)
+    /// Gets the Cache Address Register (CAAR)
     u32 getCAAR() const { return reg.caar; }
+    /// Sets the Cache Address Register (CAAR)
     void setCAAR(u32 val);
 
     
@@ -719,13 +788,13 @@ public:
     
 public:
     
-    // Sets or clears supervisor mode
+    /// Sets or clears supervisor mode
     void setSupervisorMode(bool value);
     
-    // Sets or clears master mode
+    /// Sets or clears master mode
     void setMasterMode(bool value);
     
-    // Sets or clear the supervisor and master flags
+    /// Sets or clear the supervisor and master flags
     void setSupervisorFlags(bool s, bool m);
     
     
@@ -778,14 +847,18 @@ protected:
     
 public:
     
-    // Retrieves the availability mask for a given instruction
+    /// Retrieves the availability mask for a given instruction
     u16 availabilityMask(Instr I) const;
+    /// Retrieves the availability mask for a given instruction
     u16 availabilityMask(Instr I, Mode M, Size S) const;
+    /// Retrieves the availability mask for a given instruction
     u16 availabilityMask(Instr I, Mode M, Size S, u16 ext) const;
     
-    // Checks if a given CPU model supports a specific instruction
+    /// Checks if a given CPU model supports a specific instruction
     bool isAvailable(CPUModel model, Instr I) const;
+    /// Checks if a given CPU model supports a specific instruction
     bool isAvailable(CPUModel model, Instr I, Mode M, Size S) const;
+    /// Checks if a given CPU model supports a specific instruction
     bool isAvailable(CPUModel model, Instr I, Mode M, Size S, u16 ext) const;
     
     
@@ -831,7 +904,7 @@ private:
     
 public:
     
-    // Reads the current value of the function code pins
+    /// Reads the current value of the function code pins
     u8 readFC() const;
     
 private:
@@ -849,10 +922,10 @@ private:
     
 public:
     
-    // Retrieves the value on the Interrupt Priority Level (IPL) pins
+    /// Retrieves the value on the Interrupt Priority Level (IPL) pins
     u8 getIPL() const { return ipl; }
     
-    // Sets the value on the Interrupt Priority Level (IPL) pins
+    /// Sets the value on the Interrupt Priority Level (IPL) pins
     void setIPL(u8 val);
     
 private:
@@ -886,13 +959,23 @@ private:
 #include "MoiraDasm.h"
 };
 
-/* The jump table builders are the only place where the instruction handler
+/** The jump table builders are the only place where the instruction handler
  * templates are instantiated. Keeping each core in a translation unit of its
  * own splits the instantiation work three ways and keeps the compiler's peak
  * memory usage within bounds. The definitions live in MoiraCore680x0.cpp.
  */
 extern template void Moira::createJumpTable<Core::C68000>(CPUModel, bool);
+/** The jump table builders are the only place where the instruction handler
+ * templates are instantiated. Keeping each core in a translation unit of its
+ * own splits the instantiation work three ways and keeps the compiler's peak
+ * memory usage within bounds. The definitions live in MoiraCore680x0.cpp.
+ */
 extern template void Moira::createJumpTable<Core::C68010>(CPUModel, bool);
+/** The jump table builders are the only place where the instruction handler
+ * templates are instantiated. Keeping each core in a translation unit of its
+ * own splits the instantiation work three ways and keeps the compiler's peak
+ * memory usage within bounds. The definitions live in MoiraCore680x0.cpp.
+ */
 extern template void Moira::createJumpTable<Core::C68020>(CPUModel, bool);
 
 

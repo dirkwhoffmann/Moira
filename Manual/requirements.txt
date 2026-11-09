@@ -1,2 +1,0 @@
-# Defining the exact version will make sure things don't break
-sphinx==4.2.0
