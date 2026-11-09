@@ -1016,7 +1016,7 @@ Moira::makeFrame(u32 addr, u32 pc)
 template <Flags F> StackFrame
 Moira::makeFrame(u32 addr)
 {
-    return makeFrame<F>(addr, getPC(), getSR(), getIRD());
+    return makeFrame<F>(addr, reg.pc, getSR(), getIRD());
 }
 
 template <Core C> AddressError
@@ -1037,9 +1037,10 @@ Moira::prefetch()
      * executed instruction.
      */
     reg.pc0 = reg.pc;
+    reg.pc += 2;
 
     queue.ird = queue.irc;
-    queue.irc = readInstr<C, F>(reg.pc + 2);
+    queue.irc = readInstr<C, F>(reg.pc);
     readBuffer = queue.irc;
 }
 
@@ -1060,6 +1061,7 @@ Moira::noPrefetch(int delay)
     assert(flags & State::LOOPING);
 
     reg.pc0 = reg.pc;
+    reg.pc += 2;
     std::swap(queue.irc, queue.ird);
     if (delay) SYNC(delay);
 }
@@ -1107,7 +1109,9 @@ Moira::jumpToVector(int nr)
             
         } else if constexpr (C == Core::C68000) {
 
-            throw AddressError(makeFrame<F|AE_PROG>(reg.pc, vectorAddr));
+            u32 target = reg.pc;
+            reg.pc = vectorAddr;
+            throw AddressError(makeFrame<F|AE_PROG>(target));
 
         } else {
 
@@ -1146,7 +1150,7 @@ Moira::jumpToVector(int nr)
     // Stop emulation if the exception should be catched
     if (debugger.catchpointMatches(nr)) didReachCatchpoint(u8(nr));
 
-    didJumpToVector(nr, reg.pc);
+    didJumpToVector(nr, reg.pc0);
 }
 
 // The following definitions are not templated. They are compiled into the

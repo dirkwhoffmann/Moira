@@ -1378,7 +1378,8 @@ Moira::execBsr(u16 opcode)
 
                 // MAME pushes the return address before it detects the misaligned target
                 push<C, Long>(retpc);
-                throw earlyAddressError<C>(makeFrame<AE_PROG>(newpc, newpc));
+                reg.pc = newpc;
+                throw earlyAddressError<C>(makeFrame<AE_PROG>(newpc));
             }
             throw earlyAddressError<C>(makeFrame(newpc));
         }
@@ -2186,7 +2187,8 @@ Moira::execDbcc(u16 opcode)
             if (misaligned<C, S>(newpc)) {
                 // MAME stores the address of the prefetched word as program counter
                 if constexpr (compat == Compatibility::MAME) throw earlyAddressError<C>(makeFrame<AE_INC_PC>(newpc));
-                throw earlyAddressError<C>(makeFrame<AE_INC_PC>(newpc, newpc));
+                reg.pc = newpc;
+                throw earlyAddressError<C>(makeFrame<AE_INC_PC>(newpc));
             }
 
             // Decrement loop counter
@@ -2236,7 +2238,8 @@ Moira::execDbcc(u16 opcode)
 
             // Check for address error
             if (misaligned<C, S>(newpc)) {
-                throw earlyAddressError<C>(makeFrame<AE_INC_PC>(newpc, newpc));
+                reg.pc = newpc;
+                throw earlyAddressError<C>(makeFrame<AE_INC_PC>(newpc));
             }
 
             // Decrement loop counter
@@ -2292,7 +2295,8 @@ Moira::execDbcc(u16 opcode)
 
             // Check for address error
             if (misaligned<C, S>(newpc)) {
-                throw earlyAddressError<C>(makeFrame<AE_INC_PC>(newpc, newpc));
+                reg.pc = newpc;
+                throw earlyAddressError<C>(makeFrame<AE_INC_PC>(newpc));
             }
 
             // Decrement loop counter
@@ -2516,9 +2520,9 @@ Moira::execJsr(u16 opcode)
 
                 // Fetch the first word of the subroutine before pushing
                 u32 ret = reg.pc;
+                reg.pc = ea;
                 queue.irc = (u16)read<C, AddrSpace::PROG, Word>(ea);
                 push<C, Long>(ret);
-                reg.pc = ea;
                 prefetch<C, POLL>();
                 break;
             }
@@ -2540,6 +2544,7 @@ Moira::execJsr(u16 opcode)
 
                 if constexpr (M == Mode::AI) {
 
+                    reg.pc = ea & ~1;
                     queue.irc = (u16)read<C, AddrSpace::PROG, Word>(ea & ~1);
                     throw earlyAddressError<C>(makeFrame<AE_SET_IF|AE_SET_RW>(ea));
                 }
@@ -2645,7 +2650,7 @@ Moira::execLink(u16 opcode)
 
         writeBuffer = u16(readA(ax) >> 16);
         writeA(ax, sp);
-        throw AddressError(makeFrame<AE_DATA|AE_WRITE>(sp, getPC() + 2, getSR(), ird));
+        throw AddressError(makeFrame<AE_DATA|AE_WRITE|AE_INC_PC>(sp));
     }
 
     POLL_IPL;
@@ -2926,9 +2931,9 @@ Moira::execMove4(u16 opcode)
     if (misaligned<C, S>(ea)) {
 
         if constexpr (S != Long) updateAn<Mode::PD, S>(dst);
-        if (format == 0) { throw earlyAddressError<C>(makeFrame<flags0>(ea + 2, reg.pc + 2, getSR(), ird)); }
-        if (format == 1) { SYNC(2); throw AddressError(makeFrame<flags1>(ea, reg.pc + 2)); }
-        if (format == 2) { SYNC(2); throw AddressError(makeFrame<flags2>(ea, reg.pc + 2)); }
+        if (format == 0) { throw earlyAddressError<C>(makeFrame<flags0>(ea + 2, reg.pc, getSR(), ird)); }
+        if (format == 1) { SYNC(2); throw AddressError(makeFrame<flags1>(ea)); }
+        if (format == 2) { SYNC(2); throw AddressError(makeFrame<flags2>(ea)); }
     }
 
     writeM<C, Mode::PD, S, REVERSE>(ea, data);
@@ -5064,7 +5069,7 @@ Moira::execRtd(u16 opcode)
         throw AddressError(makeFrame<AE_PROG>(newpc));
     }
 
-    setPC(newpc);
+    reg.pc = newpc;
     fullPrefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -5323,7 +5328,7 @@ Moira::execRte(u16 opcode)
         throw earlyAddressError<C>(makeFrame<AE_PROG>(newpc));
     }
 
-    setPC(newpc);
+    reg.pc = newpc;
     fullPrefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -5372,7 +5377,7 @@ Moira::execRtr(u16 opcode)
         throw earlyAddressError<C>(makeFrame<AE_PROG>(newpc));
     }
 
-    setPC(newpc);
+    reg.pc = newpc;
     fullPrefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -5403,7 +5408,7 @@ Moira::execRts(u16 opcode)
         throw earlyAddressError<C>(makeFrame<AE_PROG>(newpc));
     }
 
-    setPC(newpc);
+    reg.pc = newpc;
     fullPrefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -5505,6 +5510,7 @@ Moira::execStop(u16 opcode)
     setSR(src);
     flags |= State::STOPPED;
     reg.pc0 = reg.pc;
+    reg.pc += 2;
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l

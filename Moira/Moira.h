@@ -108,6 +108,7 @@ public:
     
     /// Debugger handling breakpoints, watchpoints, catchpoints, and instruction tracing
     Debugger debugger = Debugger(*this);
+
     
     
     //
@@ -706,11 +707,16 @@ public:
     /// Sets the value of an address register (0 - 7)
     void setA(int n, u32 v) { writeA(n, v); }
     
-    /// Gets the value of the program counter (PC)
-    u32 getPC() const { return reg.pc; }
-    /// Sets the value of the program counter (PC)
-    void setPC(u32 val) { reg.pc = val; }
-    
+    /** Gets the address of the next instruction (at an instruction boundary)
+     *
+     * Internally, the program counter follows the hardware: it always holds
+     * the address of the word in IRC, which is two bytes ahead of the
+     * instruction to be executed next. This function hides the offset.
+     */
+    u32 getPC() const { return reg.pc - 2; }
+    /// Sets the address of the next instruction (see getPC)
+    void setPC(u32 val) { reg.pc = val + 2; }
+
     /// Gets the address of the currently executed instruction
     u32 getPC0() const { return reg.pc0; }
     /// Sets the address of the currently executed instruction

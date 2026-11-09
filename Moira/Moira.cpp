@@ -395,7 +395,7 @@ Moira::execute()
     assert(!!(flags & TRACING) == reg.sr.t1);
 
     // Check the integrity of the program counter
-    assert(reg.pc0 == reg.pc);
+    assert(reg.pc == reg.pc0 + 2);
 
     // Take the fast path or the slow path
     if (!flags) {
@@ -404,7 +404,6 @@ Moira::execute()
         // Fast path: Call the instruction handler and return
         //
 
-        reg.pc += 2;
         try {
             (this->*exec[queue.ird])(queue.ird);
         } catch (const std::exception &exc) {
@@ -456,7 +455,7 @@ Moira::execute()
             // Initiate a privilege exception if the supervisor bit is cleared
             if (!reg.sr.s) {
                 sync(4);
-                reg.pc -= 2;
+                reg.pc -= 4;
                 flags &= ~STOPPED;
                 execException(M68kException::PRIVILEGE);
                 return;
@@ -474,7 +473,6 @@ Moira::execute()
 
         // Execute the instruction
         saveRegisters();
-        reg.pc += 2;
 
         if (flags & LOOPING) {
 
@@ -507,7 +505,7 @@ Moira::execute()
     }
 
     // Check the integrity of the program counter again
-    assert(reg.pc0 == reg.pc);
+    assert(reg.pc == reg.pc0 + 2);
 }
 
 void
@@ -626,7 +624,7 @@ Moira::halt()
 {
     // Halt the CPU
     flags |= State::HALTED;
-    reg.pc = reg.pc0;
+    reg.pc = reg.pc0 + 2;
 
     // Inform the delegate
     cpuDidHalt();

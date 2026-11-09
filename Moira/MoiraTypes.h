@@ -334,8 +334,9 @@ struct StatusRegister {
 /// The register set of the CPU
 struct Registers {
     
-    u32 pc;                     ///< Program counter
+    u32 pc;                     ///< Program counter (address of the word in IRC)
     u32 pc0;                    ///< Beginning of the current instruction
+
     StatusRegister sr;          ///< Status register
     
     union {

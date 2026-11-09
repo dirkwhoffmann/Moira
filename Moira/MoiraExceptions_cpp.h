@@ -342,6 +342,9 @@ Moira::execAddressError(StackFrame frame, int delay)
     // Disable tracing
     clearTraceFlags();
     flags &= ~State::TRACE_EXC;
+
+    // Interrupts are taken at an instruction boundary
+    reg.pc = reg.pc0;
     SYNC(8);
 
     // A misaligned stack pointer will cause a double fault
@@ -566,6 +569,9 @@ Moira::execException(M68kException exc, int nr)
             flags &= ~State::STOPPED;
 
             SYNC(4);
+
+            // Trace exceptions are taken at an instruction boundary
+            reg.pc = reg.pc0;
 
             // Write stack frame
             writeStackFrame0000<C>(status, reg.pc, vector);
