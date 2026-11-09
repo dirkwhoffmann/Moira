@@ -31,6 +31,10 @@ struct Cursor {
         p += 4;
         return v;
     }
+    uint8_t u8() {
+        if (end - p < 1) { ok = false; return 0; }
+        return *p++;
+    }
     uint16_t u16() {
         if (end - p < 2) { ok = false; return 0; }
         uint16_t v = uint16_t(p[0] | p[1] << 8);
@@ -118,9 +122,26 @@ File::next(Test &test)
     // States
     if (!readState(c, test.initial) || !readState(c, test.final)) return false;
 
-    // Transactions (only the total cycle count is used)
+    // Transactions
     Cursor transactions = c.block(MAGIC_TRANSACTIONS);
     test.cycles = transactions.u32();
+    test.bus.clear();
+    for (uint32_t n = transactions.u32(); n && transactions.ok; n--) {
+
+        Bus b;
+        b.type = Bus::Type(transactions.u8());
+        b.cycles = transactions.u32();
+        if (b.type > Bus::WRITE_AE) return false;
+
+        if (b.type != Bus::IDLE) {
+            b.fc = transactions.u32();
+            b.addr = transactions.u32();
+            b.data = transactions.u32();
+            b.uds = transactions.u32() != 0;
+            b.lds = transactions.u32() != 0;
+        }
+        test.bus.push_back(b);
+    }
     if (!transactions.ok || !c.ok) return false;
 
     pos = size_t(file.p - data.data());

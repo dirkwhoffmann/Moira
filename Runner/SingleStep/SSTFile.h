@@ -27,7 +27,8 @@ namespace sst {
  *                 two prefetch words, number of RAM entries, (address, word) pairs
  *   Transactions: size, magic 0x456789AB, number of cycles, number of transactions, ...
  *
- * The bus transactions are not decoded (yet). Only the total cycle count is used.
+ *   A transaction record is: type (1 byte), duration in cycles, and for all types
+ *   but IDLE: function code, address bus, data bus, UDS, LDS (all 32 bit).
  */
 
 struct State {
@@ -42,12 +43,26 @@ struct State {
     std::vector<std::pair<uint32_t, uint8_t>> ram;  // Bytes that are set or checked
 };
 
+/* A bus transaction. Idle periods are stored as transactions of type IDLE. */
+struct Bus {
+
+    enum Type : uint8_t { IDLE = 0, WRITE = 1, READ = 2, TAS = 3, READ_AE = 4, WRITE_AE = 5 };
+
+    Type type = IDLE;
+    uint32_t cycles = 0;                            // Duration
+    uint32_t fc = 0;                                // Function code pins
+    uint32_t addr = 0;                              // Address bus (A0 is not part of it)
+    uint32_t data = 0;                              // Data bus
+    bool uds = false, lds = false;                  // Data strobes
+};
+
 struct Test {
 
     std::string name;
     State initial;
     State final;
     uint32_t cycles = 0;                            // Total number of CPU cycles
+    std::vector<Bus> bus;                           // Bus transactions
 };
 
 class File {

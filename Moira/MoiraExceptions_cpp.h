@@ -8,6 +8,20 @@
 template <Core C> void
 Moira::writeStackFrameAEBE(StackFrame &frame)
 {
+    if constexpr (compat == Compatibility::MAME && C == Core::C68000) {
+
+        // MAME writes the words in a different order
+        U32_DEC(reg.sp, 14);
+        write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 12), (u16)frame.pc);
+        write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 8), frame.sr);
+        write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 10), frame.pc >> 16);
+        write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6), frame.ird);
+        write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4), (u16)frame.addr);
+        write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0), frame.code);
+        write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2), frame.addr >> 16);
+        return;
+    }
+
     // Push PC
     push<C, Word>((u16)frame.pc);
     push<C, Word>(frame.pc >> 16);
@@ -334,12 +348,15 @@ Moira::execAddressError(StackFrame frame, int delay)
     if (misaligned<C>(reg.sp)) throw DoubleFault();
 
     // Write stack frame
+    // MAME delays the stack frame instead of the vector fetch
+    if constexpr (compat == Compatibility::MAME) SYNC(2);
+
     if constexpr (C == Core::C68000) {
         writeStackFrameAEBE<C>(frame);
     } else {
         writeStackFrame1000<C>(frame, status, frame.pc, reg.pc0, 3, frame.addr);
     }
-    SYNC(2);
+    if constexpr (compat != Compatibility::MAME) SYNC(2);
 
     // Jump to exception vector
     jumpToVector<C>(3);
