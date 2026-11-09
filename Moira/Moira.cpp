@@ -138,8 +138,13 @@ Moira::updateUnits()
     }
     fpu.setModel(effectiveFpu);
 
-    // The 68030 and the 68040 have a built-in MMU
-    mmu.setModel(mmuModel == MMUModel::BUILTIN && hasMMU(cpuModel) ? MMUModel::BUILTIN : MMUModel::NONE);
+    // The 68030 and the 68040 have a built-in MMU. Selecting a specific type
+    // only has an effect if it is the type the CPU provides.
+    MMUModel builtin = MMUModel::NONE;
+    if (hasMMU(cpuModel)) {
+        builtin = (cpuModel == CPUModel::M68LC040 || cpuModel == CPUModel::M68040) ? MMUModel::M68040 : MMUModel::M68030;
+    }
+    mmu.setModel(mmuModel == MMUModel::BUILTIN || mmuModel == builtin ? builtin : MMUModel::NONE);
     updateMmuFlag();
 }
 

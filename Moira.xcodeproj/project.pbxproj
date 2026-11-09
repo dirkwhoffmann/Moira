@@ -54,7 +54,7 @@
 		50B10000000000000000000C /* MoiraCore68000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61F3AFFB3C6CFCEC22A0FD23 /* MoiraCore68000.cpp */; };
 		50B10000000000000000000D /* MoiraCore68020.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1654296120AA412377E9642D /* MoiraCore68020.cpp */; };
 		50B100000000000000000012 /* FPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81033098E38500E2E307 /* FPU.cpp */; };
-		50E00000000000000000A004 /* MMU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E00000000000000000A002 /* MMU.cpp */; };
+		50E00000000000000000A004 /* MMU030.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E00000000000000000A002 /* MMU030.cpp */; };
 		C20E21D44E8A477AB1A17901 /* Cache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C20E21D44E8A477AB1A178E8 /* Cache.cpp */; };
 		50B100000000000000000013 /* FpuFormats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81053098E38500E2E307 /* FpuFormats.cpp */; };
 		50B10000000000000000F001 /* MFloat80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000013 /* MFloat80.cpp */; };
@@ -67,7 +67,7 @@
 		50B100000000000000000069 /* MoiraCore68000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61F3AFFB3C6CFCEC22A0FD23 /* MoiraCore68000.cpp */; };
 		50B10000000000000000006A /* MoiraCore68020.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1654296120AA412377E9642D /* MoiraCore68020.cpp */; };
 		50B10000000000000000006F /* FPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81033098E38500E2E307 /* FPU.cpp */; };
-		50E00000000000000000A005 /* MMU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E00000000000000000A002 /* MMU.cpp */; };
+		50E00000000000000000A005 /* MMU030.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E00000000000000000A002 /* MMU030.cpp */; };
 		C20E21D44E8A477AB1A17902 /* Cache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C20E21D44E8A477AB1A178E8 /* Cache.cpp */; };
 		50B100000000000000000070 /* FpuFormats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81053098E38500E2E307 /* FpuFormats.cpp */; };
 		50B10000000000000000F002 /* MFloat80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000013 /* MFloat80.cpp */; };
@@ -179,8 +179,9 @@
 		50A300000000000000000014 /* FpuEnv.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FpuEnv.cpp; sourceTree = "<group>"; };
 		505A81023098E38500E2E307 /* FPU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FPU.h; sourceTree = "<group>"; };
 		505A81033098E38500E2E307 /* FPU.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FPU.cpp; sourceTree = "<group>"; };
-		50E00000000000000000A001 /* MMU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MMU.h; sourceTree = "<group>"; };
-		50E00000000000000000A002 /* MMU.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MMU.cpp; sourceTree = "<group>"; };
+		50E00000000000000000A001 /* MMU030.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MMU030.h; sourceTree = "<group>"; };
+		50E00000000000000000A0F1 /* MMU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MMU.h; sourceTree = "<group>"; };
+		50E00000000000000000A002 /* MMU030.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MMU030.cpp; sourceTree = "<group>"; };
 		505A81043098E38500E2E307 /* FpuFormats.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FpuFormats.h; sourceTree = "<group>"; };
 		505A81053098E38500E2E307 /* FpuFormats.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FpuFormats.cpp; sourceTree = "<group>"; };
 		505A8182309A2F2A00E2E307 /* byteswap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = byteswap.h; sourceTree = "<group>"; };
@@ -669,8 +670,9 @@
 		50E00000000000000000A003 /* MMU */ = {
 			isa = PBXGroup;
 			children = (
-				50E00000000000000000A001 /* MMU.h */,
-				50E00000000000000000A002 /* MMU.cpp */,
+				50E00000000000000000A001 /* MMU030.h */,
+				50E00000000000000000A0F1 /* MMU.h */,
+				50E00000000000000000A002 /* MMU030.cpp */,
 			);
 			path = MMU;
 			sourceTree = "<group>";
@@ -966,7 +968,7 @@
 				50B10000000000000000000C /* MoiraCore68000.cpp in Sources */,
 				50B10000000000000000000D /* MoiraCore68020.cpp in Sources */,
 				50B100000000000000000012 /* FPU.cpp in Sources */,
-				50E00000000000000000A004 /* MMU.cpp in Sources */,
+				50E00000000000000000A004 /* MMU030.cpp in Sources */,
 				C20E21D44E8A477AB1A17901 /* Cache.cpp in Sources */,
 				50B100000000000000000013 /* FpuFormats.cpp in Sources */,
 				50B10000000000000000F001 /* MFloat80.cpp in Sources */,
@@ -985,7 +987,7 @@
 				50B100000000000000000069 /* MoiraCore68000.cpp in Sources */,
 				50B10000000000000000006A /* MoiraCore68020.cpp in Sources */,
 				50B10000000000000000006F /* FPU.cpp in Sources */,
-				50E00000000000000000A005 /* MMU.cpp in Sources */,
+				50E00000000000000000A005 /* MMU030.cpp in Sources */,
 				C20E21D44E8A477AB1A17902 /* Cache.cpp in Sources */,
 				50B100000000000000000070 /* FpuFormats.cpp in Sources */,
 				50B10000000000000000F002 /* MFloat80.cpp in Sources */,

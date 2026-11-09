@@ -115,7 +115,7 @@ struct MmuContext {
 };
 
 void
-MMU::reset()
+MMU030::reset()
 {
     // Reset registers
     crp = srp = 0;
@@ -126,7 +126,7 @@ MMU::reset()
 }
 
 void
-MMU::setTC(u32 value)
+MMU030::setTC(u32 value)
 {
     bool oldE = tc & (1 << 31);
     tc = value;
@@ -139,13 +139,13 @@ MMU::setTC(u32 value)
 }
 
 void
-MMU::setTT0(u32 value)
+MMU030::setTT0(u32 value)
 {
     tt0 = value;
 }
 
 void
-MMU::setTT1(u32 value)
+MMU030::setTT1(u32 value)
 {
     tt1 = value;
 }
@@ -155,7 +155,7 @@ MMU::setTT1(u32 value)
 //
 
 int
-MMU::numTables() const
+MMU030::numTables() const
 {
     // A table exists for each leading non-zero TIx field in the TC register
     for (int i = 0; i < 4; i++) {
@@ -165,13 +165,13 @@ MMU::numTables() const
 }
 
 bool
-MMU::testTT(u32 addr, u8 fc, bool rw) const
+MMU030::testTT(u32 addr, u8 fc, bool rw) const
 {
     return testTT(tt0, addr, fc, rw) || testTT(tt1, addr, fc, rw);
 }
 
 bool
-MMU::testTT(u32 ttx, u32 addr, u8 fc, bool rw)
+MMU030::testTT(u32 ttx, u32 addr, u8 fc, bool rw)
 {
     auto addrBase = ________xxxxxxxx (ttx >> 24);
     auto addrMask = ________xxxxxxxx (ttx >> 16);
@@ -197,7 +197,7 @@ MMU::testTT(u32 ttx, u32 addr, u8 fc, bool rw)
 }
 
 std::optional<u32>
-MMU::translate(u32 addr, u8 fc, bool write, bool *ci)
+MMU030::translate(u32 addr, u8 fc, bool write, bool *ci)
 {
     if (ci) *ci = false;
 
@@ -233,7 +233,7 @@ MMU::translate(u32 addr, u8 fc, bool write, bool *ci)
 }
 
 void
-MMU::load(u32 addr, u8 fc, bool write)
+MMU030::load(u32 addr, u8 fc, bool write)
 {
     atcFlushPage(addr);
 
@@ -243,7 +243,7 @@ MMU::load(u32 addr, u8 fc, bool write)
 }
 
 u32
-MMU::test(u32 addr, u8 fc, bool write, u32 level, u32 &descrAddr)
+MMU030::test(u32 addr, u8 fc, bool write, u32 level, u32 &descrAddr)
 {
     descrAddr = 0;
 
@@ -277,7 +277,7 @@ MMU::test(u32 addr, u8 fc, bool write, u32 level, u32 &descrAddr)
 //
 
 void
-MMU::atcTouch(int line)
+MMU030::atcTouch(int line)
 {
     // Flag the entry as recently used
     atc[line].history = true;
@@ -289,7 +289,7 @@ MMU::atcTouch(int line)
 }
 
 std::optional<int>
-MMU::atcFind(u32 addr, u8 fc, bool write)
+MMU030::atcFind(u32 addr, u8 fc, bool write)
 {
     u32 page = addr & ~pageMask();
 
@@ -320,21 +320,21 @@ MMU::atcFind(u32 addr, u8 fc, bool write)
 }
 
 std::optional<int>
-MMU::atcFindFree()
+MMU030::atcFindFree()
 {
     for (int i = 0; i < ATC_ENTRIES; i++) if (!atc[i].valid) return i;
     return std::nullopt;
 }
 
 std::optional<int>
-MMU::atcFindUnused()
+MMU030::atcFindUnused()
 {
     for (int i = 0; i < ATC_ENTRIES; i++) if (!atc[i].history) return i;
     return std::nullopt;
 }
 
 int
-MMU::atcInsert(u32 addr, u8 fc, u32 physical, u32 status, bool ci)
+MMU030::atcInsert(u32 addr, u8 fc, u32 physical, u32 status, bool ci)
 {
     // Find the first free entry
     auto line = atcFindFree();
@@ -363,25 +363,25 @@ MMU::atcInsert(u32 addr, u8 fc, u32 physical, u32 status, bool ci)
 }
 
 void
-MMU::atcFlush()
+MMU030::atcFlush()
 {
     for (auto &e : atc) e.valid = false;
 }
 
 void
-MMU::atcFlush(u8 fcBase, u8 fcMask)
+MMU030::atcFlush(u8 fcBase, u8 fcMask)
 {
     for (auto &e : atc) if ((fcBase & fcMask) == (e.fc & fcMask)) e.valid = false;
 }
 
 void
-MMU::atcFlushPage(u32 addr)
+MMU030::atcFlushPage(u32 addr)
 {
     for (auto &e : atc) if (e.logical == (addr & ~pageMask())) e.valid = false;
 }
 
 void
-MMU::atcFlushPage(u32 addr, u8 fcBase, u8 fcMask)
+MMU030::atcFlushPage(u32 addr, u8 fcBase, u8 fcMask)
 {
     for (auto &e : atc) {
         if (e.logical == (addr & ~pageMask()) && (fcBase & fcMask) == (e.fc & fcMask)) e.valid = false;
@@ -393,13 +393,13 @@ MMU::atcFlushPage(u32 addr, u8 fcBase, u8 fcMask)
 //
 
 u32
-MMU::walk(u32 addr, u8 fc, bool write, MmuContext &c)
+MMU030::walk(u32 addr, u8 fc, bool write, MmuContext &c)
 {
     return walk(addr, fc, write, c, false, 0);
 }
 
 u32
-MMU::walk(u32 addr, u8 fc, bool write, MmuContext &c, bool ptest, u32 level)
+MMU030::walk(u32 addr, u8 fc, bool write, MmuContext &c, bool ptest, u32 level)
 {
     bool fcl = tc & (1 << 24);
 
@@ -503,7 +503,7 @@ MMU::walk(u32 addr, u8 fc, bool write, MmuContext &c, bool ptest, u32 level)
 }
 
 u32
-MMU::lookupShort(char table, u32 taddr, u32 offset, bool write, MmuContext &c)
+MMU030::lookupShort(char table, u32 taddr, u32 offset, bool write, MmuContext &c)
 {
     u32 physAddr;
 
@@ -630,7 +630,7 @@ MMU::lookupShort(char table, u32 taddr, u32 offset, bool write, MmuContext &c)
 }
 
 u32
-MMU::lookupLong(char table, u32 taddr, u32 offset, bool write, MmuContext &c)
+MMU030::lookupLong(char table, u32 taddr, u32 offset, bool write, MmuContext &c)
 {
     u32 physAddr;
 

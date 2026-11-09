@@ -253,14 +253,14 @@ void resetMoira(Setup &s)
     moiracpu->fpu.setFPSR(s.fpsr);
     moiracpu->fpu.setFPIAR(s.fpiar);
 
-    moiracpu->mmu.crp = s.crp;
-    moiracpu->mmu.srp = s.srp;
-    moiracpu->mmu.tc = s.tc;
+    moiracpu->mmu.mmu030.crp = s.crp;
+    moiracpu->mmu.mmu030.srp = s.srp;
+    moiracpu->mmu.mmu030.tc = s.tc;
     moiracpu->updateMmuFlag();
-    moiracpu->mmu.tt0 = s.tt0;
-    moiracpu->mmu.tt1 = s.tt1;
-    moiracpu->mmu.mmusr = s.mmusr;
-    for (auto &e : moiracpu->mmu.atc) e.valid = false;
+    moiracpu->mmu.mmu030.tt0 = s.tt0;
+    moiracpu->mmu.mmu030.tt1 = s.tt1;
+    moiracpu->mmu.mmu030.mmusr = s.mmusr;
+    for (auto &e : moiracpu->mmu.mmu030.atc) e.valid = false;
 }
 
 void run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const std::vector<FPUModel> &fpus)
@@ -488,11 +488,11 @@ void runMMUTranslate(long round)
 
         // Configure both MMUs
         setMMUUAE(t.crp, t.srp, t.tc, t.tt0, t.tt1);
-        moiracpu->mmu.crp = t.crp;
-        moiracpu->mmu.srp = t.srp;
-        moiracpu->mmu.tc = t.tc;
-        moiracpu->mmu.tt0 = t.tt0;
-        moiracpu->mmu.tt1 = t.tt1;
+        moiracpu->mmu.mmu030.crp = t.crp;
+        moiracpu->mmu.mmu030.srp = t.srp;
+        moiracpu->mmu.mmu030.tc = t.tc;
+        moiracpu->mmu.mmu030.tt0 = t.tt0;
+        moiracpu->mmu.mmu030.tt1 = t.tt1;
 
         u32 lastAddr = 0; u8 lastFC = 1;
 
@@ -502,7 +502,7 @@ void runMMUTranslate(long round)
             // the ATC size, so that the (pseudo-LRU) replacement strategy doesn't matter.
             if (j % 16 == 0) {
                 flushATCUAE();
-                for (auto &e : moiracpu->mmu.atc) e.valid = false;
+                for (auto &e : moiracpu->mmu.mmu030.atc) e.valid = false;
             }
 
             // Pick an address that is likely to be covered by the tables
@@ -532,7 +532,7 @@ void runMMUTranslate(long round)
                 ptestUAE(paddr, pfc, pwrite, level, &statusRef, &descrRef);
                 moiracpu->setSupervisorMode(super);
                 sandbox.prepare(false, true);
-                u32 statusMoira = moiracpu->mmu.test(paddr, pfc, pwrite, level, descrMoira);
+                u32 statusMoira = moiracpu->mmu.mmu030.test(paddr, pfc, pwrite, level, descrMoira);
 
                 // The descriptor address is only returned for levels > 0
                 bool equal = statusRef == statusMoira && (level == 0 || descrRef == descrMoira) && !memcmp(refMem, moiraMem, sizeof(refMem));
@@ -1145,12 +1145,12 @@ void recordMoiraRegisters(Result &r)
     r.fpsr = moiracpu->fpu.getFPSR();
     r.fpiar = moiracpu->fpu.getFPIAR();
 
-    r.crp = moiracpu->mmu.crp;
-    r.srp = moiracpu->mmu.srp;
-    r.tc = moiracpu->mmu.tc;
-    r.tt0 = moiracpu->mmu.tt0;
-    r.tt1 = moiracpu->mmu.tt1;
-    r.mmusr = moiracpu->mmu.mmusr;
+    r.crp = moiracpu->mmu.mmu030.crp;
+    r.srp = moiracpu->mmu.mmu030.srp;
+    r.tc = moiracpu->mmu.mmu030.tc;
+    r.tt0 = moiracpu->mmu.mmu030.tt0;
+    r.tt1 = moiracpu->mmu.mmu030.tt1;
+    r.mmusr = moiracpu->mmu.mmu030.mmusr;
 }
 
 void dumpDasm(Setup &s, Result &rRef, Result &rMoira)

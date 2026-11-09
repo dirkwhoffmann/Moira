@@ -239,12 +239,12 @@ Moira::execPFlush(u16 opcode)
 
         // Flush by function code and effective address
         u32 ea = computeEA<C, M, Long>(reg);
-        mmu.atcFlushPage(ea, fcBase, mask);
+        mmu.mmu030.atcFlushPage(ea, fcBase, mask);
 
     } else {
 
         // Flush by function code
-        mmu.atcFlush(fcBase, mask);
+        mmu.mmu030.atcFlush(fcBase, mask);
     }
 
     prefetch<C, POLL>();
@@ -269,7 +269,7 @@ Moira::execPFlusha(u16 opcode)
 
     (void)readI<C, Word>();
 
-    mmu.atcFlush();
+    mmu.mmu030.atcFlush();
 
     prefetch<C, POLL>();
 
@@ -325,7 +325,7 @@ Moira::execPLoad(u16 opcode)
     (void)readI<C, Word>();
 
     u32 ea = computeEA<C, M, Long>(reg);
-    mmu.load(ea, mmuFC(ext), !rw);
+    mmu.mmu030.load(ea, mmuFC(ext), !rw);
 
     prefetch<C, POLL>();
 
@@ -430,7 +430,7 @@ Moira::execPMove(u16 opcode)
     }
 
     // Writing a translation register flushes the ATC unless the FD bit is set
-    if (!rw && fmt != 3 && !(ext & 0x100)) mmu.atcFlush();
+    if (!rw && fmt != 3 && !(ext & 0x100)) mmu.mmu030.atcFlush();
 
     prefetch<C, POLL>();
 
@@ -453,32 +453,32 @@ Moira::execPMove(u16 opcode, MmuReg mmuReg, bool rw)
 
             case MmuReg::MMUSR:
 
-                writeOp<C, M, Word>(reg, mmu.mmusr);
+                writeOp<C, M, Word>(reg, mmu.mmu030.mmusr);
                 break;
 
             case MmuReg::TT0:
 
-                writeOp<C, M, Long>(reg, mmu.tt0);
+                writeOp<C, M, Long>(reg, mmu.mmu030.tt0);
                 break;
 
             case MmuReg::TT1:
 
-                writeOp<C, M, Long>(reg, mmu.tt1);
+                writeOp<C, M, Long>(reg, mmu.mmu030.tt1);
                 break;
 
             case MmuReg::TC:
 
-                writeOp<C, M, Long>(reg, mmu.tc);
+                writeOp<C, M, Long>(reg, mmu.mmu030.tc);
                 break;
 
             case MmuReg::CRP:
 
-                writeOp64<C, M>(reg, mmu.crp);
+                writeOp64<C, M>(reg, mmu.mmu030.crp);
                 break;
 
             case MmuReg::SRP:
 
-                writeOp64<C, M>(reg, mmu.srp);
+                writeOp64<C, M>(reg, mmu.mmu030.srp);
                 break;
 
             default:
@@ -492,37 +492,37 @@ Moira::execPMove(u16 opcode, MmuReg mmuReg, bool rw)
             case MmuReg::MMUSR:
 
                 readOp<C, M, Word>(reg, &ea, &data32);
-                mmu.mmusr = u16(data32);
+                mmu.mmu030.mmusr = u16(data32);
                 break;
 
             case MmuReg::TT0:
 
                 readOp<C, M, Long>(reg, &ea, &data32);
-                mmu.setTT0(data32);
+                mmu.mmu030.setTT0(data32);
                 break;
 
             case MmuReg::TT1:
 
                 readOp<C, M, Long>(reg, &ea, &data32);
-                mmu.setTT1(data32);
+                mmu.mmu030.setTT1(data32);
                 break;
 
             case MmuReg::TC:
 
                 readOp<C, M, Long>(reg, &ea, &data32);
-                mmu.setTC(data32);
+                mmu.mmu030.setTC(data32);
                 break;
 
             case MmuReg::CRP:
 
                 readOp64<C, M>(reg, &ea, &data64);
-                mmu.crp = data64;
+                mmu.mmu030.crp = data64;
                 break;
 
             case MmuReg::SRP:
 
                 readOp64<C, M>(reg, &ea, &data64);
-                mmu.srp = data64;
+                mmu.mmu030.srp = data64;
                 break;
 
             default:
@@ -561,7 +561,7 @@ Moira::execPTest(u16 opcode)
     // u8 fcode = mmuFC(ext);
 
     u32 descrAddr;
-    mmu.mmusr = mmu.test(ea, mmuFC(ext), !rw, lvl, descrAddr);
+    mmu.mmu030.mmusr = mmu.mmu030.test(ea, mmuFC(ext), !rw, lvl, descrAddr);
     if (a) writeA(areg, descrAddr);
 
     prefetch<C, POLL>();
@@ -582,10 +582,10 @@ Moira::execPTest40(u16 opcode)
     readOp<C, M, Long>(rg, &ea, &data);
     
     u8 fcode = u8(reg.dfc);
-    if (mmu.testTT(ea, fcode, rw)) {
-        mmu.mmusr |= 0x40;
+    if (mmu.mmu030.testTT(ea, fcode, rw)) {
+        mmu.mmu030.mmusr |= 0x40;
     } else {
-        mmu.mmusr &= ~0x40;
+        mmu.mmu030.mmusr &= ~0x40;
     }
     
     prefetch<C, POLL>();

@@ -31,7 +31,7 @@ class Moira {
     friend class Breakpoints;
     friend class Watchpoints;
     friend class Catchpoints;
-    friend class MMU;
+    friend class MMU030;
     friend class Cache;
     friend class ICache;
     friend class DCache;

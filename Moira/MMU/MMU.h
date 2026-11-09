@@ -7,82 +7,40 @@
 
 #pragma once
 
-#include "../MoiraTypes.h"
-#include <optional>
+#include "MMU030.h"
 
 namespace MOIRA_NAMESPACE {
 
-struct MmuContext;
-
+/* Selectable MMU types
+ *
+ * The model that is selected in Moira (see Moira::setMmuModel) is a request.
+ * The MMU that is effectively present is derived from it and from the CPU
+ * model. It is never BUILTIN.
+ */
 enum class MMUModel
 {
     NONE,                   // The MMU is not emulated (MMU instructions cause a line F exception)
-    BUILTIN                 // Use the MMU of the CPU (68030, 68040), other CPUs have none
+    BUILTIN,                // Use the MMU of the CPU (68030, 68040), other CPUs have none
+    M68030,                 // The MMU of the 68030
+    M68040                  // The MMU of the 68040 (not emulated yet)
 };
 
-enum class MmuReg {
-    
-    TT0,                    // Transparent translation register 0
-    TT1,                    // Transparent translation register 1
-    MMUSR,                  // MMU Status register
-    CRP,                    // CPU Root pointer
-    SRP,                    // Supervisor Root pointer
-    TC                      // Translation control register
-};
-
-struct AtcEntry {
-
-    u32 logical;            // Logical page address
-    u32 physical;           // Physical page address
-    u8  fc;                 // Function code
-    bool valid;             //
-    bool busError;          // Translation error bit
-    bool wp;                // Write protection bit
-    bool modified;          // Modification bit
-    bool ci;                // Cache inhibit bit
-    bool history;           // Set if the entry was used recently (guides the replacement policy)
-};
-
-// Cache size
-static constexpr int ATC_ENTRIES                = 22;
-
-// Status register bits
-static constexpr u32 MMUSR_BUS_ERROR            = 1 << 15;
-static constexpr u32 MMUSR_LIMIT_VIOLATION      = 1 << 14;
-static constexpr u32 MMUSR_SUPERVISOR_ONLY      = 1 << 13;
-static constexpr u32 MMUSR_WRITE_PROTECTED      = 1 << 11;
-static constexpr u32 MMUSR_INVALID              = 1 << 10;
-static constexpr u32 MMUSR_MODIFIED             = 1 << 9;
-static constexpr u32 MMUSR_TRANSPARENT_ACCESS   = 1 << 6;
-static constexpr u32 MMUSR_NUMBER_OF_LEVELS     = 0b111;
-
+/* Memory management unit
+ *
+ * This class is a wrapper that dispatches to the MMU implementation of the
+ * effectively present MMU model. Features that only exist in one MMU type are
+ * accessed via the MMU object of that type (e.g., mmu.mmu030.crp).
+ */
 class MMU {
-
-    // The CPU this MMU belongs to
-    class Moira &moira;
-
-public:
 
     // The MMU that is effectively present (resolved by Moira from the CPU model
     // and the selected MMU model)
     MMUModel model = MMUModel::NONE;
 
-    // Root pointers (CPU and Supervisor)
-    u64 crp = 0;
-    u64 srp = 0;
-    
-    // Translation control register
-    u32 tc = 0;
-    
-    // Transparent translation register
-    u32 tt0 = 0;
-    u32 tt1 = 0;
-    
-    // MMU Status register
-    u32 mmusr = 0;
+public:
 
-    // Address translation cache
-    AtcEntry atc[ATC_ENTRIES] = { };
+    // MMU implementations
+    MMU030 mmu030;
 
 
     //
@@ -91,10 +49,10 @@ public:
 
 public:
 
-    MMU(Moira &ref) : moira(ref) { reset(); }
+    MMU(Moira &ref) : mmu030(ref) { }
 
     // Initializes all registers and invalidates the ATC
-    void reset();
+    void reset() { mmu030.reset(); }
 
 
     //
@@ -104,16 +62,11 @@ public:
 public:
 
     MMUModel getModel() const { return model; }
-    bool isPresent() const { return model != MMUModel::NONE; }
     void setModel(MMUModel newModel) { model = newModel; }
+    bool isPresent() const { return model != MMUModel::NONE; }
 
     // Indicates whether address translation is active
-    bool isEnabled() const { return (tc & 0x80000000) && isPresent(); }
-
-    // Setters
-    void setTC(u32 value);
-    void setTT0(u32 value);
-    void setTT1(u32 value);
+    bool isEnabled() const;
 
 
     //
@@ -122,67 +75,33 @@ public:
 
 public:
 
-    // Returns the page size mask as defined in the translation control register
-    u32 pageMask() const { return (1u << (tc >> 20 & 0xF)) - 1; }
-
-    // Returns the number of tables indexed by the logical address
-    int numTables() const;
-
-    // Checks whether an access matches one of the transparent translation registers
-    bool testTT(u32 addr, u8 fc, bool rw) const;
-
     // Translates a logical address to a physical address. If 'ci' is provided,
     // it is set if the access must bypass the on-chip caches.
     std::optional<u32> translate(u32 addr, u8 fc, bool write, bool *ci = nullptr);
-
-    // Creates an ATC entry for a logical address (PLOAD)
-    void load(u32 addr, u8 fc, bool write);
-
-    // Returns the MMUSR value and the address of the last descriptor (PTEST)
-    u32 test(u32 addr, u8 fc, bool write, u32 level, u32 &descrAddr);
-
-
-    //
-    // Managing the address translation cache
-    //
-
-public:
-
-    // Searches the ATC. Returns the line number of a matching entry.
-    std::optional<int> atcFind(u32 addr, u8 fc, bool write);
-
-    // Creates an ATC entry and returns its line number
-    int atcInsert(u32 addr, u8 fc, u32 physical, u32 status, bool ci);
-
-    // Invalidates one or more ATC entries
-    void atcFlush();
-    void atcFlush(u8 fcBase, u8 fcMask);
-    void atcFlushPage(u32 addr);
-    void atcFlushPage(u32 addr, u8 fcBase, u8 fcMask);
-
-private:
-
-    // Returns the first unused line, if any
-    std::optional<int> atcFindFree();
-
-    // Returns the first line without history bit, if any
-    std::optional<int> atcFindUnused();
-
-    // Marks an entry as recently used
-    void atcTouch(int line);
-
-    // Checks whether an access matches a single transparent translation register
-    static bool testTT(u32 ttx, u32 addr, u8 fc, bool rw);
-
-    // Walks the translation tables
-    u32 walk(u32 addr, u8 fc, bool write, MmuContext &c);
-
-    // Walks the translation tables without side effects (PTEST mode)
-    u32 walk(u32 addr, u8 fc, bool write, MmuContext &c, bool ptest, u32 level);
-
-    // Helpers called inside the walk function
-    u32 lookupShort(char table, u32 taddr, u32 offset, bool write, MmuContext &c);
-    u32 lookupLong(char table, u32 taddr, u32 offset, bool write, MmuContext &c);
 };
+
+inline bool
+MMU::isEnabled() const
+{
+    switch (model) {
+
+        case MMUModel::M68030: return mmu030.isEnabled();
+        default:               return false;
+    }
+}
+
+inline std::optional<u32>
+MMU::translate(u32 addr, u8 fc, bool write, bool *ci)
+{
+    switch (model) {
+
+        case MMUModel::M68030: return mmu030.translate(addr, fc, write, ci);
+
+        default:
+
+            if (ci) *ci = false;
+            return addr;
+    }
+}
 
 }

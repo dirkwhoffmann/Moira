@@ -119,9 +119,9 @@ static void setupShortTables(TestCPU &cpu)
     cpu.write32(tableB + 4 * 4, 0x6000 | 1 | 4);    // Write protected
     cpu.write32(tableB + 4 * 5, 0x7000 | 1);
 
-    cpu.mmu.crp = rootPointer(tableA, 2);
-    cpu.mmu.srp = cpu.mmu.crp;
-    cpu.mmu.tc  = TC_E | TC_4K_2L;
+    cpu.mmu.mmu030.crp = rootPointer(tableA, 2);
+    cpu.mmu.mmu030.srp = cpu.mmu.mmu030.crp;
+    cpu.mmu.mmu030.tc  = TC_E | TC_4K_2L;
     cpu.updateMmuFlag();
 
     // Bus error vector
@@ -132,7 +132,7 @@ static void testDisabled()
 {
     TestCPU cpu;
     setupShortTables(cpu);
-    cpu.mmu.tc = TC_4K_2L;                          // E bit is cleared
+    cpu.mmu.mmu030.tc = TC_4K_2L;                          // E bit is cleared
     cpu.updateMmuFlag();
 
     // Without the E bit, logical addresses are physical addresses
@@ -243,7 +243,7 @@ static void testFaults()
         TestCPU cpu;
         setupShortTables(cpu);
         cpu.write32(tableA + 4, tableB | 2);        // Make index 1 valid ...
-        cpu.mmu.crp = cpu.mmu.srp = rootPointer(tableA, 2, 0);   // ... but limit the index to 0
+        cpu.mmu.mmu030.crp = cpu.mmu.mmu030.srp = rootPointer(tableA, 2, 0);   // ... but limit the index to 0
         cpu.reg.a[0] = 0x00400000;
         cpu.run({ 0x2010 });
         CHECK(cpu.reg.pc0 == 0x1800);
@@ -256,8 +256,8 @@ static void testEarlyTermination()
     setupShortTables(cpu);
 
     // The root pointer terminates the lookup: Physical = Table address + Logical address
-    cpu.mmu.crp = cpu.mmu.srp = rootPointer(0x20000, 1);
-    cpu.mmu.tc  = TC_E | TC_4K_2L;
+    cpu.mmu.mmu030.crp = cpu.mmu.mmu030.srp = rootPointer(0x20000, 1);
+    cpu.mmu.mmu030.tc  = TC_E | TC_4K_2L;
     cpu.updateMmuFlag();
 
     // Move the code and the stack to the new location
@@ -297,7 +297,7 @@ static void testLongTables()
     page(4, 0x6000, 0x04);                          // Write protected
     page(5, 0x7000, 0x100);                         // Supervisor only
 
-    cpu.mmu.crp = cpu.mmu.srp = rootPointer(longA, 3);
+    cpu.mmu.mmu030.crp = cpu.mmu.mmu030.srp = rootPointer(longA, 3);
 
     // Read from a relocated page
     cpu.write32(0x5004, 0xCAFEBABE);
@@ -327,9 +327,9 @@ static void testSupervisorRootPointer()
 
     // With SRE set, the supervisor uses the SRP and the user uses the CRP.
     // The user map is empty.
-    cpu.mmu.tc  = TC_E | TC_SRE | TC_4K_2L;
+    cpu.mmu.mmu030.tc  = TC_E | TC_SRE | TC_4K_2L;
     cpu.updateMmuFlag();
-    cpu.mmu.crp = rootPointer(tableA + 0x800, 2);   // Table without valid descriptors
+    cpu.mmu.mmu030.crp = rootPointer(tableA + 0x800, 2);   // Table without valid descriptors
 
     // Supervisor mode
     cpu.write32(0x5004, 0xCAFEBABE);
@@ -347,7 +347,7 @@ static void testPMove()
     cpu.write32(0x2000, 0x7FFF0002);
     cpu.write32(0x2004, 0x00012340);
     cpu.run({ 0xF010, 0x4C00 });
-    CHECK(cpu.mmu.crp == 0x7FFF000200012340ULL);
+    CHECK(cpu.mmu.mmu030.crp == 0x7FFF000200012340ULL);
 
     // PMOVE CRP,(A0)
     cpu.reg.a[0] = 0x2100;
@@ -359,7 +359,7 @@ static void testPMove()
     cpu.write32(0x2000, 0x80010001);
     cpu.write32(0x2004, 0x00004560);
     cpu.run({ 0xF010, 0x4800 });
-    CHECK(cpu.mmu.srp == 0x8001000100004560ULL);
+    CHECK(cpu.mmu.mmu030.srp == 0x8001000100004560ULL);
     cpu.reg.a[0] = 0x2200;
     cpu.run({ 0xF010, 0x4A00 });
     CHECK(cpu.read32(0x2200) == 0x80010001 && cpu.read32(0x2204) == 0x00004560);
@@ -368,9 +368,9 @@ static void testPMove()
     cpu.reg.a[0] = 0x2300;
     cpu.write32(0x2300, 0x1234ABCD);
     cpu.run({ 0xF010, 0x0800 });
-    CHECK(cpu.mmu.tt0 == 0x1234ABCD);
+    CHECK(cpu.mmu.mmu030.tt0 == 0x1234ABCD);
     cpu.run({ 0xF010, 0x0C00 });
-    CHECK(cpu.mmu.tt1 == 0x1234ABCD);
+    CHECK(cpu.mmu.mmu030.tt1 == 0x1234ABCD);
     cpu.reg.a[0] = 0x2310;
     cpu.run({ 0xF010, 0x0A00 });
     CHECK(cpu.read32(0x2310) == 0x1234ABCD);
@@ -382,7 +382,7 @@ static void testPMove()
     cpu.reg.a[0] = 0x2400;
     cpu.write16(0x2400, 0xA5A5);
     cpu.run({ 0xF010, 0x6000 });
-    CHECK(cpu.mmu.mmusr == 0xA5A5);
+    CHECK(cpu.mmu.mmu030.mmusr == 0xA5A5);
     cpu.reg.a[0] = 0x2410;
     cpu.run({ 0xF010, 0x6200 });
     CHECK(cpu.read16(0x2410) == 0xA5A5);
@@ -394,21 +394,21 @@ static void testEnableDisable()
     cpu.reg.a[0] = 0x2000;
 
     // PMOVE (A0),TC: Enable the MMU with an identity mapping (early termination)
-    cpu.mmu.crp = cpu.mmu.srp = rootPointer(0, 1);
+    cpu.mmu.mmu030.crp = cpu.mmu.mmu030.srp = rootPointer(0, 1);
     cpu.write32(0x2000, TC_E | TC_4K_2L);
     cpu.run({ 0xF010, 0x4000 });
-    CHECK(cpu.mmu.tc == (TC_E | TC_4K_2L));
+    CHECK(cpu.mmu.mmu030.tc == (TC_E | TC_4K_2L));
     CHECK(cpu.enabled == 1 && cpu.disabled == 0);
 
     // The MMU is active: Redirect the root pointer
-    cpu.mmu.crp = cpu.mmu.srp = rootPointer(0x20000, 1);
+    cpu.mmu.mmu030.crp = cpu.mmu.mmu030.srp = rootPointer(0x20000, 1);
     cpu.write32(0x20000 + 0x2000, 0);
-    cpu.mmu.crp = cpu.mmu.srp = rootPointer(0, 1);
+    cpu.mmu.mmu030.crp = cpu.mmu.mmu030.srp = rootPointer(0, 1);
 
     // PMOVE (A0),TC: Disable the MMU
     cpu.write32(0x2000, TC_4K_2L);
     cpu.run({ 0xF010, 0x4000 });
-    CHECK(cpu.mmu.tc == TC_4K_2L);
+    CHECK(cpu.mmu.mmu030.tc == TC_4K_2L);
     CHECK(cpu.enabled == 1 && cpu.disabled == 1);
 
     // PMOVE TC,(A0)
@@ -417,11 +417,11 @@ static void testEnableDisable()
     CHECK(cpu.read32(0x2100) == TC_4K_2L);
 
     // RESET disables the MMU
-    cpu.mmu.tc = TC_E | TC_4K_2L;
+    cpu.mmu.mmu030.tc = TC_E | TC_4K_2L;
     cpu.updateMmuFlag();
-    cpu.mmu.crp = cpu.mmu.srp = rootPointer(0, 1);
+    cpu.mmu.mmu030.crp = cpu.mmu.mmu030.srp = rootPointer(0, 1);
     cpu.run({ 0x4E70 });
-    CHECK(!(cpu.mmu.tc & TC_E));
+    CHECK(!(cpu.mmu.mmu030.tc & TC_E));
 }
 
 static void testTransparentTranslation()
@@ -430,17 +430,17 @@ static void testTransparentTranslation()
     cpu.reg.a[0] = 0x2000;
 
     // TT0: Match addresses 0x20xxxxxx, ignore R/W, function code = 1 (user data)
-    cpu.mmu.tt0 = 0x20000000 | 1 << 15 | 1 << 8 | 1 << 4;
+    cpu.mmu.mmu030.tt0 = 0x20000000 | 1 << 15 | 1 << 8 | 1 << 4;
 
     // PTESTR #1,(A0),#0 with a matching address
     cpu.reg.a[0] = 0x20001234;
     cpu.run({ 0xF010, 0x8000 | 1 << 9 | 0x11 });
-    CHECK(cpu.mmu.mmusr & 0x40);
+    CHECK(cpu.mmu.mmu030.mmusr & 0x40);
 
     // Non-matching address
     cpu.reg.a[0] = 0x30001234;
     cpu.run({ 0xF010, 0x8000 | 1 << 9 | 0x11 });
-    CHECK(!(cpu.mmu.mmusr & 0x40));
+    CHECK(!(cpu.mmu.mmu030.mmusr & 0x40));
 }
 
 static void testTranslationBypass()
@@ -456,23 +456,23 @@ static void testTranslationBypass()
     CHECK(cpu.reg.d[0] == 0x22222222);
 
     // TT0: Address 0x00xxxxxx, any function code, read and write
-    cpu.mmu.tt0 = 1 << 15 | 1 << 8 | 7;
+    cpu.mmu.mmu030.tt0 = 1 << 15 | 1 << 8 | 7;
     cpu.run({ 0x2010 });
     CHECK(cpu.reg.d[0] == 0x11111111);
 
     // A different address base doesn't match
-    cpu.mmu.tt0 = 0x20000000 | 1 << 15 | 1 << 8 | 7;
+    cpu.mmu.mmu030.tt0 = 0x20000000 | 1 << 15 | 1 << 8 | 7;
     cpu.run({ 0x2010 });
     CHECK(cpu.reg.d[0] == 0x22222222);
 
     // Ignoring all address bits matches everything
-    cpu.mmu.tt0 = 0x20000000 | 0xFF << 16 | 1 << 15 | 1 << 8 | 7;
+    cpu.mmu.mmu030.tt0 = 0x20000000 | 0xFF << 16 | 1 << 15 | 1 << 8 | 7;
     cpu.run({ 0x2010 });
     CHECK(cpu.reg.d[0] == 0x11111111);
 
     // TT1 works the same way, and a read-only TT (RWM = 0, RW = 1) ignores writes
-    cpu.mmu.tt0 = 0;
-    cpu.mmu.tt1 = 1 << 15 | 1 << 9 | 0xFF << 16 | 7;
+    cpu.mmu.mmu030.tt0 = 0;
+    cpu.mmu.mmu030.tt1 = 1 << 15 | 1 << 9 | 0xFF << 16 | 7;
     cpu.run({ 0x2010 });
     CHECK(cpu.reg.d[0] == 0x11111111);
     cpu.reg.d[1] = 0xDEADBEEF;
@@ -480,7 +480,7 @@ static void testTranslationBypass()
     CHECK(cpu.read32(0x5004) == 0xDEADBEEF);
 
     // Function code mismatch
-    cpu.mmu.tt1 = 1 << 15 | 1 << 8 | 0xFF << 16 | 1 << 4;   // User data only
+    cpu.mmu.mmu030.tt1 = 1 << 15 | 1 << 8 | 0xFF << 16 | 1 << 4;   // User data only
     cpu.run({ 0x2010 });                        // Supervisor data access
     CHECK(cpu.reg.d[0] == 0xDEADBEEF);
 }
@@ -489,7 +489,7 @@ static void testPTest()
 {
     TestCPU cpu;
     setupShortTables(cpu);
-    cpu.mmu.tc = TC_E | TC_4K_2L;
+    cpu.mmu.mmu030.tc = TC_E | TC_4K_2L;
     cpu.updateMmuFlag();
 
     // PTESTR #1,(A0),#2,A1 (user data, level 2, return the descriptor address)
@@ -501,22 +501,22 @@ static void testPTest()
 
     // Valid page: Two levels, no error bits
     ptest(0x2000, true, 2, true);
-    CHECK((cpu.mmu.mmusr & 0xEE07) == 2);
+    CHECK((cpu.mmu.mmu030.mmusr & 0xEE07) == 2);
     CHECK(cpu.reg.a[1] == tableB + 4 * 2);
 
     // Level 1 stops at the table descriptor
     ptest(0x2000, true, 1, true);
-    CHECK((cpu.mmu.mmusr & 0xEE07) == 1);
+    CHECK((cpu.mmu.mmu030.mmusr & 0xEE07) == 1);
     CHECK(cpu.reg.a[1] == tableA);
 
     // Invalid page
     ptest(0x3000, true, 7, true);
-    CHECK((cpu.mmu.mmusr & 0x0400) == 0x0400);
+    CHECK((cpu.mmu.mmu030.mmusr & 0x0400) == 0x0400);
     CHECK(cpu.reg.a[1] == tableB + 4 * 3);
 
     // Write-protected page
     ptest(0x4000, false, 7, false);
-    CHECK((cpu.mmu.mmusr & 0x0800) == 0x0800);
+    CHECK((cpu.mmu.mmu030.mmusr & 0x0800) == 0x0800);
     CHECK(cpu.reg.a[1] == 0xDEAD0000);              // A bit not set
 
     // PTEST doesn't modify the tables
@@ -526,7 +526,7 @@ static void testPTest()
 
     // Level 0 without TT: The ATC is empty
     ptest(0x2000, true, 0, false);
-    CHECK((cpu.mmu.mmusr & 0x0400) == 0x0400);
+    CHECK((cpu.mmu.mmu030.mmusr & 0x0400) == 0x0400);
 
     // The A bit is illegal for level 0
     cpu.write32(4 * 4, 0x1900);                     // Illegal instruction vector
@@ -546,7 +546,7 @@ static void testATC()
     auto ptest0 = [&](u32 addr, int fc) {
         cpu.reg.a[0] = addr;
         cpu.run({ 0xF010, u16(0x8000 | 1 << 9 | 0x10 | fc) });
-        return cpu.mmu.mmusr;
+        return cpu.mmu.mmu030.mmusr;
     };
 
     // Before the first access, the ATC doesn't know the page
@@ -665,7 +665,7 @@ static void testBusFaultFrames()
 
         // Map the page and return
         cpu.write32(tableB + 4 * 3, 0x8000 | 1);
-        cpu.mmu.atcFlush();
+        cpu.mmu.mmu030.atcFlush();
         cpu.execute();                              // RTE
         CHECK(cpu.reg.sp == TestCPU::stackStart);
         CHECK(cpu.reg.pc0 == TestCPU::codeStart);
@@ -696,7 +696,7 @@ static void testBusFaultFrames()
 
         // Map the page and return. The memory is updated exactly once.
         cpu.write32(tableB + 4 * 6, 0x9000 | 1);
-        cpu.mmu.atcFlush();
+        cpu.mmu.mmu030.atcFlush();
         cpu.execute();                              // RTE
         cpu.execute();                              // ADDQ.L #1,(A1)
         CHECK(cpu.read32(0x5000) == 42);
@@ -722,6 +722,31 @@ static void testModels()
     CHECK(cpu.hasMMU());
     cpu.setModel(CPUModel::M68020);
     CHECK(!cpu.hasMMU());
+
+    // BUILTIN resolves to the MMU type of the CPU
+    {
+        TestCPU c030(CPUModel::M68030);
+        CHECK(c030.mmu.getModel() == MMUModel::M68030);
+        TestCPU c040(CPUModel::M68040);
+        CHECK(c040.mmu.getModel() == MMUModel::M68040);
+        TestCPU c020(CPUModel::M68020);
+        CHECK(c020.mmu.getModel() == MMUModel::NONE);
+    }
+
+    // Selecting a type only has an effect if the CPU provides it
+    {
+        TestCPU c030(CPUModel::M68030);
+        c030.setMmuModel(MMUModel::M68030);
+        CHECK(c030.mmu.getModel() == MMUModel::M68030);
+        c030.setMmuModel(MMUModel::M68040);
+        CHECK(c030.mmu.getModel() == MMUModel::NONE);
+
+        TestCPU c040(CPUModel::M68040);
+        c040.setMmuModel(MMUModel::M68030);
+        CHECK(c040.mmu.getModel() == MMUModel::NONE);
+        c040.setMmuModel(MMUModel::M68040);
+        CHECK(c040.mmu.getModel() == MMUModel::M68040);
+    }
 }
 
 static constexpr u32 dataBase = 0x20000;
@@ -825,7 +850,7 @@ static void testDataCache()
 
         // Invalidate the page, the cached longword is still reachable
         cpu.write32(tableB + 4 * 2, 0);
-        cpu.mmu.atcFlush();
+        cpu.mmu.mmu030.atcFlush();
         cpu.run({ 0x2010 });
         CHECK(cpu.reg.d[0] == 0xCAFEBABE);
         CHECK(cpu.reg.sp == TestCPU::stackStart);   // No exception
