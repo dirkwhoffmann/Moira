@@ -785,6 +785,9 @@ Moira::write(u32 addr, u32 val)
 template <Core C, Size S, Flags F> void
 Moira::writeBus(u32 addr, u32 val, bool *ci)
 {
+    // Remember the value for the bus fault frame (68030)
+    if constexpr (C == Core::C68020) busWriteData = val;
+
     // Derive the physical address
     addr = translate<C, true, S>(addr, readFC(), ci);
 

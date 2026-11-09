@@ -167,14 +167,14 @@ Moira::writeStackFrame1001(u16 sr, u32 pc, u32 ia, u16 nr)
 }
 
 template <Core C> void
-Moira::writeStackFrame1010(u16 sr, u32 pc, u16 nr, u16 ssw, u32 addr)
+Moira::writeStackFrame1010(u16 sr, u32 pc, u16 nr, u16 ssw, u32 addr, u32 dataOut, u16 stageC, u16 stageB)
 {
     // Internal registers
     push<C, Word>(0);
     push<C, Word>(0);
 
     // Data output buffer
-    push<C, Long>(0);
+    push<C, Long>(dataOut);
 
     // Internal registers
     push<C, Word>(0);
@@ -184,10 +184,10 @@ Moira::writeStackFrame1010(u16 sr, u32 pc, u16 nr, u16 ssw, u32 addr)
     push<C, Long>(addr);
 
     // Instruction pipe stage B
-    push<C, Word>(0);
+    push<C, Word>(stageB);
 
     // Instruction pipe stage C
-    push<C, Word>(0);
+    push<C, Word>(stageC);
 
     // Special status word
     push<C, Word>(ssw);
@@ -206,7 +206,7 @@ Moira::writeStackFrame1010(u16 sr, u32 pc, u16 nr, u16 ssw, u32 addr)
 }
 
 template <Core C> void
-Moira::writeStackFrame1011(u16 sr, u32 pc, u32 ia, u16 nr, u16 ssw, u32 addr)
+Moira::writeStackFrame1011(u16 sr, u32 pc, u32 ia, u16 nr, u16 ssw, u32 addr, u32 dataOut, u16 stageC, u16 stageB)
 {
     // Internal registers
     push<C, Long>(0);
@@ -240,7 +240,7 @@ Moira::writeStackFrame1011(u16 sr, u32 pc, u32 ia, u16 nr, u16 ssw, u32 addr)
     push<C, Long>(0);
 
     // Data output buffer
-    push<C, Long>(0);
+    push<C, Long>(dataOut);
 
     // Internal registers
     push<C, Word>(0);
@@ -250,10 +250,10 @@ Moira::writeStackFrame1011(u16 sr, u32 pc, u32 ia, u16 nr, u16 ssw, u32 addr)
     push<C, Long>(addr);
 
     // Instruction pipe stage B
-    push<C, Word>(0);
+    push<C, Word>(stageB);
 
     // Instruction pipe stage C
-    push<C, Word>(0);
+    push<C, Word>(stageC);
 
     // Special status register
     push<C, Word>(ssw);
@@ -339,10 +339,22 @@ Moira::execBusError(StackFrame frame, int delay)
          * and the logical fault address. A fault in a write cycle is reported
          * with the short format ($A), all others with the long format ($B).
          */
-        if (cpuModel >= CPUModel::M68EC030 && !(frame.ssw & SSW030::RW) && (frame.ssw & SSW030::DF)) {
-            writeStackFrame1010<C>(status, reg.pc0, 2, frame.ssw, frame.addr);
-        } else if (cpuModel >= CPUModel::M68EC030) {
-            writeStackFrame1011<C>(status, frame.pc, reg.pc0, 2, frame.ssw, frame.addr);
+        if (cpuModel >= CPUModel::M68EC030) {
+
+            // The pipe stages hold the two instruction words behind the opcode
+            bool supervisor = status & 0x2000;
+            u16 stageC = peekProgramWord(reg.pc0 + 2, supervisor);
+            u16 stageB = peekProgramWord(reg.pc0 + 4, supervisor);
+
+            // The data output buffer holds the value of a faulting write
+            bool write = !(frame.ssw & SSW030::RW) && (frame.ssw & SSW030::DF);
+            u32 dataOut = write ? busWriteData : 0;
+
+            if (write) {
+                writeStackFrame1010<C>(status, reg.pc0, 2, frame.ssw, frame.addr, dataOut, stageC, stageB);
+            } else {
+                writeStackFrame1011<C>(status, frame.pc, reg.pc0, 2, frame.ssw, frame.addr, dataOut, stageC, stageB);
+            }
         } else {
             writeStackFrame1011<C>(status, frame.pc, reg.pc0, 2);
         }
@@ -361,6 +373,21 @@ Moira::execBusError(StackFrame frame, int delay)
 // The following definitions are not templated. They are compiled into the
 // main translation unit only (see MoiraCore_cpp.h).
 #ifdef MOIRA_MAIN_TU
+
+u16
+Moira::peekProgramWord(u32 addr, bool supervisor)
+{
+    addr &= addrMask();
+
+    if (mmu.isEnabled()) {
+
+        auto phys = mmu.translate(addr, supervisor ? FC::SUPERVISOR_PROG : FC::USER_PROG, false);
+        if (!phys) return 0;
+        addr = *phys & addrMask();
+    }
+
+    return read16(addr);
+}
 
 void
 Moira::execException(M68kException exc, int nr)

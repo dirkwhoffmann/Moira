@@ -610,10 +610,13 @@ static void testBusFaultFrames()
         TestCPU cpu;
         setupShortTables(cpu);
         cpu.reg.a[0] = 0x3000;
-        cpu.run({ 0x2018 });                        // MOVE.L (A0)+,D0
+        cpu.run({ 0x2018, 0xABCD, 0xEF01 });        // MOVE.L (A0)+,D0
 
         u32 sp = cpu.reg.sp;
         CHECK(sp == TestCPU::stackStart - 92);
+        CHECK(cpu.read32(sp + 0x18) == 0);                              // Data output buffer
+        CHECK(cpu.read16(sp + 0x0C) == 0xABCD);                         // Instruction pipe stage C
+        CHECK(cpu.read16(sp + 0x0E) == 0xEF01);                         // Instruction pipe stage B
         CHECK(cpu.read16(sp + 6) == (0xB000 | 2 * 4));
         CHECK(cpu.read32(sp + 2) == TestCPU::codeStart);                // Restart address
         CHECK(cpu.read16(sp + 0x0A) == (SSW030::DF | SSW030::RW | SSW030::SIZ_L | FC::SUPERVISOR_DATA));
@@ -627,10 +630,13 @@ static void testBusFaultFrames()
         setupShortTables(cpu);
         cpu.reg.a[0] = 0x4000;
         cpu.reg.d[1] = 0x22222222;
-        cpu.run({ 0x20C1 });                        // MOVE.L D1,(A0)+
+        cpu.run({ 0x20C1, 0x1234, 0x5678 });        // MOVE.L D1,(A0)+
 
         u32 sp = cpu.reg.sp;
         CHECK(sp == TestCPU::stackStart - 32);
+        CHECK(cpu.read32(sp + 0x18) == 0x22222222);                     // Data output buffer
+        CHECK(cpu.read16(sp + 0x0C) == 0x1234);                         // Instruction pipe stage C
+        CHECK(cpu.read16(sp + 0x0E) == 0x5678);                         // Instruction pipe stage B
         CHECK(cpu.read16(sp + 6) == (0xA000 | 2 * 4));
         CHECK(cpu.read16(sp + 0x0A) == (SSW030::DF | SSW030::SIZ_L | FC::SUPERVISOR_DATA));
         CHECK(cpu.read32(sp + 0x10) == 0x4000);

@@ -58,6 +58,9 @@ protected:
      */
     Registers savedReg;
     bool savedRegValid = false;
+
+    // The value of the most recent write access (reported in bus fault frames)
+    u32 busWriteData = 0;
     
     // Instruction set used by the disassembler
     CPUModel dasmModel = CPUModel::M68000;
@@ -190,6 +193,9 @@ protected:
 
     // Rolls the registers back to the state saved at the start of the instruction
     void restoreRegisters();
+
+    // Reads a program word without raising a bus error (returns 0 if the word is unreachable)
+    u16 peekProgramWord(u32 addr, bool supervisor);
 
     // Remembers the registers at the beginning of an instruction (see savedReg)
     void saveRegisters()
