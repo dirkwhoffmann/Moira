@@ -70,12 +70,6 @@ Cache::validCount(u32 addr) const
     return count;
 }
 
-bool
-Cache::burstCapable() const
-{
-    return moira.cpuModel == CPUModel::M68030 || moira.cpuModel == CPUModel::M68EC030;
-}
-
 void
 Cache::flush()
 {
@@ -86,22 +80,6 @@ void
 Cache::invalidate(u32 addr)
 {
     valid[slot(addr)] = false;
-}
-
-u32
-Cache::busReadLong(u32 addr)
-{
-    // Filling a cache entry is a longword fetch, so it is split into as many
-    // bus cycles as the addressed port provides (see dsack). The cycle penalty
-    // for a narrow port is accounted for by the caller.
-
-    switch (portSize(moira.dsack(addr))) {
-
-        case 4:  return moira.read32(addr);
-        case 2:  return u32(moira.read16(addr)) << 16 | moira.read16(addr + 2);
-        default: return u32(moira.read8(addr))  << 24 | u32(moira.read8(addr + 1)) << 16 |
-                        u32(moira.read8(addr + 2)) << 8 | u32(moira.read8(addr + 3));
-    }
 }
 
 void
@@ -124,9 +102,9 @@ Cache::burstFill(u32 logical, u32 physical, bool supervisor)
 }
 
 bool
-ICache::enabled() const
+ICache::active() const
 {
-    return moira.reg.cacr & CACR::E;
+    return emulated && (moira.reg.cacr & CACR::E);
 }
 
 bool
@@ -138,7 +116,7 @@ ICache::frozen() const
 bool
 ICache::burstEnabled() const
 {
-    return moira.reg.cacr & CACR::IBE;
+    return getLayout() == Layout::M68030 && (moira.reg.cacr & CACR::IBE);
 }
 
 void
@@ -170,14 +148,8 @@ ICache::fill(u32 base, u32 &phys)
     bool supervisor = moira.reg.sr.s;
     phys = base;
 
-    // The cache is only consulted while it is enabled. Bit 0 (E) gates the
-    // lookup, not just the fill: clearing it has to stop valid lines from
-    // being served, or the CPU would keep executing stale opcodes after a
-    // program switches the cache off. Bit 1 (F) is deliberately not part of
-    // this condition. Freezing only prevents new entries from being
-    // allocated; entries that are already valid keep hitting.
 
-    if (enabled() && hit(base, supervisor)) {
+    if (active() && hit(base, supervisor)) {
 
         //
         // Cache hit
@@ -185,47 +157,52 @@ ICache::fill(u32 base, u32 &phys)
 
         latch = { base, read(base) };
         return false;
-    }
-
-    //
-    // Cache miss
-    //
-
-    // The logical address is translated now. The MMU provides the physical
-    // address and tells if the page is cache-inhibited.
-    bool ci;
-    phys = moira.translate<Core::C68020, false, Word>(base, moira.readFC(), &ci) & moira.addrMask() & ~3;
-
-    u32 value = busReadLong(phys);
-
-    if (enabled() && !frozen() && !ci) {
-
-        insert(base, supervisor, value);
-
-        if (burstEnabled() && burstCapable() && validCount(base) == 1 && portSize(moira.dsack(phys)) == 4) {
-            burstFill(base, phys, supervisor);
+    
+    } else {
+        
+        //
+        // Cache miss
+        //
+        
+        bool ci;
+        
+        // Read from memory
+        phys = moira.translate<Core::C68020, false, Word>(base, moira.readFC(), &ci) & moira.addrMask() & ~3;
+        u32 value = moira.readLongSplit<Core::C68020>(phys);
+        
+        // Update the cache
+        if (active() && !frozen() && !ci) {
+            
+            insert(base, supervisor, value);
+            
+            if (burstEnabled() && validCount(base) == 1 && portSize(moira.dsack(phys)) == 4) {
+                burstFill(base, phys, supervisor);
+            }
         }
+     
+        latch = { base, value };
+        return true;
     }
-
-    // Updated last, so that a read that throws leaves the latch
-    // untouched instead of marking stale data as valid.
-    latch = { base, value };
-
-    return true;
 }
 
 u16
 ICache::fetch(u32 addr, bool &busAccess, u32 &phys)
 {
-#if MOIRA_EMULATE_ICACHE
+    if (!emulated) {
+
+        // Every fetch behaves like a permanent cache miss
+        busAccess = true;
+        phys = moira.translate<Core::C68020, false, Word>(addr, moira.readFC());
+        return moira.read16(phys);
+    }
 
     auto base = addr & moira.addrMask() & ~3;
-    phys = addr;
 
     if (latch.addr == base) {
 
         // Direct hit
         busAccess = false;
+        phys = addr;
 
     } else {
 
@@ -234,28 +211,12 @@ ICache::fetch(u32 addr, bool &busAccess, u32 &phys)
     }
 
     return (addr & 2) ? u16(latch.data & 0xFFFF) : u16(latch.data >> 16);
-
-#else
-
-    // Every fetch behaves like a permanent cache miss
-    busAccess = true;
-    phys = moira.translate<Core::C68020, false, Word>(addr, moira.readFC());
-    return moira.read16(phys);
-
-#endif
 }
 
 bool
-DCache::present() const
+DCache::active() const
 {
-    // A data cache is only emulated for the 68030
-    return burstCapable();
-}
-
-bool
-DCache::enabled() const
-{
-    return present() && (moira.reg.cacr & CACR::ED);
+    return emulated && (moira.reg.cacr & CACR::ED);
 }
 
 bool
@@ -267,13 +228,13 @@ DCache::frozen() const
 bool
 DCache::burstEnabled() const
 {
-    return moira.reg.cacr & CACR::DBE;
+    return getLayout() == Layout::M68030 && (moira.reg.cacr & CACR::DBE);
 }
 
 void
 DCache::cacrDidChange(u32 value)
 {
-    if (!present()) return;
+    if (!emulated) return;
 
     // Setting the CED bit invalidates the entry for the address in CAAR
     if (value & CACR::CED) invalidate(moira.reg.caar);
@@ -305,13 +266,13 @@ DCache::readLong(u32 addr, u8 fc, u32 &result)
     if (ci) return false;
 
     // Load the entire longword, regardless of the size of the access
-    result = busReadLong(phys);
+    result = moira.readLongSplit<Core::C68020>(phys);
 
     if (!frozen()) {
 
         insert(addr, supervisor, result);
 
-        if (burstEnabled() && burstCapable() && validCount(addr) == 1 && portSize(moira.dsack(phys)) == 4) {
+        if (burstEnabled() && validCount(addr) == 1 && portSize(moira.dsack(phys)) == 4) {
             burstFill(addr, phys, supervisor);
         }
     }

@@ -369,11 +369,6 @@ struct PrefetchQueue {
     u16 ird;                    // The instruction currently being executed
 };
 
-struct CacheLatch {
-
-    u32 addr;
-    u32 data;
-};
 
 struct CycleBudget { // 68020 only
 

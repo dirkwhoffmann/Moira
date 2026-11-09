@@ -85,6 +85,18 @@
 #define MOIRA_EMULATE_ICACHE true
 #endif
 
+/* Set to true to emulate the 68030 data cache.
+ *
+ * The 68030 caches data accesses in a small on-chip cache (see Cache.h). When
+ * this option is disabled, every data access goes straight to the bus. This
+ * setting has no effect for other supported models, which have no data cache.
+ *
+ * Enable to improve accuracy, disable to gain speed.
+ */
+#ifndef MOIRA_EMULATE_DCACHE
+#define MOIRA_EMULATE_DCACHE true
+#endif
+
 /* Set to true to enable the disassembler.
  *
  * The disassembler requires a jump table which consumes about 1MB of memory,

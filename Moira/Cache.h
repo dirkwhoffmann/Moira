@@ -15,8 +15,9 @@ namespace MOIRA_NAMESPACE {
  *
  * The 68020 has an instruction cache of 64 longwords. The 68030 has an
  * instruction cache and a data cache of 256 bytes each, organized as 16 lines
- * of four longwords. The 68040 models use the 68030 layout for the instruction
- * cache. A data cache is only emulated for the 68030.
+ * of four longwords. The caches of the 68040 models are not emulated. They are
+ * physically tagged, 4-way set-associative and support copyback mode, which is
+ * a different design.
  *
  * Organization
  *
@@ -30,7 +31,7 @@ namespace MOIRA_NAMESPACE {
  * Two layouts exist. They differ in the line size only:
  *
  *   68020:     64 lines of 1 longword   index = addr[7:2]
- *   68030/040: 16 lines of 4 longwords  index = addr[7:4], longword = addr[3:2]
+ *   68030:      16 lines of 4 longwords  index = addr[7:4], longword = addr[3:2]
  *
  * Each longword has its own valid bit, so a line can be partially filled, e.g.,
  * after a miss that is served by a single longword transfer. Allocating a
@@ -98,10 +99,10 @@ class Cache {
     // Maximum number of cached longwords
     static constexpr int capacity = 64;
 
+protected:
+
     // Supported layouts
     enum class Layout { M68020, M68030 };
-
-protected:
 
     // The CPU this cache belongs to
     class Moira &moira;
@@ -146,16 +147,16 @@ public:
     int numLongs() const { return layout == Layout::M68030 ? 4 : 1; }
     int numLines() const { return capacity / numLongs(); }
 
-    // Indicates whether the emulated CPU model has this cache
-    virtual bool present() const = 0;
+    // Indicates whether this cache is part of the emulated CPU
+    bool emulated = false;
 
-    // Indicates whether the cache is present and enabled in the CACR
-    virtual bool enabled() const = 0;
+    // Indicates whether the cache is emulated and enabled in the CACR
+    virtual bool active() const = 0;
 
     // Indicates whether the CACR freezes the cache (no new entries are allocated)
     virtual bool frozen() const = 0;
 
-    // Indicates whether the CACR enables burst fills
+    // Indicates whether burst fills are enabled (requires the 68030 layout and the burst bit in the CACR)
     virtual bool burstEnabled() const = 0;
 
     //
@@ -184,6 +185,8 @@ protected:
     // Accessing entries
     //
     
+protected:
+    
     // Checks if the longword of an address is valid and carries the matching tag
     bool hit(u32 addr, bool supervisor) const;
 
@@ -196,6 +199,9 @@ protected:
     // Stores a longword
     void insert(u32 addr, bool supervisor, u32 value);
 
+    // Fetches the missing longwords of a line right behind the longword that has just been loaded
+    void burstFill(u32 logical, u32 physical, bool supervisor);
+    
     
     //
     // Invalidating entries
@@ -217,18 +223,6 @@ protected:
     // Returns the number of valid longwords in the line an address maps to
     int validCount(u32 addr) const;
 
-    
-
-
-    // Indicates whether the CPU model supports burst fills (68030)
-    bool burstCapable() const;
-
-    // Reads an aligned longword from the bus, split according to the width of the addressed port
-    u32 busReadLong(u32 addr);
-
-    // Fetches the missing longwords of a line right behind the longword that has just been loaded
-    void burstFill(u32 logical, u32 physical, bool supervisor);
-
 
     //
     // Delegates
@@ -240,19 +234,20 @@ public:
     virtual void cacrDidChange(u32 value) = 0;
 
     // Informs the cache that CAAR contains a new value
-    virtual void caarDidChange(u32 value);
+    virtual void caarDidChange(u32 value) = 0;
 
     
 };
 
 
-/* Instruction cache (68020 and up)
- *
- * Moira keeps a one-entry latch in front of the cache that records the
- * longword fetched last.
- */
+//
+// Instruction cache (68020 and up)
+//
+
 class ICache final : public Cache {
 
+    struct CacheLatch { u32 addr; u32 data; };
+    
     // The longword that has been fetched last
     CacheLatch latch = { 0xffffffff, 0xffffffff };
 
@@ -260,8 +255,7 @@ public:
 
     using Cache::Cache;
 
-    bool present() const override { return true; }
-    bool enabled() const override;
+    bool active() const override;
     bool frozen() const override;
     bool burstEnabled() const override;
 
@@ -272,10 +266,7 @@ public:
     // Forgets the longword that has been fetched last
     void flushLatch() { latch = { 0xffffffff, 0xffffffff }; }
 
-    /* Reads an instruction word via the latch and the cache. On a miss, the
-     * line is filled from the bus. The function reports whether a bus access
-     * was made and returns the physical address.
-     */
+    // Reads an instruction word via the latch and the cache
     u16 fetch(u32 addr, bool &busAccess, u32 &phys);
 
 private:
@@ -285,24 +276,27 @@ private:
 };
 
 
-/* Data cache (68030)
- */
+//
+// Data cache (68030)
+//
+
 class DCache final : public Cache {
 
 public:
 
     using Cache::Cache;
 
-    bool present() const override;
-    bool enabled() const override;
+    bool active() const override;
     bool frozen() const override;
     bool burstEnabled() const override;
 
     void cacrDidChange(u32 value) override;
     void caarDidChange(u32 value) override;
 
-    /* Reads an aligned longword. Returns false if the access has to bypass
-     * the cache (the page is cache-inhibited). May throw a bus error.
+    /* Reads an aligned longword
+     *
+     * Returns false if the access has to bypass the cache, because the page
+     * is cache-inhibited. May throw a bus error.
      */
     bool readLong(u32 addr, u8 fc, u32 &result);
 

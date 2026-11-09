@@ -35,6 +35,7 @@ using namespace Flag;
 // Instantiations used by the caches (see Cache.cpp)
 template u32 Moira::translate<Core::C68020, false, Word>(u32, u8, bool *);
 template u32 Moira::translate<Core::C68020, false, Long>(u32, u8, bool *);
+template u32 Moira::readLongSplit<Core::C68020, 0>(u32);
 
 Moira::Moira()
 {
@@ -109,7 +110,13 @@ Moira::setModel(CPUModel cpuModel, CPUModel dasmModel)
         reg.cacr &= cacrMask();
         iCache.reset(cpuModel);
         dCache.reset(cpuModel);
-        dCacheOn = dCache.enabled();
+        
+        // The 68040 caches are not emulated. They are physically tagged, 4-way
+        // set-associative and support copyback mode. Without them, the CPU
+        // behaves like it had perfectly coherent caches.
+        iCache.emulated = MOIRA_EMULATE_ICACHE && cpuModel >= CPUModel::M68EC020 && cpuModel < CPUModel::M68EC040;
+        dCache.emulated = MOIRA_EMULATE_DCACHE && (cpuModel == CPUModel::M68030 || cpuModel == CPUModel::M68EC030);
+        dCacheOn = dCache.active();
         flags &= ~State::LOOPING;
     }
 }
@@ -254,7 +261,10 @@ Moira::cacrMask() const
 
         case CPUModel::M68020: case CPUModel::M68EC020: return 0x0003;
         case CPUModel::M68030: case CPUModel::M68EC030: return 0x3313;
-        
+
+        // Instruction cache enable (bit 15) and data cache enable (bit 31)
+        case CPUModel::M68EC040: case CPUModel::M68LC040: case CPUModel::M68040: return 0x80008000;
+
         default:
             return 0xFFFF;
     }
@@ -685,7 +695,7 @@ Moira::setCACR(u32 val)
     dCache.cacrDidChange(val);
 
     reg.cacr = val & cacrMask();
-    dCacheOn = dCache.enabled();
+    dCacheOn = dCache.active();
     didChangeCACR(val);
 }
 
