@@ -7,7 +7,6 @@
 
 #include "../MoiraConfig.h"
 #include "FPU.h"
-#include "FloatMath.h"
 #include <bit>
 
 namespace MOIRA_NAMESPACE {
@@ -397,133 +396,133 @@ MFloat80
 FPU::fsin(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return FloatMath::sin(env, value);
+    return env.sin(value);
 }
 
 MFloat80
 FPU::fcos(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return FloatMath::cos(env, value);
+    return env.cos(value);
 }
 
 MFloat80
 FPU::ftan(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return FloatMath::tan(env, value);
+    return env.tan(value);
 }
 
 MFloat80
 FPU::fasin(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return FloatMath::asin(env, value);
+    return env.asin(value);
 }
 
 MFloat80
 FPU::facos(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return FloatMath::acos(env, value);
+    return env.acos(value);
 }
 
 MFloat80
 FPU::fatan(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return FloatMath::atan(env, value);
+    return env.atan(value);
 }
 
 MFloat80
 FPU::fsinh(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return FloatMath::sinh(env, value);
+    return env.sinh(value);
 }
 
 MFloat80
 FPU::fcosh(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return FloatMath::cosh(env, value);
+    return env.cosh(value);
 }
 
 MFloat80
 FPU::ftanh(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return FloatMath::tanh(env, value);
+    return env.tanh(value);
 }
 
 MFloat80
 FPU::fatanh(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return FloatMath::atanh(env, value);
+    return env.atanh(value);
 }
 
 MFloat80
 FPU::fetox(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return FloatMath::etox(env, value);
+    return env.etox(value);
 }
 
 MFloat80
 FPU::fetoxm1(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return FloatMath::etoxm1(env, value);
+    return env.etoxm1(value);
 }
 
 MFloat80
 FPU::ftwotox(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return FloatMath::twotox(env, value);
+    return env.twotox(value);
 }
 
 MFloat80
 FPU::ftentox(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return FloatMath::tentox(env, value);
+    return env.tentox(value);
 }
 
 MFloat80
 FPU::flogn(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return FloatMath::logn(env, value);
+    return env.logn(value);
 }
 
 MFloat80
 FPU::flognp1(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return FloatMath::lognp1(env, value);
+    return env.lognp1(value);
 }
 
 MFloat80
 FPU::flog2(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return FloatMath::log2(env, value);
+    return env.log2(value);
 }
 
 MFloat80
 FPU::flog10(const MFloat80 &value)
 {
     if (auto nan = resolveNan(value)) return *nan;
-    return FloatMath::log10(env, value);
+    return env.log10(value);
 }
 
 void
 FPU::fsincos(const MFloat80 &value, MFloat80 &sine, MFloat80 &cosine)
 {
     if (auto nan = resolveNan(value)) { sine = cosine = *nan; return; }
-    FloatMath::sincos(env, value, sine, cosine);
+    env.sincos(value, sine, cosine);
 }
 
 MFloat80

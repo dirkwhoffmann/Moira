@@ -5,7 +5,7 @@
 // Published under the terms of the MIT License
 // -----------------------------------------------------------------------------
 
-#include "FloatMath.h"
+#include "FpuEnv.h"
 #include "Wide.h"
 #include <algorithm>
 #include <bit>
@@ -562,9 +562,9 @@ sincos_(FpuEnv &env, const MFloat80 &x, MFloat80 &sine, MFloat80 &cosine)
 }
 
 void
-FloatMath::sincos(FpuEnv &env, const MFloat80 &x, MFloat80 &sine, MFloat80 &cosine)
+FpuEnv::sincos(const MFloat80 &x, MFloat80 &sine, MFloat80 &cosine)
 {
-    sincos_(env, x, sine, cosine);
+    sincos_(*this, x, sine, cosine);
 }
 
 namespace {
@@ -597,9 +597,9 @@ sin_(FpuEnv &env, const MFloat80 &x)
 }
 
 MFloat80
-FloatMath::sin(FpuEnv &env, const MFloat80 &x)
+FpuEnv::sin(const MFloat80 &x)
 {
-    return sin_(env, x);
+    return sin_(*this, x);
 }
 
 static MFloat80
@@ -615,9 +615,9 @@ cos_(FpuEnv &env, const MFloat80 &x)
 }
 
 MFloat80
-FloatMath::cos(FpuEnv &env, const MFloat80 &x)
+FpuEnv::cos(const MFloat80 &x)
 {
-    return cos_(env, x);
+    return cos_(*this, x);
 }
 
 static MFloat80
@@ -639,9 +639,9 @@ tan_(FpuEnv &env, const MFloat80 &x)
 }
 
 MFloat80
-FloatMath::tan(FpuEnv &env, const MFloat80 &x)
+FpuEnv::tan(const MFloat80 &x)
 {
-    return tan_(env, x);
+    return tan_(*this, x);
 }
 
 
@@ -659,9 +659,9 @@ atan_(FpuEnv &env, const MFloat80 &x)
 }
 
 MFloat80
-FloatMath::atan(FpuEnv &env, const MFloat80 &x)
+FpuEnv::atan(const MFloat80 &x)
 {
-    return atan_(env, x);
+    return atan_(*this, x);
 }
 
 static MFloat80
@@ -683,9 +683,9 @@ asin_(FpuEnv &env, const MFloat80 &x)
 }
 
 MFloat80
-FloatMath::asin(FpuEnv &env, const MFloat80 &x)
+FpuEnv::asin(const MFloat80 &x)
 {
-    return asin_(env, x);
+    return asin_(*this, x);
 }
 
 static MFloat80
@@ -705,9 +705,9 @@ acos_(FpuEnv &env, const MFloat80 &x)
 }
 
 MFloat80
-FloatMath::acos(FpuEnv &env, const MFloat80 &x)
+FpuEnv::acos(const MFloat80 &x)
 {
-    return acos_(env, x);
+    return acos_(*this, x);
 }
 
 
@@ -740,9 +740,9 @@ sinh_(FpuEnv &env, const MFloat80 &x)
 }
 
 MFloat80
-FloatMath::sinh(FpuEnv &env, const MFloat80 &x)
+FpuEnv::sinh(const MFloat80 &x)
 {
-    return sinh_(env, x);
+    return sinh_(*this, x);
 }
 
 static MFloat80
@@ -757,9 +757,9 @@ cosh_(FpuEnv &env, const MFloat80 &x)
 }
 
 MFloat80
-FloatMath::cosh(FpuEnv &env, const MFloat80 &x)
+FpuEnv::cosh(const MFloat80 &x)
 {
-    return cosh_(env, x);
+    return cosh_(*this, x);
 }
 
 static MFloat80
@@ -781,9 +781,9 @@ tanh_(FpuEnv &env, const MFloat80 &x)
 }
 
 MFloat80
-FloatMath::tanh(FpuEnv &env, const MFloat80 &x)
+FpuEnv::tanh(const MFloat80 &x)
 {
-    return tanh_(env, x);
+    return tanh_(*this, x);
 }
 
 static MFloat80
@@ -804,9 +804,9 @@ atanh_(FpuEnv &env, const MFloat80 &x)
 }
 
 MFloat80
-FloatMath::atanh(FpuEnv &env, const MFloat80 &x)
+FpuEnv::atanh(const MFloat80 &x)
 {
-    return atanh_(env, x);
+    return atanh_(*this, x);
 }
 
 
@@ -825,9 +825,9 @@ etox_(FpuEnv &env, const MFloat80 &x)
 }
 
 MFloat80
-FloatMath::etox(FpuEnv &env, const MFloat80 &x)
+FpuEnv::etox(const MFloat80 &x)
 {
-    return etox_(env, x);
+    return etox_(*this, x);
 }
 
 static MFloat80
@@ -865,9 +865,9 @@ etoxm1_(FpuEnv &env, const MFloat80 &x)
 }
 
 MFloat80
-FloatMath::etoxm1(FpuEnv &env, const MFloat80 &x)
+FpuEnv::etoxm1(const MFloat80 &x)
 {
-    return etoxm1_(env, x);
+    return etoxm1_(*this, x);
 }
 
 static MFloat80
@@ -890,9 +890,9 @@ twotox_(FpuEnv &env, const MFloat80 &x)
 }
 
 MFloat80
-FloatMath::twotox(FpuEnv &env, const MFloat80 &x)
+FpuEnv::twotox(const MFloat80 &x)
 {
-    return twotox_(env, x);
+    return twotox_(*this, x);
 }
 
 static MFloat80
@@ -919,9 +919,9 @@ tentox_(FpuEnv &env, const MFloat80 &x)
 }
 
 MFloat80
-FloatMath::tentox(FpuEnv &env, const MFloat80 &x)
+FpuEnv::tentox(const MFloat80 &x)
 {
-    return tentox_(env, x);
+    return tentox_(*this, x);
 }
 
 
@@ -962,9 +962,9 @@ MFloat80 logarithm(FpuEnv &env, const MFloat80 &x, Base base)
 
 }
 
-MFloat80 FloatMath::logn(FpuEnv &env, const MFloat80 &x) { return logarithm(env, x, Base::E); }
-MFloat80 FloatMath::log2(FpuEnv &env, const MFloat80 &x) { return logarithm(env, x, Base::TWO); }
-MFloat80 FloatMath::log10(FpuEnv &env, const MFloat80 &x) { return logarithm(env, x, Base::TEN); }
+MFloat80 FpuEnv::logn(const MFloat80 &x) { return logarithm(*this, x, Base::E); }
+MFloat80 FpuEnv::log2(const MFloat80 &x) { return logarithm(*this, x, Base::TWO); }
+MFloat80 FpuEnv::log10(const MFloat80 &x) { return logarithm(*this, x, Base::TEN); }
 
 static MFloat80
 lognp1_(FpuEnv &env, const MFloat80 &x)
@@ -982,9 +982,9 @@ lognp1_(FpuEnv &env, const MFloat80 &x)
 }
 
 MFloat80
-FloatMath::lognp1(FpuEnv &env, const MFloat80 &x)
+FpuEnv::lognp1(const MFloat80 &x)
 {
-    return lognp1_(env, x);
+    return lognp1_(*this, x);
 }
 
 }

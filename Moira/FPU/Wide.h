@@ -13,7 +13,7 @@
 namespace MOIRA_NAMESPACE {
 
 /* Helpers for 128-bit integer arithmetic. They are shared by the transcendental
- * functions (FloatMath) and the packed decimal conversion (FpuFormats).
+ * functions (FpuEnvMath.cpp) and the packed decimal conversion (FpuFormats).
  */
 using u128 = unsigned __int128;
 

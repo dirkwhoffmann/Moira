@@ -181,6 +181,53 @@ public:
     float toFloat(const MFloat80 &a);
     double toDouble(const MFloat80 &a);
 
+
+    //
+    // Transcendental functions (implemented in FpuEnvMath.cpp)
+    //
+
+    /* The functions are evaluated with a 128-bit significand and rounded once
+     * to the current precision and rounding mode. Hence, results are accurate
+     * to far better than one unit in the last place (but, like on the real
+     * hardware, not necessarily correctly rounded). Results that are
+     * mathematically exact (e.g., 2^n, log2(2^n), sin(0)) are returned exactly.
+     *
+     * Special operands are handled according to the MC68881 user's manual:
+     * Invalid operations (e.g., the logarithm of a negative number) raise the
+     * invalid flag and return a quiet NaN, a division by zero (e.g., ln(0))
+     * raises the corresponding flag and returns an infinity. NaN operands have
+     * to be resolved by the caller.
+     */
+
+    // Trigonometric functions
+    MFloat80 sin(const MFloat80 &x);
+    MFloat80 cos(const MFloat80 &x);
+    MFloat80 tan(const MFloat80 &x);
+    void sincos(const MFloat80 &x, MFloat80 &sine, MFloat80 &cosine);
+
+    // Inverse trigonometric functions
+    MFloat80 asin(const MFloat80 &x);
+    MFloat80 acos(const MFloat80 &x);
+    MFloat80 atan(const MFloat80 &x);
+
+    // Hyperbolic functions
+    MFloat80 sinh(const MFloat80 &x);
+    MFloat80 cosh(const MFloat80 &x);
+    MFloat80 tanh(const MFloat80 &x);
+    MFloat80 atanh(const MFloat80 &x);
+
+    // Exponential functions
+    MFloat80 etox(const MFloat80 &x);         // e^x
+    MFloat80 etoxm1(const MFloat80 &x);       // e^x - 1
+    MFloat80 twotox(const MFloat80 &x);       // 2^x
+    MFloat80 tentox(const MFloat80 &x);       // 10^x
+
+    // Logarithms
+    MFloat80 logn(const MFloat80 &x);         // ln(x)
+    MFloat80 lognp1(const MFloat80 &x);       // ln(x + 1)
+    MFloat80 log2(const MFloat80 &x);
+    MFloat80 log10(const MFloat80 &x);
+
 private:
 
     MFloat80 propagateNaN(const MFloat80 &a, const MFloat80 &b);
