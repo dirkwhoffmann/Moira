@@ -161,6 +161,9 @@ template <Flags F = 0> StackFrame makeFrame(u32 addr, u32 pc, u16 sr, u16 ird);
 template <Flags F = 0> StackFrame makeFrame(u32 addr, u32 pc);
 template <Flags F = 0> StackFrame makeFrame(u32 addr);
 
+// Creates an address error that is raised before the bus cycle has started
+template <Core C> AddressError earlyAddressError(const StackFrame &frame);
+
 // Prefetches the next instruction
 template <Core C, Flags F = 0> void prefetch();
 

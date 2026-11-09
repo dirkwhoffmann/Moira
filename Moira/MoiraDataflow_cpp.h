@@ -1008,6 +1008,15 @@ Moira::makeFrame(u32 addr)
     return makeFrame<F>(addr, getPC(), getSR(), getIRD());
 }
 
+template <Core C> AddressError
+Moira::earlyAddressError(const StackFrame &frame)
+{
+    // MAME spends two extra cycles if an address error is detected without a bus access
+    if constexpr (compat == Compatibility::MAME && C == Core::C68000) sync(2);
+
+    return AddressError(frame);
+}
+
 template <Core C, Flags F> void
 Moira::prefetch()
 {
