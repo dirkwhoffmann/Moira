@@ -87,6 +87,10 @@ protected:
     Registers savedReg;
     bool savedRegValid = false;
 
+    // IRD of the executing instruction after a prefetch that was followed by more cycles (MAME mode)
+    u16 irdOld = 0;
+    bool irdKeep = false;
+
     // The value of the most recent write access (reported in bus fault frames)
     u32 busWriteData = 0;
     

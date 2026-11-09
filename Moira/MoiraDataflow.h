@@ -147,6 +147,9 @@ template <Core C, Flags F = 0> void writeLongSplit(u32 addr, u32 val);
 // Reads an immediate value from memory
 template <Core C, Size S> u32 readI();
 
+// Same as readI, but stacks the PC as MAME does if the refill fails
+template <Core C, Size S> u32 readIFrame();
+
 // Pushes a value onto the stack
 template <Core C, Size S, Flags F = 0> void push(u32 value);
 
@@ -170,11 +173,15 @@ template <Core C, Flags F = 0> void prefetch();
 // Performs a full prefetch cycle
 template <Core C, Flags F = 0, int delay = 0> void fullPrefetch();
 
+// Jumps to a new address. MAME stacks the old PC if the first fetch fails.
+template <Core C, Flags F = 0> void fullPrefetchAt(u32 newpc);
+
 // prefetch replacement if loop mode is active
 template <Core C> void noPrefetch(int delay = 0);
 
 // Reads an extension word from memory
 template <Core C> void readExt();
+template <Core C> void readExtLast();
 template <Core C, Size S> u32 readExt();
 
 /* Reads and writes floating-point operands. Depending on the addressing mode,

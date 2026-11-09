@@ -147,7 +147,7 @@ Moira::computeEA(u32 n) {
             result |= queue.irc;
             readBuffer = queue.irc;
 
-            if constexpr ((F & SKIP_LAST_RD) == 0) { readExt<C>(); } else { reg.pc += 2; }
+            if constexpr ((F & SKIP_LAST_RD) == 0) { readExtLast<C>(); } else { reg.pc += 2; }
             break;
         }
         case 9: // (d,PC)
@@ -288,12 +288,17 @@ Moira::readOp(int n, u32 *ea, u32 *result)
             if constexpr (compat == Compatibility::MAME && C == Core::C68000 && M == Mode::PI && S == Word && !(F & AE_KEEP_A)) {
 
                 // MAME advances the register before the bus error is reported
-                try { *result = readM<C, M, S, F>(*ea); } catch (const AddressError &) { updateAnPI<M, S>(n); throw; }
+                try { *result = readM<C, M, S, F>(*ea); } catch (const AddressError &) { updateAnPI<M, S>(n); throw; } catch (const BusError &) { updateAnPI<M, S>(n); throw; }
 
             } else if constexpr (compat == Compatibility::MAME && C == Core::C68000 && M == Mode::PI) {
 
-                // MAME advances the register before a bus error is reported
-                try { *result = readM<C, M, S, F>(*ea); } catch (const BusError &) { updateAnPI<M, S>(n); throw; }
+                // MAME advances the register before a bus error is reported. A long operand
+                // is advanced between the two word accesses.
+                try { *result = readM<C, M, S, F>(*ea); }
+                catch (const BusError &e) {
+                    if (S != Long || (e.stackFrame.addr & 0xFFFFFF) == ((*ea + 2) & 0xFFFFFF)) updateAnPI<M, S>(n);
+                    throw;
+                }
 
             } else {
 
@@ -512,6 +517,7 @@ Moira::write2x16(u32 lo, u32 hi, u32 valHi, u32 valLo)
         write16(hi, u16(valLo));
         SYNC(4);
         if constexpr (F & POLL) POLL_IPL;
+        if constexpr (compat == Compatibility::MAME && C == Core::C68000) irdKeep = false;   // MAME replaces the IRD when the last bus cycle starts
         write16(lo, u16(valHi));
         SYNC(2);
 
@@ -520,6 +526,7 @@ Moira::write2x16(u32 lo, u32 hi, u32 valHi, u32 valLo)
         write16(lo, u16(valHi));
         SYNC(4);
         if constexpr (F & POLL) POLL_IPL;
+        if constexpr (compat == Compatibility::MAME && C == Core::C68000) irdKeep = false;   // MAME replaces the IRD when the last bus cycle starts
         write16(hi, u16(valLo));
         SYNC(2);
     }
@@ -674,7 +681,7 @@ Moira::read(u32 addr)
 
         // Let Moira complete the stack frame if the host signals a bus error
         try { return readBus<C, S, F>(addr); }
-        catch (BusError &e) { if (!e.complete) e = BusError(makeFrame<F>(e.stackFrame.addr)); throw; }
+        catch (BusError &e) { if (!e.complete) e = BusError(makeFrame<F & ~(AE_INC_A | AE_DEC_A)>(e.stackFrame.addr)); throw; }
 
     } else {
 
@@ -785,7 +792,7 @@ Moira::readInstr(u32 addr)
                 SYNC(2);
                 return result;
             } catch (BusError &e) {
-                if (!e.complete) e = BusError(makeFrame<F>(e.stackFrame.addr));
+                if (!e.complete) e = BusError(makeFrame<F & ~(AE_INC_A | AE_DEC_A)>(e.stackFrame.addr));
                 throw;
             }
 
@@ -831,7 +838,7 @@ Moira::write(u32 addr, u32 val)
 
         // Let Moira complete the stack frame if the host signals a bus error
         try { writeBus<C, S, F>(addr, val); }
-        catch (BusError &e) { if (!e.complete) e = BusError(makeFrame<F|AE_WRITE>(e.stackFrame.addr)); throw; }
+        catch (BusError &e) { if (!e.complete) e = BusError(makeFrame<(F & ~(AE_INC_A | AE_DEC_A)) | AE_WRITE>(e.stackFrame.addr)); throw; }
 
     } else {
 
@@ -856,6 +863,7 @@ Moira::writeBus(u32 addr, u32 val, bool *ci)
     if constexpr (S == Byte) {
 
         if constexpr (F & POLL) POLL_IPL;
+        if constexpr (compat == Compatibility::MAME && C == Core::C68000) irdKeep = false;   // MAME replaces the IRD when the last bus cycle starts
         write8(addr & addrMask<C>(), (u8)val);
         SYNC(2);
     }
@@ -874,6 +882,7 @@ Moira::writeBus(u32 addr, u32 val, bool *ci)
         }
 
         if constexpr (F & POLL) POLL_IPL;
+        if constexpr (compat == Compatibility::MAME && C == Core::C68000) irdKeep = false;   // MAME replaces the IRD when the last bus cycle starts
         write16(a, (u16)val);
         SYNC(2);
     }
@@ -953,6 +962,20 @@ Moira::writeDataCache(u32 addr, u32 val)
 }
 
 template <Core C, Size S> u32
+Moira::readIFrame()
+{
+    if constexpr (compat == Compatibility::MAME && C == Core::C68000 && S != Long) {
+
+        try { return readI<C, S>(); }
+        catch (BusError &e) { e.stackFrame.pc += 2; throw; }
+
+    } else {
+
+        return readI<C, S>();
+    }
+}
+
+template <Core C, Size S> u32
 Moira::readI()
 {
     u32 result;
@@ -976,7 +999,7 @@ Moira::readI()
             result = queue.irc << 16;
             readExt<C>();
             result |= queue.irc;
-            readExt<C>();
+            readExtLast<C>();
             break;
 
         default:
@@ -1054,6 +1077,11 @@ Moira::makeFrame(u32 addr, u32 pc)
 template <Flags F> StackFrame
 Moira::makeFrame(u32 addr)
 {
+    if constexpr (compat == Compatibility::MAME) {
+
+        // MAME keeps the IRD of the executing instruction until its last bus cycle has started
+        return makeFrame<F>(addr, reg.pc, getSR(), irdKeep ? irdOld : getIRD());
+    }
     return makeFrame<F>(addr, reg.pc, getSR(), getIRD());
 }
 
@@ -1082,6 +1110,8 @@ Moira::prefetch()
         // MAME replaces the IRD when the last bus cycle of the instruction starts.
         // The value is part of the stack frame if the prefetch fails.
         u16 irc = readInstr<C, F>(reg.pc);
+        irdOld = queue.ird;
+        irdKeep = true;
         queue.ird = queue.irc;
         queue.irc = irc;
 
@@ -1091,6 +1121,27 @@ Moira::prefetch()
         queue.irc = readInstr<C, F>(reg.pc);
     }
     readBuffer = queue.irc;
+}
+
+template <Core C, Flags F> void
+Moira::fullPrefetchAt(u32 newpc)
+{
+    if constexpr (compat == Compatibility::MAME && C == Core::C68000) {
+
+        u32 oldpc = reg.pc;
+        reg.pc = newpc;
+
+        try { fullPrefetch<C, F>(); }
+        catch (BusError &e) {
+            if ((e.stackFrame.addr & 0xFFFFFF) == (newpc & 0xFFFFFF)) e.stackFrame.pc = oldpc;
+            throw;
+        }
+
+    } else {
+
+        reg.pc = newpc;
+        fullPrefetch<C, F>();
+    }
 }
 
 template <Core C, Flags F, int delay> void
@@ -1127,6 +1178,22 @@ Moira::readExt()
         queue.irc = readInstr<C, AE_DEC_PC>(reg.pc);
     } else {
         queue.irc = readInstr<C>(reg.pc);
+    }
+}
+
+template <Core C> void
+Moira::readExtLast()
+{
+    // MAME does not decrement the stacked PC if the refill after the last word of a long operand fails
+    if constexpr (compat == Compatibility::MAME && C == Core::C68000) {
+
+        assert(!misaligned<C>(reg.pc));
+        reg.pc += 2;
+        queue.irc = readInstr<C>(reg.pc);
+
+    } else {
+
+        readExt<C>();
     }
 }
 
