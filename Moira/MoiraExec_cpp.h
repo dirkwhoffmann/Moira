@@ -966,9 +966,12 @@ Moira::execBitDxEa(u16 opcode)
     data = bit<C, I>(data, b);
 
     if constexpr (I == Instr::BCLR && C == Core::C68010) { SYNC(2); }
-    if constexpr ((compat == Compatibility::UAE || compat == Compatibility::MAME) && I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
+    if constexpr (compat == Compatibility::UAE && I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
 
     prefetch<C, POLL>();
+
+    // MAME idles after the prefetch
+    if constexpr (compat == Compatibility::MAME && I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
     if constexpr (I != Instr::BTST) writeM<C, M, Byte>(ea, data);
 
     [[maybe_unused]] auto c = I == Instr::BTST ? 0 : I == Instr::BCLR && C == Core::C68010 ? 6 : 4;
@@ -5632,7 +5635,18 @@ Moira::execTrapv(u16 opcode)
     if (reg.sr.v) {
 
         if constexpr (C == Core::C68000) {
-            (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
+            if constexpr (compat == Compatibility::MAME) {
+
+                // In MAME, the word is read in supervisor mode
+                bool s = reg.sr.s;
+                reg.sr.s = true;
+                (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
+                reg.sr.s = s;
+
+            } else {
+
+                (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
+            }
         } else {
             (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
             SYNC(2);

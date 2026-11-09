@@ -14,8 +14,7 @@
  * Each test sets up the CPU and the memory, executes a single instruction, and
  * checks the registers, the memory, the number of elapsed cycles and the bus
  * transactions. The bus check compares every read and write access (address,
- * data, function code, and the cycle in which it happens). It is reported in a
- * separate column and does not affect the exit status yet.
+ * data, function code, and the cycle in which it happens).
  *
  * The expected values have been recorded from MAME's microcoded 68000 core.
  * Because that core has bugs of its own, Moira offers a MAME compatibility mode,
@@ -130,7 +129,7 @@ struct Outcome {
     i64 elapsed = 0;
 
     bool state() const { return dataRegs && addrRegs && stackPtrs && sr && pc && mem; }
-    bool all() const { return state() && cycles; }
+    bool all() const { return state() && cycles && bus; }
 };
 
 // Counters
@@ -417,8 +416,8 @@ int main(int argc, char **argv)
 
 //     printf("%-16s %-32s %-32s\n%-16s ", "", "Standard Tests", "Address errors", "");
     printf("%-16s ", "Test");
-    printf("%9s %9s %9s %9s %9s ", "Count", "State", "Cycles", "Bus", "Both");
-    printf("%9s %9s %9s %9s %9s\n", "AE", "State", "Cycles", "Bus", "Both");
+    printf("%9s %9s %9s %9s ", "Count", "State", "Cycles", "Bus");
+    printf("%9s %9s %9s %9s\n", "AE", "State", "Cycles", "Bus");
 
     for (auto &name : files) {
 
@@ -427,10 +426,10 @@ int main(int argc, char **argv)
 
         auto &r = fs.regular, &a = fs.addressError;
         printf("%-16s ", name.substr(0, name.size() - 9).c_str());
-        printf("%9ld %8.2f%% %8.2f%% %8.2f%% %8.2f%% ",
-               r.tests, percent(r.state, r.tests), percent(r.cycles, r.tests), percent(r.bus, r.tests), percent(r.all, r.tests));
-        printf("%9ld %8.2f%% %8.2f%% %8.2f%% %8.2f%%\n",
-               a.tests, percent(a.state, a.tests), percent(a.cycles, a.tests), percent(a.bus, a.tests), percent(a.all, a.tests));
+        printf("%9ld %8.2f%% %8.2f%% %8.2f%% ",
+               r.tests, percent(r.state, r.tests), percent(r.cycles, r.tests), percent(r.bus, r.tests));
+        printf("%9ld %8.2f%% %8.2f%% %8.2f%%\n",
+               a.tests, percent(a.state, a.tests), percent(a.cycles, a.tests), percent(a.bus, a.tests));
 
         /*
         printf("%-16s %8ld %8.2f%% %8.2f%% %8.2f%%   %ld, %5.1f%%, %5.1f%%, %5.1f%%\n",
@@ -447,10 +446,10 @@ int main(int argc, char **argv)
     auto &r = total.regular, &a = total.addressError;
     
     printf("\n%-16s ", "TOTAL");
-    printf("%9ld %8.2f%% %8.2f%% %8.2f%% %8.2f%% ",
-           r.tests, percent(r.state, r.tests), percent(r.cycles, r.tests), percent(r.bus, r.tests), percent(r.all, r.tests));
-    printf("%9ld %8.2f%% %8.2f%% %8.2f%% %8.2f%%\n",
-           a.tests, percent(a.state, a.tests), percent(a.cycles, a.tests), percent(a.bus, a.tests), percent(a.all, a.tests));
+    printf("%9ld %8.2f%% %8.2f%% %8.2f%% ",
+           r.tests, percent(r.state, r.tests), percent(r.cycles, r.tests), percent(r.bus, r.tests));
+    printf("%9ld %8.2f%% %8.2f%% %8.2f%%\n",
+           a.tests, percent(a.state, a.tests), percent(a.cycles, a.tests), percent(a.bus, a.tests));
     
     /*
     printf("\n%-16s %8ld %8.2f%% %8.2f%% %8.2f%%   %ld, %.1f%%, %.1f%%, %.1f%%\n", "TOTAL", r.tests,
