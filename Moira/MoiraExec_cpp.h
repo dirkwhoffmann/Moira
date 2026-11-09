@@ -793,7 +793,9 @@ Moira::execAndiccr(u16 opcode)
         u8  dst = getCCR();
         setCCR(u8(logic<C, I, S>(src, dst)));
         SYNC(8);
-        (void)read<C, AddrSpace::DATA, Word>(reg.pc + 2);
+        // MAME reads the word at the current PC from program space
+        if constexpr (compat == Compatibility::MAME) { (void)read<C, AddrSpace::PROG, Word>(reg.pc); }
+        else { (void)read<C, AddrSpace::DATA, Word>(reg.pc + 2); }
 
     } else {
 
@@ -828,7 +830,9 @@ Moira::execAndisr(u16 opcode)
     u32 result = logic<C, I, S>(src, dst);
     setSR((u16)result);
 
-    (void)read<C, AddrSpace::DATA, Word>(reg.pc + 2);
+    // MAME reads the word at the current PC from program space
+    if constexpr (compat == Compatibility::MAME) { (void)read<C, AddrSpace::PROG, Word>(reg.pc); }
+    else { (void)read<C, AddrSpace::DATA, Word>(reg.pc + 2); }
     prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -2505,7 +2509,7 @@ Moira::execJsr(u16 opcode)
                 throw earlyAddressError<C>(makeFrame(ea));
             }
 
-            if constexpr ((compat == Compatibility::UAE)) {
+            if constexpr (compat == Compatibility::UAE || compat == Compatibility::MAME) {
 
                 // Fetch the first word of the subroutine before pushing
                 u32 ret = reg.pc;
@@ -3794,7 +3798,7 @@ Moira::execMoveToCcr(u16 opcode)
     SYNC(4);
     setCCR((u8)data);
 
-    (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
+    (void)read<C, AddrSpace::PROG, Word>(compat == Compatibility::MAME ? reg.pc : reg.pc + 2);
     prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -3915,7 +3919,7 @@ Moira::execMoveToSr(u16 opcode)
     SYNC(4);
     setSR((u16)data);
 
-    (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
+    (void)read<C, AddrSpace::PROG, Word>(compat == Compatibility::MAME ? reg.pc : reg.pc + 2);
     prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
