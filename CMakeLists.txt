@@ -52,6 +52,11 @@ endfunction()
 add_test_runner(testRunnerMusashi moiraMusashi)
 add_test_runner(testRunnerUAE moiraUAE)
 
+# A minimal example that shows how to use Moira
+add_executable(example Example/main.cpp)
+target_link_libraries(example PRIVATE moira)
+target_include_directories(example PRIVATE ${CMAKE_SOURCE_DIR}/Moira)
+
 # The SingleStepTests runner (runs Moira against the SingleStepTests 68000 suite)
 add_executable(singleStepRunner Runner/SingleStep/SingleStep.cpp Runner/SingleStep/SSTFile.cpp)
 target_link_libraries(singleStepRunner PRIVATE moiraMAME)
