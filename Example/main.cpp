@@ -67,7 +67,7 @@ public:
 
     CPU() { setModel(CPUModel::M68000); }
 
-    // Prints the CPU state followed by the instruction that is about to be executed
+    // Prints the CPU state, the instruction that is about to be executed, and the result table
     void dump()
     {
         char instr[64];
@@ -79,8 +79,12 @@ public:
         for (int i = 0; i < 5; i++) flags[i] = (sr >> (4 - i)) & 1 ? "XNZVC"[i] : '-';
         flags[5] = 0;
 
-        printf("%06X %04X %s  %08X %08X %08X %08X  %-20s\n",
+        printf("%06X %04X %s  %08X %08X %08X %08X  %-26s",
                getPC0(), sr, flags, getD(0), getD(1), getA(0), getSP(), instr);
+
+        // Memory dump of the result table
+        for (int i = 0; i < 10; i++) printf("%3d ", ram[tableAddr + i]);
+        printf("\n");
     }
 };
 
@@ -121,7 +125,7 @@ int main(int argc, const char *argv[])
     }
 
     printf("\nInstruction trace:\n\n");
-    printf("    PC   SR XNZVC  D0       D1       A0       SP\n");
+    printf("    PC   SR XNZVC  D0       D1       A0       SP        Instruction                 $2000...\n");
 
     // Execute instructions until the CPU reaches the STOP instruction
     while (cpu.read16(cpu.getPC0()) != STOP) {
