@@ -15,6 +15,11 @@ All symbols live in the namespace `moira`. The name can be changed at compile ti
 | [moira::Debugger](/api/moira-Debugger) | Breakpoints, watchpoints, catchpoints, software traps, single-stepping and instruction logging. Available as `Moira::debugger`. |
 | [moira::Guards](/api/moira-Guards) | Base class of [Breakpoints](/api/moira-Breakpoints), [Watchpoints](/api/moira-Watchpoints) and [Catchpoints](/api/moira-Catchpoints). |
 | [moira::SoftwareTraps](/api/moira-SoftwareTraps) | A table of software traps. |
+| [moira::FPU](/api/moira-FPU) | The floating-point unit (68881, 68882 and the FPU of the 68040): registers and arithmetic. |
+| [moira::FpuEnv](/api/moira-FpuEnv) | The floating-point environment: rounding mode, precision, exception flags and the rounded arithmetic. |
+| [moira::MFloat80](/api/moira-MFloat80) | The 80-bit extended precision value type. |
+| [moira::FpuFormats](/api/moira-FpuFormats) | Conversions between `MFloat80` and the memory formats of the FPU. |
+| [moira::MMU](/api/moira-MMU) | The memory management unit. Dispatches to [MMU030](/api/moira-MMU030) or [MMU040](/api/moira-MMU040). |
 
 ## Delegates
 

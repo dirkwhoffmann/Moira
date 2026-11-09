@@ -11,7 +11,7 @@
 
 namespace MOIRA_NAMESPACE {
 
-/* The Motorola floating-point unit supports seven data formats:
+/** The Motorola floating-point unit supports seven data formats:
  *
  *    Byte Integer (B)
  *    Word Integer (W)
@@ -30,10 +30,13 @@ namespace MOIRA_NAMESPACE {
  */
 struct FpuFormats {
 
-    // Number of bytes a value of a certain format occupies in memory
+    /// Number of bytes of a single precision value in memory
     static constexpr int sizeOfSingle   = 4;
+    /// Number of bytes of a double precision value in memory
     static constexpr int sizeOfDouble   = 8;
+    /// Number of bytes of an extended precision value in memory
     static constexpr int sizeOfExtended = 12;
+    /// Number of bytes of a packed decimal value in memory
     static constexpr int sizeOfPacked   = 12;
 
 
@@ -41,10 +44,10 @@ struct FpuFormats {
     // Integers (B, W, L)
     //
 
-    // Integers convert to MFloat80 without loss of precision
+    /// Integers convert to MFloat80 without loss of precision
     static MFloat80 fromInteger(i32 value) { return MFloat80::fromInt(value); }
 
-    /* Converts to an integer of 'bits' width (8, 16, or 32). The value is
+    /** Converts to an integer of 'bits' width (8, 16, or 32). The value is
      * rounded according to the current rounding mode. If it doesn't fit, the
      * invalid flag is raised and the largest value of matching sign is
      * returned (NaNs return the largest positive value).
@@ -56,12 +59,14 @@ struct FpuFormats {
     // Single and double precision (S, D)
     //
 
-    // Conversions to MFloat80 are exact (signaling NaNs raise the invalid flag)
+    /// Converts a single precision value (exact; signaling NaNs raise the invalid flag)
     static MFloat80 fromSingle(FpuEnv &env, u32 raw);
+    /// Converts a double precision value (exact; signaling NaNs raise the invalid flag)
     static MFloat80 fromDouble(FpuEnv &env, u64 raw);
 
-    // Conversions from MFloat80 are rounded according to the current rounding mode
+    /// Converts to single precision (rounded according to the current rounding mode)
     static u32 toSingle(FpuEnv &env, const MFloat80 &value);
+    /// Converts to double precision (rounded according to the current rounding mode)
     static u64 toDouble(FpuEnv &env, const MFloat80 &value);
 
 
@@ -69,13 +74,19 @@ struct FpuFormats {
     // Extended precision (X)
     //
 
-    /* An extended precision value occupies three long words in memory:
+    /** An extended precision value occupies three long words in memory:
      *
      *   w[0]: Sign and exponent in bits 31..16, bits 15..0 are unused
      *   w[1]: Mantissa (high)
      *   w[2]: Mantissa (low)
      */
     static MFloat80 fromExtended(const u32 (&w)[3]);
+    /** An extended precision value occupies three long words in memory:
+     *
+     *   w[0]: Sign and exponent in bits 31..16, bits 15..0 are unused
+     *   w[1]: Mantissa (high)
+     *   w[2]: Mantissa (low)
+     */
     static void toExtended(const MFloat80 &value, u32 (&w)[3]);
 
 
@@ -83,7 +94,7 @@ struct FpuFormats {
     // Packed decimal (P)
     //
 
-    /* A packed decimal value occupies three long words in memory:
+    /** A packed decimal value occupies three long words in memory:
      *
      *   w[0]: Bit 31:      Sign of the mantissa (SM)
      *         Bit 30:      Sign of the exponent (SE)
@@ -98,7 +109,7 @@ struct FpuFormats {
      */
     static MFloat80 fromPacked(FpuEnv &env, const u32 (&w)[3]);
 
-    /* Converts to packed decimal. The parameter 'k' is the k-factor. For
+    /** Converts to packed decimal. The parameter 'k' is the k-factor. For
      * positive values, it is the number of significant digits (1...17). For
      * values less than or equal to zero, -k is the number of digits to the
      * right of the decimal point. A k-factor greater than 17 is clamped to 17

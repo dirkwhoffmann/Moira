@@ -375,7 +375,8 @@ struct PrefetchQueue {
 };
 
 
-struct CycleBudget { ///< 68020 only
+/// Bookkeeping of the cycle penalty (68020 only)
+struct CycleBudget {
 
     /// Cycle penalty
     int cp {};

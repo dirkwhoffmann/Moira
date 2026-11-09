@@ -321,7 +321,7 @@ public:
     void setDasmIndentation(int value) { instrStyle.tab = value; }
     
     /// Sets the number format for data dumps
-    void setDumpNumberFormat(DasmNumberFormat value) { setNumberFormat(instrStyle, value); }
+    void setDumpNumberFormat(DasmNumberFormat value) { setNumberFormat(dataStyle, value); }
     
     /// Sets the indentation for data dumps
     void setDumpIndentation(int value) { dataStyle.tab = value; }

@@ -43,7 +43,14 @@ WARN_FORMAT            = "$file:$line: $text"
 # Input
 INPUT                  = ../Moira/Moira.h \
                          ../Moira/MoiraTypes.h \
-                         ../Moira/MoiraDebugger.h
+                         ../Moira/MoiraDebugger.h \
+                         ../Moira/FPU/FPU.h \
+                         ../Moira/FPU/FpuEnv.h \
+                         ../Moira/FPU/FpuFormats.h \
+                         ../Moira/FPU/MFloat80.h \
+                         ../Moira/MMU/MMU.h \
+                         ../Moira/MMU/MMU030.h \
+                         ../Moira/MMU/MMU040.h
 FILE_PATTERNS          = *.h
 RECURSIVE              = NO
 

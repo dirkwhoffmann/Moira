@@ -69,28 +69,28 @@ function kindOf(file: string): string {
 // The classes in the order of the API overview
 const classes = ['Moira', 'Debugger', 'Guards', 'Breakpoints', 'Watchpoints', 'Catchpoints',
                  'SoftwareTraps', 'SoftwareTrap', 'Guard']
+const fpuClasses = ['FPU', 'FpuEnv', 'MFloat80', 'FpuFormats']
+const mmuClasses = ['MMU', 'MMU030', 'MMU040']
+const grouped = [...classes, ...fpuClasses, ...mmuClasses]
 
 // Structs, grouped by what they are for. The first matching rule decides.
 const structKinds: [string, RegExp][] = [
   ['CPU state', /^(Registers|StatusRegister|PrefetchQueue|StackFrame|CycleBudget)$/],
   ['Disassembler', /^(InstrInfo|DasmStyle|DasmNumberFormat)$/],
+  ['MMU', /^Atc/],
   ['Exceptions', /^(IllegalInstruction|DoubleFault|AddressError|BusError)$/],
   ['Other', /./],
 ]
 
-function apiClasses() {
-  const present = apiFiles().filter(f => f.startsWith('moira-')).map(f => f.replace(/^moira-|\.md$/g, ''))
-  const kind = (c: string) => kindOf(`moira-${c}.md`)
-  const list = present.filter(c => kind(c) === 'class' || classes.includes(c))
-  const rank = (c: string) => { const i = classes.indexOf(c); return i < 0 ? classes.length : i }
-  return list.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
+function apiClasses(list: string[]) {
+  return list.filter(c => apiFiles().includes(`moira-${c}.md`))
     .map(c => ({ text: c, link: `/api/moira-${c}` }))
 }
 
 function structGroups() {
   const structs = apiFiles().filter(f => f.startsWith('moira-') && /^(struct|union)$/.test(kindOf(f)))
     .map(f => f.replace(/^moira-|\.md$/g, ''))
-    .filter(c => !classes.includes(c))
+    .filter(c => !grouped.includes(c))
     .sort((a, b) => a.localeCompare(b))
   const groups = new Map(structKinds.map(([label]) => [label, [] as string[]]))
   for (const c of structs) groups.get(structKinds.find(([, re]) => re.test(c))![0])!.push(c)
@@ -137,7 +137,9 @@ export default defineConfig({
     sidebar: {
       '/guides/': guideSidebar(),
       '/api/': [
-        { text: 'API', collapsed: false, items: [{ text: 'Overview', link: '/api/overview' }, ...apiClasses()] },
+        { text: 'API', collapsed: false, items: [{ text: 'Overview', link: '/api/overview' }, ...apiClasses(classes)] },
+        { text: 'FPU', collapsed: false, items: apiClasses(fpuClasses) },
+        { text: 'MMU', collapsed: false, items: apiClasses(mmuClasses) },
         { text: 'Structs', collapsed: true, items: structGroups() },
         { text: 'Enumerations', collapsed: true, items: enumItems() },
         { text: 'More', collapsed: false, items: [

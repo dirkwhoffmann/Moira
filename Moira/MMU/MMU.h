@@ -12,7 +12,7 @@
 
 namespace MOIRA_NAMESPACE {
 
-/* Selectable MMU types
+/** Selectable MMU types
  *
  * The model that is selected in Moira (see Moira::setMmuModel) is a request.
  * The MMU that is effectively present is derived from it and from the CPU
@@ -20,13 +20,13 @@ namespace MOIRA_NAMESPACE {
  */
 enum class MMUModel
 {
-    NONE,                   // The MMU is not emulated (MMU instructions cause a line F exception)
-    BUILTIN,                // Use the MMU of the CPU (68030, 68040), other CPUs have none
-    M68030,                 // The MMU of the 68030
-    M68040                  // The MMU of the 68040
+    NONE,                   ///< The MMU is not emulated (MMU instructions cause a line F exception)
+    BUILTIN,                ///< Use the MMU of the CPU (68030, 68040), other CPUs have none
+    M68030,                 ///< The MMU of the 68030
+    M68040                  ///< The MMU of the 68040
 };
 
-/* Memory management unit
+/** Memory management unit
  *
  * This class is a wrapper that dispatches to the MMU implementation of the
  * effectively present MMU model. Features that only exist in one MMU type are
@@ -40,8 +40,9 @@ class MMU {
 
 public:
 
-    // MMU implementations
+    /// The MMU of the 68030
     MMU030 mmu030;
+    /// The MMU of the 68040
     MMU040 mmu040;
 
 
@@ -53,7 +54,7 @@ public:
 
     MMU(Moira &ref) : mmu030(ref), mmu040(ref) { }
 
-    // Initializes all registers and invalidates the ATC
+    /// Initializes all registers and invalidates the ATC
     void reset() { mmu030.reset(); mmu040.reset(); }
 
 
@@ -67,7 +68,7 @@ public:
     void setModel(MMUModel newModel) { model = newModel; }
     bool isPresent() const { return model != MMUModel::NONE; }
 
-    // Indicates whether address translation is active
+    /// Indicates whether address translation is active
     bool isEnabled() const;
 
 
@@ -77,8 +78,8 @@ public:
 
 public:
 
-    // Translates a logical address to a physical address. If 'ci' is provided,
-    // it is set if the access must bypass the on-chip caches.
+    /// Translates a logical address to a physical address. If 'ci' is provided,
+    /// it is set if the access must bypass the on-chip caches.
     std::optional<u32> translate(u32 addr, u8 fc, bool write, bool *ci = nullptr);
 };
 

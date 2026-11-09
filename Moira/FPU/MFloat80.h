@@ -12,7 +12,7 @@
 
 namespace MOIRA_NAMESPACE {
 
-/* MFloat80 is the 80-bit extended precision format of the Motorola FPUs:
+/** MFloat80 is the 80-bit extended precision format of the Motorola FPUs:
  *
  *   Bit 79      : Sign bit
  *   Bits 64..78 : Biased exponent (bias 0x3FFF)
@@ -37,7 +37,7 @@ class MFloat80 {
 
 public:
 
-    // Exponent bias
+    /// Exponent bias
     static constexpr i32 bias = 0x3FFF;
 
 
@@ -45,26 +45,31 @@ public:
     // Creating numbers
     //
 
-    // Creates +0
+    /// Creates +0
     constexpr MFloat80() = default;
 
-    // Creates a number from its raw bits
+    /// Creates a number from its raw bits
     constexpr MFloat80(u16 signExp, u64 mantissa) : se(signExp), man(mantissa) { }
+    /// Creates a number from its raw bits
     static constexpr MFloat80 fromBits(u16 signExp, u64 mantissa) { return { signExp, mantissa }; }
 
-    // Converts from a 64-bit integer (always exact)
+    /// Converts from a 64-bit integer (always exact)
     static MFloat80 fromInt(i64 value);
 
-    // Converts from 'long double' (exact if the host's long double is an 80-bit extended type)
+    /// Converts from 'long double' (exact if the host's long double is an 80-bit extended type)
     static MFloat80 fromLongDouble(long double value);
 
-    // Special values
+    /// Returns +0 or -0
     static constexpr MFloat80 zero(bool negative = false) { return { u16(negative ? 0x8000 : 0), 0 }; }
+    /// Returns +1 or -1
     static constexpr MFloat80 one(bool negative = false) { return { u16(negative ? 0xBFFF : 0x3FFF), 1ULL << 63 }; }
+    /// Returns +infinity or -infinity
     static constexpr MFloat80 infinity(bool negative = false) { return { u16(negative ? 0xFFFF : 0x7FFF), 0 }; }
+    /// Returns a quiet NaN
     static constexpr MFloat80 quietNaN(bool negative = false) { return { u16(negative ? 0xFFFF : 0x7FFF), 0xC000000000000000ULL }; }
-    // The result of an invalid operation (positive, all mantissa bits set)
+    /// Returns the result of an invalid operation (positive, all mantissa bits set)
     static constexpr MFloat80 defaultNaN() { return { 0x7FFF, 0xFFFFFFFFFFFFFFFFULL }; }
+    /// Returns a signaling NaN
     static constexpr MFloat80 signalingNaN(bool negative = false) { return { u16(negative ? 0xFFFF : 0x7FFF), 0xA000000000000000ULL }; }
 
 
@@ -93,16 +98,16 @@ public:
     constexpr bool isQuietNaN() const { return isNaN() && (man & (1ULL << 62)); }
     constexpr bool isFinite() const { return biasedExponent() != 0x7FFF; }
 
-    // A number with a minimal exponent and a cleared integer bit
+    /// A number with a minimal exponent and a cleared integer bit
     constexpr bool isDenormal() const { return biasedExponent() == 0 && man != 0 && !integerBit(); }
 
-    // A number with a regular exponent and a set integer bit
+    /// A number with a regular exponent and a set integer bit
     constexpr bool isNormal() const { return biasedExponent() != 0 && biasedExponent() != 0x7FFF && integerBit(); }
 
-    // Checks whether at least one operand is a NaN
+    /// Checks whether at least one operand is a NaN
     constexpr bool unordered(const MFloat80 &rhs) const { return isNaN() || rhs.isNaN(); }
 
-    // Checks for identical bit patterns (0 and -0 differ)
+    /// Checks for identical bit patterns (0 and -0 differ)
     constexpr bool identical(const MFloat80 &rhs) const { return se == rhs.se && man == rhs.man; }
 
 
@@ -118,10 +123,10 @@ public:
     // Converting
     //
 
-    // Converts to 'long double' (exact if the host's long double is an 80-bit extended type)
+    /// Converts to 'long double' (exact if the host's long double is an 80-bit extended type)
     long double toLongDouble() const;
 
-    // Returns a string of the form "0x3FFF:8000000000000000"
+    /// Returns a string of the form "0x3FFF:8000000000000000"
     std::string str() const;
 };
 

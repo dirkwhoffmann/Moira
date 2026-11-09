@@ -13,35 +13,35 @@ namespace MOIRA_NAMESPACE {
 
 enum class RoundingMode : int {
 
-    NEAREST = 0,    ///< Round to nearest, ties to even
-    ZERO    = 1,    ///< Round toward zero
-    DOWN    = 2,    ///< Round toward negative infinity
-    UP      = 3     ///< Round toward positive infinity
+    NEAREST = 0,    ////<< Round to nearest, ties to even
+    ZERO    = 1,    ////<< Round toward zero
+    DOWN    = 2,    ////<< Round toward negative infinity
+    UP      = 3     ////<< Round toward positive infinity
 };
 
-/* The rounding precision limits the number of mantissa bits of a result. The
+/** The rounding precision limits the number of mantissa bits of a result. The
  * exponent range is always the one of the extended format.
  */
 enum class Precision : int {
 
-    SINGLE   = 32,  ///< 24 mantissa bits
-    DOUBLE   = 64,  ///< 53 mantissa bits
-    EXTENDED = 80   ///< 64 mantissa bits
+    SINGLE   = 32,  ////<< 24 mantissa bits
+    DOUBLE   = 64,  ////<< 53 mantissa bits
+    EXTENDED = 80   ////<< 64 mantissa bits
 };
 
-// Exception flags. They are sticky: Once raised, a flag stays set until cleared.
+/// Exception flags. They are sticky: Once raised, a flag stays set until cleared.
 struct FloatFlags {
 
     static constexpr u8 INEXACT     = 0x01;
-    static constexpr u8 UNFL        = 0x02;   ///< Underflow
-    static constexpr u8 OVFL        = 0x04;   ///< Overflow
+    static constexpr u8 UNFL        = 0x02;   ////<< Underflow
+    static constexpr u8 OVFL        = 0x04;   ////<< Overflow
     static constexpr u8 DIV_BY_ZERO = 0x08;
     static constexpr u8 INVALID     = 0x10;
-    static constexpr u8 SNAN        = 0x20;   ///< Signaling NaN operand
+    static constexpr u8 SNAN        = 0x20;   ////<< Signaling NaN operand
     static constexpr u8 ALL         = 0x3F;
 };
 
-/* The floating-point environment of the Motorola FPUs
+/** The floating-point environment of the Motorola FPUs
  *
  * The environment consists of the rounding mode, the rounding precision and the
  * accumulated exception flags. All operations on MFloat80 numbers are carried
@@ -72,24 +72,29 @@ public:
     // Configuration
     //
 
-    // Rounding mode (default: NEAREST)
+    /// Returns the rounding mode (default: NEAREST)
     RoundingMode roundingMode() const { return mode; }
+    /// Sets the rounding mode
     void setRoundingMode(RoundingMode value) { mode = value; }
 
-    // Rounding precision (default: EXTENDED)
+    /// Returns the rounding precision (default: EXTENDED)
     Precision precision() const { return prec; }
+    /// Sets the rounding precision
     void setPrecision(Precision value) { prec = value; }
 
-    // Exponent range of results (default: limited by the precision)
+    /// Indicates whether the exponent range of results is limited by the precision
     bool limitsExponent() const { return limitExponent; }
+    /// Limits or unlimits the exponent range of results
     void setLimitsExponent(bool value) { limitExponent = value; }
 
-    // Exception flags (see FloatFlags)
+    /// Returns the raised exception flags (see FloatFlags)
     u8 flags() const { return exceptions; }
+    /// Clears exception flags
     void clearFlags(u8 mask = FloatFlags::ALL) { exceptions &= u8(~mask); }
+    /// Raises exception flags
     void raiseFlags(u8 mask) { exceptions |= u8(mask & FloatFlags::ALL); }
 
-    /* Saves the environment on construction and restores it on destruction.
+    /** Saves the environment on construction and restores it on destruction.
      * The flags are not restored by default, so exceptions raised inside the
      * scope stay visible afterwards. Pass 'true' to discard them.
      */
@@ -116,7 +121,7 @@ public:
     // Arithmetic
     //
 
-    // Rounds to the current precision and exponent range (FMOVE)
+    /// Rounds to the current precision and exponent range (FMOVE)
     MFloat80 round(const MFloat80 &a);
 
     MFloat80 add(const MFloat80 &a, const MFloat80 &b);
@@ -125,16 +130,16 @@ public:
     MFloat80 div(const MFloat80 &a, const MFloat80 &b);
     MFloat80 sqrt(const MFloat80 &a);
 
-    // Raises the invalid flag and returns the default NaN of the 68k FPUs
+    /// Raises the invalid flag and returns the default NaN of the 68k FPUs
     MFloat80 invalidOperation();
 
-    // Rounds to an integral value according to the current rounding mode
+    /// Rounds to an integral value according to the current rounding mode
     MFloat80 roundToInt(const MFloat80 &a);
 
-    // Computes a * 2^n, where n is the integer part of b
+    /// Computes a * 2^n, where n is the integer part of b
     MFloat80 scale(const MFloat80 &a, const MFloat80 &b);
 
-    /* Composes a number from an unrounded significand. The value is
+    /** Composes a number from an unrounded significand. The value is
      * sig:extra * 2^(exp - bias - 63), where 'exp' is the biased exponent that
      * applies if 'sig' is normalized (bit 63 set). A 'sig' that is not
      * normalized is normalized first. The bits in 'extra' lie below 'sig' and
@@ -148,14 +153,26 @@ public:
     // Comparing
     //
 
-    /* The comparisons follow IEEE 754. A NaN is unordered, i.e., it compares
+    /** The comparisons follow IEEE 754. A NaN is unordered, i.e., it compares
      * unequal to everything (including itself) and every ordering comparison
      * with it is false. Equality is quiet and raises the invalid flag only for
      * signaling NaNs. The ordering comparisons raise the invalid flag for all
      * NaNs. Note that +0 == -0.
      */
     bool eq(const MFloat80 &a, const MFloat80 &b);
+    /** The comparisons follow IEEE 754. A NaN is unordered, i.e., it compares
+     * unequal to everything (including itself) and every ordering comparison
+     * with it is false. Equality is quiet and raises the invalid flag only for
+     * signaling NaNs. The ordering comparisons raise the invalid flag for all
+     * NaNs. Note that +0 == -0.
+     */
     bool lt(const MFloat80 &a, const MFloat80 &b);
+    /** The comparisons follow IEEE 754. A NaN is unordered, i.e., it compares
+     * unequal to everything (including itself) and every ordering comparison
+     * with it is false. Equality is quiet and raises the invalid flag only for
+     * signaling NaNs. The ordering comparisons raise the invalid flag for all
+     * NaNs. Note that +0 == -0.
+     */
     bool le(const MFloat80 &a, const MFloat80 &b);
 
 
@@ -163,22 +180,39 @@ public:
     // Converting
     //
 
-    // Converts from single and double precision (always exact)
+    /// Converts from single precision (always exact)
     MFloat80 fromFloat(float value);
+    /// Converts from double precision (always exact)
     MFloat80 fromDouble(double value);
 
-    /* Conversion to integers. The result is rounded according to the current
+    /** Conversion to integers. The result is rounded according to the current
      * rounding mode (toInt) or truncated toward zero (toIntTruncated).
      * Out-of-range values and NaNs raise the invalid flag and yield the most
      * negative integer.
      */
     i32 toInt32(const MFloat80 &a);
+    /** Conversion to integers. The result is rounded according to the current
+     * rounding mode (toInt) or truncated toward zero (toIntTruncated).
+     * Out-of-range values and NaNs raise the invalid flag and yield the most
+     * negative integer.
+     */
     i32 toInt32Truncated(const MFloat80 &a);
+    /** Conversion to integers. The result is rounded according to the current
+     * rounding mode (toInt) or truncated toward zero (toIntTruncated).
+     * Out-of-range values and NaNs raise the invalid flag and yield the most
+     * negative integer.
+     */
     i64 toInt64(const MFloat80 &a);
+    /** Conversion to integers. The result is rounded according to the current
+     * rounding mode (toInt) or truncated toward zero (toIntTruncated).
+     * Out-of-range values and NaNs raise the invalid flag and yield the most
+     * negative integer.
+     */
     i64 toInt64Truncated(const MFloat80 &a);
 
-    // Conversion to single and double precision (rounded according to the current rounding mode)
+    /// Converts to single precision (rounded according to the current rounding mode)
     float toFloat(const MFloat80 &a);
+    /// Converts to double precision (rounded according to the current rounding mode)
     double toDouble(const MFloat80 &a);
 
 
@@ -199,32 +233,40 @@ public:
      * to be resolved by the caller.
      */
 
-    // Trigonometric functions
+    /// Sine
     MFloat80 sin(const MFloat80 &x);
+    /// Cosine
     MFloat80 cos(const MFloat80 &x);
+    /// Tangent
     MFloat80 tan(const MFloat80 &x);
+    /// Sine and cosine in one step
     void sincos(const MFloat80 &x, MFloat80 &sine, MFloat80 &cosine);
 
-    // Inverse trigonometric functions
+    /// Arc sine
     MFloat80 asin(const MFloat80 &x);
+    /// Arc cosine
     MFloat80 acos(const MFloat80 &x);
+    /// Arc tangent
     MFloat80 atan(const MFloat80 &x);
 
-    // Hyperbolic functions
+    /// Hyperbolic sine
     MFloat80 sinh(const MFloat80 &x);
+    /// Hyperbolic cosine
     MFloat80 cosh(const MFloat80 &x);
+    /// Hyperbolic tangent
     MFloat80 tanh(const MFloat80 &x);
+    /// Hyperbolic arc tangent
     MFloat80 atanh(const MFloat80 &x);
 
-    // Exponential functions
+    /// Exponential functions
     MFloat80 etox(const MFloat80 &x);         // e^x
-    MFloat80 etoxm1(const MFloat80 &x);       // e^x - 1
-    MFloat80 twotox(const MFloat80 &x);       // 2^x
-    MFloat80 tentox(const MFloat80 &x);       // 10^x
+    MFloat80 etoxm1(const MFloat80 &x);       ///< e^x - 1
+    MFloat80 twotox(const MFloat80 &x);       ///< 2^x
+    MFloat80 tentox(const MFloat80 &x);       ///< 10^x
 
-    // Logarithms
+    /// Logarithms
     MFloat80 logn(const MFloat80 &x);         // ln(x)
-    MFloat80 lognp1(const MFloat80 &x);       // ln(x + 1)
+    MFloat80 lognp1(const MFloat80 &x);       ///< ln(x + 1)
     MFloat80 log2(const MFloat80 &x);
     MFloat80 log10(const MFloat80 &x);
 
