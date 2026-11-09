@@ -340,14 +340,18 @@ int main(int argc, char **argv)
                 std::string diff;
                 auto add = [&](const std::string &s) { diff += (diff.empty() ? "" : " ") + s; };
 
-                for (int i = 0; i < 8; i++) if (moira.getD(i) != rs.d[i]) { add("D" + std::to_string(i)); break; }
+                for (int i = 0; i < 8; i++) if (moira.getD(i) != rs.d[i]) {
+                    add("D" + std::to_string(i));
+                    if (getenv("BED_REGS")) printf("      D%d: initial %08x exp %08x got %08x\n", i, t.initial.d[i], rs.d[i], moira.getD(i));
+                    break;
+                }
                 for (int i = 0; i < 7; i++) if (moira.getA(i) != rs.a[i]) {
                     add("A" + std::to_string(i));
                     if (getenv("BED_REGS")) printf("      A%d: initial %08x exp %08x got %08x\n", i, t.initial.a[i], rs.a[i], moira.getA(i));
                     break;
                 }
-                if (moira.getUSP() != rs.usp) add("USP");
-                if (moira.getISP() != rs.ssp) add("SSP");
+                if (moira.getUSP() != rs.usp) { add("USP"); if (getenv("BED_REGS")) printf("      USP: initial %08x exp %08x got %08x\n", t.initial.usp, rs.usp, moira.getUSP()); }
+                if (moira.getISP() != rs.ssp) { add("SSP"); if (getenv("BED_REGS")) printf("      SSP: initial %08x exp %08x got %08x\n", t.initial.ssp, rs.ssp, moira.getISP()); }
                 if ((moira.getSR() & srMask) != (rs.sr & srMask)) add("SR");
                 if ((moira.getPC() & ADDR_MASK) != (rs.pc & ADDR_MASK)) add("PC");
                 if (i64(moira.getClock()) != refCycles) add("cycles");
