@@ -112,6 +112,46 @@ Moira::writeStackFrame0010(u16 sr, u32 pc, u32 ia, u16 nr)
 }
 
 template <Core C> void
+Moira::writeStackFrame0111(u16 sr, u32 pc, u16 nr, u16 ssw, u32 addr, u32 dataOut)
+{
+    // Write-back 1 (unused)
+    for (int i = 0; i < 4; i++) push<C, Long>(0); // PD3 ... PD0
+    push<C, Long>(0);                             // WB1A
+
+    // Write-back 2 (unused)
+    push<C, Long>(0);                             // WB2D
+    push<C, Long>(0);                             // WB2A
+
+    // Write-back 3 (the faulting write)
+    bool write = !(ssw & SSW040::RW);
+    push<C, Long>(dataOut);                       // WB3D
+    push<C, Long>(write ? addr : 0);              // WB3A
+
+    // Fault address
+    push<C, Long>(addr);
+
+    // Write-back status words
+    push<C, Word>(0);                             // WB1S
+    push<C, Word>(0);                             // WB2S
+    push<C, Word>(write ? 0x80 | (ssw & 0x7F) : 0); // WB3S
+
+    // Special status word
+    push<C, Word>(ssw);
+
+    // Effective address
+    push<C, Long>(addr);
+
+    // 0111 | Vector offset
+    push<C, Word>(0x7000 | nr << 2);
+
+    // Program counter
+    push<C, Long>(pc);
+
+    // Status register
+    push<C, Word>(sr);
+}
+
+template <Core C> void
 Moira::writeStackFrame1000(StackFrame &frame, u16 sr, u32 pc, u32 ia, u16 nr, u32 addr)
 {
     assert(C == Core::C68010);
@@ -339,7 +379,13 @@ Moira::execBusError(StackFrame frame, int delay)
          * and the logical fault address. A fault in a write cycle is reported
          * with the short format ($A), all others with the long format ($B).
          */
-        if (cpuModel >= CPUModel::M68EC030) {
+        if (cpuModel >= CPUModel::M68EC040) {
+
+            // The write-back buffer 3 holds the data of a faulting write
+            bool write = !(frame.ssw & SSW040::RW);
+            writeStackFrame0111<C>(status, reg.pc0, 2, frame.ssw, frame.addr, write ? busWriteData : 0);
+
+        } else if (cpuModel >= CPUModel::M68EC030) {
 
             // The pipe stages hold the two instruction words behind the opcode
             bool supervisor = status & 0x2000;

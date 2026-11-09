@@ -8,6 +8,7 @@
 #pragma once
 
 #include "MMU030.h"
+#include "MMU040.h"
 
 namespace MOIRA_NAMESPACE {
 
@@ -22,7 +23,7 @@ enum class MMUModel
     NONE,                   // The MMU is not emulated (MMU instructions cause a line F exception)
     BUILTIN,                // Use the MMU of the CPU (68030, 68040), other CPUs have none
     M68030,                 // The MMU of the 68030
-    M68040                  // The MMU of the 68040 (not emulated yet)
+    M68040                  // The MMU of the 68040
 };
 
 /* Memory management unit
@@ -41,6 +42,7 @@ public:
 
     // MMU implementations
     MMU030 mmu030;
+    MMU040 mmu040;
 
 
     //
@@ -49,10 +51,10 @@ public:
 
 public:
 
-    MMU(Moira &ref) : mmu030(ref) { }
+    MMU(Moira &ref) : mmu030(ref), mmu040(ref) { }
 
     // Initializes all registers and invalidates the ATC
-    void reset() { mmu030.reset(); }
+    void reset() { mmu030.reset(); mmu040.reset(); }
 
 
     //
@@ -86,6 +88,7 @@ MMU::isEnabled() const
     switch (model) {
 
         case MMUModel::M68030: return mmu030.isEnabled();
+        case MMUModel::M68040: return mmu040.isEnabled();
         default:               return false;
     }
 }
@@ -96,6 +99,7 @@ MMU::translate(u32 addr, u8 fc, bool write, bool *ci)
     switch (model) {
 
         case MMUModel::M68030: return mmu030.translate(addr, fc, write, ci);
+        case MMUModel::M68040: return mmu040.translate(addr, fc, write, ci);
 
         default:
 

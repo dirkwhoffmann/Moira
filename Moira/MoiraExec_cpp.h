@@ -3206,10 +3206,7 @@ Moira::execMovecRcRx(u16 opcode)
     }
     if constexpr (C == Core::C68020) {
 
-        auto rc = arg & 0xFFF;
-
-        if (rc != 0x000 && rc != 0x001 && rc != 0x800 && rc != 0x801 &&
-            rc != 0x002 && rc != 0x802 && rc != 0x803 && rc != 0x804) {
+        if (!isValidMovecReg(arg & 0xFFF)) {
 
             execIllegal<C, I, M, S>(opcode);
             return;
@@ -3226,6 +3223,14 @@ Moira::execMovecRcRx(u16 opcode)
         case 0x802: reg.r[dst] = getCAAR(); break;
         case 0x803: reg.r[dst] = reg.sr.m ? getSP() : getMSP(); break;
         case 0x804: reg.r[dst] = reg.sr.m ? getISP() : getSP(); break;
+        case 0x003: reg.r[dst] = mmu.mmu040.tc; break;
+        case 0x004: reg.r[dst] = mmu.mmu040.itt0; break;
+        case 0x005: reg.r[dst] = mmu.mmu040.itt1; break;
+        case 0x006: reg.r[dst] = mmu.mmu040.dtt0; break;
+        case 0x007: reg.r[dst] = mmu.mmu040.dtt1; break;
+        case 0x805: reg.r[dst] = mmu.mmu040.mmusr; break;
+        case 0x806: reg.r[dst] = mmu.mmu040.urp; break;
+        case 0x807: reg.r[dst] = mmu.mmu040.srp; break;
     }
 
     prefetch<C, POLL>();
@@ -3260,10 +3265,7 @@ Moira::execMovecRxRc(u16 opcode)
     }
     if constexpr (C == Core::C68020) {
 
-        auto reg = arg & 0xFFF;
-
-        if (reg != 0x000 && reg != 0x001 && reg != 0x800 && reg != 0x801 &&
-            reg != 0x002 && reg != 0x802 && reg != 0x803 && reg != 0x804) {
+        if (!isValidMovecReg(arg & 0xFFF)) {
 
             execIllegal<C, I, M, S>(opcode);
             return;
@@ -3281,6 +3283,14 @@ Moira::execMovecRxRc(u16 opcode)
         case 0x802: setCAAR(val); break;
         case 0x803: reg.sr.m ? setSP(val) : setMSP(val); break;
         case 0x804: reg.sr.m ? setISP(val) : setSP(val); break;
+        case 0x003: if (cpuModel != CPUModel::M68EC040) mmu.mmu040.setTC(val); break;
+        case 0x004: mmu.mmu040.setITT0(val); break;
+        case 0x005: mmu.mmu040.setITT1(val); break;
+        case 0x006: mmu.mmu040.setDTT0(val); break;
+        case 0x007: mmu.mmu040.setDTT1(val); break;
+        case 0x805: mmu.mmu040.mmusr = val; break;
+        case 0x806: mmu.mmu040.urp = val; break;
+        case 0x807: mmu.mmu040.srp = val; break;
     }
 
     prefetch<C, POLL>();
@@ -5165,6 +5175,17 @@ Moira::execRte(u16 opcode)
                     
                     //
                     (void)pop<C, Long>();
+                    break;
+
+                } else if (format == 0b0111 && cpuModel >= CPUModel::M68EC040) {  // Access error frame (68040)
+
+                    // Status register, program counter, format and vector offset
+                    newsr = (u16)pop<C, Word>();
+                    newpc = pop<C, Long>();
+                    (void)pop<C, Word>();
+
+                    // Effective address, special status word, write-back data
+                    for (int i = 0; i < 13; i++) (void)pop<C, Long>();
                     break;
 
                 } else if (format == 0b1010) {  // Short bus fault frame

@@ -92,8 +92,8 @@ enum class CPUModel
     M68EC030,               // Non-cycle exact emulation (68020 core, no MMU)
     M68030,                 // Non-cycle exact emulation (68020 core, 68030 MMU)
     M68EC040,               // Non-cycle exact emulation (68020 core, no FPU, no MMU)
-    M68LC040,               // Non-cycle exact emulation (68020 core, no FPU, 68030-style MMU)
-    M68040                  // Non-cycle exact emulation (68020 core, FPU, 68030-style MMU)
+    M68LC040,               // Non-cycle exact emulation (68020 core, no FPU, 68040 MMU)
+    M68040                  // Non-cycle exact emulation (68020 core, FPU, 68040 MMU)
 };
 
 // Execution cores
@@ -439,6 +439,17 @@ static constexpr u16 RW     = 0x0040;   // Read cycle (0 = write cycle)
 static constexpr u16 SIZ_B  = 0x0010;   // Transfer size: byte
 static constexpr u16 SIZ_W  = 0x0020;   // Transfer size: word
 static constexpr u16 SIZ_L  = 0x0000;   // Transfer size: long word
+}
+
+namespace SSW040 {
+
+static constexpr u16 MA     = 0x0800;   // Misaligned access
+static constexpr u16 ATC    = 0x0400;   // Fault caused by the address translation
+static constexpr u16 LK     = 0x0200;   // Locked transfer (read-modify-write)
+static constexpr u16 RW     = 0x0100;   // Read cycle (0 = write cycle)
+static constexpr u16 SIZ_L  = 0x0000;   // Transfer size: long word
+static constexpr u16 SIZ_B  = 0x0020;   // Transfer size: byte
+static constexpr u16 SIZ_W  = 0x0040;   // Transfer size: word
 }
 
 /* Function codes for CPU privilege levels and address space separation.

@@ -12,6 +12,7 @@ FPU/FloatMath.cpp
 FPU/FpuFormats.cpp
 FPU/FPU.cpp
 MMU/MMU030.cpp
+MMU/MMU040.cpp
 )
 
 add_library(moira STATIC ${MOIRA_SRC})

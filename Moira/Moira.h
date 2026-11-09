@@ -32,6 +32,7 @@ class Moira {
     friend class Watchpoints;
     friend class Catchpoints;
     friend class MMU030;
+    friend class MMU040;
     friend class Cache;
     friend class ICache;
     friend class DCache;
@@ -868,6 +869,9 @@ private:
 
     // Extracts the function code from the extension word of an MMU instruction
     u8 mmuFC(u16 ext) const;
+
+    // Checks whether MOVEC accepts a control register number
+    bool isValidMovecReg(u16 rc) const;
 
     // Translates a logical address to a physical address
     template <Core C, bool write, Size S> u32 translate(u32 addr, u8 fc, bool *ci = nullptr);

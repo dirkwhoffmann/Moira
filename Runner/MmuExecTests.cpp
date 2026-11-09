@@ -932,8 +932,378 @@ static void testDataCache()
     }
 }
 
+
+//
+// 68040 MMU
+//
+
+/* Page size is 4 KB with the fixed three-level table structure:
+ *
+ *      Logical    Physical
+ *      0x0000     0x0000    (vectors, stack)
+ *      0x1000     0x1000    (code)
+ *      0x2000     0x5000    (relocated)
+ *      0x3000     ---       (invalid)
+ *      0x4000     0x6000    (write protected)
+ *      0x5000     0x7000
+ */
+static constexpr u32 rootTable    = 0x10000;
+static constexpr u32 pointerTable = 0x10200;
+static constexpr u32 pageTable    = 0x10400;
+
+static constexpr u32 TC40_E = 1 << 15;
+static constexpr u32 TC40_P = 1 << 14;
+
+static void setupTables040(TestCPU &cpu, bool page8k = false)
+{
+    cpu.write32(rootTable, pointerTable | 2);
+    cpu.write32(pointerTable, pageTable | 2);
+
+    if (page8k) {
+
+        // 8K pages: Logical 0x2000 -> 0x6000
+        cpu.write32(pageTable + 4 * 0, 0x0000 | 1);
+        cpu.write32(pageTable + 4 * 1, 0x6000 | 1);
+        cpu.write32(pageTable + 4 * 2, 0xA000 | 1);
+
+    } else {
+
+        cpu.write32(pageTable + 4 * 0, 0x0000 | 1);
+        cpu.write32(pageTable + 4 * 1, 0x1000 | 1);
+        cpu.write32(pageTable + 4 * 2, 0x5000 | 1);
+        cpu.write32(pageTable + 4 * 3, 0);                 // Invalid
+        cpu.write32(pageTable + 4 * 4, 0x6000 | 1 | 4);    // Write protected
+        cpu.write32(pageTable + 4 * 5, 0x7000 | 1);
+    }
+
+    cpu.mmu.mmu040.urp = rootTable;
+    cpu.mmu.mmu040.srp = rootTable;
+    cpu.mmu.mmu040.setTC(TC40_E | (page8k ? TC40_P : 0));
+
+    // Bus error vector
+    cpu.write32(2 * 4, 0x1800);
+    cpu.reg.dfc = FC::SUPERVISOR_DATA;
+    cpu.reg.sfc = FC::SUPERVISOR_DATA;
+}
+
+static void testMMU040()
+{
+    // Address translation
+    {
+        TestCPU cpu(CPUModel::M68040);
+        CHECK(cpu.mmu.getModel() == MMUModel::M68040);
+        CHECK(!cpu.mmu.isEnabled());
+        setupTables040(cpu);
+        CHECK(cpu.mmu.isEnabled());
+        CHECK(cpu.enabled == 1);
+
+        // Read from a relocated page
+        cpu.write32(0x5004, 0xCAFEBABE);
+        cpu.reg.a[0] = 0x2004;
+        cpu.run({ 0x2010 });                        // MOVE.L (A0),D0
+        CHECK(cpu.reg.d[0] == 0xCAFEBABE);
+
+        // The U bit has been set in all three levels
+        CHECK((cpu.read32(rootTable) & 8) == 8);
+        CHECK((cpu.read32(pointerTable) & 8) == 8);
+        CHECK((cpu.read32(pageTable + 4 * 2) & 0x18) == 0x08);
+
+        // A write access sets the M bit, too (although the page is in the ATC)
+        cpu.reg.d[1] = 0xDEADBEEF;
+        cpu.reg.a[0] = 0x2008;
+        cpu.run({ 0x2081 });                        // MOVE.L D1,(A0)
+        CHECK(cpu.read32(0x5008) == 0xDEADBEEF);
+        CHECK(cpu.read32(0x2008) == 0);
+        CHECK((cpu.read32(pageTable + 4 * 2) & 0x18) == 0x18);
+
+        // The page offset is preserved
+        cpu.write32(0x5FFC, 0x12345678);
+        cpu.reg.a[0] = 0x2FFC;
+        cpu.run({ 0x2010 });
+        CHECK(cpu.reg.d[0] == 0x12345678);
+
+        // Disabling translation
+        cpu.mmu.mmu040.setTC(0);
+        CHECK(!cpu.mmu.isEnabled());
+        CHECK(cpu.disabled == 1);
+        cpu.write32(0x2004, 0x11111111);
+        cpu.reg.a[0] = 0x2004;
+        cpu.run({ 0x2010 });
+        CHECK(cpu.reg.d[0] == 0x11111111);
+    }
+
+    // 8K pages
+    {
+        TestCPU cpu(CPUModel::M68040);
+        setupTables040(cpu, true);
+        CHECK(cpu.mmu.mmu040.pageMask() == 0x1FFF);
+
+        cpu.write32(0x7004, 0xCAFEBABE);            // Logical 0x3004
+        cpu.reg.a[0] = 0x3004;
+        cpu.run({ 0x2010 });
+        CHECK(cpu.reg.d[0] == 0xCAFEBABE);
+    }
+
+    // Faults (format $7)
+    {
+        TestCPU cpu(CPUModel::M68040);
+        setupTables040(cpu);
+        cpu.reg.a[0] = 0x3000;
+        cpu.run({ 0x2018 });                        // MOVE.L (A0)+,D0
+
+        u32 sp = cpu.reg.sp;
+        CHECK(sp == TestCPU::stackStart - 60);
+        CHECK(cpu.read16(sp + 6) == (0x7000 | 2 * 4));
+        CHECK(cpu.read32(sp + 2) == TestCPU::codeStart);
+        CHECK(cpu.read16(sp + 0x0C) == (SSW040::ATC | SSW040::RW | SSW040::SIZ_L | FC::SUPERVISOR_DATA));
+        CHECK(cpu.read32(sp + 0x14) == 0x3000);     // Fault address
+        CHECK(cpu.read16(sp + 0x0E) == 0);          // No write-back
+        CHECK(cpu.reg.a[0] == 0x3000);              // A0 has been rolled back
+    }
+    {
+        // Write to a write protected page
+        TestCPU cpu(CPUModel::M68040);
+        setupTables040(cpu);
+        cpu.reg.a[0] = 0x4000;
+        cpu.reg.d[1] = 0x22222222;
+        cpu.run({ 0x20C1 });                        // MOVE.L D1,(A0)+
+
+        u32 sp = cpu.reg.sp;
+        CHECK(sp == TestCPU::stackStart - 60);
+        CHECK(cpu.read16(sp + 0x0C) == (SSW040::ATC | SSW040::SIZ_L | FC::SUPERVISOR_DATA));
+        CHECK(cpu.read16(sp + 0x0E) == (0x80 | FC::SUPERVISOR_DATA));     // Write-back 3 status
+        CHECK(cpu.read32(sp + 0x14) == 0x4000);
+        CHECK(cpu.read32(sp + 0x18) == 0x4000);     // WB3A
+        CHECK(cpu.read32(sp + 0x1C) == 0x22222222); // WB3D
+        CHECK(cpu.read32(0x6000) == 0);
+
+        // Reading the page is fine
+        cpu.reg.a[0] = 0x4000;
+        cpu.run({ 0x2010 });
+        CHECK(cpu.reg.d[0] == 0);
+    }
+    {
+        // The instruction is restarted when the handler returns with RTE
+        TestCPU cpu(CPUModel::M68040);
+        setupTables040(cpu);
+        cpu.write32(0x8004, 0xCAFEBABE);
+        cpu.write16(0x1800, 0x4E73);                // RTE
+        cpu.reg.a[0] = 0x3004;
+        cpu.reg.sr.ipl = 0;
+        cpu.run({ 0x2018 });                        // MOVE.L (A0)+,D0
+        CHECK(cpu.reg.pc0 == 0x1800);
+
+        cpu.write32(pageTable + 4 * 3, 0x8000 | 1);
+        cpu.mmu.mmu040.atcFlush();
+        cpu.execute();                              // RTE
+        CHECK(cpu.reg.sp == TestCPU::stackStart);
+        CHECK(cpu.reg.pc0 == TestCPU::codeStart);
+        cpu.execute();                              // MOVE.L (A0)+,D0
+        CHECK(cpu.reg.d[0] == 0xCAFEBABE);
+        CHECK(cpu.reg.a[0] == 0x3008);
+    }
+
+    // Supervisor-only pages
+    {
+        TestCPU cpu(CPUModel::M68040);
+        setupTables040(cpu);
+        cpu.write32(pageTable + 4 * 5, 0x7000 | 1 | 0x80);
+        cpu.write32(0x7000, 0x600DF00D);
+        cpu.reg.a[0] = 0x5000;
+        cpu.run({ 0x2010 });
+        CHECK(cpu.reg.d[0] == 0x600DF00D);
+
+        cpu.mmu.mmu040.atcFlush();
+        cpu.write32(pageTable + 4 * 5, 0x7000 | 1 | 0x80);
+        auto &mmu = cpu.mmu.mmu040;
+        CHECK(!mmu.translate(0x5000, FC::USER_DATA, false).has_value());
+        CHECK(mmu.translate(0x5000, FC::SUPERVISOR_DATA, false).has_value());
+    }
+
+    // Write protection is inherited from the upper levels
+    {
+        TestCPU cpu(CPUModel::M68040);
+        setupTables040(cpu);
+        cpu.write32(pointerTable, pageTable | 2 | 4);
+        auto &mmu = cpu.mmu.mmu040;
+        CHECK(mmu.translate(0x2000, FC::SUPERVISOR_DATA, false) == 0x5000);
+        CHECK(!mmu.translate(0x2000, FC::SUPERVISOR_DATA, true).has_value());
+    }
+
+    // Indirect page descriptors
+    {
+        TestCPU cpu(CPUModel::M68040);
+        setupTables040(cpu);
+        cpu.write32(0x10800, 0x9000 | 1);
+        cpu.write32(pageTable + 4 * 2, 0x10800 | 2);
+        CHECK(cpu.mmu.mmu040.translate(0x2123, FC::SUPERVISOR_DATA, false) == 0x9123);
+    }
+
+    // Transparent translation
+    {
+        TestCPU cpu(CPUModel::M68040);
+        setupTables040(cpu);
+        auto &mmu = cpu.mmu.mmu040;
+
+        // Address range 0x00xxxxxx, any privilege level
+        mmu.setDTT0(0x00FF8000 | 0x4000);
+        cpu.write32(0x3000, 0xFEEDFACE);
+        cpu.reg.a[0] = 0x3000;
+        cpu.run({ 0x2010 });
+        CHECK(cpu.reg.d[0] == 0xFEEDFACE);
+
+        // Instruction fetches are not affected by the DTT registers
+        CHECK(!mmu.translate(0x3000, FC::SUPERVISOR_PROG, false).has_value());
+        mmu.setITT1(0x00FF8000 | 0x4000);
+        CHECK(mmu.translate(0x3000, FC::SUPERVISOR_PROG, false) == 0x3000);
+
+        // The supervisor field selects the privilege level
+        mmu.setDTT0(0x00FF8000 | 0x2000);           // Supervisor only
+        CHECK(mmu.translate(0x3000, FC::SUPERVISOR_DATA, false) == 0x3000);
+        CHECK(!mmu.translate(0x3000, FC::USER_DATA, false).has_value());
+
+        // The W bit makes writes fault
+        mmu.setDTT0(0x00FF8000 | 0x4000 | 0x4);
+        CHECK(mmu.translate(0x3000, FC::SUPERVISOR_DATA, false) == 0x3000);
+        CHECK(!mmu.translate(0x3000, FC::SUPERVISOR_DATA, true).has_value());
+
+        // Cache mode
+        mmu.setDTT0(0x00FF8000 | 0x4000 | 0x40);
+        bool ci = false;
+        CHECK(mmu.translate(0x3000, FC::SUPERVISOR_DATA, false, &ci) == 0x3000);
+        CHECK(ci);
+
+        // Reserved bits are not writable
+        mmu.setDTT1(0xFFFFFFFF);
+        CHECK(mmu.dtt1 == 0xFFFFE364);
+    }
+
+    // PTEST
+    {
+        TestCPU cpu(CPUModel::M68040);
+        setupTables040(cpu);
+        auto &mmu = cpu.mmu.mmu040;
+
+        cpu.reg.a[0] = 0x2004;
+        cpu.run({ 0xF568 });                        // PTESTR (A0)
+        CHECK(mmu.mmusr == (0x5000 | MMUSR040_RESIDENT));
+
+        cpu.run({ 0xF548 });                        // PTESTW (A0)
+        CHECK(mmu.mmusr == (0x5000 | MMUSR040_RESIDENT | MMUSR040_MODIFIED));
+
+        cpu.reg.a[0] = 0x3000;                      // Invalid
+        cpu.run({ 0xF568 });
+        CHECK(mmu.mmusr == 0);
+
+        cpu.reg.a[0] = 0x4000;                      // Write protected
+        cpu.run({ 0xF568 });
+        CHECK(mmu.mmusr == (0x6000 | MMUSR040_WRITE_PROTECTED | MMUSR040_RESIDENT));
+
+        mmu.setDTT0(0x00FF8000 | 0x4000);           // Transparent
+        cpu.reg.a[0] = 0x3000;
+        cpu.run({ 0xF568 });
+        CHECK(mmu.mmusr == (MMUSR040_TRANSPARENT | MMUSR040_RESIDENT));
+    }
+
+    // PFLUSH
+    {
+        TestCPU cpu(CPUModel::M68040);
+        setupTables040(cpu);
+
+        auto readA0 = [&](u32 addr) {
+            cpu.reg.a[0] = addr;
+            cpu.run({ 0x2010 });
+            return cpu.reg.d[0];
+        };
+        cpu.write32(0x5000, 1);
+        cpu.write32(0x9000, 2);
+        CHECK(readA0(0x2000) == 1);
+
+        // The ATC still serves the old translation
+        cpu.write32(pageTable + 4 * 2, 0x9000 | 1);
+        CHECK(readA0(0x2000) == 1);
+
+        // PFLUSH (A0)
+        cpu.reg.a[0] = 0x2000;
+        cpu.run({ 0xF508 });
+        CHECK(readA0(0x2000) == 2);
+
+        // PFLUSHA
+        cpu.write32(pageTable + 4 * 2, 0x5000 | 1);
+        cpu.run({ 0xF518 });
+        CHECK(readA0(0x2000) == 1);
+
+        // Global entries survive PFLUSHAN and PFLUSHN, but not PFLUSHA and PFLUSH
+        cpu.write32(pageTable + 4 * 2, 0x9000 | 1 | 0x400);
+        cpu.run({ 0xF518 });
+        CHECK(readA0(0x2000) == 2);
+        cpu.write32(pageTable + 4 * 2, 0x5000 | 1);
+        cpu.run({ 0xF510 });                        // PFLUSHAN
+        CHECK(readA0(0x2000) == 2);
+        cpu.reg.a[0] = 0x2000;
+        cpu.run({ 0xF500 });                        // PFLUSHN (A0)
+        CHECK(readA0(0x2000) == 2);
+        cpu.reg.a[0] = 0x2000;
+        cpu.run({ 0xF508 });                        // PFLUSH (A0)
+        CHECK(readA0(0x2000) == 1);
+    }
+
+    // Control registers
+    {
+        TestCPU cpu(CPUModel::M68040);
+        cpu.write32(2 * 4, 0x1800);
+        cpu.write32(4 * 4, 0x1900);
+
+        // Only the E and the P bit are writable (E stays clear here, because
+        // the tables do not exist)
+        cpu.reg.d[0] = 0x7FFF;
+        cpu.run({ 0x4E7B, 0x0003 });                // MOVEC D0,TC
+        CHECK(cpu.mmu.mmu040.tc == 0x4000);
+        CHECK(!cpu.mmu.isEnabled());
+
+        cpu.run({ 0x4E7A, 0x1003 });                // MOVEC TC,D1
+        CHECK(cpu.reg.d[1] == 0x4000);
+
+        cpu.reg.d[0] = 0x12345678;
+        cpu.run({ 0x4E7B, 0x0806 });                // MOVEC D0,URP
+        cpu.run({ 0x4E7B, 0x0807 });                // MOVEC D0,SRP
+        cpu.run({ 0x4E7B, 0x0805 });                // MOVEC D0,MMUSR
+        cpu.run({ 0x4E7B, 0x0004 });                // MOVEC D0,ITT0
+        cpu.run({ 0x4E7B, 0x0007 });                // MOVEC D0,DTT1
+        CHECK(cpu.mmu.mmu040.urp == 0x12345678);
+        CHECK(cpu.mmu.mmu040.srp == 0x12345678);
+        CHECK(cpu.mmu.mmu040.mmusr == 0x12345678);
+        CHECK(cpu.mmu.mmu040.itt0 == (0x12345678 & 0xFFFFE364));
+        CHECK(cpu.mmu.mmu040.dtt1 == (0x12345678 & 0xFFFFE364));
+
+        cpu.run({ 0x4E7A, 0x2806 });                // MOVEC URP,D2
+        CHECK(cpu.reg.d[2] == 0x12345678);
+
+        // The CAAR does not exist
+        cpu.run({ 0x4E7B, 0x0802 });
+        CHECK(cpu.reg.pc0 == 0x1900);
+
+        // Enabling translation
+        cpu.mmu.mmu040.setTC(0);
+        cpu.mmu.mmu040.setTC(0xC000);
+        CHECK(cpu.mmu.isEnabled());
+    }
+
+    // The 68EC040 has no MMU, but transparent translation registers
+    {
+        TestCPU cpu(CPUModel::M68EC040);
+        CHECK(!cpu.mmu.isPresent());
+        cpu.reg.d[0] = 0xFFFFFFFF;
+        cpu.run({ 0x4E7B, 0x0003 });
+        CHECK(cpu.mmu.mmu040.tc == 0);
+        cpu.run({ 0x4E7B, 0x0006 });
+        CHECK(cpu.mmu.mmu040.dtt0 == 0xFFFFE364);
+    }
+}
+
 int main()
 {
+    testMMU040();
     testDataCache();
     testModels();
     testDisabled();

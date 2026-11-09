@@ -21,6 +21,18 @@ Moira::mmuFC(u16 ext) const
 }
 
 bool
+Moira::isValidMovecReg(u16 rc) const
+{
+    // The 68040 has no CAAR but a set of MMU registers
+    if (cpuModel >= CPUModel::M68EC040) {
+        return rc <= 0x007 || rc == 0x800 || rc == 0x801 || (rc >= 0x803 && rc <= 0x807);
+    }
+
+    return rc == 0x000 || rc == 0x001 || rc == 0x002 || rc == 0x800 || rc == 0x801 ||
+           rc == 0x802 || rc == 0x803 || rc == 0x804;
+}
+
+bool
 Moira::isValidExtMMU(Instr I, Mode M, u16 op, u32 ext) const
 {
     auto preg  = [ext]() { return ext >> 10 & 0b111;   };
@@ -153,13 +165,24 @@ Moira::translate(u32 addr, u8 fc, bool *ci)
 
         auto frame = makeFrame<write ? AE_WRITE : 0>(addr);
 
-        // Special status word: A fault in program space belongs to the
-        // instruction pipe, all other faults belong to a data cycle.
-        u16 size = S == Byte ? SSW030::SIZ_B : S == Word ? SSW030::SIZ_W : SSW030::SIZ_L;
-        bool prog = (fc & 3) == 2;
+        // Special status word. On the 68030, a fault in program space belongs
+        // to the instruction pipe, all other faults belong to a data cycle.
+        if (cpuModel >= CPUModel::M68EC040) {
 
-        frame.ssw = (prog ? SSW030::FB | SSW030::RB : SSW030::DF) | size | (fc & 7);
-        if (!write) frame.ssw |= SSW030::RW;
+            // The 68040 reports the transfer type, the size and the cause
+            u16 size = S == Byte ? SSW040::SIZ_B : S == Word ? SSW040::SIZ_W : SSW040::SIZ_L;
+
+            frame.ssw = SSW040::ATC | size | (fc & 7);
+            if (!write) frame.ssw |= SSW040::RW;
+
+        } else {
+
+            u16 size = S == Byte ? SSW030::SIZ_B : S == Word ? SSW030::SIZ_W : SSW030::SIZ_L;
+            bool prog = (fc & 3) == 2;
+
+            frame.ssw = (prog ? SSW030::FB | SSW030::RB : SSW030::DF) | size | (fc & 7);
+            if (!write) frame.ssw |= SSW030::RW;
+        }
 
         throw BusError(frame);
     }
@@ -281,23 +304,25 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execPFlush40(u16 opcode)
 {
     AVAILABILITY(Core::C68020)
+    SUPERVISOR_MODE_ONLY
 
-    auto reg  = _____________xxx (opcode);
+    auto rg   = _____________xxx (opcode);
     auto mode = ___________xx___ (opcode);
-    
-    switch (mode) {
 
-        case 0:
-        case 1:
-                        
-            u32 ea; u32 data;
-            readOp<C, M>(reg, &ea, &data);
-            break;
-            
-        case 2:
-        case 3:
+    // Mode 0: PFLUSHN (An)   Flush a page, keep global entries
+    // Mode 1: PFLUSH (An)    Flush a page
+    // Mode 2: PFLUSHAN       Flush all entries, keep global entries
+    // Mode 3: PFLUSHA        Flush all entries
+    bool global = mode & 1;
 
-            break;
+    if (mode < 2) {
+
+        // The DFC register selects user or supervisor space
+        mmu.mmu040.atcFlushPage(readA(rg), reg.dfc & 4, global);
+
+    } else {
+
+        mmu.mmu040.atcFlush(global);
     }
 
     prefetch<C, POLL>();
@@ -574,20 +599,14 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execPTest40(u16 opcode)
 {
     AVAILABILITY(Core::C68020)
-    
+    SUPERVISOR_MODE_ONLY
+
     auto rg  = _____________xxx (opcode);
     auto rw  = __________x_____ (opcode);
-        
-    u32 ea = 0; u32 data;
-    readOp<C, M, Long>(rg, &ea, &data);
-    
-    u8 fcode = u8(reg.dfc);
-    if (mmu.mmu030.testTT(ea, fcode, rw)) {
-        mmu.mmu030.mmusr |= 0x40;
-    } else {
-        mmu.mmu030.mmusr &= ~0x40;
-    }
-    
+
+    // The DFC register selects the address space
+    mmu.mmu040.mmusr = mmu.mmu040.test(readA(rg), u8(reg.dfc), !rw);
+
     prefetch<C, POLL>();
 
     CYCLES_68020(8);
