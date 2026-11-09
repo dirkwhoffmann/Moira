@@ -480,6 +480,17 @@ Moira::readM(u32 addr)
 template <Core C, Flags F> u32
 Moira::read2x16(u32 lo, u32 hi)
 {
+    if constexpr ((F & REVERSE) && compat == Compatibility::MAME && C == Core::C68000) {
+
+        // MAME reads the lower word first
+        u32 result = read16(hi);
+        SYNC(4);
+        if constexpr (F & POLL) POLL_IPL;
+        result |= read16(lo) << 16;
+        SYNC(2);
+        return result;
+    }
+
     u32 result = read16(lo) << 16;
     SYNC(4);
     if constexpr (F & POLL) POLL_IPL;

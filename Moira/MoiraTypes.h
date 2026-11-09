@@ -544,7 +544,7 @@ typedef u64 Flags;
 namespace Flag {
 
 // Memory access flags
-static constexpr u64 REVERSE        = (1 << 0);   // Reverse the long word access order
+static constexpr u64 REVERSE        = (1 << 0);   // Reverse the long word access order (MAME: reads, too)
 static constexpr u64 SKIP_LAST_RD   = (1 << 1);   // Don't read the extension word
 
 // Interrupt flags

@@ -345,7 +345,7 @@ Moira::execAddRgEa(u16 opcode)
 
     looping<I>() ? noPrefetch<C>(2) : prefetch<C, POLL>();
 
-    writeM<C, M, S, ((compat == Compatibility::UAE) && C != Core::C68020) ? REVERSE : 0>(ea, result);
+    writeM<C, M, S, ((compat == Compatibility::UAE || compat == Compatibility::MAME) && C != Core::C68020) ? REVERSE : 0>(ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -466,7 +466,7 @@ Moira::execAddiEa(u16 opcode)
     result = addsub<C, I, S>(src, data);
     prefetch<C>();
 
-    writeOp<C, M, S, POLL | (((compat == Compatibility::UAE) && C != Core::C68020) ? REVERSE : 0)>(dst, ea, result);
+    writeOp<C, M, S, POLL | (((compat == Compatibility::UAE || compat == Compatibility::MAME) && C != Core::C68020) ? REVERSE : 0)>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -541,7 +541,7 @@ Moira::execAddqEa(u16 opcode)
     result = addsub<C, I, S>(src, data);
     prefetch<C, POLL>();
 
-    writeOp<C, M, S, ((compat == Compatibility::UAE) && C != Core::C68020) ? REVERSE : 0>(dst, ea, result);
+    writeOp<C, M, S, ((compat == Compatibility::UAE || compat == Compatibility::MAME) && C != Core::C68020) ? REVERSE : 0>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -592,8 +592,9 @@ Moira::execAddxEa(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
+    // MAME reads the lower word of a long operand first
     const u64 flags =
-    (S == Word) ? AE_INC_PC : (S == Long) ? AE_INC_PC | AE_INC_A : 0;
+    (S == Word) ? AE_INC_PC : (S == Long) ? AE_INC_PC | AE_INC_A | (compat == Compatibility::MAME ? REVERSE : 0) : 0;
 
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
@@ -631,7 +632,7 @@ Moira::execAddxEa(u16 opcode)
 
     } else if constexpr (S == Long && C == Core::C68010 && !(compat == Compatibility::MUSASHI)) {
 
-        writeM<C, M, S, ((compat == Compatibility::UAE) && C != Core::C68020) ? REVERSE : 0>(ea2, result);
+        writeM<C, M, S, ((compat == Compatibility::UAE || compat == Compatibility::MAME) && C != Core::C68020) ? REVERSE : 0>(ea2, result);
         looping<I>() ? noPrefetch<C>(S == Long ? 0 : 2) : prefetch<C, POLL>();
 
     } else {
@@ -3351,7 +3352,8 @@ Moira::execMovemEaRg(u16 opcode)
         }
     }
 
-    if constexpr (S == Long) (void)read<C, AddrSpace::DATA, Word>(ea);
+    // MAME does not read ahead, it reads one word too many at the end
+    if constexpr (S == Long && compat != Compatibility::MAME) (void)read<C, AddrSpace::DATA, Word>(ea);
 
     if constexpr (M == Mode(3)) {     // (An)+
 
@@ -3379,7 +3381,12 @@ Moira::execMovemEaRg(u16 opcode)
             cnt++;
         }
     }
-    if constexpr (S == Word) (void)read<C, AddrSpace::DATA, Word>(ea);
+    if constexpr (S == Word || compat == Compatibility::MAME) {
+
+        // MAME reads from program space if the operand is addressed relative to the PC
+        constexpr bool pcRel = compat == Compatibility::MAME && (M == Mode::DIPC || M == Mode::IXPC);
+        (void)read<C, pcRel ? AddrSpace::PROG : AddrSpace::DATA, Word>(ea);
+    }
 
     prefetch<C, POLL>();
 
@@ -3437,7 +3444,7 @@ Moira::execMovemRgEa(u16 opcode)
             if constexpr ((compat == Compatibility::UAE) && C == Core::C68020) {
                 if (i == 8 + dst) value = initial - S;
             }
-            writeM<C, M, S, ((compat == Compatibility::MUSASHI) || (compat == Compatibility::UAE)) ? REVERSE : 0>(ea, value);
+            writeM<C, M, S, ((compat == Compatibility::MUSASHI) || (compat == Compatibility::UAE) || (compat == Compatibility::MAME)) ? REVERSE : 0>(ea, value);
             cnt++;
         }
         if constexpr (C != Core::C68020 || (compat == Compatibility::MUSASHI)) writeA(dst, ea);
