@@ -30,6 +30,7 @@
 		50F400000000000000000118 /* FpuExecTests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F400000000000000000117 /* FpuExecTests.cpp */; };
 		50F40000000000000000011A /* FpuRefTests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F400000000000000000119 /* FpuRefTests.cpp */; };
 		50F40000000000000000011C /* MmuExecTests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F40000000000000000011B /* MmuExecTests.cpp */; };
+		50F4000000000000000001F2 /* BusErrorTests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F4000000000000000001F1 /* BusErrorTests.cpp */; };
 		50F400000000000000000017 /* libUAERef.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50F400000000000000000002 /* libUAERef.a */; };
 		5028B10A288D9EC000047C20 /* musashi_softfloat.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B103288D9EC000047C20 /* musashi_softfloat.c */; };
 		5028B10E288D9ECD00047C20 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B10D288D9ECD00047C20 /* m68kops.c */; };
@@ -215,6 +216,7 @@
 		50F400000000000000000117 /* FpuExecTests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FpuExecTests.cpp; sourceTree = "<group>"; };
 		50F400000000000000000119 /* FpuRefTests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FpuRefTests.cpp; sourceTree = "<group>"; };
 		50F40000000000000000011B /* MmuExecTests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MmuExecTests.cpp; sourceTree = "<group>"; };
+		50F4000000000000000001F1 /* BusErrorTests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BusErrorTests.cpp; sourceTree = "<group>"; };
 		50F40000000000000000011D /* doctest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = doctest.h; sourceTree = "<group>"; };
 		50F40000000000000000011E /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F400000000000000000002 /* libUAERef.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libUAERef.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -511,6 +513,7 @@
 				50F400000000000000000117 /* FpuExecTests.cpp */,
 				50F400000000000000000119 /* FpuRefTests.cpp */,
 				50F40000000000000000011B /* MmuExecTests.cpp */,
+				50F4000000000000000001F1 /* BusErrorTests.cpp */,
 				50F40000000000000000011D /* doctest.h */,
 				50F40000000000000000011E /* CMakeLists.txt */,
 			);
@@ -1377,6 +1380,7 @@
 				50F400000000000000000118 /* FpuExecTests.cpp in Sources */,
 				50F40000000000000000011A /* FpuRefTests.cpp in Sources */,
 				50F40000000000000000011C /* MmuExecTests.cpp in Sources */,
+				50F4000000000000000001F2 /* BusErrorTests.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

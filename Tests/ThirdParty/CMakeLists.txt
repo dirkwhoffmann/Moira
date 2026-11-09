@@ -56,3 +56,21 @@ ${CMAKE_CURRENT_SOURCE_DIR}/UAEGlue/sdl-shim
 ${AMI} ${AMI}/include ${AMI}/osdep ${AMI}/archivers ${AMI}/threaddep)
 target_include_directories(uaecpu PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/UAEGlue)
 
+
+
+# MAME's microcoded 68000 core (BSD-3-Clause, used by the tests only)
+#
+# The core is compiled from MAME's unmodified sources on top of a minimal
+# device framework (see MAMEGlue/shim). It is the reference for bus errors.
+set(MAME_DIR ${CMAKE_CURRENT_SOURCE_DIR}/MAME)
+add_library(mameref STATIC
+MAMEGlue/MameCpu.cpp
+${MAME_DIR}/m68000.cpp
+${MAME_DIR}/m68000-decode.cpp
+${MAME_DIR}/m68000-sdf.cpp
+${MAME_DIR}/m68000-sdp.cpp
+)
+set_target_properties(mameref PROPERTIES CXX_STANDARD 20)
+target_include_directories(mameref PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/MAMEGlue/shim ${MAME_DIR})
+target_include_directories(mameref PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/MAMEGlue)
+target_compile_options(mameref PRIVATE -w)
