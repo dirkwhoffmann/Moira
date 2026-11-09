@@ -449,13 +449,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		50F300000000000000000002 /* Examples */ = {
+			isa = PBXGroup;
+			children = (
+				50F20000000000000000000A /* Fibonacci */,
+			);
+			path = Examples;
+			sourceTree = "<group>";
+		};
 		50F20000000000000000000A /* Fibonacci */ = {
 			isa = PBXGroup;
 			children = (
 				50F20000000000000000000B /* main.cpp */,
 			);
-			name = Fibonacci;
-			path = Examples/Fibonacci;
+			path = Fibonacci;
 			sourceTree = "<group>";
 		};
 		50F10000000000000000001F /* SingleStep */ = {
@@ -728,7 +735,7 @@
 			children = (
 				50F80AAB23C9F16900F21D80 /* CMakeLists.txt */,
 				50804E082386A4CE004D3EC2 /* Moira */,
-				50F20000000000000000000A /* Fibonacci */,
+				50F300000000000000000002 /* Examples */,
 				5054686328A6642900028727 /* Tests */,
 				50804E072386A4CE004D3EC2 /* Products */,
 			);
