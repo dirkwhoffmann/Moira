@@ -5485,7 +5485,19 @@ Moira::execStop(u16 opcode)
 
     SUPERVISOR_MODE_ONLY
 
-    u16 src = (u16)readI<C, Word>();
+    u16 src;
+
+    if constexpr (compat == Compatibility::MAME) {
+
+        // MAME does not fetch the next instruction word. The CPU just idles for four cycles.
+        src = queue.irc;
+        reg.pc += 2;
+        SYNC(4);
+
+    } else {
+
+        src = (u16)readI<C, Word>();
+    }
 
     setSR(src);
     flags |= State::STOPPED;
