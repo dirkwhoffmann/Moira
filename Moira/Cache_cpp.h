@@ -9,14 +9,14 @@ void
 Cache::update()
 {
     // The 68020 has a cache with one longword per line, all other models with a cache have four
-    layout = moira.cpuModel >= Model::M68EC030 ? Layout::M68030 : Layout::M68020;
+    layout = moira.cpuModel >= CPUModel::M68EC030 ? Layout::M68030 : Layout::M68020;
     flush();
 }
 
 bool
 Cache::burstCapable() const
 {
-    return moira.cpuModel == Model::M68030 || moira.cpuModel == Model::M68EC030;
+    return moira.cpuModel == CPUModel::M68030 || moira.cpuModel == CPUModel::M68EC030;
 }
 
 void

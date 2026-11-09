@@ -44,7 +44,7 @@ class Moira {
 protected:
     
     // Emulated CPU model
-    Model cpuModel = Model::M68000;
+    CPUModel cpuModel = CPUModel::M68000;
 
     // Selected FPU model
     FPUModel fpuModel = FPUModel::BUILTIN;
@@ -60,7 +60,7 @@ protected:
     bool savedRegValid = false;
     
     // Instruction set used by the disassembler
-    Model dasmModel = Model::M68000;
+    CPUModel dasmModel = CPUModel::M68000;
     
     // Visual style for disassembled instructions
     DasmStyle instrStyle;
@@ -186,7 +186,7 @@ public:
 protected:
     
     // Creates or updates the jump tables for execution and disassembly
-    void createJumpTable(Model cpuModel, Model dasmModel);
+    void createJumpTable(CPUModel cpuModel, CPUModel dasmModel);
 
     // Rolls the registers back to the state saved at the start of the instruction
     void restoreRegisters();
@@ -200,7 +200,7 @@ protected:
 
     // Determines the effective FPU and MMU from the CPU model and the selection
     void updateUnits();
-    void createJumpTable(Model model) { createJumpTable(model, model); }
+    void createJumpTable(CPUModel model) { createJumpTable(model, model); }
     
 private:
     
@@ -212,19 +212,19 @@ private:
      * consumption far beyond what some environments provide.
      */
     
-    template <Core C> void createJumpTable(Model model, bool registerDasm);
-    template <Core C> void createJumpTable1(Model model, bool registerDasm);
-    template <Core C> void createJumpTable2(Model model, bool registerDasm);
-    template <Core C> void createJumpTable3(Model model, bool registerDasm);
-    template <Core C> void createJumpTable4(Model model, bool registerDasm);
-    template <Core C> void createJumpTable5(Model model, bool registerDasm);
-    template <Core C> void createJumpTable6(Model model, bool registerDasm);
-    template <Core C> void createJumpTable7(Model model, bool registerDasm);
-    template <Core C> void createJumpTable8(Model model, bool registerDasm);
-    template <Core C> void createJumpTable9(Model model, bool registerDasm);
-    template <Core C> void createJumpTable10(Model model, bool registerDasm);
-    template <Core C> void createJumpTable11(Model model, bool registerDasm);
-    template <Core C> void createJumpTable12(Model model, bool registerDasm);
+    template <Core C> void createJumpTable(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable1(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable2(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable3(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable4(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable5(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable6(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable7(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable8(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable9(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable10(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable11(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable12(CPUModel model, bool registerDasm);
     
     
     //
@@ -234,8 +234,8 @@ private:
 public:
     
     // Sets the emulated CPU models
-    void setModel(Model cpuModel, Model dasmModel);
-    void setModel(Model model) { setModel(model, model); }
+    void setModel(CPUModel cpuModel, CPUModel dasmModel);
+    void setModel(CPUModel model) { setModel(model, model); }
 
     /* Selects the FPU and MMU to emulate. NONE removes the unit, even if the
      * CPU provides one (e.g., to emulate a 68LC040 or 68EC030 with a 68040 or
@@ -254,7 +254,7 @@ public:
     MMUModel getMmuModel() const { return mmuModel; }
 
     // Checks if a model provides a coprocessor interface (to attach a 6888x)
-    static bool hasCoproInterface(Model model);
+    static bool hasCoproInterface(CPUModel model);
 
     // Checks if an external floating-point coprocessor (68881 or 68882) is attached
     bool has6888x() const;
@@ -294,7 +294,7 @@ public:
     
     // Checks if the emulated CPU model has a memory management unit (MMU)
     bool hasMMU() const;
-    static bool hasMMU(Model model);
+    static bool hasMMU(CPUModel model);
     
     // Checks if the emulated CPU model has a floating-point unit (FPU)
     bool hasFPU() const;
@@ -777,9 +777,9 @@ public:
     u16 availabilityMask(Instr I, Mode M, Size S, u16 ext) const;
     
     // Checks if a given CPU model supports a specific instruction
-    bool isAvailable(Model model, Instr I) const;
-    bool isAvailable(Model model, Instr I, Mode M, Size S) const;
-    bool isAvailable(Model model, Instr I, Mode M, Size S, u16 ext) const;
+    bool isAvailable(CPUModel model, Instr I) const;
+    bool isAvailable(CPUModel model, Instr I, Mode M, Size S) const;
+    bool isAvailable(CPUModel model, Instr I, Mode M, Size S, u16 ext) const;
     
     
     //
@@ -795,7 +795,7 @@ private:
     bool isValidExtMMU(Instr I, Mode M, u16 op, u32 ext) const;
     
     // Validates extension words for FPU-related instructions
-    bool isValidExtFPU(Instr I, Mode M, u16 op, u32 ext, Model model) const;
+    bool isValidExtFPU(Instr I, Mode M, u16 op, u32 ext, CPUModel model) const;
     
     
     //
@@ -881,9 +881,9 @@ private:
  * own splits the instantiation work three ways and keeps the compiler's peak
  * memory usage within bounds. The definitions live in MoiraCore680x0.cpp.
  */
-extern template void Moira::createJumpTable<Core::C68000>(Model, bool);
-extern template void Moira::createJumpTable<Core::C68010>(Model, bool);
-extern template void Moira::createJumpTable<Core::C68020>(Model, bool);
+extern template void Moira::createJumpTable<Core::C68000>(CPUModel, bool);
+extern template void Moira::createJumpTable<Core::C68010>(CPUModel, bool);
+extern template void Moira::createJumpTable<Core::C68020>(CPUModel, bool);
 
 
 }

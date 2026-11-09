@@ -49,6 +49,6 @@ using namespace Flag;
  * for which the declaration in MoiraInit.h is enough.
  */
 
-template void Moira::createJumpTable<MOIRA_CORE>(Model, bool);
+template void Moira::createJumpTable<MOIRA_CORE>(CPUModel, bool);
 
 }

@@ -92,7 +92,7 @@ Moira::build()
 }
 
 void
-Moira::setModel(Model cpuModel, Model dasmModel)
+Moira::setModel(CPUModel cpuModel, CPUModel dasmModel)
 {
     if (this->cpuModel != cpuModel || this->dasmModel != dasmModel) {
         
@@ -120,7 +120,7 @@ Moira::updateUnits()
 
     if (fpuModel != FPUModel::NONE) {
 
-        if (cpuModel == Model::M68040) {
+        if (cpuModel == CPUModel::M68040) {
             effectiveFpu = FPUModel::BUILTIN;
         } else if (hasCoproInterface(cpuModel) && fpuModel != FPUModel::BUILTIN) {
             effectiveFpu = fpuModel;
@@ -153,14 +153,14 @@ Moira::setMmuModel(MMUModel model)
 }
 
 bool
-Moira::hasCoproInterface(Model model)
+Moira::hasCoproInterface(CPUModel model)
 {
     switch (model) {
 
-        case Model::M68EC020:
-        case Model::M68020:
-        case Model::M68EC030:
-        case Model::M68030:     return true;
+        case CPUModel::M68EC020:
+        case CPUModel::M68020:
+        case CPUModel::M68EC030:
+        case CPUModel::M68030:     return true;
         default:                return false;
     }
 }
@@ -204,7 +204,7 @@ Moira::hasCPI() const
 {
     switch (cpuModel) {
 
-        case Model::M68EC020: case Model::M68020: case Model::M68EC030: case Model::M68030:
+        case CPUModel::M68EC020: case CPUModel::M68020: case CPUModel::M68EC030: case CPUModel::M68030:
             return true;
 
         default:
@@ -213,11 +213,11 @@ Moira::hasCPI() const
 }
 
 bool
-Moira::hasMMU(Model model)
+Moira::hasMMU(CPUModel model)
 {
     switch (model) {
 
-        case Model::M68030: case Model::M68LC040: case Model::M68040:
+        case CPUModel::M68030: case CPUModel::M68LC040: case CPUModel::M68040:
             return true;
 
         default:
@@ -236,7 +236,7 @@ Moira::hasFPU() const
 {
     switch (cpuModel) {
 
-        case Model::M68040:
+        case CPUModel::M68040:
             return true;
 
         default:
@@ -249,8 +249,8 @@ Moira::cacrMask() const
 {
     switch (cpuModel) {
 
-        case Model::M68020: case Model::M68EC020: return 0x0003;
-        case Model::M68030: case Model::M68EC030: return 0x3313;
+        case CPUModel::M68020: case CPUModel::M68EC020: return 0x0003;
+        case CPUModel::M68030: case CPUModel::M68EC030: return 0x3313;
         
         default:
             return 0xFFFF;
@@ -262,8 +262,8 @@ Moira::addrMask() const
 {
     switch (cpuModel) {
 
-        case Model::M68000: return addrMask<Core::C68000>();
-        case Model::M68010: return addrMask<Core::C68010>();
+        case CPUModel::M68000: return addrMask<Core::C68000>();
+        case CPUModel::M68010: return addrMask<Core::C68010>();
         
         default:
             return addrMask<Core::C68020>();
@@ -278,8 +278,8 @@ Moira::reset()
 
     switch (cpuModel) {
 
-        case Model::M68000:    reset<Core::C68000>(); break;
-        case Model::M68010:    reset<Core::C68010>(); break;
+        case CPUModel::M68000:    reset<Core::C68000>(); break;
+        case CPUModel::M68010:    reset<Core::C68010>(); break;
         
         default:
             reset<Core::C68020>();
@@ -534,8 +534,8 @@ Moira::processException(const std::exception &exc)
 {
     switch (cpuModel) {
 
-        case Model::M68000: processException<Core::C68000>(exc); break;
-        case Model::M68010: processException<Core::C68010>(exc); break;
+        case CPUModel::M68000: processException<Core::C68000>(exc); break;
+        case CPUModel::M68010: processException<Core::C68010>(exc); break;
         
         default:
             processException<Core::C68020>(exc);
@@ -664,7 +664,7 @@ Moira::setSR(u16 val)
     setCCR(u8(val));
     setSupervisorMode(s);
 
-    if (cpuModel > Model::M68010) {
+    if (cpuModel > CPUModel::M68010) {
 
         bool t0 = (val >> 14) & 1;
         bool m = (val >> 12) & 1;
@@ -868,19 +868,19 @@ u16 Moira::availabilityMask(Instr I, Mode M, Size S, u16 ext) const
 }
 
 bool
-Moira::isAvailable(Model model, Instr I) const
+Moira::isAvailable(CPUModel model, Instr I) const
 {
     return availabilityMask(I) & (1 << (int)model);
 }
 
 bool
-Moira::isAvailable(Model model, Instr I, Mode M, Size S) const
+Moira::isAvailable(CPUModel model, Instr I, Mode M, Size S) const
 {
     return availabilityMask(I, M, S) & (1 << (int)model);
 }
 
 bool
-Moira::isAvailable(Model model, Instr I, Mode M, Size S, u16 ext) const
+Moira::isAvailable(CPUModel model, Instr I, Mode M, Size S, u16 ext) const
 {
     return availabilityMask(I, M, S, ext) & (1 << (int)model);
 }

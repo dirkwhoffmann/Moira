@@ -83,7 +83,7 @@ static constexpr int portSize(u8 dsack)
 //
 
 // CPU variants
-enum class Model
+enum class CPUModel
 {
     M68000,                 // Cycle-exact emulation
     M68010,                 // Cycle-exact emulation
@@ -469,14 +469,14 @@ static constexpr u8 SUPERVISOR_PROG = 6;  // Supervisor access to program space
  */
 namespace AV {
 
-static constexpr u16 M68000         = 1 << int(Model::M68000);
-static constexpr u16 M68010         = 1 << int(Model::M68010);
-static constexpr u16 M68020         = 1 << int(Model::M68EC020) | 1 << int(Model::M68020);
-static constexpr u16 M68030         = 1 << int(Model::M68EC030) | 1 << int(Model::M68030);
-static constexpr u16 M68040         = 1 << int(Model::M68EC040) | 1 << int(Model::M68LC040) | 1 << int(Model::M68040);
-static constexpr u16 MMU            = 1 << int(Model::M68030) | 1 << int(Model::M68LC040) | 1 << int(Model::M68040);
-static constexpr u16 FPU            = M68020 | M68030 | 1 << int(Model::M68040);
-static constexpr u16 FPU040         = 1 << int(Model::M68040);
+static constexpr u16 M68000         = 1 << int(CPUModel::M68000);
+static constexpr u16 M68010         = 1 << int(CPUModel::M68010);
+static constexpr u16 M68020         = 1 << int(CPUModel::M68EC020) | 1 << int(CPUModel::M68020);
+static constexpr u16 M68030         = 1 << int(CPUModel::M68EC030) | 1 << int(CPUModel::M68030);
+static constexpr u16 M68040         = 1 << int(CPUModel::M68EC040) | 1 << int(CPUModel::M68LC040) | 1 << int(CPUModel::M68040);
+static constexpr u16 MMU            = 1 << int(CPUModel::M68030) | 1 << int(CPUModel::M68LC040) | 1 << int(CPUModel::M68040);
+static constexpr u16 FPU            = M68020 | M68030 | 1 << int(CPUModel::M68040);
+static constexpr u16 FPU040         = 1 << int(CPUModel::M68040);
 static constexpr u16 M68030_UP      = M68030 | M68040;
 static constexpr u16 M68020_UP      = M68020 | M68030_UP;
 static constexpr u16 M68010_UP      = M68010 | M68020_UP;

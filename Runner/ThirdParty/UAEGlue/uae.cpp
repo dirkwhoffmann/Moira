@@ -17,19 +17,19 @@ static void uaeWrite(int size, u32 addr, u32 value, u32 fc, u64 cycle)
         sandbox.record(size == 1 ? POKE8 : POKE16, addr, cycle, fc, size == 1 ? u8(value) : u16(value));
 }
 
-void setupUAE(moira::Model model, moira::FPUModel fpuModel)
+void setupUAE(moira::CPUModel model, moira::FPUModel fpuModel)
 {
     using uaecpu::Cpu;
     using uaecpu::Fpu;
     Cpu cpu =
-    model == moira::Model::M68000   ? Cpu::M68000 :
-    model == moira::Model::M68010   ? Cpu::M68010 :
-    model == moira::Model::M68EC020 ? Cpu::M68EC020 :
-    model == moira::Model::M68020   ? Cpu::M68020 :
-    model == moira::Model::M68EC030 ? Cpu::M68EC030 :
-    model == moira::Model::M68030   ? Cpu::M68030 :
-    model == moira::Model::M68EC040 ? Cpu::M68EC040 :
-    model == moira::Model::M68LC040 ? Cpu::M68LC040 : Cpu::M68040;
+    model == moira::CPUModel::M68000   ? Cpu::M68000 :
+    model == moira::CPUModel::M68010   ? Cpu::M68010 :
+    model == moira::CPUModel::M68EC020 ? Cpu::M68EC020 :
+    model == moira::CPUModel::M68020   ? Cpu::M68020 :
+    model == moira::CPUModel::M68EC030 ? Cpu::M68EC030 :
+    model == moira::CPUModel::M68030   ? Cpu::M68030 :
+    model == moira::CPUModel::M68EC040 ? Cpu::M68EC040 :
+    model == moira::CPUModel::M68LC040 ? Cpu::M68LC040 : Cpu::M68040;
 
     Fpu fpu =
     fpuModel == moira::FPUModel::M68881   ? Fpu::M68881 :

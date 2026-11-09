@@ -28,7 +28,7 @@ static constexpr bool useMusashi = (compat == Compatibility::MUSASHI);
 TestCPU *moiracpu;
 
 // The currently tested CPU type and instruction
-Model cpuModel = Model::M68000;
+CPUModel cpuModel = CPUModel::M68000;
 FPUModel fpuModel = FPUModel::NONE;
 u16 opcode = 0;
 
@@ -38,36 +38,36 @@ clock_t moiraclk[2] = {0,0};
 
 static void resetClocks() { refclk[0] = refclk[1] = moiraclk[0] = moiraclk[1] = 0; }
 
-static const struct { Model model; const char *name; } modelTable[] = {
+static const struct { CPUModel model; const char *name; } modelTable[] = {
 
-    { Model::M68000,   "68000" },
-    { Model::M68010,   "68010" },
-    { Model::M68EC020, "EC020" },
-    { Model::M68020,   "68020" },
-    { Model::M68EC030, "EC030" },
-    { Model::M68030,   "68030" },
-    { Model::M68EC040, "EC040" },
-    { Model::M68LC040, "LC040" },
-    { Model::M68040,   "68040" }
+    { CPUModel::M68000,   "68000" },
+    { CPUModel::M68010,   "68010" },
+    { CPUModel::M68EC020, "EC020" },
+    { CPUModel::M68020,   "68020" },
+    { CPUModel::M68EC030, "EC030" },
+    { CPUModel::M68030,   "68030" },
+    { CPUModel::M68EC040, "EC040" },
+    { CPUModel::M68LC040, "LC040" },
+    { CPUModel::M68040,   "68040" }
 };
 
-const std::vector<Model> &allModels()
+const std::vector<CPUModel> &allModels()
 {
-    static const std::vector<Model> all = []() {
-        std::vector<Model> result;
+    static const std::vector<CPUModel> all = []() {
+        std::vector<CPUModel> result;
         for (auto &m : modelTable) result.push_back(m.model);
         return result;
     }();
     return all;
 }
 
-const char *modelName(Model model)
+const char *modelName(CPUModel model)
 {
     for (auto &m : modelTable) if (m.model == model) return m.name;
     return "???";
 }
 
-std::optional<Model> parseModel(const char *name)
+std::optional<CPUModel> parseModel(const char *name)
 {
     for (auto &m : modelTable) if (strcasecmp(m.name, name) == 0) return m.model;
     return std::nullopt;
@@ -102,17 +102,17 @@ std::optional<FPUModel> parseFpuModel(const char *name)
     return std::nullopt;
 }
 
-bool isCompatible(Model cpu, FPUModel fpu)
+bool isCompatible(CPUModel cpu, FPUModel fpu)
 {
     switch (fpu) {
 
         case FPUModel::BUILTIN:
-            return cpu == Model::M68040;
+            return cpu == CPUModel::M68040;
 
         case FPUModel::M68881:
         case FPUModel::M68882:
-            return cpu == Model::M68020 || cpu == Model::M68EC020 ||
-                   cpu == Model::M68030 || cpu == Model::M68EC030;
+            return cpu == CPUModel::M68020 || cpu == CPUModel::M68EC020 ||
+                   cpu == CPUModel::M68030 || cpu == CPUModel::M68EC030;
 
         default:
             return false;
@@ -136,12 +136,12 @@ const char *selectedModel()
     return modelName(cpuModel);
 }
 
-void selectModel(Model model)
+void selectModel(CPUModel model)
 {
     cpuModel = model;
 
     // Only the 68040 has a built-in FPU. External FPUs are installed with selectFpu.
-    fpuModel = (cpuModel == Model::M68040) ? FPUModel::BUILTIN : FPUModel::NONE;
+    fpuModel = (cpuModel == CPUModel::M68040) ? FPUModel::BUILTIN : FPUModel::NONE;
 
     if (useMusashi) setupMusashi(cpuModel);
     if (useUAE) setupUAE(cpuModel, fpuModel);
@@ -149,9 +149,9 @@ void selectModel(Model model)
     setupMoira();
 
     // Configure the sandbox
-    sandbox.checkCycles = useUAE && cpuModel == Model::M68000;
-    sandbox.addrMask = (cpuModel == Model::M68EC020) ? 0xFFFFFF : 0xFFFFFFFF;
-    sandbox.byteGranular = useUAE && cpuModel != Model::M68000 && cpuModel != Model::M68010;
+    sandbox.checkCycles = useUAE && cpuModel == CPUModel::M68000;
+    sandbox.addrMask = (cpuModel == CPUModel::M68EC020) ? 0xFFFFFF : 0xFFFFFFFF;
+    sandbox.byteGranular = useUAE && cpuModel != CPUModel::M68000 && cpuModel != CPUModel::M68010;
 }
 
 void setupMoira()
@@ -176,7 +176,7 @@ void setupTestEnvironment(Setup &s, long round)
     s.ext1 = u16(randomizer.rand());
     s.ext2 = u16(randomizer.rand());
     s.ext3 = u16(randomizer.rand());
-    s.vbr = cpuModel == Model::M68000 ? 0 : u16(randomizer.rand() & ~1);
+    s.vbr = cpuModel == CPUModel::M68000 ? 0 : u16(randomizer.rand() & ~1);
     s.sfc = u16(randomizer.rand());
     s.dfc = u16(randomizer.rand());
     s.cacr = randomizer.rand() & moiracpu->cacrMask();
@@ -263,7 +263,7 @@ void resetMoira(Setup &s)
     for (auto &e : moiracpu->mmu.atc) e.valid = false;
 }
 
-void run(unsigned seed, long rounds, const std::vector<Model> &cpus, const std::vector<FPUModel> &fpus)
+void run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const std::vector<FPUModel> &fpus)
 {
     srand(seed);
 
@@ -273,14 +273,14 @@ void run(unsigned seed, long rounds, const std::vector<Model> &cpus, const std::
 
         printf("\nRound %ld:\n\n", i);
 
-        for (Model cpu : cpus) {
+        for (CPUModel cpu : cpus) {
 
             // Select the CPU core
             selectModel(cpu);
 
             // Execute tests
             if constexpr (CHECK_CPU) runCPU(i);
-            if constexpr (CHECK_MMU) { runMMU(i); if (useUAE && cpu == Model::M68030) runMMUTranslate(i); }
+            if constexpr (CHECK_MMU) { runMMU(i); if (useUAE && cpu == CPUModel::M68030) runMMUTranslate(i); }
 
             // Test the disassembler
             if constexpr (CHECK_DASM) {
@@ -435,7 +435,7 @@ void runMMU(long round)
     if (!moiracpu->hasMMU()) return;
 
     // Let UAE execute MMU instructions and compare the MMU registers
-    mmuCompare = useUAE && cpuModel == Model::M68030;
+    mmuCompare = useUAE && cpuModel == CPUModel::M68030;
     if (mmuCompare) enableMMUUAE(true);
  
     static const int MMU_SETUPS = 4;
@@ -795,7 +795,7 @@ void runSingleTest(Setup &s, u16 op)
     auto info = moiracpu->getInstrInfo(op);
     bool enable = doExec(op) && !skip(s) && !skipAccessCheck(op);
     bool ignore = (info.I == Instr::CLR && info.S == Long) ||
-    (info.I == Instr::CHK && cpuModel != Model::M68000);
+    (info.I == Instr::CHK && cpuModel != CPUModel::M68000);
     sandbox.prepare(enable, ignore);
     misalignedRead = false;
 
@@ -994,21 +994,21 @@ bool skip(const Setup &s)
         if (instr == Instr::CALLM || instr == Instr::RTM) return true;
 
         // RTE processes random stack frames (format errors, bus error frames)
-        if (instr == Instr::RTE && cpuModel != Model::M68000 && cpuModel != Model::M68010) return true;
+        if (instr == Instr::RTE && cpuModel != CPUModel::M68000 && cpuModel != CPUModel::M68010) return true;
 
         // The 68010 supports the bus error stack frame (format $8), which Moira doesn't process.
         // The format word sits at offset 6 of the frame (the supervisor stack pointer is $2000).
-        if (instr == Instr::RTE && cpuModel == Model::M68010 && (get16(refMem, 0x2006) >> 12) == 8) return true;
+        if (instr == Instr::RTE && cpuModel == CPUModel::M68010 && (get16(refMem, 0x2006) >> 12) == 8) return true;
 
         // LINK.l A7 pushes A7-4 on the 68040 (Moira's 040 models run on the 68020 core)
-        if (instr == Instr::LINK && (op & 7) == 7 && cpuModel >= Model::M68EC040) return true;
+        if (instr == Instr::LINK && (op & 7) == 7 && cpuModel >= CPUModel::M68EC040) return true;
 
         // Zero divide uses a different stack frame on the 68040 (Moira's 040 models run on the 68020 core)
         if ((instr == Instr::DIVL || instr == Instr::DIVU || instr == Instr::DIVS) &&
-            cpuModel >= Model::M68EC040) return true;
+            cpuModel >= CPUModel::M68EC040) return true;
 
         // UAE emulates FPU instructions that the 68040 traps (Moira follows real hardware)
-        if ((op & 0xFFC0) == 0xF200 && cpuModel == Model::M68040) {
+        if ((op & 0xFFC0) == 0xF200 && cpuModel == CPUModel::M68040) {
             u16 e = get16(refMem, 0x1002);
             u16 cod = e >> 13, cmd = e & 0x7F;
             if ((cod == 0 || cod == 2) && (cmd == 0x02 || cmd == 0x06 || cmd == 0x08 || cmd == 0x09 ||
@@ -1091,7 +1091,7 @@ bool skip(const Setup &s)
         bool indexed = mode == 6 || (mode == 7 && reg == 3);
         if (op >= 0x1000 && op < 0x4000) indexed |= dmode == 6 || (dmode == 7 && dreg == 3);
 
-        if (cpuModel >= Model::M68EC020 && indexed) {
+        if (cpuModel >= CPUModel::M68EC020 && indexed) {
             for (int off = 2; off <= 6; off += 2) {
                 u16 w = get16(refMem, 0x1000 + off);
                 if ((w & 0x100) == 0) continue;
@@ -1116,7 +1116,7 @@ bool skip(const Setup &s)
     instr == Instr::BFSET   ||
     instr == Instr::BFTST;
 
-    if (cpuModel != Model::M68000) {
+    if (cpuModel != CPUModel::M68000) {
 
         result |= instr == Instr::RTE;
     }
@@ -1422,7 +1422,7 @@ bool dasmEqualUAE(const char *uae, const char *moira)
 static bool noUAEDasmForCoprocessor(u16 opcode)
 {
     switch (cpuModel) {
-        case Model::M68EC020: case Model::M68EC030: case Model::M68EC040: case Model::M68LC040:
+        case CPUModel::M68EC020: case CPUModel::M68EC030: case CPUModel::M68EC040: case CPUModel::M68LC040:
             return opcode >= 0xF000;
         default:
             return false;
@@ -1438,15 +1438,15 @@ bool compareDasm(Result &rRef, Result &rMoira)
 
     switch (cpuModel) {
 
-        case Model::M68010:
+        case CPUModel::M68010:
 
             skipBinutils |= I == Instr::CMPI;
             break;
             
-        case Model::M68EC020:
-        case Model::M68EC030:
-        case Model::M68EC040:
-        case Model::M68LC040:
+        case CPUModel::M68EC020:
+        case CPUModel::M68EC030:
+        case CPUModel::M68EC040:
+        case CPUModel::M68LC040:
 
             skipBinutils |= rRef.opcode >= 0xF000;
             break;
@@ -1525,13 +1525,13 @@ bool compareSR(Result &rRef, Result &rMoira)
     }
 
     // N and V are undefined for BCD instructions (68040 differs from older models)
-    if (useUAE && cpuModel >= Model::M68EC040 &&
+    if (useUAE && cpuModel >= CPUModel::M68EC040 &&
         (instr == Instr::ABCD || instr == Instr::SBCD || instr == Instr::NBCD)) {
         return (rRef.sr & ~0x0A) == (rMoira.sr & ~0x0A);
     }
 
     // Z, V and C are undefined for CHK on the 68020 and above
-    if (useUAE && instr == Instr::CHK && cpuModel != Model::M68000 && cpuModel != Model::M68010) {
+    if (useUAE && instr == Instr::CHK && cpuModel != CPUModel::M68000 && cpuModel != CPUModel::M68010) {
         return (rRef.sr & ~0x07) == (rMoira.sr & ~0x07);
     }
 
@@ -1729,7 +1729,7 @@ bool compareCycles(Result &rRef, Result &rMoira)
      * 68010 timing is partially copied from the 68000, and the 68020+ cores
      * aren't cycle-exact.
      */
-    if (useUAE && cpuModel != Model::M68000) return true;
+    if (useUAE && cpuModel != CPUModel::M68000) return true;
 
     /* Timing comparison is off for every model beyond the 68000 and 68010
      * while the instruction cache is emulated. Those models (68020 and up)
@@ -1741,11 +1741,11 @@ bool compareCycles(Result &rRef, Result &rMoira)
      * legitimately diverges from that flat model.
      */
     if constexpr (MOIRA_EMULATE_ICACHE) {
-        if (cpuModel != Model::M68000 && cpuModel != Model::M68010) return true;
+        if (cpuModel != CPUModel::M68000 && cpuModel != CPUModel::M68010) return true;
     }
 
     // WHY DO WE IGNORE THESE?
-    if (cpuModel == Model::M68010) {
+    if (cpuModel == CPUModel::M68010) {
 
         if (I == Instr::CLR && S == Byte && M == Mode::AL) return true;
         if (I == Instr::CLR && S == Word && M == Mode::AL) return true;

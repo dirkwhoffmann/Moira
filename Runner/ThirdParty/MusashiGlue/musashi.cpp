@@ -74,21 +74,21 @@ extern "C" int read_pc_on_reset(void) { return 0x1000; }
 // The CPU type of the selected model (needed by the disassembler)
 static unsigned musashiType = M68K_CPU_TYPE_68000;
 
-void setupMusashi(moira::Model model)
+void setupMusashi(moira::CPUModel model)
 {
     m68k_init();
 
     switch (model) {
 
-        case moira::Model::M68000:    musashiType = M68K_CPU_TYPE_68000;     break;
-        case moira::Model::M68010:    musashiType = M68K_CPU_TYPE_68010;     break;
-        case moira::Model::M68EC020:  musashiType = M68K_CPU_TYPE_68EC020;   break;
-        case moira::Model::M68020:    musashiType = M68K_CPU_TYPE_68020;     break;
-        case moira::Model::M68EC030:  musashiType = M68K_CPU_TYPE_68EC030;   break;
-        case moira::Model::M68030:    musashiType = M68K_CPU_TYPE_68030;     break;
-        case moira::Model::M68EC040:  musashiType = M68K_CPU_TYPE_68EC040;   break;
-        case moira::Model::M68LC040:  musashiType = M68K_CPU_TYPE_68LC040;   break;
-        case moira::Model::M68040:    musashiType = M68K_CPU_TYPE_68040;     break;
+        case moira::CPUModel::M68000:    musashiType = M68K_CPU_TYPE_68000;     break;
+        case moira::CPUModel::M68010:    musashiType = M68K_CPU_TYPE_68010;     break;
+        case moira::CPUModel::M68EC020:  musashiType = M68K_CPU_TYPE_68EC020;   break;
+        case moira::CPUModel::M68020:    musashiType = M68K_CPU_TYPE_68020;     break;
+        case moira::CPUModel::M68EC030:  musashiType = M68K_CPU_TYPE_68EC030;   break;
+        case moira::CPUModel::M68030:    musashiType = M68K_CPU_TYPE_68030;     break;
+        case moira::CPUModel::M68EC040:  musashiType = M68K_CPU_TYPE_68EC040;   break;
+        case moira::CPUModel::M68LC040:  musashiType = M68K_CPU_TYPE_68LC040;   break;
+        case moira::CPUModel::M68040:    musashiType = M68K_CPU_TYPE_68040;     break;
     }
     m68k_set_cpu_type(musashiType);
 }

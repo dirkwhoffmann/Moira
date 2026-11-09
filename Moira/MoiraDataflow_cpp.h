@@ -16,7 +16,7 @@ Moira::addrMask() const
 {
     if constexpr (C == Core::C68020) {
 
-        return cpuModel == Model::M68EC020 ? 0x00FFFFFF : 0xFFFFFFFF;
+        return cpuModel == CPUModel::M68EC020 ? 0x00FFFFFF : 0xFFFFFFFF;
 
     } else {
 

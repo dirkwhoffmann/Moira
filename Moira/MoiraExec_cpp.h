@@ -3606,7 +3606,7 @@ Moira::execMoves(u16 opcode)
 
         if constexpr (S == Long) {
 
-            if (cpuModel == Model::M68020 || cpuModel == Model::M68EC020) budget.cp += 2;
+            if (cpuModel == CPUModel::M68020 || cpuModel == CPUModel::M68EC020) budget.cp += 2;
         }
 
     } else {                    // Ea -> Rg
@@ -3651,7 +3651,7 @@ Moira::execMoves(u16 opcode)
         // Switch back to the old FC pin values
         fcSource = 0;
 
-        if (cpuModel == Model::M68020 || cpuModel == Model::M68EC020) budget.cp += 2;
+        if (cpuModel == CPUModel::M68020 || cpuModel == CPUModel::M68EC020) budget.cp += 2;
     }
 
     prefetch<C, POLL>();

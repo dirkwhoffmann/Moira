@@ -339,9 +339,9 @@ Moira::execBusError(StackFrame frame, int delay)
          * and the logical fault address. A fault in a write cycle is reported
          * with the short format ($A), all others with the long format ($B).
          */
-        if (cpuModel >= Model::M68EC030 && !(frame.ssw & SSW030::RW) && (frame.ssw & SSW030::DF)) {
+        if (cpuModel >= CPUModel::M68EC030 && !(frame.ssw & SSW030::RW) && (frame.ssw & SSW030::DF)) {
             writeStackFrame1010<C>(status, reg.pc0, 2, frame.ssw, frame.addr);
-        } else if (cpuModel >= Model::M68EC030) {
+        } else if (cpuModel >= CPUModel::M68EC030) {
             writeStackFrame1011<C>(status, frame.pc, reg.pc0, 2, frame.ssw, frame.addr);
         } else {
             writeStackFrame1011<C>(status, frame.pc, reg.pc0, 2);
@@ -367,8 +367,8 @@ Moira::execException(M68kException exc, int nr)
 {
     switch (cpuModel) {
 
-        case Model::M68000: execException<Core::C68000>(exc, nr); break;
-        case Model::M68010: execException<Core::C68010>(exc, nr); break;
+        case CPUModel::M68000: execException<Core::C68000>(exc, nr); break;
+        case CPUModel::M68010: execException<Core::C68010>(exc, nr); break;
         default:            execException<Core::C68020>(exc, nr); break;
     }
 }
@@ -526,8 +526,8 @@ Moira::execInterrupt(u8 level)
 {
     switch (cpuModel) {
 
-        case Model::M68000: execInterrupt<Core::C68000>(level); break;
-        case Model::M68010: execInterrupt<Core::C68010>(level); break;
+        case CPUModel::M68000: execInterrupt<Core::C68000>(level); break;
+        case CPUModel::M68010: execInterrupt<Core::C68010>(level); break;
         
         default:
             execInterrupt<Core::C68020>(level);

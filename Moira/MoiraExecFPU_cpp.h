@@ -11,10 +11,10 @@
 #ifdef MOIRA_MAIN_TU
 
 bool
-Moira::isValidExtFPU(Instr I, Mode M, u16 op, u32 ext, Model model) const
+Moira::isValidExtFPU(Instr I, Mode M, u16 op, u32 ext, CPUModel model) const
 {
     // Some FMOVE variants (FSMOVE, FDMOVE) exist on the 68040 FPU only
-    auto has040Fpu = model == Model::M68040;
+    auto has040Fpu = model == CPUModel::M68040;
 
     auto cod  = xxx_____________ (ext);
     auto mode = ___xx___________ (ext);
@@ -734,7 +734,7 @@ Moira::execFMove(u16 opcode)
 
     // The 68040 FPU updates FPIAR on every data operation, older FPUs only if an
     // exception other than BSUN is enabled (only conditional instructions raise BSUN)
-    if (cpuModel >= Model::M68EC040 || (fpu.getFPCR() & 0x7F00)) fpu.setFPIAR(getPC0());
+    if (cpuModel >= CPUModel::M68EC040 || (fpu.getFPCR() & 0x7F00)) fpu.setFPIAR(getPC0());
 
     {
         // FSMOVE and FDMOVE round to single or double precision
@@ -826,7 +826,7 @@ Moira::execFMovecr(u16 opcode)
 
     // The 68040 FPU updates FPIAR on every data operation, older FPUs only if an
     // exception other than BSUN is enabled (only conditional instructions raise BSUN)
-    if (cpuModel >= Model::M68EC040 || (fpu.getFPCR() & 0x7F00)) fpu.setFPIAR(getPC0());
+    if (cpuModel >= CPUModel::M68EC040 || (fpu.getFPCR() & 0x7F00)) fpu.setFPIAR(getPC0());
 
     {
         FPU::Scope scope(fpu);
@@ -1016,7 +1016,7 @@ Moira::execFGeneric(u16 opcode)
 
     // The 68040 FPU updates FPIAR on every data operation, older FPUs only if an
     // exception other than BSUN is enabled (only conditional instructions raise BSUN)
-    if (cpuModel >= Model::M68EC040 || (fpu.getFPCR() & 0x7F00)) fpu.setFPIAR(getPC0());
+    if (cpuModel >= CPUModel::M68EC040 || (fpu.getFPCR() & 0x7F00)) fpu.setFPIAR(getPC0());
 
     {
         FPU::Scope scope(fpu, precision);

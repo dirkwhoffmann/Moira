@@ -23,19 +23,19 @@ static int binutilsFprintf(FILE* f, const char* format, ...)
     return n;
 }
 
-void setupBinutils(moira::Model model)
+void setupBinutils(moira::CPUModel model)
 {
     switch (model) {
 
-        case moira::Model::M68000:    di.mach = MACH_68000; break;
-        case moira::Model::M68010:    di.mach = MACH_68010; break;
-        case moira::Model::M68EC020:  // Not supported by binutils
-        case moira::Model::M68020:    di.mach = MACH_68020; break;
-        case moira::Model::M68EC030:  // Not supported by binutils
-        case moira::Model::M68030:    di.mach = MACH_68030; break;
-        case moira::Model::M68EC040:  // Not supported by binutils
-        case moira::Model::M68LC040:  // Not supported by binutils
-        case moira::Model::M68040:    di.mach = MACH_68040; break;
+        case moira::CPUModel::M68000:    di.mach = MACH_68000; break;
+        case moira::CPUModel::M68010:    di.mach = MACH_68010; break;
+        case moira::CPUModel::M68EC020:  // Not supported by binutils
+        case moira::CPUModel::M68020:    di.mach = MACH_68020; break;
+        case moira::CPUModel::M68EC030:  // Not supported by binutils
+        case moira::CPUModel::M68030:    di.mach = MACH_68030; break;
+        case moira::CPUModel::M68EC040:  // Not supported by binutils
+        case moira::CPUModel::M68LC040:  // Not supported by binutils
+        case moira::CPUModel::M68040:    di.mach = MACH_68040; break;
     }
 
     di.caller_private = &mi;

@@ -44,9 +44,9 @@ extern disassemble_info di;
 static const size_t BINUTILS_BUFFER_SIZE = 128;
 
 // Initializes the reference libraries for a CPU model (implemented in the glue layer)
-void setupBinutils(moira::Model model);
-void setupMusashi(moira::Model model);
-void setupUAE(moira::Model model, moira::FPUModel fpu);
+void setupBinutils(moira::CPUModel model);
+void setupMusashi(moira::CPUModel model);
+void setupUAE(moira::CPUModel model, moira::FPUModel fpu);
 
 extern Sandbox sandbox;
 extern Randomizer randomizer;

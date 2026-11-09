@@ -26,7 +26,7 @@ namespace runner {
 using namespace moira;
 
 extern class TestCPU *moiracpu;
-extern Model cpuModel;
+extern CPUModel cpuModel;
 extern FPUModel fpuModel;
 extern u16 opcode;
 
@@ -34,18 +34,18 @@ extern u16 opcode;
 // Preparing a test
 //
 
-const std::vector<Model> &allModels();
-const char *modelName(Model model);
-std::optional<Model> parseModel(const char *name);
+const std::vector<CPUModel> &allModels();
+const char *modelName(CPUModel model);
+std::optional<CPUModel> parseModel(const char *name);
 
 const std::vector<FPUModel> &allFpuModels();
 const char *fpuModelName(FPUModel model);
 std::optional<FPUModel> parseFpuModel(const char *name);
 
 // Returns true if the FPU can be installed in a system with the given CPU
-bool isCompatible(Model cpu, FPUModel fpu);
+bool isCompatible(CPUModel cpu, FPUModel fpu);
 
-void selectModel(Model model);
+void selectModel(CPUModel model);
 void selectFpu(FPUModel fpu);
 const char *selectedModel();
 
@@ -64,7 +64,7 @@ void resetMoira(Setup &s);
 // Performing a test
 //
 
-void run(unsigned seed, long rounds, const std::vector<Model> &cpus, const std::vector<FPUModel> &fpus);
+void run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const std::vector<FPUModel> &fpus);
 
 void runCPU(long round);
 void runMMU(long round);

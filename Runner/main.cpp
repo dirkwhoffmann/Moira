@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     unsigned seed = 1900 + now->tm_year + now->tm_yday;
 
     long rounds = 1;
-    std::vector<moira::Model> cpus;
+    std::vector<moira::CPUModel> cpus;
     std::vector<moira::FPUModel> fpus;
 
     for (int i = 1; i < argc; i++) {
