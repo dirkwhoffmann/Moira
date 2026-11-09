@@ -7,13 +7,16 @@
 
 /* SingleStepTests runner
  *
- * Runs Moira against the 68000 test suite from https://github.com/SingleStepTests/m68000.
+ * Runs Moira against the 68000 test suite from
+ *
+ *    https://github.com/SingleStepTests/m68000.
+ *
  * Each test sets up the CPU and the memory, executes a single instruction, and
  * checks the registers, the memory and the number of elapsed cycles.
  *
- * The expected values have been recorded from MAME's microcoded 68000 core. Because
- * that core has bugs of its own, Moira offers a MAME compatibility mode
- * (MOIRA_COMPATIBILITY=MAME), which is the mode this runner is meant to be linked against.
+ * The expected values have been recorded from MAME's microcoded 68000 core.
+ * Because that core has bugs of its own, Moira offers a MAME compatibility mode,
+ * which is the mode this runner is meant to be linked against.
  */
 
 #include "Moira.h"
@@ -47,14 +50,17 @@ public:
     void write16(u32 addr, u16 val) const override { poke(addr, u8(val >> 8)); poke(addr + 1, u8(val)); }
     void write32(u32 addr, u32 val) const override { write16(addr, u16(val >> 16)); write16(addr + 2, u16(val)); }
 
-    // Writes a byte and remembers the address, so that the memory can be cleared quickly
     void poke(u32 addr, u8 val) const {
+
         auto *self = const_cast<TestCPU *>(this);
         self->ram[addr & 0xFFFFFF] = val;
+
+        // Remember the written address, so memory can be cleared quickly
         self->touched.push_back(addr & 0xFFFFFF);
     }
 
     void clearMemory() {
+        
         for (auto addr : touched) ram[addr] = 0;
         touched.clear();
     }
@@ -123,7 +129,10 @@ constexpr u32 ADDR_MASK = 0xFFFFFF;
  * the next instruction. A stopped CPU does not prefetch, so no offset applies after STOP.
  */
 u32 pcOffset(const sst::Test &t) {
-    bool stops = t.initial.prefetch[0] == 0x4E72 && (t.initial.sr & 0x2000);   // (in user mode, STOP is a privilege violation)
+    
+    // (in user mode, STOP is a privilege violation)
+    bool stops = t.initial.prefetch[0] == 0x4E72 && (t.initial.sr & 0x2000);
+
     return stops ? 0 : 4;
 }
 
@@ -181,7 +190,7 @@ void dump(FILE *f, const char *file, const sst::Test &t, const Outcome &o, TestC
     fprintf(f, "%s|%s|%d|%u|%lld|%04x|%04x|", file, t.name.c_str(), ae, t.cycles, (long long)o.elapsed,
             e.sr, cpu.getSR());
     for (int i = 0; i < 8; i++) if (cpu.getD(i) != e.d[i]) fprintf(f, "d%d:%08x:%08x ", i, e.d[i], cpu.getD(i));
-    for (int i = 0; i < 7; i++) if (cpu.getA(i) != e.a[i]) fprintf(f, "a%d:%08x:%08x ", i, e.a[i], cpu.getA(i));
+    for (int i = 0; i < 7; i++) if (cpu.getA(i) != e.a[i]) fprintf(f, "a%d:%08x:%08x:%08x ", i, t.initial.a[i], e.a[i], cpu.getA(i));
     if (cpu.getUSP() != e.usp) fprintf(f, "usp:%08x:%08x ", e.usp, cpu.getUSP());
     if (cpu.getISP() != e.ssp) fprintf(f, "ssp:%08x:%08x ", e.ssp, cpu.getISP());
     if (!o.pc) fprintf(f, "pc:%06x:%06x ", e.pc & ADDR_MASK, (cpu.getPC() + pcOffset(t)) & ADDR_MASK);
@@ -260,6 +269,19 @@ void usage(const char *prog)
 
 }
 
+static inline const char *reference()
+{
+    switch (compat) {
+
+        case Compatibility::MUSASHI: return "Musashi";
+        case Compatibility::UAE:     return "UAE";
+        case Compatibility::MAME:    return "MAME";
+            
+        default:
+            return "Moira";
+    }
+}
+
 int main(int argc, char **argv)
 {
     Options opt;
@@ -283,15 +305,23 @@ int main(int argc, char **argv)
     auto files = collectFiles(opt);
     if (files.empty()) { printf("No test files found in %s\n", opt.dir.c_str()); return 1; }
 
-    printf("Moira SingleStepTests runner. (C) Dirk W. Hoffmann, 2019 - 2026\n");
-    printf("Core %s (compatibility mode: %s, %s timing)\n\n", Moira::build().c_str(),
-           compat == Compatibility::MAME ? "MAME" : compat == Compatibility::MUSASHI ? "Musashi" : compat == Compatibility::UAE ? "UAE" : "default",
-           MOIRA_PRECISE_TIMING ? "precise" : "fast");
+    printf("Moira SingleStep runner. (C) Dirk W. Hoffmann, 2026\n");
+    printf("Core %s\n", moira::Moira::build().c_str());
+    printf("\n");
+    printf("The test program runs Moira against the TomHarte-style JSON tests for the Motorola 68000.\n");
+    printf("https://github.com/SingleStepTests/m68000\n");
+    printf("\n");
+    printf("Reference : %s ", reference());
+    printf("(Timing : %s)\n", MOIRA_PRECISE_TIMING ? "precise" : "fast");
+    printf("\n");
 
     TestCPU cpu;
     FileStats total;
 
-    printf("%-16s %8s %9s %9s %9s   %s\n", "", "Tests", "State", "Cycles", "Both", "Address errors (tests, state, cycles, both)");
+//     printf("%-16s %-32s %-32s\n%-16s ", "", "Standard Tests", "Address errors", "");
+    printf("%-16s ", "Test");
+    printf("%9s %9s %9s %9s ", "Count", "State", "Cycles", "Both");
+    printf("%9s %9s %9s %9s\n", "AE", "State", "Cycles", "Both");
 
     for (auto &name : files) {
 
@@ -299,10 +329,18 @@ int main(int argc, char **argv)
         if (!runFile(cpu, opt, opt.dir + "/" + name, name, fs)) return 1;
 
         auto &r = fs.regular, &a = fs.addressError;
-        printf("%-16s %8ld %8.2f%% %8.2f%% %8.2f%%   %ld, %.1f%%, %.1f%%, %.1f%%\n",
+        printf("%-16s ", name.substr(0, name.size() - 9).c_str());
+        printf("%9ld %8.2f%% %8.2f%% %8.2f%% ",
+               r.tests, percent(r.state, r.tests), percent(r.cycles, r.tests), percent(r.all, r.tests));
+        printf("%9ld %8.2f%% %8.2f%% %8.2f%% \n",
+               a.tests, percent(a.state, a.tests), percent(a.cycles, a.tests), percent(a.all, a.tests));
+
+        /*
+        printf("%-16s %8ld %8.2f%% %8.2f%% %8.2f%%   %ld, %5.1f%%, %5.1f%%, %5.1f%%\n",
                name.substr(0, name.size() - 9).c_str(), r.tests,
                percent(r.state, r.tests), percent(r.cycles, r.tests), percent(r.all, r.tests),
                a.tests, percent(a.state, a.tests), percent(a.cycles, a.tests), percent(a.all, a.tests));
+         */
         fflush(stdout);
 
         total.regular.add(r);
@@ -310,10 +348,19 @@ int main(int argc, char **argv)
     }
 
     auto &r = total.regular, &a = total.addressError;
+    
+    printf("\n%-16s ", "TOTAL");
+    printf("%9ld %8.2f%% %8.2f%% %8.2f%% ",
+           r.tests, percent(r.state, r.tests), percent(r.cycles, r.tests), percent(r.all, r.tests));
+    printf("%9ld %8.2f%% %8.2f%% %8.2f%% \n",
+           a.tests, percent(a.state, a.tests), percent(a.cycles, a.tests), percent(a.all, a.tests));
+    
+    /*
     printf("\n%-16s %8ld %8.2f%% %8.2f%% %8.2f%%   %ld, %.1f%%, %.1f%%, %.1f%%\n", "TOTAL", r.tests,
            percent(r.state, r.tests), percent(r.cycles, r.tests), percent(r.all, r.tests),
            a.tests, percent(a.state, a.tests), percent(a.cycles, a.tests), percent(a.all, a.tests));
-
+     */
+    
     if (opt.dump) fclose(opt.dump);
     return (r.all == r.tests && a.all == a.tests) ? 0 : 1;
 }

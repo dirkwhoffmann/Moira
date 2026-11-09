@@ -285,7 +285,15 @@ Moira::readOp(int n, u32 *ea, u32 *result)
             updateAnPD<M, S>(n);
 
             // Read from effective address
-            *result = readM<C, M, S, F>(*ea);
+            if constexpr (compat == Compatibility::MAME && C == Core::C68000 && M == Mode::PI && S == Word && !(F & AE_KEEP_A)) {
+
+                // MAME advances the register before the bus error is reported
+                try { *result = readM<C, M, S, F>(*ea); } catch (const AddressError &) { updateAnPI<M, S>(n); throw; }
+
+            } else {
+
+                *result = readM<C, M, S, F>(*ea);
+            }
 
             // Emulate (An)+ register modification
             updateAnPI<M, S>(n);

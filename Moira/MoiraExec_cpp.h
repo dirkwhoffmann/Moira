@@ -2036,9 +2036,20 @@ Moira::execCmpm(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        readOp<C, M, S, AE_INC_PC>(src, &ea1, &data1);
-        POLL_IPL;
-        readOp<C, M, S, AE_INC_PC>(dst, &ea2, &data2);
+        if constexpr (compat == Compatibility::MAME) {
+
+            // MAME advances the source register by 2 if the source read fails, but not the destination register
+            try { readOp<C, M, S, AE_INC_PC | AE_KEEP_A>(src, &ea1, &data1); }
+            catch (const AddressError &) { U32_INC(reg.a[src], 2); throw; }
+            POLL_IPL;
+            readOp<C, M, S, AE_INC_PC | AE_KEEP_A>(dst, &ea2, &data2);
+
+        } else {
+
+            readOp<C, M, S, AE_INC_PC>(src, &ea1, &data1);
+            POLL_IPL;
+            readOp<C, M, S, AE_INC_PC>(dst, &ea2, &data2);
+        }
 
         cmp<C, S>(data1, data2);
         prefetch<C>();
