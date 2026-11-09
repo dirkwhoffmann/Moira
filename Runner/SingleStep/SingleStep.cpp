@@ -175,10 +175,10 @@ void describe(const sst::Test &t, const Outcome &o, TestCPU &cpu)
     printf("\n");
 }
 
-void dump(FILE *f, const char *file, const sst::Test &t, const Outcome &o, TestCPU &cpu)
+void dump(FILE *f, const char *file, const sst::Test &t, const Outcome &o, TestCPU &cpu, bool ae)
 {
     auto &e = t.final;
-    fprintf(f, "%s|%s|%u|%lld|%04x|%04x|", file, t.name.c_str(), t.cycles, (long long)o.elapsed,
+    fprintf(f, "%s|%s|%d|%u|%lld|%04x|%04x|", file, t.name.c_str(), ae, t.cycles, (long long)o.elapsed,
             e.sr, cpu.getSR());
     for (int i = 0; i < 8; i++) if (cpu.getD(i) != e.d[i]) fprintf(f, "d%d:%08x:%08x ", i, e.d[i], cpu.getD(i));
     for (int i = 0; i < 7; i++) if (cpu.getA(i) != e.a[i]) fprintf(f, "a%d:%08x:%08x ", i, e.a[i], cpu.getA(i));
@@ -214,7 +214,7 @@ bool runFile(TestCPU &cpu, const Options &opt, const std::string &path, const st
 
         if (!o.all()) {
             if (shown < opt.verbose) { shown++; describe(t, o, cpu); }
-            if (opt.dump) dump(opt.dump, name.c_str(), t, o, cpu);
+            if (opt.dump) dump(opt.dump, name.c_str(), t, o, cpu, expectsAddressError(t));
         }
     }
     return true;
@@ -238,12 +238,20 @@ std::vector<std::string> collectFiles(const Options &opt)
     return names;
 }
 
+// The test files shipped with the repository (located relative to this source file)
+std::string defaultDir()
+{
+    std::string file = __FILE__;
+    return file.substr(0, file.find_last_of("/\\")) + "/../ThirdParty/SingleStepTests/m68000/v1";
+}
+
 double percent(long a, long b) { return b ? 100.0 * double(a) / double(b) : 100.0; }
 
 void usage(const char *prog)
 {
-    printf("Usage: %s --dir <folder> [--only <text>]... [--limit <n>] [-v <n>] [--dump <file>]\n", prog);
-    printf("  --dir <folder>   Folder containing the *.json.bin files of the SingleStepTests 68000 suite\n");
+    printf("Usage: %s [--dir <folder>] [--only <text>]... [--limit <n>] [-v <n>] [--dump <file>]\n", prog);
+    printf("  --dir <folder>   Folder containing the *.json.bin files of the SingleStepTests 68000 suite.\n");
+    printf("                   Default: $SST_DIR if set, otherwise the files shipped in Runner/ThirdParty/SingleStepTests\n");
     printf("  --only <text>    Only run files whose name contains <text>. May be repeated.\n");
     printf("  --limit <n>      Run at most <n> tests per file\n");
     printf("  -v <n>           Print the first <n> failures of each file\n");
@@ -256,6 +264,7 @@ int main(int argc, char **argv)
 {
     Options opt;
 
+    opt.dir = defaultDir();
     if (const char *env = getenv("SST_DIR")) opt.dir = env;
 
     for (int i = 1; i < argc; i++) {
@@ -270,7 +279,6 @@ int main(int argc, char **argv)
         else if (a == "--dump" && more)  { opt.dump = fopen(argv[++i], "w"); }
         else { usage(argv[0]); return 1; }
     }
-    if (opt.dir.empty()) { usage(argv[0]); return 1; }
 
     auto files = collectFiles(opt);
     if (files.empty()) { printf("No test files found in %s\n", opt.dir.c_str()); return 1; }

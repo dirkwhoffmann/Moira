@@ -961,7 +961,7 @@ Moira::execBitDxEa(u16 opcode)
     data = bit<C, I>(data, b);
 
     if constexpr (I == Instr::BCLR && C == Core::C68010) { SYNC(2); }
-    if constexpr ((compat == Compatibility::UAE) && I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
+    if constexpr ((compat == Compatibility::UAE || compat == Compatibility::MAME) && I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
 
     prefetch<C, POLL>();
     if constexpr (I != Instr::BTST) writeM<C, M, Byte>(ea, data);
@@ -1606,7 +1606,12 @@ Moira::execChk(u16 opcode)
         setUndefinedCHK<C, S>(SEXT<S>(data), SEXT<S>(dy));
     }
 
-    if (SEXT<S>(dy) > SEXT<S>(data)) {
+    // MAME additionally takes the branch if the difference of both operands has a negative sign,
+    // which includes the case where an arithmetic overflow occurs
+    bool above = SEXT<S>(dy) > SEXT<S>(data);
+    if constexpr (compat == Compatibility::MAME) above |= S == Word && (i16)(data - dy) < 0;
+
+    if (above) {
 
         switch (C) {
 
