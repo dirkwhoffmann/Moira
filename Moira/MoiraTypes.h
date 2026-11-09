@@ -593,11 +593,28 @@ struct AddressError : public std::exception {
     AddressError(const StackFrame frame) { stackFrame = frame; }
 };
 
-/// Thrown when a bus error occurs
+/** Thrown when a bus error occurs
+ *
+ * A bus error can be signaled in two ways. If a host callback (read8, read16,
+ * write8, ...) throws a BusError that only carries the fault address, Moira
+ * completes the stack frame itself. This is the preferred way, because the
+ * frame content (stacked PC, instruction register, status register and access
+ * information) depends on the executed instruction and its addressing mode.
+ * Currently, this feature is available for the 68000. Alternatively, the host
+ * can create the complete stack frame and pass it to the second constructor.
+ */
 struct BusError : public std::exception {
     
     StackFrame stackFrame;
+
+    /// Indicates whether the stack frame is complete
+    bool complete = true;
+
+    /// Creates a bus error with a complete stack frame
     BusError(const StackFrame frame) { stackFrame = frame; }
+
+    /// Creates a bus error that only carries the fault address
+    BusError(u32 addr) { stackFrame = StackFrame(); stackFrame.addr = addr; complete = false; }
 };
 
 }

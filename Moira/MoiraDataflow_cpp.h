@@ -665,7 +665,16 @@ Moira::read(u32 addr)
         if (dCacheOn) return readDataCache<C, S, F>(addr);
     }
 
-    return readBus<C, S, F>(addr);
+    if constexpr (C == Core::C68000) {
+
+        // Let Moira complete the stack frame if the host signals a bus error
+        try { return readBus<C, S, F>(addr); }
+        catch (BusError &e) { if (!e.complete) e = BusError(makeFrame<F>(e.stackFrame.addr)); throw; }
+
+    } else {
+
+        return readBus<C, S, F>(addr);
+    }
 }
 
 template <Core C, Size S, Flags F> u32
@@ -763,10 +772,25 @@ Moira::readInstr(u32 addr)
 
         if constexpr (F & POLL) POLL_IPL;
 
-        u16 result = read16(addr & addrMask<C>());
-        SYNC(2);
+        if constexpr (C == Core::C68000) {
 
-        return result;
+            // Let Moira complete the stack frame if the host signals a bus error
+            try {
+                u16 result = read16(addr & addrMask<C>());
+                SYNC(2);
+                return result;
+            } catch (BusError &e) {
+                if (!e.complete) e = BusError(makeFrame<F>(e.stackFrame.addr));
+                throw;
+            }
+
+        } else {
+
+            u16 result = read16(addr & addrMask<C>());
+            SYNC(2);
+
+            return result;
+        }
     }
 }
 
@@ -798,7 +822,16 @@ Moira::write(u32 addr, u32 val)
         if (dCacheOn) { writeDataCache<C, S, F>(addr, val); return; }
     }
 
-    writeBus<C, S, F>(addr, val);
+    if constexpr (C == Core::C68000) {
+
+        // Let Moira complete the stack frame if the host signals a bus error
+        try { writeBus<C, S, F>(addr, val); }
+        catch (BusError &e) { if (!e.complete) e = BusError(makeFrame<F|AE_WRITE>(e.stackFrame.addr)); throw; }
+
+    } else {
+
+        writeBus<C, S, F>(addr, val);
+    }
 }
 
 template <Core C, Size S, Flags F> void
