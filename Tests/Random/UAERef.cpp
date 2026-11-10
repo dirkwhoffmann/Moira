@@ -61,36 +61,46 @@ static __int128 ulpIndex(const MFloat80 &value)
     return value.sign() ? -pos : pos;
 }
 
+/* Test cases that are excluded from the comparison. Every entry is tagged with the reason:
+ *
+ *   [undefined]  The behavior is undefined or reserved. No emulator can be right or wrong.
+ *   [UAE]        UAE deviates from the manual or from real hardware. Moira follows the hardware.
+ *   [Moira]      Moira has a known gap (mostly the 68040 models, which run on the 68020 core).
+ *   [open]       Not yet understood.
+ *
+ * Only the [Moira] and [open] entries are candidates for removal.
+ */
 bool
 UAERef::skipSetup(const Setup &s) const
 {
+    u8 *mem = const_cast<u8 *>(s.mem);   // The reference has not been reset yet
     u16 op = s.opcode;
     Instr instr = moiracpu->getInstrInfo(op).I;
 
 
-    // The FPCR precision value 3 is reserved. UAE and Moira round tiny results differently in this mode.
+    // [undefined] The FPCR precision value 3 is reserved. UAE and Moira round tiny results differently in this mode.
     if ((op & 0xFE00) == 0xF200 && (s.fpcr & 0xC0) == 0xC0) return true;
 
-    // UAE doesn't implement the module instructions
+    // [UAE] UAE doesn't implement the module instructions
     if (instr == Instr::CALLM || instr == Instr::RTM) return true;
 
-    // RTE processes random stack frames (format errors, bus error frames)
+    // [Moira] RTE processes random stack frames (format errors, bus error frames)
     if (instr == Instr::RTE && cpuModel != CPUModel::M68000 && cpuModel != CPUModel::M68010) return true;
 
-    // The 68010 supports the bus error stack frame (format $8), which Moira doesn't process.
+    // [Moira] The 68010 supports the bus error stack frame (format $8), which Moira doesn't process.
     // The format word sits at offset 6 of the frame (the supervisor stack pointer is $2000).
-    if (instr == Instr::RTE && cpuModel == CPUModel::M68010 && (get16(refMem, 0x2006) >> 12) == 8) return true;
+    if (instr == Instr::RTE && cpuModel == CPUModel::M68010 && (get16(mem, 0x2006) >> 12) == 8) return true;
 
-    // LINK.l A7 pushes A7-4 on the 68040 (Moira's 040 models run on the 68020 core)
+    // [Moira] LINK.l A7 pushes A7-4 on the 68040 (Moira's 040 models run on the 68020 core)
     if (instr == Instr::LINK && (op & 7) == 7 && cpuModel >= CPUModel::M68EC040) return true;
 
-    // Zero divide uses a different stack frame on the 68040 (Moira's 040 models run on the 68020 core)
+    // [Moira] Zero divide uses a different stack frame on the 68040 (Moira's 040 models run on the 68020 core)
     if ((instr == Instr::DIVL || instr == Instr::DIVU || instr == Instr::DIVS) &&
         cpuModel >= CPUModel::M68EC040) return true;
 
-    // UAE emulates FPU instructions that the 68040 traps (Moira follows real hardware)
+    // [UAE] UAE emulates FPU instructions that the 68040 traps (Moira follows real hardware)
     if ((op & 0xFFC0) == 0xF200 && cpuModel == CPUModel::M68040) {
-        u16 e = get16(refMem, 0x1002);
+        u16 e = get16(mem, 0x1002);
         u16 cod = e >> 13, cmd = e & 0x7F;
         if ((cod == 0 || cod == 2) && (cmd == 0x02 || cmd == 0x06 || cmd == 0x08 || cmd == 0x09 ||
             (cmd >= 0x0A && cmd <= 0x12 && cmd != 0x0B && cmd != 0x13) ||
@@ -99,86 +109,116 @@ UAERef::skipSetup(const Setup &s) const
             (cmd >= 0x30 && cmd <= 0x37))) return true;
     }
 
-    // FMOVECR from an undefined ROM offset returns implementation specific values
+    // [undefined] FMOVECR from an undefined ROM offset returns implementation specific values
     if ((op & 0xFFC0) == 0xF200) {
-        u16 e = get16(refMem, 0x1002);
+        u16 e = get16(mem, 0x1002);
         u16 off = e & 0x7F;
         if ((e & 0xFC00) == 0x5C00 && off != 0x00 && !(off >= 0x0B && off <= 0x0F) && !(off >= 0x30 && off <= 0x3F)) return true;
     }
 
-    // FMOVE to <ea> with a non-zero k-factor field is only defined for packed formats
+    // [undefined] FMOVE to <ea> with a non-zero k-factor field is only defined for packed formats
     if ((op & 0xFFC0) == 0xF200) {
-        u16 e = get16(refMem, 0x1002);
+        u16 e = get16(mem, 0x1002);
         u16 fmt = (e >> 10) & 7;
         if ((e >> 13) == 3 && (e & 0x7F) && fmt != 3 && fmt != 7) return true;
     }
 
-    // FMOVEM to/from control registers with an empty register list or non-zero reserved bits is undefined
+    // [undefined] FMOVEM to/from control registers with an empty register list or non-zero reserved bits is undefined
     if ((op & 0xFFC0) == 0xF200) {
-        u16 e = get16(refMem, 0x1002);
+        u16 e = get16(mem, 0x1002);
         if (((e >> 13) == 4 || (e >> 13) == 5) && ((e & 0x1C00) == 0 || (e & 0x3FF))) return true;
     }
 
-    // FMOVEM <ea>,<control registers> with several registers and Dn/An as source. Moira
+    // [UAE] FMOVEM <ea>,<control registers> with several registers and Dn/An as source. Moira
     // accepts this, UAE (and the 6888x manual) don't. Flagged, not mimicked.
     if ((op & 0xFFC0) == 0xF200 && ((op >> 3) & 7) <= 1) {
-        u16 e = get16(refMem, 0x1002);
+        u16 e = get16(mem, 0x1002);
         u16 lst = (e >> 10) & 7;
         if ((e >> 13) == 4 && lst != 1 && lst != 2 && lst != 4) return true;
         if (((e >> 13) == 4 || (e >> 13) == 5) && ((op >> 3) & 7) == 1 && lst != 1) return true;
     }
 
-    // Register-to-register FPU operations and FMOVECR with a non-zero <ea> field: Moira raises line F, UAE ignores the field
-    if ((op & 0xFFC0) == 0xF200 && (op & 0x3F) && ((get16(refMem, 0x1002) >> 13) == 0 ||
-        (get16(refMem, 0x1002) & 0xFC00) == 0x5C00)) return true;
+    // [UAE] Register-to-register FPU operations and FMOVECR with a non-zero <ea> field: Moira raises line F, UAE ignores the field
+    if ((op & 0xFFC0) == 0xF200 && (op & 0x3F) && ((get16(mem, 0x1002) >> 13) == 0 ||
+        (get16(mem, 0x1002) & 0xFC00) == 0x5C00)) return true;
 
-    // Rounded results of the 68040 FS/FD instructions differ on underflow (under investigation)
+    // [open] Rounded results of the 68040 FS/FD instructions differ on underflow (under investigation)
     if ((op & 0xFFC0) == 0xF200) {
-        u16 e = get16(refMem, 0x1002);
+        u16 e = get16(mem, 0x1002);
         if (((e >> 13) == 0 || (e >> 13) == 2) && (e & 0x40)) return true;
     }
 
-    // Packed decimal: random input contains invalid digits and the digit rounding on output differs
+    // [undefined] Packed decimal: random input contains invalid digits and the digit rounding on output differs
     if ((op & 0xFFC0) == 0xF200) {
-        u16 e = get16(refMem, 0x1002);
+        u16 e = get16(mem, 0x1002);
         if (((e >> 13) == 2 || (e >> 13) == 3) && (((e >> 10) & 7) == 3 || ((e >> 10) & 7) == 7)) return true;
     }
 
-    // FMOVEM data registers with an empty static list or reserved mode bits
+    // [undefined] FMOVEM data registers with an empty static list or reserved mode bits
     if ((op & 0xFFC0) == 0xF200) {
-        u16 e = get16(refMem, 0x1002);
+        u16 e = get16(mem, 0x1002);
         if (((e >> 13) == 6 || (e >> 13) == 7) && !(e & 0x0800) && (e & 0xFF) == 0) return true;
         if (((e >> 13) == 6 || (e >> 13) == 7) && (((e >> 11) & 3) < 2 || (e & 0x0700) || (((e >> 11) & 3) == 3 && (e & 0x8F)))) return true;
     }
 
-    // MULL with identical high and low registers has an undefined result
+    // [undefined] MULL with identical high and low registers has an undefined result
     if (instr == Instr::MULL) {
-        u16 e = get16(refMem, 0x1002);
+        u16 e = get16(mem, 0x1002);
         if ((e & 0x400) && ((e >> 12) & 7) == (e & 7)) return true;
     }
 
-    // CAS2 with identical compare registers is degenerate
+    // [undefined] CAS2 with identical compare registers is degenerate
     if (instr == Instr::CAS2) {
-        u16 e1 = get16(refMem, 0x1002), e2 = get16(refMem, 0x1004);
+        u16 e1 = get16(mem, 0x1002), e2 = get16(mem, 0x1004);
         if ((e1 & 7) == (e2 & 7) || ((e1 >> 6) & 7) == ((e2 >> 6) & 7)) return true;
     }
 
-    /* The behavior is undefined for reserved encodings of the full
-     * extension word (indexed modes of the 68020 and above). Skip the
-     * instruction if one of its first words looks like one.
+    /* [undefined] The behavior is undefined for reserved encodings of the full extension word
+     * (indexed modes of the 68020 and above). Skip the instruction if one of its
+     * extension words looks like one.
      */
+    auto reserved = [](u16 w) {
+        return (w & 0x100) && ((w & 0x30) == 0 || (w & 0x08) || (w & 7) == 4 || ((w & 0x40) && (w & 7) >= 5));
+    };
+
     int mode = (op >> 3) & 7, reg = op & 7;
     int dmode = (op >> 6) & 7, dreg = (op >> 9) & 7;
     bool indexed = mode == 6 || (mode == 7 && reg == 3);
-    if (op >= 0x1000 && op < 0x4000) indexed |= dmode == 6 || (dmode == 7 && dreg == 3);
 
-    if (cpuModel >= CPUModel::M68EC020 && indexed) {
-        for (int off = 2; off <= 6; off += 2) {
-            u16 w = get16(refMem, 0x1000 + off);
-            if ((w & 0x100) == 0) continue;
-            bool bs = (w & 0x30) == 0 || (w & 0x08) || (w & 7) == 4 || ((w & 0x40) && (w & 7) >= 5);
-            if (bs) return true;
-        }
+    if (cpuModel < CPUModel::M68EC020) return false;
+
+    if (op >= 0x1000 && op < 0x4000) {
+
+        // MOVE: Walk through the extension words of the source and the destination
+        int size = (op >> 12) == 1 ? 1 : (op >> 12) == 3 ? 2 : 4;
+        u32 off = 0x1002;
+
+        auto operand = [&](int m, int r) {
+
+            if (m == 6 || (m == 7 && r == 3)) {
+                u16 w = get16(mem, off);
+                if (reserved(w)) return true;
+                if (w & 0x100) {
+                    int bd = (w & 0x30) >> 4, od = w & 3;
+                    off += 2 + 2 * ((bd == 2 ? 1 : bd == 3 ? 2 : 0) + (od == 2 ? 1 : od == 3 ? 2 : 0));
+                } else {
+                    off += 2;
+                }
+            } else if (m == 5 || (m == 7 && (r == 0 || r == 2))) {
+                off += 2;
+            } else if (m == 7 && r == 1) {
+                off += 4;
+            } else if (m == 7 && r == 4) {
+                off += size == 4 ? 4 : 2;
+            }
+            return false;
+        };
+        return operand(mode, reg) || operand(dmode, dreg);
+    }
+
+    // Other instructions: The extension word follows the first words
+    if (indexed) {
+        for (int off = 2; off <= 6; off += 2) if (reserved(get16(mem, 0x1000 + off))) return true;
     }
     return false;
 }
