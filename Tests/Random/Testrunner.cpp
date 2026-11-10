@@ -54,8 +54,9 @@ u16 opcode = 0;
 // Speed comparison
 clock_t refclk[2] = {0,0};
 clock_t moiraclk[2] = {0,0};
+clock_t dasmclk[3] = {0,0,0};      // Disassembler time of the references (Binutils, Musashi, UAE)
 
-static void resetClocks() { refclk[0] = refclk[1] = moiraclk[0] = moiraclk[1] = 0; }
+static void resetClocks() { refclk[0] = refclk[1] = moiraclk[0] = moiraclk[1] = 0; dasmclk[0] = dasmclk[1] = dasmclk[2] = 0; }
 
 static const struct { CPUModel model; const char *name; } modelTable[] = {
 
@@ -195,6 +196,15 @@ void setupTestEnvironment(Setup &s, long round)
     s.dfc = u16(randomizer.rand());
     s.cacr = randomizer.rand() & moiracpu->cacrMask();
     s.caar = randomizer.rand();
+
+    // The FPU and MMU registers are set by setupFpuEnvironment() and the MMU tests. All other
+    // stages must not see indeterminate values there, because they are applied to both CPUs
+    // (a random TC value could enable the address translation).
+    for (auto &f : s.fpr) f = MFloat80();
+    s.fpcr = s.fpsr = s.fpiar = 0;
+    s.crp = s.srp = 0;
+    s.tc = s.tt0 = s.tt1 = 0;
+    s.mmusr = 0;
 
     for (int i = 0; i < 8; i++) s.d[i] = randomizer.rand();
     for (int i = 0; i < 8; i++) s.a[i] = randomizer.rand();
@@ -809,7 +819,7 @@ void runDasmCPU(long round)
             runDasmSingleTest(setup, u16(op));
         }
     }
-    passed(moiraclk[1], refclk[1]);
+    passedDasm();
 }
 
 void runDasmMMU(long round)
@@ -836,7 +846,7 @@ void runDasmMMU(long round)
             }
         }
     }
-    passed(moiraclk[1], refclk[1]);
+    passedDasm();
 }
 
 void runDasmFPU(long round)
@@ -865,7 +875,7 @@ void runDasmFPU(long round)
             }
         }
     }
-    passed(moiraclk[1], refclk[1]);
+    passedDasm();
 }
 
 bool misalignedRead = false;
@@ -941,6 +951,15 @@ void setupFpuEnvironment(Setup &s)
     s.mmusr = randomizer.rand() & 0xEE47;
 }
 
+void passedDasm()
+{
+    // Moira's time covers all syntax flavors; each reference is timed separately
+    printf(" PASSED  (Moira: %.2fs  Binutils: %.2fs", double(moiraclk[1]) / double(CLOCKS_PER_SEC), double(dasmclk[0]) / double(CLOCKS_PER_SEC));
+    if (dasmMusashi) printf("  Musashi: %.2fs", double(dasmclk[1]) / double(CLOCKS_PER_SEC));
+    if (dasmUAE) printf("  UAE: %.2fs", double(dasmclk[2]) / double(CLOCKS_PER_SEC));
+    printf(")\n");
+}
+
 void passed(clock_t moira, clock_t ref)
 {
     printf(" PASSED  (Moira: %.2fs  %s: %.2fs)\n",
@@ -1014,7 +1033,6 @@ void runDasmSingleTest(Setup &s, u16 op)
     // Run both disassemblers
     disassembleReference(s, refResult);
     disassembleMoira(s, moiraResult);
-    refclk[1] += refResult.elapsed[1];
     moiraclk[1] += moiraResult.elapsed[1];
 
     // Compare
@@ -1074,10 +1092,12 @@ void disassembleReference(Setup &s, Result &r)
     r.dasmMusashi[0] = r.dasmUAE[0] = 0;
     r.dasmCntMusashi = r.dasmCntUAE = 0;
 
+    clock_t t0 = clock();
     disassembleBinutils(r);
+    dasmclk[0] += clock() - t0;
 
-    if (dasmMusashi) disassembleMusashi(s, r);
-    if (dasmUAE) disassembleUAE(s, r);
+    if (dasmMusashi) { t0 = clock(); disassembleMusashi(s, r); dasmclk[1] += clock() - t0; }
+    if (dasmUAE) { t0 = clock(); disassembleUAE(s, r); dasmclk[2] += clock() - t0; }
 }
 
 // Disassembles the instruction with Moira in all supported syntax flavors
@@ -1086,6 +1106,7 @@ void disassembleMoira(Setup &s, Result &r)
     r.oldpc = s.pc;
     r.opcode = get16(moiraMem, r.oldpc);
     r.elapsed[0] = r.elapsed[1] = 0;
+    clock_t tStart = clock();
     r.dasmMoiraUAE[0] = 0;
     r.dasmCntMusashi = r.dasmCntMoiraUAE = 0;
 
@@ -1110,9 +1131,7 @@ void disassembleMoira(Setup &s, Result &r)
         moiracpu->setDasmSyntax(Syntax::MUSASHI);
         moiracpu->setDasmLetterCase(LetterCase::MIXED_CASE);
         moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
-        clock_t elapsed = clock();
         r.dasmCntMusashi = moiracpu->disassemble(r.dasmMusashi, r.oldpc);
-        r.elapsed[1] = clock() - elapsed;
     }
 
     // Disassemble the instruction in UAE format
@@ -1120,10 +1139,11 @@ void disassembleMoira(Setup &s, Result &r)
         moiracpu->setDasmSyntax(Syntax::UAE);
         moiracpu->setDasmLetterCase(LetterCase::LOWER_CASE);
         moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
-        clock_t elapsed = clock();
         r.dasmCntMoiraUAE = moiracpu->disassemble(r.dasmMoiraUAE, r.oldpc);
-        r.elapsed[1] = clock() - elapsed;
     }
+
+    // Time spent in all syntax flavors
+    r.elapsed[1] = clock() - tStart;
 }
 
 bool skipAccessCheck(u16 op)

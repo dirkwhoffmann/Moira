@@ -2938,7 +2938,7 @@ Moira::execLink(u16 opcode)
 {
     AVAILABILITY(S == Long ? Core::C68020 : Core::C68000)
 
-    u16 ird  = getIRD();
+    [[maybe_unused]] u16 ird  = getIRD();
     u32 sp   = getSP() - 4;
 
     int ax   = _____________xxx(opcode);

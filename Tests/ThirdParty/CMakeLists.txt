@@ -63,6 +63,7 @@ else()
 endif()
 target_include_directories(uaecpu PRIVATE
 ${CMAKE_CURRENT_SOURCE_DIR}/UAEGlue/sdl-shim
+$<$<BOOL:${MSVC}>:${CMAKE_CURRENT_SOURCE_DIR}/UAEGlue/msvc-shim>
 ${AMI} ${AMI}/include ${AMI}/osdep ${AMI}/archivers ${AMI}/threaddep)
 target_include_directories(uaecpu PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/UAEGlue)
 
