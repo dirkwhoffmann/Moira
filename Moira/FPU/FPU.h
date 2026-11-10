@@ -89,7 +89,7 @@ static constexpr u32 AEXC_MASK      = 0x000000F8;
 namespace FPEXP {
 
 static constexpr u32 BSUN           = 1 << 15;
-static constexpr u32 SNAN           = 1 << 14;
+static constexpr u32 SIG_NAN           = 1 << 14;
 static constexpr u32 OPERR          = 1 << 13;
 static constexpr u32 OVFL           = 1 << 12;
 static constexpr u32 UNFL           = 1 << 11;

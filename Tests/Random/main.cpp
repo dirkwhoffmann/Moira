@@ -10,6 +10,7 @@
 #include "config.h"
 #include "Testrunner.h"
 #include <string.h>
+#include <ctime>
 #include <algorithm>
 
 #define STRINGIFY(x) #x

@@ -34,7 +34,7 @@ FpuFormats::toInteger(FpuEnv &env, const MFloat80 &value, int bits)
 
         // The result consists of the most significant bits of the (quieted) mantissa
         u64 man = value.mantissa();
-        if (value.isSignalingNaN()) { env.raiseFlags(FloatFlags::SNAN); man |= 1ULL << 62; }
+        if (value.isSignalingNaN()) { env.raiseFlags(FloatFlags::SIG_NAN); man |= 1ULL << 62; }
         env.raiseFlags(FloatFlags::INVALID);
         return (i32)(u32)(man >> (64 - bits));
     }
@@ -102,7 +102,7 @@ FpuFormats::toSingle(FpuEnv &env, const MFloat80 &value)
 
         // Truncate the payload, but make sure the result remains a NaN
         u32 frac = u32((value.mantissa() >> 40) & 0x007FFFFF);
-        if (value.isSignalingNaN()) { env.raiseFlags(FloatFlags::SNAN); frac |= 0x00400000; }
+        if (value.isSignalingNaN()) { env.raiseFlags(FloatFlags::SIG_NAN); frac |= 0x00400000; }
         if (frac == 0) frac = 0x00400000;
         return u32(value.sign()) << 31 | 0x7F800000 | frac;
     }
@@ -115,7 +115,7 @@ FpuFormats::toDouble(FpuEnv &env, const MFloat80 &value)
     if (value.isNaN()) {
 
         u64 frac = (value.mantissa() >> 11) & 0x000FFFFFFFFFFFFFULL;
-        if (value.isSignalingNaN()) { env.raiseFlags(FloatFlags::SNAN); frac |= 0x0008000000000000ULL; }
+        if (value.isSignalingNaN()) { env.raiseFlags(FloatFlags::SIG_NAN); frac |= 0x0008000000000000ULL; }
         if (frac == 0) frac = 0x0008000000000000ULL;
         return u64(value.sign()) << 63 | 0x7FF0000000000000ULL | frac;
     }
@@ -370,7 +370,7 @@ FpuFormats::toPacked(FpuEnv &env, const MFloat80 &value, int k, u32 (&w)[3])
 
             // Signaling NaNs are converted to quiet NaNs
             u64 man = value.mantissa();
-            if (value.isSignalingNaN()) { env.raiseFlags(FloatFlags::SNAN); man |= 1ULL << 62; }
+            if (value.isSignalingNaN()) { env.raiseFlags(FloatFlags::SIG_NAN); man |= 1ULL << 62; }
             w[1] = u32(man >> 32);
             w[2] = u32(man);
         }

@@ -254,15 +254,15 @@ TEST_CASE("Arithmetic")
     CHECK(same(fpu.fadd(qnan2, qnan), qnan2));
     CHECK(fpu.fpsr == 0);
     CHECK(same(fpu.fadd(F(1), snan), qnan));
-    CHECK((fpu.fpsr & FPEXP::SNAN));
+    CHECK((fpu.fpsr & FPEXP::SIG_NAN));
     CHECK(!(fpu.fpsr & FPEXP::OPERR));
     fpu.setFPSR(0);
     CHECK(same(fpu.fadd(qnan2, snan), qnan2));
-    CHECK((fpu.fpsr & FPEXP::SNAN));
+    CHECK((fpu.fpsr & FPEXP::SIG_NAN));
     fpu.setFPSR(0);
     CHECK(same(fpu.fsqrt(snan), qnan));
     CHECK(same(fpu.fint(snan), qnan));
-    CHECK((fpu.fpsr & FPEXP::SNAN));
+    CHECK((fpu.fpsr & FPEXP::SIG_NAN));
     fpu.setFPSR(0);
 
     // FINT and FINTRZ
@@ -313,7 +313,7 @@ TEST_CASE("Arithmetic")
     CHECK((fpu.fpsr & FPSR::CC_MASK) == FPSR::CC_N);
     fpu.ftst(snan);
     CHECK((fpu.fpsr & FPSR::CC_NAN));
-    CHECK((fpu.fpsr & FPEXP::SNAN));
+    CHECK((fpu.fpsr & FPEXP::SIG_NAN));
     fpu.setFPSR(0);
 
     // FCMP

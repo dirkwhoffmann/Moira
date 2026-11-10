@@ -37,7 +37,7 @@ struct FloatFlags {
     static constexpr u8 OVFL        = 0x04;   ////<< Overflow
     static constexpr u8 DIV_BY_ZERO = 0x08;
     static constexpr u8 INVALID     = 0x10;
-    static constexpr u8 SNAN        = 0x20;   ////<< Signaling NaN operand
+    static constexpr u8 SIG_NAN        = 0x20;   ////<< Signaling NaN operand
     static constexpr u8 ALL         = 0x3F;
 };
 

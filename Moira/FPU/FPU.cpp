@@ -7,6 +7,7 @@
 
 #include "../MoiraConfig.h"
 #include "FPU.h"
+#include "Wide.h"
 #include <bit>
 
 namespace MOIRA_NAMESPACE {
@@ -99,7 +100,7 @@ FPU::setExcStatusBit(u32 mask)
     fpsr |= mask & FPSR::EXC_MASK;
 
     // Update the accrued exception byte (sticky bits)
-    if (fpsr & (FPEXP::BSUN | FPEXP::SNAN | FPEXP::OPERR))      fpsr |= 1 << 7;
+    if (fpsr & (FPEXP::BSUN | FPEXP::SIG_NAN | FPEXP::OPERR))      fpsr |= 1 << 7;
     if (fpsr & FPEXP::OVFL)                                     fpsr |= 1 << 6;
     if ((fpsr & FPEXP::UNFL) && (fpsr & FPEXP::INEX2))          fpsr |= 1 << 5;
     if (fpsr & FPEXP::DZ)                                       fpsr |= 1 << 4;
@@ -190,7 +191,7 @@ FPU::collectFlags()
     if (flags & FloatFlags::OVFL)           mask |= FPEXP::OVFL;
     if (flags & FloatFlags::DIV_BY_ZERO)    mask |= FPEXP::DZ;
     if (flags & FloatFlags::INVALID)        mask |= FPEXP::OPERR;
-    if (flags & FloatFlags::SNAN)           mask |= FPEXP::SNAN;
+    if (flags & FloatFlags::SIG_NAN)           mask |= FPEXP::SIG_NAN;
 
     if (mask) setExcStatusBit(mask);
     env.clearFlags();
@@ -218,8 +219,6 @@ MFloat80 singleOverflow(FpuEnv &env, const MFloat80 &result)
  * The remainder has the value 'rem' * 2^(unit - bias - 63) and the quotient
  * is given by its least significant bits.
  */
-using u128 = unsigned __int128;
-
 struct Division {
 
     u64 quotient = 0;
@@ -316,7 +315,7 @@ FPU::resolveNan(const MFloat80 &op1, const MFloat80 &op2)
 
     auto quiet = [&](const MFloat80 &op) {
 
-        if (op.isSignalingNaN()) setExcStatusBit(FPEXP::SNAN);
+        if (op.isSignalingNaN()) setExcStatusBit(FPEXP::SIG_NAN);
         return MFloat80::fromBits(op.signExp(), op.mantissa() | (1ULL << 62));
     };
 
