@@ -14,7 +14,7 @@
 		50F500000000000000000112 /* m68000-sdp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F500000000000000000104 /* m68000-sdp.cpp */; };
 		50F500000000000000000113 /* MameCheck.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F50000000000000000010D /* MameCheck.cpp */; };
 		50F500000000000000000114 /* SSTFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F100000000000000000021 /* SSTFile.cpp */; };
-		50F500000000000000000115 /* BusErrorDiff.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F50000000000000000010C /* BusErrorDiff.cpp */; };
+		50F500000000000000000115 /* ExceptionDiff.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F50000000000000000010C /* ExceptionDiff.cpp */; };
 		50F500000000000000000116 /* SSTFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F100000000000000000021 /* SSTFile.cpp */; };
 		50F500000000000000000033 /* libMAMERef.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50F500000000000000000002 /* libMAMERef.a */; };
 		50F500000000000000000034 /* libMAMERef.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50F500000000000000000002 /* libMAMERef.a */; };
@@ -255,11 +255,11 @@
 		50F500000000000000000109 /* MameCpu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MameCpu.h; sourceTree = "<group>"; };
 		50F50000000000000000010A /* emu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = emu.h; sourceTree = "<group>"; };
 		50F50000000000000000010B /* m68kdasm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = m68kdasm.h; sourceTree = "<group>"; };
-		50F50000000000000000010C /* BusErrorDiff.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BusErrorDiff.cpp; sourceTree = "<group>"; };
+		50F50000000000000000010C /* ExceptionDiff.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ExceptionDiff.cpp; sourceTree = "<group>"; };
 		50F50000000000000000010D /* MameCheck.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MameCheck.cpp; sourceTree = "<group>"; };
 		50F500000000000000000002 /* libMAMERef.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libMAMERef.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		50F50000000000000000000C /* mameCheck */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mameCheck; sourceTree = BUILT_PRODUCTS_DIR; };
-		50F500000000000000000016 /* busErrorRunner */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = busErrorRunner; sourceTree = BUILT_PRODUCTS_DIR; };
+		50F500000000000000000016 /* exceptionRunner */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = exceptionRunner; sourceTree = BUILT_PRODUCTS_DIR; };
 		50F400000000000000000113 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		50F400000000000000000115 /* FpuTests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FpuTests.cpp; sourceTree = "<group>"; };
 		50F400000000000000000117 /* FpuExecTests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FpuExecTests.cpp; sourceTree = "<group>"; };
@@ -614,7 +614,7 @@
 		50F50000000000000000002C /* MameRef */ = {
 			isa = PBXGroup;
 			children = (
-				50F50000000000000000010C /* BusErrorDiff.cpp */,
+				50F50000000000000000010C /* ExceptionDiff.cpp */,
 				50F50000000000000000010D /* MameCheck.cpp */,
 			);
 			path = MameRef;
@@ -895,7 +895,7 @@
 				50F100000000000000000002 /* libMoiraMAME.a */,
 				50F500000000000000000002 /* libMAMERef.a */,
 				50F50000000000000000000C /* mameCheck */,
-				50F500000000000000000016 /* busErrorRunner */,
+				50F500000000000000000016 /* exceptionRunner */,
 				50F10000000000000000000C /* singleStepRunner */,
 				50F200000000000000000002 /* fibonacci */,
 				50F400000000000000000002 /* libUAERef.a */,
@@ -1287,9 +1287,9 @@
 			productReference = 50F50000000000000000000C /* mameCheck */;
 			productType = "com.apple.product-type.tool";
 		};
-		50F500000000000000000015 /* busErrorRunner */ = {
+		50F500000000000000000015 /* exceptionRunner */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 50F500000000000000000019 /* Build configuration list for PBXNativeTarget "busErrorRunner" */;
+			buildConfigurationList = 50F500000000000000000019 /* Build configuration list for PBXNativeTarget "exceptionRunner" */;
 			buildPhases = (
 				50F500000000000000000017 /* Sources */,
 				50F500000000000000000018 /* Frameworks */,
@@ -1300,9 +1300,9 @@
 				50F500000000000000000023 /* PBXTargetDependency */,
 				50F500000000000000000024 /* PBXTargetDependency */,
 			);
-			name = busErrorRunner;
-			productName = busErrorRunner;
-			productReference = 50F500000000000000000016 /* busErrorRunner */;
+			name = exceptionRunner;
+			productName = exceptionRunner;
+			productReference = 50F500000000000000000016 /* exceptionRunner */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -1341,7 +1341,7 @@
 				50F100000000000000000001 /* MoiraMAME */,
 				50F500000000000000000001 /* MAMERef */,
 				50F50000000000000000000B /* mameCheck */,
-				50F500000000000000000015 /* busErrorRunner */,
+				50F500000000000000000015 /* exceptionRunner */,
 				50F10000000000000000000B /* singleStepRunner */,
 				50F200000000000000000001 /* fibonacci */,
 				50F400000000000000000001 /* UAERef */,
@@ -1584,7 +1584,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				50F500000000000000000115 /* BusErrorDiff.cpp in Sources */,
+				50F500000000000000000115 /* ExceptionDiff.cpp in Sources */,
 				50F500000000000000000116 /* SSTFile.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2621,7 +2621,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		50F500000000000000000019 /* Build configuration list for PBXNativeTarget "busErrorRunner" */ = {
+		50F500000000000000000019 /* Build configuration list for PBXNativeTarget "exceptionRunner" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				50F50000000000000000001A /* Debug */,
