@@ -365,13 +365,13 @@ int main(int argc, char **argv)
                 std::set<int> badWords;
                 for (auto a : addrs) {
                     if (tasRead && (a & ~1u) == plain[k].addr) continue;    // MAME still completes the write half
-                    if (a == rs.ssp + 2) continue;      // Undefined upper byte of the fault address
-                    if (a == rs.ssp + 9 && !(srMask & 0x1F)) {      // Condition codes in the stacked SR
+                    if (a == ((rs.ssp & ADDR_MASK) + 2)) continue;      // Undefined upper byte of the fault address
+                    if (a == ((rs.ssp & ADDR_MASK) + 9) && !(srMask & 0x1F)) {      // Condition codes in the stacked SR
                         if (((moira.mem.peek(a) ^ ref.mem.peek(a)) & ~0x1F) == 0) continue;
                     }
                     if (moira.mem.peek(a) != ref.mem.peek(a)) {
-                        u32 sp = rs.ssp;
-                        if (a >= sp && a < sp + 14) badWords.insert(int((a - sp) / 2)); else badWords.insert(-1);
+                        u32 sp = rs.ssp & ADDR_MASK;
+                        if (a >= sp && a < sp + 14) badWords.insert(int((a - sp) / 2)); else { badWords.insert(-1); if (getenv("BED_REGS")) printf("      mem %06x: exp %02x got %02x (ssp %06x)\n", a, ref.mem.peek(a), moira.mem.peek(a), sp); }
                     }
                 }
                 static const char *fields[] = { "frame.code", "frame.addr", "frame.addr", "frame.ird", "frame.sr", "frame.pc", "frame.pc" };
@@ -394,8 +394,8 @@ int main(int argc, char **argv)
                         if (e.mask != g.mask) d += "mask ";
                         if (e.fc != g.fc) d += "fc ";
                         u16 dm = 0xFFFF;
-                        if (e.write && e.fc == 5 && e.addr == ((rs.ssp + 2) & ~1u)) dm = 0x00FF;        // Undefined upper byte of the fault address
-                        if (e.write && e.fc == 5 && e.addr == ((rs.ssp + 8) & ~1u)) dm = ~srMask & 0x1F ? 0xFFE0 : 0xFFFF;   // Condition codes
+                        if (e.write && e.fc == 5 && e.addr == (((rs.ssp & ADDR_MASK) + 2) & ~1u)) dm = 0x00FF;        // Undefined upper byte of the fault address
+                        if (e.write && e.fc == 5 && e.addr == (((rs.ssp & ADDR_MASK) + 8) & ~1u)) dm = ~srMask & 0x1F ? 0xFFE0 : 0xFFFF;   // Condition codes
                         if (e.write && (e.data & e.mask & dm) != (g.data & g.mask & dm)) d += "data ";
                         if (!d.empty()) { d.pop_back(); add("bus#" + std::to_string(i) + "(" + d + ")"); break; }
                     }

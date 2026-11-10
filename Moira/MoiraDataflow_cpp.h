@@ -137,7 +137,7 @@ Moira::computeEA(u32 n) {
             result = (i16)queue.irc;
             readBuffer = queue.irc;
 
-            if constexpr ((F & SKIP_LAST_RD) == 0) { readExt<C>(); } else { reg.pc += 2; }
+            if constexpr ((F & SKIP_LAST_RD) == 0) { readExtLast<C>(); } else { reg.pc += 2; }
             break;
         }
         case 8: // ABS.L
@@ -964,15 +964,8 @@ Moira::writeDataCache(u32 addr, u32 val)
 template <Core C, Size S> u32
 Moira::readIFrame()
 {
-    if constexpr (compat == Compatibility::MAME && C == Core::C68000 && S != Long) {
-
-        try { return readI<C, S>(); }
-        catch (BusError &e) { e.stackFrame.pc += 2; throw; }
-
-    } else {
-
-        return readI<C, S>();
-    }
+    // (MAME mode: readI no longer decrements the stacked PC for byte and word operands)
+    return readI<C, S>();
 }
 
 template <Core C, Size S> u32
@@ -985,13 +978,13 @@ Moira::readI()
         case Byte:
 
             result = (u8)queue.irc;
-            readExt<C>();
+            readExtLast<C>();
             break;
 
         case Word:
 
             result = queue.irc;
-            readExt<C>();
+            readExtLast<C>();
             break;
 
         case Long:
