@@ -713,8 +713,9 @@ Moira::execAddxEa(u16 opcode)
     } catch (const BusError &e) {
 
         // MAME updates the register between the two word reads
+        // UAE updates the register after both reads
         if constexpr (EXACT_COMPAT && S == Long) {
-            if ((e.stackFrame.addr & 0xFFFFFF) == ((ea1 + 2) & 0xFFFFFF)) undoAnPD<M,S>(src);
+            if (compat == Compatibility::UAE || (e.stackFrame.addr & 0xFFFFFF) == ((ea1 + 2) & 0xFFFFFF)) undoAnPD<M,S>(src);
         }
         throw;
     }
@@ -749,8 +750,9 @@ Moira::execAddxEa(u16 opcode)
 
     } catch (const BusError &e) {
 
+        // UAE updates the register after both reads
         if constexpr (EXACT_COMPAT && S == Long) {
-            if ((e.stackFrame.addr & 0xFFFFFF) == ((ea2 + 2) & 0xFFFFFF)) undoAnPD<M,S>(dst);
+            if (compat == Compatibility::UAE || (e.stackFrame.addr & 0xFFFFFF) == ((ea2 + 2) & 0xFFFFFF)) undoAnPD<M,S>(dst);
         }
         throw;
     }
@@ -764,7 +766,18 @@ Moira::execAddxEa(u16 opcode)
         writeM<C, M, Word, POLL | AE_INC_PC>(ea2 + 2, result & 0xFFFF);
         if constexpr (EXACT_68000) setCCR(ccrFin);
         looping<I>() ? noPrefetch<C>() : prefetch<C, KEEP_IRD>();
-        writeM<C, M, Word>(ea2, result >> 16);
+        if constexpr (compat == Compatibility::UAE) {
+
+            // UAE stacks the IRD of the executing instruction
+            try { writeM<C, M, Word>(ea2, result >> 16); }
+            catch (BusError &e) {
+                e.stackFrame.ird = irdOld;
+                e.stackFrame.code = (irdOld & 0xFFE0) | (e.stackFrame.code & 0x1F);
+                throw;
+            }
+        } else {
+            writeM<C, M, Word>(ea2, result >> 16);
+        }
 
     } else if constexpr (S == Long && C == Core::C68010 && !(compat == Compatibility::MUSASHI)) {
 
@@ -2253,7 +2266,26 @@ Moira::execCmpm(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        if constexpr (EXACT_COMPAT) {
+        if constexpr (compat == Compatibility::UAE) {
+
+            // UAE advances the source register by the number of words read (including the failing one).
+            // If a word-sized destination read fails, the destination register is advanced, too.
+            u32 inc = (S == Byte && src == 7) ? 2 : (S == Byte) ? 1 : 2;
+            u32 anSrc = reg.a[src];
+            try { readOp<C, M, S, AE_INC_PC | AE_KEEP_A>(src, &ea1, &data1); }
+            catch (const AddressError &) { reg.a[src] = anSrc; throw; }
+            catch (const BusError &e) {
+                if (S == Long && (e.stackFrame.addr & 0xFFFFFF) == ((anSrc + 2) & 0xFFFFFF)) inc = 4;
+                U32_INC(reg.a[src], inc);
+                throw;
+            }
+            POLL_IPL;
+            u32 an = reg.a[dst];
+            try { readOp<C, M, S, AE_INC_PC | AE_KEEP_A>(dst, &ea2, &data2); }
+            catch (const AddressError &) { reg.a[dst] = an; throw; }
+            catch (const BusError &) { reg.a[dst] = an; if (S == Word) U32_INC(reg.a[dst], 2); throw; }
+
+        } else if constexpr (EXACT_COMPAT) {
 
             // MAME advances the source register by 2 if the source read fails, but not the destination register
             try { readOp<C, M, S, AE_INC_PC | AE_KEEP_A>(src, &ea1, &data1); }
@@ -2397,11 +2429,11 @@ Moira::execDbcc(u16 opcode)
             }
 
             // Decrement loop counter
-            if constexpr (compat != Compatibility::MAME) writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+            if constexpr (!(compat == Compatibility::MAME || compat == Compatibility::UAE)) writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
 
             // Branch
             if (takeBranch) {
-                if constexpr (compat == Compatibility::MAME) {
+                if constexpr (compat == Compatibility::MAME || compat == Compatibility::UAE) {
 
                     // MAME decrements the counter after the first fetch at the branch target
                     reg.pc += 2;
@@ -2421,7 +2453,7 @@ Moira::execDbcc(u16 opcode)
 
             } else {
 
-                if constexpr (compat == Compatibility::MAME) writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+                if constexpr (compat == Compatibility::MAME || compat == Compatibility::UAE) writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
                 (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
                 CYCLES_68000(14);
                 CYCLES_68020(10);
@@ -3246,7 +3278,16 @@ Moira::execMove4(u16 opcode)
         if (format == 2) { SYNC(2); throw AddressError(makeFrame<flags2>(ea)); }
     }
 
-    if constexpr (EXACT_COMPAT) {
+    if constexpr (compat == Compatibility::UAE && C == Core::C68000 && S == Long) {
+
+        // UAE restores the register if a long write fails and stacks the unmasked address
+        try { writeM<C, Mode::PD, S, REVERSE>(ea, data); }
+        catch (BusError &e) {
+            e.stackFrame.addr = (e.stackFrame.addr & 0xFFFFFF) | (ea & 0xFF000000);
+            throw;
+        }
+
+    } else if constexpr (EXACT_COMPAT) {
 
         // The register has already been decremented when the final write fails
         try { writeM<C, Mode::PD, S, REVERSE>(ea, data); }
@@ -6419,13 +6460,14 @@ Moira::execTrapv(u16 opcode)
                 // In MAME, the word is read in supervisor mode. A bus error at this point
                 // is raised after the exception has already been entered.
                 bool s = reg.sr.s;
-                reg.sr.s = true;
+                if constexpr (compat == Compatibility::MAME) reg.sr.s = true;   // UAE reads in the current mode
                 try { (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2); }
                 catch (BusError &e) {
                     reg.sr.s = s;
                     setSupervisorMode(true);
                     clearTraceFlags();
                     e.stackFrame.sr = (e.stackFrame.sr | 0x2000) & ~0x8000;   // Stacked with S set and T cleared
+                    if constexpr (compat == Compatibility::UAE) e.stackFrame.code = (e.stackFrame.code & ~7) | 6;   // Supervisor program space
                     throw;
                 }
                 reg.sr.s = s;

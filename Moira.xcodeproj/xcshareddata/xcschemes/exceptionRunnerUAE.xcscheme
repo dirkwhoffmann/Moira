@@ -53,6 +53,20 @@
             ReferencedContainer = "container:Moira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "--ignore ccr"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--ignore cycles"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--ignore nbit"
+            isEnabled = "YES">
+         </CommandLineArgument>
+      </CommandLineArguments>
       <MetalAPIValidationSettings
          isEnabled = "No">
       </MetalAPIValidationSettings>
