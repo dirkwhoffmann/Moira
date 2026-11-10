@@ -14,16 +14,16 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "50804E052386A4CE004D3EC2"
-               BuildableName = "testRunnerMusashi"
-               BlueprintName = "testRunnerMusashi"
+               BlueprintIdentifier = "50F10000000000000000000B"
+               BuildableName = "smoke"
+               BlueprintName = "smoke"
                ReferencedContainer = "container:Moira.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
-      buildConfiguration = "Debug"
+      buildConfiguration = "Debug-UAE"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
@@ -31,7 +31,7 @@
       </Testables>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Debug"
+      buildConfiguration = "Release"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       enableASanStackUseAfterReturn = "YES"
@@ -47,9 +47,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "50804E052386A4CE004D3EC2"
-            BuildableName = "testRunnerMusashi"
-            BlueprintName = "testRunnerMusashi"
+            BlueprintIdentifier = "50F10000000000000000000B"
+            BuildableName = "smoke"
+            BlueprintName = "smoke"
             ReferencedContainer = "container:Moira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -67,15 +67,15 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "50804E052386A4CE004D3EC2"
-            BuildableName = "testRunnerMusashi"
-            BlueprintName = "testRunnerMusashi"
+            BlueprintIdentifier = "50F10000000000000000000B"
+            BuildableName = "smoke"
+            BlueprintName = "smoke"
             ReferencedContainer = "container:Moira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
-      buildConfiguration = "Debug">
+      buildConfiguration = "Debug-UAE">
    </AnalyzeAction>
    <ArchiveAction
       buildConfiguration = "Release"

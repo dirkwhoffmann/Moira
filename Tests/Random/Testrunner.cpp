@@ -290,13 +290,13 @@ void run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const st
             }
 
             // Run the FPU tests for all FPUs that can be combined with this CPU
-            if constexpr (CHECK_FPU) {
+            if constexpr (CHECK_FPU || CHECK_DASM) {
 
                 for (FPUModel fpu : fpus) {
 
                     if (!isCompatible(cpu, fpu)) continue;
                     selectFpu(fpu);
-                    runFPU(i);
+                    if constexpr (CHECK_FPU) runFPU(i);
                     if constexpr (CHECK_DASM) runDasmFPU(i);
 
                     // Without a reference FPU, there is nothing more to report

@@ -14,16 +14,16 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "50FA00000000000000000115"
-               BuildableName = "exceptionRunnerUAE"
-               BlueprintName = "exceptionRunnerUAE"
+               BlueprintIdentifier = "50804E052386A4CE004D3EC2"
+               BuildableName = "randommusashi"
+               BlueprintName = "randommusashi"
                ReferencedContainer = "container:Moira.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
-      buildConfiguration = "Debug-UAE"
+      buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
@@ -31,7 +31,7 @@
       </Testables>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Release"
+      buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       enableASanStackUseAfterReturn = "YES"
@@ -47,26 +47,12 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "50FA00000000000000000115"
-            BuildableName = "exceptionRunnerUAE"
-            BlueprintName = "exceptionRunnerUAE"
+            BlueprintIdentifier = "50804E052386A4CE004D3EC2"
+            BuildableName = "randommusashi"
+            BlueprintName = "randommusashi"
             ReferencedContainer = "container:Moira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <CommandLineArguments>
-         <CommandLineArgument
-            argument = "--ignore ccr"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "--ignore cycles"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "--ignore nbit"
-            isEnabled = "YES">
-         </CommandLineArgument>
-      </CommandLineArguments>
       <MetalAPIValidationSettings
          isEnabled = "No">
       </MetalAPIValidationSettings>
@@ -81,15 +67,15 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "50FA00000000000000000115"
-            BuildableName = "exceptionRunnerUAE"
-            BlueprintName = "exceptionRunnerUAE"
+            BlueprintIdentifier = "50804E052386A4CE004D3EC2"
+            BuildableName = "randommusashi"
+            BlueprintName = "randommusashi"
             ReferencedContainer = "container:Moira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
-      buildConfiguration = "Debug-UAE">
+      buildConfiguration = "Debug">
    </AnalyzeAction>
    <ArchiveAction
       buildConfiguration = "Release"

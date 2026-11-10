@@ -14,17 +14,27 @@
 // Set to true to verify all memory write operations
 static const bool CHECK_MEM_WRITES = true;
 
+// The runner is built in two flavors: randomized execution tests (RUNNER_STAGES_RANDOM)
+// and disassembler tests (RUNNER_STAGES_DASM)
+#if defined(RUNNER_STAGES_DASM)
+static const bool EXEC_STAGES = false;
+static const bool DASM_STAGES = true;
+#else
+static const bool EXEC_STAGES = true;
+static const bool DASM_STAGES = false;
+#endif
+
 // Set to true to execute CPU tests
-static const bool CHECK_CPU = true;
+static const bool CHECK_CPU = EXEC_STAGES;
 
 // Set to true to execute MMU tests for capable CPUs
-static const bool CHECK_MMU = true;
+static const bool CHECK_MMU = EXEC_STAGES;
 
 // Set to true to execute FPU tests for capable CPUs
-static const bool CHECK_FPU = true;
+static const bool CHECK_FPU = EXEC_STAGES;
 
 // Set to true to run the disassembler tests
-static const bool CHECK_DASM = true;
+static const bool CHECK_DASM = DASM_STAGES;
 
 // Set to true to skip the execution of illegal instructions
 static const bool SKIP_ILLEGAL = true;

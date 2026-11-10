@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "50F50000000000000000000B"
-               BuildableName = "mameCheck"
-               BlueprintName = "mameCheck"
+               BuildableName = "mamecheck"
+               BlueprintName = "mamecheck"
                ReferencedContainer = "container:Moira.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -48,8 +48,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "50F50000000000000000000B"
-            BuildableName = "mameCheck"
-            BlueprintName = "mameCheck"
+            BuildableName = "mamecheck"
+            BlueprintName = "mamecheck"
             ReferencedContainer = "container:Moira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -68,8 +68,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "50F50000000000000000000B"
-            BuildableName = "mameCheck"
-            BlueprintName = "mameCheck"
+            BuildableName = "mamecheck"
+            BlueprintName = "mamecheck"
             ReferencedContainer = "container:Moira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

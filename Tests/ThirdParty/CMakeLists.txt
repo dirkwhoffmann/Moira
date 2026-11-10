@@ -23,7 +23,7 @@ target_include_directories(uaeref PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/UAEGlue)
 target_compile_options(uaeref PRIVATE -w)
 
 
-# Add UAE's CPU core (the reference of testRunnerUAE)
+# Add UAE's CPU core (the reference of randomuae and the exception tests)
 # UAE includes <SDL3/SDL.h> for a few string helpers. The CPU core doesn't need
 # SDL, so a minimal shim header is used instead (see UAEGlue/sdl-shim).
 set(AMI ${UAE_DIR}/src)

@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "50F40000000000000000000B"
-               BuildableName = "unitTests"
-               BlueprintName = "unitTests"
+               BlueprintIdentifier = "50FB00000000000000000301"
+               BuildableName = "dasm"
+               BlueprintName = "dasm"
                ReferencedContainer = "container:Moira.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -47,9 +47,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "50F40000000000000000000B"
-            BuildableName = "unitTests"
-            BlueprintName = "unitTests"
+            BlueprintIdentifier = "50FB00000000000000000301"
+            BuildableName = "dasm"
+            BlueprintName = "dasm"
             ReferencedContainer = "container:Moira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -67,9 +67,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "50F40000000000000000000B"
-            BuildableName = "unitTests"
-            BlueprintName = "unitTests"
+            BlueprintIdentifier = "50FB00000000000000000301"
+            BuildableName = "dasm"
+            BlueprintName = "dasm"
             ReferencedContainer = "container:Moira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

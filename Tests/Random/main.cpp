@@ -69,7 +69,8 @@ int main(int argc, char **argv)
 
     printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2026\n");
     printf("Core %s\n\n", moira::Moira::build().c_str());
-    printf("The test program runs Moira against a reference CPU with randomly generated data.\n");
+    if (DASM_STAGES) printf("The test program compares the disassembler output of Moira with reference disassemblers.\n");
+    else printf("The test program runs Moira against a reference CPU with randomly generated data.\n");
     printf("\n");
     printf("    Test rounds : %ld\n", rounds);
     printf("    Random seed : %d\n", seed);

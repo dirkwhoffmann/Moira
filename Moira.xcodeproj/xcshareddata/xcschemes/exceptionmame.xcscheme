@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "50F10000000000000000000B"
-               BuildableName = "singleStepRunner"
-               BlueprintName = "singleStepRunner"
+               BlueprintIdentifier = "50F500000000000000000015"
+               BuildableName = "exceptionmame"
+               BlueprintName = "exceptionmame"
                ReferencedContainer = "container:Moira.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -47,9 +47,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "50F10000000000000000000B"
-            BuildableName = "singleStepRunner"
-            BlueprintName = "singleStepRunner"
+            BlueprintIdentifier = "50F500000000000000000015"
+            BuildableName = "exceptionmame"
+            BlueprintName = "exceptionmame"
             ReferencedContainer = "container:Moira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -67,9 +67,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "50F10000000000000000000B"
-            BuildableName = "singleStepRunner"
-            BlueprintName = "singleStepRunner"
+            BlueprintIdentifier = "50F500000000000000000015"
+            BuildableName = "exceptionmame"
+            BlueprintName = "exceptionmame"
             ReferencedContainer = "container:Moira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

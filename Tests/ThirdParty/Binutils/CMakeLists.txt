@@ -6,5 +6,5 @@ m68k-opc.c
 
 target_include_directories(binutils PUBLIC
 
-${CMAKE_SOURCE_DIR}/Tests/Differential
+${CMAKE_SOURCE_DIR}/Tests/Random
 )
