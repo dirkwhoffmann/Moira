@@ -9,6 +9,7 @@
 
 #include "config.h"
 #include "Testrunner.h"
+#include "Reference.h"
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
@@ -67,9 +68,7 @@ const std::vector<CPUModel> &allModels()
 {
     static const std::vector<CPUModel> all = []() {
         std::vector<CPUModel> result;
-        // MAME's core is a 68000
-        if (compat == Compatibility::MAME) { result.push_back(CPUModel::M68000); return result; }
-        for (auto &m : modelTable) result.push_back(m.model);
+        for (auto &m : modelTable) if (DASM_STAGES || ref().supports(m.model)) result.push_back(m.model);
         return result;
     }();
     return all;
@@ -135,17 +134,7 @@ bool isCompatible(CPUModel cpu, FPUModel fpu)
 
 const char *reference()
 {
-    if (DASM_STAGES) return "Ref";
-
-    switch (compat) {
-
-        case Compatibility::MUSASHI: return "Musashi";
-        case Compatibility::UAE:     return "UAE";
-        case Compatibility::MAME:    return "MAME";
-    
-        default:
-            return "???";
-    }
+    return DASM_STAGES ? "Ref" : ref().name();
 }
 
 const char *selectedModel()
@@ -160,16 +149,16 @@ void selectModel(CPUModel model)
     // Only the 68040 has a built-in FPU. External FPUs are installed with selectFpu.
     fpuModel = (cpuModel == CPUModel::M68040) ? FPUModel::BUILTIN : FPUModel::NONE;
 
-    if (useMusashi || dasmMusashi) setupMusashi(cpuModel);
-    if (useUAE || dasmUAE) setupUAE(cpuModel, fpuModel);
-    if (useMAME) setupMAME(cpuModel);
+    if (!DASM_STAGES) ref().setup(cpuModel, fpuModel);
+    if (dasmMusashi) setupMusashi(cpuModel);
+    if (dasmUAE) setupUAE(cpuModel, fpuModel);
     setupBinutils(cpuModel);
     setupMoira();
 
     // Configure the sandbox
-    sandbox.checkCycles = (useUAE || useMAME) && cpuModel == CPUModel::M68000;
+    sandbox.checkCycles = ref().checksCycles(cpuModel);
     sandbox.addrMask = (cpuModel == CPUModel::M68EC020) ? 0xFFFFFF : 0xFFFFFFFF;
-    sandbox.byteGranular = useUAE && cpuModel != CPUModel::M68000 && cpuModel != CPUModel::M68010;
+    sandbox.byteGranular = ref().byteGranular(cpuModel);
 }
 
 void setupMoira()
@@ -182,7 +171,8 @@ void selectFpu(FPUModel fpu)
 {
     fpuModel = fpu;
 
-    if (useUAE) setupUAE(cpuModel, fpuModel);
+    if (!DASM_STAGES) ref().selectFpu(cpuModel, fpuModel);
+    if (dasmUAE) setupUAE(cpuModel, fpuModel);
     setupMoira();
 }
 
@@ -238,11 +228,8 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
     s.pc = pc;
     s.opcode = opcode;
 
-    // Random exception vectors (odd handler addresses) would cause chains of address errors in
-    // MAME, so all handlers start at a valid address.
-    if (useMAME) {
-        for (u32 vector = 2; vector < 256; vector++) set32(s.mem, vector * 4, 0x4000);
-    }
+    // Let the reference adjust the test case (if needed)
+    ref().prepare(s);
 
     set16(s.mem, pc, opcode);
     set16(s.mem, pc + 2, s.ext1);
@@ -305,7 +292,7 @@ void run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const st
 
         if (getenv("RUNNER_USER")) replay.supervisor = false;
         selectModel(CPUModel(model));
-        if (useUAE && cpuModel == CPUModel::M68030) { mmuCompare = true; enableMMUUAE(true); }
+        if (ref().comparesMMU(cpuModel)) { mmuCompare = true; enableMMUUAE(true); }
         runSingleTest(replay, replay.opcode, replay.ext1);
         printf("Replayed test passed\n");
         return;
@@ -342,7 +329,7 @@ void run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const st
                     if constexpr (CHECK_DASM) runDasmFPU(i);
 
                     // Without a reference FPU, there is nothing more to report
-                    if (useMusashi) break;
+                    if (!ref().hasFpu()) break;
                 }
             }
         }
@@ -505,7 +492,7 @@ void runMMU(long round)
     if (!moiracpu->hasMMU()) return;
 
     // Let UAE execute MMU instructions and compare the MMU registers
-    mmuCompare = useUAE && cpuModel == CPUModel::M68030;
+    mmuCompare = ref().comparesMMU(cpuModel);
     if (mmuCompare) enableMMUUAE(true);
  
     static const int MMU_SETUPS = 4;
@@ -747,7 +734,7 @@ void runMMUTranslate040(long round)
 void runFPU(long round)
 {
     // Musashi's FPU is not a reliable reference
-    if (useMusashi) {
+    if (!ref().hasFpu()) {
         printf("%s FPU skipped (no reliable reference)\n", selectedModel());
         return;
     }
@@ -966,9 +953,7 @@ void runSingleTest(Setup &s, u16 op)
     misalignedRead = false;
 
     // Reset all CPUs
-    if (useMusashi) resetMusashi(s);
-    if (useUAE) resetUAE(s);
-    if (useMAME) resetMAME(s);
+    ref().reset(s);
     resetMoira(s);
 
     if (VERBOSE) {
@@ -978,9 +963,8 @@ void runSingleTest(Setup &s, u16 op)
 
     // Run the reference CPU
     runReference(s, refResult);
-    // Moira is configured without address error emulation (MOIRA_EMULATE_ADDRESS_ERROR)
-    if (useUAE && (lastExceptionUAE() == 3) && !MOIRA_EMULATE_ADDRESS_ERROR) return;
-    if (useMAME && addressErrorMAME()) return;
+    // Skip the case if the reference raised an address error (not covered by this test)
+    if (ref().aborted()) return;
     refclk[0] += refResult.elapsed[0];
 
     // Run Moira
@@ -1030,15 +1014,7 @@ void runReference(Setup &s, Result &r)
 
     if (!doExec(r.opcode)) return;
 
-    switch (compat) {
-
-        case Compatibility::MUSASHI: executeMusashi(r); break;
-        case Compatibility::UAE:     executeUAE(r); break;
-        case Compatibility::MAME:    executeMAME(r); break;
-
-        default:
-            assert(false);
-    }
+    ref().execute(r);
 }
 
 // Executes the instruction on Moira
@@ -1131,167 +1107,12 @@ void disassembleMoira(Setup &s, Result &r)
 
 bool skipAccessCheck(u16 op)
 {
-    // UAE only writes back the bytes of a bit field that are affected,
-    // whereas Moira writes back the whole long word. The final memory
-    // contents are still compared.
-    if (!useUAE) return false;
-    if ((op & 0xF8C0) == 0xE8C0) return true;
-
-    // FPU opcodes may be legal for one side only (final memory contents are still compared)
-    if ((op & 0xFE00) == 0xF200) return true;
-
-    // The same applies to MMU opcodes
-    if (isMmuOpcode(op)) return true;
-
-    // N and V are undefined for CHK2, which shows up in the exception frame
-    auto instr = moiracpu->getInstrInfo(op).I;
-    return instr == Instr::CHK2 || instr == Instr::CMP2;
+    return ref().skipAccessCheck(op);
 }
 
 bool skip(const Setup &s)
 {
-    bool result;
-
-    u16 op = s.opcode;
-    Instr instr = moiracpu->getInstrInfo(op).I;
-
-    if (useUAE) {
-
-        // The FPCR precision value 3 is reserved. UAE and Moira round tiny results differently in this mode.
-        if ((op & 0xFE00) == 0xF200 && (s.fpcr & 0xC0) == 0xC0) return true;
-
-        // UAE doesn't implement the module instructions
-        if (instr == Instr::CALLM || instr == Instr::RTM) return true;
-
-        // RTE processes random stack frames (format errors, bus error frames)
-        if (instr == Instr::RTE && cpuModel != CPUModel::M68000 && cpuModel != CPUModel::M68010) return true;
-
-        // The 68010 supports the bus error stack frame (format $8), which Moira doesn't process.
-        // The format word sits at offset 6 of the frame (the supervisor stack pointer is $2000).
-        if (instr == Instr::RTE && cpuModel == CPUModel::M68010 && (get16(refMem, 0x2006) >> 12) == 8) return true;
-
-        // LINK.l A7 pushes A7-4 on the 68040 (Moira's 040 models run on the 68020 core)
-        if (instr == Instr::LINK && (op & 7) == 7 && cpuModel >= CPUModel::M68EC040) return true;
-
-        // Zero divide uses a different stack frame on the 68040 (Moira's 040 models run on the 68020 core)
-        if ((instr == Instr::DIVL || instr == Instr::DIVU || instr == Instr::DIVS) &&
-            cpuModel >= CPUModel::M68EC040) return true;
-
-        // UAE emulates FPU instructions that the 68040 traps (Moira follows real hardware)
-        if ((op & 0xFFC0) == 0xF200 && cpuModel == CPUModel::M68040) {
-            u16 e = get16(refMem, 0x1002);
-            u16 cod = e >> 13, cmd = e & 0x7F;
-            if ((cod == 0 || cod == 2) && (cmd == 0x02 || cmd == 0x06 || cmd == 0x08 || cmd == 0x09 ||
-                (cmd >= 0x0A && cmd <= 0x12 && cmd != 0x0B && cmd != 0x13) ||
-                cmd == 0x14 || cmd == 0x15 || cmd == 0x16 || cmd == 0x19 ||
-                (cmd >= 0x1C && cmd <= 0x1F) || cmd == 0x21 || cmd == 0x25 || cmd == 0x26 ||
-                (cmd >= 0x30 && cmd <= 0x37))) return true;
-        }
-
-        // FMOVECR from an undefined ROM offset returns implementation specific values
-        if ((op & 0xFFC0) == 0xF200) {
-            u16 e = get16(refMem, 0x1002);
-            u16 off = e & 0x7F;
-            if ((e & 0xFC00) == 0x5C00 && off != 0x00 && !(off >= 0x0B && off <= 0x0F) && !(off >= 0x30 && off <= 0x3F)) return true;
-        }
-
-        // FMOVE to <ea> with a non-zero k-factor field is only defined for packed formats
-        if ((op & 0xFFC0) == 0xF200) {
-            u16 e = get16(refMem, 0x1002);
-            u16 fmt = (e >> 10) & 7;
-            if ((e >> 13) == 3 && (e & 0x7F) && fmt != 3 && fmt != 7) return true;
-        }
-
-        // FMOVEM to/from control registers with an empty register list or non-zero reserved bits is undefined
-        if ((op & 0xFFC0) == 0xF200) {
-            u16 e = get16(refMem, 0x1002);
-            if (((e >> 13) == 4 || (e >> 13) == 5) && ((e & 0x1C00) == 0 || (e & 0x3FF))) return true;
-        }
-
-        // FMOVEM <ea>,<control registers> with several registers and Dn/An as source. Moira
-        // accepts this, UAE (and the 6888x manual) don't. Flagged, not mimicked.
-        if ((op & 0xFFC0) == 0xF200 && ((op >> 3) & 7) <= 1) {
-            u16 e = get16(refMem, 0x1002);
-            u16 lst = (e >> 10) & 7;
-            if ((e >> 13) == 4 && lst != 1 && lst != 2 && lst != 4) return true;
-            if (((e >> 13) == 4 || (e >> 13) == 5) && ((op >> 3) & 7) == 1 && lst != 1) return true;
-        }
-
-        // Register-to-register FPU operations and FMOVECR with a non-zero <ea> field: Moira raises line F, UAE ignores the field
-        if ((op & 0xFFC0) == 0xF200 && (op & 0x3F) && ((get16(refMem, 0x1002) >> 13) == 0 ||
-            (get16(refMem, 0x1002) & 0xFC00) == 0x5C00)) return true;
-
-        // Rounded results of the 68040 FS/FD instructions differ on underflow (under investigation)
-        if ((op & 0xFFC0) == 0xF200) {
-            u16 e = get16(refMem, 0x1002);
-            if (((e >> 13) == 0 || (e >> 13) == 2) && (e & 0x40)) return true;
-        }
-
-        // Packed decimal: random input contains invalid digits and the digit rounding on output differs
-        if ((op & 0xFFC0) == 0xF200) {
-            u16 e = get16(refMem, 0x1002);
-            if (((e >> 13) == 2 || (e >> 13) == 3) && (((e >> 10) & 7) == 3 || ((e >> 10) & 7) == 7)) return true;
-        }
-
-        // FMOVEM data registers with an empty static list or reserved mode bits
-        if ((op & 0xFFC0) == 0xF200) {
-            u16 e = get16(refMem, 0x1002);
-            if (((e >> 13) == 6 || (e >> 13) == 7) && !(e & 0x0800) && (e & 0xFF) == 0) return true;
-            if (((e >> 13) == 6 || (e >> 13) == 7) && (((e >> 11) & 3) < 2 || (e & 0x0700) || (((e >> 11) & 3) == 3 && (e & 0x8F)))) return true;
-        }
-
-        // MULL with identical high and low registers has an undefined result
-        if (instr == Instr::MULL) {
-            u16 e = get16(refMem, 0x1002);
-            if ((e & 0x400) && ((e >> 12) & 7) == (e & 7)) return true;
-        }
-
-        // CAS2 with identical compare registers is degenerate
-        if (instr == Instr::CAS2) {
-            u16 e1 = get16(refMem, 0x1002), e2 = get16(refMem, 0x1004);
-            if ((e1 & 7) == (e2 & 7) || ((e1 >> 6) & 7) == ((e2 >> 6) & 7)) return true;
-        }
-
-        /* The behavior is undefined for reserved encodings of the full
-         * extension word (indexed modes of the 68020 and above). Skip the
-         * instruction if one of its first words looks like one.
-         */
-        int mode = (op >> 3) & 7, reg = op & 7;
-        int dmode = (op >> 6) & 7, dreg = (op >> 9) & 7;
-        bool indexed = mode == 6 || (mode == 7 && reg == 3);
-        if (op >= 0x1000 && op < 0x4000) indexed |= dmode == 6 || (dmode == 7 && dreg == 3);
-
-        if (cpuModel >= CPUModel::M68EC020 && indexed) {
-            for (int off = 2; off <= 6; off += 2) {
-                u16 w = get16(refMem, 0x1000 + off);
-                if ((w & 0x100) == 0) continue;
-                bool bs = (w & 0x30) == 0 || (w & 0x08) || (w & 7) == 4 || ((w & 0x40) && (w & 7) >= 5);
-                if (bs) return true;
-            }
-        }
-        return false;
-    }
-
-    // Skip some instructions that the reference CPUs handle differently (known Musashi problems)
-    result =
-    instr == Instr::ABCD    ||
-    instr == Instr::SBCD    ||
-    instr == Instr::NBCD    ||
-    instr == Instr::BFCHG   ||
-    instr == Instr::BFCLR   ||
-    instr == Instr::BFEXTS  ||
-    instr == Instr::BFEXTU  ||
-    instr == Instr::BFFFO   ||
-    instr == Instr::BFINS   ||
-    instr == Instr::BFSET   ||
-    instr == Instr::BFTST;
-
-    if (cpuModel != CPUModel::M68000) {
-
-        result |= instr == Instr::RTE;
-    }
-
-    return result;
+    return ref().skipSetup(s);
 }
 
 void recordMoiraRegisters(Result &r)
@@ -1395,8 +1216,8 @@ bool skipCompare(const Setup &s, const Result &rRef, const Result &rMoira)
     if (skip(s)) return true;
 
     // Cases that can only be recognized by looking at the results
-    // FPU opcodes where only one side raises line F (reserved bits set in the opcode or extension word)
-    if (useUAE && (s.opcode & 0xFE00) == 0xF200 && ((rRef.pc >> 12) == 1) != ((rMoira.pc >> 12) == 1)) return true;
+    // Cases that the reference excludes
+    if (ref().skipResult(s, rRef, rMoira)) return true;
 
     // MMU opcodes: Compare only instructions that execute on both sides. Exception handling of
     // invalid extension words differs (UAE raises a privilege violation for some of them).
@@ -1682,14 +1503,7 @@ bool compareA(Result &rRef, Result &rMoira)
 
 bool comparePC(Result &rRef, Result &rMoira)
 {
-    // UAE clears the lowest PC bit after a jump to an odd address. Moira
-    // is configured without address error emulation and keeps it.
-    if (useUAE && (rMoira.pc & 1) && rRef.pc == (rMoira.pc & ~1u)) return true;
-
-    // The 68000 has a 24 bit address bus. MAME doesn't keep the upper bits of the PC.
-    if (useMAME) return (rRef.pc & 0xFFFFFF) == (rMoira.pc & 0xFFFFFF);
-
-    return rRef.pc == rMoira.pc;
+    return ref().equalPC(rRef, rMoira);
 }
 
 bool compareSR(Result &rRef, Result &rMoira)
@@ -1702,23 +1516,9 @@ bool compareSR(Result &rRef, Result &rMoira)
         return true;
     }
 
-    // N and V are undefined for CMP2 and CHK2 and not compared with UAE
-    if (useUAE && (instr == Instr::CMP2 || instr == Instr::CHK2)) {
-        return (rRef.sr & ~0x0A) == (rMoira.sr & ~0x0A);
-    }
-
-    // N and V are undefined for BCD instructions (68040 differs from older models)
-    if (useUAE && cpuModel >= CPUModel::M68EC040 &&
-        (instr == Instr::ABCD || instr == Instr::SBCD || instr == Instr::NBCD)) {
-        return (rRef.sr & ~0x0A) == (rMoira.sr & ~0x0A);
-    }
-
-    // Z, V and C are undefined for CHK on the 68020 and above
-    if (useUAE && instr == Instr::CHK && cpuModel != CPUModel::M68000 && cpuModel != CPUModel::M68010) {
-        return (rRef.sr & ~0x07) == (rMoira.sr & ~0x07);
-    }
-
-    return rRef.sr == rMoira.sr;
+    // Compare all bits that are defined
+    u32 mask = ref().srMask(instr);
+    return (rRef.sr & mask) == (rMoira.sr & mask);
 }
 
 bool compareUSP(Result &rRef, Result &rMoira)
@@ -1756,125 +1556,10 @@ bool compareCAxR(Result &rRef, Result &rMoira)
     return rRef.cacr == rMoira.cacr && rRef.caar == rMoira.caar;
 }
 
-// Returns the command field of an FPU instruction that operates on the registers (or -1)
-static int fpuCommand(u16 op)
-{
-    if ((op & 0xFFC0) != 0xF200) return -1;
-
-    u16 ext = get16(refMem, pc + 2);
-    u16 cod = ext >> 13;
-    return (cod == 0 || cod == 2) ? (ext & 0x7F) : -1;
-}
-
-// Returns true if the instruction is a sine, cosine, or tangent function. The reference
-// reduces the argument with a pi of limited precision, so its results degrade for large
-// arguments (Moira reduces exactly). FpuRefTests checks the accuracy.
-static bool isTrigonometric(u16 op)
-{
-    int cmd = fpuCommand(op);
-    return cmd == 0x0E || cmd == 0x0F || cmd == 0x1D || (cmd >= 0x30 && cmd <= 0x37);
-}
-
-// Returns true if the instruction is a transcendental function. Moira's implementation
-// differs from the reference in the last bits, so these results are compared with a tolerance.
-static bool isTranscendental(u16 op)
-{
-    switch (fpuCommand(op)) {
-
-        case 0x02: case 0x06: case 0x08: case 0x09: case 0x0A: case 0x0C: case 0x0D:
-        case 0x10: case 0x11: case 0x12: case 0x14: case 0x15: case 0x16: case 0x19:
-        case 0x1C:
-            return true;
-
-        default:
-            return isTrigonometric(op);
-    }
-}
-
-static bool identicalFPR(Result &rRef, Result &rMoira)
-{
-    for (int i = 0; i < 8; i++) if (!rRef.fpr[i].identical(rMoira.fpr[i])) return false;
-    return true;
-}
-
-// Maps a finite value to an integer such that adjacent values differ by 1
-static __int128 ulpIndex(const MFloat80 &value)
-{
-    __int128 e = value.biasedExponent();
-    u64 man = value.mantissa();
-    __int128 pos = (e << 63) + (e ? __int128(man & ~(1ULL << 63)) : __int128(man >> 1));
-    return value.sign() ? -pos : pos;
-}
-
-bool compareFPR(Result &rRef, Result &rMoira)
-{
-    // The reference loses up to 13 bits for small arguments of the hyperbolic functions.
-    // With directed rounding, the results can also differ by an ulp of the selected precision.
-    __int128 ulpTolerance = 1 << 14;
-    if ((rRef.fpcr & 0xC0) == 0x40) ulpTolerance = __int128(1) << 40;     // Single precision
-
-    for (int i = 0; i < 8; i++) {
-
-        if (rRef.fpr[i].identical(rMoira.fpr[i])) continue;
-
-        // On underflow, UAE returns a zero significand with the minimum exponent of the
-        // format instead of a true zero (same exemption as in FpuRefTests)
-        if (useUAE) {
-            auto &ref = rRef.fpr[i], &moira = rMoira.fpr[i];
-            bool pseudoZero = ref.mantissa() == 0 && ref.biasedExponent() != 0 && ref.biasedExponent() != 0x7FFF;
-            if (pseudoZero && moira.isZero() && moira.sign() == ref.sign()) continue;
-
-            // The transcendental functions are accurate to only a few ulps
-            if (isTranscendental(rRef.opcode) && !ref.isNaN() && !ref.isInfinite() && !moira.isNaN() && !moira.isInfinite()) {
-                __int128 diff = ulpIndex(ref) - ulpIndex(moira);
-                if ((diff < 0 ? -diff : diff) <= ulpTolerance) continue;
-                if (isTrigonometric(rRef.opcode)) continue;
-            }
-        }
-        return false;
-    }
-    return true;
-}
-
-bool compareFPCR(Result &rRef, Result &rMoira)
-{
-    // UAE stores the reserved low bits of FPCR
-    if (useUAE) return (rRef.fpcr & ~0xF) == (rMoira.fpcr & ~0xF);
-
-    return rRef.fpcr == rMoira.fpcr;
-}
-bool compareFPSR(Result &rRef, Result &rMoira)
-{
-    // UAE modifies FPSR even if the instruction ends up in a line F exception
-    if (useUAE && (rRef.pc >> 12) != 1) return true;
-
-    /* An overflow always implies an inexact result. UAE only raises INEX2 if the
-     * rounding discards non-zero bits, which isn't the case if the operand is a
-     * huge unnormalized number whose low mantissa bits are zero after normalization.
-     */
-    u32 ref = rRef.fpsr, moira = rMoira.fpsr;
-    if (useUAE && (ref & 0x1000) && (moira & 0x1000)) { ref |= 0x0200; moira |= 0x0200; }
-
-    // If the reference degrades, the result may even differ in sign
-    if (useUAE && isTrigonometric(rRef.opcode) && !identicalFPR(rRef, rMoira)) {
-        ref &= ~0x0C000000; moira &= ~0x0C000000;
-    }
-
-    // UAE doesn't raise OPERR when it converts a signaling NaN to an integer
-    if (useUAE && (ref & 0x4000)) return (ref | 0x2000) == (moira | 0x2000);
-
-    return ref == moira;
-}
-bool compareFPIAR(Result &rRef, Result &rMoira)
-{
-    // UAE updates FPIAR even if the instruction ends up in a line F exception
-    if (useUAE && (rRef.pc >> 12) != 1) return true;
-
-    // UAE skips the FPIAR update if a conversion in FMOVE <ea> raises an operand error
-    if (useUAE && (rRef.fpsr & 0x6000)) return true;
-
-    return rRef.fpiar == rMoira.fpiar;
-}
+bool compareFPR(Result &rRef, Result &rMoira) { return ref().equalFPR(rRef, rMoira); }
+bool compareFPCR(Result &rRef, Result &rMoira) { return ref().equalFPCR(rRef, rMoira); }
+bool compareFPSR(Result &rRef, Result &rMoira) { return ref().equalFPSR(rRef, rMoira); }
+bool compareFPIAR(Result &rRef, Result &rMoira) { return ref().equalFPIAR(rRef, rMoira); }
 bool compareMMU(Result &rRef, Result &rMoira)
 {
     return rRef.crp == rMoira.crp && rRef.srp == rMoira.srp &&
@@ -1889,7 +1574,7 @@ void printMemoryDiff()
     int shown = 0;
     for (size_t i = 0; i < sizeof(refMem) && shown < 16; i++) {
         if (refMem[i] != moiraMem[i]) {
-            printf("\n  Memory[%05zx]: UAE %02x  Moira %02x", i, refMem[i], moiraMem[i]);
+            printf("\n  Memory[%05zx]: %s %02x  Moira %02x", i, ref().name(), refMem[i], moiraMem[i]);
             shown++;
         }
     }
@@ -1908,11 +1593,8 @@ bool compareCycles(Result &rRef, Result &rMoira)
     // FPU timing is not emulated yet
     if (isFpuOpcode(rRef.opcode)) return true;
 
-    /* UAE's cores are only used as a timing reference for the 68000. The
-     * 68010 timing is partially copied from the 68000, and the 68020+ cores
-     * aren't cycle-exact.
-     */
-    if (useUAE && cpuModel != CPUModel::M68000) return true;
+    // Some references are only reliable for certain models
+    if (ref().ignoreCycles(cpuModel)) return true;
 
     /* Timing comparison is off for every model beyond the 68000 and 68010
      * while the instruction cache is emulated. Those models (68020 and up)

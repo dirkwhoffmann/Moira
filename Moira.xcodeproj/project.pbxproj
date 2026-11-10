@@ -7,6 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		50FF0000000000000000F40E /* MAMERef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F202 /* MAMERef.cpp */; };
+		50FF0000000000000000F40D /* UAERef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F201 /* UAERef.cpp */; };
+		50FF0000000000000000F40C /* MusashiRef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F200 /* MusashiRef.cpp */; };
+		50FF0000000000000000F40B /* MAMERef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F202 /* MAMERef.cpp */; };
+		50FF0000000000000000F40A /* UAERef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F201 /* UAERef.cpp */; };
+		50FF0000000000000000F409 /* MusashiRef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F200 /* MusashiRef.cpp */; };
+		50FF0000000000000000F408 /* MAMERef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F202 /* MAMERef.cpp */; };
+		50FF0000000000000000F407 /* UAERef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F201 /* UAERef.cpp */; };
+		50FF0000000000000000F406 /* MusashiRef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F200 /* MusashiRef.cpp */; };
+		50FF0000000000000000F405 /* MAMERef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F202 /* MAMERef.cpp */; };
+		50FF0000000000000000F404 /* UAERef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F201 /* UAERef.cpp */; };
+		50FF0000000000000000F403 /* MusashiRef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F200 /* MusashiRef.cpp */; };
+		50FF0000000000000000F402 /* MAMERef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F202 /* MAMERef.cpp */; };
+		50FF0000000000000000F401 /* UAERef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F201 /* UAERef.cpp */; };
+		50FF0000000000000000F400 /* MusashiRef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F200 /* MusashiRef.cpp */; };
 		50FF0000000000000000F104 /* Reference.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F001 /* Reference.cpp */; };
 		50FF0000000000000000F103 /* Reference.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F001 /* Reference.cpp */; };
 		50FF0000000000000000F102 /* Reference.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F001 /* Reference.cpp */; };
@@ -437,6 +452,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		50FF0000000000000000F202 /* MAMERef.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MAMERef.cpp; sourceTree = "<group>"; };
+		50FF0000000000000000F302 /* MAMERef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MAMERef.h; sourceTree = "<group>"; };
+		50FF0000000000000000F201 /* UAERef.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = UAERef.cpp; sourceTree = "<group>"; };
+		50FF0000000000000000F301 /* UAERef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UAERef.h; sourceTree = "<group>"; };
+		50FF0000000000000000F200 /* MusashiRef.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MusashiRef.cpp; sourceTree = "<group>"; };
+		50FF0000000000000000F300 /* MusashiRef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MusashiRef.h; sourceTree = "<group>"; };
 		50FF0000000000000000F001 /* Reference.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Reference.cpp; sourceTree = "<group>"; };
 		50FF0000000000000000F002 /* Reference.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Reference.h; sourceTree = "<group>"; };
 		50FD00000000000000000001 /* mame.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = mame.cpp; sourceTree = "<group>"; };
@@ -1283,6 +1304,12 @@
 				507BE4AD23B66456000B37D2 /* Testrunner.cpp */,
 				50FF0000000000000000F002 /* Reference.h */,
 				50FF0000000000000000F001 /* Reference.cpp */,
+				50FF0000000000000000F302 /* MAMERef.h */,
+				50FF0000000000000000F202 /* MAMERef.cpp */,
+				50FF0000000000000000F301 /* UAERef.h */,
+				50FF0000000000000000F201 /* UAERef.cpp */,
+				50FF0000000000000000F300 /* MusashiRef.h */,
+				50FF0000000000000000F200 /* MusashiRef.cpp */,
 				50B100000000000000000002 /* Shared.h */,
 				50B100000000000000000001 /* Shared.cpp */,
 				502C09E123C8E16600A179E1 /* TestCPU.h */,
@@ -1756,6 +1783,9 @@
 				50B100000000000000000003 /* Shared.cpp in Sources */,
 				50C300000000000000000003 /* Testrunner.cpp in Sources */,
 				50FF0000000000000000F100 /* Reference.cpp in Sources */,
+				50FF0000000000000000F402 /* MAMERef.cpp in Sources */,
+				50FF0000000000000000F401 /* UAERef.cpp in Sources */,
+				50FF0000000000000000F400 /* MusashiRef.cpp in Sources */,
 				50D100000000000000000001 /* TestCPU.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1856,6 +1886,9 @@
 				50D10000000000000000000C /* Shared.cpp in Sources */,
 				50D10000000000000000000D /* Testrunner.cpp in Sources */,
 				50FF0000000000000000F101 /* Reference.cpp in Sources */,
+				50FF0000000000000000F405 /* MAMERef.cpp in Sources */,
+				50FF0000000000000000F404 /* UAERef.cpp in Sources */,
+				50FF0000000000000000F403 /* MusashiRef.cpp in Sources */,
 				50D10000000000000000000E /* TestCPU.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1880,6 +1913,9 @@
 				50FD00000000000000000021 /* Shared.cpp in Sources */,
 				50FD00000000000000000022 /* Testrunner.cpp in Sources */,
 				50FF0000000000000000F102 /* Reference.cpp in Sources */,
+				50FF0000000000000000F408 /* MAMERef.cpp in Sources */,
+				50FF0000000000000000F407 /* UAERef.cpp in Sources */,
+				50FF0000000000000000F406 /* MusashiRef.cpp in Sources */,
 				50FD00000000000000000023 /* TestCPU.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2062,6 +2098,9 @@
 				50FB0000000000000000030F /* Shared.cpp in Sources */,
 				50FB00000000000000000310 /* Testrunner.cpp in Sources */,
 				50FF0000000000000000F103 /* Reference.cpp in Sources */,
+				50FF0000000000000000F40B /* MAMERef.cpp in Sources */,
+				50FF0000000000000000F40A /* UAERef.cpp in Sources */,
+				50FF0000000000000000F409 /* MusashiRef.cpp in Sources */,
 				50FB00000000000000000311 /* TestCPU.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2086,6 +2125,9 @@
 				50FC0000000000000000050F /* Shared.cpp in Sources */,
 				50FC00000000000000000510 /* Testrunner.cpp in Sources */,
 				50FF0000000000000000F104 /* Reference.cpp in Sources */,
+				50FF0000000000000000F40E /* MAMERef.cpp in Sources */,
+				50FF0000000000000000F40D /* UAERef.cpp in Sources */,
+				50FF0000000000000000F40C /* MusashiRef.cpp in Sources */,
 				50FC00000000000000000511 /* TestCPU.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
