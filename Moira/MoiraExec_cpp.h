@@ -1175,13 +1175,12 @@ Moira::execBitDxEa(u16 opcode)
     if constexpr (compat != Compatibility::MAME || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) data = bit<C, I>(data, b);
 
     if constexpr (I == Instr::BCLR && C == Core::C68010) { SYNC(2); }
-    if constexpr (compat == Compatibility::UAE && I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
 
     prefetch<C, POLL | ((I == Instr::BTST && M != Mode::IM) ? 0 : KEEP_IRD)>();
     if constexpr (compat == Compatibility::MAME && !(I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) data = bit<C, I>(data, b);   // MAME updates the flags after the prefetch
 
-    // MAME idles after the prefetch
-    if constexpr (compat == Compatibility::MAME && I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
+    // MAME and UAE idle after the prefetch
+    if constexpr ((compat == Compatibility::MAME || compat == Compatibility::UAE) && I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
     if constexpr (I != Instr::BTST) writeM<C, M, Byte>(ea, data);
 
     [[maybe_unused]] auto c = I == Instr::BTST ? 0 : I == Instr::BCLR && C == Core::C68010 ? 6 : 4;
@@ -1798,7 +1797,7 @@ Moira::execChk(u16 opcode)
         // Rectify the stack frame
         if constexpr (C == Core::C68000) {
 
-            if constexpr (compat != Compatibility::MAME) SYNC(2);
+            if constexpr (compat == Compatibility::MUSASHI) SYNC(2);
             throw AddressError(makeFrame<STD_AE_FRAME>(ea));
 
         } else {
@@ -3277,6 +3276,7 @@ Moira::execMove4(u16 opcode)
         if constexpr (EXACT_COMPAT) irdKeep = false;
 
         if constexpr (S != Long) updateAn<Mode::PD, S>(dst);
+        if constexpr (compat == Compatibility::UAE) SYNC(2);
         if (format == 0) { throw earlyAddressError<C>(makeFrame<flags0>(ea + 2, reg.pc, getSR(), ird)); }
         if (format == 1) { SYNC(2); throw AddressError(makeFrame<flags1>(ea)); }
         if (format == 2) { SYNC(2); throw AddressError(makeFrame<flags2>(ea)); }
@@ -4973,7 +4973,7 @@ Moira::execDivsMoira(u16 opcode, bool *divByZero)
         // Rectify the stack frame
         if constexpr (C == Core::C68000) {
 
-            if constexpr (compat != Compatibility::MAME) SYNC(2);
+            if constexpr (compat == Compatibility::MUSASHI) SYNC(2);
             exc.stackFrame = makeFrame<STD_AE_FRAME>(ea);
 
         } else {
@@ -5120,7 +5120,7 @@ Moira::execDivuMoira(u16 opcode, bool *divByZero)
         // Rectify the stack frame
         if constexpr (C == Core::C68000) {
 
-            if constexpr (compat != Compatibility::MAME) SYNC(2);
+            if constexpr (compat == Compatibility::MUSASHI) SYNC(2);
             exc.stackFrame = makeFrame<STD_AE_FRAME>(ea);
             throw exc;
 

@@ -84,7 +84,11 @@ namespace {
 
 constexpr u32 ADDR_MASK = 0xFFFFFF;
 u32 srMask = 0xA71F;                  // Compared bits of the status register
+#ifdef SST_UAE
+u16 codeMask = 0xFFF7;                // UAE sets the I/N bit (bit 3) by rules that are not modeled, so it is not compared
+#else
 u16 codeMask = 0xFFFF;                // Compared bits of the first word of bus and address error frames
+#endif
 bool ignoreCycles = false;            // Skip the comparison of cycle counts and bus cycle timing?
 constexpr u32 HANDLER = 0x600000;       // Bus error handler
 bool installVectors = true;             // Install the vectors of the bus error and address error handler?
@@ -851,6 +855,7 @@ int main(int argc, char **argv)
                     if (e.write && e.fc == 5 && e.addr == (((rs.ssp & ADDR_MASK) + 8) & ~1u)) dm = ~srMask & 0x1F ? 0xFFE0 : 0xFFFF;   // Condition codes
                     if (e.write && !halted && e.fc == 5 && e.addr == ((rs.ssp & ADDR_MASK) & ~1u)) dm = codeMask;   // Ignored bits of the code word
                     if (e.write && (e.data & e.mask & dm) != (g.data & g.mask & dm)) d += "data ";
+                    if (!d.empty() && getenv("EXC_BUS")) { for (size_t j = 0; j < mlog.size() || j < moira.log.size(); j++) { if (j < mlog.size()) printf("      ref   %2zu: cyc %3lld %c addr %06x fc %d\n", j, (long long)mlog[j].cycle, mlog[j].write ? 'W' : 'R', mlog[j].addr, mlog[j].fc); if (j < moira.log.size()) printf("      moira %2zu: cyc %3lld %c addr %06x fc %d\n", j, (long long)moira.log[j].cycle, moira.log[j].write ? 'W' : 'R', moira.log[j].addr, moira.log[j].fc); } }
                     if (!d.empty()) { d.pop_back(); add("bus#" + std::to_string(i) + "(" + d + ")"); break; }
                 }
             }

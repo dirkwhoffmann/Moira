@@ -19,9 +19,9 @@ target_link_libraries(sstmusashi PRIVATE mameref uaecpu musashi moiraMusashi)
 target_include_directories(sstmusashi PRIVATE ${SST_INC} ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/Musashi)
 target_compile_definitions(sstmusashi PRIVATE SST_TOOL SST_MUSASHI)
 
-# Every compatibility mode should reach 100%. The UAE mode is not there yet.
+# Every compatibility mode reaches 100%.
 # Its test demands the success rate of the last release, so regressions are caught.
 add_test(NAME SSTMame COMMAND sstmame)
-add_test(NAME SSTUAE COMMAND sstuae --min 98.9)
+add_test(NAME SSTUAE COMMAND sstuae)
 add_test(NAME SSTMusashi COMMAND sstmusashi)
 set_tests_properties(SSTMame SSTUAE SSTMusashi PROPERTIES LABELS "sst")
