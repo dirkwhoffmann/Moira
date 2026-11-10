@@ -68,6 +68,9 @@ void setAccessHook(AccessHook hook);
 // Selects the CPU and FPU model and the memory area (65536 bytes)
 void init(Cpu model, Fpu fpu, uint8_t *memory, WriteHook hook);
 
+// If disabled, a pending trace exception is not taken at the end of step() (default: enabled)
+void setTraceInStep(bool enable);
+
 // Changes the size of the memory area to mask + 1 bytes (e.g. 0xFFFFFF for 16 MB)
 void setMemoryMask(uint32_t mask);
 

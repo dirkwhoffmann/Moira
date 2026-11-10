@@ -60,3 +60,7 @@ add_moira_variant(moiraMusashi MUSASHI false)
 # The SingleStepTests runner needs address errors and exact timing
 add_moira_variant(moiraMAME MAME true)
 target_compile_definitions(moiraMAME PUBLIC MOIRA_EMULATE_ADDRESS_ERROR=true)
+
+# The exception runner needs address errors in UAE mode as well
+add_moira_variant(moiraUAEExc UAE true)
+target_compile_definitions(moiraUAEExc PUBLIC MOIRA_EMULATE_ADDRESS_ERROR=true)

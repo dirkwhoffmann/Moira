@@ -41,6 +41,19 @@
  *   a halted CPU are not compared, and MAME's endless repetition of the last bus
  *   cycle is cut off.
  *
+ * Reference CPUs:
+ *   --reference mame   MAME's microcoded 68000 (default)
+ *   --reference uae    WinUAE's cycle-exact 68000. Where it disagrees with MAME, either one
+ *                      has a bug or the behavior is not well defined. These spots are worth
+ *                      a closer look. Note that Moira (MAME mode) follows MAME.
+ *   --ignore ccr,cycles  Skips the comparison of condition codes (final and stacked) and of cycle
+ *                      counts and bus timing. Helps to see the other differences between two
+ *                      references that differ in these. "nbit" skips the I/N bit (bit 3) in
+ *                      the first word of bus and address error frames, which UAE sets by
+ *                      rules that Moira (UAE mode) does not model yet.
+ *   --check            Runs the reference alone against the SingleStep expectations (no faults).
+ *                      MAME has to reach 100%. This is also the calibration for other references.
+ *
  * The SingleStep suite contains thousands of tests per instruction. --dedupe <n>
  * runs at most n cases per instruction form, access index and kind, which keeps
  * the coverage but drops the data variety. --coverage lists instruction forms
@@ -65,8 +78,11 @@ using namespace moira;
 namespace {
 
 constexpr u32 ADDR_MASK = 0xFFFFFF;
-constexpr u32 SR_MASK = 0xA71F;       // Compared bits of the status register
+u32 srMask = 0xA71F;                  // Compared bits of the status register
+u16 codeMask = 0xFFFF;                // Compared bits of the first word of bus and address error frames
+bool ignoreCycles = false;            // Skip the comparison of cycle counts and bus cycle timing?
 constexpr u32 HANDLER = 0x600000;       // Bus error handler
+bool installVectors = true;             // Install the vectors of the bus error and address error handler?
 
 // A flat 16 MB memory that can be reset quickly
 struct Memory {
@@ -83,6 +99,8 @@ struct Memory {
     {
         clear();
         for (auto &[addr, val] : s.ram) poke(addr, val);
+
+        if (!installVectors) return;
 
         // Install the bus error vector
         for (int i = 0; i < 4; i++) poke(8 + i, u8(HANDLER >> (24 - 8 * i)));
@@ -260,6 +278,7 @@ struct UaeCore : RefCore {
             for (int i = 0; i < size; i++) self->mem.touched.push_back((addr + i) & ADDR_MASK);
         });
         uaecpu::setMemoryMask(ADDR_MASK);
+        uaecpu::setTraceInStep(false);
         uaecpu::setAccessHook([](const uaecpu::BusAccess &a) { return self->access(a); });
     }
 
@@ -360,7 +379,12 @@ struct Settings {
     int verbose = 0;                // Failures to print per file
     int dedupe = 0;                 // Maximum number of cases per instruction form, access, and kind (0 = all)
     bool coverage = false;          // Report instruction forms without any case?
+#ifdef EXC_DEFAULT_REFERENCE_UAE
+    bool uae = true;                // Use UAE instead of MAME as reference?
+#else
     bool uae = false;               // Use UAE instead of MAME as reference?
+#endif
+    bool check = false;             // Only check the reference against the SingleStep expectations?
     std::string tsv;                // Optional result table
 };
 
@@ -392,6 +416,127 @@ std::string words(const Memory &m, u32 sp, int n)
     return s;
 }
 
+
+//
+// Checking a reference CPU against the SingleStep expectations
+//
+
+struct Expected { int cycle; bool write; u32 addr; u16 mask; u16 data; int fc; bool ae; };
+
+std::vector<Expected> expectedBus(const sst::Test &t)
+{
+    std::vector<Expected> result;
+    int cycle = 0;
+
+    for (auto &b : t.bus) {
+        if (b.type != sst::Bus::IDLE) {
+            u16 mask = b.uds && b.lds ? 0xFFFF : b.uds ? 0xFF00 : 0x00FF;
+            bool write = b.type == sst::Bus::WRITE || b.type == sst::Bus::TAS || b.type == sst::Bus::WRITE_AE;
+            bool ae = b.type == sst::Bus::READ_AE || b.type == sst::Bus::WRITE_AE;
+            result.push_back({ cycle, write, b.addr & ~1u, mask, u16(b.data & mask), int(b.fc), ae });
+        }
+        cycle += b.cycles;
+    }
+    return result;
+}
+
+// Returns an empty string if the bus cycles match. A reference that doesn't log the aborted access
+// of an address error (UAE) is compared without it.
+std::string compareBus(const sst::Test &t, const std::vector<mame::BusCycle> &got, bool dropAborted)
+{
+    auto exp = expectedBus(t);
+    if (dropAborted) exp.erase(std::remove_if(exp.begin(), exp.end(), [](auto &e) { return e.ae; }), exp.end());
+    if (exp.size() != got.size()) return "count";
+
+    for (size_t i = 0; i < exp.size(); i++) {
+        auto &e = exp[i]; auto &g = got[i];
+        std::string d;
+        if (!ignoreCycles && e.cycle != g.cycle) d += "cycle ";
+        if (e.write != g.write) d += "rw ";
+        if (e.addr != g.addr) d += "addr ";
+        if (e.mask != g.mask) d += "mask ";
+        if (!e.ae && (e.data & e.mask) != (g.data & g.mask)) d += "data ";
+        if (e.fc != g.fc) d += "fc ";
+        if (!d.empty()) { d.pop_back(); return "bus#" + std::to_string(i) + "(" + d + ")"; }
+    }
+    return "";
+}
+
+// Runs the reference without faults and compares the result with the SingleStep expectations
+int checkReference(const Settings &opt, const std::vector<std::string> &names, Reference &ref)
+{
+    printf("Reference CPU (%s), run against the SingleStepTests 68000 suite\n\n", opt.uae ? "UAE" : "MAME");
+    printf("%-16s %9s %9s %9s %9s\n", "Test", "Count", "State", "Cycles", "Bus");
+
+    long total = 0, okState = 0, okCycles = 0, okBus = 0;
+    std::map<std::string, long> signatures;
+
+    for (auto &name : names) {
+
+        sst::File file;
+        if (!file.open(opt.dir + "/" + name)) { printf("Cannot read %s\n", name.c_str()); return 1; }
+
+        long n = 0, st = 0, cy = 0, bu = 0;
+        int shown = 0;
+        sst::Test t;
+
+        while (file.next(t)) {
+
+            if (opt.limit && n >= opt.limit) break;
+
+            ref.load(t.initial);
+            int cycles = ref.cpu.execute();
+            auto r = ref.cpu.state();
+            auto &f = t.final;
+
+            // STOP does not prefetch, so no offset applies afterwards
+            u32 pcOffset = (t.initial.prefetch[0] == 0x4E72 && (t.initial.sr & 0x2000)) ? 0 : 4;
+
+            std::string why;
+            auto fail = [&](const char *w) { if (!why.empty()) why += " "; why += w; };
+            bool state = true;
+            for (int i = 0; i < 8; i++) if (r.d[i] != f.d[i]) { state = false; fail("D"); break; }
+            for (int i = 0; i < 7; i++) if (r.a[i] != f.a[i]) { state = false; fail("A"); if (getenv("EXC_REGS")) printf("      A%d: initial %08x exp %08x got %08x\n", i, t.initial.a[i], f.a[i], r.a[i]); break; }
+            if (r.usp != f.usp) { state = false; fail("USP"); }
+            if (r.ssp != f.ssp) { state = false; fail("SSP"); }
+            if ((r.sr & srMask) != (f.sr & srMask)) { state = false; fail("SR"); }
+            if (((r.pc + pcOffset) & ADDR_MASK) != (f.pc & ADDR_MASK)) { state = false; fail("PC"); }
+            for (auto &[addr, val] : f.ram) if (ref.mem.peek(addr) != val) { state = false; fail("mem"); break; }
+            bool cyc = cycles == int(t.cycles);
+            if (!cyc && !ignoreCycles) fail("cycles");
+            auto busDiff = compareBus(t, ref.cpu.log(), opt.uae);
+            if (!busDiff.empty()) fail(busDiff.c_str());
+
+            n++; st += state; cy += cyc; bu += busDiff.empty();
+            if (!why.empty() && getenv("EXC_REGS") && shown < opt.verbose && (!getenv("EXC_SIG") || why.find(getenv("EXC_SIG")) != std::string::npos)) {
+                printf("      ssp: initial %08x exp %08x got %08x; pc: exp %08x got %08x (+%u); cycles exp %u got %d\n", t.initial.ssp, f.ssp, r.ssp, f.pc, r.pc, pcOffset, t.cycles, cycles);
+                for (auto &b : ref.cpu.log()) printf("      got c%-3d %s %06x m%04x d%04x fc%d\n", b.cycle, b.write ? "W" : "R", b.addr, b.mask, b.data, b.fc);
+                int c = 0;
+                for (auto &b : t.bus) { printf("      exp c%-3d type %d dur %d addr %06x data %04x fc %u\n", c, int(b.type), b.cycles, b.addr, b.data, b.fc); c += b.cycles; }
+            }
+            if (!why.empty()) {
+                signatures[(expectsAddressError(t) ? "[AE] " : "") + why]++;
+                if (shown < opt.verbose && (!getenv("EXC_SIG") || why.find(getenv("EXC_SIG")) != std::string::npos)) { shown++; printf("    %s: %s%s\n", t.name.c_str(), expectsAddressError(t) ? "[AE] " : "", why.c_str()); }
+            }
+        }
+        printf("%-16s %9ld %8.2f%% %8.2f%% %8.2f%%\n", name.substr(0, name.size() - 9).c_str(), n,
+               n ? 100.0 * st / n : 100.0, n ? 100.0 * cy / n : 100.0, n ? 100.0 * bu / n : 100.0);
+        fflush(stdout);
+        total += n; okState += st; okCycles += cy; okBus += bu;
+    }
+
+    printf("\n%-16s %9ld %8.2f%% %8.2f%% %8.2f%%\n\n", "TOTAL", total,
+           total ? 100.0 * okState / total : 100.0, total ? 100.0 * okCycles / total : 100.0, total ? 100.0 * okBus / total : 100.0);
+
+    std::vector<std::pair<long, std::string>> sorted;
+    for (auto &[sig, n] : signatures) sorted.push_back({ n, sig });
+    std::sort(sorted.rbegin(), sorted.rend());
+    printf("Most frequent differences:\n");
+    for (size_t i = 0; i < sorted.size() && i < 25; i++) printf("  %8ld  %s\n", sorted[i].first, sorted[i].second.c_str());
+
+    return total == okState && total == okCycles && total == okBus ? 0 : 1;
+}
+
 }
 
 int main(int argc, char **argv)
@@ -412,10 +557,17 @@ int main(int argc, char **argv)
         else if (a == "--tsv" && more) opt.tsv = argv[++i];
         else if (a == "--dedupe" && more) opt.dedupe = atoi(argv[++i]);
         else if (a == "--coverage") opt.coverage = true;
+        else if (a == "--check") opt.check = true;
+        else if (a == "--ignore" && more) {
+            std::string list = "," + std::string(argv[++i]) + ",";
+            if (list.find(",ccr,") != std::string::npos) srMask = 0xA700;
+            if (list.find(",cycles,") != std::string::npos) ignoreCycles = true;
+            if (list.find(",nbit,") != std::string::npos) codeMask = 0xFFF7;
+        }
         else if (a == "--reference" && more) { std::string r = argv[++i]; if (r != "mame" && r != "uae") { printf("Unknown reference %s\n", r.c_str()); return 1; } opt.uae = r == "uae"; }
         else if (a == "-v" && more) opt.verbose = atoi(argv[++i]);
         else {
-            printf("Usage: %s [--dir <folder>] [--only <text>]... [--limit <n>] [-v <n>] [--dedupe <n>] [--coverage] [--reference mame|uae] [--tsv <file>]\n", argv[0]);
+            printf("Usage: %s [--dir <folder>] [--only <text>]... [--limit <n>] [-v <n>] [--dedupe <n>] [--coverage] [--reference mame|uae] [--check] [--ignore ccr,cycles,nbit] [--tsv <file>]\n", argv[0]);
             return 1;
         }
     }
@@ -433,15 +585,16 @@ int main(int argc, char **argv)
     std::sort(names.begin(), names.end());
     if (names.empty()) { printf("No test files found in %s\n", opt.dir.c_str()); return 1; }
 
-    printf("Exception differential test: Moira (MAME mode) vs. %s\n\n", opt.uae ? "UAE (WinUAE, cycle exact 68000)" : "MAME's microcoded 68000");
+    printf("Exception differential test: Moira (%s mode) vs. %s\n\n", moira::compat == moira::Compatibility::UAE ? "UAE" : "MAME", opt.uae ? "UAE (WinUAE, cycle exact 68000)" : "MAME's microcoded 68000");
     printf("%-16s %8s %8s %8s\n", "Instruction", "Cases", "OK", "OK%");
 
     FILE *tsv = opt.tsv.empty() ? nullptr : fopen(opt.tsv.c_str(), "w");
     TestCPU moira;
     Reference ref(opt.uae);
+    if (opt.check) { installVectors = false; return checkReference(opt, names, ref); }
     std::map<std::string, Counter> byKind;
     std::map<std::string, long> signatures;
-    long total = 0, totalOk = 0;
+    long total = 0, totalOk = 0, skippedStacking = 0;
     std::map<std::string, int> keyCount;
     std::set<std::string> allForms, hitForms;
 
@@ -483,22 +636,24 @@ int main(int argc, char **argv)
             if (halted) kd = "halt";
             if (moira.isHalted() != halted) add("halt");
 
-            for (int i = 0; i < 8; i++) if (moira.getD(i) != rs.d[i]) {
+            // The registers of a halted UAE are not compared (e.g., it keeps the trace bit and ends up with a different SSP)
+            bool regs = !(halted && opt.uae);
+            for (int i = 0; regs && i < 8; i++) if (moira.getD(i) != rs.d[i]) {
                 add("D" + std::to_string(i));
                 if (getenv("EXC_REGS")) printf("      D%d: initial %08x exp %08x got %08x\n", i, init.d[i], rs.d[i], moira.getD(i));
                 break;
             }
-            for (int i = 0; i < 7; i++) if (moira.getA(i) != rs.a[i]) {
+            for (int i = 0; regs && i < 7; i++) if (moira.getA(i) != rs.a[i]) {
                 add("A" + std::to_string(i));
                 if (getenv("EXC_REGS")) printf("      A%d: initial %08x exp %08x got %08x\n", i, init.a[i], rs.a[i], moira.getA(i));
                 break;
             }
-            if (moira.getUSP() != rs.usp) { add("USP"); if (getenv("EXC_REGS")) printf("      USP: initial %08x exp %08x got %08x\n", init.usp, rs.usp, moira.getUSP()); }
-            if (moira.getISP() != rs.ssp) { add("SSP"); if (getenv("EXC_REGS")) printf("      SSP: initial %08x exp %08x got %08x\n", init.ssp, rs.ssp, moira.getISP()); }
-            if ((moira.getSR() & SR_MASK) != (rs.sr & SR_MASK)) add("SR");
+            if (regs && moira.getUSP() != rs.usp) { add("USP"); if (getenv("EXC_REGS")) printf("      USP: initial %08x exp %08x got %08x\n", init.usp, rs.usp, moira.getUSP()); }
+            if (regs && moira.getISP() != rs.ssp) { add("SSP"); if (getenv("EXC_REGS")) printf("      SSP: initial %08x exp %08x got %08x\n", init.ssp, rs.ssp, moira.getISP()); }
+            if (regs && (moira.getSR() & srMask) != (rs.sr & srMask)) { add("SR"); if (getenv("EXC_REGS")) printf("      SR: initial %04x exp %04x got %04x\n", init.sr, rs.sr, moira.getSR()); }
             // The PC of a halted CPU depends on the microcode state (not compared)
             if (!halted && (moira.getPC() & ADDR_MASK) != (rs.pc & ADDR_MASK)) { add("PC"); if (getenv("EXC_REGS")) printf("      PC: initial %08x exp %08x got %08x\n", init.pc, rs.pc, moira.getPC()); }
-            if (!halted && i64(moira.getClock()) != refCycles) { add("cycles"); if (getenv("EXC_REGS")) printf("      cycles: exp %lld got %lld\n", (long long)refCycles, (long long)moira.getClock()); }
+            if (!halted && !ignoreCycles && i64(moira.getClock()) != refCycles) { add("cycles"); if (getenv("EXC_REGS")) printf("      cycles: exp %lld got %lld\n", (long long)refCycles, (long long)moira.getClock()); }
 
             // The read of a TAS is followed by a write in MAME, which a real bus error would prevent
             // Address of the aborted access of an address error (MAME may still perform it)
@@ -534,6 +689,10 @@ int main(int argc, char **argv)
                 if (extraWrites.count(a & ~1u)) continue;
                 if ((a & ~1u) == aborted && aborted != ~0u && (!bus || halted)) continue;       // MAME may perform the aborted access    // MAME still completes the write half
                 if (a == ((rs.ssp & ADDR_MASK) + 2)) continue;      // Undefined upper byte of the fault address
+                if (a == ((rs.ssp & ADDR_MASK) + 1) && !halted && ((moira.mem.peek(a) ^ ref.mem.peek(a)) & codeMask & 0xFF) == 0) continue;   // Ignored bits of the code word
+                if (a == ((rs.ssp & ADDR_MASK) + 9) && !(srMask & 0x1F)) {      // Condition codes in the stacked SR
+                    if (((moira.mem.peek(a) ^ ref.mem.peek(a)) & ~0x1F) == 0) continue;
+                }
                 if (moira.mem.peek(a) != ref.mem.peek(a)) {
                     u32 sp = rs.ssp & ADDR_MASK;
                     if (a >= sp && a < sp + 14) badWords.insert(int((a - sp) / 2)); else { badWords.insert(-1); if (getenv("EXC_REGS")) printf("      mem %06x: exp %02x got %02x (ssp %06x)\n", a, ref.mem.peek(a), moira.mem.peek(a), sp); }
@@ -573,13 +732,15 @@ int main(int argc, char **argv)
                     auto &e = mlog[i]; auto &g = moira.log[i];
                     std::string d;
                     if (getenv("EXC_DEBUG") && i == 0) printf("      first bus cycle: mame %lld moira %lld; total mame %d moira %lld\n", (long long)e.cycle, (long long)g.cycle, refCycles, (long long)moira.getClock());
-                    if (e.cycle != g.cycle) d += "cycle ";
+                    if (!ignoreCycles && e.cycle != g.cycle) d += "cycle ";
                     if (e.write != g.write) d += "rw ";
                     if (e.addr != g.addr) d += "addr ";
                     if (e.mask != g.mask) d += "mask ";
                     if (e.fc != g.fc) d += "fc ";
                     u16 dm = 0xFFFF;
                     if (e.write && e.fc == 5 && e.addr == (((rs.ssp & ADDR_MASK) + 2) & ~1u)) dm = 0x00FF;        // Undefined upper byte of the fault address
+                    if (e.write && e.fc == 5 && e.addr == (((rs.ssp & ADDR_MASK) + 8) & ~1u)) dm = ~srMask & 0x1F ? 0xFFE0 : 0xFFFF;   // Condition codes
+                    if (e.write && !halted && e.fc == 5 && e.addr == ((rs.ssp & ADDR_MASK) & ~1u)) dm = codeMask;   // Ignored bits of the code word
                     if (e.write && (e.data & e.mask & dm) != (g.data & g.mask & dm)) d += "data ";
                     if (!d.empty()) { d.pop_back(); add("bus#" + std::to_string(i) + "(" + d + ")"); break; }
                 }
@@ -720,7 +881,14 @@ int main(int argc, char **argv)
                 auto plain = ref.cpu.log();
                 u16 plainSR = ref.cpu.state().sr;
 
+                // Find the exception vector fetch of instructions that raise an exception themselves
+                int vectorFetch = -1;
+                for (int k = 0; k < accesses && vectorFetch < 0; k++) if (!plain[k].write && plain[k].addr < 0x100 && plain[k].fc == 5) vectorFetch = k;
+
                 for (int k = 0; k < accesses; k++) {
+
+                    // UAE and MAME disagree on the frames of bus errors that hit the stacking, the vector fetch, or the first fetches of the handler of a group 1 or 2 exception
+                    if (opt.uae && vectorFetch >= 3 && k >= vectorFetch - 3) { skippedStacking++; continue; }
 
                     const char *kd = kind(plain[k]);
                     bool isFetch = !strcmp(kd, "fetch");
@@ -737,6 +905,7 @@ int main(int argc, char **argv)
         total += c.cases; totalOk += c.ok;
     }
 
+    if (skippedStacking) printf("\nSkipped %ld cases that fault while a group 1/2 exception is processed (UAE and MAME disagree on these frames)\n", skippedStacking);
     printf("\n%-16s %8ld %8ld %7.2f%%\n\n", "TOTAL", total, totalOk, total ? 100.0 * totalOk / total : 100.0);
 
     printf("\nDistinct cases (instruction form x access x kind): %zu\n", keyCount.size());

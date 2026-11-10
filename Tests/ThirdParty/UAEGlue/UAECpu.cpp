@@ -30,6 +30,8 @@ bool addr24 = false;
 uint32_t memMask = 0xFFFF;
 uaecpu::AccessHook accessHook = nullptr;
 bool stepping = false;           // Is an instruction being executed?
+int lastExc = 0;                 // Vector of the last exception taken
+bool traceInStep = true;         // Process a pending trace exception in the same step?
 
 inline uint32_t mask(uint32_t addr) { return addr & memMask; }
 
@@ -49,6 +51,14 @@ bool busAccess(bool write, bool fetch, uint32_t addr, int size, uint32_t value)
 {
     if (!accessHook || !stepping) return false;
 
+    /* The cycle-exact core fetches the first words of an exception handler with
+     * the data access function, and PC-relative operands come from program space.
+     * Both are program space accesses on a real 68000.
+     */
+    if (!write && !fetch && addr >= 0x400) {
+        bool pcRelative = ((regs.opcode & 0x3F) == 0x3A || (regs.opcode & 0x3F) == 0x3B);
+        if (lastExc != 0 || pcRelative) fetch = true;
+    }
     uint32_t fc = fetch ? (regs.s ? 6 : 2) : (regs.s ? 5 : 1);
     uaecpu::BusAccess a { write, fetch, addr & 0xFFFFFF, size, value, fc, uaecpu::cycles() };
     if (!accessHook(a)) return false;
@@ -83,13 +93,10 @@ uae_u32 memory_get_word(uaecptr a)
 
 uae_u32 memory_get_long(uaecptr a)
 {
-    if (accessHook && stepping) {
-        if (busAccess(false, false, a, 2, 0)) return 0;
-        uae_u32 hi = mem[mask(a)] << 8 | mem[mask(a + 1)];
-        if (busAccess(false, false, a + 2, 2, 0)) return 0;
-        return hi << 16 | mem[mask(a + 2)] << 8 | mem[mask(a + 3)];
-    }
-    return memory_get_word(a) << 16 | memory_get_word(a + 2);
+    /* The cycle-exact core accesses the bus in words. Long accesses are free
+     * peeks (e.g., the early look at an exception vector) and not observed.
+     */
+    return mem[mask(a)] << 24 | mem[mask(a + 1)] << 16 | mem[mask(a + 2)] << 8 | mem[mask(a + 3)];
 }
 
 uae_u32 memory_get_wordi(uaecptr a)
@@ -141,13 +148,6 @@ void memory_put_word(uaecptr a, uae_u32 v)
 
 void memory_put_long(uaecptr a, uae_u32 v)
 {
-    if (accessHook && stepping) {
-        if (busAccess(true, false, a, 2, v >> 16)) return;
-        putWord(a, v >> 16);
-        if (busAccess(true, false, a + 2, 2, v & 0xFFFF)) return;
-        putWord(a + 2, v & 0xFFFF);
-        return;
-    }
     if (addr24) a &= 0xFFFFFF;
     if (writeHook) { writeHook(2, a, v >> 16, fcOfWrite(), uaecpu::cycles() + 2); writeHook(2, a + 2, v & 0xFFFF, fcOfWrite(), uaecpu::cycles() + 2); }
     mem[mask(a)] = uint8_t(v >> 24);
@@ -170,7 +170,6 @@ void m68k_handle_trap(unsigned int) { }
 //
 
 static uint64_t cycleCounter = 0;
-static int lastExc = 0;
 
 // Called whenever an exception is processed
 void debug_exception(int nr) { lastExc = nr; movesActive = false; }
@@ -271,6 +270,8 @@ void init(Cpu model, Fpu fpu, uint8_t *memory, WriteHook hook)
 }
 
 void setAccessHook(AccessHook hook) { accessHook = hook; }
+
+void setTraceInStep(bool enable) { traceInStep = enable; }
 
 void setMemoryMask(uint32_t m)
 {
@@ -640,8 +641,10 @@ bool step()
             unset_special(SPCFLAG_TRAP);
             Exception(3);
         }
-        if (r->spcflags & SPCFLAG_DOTRACE) Exception(9);
-        if (r->spcflags & SPCFLAG_TRACE) do_trace();
+        if (traceInStep) {
+            if (r->spcflags & SPCFLAG_DOTRACE) Exception(9);
+            if (r->spcflags & SPCFLAG_TRACE) do_trace();
+        }
         regs.spcflags = 0;
 
     } CATCH(prb) {

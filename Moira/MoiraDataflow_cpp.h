@@ -287,7 +287,7 @@ Moira::readOp(int n, u32 *ea, u32 *result)
             // Read from effective address
             if constexpr (compat == Compatibility::MAME && C == Core::C68000 && M == Mode::PI && S == Word && !(F & AE_KEEP_A)) {
 
-                // MAME advances the register before the bus error is reported
+                // MAME advances the register before the bus or address error is reported
                 try { *result = readM<C, M, S, F>(*ea); } catch (const AddressError &) { updateAnPI<M, S>(n); throw; } catch (const BusError &) { updateAnPI<M, S>(n); throw; }
 
             } else if constexpr (compat == Compatibility::MAME && C == Core::C68000 && M == Mode::PI) {
@@ -490,7 +490,7 @@ Moira::readM(u32 addr)
 template <Core C, Flags F> u32
 Moira::read2x16(u32 lo, u32 hi)
 {
-    if constexpr ((F & REVERSE) && compat == Compatibility::MAME && C == Core::C68000) {
+    if constexpr ((F & REVERSE) && EXACT_68000) {
 
         // MAME reads the lower word first
         u32 result = read16(hi);
@@ -517,7 +517,7 @@ Moira::write2x16(u32 lo, u32 hi, u32 valHi, u32 valLo)
         write16(hi, u16(valLo));
         SYNC(4);
         if constexpr (F & POLL) POLL_IPL;
-        if constexpr (compat == Compatibility::MAME && C == Core::C68000) irdKeep = false;   // MAME replaces the IRD when the last bus cycle starts
+        if constexpr (compat == Compatibility::MAME && C == Core::C68000) irdKeep = false;   // MAME replaces the IRD when the last bus cycle starts (UAE not before the instruction ends)
         write16(lo, u16(valHi));
         SYNC(2);
 
@@ -526,7 +526,7 @@ Moira::write2x16(u32 lo, u32 hi, u32 valHi, u32 valLo)
         write16(lo, u16(valHi));
         SYNC(4);
         if constexpr (F & POLL) POLL_IPL;
-        if constexpr (compat == Compatibility::MAME && C == Core::C68000) irdKeep = false;   // MAME replaces the IRD when the last bus cycle starts
+        if constexpr (compat == Compatibility::MAME && C == Core::C68000) irdKeep = false;   // MAME replaces the IRD when the last bus cycle starts (UAE not before the instruction ends)
         write16(hi, u16(valLo));
         SYNC(2);
     }
@@ -863,7 +863,7 @@ Moira::writeBus(u32 addr, u32 val, bool *ci)
     if constexpr (S == Byte) {
 
         if constexpr (F & POLL) POLL_IPL;
-        if constexpr (compat == Compatibility::MAME && C == Core::C68000) irdKeep = false;   // MAME replaces the IRD when the last bus cycle starts
+        if constexpr (EXACT_68000) irdKeep = false;   // MAME replaces the IRD when the last bus cycle starts
         write8(addr & addrMask<C>(), (u8)val);
         SYNC(2);
     }
@@ -882,7 +882,7 @@ Moira::writeBus(u32 addr, u32 val, bool *ci)
         }
 
         if constexpr (F & POLL) POLL_IPL;
-        if constexpr (compat == Compatibility::MAME && C == Core::C68000) irdKeep = false;   // MAME replaces the IRD when the last bus cycle starts
+        if constexpr (EXACT_68000) irdKeep = false;   // MAME replaces the IRD when the last bus cycle starts
         write16(a, (u16)val);
         SYNC(2);
     }
@@ -1070,9 +1070,9 @@ Moira::makeFrame(u32 addr, u32 pc)
 template <Flags F> StackFrame
 Moira::makeFrame(u32 addr)
 {
-    if constexpr (compat == Compatibility::MAME) {
+    if constexpr (compat == Compatibility::MAME || compat == Compatibility::UAE) {
 
-        // MAME keeps the IRD of the executing instruction until its last bus cycle has started
+        // MAME and UAE keep the IRD of the executing instruction until its last bus cycle has started
         return makeFrame<F>(addr, reg.pc, getSR(), irdKeep ? irdOld : getIRD());
     }
     return makeFrame<F>(addr, reg.pc, getSR(), getIRD());
@@ -1082,7 +1082,7 @@ template <Core C> AddressError
 Moira::earlyAddressError(const StackFrame &frame)
 {
     // MAME spends two extra cycles if an address error is detected without a bus access
-    if constexpr (compat == Compatibility::MAME && C == Core::C68000) sync(2);
+    if constexpr (EXACT_68000) sync(2);
 
     return AddressError(frame);
 }
@@ -1098,7 +1098,7 @@ Moira::prefetch()
     reg.pc0 = reg.pc;
     reg.pc += 2;
 
-    if constexpr (compat == Compatibility::MAME && C == Core::C68000 && (F & KEEP_IRD)) {
+    if constexpr (EXACT_68000 && (F & KEEP_IRD)) {
 
         // MAME replaces the IRD when the last bus cycle of the instruction starts.
         // The value is part of the stack frame if the prefetch fails.
@@ -1119,7 +1119,7 @@ Moira::prefetch()
 template <Core C, Flags F> void
 Moira::fullPrefetchAt(u32 newpc)
 {
-    if constexpr (compat == Compatibility::MAME && C == Core::C68000) {
+    if constexpr (EXACT_68000) {
 
         u32 oldpc = reg.pc;
         reg.pc = newpc;
@@ -1167,7 +1167,7 @@ Moira::readExt()
     reg.pc += 2;
 
     // MAME stacks the address of the consumed extension word if the refill fails
-    if constexpr (compat == Compatibility::MAME && C == Core::C68000) {
+    if constexpr (EXACT_68000) {
         queue.irc = readInstr<C, AE_DEC_PC>(reg.pc);
     } else {
         queue.irc = readInstr<C>(reg.pc);
@@ -1178,7 +1178,7 @@ template <Core C> void
 Moira::readExtLast()
 {
     // MAME does not decrement the stacked PC if the refill after the last word of a long operand fails
-    if constexpr (compat == Compatibility::MAME && C == Core::C68000) {
+    if constexpr (EXACT_68000) {
 
         assert(!misaligned<C>(reg.pc));
         reg.pc += 2;
@@ -1213,7 +1213,7 @@ Moira::jumpToVector(int nr)
     u32 oldpc = reg.pc;
 
     // Update the program counter
-    if constexpr (compat == Compatibility::MAME && C == Core::C68000) {
+    if constexpr (EXACT_68000) {
 
         // MAME stacks the vector address if a bus error occurs while the vector is fetched
         try { reg.pc = read<C, AddrSpace::DATA, Long>(vectorAddr); }
@@ -1267,7 +1267,7 @@ Moira::jumpToVector(int nr)
     }
 
     // Update the prefetch queue
-    if constexpr (compat == Compatibility::MAME && C == Core::C68000) {
+    if constexpr (EXACT_68000) {
 
         // The first fetch also stacks the vector address, the second one the handler address
         try { queue.irc = (u16)read<C, AddrSpace::PROG, Word>(reg.pc); }

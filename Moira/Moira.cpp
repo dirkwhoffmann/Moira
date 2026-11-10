@@ -397,7 +397,7 @@ Moira::execute()
     // Check the integrity of the program counter
     assert(reg.pc == reg.pc0 + 2);
 
-    if constexpr (compat == Compatibility::MAME) irdKeep = false;
+    if constexpr (compat == Compatibility::MAME || compat == Compatibility::UAE) irdKeep = false;
 
     // Take the fast path or the slow path
     if (!flags) {

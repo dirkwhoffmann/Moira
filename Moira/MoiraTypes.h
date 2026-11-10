@@ -115,6 +115,9 @@ enum class Compatibility
 
 inline constexpr Compatibility compat = Compatibility::MOIRA_COMPATIBILITY;
 
+// Selects the cycle-exact 68000 behavior shared by the MAME and UAE modes (exceptions in the middle of an instruction)
+#define EXACT_68000 ((compat == Compatibility::MAME || compat == Compatibility::UAE) && C == Core::C68000)
+
 // UAE's bus access timing can only be reproduced with precise timing
 static_assert(compat != Compatibility::UAE || MOIRA_PRECISE_TIMING,
               "MOIRA_COMPATIBILITY=UAE requires MOIRA_PRECISE_TIMING=true");
