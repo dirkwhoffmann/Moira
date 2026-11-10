@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		50FF0000000000000000F104 /* Reference.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F001 /* Reference.cpp */; };
+		50FF0000000000000000F103 /* Reference.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F001 /* Reference.cpp */; };
+		50FF0000000000000000F102 /* Reference.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F001 /* Reference.cpp */; };
+		50FF0000000000000000F101 /* Reference.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F001 /* Reference.cpp */; };
+		50FF0000000000000000F100 /* Reference.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FF0000000000000000F001 /* Reference.cpp */; };
 		50FD0000000000000000000F /* libMAMERef.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50F500000000000000000002 /* libMAMERef.a */; };
 		50FD0000000000000000000E /* mame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FD00000000000000000001 /* mame.cpp */; };
 		50FD0000000000000000000B /* libMAMERef.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50F500000000000000000002 /* libMAMERef.a */; };
@@ -432,6 +437,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		50FF0000000000000000F001 /* Reference.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Reference.cpp; sourceTree = "<group>"; };
+		50FF0000000000000000F002 /* Reference.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Reference.h; sourceTree = "<group>"; };
 		50FD00000000000000000001 /* mame.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = mame.cpp; sourceTree = "<group>"; };
 		08C7A9B2140D45BEA6DAD5A7 /* Cache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Cache.h; sourceTree = "<group>"; };
 		1654296120AA412377E9642D /* MoiraCore68020.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraCore68020.cpp; sourceTree = "<group>"; };
@@ -1274,6 +1281,8 @@
 				50953AE228895D5D0077C9E8 /* config.h */,
 				507BE4AE23B66456000B37D2 /* Testrunner.h */,
 				507BE4AD23B66456000B37D2 /* Testrunner.cpp */,
+				50FF0000000000000000F002 /* Reference.h */,
+				50FF0000000000000000F001 /* Reference.cpp */,
 				50B100000000000000000002 /* Shared.h */,
 				50B100000000000000000001 /* Shared.cpp */,
 				502C09E123C8E16600A179E1 /* TestCPU.h */,
@@ -1746,6 +1755,7 @@
 				5054686228A4CDDC00028727 /* Randomizer.cpp in Sources */,
 				50B100000000000000000003 /* Shared.cpp in Sources */,
 				50C300000000000000000003 /* Testrunner.cpp in Sources */,
+				50FF0000000000000000F100 /* Reference.cpp in Sources */,
 				50D100000000000000000001 /* TestCPU.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1845,6 +1855,7 @@
 				50D10000000000000000000B /* Randomizer.cpp in Sources */,
 				50D10000000000000000000C /* Shared.cpp in Sources */,
 				50D10000000000000000000D /* Testrunner.cpp in Sources */,
+				50FF0000000000000000F101 /* Reference.cpp in Sources */,
 				50D10000000000000000000E /* TestCPU.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1868,6 +1879,7 @@
 				50FD00000000000000000020 /* Randomizer.cpp in Sources */,
 				50FD00000000000000000021 /* Shared.cpp in Sources */,
 				50FD00000000000000000022 /* Testrunner.cpp in Sources */,
+				50FF0000000000000000F102 /* Reference.cpp in Sources */,
 				50FD00000000000000000023 /* TestCPU.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2049,6 +2061,7 @@
 				50FB0000000000000000030E /* Randomizer.cpp in Sources */,
 				50FB0000000000000000030F /* Shared.cpp in Sources */,
 				50FB00000000000000000310 /* Testrunner.cpp in Sources */,
+				50FF0000000000000000F103 /* Reference.cpp in Sources */,
 				50FB00000000000000000311 /* TestCPU.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2072,6 +2085,7 @@
 				50FC0000000000000000050E /* Randomizer.cpp in Sources */,
 				50FC0000000000000000050F /* Shared.cpp in Sources */,
 				50FC00000000000000000510 /* Testrunner.cpp in Sources */,
+				50FF0000000000000000F104 /* Reference.cpp in Sources */,
 				50FC00000000000000000511 /* TestCPU.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
