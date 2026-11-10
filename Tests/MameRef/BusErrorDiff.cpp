@@ -221,7 +221,7 @@ struct Settings {
     bool fetch = true;              // Fault program fetches?
     bool data = true;               // Fault data accesses?
     std::string tsv;                // Optional result table
-    bool exceptions = false;        // Include instructions that raise an exception?
+    bool exceptions = true;         // Include instructions that raise an exception?
 };
 
 struct Counter {
@@ -283,7 +283,7 @@ int main(int argc, char **argv)
     if (names.empty()) { printf("No test files found in %s\n", opt.dir.c_str()); return 1; }
 
     printf("Bus error differential test: Moira (MAME mode) vs. MAME's microcoded 68000\n\n");
-    printf("%-16s %8s %8s %8s %8s %8s\n", "Instruction", "Cases", "OK", "OK%", "Reads", "Writes");
+    printf("%-16s %8s %8s %8s\n", "Instruction", "Cases", "OK", "OK%");
 
     FILE *tsv = opt.tsv.empty() ? nullptr : fopen(opt.tsv.c_str(), "w");
     TestCPU moira;
@@ -450,8 +450,10 @@ int main(int argc, char **argv)
             }
         }
 
-        printf("%-16s %8ld %8ld %7.2f%% %8ld %8ld\n", name.substr(0, name.size() - 9).c_str(), c.cases, c.ok,
-               c.cases ? 100.0 * c.ok / c.cases : 100.0, failedReads, failedWrites);
+        printf("%-16s %8ld %8ld %7.2f%%", name.substr(0, name.size() - 9).c_str(), c.cases, c.ok,
+               c.cases ? 100.0 * c.ok / c.cases : 100.0);
+        if (failedReads || failedWrites) printf("  (%ld read errors, %ld write errors)", failedReads, failedWrites);
+        printf("\n");
         fflush(stdout);
         total += c.cases; totalOk += c.ok;
     }
