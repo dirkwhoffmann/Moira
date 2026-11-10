@@ -14,10 +14,15 @@ ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/UAEGlue/uae.cpp
 )
 set(RUNNER_SRC ${RUNNER_SRC} CACHE INTERNAL "Sources of the random and disassembler runners")
 
-# STAGES is RANDOM (execute instructions) or DASM (disassemble only)
+# STAGES is RANDOM (execute instructions), DASM (disassemble only) or DASM_MIT (disassemble only,
+# MIT syntax). The MIT flavor needs a binutils library that is compiled without MOTOROLA.
 function(add_test_runner NAME MOIRALIB STAGES)
   add_executable(${NAME} ${RUNNER_SRC})
-  target_link_libraries(${NAME} PRIVATE ${MOIRALIB} binutils musashi uaecpu)
+  if(STAGES STREQUAL "DASM_MIT")
+    target_link_libraries(${NAME} PRIVATE ${MOIRALIB} binutilsmit musashi uaecpu)
+  else()
+    target_link_libraries(${NAME} PRIVATE ${MOIRALIB} binutils musashi uaecpu)
+  endif()
   target_compile_definitions(${NAME} PRIVATE RUNNER_STAGES_${STAGES})
   if(MSVC)
     target_compile_options(${NAME} PRIVATE /wd4100 /wd4201 /wd4324 /wd4458)

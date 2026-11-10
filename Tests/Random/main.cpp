@@ -76,7 +76,7 @@ int main(int argc, char **argv)
     printf("    Random seed : %d\n", seed);
     printf("     Exec range : %s\n", TOSTRING(doExec(opcode)));
     printf("     Dasm range : %s\n", TOSTRING(doDasm(opcode)));
-    printf("      Reference : %s\n", runner::reference());
+    printf("      Reference : %s\n", DASM_STAGES ? (DASM_MIT ? "Binutils (MIT)" : "Binutils, Musashi, UAE") : runner::reference());
 
     runner::run(seed, rounds,
                 cpus.empty() ? runner::allModels() : cpus,

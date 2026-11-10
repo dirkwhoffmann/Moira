@@ -143,6 +143,8 @@ struct Result {
     u32     mmusr;
     char    dasmMoira[128];
     int     dasmCntMoira;
+    char    dasmMoiraSyn[128];      // Moira's output in its native syntax
+    int     dasmCntMoiraSyn;
     char    dasmBinutils[BINUTILS_BUFFER_SIZE];
     int     dasmCntBinutils;
     char    dasmMusashi[128];

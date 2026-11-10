@@ -16,12 +16,20 @@ static const bool CHECK_MEM_WRITES = true;
 
 // The runner is built in two flavors: randomized execution tests (RUNNER_STAGES_RANDOM)
 // and disassembler tests (RUNNER_STAGES_DASM)
-#if defined(RUNNER_STAGES_DASM)
+#if defined(RUNNER_STAGES_DASM) || defined(RUNNER_STAGES_DASM_MIT)
 static const bool EXEC_STAGES = false;
 static const bool DASM_STAGES = true;
 #else
 static const bool EXEC_STAGES = true;
 static const bool DASM_STAGES = false;
+#endif
+
+// The Motorola flavor compares Moira with Binutils, Musashi and UAE. The MIT flavor
+// compares Moira with Binutils only.
+#if defined(RUNNER_STAGES_DASM_MIT)
+static const bool DASM_MIT = true;
+#else
+static const bool DASM_MIT = false;
 #endif
 
 // Set to true to execute CPU tests
@@ -48,8 +56,11 @@ static const bool VERBOSE = false;
 // Change to limit the range of disassembled instructions
 #define doDasm(opcode) (opcode >= 0x0000 && opcode <= 0xFFFF)
 
-// Uncomment to check against M68K in Motorola syntax
+// Binutils is compiled in Motorola syntax, except for the MIT flavor of the
+// disassembler test (RUNNER_STAGES_DASM_MIT)
+#ifndef RUNNER_STAGES_DASM_MIT
 #define MOTOROLA
+#endif
 
 // Uncomment to create M68881 compatible disassembler output
 // #define ENABLE_M68881

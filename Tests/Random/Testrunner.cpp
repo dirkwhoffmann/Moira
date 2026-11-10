@@ -24,6 +24,11 @@ using namespace moira;
 static constexpr bool useUAE     = (compat == Compatibility::UAE);
 static constexpr bool useMusashi = (compat == Compatibility::MUSASHI);
 
+// The disassembler tests don't depend on the compatibility mode. They compare Moira with
+// all reference disassemblers at once (the MIT flavor compares Moira with Binutils only).
+static constexpr bool dasmMusashi = DASM_STAGES ? !DASM_MIT : useMusashi;
+static constexpr bool dasmUAE     = DASM_STAGES ? !DASM_MIT : useUAE;
+
 // The Moira instance under test
 TestCPU *moiracpu;
 
@@ -121,6 +126,8 @@ bool isCompatible(CPUModel cpu, FPUModel fpu)
 
 const char *reference()
 {
+    if (DASM_STAGES) return "Ref";
+
     switch (compat) {
 
         case Compatibility::MUSASHI: return "Musashi";
@@ -143,8 +150,8 @@ void selectModel(CPUModel model)
     // Only the 68040 has a built-in FPU. External FPUs are installed with selectFpu.
     fpuModel = (cpuModel == CPUModel::M68040) ? FPUModel::BUILTIN : FPUModel::NONE;
 
-    if (useMusashi) setupMusashi(cpuModel);
-    if (useUAE) setupUAE(cpuModel, fpuModel);
+    if (useMusashi || dasmMusashi) setupMusashi(cpuModel);
+    if (useUAE || dasmUAE) setupUAE(cpuModel, fpuModel);
     setupBinutils(cpuModel);
     setupMoira();
 
@@ -1034,14 +1041,8 @@ void disassembleReference(Setup &s, Result &r)
 
     disassembleBinutils(r);
 
-    switch (compat) {
-
-        case Compatibility::MUSASHI: disassembleMusashi(s, r); break;
-        case Compatibility::UAE:     disassembleUAE(s, r); break;
-
-        default:
-            assert(false);
-    }
+    if (dasmMusashi) disassembleMusashi(s, r);
+    if (dasmUAE) disassembleUAE(s, r);
 }
 
 // Disassembles the instruction with Moira in all supported syntax flavors
@@ -1062,8 +1063,15 @@ void disassembleMoira(Setup &s, Result &r)
     moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 10, .plainZero = true });
     r.dasmCntBinutils = moiracpu->disassemble(r.dasmBinutils, r.oldpc);
 
+    // Disassemble the instruction in Moira's own syntax
+    r.dasmMoiraSyn[0] = 0;
+    moiracpu->setDasmSyntax(DASM_MIT ? Syntax::MOIRA_MIT : Syntax::MOIRA);
+    moiracpu->setDasmLetterCase(LetterCase::MIXED_CASE);
+    moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
+    r.dasmCntMoiraSyn = moiracpu->disassemble(r.dasmMoiraSyn, r.oldpc);
+
     // Disassemble the instruction in Musashi format
-    if (useMusashi) {
+    if (dasmMusashi) {
         moiracpu->setDasmSyntax(Syntax::MUSASHI);
         moiracpu->setDasmLetterCase(LetterCase::MIXED_CASE);
         moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
@@ -1073,7 +1081,7 @@ void disassembleMoira(Setup &s, Result &r)
     }
 
     // Disassemble the instruction in UAE format
-    if (useUAE) {
+    if (dasmUAE) {
         moiracpu->setDasmSyntax(Syntax::UAE);
         moiracpu->setDasmLetterCase(LetterCase::LOWER_CASE);
         moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
@@ -1279,11 +1287,14 @@ void recordMoiraRegisters(Result &r)
 
 void dumpDasm(Setup &s, Result &rRef, Result &rMoira)
 {
-    if (useUAE) {
+    if (DASM_STAGES) {
+        printf("\nMoira syntax:         [%d] '%s'\n", rMoira.dasmCntMoiraSyn, rMoira.dasmMoiraSyn);
+    }
+    if (dasmUAE) {
         printf("\nInstruction:      UAE: [%d] '%s'", rRef.dasmCntUAE, rRef.dasmUAE);
         printf("\n                Moira: [%d] '%s'\n", rMoira.dasmCntMoiraUAE, rMoira.dasmMoiraUAE);
     }
-    if (useMusashi) {
+    if (dasmMusashi) {
         printf("\nInstruction:  Musashi: [%d] '%s'", rRef.dasmCntMusashi, rRef.dasmMusashi);
         printf("\n                Moira: [%d] '%s'\n", rMoira.dasmCntMusashi, rMoira.dasmMusashi);
     }
@@ -1557,7 +1568,7 @@ bool compareDasm(Result &rRef, Result &rMoira)
 {
     auto I = moiracpu->getInstrInfo(rRef.opcode).I;
 
-    bool skipMusashi = !useMusashi || rRef.opcode >= 0xF000;
+    bool skipMusashi = !dasmMusashi || rRef.opcode >= 0xF000;
     bool skipBinutils = false;
 
     switch (cpuModel) {
@@ -1590,7 +1601,14 @@ bool compareDasm(Result &rRef, Result &rMoira)
     }
 
     // Compare with UAE's disassembler (UAE decodes coprocessor opcodes regardless of the model)
-    if (useUAE && !noUAEDasmForCoprocessor(rRef.opcode) && !dasmEqualUAE(rRef.dasmUAE, rMoira.dasmMoiraUAE)) return false;
+    if (dasmUAE && !noUAEDasmForCoprocessor(rRef.opcode) && !dasmEqualUAE(rRef.dasmUAE, rMoira.dasmMoiraUAE)) return false;
+
+    // Moira's own syntax has no reference. Make sure that it produces some output. (The
+    // length may differ from the GNU flavor, because the latter mimics Binutils' view on
+    // instructions that are not available on the selected CPU.)
+    if (DASM_STAGES) {
+        if (!rMoira.dasmMoiraSyn[0] || rMoira.dasmCntMoiraSyn <= 0) return false;
+    }
 
     // Compare with binutils
     if (!skipBinutils) {
