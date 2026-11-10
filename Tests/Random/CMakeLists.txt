@@ -1,6 +1,6 @@
 # The randomized differential test runner. It is built once per tested Moira core
 # (randomuae tests moiraUAE against UAE, randommusashi tests moiraMusashi against
-# Musashi). The same sources are used by the disassembler tests (see ../Dasm).
+# Musashi, randommame tests moiraMAME against MAME's microcoded 68000). The same sources are used by the disassembler tests (see ../Dasm).
 set(RUNNER_SRC
 ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/Testrunner.cpp
@@ -11,6 +11,7 @@ ${CMAKE_CURRENT_SOURCE_DIR}/Randomizer.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/MusashiGlue/musashi.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/BinutilsGlue/binutils.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/UAEGlue/uae.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/MAMEGlue/mame.cpp
 )
 set(RUNNER_SRC ${RUNNER_SRC} CACHE INTERNAL "Sources of the random and disassembler runners")
 
@@ -19,9 +20,9 @@ set(RUNNER_SRC ${RUNNER_SRC} CACHE INTERNAL "Sources of the random and disassemb
 function(add_test_runner NAME MOIRALIB STAGES)
   add_executable(${NAME} ${RUNNER_SRC})
   if(STAGES STREQUAL "DASM_MIT")
-    target_link_libraries(${NAME} PRIVATE ${MOIRALIB} binutilsmit musashi uaecpu)
+    target_link_libraries(${NAME} PRIVATE ${MOIRALIB} binutilsmit musashi uaecpu mameref)
   else()
-    target_link_libraries(${NAME} PRIVATE ${MOIRALIB} binutils musashi uaecpu)
+    target_link_libraries(${NAME} PRIVATE ${MOIRALIB} binutils musashi uaecpu mameref)
   endif()
   target_compile_definitions(${NAME} PRIVATE RUNNER_STAGES_${STAGES})
   if(MSVC)
@@ -42,9 +43,11 @@ endfunction()
 
 add_test_runner(randommusashi moiraMusashi RANDOM)
 add_test_runner(randomuae moiraUAE RANDOM)
+add_test_runner(randommame moiraMAME RANDOM)
 
 # A fixed seed keeps the automated runs reproducible. Without --seed, the runners
 # derive the seed from the date.
 add_test(NAME RandomMusashi COMMAND randommusashi --seed 1)
 add_test(NAME RandomUAE COMMAND randomuae --seed 1)
-set_tests_properties(RandomMusashi RandomUAE PROPERTIES LABELS "random")
+add_test(NAME RandomMAME COMMAND randommame --seed 1)
+set_tests_properties(RandomMusashi RandomUAE RandomMAME PROPERTIES LABELS "random")

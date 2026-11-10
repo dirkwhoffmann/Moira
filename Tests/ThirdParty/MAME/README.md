@@ -25,6 +25,6 @@ framework is provided in `../MAMEGlue/shim/emu.h`. `../MAMEGlue/MameCpu.h` is a
 small wrapper that runs the core instruction by instruction and records the bus
 cycles. It also allows to trigger a bus error on any access.
 
-To update the core, replace the files and rebuild. `mameCheck` (see
-`Tests/MameRef`) runs the core against the SingleStepTests, which have been
+To update the core, replace the files and rebuild. `exceptionmame --check` (see
+`Tests/Exception`) runs the core against the SingleStepTests, which have been
 recorded from the same core. It must report 100%.

@@ -10,6 +10,7 @@
 #include "config.h"
 #include "Testrunner.h"
 #include <string.h>
+#include <algorithm>
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
@@ -56,7 +57,10 @@ int main(int argc, char **argv)
 
         } else if (!strcmp(argv[i], "--cpu") && i + 1 < argc) {
 
-            if (auto model = runner::parseModel(argv[++i])) { cpus.push_back(*model); continue; }
+            if (auto model = runner::parseModel(argv[++i])) {
+                const auto &all = runner::allModels();
+                if (std::find(all.begin(), all.end(), *model) != all.end()) { cpus.push_back(*model); continue; }
+            }
 
         } else if (!strcmp(argv[i], "--fpu") && i + 1 < argc) {
 

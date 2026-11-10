@@ -47,6 +47,7 @@ static const size_t BINUTILS_BUFFER_SIZE = 128;
 void setupBinutils(moira::CPUModel model);
 void setupMusashi(moira::CPUModel model);
 void setupUAE(moira::CPUModel model, moira::FPUModel fpu);
+void setupMAME(moira::CPUModel model);
 
 extern Sandbox sandbox;
 extern Randomizer randomizer;
@@ -174,6 +175,10 @@ void disassembleBinutils(runner::Result &r);
 void resetMusashi(const runner::Setup &s);
 void disassembleMusashi(const runner::Setup &s, runner::Result &r);
 void executeMusashi(runner::Result &r);
+
+// MAME
+void resetMAME(const runner::Setup &s);
+void executeMAME(runner::Result &r);
 
 // UAE
 void disassembleUAE(const runner::Setup &s, runner::Result &r);

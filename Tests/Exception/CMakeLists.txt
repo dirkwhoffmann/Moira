@@ -1,8 +1,3 @@
-# Verifies the MAME reference CPU against the SingleStepTests 68000 suite
-add_executable(mamecheck MameCheck.cpp ../Common/SSTFile.cpp)
-target_link_libraries(mamecheck PRIVATE mameref)
-target_include_directories(mamecheck PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../Common)
-
 # Runs Moira and the MAME reference side by side and lets exceptions hit in the middle of instructions
 add_executable(exceptionmame ExceptionDiff.cpp ../Common/SSTFile.cpp)
 target_link_libraries(exceptionmame PRIVATE mameref uaecpu moiraMAME)
@@ -14,7 +9,7 @@ target_link_libraries(exceptionuae PRIVATE mameref uaecpu moiraUAEExc)
 target_include_directories(exceptionuae PRIVATE ${CMAKE_SOURCE_DIR}/Moira ${CMAKE_CURRENT_SOURCE_DIR}/../Common)
 target_compile_definitions(exceptionuae PRIVATE EXC_DEFAULT_REFERENCE_UAE=1)
 
-add_test(NAME MameCheck COMMAND mamecheck)
 add_test(NAME ExceptionMame COMMAND exceptionmame --ignore ccr,cycles,nbit)
+add_test(NAME ReferenceMame COMMAND exceptionmame --check)
 add_test(NAME ExceptionUAE COMMAND exceptionuae --ignore ccr,cycles,nbit)
-set_tests_properties(MameCheck ExceptionMame ExceptionUAE PROPERTIES LABELS "exception")
+set_tests_properties(ExceptionMame ReferenceMame ExceptionUAE PROPERTIES LABELS "exception")

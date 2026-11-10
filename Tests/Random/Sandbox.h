@@ -62,6 +62,7 @@ public:
     // enable: check the accesses. ignore: skip the replay (handled differently by Moira)
     void prepare(bool enable, bool ignore);
     long getErrors() { return errors; }
+    int records() const { return recordCnt; }
     void record(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value);
     void replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value);
 

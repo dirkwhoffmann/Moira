@@ -16,7 +16,11 @@ static const bool CHECK_MEM_WRITES = true;
 
 // The runner is built in two flavors: randomized execution tests (RUNNER_STAGES_RANDOM)
 // and disassembler tests (RUNNER_STAGES_DASM)
-#if defined(RUNNER_STAGES_DASM) || defined(RUNNER_STAGES_DASM_MIT)
+#if defined(RUNNER_STAGES_ALL)
+// Execution and Disassembler stages in one run (reproduces the random sequence of older runs)
+static const bool EXEC_STAGES = true;
+static const bool DASM_STAGES = true;
+#elif defined(RUNNER_STAGES_DASM) || defined(RUNNER_STAGES_DASM_MIT)
 static const bool EXEC_STAGES = false;
 static const bool DASM_STAGES = true;
 #else

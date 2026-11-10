@@ -23,9 +23,16 @@ using namespace moira;
 // The reference core (determined by the compatibility mode of the tested Moira)
 static constexpr bool useUAE     = (compat == Compatibility::UAE);
 static constexpr bool useMusashi = (compat == Compatibility::MUSASHI);
+static constexpr bool useMAME    = (compat == Compatibility::MAME);
 
 // The disassembler tests don't depend on the compatibility mode. They compare Moira with
 // all reference disassemblers at once (the MIT flavor compares Moira with Binutils only).
+// Set while MMU instructions are compared against UAE
+static bool mmuCompare = false;
+
+// The setup of the test that is currently running (see RUNNER_DUMP)
+static Setup *lastSetup = nullptr;
+
 static constexpr bool dasmMusashi = DASM_STAGES ? !DASM_MIT : useMusashi;
 static constexpr bool dasmUAE     = DASM_STAGES ? !DASM_MIT : useUAE;
 
@@ -60,6 +67,8 @@ const std::vector<CPUModel> &allModels()
 {
     static const std::vector<CPUModel> all = []() {
         std::vector<CPUModel> result;
+        // MAME's core is a 68000
+        if (compat == Compatibility::MAME) { result.push_back(CPUModel::M68000); return result; }
         for (auto &m : modelTable) result.push_back(m.model);
         return result;
     }();
@@ -132,6 +141,7 @@ const char *reference()
 
         case Compatibility::MUSASHI: return "Musashi";
         case Compatibility::UAE:     return "UAE";
+        case Compatibility::MAME:    return "MAME";
     
         default:
             return "???";
@@ -152,11 +162,12 @@ void selectModel(CPUModel model)
 
     if (useMusashi || dasmMusashi) setupMusashi(cpuModel);
     if (useUAE || dasmUAE) setupUAE(cpuModel, fpuModel);
+    if (useMAME) setupMAME(cpuModel);
     setupBinutils(cpuModel);
     setupMoira();
 
     // Configure the sandbox
-    sandbox.checkCycles = useUAE && cpuModel == CPUModel::M68000;
+    sandbox.checkCycles = (useUAE || useMAME) && cpuModel == CPUModel::M68000;
     sandbox.addrMask = (cpuModel == CPUModel::M68EC020) ? 0xFFFFFF : 0xFFFFFFFF;
     sandbox.byteGranular = useUAE && cpuModel != CPUModel::M68000 && cpuModel != CPUModel::M68010;
 }
@@ -227,6 +238,12 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
     s.pc = pc;
     s.opcode = opcode;
 
+    // MAME emulates address errors. Random exception vectors (odd handler addresses) would
+    // cause an endless chain of address errors, so all handlers start at a valid address.
+    if (useMAME) {
+        for (u32 vector = 2; vector < 256; vector++) set32(s.mem, vector * 4, 0x4000);
+    }
+
     set16(s.mem, pc, opcode);
     set16(s.mem, pc + 2, s.ext1);
     set16(s.mem, pc + 4, s.ext2);
@@ -275,6 +292,24 @@ void run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const st
     srand(seed);
 
     if (!moiracpu) moiracpu = new TestCPU();
+
+    // Replay a single test that has been dumped with RUNNER_DUMP
+    if (const char *name = getenv("RUNNER_REPLAY")) {
+
+        FILE *f = fopen(name, "rb");
+        if (!f) { printf("Cannot open %s\n", name); exit(1); }
+        int model = 0;
+        static Setup replay;
+        if (fread(&model, sizeof(model), 1, f) != 1 || fread(&replay, sizeof(Setup), 1, f) != 1) { printf("Cannot read %s\n", name); exit(1); }
+        fclose(f);
+
+        if (getenv("RUNNER_USER")) replay.supervisor = false;
+        selectModel(CPUModel(model));
+        if (useUAE && cpuModel == CPUModel::M68030) { mmuCompare = true; enableMMUUAE(true); }
+        runSingleTest(replay, replay.opcode, replay.ext1);
+        printf("Replayed test passed\n");
+        return;
+    }
 
     for (long i = 1; i <= rounds; i++) {
 
@@ -464,7 +499,6 @@ u32 randomTT040()
 
 }
 
-static bool mmuCompare = false;
 
 void runMMU(long round)
 {
@@ -915,6 +949,7 @@ void runSingleTest(Setup &s, u16 op, u16 ext)
 
 void runSingleTest(Setup &s, u16 op)
 {
+    lastSetup = &s;
     Result refResult, moiraResult;
     
     opcode = op;
@@ -933,6 +968,7 @@ void runSingleTest(Setup &s, u16 op)
     // Reset all CPUs
     if (useMusashi) resetMusashi(s);
     if (useUAE) resetUAE(s);
+    if (useMAME) resetMAME(s);
     resetMoira(s);
 
     if (VERBOSE) {
@@ -997,6 +1033,7 @@ void runReference(Setup &s, Result &r)
 
         case Compatibility::MUSASHI: executeMusashi(r); break;
         case Compatibility::UAE:     executeUAE(r); break;
+        case Compatibility::MAME:    executeMAME(r); break;
 
         default:
             assert(false);
@@ -1648,6 +1685,9 @@ bool comparePC(Result &rRef, Result &rMoira)
     // is configured without address error emulation and keeps it.
     if (useUAE && (rMoira.pc & 1) && rRef.pc == (rMoira.pc & ~1u)) return true;
 
+    // The 68000 has a 24 bit address bus. MAME doesn't keep the upper bits of the PC.
+    if (useMAME) return (rRef.pc & 0xFFFFFF) == (rMoira.pc & 0xFFFFFF);
+
     return rRef.pc == rMoira.pc;
 }
 
@@ -1897,8 +1937,23 @@ bool compareCycles(Result &rRef, Result &rMoira)
     return rRef.cycles == rMoira.cycles;
 }
 
+// Writes the setup of the failed test to the file named in RUNNER_DUMP. Replay it with RUNNER_REPLAY.
+static void dumpFailedSetup()
+{
+    const char *name = getenv("RUNNER_DUMP");
+    if (!name || !lastSetup) return;
+    if (FILE *f = fopen(name, "wb")) {
+        int model = int(cpuModel);
+        fwrite(&model, sizeof(model), 1, f);
+        fwrite(lastSetup, sizeof(Setup), 1, f);
+        fclose(f);
+        printf("Setup written to %s\n", name);
+    }
+}
+
 void bugReport()
 {
+    dumpFailedSetup();
     printf("Please report the bug at https://github.com/dirkwhoffmann/Moira\n");
     printf("Thanks you!\n\n");
     exit(1);
