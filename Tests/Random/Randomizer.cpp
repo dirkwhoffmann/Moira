@@ -12,11 +12,45 @@
 #include <bit>
 #include <cstdlib>
 
+namespace {
+
+u32 rstate[34];     // The last 34 values of the feedback sequence (ring buffer)
+int rpos = 0;       // Slot of the oldest value
+
+}
+
+void
+portableSrand(unsigned seed)
+{
+    // Mirrors glibc's srandom_r() for the default state size (degree 31)
+    int32_t r[344];
+    if (seed == 0) seed = 1;
+    r[0] = int32_t(seed);
+    for (int i = 1; i < 31; i++) {
+        int64_t word = 16807LL * r[i - 1] % 2147483647;
+        if (word < 0) word += 2147483647;
+        r[i] = int32_t(word);
+    }
+    for (int i = 31; i < 34; i++) r[i] = r[i - 31];
+    for (int i = 34; i < 344; i++) r[i] = int32_t(u32(r[i - 31]) + u32(r[i - 3]));
+    for (int i = 0; i < 34; i++) rstate[i] = u32(r[310 + i]);
+    rpos = 0;
+}
+
+int
+portableRand()
+{
+    u32 v = rstate[(rpos + 34 - 31) % 34] + rstate[(rpos + 34 - 3) % 34];
+    rstate[rpos] = v;
+    rpos = (rpos + 1) % 34;
+    return int(v >> 1);
+}
+
 u32
 Randomizer::rand()
 {
-    u32 r = ::rand();
-    u32 s = ::rand();
+    u32 r = portableRand();
+    u32 s = portableRand();
 
     u32 s1 = (s >> 0) & 0xF;
     u32 s2 = (s >> 4) & 0x7;
@@ -49,9 +83,9 @@ Randomizer::rand()
 
         case 11:                     // Bit field
         {
-            u32 mask2 = std::rotl(u32(0xFFFF), ::rand() & 15);
-            u32 mask3 = std::rotl(u32(0xFFFF), ::rand() & 15);
-            return std::rotl(u32(mask2 & mask3), ::rand() & 15);
+            u32 mask2 = std::rotl(u32(0xFFFF), portableRand() & 15);
+            u32 mask3 = std::rotl(u32(0xFFFF), portableRand() & 15);
+            return std::rotl(u32(mask2 & mask3), portableRand() & 15);
         }
 
         case 12:                    // Repeating patterns

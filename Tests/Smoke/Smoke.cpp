@@ -27,7 +27,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <dirent.h>
+#include <filesystem>
 
 using namespace moira;
 
@@ -328,16 +328,14 @@ bool runFile(TestCPU &cpu, const Options &opt, const std::string &path, const st
 std::vector<std::string> collectFiles(const Options &opt)
 {
     std::vector<std::string> names;
-    if (DIR *d = opendir(opt.dir.c_str())) {
-        while (auto *e = readdir(d)) {
-            std::string n = e->d_name;
-            if (n.size() > 9 && n.compare(n.size() - 9, 9, ".json.bin") == 0) {
-                if (opt.only.empty() || std::any_of(opt.only.begin(), opt.only.end(), [&](auto &s) { return n.find(s) != std::string::npos; })) {
-                    names.push_back(n);
-                }
+    std::error_code ec;
+    for (auto &e : std::filesystem::directory_iterator(opt.dir, ec)) {
+        std::string n = e.path().filename().string();
+        if (n.size() > 9 && n.compare(n.size() - 9, 9, ".json.bin") == 0) {
+            if (opt.only.empty() || std::any_of(opt.only.begin(), opt.only.end(), [&](auto &s) { return n.find(s) != std::string::npos; })) {
+                names.push_back(n);
             }
         }
-        closedir(d);
     }
     std::sort(names.begin(), names.end());
     return names;

@@ -73,7 +73,7 @@ extern "C" {
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <dirent.h>
+#include <filesystem>
 #include <map>
 #include <memory>
 #include <set>
@@ -673,14 +673,12 @@ int main(int argc, char **argv)
     }
 
     std::vector<std::string> names;
-    if (DIR *d = opendir(opt.dir.c_str())) {
-        while (auto *e = readdir(d)) {
-            std::string n = e->d_name;
-            if (n.size() > 9 && n.compare(n.size() - 9, 9, ".json.bin") == 0 &&
-                (opt.only.empty() || std::any_of(opt.only.begin(), opt.only.end(), [&](auto &s) { return n.find(s) != std::string::npos; })))
-                names.push_back(n);
-        }
-        closedir(d);
+    std::error_code ec;
+    for (auto &e : std::filesystem::directory_iterator(opt.dir, ec)) {
+        std::string n = e.path().filename().string();
+        if (n.size() > 9 && n.compare(n.size() - 9, 9, ".json.bin") == 0 &&
+            (opt.only.empty() || std::any_of(opt.only.begin(), opt.only.end(), [&](auto &s) { return n.find(s) != std::string::npos; })))
+            names.push_back(n);
     }
     std::sort(names.begin(), names.end());
     if (names.empty()) { printf("No test files found in %s\n", opt.dir.c_str()); return 1; }

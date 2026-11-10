@@ -12,7 +12,12 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <string.h>
+#ifdef _MSC_VER
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
+#else
 #include <strings.h>
+#endif
 #include <ctype.h>
 #include <math.h>
 
@@ -35,7 +40,11 @@
 #define SDL_strncmp        strncmp
 #define SDL_strcasecmp     strcasecmp
 #define SDL_strncasecmp    strncasecmp
+#ifdef _MSC_VER
+#define SDL_strdup         _strdup
+#else
 #define SDL_strdup         strdup
+#endif
 #define SDL_strlen         strlen
 
 // Used by the abort macro in sysdeps.h

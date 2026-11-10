@@ -15,7 +15,13 @@
 #include <algorithm>
 #include <ctime>
 #include <string>
+#ifdef _MSC_VER
+#include <string.h>
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
+#else
 #include <strings.h>
+#endif
 
 namespace runner {
 
@@ -180,7 +186,7 @@ void setupTestEnvironment(Setup &s, long round)
 {
     s.round = round;
     s.supervisor = round % 2;
-    s.ccr = u8(rand());
+    s.ccr = u8(portableRand());
     s.ext1 = u16(randomizer.rand());
     s.ext2 = u16(randomizer.rand());
     s.ext3 = u16(randomizer.rand());
@@ -276,7 +282,7 @@ void resetMoira(Setup &s)
 
 void run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const std::vector<FPUModel> &fpus)
 {
-    srand(seed);
+    portableSrand(seed);
 
     if (!moiracpu) moiracpu = new TestCPU();
 
@@ -389,20 +395,24 @@ void fillWithDescriptors()
     for (int i = 0; i < 0x10000; i += 4) {
 
         u32 w;
-        int kind = rand() % 8;
+        int kind = portableRand() % 8;
 
         if (kind < 4) {
             // Short descriptor
-            w = (u32(rand()) & 0xFFFFFFF0) | (rand() % 4) | (rand() & 0xC);
-            if (rand() % 6 == 0) w &= ~3u;
+            u32 r0 = u32(portableRand()), r1 = portableRand(), r2 = portableRand();
+            w = (r0 & 0xFFFFFFF0) | (r1 % 4) | (r2 & 0xC);
+            if (portableRand() % 6 == 0) w &= ~3u;
         } else if (kind < 6) {
             // Upper half of a long descriptor (limit, flags, DT)
-            u32 limit = (rand() % 3 == 0) ? 0x7FFF : u32(rand() % 70);
-            w = (rand() % 6 == 0 ? 0x80000000 : 0) | limit << 16 | (rand() & 0x0100) | (rand() & 0x1C) | (rand() % 4);
-            if (rand() % 6 == 0) w &= ~3u;
+            u32 limit = (portableRand() % 3 == 0) ? 0x7FFF : u32(portableRand() % 70);
+            u32 r0 = portableRand(), r1 = portableRand(), r2 = portableRand(), r3 = portableRand();
+            w = (r0 % 6 == 0 ? 0x80000000 : 0) | limit << 16 | (r1 & 0x0100) | (r2 & 0x1C) | (r3 % 4);
+            if (portableRand() % 6 == 0) w &= ~3u;
         } else {
             // Lower half of a long descriptor (address)
-            w = (rand() & 0xFFF0) | (rand() % 3 == 0 ? u32(rand()) << 16 : 0);
+            u32 r0 = portableRand();
+            u32 hi = portableRand() % 3 == 0 ? u32(portableRand()) << 16 : 0;
+            w = (r0 & 0xFFF0) | hi;
         }
         refMem[i] = moiraMem[i] = u8(w >> 24);
         refMem[i + 1] = moiraMem[i + 1] = u8(w >> 16);
@@ -416,38 +426,42 @@ TranslationSetup randomTranslationSetup()
     TranslationSetup t;
 
     // Page size, initial shift, and table index bits (sum must be 32)
-    int ps = 8 + rand() % 8;
-    int is = rand() % 3 == 0 ? rand() % 6 : 0;
+    int ps = 8 + portableRand() % 8;
+    int is = portableRand() % 3 == 0 ? portableRand() % 6 : 0;
     int rest = 32 - ps - is;
 
     do {
-        t.levels = 2 + rand() % 3;
+        t.levels = 2 + portableRand() % 3;
         int left = rest;
         for (int i = 0; i < 4; i++) t.bits[i] = 0;
         for (int i = 0; i < t.levels; i++) {
             int minLeft = t.levels - i - 1;
             int maxBits = std::min(6, left - minLeft);
-            int b = (i == t.levels - 1) ? left : 1 + rand() % maxBits;
+            int b = (i == t.levels - 1) ? left : 1 + portableRand() % maxBits;
             t.bits[i] = b;
             left -= b;
         }
         if (left != 0) t.levels = 0;
     } while (t.levels == 0 || t.bits[t.levels - 1] > 6 || t.bits[t.levels - 1] < 1);
 
-    t.tc = 0x80000000 | (rand() % 2 ? 0x02000000 : 0) | (rand() % 4 == 0 ? 0x01000000 : 0) | ps << 20 | is << 16
+    u32 tcE = portableRand() % 2 ? 0x02000000 : 0;
+    u32 tcF = portableRand() % 4 == 0 ? 0x01000000 : 0;
+    t.tc = 0x80000000 | tcE | tcF | ps << 20 | is << 16
          | t.bits[0] << 12 | t.bits[1] << 8 | t.bits[2] << 4 | t.bits[3];
 
     auto rootPointer = [&]() {
-        u64 limit = rand() % 3 == 0 ? 0x7FFF : rand() % 70;
-        u64 lu = rand() % 6 == 0;
-        u64 dt = 1 + rand() % 3;
-        return lu << 63 | limit << 48 | dt << 32 | u64(rand() & 0xFFF0);
+        u64 limit = portableRand() % 3 == 0 ? 0x7FFF : portableRand() % 70;
+        u64 lu = portableRand() % 6 == 0;
+        u64 dt = 1 + portableRand() % 3;
+        return lu << 63 | limit << 48 | dt << 32 | u64(portableRand() & 0xFFF0);
     };
     auto transparentTranslation = [&]() {
-        if (rand() % 2) return u32(0);
-        u32 mask = (0xFF00 >> (rand() % 9)) & 0xFF;
-        return u32(rand() & 0xFF) << 24 | mask << 16 | 0x8000 | u32(rand() % 2) << 10
-             | u32(rand() % 2) << 9 | u32(rand() % 2) << 8 | u32(rand() % 8) << 4 | u32(rand() % 8);
+        if (portableRand() % 2) return u32(0);
+        u32 mask = (0xFF00 >> (portableRand() % 9)) & 0xFF;
+        u32 b = portableRand() & 0xFF;
+        u32 f10 = portableRand() % 2, f9 = portableRand() % 2, f8 = portableRand() % 2;
+        u32 m1 = portableRand() % 8, m0 = portableRand() % 8;
+        return b << 24 | mask << 16 | 0x8000 | f10 << 10 | f9 << 9 | f8 << 8 | m1 << 4 | m0;
     };
     t.tt0 = transparentTranslation();
     t.tt1 = transparentTranslation();
@@ -462,13 +476,14 @@ void fillWith040Descriptors()
     for (int i = 0; i < 0x10000; i += 4) {
 
         // Descriptor type: invalid, page, indirect, or table / page
-        int r = rand() % 100;
+        int r = portableRand() % 100;
         u32 type = r < 15 ? 0 : r < 55 ? 1 : r < 70 ? 2 : 3;
 
-        u32 w = (u32(rand()) & 0xFF00) | (u32(rand()) & 0xFC) | type;
-        if (rand() % 3 == 0) w &= ~0x7Cu;               // Clear W, U, M, CM, S
-        if (rand() % 4 == 0) w |= u32(rand() & 3) << 8; // U0, U1
-        if (rand() % 4 == 0) w |= 0x400;                // G
+        u32 w0 = u32(portableRand()), w1 = u32(portableRand());
+        u32 w = (w0 & 0xFF00) | (w1 & 0xFC) | type;
+        if (portableRand() % 3 == 0) w &= ~0x7Cu;               // Clear W, U, M, CM, S
+        if (portableRand() % 4 == 0) w |= u32(portableRand() & 3) << 8; // U0, U1
+        if (portableRand() % 4 == 0) w |= 0x400;                // G
         refMem[i] = moiraMem[i] = u8(w >> 24);
         refMem[i + 1] = moiraMem[i + 1] = u8(w >> 16);
         refMem[i + 2] = moiraMem[i + 2] = u8(w >> 8);
@@ -478,10 +493,12 @@ void fillWith040Descriptors()
 
 u32 randomTT040()
 {
-    if (rand() % 2) return 0;
-    u32 mask = (0xFF00 >> (rand() % 9)) & 0xFF;
-    return u32(rand() & 0xFF) << 24 | mask << 16 | 0x8000 | u32(rand() % 2) << 14 | u32(rand() % 2) << 13
-         | u32(rand() % 4 == 0) << 2 | u32(rand() % 4) << 5 | u32(rand() % 4) << 8;
+    if (portableRand() % 2) return 0;
+    u32 mask = (0xFF00 >> (portableRand() % 9)) & 0xFF;
+    u32 b = portableRand() & 0xFF;
+    u32 f14 = portableRand() % 2, f13 = portableRand() % 2;
+    u32 f2 = portableRand() % 4 == 0, f5 = portableRand() % 4, f8 = portableRand() % 4;
+    return b << 24 | mask << 16 | 0x8000 | f14 << 14 | f13 << 13 | f2 << 2 | f5 << 5 | f8 << 8;
 }
 
 }
@@ -563,9 +580,9 @@ void runMMUTranslate(long round)
             }
 
             // Pick an address that is likely to be covered by the tables
-            u32 addr = u32(rand()) << (rand() % 17);
-            if (rand() % 4 == 0) addr &= 0xFFFF;
-            bool super = rand() % 2, data = rand() % 2, write = data && rand() % 2;
+            u32 addr = u32(portableRand()) << (portableRand() % 17);
+            if (portableRand() % 4 == 0) addr &= 0xFFFF;
+            bool super = portableRand() % 2, data = portableRand() % 2, write = data && portableRand() % 2;
             u8 fc = (super ? 4 : 0) | (data ? 1 : 2);
 
             // UAE's ATC lookup is undefined for write accesses if the root pointer
@@ -575,16 +592,16 @@ void runMMUTranslate(long round)
 
             // Run PTEST on both MMUs (no side effects)
             {
-                u32 level = rand() % 6;
+                u32 level = portableRand() % 6;
                 u32 paddr = addr, pfc = fc;
                 if (level == 0) {
 
                     // UAE compares the unmasked address with the ATC entries. Use the
                     // page of an earlier access to get ATC hits.
-                    paddr = (rand() % 4 ? lastAddr : addr) & ~((1u << (t.tc >> 20 & 0xF)) - 1);
-                    if (rand() % 4) pfc = lastFC;
+                    paddr = (portableRand() % 4 ? lastAddr : addr) & ~((1u << (t.tc >> 20 & 0xF)) - 1);
+                    if (portableRand() % 4) pfc = lastFC;
                 }
-                bool pwrite = rand() % 2;
+                bool pwrite = portableRand() % 2;
                 u32 statusRef = 0, descrRef = 0, descrMoira = 0;
                 ptestUAE(paddr, pfc, pwrite, level, &statusRef, &descrRef);
                 moiracpu->setSupervisorMode(super);
@@ -653,8 +670,8 @@ void runMMUTranslate040(long round)
 
         fillWith040Descriptors();
 
-        u32 urp = u32(rand()) & 0xFE00, srp = u32(rand()) & 0xFE00;
-        u32 tc = 0x8000 | (rand() % 2 ? 0x4000 : 0);
+        u32 urp = u32(portableRand()) & 0xFE00, srp = u32(portableRand()) & 0xFE00;
+        u32 tc = 0x8000 | (portableRand() % 2 ? 0x4000 : 0);
         u32 itt0 = randomTT040(), itt1 = randomTT040(), dtt0 = randomTT040(), dtt1 = randomTT040();
 
         // Configure both MMUs
@@ -668,15 +685,15 @@ void runMMUTranslate040(long round)
             // Flush the ATCs regularly (UAE's ATC is 4-way set associative)
             if (j % 8 == 0) { flushATC040UAE(); mmu.atcFlush(); }
 
-            u32 addr = u32(rand()) << (rand() % 17);
-            if (rand() % 4 == 0) addr &= 0xFFFF;
-            bool super = rand() % 2, data = rand() % 2, write = data && rand() % 2;
+            u32 addr = u32(portableRand()) << (portableRand() % 17);
+            if (portableRand() % 4 == 0) addr &= 0xFFFF;
+            bool super = portableRand() % 2, data = portableRand() % 2, write = data && portableRand() % 2;
             u8 fc = (super ? 4 : 0) | (data ? 1 : 2);
 
             // PTEST
-            if (rand() % 4 == 0) {
+            if (portableRand() % 4 == 0) {
 
-                bool pwrite = rand() % 2;
+                bool pwrite = portableRand() % 2;
                 u32 statusRef = ptest040UAE(addr, fc, pwrite);
                 moiracpu->setSupervisorMode(super);
                 sandbox.prepare(false, true);
@@ -899,7 +916,9 @@ void setupFpuEnvironment(Setup &s)
         } else {
 
             // Create a random normalized number with a moderate exponent
-            u64 man = (u64(randomizer.rand()) << 32 | randomizer.rand()) | (1ULL << 63);
+            u64 manHi = randomizer.rand();
+            u64 manLo = randomizer.rand();
+            u64 man = (manHi << 32 | manLo) | (1ULL << 63);
             u16 exp = u16(0x3FFF - 40 + randomizer.rand() % 80);
             u16 sign = u16((randomizer.rand() & 1) << 15);
             s.fpr[i] = MFloat80::fromBits(sign | exp, man);
@@ -912,8 +931,10 @@ void setupFpuEnvironment(Setup &s)
     s.fpiar = randomizer.rand();
 
     // MMU registers (translation stays disabled initially)
-    s.crp = u64(randomizer.rand()) << 32 | randomizer.rand();
-    s.srp = u64(randomizer.rand()) << 32 | randomizer.rand();
+    u64 crpHi = randomizer.rand(), crpLo = randomizer.rand();
+    s.crp = crpHi << 32 | crpLo;
+    u64 srpHi = randomizer.rand(), srpLo = randomizer.rand();
+    s.srp = srpHi << 32 | srpLo;
     s.tc = randomizer.rand() & 0x7FFFFFFF;
     s.tt0 = randomizer.rand();
     s.tt1 = randomizer.rand();
