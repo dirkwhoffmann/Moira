@@ -2744,6 +2744,11 @@ Moira::execJsr(u16 opcode)
                     // MAME stacks the return address of the subroutine call
                     e.stackFrame.pc = ret;
                     throw;
+                } catch (AddressError &e) {
+
+                    // MAME stacks the return address of the subroutine call
+                    if constexpr (compat == Compatibility::MAME) e.stackFrame.pc = ret;
+                    throw;
                 }
                 prefetch<C, POLL>();
                 break;
@@ -2912,6 +2917,7 @@ Moira::execLink(u16 opcode)
 
         writeBuffer = u16(readA(ax) >> 16);
         writeA(ax, sp);
+        if constexpr (MAME_68000) throw earlyAddressError<C>(makeFrame<AE_DATA|AE_WRITE|AE_INC_PC>(sp));
         throw AddressError(makeFrame<AE_DATA|AE_WRITE|AE_INC_PC>(sp));
     }
 
@@ -5578,7 +5584,17 @@ Moira::execPea(u16 opcode)
 
         U32_DEC(reg.sp, S);
 
-        if constexpr (C == Core::C68000) {
+        if constexpr (MAME_68000) {
+
+            // MAME completes the prefetch before it detects the misaligned push
+            if (isAbsMode(M)) {
+                throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(reg.sp));
+            } else {
+                prefetch<C, KEEP_IRD>();
+                throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(reg.sp));
+            }
+
+        } else if constexpr (C == Core::C68000) {
 
             if (isAbsMode(M)) {
                 throw AddressError(makeFrame<AE_WRITE|AE_DATA>(reg.sp));
@@ -6006,6 +6022,11 @@ Moira::execRtr(u16 opcode)
     if (misaligned<C>(reg.sp)) {
 
         setFC<M>();
+        if constexpr (MAME_68000) {
+
+            // MAME aborts the access without a bus cycle
+            throw earlyAddressError<C>(makeFrame<AE_SET_RW|AE_SET_DF>(reg.sp));
+        }
         readBuffer = u16(readM<C, M, Word>(reg.sp & ~1));
         throw earlyAddressError<C>(makeFrame<AE_SET_RW|AE_SET_DF>(reg.sp));
     }
@@ -6067,6 +6088,11 @@ Moira::execRts(u16 opcode)
     if (misaligned<C>(reg.sp)) {
 
         setFC<M>();
+        if constexpr (MAME_68000) {
+
+            // MAME aborts the access without a bus cycle
+            throw earlyAddressError<C>(makeFrame<AE_SET_RW|AE_SET_DF>(reg.sp));
+        }
         readBuffer = u16(readM<C, M, Word>(reg.sp & ~1));
         throw earlyAddressError<C>(makeFrame<AE_SET_RW|AE_SET_DF>(reg.sp));
     }

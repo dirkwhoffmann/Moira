@@ -15,6 +15,13 @@
  *
  * The instructions and the initial states are taken from the SingleStepTests.
  * Tests that end in an address error are skipped.
+ *
+ * With --address, the tool checks address errors instead. A bus access cannot
+ * be turned into an address error from the outside, because both CPUs decide on
+ * their own whether an address is odd. Hence, the initial state is perturbed
+ * (--perturb a7,an,dn,irc flips bit 0 of A7, A0-A6, D0-D7, or the extension word)
+ * and MAME decides whether the instruction ends in an address error. Those
+ * cases are replayed on Moira and compared in the same way.
  */
 
 #include "Moira.h"
@@ -35,6 +42,7 @@ namespace {
 constexpr u32 ADDR_MASK = 0xFFFFFF;
 constexpr u32 SR_MASK = 0xA700;       // Condition codes are not compared (see --flags)
 u32 srMask = SR_MASK;
+bool installAeVector = false;
 constexpr u32 HANDLER = 0x600000;       // Bus error handler
 
 // A flat 16 MB memory that can be reset quickly
@@ -55,6 +63,9 @@ struct Memory {
 
         // Install the bus error vector
         for (int i = 0; i < 4; i++) poke(8 + i, u8(HANDLER >> (24 - 8 * i)));
+
+        // Install the address error vector
+        if (installAeVector) for (int i = 0; i < 4; i++) poke(12 + i, u8((HANDLER + 0x100) >> (24 - 8 * i)));
     }
 };
 
@@ -222,6 +233,8 @@ struct Settings {
     bool data = true;               // Fault data accesses?
     std::string tsv;                // Optional result table
     bool exceptions = true;         // Include instructions that raise an exception?
+    bool address = false;           // Address error mode?
+    std::string perturb = "a7";     // Input perturbations used in address error mode
 };
 
 struct Counter {
@@ -257,6 +270,8 @@ int main(int argc, char **argv)
         else if (a == "--exceptions") opt.exceptions = true;
         else if (a == "--tsv" && more) opt.tsv = argv[++i];
         else if (a == "--flags") srMask = 0xA71F;
+        else if (a == "--address") { opt.address = true; installAeVector = true; }
+        else if (a == "--perturb" && more) opt.perturb = argv[++i];
         else if (a == "-v" && more) opt.verbose = atoi(argv[++i]);
         else if (a == "--kinds" && more) {
             std::string k = argv[++i];
@@ -264,7 +279,7 @@ int main(int argc, char **argv)
             opt.fetch = k == "fetch" || k == "all";
         }
         else {
-            printf("Usage: %s [--dir <folder>] [--only <text>]... [--limit <n>] [-v <n>] [--kinds data|fetch|all]\n", argv[0]);
+            printf("Usage: %s [--dir <folder>] [--only <text>]... [--limit <n>] [-v <n>] [--kinds data|fetch|all] [--flags] [--address [--perturb a7,an,dn,irc]]\n", argv[0]);
             return 1;
         }
     }
@@ -282,7 +297,7 @@ int main(int argc, char **argv)
     std::sort(names.begin(), names.end());
     if (names.empty()) { printf("No test files found in %s\n", opt.dir.c_str()); return 1; }
 
-    printf("Bus error differential test: Moira (MAME mode) vs. MAME's microcoded 68000\n\n");
+    printf("%s differential test: Moira (MAME mode) vs. MAME's microcoded 68000\n\n", opt.address ? "Address error" : "Bus error");
     printf("%-16s %8s %8s %8s\n", "Instruction", "Cases", "OK", "OK%");
 
     FILE *tsv = opt.tsv.empty() ? nullptr : fopen(opt.tsv.c_str(), "w");
@@ -304,10 +319,212 @@ int main(int argc, char **argv)
         int shown = 0;
         sst::Test t;
 
+        auto runCase = [&](const sst::State &init, int k, int accesses, const mame::BusCycle &pk, const char *kd, bool isFetch, bool bus, u16 plainSR, const std::string &label) {
+
+            // Reference
+            ref.load(init);
+            ref.fault.index = k;
+            int refCycles = ref.cpu.execute();
+            if (ref.cpu.halted()) return;
+            auto rs = ref.cpu.state();
+
+            // Moira
+            moira.load(init);
+            moira.fault.index = k;
+            moira.logging = true;
+            moira.execute();
+            moira.logging = false;
+
+            // Compare
+            std::string diff;
+            auto add = [&](const std::string &s) { diff += (diff.empty() ? "" : " ") + s; };
+
+            for (int i = 0; i < 8; i++) if (moira.getD(i) != rs.d[i]) {
+                add("D" + std::to_string(i));
+                if (getenv("BED_REGS")) printf("      D%d: initial %08x exp %08x got %08x\n", i, init.d[i], rs.d[i], moira.getD(i));
+                break;
+            }
+            for (int i = 0; i < 7; i++) if (moira.getA(i) != rs.a[i]) {
+                add("A" + std::to_string(i));
+                if (getenv("BED_REGS")) printf("      A%d: initial %08x exp %08x got %08x\n", i, init.a[i], rs.a[i], moira.getA(i));
+                break;
+            }
+            if (moira.getUSP() != rs.usp) { add("USP"); if (getenv("BED_REGS")) printf("      USP: initial %08x exp %08x got %08x\n", init.usp, rs.usp, moira.getUSP()); }
+            if (moira.getISP() != rs.ssp) { add("SSP"); if (getenv("BED_REGS")) printf("      SSP: initial %08x exp %08x got %08x\n", init.ssp, rs.ssp, moira.getISP()); }
+            if ((moira.getSR() & srMask) != (rs.sr & srMask)) add("SR");
+            if ((moira.getPC() & ADDR_MASK) != (rs.pc & ADDR_MASK)) add("PC");
+            if (i64(moira.getClock()) != refCycles) { add("cycles"); if (getenv("BED_REGS")) printf("      cycles: exp %lld got %lld\n", (long long)refCycles, (long long)moira.getClock()); }
+
+            // The read of a TAS is followed by a write in MAME, which a real bus error would prevent
+            // Address of the aborted access of an address error (MAME may still perform it)
+            u32 aborted = ~0u;
+            if (!bus) for (size_t i = 1; i < ref.cpu.log().size(); i++) {
+                auto &e = ref.cpu.log()[i];
+                u32 sp = rs.ssp & ADDR_MASK;
+                if (e.write && e.fc == 5 && e.addr >= sp && e.addr < sp + 14) { aborted = ref.cpu.log()[i - 1].addr; break; }
+            }
+
+            bool tasRead = bus && t.name.find(" TAS ") != std::string::npos && !isFetch && !pk.write;
+
+            // Memory: compare everything that has been written by either side
+            std::set<u32> addrs(moira.mem.touched.begin(), moira.mem.touched.end());
+            addrs.insert(ref.mem.touched.begin(), ref.mem.touched.end());
+            std::set<int> badWords;
+            for (auto a : addrs) {
+                if (tasRead && (a & ~1u) == pk.addr) continue;
+                if ((a & ~1u) == aborted && aborted != ~0u && !bus) continue;       // MAME may perform the aborted access    // MAME still completes the write half
+                if (a == ((rs.ssp & ADDR_MASK) + 2)) continue;      // Undefined upper byte of the fault address
+                if (a == ((rs.ssp & ADDR_MASK) + 9) && !(srMask & 0x1F)) {      // Condition codes in the stacked SR
+                    if (((moira.mem.peek(a) ^ ref.mem.peek(a)) & ~0x1F) == 0) continue;
+                }
+                if (moira.mem.peek(a) != ref.mem.peek(a)) {
+                    u32 sp = rs.ssp & ADDR_MASK;
+                    if (a >= sp && a < sp + 14) badWords.insert(int((a - sp) / 2)); else { badWords.insert(-1); if (getenv("BED_REGS")) printf("      mem %06x: exp %02x got %02x (ssp %06x)\n", a, ref.mem.peek(a), moira.mem.peek(a), sp); }
+                }
+            }
+            static const char *fields[] = { "frame.code", "frame.addr", "frame.addr", "frame.ird", "frame.sr", "frame.pc", "frame.pc" };
+            std::set<std::string> bad;
+            for (int w : badWords) bad.insert(w < 0 ? "mem" : fields[w]);
+            for (auto &b : bad) add(b);
+
+            // Bus cycles
+            auto mlog = ref.cpu.log();
+
+            // MAME logs the aborted access of an address error, which never reaches a real bus. Drop it.
+            if (!bus) {
+                u32 sp = rs.ssp & ADDR_MASK;
+                for (size_t i = 1; i < mlog.size(); i++) {
+                    if (mlog[i].write && mlog[i].fc == 5 && mlog[i].addr >= sp && mlog[i].addr < sp + 14) {
+                        if (mlog.size() == moira.log.size() + 1) mlog.erase(mlog.begin() + (i - 1));
+                        break;
+                    }
+                }
+            }
+            if (tasRead) {}
+            else if (mlog.size() != moira.log.size()) add("bus.count");
+            else {
+                for (size_t i = 0; i < mlog.size(); i++) {
+                    auto &e = mlog[i]; auto &g = moira.log[i];
+                    std::string d;
+                    if (getenv("BED_DEBUG") && i == 0) printf("      first bus cycle: mame %lld moira %lld; total mame %d moira %lld\n", (long long)e.cycle, (long long)g.cycle, refCycles, (long long)moira.getClock());
+                    if (e.cycle != g.cycle) d += "cycle ";
+                    if (e.write != g.write) d += "rw ";
+                    if (e.addr != g.addr) d += "addr ";
+                    if (e.mask != g.mask) d += "mask ";
+                    if (e.fc != g.fc) d += "fc ";
+                    u16 dm = 0xFFFF;
+                    if (e.write && e.fc == 5 && e.addr == (((rs.ssp & ADDR_MASK) + 2) & ~1u)) dm = 0x00FF;        // Undefined upper byte of the fault address
+                    if (e.write && e.fc == 5 && e.addr == (((rs.ssp & ADDR_MASK) + 8) & ~1u)) dm = ~srMask & 0x1F ? 0xFFE0 : 0xFFFF;   // Condition codes
+                    if (e.write && (e.data & e.mask & dm) != (g.data & g.mask & dm)) d += "data ";
+                    if (!d.empty()) { d.pop_back(); add("bus#" + std::to_string(i) + "(" + d + ")"); break; }
+                }
+            }
+
+            if (tsv) fprintf(tsv, "%s\t%d\t%d\t%s\t%s\t%s\n", t.name.c_str(), k, accesses, kd, diff.empty() ? "ok" : "FAIL", diff.c_str());
+            if (getenv("BED_CCR") && diff.find("frame.sr") != std::string::npos) {
+                u32 sp24 = rs.ssp & ADDR_MASK;
+                int exp = ref.mem.peek(sp24 + 9) & 0x1F, got = moira.mem.peek(sp24 + 9) & 0x1F;
+                int ini = init.sr & 0x1F, fin = plainSR & 0x1F;
+                if (getenv("BED_CCR")[0] == '2') {
+                    auto bin = [](int v) { std::string r; for (int b = 4; b >= 0; b--) r += (v >> b & 1) ? "XNZVC"[4 - b] : '.'; return r; };
+                    printf("   %s #%d %s: init %s fin %s exp %s got %s  D0-7:", t.name.c_str(), k, kd, bin(ini).c_str(), bin(fin).c_str(), bin(exp).c_str(), bin(got).c_str());
+                    for (int i = 0; i < 8; i++) printf(" %08x", init.d[i]);
+                    printf("\n");
+                }
+                auto &st = ccrStats[t.name.substr(t.name.find(' ') + 1, t.name.find(' ', t.name.find(' ') + 1) - t.name.find(' ') - 1)];
+                st.n++;
+                for (int b = 0; b < 5; b++) {
+                    int m = 1 << b;
+                    if ((exp & m) == (ini & m)) st.eqInit[b]++;
+                    if ((exp & m) == (fin & m)) st.eqFin[b]++;
+                    if ((exp & m) == (got & m)) st.eqGot[b]++;
+                    if (!(exp & m)) st.zero[b]++;
+                }
+            }
+            std::string key = std::string(kd);
+            c.cases++;
+            byKind[key].cases++;
+            if (diff.empty()) { c.ok++; byKind[key].ok++; return; }
+
+            (isFetch ? failedReads : (pk.write ? failedWrites : failedReads))++;
+            signatures[diff]++;
+            byKind[key].signatures[diff]++;
+
+            if (shown < opt.verbose) {
+                shown++;
+                if (getenv("BED_DEBUG")) {
+                    if (!bus) for (auto &e : ref.cpu.log()) printf("      raw   c%-3lld %s %06x m%04x d%04x fc%d\n", (long long)e.cycle, e.write ? "W" : "R", e.addr, e.mask, e.data, e.fc);
+                    for (auto &e : mlog) printf("      mame  c%-3lld %s %06x m%04x d%04x fc%d\n", (long long)e.cycle, e.write ? "W" : "R", e.addr, e.mask, e.data, e.fc);
+                    for (auto &g : moira.log) printf("      moira c%-3lld %s %06x m%04x d%04x fc%d\n", (long long)g.cycle, g.write ? "W" : "R", g.addr, g.mask, g.data, g.fc);
+                }
+                printf("    %s%s  fault #%d (%s %06x fc %d): %s\n", t.name.c_str(), label.c_str(), k, kd, pk.addr, pk.fc, diff.c_str());
+                if (opt.verbose > 1) {
+                    printf("        initial prefetch: %04x %04x  pc %06x\n", init.prefetch[0], init.prefetch[1], init.pc);
+                    printf("        exp frame: %s\n", words(ref.mem, rs.ssp, 7).c_str());
+                    printf("        got frame: %s\n", words(moira.mem, rs.ssp, 7).c_str());
+                }
+            }
+
+        };
+
         for (long n = 0; file.next(t); n++) {
 
             if (opt.limit && n >= opt.limit) break;
-            if (expectsAddressError(t) || (t.initial.ssp & 1)) continue;
+            if (expectsAddressError(t)) continue;
+
+            if (opt.address) {
+
+                // Perturb the initial state such that an instruction ends in an address error
+                struct Perturbation { std::string name; sst::State state; };
+                std::vector<Perturbation> variants;
+                auto wants = [&](const char *w) { return (","+opt.perturb+",").find(std::string(",")+w+",") != std::string::npos; };
+
+                if (wants("a7")) {
+                    sst::State s = t.initial;
+                    bool supervisor = s.sr & 0x2000;
+                    u32 &sp = supervisor ? s.ssp : s.usp;
+                    if (!(sp & 1)) { sp ^= 1; variants.push_back({ " [A7^1]", s }); }
+                }
+                if (wants("an")) for (int i = 0; i < 7; i++) {
+                    if (t.initial.a[i] & 1) continue;
+                    sst::State s = t.initial; s.a[i] ^= 1;
+                    variants.push_back({ " [A" + std::to_string(i) + "^1]", s });
+                }
+                if (wants("dn")) for (int i = 0; i < 8; i++) {
+                    sst::State s = t.initial; s.d[i] ^= 1;
+                    variants.push_back({ " [D" + std::to_string(i) + "^1]", s });
+                }
+                if (wants("irc")) {
+                    sst::State s = t.initial; s.prefetch[1] ^= 1;
+                    variants.push_back({ " [IRC^1]", s });
+                }
+
+                for (auto &v : variants) {
+
+                    if (t.initial.ssp & 1) continue;
+                    ref.load(v.state);
+                    ref.cpu.execute();
+                    if (ref.cpu.halted()) continue;
+                    auto log = ref.cpu.log();
+
+                    // Did the instruction end in an address error? (vector 3 is read)
+                    bool ae = std::any_of(log.begin(), log.end(), [](auto &c) { return !c.write && c.fc == 5 && c.addr == 12; });
+                    if (!ae) continue;
+
+                    // Classify the failing access by the function code and the R/W bit of the stacked frame
+                    auto rs = ref.cpu.state();
+                    u16 code = ref.mem.peek16(rs.ssp);
+                    const char *kd = ((code & 7) == 2 || (code & 7) == 6) ? "ae-fetch" : (code & 0x10) ? "ae-read" : "ae-write";
+                    bool isFetch = !strcmp(kd, "ae-fetch");
+                    if (isFetch ? !opt.fetch : !opt.data) continue;
+
+                    mame::BusCycle none { 0, false, 0, 0, 0, 0 };
+                    runCase(v.state, -1, 0, none, kd, isFetch, false, ref.cpu.state().sr, v.name);
+                }
+                continue;
+            }
+
+            if (t.initial.ssp & 1) continue;
 
             // Run the instruction without faults to find out how many bus accesses there are
             ref.load(t.initial);
@@ -324,129 +541,7 @@ int main(int argc, char **argv)
                 const char *kd = kind(plain[k]);
                 bool isFetch = !strcmp(kd, "fetch");
                 if (isFetch ? !opt.fetch : !opt.data) continue;
-
-                // Reference
-                ref.load(t.initial);
-                ref.fault.index = k;
-                int refCycles = ref.cpu.execute();
-                if (ref.cpu.halted()) continue;
-                auto rs = ref.cpu.state();
-
-                // Moira
-                moira.load(t.initial);
-                moira.fault.index = k;
-                moira.logging = true;
-                moira.execute();
-                moira.logging = false;
-
-                // Compare
-                std::string diff;
-                auto add = [&](const std::string &s) { diff += (diff.empty() ? "" : " ") + s; };
-
-                for (int i = 0; i < 8; i++) if (moira.getD(i) != rs.d[i]) {
-                    add("D" + std::to_string(i));
-                    if (getenv("BED_REGS")) printf("      D%d: initial %08x exp %08x got %08x\n", i, t.initial.d[i], rs.d[i], moira.getD(i));
-                    break;
-                }
-                for (int i = 0; i < 7; i++) if (moira.getA(i) != rs.a[i]) {
-                    add("A" + std::to_string(i));
-                    if (getenv("BED_REGS")) printf("      A%d: initial %08x exp %08x got %08x\n", i, t.initial.a[i], rs.a[i], moira.getA(i));
-                    break;
-                }
-                if (moira.getUSP() != rs.usp) { add("USP"); if (getenv("BED_REGS")) printf("      USP: initial %08x exp %08x got %08x\n", t.initial.usp, rs.usp, moira.getUSP()); }
-                if (moira.getISP() != rs.ssp) { add("SSP"); if (getenv("BED_REGS")) printf("      SSP: initial %08x exp %08x got %08x\n", t.initial.ssp, rs.ssp, moira.getISP()); }
-                if ((moira.getSR() & srMask) != (rs.sr & srMask)) add("SR");
-                if ((moira.getPC() & ADDR_MASK) != (rs.pc & ADDR_MASK)) add("PC");
-                if (i64(moira.getClock()) != refCycles) { add("cycles"); if (getenv("BED_REGS")) printf("      cycles: exp %lld got %lld\n", (long long)refCycles, (long long)moira.getClock()); }
-
-                // The read of a TAS is followed by a write in MAME, which a real bus error would prevent
-                bool tasRead = t.name.find(" TAS ") != std::string::npos && !isFetch && !plain[k].write;
-
-                // Memory: compare everything that has been written by either side
-                std::set<u32> addrs(moira.mem.touched.begin(), moira.mem.touched.end());
-                addrs.insert(ref.mem.touched.begin(), ref.mem.touched.end());
-                std::set<int> badWords;
-                for (auto a : addrs) {
-                    if (tasRead && (a & ~1u) == plain[k].addr) continue;    // MAME still completes the write half
-                    if (a == ((rs.ssp & ADDR_MASK) + 2)) continue;      // Undefined upper byte of the fault address
-                    if (a == ((rs.ssp & ADDR_MASK) + 9) && !(srMask & 0x1F)) {      // Condition codes in the stacked SR
-                        if (((moira.mem.peek(a) ^ ref.mem.peek(a)) & ~0x1F) == 0) continue;
-                    }
-                    if (moira.mem.peek(a) != ref.mem.peek(a)) {
-                        u32 sp = rs.ssp & ADDR_MASK;
-                        if (a >= sp && a < sp + 14) badWords.insert(int((a - sp) / 2)); else { badWords.insert(-1); if (getenv("BED_REGS")) printf("      mem %06x: exp %02x got %02x (ssp %06x)\n", a, ref.mem.peek(a), moira.mem.peek(a), sp); }
-                    }
-                }
-                static const char *fields[] = { "frame.code", "frame.addr", "frame.addr", "frame.ird", "frame.sr", "frame.pc", "frame.pc" };
-                std::set<std::string> bad;
-                for (int w : badWords) bad.insert(w < 0 ? "mem" : fields[w]);
-                for (auto &b : bad) add(b);
-
-                // Bus cycles
-                auto &mlog = ref.cpu.log();
-                if (tasRead) {}
-                else if (mlog.size() != moira.log.size()) add("bus.count");
-                else {
-                    for (size_t i = 0; i < mlog.size(); i++) {
-                        auto &e = mlog[i]; auto &g = moira.log[i];
-                        std::string d;
-                        if (getenv("BED_DEBUG") && i == 0) printf("      first bus cycle: mame %lld moira %lld; total mame %d moira %lld\n", (long long)e.cycle, (long long)g.cycle, refCycles, (long long)moira.getClock());
-                        if (e.cycle != g.cycle) d += "cycle ";
-                        if (e.write != g.write) d += "rw ";
-                        if (e.addr != g.addr) d += "addr ";
-                        if (e.mask != g.mask) d += "mask ";
-                        if (e.fc != g.fc) d += "fc ";
-                        u16 dm = 0xFFFF;
-                        if (e.write && e.fc == 5 && e.addr == (((rs.ssp & ADDR_MASK) + 2) & ~1u)) dm = 0x00FF;        // Undefined upper byte of the fault address
-                        if (e.write && e.fc == 5 && e.addr == (((rs.ssp & ADDR_MASK) + 8) & ~1u)) dm = ~srMask & 0x1F ? 0xFFE0 : 0xFFFF;   // Condition codes
-                        if (e.write && (e.data & e.mask & dm) != (g.data & g.mask & dm)) d += "data ";
-                        if (!d.empty()) { d.pop_back(); add("bus#" + std::to_string(i) + "(" + d + ")"); break; }
-                    }
-                }
-
-                if (tsv) fprintf(tsv, "%s\t%d\t%d\t%s\t%s\t%s\n", t.name.c_str(), k, accesses, kd, diff.empty() ? "ok" : "FAIL", diff.c_str());
-                if (getenv("BED_CCR") && diff.find("frame.sr") != std::string::npos) {
-                    u32 sp24 = rs.ssp & ADDR_MASK;
-                    int exp = ref.mem.peek(sp24 + 9) & 0x1F, got = moira.mem.peek(sp24 + 9) & 0x1F;
-                    int ini = t.initial.sr & 0x1F, fin = plainSR & 0x1F;
-                    if (getenv("BED_CCR")[0] == '2') {
-                        auto bin = [](int v) { std::string r; for (int b = 4; b >= 0; b--) r += (v >> b & 1) ? "XNZVC"[4 - b] : '.'; return r; };
-                        printf("   %s #%d %s: init %s fin %s exp %s got %s  D0-7:", t.name.c_str(), k, kd, bin(ini).c_str(), bin(fin).c_str(), bin(exp).c_str(), bin(got).c_str());
-                        for (int i = 0; i < 8; i++) printf(" %08x", t.initial.d[i]);
-                        printf("\n");
-                    }
-                    auto &st = ccrStats[t.name.substr(t.name.find(' ') + 1, t.name.find(' ', t.name.find(' ') + 1) - t.name.find(' ') - 1)];
-                    st.n++;
-                    for (int b = 0; b < 5; b++) {
-                        int m = 1 << b;
-                        if ((exp & m) == (ini & m)) st.eqInit[b]++;
-                        if ((exp & m) == (fin & m)) st.eqFin[b]++;
-                        if ((exp & m) == (got & m)) st.eqGot[b]++;
-                        if (!(exp & m)) st.zero[b]++;
-                    }
-                }
-                std::string key = std::string(kd);
-                c.cases++;
-                byKind[key].cases++;
-                if (diff.empty()) { c.ok++; byKind[key].ok++; continue; }
-
-                (isFetch ? failedReads : (plain[k].write ? failedWrites : failedReads))++;
-                signatures[diff]++;
-                byKind[key].signatures[diff]++;
-
-                if (shown < opt.verbose) {
-                    shown++;
-                    if (getenv("BED_DEBUG")) {
-                        for (auto &e : mlog) printf("      mame  c%-3lld %s %06x m%04x d%04x fc%d\n", (long long)e.cycle, e.write ? "W" : "R", e.addr, e.mask, e.data, e.fc);
-                        for (auto &g : moira.log) printf("      moira c%-3lld %s %06x m%04x d%04x fc%d\n", (long long)g.cycle, g.write ? "W" : "R", g.addr, g.mask, g.data, g.fc);
-                    }
-                    printf("    %s  fault #%d (%s %06x fc %d): %s\n", t.name.c_str(), k, kd, plain[k].addr, plain[k].fc, diff.c_str());
-                    if (opt.verbose > 1) {
-                        printf("        initial prefetch: %04x %04x  pc %06x\n", t.initial.prefetch[0], t.initial.prefetch[1], t.initial.pc);
-                        printf("        exp frame: %s\n", words(ref.mem, rs.ssp, 7).c_str());
-                        printf("        got frame: %s\n", words(moira.mem, rs.ssp, 7).c_str());
-                    }
-                }
+                runCase(t.initial, k, accesses, plain[k], kd, isFetch, true, plainSR, "");
             }
         }
 
