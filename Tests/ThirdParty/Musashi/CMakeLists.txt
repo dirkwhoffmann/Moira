@@ -6,11 +6,9 @@ m68kops.c
 musashi_softfloat/musashi_softfloat.c
 )
 
-if(NOT MSVC)
-    target_compile_options(musashi PUBLIC -Wno-strict-aliasing)
-    target_compile_options(musashi PUBLIC -Wno-string-concatenation)
-endif()
-
-if(MINGW)
-    target_compile_options(musashi PUBLIC -Wno-format-overflow)
+# Third-party code: no warnings
+if(MSVC)
+    target_compile_options(musashi PRIVATE /w)
+else()
+    target_compile_options(musashi PRIVATE -w)
 endif()

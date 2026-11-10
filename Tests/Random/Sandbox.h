@@ -14,7 +14,7 @@
 typedef uint8_t  u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
-typedef uint64_t u64;
+typedef unsigned long long u64;    // Same type as moira::u64 (avoids ambiguities)
 
 enum AccessType {
     PEEK8,

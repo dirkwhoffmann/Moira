@@ -704,7 +704,9 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op, Instr I, Mode M, Size S) co
                     str << Op(M, Long, reg, addr);
                     if (ext & 0xFF) {
                         str << Sep{};
-                        str << FRegList(str.style.syntax == Syntax::UAE ? u16(uaeMask(ext)) : u16(ext & 0xFF));
+                        u16 list = u16(ext & 0xFF);
+                        if (str.style.syntax == Syntax::UAE) list = u16(uaeMask(ext));
+                        str << FRegList(list);
                     } else if (str.style.syntax != Syntax::UAE) {
                         str << Sep{} << Imd{0};
                     }
@@ -723,7 +725,9 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op, Instr I, Mode M, Size S) co
                     str << Op(M, Long, reg, addr);
                     if (ext & 0xFF) {
                         str << Sep{};
-                        str << FRegList(str.style.syntax == Syntax::UAE ? u16(uaeMask(ext)) : u16(REVERSE_8(ext & 0xFF)));
+                        u16 list = u16(REVERSE_8(ext & 0xFF));
+                        if (str.style.syntax == Syntax::UAE) list = u16(uaeMask(ext));
+                        str << FRegList(list);
                     } else if (str.style.syntax != Syntax::UAE) {
                         str << Sep{} << Imd{0};
                     }
@@ -746,7 +750,9 @@ Moira::dasmFMovem(StrWriter &str, u32 &addr, u16 op, Instr I, Mode M, Size S) co
 
                     str << Ins{I} << Ffmt{2} << str.tab;
                     if (ext & 0xFF) {
-                        str << FRegList(str.style.syntax == Syntax::UAE ? u16(uaeMask(ext)) : u16(ext & 0xFF));
+                        u16 list = u16(ext & 0xFF);
+                        if (str.style.syntax == Syntax::UAE) list = u16(uaeMask(ext));
+                        str << FRegList(list);
                     } else if (str.style.syntax != Syntax::UAE) {
                         str << Imd{0};
                     }

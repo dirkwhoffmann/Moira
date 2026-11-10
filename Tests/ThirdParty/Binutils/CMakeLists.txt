@@ -23,3 +23,12 @@ target_include_directories(binutilsmit PUBLIC
 
 ${CMAKE_SOURCE_DIR}/Tests/Random
 )
+
+# Third-party code: no warnings
+foreach(T binutils binutilsmit)
+  if(MSVC)
+    target_compile_options(${T} PRIVATE /w)
+  else()
+    target_compile_options(${T} PRIVATE -w)
+  endif()
+endforeach()
