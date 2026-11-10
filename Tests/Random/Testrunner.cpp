@@ -1361,6 +1361,14 @@ void compare(Setup &s, Result &rRef, Result &rMoira)
             }
             if (sandbox.getErrors()) {
                 printf("\nSANDBOX ERRORS REPORTED");
+                if (lastSetup) {
+                    printf("\nMemory at $0 (setup / reference / Moira):\n");
+                    for (int q = 0; q < 16; q += 4)
+                        printf("  %02x %02x %02x %02x  /  %02x %02x %02x %02x  /  %02x %02x %02x %02x\n",
+                               lastSetup->mem[q], lastSetup->mem[q+1], lastSetup->mem[q+2], lastSetup->mem[q+3],
+                               refMem[q], refMem[q+1], refMem[q+2], refMem[q+3],
+                               moiraMem[q], moiraMem[q+1], moiraMem[q+2], moiraMem[q+3]);
+                }
                 error = true;
             }
         }

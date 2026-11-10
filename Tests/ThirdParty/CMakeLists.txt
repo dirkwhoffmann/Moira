@@ -23,7 +23,7 @@ target_include_directories(uaeref PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/UAEGlue)
 if(MSVC)
     target_compile_options(uaeref PRIVATE /w)
 else()
-    target_compile_options(uaeref PRIVATE -w)
+    target_compile_options(uaeref PRIVATE -w -fwrapv -fno-strict-aliasing)
 endif()
 
 
@@ -57,7 +57,9 @@ target_compile_definitions(uaecpu PRIVATE AMIBERRY AMIBERRY_NO_JIT AMIBERRY_NO_T
 if(MSVC)
     target_compile_options(uaecpu PRIVATE /w)
 else()
-    target_compile_options(uaecpu PRIVATE -w -O1)
+    # WinUAE/Amiberry rely on wrapping signed arithmetic and on type punning (UBSan reports
+    # signed overflows in cpuemu_*.cpp, newcpu_common.cpp and the softfloat code)
+    target_compile_options(uaecpu PRIVATE -w -O1 -fwrapv -fno-strict-aliasing)
 endif()
 target_include_directories(uaecpu PRIVATE
 ${CMAKE_CURRENT_SOURCE_DIR}/UAEGlue/sdl-shim

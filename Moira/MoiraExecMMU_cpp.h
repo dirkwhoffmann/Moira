@@ -154,40 +154,43 @@ Moira::translate(u32 addr, u8 fc, bool *ci)
     if (ci) *ci = false;
 
     // Only proceed if a MMU capable core is present
-    if constexpr (C == Core::C68000 || C == Core::C68010) return addr;
+    if constexpr (C == Core::C68000 || C == Core::C68010) {
+        return addr;
+    } else {
 
-    // Only proceed if the MMU is present and enabled
-    if (!mmu.isEnabled()) return addr;
+        // Only proceed if the MMU is present and enabled
+        if (!mmu.isEnabled()) return addr;
 
-    auto physical = mmu.translate(addr, fc, write, ci);
+        auto physical = mmu.translate(addr, fc, write, ci);
     
-    if (!physical) {
+        if (!physical) {
 
-        auto frame = makeFrame<write ? AE_WRITE : 0>(addr);
+            auto frame = makeFrame<write ? AE_WRITE : 0>(addr);
 
-        // Special status word. On the 68030, a fault in program space belongs
-        // to the instruction pipe, all other faults belong to a data cycle.
-        if (cpuModel >= CPUModel::M68EC040) {
+            // Special status word. On the 68030, a fault in program space belongs
+            // to the instruction pipe, all other faults belong to a data cycle.
+            if (cpuModel >= CPUModel::M68EC040) {
 
-            // The 68040 reports the transfer type, the size and the cause
-            u16 size = S == Byte ? SSW040::SIZ_B : S == Word ? SSW040::SIZ_W : SSW040::SIZ_L;
+                // The 68040 reports the transfer type, the size and the cause
+                u16 size = S == Byte ? SSW040::SIZ_B : S == Word ? SSW040::SIZ_W : SSW040::SIZ_L;
 
-            frame.ssw = SSW040::ATC | size | (fc & 7);
-            if (!write) frame.ssw |= SSW040::RW;
+                frame.ssw = SSW040::ATC | size | (fc & 7);
+                if (!write) frame.ssw |= SSW040::RW;
 
-        } else {
+            } else {
 
-            u16 size = S == Byte ? SSW030::SIZ_B : S == Word ? SSW030::SIZ_W : SSW030::SIZ_L;
-            bool prog = (fc & 3) == 2;
+                u16 size = S == Byte ? SSW030::SIZ_B : S == Word ? SSW030::SIZ_W : SSW030::SIZ_L;
+                bool prog = (fc & 3) == 2;
 
-            frame.ssw = (prog ? SSW030::FB | SSW030::RB : SSW030::DF) | size | (fc & 7);
-            if (!write) frame.ssw |= SSW030::RW;
+                frame.ssw = (prog ? SSW030::FB | SSW030::RB : SSW030::DF) | size | (fc & 7);
+                if (!write) frame.ssw |= SSW030::RW;
+            }
+
+            throw BusError(frame);
         }
 
-        throw BusError(frame);
+        return *physical;
     }
-
-    return *physical;
 }
 
 //

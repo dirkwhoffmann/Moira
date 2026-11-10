@@ -73,6 +73,15 @@ UAERef::skipSetup(const Setup &s) const
     // [undefined] The FPCR precision value 3 is reserved. UAE and Moira round tiny results differently in this mode.
     if ((op & 0xFE00) == 0xF200 && (s.fpcr & 0xC0) == 0xC0) return true;
 
+    // [UAE] UAE returns the wrong sign for FSUB with two infinite operands of different sign
+    // (-inf - (+inf) is -inf, but UAE returns +inf)
+    if ((op & 0xFFC0) == 0xF200) {
+        u16 e = get16(mem, 0x1002);
+        int cmd = e & 0x7F;
+        if ((e >> 13) == 0 && (cmd == 0x28 || cmd == 0x68 || cmd == 0x6C) &&
+            s.fpr[(e >> 7) & 7].isInfinite() && s.fpr[(e >> 10) & 7].isInfinite()) return true;
+    }
+
     // [UAE] UAE doesn't implement the module instructions
     if (instr == Instr::CALLM || instr == Instr::RTM) return true;
 

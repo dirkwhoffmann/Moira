@@ -26,7 +26,9 @@ endif()
 
 if(MSVC)
     target_compile_options(moira PUBLIC /W4 /bigobj) # /WX disabled for now
-    target_compile_options(moira PUBLIC /wd4100 /wd4201 /wd4324 /wd4458 /wd4127)
+    # C4127/C4702: The handlers are templates. Code behind an 'if constexpr (...) return/throw;'
+    # is reachable in some instantiations but not in others, which MSVC reports per instantiation.
+    target_compile_options(moira PUBLIC /wd4100 /wd4201 /wd4324 /wd4458 /wd4127 /wd4702)
 endif()
 
 if(MINGW)
@@ -47,7 +49,7 @@ function(add_moira_variant NAME COMPAT PRECISE)
         target_compile_options(${NAME} PUBLIC -Wno-unused-parameter -Wno-unused-but-set-parameter
             -Wno-unused-but-set-variable -Wno-missing-field-initializers)
     else()
-        target_compile_options(${NAME} PUBLIC /W4 /bigobj /wd4100 /wd4201 /wd4324 /wd4458 /wd4127)
+        target_compile_options(${NAME} PUBLIC /W4 /bigobj /wd4100 /wd4201 /wd4324 /wd4458 /wd4127 /wd4702)
     endif()
     if(MINGW)
         target_compile_options(${NAME} PUBLIC -Wa,-mbig-obj)

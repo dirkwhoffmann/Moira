@@ -1,8 +1,8 @@
 LICENSE INFORMATION
 
-The core emulator (Moira) is published under the terms of the MIT license.
+The Moira emulator core is published under the terms of the MIT License. 
 See Moira/LICENSE for details.
 
-The testing app (unit tester) integrates third-party tools (Musashi, GNU binutils) 
-that are provided with their own licenses. For details, please refer to the 
-license information in the corresponding subfolders.
+The testing applications integrate several third-party tools (Musashi, UAE, 
+MAME, and GNU binutils), each distributed under its own license. For details, 
+please refer to the license information provided in the corresponding subfolders.
