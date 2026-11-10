@@ -53,7 +53,16 @@ Moira::writeStackFrame0000(u16 sr, u32 pc, u16 nr)
             } else {
 
                 U32_DEC(reg.sp, 6);
-                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & ~1, pc & 0xFFFF);
+                if constexpr (compat == Compatibility::MAME) {
+
+                    // MAME has not adjusted the stack pointer yet if the first write fails
+                    try { write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & ~1, pc & 0xFFFF); }
+                    catch (BusError &) { U32_INC(reg.sp, 6); throw; }
+
+                } else {
+
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & ~1, pc & 0xFFFF);
+                }
                 write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & ~1, sr);
                 write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & ~1, pc >> 16);
             }
@@ -510,6 +519,17 @@ Moira::execException(M68kException exc, int nr)
             SYNC(4);
 
             // Write stack frame
+            if constexpr (compat == Compatibility::MAME && C == Core::C68000) {
+
+                // MAME marks bus errors during the exception sequence as "not instruction" cycles
+                try {
+                    try { writeStackFrame0000<C>(status, reg.pc - 2, vector); }
+                    catch (BusError &e) { e.stackFrame.pc -= 2; throw; }
+                    jumpToVector<C, AE_SET_CB3>(vector);
+                }
+                catch (BusError &e) { e.stackFrame.code |= 0x8; throw; }
+                break;
+            }
             if constexpr (C == Core::C68010 || C == Core::C68020) {
                 writeStackFrame0000<C>(status, reg.pc0, vector);
             } else {
@@ -557,6 +577,16 @@ Moira::execException(M68kException exc, int nr)
             SYNC(4);
 
             // Write stack frame
+            if constexpr (compat == Compatibility::MAME && C == Core::C68000) {
+
+                try {
+                    try { writeStackFrame0000<C>(status, reg.pc - 2, vector); }
+                    catch (BusError &e) { e.stackFrame.pc -= 2; throw; }
+                    jumpToVector<C,AE_SET_CB3>(vector);
+                }
+                catch (BusError &e) { e.stackFrame.code |= 0x8; throw; }
+                break;
+            }
             writeStackFrame0000<C>(status, reg.pc - 2, vector);
 
             // Branch to exception handler

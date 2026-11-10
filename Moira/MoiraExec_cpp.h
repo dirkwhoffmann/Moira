@@ -6013,10 +6013,18 @@ Moira::execTrapv(u16 opcode)
         if constexpr (C == Core::C68000) {
             if constexpr (compat == Compatibility::MAME) {
 
-                // In MAME, the word is read in supervisor mode
+                // In MAME, the word is read in supervisor mode. A bus error at this point
+                // is raised after the exception has already been entered.
                 bool s = reg.sr.s;
                 reg.sr.s = true;
-                (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
+                try { (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2); }
+                catch (BusError &e) {
+                    reg.sr.s = s;
+                    setSupervisorMode(true);
+                    clearTraceFlags();
+                    e.stackFrame.sr = (e.stackFrame.sr | 0x2000) & ~0x8000;   // Stacked with S set and T cleared
+                    throw;
+                }
                 reg.sr.s = s;
 
             } else {

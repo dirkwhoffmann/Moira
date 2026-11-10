@@ -1213,7 +1213,16 @@ Moira::jumpToVector(int nr)
     u32 oldpc = reg.pc;
 
     // Update the program counter
-    reg.pc = read<C, AddrSpace::DATA, Long>(vectorAddr);
+    if constexpr (compat == Compatibility::MAME && C == Core::C68000) {
+
+        // MAME stacks the vector address if a bus error occurs while the vector is fetched
+        try { reg.pc = read<C, AddrSpace::DATA, Long>(vectorAddr); }
+        catch (BusError &e) { e.stackFrame.pc = vectorAddr; throw; }
+
+    } else {
+
+        reg.pc = read<C, AddrSpace::DATA, Long>(vectorAddr);
+    }
 
     // Check for address error
     if (misaligned<C>(reg.pc)) {
@@ -1258,9 +1267,20 @@ Moira::jumpToVector(int nr)
     }
 
     // Update the prefetch queue
-    queue.irc = (u16)read<C, AddrSpace::PROG, Word>(reg.pc);
-    SYNC(2);
-    prefetch<C, POLL>();
+    if constexpr (compat == Compatibility::MAME && C == Core::C68000) {
+
+        // The first fetch also stacks the vector address, the second one the handler address
+        try { queue.irc = (u16)read<C, AddrSpace::PROG, Word>(reg.pc); }
+        catch (BusError &e) { e.stackFrame.pc = vectorAddr; throw; }
+        SYNC(2);
+        prefetch<C, POLL>();
+
+    } else {
+
+        queue.irc = (u16)read<C, AddrSpace::PROG, Word>(reg.pc);
+        SYNC(2);
+        prefetch<C, POLL>();
+    }
 
     // Stop emulation if the exception should be catched
     if (debugger.catchpointMatches(nr)) didReachCatchpoint(u8(nr));
