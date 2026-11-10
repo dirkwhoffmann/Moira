@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		50F500000000000000000043 /* libUAECpu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50A200000000000000000001 /* libUAECpu.a */; };
 		50F50000000000000000010E /* MameCpu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F500000000000000000108 /* MameCpu.cpp */; };
 		50F50000000000000000010F /* m68000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F500000000000000000101 /* m68000.cpp */; };
 		50F500000000000000000110 /* m68000-decode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F500000000000000000102 /* m68000-decode.cpp */; };
@@ -166,6 +167,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		50F500000000000000000041 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 50804DFE2386A4CE004D3EC2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 50A200000000000000000004;
+			remoteInfo = UAECpu;
+		};
 		50F50000000000000000001F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 50804DFE2386A4CE004D3EC2 /* Project object */;
@@ -495,6 +503,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				50F500000000000000000034 /* libMAMERef.a in Frameworks */,
+				50F500000000000000000043 /* libUAECpu.a in Frameworks */,
 				50F500000000000000000035 /* libMoiraMAME.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1299,6 +1308,7 @@
 			dependencies = (
 				50F500000000000000000023 /* PBXTargetDependency */,
 				50F500000000000000000024 /* PBXTargetDependency */,
+				50F500000000000000000042 /* PBXTargetDependency */,
 			);
 			name = exceptionRunner;
 			productName = exceptionRunner;
@@ -1592,6 +1602,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		50F500000000000000000042 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 50A200000000000000000004 /* UAECpu */;
+			targetProxy = 50F500000000000000000041 /* PBXContainerItemProxy */;
+		};
 		50A200000000000000000009 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 50A200000000000000000004 /* UAECpu */;
@@ -1759,6 +1774,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/Tests/SingleStep",
 					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
+					"$(SRCROOT)/Tests/ThirdParty/UAEGlue",
 					"$(SRCROOT)/Moira/**",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
@@ -1782,6 +1798,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/Tests/SingleStep",
 					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
+					"$(SRCROOT)/Tests/ThirdParty/UAEGlue",
 					"$(SRCROOT)/Moira/**",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
@@ -1806,6 +1823,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/Tests/SingleStep",
 					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
+					"$(SRCROOT)/Tests/ThirdParty/UAEGlue",
 					"$(SRCROOT)/Moira/**",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;

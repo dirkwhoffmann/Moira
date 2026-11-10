@@ -49,6 +49,7 @@
 
 #include "Moira.h"
 #include "MameCpu.h"
+#include "UAECpu.h"
 #include "SSTFile.h"
 #include <algorithm>
 #include <cstdio>
@@ -56,6 +57,7 @@
 #include <cstring>
 #include <dirent.h>
 #include <map>
+#include <memory>
 #include <set>
 
 using namespace moira;
@@ -188,28 +190,38 @@ public:
 };
 
 //
-// MAME
+// Reference CPUs
 //
 
-struct Reference {
+// Common interface of the reference CPUs (the results are reported in MAME's types)
+struct RefCore {
 
-    Memory mem;
-    Fault fault;
+    virtual ~RefCore() = default;
+
+    virtual void load(const sst::State &s) = 0;                         // Sets the registers (the memory is loaded already)
+    virtual int execute() = 0;                                          // Runs one instruction and returns the elapsed cycles
+    virtual mame::State state() const = 0;
+    virtual const std::vector<mame::BusCycle> &log() const = 0;
+    virtual bool halted() const = 0;
+};
+
+// MAME's microcoded 68000
+struct MameCore : RefCore {
+
     mame::Cpu cpu;
 
-    Reference()
+    MameCore(Memory &mem, Fault &fault)
     {
-        cpu.read = [this](u32 addr, u16) { return mem.peek16(addr); };
-        cpu.write = [this](u32 addr, u16 val, u16 mask) {
+        cpu.read = [&mem](u32 addr, u16) { return mem.peek16(addr); };
+        cpu.write = [&mem](u32 addr, u16 val, u16 mask) {
             if (mask & 0xFF00) mem.poke(addr, u8(val >> 8));
             if (mask & 0x00FF) mem.poke(addr + 1, u8(val));
         };
-        cpu.busError = [this](u32, bool, int) { return fault.hit(); };
+        cpu.busError = [&fault](u32, bool, int) { return fault.hit(); };
     }
 
-    void load(const sst::State &s)
+    void load(const sst::State &s) override
     {
-        mem.load(s);
         mame::State m;
         for (int i = 0; i < 8; i++) m.d[i] = s.d[i];
         for (int i = 0; i < 7; i++) m.a[i] = s.a[i];
@@ -220,6 +232,102 @@ struct Reference {
         m.ird = u16(s.prefetch[0]);
         m.irc = u16(s.prefetch[1]);
         cpu.load(m);
+    }
+
+    int execute() override { return cpu.execute(); }
+    mame::State state() const override { return cpu.state(); }
+    const std::vector<mame::BusCycle> &log() const override { return cpu.log(); }
+    bool halted() const override { return cpu.halted(); }
+};
+
+// The 68000 core of UAE (WinUAE, cycle exact). The core is a singleton.
+struct UaeCore : RefCore {
+
+    static inline UaeCore *self = nullptr;
+
+    Memory &mem;
+    Fault &fault;
+    std::vector<mame::BusCycle> cycles;
+    bool didHalt = false;
+    uint64_t cycleBase = 0;
+
+    UaeCore(Memory &m, Fault &f) : mem(m), fault(f)
+    {
+        self = this;
+        uaecpu::init(uaecpu::Cpu::M68000, uaecpu::Fpu::None, mem.ram.data(), [](int size, uint32_t addr, uint32_t, uint32_t, uint64_t) {
+
+            // Writes go directly into the memory. Remember them, so that the memory can be reset.
+            for (int i = 0; i < size; i++) self->mem.touched.push_back((addr + i) & ADDR_MASK);
+        });
+        uaecpu::setMemoryMask(ADDR_MASK);
+        uaecpu::setAccessHook([](const uaecpu::BusAccess &a) { return self->access(a); });
+    }
+
+    // Is called for each bus access of the CPU
+    bool access(const uaecpu::BusAccess &a)
+    {
+        u16 mask = a.size == 2 ? 0xFFFF : (a.addr & 1) ? 0x00FF : 0xFF00;
+        u32 word = a.addr & ~1u;
+        u16 data = a.write ? (a.size == 2 ? u16(a.value) : (a.addr & 1) ? u16(a.value & 0xFF) : u16(a.value << 8)) : mem.peek16(word);
+        cycles.push_back({ int(a.cycle - cycleBase), a.write, word, data, mask, int(a.fc) });
+        return fault.hit();
+    }
+
+    void load(const sst::State &s) override
+    {
+        uaecpu::State u;
+        for (int i = 0; i < 8; i++) u.d[i] = s.d[i];
+        for (int i = 0; i < 7; i++) u.a[i] = s.a[i];
+        u.usp = s.usp;
+        u.isp = s.ssp;
+        u.sr = u16(s.sr);
+        u.pc = (s.pc - 4) & ADDR_MASK;
+
+        // Loading the state fetches the prefetch queue. This is not part of the instruction.
+        uaecpu::setAccessHook(nullptr);
+        uaecpu::setState(u);
+        uaecpu::setPrefetch(u16(s.prefetch[0]), u16(s.prefetch[1]));
+        uaecpu::setAccessHook([](const uaecpu::BusAccess &a) { return self->access(a); });
+        cycles.clear();
+        didHalt = false;
+    }
+
+    int execute() override
+    {
+        didHalt = !uaecpu::step();
+        return int(uaecpu::cycles());
+    }
+
+    mame::State state() const override
+    {
+        auto u = uaecpu::getState();
+        mame::State m;
+        for (int i = 0; i < 8; i++) m.d[i] = u.d[i];
+        for (int i = 0; i < 7; i++) m.a[i] = u.a[i];
+        m.usp = u.usp;
+        m.ssp = u.isp;
+        m.sr = u.sr;
+        m.pc = u.pc & ADDR_MASK;
+        return m;
+    }
+
+    const std::vector<mame::BusCycle> &log() const override { return cycles; }
+    bool halted() const override { return didHalt; }
+};
+
+struct Reference {
+
+    Memory mem;
+    Fault fault;
+    std::unique_ptr<RefCore> core;
+    RefCore &cpu;
+
+    Reference(bool uae) : core(uae ? (RefCore *)new UaeCore(mem, fault) : (RefCore *)new MameCore(mem, fault)), cpu(*core) { }
+
+    void load(const sst::State &s)
+    {
+        mem.load(s);
+        cpu.load(s);
         fault = Fault();
     }
 };
@@ -252,6 +360,7 @@ struct Settings {
     int verbose = 0;                // Failures to print per file
     int dedupe = 0;                 // Maximum number of cases per instruction form, access, and kind (0 = all)
     bool coverage = false;          // Report instruction forms without any case?
+    bool uae = false;               // Use UAE instead of MAME as reference?
     std::string tsv;                // Optional result table
 };
 
@@ -303,9 +412,10 @@ int main(int argc, char **argv)
         else if (a == "--tsv" && more) opt.tsv = argv[++i];
         else if (a == "--dedupe" && more) opt.dedupe = atoi(argv[++i]);
         else if (a == "--coverage") opt.coverage = true;
+        else if (a == "--reference" && more) { std::string r = argv[++i]; if (r != "mame" && r != "uae") { printf("Unknown reference %s\n", r.c_str()); return 1; } opt.uae = r == "uae"; }
         else if (a == "-v" && more) opt.verbose = atoi(argv[++i]);
         else {
-            printf("Usage: %s [--dir <folder>] [--only <text>]... [--limit <n>] [-v <n>] [--dedupe <n>] [--coverage] [--tsv <file>]\n", argv[0]);
+            printf("Usage: %s [--dir <folder>] [--only <text>]... [--limit <n>] [-v <n>] [--dedupe <n>] [--coverage] [--reference mame|uae] [--tsv <file>]\n", argv[0]);
             return 1;
         }
     }
@@ -323,12 +433,12 @@ int main(int argc, char **argv)
     std::sort(names.begin(), names.end());
     if (names.empty()) { printf("No test files found in %s\n", opt.dir.c_str()); return 1; }
 
-    printf("Exception differential test: Moira (MAME mode) vs. MAME's microcoded 68000\n\n");
+    printf("Exception differential test: Moira (MAME mode) vs. %s\n\n", opt.uae ? "UAE (WinUAE, cycle exact 68000)" : "MAME's microcoded 68000");
     printf("%-16s %8s %8s %8s\n", "Instruction", "Cases", "OK", "OK%");
 
     FILE *tsv = opt.tsv.empty() ? nullptr : fopen(opt.tsv.c_str(), "w");
     TestCPU moira;
-    Reference ref;
+    Reference ref(opt.uae);
     std::map<std::string, Counter> byKind;
     std::map<std::string, long> signatures;
     long total = 0, totalOk = 0;

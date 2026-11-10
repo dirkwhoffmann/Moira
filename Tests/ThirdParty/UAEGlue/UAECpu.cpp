@@ -27,8 +27,11 @@ uaecpu::WriteHook writeHook = nullptr;
 uaecpu::Cpu cpuType = uaecpu::Cpu::M68000;
 bool mmuExec = false;
 bool addr24 = false;
+uint32_t memMask = 0xFFFF;
+uaecpu::AccessHook accessHook = nullptr;
+bool stepping = false;           // Is an instruction being executed?
 
-inline uint32_t mask(uint32_t addr) { return addr & 0xFFFF; }
+inline uint32_t mask(uint32_t addr) { return addr & memMask; }
 
 // MOVES accesses the address space selected by the DFC register (0x0EC0 - 0x0EFF is CAS.L)
 inline bool isMoves(uint32_t op) { return (op & 0xFF00) == 0x0E00 && (op & 0xC0) != 0xC0; }
@@ -37,6 +40,22 @@ bool pendingByte = false;
 uint32_t pendingValue = 0;
 uint64_t pendingCycle = 0;
 inline uint32_t fcOfWrite() { return movesActive ? (regs.dfc & 7) : regs.s ? 5 : 1; }
+
+/* Reports a bus access to the access hook (if any). If the hook asks for a bus
+ * error, the access is aborted and UAE's hardware bus error is raised. The
+ * cycle-exact core checks the flag after each access and builds the frame.
+ */
+bool busAccess(bool write, bool fetch, uint32_t addr, int size, uint32_t value)
+{
+    if (!accessHook || !stepping) return false;
+
+    uint32_t fc = fetch ? (regs.s ? 6 : 2) : (regs.s ? 5 : 1);
+    uaecpu::BusAccess a { write, fetch, addr & 0xFFFFFF, size, value, fc, uaecpu::cycles() };
+    if (!accessHook(a)) return false;
+
+    hardware_exception2(addr, value, !write, fetch, size);
+    return true;
+}
 
 }
 
@@ -52,24 +71,37 @@ uae_u8 *baseaddr[MEMORY_BANKS];
 
 uae_u32 memory_get_byte(uaecptr a)
 {
+    if (busAccess(false, false, a, 1, 0)) return 0;
     return mem[mask(a)];
 }
 
 uae_u32 memory_get_word(uaecptr a)
 {
+    if (busAccess(false, false, a, 2, 0)) return 0;
     return mem[mask(a)] << 8 | mem[mask(a + 1)];
 }
 
 uae_u32 memory_get_long(uaecptr a)
 {
+    if (accessHook && stepping) {
+        if (busAccess(false, false, a, 2, 0)) return 0;
+        uae_u32 hi = mem[mask(a)] << 8 | mem[mask(a + 1)];
+        if (busAccess(false, false, a + 2, 2, 0)) return 0;
+        return hi << 16 | mem[mask(a + 2)] << 8 | mem[mask(a + 3)];
+    }
     return memory_get_word(a) << 16 | memory_get_word(a + 2);
 }
 
-uae_u32 memory_get_wordi(uaecptr a) { return memory_get_word(a); }
+uae_u32 memory_get_wordi(uaecptr a)
+{
+    if (busAccess(false, true, a, 2, 0)) return 0;
+    return mem[mask(a)] << 8 | mem[mask(a + 1)];
+}
 uae_u32 memory_get_longi(uaecptr a) { return memory_get_long(a); }
 
 void memory_put_byte(uaecptr a, uae_u32 v)
 {
+    if (busAccess(true, false, a, 1, v & 0xFF)) return;
     if (addr24) a &= 0xFFFFFF;
 
     /* A misaligned word write that crosses the end of the 24-bit address
@@ -93,7 +125,7 @@ void memory_put_byte(uaecptr a, uae_u32 v)
     mem[mask(a)] = uint8_t(v);
 }
 
-void memory_put_word(uaecptr a, uae_u32 v)
+static void putWord(uaecptr a, uae_u32 v)
 {
     if (addr24) a &= 0xFFFFFF;
     if (writeHook) writeHook(2, a, v & 0xFFFF, fcOfWrite(), uaecpu::cycles() + 2);
@@ -101,8 +133,21 @@ void memory_put_word(uaecptr a, uae_u32 v)
     mem[mask(a + 1)] = uint8_t(v);
 }
 
+void memory_put_word(uaecptr a, uae_u32 v)
+{
+    if (busAccess(true, false, a, 2, v & 0xFFFF)) return;
+    putWord(a, v);
+}
+
 void memory_put_long(uaecptr a, uae_u32 v)
 {
+    if (accessHook && stepping) {
+        if (busAccess(true, false, a, 2, v >> 16)) return;
+        putWord(a, v >> 16);
+        if (busAccess(true, false, a + 2, 2, v & 0xFFFF)) return;
+        putWord(a + 2, v & 0xFFFF);
+        return;
+    }
     if (addr24) a &= 0xFFFFFF;
     if (writeHook) { writeHook(2, a, v >> 16, fcOfWrite(), uaecpu::cycles() + 2); writeHook(2, a + 2, v & 0xFFFF, fcOfWrite(), uaecpu::cycles() + 2); }
     mem[mask(a)] = uint8_t(v >> 24);
@@ -224,6 +269,25 @@ void init(Cpu model, Fpu fpu, uint8_t *memory, WriteHook hook)
     set_x_funcs();
     m68k_reset();
 }
+
+void setAccessHook(AccessHook hook) { accessHook = hook; }
+
+void setMemoryMask(uint32_t m)
+{
+    memMask = m;
+    ram.mask = m;
+    ram.allocated_size = ram.reserved_size = m + 1;
+}
+
+void setPrefetch(uint16_t ir, uint16_t irc)
+{
+    regs.ir = ir;
+    regs.ird = ir;
+    regs.irc = irc;
+    regs.opcode = ir;
+}
+
+bool halted() { return regs.halted; }
 
 void setState(const State &s)
 {
@@ -537,6 +601,7 @@ bool step()
 
     movesActive = false;
     pendingByte = false;
+    stepping = true;
 
     TRY(prb) {
 
@@ -585,6 +650,8 @@ bool step()
         regs.spcflags = 0;
 
     } ENDTRY
+
+    stepping = false;
 
     // Report a byte write at the very end of the address space that wasn't
     // followed by a wrapped second byte

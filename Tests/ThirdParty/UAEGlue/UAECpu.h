@@ -48,8 +48,34 @@ enum class Fpu { None, M68881, M68882, Internal };
 // Write observer: size is 1 or 2 bytes, fc is the function code of the access
 typedef void (*WriteHook)(int size, uint32_t addr, uint32_t value, uint32_t fc, uint64_t cycle);
 
+// A bus access of the CPU
+struct BusAccess {
+
+    bool write;                 // Write access?
+    bool fetch;                 // Program fetch?
+    uint32_t addr;              // Address (24 bits)
+    int size;                   // 1 (byte) or 2 (word)
+    uint32_t value;             // Data (valid for writes)
+    uint32_t fc;                // Function code
+    uint64_t cycle;             // CPU cycle (in UAE's cycle units)
+};
+
+// Is called before each CPU bus access. If it returns true, the access fails with a bus error.
+// This is supported by the cycle-exact 68000 core only.
+typedef bool (*AccessHook)(const BusAccess &access);
+void setAccessHook(AccessHook hook);
+
 // Selects the CPU and FPU model and the memory area (65536 bytes)
 void init(Cpu model, Fpu fpu, uint8_t *memory, WriteHook hook);
+
+// Changes the size of the memory area to mask + 1 bytes (e.g. 0xFFFFFF for 16 MB)
+void setMemoryMask(uint32_t mask);
+
+// Overwrites the prefetch queue (instruction word and the word following it)
+void setPrefetch(uint16_t ir, uint16_t irc);
+
+// Indicates whether the CPU has halted (double fault)
+bool halted();
 
 // Loads and reads back the processor state
 void setState(const State &s);
