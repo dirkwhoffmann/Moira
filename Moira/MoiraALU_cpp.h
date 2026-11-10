@@ -1266,6 +1266,9 @@ Moira::setUndefinedCHK2(i32 lower, i32 upper, i32 value)
 template <Core C, Size S> void
 Moira::setUndefinedDIVU(u32 dividend, u16 divisor)
 {
+    // The 68040 sets V and clears C. N and Z stay unchanged.
+    if (cpuModel >= CPUModel::M68EC040) { reg.sr.c = 0; return; }
+
     auto iDividend = i32(dividend);
 
     switch (C) {
@@ -1288,6 +1291,9 @@ Moira::setUndefinedDIVU(u32 dividend, u16 divisor)
 template <Core C, Size S> void
 Moira::setUndefinedDIVS(i32 dividend, i16 divisor)
 {
+    // The 68040 sets V and clears C. N and Z stay unchanged.
+    if (cpuModel >= CPUModel::M68EC040) { reg.sr.c = 0; return; }
+
     auto uDividend = u32(std::abs(dividend));
     auto uDivisor = u16(std::abs(divisor));
 
@@ -1319,6 +1325,9 @@ Moira::setUndefinedDIVS(i32 dividend, i16 divisor)
 template <Core C, Size S> void
 Moira::setUndefinedDIVUL(i64 a, i32 divisor)
 {
+    // The 68040 sets V and clears C. N and Z stay unchanged.
+    if (cpuModel >= CPUModel::M68EC040) { reg.sr.c = 0; return; }
+
     i32 a32 = (i32)a;
     bool neg32 = a32 < 0;
 
@@ -1330,6 +1339,9 @@ Moira::setUndefinedDIVUL(i64 a, i32 divisor)
 template <Core C, Size S> void
 Moira::setUndefinedDIVSL(i64 a, i32 divisor)
 {
+    // The 68040 sets V and clears C. N and Z stay unchanged.
+    if (cpuModel >= CPUModel::M68EC040) { reg.sr.c = 0; return; }
+
     i32 a32 = (i32)a;
     bool neg64 = a < 0;
     bool neg32 = a32 < 0;

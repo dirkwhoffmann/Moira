@@ -2974,7 +2974,9 @@ Moira::execLink(u16 opcode)
 
     } else {
 
-        push <C, Long>(readA(ax) - (((compat == Compatibility::MUSASHI) && ax == 7) ? 4 : 0));
+        // LINK A7 pushes the decremented stack pointer on the 68040 (and in Musashi)
+        bool decremented = ax == 7 && (compat == Compatibility::MUSASHI || cpuModel >= CPUModel::M68EC040);
+        push <C, Long>(readA(ax) - (decremented ? 4 : 0));
     }
 
     // Modify address register and stack pointer
@@ -4991,11 +4993,19 @@ Moira::execDivsMoira(u16 opcode, bool *divByZero)
 
     if (divisor == 0) {
 
-        reg.sr.n = 0;
-        reg.sr.z = 1;
-        reg.sr.v = 0;
-        reg.sr.c = 0;
-        setDivZeroDIVS<C, S>(dividend);
+        if (cpuModel >= CPUModel::M68EC040) {
+
+            // The 68040 only clears the carry flag
+            reg.sr.c = 0;
+
+        } else {
+
+            reg.sr.n = 0;
+            reg.sr.z = 1;
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+            setDivZeroDIVS<C, S>(dividend);
+        }
 
         SYNC(8);
         execException<C>(M68kException::DIVIDE_BY_ZERO);
@@ -5131,11 +5141,19 @@ Moira::execDivuMoira(u16 opcode, bool *divByZero)
     // Check for division by zero
     if (divisor == 0) {
 
-        reg.sr.n = NBIT<Long>(dividend);
-        reg.sr.z = (dividend & 0xFFFF0000) == 0;
-        reg.sr.v = 0;
-        reg.sr.c = 0;
-        setDivZeroDIVU<C, S>(dividend);
+        if (cpuModel >= CPUModel::M68EC040) {
+
+            // The 68040 only clears the carry flag
+            reg.sr.c = 0;
+
+        } else {
+
+            reg.sr.n = NBIT<Long>(dividend);
+            reg.sr.z = (dividend & 0xFFFF0000) == 0;
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+            setDivZeroDIVU<C, S>(dividend);
+        }
 
         SYNC(8);
         execException<C>(M68kException::DIVIDE_BY_ZERO);
@@ -5254,7 +5272,12 @@ Moira::execDivlMoira(u16 opcode, bool *divByZero)
 
     if (divisor == 0) {
 
-        if (ext & 0x800) {
+        if (cpuModel >= CPUModel::M68EC040) {
+
+            // The 68040 only clears the carry flag
+            reg.sr.c = 0;
+
+        } else if (ext & 0x800) {
 
             reg.sr.c = 0;
             setDivZeroDIVSL<C, S>(i64(dividend));

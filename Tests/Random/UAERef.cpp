@@ -91,13 +91,6 @@ UAERef::skipSetup(const Setup &s) const
     // The format word sits at offset 6 of the frame (the supervisor stack pointer is $2000).
     if (instr == Instr::RTE && cpuModel == CPUModel::M68010 && (get16(mem, 0x2006) >> 12) == 8) return true;
 
-    // [Moira] LINK.l A7 pushes A7-4 on the 68040 (Moira's 040 models run on the 68020 core)
-    if (instr == Instr::LINK && (op & 7) == 7 && cpuModel >= CPUModel::M68EC040) return true;
-
-    // [Moira] Zero divide uses a different stack frame on the 68040 (Moira's 040 models run on the 68020 core)
-    if ((instr == Instr::DIVL || instr == Instr::DIVU || instr == Instr::DIVS) &&
-        cpuModel >= CPUModel::M68EC040) return true;
-
     // [UAE] UAE emulates FPU instructions that the 68040 traps (Moira follows real hardware)
     if ((op & 0xFFC0) == 0xF200 && cpuModel == CPUModel::M68040) {
         u16 e = get16(mem, 0x1002);
@@ -163,6 +156,12 @@ UAERef::skipSetup(const Setup &s) const
 
     // [undefined] MULL with identical high and low registers has an undefined result
     if (instr == Instr::MULL) {
+        u16 e = get16(mem, 0x1002);
+        if ((e & 0x400) && ((e >> 12) & 7) == (e & 7)) return true;
+    }
+
+    // [undefined] DIVL with identical quotient and remainder registers (64 bit dividend) has an undefined result
+    if (instr == Instr::DIVL) {
         u16 e = get16(mem, 0x1002);
         if ((e & 0x400) && ((e >> 12) & 7) == (e & 7)) return true;
     }
