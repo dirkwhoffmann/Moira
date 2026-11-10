@@ -290,6 +290,8 @@ int main(int argc, char **argv)
     Reference ref;
     std::map<std::string, Counter> byKind;
     std::map<std::string, long> signatures;
+    struct CcrStat { int n = 0, eqInit[5] = {}, eqFin[5] = {}, eqGot[5] = {}, zero[5] = {}; };
+    std::map<std::string, CcrStat> ccrStats;
     long total = 0, totalOk = 0;
 
     for (auto &name : names) {
@@ -312,6 +314,7 @@ int main(int argc, char **argv)
             ref.cpu.execute();
             int accesses = int(ref.cpu.log().size());
             auto plain = ref.cpu.log();
+            u16 plainSR = ref.cpu.state().sr;
 
             // Skip instructions that raise an exception (faults while stacking a frame are double bus faults)
             if (!opt.exceptions && std::any_of(plain.begin(), plain.end(), [](auto &c) { return !c.write && c.fc == 5 && c.addr < 0x400; })) continue;
@@ -402,6 +405,26 @@ int main(int argc, char **argv)
                 }
 
                 if (tsv) fprintf(tsv, "%s\t%d\t%d\t%s\t%s\t%s\n", t.name.c_str(), k, accesses, kd, diff.empty() ? "ok" : "FAIL", diff.c_str());
+                if (getenv("BED_CCR") && diff.find("frame.sr") != std::string::npos) {
+                    u32 sp24 = rs.ssp & ADDR_MASK;
+                    int exp = ref.mem.peek(sp24 + 9) & 0x1F, got = moira.mem.peek(sp24 + 9) & 0x1F;
+                    int ini = t.initial.sr & 0x1F, fin = plainSR & 0x1F;
+                    if (getenv("BED_CCR")[0] == '2') {
+                        auto bin = [](int v) { std::string r; for (int b = 4; b >= 0; b--) r += (v >> b & 1) ? "XNZVC"[4 - b] : '.'; return r; };
+                        printf("   %s #%d %s: init %s fin %s exp %s got %s  D0-7:", t.name.c_str(), k, kd, bin(ini).c_str(), bin(fin).c_str(), bin(exp).c_str(), bin(got).c_str());
+                        for (int i = 0; i < 8; i++) printf(" %08x", t.initial.d[i]);
+                        printf("\n");
+                    }
+                    auto &st = ccrStats[t.name.substr(t.name.find(' ') + 1, t.name.find(' ', t.name.find(' ') + 1) - t.name.find(' ') - 1)];
+                    st.n++;
+                    for (int b = 0; b < 5; b++) {
+                        int m = 1 << b;
+                        if ((exp & m) == (ini & m)) st.eqInit[b]++;
+                        if ((exp & m) == (fin & m)) st.eqFin[b]++;
+                        if ((exp & m) == (got & m)) st.eqGot[b]++;
+                        if (!(exp & m)) st.zero[b]++;
+                    }
+                }
                 std::string key = std::string(kd);
                 c.cases++;
                 byKind[key].cases++;
@@ -436,6 +459,16 @@ int main(int argc, char **argv)
     printf("\n%-16s %8ld %8ld %7.2f%%\n\n", "TOTAL", total, totalOk, total ? 100.0 * totalOk / total : 100.0);
 
     for (auto &[k, c] : byKind) printf("%-8s %8ld cases, %8ld ok (%.2f%%)\n", k.c_str(), c.cases, c.ok, c.cases ? 100.0 * c.ok / c.cases : 100.0);
+
+    if (getenv("BED_CCR")) {
+        printf("\nStacked CCR analysis (per flag XNZVC: how often the expected bit equals initial/final/got/zero)\n");
+        for (auto &[k, st] : ccrStats) {
+            printf("%-10s n=%5d", k.c_str(), st.n);
+            const char *fl = "CVZNX";
+            for (int b = 4; b >= 0; b--) printf("  %c[i%3d f%3d g%3d z%3d]", fl[b], 100 * st.eqInit[b] / st.n, 100 * st.eqFin[b] / st.n, 100 * st.eqGot[b] / st.n, 100 * st.zero[b] / st.n);
+            printf("\n");
+        }
+    }
 
     printf("\nMost frequent differences:\n");
     std::vector<std::pair<long, std::string>> sorted;
