@@ -23,7 +23,7 @@ CYCLES_68020(34) \
 return; }
 
 // Runs a block of code. If a fetch (program space) bus error occurs, the
-// stacked PC is moved forward by 'delta' (MAME mode only)
+// stacked PC is moved forward by 'delta' (MAME and UAE mode only)
 template <bool Enable, typename Fn> static inline void
 adjustFetchPc(Fn &&fn, int delta)
 {
@@ -38,7 +38,7 @@ adjustFetchPc(Fn &&fn, int delta)
 #define MAME_68000 (compat == Compatibility::MAME && C == Core::C68000)
 #define EXACT_COMPAT (compat == Compatibility::MAME || (compat == Compatibility::UAE && C == Core::C68000))   // Behavior shared with UAE (bus cycle sequence)
 #define EXACT_ABORT EXACT_68000   // MAME and UAE abort misaligned stack accesses without a bus cycle
-#define NO_DEC_PC(...) adjustFetchPc<MAME_68000>([&]{ __VA_ARGS__; }, 2)
+#define NO_DEC_PC(...) adjustFetchPc<EXACT_68000>([&]{ __VA_ARGS__; }, 2)
 
 // MAME shows modified flags in the frame if the second word of a long write fails
 #define MAME_LONG_WRITE(ea0, nexpr, zexpr, ...) \
@@ -1147,7 +1147,7 @@ Moira::execBitDxEa(u16 opcode)
     u8 b = readD(src) & 0b111;
 
     u32 ea, data;
-    if constexpr (compat == Compatibility::MAME && C == Core::C68000) {
+    if constexpr (EXACT_68000) {
 
         try { readOp<C, M, Byte, STD_AE_FRAME>(dst, &ea, &data); }
         catch (BusError &) { throw; }
@@ -2732,7 +2732,7 @@ Moira::execJsr(u16 opcode)
             // Check for address errors
             if (isDspMode(M) && misaligned<C>(ea)) {
                 // MAME keeps the program counter in the stack frame unchanged
-                if constexpr (EXACT_COMPAT) throw earlyAddressError<C>(makeFrame(ea));
+                if constexpr (compat == Compatibility::MAME) throw earlyAddressError<C>(makeFrame(ea));
                 throw earlyAddressError<C>(makeFrame<AE_DEC_PC>(ea));
             }
             if (misaligned<C>(ea)) {
@@ -2744,13 +2744,15 @@ Moira::execJsr(u16 opcode)
                 // Fetch the first word of the subroutine before pushing
                 u32 ret = reg.pc;
                 reg.pc = ea;
+                [[maybe_unused]] bool pushing = false;
                 try {
                     queue.irc = (u16)read<C, AddrSpace::PROG, Word>(ea);
+                    pushing = true;
                     push<C, Long>(ret);
                 } catch (BusError &e) {
 
-                    // MAME stacks the return address of the subroutine call
-                    e.stackFrame.pc = ret;
+                    // MAME stacks the return address of the subroutine call. UAE stacks the target address if the push fails.
+                    e.stackFrame.pc = (compat == Compatibility::UAE && pushing) ? ea + 2 + (M == Mode::AW ? 2 : M == Mode::AL ? 4 : 0) : ret;
                     throw;
                 } catch (AddressError &e) {
 
@@ -5630,7 +5632,9 @@ Moira::execPea(u16 opcode)
 
         if constexpr (C == Core::C68000) {
 
-            push <C, Long> (ea);
+            // UAE stacks the PC two bytes further if the push fails
+            if constexpr (compat == Compatibility::UAE) { try { push <C, Long> (ea); } catch (BusError &e) { e.stackFrame.pc += 2; throw; } }
+            else push <C, Long> (ea);
             prefetch<C, POLL>();
 
         } else {
@@ -5741,13 +5745,23 @@ Moira::execRte(u16 opcode)
 
         case Core::C68000:
         {
-            if constexpr (EXACT_COMPAT) {
+            if constexpr (compat == Compatibility::MAME) {
 
                 // SP is adjusted after the last read
                 newsr = (u16)read<C, AddrSpace::DATA, Word>(reg.sp);
                 newpc = (u32)read<C, AddrSpace::DATA, Word>(reg.sp + 2) << 16;
                 reg.sp += 6;
                 newpc |= read<C, AddrSpace::DATA, Word>(reg.sp - 2);
+                break;
+            }
+
+            if constexpr (compat == Compatibility::UAE) {
+
+                // UAE adjusts the stack pointer after the status register has been read
+                UAE_BE_PC(newsr = (u16)read<C, AddrSpace::DATA, Word>(reg.sp));
+                reg.sp += 6;
+                UAE_BE_PC(newpc = (u32)read<C, AddrSpace::DATA, Word>(reg.sp - 4) << 16);
+                UAE_BE_PC(newpc |= read<C, AddrSpace::DATA, Word>(reg.sp - 2));
                 break;
             }
 
@@ -6042,7 +6056,7 @@ Moira::execRtr(u16 opcode)
     u16 newccr;
     u32 newpc;
 
-    if constexpr (EXACT_COMPAT) {
+    if constexpr (compat == Compatibility::MAME) {
 
         // MAME adjusts the stack pointer right before the last word is read
         u32 sp = reg.sp;
@@ -6105,7 +6119,8 @@ Moira::execRts(u16 opcode)
         throw earlyAddressError<C>(makeFrame<AE_SET_RW|AE_SET_DF>(reg.sp));
     }
 
-    u32 newpc = readM<C, M, Long>(reg.sp);
+    u32 newpc;
+    UAE_BE_PC(newpc = readM<C, M, Long>(reg.sp));
     reg.sp += 4;
 
     // Check for address error
@@ -6314,7 +6329,7 @@ Moira::execTasEa(u16 opcode)
 
         constexpr Flags tas = AE_INC_PC;
 
-        if constexpr (EXACT_COMPAT && !isRegMode(M)) {
+        if constexpr (compat == Compatibility::MAME && !isRegMode(M)) {
 
             // MAME completes a failed read like a failed write
             try { readOp<C, M, Byte, tas>(dst, &ea, &data); }
@@ -6326,6 +6341,12 @@ Moira::execTasEa(u16 opcode)
                 }
                 throw;
             }
+
+        } else if constexpr (compat == Compatibility::UAE && !isRegMode(M)) {
+
+            // UAE does not advance the stacked PC for a bus error in the read cycle
+            try { readOp<C, M, Byte, tas>(dst, &ea, &data); }
+            catch (BusError &e) { if ((e.stackFrame.fc & 3) != 2 && M != Mode::PD) e.stackFrame.pc -= (M == Mode::DI || M == Mode::IX) ? 4 : 2; throw; }
 
         } else {
 

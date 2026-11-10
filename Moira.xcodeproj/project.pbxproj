@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		50F500000000000000000043 /* libUAECpu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50A200000000000000000001 /* libUAECpu.a */; };
+		50FA0000000000000000011B /* libUAECpu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50A200000000000000000001 /* libUAECpu.a */; };
 		50F50000000000000000010E /* MameCpu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F500000000000000000108 /* MameCpu.cpp */; };
 		50F50000000000000000010F /* m68000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F500000000000000000101 /* m68000.cpp */; };
 		50F500000000000000000110 /* m68000-decode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F500000000000000000102 /* m68000-decode.cpp */; };
@@ -16,10 +17,14 @@
 		50F500000000000000000113 /* MameCheck.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F50000000000000000010D /* MameCheck.cpp */; };
 		50F500000000000000000114 /* SSTFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F100000000000000000021 /* SSTFile.cpp */; };
 		50F500000000000000000115 /* ExceptionDiff.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F50000000000000000010C /* ExceptionDiff.cpp */; };
+		50FA00000000000000000117 /* ExceptionDiff.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F50000000000000000010C /* ExceptionDiff.cpp */; };
 		50F500000000000000000116 /* SSTFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F100000000000000000021 /* SSTFile.cpp */; };
+		50FA00000000000000000118 /* SSTFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F100000000000000000021 /* SSTFile.cpp */; };
 		50F500000000000000000033 /* libMAMERef.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50F500000000000000000002 /* libMAMERef.a */; };
 		50F500000000000000000034 /* libMAMERef.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50F500000000000000000002 /* libMAMERef.a */; };
+		50FA0000000000000000011A /* libMAMERef.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50F500000000000000000002 /* libMAMERef.a */; };
 		50F500000000000000000035 /* libMoiraMAME.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50F100000000000000000002 /* libMoiraMAME.a */; };
+		50FA0000000000000000011C /* libMoiraUAEExc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50FA00000000000000000114 /* libMoiraUAEExc.a */; };
 		50F400000000000000000101 /* UAERef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81EA309A2F2A00E2E307 /* UAERef.cpp */; };
 		50F400000000000000000102 /* softfloat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81BA309A2F2A00E2E307 /* softfloat.cpp */; };
 		50F400000000000000000103 /* softfloat_decimal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81BB309A2F2A00E2E307 /* softfloat_decimal.cpp */; };
@@ -84,13 +89,21 @@
 		50A400000000000000000F02 /* disasm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A400000000000000000F01 /* disasm.cpp */; };
 		50B100000000000000000003 /* Shared.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50B100000000000000000001 /* Shared.cpp */; };
 		50B100000000000000000008 /* FpuEnvMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000001 /* FpuEnvMath.cpp */; };
+		50FA00000000000000000103 /* FpuEnvMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000001 /* FpuEnvMath.cpp */; };
 		50B100000000000000000009 /* MoiraDebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */; };
+		50FA00000000000000000104 /* MoiraDebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */; };
 		50B10000000000000000000A /* Moira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F332386A7DD004D3EC2 /* Moira.cpp */; };
+		50FA00000000000000000105 /* Moira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F332386A7DD004D3EC2 /* Moira.cpp */; };
 		50B10000000000000000000B /* MoiraCore68010.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55703C9956D2BECD0F343A8F /* MoiraCore68010.cpp */; };
+		50FA00000000000000000106 /* MoiraCore68010.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55703C9956D2BECD0F343A8F /* MoiraCore68010.cpp */; };
 		50B10000000000000000000C /* MoiraCore68000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61F3AFFB3C6CFCEC22A0FD23 /* MoiraCore68000.cpp */; };
+		50FA00000000000000000107 /* MoiraCore68000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61F3AFFB3C6CFCEC22A0FD23 /* MoiraCore68000.cpp */; };
 		50B10000000000000000000D /* MoiraCore68020.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1654296120AA412377E9642D /* MoiraCore68020.cpp */; };
+		50FA00000000000000000108 /* MoiraCore68020.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1654296120AA412377E9642D /* MoiraCore68020.cpp */; };
 		50B100000000000000000012 /* FPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81033098E38500E2E307 /* FPU.cpp */; };
+		50FA00000000000000000109 /* FPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81033098E38500E2E307 /* FPU.cpp */; };
 		50B100000000000000000013 /* FpuFormats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81053098E38500E2E307 /* FpuFormats.cpp */; };
+		50FA0000000000000000010C /* FpuFormats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81053098E38500E2E307 /* FpuFormats.cpp */; };
 		50B100000000000000000053 /* libMoiraUAE.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50B100000000000000000004 /* libMoiraUAE.a */; };
 		50B100000000000000000065 /* FpuEnvMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000001 /* FpuEnvMath.cpp */; };
 		50B100000000000000000066 /* MoiraDebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */; };
@@ -102,8 +115,10 @@
 		50B100000000000000000070 /* FpuFormats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81053098E38500E2E307 /* FpuFormats.cpp */; };
 		50B1000000000000000000B0 /* libMoiraMusashi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50B100000000000000000061 /* libMoiraMusashi.a */; };
 		50B10000000000000000F001 /* MFloat80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000013 /* MFloat80.cpp */; };
+		50FA0000000000000000010D /* MFloat80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000013 /* MFloat80.cpp */; };
 		50B10000000000000000F002 /* MFloat80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000013 /* MFloat80.cpp */; };
 		50B10000000000000000F003 /* FpuEnv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000014 /* FpuEnv.cpp */; };
+		50FA0000000000000000010E /* FpuEnv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000014 /* FpuEnv.cpp */; };
 		50B10000000000000000F004 /* FpuEnv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000014 /* FpuEnv.cpp */; };
 		50C0123A28BBAD9B001EFB37 /* m68k-dis.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123628BBAD9B001EFB37 /* m68k-dis.c */; };
 		50C0123B28BBAD9B001EFB37 /* m68k-opc.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123728BBAD9B001EFB37 /* m68k-opc.c */; };
@@ -125,8 +140,10 @@
 		50D10000000000000000000E /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; };
 		50D2000000000000000000A3 /* libUAECpu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50A200000000000000000001 /* libUAECpu.a */; };
 		50E00000000000000000A004 /* MMU030.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E00000000000000000A002 /* MMU030.cpp */; };
+		50FA0000000000000000010A /* MMU030.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E00000000000000000A002 /* MMU030.cpp */; };
 		50E00000000000000000A005 /* MMU030.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E00000000000000000A002 /* MMU030.cpp */; };
 		50E00000000000000000A0F4 /* MMU040.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E00000000000000000A0F3 /* MMU040.cpp */; };
+		50FA0000000000000000010B /* MMU040.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E00000000000000000A0F3 /* MMU040.cpp */; };
 		50E00000000000000000A0F5 /* MMU040.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E00000000000000000A0F3 /* MMU040.cpp */; };
 		50E1000000000000000000F3 /* binutils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E1000000000000000000F1 /* binutils.cpp */; };
 		50E1000000000000000000F4 /* binutils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E1000000000000000000F1 /* binutils.cpp */; };
@@ -174,6 +191,13 @@
 			remoteGlobalIDString = 50A200000000000000000004;
 			remoteInfo = UAECpu;
 		};
+		50FA00000000000000000127 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 50804DFE2386A4CE004D3EC2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 50A200000000000000000004;
+			remoteInfo = UAECpu;
+		};
 		50F50000000000000000001F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 50804DFE2386A4CE004D3EC2 /* Project object */;
@@ -188,12 +212,26 @@
 			remoteGlobalIDString = 50F500000000000000000001;
 			remoteInfo = MAMERef;
 		};
+		50FA00000000000000000123 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 50804DFE2386A4CE004D3EC2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 50F500000000000000000001;
+			remoteInfo = MAMERef;
+		};
 		50F500000000000000000021 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 50804DFE2386A4CE004D3EC2 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 50F100000000000000000001;
 			remoteInfo = MoiraMAME;
+		};
+		50FA00000000000000000125 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 50804DFE2386A4CE004D3EC2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 50FA00000000000000000101;
+			remoteInfo = MoiraUAEExc;
 		};
 		50F400000000000000000015 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -268,6 +306,7 @@
 		50F500000000000000000002 /* libMAMERef.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libMAMERef.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		50F50000000000000000000C /* mameCheck */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mameCheck; sourceTree = BUILT_PRODUCTS_DIR; };
 		50F500000000000000000016 /* exceptionRunner */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = exceptionRunner; sourceTree = BUILT_PRODUCTS_DIR; };
+		50FA00000000000000000121 /* exceptionRunnerUAE */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = exceptionRunnerUAE; sourceTree = BUILT_PRODUCTS_DIR; };
 		50F400000000000000000113 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		50F400000000000000000115 /* FpuTests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FpuTests.cpp; sourceTree = "<group>"; };
 		50F400000000000000000117 /* FpuExecTests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FpuExecTests.cpp; sourceTree = "<group>"; };
@@ -443,6 +482,7 @@
 		50B100000000000000000001 /* Shared.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Shared.cpp; sourceTree = "<group>"; };
 		50B100000000000000000002 /* Shared.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Shared.h; sourceTree = "<group>"; };
 		50B100000000000000000004 /* libMoiraUAE.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libMoiraUAE.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		50FA00000000000000000114 /* libMoiraUAEExc.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libMoiraUAEExc.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		50B100000000000000000061 /* libMoiraMusashi.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libMoiraMusashi.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		50B99DAB23B24E0C00D8A89A /* MoiraTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraTypes.h; sourceTree = "<group>"; };
 		50BF14CA23BB4D2700EDFB9C /* MoiraALU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraALU.h; sourceTree = "<group>"; };
@@ -508,6 +548,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		50FA00000000000000000119 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				50FA0000000000000000011A /* libMAMERef.a in Frameworks */,
+				50FA0000000000000000011B /* libUAECpu.a in Frameworks */,
+				50FA0000000000000000011C /* libMoiraMAME.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		50F400000000000000000004 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -540,6 +590,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		50B100000000000000000006 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50FA0000000000000000010F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -898,6 +955,7 @@
 			children = (
 				50A200000000000000000001 /* libUAECpu.a */,
 				50B100000000000000000004 /* libMoiraUAE.a */,
+				50FA00000000000000000114 /* libMoiraUAEExc.a */,
 				50B100000000000000000061 /* libMoiraMusashi.a */,
 				50804E062386A4CE004D3EC2 /* testRunnerMusashi */,
 				50D100000000000000000010 /* testRunnerUAE */,
@@ -905,6 +963,7 @@
 				50F500000000000000000002 /* libMAMERef.a */,
 				50F50000000000000000000C /* mameCheck */,
 				50F500000000000000000016 /* exceptionRunner */,
+				50FA00000000000000000121 /* exceptionRunnerUAE */,
 				50F10000000000000000000C /* singleStepRunner */,
 				50F200000000000000000002 /* fibonacci */,
 				50F400000000000000000002 /* libUAERef.a */,
@@ -1147,6 +1206,22 @@
 			productReference = 50B100000000000000000004 /* libMoiraUAE.a */;
 			productType = "com.apple.product-type.library.static";
 		};
+		50FA00000000000000000101 /* MoiraUAEExc */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 50FA00000000000000000110 /* Build configuration list for PBXNativeTarget "MoiraUAEExc" */;
+			buildPhases = (
+				50FA00000000000000000102 /* Sources */,
+				50FA0000000000000000010F /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MoiraUAEExc;
+			productName = MoiraUAEExc;
+			productReference = 50FA00000000000000000114 /* libMoiraUAEExc.a */;
+			productType = "com.apple.product-type.library.static";
+		};
 		50B100000000000000000064 /* MoiraMusashi */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 50B1000000000000000000AD /* Build configuration list for PBXNativeTarget "MoiraMusashi" */;
@@ -1315,6 +1390,25 @@
 			productReference = 50F500000000000000000016 /* exceptionRunner */;
 			productType = "com.apple.product-type.tool";
 		};
+		50FA00000000000000000115 /* exceptionRunnerUAE */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 50FA0000000000000000011D /* Build configuration list for PBXNativeTarget "exceptionRunnerUAE" */;
+			buildPhases = (
+				50FA00000000000000000116 /* Sources */,
+				50FA00000000000000000119 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				50FA00000000000000000122 /* PBXTargetDependency */,
+				50FA00000000000000000124 /* PBXTargetDependency */,
+				50FA00000000000000000126 /* PBXTargetDependency */,
+			);
+			name = exceptionRunnerUAE;
+			productName = exceptionRunnerUAE;
+			productReference = 50FA00000000000000000121 /* exceptionRunnerUAE */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -1347,11 +1441,13 @@
 				50D10000000000000000000F /* testRunnerUAE */,
 				50A200000000000000000004 /* UAECpu */,
 				50B100000000000000000007 /* MoiraUAE */,
+				50FA00000000000000000101 /* MoiraUAEExc */,
 				50B100000000000000000064 /* MoiraMusashi */,
 				50F100000000000000000001 /* MoiraMAME */,
 				50F500000000000000000001 /* MAMERef */,
 				50F50000000000000000000B /* mameCheck */,
 				50F500000000000000000015 /* exceptionRunner */,
+				50FA00000000000000000115 /* exceptionRunnerUAE */,
 				50F10000000000000000000B /* singleStepRunner */,
 				50F200000000000000000001 /* fibonacci */,
 				50F400000000000000000001 /* UAERef */,
@@ -1436,6 +1532,26 @@
 				50B100000000000000000013 /* FpuFormats.cpp in Sources */,
 				50B10000000000000000F001 /* MFloat80.cpp in Sources */,
 				50B10000000000000000F003 /* FpuEnv.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50FA00000000000000000102 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				50FA00000000000000000103 /* FpuEnvMath.cpp in Sources */,
+				50FA00000000000000000104 /* MoiraDebugger.cpp in Sources */,
+				50FA00000000000000000105 /* Moira.cpp in Sources */,
+				50FA00000000000000000106 /* MoiraCore68010.cpp in Sources */,
+				50FA00000000000000000107 /* MoiraCore68000.cpp in Sources */,
+				50FA00000000000000000108 /* MoiraCore68020.cpp in Sources */,
+				50FA00000000000000000109 /* FPU.cpp in Sources */,
+				50FA0000000000000000010A /* MMU030.cpp in Sources */,
+				50FA0000000000000000010B /* MMU040.cpp in Sources */,
+				C20E21D44E8A477AB1A17901 /* Cache.cpp in Sources */,
+				50FA0000000000000000010C /* FpuFormats.cpp in Sources */,
+				50FA0000000000000000010D /* MFloat80.cpp in Sources */,
+				50FA0000000000000000010E /* FpuEnv.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1599,6 +1715,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		50FA00000000000000000116 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				50FA00000000000000000117 /* ExceptionDiff.cpp in Sources */,
+				50FA00000000000000000118 /* SSTFile.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -1606,6 +1731,11 @@
 			isa = PBXTargetDependency;
 			target = 50A200000000000000000004 /* UAECpu */;
 			targetProxy = 50F500000000000000000041 /* PBXContainerItemProxy */;
+		};
+		50FA00000000000000000126 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 50A200000000000000000004 /* UAECpu */;
+			targetProxy = 50FA00000000000000000127 /* PBXContainerItemProxy */;
 		};
 		50A200000000000000000009 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1647,10 +1777,20 @@
 			target = 50F500000000000000000001 /* MAMERef */;
 			targetProxy = 50F500000000000000000020 /* PBXContainerItemProxy */;
 		};
+		50FA00000000000000000122 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 50F500000000000000000001 /* MAMERef */;
+			targetProxy = 50FA00000000000000000123 /* PBXContainerItemProxy */;
+		};
 		50F500000000000000000024 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 50F100000000000000000001 /* MoiraMAME */;
 			targetProxy = 50F500000000000000000021 /* PBXContainerItemProxy */;
+		};
+		50FA00000000000000000124 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 50FA00000000000000000101 /* MoiraUAEExc */;
+			targetProxy = 50FA00000000000000000125 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1783,6 +1923,31 @@
 			};
 			name = Debug;
 		};
+		50FA0000000000000000011E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_COMPATIBILITY=UAE",
+					"EXC_DEFAULT_REFERENCE_UAE=1",
+					"MOIRA_PRECISE_TIMING=true",
+					"MOIRA_EMULATE_ADDRESS_ERROR=true",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/SingleStep",
+					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
+					"$(SRCROOT)/Tests/ThirdParty/UAEGlue",
+					"$(SRCROOT)/Moira/**",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USE_HEADERMAP = NO;
+			};
+			name = Debug;
+		};
 		50F50000000000000000001B /* Debug-UAE */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1791,6 +1956,31 @@
 				DEAD_CODE_STRIPPING = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_COMPATIBILITY=MAME",
+					"MOIRA_PRECISE_TIMING=true",
+					"MOIRA_EMULATE_ADDRESS_ERROR=true",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/SingleStep",
+					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
+					"$(SRCROOT)/Tests/ThirdParty/UAEGlue",
+					"$(SRCROOT)/Moira/**",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USE_HEADERMAP = NO;
+			};
+			name = "Debug-UAE";
+		};
+		50FA0000000000000000011F /* Debug-UAE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_COMPATIBILITY=UAE",
+					"EXC_DEFAULT_REFERENCE_UAE=1",
 					"MOIRA_PRECISE_TIMING=true",
 					"MOIRA_EMULATE_ADDRESS_ERROR=true",
 					"$(inherited)",
@@ -1816,6 +2006,32 @@
 				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_COMPATIBILITY=MAME",
+					"MOIRA_PRECISE_TIMING=true",
+					"MOIRA_EMULATE_ADDRESS_ERROR=true",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/SingleStep",
+					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
+					"$(SRCROOT)/Tests/ThirdParty/UAEGlue",
+					"$(SRCROOT)/Moira/**",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USE_HEADERMAP = NO;
+			};
+			name = Release;
+		};
+		50FA00000000000000000120 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_COMPATIBILITY=UAE",
+					"EXC_DEFAULT_REFERENCE_UAE=1",
 					"MOIRA_PRECISE_TIMING=true",
 					"MOIRA_EMULATE_ADDRESS_ERROR=true",
 					"$(inherited)",
@@ -2299,6 +2515,24 @@
 			};
 			name = Debug;
 		};
+		50FA00000000000000000111 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_COMPATIBILITY=UAE",
+					"MOIRA_EMULATE_ADDRESS_ERROR=true",
+					"MOIRA_PRECISE_TIMING=true",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/Moira/**";
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+			};
+			name = Debug;
+		};
 		50B10000000000000000004E /* Debug-UAE */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -2316,12 +2550,48 @@
 			};
 			name = "Debug-UAE";
 		};
+		50FA00000000000000000112 /* Debug-UAE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_COMPATIBILITY=UAE",
+					"MOIRA_EMULATE_ADDRESS_ERROR=true",
+					"MOIRA_PRECISE_TIMING=true",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/Moira/**";
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+			};
+			name = "Debug-UAE";
+		};
 		50B10000000000000000004F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				EXECUTABLE_PREFIX = lib;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"MOIRA_COMPATIBILITY=UAE",
+					"MOIRA_PRECISE_TIMING=true",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/Moira/**";
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+			};
+			name = Release;
+		};
+		50FA00000000000000000113 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_COMPATIBILITY=UAE",
+					"MOIRA_EMULATE_ADDRESS_ERROR=true",
 					"MOIRA_PRECISE_TIMING=true",
 					"$(inherited)",
 				);
@@ -2649,6 +2919,16 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		50FA0000000000000000011D /* Build configuration list for PBXNativeTarget "exceptionRunnerUAE" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				50FA0000000000000000011E /* Debug */,
+				50FA0000000000000000011F /* Debug-UAE */,
+				50FA00000000000000000120 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		50F400000000000000000005 /* Build configuration list for PBXNativeTarget "UAERef" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -2705,6 +2985,16 @@
 				50B10000000000000000004D /* Debug */,
 				50B10000000000000000004E /* Debug-UAE */,
 				50B10000000000000000004F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		50FA00000000000000000110 /* Build configuration list for PBXNativeTarget "MoiraUAEExc" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				50FA00000000000000000111 /* Debug */,
+				50FA00000000000000000112 /* Debug-UAE */,
+				50FA00000000000000000113 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
