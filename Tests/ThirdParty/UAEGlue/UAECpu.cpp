@@ -206,6 +206,12 @@ void wait_cpu_cycle_write_ce020(uaecptr addr, int mode, uae_u32 v) { wait_cpu_cy
 // Interface
 //
 
+// UAE initializes the x87 control word on x86 hosts. Moira's reference runs on
+// softfloat only, so there is nothing to do (the real functions live in the
+// host-specific part of Amiberry, which is not compiled).
+void init_fpucw_x87(void) { }
+void init_fpucw_x87_80(void) { }
+
 namespace uaecpu {
 
 void init(Cpu model, Fpu fpu, uint8_t *memory, WriteHook hook)

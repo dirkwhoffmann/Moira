@@ -11,7 +11,7 @@
 #include "config.h"
 #include "UAEGlue/UAECpu.h"
 
-static void uaeWrite(int size, u32 addr, u32 value, u32 fc, u64 cycle)
+static void uaeWrite(int size, uint32_t addr, uint32_t value, uint32_t fc, uint64_t cycle)
 {
     if (CHECK_MEM_WRITES)
         sandbox.record(size == 1 ? POKE8 : POKE16, addr, cycle, fc, size == 1 ? u8(value) : u16(value));

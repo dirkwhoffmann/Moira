@@ -20,7 +20,11 @@ ${UAE_DIR}/src/include
 ${UAE_DIR}/src
 )
 target_include_directories(uaeref PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/UAEGlue)
-target_compile_options(uaeref PRIVATE -w)
+if(MSVC)
+    target_compile_options(uaeref PRIVATE /w)
+else()
+    target_compile_options(uaeref PRIVATE -w)
+endif()
 
 
 # Add UAE's CPU core (the reference of randomuae and the exception tests)
@@ -50,7 +54,11 @@ ${AMI}/cpuemu_35.cpp ${AMI}/cpuemu_40.cpp ${AMI}/cpuemu_50.cpp
 )
 set_target_properties(uaecpu PROPERTIES CXX_STANDARD 17)
 target_compile_definitions(uaecpu PRIVATE AMIBERRY AMIBERRY_NO_JIT AMIBERRY_NO_THREADED_CPU)
-target_compile_options(uaecpu PRIVATE -w -O1)
+if(MSVC)
+    target_compile_options(uaecpu PRIVATE /w)
+else()
+    target_compile_options(uaecpu PRIVATE -w -O1)
+endif()
 target_include_directories(uaecpu PRIVATE
 ${CMAKE_CURRENT_SOURCE_DIR}/UAEGlue/sdl-shim
 ${AMI} ${AMI}/include ${AMI}/osdep ${AMI}/archivers ${AMI}/threaddep)
@@ -73,4 +81,8 @@ ${MAME_DIR}/m68000-sdp.cpp
 set_target_properties(mameref PROPERTIES CXX_STANDARD 20)
 target_include_directories(mameref PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/MAMEGlue/shim ${MAME_DIR})
 target_include_directories(mameref PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/MAMEGlue)
-target_compile_options(mameref PRIVATE -w)
+if(MSVC)
+    target_compile_options(mameref PRIVATE /w)
+else()
+    target_compile_options(mameref PRIVATE -w)
+endif()

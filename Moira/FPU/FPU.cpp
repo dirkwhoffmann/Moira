@@ -660,7 +660,7 @@ static MFloat80 zeroRemainder(FpuEnv &env, const MFloat80 &dst, const MFloat80 &
 {
     // Exponents are normalized if the operand is a denormal number
     auto exponent = [](const MFloat80 &v) {
-        return v.biasedExponent() ? int(v.biasedExponent()) : 1 - __builtin_clzll(v.mantissa());
+        return v.biasedExponent() ? int(v.biasedExponent()) : 1 - std::countl_zero(v.mantissa());
     };
     int bExp = exponent(src);
     int diff = std::max(exponent(dst) - bExp, 0);
