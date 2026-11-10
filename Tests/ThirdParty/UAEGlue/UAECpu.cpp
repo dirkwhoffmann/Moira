@@ -319,6 +319,11 @@ void setState(const State &s)
     // Start with empty caches
     flush_cpu_caches(true);
 
+    // Forget the long word held in the 68020 prefetch pipeline. Otherwise, the
+    // instruction at an unchanged PC is taken from the previous test case.
+    regs.cacheholdingaddr020 = 0xffffffff;
+    regs.prefetch020addr = 0xffffffff;
+
     for (int i = 0; i < 8; i++) {
         regs.fp[i].fpx.high = s.fpse[i];
         regs.fp[i].fpx.low = s.fpman[i];
