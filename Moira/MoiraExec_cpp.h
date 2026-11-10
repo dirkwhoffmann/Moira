@@ -882,7 +882,16 @@ Moira::execAndisr(u16 opcode)
 
     SUPERVISOR_MODE_ONLY
 
-    u32 src = readI<C, S>();
+    u32 src;
+    if constexpr (compat == Compatibility::MAME) {
+
+        // MAME does not decrement the stacked PC if the refill fails
+        try { src = readI<C, S>(); } catch (BusError &e) { e.stackFrame.pc += 2; throw; }
+
+    } else {
+
+        src = readI<C, S>();
+    }
     u16 dst = getSR();
 
     SYNC_68000(8);
@@ -4194,8 +4203,9 @@ Moira::execMoveUspAn(u16 opcode)
 
     if constexpr (C >= Core::C68010) SYNC(2);
 
+    if constexpr (compat == Compatibility::MAME) writeA(an, getUSP());   // MAME writes before the prefetch
     prefetch<C, POLL>();
-    writeA(an, getUSP());
+    if constexpr (compat != Compatibility::MAME) writeA(an, getUSP());
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -4214,8 +4224,9 @@ Moira::execMoveAnUsp(u16 opcode)
 
     if constexpr (C >= Core::C68010) SYNC(2);
 
+    if constexpr (compat == Compatibility::MAME) setUSP(readA(an));   // MAME writes before the prefetch
     prefetch<C, POLL>();
-    setUSP(readA(an));
+    if constexpr (compat != Compatibility::MAME) setUSP(readA(an));
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
