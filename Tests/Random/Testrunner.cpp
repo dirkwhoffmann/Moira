@@ -238,8 +238,8 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
     s.pc = pc;
     s.opcode = opcode;
 
-    // MAME emulates address errors. Random exception vectors (odd handler addresses) would
-    // cause an endless chain of address errors, so all handlers start at a valid address.
+    // Random exception vectors (odd handler addresses) would cause chains of address errors in
+    // MAME, so all handlers start at a valid address.
     if (useMAME) {
         for (u32 vector = 2; vector < 256; vector++) set32(s.mem, vector * 4, 0x4000);
     }
@@ -980,6 +980,7 @@ void runSingleTest(Setup &s, u16 op)
     runReference(s, refResult);
     // Moira is configured without address error emulation (MOIRA_EMULATE_ADDRESS_ERROR)
     if (useUAE && (lastExceptionUAE() == 3) && !MOIRA_EMULATE_ADDRESS_ERROR) return;
+    if (useMAME && addressErrorMAME()) return;
     refclk[0] += refResult.elapsed[0];
 
     // Run Moira

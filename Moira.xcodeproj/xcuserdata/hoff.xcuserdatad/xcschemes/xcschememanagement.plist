@@ -34,10 +34,15 @@
 			<key>orderHint</key>
 			<integer>11</integer>
 		</dict>
-		<key>MoiraMusashi.xcscheme_^#shared#^_</key>
+		<key>MoiraMAMENoAE.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>12</integer>
+		</dict>
+		<key>MoiraMusashi.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>13</integer>
 		</dict>
 		<key>MoiraSoftfloat.xcscheme_^#shared#^_</key>
 		<dict>
@@ -47,12 +52,12 @@
 		<key>MoiraUAE.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>13</integer>
+			<integer>14</integer>
 		</dict>
 		<key>MoiraUAEExc.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>14</integer>
+			<integer>15</integer>
 		</dict>
 		<key>RunnerMusashi.xcscheme_^#shared#^_</key>
 		<dict>
@@ -67,12 +72,12 @@
 		<key>UAECpu.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>15</integer>
+			<integer>16</integer>
 		</dict>
 		<key>UAERef.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>16</integer>
+			<integer>17</integer>
 		</dict>
 		<key>busErrorRunner.xcscheme_^#shared#^_</key>
 		<dict>

@@ -21,9 +21,7 @@ static u32 mameVBR, mameSFC, mameDFC, mameCACR, mameCAAR;
 // The state loaded by the last reset
 static mame::State mameState;
 
-// Counts the write accesses of an instruction. The write with the number mameSuppress is not performed.
-static int mameWrites = 0;
-static int mameSuppress = -1;
+static bool mameAddressError = false;
 
 void setupMAME(moira::CPUModel model)
 {
@@ -38,7 +36,6 @@ void setupMAME(moira::CPUModel model)
         return get16(refMem, addr);
     };
     mamecpu->write = [](uint32_t addr, uint16_t data, uint16_t mask) {
-        if (mameWrites++ == mameSuppress) return;
         if (mask == 0xFFFF) set16(refMem, addr, data);
         else if (mask == 0xFF00) set8(refMem, addr, data >> 8);
         else set8(refMem, addr + 1, data & 0xFF);
@@ -66,11 +63,6 @@ void resetMAME(const runner::Setup &s)
 
 void executeMAME(runner::Result &r)
 {
-    static u8 snapshot[0x10000];
-    memcpy(snapshot, refMem, sizeof(snapshot));
-
-    mameWrites = 0;
-    mameSuppress = -1;
 
     clock_t elapsed = clock();
     r.cycles = mamecpu->execute();
@@ -78,44 +70,11 @@ void executeMAME(runner::Result &r)
 
     auto st = mamecpu->state();
 
-    // MAME logs the aborted access of an address error, which never reaches a real bus. Drop it.
-    // It is the access that precedes the exception stack frame (the last 7 writes).
+    // Address errors are not part of this test (see the exception tests). Tell the runner to skip
+    // the case if MAME raised one, i.e., if it fetched the address error vector.
     auto log = mamecpu->log();
-    bool addressError = false;
-    for (auto &b : log) if (!b.write && b.fc == 5 && (b.addr == 0x0C || b.addr == 0x0E)) addressError = true;
-
-    if (addressError) {
-
-        std::vector<size_t> writes;
-        for (size_t i = 0; i < log.size(); i++) if (log[i].write) writes.push_back(i);
-
-        // Find the first exception stack frame. Its writes go to SP-2, SP-6, SP-4, SP-8, SP-10, SP-14, SP-12
-        static const int offsets[7] = { 0, -4, -2, -6, -8, -12, -10 };
-        int frame = -1;
-        for (size_t i = 1; i + 6 < writes.size() && frame < 0; i++) {
-            bool match = true;
-            for (int k = 0; k < 7; k++) {
-                auto &e = log[writes[i + k]];
-                if (e.fc != 5 || e.addr != log[writes[i]].addr + offsets[k]) { match = false; break; }
-            }
-            if (match && writes[i - 1] + 1 == writes[i]) frame = int(i);
-        }
-
-        if (frame > 0) {
-
-            // MAME has performed the aborted write. Run the instruction again without it, because
-            // the write could modify the data the exception processing depends on (e.g., a vector).
-            int aborted = frame - 1;
-            memcpy(refMem, snapshot, sizeof(snapshot));
-            mamecpu->load(mameState);
-            mameWrites = 0;
-            mameSuppress = aborted;
-            r.cycles = mamecpu->execute();
-            st = mamecpu->state();
-            log = mamecpu->log();
-            log.erase(log.begin() + writes[aborted]);
-        }
-    }
+    mameAddressError = false;
+    for (auto &b : log) if (!b.write && b.fc == 5 && (b.addr == 0x0C || b.addr == 0x0E)) mameAddressError = true;
 
     // Report the write accesses to the sandbox. Moira performs a write after the first two
     // cycles of the bus cycle have elapsed.
@@ -146,3 +105,5 @@ void executeMAME(runner::Result &r)
     for (int i = 0; i < 7; i++) r.a[i] = st.a[i];
     r.a[7] = (st.sr & 0x2000) ? st.ssp : st.usp;
 }
+
+bool addressErrorMAME() { return mameAddressError; }

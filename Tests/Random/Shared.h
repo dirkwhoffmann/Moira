@@ -179,6 +179,7 @@ void executeMusashi(runner::Result &r);
 // MAME
 void resetMAME(const runner::Setup &s);
 void executeMAME(runner::Result &r);
+bool addressErrorMAME();
 
 // UAE
 void disassembleUAE(const runner::Setup &s, runner::Result &r);

@@ -401,13 +401,14 @@ int main(int argc, char **argv)
     auto files = collectFiles(opt);
     if (files.empty()) { printf("No test files found in %s\n", opt.dir.c_str()); return 1; }
 
-    printf("Moira SingleStep runner. (C) Dirk W. Hoffmann, 2026\n");
-    printf("Core %s\n", moira::Moira::build().c_str());
-    printf("\n");
-    printf("The test program runs Moira against the TomHarte-style JSON tests for the Motorola 68000.\n");
-    printf("https://github.com/SingleStepTests/m68000\n");
-    printf("\n");
-    printf("Reference : %s ", reference());
+    printf("Moira - A Motorola 68k CPU emulator\n\n");
+    printf("Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de\n");
+    printf("Published under the terms of the MIT License\n\n");
+    printf("Runs Moira against the SingleStepTests suite for the Motorola 68000 and\n");
+    printf("compares registers, memory and bus cycles after each instruction.\n");
+    printf("https://github.com/SingleStepTests/m68000\n\n");
+    printf("Core under test : Moira %s\n", moira::Moira::build().c_str());
+    printf("Reference       : %s ", reference());
     printf("(Timing : %s)\n", MOIRA_PRECISE_TIMING ? "precise" : "fast");
     printf("\n");
 

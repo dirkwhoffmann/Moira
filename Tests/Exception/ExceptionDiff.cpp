@@ -585,7 +585,13 @@ int main(int argc, char **argv)
     std::sort(names.begin(), names.end());
     if (names.empty()) { printf("No test files found in %s\n", opt.dir.c_str()); return 1; }
 
-    printf("Exception differential test: Moira (%s mode) vs. %s\n\n", moira::compat == moira::Compatibility::UAE ? "UAE" : "MAME", opt.uae ? "UAE (WinUAE, cycle exact 68000)" : "MAME's microcoded 68000");
+    printf("Moira - A Motorola 68k CPU emulator\n\n");
+    printf("Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de\n");
+    printf("Published under the terms of the MIT License\n\n");
+    printf("Compares the exception processing of Moira (address errors, bus errors, traps,\n");
+    printf("etc.) with a reference 68000 and checks registers, stack frames and bus cycles.\n\n");
+    printf("Core under test : Moira %s (%s mode)\n", moira::Moira::build().c_str(), moira::compat == moira::Compatibility::UAE ? "UAE" : "MAME");
+    printf("Reference       : %s\n\n", opt.uae ? "UAE (WinUAE, cycle exact 68000)" : "MAME's microcoded 68000");
     printf("%-16s %8s %8s %8s\n", "Instruction", "Cases", "OK", "OK%");
 
     FILE *tsv = opt.tsv.empty() ? nullptr : fopen(opt.tsv.c_str(), "w");

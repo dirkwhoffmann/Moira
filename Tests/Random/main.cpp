@@ -71,16 +71,23 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    printf("Moira CPU tester. (C) Dirk W. Hoffmann, 2019 - 2026\n");
-    printf("Core %s\n\n", moira::Moira::build().c_str());
-    if (DASM_STAGES) printf("The test program compares the disassembler output of Moira with reference disassemblers.\n");
-    else printf("The test program runs Moira against a reference CPU with randomly generated data.\n");
+    printf("Moira - A Motorola 68k CPU emulator\n\n");
+    printf("Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de\n");
+    printf("Published under the terms of the MIT License\n\n");
+    if (DASM_STAGES) {
+        printf("Compares the disassembler output of Moira with reference disassemblers.\n");
+        printf("Every opcode is disassembled in several syntaxes and the texts are compared.\n\n");
+    } else {
+        printf("Runs random instructions on Moira and on a reference CPU and compares\n");
+        printf("registers, memory and cycle counts after each instruction.\n\n");
+    }
+    printf("Core under test : Moira %s\n", moira::Moira::build().c_str());
+    printf("      Reference : %s\n", DASM_STAGES ? (DASM_MIT ? "Binutils (MIT)" : "Binutils, Musashi, UAE") : runner::reference());
     printf("\n");
     printf("    Test rounds : %ld\n", rounds);
     printf("    Random seed : %d\n", seed);
     printf("     Exec range : %s\n", TOSTRING(doExec(opcode)));
     printf("     Dasm range : %s\n", TOSTRING(doDasm(opcode)));
-    printf("      Reference : %s\n", DASM_STAGES ? (DASM_MIT ? "Binutils (MIT)" : "Binutils, Musashi, UAE") : runner::reference());
 
     runner::run(seed, rounds,
                 cpus.empty() ? runner::allModels() : cpus,

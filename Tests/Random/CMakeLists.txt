@@ -1,6 +1,6 @@
 # The randomized differential test runner. It is built once per tested Moira core
 # (randomuae tests moiraUAE against UAE, randommusashi tests moiraMusashi against
-# Musashi, randommame tests moiraMAME against MAME's microcoded 68000). The same sources are used by the disassembler tests (see ../Dasm).
+# Musashi, randommame tests moiraMAMENoAE against MAME's microcoded 68000). The same sources are used by the disassembler tests (see ../Dasm).
 set(RUNNER_SRC
 ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/Testrunner.cpp
@@ -43,7 +43,7 @@ endfunction()
 
 add_test_runner(randommusashi moiraMusashi RANDOM)
 add_test_runner(randomuae moiraUAE RANDOM)
-add_test_runner(randommame moiraMAME RANDOM)
+add_test_runner(randommame moiraMAMENoAE RANDOM)
 
 # A fixed seed keeps the automated runs reproducible. Without --seed, the runners
 # derive the seed from the date.
