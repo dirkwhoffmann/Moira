@@ -64,6 +64,11 @@
 #include "MameCpu.h"
 #include "UAECpu.h"
 #include "SSTFile.h"
+#ifdef SST_MUSASHI
+extern "C" {
+#include "m68k.h"
+}
+#endif
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -221,6 +226,7 @@ struct RefCore {
     virtual mame::State state() const = 0;
     virtual const std::vector<mame::BusCycle> &log() const = 0;
     virtual bool halted() const = 0;
+    virtual bool hasBusLog() const { return true; }                     // Does the core report its bus cycles?
 };
 
 // MAME's microcoded 68000
@@ -334,6 +340,81 @@ struct UaeCore : RefCore {
     bool halted() const override { return didHalt; }
 };
 
+#ifdef SST_MUSASHI
+
+// Musashi. The core has no bus log and doesn't emulate address errors. It reads the
+// instruction from memory (no prefetch queue), so the queue is poked in behind the PC.
+Memory *musashiMem = nullptr;
+
+extern "C" {
+
+unsigned int m68k_read_memory_8(unsigned int addr) { return musashiMem->peek(addr); }
+unsigned int m68k_read_memory_16(unsigned int addr) { return musashiMem->peek16(addr); }
+unsigned int m68k_read_memory_32(unsigned int addr) { return musashiMem->peek16(addr) << 16 | musashiMem->peek16(addr + 2); }
+unsigned int m68k_read_disassembler_16(unsigned int addr) { return musashiMem->peek16(addr); }
+unsigned int m68k_read_disassembler_32(unsigned int addr) { return m68k_read_memory_32(addr); }
+void m68k_write_memory_8(unsigned int addr, unsigned int value) { musashiMem->poke(addr, u8(value)); }
+void m68k_write_memory_16(unsigned int addr, unsigned int value) { musashiMem->poke(addr, u8(value >> 8)); musashiMem->poke(addr + 1, u8(value)); }
+void m68k_write_memory_32(unsigned int addr, unsigned int value) { m68k_write_memory_16(addr, value >> 16); m68k_write_memory_16(addr + 2, value & 0xFFFF); }
+int interrupt_handler(int) { return M68K_INT_ACK_AUTOVECTOR; }
+void my_fc_handler(unsigned int) { }
+int read_sp_on_reset(void) { return 0x2000; }
+int read_pc_on_reset(void) { return 0x1000; }
+
+}
+
+struct MusashiCore : RefCore {
+
+    Memory &mem;
+
+    MusashiCore(Memory &m) : mem(m)
+    {
+        musashiMem = &mem;
+        m68k_init();
+        m68k_set_cpu_type(M68K_CPU_TYPE_68000);
+    }
+
+    void load(const sst::State &s) override
+    {
+        // The queue holds the opcode and the next extension word (the PC points behind them)
+        u32 pc = (s.pc - 4) & ADDR_MASK;
+        mem.poke(pc, u8(s.prefetch[0] >> 8)); mem.poke(pc + 1, u8(s.prefetch[0]));
+        mem.poke(pc + 2, u8(s.prefetch[1] >> 8)); mem.poke(pc + 3, u8(s.prefetch[1]));
+
+        m68k_set_reg(M68K_REG_USP, 0);
+        m68k_set_reg(M68K_REG_ISP, 0);
+        m68k_pulse_reset();
+        m68k_set_reg(M68K_REG_SR, s.sr);
+        m68k_set_reg(M68K_REG_USP, s.usp);
+        m68k_set_reg(M68K_REG_ISP, s.ssp);
+        for (int i = 0; i < 8; i++) m68k_set_reg((m68k_register_t)(M68K_REG_D0 + i), s.d[i]);
+        for (int i = 0; i < 7; i++) m68k_set_reg((m68k_register_t)(M68K_REG_A0 + i), s.a[i]);
+        m68k_set_reg(M68K_REG_PC, pc);
+    }
+
+    int execute() override { return m68k_execute(1); }
+
+    mame::State state() const override
+    {
+        mame::State m;
+        for (int i = 0; i < 8; i++) m.d[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_D0 + i));
+        for (int i = 0; i < 7; i++) m.a[i] = m68k_get_reg(NULL, (m68k_register_t)(M68K_REG_A0 + i));
+        m.usp = m68k_get_reg(NULL, M68K_REG_USP);
+        m.ssp = m68k_get_reg(NULL, M68K_REG_ISP);
+        m.sr = u16(m68k_get_reg(NULL, M68K_REG_SR));
+        m.pc = m68k_get_reg(NULL, M68K_REG_PC) & ADDR_MASK;
+        return m;
+    }
+
+    const std::vector<mame::BusCycle> &log() const override { return cycles; }
+    bool halted() const override { return false; }
+    bool hasBusLog() const override { return false; }
+
+    std::vector<mame::BusCycle> cycles;
+};
+
+#endif
+
 struct Reference {
 
     Memory mem;
@@ -341,7 +422,15 @@ struct Reference {
     std::unique_ptr<RefCore> core;
     RefCore &cpu;
 
-    Reference(bool uae) : core(uae ? (RefCore *)new UaeCore(mem, fault) : (RefCore *)new MameCore(mem, fault)), cpu(*core) { }
+    static RefCore *create(bool uae, bool musashi, Memory &mem, Fault &fault)
+    {
+#ifdef SST_MUSASHI
+        if (musashi) return new MusashiCore(mem);
+#endif
+        return uae ? (RefCore *)new UaeCore(mem, fault) : (RefCore *)new MameCore(mem, fault);
+    }
+
+    Reference(bool uae, bool musashi = false) : core(create(uae, musashi, mem, fault)), cpu(*core) { }
 
     void load(const sst::State &s)
     {
@@ -379,11 +468,17 @@ struct Settings {
     int verbose = 0;                // Failures to print per file
     int dedupe = 0;                 // Maximum number of cases per instruction form, access, and kind (0 = all)
     bool coverage = false;          // Report instruction forms without any case?
-#ifdef EXC_DEFAULT_REFERENCE_UAE
+#if defined(EXC_DEFAULT_REFERENCE_UAE) || defined(SST_UAE)
     bool uae = true;                // Use UAE instead of MAME as reference?
 #else
     bool uae = false;               // Use UAE instead of MAME as reference?
 #endif
+#ifdef SST_MUSASHI
+    bool musashi = true;            // Use Musashi as reference?
+#else
+    bool musashi = false;           // Use Musashi as reference?
+#endif
+    double minPercent = 100.0;      // Required success rate (exit code)
     bool check = false;             // Only check the reference against the SingleStep expectations?
     std::string tsv;                // Optional result table
 };
@@ -558,6 +653,7 @@ int main(int argc, char **argv)
         else if (a == "--dedupe" && more) opt.dedupe = atoi(argv[++i]);
         else if (a == "--coverage") opt.coverage = true;
         else if (a == "--check") opt.check = true;
+        else if (a == "--min" && more) opt.minPercent = atof(argv[++i]);
         else if (a == "--ignore" && more) {
             std::string list = "," + std::string(argv[++i]) + ",";
             if (list.find(",ccr,") != std::string::npos) srMask = 0xA700;
@@ -567,7 +663,7 @@ int main(int argc, char **argv)
         else if (a == "--reference" && more) { std::string r = argv[++i]; if (r != "mame" && r != "uae") { printf("Unknown reference %s\n", r.c_str()); return 1; } opt.uae = r == "uae"; }
         else if (a == "-v" && more) opt.verbose = atoi(argv[++i]);
         else {
-            printf("Usage: %s [--dir <folder>] [--only <text>]... [--limit <n>] [-v <n>] [--dedupe <n>] [--coverage] [--reference mame|uae] [--check] [--ignore ccr,cycles,nbit] [--tsv <file>]\n", argv[0]);
+            printf("Usage: %s [--dir <folder>] [--only <text>]... [--limit <n>] [-v <n>] [--dedupe <n>] [--coverage] [--reference mame|uae] [--check] [--min <percent>] [--ignore ccr,cycles,nbit] [--tsv <file>]\n", argv[0]);
             return 1;
         }
     }
@@ -588,15 +684,22 @@ int main(int argc, char **argv)
     printf("Moira - A Motorola 68k CPU emulator\n\n");
     printf("Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de\n");
     printf("Published under the terms of the MIT License\n\n");
+#ifdef SST_TOOL
+    printf("Runs the instructions of the SingleStepTests on Moira and on a reference 68000 and\n");
+    printf("compares the results. The prerecorded results are ignored. Compares registers, memory,\n");
+    printf("cycle counts and bus cycles (if the reference reports them).\n\n");
+#else
     printf("Compares the exception processing of Moira (address errors, bus errors, traps,\n");
     printf("etc.) with a reference 68000 and checks registers, stack frames and bus cycles.\n\n");
-    printf("Core under test : Moira %s (%s mode)\n", moira::Moira::build().c_str(), moira::compat == moira::Compatibility::UAE ? "UAE" : "MAME");
-    printf("Reference       : %s\n\n", opt.uae ? "UAE (WinUAE, cycle exact 68000)" : "MAME's microcoded 68000");
+#endif
+    printf("Core under test : Moira %s (%s mode)\n", moira::Moira::build().c_str(),
+           moira::compat == moira::Compatibility::UAE ? "UAE" : moira::compat == moira::Compatibility::MUSASHI ? "Musashi" : "MAME");
+    printf("Reference       : %s\n\n", opt.musashi ? "Musashi" : opt.uae ? "UAE (WinUAE, cycle exact 68000)" : "MAME's microcoded 68000");
     printf("%-16s %8s %8s %8s\n", "Instruction", "Cases", "OK", "OK%");
 
     FILE *tsv = opt.tsv.empty() ? nullptr : fopen(opt.tsv.c_str(), "w");
     TestCPU moira;
-    Reference ref(opt.uae);
+    Reference ref(opt.uae, opt.musashi);
     if (opt.check) { installVectors = false; return checkReference(opt, names, ref); }
     std::map<std::string, Counter> byKind;
     std::map<std::string, long> signatures;
@@ -731,7 +834,7 @@ int main(int argc, char **argv)
                 }
             }
             if (halted && !bus && mlog.size() == moira.log.size() + 1) mlog.pop_back();
-            if (tasRead) {}
+            if (tasRead || !ref.cpu.hasBusLog()) {}
             else if (mlog.size() != moira.log.size()) add("bus.count");
             else {
                 for (size_t i = 0; i < mlog.size(); i++) {
@@ -782,8 +885,28 @@ int main(int argc, char **argv)
         for (long n = 0; file.next(t); n++) {
 
             if (opt.limit && n >= opt.limit) break;
+#ifndef SST_TOOL
             if (expectsAddressError(t)) continue;
+#endif
             allForms.insert(formOf(t.name));
+
+#ifdef SST_TOOL
+            {
+                // Run the test as it is. If the reference ends in an address error, the aborted access is excluded.
+                ref.load(t.initial);
+                ref.cpu.execute();
+                auto log = ref.cpu.log();
+                bool ae = std::any_of(log.begin(), log.end(), [](auto &c) { return !c.write && c.fc == 5 && c.addr == 12; });
+                const char *kd = "plain";
+                if (ae) {
+                    u16 code = ref.mem.peek16(ref.cpu.state().ssp);
+                    kd = ((code & 7) == 2 || (code & 7) == 6) ? "ae-fetch" : (code & 0x10) ? "ae-read" : "ae-write";
+                }
+                mame::BusCycle none { 0, true, 0, 0, 0, 0 };
+                runCase(t.initial, -1, 0, none, kd, false, !ae, 0, "");
+                continue;
+            }
+#endif
 
             {
 
@@ -939,5 +1062,5 @@ int main(int argc, char **argv)
     std::sort(sorted.rbegin(), sorted.rend());
     for (size_t i = 0; i < sorted.size() && i < 25; i++) printf("  %8ld  %s\n", sorted[i].first, sorted[i].second.c_str());
 
-    return totalOk == total ? 0 : 1;
+    return (total ? 100.0 * totalOk / total : 100.0) >= opt.minPercent ? 0 : 1;
 }
