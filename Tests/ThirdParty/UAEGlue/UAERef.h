@@ -22,7 +22,7 @@ namespace uaeref {
 
 // FPSR exception status byte bits
 constexpr uint32_t BSUN  = 0x8000;
-constexpr uint32_t SNAN  = 0x4000;
+constexpr uint32_t SIG_NAN  = 0x4000;
 constexpr uint32_t OPERR = 0x2000;
 constexpr uint32_t OVFL  = 0x1000;
 constexpr uint32_t UNFL  = 0x0800;

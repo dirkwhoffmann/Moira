@@ -18,14 +18,14 @@ static const bool CHECK_MEM_WRITES = true;
 // and disassembler tests (RUNNER_STAGES_DASM)
 #if defined(RUNNER_STAGES_ALL)
 // Execution and Disassembler stages in one run (reproduces the random sequence of older runs)
-static const bool EXEC_STAGES = true;
-static const bool DASM_STAGES = true;
+#define EXEC_STAGES true
+#define DASM_STAGES true
 #elif defined(RUNNER_STAGES_DASM) || defined(RUNNER_STAGES_DASM_MIT)
-static const bool EXEC_STAGES = false;
-static const bool DASM_STAGES = true;
+#define EXEC_STAGES false
+#define DASM_STAGES true
 #else
-static const bool EXEC_STAGES = true;
-static const bool DASM_STAGES = false;
+#define EXEC_STAGES true
+#define DASM_STAGES false
 #endif
 
 // The Motorola flavor compares Moira with Binutils, Musashi and UAE. The MIT flavor
