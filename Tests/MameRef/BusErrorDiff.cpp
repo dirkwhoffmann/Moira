@@ -22,6 +22,14 @@
  * (--perturb a7,an,dn,irc flips bit 0 of A7, A0-A6, D0-D7, or the extension word)
  * and MAME decides whether the instruction ends in an address error. Those
  * cases are replayed on Moira and compared in the same way.
+ *
+ * With --halt, cases in which MAME halts (double fault) are compared, too:
+ * Moira must halt as well, and registers, memory and bus cycles must agree.
+ * A double fault occurs if a fault happens while the exception frame is stacked,
+ * e.g., because the instruction loaded an odd value into A7. In bus error mode,
+ * a second pass additionally makes the SSP odd (user mode tests only), such that
+ * every bus error double-faults. The cycle count and the PC of a halted CPU are
+ * not compared, and MAME's endless repetition of the last bus cycle is cut off.
  */
 
 #include "Moira.h"
@@ -234,6 +242,7 @@ struct Settings {
     std::string tsv;                // Optional result table
     bool exceptions = true;         // Include instructions that raise an exception?
     bool address = false;           // Address error mode?
+    bool halt = false;              // Compare double bus faults (halted CPU)?
     std::string perturb = "a7";     // Input perturbations used in address error mode
 };
 
@@ -271,6 +280,7 @@ int main(int argc, char **argv)
         else if (a == "--tsv" && more) opt.tsv = argv[++i];
         else if (a == "--flags") srMask = 0xA71F;
         else if (a == "--address") { opt.address = true; installAeVector = true; }
+        else if (a == "--halt") opt.halt = true;
         else if (a == "--perturb" && more) opt.perturb = argv[++i];
         else if (a == "-v" && more) opt.verbose = atoi(argv[++i]);
         else if (a == "--kinds" && more) {
@@ -279,7 +289,7 @@ int main(int argc, char **argv)
             opt.fetch = k == "fetch" || k == "all";
         }
         else {
-            printf("Usage: %s [--dir <folder>] [--only <text>]... [--limit <n>] [-v <n>] [--kinds data|fetch|all] [--flags] [--address [--perturb a7,an,dn,irc]]\n", argv[0]);
+            printf("Usage: %s [--dir <folder>] [--only <text>]... [--limit <n>] [-v <n>] [--kinds data|fetch|all] [--flags] [--halt] [--address [--perturb a7,an,dn,irc]]\n", argv[0]);
             return 1;
         }
     }
@@ -325,7 +335,8 @@ int main(int argc, char **argv)
             ref.load(init);
             ref.fault.index = k;
             int refCycles = ref.cpu.execute();
-            if (ref.cpu.halted()) return;
+            bool halted = ref.cpu.halted();
+            if (halted && !opt.halt) return;
             auto rs = ref.cpu.state();
 
             // Moira
@@ -338,6 +349,8 @@ int main(int argc, char **argv)
             // Compare
             std::string diff;
             auto add = [&](const std::string &s) { diff += (diff.empty() ? "" : " ") + s; };
+            if (halted) kd = "halt";
+            if (moira.isHalted() != halted) add("halt");
 
             for (int i = 0; i < 8; i++) if (moira.getD(i) != rs.d[i]) {
                 add("D" + std::to_string(i));
@@ -352,8 +365,9 @@ int main(int argc, char **argv)
             if (moira.getUSP() != rs.usp) { add("USP"); if (getenv("BED_REGS")) printf("      USP: initial %08x exp %08x got %08x\n", init.usp, rs.usp, moira.getUSP()); }
             if (moira.getISP() != rs.ssp) { add("SSP"); if (getenv("BED_REGS")) printf("      SSP: initial %08x exp %08x got %08x\n", init.ssp, rs.ssp, moira.getISP()); }
             if ((moira.getSR() & srMask) != (rs.sr & srMask)) add("SR");
-            if ((moira.getPC() & ADDR_MASK) != (rs.pc & ADDR_MASK)) add("PC");
-            if (i64(moira.getClock()) != refCycles) { add("cycles"); if (getenv("BED_REGS")) printf("      cycles: exp %lld got %lld\n", (long long)refCycles, (long long)moira.getClock()); }
+            // The PC of a halted CPU depends on the microcode state (not compared)
+            if (!halted && (moira.getPC() & ADDR_MASK) != (rs.pc & ADDR_MASK)) { add("PC"); if (getenv("BED_REGS")) printf("      PC: initial %08x exp %08x got %08x\n", init.pc, rs.pc, moira.getPC()); }
+            if (!halted && i64(moira.getClock()) != refCycles) { add("cycles"); if (getenv("BED_REGS")) printf("      cycles: exp %lld got %lld\n", (long long)refCycles, (long long)moira.getClock()); }
 
             // The read of a TAS is followed by a write in MAME, which a real bus error would prevent
             // Address of the aborted access of an address error (MAME may still perform it)
@@ -364,6 +378,20 @@ int main(int argc, char **argv)
                 if (e.write && e.fc == 5 && e.addr >= sp && e.addr < sp + 14) { aborted = ref.cpu.log()[i - 1].addr; break; }
             }
 
+            // A halted MAME repeats the last bus cycle forever (the aborted access of the double fault)
+            if (halted) for (size_t i = 0; i + 1 < ref.cpu.log().size(); i++) {
+                auto &a = ref.cpu.log()[i], &b = ref.cpu.log()[i + 1];
+                if (a.write && b.write && a.addr == b.addr && a.fc == b.fc && a.data == b.data) { aborted = a.addr; break; }
+            }
+
+            // MAME may perform writes that a real bus would abort and that Moira does not log
+            std::set<u32> extraWrites;
+            if (halted) for (auto &e : ref.cpu.log()) {
+                if (!e.write) continue;
+                bool found = std::any_of(moira.log.begin(), moira.log.end(), [&](auto &g) { return g.write && g.addr == e.addr && g.data == e.data; });
+                if (!found) extraWrites.insert(e.addr);
+            }
+
             bool tasRead = bus && t.name.find(" TAS ") != std::string::npos && !isFetch && !pk.write;
 
             // Memory: compare everything that has been written by either side
@@ -372,7 +400,8 @@ int main(int argc, char **argv)
             std::set<int> badWords;
             for (auto a : addrs) {
                 if (tasRead && (a & ~1u) == pk.addr) continue;
-                if ((a & ~1u) == aborted && aborted != ~0u && !bus) continue;       // MAME may perform the aborted access    // MAME still completes the write half
+                if (extraWrites.count(a & ~1u)) continue;
+                if ((a & ~1u) == aborted && aborted != ~0u && (!bus || halted)) continue;       // MAME may perform the aborted access    // MAME still completes the write half
                 if (a == ((rs.ssp & ADDR_MASK) + 2)) continue;      // Undefined upper byte of the fault address
                 if (a == ((rs.ssp & ADDR_MASK) + 9) && !(srMask & 0x1F)) {      // Condition codes in the stacked SR
                     if (((moira.mem.peek(a) ^ ref.mem.peek(a)) & ~0x1F) == 0) continue;
@@ -400,6 +429,15 @@ int main(int argc, char **argv)
                     }
                 }
             }
+
+            // A halted MAME repeats the last bus cycle forever. Cut the loop.
+            if (halted) {
+                for (size_t i = 0; i + 1 < mlog.size(); i++) {
+                    auto &a = mlog[i], &b = mlog[i + 1];
+                    if (a.write && b.write && a.addr == b.addr && a.fc == b.fc && a.data == b.data) { mlog.resize(i); break; }
+                }
+            }
+            if (halted && !bus && mlog.size() == moira.log.size() + 1) mlog.pop_back();
             if (tasRead) {}
             else if (mlog.size() != moira.log.size()) add("bus.count");
             else {
@@ -459,7 +497,7 @@ int main(int argc, char **argv)
                 }
                 printf("    %s%s  fault #%d (%s %06x fc %d): %s\n", t.name.c_str(), label.c_str(), k, kd, pk.addr, pk.fc, diff.c_str());
                 if (opt.verbose > 1) {
-                    printf("        initial prefetch: %04x %04x  pc %06x\n", init.prefetch[0], init.prefetch[1], init.pc);
+                    printf("        initial prefetch: %04x %04x  pc %06x  sr %04x ssp %08x usp %08x\n", init.prefetch[0], init.prefetch[1], init.pc, init.sr, init.ssp, init.usp);
                     printf("        exp frame: %s\n", words(ref.mem, rs.ssp, 7).c_str());
                     printf("        got frame: %s\n", words(moira.mem, rs.ssp, 7).c_str());
                 }
@@ -501,10 +539,13 @@ int main(int argc, char **argv)
 
                 for (auto &v : variants) {
 
-                    if (t.initial.ssp & 1) continue;
+                    if ((t.initial.ssp & 1) && !opt.halt) continue;
                     ref.load(v.state);
                     ref.cpu.execute();
-                    if (ref.cpu.halted()) continue;
+                    if (ref.cpu.halted()) {
+                        if (opt.halt) { mame::BusCycle none { 0, false, 0, 0, 0, 0 }; runCase(v.state, -1, 0, none, "halt", false, false, 0, v.name); }
+                        continue;
+                    }
                     auto log = ref.cpu.log();
 
                     // Did the instruction end in an address error? (vector 3 is read)
@@ -524,24 +565,39 @@ int main(int argc, char **argv)
                 continue;
             }
 
-            if (t.initial.ssp & 1) continue;
+            // With --halt, the second pass makes the SSP odd (user mode only), so that stacking an exception frame double-faults
+            for (int pass = 0; pass < 2; pass++) {
 
-            // Run the instruction without faults to find out how many bus accesses there are
-            ref.load(t.initial);
-            ref.cpu.execute();
-            int accesses = int(ref.cpu.log().size());
-            auto plain = ref.cpu.log();
-            u16 plainSR = ref.cpu.state().sr;
+                sst::State st = t.initial;
+                if (pass == 1) {
+                    if (!opt.halt || (st.sr & 0x2000) || (st.ssp & 1)) break;
+                    st.ssp ^= 1;
+                } else if (st.ssp & 1) continue;
 
-            // Skip instructions that raise an exception (faults while stacking a frame are double bus faults)
-            if (!opt.exceptions && std::any_of(plain.begin(), plain.end(), [](auto &c) { return !c.write && c.fc == 5 && c.addr < 0x400; })) continue;
 
-            for (int k = 0; k < accesses; k++) {
+                // Run the instruction without faults to find out how many bus accesses there are
+                ref.load(st);
+                ref.cpu.execute();
+                if (ref.cpu.halted()) {
+                    // The instruction halts the CPU by itself (e.g., an address error with an odd SSP)
+                    mame::BusCycle none { 0, false, 0, 0, 0, 0 };
+                    if (opt.halt) runCase(st, -1, 0, none, "halt", false, true, 0, pass ? " [SSP^1]" : "");
+                    continue;
+                }
+                int accesses = int(ref.cpu.log().size());
+                auto plain = ref.cpu.log();
+                u16 plainSR = ref.cpu.state().sr;
 
-                const char *kd = kind(plain[k]);
-                bool isFetch = !strcmp(kd, "fetch");
-                if (isFetch ? !opt.fetch : !opt.data) continue;
-                runCase(t.initial, k, accesses, plain[k], kd, isFetch, true, plainSR, "");
+                // Skip instructions that raise an exception (faults while stacking a frame are double bus faults)
+                if (!opt.exceptions && std::any_of(plain.begin(), plain.end(), [](auto &c) { return !c.write && c.fc == 5 && c.addr < 0x400; })) continue;
+
+                for (int k = 0; k < accesses; k++) {
+
+                    const char *kd = kind(plain[k]);
+                    bool isFetch = !strcmp(kd, "fetch");
+                    if (isFetch ? !opt.fetch : !opt.data) continue;
+                    runCase(st, k, accesses, plain[k], kd, isFetch, true, plainSR, pass ? " [SSP^1]" : "");
+                }
             }
         }
 

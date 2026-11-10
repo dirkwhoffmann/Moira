@@ -498,6 +498,11 @@ Moira::execException(M68kException exc, int nr)
     setSupervisorMode(true);
     clearTraceFlags();
 
+    // A misaligned stack pointer causes a double fault
+    if constexpr (compat == Compatibility::MAME && C == Core::C68000) {
+        if (exc != M68kException::BUS_ERROR && misaligned<C>(reg.sp)) throw DoubleFault();
+    }
+
     switch (exc) {
 
         case M68kException::BUS_ERROR:
