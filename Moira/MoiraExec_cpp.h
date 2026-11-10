@@ -500,9 +500,12 @@ Moira::execAddiRg(u16 opcode)
     u32 ea, data, result;
     readOp<C, M, S>(dst, &ea, &data);
 
+    [[maybe_unused]] u8 ccr0 = getCCR(), ccr1 = 0;
     result = addsub<C, I, S>(src, data);
+    if constexpr (MAME_68000 && S == Long) { ccr1 = getCCR(); setCCR(ccr0); addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF); }
     if constexpr (compat == Compatibility::MAME) writeD<S == Long ? Word : S>(dst, result);   // MAME updates the register (lower word) before the prefetch
     prefetch<C, POLL | (S == Long ? KEEP_IRD : 0)>();
+    if constexpr (MAME_68000 && S == Long) setCCR(ccr1);
 
     if constexpr (S == Long) { SYNC_68000(4); SYNC_68010(2); }
     writeD<S>(dst, result);
@@ -566,9 +569,12 @@ Moira::execAddqDn(u16 opcode)
     int dst = _____________xxx(opcode);
 
     if (src == 0) src = 8;
+    [[maybe_unused]] u8 ccr0 = getCCR(), ccr1 = 0;
     u32 result = addsub<C, I, S>(src, readD<S>(dst));
+    if constexpr (MAME_68000 && S == Long) { ccr1 = getCCR(); setCCR(ccr0); addsub<C, I, Word>(src, readD<Word>(dst)); }
     if constexpr (compat == Compatibility::MAME) writeD<S == Long ? Word : S>(dst, result);   // MAME updates the register (lower word) before the prefetch
     prefetch<C, POLL | (S == Long ? KEEP_IRD : 0)>();
+    if constexpr (MAME_68000 && S == Long) setCCR(ccr1);
 
     if constexpr (S == Long) SYNC(4);
     writeD<S>(dst, result);
@@ -883,9 +889,12 @@ Moira::execAndiRg(u16 opcode)
     u32 src = readIFrame<C, S>();
     int dst = _____________xxx(opcode);
 
+    [[maybe_unused]] u8 ccr0 = getCCR(), ccr1 = 0;
     u32 result = logic<C, I, S>(src, readD<S>(dst));
+    if constexpr (MAME_68000 && S == Long) { ccr1 = getCCR(); setCCR(ccr0); logic<C, I, Word>(src & 0xFFFF, readD<Word>(dst)); }
     if constexpr (compat == Compatibility::MAME) writeD<S == Long ? Word : S>(dst, result);   // MAME updates the register (lower word) before the prefetch
     prefetch<C, POLL | (S == Long ? KEEP_IRD : 0)>();
+    if constexpr (MAME_68000 && S == Long) setCCR(ccr1);
 
     if constexpr (S == Long) { SYNC_68000(4); SYNC_68010(2); }
     writeD<S>(dst, result);
@@ -2988,7 +2997,7 @@ Moira::execMove2(u16 opcode)
 
         if constexpr (!isMemMode(M) && S == Long) {
 
-            MAME_LONG_WRITE(readA<Long>(dst), (NBIT<M == Mode::AN ? Long : Word>(data)), (ZERO<M == Mode::AN ? Long : Word>(data)),
+            MAME_LONG_WRITE(readA<Long>(dst), (NBIT<Word>(data)), (ZERO<Word>(data)),
                             writeOp<C, Mode::AI, S, AE_INC_PC|POLL>(dst, data))
 
             reg.sr.n = NBIT<S>(data);
@@ -3081,7 +3090,7 @@ Moira::execMove3(u16 opcode)
 
         if constexpr (S == Long && !isMemMode(M)) {
 
-            MAME_LONG_WRITE(readA<Long>(dst), (NBIT<M == Mode::AN ? Long : Word>(data)), (ZERO<M == Mode::AN ? Long : Word>(data)),
+            MAME_LONG_WRITE(readA<Long>(dst), (NBIT<Word>(data)), (ZERO<Word>(data)),
                             writeOp<C, Mode::PI, S, AE_INC_PC|POLL>(dst, data))
 
             reg.sr.n = NBIT<S>(data);
@@ -3190,7 +3199,16 @@ Moira::execMove4(u16 opcode)
 
     if constexpr (compat == Compatibility::MAME) {
 
+        // MAME shows the flags of the low word while the prefetch is pending
+        if constexpr (MAME_68000 && S == Long) {
+            reg.sr.n = NBIT<Word>(data);
+            reg.sr.z = ZERO<Word>(data);
+        }
         looping<I>() ? noPrefetch<C>(2) : prefetch<C, POLL | KEEP_IRD>();
+        if constexpr (MAME_68000 && S == Long) {
+            reg.sr.n = NBIT<S>(data);
+            reg.sr.z = ZERO<S>(data);
+        }
 
     } else {
 
@@ -3265,11 +3283,18 @@ Moira::execMove5(u16 opcode)
 
         if constexpr (MAME_68000) {
 
-            // A failed extension word fetch leaves the flags untouched
+            // A failed extension word fetch leaves the flags untouched. A failed second write shows
+            // the flags of the low word (data register) or the final flags (address register).
+            u32 ea0 = readA<Long>(dst) + u32(i16(queue.irc));
             try { NO_DEC_PC(writeOp<C, Mode::DI, S, POLL>(dst, data);); }
             catch (BusError &e) {
                 if ((e.stackFrame.fc & 3) == 2) {
                     e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | ccr0; setCCR(ccr0);
+                } else if (((e.stackFrame.addr ^ (ea0 + 2)) & 0xFFFFFF) == 0) {
+                    reg.sr.n = NBIT<Word>(data);
+                    reg.sr.z = ZERO<Word>(data);
+                    reg.sr.v = 0; reg.sr.c = 0;
+                    e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | getCCR();
                 }
                 throw;
             }
@@ -3289,8 +3314,8 @@ Moira::execMove5(u16 opcode)
     } else {
 
         [[maybe_unused]] u8 ccr0 = getCCR();
-        reg.sr.n = NBIT<S>(data);
-        reg.sr.z = ZERO<S>(data);
+        reg.sr.n = NBIT<S == Long && MAME_68000 ? Word : S>(data);
+        reg.sr.z = ZERO<S == Long && MAME_68000 ? Word : S>(data);
         reg.sr.v = 0;
         reg.sr.c = 0;
 
@@ -3303,10 +3328,31 @@ Moira::execMove5(u16 opcode)
                 throw;
             }
 
+        } else if constexpr (MAME_68000 && S == Long) {
+
+            // A failed write shows the final flags
+            try { NO_DEC_PC(writeOp<C, Mode::DI, S>(dst, data);); }
+            catch (BusError &e) {
+                if ((e.stackFrame.fc & 3) != 2) {
+                    reg.sr.n = NBIT<S>(data);
+                    reg.sr.z = ZERO<S>(data);
+                    e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | getCCR();
+                }
+                throw;
+            }
+            catch (AddressError &e) {
+                reg.sr.n = NBIT<S>(data);
+                reg.sr.z = ZERO<S>(data);
+                e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | getCCR();
+                throw;
+            }
+
         } else {
 
             NO_DEC_PC(writeOp<C, Mode::DI, S>(dst, data););
         }
+        reg.sr.n = NBIT<S>(data);
+        reg.sr.z = ZERO<S>(data);
         prefetch<C, POLL>();
     }
 
@@ -3348,11 +3394,21 @@ Moira::execMove6(u16 opcode)
 
         if constexpr (MAME_68000) {
 
-            // A failed extension word fetch leaves the flags untouched
+            // A failed extension word fetch leaves the flags untouched. A failed second write shows
+            // the flags of the low word (data register) or the final flags (address register).
+            u16 ext = queue.irc;
+        u32 idx = (ext & 0x8000) ? readA<Long>((ext >> 12) & 7) : readD<Long>((ext >> 12) & 7);
+        if (!(ext & 0x800)) idx = u32(i16(idx));
+        u32 ea0 = readA<Long>(dst) + u32(i8(ext)) + idx;
             try { NO_DEC_PC(writeOp<C, Mode::IX, S, POLL>(dst, data);); }
             catch (BusError &e) {
                 if ((e.stackFrame.fc & 3) == 2) {
                     e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | ccr0; setCCR(ccr0);
+                } else if (((e.stackFrame.addr ^ (ea0 + 2)) & 0xFFFFFF) == 0) {
+                    reg.sr.n = NBIT<Word>(data);
+                    reg.sr.z = ZERO<Word>(data);
+                    reg.sr.v = 0; reg.sr.c = 0;
+                    e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | getCCR();
                 }
                 throw;
             }
@@ -3372,8 +3428,8 @@ Moira::execMove6(u16 opcode)
     } else {
 
         [[maybe_unused]] u8 ccr0 = getCCR();
-        reg.sr.n = NBIT<S>(data);
-        reg.sr.z = ZERO<S>(data);
+        reg.sr.n = NBIT<S == Long && MAME_68000 ? Word : S>(data);
+        reg.sr.z = ZERO<S == Long && MAME_68000 ? Word : S>(data);
         reg.sr.v = 0;
         reg.sr.c = 0;
 
@@ -3386,10 +3442,31 @@ Moira::execMove6(u16 opcode)
                 throw;
             }
 
+        } else if constexpr (MAME_68000 && S == Long) {
+
+            // A failed write shows the final flags
+            try { NO_DEC_PC(writeOp<C, Mode::IX, S>(dst, data);); }
+            catch (BusError &e) {
+                if ((e.stackFrame.fc & 3) != 2) {
+                    reg.sr.n = NBIT<S>(data);
+                    reg.sr.z = ZERO<S>(data);
+                    e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | getCCR();
+                }
+                throw;
+            }
+            catch (AddressError &e) {
+                reg.sr.n = NBIT<S>(data);
+                reg.sr.z = ZERO<S>(data);
+                e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | getCCR();
+                throw;
+            }
+
         } else {
 
             NO_DEC_PC(writeOp<C, Mode::IX, S>(dst, data););
         }
+        reg.sr.n = NBIT<S>(data);
+        reg.sr.z = ZERO<S>(data);
         prefetch<C, POLL>();
     }
 
@@ -3423,12 +3500,36 @@ Moira::execMove7(u16 opcode)
 
     readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
 
-    reg.sr.n = NBIT<S>(u64(data));
-    reg.sr.z = ZERO<S>(u64(data));
+    reg.sr.n = NBIT<S == Long && MAME_68000 ? Word : S>(u64(data));
+    reg.sr.z = ZERO<S == Long && MAME_68000 ? Word : S>(u64(data));
     reg.sr.v = 0;
     reg.sr.c = 0;
 
-    writeOp<C, Mode::AW, S>(dst, data);
+    if constexpr (MAME_68000 && S == Long) {
+
+        // A failed write shows the final flags
+        try { writeOp<C, Mode::AW, S>(dst, data); }
+        catch (BusError &e) {
+            if ((e.stackFrame.fc & 3) != 2) {
+                reg.sr.n = NBIT<S>(data);
+                reg.sr.z = ZERO<S>(data);
+                e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | getCCR();
+            }
+            throw;
+        }
+        catch (AddressError &e) {
+            reg.sr.n = NBIT<S>(data);
+            reg.sr.z = ZERO<S>(data);
+            e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | getCCR();
+            throw;
+        }
+
+    } else {
+
+        writeOp<C, Mode::AW, S>(dst, data);
+    }
+    reg.sr.n = NBIT<S>(u64(data));
+    reg.sr.z = ZERO<S>(u64(data));
     prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -3475,10 +3576,12 @@ Moira::execMove8(u16 opcode)
 
         readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
 
-        reg.sr.n = NBIT<S == Long ? Word : S>(data);
-        reg.sr.z = ZERO<S == Long ? Word : S>(data);
-        reg.sr.v = 0;
-        reg.sr.c = 0;
+        if constexpr (!(MAME_68000 && S == Long)) {
+            reg.sr.n = NBIT<S == Long ? Word : S>(data);
+            reg.sr.z = ZERO<S == Long ? Word : S>(data);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+        }
 
         u32 ea2 = queue.irc << 16;
         NO_DEC_PC(readExt<C>());
@@ -3486,15 +3589,46 @@ Moira::execMove8(u16 opcode)
 
         // Check for address error
         if (misaligned<C, S>(ea2)) {
+            if constexpr (MAME_68000 && S == Long) {
+                reg.sr.n = NBIT<Word>(data);
+                reg.sr.z = ZERO<Word>(data);
+                reg.sr.v = 0;
+                reg.sr.c = 0;
+            }
             throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(ea2));
         }
 
+        if constexpr (MAME_68000 && S == Long) {
+            reg.sr.n = NBIT<Word>(data);
+            reg.sr.z = ZERO<Word>(data);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+        } else {
+            reg.sr.n = NBIT<S>(data);
+            reg.sr.z = ZERO<S>(data);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+        }
+
+        if constexpr (MAME_68000 && S == Long) {
+
+            // A failed second write shows the final flags
+            try { writeM<C, Mode::AL, S>(ea2, data); }
+            catch (BusError &e) {
+                if ((e.stackFrame.fc & 3) != 2 && ((e.stackFrame.addr ^ (ea2 + 2)) & 0xFFFFFF) == 0) {
+                    reg.sr.n = NBIT<S>(data);
+                    reg.sr.z = ZERO<S>(data);
+                    e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | getCCR();
+                }
+                throw;
+            }
+
+        } else {
+
+            writeM<C, Mode::AL, S>(ea2, data);
+        }
         reg.sr.n = NBIT<S>(data);
         reg.sr.z = ZERO<S>(data);
-        reg.sr.v = 0;
-        reg.sr.c = 0;
-
-        writeM<C, Mode::AL, S>(ea2, data);
         NO_DEC_PC(readExt<C>());
 
     } else {
@@ -3513,7 +3647,11 @@ Moira::execMove8(u16 opcode)
             // A failed fetch of the first extension word leaves the flags untouched
             try { writeOp<C, Mode::AL, S>(dst, data); }
             catch (BusError &e) {
-                if ((e.stackFrame.fc & 3) == 2 && (e.stackFrame.addr & 0xFFFFFF) == (firstExt & 0xFFFFFF)) { e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | ccr0; setCCR(ccr0); }
+                if ((e.stackFrame.fc & 3) == 2 && S == Long && (e.stackFrame.addr & 0xFFFFFF) != (firstExt & 0xFFFFFF)) {
+                    reg.sr.n = NBIT<Word>(data);
+                    reg.sr.z = ZERO<Word>(data);
+                    e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | getCCR();
+                } else if ((e.stackFrame.fc & 3) == 2 && (e.stackFrame.addr & 0xFFFFFF) == (firstExt & 0xFFFFFF)) { e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | ccr0; setCCR(ccr0); }
                 throw;
             }
 
