@@ -1,0 +1,115 @@
+name: CI
+
+# Every push and pull request builds Moira and runs the unit, smoke, SST, random,
+# exception and example tests. The disassembler tests (dasm) take 30+ minutes and
+# run on master, nightly, and on request (workflow_dispatch). Debug builds only run
+# the fast tests (unit, smoke, example), because the other tools are too slow unoptimized.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '40 5 * * *'
+
+jobs:
+
+  native:
+    name: ${{ matrix.name }} (${{ matrix.build_type }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: Ubuntu GCC,   os: ubuntu-latest,  cc: gcc,   cxx: g++,     build_type: Release }
+          - { name: Ubuntu GCC,   os: ubuntu-latest,  cc: gcc,   cxx: g++,     build_type: Debug }
+          - { name: Ubuntu Clang, os: ubuntu-latest,  cc: clang, cxx: clang++, build_type: Release }
+          - { name: Ubuntu Clang, os: ubuntu-latest,  cc: clang, cxx: clang++, build_type: Debug }
+          - { name: macOS,        os: macos-latest,   cc: clang, cxx: clang++, build_type: Release }
+          - { name: Windows MSVC, os: windows-latest, cc: cl,    cxx: cl,      build_type: Release }
+          - { name: Windows MSVC, os: windows-latest, cc: cl,    cxx: cl,      build_type: Debug }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        shell: bash
+        run: >
+          cmake -B build -S .
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -DCMAKE_C_COMPILER=${{ matrix.cc }}
+          -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+
+      - name: Build
+        run: cmake --build build --config ${{ matrix.build_type }} --parallel 4
+
+      - name: Select tests
+        id: select
+        shell: bash
+        run: |
+          if [ "${{ matrix.build_type }}" = "Debug" ]; then
+            echo 'args=-L "unit|smoke|example"' >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" != "refs/heads/master" ]; then
+            echo 'args=-LE dasm' >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo 'args=-LE dasm' >> "$GITHUB_OUTPUT"
+          else
+            echo 'args=' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Test
+        working-directory: build
+        shell: bash
+        run: ctest -C ${{ matrix.build_type }} -j 4 --output-on-failure ${{ steps.select.outputs.args }}
+
+  mingw:
+    name: MinGW ${{ matrix.env }} (${{ matrix.build_type }})
+    runs-on: windows-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { sys: mingw32, env: i686,   build_type: Release }
+          - { sys: mingw32, env: i686,   build_type: Debug }
+          - { sys: mingw64, env: x86_64, build_type: Release }
+          - { sys: mingw64, env: x86_64, build_type: Debug }
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.sys }}
+          update: true
+          install: >-
+            git
+            make
+            mingw-w64-${{ matrix.env }}-toolchain
+            mingw-w64-${{ matrix.env }}-cmake
+            mingw-w64-${{ matrix.env }}-ninja
+
+      - name: Build
+        run: |
+          cmake -G Ninja -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          cmake --build build
+
+      - name: Select tests
+        id: select
+        run: |
+          if [ "${{ matrix.build_type }}" = "Debug" ]; then
+            echo 'args=-L "unit|smoke|example"' >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" != "refs/heads/master" ]; then
+            echo 'args=-LE dasm' >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo 'args=-LE dasm' >> "$GITHUB_OUTPUT"
+          else
+            echo 'args=' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Test
+        working-directory: build
+        run: ctest -j 4 --output-on-failure ${{ steps.select.outputs.args }}

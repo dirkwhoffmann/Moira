@@ -220,7 +220,7 @@ FpuEnv::roundPack(bool sign, i32 exp, u64 sig, u64 extra)
     bool roundBit = (frac & half) != 0;
     bool rest = (frac & (half - 1)) != 0 || sticky;
 
-    kept += increment(mode, sign, roundBit, rest, kept & 1);
+    kept += increment(mode, sign, roundBit, rest, (kept & 1) != 0);
     if (!tiny && (kept >> bits)) { kept >>= 1; exp++; }
 
     // Overflow
@@ -673,7 +673,7 @@ FpuEnv::toIeee(const MFloat80 &a, int bits)
     u128 kept = t >> drop;
     u128 frac = t & (unit - 1);
     bool roundBit = (frac & half) != 0, rest = (frac & (half - 1)) != 0;
-    kept += increment(mode, x.sign, roundBit, rest, kept & 1);
+    kept += increment(mode, x.sign, roundBit, rest, (kept & 1) != 0);
     bool carry = (kept >> p) != 0;
 
     if (e >= emin) {
@@ -700,7 +700,7 @@ FpuEnv::toIeee(const MFloat80 &a, int bits)
     frac = t & (unit - 1);
     roundBit = (frac & half) != 0;
     rest = (frac & (half - 1)) != 0;
-    kept += increment(mode, x.sign, roundBit, rest, kept & 1);
+    kept += increment(mode, x.sign, roundBit, rest, (kept & 1) != 0);
 
     if (frac != 0) {
         raiseFlags(FloatFlags::INEXACT);

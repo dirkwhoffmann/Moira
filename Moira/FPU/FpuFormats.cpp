@@ -179,7 +179,7 @@ BinFloat div(BinFloat a, const BinFloat &b)
     // Compute the 128 fraction bits of a / b, one bit at a time
     u128 q = 0, r = a.sig;
     for (int i = 0; i < 128; i++) {
-        bool carry = r >> 127;
+        bool carry = (r >> 127) != 0;
         r <<= 1;
         q <<= 1;
         if (carry || r >= b.sig) { r -= b.sig; q |= 1; }

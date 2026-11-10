@@ -8,6 +8,7 @@
 // -----------------------------------------------------------------------------
 
 #include "UAERef.h"
+#include "FPU/Wide.h"
 
 namespace runner {
 
@@ -50,15 +51,6 @@ static bool identicalFPR(const Result &rRef, const Result &rMoira)
 {
     for (int i = 0; i < 8; i++) if (!rRef.fpr[i].identical(rMoira.fpr[i])) return false;
     return true;
-}
-
-// Maps a finite value to an integer such that adjacent values differ by 1
-static __int128 ulpIndex(const MFloat80 &value)
-{
-    __int128 e = value.biasedExponent();
-    u64 man = value.mantissa();
-    __int128 pos = (e << 63) + (e ? __int128(man & ~(1ULL << 63)) : __int128(man >> 1));
-    return value.sign() ? -pos : pos;
 }
 
 /* Test cases that are excluded from the comparison. Every entry is tagged with the reason:
@@ -276,8 +268,8 @@ UAERef::equalFPR(const Result &rRef, const Result &rMoira) const
 {
     // The reference loses up to 13 bits for small arguments of the hyperbolic functions.
     // With directed rounding, the results can also differ by an ulp of the selected precision.
-    __int128 ulpTolerance = 1 << 14;
-    if ((rRef.fpcr & 0xC0) == 0x40) ulpTolerance = __int128(1) << 40;     // Single precision
+    u128 ulpTolerance = u128(1) << 14;
+    if ((rRef.fpcr & 0xC0) == 0x40) ulpTolerance = u128(1) << 40;     // Single precision
 
     for (int i = 0; i < 8; i++) {
 
@@ -291,8 +283,9 @@ UAERef::equalFPR(const Result &rRef, const Result &rMoira) const
 
         // The transcendental functions are accurate to only a few ulps
         if (isTranscendental(rRef.opcode) && !ref.isNaN() && !ref.isInfinite() && !moira.isNaN() && !moira.isInfinite()) {
-            __int128 diff = ulpIndex(ref) - ulpIndex(moira);
-            if ((diff < 0 ? -diff : diff) <= ulpTolerance) continue;
+            u128 diff = ulpDistance(ref.sign(), ulpPosition(ref.biasedExponent(), ref.mantissa()),
+                                    moira.sign(), ulpPosition(moira.biasedExponent(), moira.mantissa()));
+            if (diff <= ulpTolerance) continue;
             if (isTrigonometric(rRef.opcode)) continue;
         }
         return false;

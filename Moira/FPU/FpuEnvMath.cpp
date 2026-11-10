@@ -98,7 +98,7 @@ W operator/(const W &a, const W &b)
 
     for (int i = 0; i < (ge ? 127 : 128); i++) {
 
-        bool carry = r >> 127;
+        bool carry = (r >> 127) != 0;
         r <<= 1;
         q <<= 1;
         if (carry || r >= b.m) { r -= b.m; q |= 1; }

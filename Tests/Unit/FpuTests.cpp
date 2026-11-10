@@ -8,6 +8,7 @@
 #include "doctest.h"
 #include "MoiraConfig.h"
 #include "FPU/FPU.h"
+#include "FPU/Wide.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
@@ -360,11 +361,11 @@ TEST_CASE("Arithmetic")
 
     // Large quotients: 10^20 mod 7 and the low bits of the quotient
     {
-        unsigned __int128 a = (unsigned __int128)10000000000ULL * 10000000000ULL;
+        u128 a = u128(10000000000ULL) * 10000000000ULL;
         auto r = fpu.fmod(MFloat80::fromInt(0) + F(1e20), F(7));
         // 1e20 as double is exactly 100000000000000000000
-        CHECK(same(r, MFloat80::fromInt((i64)(a % 7))));
-        CHECK(q() == (u8)((a / 7) & 0x7F));
+        CHECK(same(r, MFloat80::fromInt((i64)lo64(a % 7))));
+        CHECK(q() == (u8)(lo64(a / 7) & 0x7F));
     }
 
     // A quotient with more than 64 bits

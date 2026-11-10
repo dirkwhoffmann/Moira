@@ -22,6 +22,7 @@
 #include "doctest.h"
 #include "FPU/FPU.h"
 #include "FPU/FpuFormats.h"
+#include "FPU/Wide.h"
 #include "UAEGlue/UAERef.h"
 
 #include <cmath>
@@ -317,14 +318,6 @@ const TransDesc transOps[] = {
     { 0x1c, "facos",    &FPU::facos },    { 0x1d, "fcos",     &FPU::fcos },
 };
 
-// Maps a finite value to an integer such that adjacent values differ by 1
-__int128 ulpIndex(u16 se, u64 man)
-{
-    __int128 e = se & 0x7FFF;
-    __int128 pos = (e << 63) + (e ? __int128(man & ~(1ULL << 63)) : __int128(man >> 1));
-    return (se & 0x8000) ? -pos : pos;
-}
-
 // The reference is accurate to only a few ulps
 int ulpTolerance = 8;
 
@@ -360,9 +353,9 @@ void testTranscendentals(long iterations)
             Reporter rep(std::string(d.name));
             bool bothFinite = res.isFinite() && (ref.se & 0x7FFF) != 0x7FFF;
             bool sameValue = res.signExp() == ref.se && res.mantissa() == ref.man;
-            __int128 diff = 0;
-            if (bothFinite) diff = ulpIndex(res.signExp(), res.mantissa()) - ulpIndex(ref.se, ref.man);
-            if (diff < 0) diff = -diff;
+            u128 diff = 0;
+            if (bothFinite) diff = ulpDistance((res.signExp() & 0x8000) != 0, ulpPosition(res.signExp(), res.mantissa()),
+                                               (ref.se & 0x8000) != 0, ulpPosition(ref.se, ref.man));
             bool closeValue = sameValue || (bothFinite && diff <= ulpTolerance);
             bool sameExc = exc == ref.exc;
 
@@ -371,13 +364,13 @@ void testTranscendentals(long iterations)
             // Moira reduces exactly (Payne-Hanek).
             bool trig = d.cmd == 0x0e || d.cmd == 0x0f || d.cmd == 0x1d;
             if (trig && bothFinite && !closeValue && src.isFinite() && src.exponent() >= 0) {
-                double err = std::ldexp(double(diff), res.exponent() - 63);
+                double err = std::ldexp(toDouble(diff), res.exponent() - 63);
                 double slope = d.cmd == 0x0f ? 1.0 + std::ldexp(1.0, 2 * res.exponent()) : 1.0;
                 if (src.exponent() >= 20 || err <= std::ldexp(slope, src.exponent() - 58)) closeValue = true;
             }
 
             // The reference has an absolute error of a few units of 2^-64
-            if (!closeValue && bothFinite && std::ldexp(double(diff), res.exponent() - 63) <= std::ldexp(1.0, -60)) closeValue = true;
+            if (!closeValue && bothFinite && std::ldexp(toDouble(diff), res.exponent() - 63) <= std::ldexp(1.0, -60)) closeValue = true;
 
             // The reference returns garbage in the low bits for tiny arguments
             // where the function is the identity
@@ -391,7 +384,7 @@ void testTranscendentals(long iterations)
 
                 rep.category = classify(fpcr, { src });
                 if (closeValue) rep.category += " (flags only)";
-                else if (bothFinite) rep.category += " (" + std::to_string((long long)(diff > 1000 ? 1000 : diff)) + " ulp)";
+                else if (bothFinite) rep.category += " (" + std::to_string((diff > 1000 ? 1000LL : (long long)lo64(diff))) + " ulp)";
                 rep.fail("fpcr=%02x src=%s\n   moira=%s exc=%04x   ref=%s exc=%04x", fpcr, str(src).c_str(),
                          str(res).c_str(), exc, str(ref.se, ref.man).c_str(), ref.exc);
             }
