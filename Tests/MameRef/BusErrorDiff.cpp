@@ -354,7 +354,7 @@ int main(int argc, char **argv)
                 if (moira.getISP() != rs.ssp) { add("SSP"); if (getenv("BED_REGS")) printf("      SSP: initial %08x exp %08x got %08x\n", t.initial.ssp, rs.ssp, moira.getISP()); }
                 if ((moira.getSR() & srMask) != (rs.sr & srMask)) add("SR");
                 if ((moira.getPC() & ADDR_MASK) != (rs.pc & ADDR_MASK)) add("PC");
-                if (i64(moira.getClock()) != refCycles) add("cycles");
+                if (i64(moira.getClock()) != refCycles) { add("cycles"); if (getenv("BED_REGS")) printf("      cycles: exp %lld got %lld\n", (long long)refCycles, (long long)moira.getClock()); }
 
                 // The read of a TAS is followed by a write in MAME, which a real bus error would prevent
                 bool tasRead = t.name.find(" TAS ") != std::string::npos && !isFetch && !plain[k].write;
