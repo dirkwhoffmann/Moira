@@ -30,6 +30,16 @@
  * a second pass additionally makes the SSP odd (user mode tests only), such that
  * every bus error double-faults. The cycle count and the PC of a halted CPU are
  * not compared, and MAME's endless repetition of the last bus cycle is cut off.
+ *
+ * Address error perturbations (--perturb): a7, an (A0-A6), dn (D0-D7), irc (IRC),
+ * ext (the next four extension words, e.g. abs.l behind immediate data),
+ * stk (the words at (A7+1/3/5/7), i.e. return addresses of RTS/RTR/RTE), and
+ * pair (odd A7 together with an odd A0-A6).
+ *
+ * The SingleStep suite contains thousands of tests per instruction. --dedupe <n>
+ * runs at most n cases per instruction form, access index and kind, which
+ * keeps the coverage but drops the data variety. --coverage lists instruction
+ * forms with a memory operand that never produced a case.
  */
 
 #include "Moira.h"
@@ -243,8 +253,25 @@ struct Settings {
     bool exceptions = true;         // Include instructions that raise an exception?
     bool address = false;           // Address error mode?
     bool halt = false;              // Compare double bus faults (halted CPU)?
+    int dedupe = 0;                 // Maximum number of cases per instruction form, access, and kind (0 = all)
+    bool coverage = false;          // Report instruction forms without any case?
     std::string perturb = "a7";     // Input perturbations used in address error mode
 };
+
+// Instruction form: operands with register numbers removed (A7 is kept), e.g. "ADD.l (d8, A7, Xn), Dn"
+std::string formOf(const std::string &name)
+{
+    std::string r = name.substr(name.find(' ') + 1);
+    size_t sp = r.find_last_of(' ');
+    if (sp != std::string::npos && r.size() - sp == 5) r.resize(sp);        // Opcode
+    std::string out;
+    for (size_t i = 0; i < r.size(); i++) {
+        if ((r[i] == 'D' || r[i] == 'A') && i + 1 < r.size() && isdigit((unsigned char)r[i + 1]) && !(r[i] == 'A' && r[i + 1] == '7')) {
+            out += r[i]; out += 'n'; i++;
+        } else out += r[i];
+    }
+    return out;
+}
 
 struct Counter {
 
@@ -281,6 +308,8 @@ int main(int argc, char **argv)
         else if (a == "--flags") srMask = 0xA71F;
         else if (a == "--address") { opt.address = true; installAeVector = true; }
         else if (a == "--halt") opt.halt = true;
+        else if (a == "--dedupe" && more) opt.dedupe = atoi(argv[++i]);
+        else if (a == "--coverage") opt.coverage = true;
         else if (a == "--perturb" && more) opt.perturb = argv[++i];
         else if (a == "-v" && more) opt.verbose = atoi(argv[++i]);
         else if (a == "--kinds" && more) {
@@ -289,7 +318,7 @@ int main(int argc, char **argv)
             opt.fetch = k == "fetch" || k == "all";
         }
         else {
-            printf("Usage: %s [--dir <folder>] [--only <text>]... [--limit <n>] [-v <n>] [--kinds data|fetch|all] [--flags] [--halt] [--address [--perturb a7,an,dn,irc]]\n", argv[0]);
+            printf("Usage: %s [--dir <folder>] [--only <text>]... [--limit <n>] [-v <n>] [--kinds data|fetch|all] [--flags] [--halt] [--dedupe <n>] [--coverage] [--address [--perturb a7,an,dn,irc,ext,stk,pair]]\n", argv[0]);
             return 1;
         }
     }
@@ -318,6 +347,8 @@ int main(int argc, char **argv)
     struct CcrStat { int n = 0, eqInit[5] = {}, eqFin[5] = {}, eqGot[5] = {}, zero[5] = {}; };
     std::map<std::string, CcrStat> ccrStats;
     long total = 0, totalOk = 0;
+    std::map<std::string, int> keyCount;
+    std::set<std::string> allForms, hitForms;
 
     for (auto &name : names) {
 
@@ -330,6 +361,12 @@ int main(int argc, char **argv)
         sst::Test t;
 
         auto runCase = [&](const sst::State &init, int k, int accesses, const mame::BusCycle &pk, const char *kd, bool isFetch, bool bus, u16 plainSR, const std::string &label) {
+
+            // Count distinct cases and skip duplicates
+            std::string key = formOf(t.name) + label.substr(0, label.find(']') + 1) + " #" + std::to_string(k) + " " + kd;
+            keyCount[key]++;
+            hitForms.insert(formOf(t.name));
+            if (opt.dedupe && keyCount[key] > opt.dedupe) return;
 
             // Reference
             ref.load(init);
@@ -479,14 +516,14 @@ int main(int argc, char **argv)
                     if (!(exp & m)) st.zero[b]++;
                 }
             }
-            std::string key = std::string(kd);
+            std::string kkey = std::string(kd);
             c.cases++;
-            byKind[key].cases++;
-            if (diff.empty()) { c.ok++; byKind[key].ok++; return; }
+            byKind[kkey].cases++;
+            if (diff.empty()) { c.ok++; byKind[kkey].ok++; return; }
 
             (isFetch ? failedReads : (pk.write ? failedWrites : failedReads))++;
             signatures[diff]++;
-            byKind[key].signatures[diff]++;
+            byKind[kkey].signatures[diff]++;
 
             if (shown < opt.verbose) {
                 shown++;
@@ -509,6 +546,7 @@ int main(int argc, char **argv)
 
             if (opt.limit && n >= opt.limit) break;
             if (expectsAddressError(t)) continue;
+            allForms.insert(formOf(t.name));
 
             if (opt.address) {
 
@@ -531,6 +569,35 @@ int main(int argc, char **argv)
                 if (wants("dn")) for (int i = 0; i < 8; i++) {
                     sst::State s = t.initial; s.d[i] ^= 1;
                     variants.push_back({ " [D" + std::to_string(i) + "^1]", s });
+                }
+                auto flipByte = [](sst::State &st, u32 addr) {
+                    uint8_t v = 0;
+                    for (auto &[a, b] : st.ram) if (a == addr) v = b;
+                    st.ram.push_back({ addr, uint8_t(v ^ 1) });
+                };
+                bool sup = t.initial.sr & 0x2000;
+                u32 sp0 = sup ? t.initial.ssp : t.initial.usp;
+                if (wants("ext")) {
+
+                    // Odd absolute address (abs.w/abs.l, also behind immediate data), odd branch displacement
+                    for (u32 i = 0; i < 4; i++) {
+                        sst::State s = t.initial; flipByte(s, t.initial.pc + 1 + 2 * i);
+                        variants.push_back({ " [EXT" + std::to_string(i) + "^1]", s });
+                    }
+                }
+                if (wants("stk")) for (u32 off : { 1u, 3u, 5u, 7u }) {
+
+                    // Odd return address on the stack (RTS, RTR, RTE)
+                    sst::State s = t.initial; flipByte(s, sp0 + off);
+                    variants.push_back({ " [(A7+" + std::to_string(off) + ")^1]", s });
+                }
+                if (wants("pair") && !(sp0 & 1)) for (int i = 0; i < 7; i++) {
+
+                    // Odd stack pointer together with an odd address register
+                    if (t.initial.a[i] & 1) continue;
+                    sst::State s = t.initial; s.a[i] ^= 1;
+                    (sup ? s.ssp : s.usp) ^= 1;
+                    variants.push_back({ " [A7^1,A" + std::to_string(i) + "^1]", s });
                 }
                 if (wants("irc")) {
                     sst::State s = t.initial; s.prefetch[1] ^= 1;
@@ -610,6 +677,23 @@ int main(int argc, char **argv)
     }
 
     printf("\n%-16s %8ld %8ld %7.2f%%\n\n", "TOTAL", total, totalOk, total ? 100.0 * totalOk / total : 100.0);
+
+    printf("\nDistinct cases (instruction form x access x kind): %zu\n", keyCount.size());
+    if (opt.coverage) {
+        std::vector<std::string> missing;
+
+        // Byte accesses and register-only forms cannot raise an address error by themselves
+        for (auto &f : allForms) {
+            if (hitForms.count(f)) continue;
+            bool byte = f.find(".b ") != std::string::npos || f.find(".b\0") != std::string::npos;
+            bool mem = f.find('(') != std::string::npos || f.find("xxx") != std::string::npos;
+            static const char *byteOps[] = { "BCHG ", "BCLR ", "BSET ", "BTST ", "ABCD ", "SBCD ", "NBCD ", "TAS ", "Scc ", "LEA ", "MOVEP." };
+            for (auto b : byteOps) if (f.compare(0, strlen(b), b) == 0) byte = true;
+            if (!byte && mem) missing.push_back(f);
+        }
+        printf("Instruction forms with a memory operand (not byte) without a case: %zu of %zu forms\n", missing.size(), allForms.size());
+        for (auto &f : missing) printf("  %s\n", f.c_str());
+    }
 
     for (auto &[k, c] : byKind) printf("%-8s %8ld cases, %8ld ok (%.2f%%)\n", k.c_str(), c.cases, c.ok, c.cases ? 100.0 * c.ok / c.cases : 100.0);
 
