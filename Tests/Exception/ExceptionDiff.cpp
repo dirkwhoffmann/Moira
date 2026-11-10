@@ -891,6 +891,10 @@ int main(int argc, char **argv)
             allForms.insert(formOf(t.name));
 
 #ifdef SST_TOOL
+#ifdef SST_MUSASHI
+            // Musashi executes MOVE16 (F620-F627) on the 68000, which has no such instruction
+            if ((t.initial.prefetch[0] & 0xFFF8) == 0xF620) { skippedStacking++; continue; }
+#endif
             {
                 // Run the test as it is. If the reference ends in an address error, the aborted access is excluded.
                 ref.load(t.initial);
@@ -1034,7 +1038,11 @@ int main(int argc, char **argv)
         total += c.cases; totalOk += c.ok;
     }
 
+#ifdef SST_MUSASHI
+    if (skippedStacking) printf("\nSkipped %ld cases (Musashi executes MOVE16 on the 68000)\n", skippedStacking);
+#else
     if (skippedStacking) printf("\nSkipped %ld cases that fault while a group 1/2 exception is processed (UAE and MAME disagree on these frames)\n", skippedStacking);
+#endif
     printf("\n%-16s %8ld %8ld %7.2f%%\n\n", "TOTAL", total, totalOk, total ? 100.0 * totalOk / total : 100.0);
 
     printf("\nDistinct cases (instruction form x access x kind): %zu\n", keyCount.size());

@@ -27,6 +27,7 @@ public:
     bool hasFpu() const override { return false; }
 
     bool skipSetup(const Setup &s) const override;
+    bool skipAccessCheck(u16 op) const override;
 };
 
 }

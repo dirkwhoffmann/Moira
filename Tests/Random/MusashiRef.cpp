@@ -12,15 +12,21 @@
 namespace runner {
 
 bool
+MusashiRef::skipAccessCheck(u16 op) const
+{
+    // Musashi omits the write-back of NBCD if the result is zero, whereas
+    // Moira writes the unchanged operand back. The final memory contents
+    // are still compared.
+    return (op & 0xFFC0) == 0x4800 && (op & 0x38) != 0x08;
+}
+
+bool
 MusashiRef::skipSetup(const Setup &s) const
 {
     Instr instr = moiracpu->getInstrInfo(s.opcode).I;
 
     // Skip some instructions that Musashi handles differently (known problems)
     bool result =
-    instr == Instr::ABCD    ||
-    instr == Instr::SBCD    ||
-    instr == Instr::NBCD    ||
     instr == Instr::BFCHG   ||
     instr == Instr::BFCLR   ||
     instr == Instr::BFEXTS  ||

@@ -297,6 +297,70 @@ Moira::shift(int cnt, u64 data) {
 template <Core C, Instr I, Size S> u32
 Moira::bcd(u32 op1, u32 op2)
 {
+    if constexpr (compat == Compatibility::MUSASHI) {
+
+        // Mimic Musashi, including the undefined N and V flags
+        u32 res, v;
+        bool carry;
+
+        switch (I) {
+
+            case Instr::ABCD:
+            case Instr::ABCD_LOOP:
+
+                res = (op1 & 0x0F) + (op2 & 0x0F) + reg.sr.x;
+                v = ~res;
+                if (res > 9) res += 6;
+                res += (op1 & 0xF0) + (op2 & 0xF0);
+                carry = res > 0x99;
+                if (carry) res -= 0xA0;
+                break;
+
+            case Instr::SBCD:
+            case Instr::SBCD_LOOP:
+
+                res = (op2 & 0x0F) - (op1 & 0x0F) - reg.sr.x;
+                v = ~res;
+                if (res > 9) res -= 6;
+                res += (op2 & 0xF0) - (op1 & 0xF0);
+                carry = res > 0x99;
+                if (carry) res += 0xA0;
+                break;
+
+            case Instr::NBCD:
+            case Instr::NBCD_LOOP:
+
+                res = (0x9A - op1 - reg.sr.x) & 0xFF;
+                if (res != 0x9A) {
+                    v = ~res;
+                    if ((res & 0x0F) == 0x0A) res = (res & 0xF0) + 0x10;
+                    res &= 0xFF;
+                    v &= res;
+                    reg.sr.v = (v >> 7) & 1;
+                    reg.sr.x = reg.sr.c = 1;
+                    if (res) reg.sr.z = 0;
+                } else {
+                    reg.sr.v = 0;
+                    reg.sr.x = reg.sr.c = 0;
+                    reg.sr.n = (res >> 7) & 1;
+                    return op1 & 0xFF;     // Musashi leaves the operand alone
+                }
+                reg.sr.n = (res >> 7) & 1;
+                return res & 0xFF;
+
+            default:
+                fatalError;
+        }
+
+        v &= res;
+        reg.sr.x = reg.sr.c = carry;
+        reg.sr.v = (v >> 7) & 1;
+        reg.sr.n = (res >> 7) & 1;
+        res &= 0xFF;
+        if (res) reg.sr.z = 0;
+        return res;
+    }
+
     u64 tmp, result;
 
     // Extract digits
@@ -792,7 +856,7 @@ Moira::divsMusashi(u32 op1, u32 op2)
 
             result = (quotient & 0xffff) | (u16)remainder << 16;
 
-            reg.sr.z = quotient;
+            reg.sr.z = quotient == 0;
             reg.sr.n = NBIT<Word>(quotient);
             reg.sr.v = 0;
             reg.sr.c = 0;
@@ -818,7 +882,7 @@ Moira::divuMusashi(u32 op1, u32 op2)
 
         result = (quotient & 0xffff) | remainder << 16;
 
-        reg.sr.z = quotient;
+        reg.sr.z = quotient == 0;
         reg.sr.n = NBIT<Word>(quotient);
         reg.sr.v = 0;
         reg.sr.c = 0;

@@ -37,6 +37,8 @@ adjustFetchPc(Fn &&fn, int delta)
 
 #define MAME_68000 (compat == Compatibility::MAME && C == Core::C68000)
 #define EXACT_COMPAT (compat == Compatibility::MAME || (compat == Compatibility::UAE && C == Core::C68000))   // Behavior shared with UAE (bus cycle sequence)
+// NBCD is computed like SBCD, except in Musashi mode (Musashi has its own formula)
+#define nbcdInstr (compat == Compatibility::MUSASHI ? Instr::NBCD : Instr::SBCD)
 #define EXACT_ABORT EXACT_68000   // MAME and UAE abort misaligned stack accesses without a bus cycle
 #define NO_DEC_PC(...) adjustFetchPc<EXACT_68000>([&]{ __VA_ARGS__; }, 2)
 
@@ -5440,7 +5442,7 @@ Moira::execNbcdRg(u16 opcode)
     if constexpr (EXACT_COMPAT) {
 
         // MAME computes the result (and the flags) before the prefetch
-        u32 result = bcd<C, Instr::SBCD, Byte>(readD<Byte>(reg), 0);
+        u32 result = bcd<C, nbcdInstr, Byte>(readD<Byte>(reg), 0);
         looping<I>() ? noPrefetch<C>() : prefetch<C, POLL | KEEP_IRD>();
         SYNC(2);
         writeD<Byte>(reg, result);
@@ -5449,7 +5451,7 @@ Moira::execNbcdRg(u16 opcode)
 
         looping<I>() ? noPrefetch<C>() : prefetch<C, POLL | KEEP_IRD>();
         SYNC(2);
-        writeD<Byte>(reg, bcd<C, Instr::SBCD, Byte>(readD<Byte>(reg), 0));
+        writeD<Byte>(reg, bcd<C, nbcdInstr, Byte>(readD<Byte>(reg), 0));
     }
 
     //           00  10  20        00  10  20        00  10  20
@@ -5470,7 +5472,7 @@ Moira::execNbcdEa(u16 opcode)
     readOp<C, M, Byte, STD_AE_FRAME>(reg, &ea, &data);
 
     // MAME updates the flags before the prefetch
-    if constexpr (EXACT_COMPAT) data = bcd<C, Instr::SBCD, Byte>(data, 0);
+    if constexpr (EXACT_COMPAT) data = bcd<C, nbcdInstr, Byte>(data, 0);
 
     if (looping<I>()) {
         if constexpr (M == Mode::AI) noPrefetch<C>(4);
@@ -5483,7 +5485,7 @@ Moira::execNbcdEa(u16 opcode)
     if constexpr (EXACT_COMPAT) {
         writeM<C, M, Byte>(ea, data);
     } else {
-        writeM<C, M, Byte>(ea, bcd<C, Instr::SBCD, Byte>(data, 0));
+        writeM<C, M, Byte>(ea, bcd<C, nbcdInstr, Byte>(data, 0));
     }
 
     //           00  10  20        00  10  20        00  10  20
@@ -6377,6 +6379,11 @@ Moira::execTasRg(u16 opcode)
 
     prefetch<C, POLL>();
 
+
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 4,  4,  4,        0,  0,  0,        0,  0,  0)
+
     FINALIZE
 }
 
@@ -6449,6 +6456,16 @@ Moira::execTasEa(u16 opcode)
         prefetch<C, POLL>();
         SYNC(2);
     }
+
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_AI   (18, 18, 18,        0,  0,  0,        0,  0,  0)
+    CYCLES_PI   (18, 18, 18,        0,  0,  0,        0,  0,  0)
+    CYCLES_PD   (20, 20, 20,        0,  0,  0,        0,  0,  0)
+    CYCLES_DI   (22, 22, 22,        0,  0,  0,        0,  0,  0)
+    CYCLES_IX   (24, 24, 24,        0,  0,  0,        0,  0,  0)
+    CYCLES_AW   (22, 22, 22,        0,  0,  0,        0,  0,  0)
+    CYCLES_AL   (26, 26, 26,        0,  0,  0,        0,  0,  0)
 
     FINALIZE
 }
