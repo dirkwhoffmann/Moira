@@ -16,14 +16,14 @@
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
 
-static void usage(const char *prog)
+static void usage(const char *prog, runner::TestRunner &runner)
 {
     printf("Usage: %s [--seed <n>] [--rounds <n>] [--cpu <model>]... [--fpu <model>]...\n", prog);
     printf("  --seed <n>      Seed of the random number generator (default: derived from the date)\n");
     printf("  --rounds <n>    Number of test rounds (default: 1)\n");
     printf("  --cpu <model>   CPU model to test (default: all models). May be repeated.\n");
     printf("                  Models:");
-    for (auto model : runner::allModels()) printf(" %s", runner::modelName(model));
+    for (auto model : runner.allModels()) printf(" %s", runner::modelName(model));
     printf("\n");
     printf("  --fpu <model>   FPU model to test in the FPU stage (default: all models). May be repeated.\n");
     printf("                  Models:");
@@ -33,6 +33,8 @@ static void usage(const char *prog)
 
 int main(int argc, char **argv)
 {
+    runner::TestRunner runner;
+
     // Without an explicit seed, the seed is derived from the current date
     std::time_t t = std::time(0);
     std::tm *now = std::localtime(&t);
@@ -59,7 +61,7 @@ int main(int argc, char **argv)
         } else if (!strcmp(argv[i], "--cpu") && i + 1 < argc) {
 
             if (auto model = runner::parseModel(argv[++i])) {
-                const auto &all = runner::allModels();
+                const auto &all = runner.allModels();
                 if (std::find(all.begin(), all.end(), *model) != all.end()) { cpus.push_back(*model); continue; }
             }
 
@@ -68,7 +70,7 @@ int main(int argc, char **argv)
             if (auto model = runner::parseFpuModel(argv[++i])) { fpus.push_back(*model); continue; }
         }
 
-        usage(argv[0]);
+        usage(argv[0], runner);
         return 1;
     }
 
@@ -83,15 +85,15 @@ int main(int argc, char **argv)
         printf("registers, memory and cycle counts after each instruction.\n\n");
     }
     printf("Core under test : Moira %s\n", moira::Moira::build().c_str());
-    printf("      Reference : %s\n", DASM_STAGES ? (DASM_MIT ? "Binutils (MIT)" : "Binutils, Musashi, UAE") : runner::reference());
+    printf("      Reference : %s\n", DASM_STAGES ? (DASM_MIT ? "Binutils (MIT)" : "Binutils, Musashi, UAE") : runner.reference());
     printf("\n");
     printf("    Test rounds : %ld\n", rounds);
     printf("    Random seed : %d\n", seed);
     printf("     Exec range : %s\n", TOSTRING(doExec(opcode)));
     printf("     Dasm range : %s\n", TOSTRING(doDasm(opcode)));
 
-    runner::run(seed, rounds,
-                cpus.empty() ? runner::allModels() : cpus,
+    runner.run(seed, rounds,
+                cpus.empty() ? runner.allModels() : cpus,
                 fpus.empty() ? runner::allFpuModels() : fpus);
 
     printf("\n");

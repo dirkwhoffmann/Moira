@@ -13,6 +13,9 @@
 
 namespace runner {
 
+// Shortcut for the runner of this process
+inline TestRunner &tr() { return TestRunner::get(); }
+
 /* A facade for the reference CPU (Musashi, UAE or MAME). It hides the glue layer
  * of the individual cores and collects everything that is specific to a reference:
  * how it is driven, which test cases it cannot handle, and which known differences

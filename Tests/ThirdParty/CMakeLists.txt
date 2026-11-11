@@ -60,34 +60,34 @@ endif()
 
 set(UAE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/UAE CACHE PATH "UAE source tree")
 
-set(AMI ${UAE_DIR}/src)
+set(UAE_SRC ${UAE_DIR}/src)
 
 add_library(uaecpu STATIC
     UAEGlue/UAECpu.cpp
     UAEGlue/UAERef.cpp
     UAEGlue/UAEStubs.cpp
-    ${AMI}/newcpu_common.cpp
-    ${AMI}/disasm.cpp
-    ${AMI}/cpustbl.cpp
-    ${AMI}/readcpu.cpp
-    ${AMI}/cpudefs.cpp
-    ${AMI}/cpummu.cpp
-    ${AMI}/cpummu30.cpp
-    ${AMI}/fpp.cpp
-    ${AMI}/fpp_softfloat.cpp
-    ${AMI}/softfloat/softfloat.cpp
-    ${AMI}/softfloat/softfloat_decimal.cpp
-    ${AMI}/softfloat/softfloat_fpsp.cpp
-    ${AMI}/cpuemu_0.cpp ${AMI}/cpuemu_11.cpp ${AMI}/cpuemu_13.cpp
-    ${AMI}/cpuemu_20.cpp ${AMI}/cpuemu_21.cpp ${AMI}/cpuemu_22.cpp
-    ${AMI}/cpuemu_23.cpp ${AMI}/cpuemu_24.cpp ${AMI}/cpuemu_31.cpp
-    ${AMI}/cpuemu_32.cpp ${AMI}/cpuemu_33.cpp ${AMI}/cpuemu_34.cpp
-    ${AMI}/cpuemu_35.cpp ${AMI}/cpuemu_40.cpp ${AMI}/cpuemu_50.cpp)
+    ${UAE_SRC}/newcpu_common.cpp
+    ${UAE_SRC}/disasm.cpp
+    ${UAE_SRC}/cpustbl.cpp
+    ${UAE_SRC}/readcpu.cpp
+    ${UAE_SRC}/cpudefs.cpp
+    ${UAE_SRC}/cpummu.cpp
+    ${UAE_SRC}/cpummu30.cpp
+    ${UAE_SRC}/fpp.cpp
+    ${UAE_SRC}/fpp_softfloat.cpp
+    ${UAE_SRC}/softfloat/softfloat.cpp
+    ${UAE_SRC}/softfloat/softfloat_decimal.cpp
+    ${UAE_SRC}/softfloat/softfloat_fpsp.cpp
+    ${UAE_SRC}/cpuemu_0.cpp ${UAE_SRC}/cpuemu_11.cpp ${UAE_SRC}/cpuemu_13.cpp
+    ${UAE_SRC}/cpuemu_20.cpp ${UAE_SRC}/cpuemu_21.cpp ${UAE_SRC}/cpuemu_22.cpp
+    ${UAE_SRC}/cpuemu_23.cpp ${UAE_SRC}/cpuemu_24.cpp ${UAE_SRC}/cpuemu_31.cpp
+    ${UAE_SRC}/cpuemu_32.cpp ${UAE_SRC}/cpuemu_33.cpp ${UAE_SRC}/cpuemu_34.cpp
+    ${UAE_SRC}/cpuemu_35.cpp ${UAE_SRC}/cpuemu_40.cpp ${UAE_SRC}/cpuemu_50.cpp)
 
 set_target_properties(uaecpu PROPERTIES CXX_STANDARD 17)
 
+# Switches that UAE's platform layer (osdep/sysconfig.h) understands
 target_compile_definitions(uaecpu PRIVATE
-    AMIBERRY
     AMIBERRY_NO_JIT
     AMIBERRY_NO_THREADED_CPU)
     
@@ -100,7 +100,7 @@ endif()
 target_include_directories(uaecpu PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/UAEGlue/sdl-shim
     $<$<BOOL:${MSVC}>:${CMAKE_CURRENT_SOURCE_DIR}/UAEGlue/msvc-shim>
-    ${AMI} ${AMI}/include ${AMI}/osdep ${AMI}/archivers ${AMI}/threaddep)
+    ${UAE_SRC} ${UAE_SRC}/include ${UAE_SRC}/osdep ${UAE_SRC}/archivers ${UAE_SRC}/threaddep)
     
 target_include_directories(uaecpu PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/UAEGlue)
 

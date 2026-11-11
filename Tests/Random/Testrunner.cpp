@@ -34,29 +34,16 @@ static constexpr bool useMAME    = (compat == Compatibility::MAME);
 
 // The disassembler tests don't depend on the compatibility mode. They compare Moira with
 // all reference disassemblers at once (the MIT flavor compares Moira with Binutils only).
-// Set while MMU instructions are compared against UAE
-static bool mmuCompare = false;
-
-// The setup of the test that is currently running (see RUNNER_DUMP)
-static Setup *lastSetup = nullptr;
-
 static constexpr bool dasmMusashi = DASM_STAGES ? !DASM_MIT : useMusashi;
 static constexpr bool dasmUAE     = DASM_STAGES ? !DASM_MIT : useUAE;
 
-// The Moira instance under test
-TestCPU *moiracpu;
+static TestRunner *theRunner = nullptr;
 
-// The currently tested CPU type and instruction
-CPUModel cpuModel = CPUModel::M68000;
-FPUModel fpuModel = FPUModel::NONE;
-u16 opcode = 0;
+TestRunner::TestRunner() { theRunner = this; moiracpu = new TestCPU(); }
+TestRunner::~TestRunner() { delete moiracpu; theRunner = nullptr; }
+TestRunner &TestRunner::get() { return *theRunner; }
 
-// Speed comparison
-clock_t refclk[2] = {0,0};
-clock_t moiraclk[2] = {0,0};
-clock_t dasmclk[3] = {0,0,0};      // Disassembler time of the references (Binutils, Musashi, UAE)
-
-static void resetClocks() { refclk[0] = refclk[1] = moiraclk[0] = moiraclk[1] = 0; dasmclk[0] = dasmclk[1] = dasmclk[2] = 0; }
+void TestRunner::resetClocks() { refclk[0] = refclk[1] = moiraclk[0] = moiraclk[1] = 0; dasmclk[0] = dasmclk[1] = dasmclk[2] = 0; }
 
 static const struct { CPUModel model; const char *name; } modelTable[] = {
 
@@ -71,7 +58,7 @@ static const struct { CPUModel model; const char *name; } modelTable[] = {
     { CPUModel::M68040,   "68040" }
 };
 
-const std::vector<CPUModel> &allModels()
+const std::vector<CPUModel> &TestRunner::allModels()
 {
     static const std::vector<CPUModel> all = []() {
         std::vector<CPUModel> result;
@@ -139,17 +126,17 @@ bool isCompatible(CPUModel cpu, FPUModel fpu)
     }
 }
 
-const char *reference()
+const char *TestRunner::reference()
 {
     return DASM_STAGES ? "Ref" : ref().name();
 }
 
-const char *selectedModel()
+const char *TestRunner::selectedModel()
 {
     return modelName(cpuModel);
 }
 
-void selectModel(CPUModel model)
+void TestRunner::selectModel(CPUModel model)
 {
     cpuModel = model;
 
@@ -168,13 +155,13 @@ void selectModel(CPUModel model)
     sandbox.byteGranular = ref().byteGranular(cpuModel);
 }
 
-void setupMoira()
+void TestRunner::setupMoira()
 {
     moiracpu->setModel(cpuModel);
     moiracpu->setFpuModel(fpuModel);
 }
 
-void selectFpu(FPUModel fpu)
+void TestRunner::selectFpu(FPUModel fpu)
 {
     fpuModel = fpu;
 
@@ -183,7 +170,7 @@ void selectFpu(FPUModel fpu)
     setupMoira();
 }
 
-void setupTestEnvironment(Setup &s, long round)
+void TestRunner::setupTestEnvironment(Setup &s, long round)
 {
     s.round = round;
     s.supervisor = round % 2;
@@ -214,7 +201,7 @@ void setupTestEnvironment(Setup &s, long round)
     }
 }
 
-void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
+void TestRunner::setupTestInstruction(Setup &s, u32 pc, u16 opcode)
 {
     static long mvc = 0;
 
@@ -256,7 +243,7 @@ void setupTestInstruction(Setup &s, u32 pc, u16 opcode)
     memcpy(moiraMem, s.mem, sizeof(moiraMem));
 }
 
-void resetMoira(Setup &s)
+void TestRunner::resetMoira(Setup &s)
 {
     moiracpu->reset();
     moiracpu->setClock(0);
@@ -290,11 +277,9 @@ void resetMoira(Setup &s)
     for (auto &e : moiracpu->mmu.mmu030.atc) e.valid = false;
 }
 
-void run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const std::vector<FPUModel> &fpus)
+void TestRunner::run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const std::vector<FPUModel> &fpus)
 {
     portableSrand(seed);
-
-    if (!moiracpu) moiracpu = new TestCPU();
 
     // Replay a single test that has been dumped with RUNNER_DUMP
     if (const char *name = getenv("RUNNER_REPLAY")) {
@@ -352,7 +337,7 @@ void run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const st
     }
 }
 
-void runCPU(long round)
+void TestRunner::runCPU(long round)
 {
     static const int CPU_SETUPS = 32;
     
@@ -514,7 +499,7 @@ u32 randomTT040()
 }
 
 
-void runMMU(long round)
+void TestRunner::runMMU(long round)
 {
     if (!moiracpu->hasMMU()) return;
 
@@ -554,7 +539,7 @@ void runMMU(long round)
     passed(moiraclk[0], refclk[0]);
 }
 
-void runMMUTranslate(long round)
+void TestRunner::runMMUTranslate(long round)
 {
     static const int TABLE_SETUPS = 256;
     static const int ADDRESSES = 512;
@@ -663,7 +648,7 @@ void runMMUTranslate(long round)
     printf("%11s           %ld translations, %ld faults\n", "", successes, faults);
 }
 
-void runMMUTranslate040(long round)
+void TestRunner::runMMUTranslate040(long round)
 {
     static const int TABLE_SETUPS = 256;
     static const int ADDRESSES = 512;
@@ -758,7 +743,7 @@ void runMMUTranslate040(long round)
     printf("%11s           %ld translations, %ld faults\n", "", successes, faults);
 }
 
-void runFPU(long round)
+void TestRunner::runFPU(long round)
 {
     // Musashi's FPU is not a reliable reference
     if (!ref().hasFpu()) {
@@ -794,7 +779,7 @@ void runFPU(long round)
     passed(moiraclk[0], refclk[0]);
 }
 
-void runDasmCPU(long round)
+void TestRunner::runDasmCPU(long round)
 {
     static const int CPU_SETUPS = 32;
 
@@ -822,7 +807,7 @@ void runDasmCPU(long round)
     passedDasm();
 }
 
-void runDasmMMU(long round)
+void TestRunner::runDasmMMU(long round)
 {
     if (!moiracpu->hasMMU()) return;
 
@@ -849,7 +834,7 @@ void runDasmMMU(long round)
     passedDasm();
 }
 
-void runDasmFPU(long round)
+void TestRunner::runDasmFPU(long round)
 {
     static const int FPU_SETUPS = 4;
     Setup setup;
@@ -878,24 +863,23 @@ void runDasmFPU(long round)
     passedDasm();
 }
 
-bool misalignedRead = false;
 
-bool isMmuOpcode(u16 op)
+bool TestRunner::isMmuOpcode(u16 op)
 {
     return mmuCompare && (op & 0xFFC0) == 0xF000;
 }
 
-bool isFpuOpcode(u16 op)
+bool TestRunner::isFpuOpcode(u16 op)
 {
     return (op & 0xFF00) == 0xF200 && moiracpu != nullptr && moiracpu->fpu.isPresent();
 }
 
-bool isIllegalOpcode(u16 op)
+bool TestRunner::isIllegalOpcode(u16 op)
 {
     return moiracpu->getInstrInfo(op).I == Instr::ILLEGAL;
 }
 
-void setupFpuEnvironment(Setup &s)
+void TestRunner::setupFpuEnvironment(Setup &s)
 {
     // A pool of interesting values
     static const MFloat80 pool[] = {
@@ -951,7 +935,7 @@ void setupFpuEnvironment(Setup &s)
     s.mmusr = randomizer.rand() & 0xEE47;
 }
 
-void passedDasm()
+void TestRunner::passedDasm()
 {
     // Moira's time covers all syntax flavors; each reference is timed separately
     printf(" PASSED  (Moira: %.2fs  Binutils: %.2fs", double(moiraclk[1]) / double(CLOCKS_PER_SEC), double(dasmclk[0]) / double(CLOCKS_PER_SEC));
@@ -960,7 +944,7 @@ void passedDasm()
     printf(")\n");
 }
 
-void passed(clock_t moira, clock_t ref)
+void TestRunner::passed(clock_t moira, clock_t ref)
 {
     printf(" PASSED  (Moira: %.2fs  %s: %.2fs)\n",
            double(moira) / double(CLOCKS_PER_SEC),
@@ -968,13 +952,13 @@ void passed(clock_t moira, clock_t ref)
            double(ref) / double(CLOCKS_PER_SEC));
 }
 
-void runSingleTest(Setup &s, u16 op, u16 ext)
+void TestRunner::runSingleTest(Setup &s, u16 op, u16 ext)
 {
     s.ext1 = ext;
     runSingleTest(s, op);
 }
 
-void runSingleTest(Setup &s, u16 op)
+void TestRunner::runSingleTest(Setup &s, u16 op)
 {
     lastSetup = &s;
     Result refResult, moiraResult;
@@ -1015,13 +999,13 @@ void runSingleTest(Setup &s, u16 op)
     compare(s, refResult, moiraResult);
 }
 
-void runDasmSingleTest(Setup &s, u16 op, u16 ext)
+void TestRunner::runDasmSingleTest(Setup &s, u16 op, u16 ext)
 {
     s.ext1 = ext;
     runDasmSingleTest(s, op);
 }
 
-void runDasmSingleTest(Setup &s, u16 op)
+void TestRunner::runDasmSingleTest(Setup &s, u16 op)
 {
     if (!doDasm(op)) return;
 
@@ -1045,7 +1029,7 @@ void runDasmSingleTest(Setup &s, u16 op)
 }
 
 // Executes the instruction on the reference CPU (Musashi or UAE)
-void runReference(Setup &s, Result &r)
+void TestRunner::runReference(Setup &s, Result &r)
 {
     r.oldpc = s.pc;
     r.opcode = get16(refMem, r.oldpc);
@@ -1057,7 +1041,7 @@ void runReference(Setup &s, Result &r)
 }
 
 // Executes the instruction on Moira
-void runMoira(Setup &s, Result &r)
+void TestRunner::runMoira(Setup &s, Result &r)
 {
     r.oldpc = moiracpu->getPC();
     r.opcode = get16(moiraMem, r.oldpc);
@@ -1084,7 +1068,7 @@ void runMoira(Setup &s, Result &r)
 }
 
 // Disassembles the instruction with the reference disassemblers (Binutils plus Musashi or UAE)
-void disassembleReference(Setup &s, Result &r)
+void TestRunner::disassembleReference(Setup &s, Result &r)
 {
     r.oldpc = s.pc;
     r.opcode = get16(refMem, r.oldpc);
@@ -1101,7 +1085,7 @@ void disassembleReference(Setup &s, Result &r)
 }
 
 // Disassembles the instruction with Moira in all supported syntax flavors
-void disassembleMoira(Setup &s, Result &r)
+void TestRunner::disassembleMoira(Setup &s, Result &r)
 {
     r.oldpc = s.pc;
     r.opcode = get16(moiraMem, r.oldpc);
@@ -1146,17 +1130,17 @@ void disassembleMoira(Setup &s, Result &r)
     r.elapsed[1] = clock() - tStart;
 }
 
-bool skipAccessCheck(u16 op)
+bool TestRunner::skipAccessCheck(u16 op)
 {
     return ref().skipAccessCheck(op);
 }
 
-bool skip(const Setup &s)
+bool TestRunner::skip(const Setup &s)
 {
     return ref().skipSetup(s);
 }
 
-void recordMoiraRegisters(Result &r)
+void TestRunner::recordMoiraRegisters(Result &r)
 {
     r.pc = moiracpu->getPC();
     r.sr = moiracpu->getSR();
@@ -1185,7 +1169,7 @@ void recordMoiraRegisters(Result &r)
     r.mmusr = moiracpu->mmu.mmu030.mmusr;
 }
 
-void dumpDasm(Setup &s, Result &rRef, Result &rMoira)
+void TestRunner::dumpDasm(Setup &s, Result &rRef, Result &rMoira)
 {
     if (DASM_STAGES) {
         printf("\nMoira syntax:         [%d] '%s'\n", rMoira.dasmCntMoiraSyn, rMoira.dasmMoiraSyn);
@@ -1203,7 +1187,7 @@ void dumpDasm(Setup &s, Result &rRef, Result &rMoira)
     printf("\n");
 }
 
-void dumpSetup(Setup &s)
+void TestRunner::dumpSetup(Setup &s)
 {
     printf("PC: %04x  Opcode: %04x  ", s.pc, s.opcode);
     printf("Ext1: %04x  Ext2: %04x  Ext3: %04x ", s.ext1, s.ext2, s.ext3);
@@ -1225,7 +1209,7 @@ void dumpSetup(Setup &s)
     printf("\n\n");
 }
 
-void dumpResult(Result &r)
+void TestRunner::dumpResult(Result &r)
 {
     printf("PC: %04x  Elapsed cycles: %d\n", r.pc, r.cycles);
     printf("         ");
@@ -1251,7 +1235,7 @@ void dumpResult(Result &r)
 }
 
 // Decides whether the results of a test case are excluded from the comparison
-bool skipCompare(const Setup &s, const Result &rRef, const Result &rMoira)
+bool TestRunner::skipCompare(const Setup &s, const Result &rRef, const Result &rMoira)
 {
     // Cases that can be recognized by looking at the setup
     if (skip(s)) return true;
@@ -1295,7 +1279,7 @@ bool skipCompare(const Setup &s, const Result &rRef, const Result &rMoira)
     return false;
 }
 
-void compare(Setup &s, Result &rRef, Result &rMoira)
+void TestRunner::compare(Setup &s, Result &rRef, Result &rMoira)
 {
     bool error = false;
 
@@ -1464,7 +1448,7 @@ bool dasmEqualUAE(const char *uae, const char *moira)
 
 static bool noUAEDasmForCoprocessor(u16 opcode)
 {
-    switch (cpuModel) {
+    switch (TestRunner::get().cpuModel) {
         case CPUModel::M68EC020: case CPUModel::M68EC030: case CPUModel::M68EC040: case CPUModel::M68LC040:
             return opcode >= 0xF000;
         default:
@@ -1472,7 +1456,7 @@ static bool noUAEDasmForCoprocessor(u16 opcode)
     }
 }
 
-bool compareDasm(Result &rRef, Result &rMoira)
+bool TestRunner::compareDasm(Result &rRef, Result &rMoira)
 {
     auto I = moiracpu->getInstrInfo(rRef.opcode).I;
 
@@ -1530,7 +1514,7 @@ bool compareDasm(Result &rRef, Result &rMoira)
     return true;
 }
 
-bool compareD(Result &rRef, Result &rMoira)
+bool TestRunner::compareD(Result &rRef, Result &rMoira)
 {
     assert(rRef.opcode == rMoira.opcode);
     Instr instr = moiracpu->getInstrInfo(rRef.opcode).I;
@@ -1544,18 +1528,18 @@ bool compareD(Result &rRef, Result &rMoira)
     return true;
 }
 
-bool compareA(Result &rRef, Result &rMoira)
+bool TestRunner::compareA(Result &rRef, Result &rMoira)
 {
     for (int i = 0; i < 8; i++) if (rRef.a[i] != rMoira.a[i]) return false;
     return true;
 }
 
-bool comparePC(Result &rRef, Result &rMoira)
+bool TestRunner::comparePC(Result &rRef, Result &rMoira)
 {
     return ref().equalPC(rRef, rMoira);
 }
 
-bool compareSR(Result &rRef, Result &rMoira)
+bool TestRunner::compareSR(Result &rRef, Result &rMoira)
 {
     assert(rRef.opcode == rMoira.opcode);
     Instr instr = moiracpu->getInstrInfo(rRef.opcode).I;
@@ -1570,55 +1554,55 @@ bool compareSR(Result &rRef, Result &rMoira)
     return (rRef.sr & mask) == (rMoira.sr & mask);
 }
 
-bool compareUSP(Result &rRef, Result &rMoira)
+bool TestRunner::compareUSP(Result &rRef, Result &rMoira)
 {
     return rRef.usp == rMoira.usp;
 }
 
-bool compareISP(Result &rRef, Result &rMoira)
+bool TestRunner::compareISP(Result &rRef, Result &rMoira)
 {
     return rRef.isp == rMoira.isp;
 }
 
-bool compareMSP(Result &rRef, Result &rMoira)
+bool TestRunner::compareMSP(Result &rRef, Result &rMoira)
 {
     return rRef.msp == rMoira.msp;
 }
 
-bool compareVBR(Result &rRef, Result &rMoira)
+bool TestRunner::compareVBR(Result &rRef, Result &rMoira)
 {
     return rRef.vbr == rMoira.vbr;
 }
 
-bool compareSFC(Result &rRef, Result &rMoira)
+bool TestRunner::compareSFC(Result &rRef, Result &rMoira)
 {
     return rRef.sfc == rMoira.sfc;
 }
 
-bool compareDFC(Result &rRef, Result &rMoira)
+bool TestRunner::compareDFC(Result &rRef, Result &rMoira)
 {
     return rRef.dfc == rMoira.dfc;
 }
 
-bool compareCAxR(Result &rRef, Result &rMoira)
+bool TestRunner::compareCAxR(Result &rRef, Result &rMoira)
 {
     return rRef.cacr == rMoira.cacr && rRef.caar == rMoira.caar;
 }
 
-bool compareFPR(Result &rRef, Result &rMoira) { return ref().equalFPR(rRef, rMoira); }
-bool compareFPCR(Result &rRef, Result &rMoira) { return ref().equalFPCR(rRef, rMoira); }
-bool compareFPSR(Result &rRef, Result &rMoira) { return ref().equalFPSR(rRef, rMoira); }
-bool compareFPIAR(Result &rRef, Result &rMoira) { return ref().equalFPIAR(rRef, rMoira); }
-bool compareMMU(Result &rRef, Result &rMoira)
+bool TestRunner::compareFPR(Result &rRef, Result &rMoira) { return ref().equalFPR(rRef, rMoira); }
+bool TestRunner::compareFPCR(Result &rRef, Result &rMoira) { return ref().equalFPCR(rRef, rMoira); }
+bool TestRunner::compareFPSR(Result &rRef, Result &rMoira) { return ref().equalFPSR(rRef, rMoira); }
+bool TestRunner::compareFPIAR(Result &rRef, Result &rMoira) { return ref().equalFPIAR(rRef, rMoira); }
+bool TestRunner::compareMMU(Result &rRef, Result &rMoira)
 {
     return rRef.crp == rMoira.crp && rRef.srp == rMoira.srp &&
            rRef.tc == rMoira.tc && rRef.tt0 == rMoira.tt0 && rRef.tt1 == rMoira.tt1 &&
            (rRef.mmusr & 0xFFFF) == (rMoira.mmusr & 0xFFFF);
 }
-bool compareMemory() { return memcmp(refMem, moiraMem, sizeof(refMem)) == 0; }
+bool TestRunner::compareMemory() { return memcmp(refMem, moiraMem, sizeof(refMem)) == 0; }
 
 // Prints the first differing bytes of the two memory images
-void printMemoryDiff()
+void TestRunner::printMemoryDiff()
 {
     int shown = 0;
     for (size_t i = 0; i < sizeof(refMem) && shown < 16; i++) {
@@ -1629,7 +1613,7 @@ void printMemoryDiff()
     }
 }
 
-bool compareCycles(Result &rRef, Result &rMoira)
+bool TestRunner::compareCycles(Result &rRef, Result &rMoira)
 {
     assert(rRef.opcode == rMoira.opcode);
     auto I = moiracpu->getInstrInfo(rRef.opcode).I;
@@ -1670,7 +1654,7 @@ bool compareCycles(Result &rRef, Result &rMoira)
 }
 
 // Writes the setup of the failed test to the file named in RUNNER_DUMP. Replay it with RUNNER_REPLAY.
-static void dumpFailedSetup()
+void TestRunner::dumpFailedSetup()
 {
     const char *name = getenv("RUNNER_DUMP");
     if (!name || !lastSetup) return;
@@ -1683,7 +1667,7 @@ static void dumpFailedSetup()
     }
 }
 
-void bugReport()
+void TestRunner::bugReport()
 {
     dumpFailedSetup();
     printf("Please report the bug at https://github.com/dirkwhoffmann/Moira\n");

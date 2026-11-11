@@ -67,7 +67,7 @@ UAERef::skipSetup(const Setup &s) const
 {
     u8 *mem = const_cast<u8 *>(s.mem);   // The reference has not been reset yet
     u16 op = s.opcode;
-    Instr instr = moiracpu->getInstrInfo(op).I;
+    Instr instr = tr().moiracpu->getInstrInfo(op).I;
 
 
     // [undefined] The FPCR precision value 3 is reserved. UAE and Moira round tiny results differently in this mode.
@@ -86,14 +86,14 @@ UAERef::skipSetup(const Setup &s) const
     if (instr == Instr::CALLM || instr == Instr::RTM) return true;
 
     // [Moira] RTE processes random stack frames (format errors, bus error frames)
-    if (instr == Instr::RTE && cpuModel != CPUModel::M68000 && cpuModel != CPUModel::M68010) return true;
+    if (instr == Instr::RTE && tr().cpuModel != CPUModel::M68000 && tr().cpuModel != CPUModel::M68010) return true;
 
     // [Moira] The 68010 supports the bus error stack frame (format $8), which Moira doesn't process.
     // The format word sits at offset 6 of the frame (the supervisor stack pointer is $2000).
-    if (instr == Instr::RTE && cpuModel == CPUModel::M68010 && (get16(mem, 0x2006) >> 12) == 8) return true;
+    if (instr == Instr::RTE && tr().cpuModel == CPUModel::M68010 && (get16(mem, 0x2006) >> 12) == 8) return true;
 
     // [UAE] UAE emulates FPU instructions that the 68040 traps (Moira follows real hardware)
-    if ((op & 0xFFC0) == 0xF200 && cpuModel == CPUModel::M68040) {
+    if ((op & 0xFFC0) == 0xF200 && tr().cpuModel == CPUModel::M68040) {
         u16 e = get16(mem, 0x1002);
         u16 cod = e >> 13, cmd = e & 0x7F;
         if ((cod == 0 || cod == 2) && (cmd == 0x02 || cmd == 0x06 || cmd == 0x08 || cmd == 0x09 ||
@@ -185,7 +185,7 @@ UAERef::skipSetup(const Setup &s) const
     int dmode = (op >> 6) & 7, dreg = (op >> 9) & 7;
     bool indexed = mode == 6 || (mode == 7 && reg == 3);
 
-    if (cpuModel < CPUModel::M68EC020) return false;
+    if (tr().cpuModel < CPUModel::M68EC020) return false;
 
     if (op >= 0x1000 && op < 0x4000) {
 
@@ -235,10 +235,10 @@ UAERef::skipAccessCheck(u16 op) const
     if ((op & 0xFE00) == 0xF200) return true;
 
     // The same applies to MMU opcodes
-    if (isMmuOpcode(op)) return true;
+    if (tr().isMmuOpcode(op)) return true;
 
     // N and V are undefined for CHK2, which shows up in the exception frame
-    auto instr = moiracpu->getInstrInfo(op).I;
+    auto instr = tr().moiracpu->getInstrInfo(op).I;
     return instr == Instr::CHK2 || instr == Instr::CMP2;
 }
 
@@ -263,11 +263,11 @@ UAERef::srMask(Instr instr) const
     if (instr == Instr::CMP2 || instr == Instr::CHK2) return ~0x0Au;
 
     // N and V are undefined for BCD instructions (68040 differs from older models)
-    if (cpuModel >= CPUModel::M68EC040 &&
+    if (tr().cpuModel >= CPUModel::M68EC040 &&
         (instr == Instr::ABCD || instr == Instr::SBCD || instr == Instr::NBCD)) return ~0x0Au;
 
     // Z, V and C are undefined for CHK on the 68020 and above
-    if (instr == Instr::CHK && cpuModel != CPUModel::M68000 && cpuModel != CPUModel::M68010) return ~0x07u;
+    if (instr == Instr::CHK && tr().cpuModel != CPUModel::M68000 && tr().cpuModel != CPUModel::M68010) return ~0x07u;
 
     return 0xFFFFFFFF;
 }

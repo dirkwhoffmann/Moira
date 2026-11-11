@@ -23,7 +23,7 @@ MusashiRef::skipAccessCheck(u16 op) const
 bool
 MusashiRef::skipSetup(const Setup &s) const
 {
-    Instr instr = moiracpu->getInstrInfo(s.opcode).I;
+    Instr instr = tr().moiracpu->getInstrInfo(s.opcode).I;
 
     // Skip some instructions that Musashi handles differently (known problems)
     bool result =
@@ -36,7 +36,7 @@ MusashiRef::skipSetup(const Setup &s) const
     instr == Instr::BFSET   ||
     instr == Instr::BFTST;
 
-    if (cpuModel != CPUModel::M68000) result |= instr == Instr::RTE;
+    if (tr().cpuModel != CPUModel::M68000) result |= instr == Instr::RTE;
 
     return result;
 }

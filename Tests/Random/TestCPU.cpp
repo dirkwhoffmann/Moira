@@ -40,7 +40,7 @@ TestCPU::read8(u32 addr) const
 u16
 TestCPU::read16(u32 addr) const
 {
-    if (addr & 1) misalignedRead = true;
+    if (addr & 1) TestRunner::get().misalignedRead = true;
     return get16(moiraMem, addr);
 }
 

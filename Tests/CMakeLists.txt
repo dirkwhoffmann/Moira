@@ -37,7 +37,6 @@ target_compile_options(moiraUAE PUBLIC ${MOIRA_OPTIONS})
 target_compile_definitions(moiraUAE PUBLIC
 
     MOIRA_COMPATIBILITY=UAE
-    MOIRA_EMULATE_ADDRESS_ERROR=true
     MOIRA_PRECISE_TIMING=true
 )
 
@@ -49,7 +48,6 @@ target_compile_options(moiraMusashi PUBLIC ${MOIRA_OPTIONS})
 target_compile_definitions(moiraMusashi PUBLIC
 
     MOIRA_COMPATIBILITY=MUSASHI
-    MOIRA_EMULATE_ADDRESS_ERROR=true
     MOIRA_PRECISE_TIMING=false
 )
 
@@ -74,6 +72,18 @@ target_compile_options(moiraMAMENoAE PUBLIC ${MOIRA_OPTIONS})
 target_compile_definitions(moiraMAMENoAE PUBLIC
 
     MOIRA_COMPATIBILITY=MAME
+    MOIRA_PRECISE_TIMING=true
+)
+
+# UAE compatibility with address errors (needed by the SingleStepTests and exception runners)
+
+add_library(moiraUAEExc STATIC ${MOIRA_SOURCES})
+target_include_directories(moiraUAEExc PUBLIC ${MOIRA_DIR})
+target_compile_options(moiraUAEExc PUBLIC ${MOIRA_OPTIONS})
+target_compile_definitions(moiraUAEExc PUBLIC
+
+    MOIRA_COMPATIBILITY=UAE
+    MOIRA_EMULATE_ADDRESS_ERROR=true
     MOIRA_PRECISE_TIMING=true
 )
 

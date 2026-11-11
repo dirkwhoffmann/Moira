@@ -10,7 +10,7 @@ target_include_directories(sstmame PRIVATE ${SST_INC})
 target_compile_definitions(sstmame PRIVATE SST_TOOL SST_MAME)
 
 add_executable(sstuae ${SST_SRC})
-target_link_libraries(sstuae PRIVATE mameref uaecpu moiraUAE)
+target_link_libraries(sstuae PRIVATE mameref uaecpu moiraUAEExc)
 target_include_directories(sstuae PRIVATE ${SST_INC})
 target_compile_definitions(sstuae PRIVATE SST_TOOL SST_UAE)
 
