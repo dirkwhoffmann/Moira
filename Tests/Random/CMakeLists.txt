@@ -7,7 +7,7 @@
 
 # The randomized differential test runner. It is built once per tested Moira core
 # (randomuae tests moiraUAE against UAE, randommusashi tests moiraMusashi against
-# Musashi, randommame tests moiraMAMENoAE against MAME's microcoded 68000). The sources are shared with the disassembler tests (see ../Dasm).
+# Musashi, randommame tests moiraMAMENoAE against MAME's microcoded 68000). The disassembler tests (dasmmot, dasmmit) are built from the same sources.
 set(RUNNER_SRC
 ${CMAKE_CURRENT_SOURCE_DIR}/RunnerMain.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/TestRunner.cpp
@@ -61,3 +61,22 @@ add_test(NAME RandomMusashi COMMAND randommusashi --seed 1)
 add_test(NAME RandomUAE COMMAND randomuae --seed 1)
 add_test(NAME RandomMAME COMMAND randommame --seed 1)
 set_tests_properties(RandomMusashi RandomUAE RandomMAME PROPERTIES LABELS "random")
+
+
+#
+# Disassembler tests
+#
+# The tools disassemble every opcode and compare the output of Moira with the reference
+# disassemblers.
+#
+#   dasmmot   Motorola syntax. Moira's GNU, MUSASHI and UAE syntaxes are compared with Binutils,
+#             Musashi and UAE. Moira's own syntax is checked for plausibility only.
+#   dasmmit   MIT syntax. Moira's GNU_MIT syntax is compared with Binutils (compiled without
+#             MOTOROLA). Moira's own MOIRA_MIT syntax is checked for plausibility only.
+
+add_test_runner(dasmmot moiraUAE ${CMAKE_CURRENT_SOURCE_DIR}/DasmMot.cpp binutils)
+add_test_runner(dasmmit moiraUAE ${CMAKE_CURRENT_SOURCE_DIR}/DasmMit.cpp binutilsmit)
+
+add_test(NAME DasmMot COMMAND dasmmot --seed 1)
+add_test(NAME DasmMit COMMAND dasmmit --seed 1)
+set_tests_properties(DasmMot DasmMit PROPERTIES LABELS "dasm")

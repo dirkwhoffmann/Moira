@@ -14,13 +14,13 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 #   SST/        sstmame                     SingleStepTests Moira vs. MAME
 #               sstmusashi                  SingleStepTests Moira vs. Musashi
 #               sstuae                      SingleStepTests Moira vs. UAE
+#               exceptionmame               Exception frames Moira vs. MAME
+#               exceptionuae                Exception frames Moira vs. UAE
 #   Random/     randommame                  Randomized tests Moira vs. MAME
 #               randommusashi               Randomized tests Moira vs. Musashi
 #               randomuae                   Randomized tests Moira vs. UAE
-#   Exception/  exceptionmame               Exceptions frames Moira vs. MAME
-#               exceptionuae                Exceptions frames Moira vs. MAME
-#   Dasm/       dasmmot                     Disassembler test in Motorola format
-#               dasmmit                     Disassembler tests in MIT format
+#               dasmmot                     Disassembler test in Motorola format
+#               dasmmit                     Disassembler test in MIT format
 
 # Differently configured copies of Moira (one per compatibility mode)
 
@@ -104,5 +104,3 @@ add_subdirectory(Unit)
 add_subdirectory(Smoke)
 add_subdirectory(SST)
 add_subdirectory(Random)
-add_subdirectory(Exception)
-add_subdirectory(Dasm)
