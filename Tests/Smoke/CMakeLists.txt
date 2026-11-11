@@ -5,10 +5,26 @@
 # Published under the terms of the MIT License
 # -----------------------------------------------------------------------------
 
-# Runs Moira against the SingleStepTests 68000 suite
-add_executable(smoke Smoke.cpp ../Common/SSTFile.cpp)
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+
+# -----------------------------------------------------------------------------
+# Tools based on the SingleStepTests suite.
+#
+#   smoke      Runs Moira on all tests in the SingleStepTests 68000 suite
+#              and compares the outcome with the prerecorded results. Note
+#              that Moira has to be run in MAME compat mode, since the
+#              results have been derived from MAME's 68000 micro core.
+# -----------------------------------------------------------------------------
+
+add_executable(smoke
+    Smoke.cpp
+    ../Common/SSTFile.cpp)
+
+target_include_directories(smoke PRIVATE
+    ${CMAKE_SOURCE_DIR}/Moira
+    ../Common)
+
 target_link_libraries(smoke PRIVATE moiraMAME)
-target_include_directories(smoke PRIVATE ${CMAKE_SOURCE_DIR}/Moira ${CMAKE_CURRENT_SOURCE_DIR}/../Common)
 
 add_test(NAME Smoke COMMAND smoke)
 set_tests_properties(Smoke PROPERTIES LABELS "smoke")

@@ -48,16 +48,18 @@ void DasmRunner::runStages(long round, const std::vector<FPUModel> &fpus)
 
     for (FPUModel fpu : fpus) {
 
-        if (!isCompatible(cpuModel, fpu)) continue;
-        selectFpu(fpu);
-        runDasmFPU(round);
+        if (isCompatible(cpuModel, fpu)) {
+            
+            selectFpu(fpu);
+            runDasmFPU(round);
+        }
     }
 }
 
 
 void DasmRunner::runDasmCPU(long round)
 {
-    static const int CPU_SETUPS = 32;
+    static const int CPU_SETUPS = 16;
 
     Setup setup;
     resetClocks();
@@ -145,9 +147,10 @@ void DasmRunner::runDasmFPU(long round)
 void DasmRunner::passedDasm()
 {
     // Moira's time covers all syntax flavors; each reference is timed separately
-    printf(" PASSED  (Moira: %.2fs  Binutils: %.2fs", double(moiraclk[1]) / double(CLOCKS_PER_SEC), double(dasmclk[0]) / double(CLOCKS_PER_SEC));
-    if (dasmMusashi) printf("  Musashi: %.2fs", double(dasmclk[1]) / double(CLOCKS_PER_SEC));
-    if (dasmUAE) printf("  UAE: %.2fs", double(dasmclk[2]) / double(CLOCKS_PER_SEC));
+    printf(" PASSED  (Moira: %.2fs  Ref:", double(moiraclk[1]) / double(CLOCKS_PER_SEC));
+    if (dasmBinutils) printf(" %.2fs", double(dasmclk[0]) / double(CLOCKS_PER_SEC));
+    if (dasmMusashi) printf(" %.2fs", double(dasmclk[1]) / double(CLOCKS_PER_SEC));
+    if (dasmUAE) printf(" %.2fs", double(dasmclk[2]) / double(CLOCKS_PER_SEC));
     printf(")\n");
 }
 
@@ -227,7 +230,7 @@ bool DasmRunner::compareDasm(Result &rRef, Result &rMoira)
     auto I = moiracpu->getInstrInfo(rRef.opcode).I;
 
     bool skipMusashi = !dasmMusashi || rRef.opcode >= 0xF000;
-    bool skipBinutils = false;
+    bool skipBinutils = !dasmBinutils;
 
     switch (cpuModel) {
 

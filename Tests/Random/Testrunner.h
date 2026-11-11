@@ -79,6 +79,7 @@ public:
 
     // Disassembler configuration (used by the DasmRunner and for error reports of the ExecRunner)
     bool mit = false;                  // Compare the MIT syntax flavor (Binutils compiled without MOTOROLA)
+    bool dasmBinutils = false;         // Compare with Musashi's disassembler
     bool dasmMusashi = false;          // Compare with Musashi's disassembler
     bool dasmUAE = false;              // Compare with UAE's disassembler
     bool checksMoiraSyntax = false;    // Check Moira's own syntax for plausibility

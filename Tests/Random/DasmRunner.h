@@ -24,9 +24,12 @@ public:
 
     explicit DasmRunner(bool mitSyntax)
     {
-        // Binutils always takes part in the comparison. Musashi and UAE only for the Motorola flavor.
         mit = mitSyntax;
-        dasmMusashi = dasmUAE = !mitSyntax;
+        
+        dasmBinutils = true;
+        dasmMusashi  = !mitSyntax;
+        dasmUAE      = !mitSyntax;
+        
         checksMoiraSyntax = true;
     }
 

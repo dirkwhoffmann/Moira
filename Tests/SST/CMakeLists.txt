@@ -1,52 +1,97 @@
-# Tools based on the SingleStepTests suite. Each tool is a small main file that selects the runner
-# and the reference core. The runners (SSTRunner.cpp, PlainRunner.cpp, ExceptionRunner.cpp) are shared.
+# -----------------------------------------------------------------------------
+# This file is part of Moira - A Motorola 68k emulator
 #
-#   sst<ref>        Runs the instructions on Moira and on a reference core and compares the
-#                   results (the prerecorded results are ignored). One tool per compatibility mode.
-#   exception<ref>  Differential exception test. Lets exceptions hit in the middle of instructions.
+# Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de
+# Published under the terms of the MIT License
+# -----------------------------------------------------------------------------
+
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+
+# -----------------------------------------------------------------------------
+# Tools based on the SingleStepTests suite.
+#
+# Each tool has a small main file that selects the runner and reference core.
+# The runners (SSTRunner.cpp, PlainRunner.cpp, ExceptionRunner.cpp) are shared.
+#
+#   sst<ref>       Runs instructions on Moira and a reference core and compares
+#                  the results. Prerecorded results are ignored. One tool per
+#                  compatibility mode.
+#
+#   exception<ref> Differential exception test. Lets exceptions hit in the
+#                  middle of instructions.
+# -----------------------------------------------------------------------------
 
 set(SST_SRC
-    ${CMAKE_CURRENT_SOURCE_DIR}/SSTRunner.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/PlainRunner.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ExceptionRunner.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../Common/SSTFile.cpp)
+    SSTRunner.cpp
+    PlainRunner.cpp
+    ExceptionRunner.cpp
+    ../Common/SSTFile.cpp)
 
-# Builds a tool. MAIN selects runner and reference, MOIRALIB is the Moira variant under test,
-# the remaining arguments are the libraries and sources of the reference.
-function(add_sst_tool NAME MAIN MOIRALIB)
-  add_executable(${NAME} ${MAIN} ${SST_SRC})
-  target_link_libraries(${NAME} PRIVATE ${MOIRALIB} mameref ${ARGN})
-  target_include_directories(${NAME} PRIVATE
+set(SST_INCLUDE_DIRS
     ${CMAKE_SOURCE_DIR}/Moira
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/../Common)
-endfunction()
 
-add_sst_tool(sstmame ${CMAKE_CURRENT_SOURCE_DIR}/SSTMame.cpp moiraMAME)
-add_sst_tool(sstuae ${CMAKE_CURRENT_SOURCE_DIR}/SSTUAE.cpp moiraUAEExc uaecpu)
-add_sst_tool(sstmusashi ${CMAKE_CURRENT_SOURCE_DIR}/SSTMusashi.cpp moiraMusashi musashi)
-target_sources(sstmusashi PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/MusashiCore.cpp)
-target_include_directories(sstmusashi PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/Musashi)
+#
+# SingleStepTests tools
+#
 
-# Every compatibility mode reaches 100%.
-# Its test demands the success rate of the last release, so regressions are caught.
+add_executable(sstmame
+    SSTMame.cpp
+    ${SST_SRC})
+    
+target_link_libraries(sstmame PRIVATE moiraMAME mameref)
+target_include_directories(sstmame PRIVATE ${SST_INCLUDE_DIRS})
+
+add_executable(sstuae
+    SSTUAE.cpp
+    ${SST_SRC})
+    
+target_link_libraries(sstuae PRIVATE moiraUAEExc mameref uaecpu)
+target_include_directories(sstuae PRIVATE ${SST_INCLUDE_DIRS})
+
+add_executable(sstmusashi
+    SSTMusashi.cpp
+    MusashiCore.cpp
+    ${SST_SRC}
+)
+target_link_libraries(sstmusashi PRIVATE moiraMusashi mameref musashi)
+target_include_directories(sstmusashi PRIVATE
+    ${SST_INCLUDE_DIRS}
+    ../ThirdParty/Musashi
+)
+
 add_test(NAME SSTMame COMMAND sstmame)
 add_test(NAME SSTUAE COMMAND sstuae)
 add_test(NAME SSTMusashi COMMAND sstmusashi)
-set_tests_properties(SSTMame SSTUAE SSTMusashi PROPERTIES LABELS "sst")
 
+set_tests_properties(
+    SSTMame SSTUAE SSTMusashi
+    PROPERTIES LABELS "sst"
+)
 
 #
 # Exception tests
 #
 
-# Runs Moira and the MAME reference side by side and lets exceptions hit in the middle of instructions
-add_sst_tool(exceptionmame ${CMAKE_CURRENT_SOURCE_DIR}/ExceptionMame.cpp moiraMAME)
+add_executable(exceptionmame
+    ExceptionMame.cpp
+    ${SST_SRC})
+    
+target_link_libraries(exceptionmame PRIVATE moiraMAME mameref)
+target_include_directories(exceptionmame PRIVATE ${SST_INCLUDE_DIRS})
 
-# Same tool, but Moira runs in UAE compatibility mode and is compared against the UAE core
-add_sst_tool(exceptionuae ${CMAKE_CURRENT_SOURCE_DIR}/ExceptionUAE.cpp moiraUAEExc uaecpu)
+add_executable(exceptionuae
+    ExceptionUAE.cpp
+    ${SST_SRC})
+    
+target_link_libraries(exceptionuae PRIVATE moiraUAEExc mameref uaecpu)
+target_include_directories(exceptionuae PRIVATE ${SST_INCLUDE_DIRS})
 
 add_test(NAME ExceptionMame COMMAND exceptionmame --ignore ccr,cycles,nbit)
 add_test(NAME ReferenceMame COMMAND exceptionmame --check)
 add_test(NAME ExceptionUAE COMMAND exceptionuae --ignore ccr,cycles,nbit)
-set_tests_properties(ExceptionMame ReferenceMame ExceptionUAE PROPERTIES LABELS "exception")
+
+set_tests_properties(
+    ExceptionMame ReferenceMame ExceptionUAE
+    PROPERTIES LABELS "exception")
