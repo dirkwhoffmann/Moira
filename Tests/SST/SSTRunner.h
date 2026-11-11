@@ -97,6 +97,7 @@ protected:
     u32 srMask = 0xA71F;                // Compared bits of the status register
     u16 codeMask = 0xFFFF;              // Compared bits of the first word of bus and address error frames
     bool ignoreCycles = false;          // Skip the comparison of cycle counts and bus cycle timing?
+    std::set<std::string> ignoredFields;    // Frame fields that are not compared (e.g., frame.addr)
 
     // Statistics
     Counter c;                          // Counter of the current file
@@ -138,6 +139,7 @@ public:
 protected:
 
     const char *description() const override;
+    bool acceptsModel(CPUModel model) const override { return model == CPUModel::M68000 || model == CPUModel::M68020; }
     bool accepts(const sst::Test &t) const override;
     void runTest(const sst::Test &t) override;
 };

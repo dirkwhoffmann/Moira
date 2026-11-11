@@ -35,6 +35,9 @@ bool traceInStep = true;         // Process a pending trace exception in the sam
 
 inline uint32_t mask(uint32_t addr) { return addr & memMask; }
 
+// The 68020 and above are not cycle exact. Their long accesses are observed as single bus accesses.
+inline bool wideBus() { return cpuType != uaecpu::Cpu::M68000 && cpuType != uaecpu::Cpu::M68010; }
+
 // MOVES accesses the address space selected by the DFC register (0x0EC0 - 0x0EFF is CAS.L)
 inline bool isMoves(uint32_t op) { return (op & 0xFF00) == 0x0E00 && (op & 0xC0) != 0xC0; }
 bool movesActive = false;
@@ -57,7 +60,7 @@ bool busAccess(bool write, bool fetch, uint32_t addr, int size, uint32_t value)
      */
     if (!write && !fetch && addr >= 0x400) {
         bool pcRelative = ((regs.opcode & 0x3F) == 0x3A || (regs.opcode & 0x3F) == 0x3B);
-        if (lastExc != 0 || pcRelative) fetch = true;
+        if ((lastExc != 0 && !wideBus()) || pcRelative) fetch = true;
     }
     uint32_t fc = fetch ? (regs.s ? 6 : 2) : (regs.s ? 5 : 1);
     uaecpu::BusAccess a { write, fetch, addr & 0xFFFFFF, size, value, fc, uaecpu::cycles() };
@@ -96,6 +99,7 @@ uae_u32 memory_get_long(uaecptr a)
     /* The cycle-exact core accesses the bus in words. Long accesses are free
      * peeks (e.g., the early look at an exception vector) and not observed.
      */
+    if (wideBus() && busAccess(false, false, a, 4, 0)) return 0;
     return mem[mask(a)] << 24 | mem[mask(a + 1)] << 16 | mem[mask(a + 2)] << 8 | mem[mask(a + 3)];
 }
 
@@ -104,7 +108,14 @@ uae_u32 memory_get_wordi(uaecptr a)
     if (busAccess(false, true, a, 2, 0)) return 0;
     return mem[mask(a)] << 8 | mem[mask(a + 1)];
 }
-uae_u32 memory_get_longi(uaecptr a) { return memory_get_long(a); }
+uae_u32 memory_get_longi(uaecptr a)
+{
+    if (wideBus()) {
+        if (busAccess(false, true, a, 4, 0)) return 0;
+        return mem[mask(a)] << 24 | mem[mask(a + 1)] << 16 | mem[mask(a + 2)] << 8 | mem[mask(a + 3)];
+    }
+    return memory_get_long(a);
+}
 
 void memory_put_byte(uaecptr a, uae_u32 v)
 {
@@ -148,6 +159,7 @@ void memory_put_word(uaecptr a, uae_u32 v)
 
 void memory_put_long(uaecptr a, uae_u32 v)
 {
+    if (wideBus() && busAccess(true, false, a, 4, v)) return;
     if (addr24) a &= 0xFFFFFF;
     if (writeHook) { writeHook(2, a, v >> 16, fcOfWrite(), uaecpu::cycles() + 2); writeHook(2, a + 2, v & 0xFFFF, fcOfWrite(), uaecpu::cycles() + 2); }
     mem[mask(a)] = uint8_t(v >> 24);

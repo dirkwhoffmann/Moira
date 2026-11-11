@@ -334,10 +334,42 @@ Moira::writeStackFrame1011(u16 sr, u32 pc, u32 ia, u16 nr, u16 ssw, u32 addr, u3
     push<C, Word>(sr);
 }
 
+/* The following code reproduces the 68020 bus error and address error frames of UAE.
+ * UAE reports the stacked PC, the SSW and the pipe stages by simple rules. Many internal
+ * words are not modeled. All frames use the long format ($B).
+ */
+static bool hasIndexedOperand(u16 ird)
+{
+    auto indexed = [](u16 m, u16 r) { return m == 6 || (m == 7 && r == 3); };
+
+    switch (ird >> 12) {
+
+        case 0x6: case 0x7: case 0xA: case 0xF: return false;
+        case 0xE: if (((ird >> 6) & 3) != 3) return false; break;
+    }
+    if (indexed((ird >> 3) & 7, ird & 7)) return true;
+
+    // MOVE has a second effective address
+    return (ird & 0xC000) == 0 && (ird & 0x3000) && indexed((ird >> 6) & 7, (ird >> 9) & 7);
+}
+
+template <Core C> void
+Moira::writeStackFrame1011UAE(u16 sr, u16 nr, u32 pc, u16 ssw, u32 addr, u32 end, bool sv)
+{
+    u16 stageC = 0, stageB = 0;
+    if (nr == 2 && !busWriteAccess) {
+        stageC = peekProgramWord(end + 2, sv);
+        stageB = peekProgramWord(end + 4, sv);
+    }
+    writeStackFrame1011<C>(sr, 0, pc, nr, ssw, addr, 0, stageC, stageB);
+}
+
 template <Core C> void
 Moira::execAddressError(StackFrame frame, int delay)
 {
     u16 status = getSR();
+    u32 pcNow = reg.pc, pc0Now = reg.pc0;
+    u16 ssw = 0x60 | (readFC() & 7);
 
     // Inform the delegate
     willExecute(M68kException::ADDRESS_ERROR, 3);
@@ -365,6 +397,22 @@ Moira::execAddressError(StackFrame frame, int delay)
 
     if constexpr (C == Core::C68000) {
         writeStackFrameAEBE<C>(frame);
+    } else if constexpr (C == Core::C68020) {
+
+        // The 68020 reports an odd instruction fetch with a frame of format B
+        u16 op = instrIrd;
+        bool target = (op & 0xFFC0) == 0x4E80 || (op & 0xF0F8) == 0x50C8 || (op >> 12) == 0x6;
+        u32 pc =
+        op == 0x4E75 || op == 0x4E73 || op == 0x4E74 ? pc0Now :
+        op == 0x4E77 ? pc0Now + 2 :
+        target ? frame.addr :
+        (op & 0xFFC0) == 0x4EC0 && hasIndexedOperand(op) ? pcNow + 2 : pc0Now + 2;
+
+        // UAE shows the next instruction word in one of the pipe stages
+        bool ix = (op & 0xFFC0) == 0x4EC0 && hasIndexedOperand(op);
+        u16 stageC = ix ? queue.irc : 0, stageB = (op == 0x4E75 || op == 0x4E77) ? queue.irc : 0;
+        writeStackFrame1011<C>(status, 0, pc, 3, ssw, frame.addr, 0, stageC, stageB);
+
     } else {
         writeStackFrame1000<C>(frame, status, frame.pc, reg.pc0, 3, frame.addr);
     }
@@ -381,6 +429,8 @@ template <Core C> void
 Moira::execBusError(StackFrame frame, int delay)
 {
     u16 status = getSR();
+    u16 ssw = 0x60 | (readFC() & 7);
+    u32 end = reg.pc0 != instrStart ? reg.pc0 : reg.pc;
 
     // Inform the delegate
     willExecute(M68kException::BUS_ERROR, 2);
@@ -433,6 +483,12 @@ Moira::execBusError(StackFrame frame, int delay)
             } else {
                 writeStackFrame1011<C>(status, frame.pc, reg.pc0, 2, frame.ssw, frame.addr, dataOut, stageC, stageB);
             }
+        } else if (compat == Compatibility::UAE) {
+
+            // UAE stacks the start of the instruction. Indexed operands move it behind the instruction words.
+            u32 pc = hasIndexedOperand(instrIrd) ? end : instrStart;
+            writeStackFrame1011UAE<C>(status, 2, pc, ssw, frame.addr, end, status & 0x2000);
+
         } else {
             writeStackFrame1011<C>(status, frame.pc, reg.pc0, 2);
         }

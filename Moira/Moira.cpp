@@ -406,6 +406,7 @@ Moira::execute()
         // Fast path: Call the instruction handler and return
         //
 
+        if constexpr (compat == Compatibility::UAE) { instrStart = reg.pc0; instrIrd = queue.ird; }
         try {
             (this->*exec[queue.ird])(queue.ird);
         } catch (const std::exception &exc) {
@@ -483,6 +484,7 @@ Moira::execute()
 
         } else {
 
+            if constexpr (compat == Compatibility::UAE) { instrStart = reg.pc0; instrIrd = queue.ird; }
             try {
                 (this->*exec[queue.ird])(queue.ird);
             } catch (const std::exception &exc) {

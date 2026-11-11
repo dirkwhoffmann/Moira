@@ -158,6 +158,7 @@ template <Core C, Size S, Flags F = 0> u32 pop();
 
 // Checks whether the provided address should trigger an address error
 template <Core C, Size S = Word> bool misaligned(u32 addr);
+template <Core C> bool misalignedPC(u32 addr);
 
 // Creates an address error stack frame
 template <Flags F = 0> StackFrame makeFrame(u32 addr, u32 pc, u16 sr, u16 ird);

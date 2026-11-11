@@ -54,7 +54,7 @@ struct BusAccess {
     bool write;                 // Write access?
     bool fetch;                 // Program fetch?
     uint32_t addr;              // Address (24 bits)
-    int size;                   // 1 (byte) or 2 (word)
+    int size;                   // 1 (byte), 2 (word) or 4 (long, 68020 and above only)
     uint32_t value;             // Data (valid for writes)
     uint32_t fc;                // Function code
     uint64_t cycle;             // CPU cycle (in UAE's cycle units)

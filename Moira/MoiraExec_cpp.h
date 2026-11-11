@@ -1066,7 +1066,7 @@ Moira::execBra(u16 opcode)
     u32 newpc = U32_ADD(oldpc, SEXT<S>(disp));
 
     // Check for address error
-    if (misaligned<C>(newpc)) {
+    if (misalignedPC<C>(newpc)) {
         throw earlyAddressError<C>(makeFrame<AE_FETCH>(newpc));
     }
 
@@ -1101,7 +1101,7 @@ Moira::execBcc(u16 opcode)
         u32 newpc = U32_ADD(oldpc, SEXT<S>(disp));
 
         // Check for address error
-        if (misaligned<C>(newpc)) {
+        if (misalignedPC<C>(newpc)) {
             throw earlyAddressError<C>(makeFrame<AE_FETCH>(newpc));
         }
 
@@ -1587,7 +1587,7 @@ Moira::execBsr(u16 opcode)
             reg.sp -= 4;
             throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(reg.sp));
         }
-        if (misaligned<C>(newpc)) {
+        if (misalignedPC<C>(newpc)) {
             if constexpr (EXACT_COMPAT) {
 
                 // MAME pushes the return address before it detects the misaligned target
@@ -1613,7 +1613,7 @@ Moira::execBsr(u16 opcode)
             throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(newpc));
 
         }
-        if (misaligned<C>(newpc)) {
+        if (misalignedPC<C>(newpc)) {
             throw earlyAddressError<C>(makeFrame<AE_FETCH>(newpc));
         }
 
@@ -2445,7 +2445,7 @@ Moira::execDbcc(u16 opcode)
             bool takeBranch = readD<Word>(dn) != 0;
 
             // Check for address error
-            if (misaligned<C, S>(newpc)) {
+            if (misalignedPC<C>(newpc)) {
                 // MAME stores the address of the prefetched word as program counter
                 if constexpr (compat == Compatibility::MAME) throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_FETCH>(newpc));
                 reg.pc = newpc;
@@ -2510,7 +2510,7 @@ Moira::execDbcc(u16 opcode)
             bool takeBranch = readD<Word>(dn) != 0;
 
             // Check for address error
-            if (misaligned<C, S>(newpc)) {
+            if (misalignedPC<C>(newpc)) {
                 reg.pc = newpc;
                 throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_FETCH>(newpc));
             }
@@ -2567,7 +2567,7 @@ Moira::execDbcc(u16 opcode)
             bool takeBranch = readD<Word>(dn) != 0;
 
             // Check for address error
-            if (misaligned<C, S>(newpc)) {
+            if (misalignedPC<C>(newpc)) {
                 reg.pc = newpc;
                 throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_FETCH>(newpc));
             }
@@ -2741,7 +2741,7 @@ Moira::execJmp(u16 opcode)
     SYNC(delay[(int)M]);
 
     // Check for address error
-    if (misaligned<C, Word>(ea)) {
+    if (misalignedPC<C>(ea)) {
         throw earlyAddressError<C>(makeFrame<AE_FETCH>(ea, oldpc));
     }
 
@@ -2858,7 +2858,10 @@ Moira::execJsr(u16 opcode)
                 }
             }
 
-            if (misaligned<C>(ea)) {
+            if (misalignedPC<C>(ea)) {
+
+                // UAE makes room for the return address on the stack (but does not write it)
+                if constexpr (C == Core::C68020) reg.sp -= 4;
 
                 if (isDspMode(M)) {
                     throw earlyAddressError<C>(makeFrame<AE_FETCH>(ea));
@@ -5805,7 +5808,7 @@ Moira::execRtd(u16 opcode)
     reg.sp += 4 + i16(queue.irc);
 
     // Check for address error
-    if (misaligned<C>(newpc)) {
+    if (misalignedPC<C>(newpc)) {
         throw AddressError(makeFrame<AE_PROG>(newpc));
     }
 
@@ -6084,7 +6087,7 @@ Moira::execRte(u16 opcode)
     setSR(newsr);
 
     // Check for address error
-    if (misaligned<C>(newpc)) {
+    if (misalignedPC<C>(newpc)) {
         throw earlyAddressError<C>(makeFrame<AE_PROG>(newpc));
     }
 
@@ -6164,7 +6167,7 @@ Moira::execRtr(u16 opcode)
     setCCR((u8)newccr);
 
     // Check for address error
-    if (misaligned<C>(newpc)) {
+    if (misalignedPC<C>(newpc)) {
         throw earlyAddressError<C>(makeFrame<AE_PROG>(newpc));
     }
 
@@ -6211,7 +6214,7 @@ Moira::execRts(u16 opcode)
     reg.sp += 4;
 
     // Check for address error
-    if (misaligned<C>(newpc)) {
+    if (misalignedPC<C>(newpc)) {
         throw earlyAddressError<C>(makeFrame<AE_PROG>(newpc));
     }
 

@@ -33,11 +33,15 @@ public:
         if (logging) log.push_back({ getClock() - 2, write, addr & ADDR_MASK & ~1u, mask, word, readFC() });
     }
 
+    // The 68020 and above count data accesses only (as one access per operand)
+    bool wide() const { return cpuModel >= CPUModel::M68EC020; }
+    bool counts() const { return !wide() || (readFC() & 3) != 2; }
+
     u8 read8(u32 addr) const override
     {
         auto self = const_cast<TestCPU *>(this);
         u8 v = mem.peek(addr);
-        if (logging && self->fault.hit()) { record(false, addr, 1, 0); throw BusError(addr & ADDR_MASK); }
+        if (logging && counts() && self->fault.hit()) { record(false, addr, 1, 0); throw BusError(wide() ? addr : addr & ADDR_MASK); }
         record(false, addr, 1, v);
         return v;
     }
@@ -45,28 +49,43 @@ public:
     {
         auto self = const_cast<TestCPU *>(this);
         u16 v = mem.peek16(addr);
-        if (logging && self->fault.hit()) { record(false, addr, 2, 0); throw BusError(addr & ADDR_MASK); }
+        if (logging && counts() && self->fault.hit()) { record(false, addr, 2, 0); throw BusError(wide() ? addr : addr & ADDR_MASK); }
         record(false, addr, 2, v);
         return v;
     }
-    u32 read32(u32 addr) const override { return u32(read16(addr) << 16 | read16(addr + 2)); }
+    u32 read32(u32 addr) const override
+    {
+        if (!wide()) return u32(read16(addr) << 16 | read16(addr + 2));
+        auto self = const_cast<TestCPU *>(this);
+        u32 v = u32(mem.peek16(addr) << 16 | mem.peek16(addr + 2));
+        if (logging && counts() && self->fault.hit()) { record(false, addr, 2, 0); throw BusError(wide() ? addr : addr & ADDR_MASK); }
+        record(false, addr, 2, u16(v >> 16));
+        return v;
+    }
 
     void write8(u32 addr, u8 val) const override
     {
         auto self = const_cast<TestCPU *>(this);
-        if (logging && self->fault.hit()) { record(true, addr, 1, val); throw BusError(addr & ADDR_MASK); }
+        if (logging && counts() && self->fault.hit()) { record(true, addr, 1, val); throw BusError(wide() ? addr : addr & ADDR_MASK); }
         record(true, addr, 1, val);
         self->mem.poke(addr, val);
     }
     void write16(u32 addr, u16 val) const override
     {
         auto self = const_cast<TestCPU *>(this);
-        if (logging && self->fault.hit()) { record(true, addr, 2, val); throw BusError(addr & ADDR_MASK); }
+        if (logging && counts() && self->fault.hit()) { record(true, addr, 2, val); throw BusError(wide() ? addr : addr & ADDR_MASK); }
         record(true, addr, 2, val);
         self->mem.poke(addr, u8(val >> 8));
         self->mem.poke(addr + 1, u8(val));
     }
-    void write32(u32 addr, u32 val) const override { write16(addr, u16(val >> 16)); write16(addr + 2, u16(val)); }
+    void write32(u32 addr, u32 val) const override
+    {
+        if (!wide()) { write16(addr, u16(val >> 16)); write16(addr + 2, u16(val)); return; }
+        auto self = const_cast<TestCPU *>(this);
+        if (logging && counts() && self->fault.hit()) { record(true, addr, 2, u16(val >> 16)); throw BusError(wide() ? addr : addr & ADDR_MASK); }
+        record(true, addr, 2, u16(val >> 16));
+        for (int i = 0; i < 4; i++) self->mem.poke(addr + i, u8(val >> (24 - 8 * i)));
+    }
 
     void load(const sst::State &s)
     {

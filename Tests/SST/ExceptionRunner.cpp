@@ -19,7 +19,10 @@ ExceptionRunner::ExceptionRunner(const CoreFactory &factory) : SSTRunner(factory
 const char *ExceptionRunner::description() const
 {
     return "Compares the exception processing of Moira (address errors, bus errors, traps,\n"
-           "etc.) with a reference 68000 and checks registers, stack frames and bus cycles.\n";
+           "etc.) with a reference CPU and checks registers, stack frames and bus cycles.\n"
+           "The 68020 is compared without timing. Bus errors are injected into the data\n"
+           "accesses of the instruction (one per operand access, no instruction fetches).\n"
+           "Only the SR, PC, format word and fault address of its frames are comparable.\n";
 }
 
 // Address errors that are part of the test itself are covered by the plain runner
@@ -97,13 +100,20 @@ void ExceptionRunner::runTest(const sst::Test &t)
             auto log = ref.cpu.log();
 
             // Did the instruction end in an address error? (vector 3 is read)
+            auto rs = ref.cpu.state();
             bool ae = std::any_of(log.begin(), log.end(), [](auto &c) { return !c.write && c.fc == 5 && c.addr == 12; });
+
+            // The 68020 reports vector 3 in the format word of the frame. It only detects faulty instruction fetches.
+            if (model >= CPUModel::M68EC020) {
+                u32 oldSsp = (v.state.sr & 0x2000) ? v.state.ssp : 0;
+                ae = rs.ssp != oldSsp && (ref.mem.peek16(rs.ssp + 6) & 0xFFF) == 0x00C;
+            }
             if (!ae) continue;
 
             // Classify the failing access by the function code and the R/W bit of the stacked frame
-            auto rs = ref.cpu.state();
             u16 code = ref.mem.peek16(rs.ssp);
             const char *kd = ((code & 7) == 2 || (code & 7) == 6) ? "ae-fetch" : (code & 0x10) ? "ae-read" : "ae-write";
+            if (model >= CPUModel::M68EC020) kd = "ae-fetch";
             bool isFetch = !strcmp(kd, "ae-fetch");
             mame::BusCycle none { 0, false, 0, 0, 0, 0 };
             runCase(t, v.state, -1, 0, none, kd, isFetch, false, ref.cpu.state().sr, v.name);
@@ -136,10 +146,20 @@ void ExceptionRunner::runTest(const sst::Test &t)
         int vectorFetch = -1;
         for (int k = 0; k < accesses && vectorFetch < 0; k++) if (!plain[k].write && plain[k].addr < 0x100 && plain[k].fc == 5) vectorFetch = k;
 
-        for (int k = 0; k < accesses; k++) {
+        // The 68020 reference does not model the stacking of exceptions. Only the accesses of the instruction are failed.
+        int limit = accesses;
+        if (model >= CPUModel::M68EC020 && vectorFetch >= 0) {
+            limit = vectorFetch;
+            u32 frame = ref.cpu.state().ssp & ADDR_MASK;
+            for (int k = 0; k < accesses; k++) {
+                if (plain[k].write && plain[k].fc == 5 && plain[k].addr >= frame && plain[k].addr < frame + 92) { limit = std::min(limit, k); break; }
+            }
+        }
+
+        for (int k = 0; k < limit; k++) {
 
             // UAE and MAME disagree on the frames of bus errors that hit the stacking, the vector fetch, or the first fetches of the handler of a group 1 or 2 exception
-            if (ref.core->disagreesOnStacking() && vectorFetch >= 3 && k >= vectorFetch - 3) { skipped++; continue; }
+            if (model < CPUModel::M68EC020 && ref.core->disagreesOnStacking() && vectorFetch >= 3 && k >= vectorFetch - 3) { skipped++; continue; }
 
             const char *kd = kind(plain[k]);
             bool isFetch = !strcmp(kd, "fetch");

@@ -727,6 +727,8 @@ Moira::readBus(u32 addr)
 {
     u32 result;
 
+    if constexpr (C == Core::C68020) busWriteAccess = false;
+
     // Derive the physical address
     addr = translate<C, false, S>(addr, readFC());
 
@@ -883,7 +885,7 @@ template <Core C, Size S, Flags F> void
 Moira::writeBus(u32 addr, u32 val, bool *ci)
 {
     // Remember the value for the bus fault frame (68030)
-    if constexpr (C == Core::C68020) busWriteData = val;
+    if constexpr (C == Core::C68020) { busWriteData = val; busWriteAccess = true; }
 
     // Derive the physical address
     addr = translate<C, true, S>(addr, readFC(), ci);
@@ -1049,6 +1051,17 @@ Moira::pop()
     u32 result = read<C, AddrSpace::DATA, S, F>(reg.sp);
     reg.sp += S;
     return result;
+}
+
+// Instruction fetches from odd addresses cause an address error on all CPUs (even the 68020)
+template <Core C> bool
+Moira::misalignedPC(u32 addr)
+{
+    if constexpr (MOIRA_EMULATE_ADDRESS_ERROR) {
+        return addr & 1;
+    } else {
+        return false;
+    }
 }
 
 template <Core C, Size S> bool

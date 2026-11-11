@@ -278,6 +278,20 @@ void SSTRunner::runCase(const sst::Test &t, const sst::State &init, int k, int a
             bool unused = off < 16 || (off >= 18 && off < 20) || (off >= 22 && off < 24) || (off >= 26 && off < 28);
             if (unused || off >= 28) continue;
         }
+        if (model >= CPUModel::M68EC020) {
+
+            // Frames of the 68020 (formats 0, 2, A, B): SR, PC, format word, and for the bus error frames the SSW, the pipe stages,
+            // the fault address and the data output buffer. All other words are internal information.
+            static const char *frame20[] = { "frame.sr", "frame.pc", "frame.pc", "frame.fmt", "frame.int", "frame.ssw", "frame.stagec", "frame.stageb",
+                                             "frame.addr", "frame.addr", "frame.int", "frame.int", "frame.dob", "frame.dob" };
+            if (moira.mem.peek(a) != ref.mem.peek(a)) {
+                u32 off = a - frameAt;
+                const char *field = a >= frameAt && off < 28 ? frame20[off / 2] : a >= frameAt && off < 92 ? "frame.int" : "mem";
+                if (!strcmp(field, "mem") && getenv("EXC_REGS")) printf("      mem %06x: exp %02x got %02x (ssp %06x)\n", a, ref.mem.peek(a), moira.mem.peek(a), frameAt);
+                if (ref.core->reliableFrameField(field)) badFields.insert(field);
+            }
+            continue;
+        }
         if (!m68000) {
             if (moira.mem.peek(a) != ref.mem.peek(a)) {
                 static const char *frame8[] = { "frame.sr", "frame.pc", "frame.pc", "frame.fmt", "frame.ssw", "frame.addr", "frame.addr", "frame.unused", "frame.dob", "frame.unused", "frame.dib", "frame.unused", "frame.iib" };
@@ -301,6 +315,7 @@ void SSTRunner::runCase(const sst::Test &t, const sst::State &init, int k, int a
     std::set<std::string> bad;
     for (int w : badWords) bad.insert(w < 0 ? "mem" : fields[w]);
     for (auto &f : badFields) bad.insert(f);
+    for (auto &f : ignoredFields) bad.erase(f);
     for (auto &b : bad) add(b);
 
     // Bus cycles
@@ -367,8 +382,9 @@ void SSTRunner::runCase(const sst::Test &t, const sst::State &init, int k, int a
         printf("    %s%s  fault #%d (%s %06x fc %d): %s\n", t.name.c_str(), label.c_str(), k, kd, pk.addr, pk.fc, diff.c_str());
         if (opt.verbose > 1) {
             printf("        initial prefetch: %04x %04x  pc %06x  sr %04x ssp %08x usp %08x\n", init.prefetch[0], init.prefetch[1], init.pc, init.sr, init.ssp, init.usp);
-            printf("        exp frame: %s\n", words(ref.mem, rs.ssp, 7).c_str());
-            printf("        got frame: %s\n", words(moira.mem, rs.ssp, 7).c_str());
+            int nw = model >= CPUModel::M68EC020 ? 30 : 7;
+            printf("        exp frame: %s\n", words(ref.mem, rs.ssp, nw).c_str());
+            printf("        got frame: %s\n", words(moira.mem, rs.ssp, nw).c_str());
         }
     }
 }
@@ -395,8 +411,13 @@ int SSTRunner::run(int argc, char **argv)
         if (list.find(",ccr,") != std::string::npos) srMask = 0xA700;
         if (list.find(",cycles,") != std::string::npos) ignoreCycles = true;
         if (list.find(",nbit,") != std::string::npos) codeMask = 0xFFF7;
+        for (size_t p = 0; (p = list.find(",frame.", p)) != std::string::npos; ) {
+            size_t q = list.find(',', p + 1);
+            ignoredFields.insert(list.substr(p + 1, q - p - 1));
+            p = q;
+        }
         return true;
-    }, "Ignore differences (comma-separated: ccr, cycles, nbit)");
+    }, "Ignore differences (comma-separated: ccr, cycles, nbit, or a frame field such as frame.addr)");
     args.integer("-v", opt.verbose, "Print the first <n> failures of each file");
     std::string models;
     for (auto m : common::allCpuModels()) if (ref.core->supports(m) && acceptsModel(m)) models += std::string(" ") + common::modelName(m);

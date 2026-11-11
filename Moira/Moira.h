@@ -89,10 +89,15 @@ protected:
 
     // IRD of the executing instruction after a prefetch that was followed by more cycles (MAME mode)
     u16 irdOld = 0;
+
+    // Start address and opcode of the executing instruction (used by the 68020 exception frames)
+    u32 instrStart = 0;
+    u16 instrIrd = 0;
     bool irdKeep = false;
 
     // The value of the most recent write access (reported in bus fault frames)
     u32 busWriteData = 0;
+    bool busWriteAccess = false;    // Is the current bus access a write? (68020 bus error frames)
     
     // Instruction set used by the disassembler
     CPUModel dasmModel = CPUModel::M68000;

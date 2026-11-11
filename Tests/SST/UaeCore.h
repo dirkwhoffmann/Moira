@@ -70,6 +70,13 @@ struct UaeCore : RefCore {
     // Is called for each bus access of the CPU
     bool access(const uaecpu::BusAccess &a)
     {
+        // The 68020 and above are not cycle exact. Only data accesses are counted (one per operand access).
+        if (a.size == 4 || model >= CPUModel::M68EC020) {
+            if (a.fetch) return false;
+            u32 w = a.addr & ~1u;
+            cycles.push_back({ 0, a.write, w, a.write ? u16(a.size == 4 ? a.value >> 16 : a.value) : mem.peek16(w), 0xFFFF, int(a.fc) });
+            return fault.hit();
+        }
         u16 mask = a.size == 2 ? 0xFFFF : (a.addr & 1) ? 0x00FF : 0xFF00;
         u32 word = a.addr & ~1u;
         u16 data = a.write ? (a.size == 2 ? u16(a.value) : (a.addr & 1) ? u16(a.value & 0xFF) : u16(a.value << 8)) : mem.peek16(word);
@@ -122,6 +129,8 @@ struct UaeCore : RefCore {
     // buffers differ from the frames recorded on real hardware (see Tests/Unit/StackFrameTests.cpp).
     bool reliableFrameField(const char *field) const override
     {
+        // UAE leaves the internal words of the 68020 frames empty and sets the SSW only partially (no DF, RC, RB, ...)
+        if (model >= CPUModel::M68EC020) return strcmp(field, "frame.int") && strcmp(field, "frame.ssw");
         if (model != CPUModel::M68010) return true;
         return strcmp(field, "frame.pc") && strcmp(field, "frame.dib") && strcmp(field, "frame.iib");
     }
