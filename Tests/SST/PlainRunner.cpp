@@ -12,9 +12,10 @@ namespace sstrunner {
 
 const char *PlainRunner::description() const
 {
-    return "Runs the instructions of the SingleStepTests on Moira and on a reference 68000 and\n"
+    return "Runs the instructions of the SingleStepTests on Moira and on a reference CPU and\n"
            "compares the results. The prerecorded results are ignored. Compares registers, memory,\n"
-           "cycle counts and bus cycles (if the reference reports them).\n";
+           "cycle counts and bus cycles (if the reference reports them). Cycle counts and bus cycles\n"
+           "are only compared for the 68000.\n";
 }
 
 void PlainRunner::runTest(const sst::Test &t)

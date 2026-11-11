@@ -23,10 +23,41 @@ struct UaeCore : RefCore {
     bool didHalt = false;
     uint64_t cycleBase = 0;
 
+    CPUModel model = CPUModel::M68000;
+    std::string label = "UAE (WinUAE, cycle exact 68000)";
+
     UaeCore(Memory &m, Fault &f) : mem(m), fault(f)
     {
         self = this;
-        uaecpu::init(uaecpu::Cpu::M68000, uaecpu::Fpu::None, mem.ram.data(), [](int size, uint32_t addr, uint32_t, uint32_t, uint64_t) {
+        configure(CPUModel::M68000);
+    }
+
+    bool supports(CPUModel) const override { return true; }
+
+    void setModel(CPUModel m) override { configure(m); }
+
+    void configure(CPUModel m)
+    {
+        using uaecpu::Cpu;
+        model = m;
+
+        Cpu cpu =
+        m == CPUModel::M68000   ? Cpu::M68000 :
+        m == CPUModel::M68010   ? Cpu::M68010 :
+        m == CPUModel::M68EC020 ? Cpu::M68EC020 :
+        m == CPUModel::M68020   ? Cpu::M68020 :
+        m == CPUModel::M68EC030 ? Cpu::M68EC030 :
+        m == CPUModel::M68030   ? Cpu::M68030 :
+        m == CPUModel::M68EC040 ? Cpu::M68EC040 :
+        m == CPUModel::M68LC040 ? Cpu::M68LC040 : Cpu::M68040;
+
+        // Only the 68040 has a built-in FPU
+        auto fpu = m == CPUModel::M68040 ? uaecpu::Fpu::Internal : uaecpu::Fpu::None;
+
+        bool exact = m == CPUModel::M68000 || m == CPUModel::M68010;
+        label = exact ? std::string("UAE (WinUAE, cycle exact ") + common::modelName(m) + ")" : std::string("UAE (WinUAE, ") + common::modelName(m) + ")";
+
+        uaecpu::init(cpu, fpu, mem.ram.data(), [](int size, uint32_t addr, uint32_t, uint32_t, uint64_t) {
 
             // Writes go directly into the memory. Remember them, so that the memory can be reset.
             for (int i = 0; i < size; i++) self->mem.touched.push_back((addr + i) & ADDR_MASK);
@@ -59,7 +90,7 @@ struct UaeCore : RefCore {
         // Loading the state fetches the prefetch queue. This is not part of the instruction.
         uaecpu::setAccessHook(nullptr);
         uaecpu::setState(u);
-        uaecpu::setPrefetch(u16(s.prefetch[0]), u16(s.prefetch[1]));
+        if (model == CPUModel::M68000) uaecpu::setPrefetch(u16(s.prefetch[0]), u16(s.prefetch[1]));
         uaecpu::setAccessHook([](const uaecpu::BusAccess &a) { return self->access(a); });
         cycles.clear();
         didHalt = false;
@@ -87,7 +118,10 @@ struct UaeCore : RefCore {
     const std::vector<mame::BusCycle> &log() const override { return cycles; }
     bool halted() const override { return didHalt; }
 
-    const char *name() const override { return "UAE (WinUAE, cycle exact 68000)"; }
+    // Only the 68000 is cycle exact and logs its bus cycles like MAME
+    bool hasBusLog() const override { return model == CPUModel::M68000; }
+
+    const char *name() const override { return label.c_str(); }
     const char *shortName() const override { return "UAE"; }
 
     // UAE sets the I/N bit (bit 3) by rules that are not modeled, so it is not compared

@@ -15,6 +15,11 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#if defined(_MSC_VER)
+#define strcasecmp _stricmp
+#else
+#include <strings.h>
+#endif
 
 namespace common {
 
@@ -49,6 +54,50 @@ printBugReport()
 {
     printf("Please report the bug at https://github.com/dirkwhoffmann/Moira\n");
     printf("Thank you!\n\n");
+}
+
+
+//
+// CPU models
+//
+
+namespace {
+
+const struct { moira::CPUModel model; const char *name; } modelTable[] = {
+
+    { moira::CPUModel::M68000,   "68000" },
+    { moira::CPUModel::M68010,   "68010" },
+    { moira::CPUModel::M68EC020, "EC020" },
+    { moira::CPUModel::M68020,   "68020" },
+    { moira::CPUModel::M68EC030, "EC030" },
+    { moira::CPUModel::M68030,   "68030" },
+    { moira::CPUModel::M68EC040, "EC040" },
+    { moira::CPUModel::M68LC040, "LC040" },
+    { moira::CPUModel::M68040,   "68040" }
+};
+
+}
+
+const std::vector<moira::CPUModel> &
+allCpuModels()
+{
+    static std::vector<moira::CPUModel> models;
+    if (models.empty()) for (auto &m : modelTable) models.push_back(m.model);
+    return models;
+}
+
+const char *
+modelName(moira::CPUModel model)
+{
+    for (auto &m : modelTable) if (m.model == model) return m.name;
+    return "???";
+}
+
+std::optional<moira::CPUModel>
+parseModel(const char *name)
+{
+    for (auto &m : modelTable) if (strcasecmp(m.name, name) == 0) return m.model;
+    return std::nullopt;
 }
 
 

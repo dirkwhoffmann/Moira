@@ -28,6 +28,13 @@ struct MusashiCore : RefCore {
     bool halted() const override { return false; }
     bool hasBusLog() const override { return false; }
 
+    // Musashi's 68030 and 68040 support is too limited to serve as a reference
+    bool supports(CPUModel m) const override
+    {
+        return m == CPUModel::M68000 || m == CPUModel::M68010 || m == CPUModel::M68EC020 || m == CPUModel::M68020;
+    }
+    void setModel(CPUModel m) override;
+
     const char *name() const override { return "Musashi"; }
     const char *shortName() const override { return "Musashi"; }
 

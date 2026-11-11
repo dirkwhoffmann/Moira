@@ -34,23 +34,11 @@ TestRunner &TestRunner::get() { return *theRunner; }
 
 void TestRunner::resetClocks() { refclk[0] = refclk[1] = moiraclk[0] = moiraclk[1] = 0; dasmclk[0] = dasmclk[1] = dasmclk[2] = 0; }
 
-static const struct { CPUModel model; const char *name; } modelTable[] = {
-
-    { CPUModel::M68000,   "68000" },
-    { CPUModel::M68010,   "68010" },
-    { CPUModel::M68EC020, "EC020" },
-    { CPUModel::M68020,   "68020" },
-    { CPUModel::M68EC030, "EC030" },
-    { CPUModel::M68030,   "68030" },
-    { CPUModel::M68EC040, "EC040" },
-    { CPUModel::M68LC040, "LC040" },
-    { CPUModel::M68040,   "68040" }
-};
 
 const std::vector<CPUModel> &TestRunner::allModels()
 {
     if (!modelsBuilt) {
-        for (auto &m : modelTable) if (supports(m.model)) models.push_back(m.model);
+        for (auto model : common::allCpuModels()) if (supports(model)) models.push_back(model);
         modelsBuilt = true;
     }
     return models;
@@ -108,20 +96,6 @@ void TestRunner::run(unsigned seed, long rounds, const std::vector<CPUModel> &cp
             runStages(i, fpus);
         }
     }
-}
-
-
-const char *modelName(CPUModel model)
-{
-    for (auto &m : modelTable) if (m.model == model) return m.name;
-    return "???";
-}
-
-
-std::optional<CPUModel> parseModel(const char *name)
-{
-    for (auto &m : modelTable) if (strcasecmp(m.name, name) == 0) return m.model;
-    return std::nullopt;
 }
 
 

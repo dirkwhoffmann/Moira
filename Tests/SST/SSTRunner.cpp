@@ -376,7 +376,26 @@ int SSTRunner::run(int argc, char **argv)
         return true;
     }, "Ignore differences (comma-separated: ccr, cycles, nbit)");
     args.integer("-v", opt.verbose, "Print the first <n> failures of each file");
+    std::string models;
+    for (auto m : common::allCpuModels()) if (ref.core->supports(m) && acceptsModel(m)) models += std::string(" ") + common::modelName(m);
+    args.custom("--cpu", "<model>", [&](const char *s) {
+        auto m = common::parseModel(s);
+        if (!m || !ref.core->supports(*m) || !acceptsModel(*m)) return false;
+        model = *m;
+        return true;
+    }, ("CPU model (default: 68000). Only the 68000 is compared cycle by cycle.\nModels:" + models).c_str());
     if (!args.parse()) return 1;
+
+    // The test data has been recorded on a 68000. For other models, the instructions and initial
+    // states are used as input only, and registers and memory are compared.
+    if (model != CPUModel::M68000) {
+
+        if (opt.check) { printf("--check requires the 68000\n"); return 1; }
+        ref.core->setModel(model);
+        moira.setModel(model);
+        ref.mem.prefetchInRam = moira.mem.prefetchInRam = true;
+        ignoreCycles = true;
+    }
 
     std::vector<std::string> names;
     std::error_code ec;
@@ -394,6 +413,7 @@ int SSTRunner::run(int argc, char **argv)
     common::printSetting("Core under test", "Moira %s (%s mode)", moira::Moira::build().c_str(),
                          moira::compat == moira::Compatibility::UAE ? "UAE" : moira::compat == moira::Compatibility::MUSASHI ? "Musashi" : "MAME");
     common::printSetting("Reference", "%s", ref.core->name());
+    common::printSetting("CPU model", "%s", common::modelName(model));
     printf("\n");
     printf("%-16s %8s %8s %8s\n", "Instruction", "Cases", "OK", "OK%");
 

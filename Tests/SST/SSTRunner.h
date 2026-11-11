@@ -63,6 +63,9 @@ protected:
     // Text shown in the start-up banner
     virtual const char *description() const = 0;
 
+    // Returns false if the runner cannot work with the given CPU model
+    virtual bool acceptsModel(CPUModel model) const { return model == CPUModel::M68000; }
+
     // Returns false if a test is of no interest to the runner
     virtual bool accepts(const sst::Test &t) const { return true; }
 
@@ -86,6 +89,7 @@ protected:
     int checkReference(const std::vector<std::string> &names);
 
     Settings opt;
+    CPUModel model = CPUModel::M68000;
     Reference ref;
     TestCPU moira;
 
@@ -121,6 +125,7 @@ public:
 protected:
 
     const char *description() const override;
+    bool acceptsModel(CPUModel model) const override { return true; }
     void runTest(const sst::Test &t) override;
 };
 

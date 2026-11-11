@@ -26,8 +26,8 @@ namespace runner {
 using namespace moira;
 
 // Model tables (independent of a runner instance)
-const char *modelName(CPUModel model);
-std::optional<CPUModel> parseModel(const char *name);
+using common::modelName;
+using common::parseModel;
 
 const std::vector<FPUModel> &allFpuModels();
 const char *fpuModelName(FPUModel model);

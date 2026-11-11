@@ -39,6 +39,13 @@ MusashiCore::MusashiCore(Memory &m) : mem(m)
     m68k_set_cpu_type(M68K_CPU_TYPE_68000);
 }
 
+void MusashiCore::setModel(CPUModel m)
+{
+    m68k_set_cpu_type(m == CPUModel::M68010   ? M68K_CPU_TYPE_68010 :
+                      m == CPUModel::M68EC020 ? M68K_CPU_TYPE_68EC020 :
+                      m == CPUModel::M68020   ? M68K_CPU_TYPE_68020 : M68K_CPU_TYPE_68000);
+}
+
 void MusashiCore::load(const sst::State &s)
 {
     // The queue holds the opcode and the next extension word (the PC points behind them)

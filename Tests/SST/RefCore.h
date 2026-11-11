@@ -9,6 +9,7 @@
 
 #include "SSTTypes.h"
 #include "MameCpu.h"
+#include "Common.h"
 #include <functional>
 #include <memory>
 
@@ -29,6 +30,10 @@ struct RefCore {
     virtual const std::vector<mame::BusCycle> &log() const = 0;
     virtual bool halted() const = 0;
     virtual bool hasBusLog() const { return true; }                     // Does the core report its bus cycles?
+
+    // Selects the CPU model. Unless a core overrides this, it only supports the 68000.
+    virtual bool supports(CPUModel model) const { return model == CPUModel::M68000; }
+    virtual void setModel(CPUModel model) { }
 
     //
     // Differences between the references

@@ -24,6 +24,7 @@ struct Memory {
     std::vector<u8> ram = std::vector<u8>(1 << 24);
     std::vector<u32> touched;
     bool installVectors = true;            // Install the vectors of the bus error and address error handler?
+    bool prefetchInRam = false;            // Store the prefetch queue in memory? (needed by cores without a queue)
 
     u8 peek(u32 a) const { return ram[a & ADDR_MASK]; }
     u16 peek16(u32 a) const { return u16(peek(a) << 8 | peek(a + 1)); }
@@ -34,6 +35,13 @@ struct Memory {
     {
         clear();
         for (auto &[addr, val] : s.ram) poke(addr, val);
+
+        // The queue holds the opcode and the next extension word (the PC points behind them)
+        if (prefetchInRam) {
+            u32 pc = s.pc - 4;
+            poke(pc, u8(s.prefetch[0] >> 8)); poke(pc + 1, u8(s.prefetch[0]));
+            poke(pc + 2, u8(s.prefetch[1] >> 8)); poke(pc + 3, u8(s.prefetch[1]));
+        }
 
         if (!installVectors) return;
 

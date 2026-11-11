@@ -7,44 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		50F600000000000000000038 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
-		50F600000000000000000037 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
-		50F600000000000000000036 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
-		50F600000000000000000035 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
-		50F600000000000000000034 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
-		50F600000000000000000033 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
-		50F600000000000000000032 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
-		50F600000000000000000031 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
-		50F600000000000000000030 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
-		50F60000000000000000002F /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
-		50F60000000000000000002E /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
-		50F60000000000000000002D /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
-		50F60000000000000000002A /* ExecRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F57E0D30A4612A00EDBDBA /* ExecRunner.cpp */; };
-		50F600000000000000000029 /* ExecRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F57E0D30A4612A00EDBDBA /* ExecRunner.cpp */; };
-		50F600000000000000000028 /* DasmRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F57E1530A4618B00EDBDBA /* DasmRunner.cpp */; };
-		50F600000000000000000027 /* DasmRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F57E1530A4618B00EDBDBA /* DasmRunner.cpp */; };
-		50F600000000000000000026 /* DasmRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F57E1530A4618B00EDBDBA /* DasmRunner.cpp */; };
-		50F600000000000000000025 /* MusashiCore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000000B /* MusashiCore.cpp */; };
-		50F600000000000000000024 /* ExceptionUAE.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000010 /* ExceptionUAE.cpp */; };
-		50F600000000000000000023 /* ExceptionRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000004 /* ExceptionRunner.cpp */; };
-		50F600000000000000000022 /* PlainRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000003 /* PlainRunner.cpp */; };
-		50F600000000000000000021 /* SSTRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000002 /* SSTRunner.cpp */; };
-		50F600000000000000000020 /* ExceptionMame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000000F /* ExceptionMame.cpp */; };
-		50F60000000000000000001F /* ExceptionRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000004 /* ExceptionRunner.cpp */; };
-		50F60000000000000000001E /* PlainRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000003 /* PlainRunner.cpp */; };
-		50F60000000000000000001D /* SSTRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000002 /* SSTRunner.cpp */; };
-		50F60000000000000000001C /* SSTMusashi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000000E /* SSTMusashi.cpp */; };
-		50F60000000000000000001B /* ExceptionRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000004 /* ExceptionRunner.cpp */; };
-		50F60000000000000000001A /* PlainRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000003 /* PlainRunner.cpp */; };
-		50F600000000000000000019 /* SSTRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000002 /* SSTRunner.cpp */; };
-		50F600000000000000000018 /* SSTUAE.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000000D /* SSTUAE.cpp */; };
-		50F600000000000000000017 /* ExceptionRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000004 /* ExceptionRunner.cpp */; };
-		50F600000000000000000016 /* PlainRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000003 /* PlainRunner.cpp */; };
-		50F600000000000000000015 /* SSTRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000002 /* SSTRunner.cpp */; };
-		50F600000000000000000014 /* SSTMame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000000C /* SSTMame.cpp */; };
-		50F600000000000000000013 /* ExceptionRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000004 /* ExceptionRunner.cpp */; };
-		50F600000000000000000012 /* PlainRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000003 /* PlainRunner.cpp */; };
-		50F600000000000000000011 /* SSTRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000002 /* SSTRunner.cpp */; };
 		5028B10A288D9EC000047C20 /* musashi_softfloat.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B103288D9EC000047C20 /* musashi_softfloat.c */; };
 		5028B10E288D9ECD00047C20 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B10D288D9ECD00047C20 /* m68kops.c */; };
 		5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B114288D9EDC00047C20 /* m68kdasm.c */; };
@@ -214,6 +176,44 @@
 		50F57E2630A4622500EDBDBA /* ExecCompare.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F57E2130A4622500EDBDBA /* ExecCompare.cpp */; };
 		50F57E2A30A4659400EDBDBA /* DasmMit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F57E2930A4659400EDBDBA /* DasmMit.cpp */; };
 		50F57E2C30A4659F00EDBDBA /* DasmMot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F57E2B30A4659F00EDBDBA /* DasmMot.cpp */; };
+		50F600000000000000000011 /* SSTRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000002 /* SSTRunner.cpp */; };
+		50F600000000000000000012 /* PlainRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000003 /* PlainRunner.cpp */; };
+		50F600000000000000000013 /* ExceptionRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000004 /* ExceptionRunner.cpp */; };
+		50F600000000000000000014 /* SSTMame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000000C /* SSTMame.cpp */; };
+		50F600000000000000000015 /* SSTRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000002 /* SSTRunner.cpp */; };
+		50F600000000000000000016 /* PlainRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000003 /* PlainRunner.cpp */; };
+		50F600000000000000000017 /* ExceptionRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000004 /* ExceptionRunner.cpp */; };
+		50F600000000000000000018 /* SSTUAE.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000000D /* SSTUAE.cpp */; };
+		50F600000000000000000019 /* SSTRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000002 /* SSTRunner.cpp */; };
+		50F60000000000000000001A /* PlainRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000003 /* PlainRunner.cpp */; };
+		50F60000000000000000001B /* ExceptionRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000004 /* ExceptionRunner.cpp */; };
+		50F60000000000000000001C /* SSTMusashi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000000E /* SSTMusashi.cpp */; };
+		50F60000000000000000001D /* SSTRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000002 /* SSTRunner.cpp */; };
+		50F60000000000000000001E /* PlainRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000003 /* PlainRunner.cpp */; };
+		50F60000000000000000001F /* ExceptionRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000004 /* ExceptionRunner.cpp */; };
+		50F600000000000000000020 /* ExceptionMame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000000F /* ExceptionMame.cpp */; };
+		50F600000000000000000021 /* SSTRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000002 /* SSTRunner.cpp */; };
+		50F600000000000000000022 /* PlainRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000003 /* PlainRunner.cpp */; };
+		50F600000000000000000023 /* ExceptionRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000004 /* ExceptionRunner.cpp */; };
+		50F600000000000000000024 /* ExceptionUAE.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000010 /* ExceptionUAE.cpp */; };
+		50F600000000000000000025 /* MusashiCore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000000B /* MusashiCore.cpp */; };
+		50F600000000000000000026 /* DasmRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F57E1530A4618B00EDBDBA /* DasmRunner.cpp */; };
+		50F600000000000000000027 /* DasmRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F57E1530A4618B00EDBDBA /* DasmRunner.cpp */; };
+		50F600000000000000000028 /* DasmRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F57E1530A4618B00EDBDBA /* DasmRunner.cpp */; };
+		50F600000000000000000029 /* ExecRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F57E0D30A4612A00EDBDBA /* ExecRunner.cpp */; };
+		50F60000000000000000002A /* ExecRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F57E0D30A4612A00EDBDBA /* ExecRunner.cpp */; };
+		50F60000000000000000002D /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F60000000000000000002E /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F60000000000000000002F /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F600000000000000000030 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F600000000000000000031 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F600000000000000000032 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F600000000000000000033 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F600000000000000000034 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F600000000000000000035 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F600000000000000000036 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F600000000000000000037 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F600000000000000000038 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
 		50FA00000000000000000103 /* FpuEnvMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000001 /* FpuEnvMath.cpp */; };
 		50FA00000000000000000104 /* MoiraDebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */; };
 		50FA00000000000000000105 /* Moira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F332386A7DD004D3EC2 /* Moira.cpp */; };
@@ -578,24 +578,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		50F60000000000000000002C /* Common.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Common.cpp; sourceTree = "<group>"; };
-		50F60000000000000000002B /* Common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Common.h; sourceTree = "<group>"; };
-		50F600000000000000000010 /* ExceptionUAE.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ExceptionUAE.cpp; sourceTree = "<group>"; };
-		50F60000000000000000000F /* ExceptionMame.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ExceptionMame.cpp; sourceTree = "<group>"; };
-		50F60000000000000000000E /* SSTMusashi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SSTMusashi.cpp; sourceTree = "<group>"; };
-		50F60000000000000000000D /* SSTUAE.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SSTUAE.cpp; sourceTree = "<group>"; };
-		50F60000000000000000000C /* SSTMame.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SSTMame.cpp; sourceTree = "<group>"; };
-		50F60000000000000000000B /* MusashiCore.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MusashiCore.cpp; sourceTree = "<group>"; };
-		50F60000000000000000000A /* MusashiCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MusashiCore.h; sourceTree = "<group>"; };
-		50F600000000000000000009 /* UaeCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UaeCore.h; sourceTree = "<group>"; };
-		50F600000000000000000008 /* MameCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MameCore.h; sourceTree = "<group>"; };
-		50F600000000000000000007 /* RefCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RefCore.h; sourceTree = "<group>"; };
-		50F600000000000000000006 /* SSTMoira.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SSTMoira.h; sourceTree = "<group>"; };
-		50F600000000000000000005 /* SSTTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SSTTypes.h; sourceTree = "<group>"; };
-		50F600000000000000000004 /* ExceptionRunner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ExceptionRunner.cpp; sourceTree = "<group>"; };
-		50F600000000000000000003 /* PlainRunner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PlainRunner.cpp; sourceTree = "<group>"; };
-		50F600000000000000000002 /* SSTRunner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SSTRunner.cpp; sourceTree = "<group>"; };
-		50F600000000000000000001 /* SSTRunner.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SSTRunner.h; sourceTree = "<group>"; };
 		08C7A9B2140D45BEA6DAD5A7 /* Cache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Cache.h; sourceTree = "<group>"; };
 		1654296120AA412377E9642D /* MoiraCore68020.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraCore68020.cpp; sourceTree = "<group>"; };
 		38037577E0C9EA87178FAF59 /* MoiraCore_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraCore_cpp.h; sourceTree = "<group>"; };
@@ -824,6 +806,24 @@
 		50F57E2730A4630F00EDBDBA /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F57E2930A4659400EDBDBA /* DasmMit.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DasmMit.cpp; sourceTree = "<group>"; };
 		50F57E2B30A4659F00EDBDBA /* DasmMot.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DasmMot.cpp; sourceTree = "<group>"; };
+		50F600000000000000000001 /* SSTRunner.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SSTRunner.h; sourceTree = "<group>"; };
+		50F600000000000000000002 /* SSTRunner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SSTRunner.cpp; sourceTree = "<group>"; };
+		50F600000000000000000003 /* PlainRunner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PlainRunner.cpp; sourceTree = "<group>"; };
+		50F600000000000000000004 /* ExceptionRunner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ExceptionRunner.cpp; sourceTree = "<group>"; };
+		50F600000000000000000005 /* SSTTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SSTTypes.h; sourceTree = "<group>"; };
+		50F600000000000000000006 /* SSTMoira.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SSTMoira.h; sourceTree = "<group>"; };
+		50F600000000000000000007 /* RefCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RefCore.h; sourceTree = "<group>"; };
+		50F600000000000000000008 /* MameCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MameCore.h; sourceTree = "<group>"; };
+		50F600000000000000000009 /* UaeCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UaeCore.h; sourceTree = "<group>"; };
+		50F60000000000000000000A /* MusashiCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MusashiCore.h; sourceTree = "<group>"; };
+		50F60000000000000000000B /* MusashiCore.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MusashiCore.cpp; sourceTree = "<group>"; };
+		50F60000000000000000000C /* SSTMame.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SSTMame.cpp; sourceTree = "<group>"; };
+		50F60000000000000000000D /* SSTUAE.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SSTUAE.cpp; sourceTree = "<group>"; };
+		50F60000000000000000000E /* SSTMusashi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SSTMusashi.cpp; sourceTree = "<group>"; };
+		50F60000000000000000000F /* ExceptionMame.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ExceptionMame.cpp; sourceTree = "<group>"; };
+		50F600000000000000000010 /* ExceptionUAE.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ExceptionUAE.cpp; sourceTree = "<group>"; };
+		50F60000000000000000002B /* Common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Common.h; sourceTree = "<group>"; };
+		50F60000000000000000002C /* Common.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Common.cpp; sourceTree = "<group>"; };
 		50F80AA723C9E4EC00F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F80AAB23C9F16900F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50FA00000000000000000114 /* libMoiraUAEExc.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libMoiraUAEExc.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1473,15 +1473,15 @@
 				502C09E023C8E16600A179E1 /* TestCPU.cpp */,
 				50CECEC623A924B000E07C65 /* Sandbox.h */,
 				50CECEC523A924B000E07C65 /* Sandbox.cpp */,
-				50F57E0130A45D5B00EDBDBA /* RandomMAME.cpp */,
-				50F57E0330A45D6700EDBDBA /* RandomMusashi.cpp */,
-				50F57E0530A45D7300EDBDBA /* RandomUAE.cpp */,
 				50F57E1B30A461CD00EDBDBA /* ExecMMU.cpp */,
 				50F57E2130A4622500EDBDBA /* ExecCompare.cpp */,
 				50F57E1330A4614800EDBDBA /* ExecRunner.h */,
 				50F57E0D30A4612A00EDBDBA /* ExecRunner.cpp */,
 				50F57E1430A4618400EDBDBA /* DasmRunner.h */,
 				50F57E1530A4618B00EDBDBA /* DasmRunner.cpp */,
+				50F57E0130A45D5B00EDBDBA /* RandomMAME.cpp */,
+				50F57E0330A45D6700EDBDBA /* RandomMusashi.cpp */,
+				50F57E0530A45D7300EDBDBA /* RandomUAE.cpp */,
 				50F57E2930A4659400EDBDBA /* DasmMit.cpp */,
 				50F57E2B30A4659F00EDBDBA /* DasmMot.cpp */,
 				50F57E0730A4610100EDBDBA /* RunnerMain.cpp */,

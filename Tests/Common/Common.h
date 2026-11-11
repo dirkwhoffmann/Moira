@@ -9,7 +9,9 @@
 
 #pragma once
 
+#include "MoiraTypes.h"
 #include <stdint.h>
+#include <optional>
 #include <functional>
 #include <string>
 #include <vector>
@@ -32,6 +34,18 @@ void printSetting(const char *key, const char *fmt, ...) __attribute__((format(p
 
 // Prints the message that asks the user to report a bug
 void printBugReport();
+
+
+//
+// CPU models
+//
+
+// All CPU models in ascending order
+const std::vector<moira::CPUModel> &allCpuModels();
+
+// Converts between models and names (68000, 68010, EC020, 68020, EC030, 68030, EC040, LC040, 68040)
+const char *modelName(moira::CPUModel model);
+std::optional<moira::CPUModel> parseModel(const char *name);
 
 
 //
