@@ -1053,15 +1053,16 @@ Moira::makeFrame(u32 addr, u32 pc, u16 sr, u16 ird)
     frame.fc = readFC();
     frame.ssw = frame.fc;
 
+    // Special status word of the 68010: R/W (bit 8), DF (bit 12) and IF (bit 13)
+    if constexpr (!(F & AE_WRITE)) frame.ssw |= (1 << 8);
+    frame.ssw |= (F & (AE_PROG | AE_FETCH)) ? (1 << 13) : (1 << 12);
+
     // Adjust
     if constexpr (F & AE_INC_PC) frame.pc += 2;
     if constexpr (F & AE_DEC_PC) frame.pc -= 2;
     if constexpr (F & AE_INC_A) frame.addr += 2;
     if constexpr (F & AE_DEC_A) frame.addr -= 2;
     if constexpr (F & AE_SET_CB3) frame.code |= (1 << 3);
-    if constexpr (F & AE_SET_RW) frame.ssw |= (1 << 8);
-    if constexpr (F & AE_SET_DF) frame.ssw |= (1 << 12);
-    if constexpr (F & AE_SET_IF) frame.ssw |= (1 << 13);
 
     return frame;
 }
@@ -1254,17 +1255,17 @@ Moira::jumpToVector(int nr)
                 case M68kException::LINEF:
                 case M68kException::PRIVILEGE:
                     
-                    throw AddressError(makeFrame<F|AE_DEC_PC|AE_PROG|AE_SET_RW|AE_SET_IF>(reg.pc, oldpc));
+                    throw AddressError(makeFrame<F|AE_DEC_PC|AE_PROG>(reg.pc, oldpc));
                     
                 default:
                     
-                    throw AddressError(makeFrame<F|AE_PROG|AE_SET_RW|AE_SET_IF>(reg.pc, oldpc));
+                    throw AddressError(makeFrame<F|AE_PROG>(reg.pc, oldpc));
             }
             /*
             if (nr == ILLEGAL || nr == LINEA || nr == LINEF || nr == EXC_PRIVILEGE) {
-                throw AddressError(makeFrame<F|AE_DEC_PC|AE_PROG|AE_SET_RW|AE_SET_IF>(reg.pc, oldpc));
+                throw AddressError(makeFrame<F|AE_DEC_PC|AE_PROG>(reg.pc, oldpc));
             } else {
-                throw AddressError(makeFrame<F|AE_PROG|AE_SET_RW|AE_SET_IF>(reg.pc, oldpc));
+                throw AddressError(makeFrame<F|AE_PROG>(reg.pc, oldpc));
             }
             */
         }

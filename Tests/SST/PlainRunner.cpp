@@ -30,7 +30,9 @@ void PlainRunner::runTest(const sst::Test &t)
         auto log = ref.cpu.log();
         bool ae = std::any_of(log.begin(), log.end(), [](auto &c) { return !c.write && c.fc == 5 && c.addr == 12; });
         const char *kd = "plain";
-        if (ae) {
+        if (ae && model != CPUModel::M68000) {
+            kd = "ae";      // Only the 68000 frame has a code word that tells the kind
+        } else if (ae) {
             u16 code = ref.mem.peek16(ref.cpu.state().ssp);
             kd = ((code & 7) == 2 || (code & 7) == 6) ? "ae-fetch" : (code & 0x10) ? "ae-read" : "ae-write";
         }

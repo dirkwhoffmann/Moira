@@ -262,10 +262,30 @@ void SSTRunner::runCase(const sst::Test &t, const sst::State &init, int k, int a
     std::set<u32> addrs(moira.mem.touched.begin(), moira.mem.touched.end());
     addrs.insert(ref.mem.touched.begin(), ref.mem.touched.end());
     std::set<int> badWords;
+    bool m68000 = model == CPUModel::M68000;
+    u32 frameAt = rs.ssp & ADDR_MASK;
+    bool format8 = !m68000 && (ref.mem.peek16(frameAt + 6) >> 12) == 8;
+    std::set<std::string> badFields;
     for (auto a : addrs) {
         if (tasRead && (a & ~1u) == pk.addr) continue;
         if (extraWrites.count(a & ~1u)) continue;
         if ((a & ~1u) == aborted && aborted != ~0u && (!bus || halted)) continue;       // MAME may perform the aborted access    // MAME still completes the write half
+
+        // The unused words and the internal information of a format 8 frame (68010) are undefined.
+        // Moira writes zeros, UAE writes a counting pattern.
+        if (format8 && a >= frameAt + 14 && a < frameAt + 58) {
+            u32 off = a - frameAt;
+            bool unused = off < 16 || (off >= 18 && off < 20) || (off >= 22 && off < 24) || (off >= 26 && off < 28);
+            if (unused || off >= 28) continue;
+        }
+        if (!m68000) {
+            if (moira.mem.peek(a) != ref.mem.peek(a)) {
+                static const char *frame8[] = { "frame.sr", "frame.pc", "frame.pc", "frame.fmt", "frame.ssw", "frame.addr", "frame.addr", "frame.unused", "frame.dob", "frame.unused", "frame.dib", "frame.unused", "frame.iib" };
+                u32 off = a - frameAt;
+                badFields.insert(a >= frameAt && off < 26 && format8 ? frame8[off / 2] : a >= frameAt && off < 8 ? frame8[off / 2] : "mem");
+            }
+            continue;
+        }
         if (a == ((rs.ssp & ADDR_MASK) + 2)) continue;      // Undefined upper byte of the fault address
         if (a == ((rs.ssp & ADDR_MASK) + 1) && !halted && ((moira.mem.peek(a) ^ ref.mem.peek(a)) & codeMask & 0xFF) == 0) continue;   // Ignored bits of the code word
         if (a == ((rs.ssp & ADDR_MASK) + 9) && !(srMask & 0x1F)) {      // Condition codes in the stacked SR
@@ -279,6 +299,7 @@ void SSTRunner::runCase(const sst::Test &t, const sst::State &init, int k, int a
     static const char *fields[] = { "frame.code", "frame.addr", "frame.addr", "frame.ird", "frame.sr", "frame.pc", "frame.pc" };
     std::set<std::string> bad;
     for (int w : badWords) bad.insert(w < 0 ? "mem" : fields[w]);
+    for (auto &f : badFields) bad.insert(f);
     for (auto &b : bad) add(b);
 
     // Bus cycles

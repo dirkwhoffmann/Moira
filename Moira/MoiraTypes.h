@@ -571,9 +571,7 @@ static constexpr u64 AE_DEC_PC      = (1 << 7);   ///< Decrement PC by 2 in stac
 static constexpr u64 AE_INC_A       = (1 << 8);   ///< Increment ADDR by 2 in stack frame
 static constexpr u64 AE_DEC_A       = (1 << 9);   ///< Decrement ADDR by 2 in stack frame
 static constexpr u64 AE_SET_CB3     = (1 << 10);  ///< Set bit 3 in CODE segment
-static constexpr u64 AE_SET_RW      = (1 << 11);  ///< Set bit 8 in the special status word (68010)
-static constexpr u64 AE_SET_DF      = (1 << 12);  ///< Set bit 12 in the special status word (68010)
-static constexpr u64 AE_SET_IF      = (1 << 13);  ///< Set bit 13 in the special status word (68010)
+static constexpr u64 AE_FETCH       = (1 << 11);  ///< The fault hit an instruction fetch (IF bit of the 68010 special status word)
 
 /// Timing flags
 static constexpr u64 IMPL_DEC       = (1 << 14);  // Omit 2 cycle delay in -(An) mode
