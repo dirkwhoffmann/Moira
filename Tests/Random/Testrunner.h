@@ -36,18 +36,21 @@ std::optional<FPUModel> parseFpuModel(const char *name);
 // Returns true if the FPU can be installed in a system with the given CPU
 bool isCompatible(CPUModel cpu, FPUModel fpu);
 
-// Returns true if the two disassembler outputs match (UAE syntax)
-bool dasmEqualUAE(const char *uae, const char *moira);
-
-/* The test runner. It owns the Moira instance under test and the state of the
- * test that is currently running. There is exactly one instance per process.
+/* Base class of all test runners. It owns the Moira instance under test and the
+ * state of the test that is currently running. A concrete runner decides which
+ * stages are executed by implementing runStages(). There is exactly one runner
+ * per process.
+ *
+ *   ExecRunner  Executes random instructions on Moira and on a reference CPU.
+ *   DasmRunner  Disassembles every opcode and compares the output with reference
+ *               disassemblers.
  */
 class TestRunner {
 
 public:
 
     TestRunner();
-    ~TestRunner();
+    virtual ~TestRunner();
 
     // Returns the runner of this process (used by the reference facades)
     static TestRunner &get();
@@ -68,11 +71,17 @@ public:
     // Set by the memory interface of Moira if an odd address is read
     bool misalignedRead = false;
 
-    // Set while MMU instructions are compared against UAE
+    // Set while MMU instructions are compared against a reference
     bool mmuCompare = false;
 
     // The setup of the test that is currently running (see RUNNER_DUMP)
     Setup *lastSetup = nullptr;
+
+    // Disassembler configuration (used by the DasmRunner and for error reports of the ExecRunner)
+    bool mit = false;                  // Compare the MIT syntax flavor (Binutils compiled without MOTOROLA)
+    bool dasmMusashi = false;          // Compare with Musashi's disassembler
+    bool dasmUAE = false;              // Compare with UAE's disassembler
+    bool checksMoiraSyntax = false;    // Check Moira's own syntax for plausibility
 
     // Speed comparison
     clock_t refclk[2] = {0,0};
@@ -80,6 +89,34 @@ public:
     clock_t dasmclk[3] = {0,0,0};      // Disassembler time of the references (Binutils, Musashi, UAE)
 
     void resetClocks();
+
+
+    //
+    // Interface to be implemented by a concrete runner
+    //
+
+    // Text shown in the start-up banner
+    virtual const char *description() const = 0;
+    virtual const char *referenceName() const = 0;
+    virtual void printRanges() const = 0;
+
+    // Returns true if the CPU model can be tested by this runner
+    virtual bool supports(CPUModel model) const { return true; }
+
+    // Runs all stages of one test round for the selected CPU model. The FPU models
+    // that can be combined with the CPU are passed in.
+    virtual void runStages(long round, const std::vector<FPUModel> &fpus) = 0;
+
+    // Replays a test that has been dumped with RUNNER_DUMP. Returns true if a test was replayed.
+    virtual bool replay() { return false; }
+
+    // Hooks that are called when a model is selected
+    virtual void setupReferences() { }            // Before Moira is configured
+    virtual void selectFpuReferences() { }        // After the FPU model has changed
+    virtual void modelSelected() { }              // After everything is configured
+
+    // Lets the runner adjust a test case before it is run
+    virtual void prepare(Setup &s) { }
 
 
     //
@@ -92,48 +129,11 @@ public:
     void selectFpu(FPUModel fpu);
     const char *selectedModel();
 
-    // Returns the name of the reference CPU (determined by the compatibility mode)
-    const char *reference();
-
     void setupMoira();
     void setupTestEnvironment(Setup &s, long round);
-    void setupFpuEnvironment(Setup &s);
     void setupTestInstruction(Setup &s, u32 pc, u16 opcode);
 
     void resetMoira(Setup &s);
-
-
-    //
-    // Performing a test
-    //
-
-    void run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const std::vector<FPUModel> &fpus);
-
-    void runCPU(long round);
-    void runMMU(long round);
-    void runMMUTranslate(long round);
-    void runMMUTranslate040(long round);
-    void runFPU(long round);
-    void runDasmCPU(long round);
-    void runDasmMMU(long round);
-    void runDasmFPU(long round);
-    void passed(clock_t moira, clock_t ref);
-    void passedDasm();
-
-    void runSingleTest(Setup &s, u16 op);
-    void runSingleTest(Setup &s, u16 op, u16 ext);
-
-    void runDasmSingleTest(Setup &s, u16 op);
-    void runDasmSingleTest(Setup &s, u16 op, u16 ext);
-
-    void runReference(Setup &s, Result &r);
-    void runMoira(Setup &s, Result &r);
-    void disassembleReference(Setup &s, Result &r);
-    void disassembleMoira(Setup &s, Result &r);
-
-    bool skip(const Setup &s);                                           // Skips a test case based on its setup
-    bool skipCompare(const Setup &s, const Result &rRef, const Result &rMoira); // Skips the comparison (includes skip)
-    bool skipAccessCheck(u16 op);
 
     bool isFpuOpcode(u16 op);
     bool isMmuOpcode(u16 op);
@@ -141,38 +141,37 @@ public:
 
 
     //
-    // Analysing a test result
+    // Running the tests
     //
 
-    void recordMoiraRegisters(Result &r);
+    void run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const std::vector<FPUModel> &fpus);
 
-    void compare(Setup &s, Result &rRef, Result &rMoira);
-    bool compareDasm(Result &rRef, Result &rMoira);
-    bool compareD(Result &rRef, Result &rMoira);
-    bool compareA(Result &rRef, Result &rMoira);
-    bool comparePC(Result &rRef, Result &rMoira);
-    bool compareSR(Result &rRef, Result &rMoira);
-    bool compareUSP(Result &rRef, Result &rMoira);
-    bool compareISP(Result &rRef, Result &rMoira);
-    bool compareMSP(Result &rRef, Result &rMoira);
-    bool compareVBR(Result &rRef, Result &rMoira);
-    bool compareSFC(Result &rRef, Result &rMoira);
-    bool compareDFC(Result &rRef, Result &rMoira);
-    bool compareCAxR(Result &rRef, Result &rMoira);
-    bool compareCycles(Result &rRef, Result &rMoira);
-    bool compareFPR(Result &rRef, Result &rMoira);
-    bool compareFPCR(Result &rRef, Result &rMoira);
-    bool compareFPSR(Result &rRef, Result &rMoira);
-    bool compareFPIAR(Result &rRef, Result &rMoira);
-    bool compareMMU(Result &rRef, Result &rMoira);
-    bool compareMemory();
-    void printMemoryDiff();
 
+    //
+    // Disassembling
+    //
+
+    void disassembleReference(Setup &s, Result &r);
+    void disassembleMoira(Setup &s, Result &r);
     void dumpDasm(Setup &s, Result &rRef, Result &rMoira);
+
+
+    //
+    // Reporting
+    //
+
     void dumpSetup(Setup &s);
     void dumpResult(Result &r);
     void dumpFailedSetup();
     void bugReport();
+
+private:
+
+    std::vector<CPUModel> models;
+    bool modelsBuilt = false;
 };
+
+// Shared entry point of all runner executables: parses the command line and runs the tests
+int runnerMain(TestRunner &runner, int argc, char **argv);
 
 }

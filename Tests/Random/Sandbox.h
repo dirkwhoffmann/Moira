@@ -40,8 +40,8 @@ struct AccessRecord {
 
 class Sandbox {
 
-    bool enabled;
-    bool ignored;
+    bool enabled = false;
+    bool ignored = false;
 
     AccessRecord access[256];
     bool used[256];

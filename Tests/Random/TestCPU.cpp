@@ -8,7 +8,7 @@
 // -----------------------------------------------------------------------------
 
 #include "config.h"
-#include "Testrunner.h"
+#include "TestRunner.h"
 
 namespace runner {
 using namespace moira;

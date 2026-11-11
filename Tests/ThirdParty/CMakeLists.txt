@@ -17,16 +17,13 @@ add_library(binutils STATIC
     ${BINUTILS_DIR}/m68k-dis.c
     ${BINUTILS_DIR}/m68k-opc.c)
 
-target_include_directories(binutils PUBLIC ${CMAKE_SOURCE_DIR}/Tests/Random)
+# Motorola syntax
+target_compile_definitions(binutils PUBLIC MOTOROLA)
 
 # The MIT flavor of the disassembler test needs a binutils that is compiled without MOTOROLA
-# (see Tests/Random/config.h)
 add_library(binutilsmit STATIC
     ${BINUTILS_DIR}/m68k-dis.c
     ${BINUTILS_DIR}/m68k-opc.c)
-
-target_compile_definitions(binutilsmit PUBLIC RUNNER_STAGES_DASM_MIT)
-target_include_directories(binutilsmit PUBLIC ${CMAKE_SOURCE_DIR}/Tests/Random)
 
 foreach(T binutils binutilsmit)
   if(MSVC)

@@ -12,8 +12,8 @@
 #             Musashi and UAE. Moira's own syntax is checked for plausibility only.
 #   dasmmit   MIT syntax. Moira's GNU_MIT syntax is compared with Binutils (compiled without
 #             MOTOROLA). Moira's own MOIRA_MIT syntax is checked for plausibility only.
-add_test_runner(dasmmot moiraUAE DASM)
-add_test_runner(dasmmit moiraUAE DASM_MIT)
+add_test_runner(dasmmot moiraUAE ${CMAKE_CURRENT_SOURCE_DIR}/DasmMot.cpp binutils)
+add_test_runner(dasmmit moiraUAE ${CMAKE_CURRENT_SOURCE_DIR}/DasmMit.cpp binutilsmit)
 
 add_test(NAME DasmMot COMMAND dasmmot --seed 1)
 add_test(NAME DasmMit COMMAND dasmmit --seed 1)

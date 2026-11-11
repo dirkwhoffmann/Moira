@@ -19,7 +19,7 @@
    02110-1301, USA.  */
 
 #include <stdbool.h>
-#include "config.h" // DIRK
+#include <assert.h>   // DIRK (MOTOROLA is defined by the build system)
 #include "m68k-dis.h"
 
 /* These are used as bit flags for the arch field in the m68k_opcode

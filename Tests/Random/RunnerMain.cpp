@@ -7,14 +7,10 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
-#include "config.h"
-#include "Testrunner.h"
+#include "TestRunner.h"
 #include <string.h>
 #include <ctime>
 #include <algorithm>
-
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
 
 static void usage(const char *prog, runner::TestRunner &runner)
 {
@@ -31,10 +27,8 @@ static void usage(const char *prog, runner::TestRunner &runner)
     printf("\n");
 }
 
-int main(int argc, char **argv)
+int runner::runnerMain(TestRunner &runner, int argc, char **argv)
 {
-    runner::TestRunner runner;
-
     // Without an explicit seed, the seed is derived from the current date
     std::time_t t = std::time(0);
     std::tm *now = std::localtime(&t);
@@ -77,20 +71,14 @@ int main(int argc, char **argv)
     printf("Moira - A Motorola 68k CPU emulator\n\n");
     printf("Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de\n");
     printf("Published under the terms of the MIT License\n\n");
-    if (DASM_STAGES) {
-        printf("Compares the disassembler output of Moira with reference disassemblers.\n");
-        printf("Every opcode is disassembled in several syntaxes and the texts are compared.\n\n");
-    } else {
-        printf("Runs random instructions on Moira and on a reference CPU and compares\n");
-        printf("registers, memory and cycle counts after each instruction.\n\n");
-    }
+    printf("%s\n", runner.description());
+
     printf("Core under test : Moira %s\n", moira::Moira::build().c_str());
-    printf("      Reference : %s\n", DASM_STAGES ? (DASM_MIT ? "Binutils (MIT)" : "Binutils, Musashi, UAE") : runner.reference());
+    printf("      Reference : %s\n", runner.referenceName());
     printf("\n");
     printf("    Test rounds : %ld\n", rounds);
     printf("    Random seed : %d\n", seed);
-    printf("     Exec range : %s\n", TOSTRING(doExec(opcode)));
-    printf("     Dasm range : %s\n", TOSTRING(doDasm(opcode)));
+    runner.printRanges();
 
     runner.run(seed, rounds,
                 cpus.empty() ? runner.allModels() : cpus,

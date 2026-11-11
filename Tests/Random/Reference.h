@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "Testrunner.h"
+#include "TestRunner.h"
 
 namespace runner {
 
@@ -50,6 +50,13 @@ public:
     // Returns true if MMU registers are compared for this CPU model
     virtual bool comparesMMU(CPUModel) const { return false; }
 
+    // Returns true if the core comes with a disassembler (used for error reports)
+    virtual bool hasMusashiDasm() const { return false; }
+    virtual bool hasUAEDasm() const { return false; }
+
+    // Returns true if the address translation is tested with random translation tables
+    virtual bool testsTranslation() const { return false; }
+
     // Sandbox configuration
     virtual bool checksCycles(CPUModel) const { return false; }
     virtual bool byteGranular(CPUModel) const { return false; }
@@ -76,8 +83,5 @@ public:
     virtual bool equalFPIAR(const Result &ref, const Result &moira) const { return ref.fpiar == moira.fpiar; }
     virtual bool ignoreCycles(CPUModel) const { return false; }
 };
-
-// Returns the reference CPU that matches the compatibility mode of the tested Moira
-Reference &ref();
 
 }

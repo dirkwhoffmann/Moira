@@ -7,10 +7,14 @@
 
 # The randomized differential test runner. It is built once per tested Moira core
 # (randomuae tests moiraUAE against UAE, randommusashi tests moiraMusashi against
-# Musashi, randommame tests moiraMAMENoAE against MAME's microcoded 68000). The same sources are used by the disassembler tests (see ../Dasm).
+# Musashi, randommame tests moiraMAMENoAE against MAME's microcoded 68000). The sources are shared with the disassembler tests (see ../Dasm).
 set(RUNNER_SRC
-${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
-${CMAKE_CURRENT_SOURCE_DIR}/Testrunner.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/RunnerMain.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/TestRunner.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/ExecRunner.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/ExecMMU.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/ExecCompare.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/DasmRunner.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/Reference.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/MusashiRef.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/UAERef.cpp
@@ -26,16 +30,11 @@ ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/MAMEGlue/mame.cpp
 )
 set(RUNNER_SRC ${RUNNER_SRC} CACHE INTERNAL "Sources of the random and disassembler runners")
 
-# STAGES is RANDOM (execute instructions), DASM (disassemble only) or DASM_MIT (disassemble only,
-# MIT syntax). The MIT flavor needs a binutils library that is compiled without MOTOROLA.
-function(add_test_runner NAME MOIRALIB STAGES)
-  add_executable(${NAME} ${RUNNER_SRC})
-  if(STAGES STREQUAL "DASM_MIT")
-    target_link_libraries(${NAME} PRIVATE ${MOIRALIB} binutilsmit musashi uaecpu mameref)
-  else()
-    target_link_libraries(${NAME} PRIVATE ${MOIRALIB} binutils musashi uaecpu mameref)
-  endif()
-  target_compile_definitions(${NAME} PRIVATE RUNNER_STAGES_${STAGES})
+# Builds a runner executable. MAIN is the source file that selects the runner and its reference,
+# BINUTILS is the Binutils library to link against.
+function(add_test_runner NAME MOIRALIB MAIN BINUTILS)
+  add_executable(${NAME} ${MAIN} ${RUNNER_SRC})
+  target_link_libraries(${NAME} PRIVATE ${MOIRALIB} ${BINUTILS} musashi uaecpu mameref)
   if(MSVC)
     target_compile_options(${NAME} PRIVATE /wd4100 /wd4201 /wd4324 /wd4458)
   else()
@@ -45,16 +44,16 @@ function(add_test_runner NAME MOIRALIB STAGES)
   target_include_directories(${NAME} PRIVATE
   ${CMAKE_SOURCE_DIR}/.
   ${CMAKE_SOURCE_DIR}/Moira
-  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_SOURCE_DIR}/Tests/Random
   ${CMAKE_SOURCE_DIR}/Tests/ThirdParty
   ${CMAKE_SOURCE_DIR}/Tests/ThirdParty/Binutils
   ${CMAKE_SOURCE_DIR}/Tests/ThirdParty/Musashi
   )
 endfunction()
 
-add_test_runner(randommusashi moiraMusashi RANDOM)
-add_test_runner(randomuae moiraUAE RANDOM)
-add_test_runner(randommame moiraMAMENoAE RANDOM)
+add_test_runner(randommusashi moiraMusashi ${CMAKE_CURRENT_SOURCE_DIR}/RandomMusashi.cpp binutils)
+add_test_runner(randomuae moiraUAE ${CMAKE_CURRENT_SOURCE_DIR}/RandomUAE.cpp binutils)
+add_test_runner(randommame moiraMAMENoAE ${CMAKE_CURRENT_SOURCE_DIR}/RandomMAME.cpp binutils)
 
 # A fixed seed keeps the automated runs reproducible. Without --seed, the runners
 # derive the seed from the date.

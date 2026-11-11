@@ -17,6 +17,7 @@ class MusashiRef : public Reference {
 
 public:
 
+    bool hasMusashiDasm() const override { return true; }
     const char *name() const override { return "Musashi"; }
 
     void setup(CPUModel cpu, FPUModel) override { setupMusashi(cpu); }
