@@ -56,15 +56,15 @@ Moira::writeStackFrame0000(u16 sr, u32 pc, u16 nr)
                 if constexpr (compat == Compatibility::MAME) {
 
                     // MAME has not adjusted the stack pointer yet if the first write fails
-                    try { write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & ~1, pc & 0xFFFF); }
+                    try { write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), pc & 0xFFFF); }
                     catch (BusError &) { U32_INC(reg.sp, 6); throw; }
 
                 } else {
 
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & ~1, pc & 0xFFFF);
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), pc & 0xFFFF);
                 }
-                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & ~1, sr);
-                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & ~1, pc >> 16);
+                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
+                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), pc >> 16);
             }
             break;
 
@@ -81,20 +81,20 @@ Moira::writeStackFrame0000(u16 sr, u32 pc, u16 nr)
 
                 U32_DEC(reg.sp, 8);
                 if constexpr ((compat == Compatibility::UAE) && C == Core::C68010) {
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & ~1, pc & 0xFFFF);
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & ~1, sr);
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & ~1, pc >> 16);
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & ~1, 4 * nr);
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), pc & 0xFFFF);
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), pc >> 16);
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & (C == Core::C68020 ? ~0u : ~1u), 4 * nr);
                 } else if constexpr ((compat == Compatibility::UAE) && C == Core::C68020) {
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & ~1, 4 * nr);
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & ~1, pc >> 16);
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & ~1, pc & 0xFFFF);
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & ~1, sr);
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & (C == Core::C68020 ? ~0u : ~1u), 4 * nr);
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), pc >> 16);
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), pc & 0xFFFF);
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
                 } else {
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & ~1, 4 * nr);
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & ~1, pc & 0xFFFF);
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & ~1, sr);
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & ~1, pc >> 16);
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & (C == Core::C68020 ? ~0u : ~1u), 4 * nr);
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), pc & 0xFFFF);
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), pc >> 16);
                 }
             }
             break;
@@ -399,18 +399,23 @@ Moira::execAddressError(StackFrame frame, int delay)
         writeStackFrameAEBE<C>(frame);
     } else if constexpr (C == Core::C68020) {
 
-        // The 68020 reports an odd instruction fetch with a frame of format B
+        // The 68020 reports an odd instruction fetch with a frame of format B. According
+        // to recordings made on a real A1200, the stacked PC is always the address of the
+        // instruction (JMP, JSR, BSR, DBcc, RTS, RTR).
         u16 op = instrIrd;
-        bool target = (op & 0xFFC0) == 0x4E80 || (op & 0xF0F8) == 0x50C8 || (op >> 12) == 0x6;
-        u32 pc =
-        op == 0x4E75 || op == 0x4E73 || op == 0x4E74 ? pc0Now :
-        op == 0x4E77 ? pc0Now + 2 :
-        target ? frame.addr :
-        (op & 0xFFC0) == 0x4EC0 && hasIndexedOperand(op) ? pcNow + 2 : pc0Now + 2;
+        u32 pc = pc0Now;
 
-        // UAE shows the next instruction word in one of the pipe stages
+        // Stage C and B are not emulated faithfully (UAE shows the next instruction word)
         bool ix = (op & 0xFFC0) == 0x4EC0 && hasIndexedOperand(op);
         u16 stageC = ix ? queue.irc : 0, stageB = (op == 0x4E75 || op == 0x4E77) ? queue.irc : 0;
+
+        // Special status word as recorded on the A1200: Rerun flags for stage C (always) and
+        // stage B (except for JMP d16(An) and BSR), supervisor program space, and the data
+        // direction / size bits of the stack read performed by RTS and RTR
+        bool jmpD16 = (op & 0xFFF8) == 0x4EE8;
+        ssw = 0x2005 | ((jmpD16 || (op >> 8) == 0x61) ? 0 : 0x1000);
+        if (op == 0x4E75) ssw |= 0x40;
+        if (op == 0x4E77) ssw |= 0x60;
         writeStackFrame1011<C>(status, 0, pc, 3, ssw, frame.addr, 0, stageC, stageB);
 
     } else {

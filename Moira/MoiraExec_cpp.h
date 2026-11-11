@@ -1614,6 +1614,9 @@ Moira::execBsr(u16 opcode)
 
         }
         if (misalignedPC<C>(newpc)) {
+
+            // The 68020 reserves the space for the return address (UAE does not write it)
+            if constexpr (C == Core::C68020) reg.sp -= 4;
             throw earlyAddressError<C>(makeFrame<AE_FETCH>(newpc));
         }
 
@@ -2445,7 +2448,11 @@ Moira::execDbcc(u16 opcode)
             bool takeBranch = readD<Word>(dn) != 0;
 
             // Check for address error
-            if (misalignedPC<C>(newpc)) {
+            if (misalignedPC<C>(newpc) && (C != Core::C68020 || takeBranch)) {
+
+                // The 68020 has decremented the counter at this point
+                if constexpr (C == Core::C68020) writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+
                 // MAME stores the address of the prefetched word as program counter
                 if constexpr (compat == Compatibility::MAME) throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_FETCH>(newpc));
                 reg.pc = newpc;

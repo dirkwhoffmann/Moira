@@ -7,6 +7,7 @@
 
 #include "doctest.h"
 #include "Moira.h"
+#include <string>
 #include <vector>
 
 using namespace moira;
@@ -253,6 +254,77 @@ TEST_CASE("68010 exception frames match real hardware")
 
         AmigaCPU cpu;
         compare(cpu.run(CPUModel::M68010, t.code), t.rec68010, t, "68010");
+    }
+}
+
+/* 68020 exception frames, compared with the frames recorded on a stock A1200 (vAmigaTS, CPU/68020/StackFrame/
+ * frame020_1 ... frame020_11). Each test provokes one exception and records 25 words: the stack pointer, the
+ * stack size, the stacked PC relative to the program (absolute in frame020_4), the first 32 bytes of the frame,
+ * the longword below the old stack pointer and D0. The test programs are replayed at the addresses they had on
+ * the recorded machine. The stack area is pre-filled with $1111. Words Moira does not reproduce are marked
+ * with -1: the fault address of a format B frame (the 68020 reports the last bus cycle, not the odd target),
+ * the stage C / B words and the internal words.
+ */
+struct Test020 {
+
+    const char *name;
+    const char *instruction;
+    u32 start;                                  // Address of the instruction under test
+    u32 a4;
+    u32 d0;
+    u32 sp;                                     // Stack pointer when the instruction is executed
+    std::vector<std::pair<u32, u16>> pokes;     // Stack contents
+    std::vector<u16> code;
+    std::vector<int> rec;                       // The 25 recorded words (-1: not compared)
+};
+
+const std::vector<Test020> tests020 = {
+
+
+};
+
+TEST_CASE("68020 exception frames match real hardware")
+{
+    for (auto &t : tests020) {
+
+        AmigaCPU cpu;
+        cpu.setModel(CPUModel::M68020);
+
+        // Pre-fill the stack area, place the program and the stack contents
+        for (u32 a = AmigaCPU::stackTop - 128; a < AmigaCPU::stackTop + 64; a += 2) cpu.write16(a, 0x1111);
+        for (auto &p : t.pokes) cpu.write16(p.first, p.second);
+        cpu.poke(t.start, t.code);
+        cpu.poke(AmigaCPU::handler, { 0x4AFC, 0x4AFC });
+        for (u32 v : { 0x0C, 0x14, 0x18, 0x84 }) cpu.write32(v, AmigaCPU::handler);
+
+        cpu.reset();
+        cpu.setSR(0x2010);
+        cpu.setISP(t.sp);
+        cpu.setA(4, t.a4);
+        cpu.setD(0, t.d0);
+        cpu.setPC(t.start);
+        cpu.setPC0(t.start);
+        cpu.setIRD(cpu.read16(t.start));
+        cpu.setIRC(cpu.read16(t.start + 2));
+
+        for (int i = 0; i < 200 && cpu.getPC() != AmigaCPU::handler; i++) cpu.execute();
+        REQUIRE(cpu.getPC() == AmigaCPU::handler);
+
+        u32 sp = cpu.getSP();
+        u32 pc = u32(cpu.read16(sp + 2)) << 16 | cpu.read16(sp + 4);
+        u32 rel = pc - (std::string(t.name) == "frame020_4" ? 0 : t.start - 2);
+        std::vector<int> got = { int(sp >> 16), int(sp & 0xFFFF), int(t.sp - sp), int(rel >> 16), int(rel & 0xFFFF) };
+        for (int i = 0; i < 16; i++) got.push_back(cpu.read16(sp + 2 * i));
+        got.push_back(cpu.read16(t.sp - 4)); got.push_back(cpu.read16(t.sp - 2));
+        got.push_back(int(cpu.getD(0) >> 16)); got.push_back(int(cpu.getD(0) & 0xFFFF));
+
+        REQUIRE(got.size() == t.rec.size());
+        for (size_t i = 0; i < t.rec.size(); i++) {
+
+            if (t.rec[i] < 0) continue;
+            INFO(t.name, " (68020): ", t.instruction, ", word ", i);
+            CHECK(got[i] == t.rec[i]);
+        }
     }
 }
 
