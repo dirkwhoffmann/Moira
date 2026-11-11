@@ -5,7 +5,7 @@ target_include_directories(exceptionmame PRIVATE ${CMAKE_SOURCE_DIR}/Moira ${CMA
 
 # Same tool, but Moira runs in UAE compatibility mode and is compared against the UAE core
 add_executable(exceptionuae ExceptionDiff.cpp ../Common/SSTFile.cpp)
-target_link_libraries(exceptionuae PRIVATE mameref uaecpu moiraUAEExc)
+target_link_libraries(exceptionuae PRIVATE mameref uaecpu moiraUAE)
 target_include_directories(exceptionuae PRIVATE ${CMAKE_SOURCE_DIR}/Moira ${CMAKE_CURRENT_SOURCE_DIR}/../Common)
 target_compile_definitions(exceptionuae PRIVATE EXC_DEFAULT_REFERENCE_UAE=1)
 

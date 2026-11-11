@@ -7,41 +7,64 @@
 
 # Third-party code that is used by the tests
 
-add_subdirectory(Binutils)
-add_subdirectory(Musashi)
+#
+# Binutils (disassembler reference)
+#
+
+set(BINUTILS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Binutils)
+
+add_library(binutils STATIC
+    ${BINUTILS_DIR}/m68k-dis.c
+    ${BINUTILS_DIR}/m68k-opc.c)
+
+target_include_directories(binutils PUBLIC ${CMAKE_SOURCE_DIR}/Tests/Random)
+
+# The MIT flavor of the disassembler test needs a binutils that is compiled without MOTOROLA
+# (see Tests/Random/config.h)
+add_library(binutilsmit STATIC
+    ${BINUTILS_DIR}/m68k-dis.c
+    ${BINUTILS_DIR}/m68k-opc.c)
+
+target_compile_definitions(binutilsmit PUBLIC RUNNER_STAGES_DASM_MIT)
+target_include_directories(binutilsmit PUBLIC ${CMAKE_SOURCE_DIR}/Tests/Random)
+
+foreach(T binutils binutilsmit)
+  if(MSVC)
+    target_compile_options(${T} PRIVATE /w)
+  else()
+    target_compile_options(${T} PRIVATE -w)
+  endif()
+endforeach()
 
 #
-# UAE
+# Musashi
+#
+
+set(MUSASHI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Musashi)
+
+add_library(musashi STATIC
+    ${MUSASHI_DIR}/m68kcpu.c
+    ${MUSASHI_DIR}/m68kdasm.c
+    ${MUSASHI_DIR}/m68kops.c
+    ${MUSASHI_DIR}/musashi_softfloat/musashi_softfloat.c)
+
+if(MSVC)
+    target_compile_options(musashi PRIVATE /w)
+else()
+    target_compile_options(musashi PRIVATE -w)
+endif()
+
+#
+# UAE (CPU core and FPU reference)
 #
 
 set(UAE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/UAE CACHE PATH "UAE source tree")
-
-add_library(uaeref STATIC
-    UAEGlue/UAERef.cpp
-    ${UAE_DIR}/src/softfloat/softfloat.cpp
-    ${UAE_DIR}/src/softfloat/softfloat_decimal.cpp
-    ${UAE_DIR}/src/softfloat/softfloat_fpsp.cpp
-    ${UAE_DIR}/src/fpp_softfloat.cpp)
-    
-target_include_directories(uaeref PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/UAEGlue/shim
-    ${CMAKE_CURRENT_SOURCE_DIR}/UAEGlue
-    ${UAE_DIR}/src/include
-    ${UAE_DIR}/src)
-    
-# target_include_directories(uaeref PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/UAEGlue)
-
-if(MSVC)
-    target_compile_options(uaeref PRIVATE /w)
-else()
-    target_compile_options(uaeref PRIVATE -w -fwrapv -fno-strict-aliasing)
-endif()
-
 
 set(AMI ${UAE_DIR}/src)
 
 add_library(uaecpu STATIC
     UAEGlue/UAECpu.cpp
+    UAEGlue/UAERef.cpp
     UAEGlue/UAEStubs.cpp
     ${AMI}/newcpu_common.cpp
     ${AMI}/disasm.cpp

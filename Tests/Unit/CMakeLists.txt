@@ -21,7 +21,7 @@ add_executable(unit
     MmuExecTests.cpp
     BusErrorTests.cpp)
     
-target_link_libraries(unit moira uaeref)
+target_link_libraries(unit moira uaecpu)
 target_include_directories(unit PUBLIC
     ${CMAKE_SOURCE_DIR}/Moira
     ${CMAKE_SOURCE_DIR}/Tests/ThirdParty)

@@ -8,13 +8,15 @@
 // -----------------------------------------------------------------------------
 
 #include "UAERef.h"
+#include "sysconfig.h"
+#include "sysdeps.h"
+#include "options.h"
+#include "events.h"
+#include "uae.h"
+#include "memory.h"
+#include "custom.h"
 #include "newcpu.h"
 #include "fpp.h"
-
-// The function pointers that UAE's fpp.cpp normally defines
-#include "fpp_globals.inc"
-
-void fpsr_set_exception(uae_u32) { }
 
 namespace uaeref {
 
