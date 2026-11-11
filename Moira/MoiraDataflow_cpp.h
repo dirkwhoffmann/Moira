@@ -1053,9 +1053,11 @@ Moira::makeFrame(u32 addr, u32 pc, u16 sr, u16 ird)
     frame.fc = readFC();
     frame.ssw = frame.fc;
 
-    // Special status word of the 68010: R/W (bit 8), DF (bit 12) and IF (bit 13)
+    // Special status word of the 68010: R/W (bit 8), DF (bit 12) and IF (bit 13).
+    // Real hardware sets DF only if a data read fails. A failing data write sets neither DF nor IF.
     if constexpr (!(F & AE_WRITE)) frame.ssw |= (1 << 8);
-    frame.ssw |= (F & (AE_PROG | AE_FETCH)) ? (1 << 13) : (1 << 12);
+    if constexpr (F & (AE_PROG | AE_FETCH)) frame.ssw |= (1 << 13);
+    else if constexpr (!(F & AE_WRITE)) frame.ssw |= (1 << 12);
 
     // Adjust
     if constexpr (F & AE_INC_PC) frame.pc += 2;
