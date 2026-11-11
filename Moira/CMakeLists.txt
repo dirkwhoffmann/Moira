@@ -1,3 +1,12 @@
+# -----------------------------------------------------------------------------
+# This file is part of Moira - A Motorola 68k emulator
+#
+# Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de
+# Published under the terms of the MIT License
+# -----------------------------------------------------------------------------
+
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+
 set(MOIRA_SRC
 
 Moira.cpp
@@ -37,38 +46,3 @@ endif()
 if(MINGW)
     # target_compile_options(moira PUBLIC -Wa,-mbig-obj)
 endif()
-
-# Differently configured copies of Moira (used by the test runners).
-# The definitions are PUBLIC, so consumers compile against the same configuration.
-# All copies live in the default namespace, so a program can link only one of them.
-# To link several copies into one program, give each its own MOIRA_NAMESPACE.
-function(add_moira_variant NAME COMPAT PRECISE)
-    add_library(${NAME} STATIC ${MOIRA_SRC})
-    target_compile_definitions(${NAME} PUBLIC
-        MOIRA_COMPATIBILITY=${COMPAT}
-        MOIRA_PRECISE_TIMING=${PRECISE})
-    target_include_directories(${NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-    if (NOT MSVC)
-        target_compile_options(${NAME} PUBLIC -Wno-unused-parameter -Wno-unused-but-set-parameter
-            -Wno-unused-but-set-variable -Wno-missing-field-initializers)
-    else()
-        target_compile_options(${NAME} PUBLIC /W4 /bigobj /wd4100 /wd4201 /wd4324 /wd4458 /wd4127 /wd4702)
-    endif()
-    if(MINGW)
-        target_compile_options(${NAME} PUBLIC -Wa,-mbig-obj)
-    endif()
-endfunction()
-
-add_moira_variant(moiraUAE UAE true)
-add_moira_variant(moiraMusashi MUSASHI false)
-
-# The SingleStepTests runner needs address errors and exact timing
-add_moira_variant(moiraMAME MAME true)
-target_compile_definitions(moiraMAME PUBLIC MOIRA_EMULATE_ADDRESS_ERROR=true)
-
-# The random runner skips address errors (covered by the exception tests) and is much faster without them
-add_moira_variant(moiraMAMENoAE MAME true)
-
-# The exception runner needs address errors in UAE mode as well
-add_moira_variant(moiraUAEExc UAE true)
-target_compile_definitions(moiraUAEExc PUBLIC MOIRA_EMULATE_ADDRESS_ERROR=true)

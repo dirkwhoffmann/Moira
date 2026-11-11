@@ -652,7 +652,6 @@
 		505A81DA309A2F2A00E2E307 /* newcpu.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = newcpu.cpp; sourceTree = "<group>"; };
 		505A81DB309A2F2A00E2E307 /* newcpu_common.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = newcpu_common.cpp; sourceTree = "<group>"; };
 		505A81DC309A2F2A00E2E307 /* readcpu.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = readcpu.cpp; sourceTree = "<group>"; };
-		505A81DE309A2F2A00E2E307 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		505A81DF309A2F2A00E2E307 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		505A81E1309A2F2A00E2E307 /* memory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = memory.h; sourceTree = "<group>"; };
 		505A81E2309A2F2A00E2E307 /* newcpu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = newcpu.h; sourceTree = "<group>"; };
@@ -760,6 +759,11 @@
 		50F57DF330A36D5700EDBDBA /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F57DF430A3C59300EDBDBA /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		50F57DF530A3C59C00EDBDBA /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		50F57DF630A42DB700EDBDBA /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		50F57DF730A42DC300EDBDBA /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		50F57DFA30A4340B00EDBDBA /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		50F57DFB30A434AC00EDBDBA /* LICENSE-Amiberry */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LICENSE-Amiberry"; sourceTree = "<group>"; };
+		50F57DFC30A434AC00EDBDBA /* LICENSE-WinUAE */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LICENSE-WinUAE"; sourceTree = "<group>"; };
 		50F80AA723C9E4EC00F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F80AAB23C9F16900F21D80 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50FA00000000000000000114 /* libMoiraUAEExc.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libMoiraUAEExc.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1180,9 +1184,10 @@
 		505A81E0309A2F2A00E2E307 /* UAE */ = {
 			isa = PBXGroup;
 			children = (
-				505A81DD309A2F2A00E2E307 /* src */,
-				505A81DE309A2F2A00E2E307 /* LICENSE */,
+				50F57DFB30A434AC00EDBDBA /* LICENSE-Amiberry */,
+				50F57DFC30A434AC00EDBDBA /* LICENSE-WinUAE */,
 				505A81DF309A2F2A00E2E307 /* README.md */,
+				505A81DD309A2F2A00E2E307 /* src */,
 			);
 			path = UAE;
 			sourceTree = "<group>";
@@ -1311,6 +1316,7 @@
 		50A1000000000000000000A1 /* ThirdParty */ = {
 			isa = PBXGroup;
 			children = (
+				50F57DFA30A4340B00EDBDBA /* CMakeLists.txt */,
 				505A81E0309A2F2A00E2E307 /* UAE */,
 				505A81ED309A2F2A00E2E307 /* UAEGlue */,
 				509F15A92927CE9800BA8AC1 /* Bartman */,
@@ -1411,6 +1417,7 @@
 		50F20000000000000000000A /* Fibonacci */ = {
 			isa = PBXGroup;
 			children = (
+				50F57DF730A42DC300EDBDBA /* CMakeLists.txt */,
 				50F20000000000000000000B /* main.cpp */,
 			);
 			path = Fibonacci;
@@ -1447,6 +1454,7 @@
 		50F300000000000000000002 /* Examples */ = {
 			isa = PBXGroup;
 			children = (
+				50F57DF630A42DB700EDBDBA /* CMakeLists.txt */,
 				50F20000000000000000000A /* Fibonacci */,
 			);
 			path = Examples;

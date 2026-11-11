@@ -1,3 +1,10 @@
+# -----------------------------------------------------------------------------
+# This file is part of Moira - A Motorola 68k emulator
+#
+# Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de
+# Published under the terms of the MIT License
+# -----------------------------------------------------------------------------
+
 # The randomized differential test runner. It is built once per tested Moira core
 # (randomuae tests moiraUAE against UAE, randommusashi tests moiraMusashi against
 # Musashi, randommame tests moiraMAMENoAE against MAME's microcoded 68000). The same sources are used by the disassembler tests (see ../Dasm).

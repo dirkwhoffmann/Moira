@@ -1,3 +1,10 @@
+# -----------------------------------------------------------------------------
+# This file is part of Moira - A Motorola 68k emulator
+#
+# Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de
+# Published under the terms of the MIT License
+# -----------------------------------------------------------------------------
+
 # Unit tests (doctest). All tests are compiled into a single executable.
 #
 # Examples:
@@ -5,6 +12,7 @@
 #   unit -ts="MMU"          Run a test suite
 #   unit -tce="*UAE*"       Exclude the (slower) comparison against UAE
 #   unit -ltc               List all test cases
+
 add_executable(unit
     main.cpp
     FpuTests.cpp
@@ -12,6 +20,7 @@ add_executable(unit
     FpuRefTests.cpp
     MmuExecTests.cpp
     BusErrorTests.cpp)
+    
 target_link_libraries(unit moira uaeref)
 target_include_directories(unit PUBLIC
     ${CMAKE_SOURCE_DIR}/Moira

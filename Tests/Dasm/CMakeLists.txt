@@ -1,3 +1,10 @@
+# -----------------------------------------------------------------------------
+# This file is part of Moira - A Motorola 68k emulator
+#
+# Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de
+# Published under the terms of the MIT License
+# -----------------------------------------------------------------------------
+
 # Disassembler tests. The tools disassemble every opcode and compare the output of Moira with
 # the reference disassemblers. They are built from the sources of the random runner (see ../Random).
 #
