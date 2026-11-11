@@ -1,11 +1,11 @@
 set(MOIRA_SRC
 
 Moira.cpp
-Cache/Cache.cpp
 MoiraCore68000.cpp
 MoiraCore68010.cpp
 MoiraCore68020.cpp
 MoiraDebugger.cpp
+Cache/Cache.cpp
 FPU/MFloat80.cpp
 FPU/FpuEnv.cpp
 FPU/FpuEnvMath.cpp
@@ -25,14 +25,17 @@ if (NOT MSVC)
 endif()
 
 if(MSVC)
-    target_compile_options(moira PUBLIC /W4 /bigobj) # /WX disabled for now
-    # C4127/C4702: The handlers are templates. Code behind an 'if constexpr (...) return/throw;'
-    # is reachable in some instantiations but not in others, which MSVC reports per instantiation.
-    target_compile_options(moira PUBLIC /wd4100 /wd4201 /wd4324 /wd4458 /wd4127 /wd4702)
+    target_compile_options(moira PUBLIC /W4)     # /bigobj /WX disabled for now
+    target_compile_options(moira PUBLIC /wd4100) # unreferenced formal parameter
+    target_compile_options(moira PUBLIC /wd4201) # nameless struct/union
+    target_compile_options(moira PUBLIC /wd4324) # structure was padded due to alignment specifier
+    target_compile_options(moira PUBLIC /wd4458) # declaration hides class member
+    target_compile_options(moira PUBLIC /wd4127) # conditional expression is constant
+    target_compile_options(moira PUBLIC /wd4702) # unreachable code
 endif()
 
 if(MINGW)
-    target_compile_options(moira PUBLIC -Wa,-mbig-obj)
+    # target_compile_options(moira PUBLIC -Wa,-mbig-obj)
 endif()
 
 # Differently configured copies of Moira (used by the test runners).
