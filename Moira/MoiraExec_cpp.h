@@ -695,7 +695,8 @@ Moira::execAddxEa(u16 opcode)
     AVAILABILITY(Core::C68000)
 
     // MAME reads the lower word of a long operand first
-    const u64 flags =
+    // (The 68010 stacks the PC of the executing instruction)
+    const u64 flags = C == Core::C68010 ? (S == Long ? AE_INC_A : 0) :
     (S == Word || S == Byte) ? AE_INC_PC : (S == Long) ? AE_INC_PC | AE_INC_A | (EXACT_COMPAT ? REVERSE : 0) : 0;
 
     int src = _____________xxx(opcode);
@@ -709,7 +710,8 @@ Moira::execAddxEa(u16 opcode)
     } catch (const AddressError &exc) {
 
         // Rectify stack frame
-        if constexpr (S == Long) undoAnPD<M,S>(src);
+        // The 68010 has undone the decrement already (see readOp)
+        if constexpr (S == Long && C != Core::C68010) undoAnPD<M,S>(src);
         throw exc;
 
     } catch (const BusError &e) {
@@ -747,7 +749,8 @@ Moira::execAddxEa(u16 opcode)
     } catch (const AddressError &exc) {
 
         // Rectify stack frame
-        if constexpr (S == Long) undoAnPD<M,S>(dst);
+        // The 68010 has undone the decrement already (see readOp)
+        if constexpr (S == Long && C != Core::C68010) undoAnPD<M,S>(dst);
         throw exc;
 
     } catch (const BusError &e) {
@@ -1802,8 +1805,7 @@ Moira::execChk(u16 opcode)
 
         } else {
 
-            readBuffer = (u16)readM<C, M, S>(ea & ~1);
-            updateAnPI<M, S>(src);
+            // The register has been advanced by readOp already. The DIB still holds the last prefetch.
             if (isAbsMode(M) || M == Mode::AI || M == Mode::PI || M == Mode::PD) {
 
                 SYNC(2);
@@ -2074,8 +2076,18 @@ Moira::execClr(u16 opcode)
             case Mode::AW:
             case Mode::AL:
 
+                // Real hardware has updated the flags and reports the second word of a long write
+                reg.sr.n = 0;
+                reg.sr.z = 1;
+                reg.sr.v = 0;
+                reg.sr.c = 0;
+
                 prefetch<C, POLL | ((!isRegMode(M) || S == Long) ? KEEP_IRD : 0)>();
-                writeOp<C, M, S, REVERSE>(dst, ea, 0);
+                if constexpr (S == Long) {
+                    writeOp<C, M, S, REVERSE | AE_INC_A>(dst, ea, 0);
+                } else {
+                    writeOp<C, M, S, REVERSE>(dst, ea, 0);
+                }
                 break;
 
             default:
@@ -2306,6 +2318,17 @@ Moira::execCmpm(u16 opcode)
 
         cmp<C, S>(data1, data2);
         prefetch<C>();
+
+    } else if constexpr (C == Core::C68010) {
+
+        // The 68010 stacks the PC of the executing instruction. A failing read advances the source register by 2.
+        try { readOp<C, M, S, AE_KEEP_A>(src, &ea1, &data1); }
+        catch (const AddressError &) { U32_INC(reg.a[src], 2); throw; }
+        readOp<C, M, S, 0>(dst, &ea2, &data2);
+        POLL_IPL;
+
+        cmp<C, S>(data1, data2);
+        looping<I>() ? noPrefetch<C>(S == Long ? 2 : 0) : prefetch<C>();
 
     } else {
 
@@ -4512,7 +4535,7 @@ Moira::execMoveSrEa(u16 opcode)
             writeBuffer = val & 0xFFFF;
             updateAnPI<M, S>(dst);
             setFC<M>();
-            throw AddressError(makeFrame<AE_WRITE|AE_INC_PC>(ea));
+            throw AddressError(makeFrame<AE_WRITE>(ea));
         }
 
         // Write to effective address
@@ -4978,8 +5001,7 @@ Moira::execDivsMoira(u16 opcode, bool *divByZero)
 
         } else {
 
-            readBuffer = (u16)readM<C, M, S>(ea & ~1);
-            updateAnPI<M, S>(src);
+            // The register has been advanced by readOp already. The DIB still holds the last prefetch.
             if (isAbsMode(M) || M == Mode::AI || M == Mode::PI || M == Mode::PD) {
                 SYNC(2);
                 exc.stackFrame = makeFrame<0>(ea);
@@ -5126,8 +5148,7 @@ Moira::execDivuMoira(u16 opcode, bool *divByZero)
 
         } else {
 
-            readBuffer = (u16)readM<C, M, S>(ea & ~1);
-            updateAnPI<M, S>(src);
+            // The register has been advanced by readOp already. The DIB still holds the last prefetch.
             SYNC(2);
             if (isAbsMode(M) || M == Mode::AI || M == Mode::PI || M == Mode::PD) {
                 exc.stackFrame = makeFrame<0>(ea);

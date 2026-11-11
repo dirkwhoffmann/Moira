@@ -285,7 +285,30 @@ Moira::readOp(int n, u32 *ea, u32 *result)
             updateAnPD<M, S>(n);
 
             // Read from effective address
-            if constexpr (compat == Compatibility::MAME && C == Core::C68000 && M == Mode::PI && S == Word && !(F & AE_KEEP_A)) {
+            if constexpr (C == Core::C68010 && !(F & AE_KEEP_A)) {
+
+                // Behavior of the 68010 as observed on real hardware (see Tests/Unit/StackFrameTests.cpp):
+                // A failing word read advances the (An)+ register, a failing long read leaves the -(An)
+                // register untouched, and a failing -(An) word read stacks a PC that is 2 lower than on
+                // the 68000.
+                if constexpr (M == Mode::PI && S == Word) {
+
+                    try { *result = readM<C, M, S, F>(*ea); } catch (const AddressError &) { updateAnPI<M, S>(n); throw; }
+
+                } else if constexpr (M == Mode::PD && S == Long) {
+
+                    try { *result = readM<C, M, S, F>(*ea); } catch (const AddressError &) { undoAnPD<M, S>(n); throw; }
+
+                } else if constexpr (M == Mode::PD && S == Word) {
+
+                    *result = readM<C, M, S, F & ~Flags(AE_INC_PC)>(*ea);
+
+                } else {
+
+                    *result = readM<C, M, S, F>(*ea);
+                }
+
+            } else if constexpr (compat == Compatibility::MAME && C == Core::C68000 && M == Mode::PI && S == Word && !(F & AE_KEEP_A)) {
 
                 // MAME advances the register before the bus or address error is reported
                 try { *result = readM<C, M, S, F>(*ea); } catch (const AddressError &) { updateAnPI<M, S>(n); throw; } catch (const BusError &) { updateAnPI<M, S>(n); throw; }
@@ -690,7 +713,12 @@ Moira::read(u32 addr)
 
     } else {
 
-        return readBus<C, S, F>(addr);
+        u32 result = readBus<C, S, F>(addr);
+
+        // The data input buffer of the 68010 holds the last word read by a data access
+        if constexpr (C == Core::C68010 && AS == AddrSpace::DATA && S != Byte) readBuffer = u16(result);
+
+        return result;
     }
 }
 

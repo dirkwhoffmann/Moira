@@ -282,7 +282,8 @@ void SSTRunner::runCase(const sst::Test &t, const sst::State &init, int k, int a
             if (moira.mem.peek(a) != ref.mem.peek(a)) {
                 static const char *frame8[] = { "frame.sr", "frame.pc", "frame.pc", "frame.fmt", "frame.ssw", "frame.addr", "frame.addr", "frame.unused", "frame.dob", "frame.unused", "frame.dib", "frame.unused", "frame.iib" };
                 u32 off = a - frameAt;
-                badFields.insert(a >= frameAt && off < 26 && format8 ? frame8[off / 2] : a >= frameAt && off < 8 ? frame8[off / 2] : "mem");
+                const char *field = a >= frameAt && off < 26 && format8 ? frame8[off / 2] : a >= frameAt && off < 8 ? frame8[off / 2] : "mem";
+                if (ref.core->reliableFrameField(field)) badFields.insert(field);
             }
             continue;
         }

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		50F60000000000000000003A /* StackFrameTests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000039 /* StackFrameTests.cpp */; };
 		5028B10A288D9EC000047C20 /* musashi_softfloat.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B103288D9EC000047C20 /* musashi_softfloat.c */; };
 		5028B10E288D9ECD00047C20 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B10D288D9ECD00047C20 /* m68kops.c */; };
 		5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B114288D9EDC00047C20 /* m68kdasm.c */; };
@@ -578,6 +579,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		50F600000000000000000039 /* StackFrameTests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = StackFrameTests.cpp; sourceTree = "<group>"; };
 		08C7A9B2140D45BEA6DAD5A7 /* Cache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Cache.h; sourceTree = "<group>"; };
 		1654296120AA412377E9642D /* MoiraCore68020.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraCore68020.cpp; sourceTree = "<group>"; };
 		38037577E0C9EA87178FAF59 /* MoiraCore_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraCore_cpp.h; sourceTree = "<group>"; };
@@ -1518,6 +1520,7 @@
 				50F4000000000000000001F1 /* BusErrorTests.cpp */,
 				50F40000000000000000011D /* doctest.h */,
 				50F40000000000000000011E /* CMakeLists.txt */,
+				50F600000000000000000039 /* StackFrameTests.cpp */,
 			);
 			path = Unit;
 			sourceTree = "<group>";
@@ -2205,6 +2208,7 @@
 				50F40000000000000000011C /* MmuExecTests.cpp in Sources */,
 				50F4000000000000000001F2 /* BusErrorTests.cpp in Sources */,
 				50F600000000000000000033 /* Common.cpp in Sources */,
+				50F60000000000000000003A /* StackFrameTests.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3284,6 +3288,12 @@
 		50F400000000000000000010 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"MOIRA_COMPATIBILITY=MAME",
+					"MOIRA_EMULATE_ADDRESS_ERROR=true",
+					"MOIRA_PRECISE_TIMING=true",
+				);
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEAD_CODE_STRIPPING = YES;
@@ -3302,6 +3312,12 @@
 		50F400000000000000000011 /* Debug-UAE */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"MOIRA_COMPATIBILITY=MAME",
+					"MOIRA_EMULATE_ADDRESS_ERROR=true",
+					"MOIRA_PRECISE_TIMING=true",
+				);
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEAD_CODE_STRIPPING = YES;
@@ -3320,6 +3336,12 @@
 		50F400000000000000000012 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"MOIRA_COMPATIBILITY=MAME",
+					"MOIRA_EMULATE_ADDRESS_ERROR=true",
+					"MOIRA_PRECISE_TIMING=true",
+				);
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEAD_CODE_STRIPPING = YES;

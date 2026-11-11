@@ -118,6 +118,14 @@ struct UaeCore : RefCore {
     const std::vector<mame::BusCycle> &log() const override { return cycles; }
     bool halted() const override { return didHalt; }
 
+    // UAE implements the 68010 address error frame only partially. The stacked PC and the two input
+    // buffers differ from the frames recorded on real hardware (see Tests/Unit/StackFrameTests.cpp).
+    bool reliableFrameField(const char *field) const override
+    {
+        if (model != CPUModel::M68010) return true;
+        return strcmp(field, "frame.pc") && strcmp(field, "frame.dib") && strcmp(field, "frame.iib");
+    }
+
     // Only the 68000 is cycle exact and logs its bus cycles like MAME
     bool hasBusLog() const override { return model == CPUModel::M68000; }
 

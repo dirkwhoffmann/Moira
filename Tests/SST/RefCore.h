@@ -55,6 +55,10 @@ struct RefCore {
     // Does the core disagree with MAME on frames that fault while a group 1/2 exception is processed?
     virtual bool disagreesOnStacking() const { return false; }
 
+    // Does the core compute the given field of a 68010 address error frame correctly?
+    // The fields are named "frame.pc", "frame.dib" (data input buffer), "frame.iib" (instruction input buffer), etc.
+    virtual bool reliableFrameField(const char *field) const { return true; }
+
     // Test cases the core cannot execute
     virtual bool unsupported(const sst::Test &t) const { return false; }
     virtual const char *unsupportedNote() const { return ""; }

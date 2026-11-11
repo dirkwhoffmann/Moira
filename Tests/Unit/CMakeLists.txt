@@ -20,9 +20,10 @@ add_executable(unit
     FpuRefTests.cpp
     MmuExecTests.cpp
     BusErrorTests.cpp
+    StackFrameTests.cpp
     ../Common/Common.cpp)
     
-target_link_libraries(unit moira uaecpu)
+target_link_libraries(unit moiraMAME uaecpu)
 target_include_directories(unit PUBLIC
     ${CMAKE_SOURCE_DIR}/Moira
     ${CMAKE_SOURCE_DIR}/Tests/Common
