@@ -371,8 +371,7 @@ void TestRunner::dumpFailedSetup()
 void TestRunner::bugReport()
 {
     dumpFailedSetup();
-    printf("Please report the bug at https://github.com/dirkwhoffmann/Moira\n");
-    printf("Thanks you!\n\n");
+    common::printBugReport();
     exit(1);
 }
 

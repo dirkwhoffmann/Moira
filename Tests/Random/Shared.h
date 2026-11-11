@@ -25,7 +25,7 @@
 #include "FPU/MFloat80.h"
 #include "FPU/FPU.h"
 #include "Sandbox.h"
-#include "Randomizer.h"
+#include "Common.h"
 #include "config.h"
 
 extern "C" {
@@ -48,6 +48,10 @@ void setupBinutils(moira::CPUModel model);
 void setupMusashi(moira::CPUModel model);
 void setupUAE(moira::CPUModel model, moira::FPUModel fpu);
 void setupMAME(moira::CPUModel model);
+
+using common::Randomizer;
+using common::portableRand;
+using common::portableSrand;
 
 extern Sandbox sandbox;
 extern Randomizer randomizer;

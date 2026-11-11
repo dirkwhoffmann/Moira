@@ -23,6 +23,7 @@
 
 #include "Moira.h"
 #include "SSTFile.h"
+#include "Common.h"
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -350,16 +351,6 @@ std::string defaultDir()
 
 double percent(long a, long b) { return b ? 100.0 * double(a) / double(b) : 100.0; }
 
-void usage(const char *prog)
-{
-    printf("Usage: %s [--dir <folder>] [--only <text>]... [--limit <n>] [-v <n>] [--dump <file>]\n", prog);
-    printf("  --dir <folder>   Folder containing the *.json.bin files of the SingleStepTests 68000 suite.\n");
-    printf("                   Default: $SST_DIR if set, otherwise the files shipped in Tests/ThirdParty/SingleStepTests\n");
-    printf("  --only <text>    Only run files whose name contains <text>. May be repeated.\n");
-    printf("  --limit <n>      Run at most <n> tests per file\n");
-    printf("  -v <n>           Print the first <n> failures of each file\n");
-    printf("  --dump <file>    Write one line per failing test to <file>\n");
-}
 
 }
 
@@ -383,31 +374,24 @@ int main(int argc, char **argv)
     opt.dir = defaultDir();
     if (const char *env = getenv("SST_DIR")) opt.dir = env;
 
-    for (int i = 1; i < argc; i++) {
-
-        std::string a = argv[i];
-        bool more = i + 1 < argc;
-
-        if (a == "--dir" && more)        { opt.dir = argv[++i]; }
-        else if (a == "--only" && more)  { opt.only.push_back(argv[++i]); }
-        else if (a == "--limit" && more) { opt.limit = atol(argv[++i]); }
-        else if (a == "-v" && more)      { opt.verbose = atoi(argv[++i]); }
-        else if (a == "--dump" && more)  { opt.dump = fopen(argv[++i], "w"); }
-        else { usage(argv[0]); return 1; }
-    }
+    std::string dumpFile;
+    common::Args args(argc, argv);
+    args.text("--dir", opt.dir, "Folder with the *.json.bin files of the SingleStepTests 68000 suite\n(default: $SST_DIR if set, otherwise the files shipped in Tests/ThirdParty/SingleStepTests)", "<folder>");
+    args.list("--only", opt.only, "Only run files whose name contains <text>. May be repeated.");
+    args.integer("--limit", opt.limit, "Run at most <n> tests per file");
+    args.integer("-v", opt.verbose, "Print the first <n> failures of each file");
+    args.text("--dump", dumpFile, "Write one line per failing test to <file>", "<file>");
+    if (!args.parse()) return 1;
+    if (!dumpFile.empty()) opt.dump = fopen(dumpFile.c_str(), "w");
 
     auto files = collectFiles(opt);
     if (files.empty()) { printf("No test files found in %s\n", opt.dir.c_str()); return 1; }
 
-    printf("Moira - A Motorola 68k CPU emulator\n\n");
-    printf("Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de\n");
-    printf("Published under the terms of the MIT License\n\n");
-    printf("Runs Moira against the SingleStepTests suite for the Motorola 68000 and\n");
-    printf("compares registers, memory and bus cycles after each instruction.\n");
-    printf("https://github.com/SingleStepTests/m68000\n\n");
-    printf("Core under test : Moira %s\n", moira::Moira::build().c_str());
-    printf("Reference       : %s ", reference());
-    printf("(Timing : %s)\n", MOIRA_PRECISE_TIMING ? "precise" : "fast");
+    common::printBanner("Runs Moira against the SingleStepTests suite for the Motorola 68000 and\n"
+                        "compares registers, memory and bus cycles after each instruction.\n"
+                        "https://github.com/SingleStepTests/m68000\n");
+    common::printSetting("Core under test", "Moira %s", moira::Moira::build().c_str());
+    common::printSetting("Reference", "%s (Timing : %s)", reference(), MOIRA_PRECISE_TIMING ? "precise" : "fast");
     printf("\n");
 
     TestCPU cpu;

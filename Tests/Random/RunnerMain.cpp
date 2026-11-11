@@ -9,78 +9,53 @@
 
 #include "TestRunner.h"
 #include <string.h>
-#include <ctime>
 #include <algorithm>
-
-static void usage(const char *prog, runner::TestRunner &runner)
-{
-    printf("Usage: %s [--seed <n>] [--rounds <n>] [--cpu <model>]... [--fpu <model>]...\n", prog);
-    printf("  --seed <n>      Seed of the random number generator (default: derived from the date)\n");
-    printf("  --rounds <n>    Number of test rounds (default: 1)\n");
-    printf("  --cpu <model>   CPU model to test (default: all models). May be repeated.\n");
-    printf("                  Models:");
-    for (auto model : runner.allModels()) printf(" %s", runner::modelName(model));
-    printf("\n");
-    printf("  --fpu <model>   FPU model to test in the FPU stage (default: all models). May be repeated.\n");
-    printf("                  Models:");
-    for (auto model : runner::allFpuModels()) printf(" %s", runner::fpuModelName(model));
-    printf("\n");
-}
 
 int runner::runnerMain(TestRunner &runner, int argc, char **argv)
 {
-    // Without an explicit seed, the seed is derived from the current date
-    std::time_t t = std::time(0);
-    std::tm *now = std::localtime(&t);
-    unsigned seed = 1900 + now->tm_year + now->tm_yday;
-
-    long rounds = 1;
+    long long seed = common::defaultSeed();
+    long long rounds = 1;
     std::vector<moira::CPUModel> cpus;
     std::vector<moira::FPUModel> fpus;
 
-    for (int i = 1; i < argc; i++) {
+    std::string cpuHelp = "CPU model to test (default: all models). May be repeated.\nModels:";
+    for (auto model : runner.allModels()) cpuHelp += std::string(" ") + runner::modelName(model);
+    
+    std::string fpuHelp = "FPU model to test in the FPU stage (default: all models). May be repeated.\nModels:";
+    for (auto model : runner::allFpuModels()) fpuHelp += std::string(" ") + runner::fpuModelName(model);
 
-        if (!strcmp(argv[i], "--seed") && i + 1 < argc) {
+    common::Args args(argc, argv);
+    args.integer("--seed", seed, "Seed of the random number generator (default: derived from the date)");
+    args.custom("--rounds", "<n>", [&](const char *s) {
+        char *end = nullptr;
+        rounds = strtoll(s, &end, 0);
+        return end != s && *end == '\0' && rounds > 0;
+    }, "Number of test rounds (default: 1)");
+    args.custom("--cpu", "<model>", [&](const char *s) {
+        auto model = runner::parseModel(s);
+        if (!model) return false;
+        const auto &all = runner.allModels();
+        if (std::find(all.begin(), all.end(), *model) == all.end()) return false;
+        cpus.push_back(*model);
+        return true;
+    }, cpuHelp.c_str());
+    args.custom("--fpu", "<model>", [&](const char *s) {
+        auto model = runner::parseFpuModel(s);
+        if (!model) return false;
+        fpus.push_back(*model);
+        return true;
+    }, fpuHelp.c_str());
+    if (!args.parse()) return 1;
 
-            char *end = nullptr;
-            seed = (unsigned)strtoul(argv[++i], &end, 0);
-            if (*end == '\0') continue;
-
-        } else if (!strcmp(argv[i], "--rounds") && i + 1 < argc) {
-
-            char *end = nullptr;
-            rounds = strtol(argv[++i], &end, 0);
-            if (*end == '\0' && rounds > 0) continue;
-
-        } else if (!strcmp(argv[i], "--cpu") && i + 1 < argc) {
-
-            if (auto model = runner::parseModel(argv[++i])) {
-                const auto &all = runner.allModels();
-                if (std::find(all.begin(), all.end(), *model) != all.end()) { cpus.push_back(*model); continue; }
-            }
-
-        } else if (!strcmp(argv[i], "--fpu") && i + 1 < argc) {
-
-            if (auto model = runner::parseFpuModel(argv[++i])) { fpus.push_back(*model); continue; }
-        }
-
-        usage(argv[0], runner);
-        return 1;
-    }
-
-    printf("Moira - A Motorola 68k CPU emulator\n\n");
-    printf("Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de\n");
-    printf("Published under the terms of the MIT License\n\n");
-    printf("%s\n", runner.description());
-
-    printf("Core under test : Moira %s\n", moira::Moira::build().c_str());
-    printf("      Reference : %s\n", runner.referenceName());
+    common::printBanner(runner.description());
+    common::printSetting("Core under test", "Moira %s", moira::Moira::build().c_str());
+    common::printSetting("Reference", "%s", runner.referenceName());
     printf("\n");
-    printf("    Test rounds : %ld\n", rounds);
-    printf("    Random seed : %d\n", seed);
+    common::printSetting("Test rounds", "%lld", rounds);
+    common::printSetting("Random seed", "%d", (int)seed);
     runner.printRanges();
 
-    runner.run(seed, rounds,
+    runner.run((unsigned)seed, rounds,
                 cpus.empty() ? runner.allModels() : cpus,
                 fpus.empty() ? runner::allFpuModels() : fpus);
 

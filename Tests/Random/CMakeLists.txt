@@ -36,7 +36,7 @@ set(RUNNER_SRC
     TestCPU.cpp
     Shared.cpp
     Sandbox.cpp
-    Randomizer.cpp
+    ../Common/Common.cpp
     ../ThirdParty/MusashiGlue/musashi.cpp
     ../ThirdParty/BinutilsGlue/binutils.cpp
     ../ThirdParty/UAEGlue/uae.cpp
@@ -46,6 +46,7 @@ set(RUNNER_INCLUDE_DIRS
     ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/Moira
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Common
     ${CMAKE_SOURCE_DIR}/Tests/ThirdParty
     ${CMAKE_SOURCE_DIR}/Tests/ThirdParty/Binutils
     ${CMAKE_SOURCE_DIR}/Tests/ThirdParty/Musashi)

@@ -27,7 +27,7 @@ const char *DasmRunner::description() const
 
 void DasmRunner::printRanges() const
 {
-    printf("     Dasm range : all opcodes\n");
+    common::printSetting("Dasm range", "all opcodes");
 }
 
 void DasmRunner::setupReferences()
@@ -65,14 +65,15 @@ void DasmRunner::runDasmCPU(long round)
     resetClocks();
 
     printf("%11s CPU : DASM ", selectedModel()); fflush(stdout);
+    common::Progress progress;
 
     for (int i = 0; i < CPU_SETUPS; i++) {
-
-        printf("."); fflush(stdout);
 
         setupTestEnvironment(setup, round * CPU_SETUPS + i);
 
         for (int op = 0x0000; op <= 0xFFFF; op++) {
+
+            progress.update(100.0 * (i * 0x10000 + op) / (CPU_SETUPS * 0x10000));
 
             if constexpr (SKIP_ILLEGAL) { if (isIllegalOpcode(u16(op))) continue; }
 
@@ -82,6 +83,7 @@ void DasmRunner::runDasmCPU(long round)
             runDasmSingleTest(setup, u16(op));
         }
     }
+    progress.finish();
     passedDasm();
 }
 
@@ -95,6 +97,7 @@ void DasmRunner::runDasmMMU(long round)
     resetClocks();
 
     printf("%11s MMU : DASM ", selectedModel()); fflush(stdout);
+    common::Progress progress;
 
     for (int i = 0; i < MMU_SETUPS; i++) {
 
@@ -102,7 +105,7 @@ void DasmRunner::runDasmMMU(long round)
 
         for (int op = 0xF000; op <= 0xF03F; op++) {
 
-            if ((op % 8) == 0) { printf("."); fflush(stdout); }
+            progress.update(100.0 * (i * 64 + (op - 0xF000)) / (MMU_SETUPS * 64));
 
             for (int ext = 0x0000; ext <= 0xFFFF; ext++) {
 
@@ -110,6 +113,7 @@ void DasmRunner::runDasmMMU(long round)
             }
         }
     }
+    progress.finish();
     passedDasm();
 }
 
@@ -125,6 +129,7 @@ void DasmRunner::runDasmFPU(long round)
     else
         printf("%5s+%5s FPU : DASM ", selectedModel(), fpuModelName(fpuModel));
     fflush(stdout);
+    common::Progress progress;
 
     for (int i = 0; i < FPU_SETUPS; i++) {
 
@@ -132,7 +137,7 @@ void DasmRunner::runDasmFPU(long round)
 
         for (int op = 0xF200; op <= 0xF23F; op++) {
 
-            if ((op % 8) == 0) { printf("."); fflush(stdout); }
+            progress.update(100.0 * (i * 64 + (op - 0xF200)) / (FPU_SETUPS * 64));
 
             for (int ext = 0x0000; ext <= 0xFFFF; ext++) {
 
@@ -140,6 +145,7 @@ void DasmRunner::runDasmFPU(long round)
             }
         }
     }
+    progress.finish();
     passedDasm();
 }
 

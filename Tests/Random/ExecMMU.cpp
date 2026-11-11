@@ -169,6 +169,7 @@ void ExecRunner::runMMU(long round)
     resetClocks();
 
     printf("%11s MMU : CORE ", selectedModel()); fflush(stdout);
+    common::Progress progress;
 
     for (int i = 0; i < MMU_SETUPS; i++) {
 
@@ -184,7 +185,7 @@ void ExecRunner::runMMU(long round)
 
         for (int op = 0xF000; op <= 0xF03F; op++) {
 
-            if ((op % 8) == 0) { printf("."); fflush(stdout); }
+            progress.update(100.0 * (i * 64 + (op - 0xF000)) / (MMU_SETUPS * 64));
 
             for (int ext = 0x0000; ext <= 0xFFFF; ext++) {
 
@@ -192,6 +193,7 @@ void ExecRunner::runMMU(long round)
             }
         }
     }
+    progress.finish();
     if (mmuCompare) { enableMMUUAE(false); mmuCompare = false; }
     passed(moiraclk[0], refclk[0]);
 }
@@ -205,10 +207,11 @@ void ExecRunner::runMMUTranslate(long round)
     long successes = 0, faults = 0;
     resetClocks();
     printf("%11s MMU : XLAT ", selectedModel()); fflush(stdout);
+    common::Progress progress;
 
     for (int i = 0; i < TABLE_SETUPS; i++) {
 
-        if (i % 16 == 0) { printf("."); fflush(stdout); }
+        progress.update(100.0 * i / TABLE_SETUPS);
 
         fillWithDescriptors();
         auto t = randomTranslationSetup();
@@ -302,6 +305,7 @@ void ExecRunner::runMMUTranslate(long round)
             exit(1);
         }
     }
+    progress.finish();
     passed(0, 0);
     printf("%11s           %ld translations, %ld faults\n", "", successes, faults);
 }
@@ -315,12 +319,13 @@ void ExecRunner::runMMUTranslate040(long round)
     long successes = 0, faults = 0;
     resetClocks();
     printf("%11s MMU : XLAT ", selectedModel()); fflush(stdout);
+    common::Progress progress;
 
     auto &mmu = moiracpu->mmu.mmu040;
 
     for (int i = 0; i < TABLE_SETUPS; i++) {
 
-        if (i % 16 == 0) { printf("."); fflush(stdout); }
+        progress.update(100.0 * i / TABLE_SETUPS);
 
         fillWith040Descriptors();
 
@@ -398,6 +403,7 @@ void ExecRunner::runMMUTranslate040(long round)
     }
     endMMU040UAE();
     mmu.setTC(0);
+    progress.finish();
     passed(0, 0);
     printf("%11s           %ld translations, %ld faults\n", "", successes, faults);
 }

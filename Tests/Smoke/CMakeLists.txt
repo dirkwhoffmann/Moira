@@ -18,7 +18,8 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 add_executable(smoke
     Smoke.cpp
-    ../Common/SSTFile.cpp)
+    ../Common/SSTFile.cpp
+    ../Common/Common.cpp)
 
 target_include_directories(smoke PRIVATE
     ${CMAKE_SOURCE_DIR}/Moira

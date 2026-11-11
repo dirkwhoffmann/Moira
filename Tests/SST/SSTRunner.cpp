@@ -6,6 +6,7 @@
 // -----------------------------------------------------------------------------
 
 #include "SSTRunner.h"
+#include "Common.h"
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -358,30 +359,24 @@ int SSTRunner::run(int argc, char **argv)
     }
     if (const char *env = getenv("SST_DIR")) opt.dir = env;
 
-    for (int i = 1; i < argc; i++) {
-        std::string a = argv[i];
-        bool more = i + 1 < argc;
-        if (a == "--dir" && more) opt.dir = argv[++i];
-        else if (a == "--only" && more) opt.only.push_back(argv[++i]);
-        else if (a == "--limit" && more) opt.limit = atol(argv[++i]);
-        else if (a == "--tsv" && more) opt.tsv = argv[++i];
-        else if (a == "--dedupe" && more) opt.dedupe = atoi(argv[++i]);
-        else if (a == "--coverage") opt.coverage = true;
-        else if (a == "--check") opt.check = true;
-        else if (a == "--min" && more) opt.minPercent = atof(argv[++i]);
-        else if (a == "--ignore" && more) {
-            std::string list = "," + std::string(argv[++i]) + ",";
-            if (list.find(",ccr,") != std::string::npos) srMask = 0xA700;
-            if (list.find(",cycles,") != std::string::npos) ignoreCycles = true;
-            if (list.find(",nbit,") != std::string::npos) codeMask = 0xFFF7;
-        }
-        else if (a == "-v" && more) opt.verbose = atoi(argv[++i]);
-        else {
-            printf("Usage: %s [--dir <folder>] [--only <text>]... [--limit <n>] [-v <n>] [--dedupe <n>] [--coverage] [--check] [--min <percent>] [--ignore ccr,cycles,nbit] [--tsv <file>]\n", argv[0]);
-            return 1;
-        }
-    }
-
+    common::Args args(argc, argv);
+    args.text("--dir", opt.dir, "Folder with the test files (default: $SST_DIR or the SingleStepTests checkout)", "<folder>");
+    args.list("--only", opt.only, "Only run files whose name contains <text>. May be repeated.");
+    args.integer("--limit", opt.limit, "Run at most <n> cases per file");
+    args.text("--tsv", opt.tsv, "Write one line per failing case to <file>", "<file>");
+    args.integer("--dedupe", opt.dedupe, "Report at most <n> failures per distinct case");
+    args.flag("--coverage", opt.coverage, "List instruction forms without an address error case");
+    args.flag("--check", opt.check, "Check the reference against the recorded results");
+    args.number("--min", opt.minPercent, "Exit with an error if less than <x> percent match");
+    args.custom("--ignore", "<list>", [&](const char *s) {
+        std::string list = "," + std::string(s) + ",";
+        if (list.find(",ccr,") != std::string::npos) srMask = 0xA700;
+        if (list.find(",cycles,") != std::string::npos) ignoreCycles = true;
+        if (list.find(",nbit,") != std::string::npos) codeMask = 0xFFF7;
+        return true;
+    }, "Ignore differences (comma-separated: ccr, cycles, nbit)");
+    args.integer("-v", opt.verbose, "Print the first <n> failures of each file");
+    if (!args.parse()) return 1;
 
     std::vector<std::string> names;
     std::error_code ec;
@@ -395,13 +390,11 @@ int SSTRunner::run(int argc, char **argv)
     if (names.empty()) { printf("No test files found in %s\n", opt.dir.c_str()); return 1; }
 
 
-    printf("Moira - A Motorola 68k CPU emulator\n\n");
-    printf("Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de\n");
-    printf("Published under the terms of the MIT License\n\n");
-    printf("%s\n", description());
-    printf("Core under test : Moira %s (%s mode)\n", moira::Moira::build().c_str(),
-           moira::compat == moira::Compatibility::UAE ? "UAE" : moira::compat == moira::Compatibility::MUSASHI ? "Musashi" : "MAME");
-    printf("Reference       : %s\n\n", ref.core->name());
+    common::printBanner(description());
+    common::printSetting("Core under test", "Moira %s (%s mode)", moira::Moira::build().c_str(),
+                         moira::compat == moira::Compatibility::UAE ? "UAE" : moira::compat == moira::Compatibility::MUSASHI ? "Musashi" : "MAME");
+    common::printSetting("Reference", "%s", ref.core->name());
+    printf("\n");
     printf("%-16s %8s %8s %8s\n", "Instruction", "Cases", "OK", "OK%");
 
     if (!opt.tsv.empty()) tsv = fopen(opt.tsv.c_str(), "w");

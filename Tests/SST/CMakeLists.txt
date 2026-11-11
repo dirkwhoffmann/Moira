@@ -25,7 +25,8 @@ set(SST_SRC
     SSTRunner.cpp
     PlainRunner.cpp
     ExceptionRunner.cpp
-    ../Common/SSTFile.cpp)
+    ../Common/SSTFile.cpp
+    ../Common/Common.cpp)
 
 set(SST_INCLUDE_DIRS
     ${CMAKE_SOURCE_DIR}/Moira

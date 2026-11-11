@@ -7,6 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		50F600000000000000000038 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F600000000000000000037 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F600000000000000000036 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F600000000000000000035 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F600000000000000000034 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F600000000000000000033 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F600000000000000000032 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F600000000000000000031 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F600000000000000000030 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F60000000000000000002F /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F60000000000000000002E /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50F60000000000000000002D /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
 		50F60000000000000000002A /* ExecRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F57E0D30A4612A00EDBDBA /* ExecRunner.cpp */; };
 		50F600000000000000000029 /* ExecRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F57E0D30A4612A00EDBDBA /* ExecRunner.cpp */; };
 		50F600000000000000000028 /* DasmRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F57E1530A4618B00EDBDBA /* DasmRunner.cpp */; };
@@ -37,7 +49,6 @@
 		5028B10E288D9ECD00047C20 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B10D288D9ECD00047C20 /* m68kops.c */; };
 		5028B11B288D9EDC00047C20 /* m68kdasm.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B114288D9EDC00047C20 /* m68kdasm.c */; };
 		5028B11C288D9EDC00047C20 /* m68kcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B116288D9EDC00047C20 /* m68kcpu.c */; };
-		5054686228A4CDDC00028727 /* Randomizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5054686028A4CDDC00028727 /* Randomizer.cpp */; };
 		505580EC23AFA14D0009F77F /* musashi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505580EA23AFA14D0009F77F /* musashi.cpp */; };
 		505A81EE309A2F2A00E2E307 /* fpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81D7309A2F2A00E2E307 /* fpp.cpp */; };
 		505A81EF309A2F2A00E2E307 /* cpuemu_32.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81CD309A2F2A00E2E307 /* cpuemu_32.cpp */; };
@@ -105,7 +116,6 @@
 		50D100000000000000000008 /* Sandbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50CECEC523A924B000E07C65 /* Sandbox.cpp */; };
 		50D100000000000000000009 /* m68k-opc.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123728BBAD9B001EFB37 /* m68k-opc.c */; };
 		50D10000000000000000000A /* m68k-dis.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123628BBAD9B001EFB37 /* m68k-dis.c */; };
-		50D10000000000000000000B /* Randomizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5054686028A4CDDC00028727 /* Randomizer.cpp */; };
 		50D10000000000000000000C /* Shared.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50B100000000000000000001 /* Shared.cpp */; };
 		50D10000000000000000000D /* TestRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* TestRunner.cpp */; };
 		50D10000000000000000000E /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; };
@@ -230,7 +240,6 @@
 		50FB0000000000000000030B /* Sandbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50CECEC523A924B000E07C65 /* Sandbox.cpp */; };
 		50FB0000000000000000030C /* m68k-opc.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123728BBAD9B001EFB37 /* m68k-opc.c */; };
 		50FB0000000000000000030D /* m68k-dis.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123628BBAD9B001EFB37 /* m68k-dis.c */; };
-		50FB0000000000000000030E /* Randomizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5054686028A4CDDC00028727 /* Randomizer.cpp */; };
 		50FB0000000000000000030F /* Shared.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50B100000000000000000001 /* Shared.cpp */; };
 		50FB00000000000000000310 /* TestRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* TestRunner.cpp */; };
 		50FB00000000000000000311 /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; };
@@ -246,7 +255,6 @@
 		50FC0000000000000000050B /* Sandbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50CECEC523A924B000E07C65 /* Sandbox.cpp */; };
 		50FC0000000000000000050C /* m68k-opc.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123728BBAD9B001EFB37 /* m68k-opc.c */; };
 		50FC0000000000000000050D /* m68k-dis.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123628BBAD9B001EFB37 /* m68k-dis.c */; };
-		50FC0000000000000000050E /* Randomizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5054686028A4CDDC00028727 /* Randomizer.cpp */; };
 		50FC0000000000000000050F /* Shared.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50B100000000000000000001 /* Shared.cpp */; };
 		50FC00000000000000000510 /* TestRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* TestRunner.cpp */; };
 		50FC00000000000000000511 /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; };
@@ -271,7 +279,6 @@
 		50FD0000000000000000001D /* Sandbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50CECEC523A924B000E07C65 /* Sandbox.cpp */; };
 		50FD0000000000000000001E /* m68k-opc.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123728BBAD9B001EFB37 /* m68k-opc.c */; };
 		50FD0000000000000000001F /* m68k-dis.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C0123628BBAD9B001EFB37 /* m68k-dis.c */; };
-		50FD00000000000000000020 /* Randomizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5054686028A4CDDC00028727 /* Randomizer.cpp */; };
 		50FD00000000000000000021 /* Shared.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50B100000000000000000001 /* Shared.cpp */; };
 		50FD00000000000000000022 /* TestRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 507BE4AD23B66456000B37D2 /* TestRunner.cpp */; };
 		50FD00000000000000000023 /* TestCPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09E023C8E16600A179E1 /* TestCPU.cpp */; };
@@ -571,6 +578,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		50F60000000000000000002C /* Common.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Common.cpp; sourceTree = "<group>"; };
+		50F60000000000000000002B /* Common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Common.h; sourceTree = "<group>"; };
 		50F600000000000000000010 /* ExceptionUAE.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ExceptionUAE.cpp; sourceTree = "<group>"; };
 		50F60000000000000000000F /* ExceptionMame.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ExceptionMame.cpp; sourceTree = "<group>"; };
 		50F60000000000000000000E /* SSTMusashi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SSTMusashi.cpp; sourceTree = "<group>"; };
@@ -615,8 +624,6 @@
 		502C09DE23C8D82600A179E1 /* MoiraDebugger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraDebugger.h; sourceTree = "<group>"; };
 		502C09E023C8E16600A179E1 /* TestCPU.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TestCPU.cpp; sourceTree = "<group>"; };
 		502C09E123C8E16600A179E1 /* TestCPU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestCPU.h; sourceTree = "<group>"; };
-		5054686028A4CDDC00028727 /* Randomizer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Randomizer.cpp; sourceTree = "<group>"; };
-		5054686128A4CDDC00028727 /* Randomizer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Randomizer.h; sourceTree = "<group>"; };
 		505580EA23AFA14D0009F77F /* musashi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = musashi.cpp; sourceTree = "<group>"; };
 		505A81023098E38500E2E307 /* FPU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FPU.h; sourceTree = "<group>"; };
 		505A81033098E38500E2E307 /* FPU.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FPU.cpp; sourceTree = "<group>"; };
@@ -1430,6 +1437,8 @@
 			children = (
 				50F100000000000000000020 /* SSTFile.h */,
 				50F100000000000000000021 /* SSTFile.cpp */,
+				50F60000000000000000002B /* Common.h */,
+				50F60000000000000000002C /* Common.cpp */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -1464,8 +1473,6 @@
 				502C09E023C8E16600A179E1 /* TestCPU.cpp */,
 				50CECEC623A924B000E07C65 /* Sandbox.h */,
 				50CECEC523A924B000E07C65 /* Sandbox.cpp */,
-				5054686128A4CDDC00028727 /* Randomizer.h */,
-				5054686028A4CDDC00028727 /* Randomizer.cpp */,
 				50F57E0130A45D5B00EDBDBA /* RandomMAME.cpp */,
 				50F57E0330A45D6700EDBDBA /* RandomMusashi.cpp */,
 				50F57E0530A45D7300EDBDBA /* RandomUAE.cpp */,
@@ -2000,7 +2007,6 @@
 				50C0123B28BBAD9B001EFB37 /* m68k-opc.c in Sources */,
 				50C0123A28BBAD9B001EFB37 /* m68k-dis.c in Sources */,
 				50F57E1C30A461CD00EDBDBA /* ExecMMU.cpp in Sources */,
-				5054686228A4CDDC00028727 /* Randomizer.cpp in Sources */,
 				50B100000000000000000003 /* Shared.cpp in Sources */,
 				50C300000000000000000003 /* TestRunner.cpp in Sources */,
 				50FF0000000000000000F100 /* Reference.cpp in Sources */,
@@ -2011,6 +2017,7 @@
 				50D100000000000000000001 /* TestCPU.cpp in Sources */,
 				50F57E0430A45D6700EDBDBA /* RandomMusashi.cpp in Sources */,
 				50F600000000000000000026 /* DasmRunner.cpp in Sources */,
+				50F60000000000000000002D /* Common.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2110,7 +2117,6 @@
 				50D100000000000000000009 /* m68k-opc.c in Sources */,
 				50F57E1F30A461CD00EDBDBA /* ExecMMU.cpp in Sources */,
 				50D10000000000000000000A /* m68k-dis.c in Sources */,
-				50D10000000000000000000B /* Randomizer.cpp in Sources */,
 				50D10000000000000000000C /* Shared.cpp in Sources */,
 				50D10000000000000000000D /* TestRunner.cpp in Sources */,
 				50FF0000000000000000F101 /* Reference.cpp in Sources */,
@@ -2120,6 +2126,7 @@
 				50FF0000000000000000F403 /* MusashiRef.cpp in Sources */,
 				50D10000000000000000000E /* TestCPU.cpp in Sources */,
 				50F600000000000000000027 /* DasmRunner.cpp in Sources */,
+				50F60000000000000000002E /* Common.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2149,6 +2156,7 @@
 			files = (
 				50F100000000000000000024 /* Smoke.cpp in Sources */,
 				50F100000000000000000023 /* SSTFile.cpp in Sources */,
+				50F600000000000000000032 /* Common.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2196,6 +2204,7 @@
 				50F40000000000000000011A /* FpuRefTests.cpp in Sources */,
 				50F40000000000000000011C /* MmuExecTests.cpp in Sources */,
 				50F4000000000000000001F2 /* BusErrorTests.cpp in Sources */,
+				50F600000000000000000033 /* Common.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2220,6 +2229,7 @@
 				50F60000000000000000001E /* PlainRunner.cpp in Sources */,
 				50F60000000000000000001F /* ExceptionRunner.cpp in Sources */,
 				50F600000000000000000020 /* ExceptionMame.cpp in Sources */,
+				50F600000000000000000034 /* Common.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2252,6 +2262,7 @@
 				50F600000000000000000022 /* PlainRunner.cpp in Sources */,
 				50F600000000000000000023 /* ExceptionRunner.cpp in Sources */,
 				50F600000000000000000024 /* ExceptionUAE.cpp in Sources */,
+				50F600000000000000000035 /* Common.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2273,7 +2284,6 @@
 				50FB0000000000000000030C /* m68k-opc.c in Sources */,
 				50FB0000000000000000030D /* m68k-dis.c in Sources */,
 				50F57E1D30A461CD00EDBDBA /* ExecMMU.cpp in Sources */,
-				50FB0000000000000000030E /* Randomizer.cpp in Sources */,
 				50FB0000000000000000030F /* Shared.cpp in Sources */,
 				50F57E2C30A4659F00EDBDBA /* DasmMot.cpp in Sources */,
 				50FB00000000000000000310 /* TestRunner.cpp in Sources */,
@@ -2284,6 +2294,7 @@
 				50FF0000000000000000F409 /* MusashiRef.cpp in Sources */,
 				50FB00000000000000000311 /* TestCPU.cpp in Sources */,
 				50F600000000000000000029 /* ExecRunner.cpp in Sources */,
+				50F600000000000000000030 /* Common.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2306,7 +2317,6 @@
 				50FC0000000000000000050C /* m68k-opc.c in Sources */,
 				50F57E2030A461CD00EDBDBA /* ExecMMU.cpp in Sources */,
 				50FC0000000000000000050D /* m68k-dis.c in Sources */,
-				50FC0000000000000000050E /* Randomizer.cpp in Sources */,
 				50FC0000000000000000050F /* Shared.cpp in Sources */,
 				50FC00000000000000000510 /* TestRunner.cpp in Sources */,
 				50FF0000000000000000F104 /* Reference.cpp in Sources */,
@@ -2316,6 +2326,7 @@
 				50FF0000000000000000F40C /* MusashiRef.cpp in Sources */,
 				50FC00000000000000000511 /* TestCPU.cpp in Sources */,
 				50F60000000000000000002A /* ExecRunner.cpp in Sources */,
+				50F600000000000000000031 /* Common.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2337,7 +2348,6 @@
 				50FD0000000000000000001E /* m68k-opc.c in Sources */,
 				50FD0000000000000000001F /* m68k-dis.c in Sources */,
 				50F57E1E30A461CD00EDBDBA /* ExecMMU.cpp in Sources */,
-				50FD00000000000000000020 /* Randomizer.cpp in Sources */,
 				50FD00000000000000000021 /* Shared.cpp in Sources */,
 				50FD00000000000000000022 /* TestRunner.cpp in Sources */,
 				50F57E0230A45D5B00EDBDBA /* RandomMAME.cpp in Sources */,
@@ -2348,6 +2358,7 @@
 				50FF0000000000000000F406 /* MusashiRef.cpp in Sources */,
 				50FD00000000000000000023 /* TestCPU.cpp in Sources */,
 				50F600000000000000000028 /* DasmRunner.cpp in Sources */,
+				50F60000000000000000002F /* Common.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2380,6 +2391,7 @@
 				50F600000000000000000012 /* PlainRunner.cpp in Sources */,
 				50F600000000000000000013 /* ExceptionRunner.cpp in Sources */,
 				50F600000000000000000014 /* SSTMame.cpp in Sources */,
+				50F600000000000000000036 /* Common.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2392,6 +2404,7 @@
 				50F600000000000000000016 /* PlainRunner.cpp in Sources */,
 				50F600000000000000000017 /* ExceptionRunner.cpp in Sources */,
 				50F600000000000000000018 /* SSTUAE.cpp in Sources */,
+				50F600000000000000000037 /* Common.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2409,6 +2422,7 @@
 				50F60000000000000000001B /* ExceptionRunner.cpp in Sources */,
 				50F60000000000000000001C /* SSTMusashi.cpp in Sources */,
 				50F600000000000000000025 /* MusashiCore.cpp in Sources */,
+				50F600000000000000000038 /* Common.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2707,6 +2721,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
 					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
 					"$(SRCROOT)/Tests/Random",
 					"$(SRCROOT)/Tests/ThirdParty",
@@ -2733,6 +2748,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
 					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
 					"$(SRCROOT)/Tests/Random",
 					"$(SRCROOT)/Tests/ThirdParty",
@@ -2878,6 +2894,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
 					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
 					"$(SRCROOT)/Tests/Random",
 					"$(SRCROOT)/Tests/ThirdParty",
@@ -3033,6 +3050,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
 					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
 					"$(SRCROOT)/Tests/Random",
 					"$(SRCROOT)/Tests/ThirdParty",
@@ -3059,6 +3077,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
 					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
 					"$(SRCROOT)/Tests/Random",
 					"$(SRCROOT)/Tests/ThirdParty",
@@ -3086,6 +3105,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
 					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
 					"$(SRCROOT)/Tests/Random",
 					"$(SRCROOT)/Tests/ThirdParty",
@@ -3268,6 +3288,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEAD_CODE_STRIPPING = YES;
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
 					"$(SRCROOT)/Tests/Unit",
 					"$(SRCROOT)/Tests/ThirdParty",
 					"$(SRCROOT)/Moira/**",
@@ -3285,6 +3306,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEAD_CODE_STRIPPING = YES;
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
 					"$(SRCROOT)/Tests/Unit",
 					"$(SRCROOT)/Tests/ThirdParty",
 					"$(SRCROOT)/Moira/**",
@@ -3303,6 +3325,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				GCC_OPTIMIZATION_LEVEL = s;
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
 					"$(SRCROOT)/Tests/Unit",
 					"$(SRCROOT)/Tests/ThirdParty",
 					"$(SRCROOT)/Moira/**",
@@ -3581,6 +3604,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
 					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
 					"$(SRCROOT)/Tests/Random",
 					"$(SRCROOT)/Tests/ThirdParty",
@@ -3607,6 +3631,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
 					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
 					"$(SRCROOT)/Tests/Random",
 					"$(SRCROOT)/Tests/ThirdParty",
@@ -3634,6 +3659,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
 					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
 					"$(SRCROOT)/Tests/Random",
 					"$(SRCROOT)/Tests/ThirdParty",
@@ -3659,6 +3685,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
 					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
 					"$(SRCROOT)/Tests/Random",
 					"$(SRCROOT)/Tests/ThirdParty",
@@ -3684,6 +3711,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
 					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
 					"$(SRCROOT)/Tests/Random",
 					"$(SRCROOT)/Tests/ThirdParty",
@@ -3710,6 +3738,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
 					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
 					"$(SRCROOT)/Tests/Random",
 					"$(SRCROOT)/Tests/ThirdParty",
@@ -3736,6 +3765,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
 					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
 					"$(SRCROOT)/Tests/Random",
 					"$(SRCROOT)/Tests/ThirdParty",
@@ -3762,6 +3792,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
 					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
 					"$(SRCROOT)/Tests/Random",
 					"$(SRCROOT)/Tests/ThirdParty",
@@ -3789,6 +3820,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
 					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
 					"$(SRCROOT)/Tests/Random",
 					"$(SRCROOT)/Tests/ThirdParty",

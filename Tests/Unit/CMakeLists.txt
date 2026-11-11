@@ -19,11 +19,13 @@ add_executable(unit
     FpuExecTests.cpp
     FpuRefTests.cpp
     MmuExecTests.cpp
-    BusErrorTests.cpp)
+    BusErrorTests.cpp
+    ../Common/Common.cpp)
     
 target_link_libraries(unit moira uaecpu)
 target_include_directories(unit PUBLIC
     ${CMAKE_SOURCE_DIR}/Moira
+    ${CMAKE_SOURCE_DIR}/Tests/Common
     ${CMAKE_SOURCE_DIR}/Tests/ThirdParty)
 
 add_test(NAME Unit COMMAND unit)

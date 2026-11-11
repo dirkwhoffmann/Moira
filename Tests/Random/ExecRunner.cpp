@@ -27,7 +27,7 @@ const char *ExecRunner::description() const
 
 void ExecRunner::printRanges() const
 {
-    printf("     Exec range : opcodes up to $EFFF plus FPU and MMU opcodes\n");
+    common::printSetting("Exec range", "opcodes up to $EFFF plus FPU and MMU opcodes");
 }
 
 void ExecRunner::setupReferences()
@@ -98,14 +98,15 @@ void ExecRunner::runCPU(long round)
     resetClocks();
 
     printf("%11s CPU : CORE ", selectedModel()); fflush(stdout);
+    common::Progress progress;
 
     for (int i = 0; i < CPU_SETUPS; i++) {
-
-        printf("."); fflush(stdout);
 
         setupTestEnvironment(setup, round * CPU_SETUPS + i);
 
         for (int op = 0x0000; op <= 0xFFFF; op++) {
+
+            progress.update(100.0 * (i * 0x10000 + op) / (CPU_SETUPS * 0x10000));
 
             // Skip illegal opcodes if requested
             if constexpr (SKIP_ILLEGAL) { if (isIllegalOpcode(u16(op))) continue; }
@@ -117,6 +118,7 @@ void ExecRunner::runCPU(long round)
             runSingleTest(setup, u16(op));
         }
     }
+    progress.finish();
     passed(moiraclk[0], refclk[0]);
 }
 
@@ -138,6 +140,7 @@ void ExecRunner::runFPU(long round)
     else
         printf("%5s+%5s FPU : CORE ", selectedModel(), fpuModelName(fpuModel));
     fflush(stdout);
+    common::Progress progress;
 
     for (int i = 0; i < FPU_SETUPS; i++) {
 
@@ -146,7 +149,7 @@ void ExecRunner::runFPU(long round)
 
         for (int op = 0xF200; op <= 0xF23F; op++) {
 
-            if ((op % 8) == 0) { printf("."); fflush(stdout); }
+            progress.update(100.0 * (i * 64 + (op - 0xF200)) / (FPU_SETUPS * 64));
             
             for (int ext = 0x0000; ext <= 0xFFFF; ext++) {
 
@@ -154,6 +157,7 @@ void ExecRunner::runFPU(long round)
             }
         }
     }
+    progress.finish();
     passed(moiraclk[0], refclk[0]);
 }
 
