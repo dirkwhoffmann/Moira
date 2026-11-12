@@ -6352,6 +6352,10 @@ Moira::execStop(u16 opcode)
 
     setSR(src);
     flags |= State::STOPPED;
+
+    // Sample the IPL pins with the new mask, so a stale level is not taken
+    POLL_IPL;
+
     reg.pc0 = reg.pc;
     reg.pc += 2;
 

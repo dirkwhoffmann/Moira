@@ -272,7 +272,7 @@ int main(int argc, char **argv)
     args.integer("-v", verbose, "Print the first <n> failures with the program");
     args.number("--min", minPercent, "Exit with an error if less than <x> percent of the programs match");
     args.integer("--program", only, "Run only the program with this number (and print it with -v)");
-    args.flag("--userstop", userStop, "Let STOP clear the supervisor bit (Moira raises a privilege violation when the stopped CPU wakes up, UAE does not)");
+    args.flag("--userstop", userStop, "Let STOP clear the supervisor bit (the CPU then stays stopped in user mode until an interrupt wakes it)");
     args.flag("--nochk", noChk, "Do not generate CHK");
     args.flag("--noack", noAck, "Never drop the IPL pins when an interrupt is taken");
     if (!args.parse()) return 1;

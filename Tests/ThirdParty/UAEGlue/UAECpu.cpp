@@ -703,7 +703,15 @@ bool step()
 
 
 
-void setIPL(int level) { pinIpl = level & 7; }
+void setIPL(int level)
+{
+    level &= 7;
+
+    // UAE detects the edge of level 7 by comparing with the level seen at the previous check. If the pins fall
+    // and rise again between two checks, the falling edge would go unnoticed, so it is recorded here.
+    if (pinIpl == 7 && level != 7) regs.lastipl = level;
+    pinIpl = level;
+}
 
 bool stopped() { return regs.stopped != 0; }
 
