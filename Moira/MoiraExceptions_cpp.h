@@ -589,6 +589,9 @@ Moira::execException(M68kException exc, int nr)
     // Remember the exception vector
     exception = vector;
 
+    // Trace on change of flow (T0) also follows the exceptions that instructions raise
+    [[maybe_unused]] const bool t0 = C == Core::C68020 && reg.sr.t0 && !reg.sr.t1;
+
     // Enter supervisor mode and leave trace mode
     setSupervisorMode(true);
     clearTraceFlags();
@@ -744,6 +747,13 @@ Moira::execException(M68kException exc, int nr)
 
         default:
             break;
+    }
+
+    if constexpr (C == Core::C68020) {
+        if (t0 && (exc == M68kException::TRAP || exc == M68kException::CHK ||
+                   exc == M68kException::TRAPV || exc == M68kException::DIVIDE_BY_ZERO)) {
+            flags |= State::TRACE_EXC;
+        }
     }
 
     // Inform the delegate

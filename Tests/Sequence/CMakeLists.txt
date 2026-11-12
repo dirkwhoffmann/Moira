@@ -24,11 +24,14 @@ target_include_directories(sequenceuae PRIVATE
 add_test(NAME SequenceUAE COMMAND sequenceuae --seed 1 --programs 1000 --min 99)
 set_tests_properties(SequenceUAE PROPERTIES LABELS "sequence")
 
-# 68020 and 68030. The M bit (--master), trace on change of flow (--t0), the 68040 and malformed
-# PMMU opcodes are not part of the automated runs (see Tests/README.md).
+# 68020 and 68030. The M bit (--master), the 68040 and malformed PMMU opcodes are not part of the
+# automated runs (see Tests/README.md). With --t0 (trace on change of flow) about 0.2% of the programs
+# differ in the same way: UAE does not trace an RTE that leaves the T0, S and M bits unchanged.
 add_test(NAME SequenceUAE020 COMMAND sequenceuae --cpu 68020 --seed 1 --programs 1000 --min 100)
 add_test(NAME SequenceUAE030 COMMAND sequenceuae --cpu 68030 --seed 1 --programs 1000 --min 100)
-set_tests_properties(SequenceUAE020 SequenceUAE030 PROPERTIES LABELS "sequence")
+add_test(NAME SequenceUAE020T0 COMMAND sequenceuae --cpu 68020 --seed 1 --programs 1000 --t0 --min 99.5)
+add_test(NAME SequenceUAE030T0 COMMAND sequenceuae --cpu 68030 --seed 1 --programs 1000 --t0 --min 99.5)
+set_tests_properties(SequenceUAE020 SequenceUAE030 SequenceUAE020T0 SequenceUAE030T0 PROPERTIES LABELS "sequence")
 
 add_executable(sequencemame
     Sequence.cpp

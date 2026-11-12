@@ -848,6 +848,18 @@ private:
     // Enables or disables trace mode (T1 flag)
     void setTraceFlag() { reg.sr.t1 = true; flags |= State::TRACING; }
     void clearTraceFlag() { reg.sr.t1 = false; flags &= ~State::TRACING; }
+
+    /* Trace on change of flow (T1T0 = 01, 68020 and later). Instructions that change the
+     * program counter or modify the status register call this function. A trace exception
+     * follows the instruction. If T1 is set, every instruction is traced anyway.
+     * STOP is not traced. RTE is traced if T0 was set before it started (UAE only does so
+     * when the T0, S or M bit changes). */
+    template <Core C> void changeOfFlow()
+    {
+        if constexpr (C == Core::C68020) {
+            if (reg.sr.t0 && !reg.sr.t1) flags |= State::TRACE_EXC;
+        }
+    }
     
     // Enables or disables trace mode (T0 flag)
     void setTrace0Flag() { reg.sr.t0 = true; }

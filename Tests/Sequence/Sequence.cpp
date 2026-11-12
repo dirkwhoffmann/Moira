@@ -136,6 +136,22 @@ Program generate()
         u16 x = u16(rnd(8)), y = u16(rnd(8)), q = u16(rnd(8));
         u16 imm = randomSR();
 
+        // Instructions that change the flow (68020 and later: they are traced when T0 is set)
+        if (formatWord && rnd(100) < 10) {
+
+            switch (rnd(7)) {
+
+                case 0: emit(0x6002); emit(0x4E71); break;                              // bra.s +2 (skips a nop)
+                case 1: emit(0x6600 | 2); emit(0x4E71); break;                          // bne.s +2
+                case 2: emit(0x6700 | 2); emit(0x4E71); break;                          // beq.s +2
+                case 3: emit(0x6102); emit(0x6002); emit(0x4E75); break;                // bsr.s sub ; bra.s over ; sub: rts
+                case 4: emit(0x4EFA); emit(0x0004); emit(0x4E71); break;                // jmp 4(pc)
+                case 5: emit(0x4EBA); emit(0x0004); emit(0x6002); emit(0x4E75); break;  // jsr sub(pc) ; bra.s over ; sub: rts
+                case 6: emit(0x51C8 | x); emit(0x0002); break;                          // dbf dx,next
+            }
+            continue;
+        }
+
         switch (rnd(40)) {
 
             case 0: case 1: emit(0x7000 | x << 9 | rnd(256)); break;                   // moveq
@@ -166,7 +182,10 @@ Program generate()
                 break;
             case 25: emit(0x4E60 | (y & 3)); emit(0x4E71); break;                      // move ay,usp
             case 26: emit(0x4E68 | (y & 3)); emit(0x4E71); break;                      // move usp,ay
-            case 27: emit(0x4E72); emit((imm & (0xA71F | (allowMaster ? 0x1000 : 0) | (allowT0 ? 0x4000 : 0))) | (userStop ? 0 : 0x2000)); break;                          // stop #imm
+            case 27:
+                // UAE traces a STOP that changes the T0, S or M bit, which contradicts its own comment (-1 is true)
+                if (allowT0) { emit(0x4E71); break; }
+                emit(0x4E72); emit((imm & (0xA71F | (allowMaster ? 0x1000 : 0) | (allowT0 ? 0x4000 : 0))) | (userStop ? 0 : 0x2000)); break;                          // stop #imm
             case 28: emit(0x4E40 | rnd(16)); break;                                    // trap #n
             case 29: emit(0x4E76); break;                                              // trapv
             case 30: if (noChk) emit(0x4E71); else emit(0x4180 | x << 9 | y); break;                                 // chk.w dy,dx

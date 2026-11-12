@@ -514,6 +514,7 @@ Moira::execFBcc(u16 opcode)
         // Take branch
         reg.pc = newpc;
         fullPrefetch<C, POLL>();
+        changeOfFlow<C>();
 
     } else {
 
@@ -557,6 +558,7 @@ Moira::execFDbcc(u16 opcode)
 
             reg.pc = newpc;
             fullPrefetch<C, POLL>();
+            changeOfFlow<C>();
             FINALIZE
             return;
         }

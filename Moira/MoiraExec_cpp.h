@@ -974,6 +974,9 @@ Moira::execAndiccr(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
+    // Trace on change of flow: T0 is sampled before the status register changes
+    changeOfFlow<C>();
+
     if constexpr (C == Core::C68000) {
 
         u32 src;
@@ -1016,6 +1019,9 @@ Moira::execAndisr(u16 opcode)
     AVAILABILITY(Core::C68000)
 
     SUPERVISOR_MODE_ONLY
+
+    // Trace on change of flow: T0 is sampled before the status register changes
+    changeOfFlow<C>();
 
     u32 src;
     if constexpr (EXACT_COMPAT) {
@@ -1072,6 +1078,8 @@ Moira::execBra(u16 opcode)
 
     fullPrefetchAt<C, POLL>(newpc);
 
+    changeOfFlow<C>();
+
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
     CYCLES_IP   (10, 10, 10,       10, 10, 10,       10, 10, 10)
@@ -1107,6 +1115,7 @@ Moira::execBcc(u16 opcode)
 
         // Take branch
         fullPrefetchAt<C, POLL>(newpc);
+        changeOfFlow<C>();
 
         //           00  10  20        00  10  20        00  10  20
         //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -1629,6 +1638,8 @@ Moira::execBsr(u16 opcode)
         fullPrefetch<C>();
     }
 
+
+    changeOfFlow<C>();
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -2496,6 +2507,7 @@ Moira::execDbcc(u16 opcode)
 
                     fullPrefetchAt<C, POLL>(newpc);
                 }
+                changeOfFlow<C>();
                 CYCLES_68000(10);
                 CYCLES_68020(6);
 
@@ -2781,6 +2793,8 @@ Moira::execJmp(u16 opcode)
         fullPrefetchAt<C, POLL>(ea);
     }
 
+    changeOfFlow<C>();
+
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
     CYCLES_AI   ( 0,  0,  0,        0,  0,  0,        8,  8,  4)
@@ -2910,6 +2924,8 @@ Moira::execJsr(u16 opcode)
             fullPrefetch<C>();
             break;
     }
+
+    changeOfFlow<C>();
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -4606,6 +4622,9 @@ Moira::execMoveToSr(u16 opcode)
 
     SUPERVISOR_MODE_ONLY
 
+    // Trace on change of flow: T0 is sampled before the status register changes
+    changeOfFlow<C>();
+
     int src = _____________xxx(opcode);
 
     u32 ea, data;
@@ -5847,6 +5866,8 @@ Moira::execRtd(u16 opcode)
     reg.pc = newpc;
     fullPrefetch<C, POLL>();
 
+    changeOfFlow<C>();
+
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
     CYCLES_IP   ( 0,  0,  0,        0,  0,  0,        0, 16, 10)
@@ -5858,6 +5879,9 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execRte(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
+
+    const bool t0AtStart = C == Core::C68020 && reg.sr.t0 && !reg.sr.t1;
+
     SUPERVISOR_MODE_ONLY
 
     u16 newsr = 0;
@@ -6186,6 +6210,9 @@ Moira::execRte(u16 opcode)
         fullPrefetch<C, POLL>();
     }
 
+    // The trace bits are sampled at the start of the instruction (not the ones that RTE loads)
+    if (t0AtStart) flags |= State::TRACE_EXC;
+
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
     CYCLES_IP   ( 0,  0,  0,        0,  0,  0,       20, 24, 20)
@@ -6199,6 +6226,8 @@ Moira::execRtm(u16 opcode)
     AVAILABILITY(Core::C68020)
 
     fullPrefetch<C, POLL>();
+
+    changeOfFlow<C>();
 
     CYCLES_68020(19)
 
@@ -6264,6 +6293,8 @@ Moira::execRtr(u16 opcode)
         fullPrefetch<C, POLL>();
     }
 
+    changeOfFlow<C>();
+
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
     CYCLES_IP   ( 0,  0,  0,        0,  0,  0,       20, 20, 14)
@@ -6310,6 +6341,8 @@ Moira::execRts(u16 opcode)
         reg.pc = newpc;
         fullPrefetch<C, POLL>();
     }
+
+    changeOfFlow<C>();
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
