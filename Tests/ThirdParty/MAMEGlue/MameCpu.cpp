@@ -42,6 +42,9 @@ public:
     using m68000_device::m_inst_substate;
     using m68000_device::m_decode_table;
     using m68000_device::m_post_run;
+    using m68000_device::m_next_state;
+    using m68000_device::m_nmi_pending;
+    using m68000_device::m_int_next_state;
     using m68000_device::m_sp;
     using m68000_device::m_isr;
     using m68000_device::m_handlers_f;
@@ -90,6 +93,42 @@ public:
         return false;
     }
 
+    /* Runs the core until the next instruction begins, but unlike runOne() it
+     * does not stop at a trace or interrupt exception. The run therefore covers
+     * the loaded instruction and all exceptions that are due after it. A STOP
+     * instruction that is not woken up starts itself again, which ends the run
+     * as well. The opcode of the first instruction is stored in firstIrd.
+     */
+    u16 firstIrd = 0;
+
+    bool runSeq()
+    {
+        int instructions = 0;
+
+        for (;;) {
+
+            if (m_icount > 0 && m_inst_substate)
+                (this->*(m_handlers_p[m_inst_state]))();
+
+            while (m_icount > 0) {
+
+                bool begins = m_inst_state >= S_first_instruction && m_inst_state == m_decode_table[m_ird];
+
+                if (begins) {
+
+                    if (++instructions == 2) return true;
+                    firstIrd = m_ird;
+                    m_ipc = m_pc - 2;
+                    m_irdi = m_ird;
+                }
+                (this->*(m_handlers_f[m_inst_state]))();
+            }
+
+            if (m_post_run) do_post_run(); else break;
+        }
+        return false;
+    }
+
     void prepare()
     {
         device_start();
@@ -107,8 +146,14 @@ public:
         m_inst_state = m_decode_table[m_ird];
         m_inst_substate = 0;
         m_post_run = 0;
+        // Forget a pending trace or interrupt of a previous run. The microcode arms the trace
+        // exception at the end of the previous instruction, so it has to be done here as well.
+        m_next_state = (m_sr & SR_T) ? S_TRACE : 0;
+        m_nmi_pending = 0;
         update_interrupt();
     }
+
+    void syncFlags() { m_isr = m_sr & SR_CCR; }
 
     void setSR(u16 sr)
     {
@@ -133,6 +178,7 @@ struct Cpu::Impl : public MameBus {
     int budget = 0;
     int hooks = 0;
     bool wasHalted = false;
+    bool wasStopped = false;
 
     Impl(Cpu &c) : cpu(c)
     {
@@ -204,6 +250,34 @@ Cpu::execute()
     return impl->budget - d.m_icount;
 }
 
+int
+Cpu::executeSequence()
+{
+    auto &d = impl->dev;
+
+    impl->cycles.clear();
+    impl->hooks = 0;
+    impl->budget = 100000;
+    d.m_icount = impl->budget;
+
+    // A STOP instruction that is not woken up begins again. If an interrupt is due at this point
+    // (the new mask lets it pass), the CPU takes it at once. MAME needs another round for that,
+    // because the microcode decides about the interrupt before STOP has loaded the new mask.
+    for (int round = 0; round < 3; round++) {
+
+        impl->wasHalted = !d.runSeq();
+
+        // The microcode of RESET clobbers the ALU flags (m_isr) without updating the status register.
+        // Instructions like TRAPV, which read the ALU flags directly, would see wrong values afterwards.
+        if (d.firstIrd == 0x4E70) d.syncFlags();
+
+        impl->wasStopped = !impl->wasHalted && d.firstIrd == 0x4E72 && d.m_ird == 0x4E72;
+        if (!impl->wasStopped || !d.m_int_next_state) break;
+    }
+
+    return impl->budget - d.m_icount;
+}
+
 State
 Cpu::state() const
 {
@@ -224,11 +298,14 @@ Cpu::state() const
 
 const std::vector<BusCycle> &Cpu::log() const { return impl->cycles; }
 bool Cpu::halted() const { return impl->wasHalted; }
+bool Cpu::stopped() const { return impl->wasStopped; }
 
 void
 Cpu::setIPL(int level)
 {
-    impl->dev.execute_set_input(level, ASSERT_LINE);
+    // Assert the line first, so a transition between two levels never passes level 0
+    if (level) impl->dev.execute_set_input(level, ASSERT_LINE);
+    for (int i = 1; i <= 7; i++) if (i != level) impl->dev.execute_set_input(i, CLEAR_LINE);
 }
 
 }

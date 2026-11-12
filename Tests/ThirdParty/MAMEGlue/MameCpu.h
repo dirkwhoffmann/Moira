@@ -81,6 +81,12 @@ public:
     /// Executes a single instruction (or exception sequence). Returns the elapsed cycles.
     int execute();
 
+    /// Executes an instruction together with the exceptions that are due after it (trace, interrupt, ...)
+    int executeSequence();
+
+    /// Indicates whether the CPU executed a STOP instruction that has not been woken up
+    bool stopped() const;
+
     /// Returns the register state at the end of the last instruction
     State state() const;
 

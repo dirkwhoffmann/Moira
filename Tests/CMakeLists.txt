@@ -17,6 +17,7 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 #               exceptionmame               Exception frames Moira vs. MAME
 #               exceptionuae                Exception frames Moira vs. UAE
 #   Sequence/   sequenceuae                 Interrupt, trace, STOP and RTE sequences Moira vs. UAE
+#               sequencemame                Interrupt, trace, STOP and RTE sequences Moira vs. MAME
 #   Random/     randommame                  Randomized tests Moira vs. MAME
 #               randommusashi               Randomized tests Moira vs. Musashi
 #               randomuae                   Randomized tests Moira vs. UAE
