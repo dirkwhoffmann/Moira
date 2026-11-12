@@ -31,6 +31,48 @@ bool ExceptionRunner::accepts(const sst::Test &t) const
     return !expectsAddressError(t);
 }
 
+// The 68020 decodes extension words with bit 8 set as full format (memory indirect addressing). The
+// 68000 test data contains such words by chance and the cores disagree on invalid combinations.
+static bool hasFullFormatExtension(const sst::State &t)
+{
+
+    u16 ird = t.prefetch[0];
+    auto indexed = [](u16 m, u16 r) { return m == 6 || (m == 7 && r == 3); };
+    auto word = [&](u32 addr) -> u16 {
+        u16 w = 0;
+        for (auto &[a, v] : t.ram) { if (a == addr) w |= u16(v) << 8; if (a == addr + 1) w |= v; }
+        return w;
+    };
+
+    // Position of the extension word: behind IRC, or behind the immediate data or register mask
+    int skip = 0;
+    switch (ird >> 12) {
+        case 0x0: skip = (ird & 0x0100) ? 0 : (ird & 0x0F00) == 0x0800 ? 1 : ((ird >> 6) & 3) == 2 ? 2 : 1; break;
+        case 0x4: if ((ird & 0xFB80) == 0x4880) skip = 1; break;
+    }
+    bool hasEA = true;
+    switch (ird >> 12) {
+        case 0x6: case 0x7: case 0xA: case 0xF: hasEA = false; break;
+        case 0xE: hasEA = ((ird >> 6) & 3) == 3; break;
+        case 0x4: hasEA = (ird & 0xFF80) != 0x4E00; break;
+    }
+    auto extAt = [&](int words) { return words == 0 ? t.prefetch[1] : word(t.pc + 2 * (words - 1)); };
+    bool full = false;
+    if (hasEA && indexed((ird >> 3) & 7, ird & 7)) full = extAt(skip) & 0x100;
+
+    // MOVE: the destination extension word follows the one of the source
+    if ((ird & 0xC000) == 0 && (ird & 0x3000) && ((ird >> 6) & 7) == 6) {
+        int srcWords = 0;
+        u16 m = (ird >> 3) & 7, r = ird & 7;
+        if (m == 5 || (m == 7 && (r == 0 || r == 2))) srcWords = 1;
+        else if (m == 6 || (m == 7 && r == 3)) srcWords = 1;
+        else if (m == 7 && r == 1) srcWords = 2;
+        else if (m == 7 && r == 4) srcWords = (ird >> 12) == 2 ? 2 : 1;
+        if (extAt(srcWords) & 0x100) full = true;
+    }
+    return full;
+}
+
 void ExceptionRunner::runTest(const sst::Test &t)
 {
     {
@@ -97,6 +139,7 @@ void ExceptionRunner::runTest(const sst::Test &t)
                 runCase(t, v.state, -1, 0, none, "halt", false, false, 0, v.name);
                 continue;
             }
+            if (model >= CPUModel::M68EC020 && hasFullFormatExtension(v.state)) continue;
             auto log = ref.cpu.log();
 
             // Did the instruction end in an address error? (vector 3 is read)
@@ -120,21 +163,7 @@ void ExceptionRunner::runTest(const sst::Test &t)
         }
     }
 
-    // The 68020 decodes extension words with bit 8 set as full format (memory indirect addressing). The
-    // 68000 test data contains such words by chance and the cores disagree on invalid combinations.
-    if (model >= CPUModel::M68EC020) {
-
-        u16 ird = t.initial.prefetch[0], ext = t.initial.prefetch[1];
-        auto indexed = [](u16 m, u16 r) { return m == 6 || (m == 7 && r == 3); };
-        bool hasEA = true;
-        switch (ird >> 12) {
-            case 0x6: case 0x7: case 0xA: case 0xF: hasEA = false; break;
-            case 0xE: hasEA = ((ird >> 6) & 3) == 3; break;
-            case 0x4: hasEA = (ird & 0xFF80) != 0x4E00; break;
-        }
-        bool moveDst = (ird & 0xC000) == 0 && (ird & 0x3000) && ((ird >> 6) & 7) == 6 && ((ird >> 3) & 7) < 5;
-        if (((hasEA && indexed((ird >> 3) & 7, ird & 7)) || moveDst) && (ext & 0x100)) { skipped++; return; }
-    }
+    if (model >= CPUModel::M68EC020 && hasFullFormatExtension(t.initial)) { skipped++; skipNote = "that use a 68020 full format extension word (the cores disagree on invalid ones)"; return; }
 
     // The second pass makes the SSP odd (user mode only), so that stacking an exception frame double-faults
     for (int pass = 0; pass < 2; pass++) {

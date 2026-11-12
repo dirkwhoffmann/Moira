@@ -641,6 +641,17 @@ Moira::processException(const std::exception &exc)
             // UAE decrements an address register after the access has succeeded
             if (savedRegValid && deferred) undoPredecrement(be->stackFrame.addr);
 
+            // UAE sets the condition codes of a MOVE before it writes the result
+            if (savedRegValid && deferred && busWriteAccess && (instrIrd >> 12) >= 1 && (instrIrd >> 12) <= 3) {
+
+                int bits = (instrIrd >> 12) == 1 ? 8 : (instrIrd >> 12) == 3 ? 16 : 32;
+                u32 mask = bits == 32 ? 0xFFFFFFFF : (1u << bits) - 1;
+                reg.sr.n = (busWriteData >> (bits - 1)) & 1;
+                reg.sr.z = (busWriteData & mask) == 0;
+                reg.sr.v = 0;
+                reg.sr.c = 0;
+            }
+
             // A bus error while processing a bus error is a double bus fault
             try { execBusError<C>(be->stackFrame); } catch (const BusError &) { halt(); }
             savedRegValid = false;

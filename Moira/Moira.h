@@ -116,6 +116,7 @@ protected:
 
     // The value of the most recent write access (reported in bus fault frames)
     u32 busWriteData = 0;
+    u8 splitHalf = 0;               // Set while the second half of a split long word access is performed (used by the tests)
     bool busWriteAccess = false;    // Is the current bus access a write? (68020 bus error frames)
     
     // Instruction set used by the disassembler

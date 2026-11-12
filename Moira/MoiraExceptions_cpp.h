@@ -494,7 +494,23 @@ Moira::execBusError(StackFrame frame, int delay)
         } else if (compat == Compatibility::UAE) {
 
             // UAE stacks the start of the instruction. Indexed operands move it behind the instruction words.
-            u32 pc = hasIndexedOperand(instrIrd) ? end : instrStart;
+            // The extension word of the destination of a MOVE is consumed after the source has been read
+            bool ix = hasIndexedOperand(instrIrd);
+            if (ix && (instrIrd & 0xC000) == 0 && (instrIrd & 0x3000)) {
+                auto indexed = [](u16 m, u16 r) { return m == 6 || (m == 7 && r == 3); };
+                if (!indexed((instrIrd >> 3) & 7, instrIrd & 7) && !busWriteAccess) ix = false;
+            }
+            u32 pc = ix ? end : instrStart;
+
+            // If the source of a MOVE is indexed, UAE stacks the address of the extension words of the destination
+            if (ix && (instrIrd & 0xC000) == 0 && (instrIrd & 0x3000) && busWriteAccess) {
+                auto indexed = [](u16 m, u16 r) { return m == 6 || (m == 7 && r == 3); };
+                u16 dm = (instrIrd >> 6) & 7, dr = (instrIrd >> 9) & 7;
+                if (indexed((instrIrd >> 3) & 7, instrIrd & 7)) {
+                    if (dm == 5 || (dm == 7 && dr == 0)) pc -= 2;
+                    else if (dm == 7 && dr == 1) pc -= 2;
+                }
+            }
             writeStackFrame1011UAE<C>(status, 2, pc, ssw, frame.addr, end, status & 0x2000);
 
             // Remember how to restart the instruction

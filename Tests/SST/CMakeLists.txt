@@ -104,9 +104,10 @@ target_include_directories(retrymoira PRIVATE ${SST_INCLUDE_DIRS})
 add_test(NAME ExceptionMame COMMAND exceptionmame --ignore ccr,cycles,nbit)
 add_test(NAME ReferenceMame COMMAND exceptionmame --check)
 add_test(NAME ExceptionUAE COMMAND exceptionuae --ignore ccr,cycles,nbit)
+add_test(NAME ExceptionUAE020 COMMAND exceptionuae --cpu 68020 --min 100)
 add_test(NAME RetryMoira030 COMMAND retrymoira --cpu 68030 --limit 100)
 add_test(NAME RetryMoira040 COMMAND retrymoira --cpu 68040 --limit 100)
 
 set_tests_properties(
-    ExceptionMame ReferenceMame ExceptionUAE RetryMoira030 RetryMoira040
+    ExceptionMame ReferenceMame ExceptionUAE ExceptionUAE020 RetryMoira030 RetryMoira040
     PROPERTIES LABELS "exception")

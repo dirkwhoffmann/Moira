@@ -45,18 +45,13 @@ public:
     bool counts() const { return !wide() || (readFC() & 3) != 2; }
 
     /* Counts a data access and tells if it has to fail. The core splits a long word that is not
-     * aligned to 4 into two word accesses. Both halves are one operand access for the reference.
+     * aligned to 4 into two word accesses. Both halves are one operand access for the reference (except at a 64K boundary).
      */
-    mutable bool lastValid = false, lastWrite = false;
-    mutable u32 lastAddr = 0;
     bool failAccess(bool write, u32 addr, int size) const
     {
         if (!logging || !counts()) return false;
-        if (fault.count == 0) lastValid = false;
-        bool cont = wide() && size == 2 && lastValid && lastWrite == write && lastAddr + 2 == addr && (getIRD() & 0xFB80) != 0x4880 && (getIRD() & 0xFFC0) != 0x4E40;
-        lastValid = !cont && wide() && size == 2;
-        lastWrite = write;
-        lastAddr = addr;
+        bool cont = wide() && size == 2 && splitHalf == 2 && (addr & 0xFFFF) != 0;    // UAE splits long words at the end of a 64K bank
+        const_cast<TestCPU *>(this)->splitHalf = 0;
         return cont ? false : const_cast<TestCPU *>(this)->fault.hit();
     }
 

@@ -135,6 +135,22 @@ struct UaeCore : RefCore {
         return strcmp(field, "frame.pc") && strcmp(field, "frame.dib") && strcmp(field, "frame.iib");
     }
 
+    /* UAE's 68020 frames are not accurate in the following places. Moira follows the recordings
+     * of a real A1200 or the manual instead.
+     *
+     * - The pipe stages (stage C and B) hold the next instruction word. Neither is modeled.
+     * - Address error frames (ae-fetch) stack a PC that differs from the A1200 recordings.
+     * - A fault while JSR pushes the return address stacks a stale value as PC.
+     */
+    bool knownDifference(const char *kind, u16 opcode, const std::string &field) const override
+    {
+        if (model < CPUModel::M68EC020) return false;
+        if (field == "frame.stagec" || field == "frame.stageb") return true;
+        if (!strcmp(kind, "ae-fetch") && field == "frame.pc") return true;
+        if (!strcmp(kind, "write") && field == "frame.pc" && (opcode & 0xFFC0) == 0x4E80) return true;
+        return false;
+    }
+
     // Only the 68000 is cycle exact and logs its bus cycles like MAME
     bool hasBusLog() const override { return model == CPUModel::M68000; }
 

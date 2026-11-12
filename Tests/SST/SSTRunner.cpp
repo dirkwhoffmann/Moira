@@ -316,7 +316,7 @@ void SSTRunner::runCase(const sst::Test &t, const sst::State &init, int k, int a
     for (int w : badWords) bad.insert(w < 0 ? "mem" : fields[w]);
     for (auto &f : badFields) bad.insert(f);
     for (auto &f : ignoredFields) bad.erase(f);
-    for (auto &b : bad) add(b);
+    for (auto &b : bad) if (!ref.core->knownDifference(kd, init.prefetch[0], b)) add(b);
 
     // Bus cycles
     auto mlog = ref.cpu.log();

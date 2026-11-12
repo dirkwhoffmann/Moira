@@ -3352,9 +3352,11 @@ Moira::execMove4(u16 opcode)
 
     } else {
 
+        // UAE (68020) decrements the register before it writes
+        if constexpr (compat == Compatibility::UAE && C == Core::C68020) updateAn<Mode::PD, S>(dst);
         writeM<C, Mode::PD, S, REVERSE>(ea, data);
     }
-    updateAn<Mode::PD, S>(dst);
+    if constexpr (!(compat == Compatibility::UAE && C == Core::C68020)) updateAn<Mode::PD, S>(dst);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -3993,7 +3995,7 @@ Moira::execMovemEaRg(u16 opcode)
     }
 
     // MAME does not read ahead, it reads one word too many at the end. UAE neither reads ahead nor too far.
-    if constexpr (S == Long && compat != Compatibility::MAME && !(compat == Compatibility::UAE && C == Core::C68000)) (void)read<C, AddrSpace::DATA, Word>(ea);
+    if constexpr (S == Long && compat != Compatibility::MAME && !(compat == Compatibility::UAE)) (void)read<C, AddrSpace::DATA, Word>(ea);
 
     if constexpr (M == Mode(3)) {     // (An)+
 
@@ -4109,7 +4111,7 @@ Moira::execMovemRgEa(u16 opcode)
 
             // Write register contents into memory
             ea -= S;
-            if constexpr (C == Core::C68020 && !(compat == Compatibility::MUSASHI)) writeA(dst, ea);
+            if constexpr (C == Core::C68020 && !(compat == Compatibility::MUSASHI) && !(compat == Compatibility::UAE)) writeA(dst, ea);
 
             // UAE stores the initial value minus the operand size
             u32 value = reg.r[i];
@@ -4119,7 +4121,7 @@ Moira::execMovemRgEa(u16 opcode)
             writeM<C, M, S, (((compat == Compatibility::MUSASHI) || (compat == Compatibility::UAE) || (EXACT_COMPAT)) ? REVERSE : 0) | AE_INC_PC>(ea, value);
             cnt++;
         }
-        if constexpr (C != Core::C68020 || (compat == Compatibility::MUSASHI)) writeA(dst, ea);
+        if constexpr (C != Core::C68020 || (compat == Compatibility::MUSASHI) || (compat == Compatibility::UAE)) writeA(dst, ea);
 
     } else {
 
@@ -4452,11 +4454,14 @@ Moira::execMoveCcrEa(u16 opcode)
         throw AddressError(makeFrame<AE_WRITE|AE_INC_PC>(ea));
     }
 
+    // UAE (68020) advances the register before it writes
+    if constexpr (compat == Compatibility::UAE && C == Core::C68020) updateAnPI<M, S>(dst);
+
     // Write to effective address
     writeM<C, M, S, POLL>(ea, val);
 
     // Emulate (An)+ register modification
-    updateAnPI<M, S>(dst);
+    if constexpr (!(compat == Compatibility::UAE && C == Core::C68020)) updateAnPI<M, S>(dst);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -4565,11 +4570,14 @@ Moira::execMoveSrEa(u16 opcode)
             throw AddressError(makeFrame<AE_WRITE>(ea));
         }
 
+        // UAE (68020) advances the register before it writes
+        if constexpr (compat == Compatibility::UAE && C == Core::C68020) updateAnPI<M, S>(dst);
+
         // Write to effective address
         writeM<C, M, S, POLL>(ea, val);
 
         // Emulate (An)+ register modification
-        updateAnPI<M, S>(dst);
+        if constexpr (!(compat == Compatibility::UAE && C == Core::C68020)) updateAnPI<M, S>(dst);
 
         /*
         writeOp<C, M, S, POLL>(dst, getSR());
@@ -5968,30 +5976,52 @@ Moira::execRte(u16 opcode)
         {
             while (1) {
 
-                u16 format = (u16)(read<C, AddrSpace::DATA, Word>(reg.sp + 6) >> 12);
+                /* UAE reads the status register, the program counter and the format word, in this order.
+                 * The values are kept, so that the frame handlers below do not read them a second time.
+                 */
+                bool cached = false;
+                u16 cSr = 0;
+                u32 cPc = 0;
+                u16 format;
+
+                if constexpr (compat == Compatibility::UAE) {
+
+                    cSr = (u16)read<C, AddrSpace::DATA, Word>(reg.sp);
+                    cPc = read<C, AddrSpace::DATA, Long>(reg.sp + 2);
+                    format = (u16)(read<C, AddrSpace::DATA, Word>(reg.sp + 6) >> 12);
+                    cached = true;
+
+                } else {
+
+                    format = (u16)(read<C, AddrSpace::DATA, Word>(reg.sp + 6) >> 12);
+                }
+
+                auto popSr = [&]() -> u16 { if (cached) { reg.sp += 2; return cSr; } return (u16)pop<C, Word>(); };
+                auto popPc = [&]() -> u32 { if (cached) { reg.sp += 4; return cPc; } return pop<C, Long>(); };
+                auto popFmt = [&]() { if (cached) { reg.sp += 2; return; } (void)pop<C, Word>(); };
 
                 if (format == 0b000) {  // Standard frame
 
                     // Status register
-                    newsr = (u16)pop<C, Word>();
+                    newsr = popSr();
                     
                     // Program counter
-                    newpc = pop<C, Long>();
+                    newpc = popPc();
                     
                     //
-                    (void)pop<C, Word>();
+                    popFmt();
                     break;
 
                 } else if (format == 0b001) {  // Throwaway frame
 
                     // Status register
-                    newsr = (u16)pop<C, Word>();
+                    newsr = popSr();
                     
                     //
-                    (void)pop<C, Long>();
+                    (void)popPc();
                     
                     //
-                    (void)pop<C, Word>();
+                    popFmt();
                     
                     setSR(newsr);
                     continue;
@@ -5999,13 +6029,13 @@ Moira::execRte(u16 opcode)
                 } else if (format == 0b010) {  // Trap
 
                     // Status register
-                    newsr = (u16)pop<C, Word>();
+                    newsr = popSr();
                     
                     // Program counter
-                    newpc = pop<C, Long>();
+                    newpc = popPc();
                     
                     //
-                    (void)pop<C, Word>();
+                    popFmt();
                     
                     //
                     (void)pop<C, Long>();
@@ -6014,9 +6044,9 @@ Moira::execRte(u16 opcode)
                 } else if (format == 0b0111 && cpuModel >= CPUModel::M68EC040) {  // Access error frame (68040)
 
                     // Status register, program counter, format and vector offset
-                    newsr = (u16)pop<C, Word>();
-                    newpc = pop<C, Long>();
-                    (void)pop<C, Word>();
+                    newsr = popSr();
+                    newpc = popPc();
+                    popFmt();
 
                     // Effective address, special status word, write-back data
                     for (int i = 0; i < 13; i++) (void)pop<C, Long>();
@@ -6025,9 +6055,9 @@ Moira::execRte(u16 opcode)
                 } else if (format == 0b1010) {  // Short bus fault frame
 
                     // Status register, program counter, format and vector offset
-                    newsr = (u16)pop<C, Word>();
-                    newpc = pop<C, Long>();
-                    (void)pop<C, Word>();
+                    newsr = popSr();
+                    newpc = popPc();
+                    popFmt();
 
                     // Special status word, instruction pipe, fault address, internal registers
                     for (int i = 0; i < 6; i++) (void)pop<C, Long>();
@@ -6038,10 +6068,10 @@ Moira::execRte(u16 opcode)
                     u32 frameBase = reg.sp;
 
                     // Status register
-                    newsr = (u16)pop<C, Word>();
+                    newsr = popSr();
 
                     // Program counter
-                    newpc = pop<C, Long>();
+                    newpc = popPc();
 
                     // If the handler has not touched the frame, restart the instruction
                     if (restart.valid && frameBase == restart.frameSp && newsr == restart.frameSr && newpc == restart.framePC) {
@@ -6054,7 +6084,7 @@ Moira::execRte(u16 opcode)
                     restart.valid = false;
 
                     // 1011 | Vector offset
-                    (void)pop<C, Word>();
+                    popFmt();
 
                     // Internal register
                     (void)pop<C, Word>();

@@ -59,6 +59,10 @@ struct RefCore {
     // The fields are named "frame.pc", "frame.dib" (data input buffer), "frame.iib" (instruction input buffer), etc.
     virtual bool reliableFrameField(const char *field) const { return true; }
 
+    // Differences that are understood and not caused by Moira (see the implementation). The kind is the
+    // failing access (read, write, ae-fetch, ...). Used by the comparison, and never to hide an unknown difference.
+    virtual bool knownDifference(const char *kind, u16 opcode, const std::string &field) const { return false; }
+
     // Test cases the core cannot execute
     virtual bool unsupported(const sst::Test &t) const { return false; }
     virtual const char *unsupportedNote() const { return ""; }

@@ -535,7 +535,9 @@ Moira::read2x16(u32 lo, u32 hi)
     u32 result = read16(lo) << 16;
     SYNC(4);
     if constexpr (F & POLL) POLL_IPL;
+    splitHalf = 2;
     result |= read16(hi);
+    splitHalf = 0;
     SYNC(2);
     return result;
 }
@@ -558,7 +560,9 @@ Moira::write2x16(u32 lo, u32 hi, u32 valHi, u32 valLo)
         SYNC(4);
         if constexpr (F & POLL) POLL_IPL;
         if constexpr (compat == Compatibility::MAME && C == Core::C68000) irdKeep = false;   // MAME replaces the IRD when the last bus cycle starts (UAE not before the instruction ends)
+        splitHalf = 2;
         write16(hi, u16(valLo));
+        splitHalf = 0;
         SYNC(2);
     }
 }
