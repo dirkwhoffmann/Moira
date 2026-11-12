@@ -46,7 +46,7 @@ Guards::~Guards()
 Guard *
 Guards::guardNr(isize nr) const
 {
-    return nr < count ? &guards[nr] : nullptr;
+    return nr >= 0 && nr < count ? &guards[nr] : nullptr;
 }
 
 Guard *
@@ -62,7 +62,7 @@ Guards::guardAt(u32 addr) const
 std::optional<u32>
 Guards::guardAddr(isize nr) const
 {
-    if (nr < count) return guards[nr].addr;
+    if (nr >= 0 && nr < count) return guards[nr].addr;
     return { };
 }
 
@@ -90,7 +90,7 @@ Guards::setAt(u32 addr, isize ignores)
 void
 Guards::remove(isize nr)
 {
-    if (nr < count) removeAt(guards[nr].addr);
+    if (nr >= 0 && nr < count) removeAt(guards[nr].addr);
 }
 
 void
@@ -111,7 +111,7 @@ Guards::removeAt(u32 addr)
 void
 Guards::replace(isize nr, u32 addr)
 {
-    if (nr >= count || isSetAt(addr)) return;
+    if (nr < 0 || nr >= count || isSetAt(addr)) return;
 
     guards[nr].addr = addr;
 }

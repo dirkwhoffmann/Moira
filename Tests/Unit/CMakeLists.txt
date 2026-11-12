@@ -20,6 +20,7 @@ add_executable(unit
     FpuRefTests.cpp
     MmuExecTests.cpp
     BusErrorTests.cpp
+    DebuggerTests.cpp
     StackFrameTests.cpp
     ../Common/Common.cpp)
     

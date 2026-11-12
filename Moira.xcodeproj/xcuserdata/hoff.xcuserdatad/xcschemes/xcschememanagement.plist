@@ -12,7 +12,7 @@
 		<key>MAMERef.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>13</integer>
+			<integer>14</integer>
 		</dict>
 		<key>Moira (Amiberry).xcscheme_^#shared#^_</key>
 		<dict>
@@ -32,17 +32,17 @@
 		<key>MoiraMAME.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>14</integer>
+			<integer>15</integer>
 		</dict>
 		<key>MoiraMAMENoAE.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>15</integer>
+			<integer>16</integer>
 		</dict>
 		<key>MoiraMusashi.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>16</integer>
+			<integer>17</integer>
 		</dict>
 		<key>MoiraSoftfloat.xcscheme_^#shared#^_</key>
 		<dict>
@@ -52,12 +52,12 @@
 		<key>MoiraUAE.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>17</integer>
+			<integer>18</integer>
 		</dict>
 		<key>MoiraUAEExc.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>18</integer>
+			<integer>19</integer>
 		</dict>
 		<key>RunnerMusashi.xcscheme_^#shared#^_</key>
 		<dict>
@@ -162,17 +162,17 @@
 		<key>retrymoira.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>19</integer>
+			<integer>20</integer>
 		</dict>
 		<key>sequencemame.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>20</integer>
+			<integer>21</integer>
 		</dict>
 		<key>sequenceuae.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>21</integer>
+			<integer>13</integer>
 		</dict>
 		<key>singleStepRunner.xcscheme_^#shared#^_</key>
 		<dict>

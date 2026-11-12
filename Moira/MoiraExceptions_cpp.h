@@ -706,8 +706,12 @@ Moira::execException(M68kException exc, int nr)
             // Trace exceptions are taken at an instruction boundary
             reg.pc = reg.pc0;
 
-            // Write stack frame
-            writeStackFrame0000<C>(status, reg.pc, vector);
+            // Write stack frame (the 68020 stacks the address of the traced instruction)
+            if constexpr (C == Core::C68020) {
+                writeStackFrame0010<C>(status, reg.pc, instrStart, vector);
+            } else {
+                writeStackFrame0000<C>(status, reg.pc, vector);
+            }
 
             // Branch to exception handler
             jumpToVector<C>(vector);

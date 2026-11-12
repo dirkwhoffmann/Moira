@@ -90,7 +90,7 @@ protected:
     // IRD of the executing instruction after a prefetch that was followed by more cycles (MAME mode)
     u16 irdOld = 0;
 
-    // Start address and opcode of the executing instruction (used by the 68020 exception frames)
+    // Start address of the executing instruction (used by the 68020 exception frames) and its opcode (UAE mode)
     u32 instrStart = 0;
     u16 instrIrd = 0;
 

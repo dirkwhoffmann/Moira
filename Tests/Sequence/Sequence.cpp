@@ -99,12 +99,19 @@ public:
 
 u32 rnd(u32 n) { return n ? u32(portableRand()) % n : 0; }
 
+bool allowMaster = false;   // Generate SR values with the M bit (68020 and later)
+bool allowT0 = false;       // Generate SR values with the T0 bit (68020 and later)
+bool noCpid0 = false;       // No F-line opcodes for coprocessor 0 (68030 and later: PMMU, see below)
+bool formatWord = false;    // Push a format word below the RTE frames (68010 and later read it)
+
 u16 randomSR()
 {
     u16 sr = u16(rnd(32));                          // CCR
     sr |= u16(rnd(8) << 8);                         // Interrupt mask
     if (rnd(100) < 75) sr |= 0x2000;                // Supervisor mode
     if (rnd(100) < 30) sr |= 0x8000;                // Trace bit
+    if (allowMaster && rnd(100) < 40) sr |= 0x1000; // Master bit (68020 and later)
+    if (allowT0 && rnd(100) < 25) sr |= 0x4000;     // Trace on change of flow (68020 and later)
     return sr;
 }
 
@@ -149,13 +156,17 @@ Program generate()
             case 17: emit(0x40C0 | x); break;                                          // move sr,dx
             case 18: emit(0x44C0 | x); break;                                          // move dx,ccr
             case 19: case 20: emit(0x46FC); emit(imm); break;                          // move #imm,sr
-            case 21: emit(0x007C); emit(imm & 0xA71F); break;                          // ori #imm,sr
+            case 21: emit(0x007C); emit(imm & (0xA71F | (allowMaster ? 0x1000 : 0) | (allowT0 ? 0x4000 : 0))); break;                          // ori #imm,sr
             case 22: emit(0x027C); emit(imm | 0x00FF); break;                          // andi #imm,sr
-            case 23: emit(0x0A7C); emit(imm & 0x871F); break;                          // eori #imm,sr
-            case 24: emit(0x46C0 | x); break;                                          // move dx,sr
+            case 23: emit(0x0A7C); emit(imm & (0x871F | (allowMaster ? 0x1000 : 0) | (allowT0 ? 0x4000 : 0))); break;                          // eori #imm,sr
+            case 24:                                                                   // move dx,sr
+                // The registers hold random bits. The M and T0 bits (68020 and later) are only
+                // generated on request, so those models load the SR from an immediate value.
+                if (formatWord) { emit(0x46FC); emit(imm); } else emit(0x46C0 | x);
+                break;
             case 25: emit(0x4E60 | (y & 3)); emit(0x4E71); break;                      // move ay,usp
             case 26: emit(0x4E68 | (y & 3)); emit(0x4E71); break;                      // move usp,ay
-            case 27: emit(0x4E72); emit((imm & 0xA71F) | (userStop ? 0 : 0x2000)); break;                          // stop #imm
+            case 27: emit(0x4E72); emit((imm & (0xA71F | (allowMaster ? 0x1000 : 0) | (allowT0 ? 0x4000 : 0))) | (userStop ? 0 : 0x2000)); break;                          // stop #imm
             case 28: emit(0x4E40 | rnd(16)); break;                                    // trap #n
             case 29: emit(0x4E76); break;                                              // trapv
             case 30: if (noChk) emit(0x4E71); else emit(0x4180 | x << 9 | y); break;                                 // chk.w dy,dx
@@ -163,10 +174,20 @@ Program generate()
             case 32: emit(0x81C0 | x << 9 | y); break;                                 // divs.w dy,dx
             case 33: emit(0x4AFC); emit(0x4E71); break;                                // illegal
             case 34: emit(0xA000 | rnd(0x1000)); emit(0x4E71); break;                  // line A
-            case 35: emit(0xF000 | rnd(0x1000)); emit(0x4E71); break;                  // line F
+            case 35:                                                                   // line F
+            {
+                /* The PMMU of the 68030 and later is coprocessor 0. Malformed PMMU opcodes raise the
+                 * illegal instruction exception in Moira and the line F exception in UAE (UAE's op_illg).
+                 * Which one is right is not known, so they are left out. */
+                u16 f = u16(rnd(0x1000));
+                if (noCpid0 && !(f & 0x0E00)) f |= u16((1 + rnd(7)) << 9);
+                emit(0xF000 | f); emit(0x4E71);
+                break;
+            }
             case 36: emit(0x4E70); emit(0x4E71); break;                                // reset
             case 37: case 38: case 39:                                                 // rte with a frame
             {
+                if (formatWord) emit(0x4267);                                           // clr.w -(a7)  (format 0)
                 emit(0x487A); emit(10);                                                 // pea next(pc)
                 emit(0x3F3C); emit(imm);                                                // move.w #imm,-(a7)
                 emit(0x4E73); emit(0x4E71);                                             // rte
@@ -226,11 +247,13 @@ int sequence::run(int argc, char **argv, Reference &ref)
     args.integer("--seed", seed, "Seed of the random number generator (default: derived from the date)");
     args.integer("--programs", programs, "Number of programs per CPU model");
     args.integer("--steps", maxSteps, "Maximum number of steps per program");
-    args.list("--cpu", cpus, "CPU model (68000, 68010; default: all models the reference supports)", "<model>");
+    args.list("--cpu", cpus, "CPU model (68000, 68010, 68020, ...; default: 68000 and 68010)", "<model>");
     args.integer("-v", verbose, "Print the first <n> failures with the program");
     args.number("--min", minPercent, "Exit with an error if less than <x> percent of the programs match");
     args.integer("--program", only, "Run only the program with this number (and print it with -v)");
     args.flag("--userstop", userStop, "Let STOP clear the supervisor bit (the CPU then stays stopped in user mode until an interrupt wakes it)");
+    args.flag("--master", allowMaster, "Generate status registers with the M bit (68020 and later)");
+    args.flag("--t0", allowT0, "Generate status registers with the T0 bit, i.e. trace on change of flow (68020 and later)");
     args.flag("--nochk", noChk, "Do not generate CHK");
     args.flag("--noack", noAck, "Never drop the IPL pins when an interrupt is taken");
     if (!args.parse()) return 1;
@@ -251,10 +274,11 @@ int sequence::run(int argc, char **argv, Reference &ref)
 
     for (auto &name : cpus) {
 
-        CPUModel model;
-        if (name == "68000") model = CPUModel::M68000;
-        else if (name == "68010") model = CPUModel::M68010;
-        else { printf("Unsupported model %s\n", name.c_str()); return 1; }
+        auto parsed = common::parseModel(name.c_str());
+        if (!parsed) { printf("Unsupported model %s\n", name.c_str()); return 1; }
+        CPUModel model = *parsed;
+        formatWord = model >= CPUModel::M68EC020;
+        noCpid0 = model >= CPUModel::M68EC030;
         if (!ref.init(name)) { printf("Unsupported model %s\n", name.c_str()); return 1; }
 
         common::portableSrand(unsigned(seed));

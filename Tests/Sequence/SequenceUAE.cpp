@@ -41,6 +41,9 @@ public:
     {
         if (cpu == "68000") model = uaecpu::Cpu::M68000;
         else if (cpu == "68010") model = uaecpu::Cpu::M68010;
+        else if (cpu == "68020") model = uaecpu::Cpu::M68020;
+        else if (cpu == "68030") model = uaecpu::Cpu::M68030;
+        else if (cpu == "68040") model = uaecpu::Cpu::M68040;
         else return false;
         return true;
     }
@@ -57,7 +60,9 @@ public:
         s.sr = u16(prog.sr);
         s.isp = SSP; s.usp = USP; s.pc = PROG;
         uaecpu::setState(s);
-        uaecpu::setPrefetch(u16(mem[PROG] << 8 | mem[PROG + 1]), u16(mem[PROG + 2] << 8 | mem[PROG + 3]));
+        // The 68020 and later fetch their instructions from memory
+        if (model == uaecpu::Cpu::M68000 || model == uaecpu::Cpu::M68010)
+            uaecpu::setPrefetch(u16(mem[PROG] << 8 | mem[PROG + 1]), u16(mem[PROG + 2] << 8 | mem[PROG + 3]));
         uaecpu::setIPL(0);
     }
 
