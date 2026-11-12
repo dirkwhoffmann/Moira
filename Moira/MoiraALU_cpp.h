@@ -1364,8 +1364,9 @@ Moira::setUndefinedDIVS(i32 dividend, i16 divisor)
     // The 68040 sets V and clears C. N and Z stay unchanged.
     if (cpuModel >= CPUModel::M68EC040) { reg.sr.c = 0; return; }
 
-    auto uDividend = u32(std::abs(dividend));
-    auto uDivisor = u16(std::abs(divisor));
+    // Negate in unsigned arithmetic (std::abs(INT32_MIN) is undefined)
+    auto uDividend = dividend < 0 ? 0u - u32(dividend) : u32(dividend);
+    auto uDivisor = u16(divisor < 0 ? 0u - u32(i32(divisor)) : u32(divisor));
 
     switch (C) {
 

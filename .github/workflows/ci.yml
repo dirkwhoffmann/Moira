@@ -4,6 +4,7 @@ name: CI
 # exception and example tests. The disassembler tests (dasm) take 30+ minutes and
 # run on master, nightly, and on request (workflow_dispatch). Debug builds only run
 # the fast tests (unit, smoke, example), because the other tools are too slow unoptimized.
+# A separate job builds with AddressSanitizer and UBSan (-DMOIRA_SANITIZE=address,undefined).
 
 on:
   push:
@@ -61,6 +62,30 @@ jobs:
         working-directory: build
         shell: bash
         run: ctest -C ${{ matrix.build_type }} -j 4 --output-on-failure ${{ steps.select.outputs.args }}
+
+  sanitizers:
+    name: Sanitizers (ASan + UBSan)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: >
+          cmake -B build -S .
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          -DCMAKE_C_COMPILER=clang
+          -DCMAKE_CXX_COMPILER=clang++
+          -DMOIRA_SANITIZE=address,undefined
+
+      - name: Build
+        run: cmake --build build --parallel 4
+
+      # The long-running reference comparisons (SST, ExceptionMame/UAE, Dasm) are too slow
+      # with sanitizers. The rest covers the unit, smoke, retry, sequence and random code paths.
+      - name: Test
+        working-directory: build
+        run: ctest -j 4 --output-on-failure -E "Dasm|SSTMame|SSTUAE|SSTMusashi|ExceptionMame|ExceptionUAE$"
 
   mingw:
     name: MinGW ${{ matrix.env }} (${{ matrix.build_type }})

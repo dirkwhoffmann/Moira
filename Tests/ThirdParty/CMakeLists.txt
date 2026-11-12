@@ -7,6 +7,12 @@
 
 # Third-party code that is used by the tests
 
+# Sanitizer builds: the reference implementations contain undefined behavior (e.g. oversized
+# shifts in UAE's softfloat) that is not ours to fix. Keep ASan, drop UBSan for this code.
+if(MOIRA_SANITIZE MATCHES "undefined")
+    add_compile_options(-fno-sanitize=undefined)
+endif()
+
 #
 # Binutils (disassembler reference)
 #

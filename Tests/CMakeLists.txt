@@ -66,8 +66,7 @@ target_compile_definitions(moiraMAME PUBLIC
     MOIRA_PRECISE_TIMING=true
 )
 
-# MAME compatibility without address errors (the random runner skips them, covered by the
-# exception tests, and runs much faster without them)
+# MAME compatibility without address errors (the random runner runs much faster without them)
 
 add_library(moiraMAMENoAE STATIC ${MOIRA_SOURCES})
 target_include_directories(moiraMAMENoAE PUBLIC ${MOIRA_DIR})
