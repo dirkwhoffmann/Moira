@@ -1995,11 +1995,22 @@ Moira::execClr(u16 opcode)
         int dst = _____________xxx(opcode);
 
         u32 ea, data;
-        readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
+        if constexpr (C == Core::C68020 && !isRegMode(M)) {
+
+            // The 68020 does not read the operand before it clears it
+            ea = computeEA<C, M, S>(dst);
+            updateAnPD<M, S>(dst);
+            updateAnPI<M, S>(dst);
+            data = 0;
+
+        } else {
+
+            readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
+        }
 
         // MAME clears the register (lower word) before the prefetch
         if constexpr (EXACT_COMPAT && isRegMode(M)) writeD<S == Long ? Word : S>(dst, 0);
-        if constexpr (EXACT_COMPAT) { reg.sr.n = 0; reg.sr.z = 1; reg.sr.v = 0; reg.sr.c = 0; }   // MAME sets the flags first
+        if constexpr (EXACT_COMPAT || (compat == Compatibility::UAE && C == Core::C68020)) { reg.sr.n = 0; reg.sr.z = 1; reg.sr.v = 0; reg.sr.c = 0; }   // MAME and UAE (68020) set the flags first
         prefetch<C, POLL | ((!isRegMode(M) || S == Long) ? KEEP_IRD : 0)>();
 
         if constexpr (S == Long && isRegMode(M)) SYNC(2);
@@ -5843,6 +5854,7 @@ Moira::execRte(u16 opcode)
 
     u16 newsr = 0;
     u32 newpc = 0;
+    bool rollback = false;
 
     switch (C) {
 
@@ -6023,11 +6035,23 @@ Moira::execRte(u16 opcode)
 
                 } else if (format == 0b1011) {
 
+                    u32 frameBase = reg.sp;
+
                     // Status register
                     newsr = (u16)pop<C, Word>();
 
                     // Program counter
                     newpc = pop<C, Long>();
+
+                    // If the handler has not touched the frame, restart the instruction
+                    if (restart.valid && frameBase == restart.frameSp && newsr == restart.frameSr && newpc == restart.framePC) {
+
+                        newpc = restart.pc;
+                        newsr = restart.preSr;
+
+                        rollback = true;
+                    }
+                    restart.valid = false;
 
                     // 1011 | Vector offset
                     (void)pop<C, Word>();
@@ -6095,6 +6119,19 @@ Moira::execRte(u16 opcode)
             }
             break;
         }
+    }
+
+    // Roll back the registers that the restarted instruction has modified
+    if (rollback) {
+        for (int i = 0; i < 15; i++) {
+            if (reg.r[i] == restart.fault.r[i]) reg.r[i] = restart.pre.r[i];
+        }
+
+        // The stack pointers (the instruction may have switched modes)
+        u32 preUsp = restart.pre.sr.s ? restart.pre.usp : restart.pre.sp;
+        u32 preIsp = restart.pre.sr.s ? restart.pre.sp : restart.pre.isp;
+        if (reg.sp == restart.entrySsp) reg.sp = preIsp;
+        if (reg.usp == restart.entryUsp) reg.usp = preUsp;
     }
 
     setSR(newsr);
@@ -6663,9 +6700,9 @@ Moira::execUnlk(u16 opcode)
 
     // Update address register
     u32 ea, data;
-    if constexpr (EXACT_COMPAT && C == Core::C68000) {
+    if constexpr ((EXACT_COMPAT && C == Core::C68000) || (compat == Compatibility::UAE && C == Core::C68020)) {
 
-        // MAME leaves the stack pointer alone if the read fails
+        // MAME and UAE leave the stack pointer alone if the read fails
         try { readOp<C, Mode::AI, Long, AE_DATA|AE_INC_PC|POLL>(7, &ea, &data); }
         catch (BusError &) { reg.sp = oldsp; throw; }
 

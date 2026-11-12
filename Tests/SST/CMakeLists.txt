@@ -19,12 +19,17 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 #
 #   exception<ref> Differential exception test. Lets exceptions hit in the
 #                  middle of instructions.
+#
+#   retrymoira     Bus error retry test (68030/68040). Faults every bus access,
+#                  returns with RTE and checks that the retried instruction
+#                  gives the same result as an undisturbed run.
 # -----------------------------------------------------------------------------
 
 set(SST_SRC
     SSTRunner.cpp
     PlainRunner.cpp
     ExceptionRunner.cpp
+    RetryRunner.cpp
     ../Common/SSTFile.cpp
     ../Common/Common.cpp)
 
@@ -89,10 +94,19 @@ add_executable(exceptionuae
 target_link_libraries(exceptionuae PRIVATE moiraUAEExc mameref uaecpu)
 target_include_directories(exceptionuae PRIVATE ${SST_INCLUDE_DIRS})
 
+add_executable(retrymoira
+    RetryMoira.cpp
+    ${SST_SRC})
+
+target_link_libraries(retrymoira PRIVATE moiraUAEExc mameref uaecpu)
+target_include_directories(retrymoira PRIVATE ${SST_INCLUDE_DIRS})
+
 add_test(NAME ExceptionMame COMMAND exceptionmame --ignore ccr,cycles,nbit)
 add_test(NAME ReferenceMame COMMAND exceptionmame --check)
 add_test(NAME ExceptionUAE COMMAND exceptionuae --ignore ccr,cycles,nbit)
+add_test(NAME RetryMoira030 COMMAND retrymoira --cpu 68030 --limit 100)
+add_test(NAME RetryMoira040 COMMAND retrymoira --cpu 68040 --limit 100)
 
 set_tests_properties(
-    ExceptionMame ReferenceMame ExceptionUAE
+    ExceptionMame ReferenceMame ExceptionUAE RetryMoira030 RetryMoira040
     PROPERTIES LABELS "exception")

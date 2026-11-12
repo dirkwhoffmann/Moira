@@ -7,6 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		50FA0000000000000000034A /* RetryRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FA00000000000000000340 /* RetryRunner.cpp */; };
+		50FA0000000000000000034B /* RetryMoira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FA00000000000000000341 /* RetryMoira.cpp */; };
+		50FA0000000000000000034C /* SSTFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F100000000000000000021 /* SSTFile.cpp */; };
+		50FA0000000000000000034D /* SSTRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000002 /* SSTRunner.cpp */; };
+		50FA0000000000000000034E /* PlainRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000003 /* PlainRunner.cpp */; };
+		50FA0000000000000000034F /* ExceptionRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000004 /* ExceptionRunner.cpp */; };
+		50FA00000000000000000350 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50FA00000000000000000351 /* libMAMERef.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50F500000000000000000002 /* libMAMERef.a */; };
+		50FA00000000000000000352 /* libUAECpu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50A200000000000000000001 /* libUAECpu.a */; };
+		50FA00000000000000000353 /* libMoiraUAEExc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50FA00000000000000000114 /* libMoiraUAEExc.a */; };
 		50FA00000000000000000323 /* Sequence.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FA00000000000000000320 /* Sequence.cpp */; };
 		50FA00000000000000000324 /* Sequence.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FA00000000000000000320 /* Sequence.cpp */; };
 		50FA00000000000000000325 /* SequenceMame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FA00000000000000000322 /* SequenceMame.cpp */; };
@@ -589,6 +599,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		50FA00000000000000000340 /* RetryRunner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = RetryRunner.cpp; sourceTree = "<group>"; };
+		50FA00000000000000000341 /* RetryMoira.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = RetryMoira.cpp; sourceTree = "<group>"; };
+		50FA00000000000000000342 /* retrymoira */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = retrymoira; sourceTree = BUILT_PRODUCTS_DIR; };
 		50FA00000000000000000320 /* Sequence.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Sequence.cpp; sourceTree = "<group>"; };
 		50FA00000000000000000321 /* Sequence.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sequence.h; sourceTree = "<group>"; };
 		50FA00000000000000000322 /* SequenceMame.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SequenceMame.cpp; sourceTree = "<group>"; };
@@ -873,6 +886,16 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		50FA00000000000000000345 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				50FA00000000000000000351 /* libMAMERef.a in Frameworks */,
+				50FA00000000000000000352 /* libUAECpu.a in Frameworks */,
+				50FA00000000000000000353 /* libMoiraUAEExc.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		50FA00000000000000000328 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -1338,6 +1361,7 @@
 				50FE00000000000000001033 /* sstmusashi */,
 				50FE0000000000000000100D /* sstmame */,
 				50FA00000000000000000121 /* exceptionuae */,
+				50FA00000000000000000342 /* retrymoira */,
 				50FA00000000000000000304 /* sequenceuae */,
 				50FA0000000000000000032C /* sequencemame */,
 				50FE00000000000000001020 /* sstuae */,
@@ -1617,6 +1641,8 @@
 				50F600000000000000000002 /* SSTRunner.cpp */,
 				50F600000000000000000003 /* PlainRunner.cpp */,
 				50F600000000000000000004 /* ExceptionRunner.cpp */,
+				50FA00000000000000000340 /* RetryRunner.cpp */,
+				50FA00000000000000000341 /* RetryMoira.cpp */,
 				50F600000000000000000005 /* SSTTypes.h */,
 				50F600000000000000000006 /* SSTMoira.h */,
 				50F600000000000000000007 /* RefCore.h */,
@@ -1636,6 +1662,25 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		50FA00000000000000000343 /* retrymoira */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 50FA00000000000000000346 /* Build configuration list for PBXNativeTarget "retrymoira" */;
+			buildPhases = (
+				50FA00000000000000000344 /* Sources */,
+				50FA00000000000000000345 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				50FA00000000000000000122 /* PBXTargetDependency */,
+				50FA00000000000000000124 /* PBXTargetDependency */,
+				50FA00000000000000000126 /* PBXTargetDependency */,
+			);
+			name = retrymoira;
+			productName = retrymoira;
+			productReference = 50FA00000000000000000342 /* retrymoira */;
+			productType = "com.apple.product-type.tool";
+		};
 		50FA0000000000000000032B /* sequencemame */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 50FA0000000000000000032D /* Build configuration list for PBXNativeTarget "sequencemame" */;
@@ -2070,6 +2115,7 @@
 				50FE00000000000000001014 /* sstuae */,
 				50FE00000000000000001001 /* sstmame */,
 				50FA00000000000000000115 /* exceptionuae */,
+				50FA00000000000000000343 /* retrymoira */,
 				50FA00000000000000000305 /* sequenceuae */,
 				50FA0000000000000000032B /* sequencemame */,
 				50F10000000000000000000B /* smoke */,
@@ -2080,6 +2126,20 @@
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		50FA00000000000000000344 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				50FA0000000000000000034C /* SSTFile.cpp in Sources */,
+				50FA0000000000000000034D /* SSTRunner.cpp in Sources */,
+				50FA0000000000000000034E /* PlainRunner.cpp in Sources */,
+				50FA0000000000000000034F /* ExceptionRunner.cpp in Sources */,
+				50FA0000000000000000034A /* RetryRunner.cpp in Sources */,
+				50FA0000000000000000034B /* RetryMoira.cpp in Sources */,
+				50FA00000000000000000350 /* Common.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		50FA00000000000000000327 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -2704,6 +2764,79 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		50FA00000000000000000347 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_COMPATIBILITY=UAE",
+					"MOIRA_PRECISE_TIMING=true",
+					"MOIRA_EMULATE_ADDRESS_ERROR=true",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
+					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
+					"$(SRCROOT)/Tests/ThirdParty/UAEGlue",
+					"$(SRCROOT)/Moira/**",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USE_HEADERMAP = NO;
+			};
+			name = Debug;
+		};
+		50FA00000000000000000348 /* Debug-UAE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_COMPATIBILITY=UAE",
+					"MOIRA_PRECISE_TIMING=true",
+					"MOIRA_EMULATE_ADDRESS_ERROR=true",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
+					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
+					"$(SRCROOT)/Tests/ThirdParty/UAEGlue",
+					"$(SRCROOT)/Moira/**",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USE_HEADERMAP = NO;
+			};
+			name = "Debug-UAE";
+		};
+		50FA00000000000000000349 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_COMPATIBILITY=UAE",
+					"MOIRA_PRECISE_TIMING=true",
+					"MOIRA_EMULATE_ADDRESS_ERROR=true",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
+					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
+					"$(SRCROOT)/Tests/ThirdParty/UAEGlue",
+					"$(SRCROOT)/Moira/**",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USE_HEADERMAP = NO;
+			};
+			name = Release;
+		};
 		50FA0000000000000000032E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -4384,6 +4517,16 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		50FA00000000000000000346 /* Build configuration list for PBXNativeTarget "retrymoira" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				50FA00000000000000000347 /* Debug */,
+				50FA00000000000000000348 /* Debug-UAE */,
+				50FA00000000000000000349 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		50FA0000000000000000032D /* Build configuration list for PBXNativeTarget "sequencemame" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

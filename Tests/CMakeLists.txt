@@ -16,6 +16,7 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 #               sstuae                      SingleStepTests Moira vs. UAE
 #               exceptionmame               Exception frames Moira vs. MAME
 #               exceptionuae                Exception frames Moira vs. UAE
+#               retrymoira                  Bus error retry after RTE (68030/68040)
 #   Sequence/   sequenceuae                 Interrupt, trace, STOP and RTE sequences Moira vs. UAE
 #               sequencemame                Interrupt, trace, STOP and RTE sequences Moira vs. MAME
 #   Random/     randommame                  Randomized tests Moira vs. MAME

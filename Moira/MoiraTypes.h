@@ -538,7 +538,7 @@ static constexpr int CHECK_WP       = (1 << 8);
 /// Enables checking for catchpoints.
 static constexpr int CHECK_CP       = (1 << 9);
 
-/// Set while address translation is active. Keeps the fast path of execute() free of MMU checks.
+/// Set if a faulted instruction can be restarted (68020 and up, or active address translation). Keeps the fast path of execute() free of MMU checks.
 static constexpr int MMU_ACTIVE     = (1 << 10);
 
 }

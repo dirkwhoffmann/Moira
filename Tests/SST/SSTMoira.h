@@ -23,6 +23,13 @@ public:
     Fault fault;
     mutable std::vector<Access> log;
     bool logging = false;
+    bool wideBus = false;               // Model a 32-bit port (a long access is a single bus cycle)?
+    size_t faultLogIndex = 0;           // Position of the failed access in the log
+    bool lastFaultWrite = false;        // Was the last injected bus error a write access?
+    int exceptions = 0;                 // Exceptions taken since load()
+
+    using Moira::willExecute;
+    void willExecute(M68kException, u16) override { exceptions++; }
 
     TestCPU() { setModel(CPUModel::M68000); }
 
@@ -37,11 +44,27 @@ public:
     bool wide() const { return cpuModel >= CPUModel::M68EC020; }
     bool counts() const { return !wide() || (readFC() & 3) != 2; }
 
+    /* Counts a data access and tells if it has to fail. The core splits a long word that is not
+     * aligned to 4 into two word accesses. Both halves are one operand access for the reference.
+     */
+    mutable bool lastValid = false, lastWrite = false;
+    mutable u32 lastAddr = 0;
+    bool failAccess(bool write, u32 addr, int size) const
+    {
+        if (!logging || !counts()) return false;
+        if (fault.count == 0) lastValid = false;
+        bool cont = wide() && size == 2 && lastValid && lastWrite == write && lastAddr + 2 == addr && (getIRD() & 0xFB80) != 0x4880 && (getIRD() & 0xFFC0) != 0x4E40;
+        lastValid = !cont && wide() && size == 2;
+        lastWrite = write;
+        lastAddr = addr;
+        return cont ? false : const_cast<TestCPU *>(this)->fault.hit();
+    }
+
     u8 read8(u32 addr) const override
     {
         auto self = const_cast<TestCPU *>(this);
         u8 v = mem.peek(addr);
-        if (logging && counts() && self->fault.hit()) { record(false, addr, 1, 0); throw BusError(wide() ? addr : addr & ADDR_MASK); }
+        if (failAccess(false, addr, 1)) { self->lastFaultWrite = false; self->faultLogIndex = self->log.size(); record(false, addr, 1, 0); throw BusError(wide() ? addr : addr & ADDR_MASK); }
         record(false, addr, 1, v);
         return v;
     }
@@ -49,7 +72,7 @@ public:
     {
         auto self = const_cast<TestCPU *>(this);
         u16 v = mem.peek16(addr);
-        if (logging && counts() && self->fault.hit()) { record(false, addr, 2, 0); throw BusError(wide() ? addr : addr & ADDR_MASK); }
+        if (failAccess(false, addr, 2)) { self->lastFaultWrite = false; self->faultLogIndex = self->log.size(); record(false, addr, 2, 0); throw BusError(wide() ? addr : addr & ADDR_MASK); }
         record(false, addr, 2, v);
         return v;
     }
@@ -58,7 +81,7 @@ public:
         if (!wide()) return u32(read16(addr) << 16 | read16(addr + 2));
         auto self = const_cast<TestCPU *>(this);
         u32 v = u32(mem.peek16(addr) << 16 | mem.peek16(addr + 2));
-        if (logging && counts() && self->fault.hit()) { record(false, addr, 2, 0); throw BusError(wide() ? addr : addr & ADDR_MASK); }
+        if (failAccess(false, addr, 4)) { self->lastFaultWrite = false; self->faultLogIndex = self->log.size(); record(false, addr, 2, 0); throw BusError(wide() ? addr : addr & ADDR_MASK); }
         record(false, addr, 2, u16(v >> 16));
         return v;
     }
@@ -66,14 +89,14 @@ public:
     void write8(u32 addr, u8 val) const override
     {
         auto self = const_cast<TestCPU *>(this);
-        if (logging && counts() && self->fault.hit()) { record(true, addr, 1, val); throw BusError(wide() ? addr : addr & ADDR_MASK); }
+        if (failAccess(true, addr, 1)) { self->lastFaultWrite = true; self->faultLogIndex = self->log.size(); record(true, addr, 1, val); throw BusError(wide() ? addr : addr & ADDR_MASK); }
         record(true, addr, 1, val);
         self->mem.poke(addr, val);
     }
     void write16(u32 addr, u16 val) const override
     {
         auto self = const_cast<TestCPU *>(this);
-        if (logging && counts() && self->fault.hit()) { record(true, addr, 2, val); throw BusError(wide() ? addr : addr & ADDR_MASK); }
+        if (failAccess(true, addr, 2)) { self->lastFaultWrite = true; self->faultLogIndex = self->log.size(); record(true, addr, 2, val); throw BusError(wide() ? addr : addr & ADDR_MASK); }
         record(true, addr, 2, val);
         self->mem.poke(addr, u8(val >> 8));
         self->mem.poke(addr + 1, u8(val));
@@ -82,10 +105,15 @@ public:
     {
         if (!wide()) { write16(addr, u16(val >> 16)); write16(addr + 2, u16(val)); return; }
         auto self = const_cast<TestCPU *>(this);
-        if (logging && counts() && self->fault.hit()) { record(true, addr, 2, u16(val >> 16)); throw BusError(wide() ? addr : addr & ADDR_MASK); }
+        if (failAccess(true, addr, 4)) { self->lastFaultWrite = true; self->faultLogIndex = self->log.size(); record(true, addr, 2, u16(val >> 16)); throw BusError(wide() ? addr : addr & ADDR_MASK); }
         record(true, addr, 2, u16(val >> 16));
         for (int i = 0; i < 4; i++) self->mem.poke(addr + i, u8(val >> (24 - 8 * i)));
     }
+
+    // Lets bus errors restore the registers (Moira does this only if an MMU is active)
+    void enableRestart() { flags |= State::MMU_ACTIVE; }
+
+    u8 dsack(u32) const override { return (wideBus || wide()) ? DSACK_32 : DSACK_16; }
 
     void load(const sst::State &s)
     {
@@ -103,6 +131,7 @@ public:
         setIRC(u16(s.prefetch[1]));
         setClock(0);
         log.clear();
+        exceptions = 0;
         fault = Fault();
     }
 };

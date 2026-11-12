@@ -144,9 +144,30 @@ protected:
     void runTest(const sst::Test &t) override;
 };
 
+/* Retry after RTE. A bus error handler that has removed the cause of the fault
+ * returns with RTE, and the instruction has to complete as if nothing had
+ * happened. The runner lets a bus error hit each data access of an instruction,
+ * returns from the handler with RTE, and compares the final state (registers,
+ * status register and memory) with an undisturbed run of the same instruction.
+ * Only Moira is involved.
+ */
+class RetryRunner : public SSTRunner {
+
+public:
+
+    explicit RetryRunner(const CoreFactory &factory);
+
+protected:
+
+    const char *description() const override;
+    bool acceptsModel(CPUModel model) const override { return model >= CPUModel::M68EC020; }
+    void runTest(const sst::Test &t) override;
+};
+
 
 // Helpers
 bool expectsAddressError(const sst::Test &t);
+std::string formOf(const std::string &name);
 const char *kind(const mame::BusCycle &c);
 
 }

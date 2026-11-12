@@ -308,6 +308,7 @@ template <Core C> void
 Moira::reset()
 {
     flags = State::CHECK_IRQ;
+    updateMmuFlag();
 
     reg = { };
     reg.sr.s = 1;
@@ -513,11 +514,75 @@ Moira::execute(i64 cycles)
 void
 Moira::updateMmuFlag()
 {
-    if (mmu.isEnabled()) {
+    // The 68020 family restarts a faulted instruction after RTE, with or without
+    // an MMU (the real CPU continues from its internal state; restarting is the
+    // approximation used by UAE).
+    if (mmu.isEnabled() || cpuModel >= CPUModel::M68EC020) {
         flags |= State::MMU_ACTIVE;
     } else {
         flags &= ~State::MMU_ACTIVE;
         savedRegValid = false;
+    }
+}
+
+void
+Moira::undoPredecrement(u32 addr)
+{
+    /* UAE decrements an address register after the operand has been read, and before
+     * a pure write. Hence, only a faulting read has to be taken back. A write fault
+     * sees the register as it is.
+     */
+    if (busWriteAccess) return;
+
+    u16 ird = instrIrd;
+    int regs[2] = { -1, -1 };
+    u32 size = 0;
+
+    switch (ird >> 12) {
+
+        case 0x1: case 0x2: case 0x3:   // MOVE
+
+            size = (ird >> 12) == 1 ? 1 : (ird >> 12) == 3 ? 2 : 4;
+            if (((ird >> 3) & 7) == 4) regs[0] = ird & 7;
+            if (((ird >> 6) & 7) == 4) regs[1] = (ird >> 9) & 7;
+            break;
+
+        case 0x8: case 0x9: case 0xC: case 0xD:
+
+            // SBCD, SUBX, ABCD, ADDX in memory-to-memory form
+            if ((ird & 0x0138) == 0x0108 && (ird & 0xC0) != 0xC0) {
+                regs[0] = ird & 7; regs[1] = (ird >> 9) & 7;
+                size = ((ird >> 12) == 8 || (ird >> 12) == 0xC) ? 1 : 1 << ((ird >> 6) & 3);
+            }
+            else if (((ird >> 3) & 7) == 4) regs[0] = ird & 7;
+            break;
+
+        case 0x4:
+
+            // MOVEM stacks its registers in its own way
+            if ((ird & 0xFB80) == 0x4880) break;
+            if (((ird >> 3) & 7) == 4) regs[0] = ird & 7;
+            break;
+
+        case 0x0: case 0x5: case 0xB: case 0xE:
+
+            if (((ird >> 3) & 7) == 4) regs[0] = ird & 7;
+            break;
+
+        default:
+            break;
+    }
+
+    for (int i = 0; i < 2; i++) {
+
+        int r = regs[i];
+        if (r < 0 || reg.a[r] != addr || savedReg.a[r] == reg.a[r]) continue;
+
+        // Both operands may use the same register
+        bool both = regs[0] == regs[1];
+        u32 delta = savedReg.a[r] - reg.a[r];
+        reg.a[r] += (both && size) ? (r == 7 && size == 1 ? 2 : size) : delta;
+        break;
     }
 }
 
@@ -568,10 +633,17 @@ Moira::processException(const std::exception &exc)
         if (auto be = dynamic_cast<const BusError *>(&exc); be) {
 
             // Abort the current instruction. It will be restarted by RTE.
-            if (savedRegValid) restoreRegisters();
+            // The 68020 in UAE mode keeps the registers as they are and rolls
+            // them back when the handler returns (see Restart).
+            bool deferred = compat == Compatibility::UAE && cpuModel <= CPUModel::M68020;
+            if (savedRegValid && !deferred) restoreRegisters();
+
+            // UAE decrements an address register after the access has succeeded
+            if (savedRegValid && deferred) undoPredecrement(be->stackFrame.addr);
 
             // A bus error while processing a bus error is a double bus fault
             try { execBusError<C>(be->stackFrame); } catch (const BusError &) { halt(); }
+            savedRegValid = false;
             return;
         }
 

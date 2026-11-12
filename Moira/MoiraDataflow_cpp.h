@@ -357,11 +357,14 @@ Moira::writeOp(int n, u32 val)
             // Emulate -(An) register modification
             updateAnPD<M, S>(n);
 
+            // UAE (68020) advances the register before it writes
+            if constexpr (compat == Compatibility::UAE && C == Core::C68020) updateAnPI<M, S>(n);
+
             // Write to effective address
             writeM<C, M, S, F>(ea, val);
 
             // Emulate (An)+ register modification
-            updateAnPI<M, S>(n);
+            if constexpr (!(compat == Compatibility::UAE && C == Core::C68020)) updateAnPI<M, S>(n);
     }
 }
 

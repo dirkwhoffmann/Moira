@@ -120,6 +120,22 @@ void ExceptionRunner::runTest(const sst::Test &t)
         }
     }
 
+    // The 68020 decodes extension words with bit 8 set as full format (memory indirect addressing). The
+    // 68000 test data contains such words by chance and the cores disagree on invalid combinations.
+    if (model >= CPUModel::M68EC020) {
+
+        u16 ird = t.initial.prefetch[0], ext = t.initial.prefetch[1];
+        auto indexed = [](u16 m, u16 r) { return m == 6 || (m == 7 && r == 3); };
+        bool hasEA = true;
+        switch (ird >> 12) {
+            case 0x6: case 0x7: case 0xA: case 0xF: hasEA = false; break;
+            case 0xE: hasEA = ((ird >> 6) & 3) == 3; break;
+            case 0x4: hasEA = (ird & 0xFF80) != 0x4E00; break;
+        }
+        bool moveDst = (ird & 0xC000) == 0 && (ird & 0x3000) && ((ird >> 6) & 7) == 6 && ((ird >> 3) & 7) < 5;
+        if (((hasEA && indexed((ird >> 3) & 7, ird & 7)) || moveDst) && (ext & 0x100)) { skipped++; return; }
+    }
+
     // The second pass makes the SSP odd (user mode only), so that stacking an exception frame double-faults
     for (int pass = 0; pass < 2; pass++) {
 

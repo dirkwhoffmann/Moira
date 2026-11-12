@@ -93,6 +93,25 @@ protected:
     // Start address and opcode of the executing instruction (used by the 68020 exception frames)
     u32 instrStart = 0;
     u16 instrIrd = 0;
+
+    /* Restart information of a faulted instruction (68020 in UAE mode). The handler
+     * sees the registers as they were when the fault occurred (as on the real CPU,
+     * which continues from internal state). If it returns without touching the frame,
+     * RTE rolls the instruction back, so that it is executed again from its start.
+     */
+    struct Restart {
+
+        bool valid = false;
+        Registers pre;          // Registers at the start of the instruction
+        Registers fault;        // Registers at the time of the fault
+        u16 preSr = 0;          // Status register at the start of the instruction
+        u32 pc = 0;             // Start of the instruction
+        u32 frameSp = 0;        // Location of the stacked frame
+        u16 frameSr = 0;        // Stacked status register
+        u32 framePC = 0;        // Stacked program counter
+        u32 entrySsp = 0;       // Supervisor stack pointer before the frame was stacked
+        u32 entryUsp = 0;       // User stack pointer (while in supervisor mode)
+    } restart;
     bool irdKeep = false;
 
     // The value of the most recent write access (reported in bus fault frames)
@@ -234,6 +253,9 @@ protected:
 
     // Rolls the registers back to the state saved at the start of the instruction
     void restoreRegisters();
+
+    // Takes back the predecrement of the operand that caused a bus error
+    void undoPredecrement(u32 addr);
 
     // Reads a program word without raising a bus error (returns 0 if the word is unreachable)
     u16 peekProgramWord(u32 addr, bool supervisor);

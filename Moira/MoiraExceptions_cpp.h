@@ -346,6 +346,7 @@ static bool hasIndexedOperand(u16 ird)
 
         case 0x6: case 0x7: case 0xA: case 0xF: return false;
         case 0xE: if (((ird >> 6) & 3) != 3) return false; break;
+        case 0x4: if ((ird & 0xFF80) == 0x4E00) return false; break;   // TRAP, LINK, UNLK, RTS, ...
     }
     if (indexed((ird >> 3) & 7, ird & 7)) return true;
 
@@ -444,7 +445,9 @@ Moira::execBusError(StackFrame frame, int delay)
     sync(delay);
 
     // Enter supervisor mode
+    Registers faultReg = reg;
     setSupervisorMode(true);
+    u32 entrySsp = reg.sp, entryUsp = reg.usp;
 
     // Disable tracing
     clearTraceFlags();
@@ -493,6 +496,21 @@ Moira::execBusError(StackFrame frame, int delay)
             // UAE stacks the start of the instruction. Indexed operands move it behind the instruction words.
             u32 pc = hasIndexedOperand(instrIrd) ? end : instrStart;
             writeStackFrame1011UAE<C>(status, 2, pc, ssw, frame.addr, end, status & 0x2000);
+
+            // Remember how to restart the instruction
+            restart.valid = savedRegValid;
+            if (restart.valid) {
+
+                restart.pre = savedReg;
+                restart.fault = faultReg;
+                auto sr = reg.sr; reg.sr = savedReg.sr; restart.preSr = getSR(); reg.sr = sr;
+                restart.pc = instrStart;
+                restart.frameSp = reg.sp;
+                restart.frameSr = status;
+                restart.framePC = pc;
+                restart.entrySsp = entrySsp;
+                restart.entryUsp = entryUsp;
+            }
 
         } else {
             writeStackFrame1011<C>(status, frame.pc, reg.pc0, 2);
