@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <vector>
 
 /* UAE's CPU core (GPLv3) wrapped as a reference for the test runner.
  *
@@ -106,6 +107,14 @@ void endMMU040();
 void flushATC040();
 bool translate040(uint32_t addr, bool super, bool data, bool write, uint32_t *physical);
 uint32_t ptest040(uint32_t addr, uint8_t dfc, bool write);
+
+// Sequence mode. The tests for interrupts, STOP and trace run whole instruction sequences. stepSeq() executes
+// one instruction and then takes the exceptions that are due (trace, interrupt) the way UAE's main loop does.
+// A stopped CPU does not execute anything but wakes up on an interrupt.
+void setIPL(int level);
+bool stepSeq();
+bool stopped();
+const std::vector<int> &exceptions();   // Vectors of all exceptions taken by the last step
 
 // Vector number of the last exception taken by the last step (0 if none)
 int lastException();

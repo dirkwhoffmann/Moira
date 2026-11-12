@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		50FA00000000000000000302 /* SequenceUAE.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50FA00000000000000000301 /* SequenceUAE.cpp */; };
+		50FA0000000000000000030C /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F60000000000000000002C /* Common.cpp */; };
+		50FA0000000000000000030D /* libUAECpu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50A200000000000000000001 /* libUAECpu.a */; };
+		50FA0000000000000000030E /* libMoiraUAEExc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50FA00000000000000000114 /* libMoiraUAEExc.a */; };
 		50F60000000000000000003A /* StackFrameTests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F600000000000000000039 /* StackFrameTests.cpp */; };
 		5028B10A288D9EC000047C20 /* musashi_softfloat.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B103288D9EC000047C20 /* musashi_softfloat.c */; };
 		5028B10E288D9ECD00047C20 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = 5028B10D288D9ECD00047C20 /* m68kops.c */; };
@@ -579,6 +583,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		50FA00000000000000000301 /* SequenceUAE.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SequenceUAE.cpp; sourceTree = "<group>"; };
+		50FA00000000000000000310 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		50FA00000000000000000304 /* sequenceuae */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = sequenceuae; sourceTree = BUILT_PRODUCTS_DIR; };
 		50F600000000000000000039 /* StackFrameTests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = StackFrameTests.cpp; sourceTree = "<group>"; };
 		08C7A9B2140D45BEA6DAD5A7 /* Cache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Cache.h; sourceTree = "<group>"; };
 		1654296120AA412377E9642D /* MoiraCore68020.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraCore68020.cpp; sourceTree = "<group>"; };
@@ -856,6 +863,15 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		50FA00000000000000000307 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				50FA0000000000000000030D /* libUAECpu.a in Frameworks */,
+				50FA0000000000000000030E /* libMoiraUAEExc.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		50804E032386A4CE004D3EC2 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -1031,6 +1047,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		50FA00000000000000000303 /* Sequence */ = {
+			isa = PBXGroup;
+			children = (
+				50FA00000000000000000310 /* CMakeLists.txt */,
+				50FA00000000000000000301 /* SequenceUAE.cpp */,
+			);
+			path = Sequence;
+			sourceTree = "<group>";
+		};
 		5028B100288D9EA600047C20 /* Musashi */ = {
 			isa = PBXGroup;
 			children = (
@@ -1072,6 +1097,7 @@
 				50F100000000000000000031 /* Common */,
 				50F300000000000000000001 /* Random */,
 				50F57E2830A4630F00EDBDBA /* SST */,
+				50FA00000000000000000303 /* Sequence */,
 				50F10000000000000000001F /* Smoke */,
 				50F40000000000000000001F /* Unit */,
 				50A1000000000000000000A1 /* ThirdParty */,
@@ -1290,6 +1316,7 @@
 				50FE00000000000000001033 /* sstmusashi */,
 				50FE0000000000000000100D /* sstmame */,
 				50FA00000000000000000121 /* exceptionuae */,
+				50FA00000000000000000304 /* sequenceuae */,
 				50FE00000000000000001020 /* sstuae */,
 				50F10000000000000000000C /* smoke */,
 				50F200000000000000000002 /* fibonacci */,
@@ -1586,6 +1613,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		50FA00000000000000000305 /* sequenceuae */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 50FA00000000000000000308 /* Build configuration list for PBXNativeTarget "sequenceuae" */;
+			buildPhases = (
+				50FA00000000000000000306 /* Sources */,
+				50FA00000000000000000307 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				50FA00000000000000000124 /* PBXTargetDependency */,
+				50FA00000000000000000126 /* PBXTargetDependency */,
+			);
+			name = sequenceuae;
+			productName = sequenceuae;
+			productReference = 50FA00000000000000000304 /* sequenceuae */;
+			productType = "com.apple.product-type.tool";
+		};
 		50804E052386A4CE004D3EC2 /* randommusashi */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 50804E0D2386A4CE004D3EC2 /* Build configuration list for PBXNativeTarget "randommusashi" */;
@@ -1984,6 +2029,7 @@
 				50FE00000000000000001014 /* sstuae */,
 				50FE00000000000000001001 /* sstmame */,
 				50FA00000000000000000115 /* exceptionuae */,
+				50FA00000000000000000305 /* sequenceuae */,
 				50F10000000000000000000B /* smoke */,
 				50F200000000000000000001 /* fibonacci */,
 				50F40000000000000000000B /* unit */,
@@ -1992,6 +2038,15 @@
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		50FA00000000000000000306 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				50FA00000000000000000302 /* SequenceUAE.cpp in Sources */,
+				50FA0000000000000000030C /* Common.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		50804E022386A4CE004D3EC2 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -2596,6 +2651,79 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		50FA00000000000000000309 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_COMPATIBILITY=UAE",
+					"MOIRA_PRECISE_TIMING=true",
+					"MOIRA_EMULATE_ADDRESS_ERROR=true",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
+					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
+					"$(SRCROOT)/Tests/ThirdParty/UAEGlue",
+					"$(SRCROOT)/Moira/**",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USE_HEADERMAP = NO;
+			};
+			name = Debug;
+		};
+		50FA0000000000000000030A /* Debug-UAE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_COMPATIBILITY=UAE",
+					"MOIRA_PRECISE_TIMING=true",
+					"MOIRA_EMULATE_ADDRESS_ERROR=true",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
+					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
+					"$(SRCROOT)/Tests/ThirdParty/UAEGlue",
+					"$(SRCROOT)/Moira/**",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USE_HEADERMAP = NO;
+			};
+			name = "Debug-UAE";
+		};
+		50FA0000000000000000030B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MOIRA_COMPATIBILITY=UAE",
+					"MOIRA_PRECISE_TIMING=true",
+					"MOIRA_EMULATE_ADDRESS_ERROR=true",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Tests/Common",
+					"$(SRCROOT)/Tests/ThirdParty/MAMEGlue",
+					"$(SRCROOT)/Tests/ThirdParty/UAEGlue",
+					"$(SRCROOT)/Moira/**",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USE_HEADERMAP = NO;
+			};
+			name = Release;
+		};
 		50804E0B2386A4CE004D3EC2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -4130,6 +4258,16 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		50FA00000000000000000308 /* Build configuration list for PBXNativeTarget "sequenceuae" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				50FA00000000000000000309 /* Debug */,
+				50FA0000000000000000030A /* Debug-UAE */,
+				50FA0000000000000000030B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		50804E012386A4CE004D3EC2 /* Build configuration list for PBXProject "Moira" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

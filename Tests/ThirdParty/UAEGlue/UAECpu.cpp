@@ -31,6 +31,9 @@ uint32_t memMask = 0xFFFF;
 uaecpu::AccessHook accessHook = nullptr;
 bool stepping = false;           // Is an instruction being executed?
 int lastExc = 0;                 // Vector of the last exception taken
+std::vector<int> excLog;         // Vectors of all exceptions taken by the last step
+bool seqFresh = false;           // First step after setState()?
+int pinIpl = 0;                  // Interrupt priority level on the IPL pins
 bool traceInStep = true;         // Process a pending trace exception in the same step?
 
 inline uint32_t mask(uint32_t addr) { return addr & memMask; }
@@ -184,7 +187,7 @@ void m68k_handle_trap(unsigned int) { }
 static uint64_t cycleCounter = 0;
 
 // Called whenever an exception is processed
-void debug_exception(int nr) { lastExc = nr; movesActive = false; }
+void debug_exception(int nr) { lastExc = nr; excLog.push_back(nr); movesActive = false; }
 
 void do_cycles_ce(int cycles) { cycleCounter += cycles; }
 void do_cycles_ce020(int cycles) { cycleCounter += cycles; }
@@ -364,6 +367,7 @@ void setState(const State &s)
     regs.stopped = 0;
     regs.halted = 0;
     regs.spcflags = 0;
+    seqFresh = true;
     m68k_setpc(s.pc);
     fill_prefetch();
 }
@@ -615,6 +619,40 @@ int disassemble(uint32_t addr, char *out, size_t size)
     return int(next - addr);
 }
 
+// Executes the instruction at the program counter
+static void executeInstruction()
+{
+    struct regstruct *r = &regs;
+
+    if (currprefs.cpu_model <= 68010) {
+
+        // Cycle-exact 68000/68010 core
+        r->opcode = r->ir;
+        movesActive = isMoves(r->opcode);
+        r->instruction_pc = m68k_getpc();
+        (*cpufunctbl_noret[r->opcode])(r->opcode);
+        if (!regs.loop_mode) regs.ird = regs.opcode;
+        wait_memory_cycles();
+
+    } else if (currprefs.cpu_model <= 68030) {
+
+        // Prefetch-accurate 68020/68030 core
+        r->instruction_pc = m68k_getpc();
+        r->opcode = regs.irc;
+        movesActive = isMoves(r->opcode);
+        int cycles = (*cpufunctbl[r->opcode])(r->opcode);
+        cycleCounter = adjust_cycles(cycles >> 16);
+
+    } else {
+
+        // 68040 core
+        r->instruction_pc = m68k_getpc();
+        r->opcode = get_iword_cache_040(0);
+        movesActive = isMoves(r->opcode);
+        (*cpufunctbl_noret[r->opcode])(r->opcode);
+    }
+}
+
 bool step()
 {
     struct regstruct *r = &regs;
@@ -629,33 +667,7 @@ bool step()
 
     TRY(prb) {
 
-        if (currprefs.cpu_model <= 68010) {
-
-            // Cycle-exact 68000/68010 core
-            r->opcode = r->ir;
-            movesActive = isMoves(r->opcode);
-            r->instruction_pc = m68k_getpc();
-            (*cpufunctbl_noret[r->opcode])(r->opcode);
-            if (!regs.loop_mode) regs.ird = regs.opcode;
-            wait_memory_cycles();
-
-        } else if (currprefs.cpu_model <= 68030) {
-
-            // Prefetch-accurate 68020/68030 core
-            r->instruction_pc = m68k_getpc();
-            r->opcode = regs.irc;
-            movesActive = isMoves(r->opcode);
-            int cycles = (*cpufunctbl[r->opcode])(r->opcode);
-            cycleCounter = adjust_cycles(cycles >> 16);
-
-        } else {
-
-            // 68040 core
-            r->instruction_pc = m68k_getpc();
-            r->opcode = get_iword_cache_040(0);
-            movesActive = isMoves(r->opcode);
-            (*cpufunctbl_noret[r->opcode])(r->opcode);
-        }
+        executeInstruction();
 
         // Only the exceptions raised through special flags matter here. The
         // remaining work of do_specialties() (interrupts, custom chips, reset
@@ -687,6 +699,65 @@ bool step()
     }
 
     return !exit && !regs.halted;
+}
+
+
+
+void setIPL(int level) { pinIpl = level & 7; }
+
+bool stopped() { return regs.stopped != 0; }
+
+const std::vector<int> &exceptions() { return excLog; }
+
+bool stepSeq()
+{
+    struct regstruct *r = &regs;
+
+    cycleCounter = 0;
+    lastExc = 0;
+    excLog.clear();
+    movesActive = false;
+    pendingByte = false;
+    stepping = true;
+
+    // Arm the trace logic for the first instruction (the main loop does this after each instruction)
+    if (seqFresh) {
+        seqFresh = false;
+        if (regs.t1) { set_special(SPCFLAG_TRACE); do_trace(); }
+    }
+
+    TRY(prb) {
+
+        // Execute an instruction (unless the CPU is stopped)
+        if (!regs.stopped && !regs.halted) executeInstruction();
+
+        // Process the special flags in the order of UAE's do_specialties()
+        if (r->spcflags & SPCFLAG_DOTRACE) Exception(9);
+        if (r->spcflags & SPCFLAG_TRAP) {
+            unset_special(SPCFLAG_TRAP);
+            Exception(3);
+        }
+        if (r->spcflags & SPCFLAG_TRACE) do_trace();
+
+        // Take an interrupt (level 7 is edge triggered)
+        int intr = pinIpl;
+        if (!regs.halted && (intr > regs.intmask || (intr == 7 && intr > regs.lastipl))) {
+            Exception(24 + intr);
+        }
+        regs.lastipl = intr;
+
+        // The trace state survives, all other flags are consumed
+        regs.spcflags &= (SPCFLAG_TRACE | SPCFLAG_DOTRACE);
+
+    } CATCH(prb) {
+
+        bus_error();
+        regs.spcflags = 0;
+
+    } ENDTRY
+
+    stepping = false;
+    return !regs.halted;
 }
 
 // A color clock (CYCLE_UNIT) is two CPU clocks

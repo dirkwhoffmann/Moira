@@ -314,6 +314,7 @@ Moira::reset()
     reg.sr.ipl = 7;
 
     ipl = 0;
+    nmiTaken = false;
     fcl = 2;
     fcSource = 0;
     budget = { };
@@ -389,7 +390,7 @@ Moira::execute()
     using namespace State;
 
     // Check the integrity of the IRQ flag
-    if (reg.ipl > reg.sr.ipl || reg.ipl == 7) assert(flags & CHECK_IRQ);
+    if (reg.ipl > reg.sr.ipl || (reg.ipl == 7 && !nmiTaken)) assert(flags & CHECK_IRQ);
 
     // Check the integrity of the trace flag
     assert(!!(flags & TRACING) == reg.sr.t1);
@@ -600,7 +601,10 @@ Moira::processException(const std::exception &exc)
 bool
 Moira::checkForIrq()
 {
-    if (reg.ipl > reg.sr.ipl || reg.ipl == 7) {
+    // Level 7 is edge triggered. The interrupt can be taken again once the polled level has dropped.
+    if (reg.ipl < 7) nmiTaken = false;
+
+    if (reg.ipl > reg.sr.ipl || (reg.ipl == 7 && !nmiTaken)) {
 
         // Exit loop mode
         if (flags & State::LOOPING) flags &= ~State::LOOPING;

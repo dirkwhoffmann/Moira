@@ -16,6 +16,7 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 #               sstuae                      SingleStepTests Moira vs. UAE
 #               exceptionmame               Exception frames Moira vs. MAME
 #               exceptionuae                Exception frames Moira vs. UAE
+#   Sequence/   sequenceuae                 Interrupt, trace, STOP and RTE sequences Moira vs. UAE
 #   Random/     randommame                  Randomized tests Moira vs. MAME
 #               randommusashi               Randomized tests Moira vs. Musashi
 #               randomuae                   Randomized tests Moira vs. UAE
@@ -102,5 +103,6 @@ target_compile_definitions(moiraUAEExc PUBLIC
 add_subdirectory(ThirdParty)
 add_subdirectory(Unit)
 add_subdirectory(Smoke)
+add_subdirectory(Sequence)
 add_subdirectory(SST)
 add_subdirectory(Random)

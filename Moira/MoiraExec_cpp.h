@@ -1856,6 +1856,9 @@ Moira::execChk(u16 opcode)
 
                 prefetch<C, POLL>();
                 SYNC_68010(4);
+
+                // The stacked PC is the address of the next instruction, which the prefetch has moved on
+                reg.pc -= 2;
                 break;
         }
         reg.sr.n = NBIT<S>(dy);
@@ -1882,6 +1885,9 @@ Moira::execChk(u16 opcode)
 
                 prefetch<C, POLL>();
                 SYNC_68010(6);
+
+                // The stacked PC is the address of the next instruction, which the prefetch has moved on
+                reg.pc -= 2;
         }
         reg.sr.n = (compat == Compatibility::MUSASHI) ? NBIT<S>(dy) : 1;
         execException<C>(M68kException::CHK);

@@ -72,7 +72,7 @@
 		<key>UAECpu.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>19</integer>
+			<integer>20</integer>
 		</dict>
 		<key>UAERef.xcscheme_^#shared#^_</key>
 		<dict>
@@ -158,6 +158,11 @@
 		<dict>
 			<key>orderHint</key>
 			<integer>4</integer>
+		</dict>
+		<key>sequenceuae.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>19</integer>
 		</dict>
 		<key>singleStepRunner.xcscheme_^#shared#^_</key>
 		<dict>

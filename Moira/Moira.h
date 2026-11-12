@@ -156,6 +156,9 @@ protected:
     
     // Current value on the IPL (Interrupt Priority Level) pins
     u8 ipl {};
+
+    // Level 7 is edge triggered. This flag is set when the level 7 interrupt has been taken and is cleared when the pins leave level 7.
+    bool nmiTaken {};
     
     // Value on the lower two function code pins (FC1|FC0)
     u8 fcl {2};

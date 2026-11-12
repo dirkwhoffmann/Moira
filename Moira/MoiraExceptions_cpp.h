@@ -739,6 +739,9 @@ Moira::execInterrupt(u8 level)
     // Notify delegate
     willInterrupt(level);
 
+    // Level 7 is edge triggered
+    if (level == 7) nmiTaken = true;
+
     // Remember the current value of the status register
     u16 status = getSR();
 
@@ -764,14 +767,14 @@ Moira::execInterrupt(u8 level)
 
             SYNC(6);
             reg.sp -= 6;
-            write<C, AddrSpace::DATA, Word>(reg.sp + 4, reg.pc & 0xFFFF);
+            write<C, AddrSpace::DATA, Word>(reg.sp + 4, (reg.pc - 2) & 0xFFFF);
 
             SYNC(4);
             queue.ird = getIrqVector(level);
 
             SYNC(4);
             write<C, AddrSpace::DATA, Word>(reg.sp + 0, status);
-            write<C, AddrSpace::DATA, Word>(reg.sp + 2, reg.pc >> 16);
+            write<C, AddrSpace::DATA, Word>(reg.sp + 2, (reg.pc - 2) >> 16);
             break;
 
         case Core::C68010:
@@ -779,9 +782,9 @@ Moira::execInterrupt(u8 level)
             SYNC(12);
             reg.sp -= 8;
             queue.ird = getIrqVector(level);
-            write<C, AddrSpace::DATA, Word>(reg.sp + 4, reg.pc & 0xFFFF);
+            write<C, AddrSpace::DATA, Word>(reg.sp + 4, (reg.pc - 2) & 0xFFFF);
             write<C, AddrSpace::DATA, Word>(reg.sp + 0, status);
-            write<C, AddrSpace::DATA, Word>(reg.sp + 2, reg.pc >> 16);
+            write<C, AddrSpace::DATA, Word>(reg.sp + 2, (reg.pc - 2) >> 16);
             write<C, AddrSpace::DATA, Word>(reg.sp + 6, 4 * queue.ird);
             break;
 
@@ -790,12 +793,12 @@ Moira::execInterrupt(u8 level)
             queue.ird = getIrqVector(level);
 
             // Both frame writers take the vector number, not the vector offset
-            writeStackFrame0000<C>(status, reg.pc, queue.ird);
+            writeStackFrame0000<C>(status, reg.pc - 2, queue.ird);
 
             if (reg.sr.m) {
 
                 setMasterMode(false);
-                writeStackFrame0001<C>(status | 0x2000, reg.pc, queue.ird);
+                writeStackFrame0001<C>(status | 0x2000, reg.pc - 2, queue.ird);
             }
     }
 
