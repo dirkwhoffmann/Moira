@@ -1,0 +1,726 @@
+// -----------------------------------------------------------------------------
+// This file is part of Moira - A Motorola 68k emulator
+//
+// Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de
+// Published under the terms of the MIT License
+// -----------------------------------------------------------------------------
+
+/* A console runner for Easy68K programs.
+ *
+ * Easy68K is a popular 68000 development environment for teaching. Programs
+ * written for it talk to their environment through TRAP #15. The task number is
+ * passed in D0, and the tasks are described here:
+ *
+ *     http://www.easy68k.com/QuickStart/TrapTasks.htm
+ *
+ * This example loads an assembled program in Motorola S-record format,
+ * disassembles it with Moira, and runs it. TRAP #15 is intercepted by the host
+ * program, which implements the console related tasks (text input and output,
+ * number conversion, time, cursor control, font colors, halting).
+ *
+ * Usage:  easy68k [options] program.s68
+ *
+ * Program output goes to stdout. Everything else (listing, trace, messages)
+ * goes to stderr, so that the output of the emulated program can be piped.
+ */
+
+#include "Moira.h"
+
+#include <chrono>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#ifdef _WIN32
+#include <io.h>
+#define isatty _isatty
+#define fileno _fileno
+#else
+#include <unistd.h>
+#endif
+
+using namespace moira;
+
+
+//
+// S-record loader
+//
+
+/* An S-record file is a text file. Every line is a record:
+ *
+ *     S <type> <count> <address> <data> <checksum>
+ *
+ * Types 1, 2, 3 carry data with a 16, 24, or 32 bit address. Type 0 is a header,
+ * types 5 and 6 are record counters, and types 7, 8, 9 carry the start address.
+ * All numbers are hexadecimal. The checksum is the one's complement of the sum
+ * of the count, address, and data bytes.
+ */
+
+struct Segment {
+
+    u32 addr;                   // Address of the first byte
+    std::vector<u8> data;       // The bytes
+};
+
+struct Image {
+
+    std::vector<Segment> segments;
+    bool hasStart = false;
+    u32 start = 0;
+
+    u32 lowest() const
+    {
+        u32 result = 0xFFFFFFFF;
+        for (auto &s : segments) result = std::min(result, s.addr);
+        return result;
+    }
+
+    bool contains(u32 addr) const
+    {
+        for (auto &s : segments) if (addr >= s.addr && addr < s.addr + s.data.size()) return true;
+        return false;
+    }
+
+    // Appends a block of data. Contiguous blocks are merged into one segment.
+    void add(u32 addr, const std::vector<u8> &bytes)
+    {
+        if (!segments.empty()) {
+            auto &last = segments.back();
+            if (last.addr + last.data.size() == addr) {
+                last.data.insert(last.data.end(), bytes.begin(), bytes.end());
+                return;
+            }
+        }
+        segments.push_back({ addr, bytes });
+    }
+};
+
+static int hexDigit(char c)
+{
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return -1;
+}
+
+static Image loadSRecords(const std::string &path)
+{
+    std::ifstream file(path);
+    if (!file) throw std::runtime_error("Cannot open " + path);
+
+    Image image;
+    std::string line;
+    int lineno = 0;
+
+    auto fail = [&](const std::string &msg) {
+        throw std::runtime_error(path + ":" + std::to_string(lineno) + ": " + msg);
+    };
+
+    while (std::getline(file, line)) {
+
+        lineno++;
+
+        // Remove trailing white space (including a CR of DOS line endings)
+        while (!line.empty() && isspace((unsigned char)line.back())) line.pop_back();
+        if (line.empty()) continue;
+
+        if (line[0] != 'S' || line.size() < 4) fail("Not an S-record");
+
+        int type = line[1] - '0';
+        if (type < 0 || type > 9) fail("Invalid record type");
+
+        // Convert the remaining characters to bytes
+        std::vector<u8> bytes;
+        if ((line.size() - 2) % 2) fail("Odd number of hex digits");
+        for (size_t i = 2; i < line.size(); i += 2) {
+            int hi = hexDigit(line[i]), lo = hexDigit(line[i + 1]);
+            if (hi < 0 || lo < 0) fail("Invalid hex digit");
+            bytes.push_back(u8(hi << 4 | lo));
+        }
+
+        // The count covers the address, the data, and the checksum
+        if (bytes[0] != bytes.size() - 1) fail("Wrong byte count");
+
+        u8 sum = 0;
+        for (auto b : bytes) sum += b;
+        if (sum != 0xFF) fail("Checksum error");
+
+        // Determine the number of address bytes
+        int alen = 0;
+        switch (type) {
+            case 1: case 9: alen = 2; break;
+            case 2: case 8: alen = 3; break;
+            case 3: case 7: alen = 4; break;
+            default: continue;      // Header and counter records
+        }
+        if (bytes.size() < size_t(2 + alen)) fail("Record too short");
+
+        u32 addr = 0;
+        for (int i = 0; i < alen; i++) addr = addr << 8 | bytes[1 + i];
+
+        if (type <= 3) {
+            image.add(addr, std::vector<u8>(bytes.begin() + 1 + alen, bytes.end() - 1));
+        } else {
+            image.hasStart = true;
+            image.start = addr;
+        }
+    }
+
+    if (image.segments.empty()) throw std::runtime_error(path + ": The file contains no data");
+    return image;
+}
+
+
+//
+// The computer
+//
+
+static const u32 memSize   = 0x1000000;     // 16 MB, as in Easy68K
+static const u32 memMask   = memSize - 1;
+static const u32 stackAddr = 0x1000000;     // Initial stack pointer, as in Easy68K
+
+struct Options {
+
+    CPUModel model = CPUModel::M68000;
+    bool listing   = true;                  // Show the disassembly
+    bool run       = true;                  // Run the program
+    bool trace     = false;                 // Show a trace
+    bool hasStart  = false;                 // Overrides the start address
+    u32 start      = 0;
+    u64 maxCycles  = 0;                     // 0 = unlimited
+};
+
+class Easy68k : public Moira {
+
+    // The computer's memory
+    mutable std::vector<u8> ram = std::vector<u8>(memSize);
+
+    // State of the TRAP #15 environment
+    bool color = false;                     // Output is a terminal that understands ANSI codes
+    bool styled = false;                    // Font style is not the default
+    bool warned[256] = { };                 // Unsupported tasks that have been reported
+
+public:
+
+    // Result of a run
+    bool stopped = false;                   // Execution should stop
+    int exitCode = 0;
+
+    Easy68k()
+    {
+        color = isatty(fileno(stdout));
+    }
+
+    ~Easy68k()
+    {
+        if (styled) fputs("\033[0m", stdout);
+        fflush(stdout);
+    }
+
+    using Moira::willExecute;
+
+
+    //
+    // Moira: Memory interface
+    //
+
+    u8 read8(u32 addr) const override { return ram[addr & memMask]; }
+    u16 read16(u32 addr) const override { return u16(read8(addr) << 8 | read8(addr + 1)); }
+    u32 read32(u32 addr) const override { return u32(read16(addr) << 16 | read16(addr + 2)); }
+
+    void write8(u32 addr, u8 val) const override { ram[addr & memMask] = val; }
+    void write16(u32 addr, u16 val) const override { write8(addr, u8(val >> 8)); write8(addr + 1, u8(val)); }
+    void write32(u32 addr, u32 val) const override { write16(addr, u16(val >> 16)); write16(addr + 2, u16(val)); }
+
+    // Easy68K does not know about exception handlers. If a program causes an
+    // exception for which no handler is installed, we stop instead of running
+    // into the code at address 0.
+    void willExecute(M68kException exc, u16 vector) override
+    {
+        if (read32(u32(vector) * 4) == 0) {
+            fprintf(stderr, "\nException %d at $%06X (no handler installed)\n", vector, getPC0());
+            stopped = true;
+            exitCode = 1;
+        }
+    }
+
+
+    //
+    // Loading and starting
+    //
+
+    void load(const Image &image, u32 start)
+    {
+        for (auto &s : image.segments)
+            for (size_t i = 0; i < s.data.size(); i++) ram[(s.addr + u32(i)) & memMask] = s.data[i];
+
+        // Reset the CPU. This loads the initial SP and PC from the vector table.
+        // The table is temporarily written, because the program might use the
+        // memory at address 0.
+        u8 saved[8];
+        for (int i = 0; i < 8; i++) saved[i] = ram[i];
+        for (int i = 0; i < 4; i++) {
+            ram[i] = u8(stackAddr >> (24 - 8 * i));
+            ram[4 + i] = u8(start >> (24 - 8 * i));
+        }
+        reset();
+        for (int i = 0; i < 8; i++) ram[i] = saved[i];
+    }
+
+
+    //
+    // Listing
+    //
+
+    // Returns true if the instruction at addr never continues with the next one
+    bool endsFlow(u32 addr) const
+    {
+        u16 op = read16(addr);
+        switch (getInstrInfo(op).I) {
+
+            case Instr::RTS: case Instr::RTE: case Instr::RTR:
+            case Instr::BRA: case Instr::JMP: case Instr::STOP:
+            case Instr::ILLEGAL:
+                return true;
+
+            default:
+                break;
+        }
+
+        // The halt call: MOVEQ #9,D0 / MOVE.B #9,D0 followed by TRAP #15
+        if (op == 0x4E4F) {
+            u16 prev = read16(addr - 2);
+            if (prev == 0x7009) return true;
+            if (read16(addr - 4) == 0x103C && prev == 0x0009) return true;
+        }
+        return false;
+    }
+
+    static bool isTextByte(u8 c) { return (c >= 0x20 && c < 0x7F) || c == 0x0A || c == 0x0D || c == 0x09; }
+
+    // Returns the length of a string that starts at addr (including the
+    // terminator and padding), or 0 if there is no string
+    u32 stringLength(u32 addr, u32 end) const
+    {
+        u32 n = 0;
+        while (addr + n < end && isTextByte(read8(addr + n))) n++;
+        if (n < 4) return 0;
+        if (addr + n < end && read8(addr + n) != 0) return 0;
+
+        // Include the terminators and align the result to a word boundary
+        while (addr + n < end && read8(addr + n) == 0) n++;
+        if (n % 2 && addr + n < end) n++;
+        return n;
+    }
+
+    void listing(const Image &image) const
+    {
+        char instr[128], bytes[128];
+
+        for (auto &seg : image.segments) {
+
+            u32 addr = seg.addr;
+            u32 end  = seg.addr + u32(seg.data.size());
+            bool data = false;
+
+            while (addr < end) {
+
+                // After an instruction that does not continue, a text may follow
+                if (data) {
+                    u32 len = stringLength(addr, end);
+                    if (len) {
+                        for (u32 i = 0; i < len; i += 8) {
+                            u32 n = std::min(len - i, 8u);
+                            std::string hex, text;
+                            for (u32 j = 0; j < n; j++) {
+                                u8 c = read8(addr + i + j);
+                                char h[4]; snprintf(h, sizeof(h), "%02X ", c);
+                                hex += h;
+                                text += (c >= 0x20 && c < 0x7F) ? char(c) : '.';
+                            }
+                            fprintf(stderr, "%06X: %-25s DC.B    '%s'\n", addr + i, hex.c_str(), text.c_str());
+                        }
+                        addr += len;
+                    }
+                    data = false;
+                    continue;
+                }
+
+                int len = disassemble(instr, addr);
+                if (addr + u32(len) > end) len = int(end - addr);
+                dump16(bytes, addr, len / 2);
+                fprintf(stderr, "%06X: %-25s %s\n", addr, bytes, instr);
+
+                data = endsFlow(addr);
+                addr += len;
+            }
+        }
+        fprintf(stderr, "\n");
+    }
+
+
+    //
+    // Execution
+    //
+
+    void trace()
+    {
+        char instr[128];
+        (void)disassemble(instr, getPC0());
+
+        u16 sr = getSR();
+        char flags[6];
+        for (int i = 0; i < 5; i++) flags[i] = (sr >> (4 - i)) & 1 ? "XNZVC"[i] : '-';
+        flags[5] = 0;
+
+        fprintf(stderr, "%06X %-26s %s", getPC0(), instr, flags);
+        for (int i = 0; i < 8; i++) fprintf(stderr, " %08X", getD(i));
+        fprintf(stderr, " |");
+        for (int i = 0; i < 8; i++) fprintf(stderr, " %08X", getA(i));
+        fprintf(stderr, "\n");
+    }
+
+    // Runs the program until it stops
+    void run(const Options &opt)
+    {
+        while (!stopped && !isHalted()) {
+
+            u32 pc = getPC0();
+            u16 op = read16(pc);
+
+            if (opt.trace) trace();
+
+            // TRAP #15 is handled by the host
+            if (op == 0x4E4F) {
+
+                trap15();
+
+                // Continue with the next instruction (this refills the prefetch queue)
+                if (!stopped) debugger.jump(pc + 2);
+                continue;
+            }
+
+            // STOP waits for an interrupt that never comes
+            if (op == 0x4E72) {
+                fprintf(stderr, "\nSTOP instruction at $%06X\n", pc);
+                break;
+            }
+
+            execute();
+
+            if (opt.maxCycles && u64(getClock()) >= opt.maxCycles) {
+                fprintf(stderr, "\nCycle limit reached at $%06X\n", getPC0());
+                exitCode = 1;
+                break;
+            }
+        }
+
+        if (isHalted()) {
+            fprintf(stderr, "\nThe CPU halted at $%06X\n", getPC0());
+            exitCode = 1;
+        }
+    }
+
+
+    //
+    // TRAP #15
+    //
+
+    // Writes a character to the console. Control characters are interpreted
+    // as described in the Easy68K documentation.
+    void put(u8 c)
+    {
+        switch (c) {
+
+            case 0x09: fputs("     ", stdout); break;             // HT: 5 spaces
+            case 0x0B: fputs("\n\n\n\n", stdout); break;          // VT: 4 lines
+            default:   fputc(c, stdout);
+        }
+    }
+
+    void put(const std::string &s) { for (unsigned char c : s) put(c); }
+
+    void putNewline() { fputc('\n', stdout); }
+
+    // Reads a zero-terminated string from memory
+    std::string cstring(u32 addr) const
+    {
+        std::string s;
+        for (u32 i = 0; i < memSize; i++) {
+            u8 c = read8(addr + i);
+            if (c == 0) break;
+            s += char(c);
+        }
+        return s;
+    }
+
+    // Reads a string of a given length from memory
+    std::string string(u32 addr, u32 len) const
+    {
+        std::string s;
+        for (u32 i = 0; i < len; i++) s += char(read8(addr + i));
+        return s;
+    }
+
+    static std::string toBase(u32 value, int base)
+    {
+        if (value == 0) return "0";
+        std::string s;
+        while (value) { s.insert(s.begin(), "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"[value % base]); value /= base; }
+        return s;
+    }
+
+    // Reads a line from the keyboard. Returns false at the end of the input.
+    bool readLine(std::string &line)
+    {
+        fflush(stdout);
+        if (std::getline(std::cin, line)) {
+            if (!line.empty() && line.back() == '\r') line.pop_back();
+            return true;
+        }
+        fprintf(stderr, "\nEnd of input at $%06X\n", getPC0());
+        stopped = true;
+        exitCode = 1;
+        return false;
+    }
+
+    // Reads a number from the keyboard (task 4)
+    void readNumber()
+    {
+        std::string line;
+        if (!readLine(line)) return;
+        setD(1, u32(strtol(line.c_str(), nullptr, 10)));
+    }
+
+    void warnUnsupported(u8 task, const char *what)
+    {
+        if (warned[task]) return;
+        warned[task] = true;
+        fprintf(stderr, "Warning: TRAP #15 task %d (%s) is not supported\n", task, what);
+    }
+
+    void trap15()
+    {
+        u8 task = u8(getD(0));
+        u32 a1 = getA(1);
+        u32 d1 = getD(1);
+        u32 d2 = getD(2);
+
+        switch (task) {
+
+            case 0:     // Display string with length D1.W, with CR/LF
+                put(string(a1, std::min<u32>(d1 & 0xFFFF, 255))); putNewline();
+                break;
+
+            case 1:     // Display string with length D1.W, without CR/LF
+                put(string(a1, std::min<u32>(d1 & 0xFFFF, 255)));
+                break;
+
+            case 2: {   // Read a string from the keyboard
+                std::string line;
+                if (!readLine(line)) break;
+                if (line.size() > 80) line.resize(80);
+                for (size_t i = 0; i < line.size(); i++) write8(a1 + u32(i), u8(line[i]));
+                write8(a1 + u32(line.size()), 0);
+                setD(1, (d1 & 0xFFFF0000) | u32(line.size()));
+                break;
+            }
+            case 3:     // Display D1.L as signed decimal
+                put(std::to_string(i32(d1)));
+                break;
+
+            case 4:     // Read a number from the keyboard
+                readNumber();
+                break;
+
+            case 5: {   // Read a character from the keyboard
+                fflush(stdout);
+                int c = std::cin.get();
+                if (c == EOF) {
+                    fprintf(stderr, "\nEnd of input at $%06X\n", getPC0());
+                    stopped = true;
+                    exitCode = 1;
+                    break;
+                }
+                setD(1, (d1 & 0xFFFFFF00) | u32(c & 0xFF));
+                break;
+            }
+            case 6:     // Display the character in D1.B
+                put(u8(d1));
+                break;
+
+            case 7:     // Check if input is pending
+                setD(1, (d1 & 0xFFFFFF00) | (std::cin.rdbuf()->in_avail() > 0 ? 1 : 0));
+                break;
+
+            case 8: {   // Time in hundredths of a second since midnight
+                auto now = std::chrono::system_clock::now();
+                auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() % 1000;
+                std::time_t t = std::chrono::system_clock::to_time_t(now);
+                std::tm tm = *std::localtime(&t);
+                setD(1, u32(((tm.tm_hour * 60 + tm.tm_min) * 60 + tm.tm_sec) * 100 + ms / 10));
+                break;
+            }
+            case 9:     // Terminate the program
+                stopped = true;
+                break;
+
+            case 11: {  // Position the cursor, or clear the screen
+                if ((d1 & 0xFFFF) == 0xFF00) {
+                    if (color) fputs("\033[2J\033[H", stdout);
+                } else {
+                    u32 col = (d1 >> 8) & 0xFF, row = d1 & 0xFF;
+                    if (col < 80 && row < 32 && color) printf("\033[%u;%uH", row + 1, col + 1);
+                }
+                break;
+            }
+            case 12:    // Keyboard echo (the terminal controls the echo)
+            case 16:    // Display properties (input prompt, line feed after input)
+                break;
+
+            case 13:    // Display zero-terminated string, with CR/LF
+                put(cstring(a1)); putNewline();
+                break;
+
+            case 14:    // Display zero-terminated string, without CR/LF
+                put(cstring(a1));
+                break;
+
+            case 15:    // Display D1.L (unsigned) in the base D2.B
+                if ((d2 & 0xFF) >= 2 && (d2 & 0xFF) <= 36) put(toBase(d1, int(d2 & 0xFF)));
+                break;
+
+            case 17:    // Display a string, then D1.L as signed decimal
+                put(cstring(a1)); put(std::to_string(i32(d1)));
+                break;
+
+            case 18:    // Display a string, then read a number
+                put(cstring(a1)); readNumber();
+                break;
+
+            case 19:    // Key states (no keyboard scan codes on a console)
+                warnUnsupported(task, "key states");
+                setD(1, 0);
+                break;
+
+            case 20: {  // Display D1.L as signed decimal in a field of D2.B columns
+                std::string s = std::to_string(i32(d1));
+                size_t width = d2 & 0xFF;
+                if (s.size() < width) s.insert(0, width - s.size(), ' ');
+                put(s);
+                break;
+            }
+            case 21: {  // Set the font color and style
+                if (color) {
+                    printf("\033[0");
+                    if (d2 & 1) printf(";1");
+                    if (d2 & 2) printf(";3");
+                    if (d2 & 4) printf(";4");
+                    if (d2 & 8) printf(";9");
+                    printf(";38;2;%u;%u;%um", d1 & 0xFF, (d1 >> 8) & 0xFF, (d1 >> 16) & 0xFF);
+                    styled = true;
+                }
+                break;
+            }
+            case 10:    warnUnsupported(task, "printer output"); break;
+            case 22:    warnUnsupported(task, "read character from screen"); setD(1, d1 & 0xFFFFFF00); break;
+            default:    warnUnsupported(task, "unknown task"); break;
+        }
+    }
+};
+
+
+//
+// Main
+//
+
+static void usage()
+{
+    fprintf(stderr,
+            "Usage: easy68k [options] program.s68\n\n"
+            "Runs an Easy68K program (Motorola S-record format) on a Moira CPU. TRAP #15\n"
+            "is emulated on the console. Program output goes to stdout, everything else\n"
+            "to stderr.\n\n"
+            "Options:\n"
+            "  -q, --quiet           Do not show the disassembly before running\n"
+            "  -n, --no-run          Show the disassembly, but do not run the program\n"
+            "  -t, --trace           Show every executed instruction\n"
+            "  -m, --model <model>   CPU model: 68000 (default), 68010, or 68020\n"
+            "  -s, --start <addr>    Start address in hex (default: S9 record)\n"
+            "  -c, --max-cycles <n>  Stop after n CPU cycles\n"
+            "  -h, --help            Show this help\n");
+}
+
+int main(int argc, const char *argv[])
+{
+    Options opt;
+    std::string path;
+
+    // Do not synchronize with stdio, so that in_avail() reports buffered input
+    std::ios::sync_with_stdio(false);
+
+    for (int i = 1; i < argc; i++) {
+
+        std::string arg = argv[i];
+        auto value = [&]() -> std::string {
+            if (i + 1 >= argc) { fprintf(stderr, "Missing value for %s\n", arg.c_str()); exit(2); }
+            return argv[++i];
+        };
+
+        if (arg == "-h" || arg == "--help") { usage(); return 0; }
+        else if (arg == "-q" || arg == "--quiet") opt.listing = false;
+        else if (arg == "-n" || arg == "--no-run") opt.run = false;
+        else if (arg == "-t" || arg == "--trace") opt.trace = true;
+        else if (arg == "-m" || arg == "--model") {
+            std::string m = value();
+            if (m == "68000") opt.model = CPUModel::M68000;
+            else if (m == "68010") opt.model = CPUModel::M68010;
+            else if (m == "68020") opt.model = CPUModel::M68020;
+            else { fprintf(stderr, "Unknown model %s\n", m.c_str()); return 2; }
+        }
+        else if (arg == "-s" || arg == "--start") { opt.hasStart = true; opt.start = u32(strtoul(value().c_str(), nullptr, 16)); }
+        else if (arg == "-c" || arg == "--max-cycles") opt.maxCycles = strtoull(value().c_str(), nullptr, 10);
+        else if (!arg.empty() && arg[0] == '-') { fprintf(stderr, "Unknown option %s\n\n", arg.c_str()); usage(); return 2; }
+        else if (path.empty()) path = arg;
+        else { usage(); return 2; }
+    }
+
+    if (path.empty()) { usage(); return 2; }
+
+    try {
+
+        Image image = loadSRecords(path);
+
+        // Determine the start address. The S9 record of an assembler that
+        // knows no entry point contains 0, which is not part of the program.
+        u32 start = image.lowest();
+        if (opt.hasStart) {
+            start = opt.start;
+        } else if (image.hasStart && image.contains(image.start)) {
+            start = image.start;
+        } else {
+            if (opt.listing) fprintf(stderr, "No usable start address in the file. Starting at $%06X.\n\n", start);
+        }
+
+        Easy68k cpu;
+        cpu.setModel(opt.model);
+        cpu.load(image, start);
+
+        if (opt.listing) cpu.listing(image);
+        if (opt.run) cpu.run(opt);
+
+        return cpu.exitCode;
+
+    } catch (const std::exception &e) {
+
+        fprintf(stderr, "Error: %s\n", e.what());
+        return 1;
+    }
+}

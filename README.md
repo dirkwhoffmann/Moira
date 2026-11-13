@@ -7,7 +7,7 @@
 | Folder | Content |
 |--------|---------|
 | `Moira/` | The CPU core. This is the only folder you need to use Moira in your own project. |
-| `Examples/` | Small programs that show how to use Moira. Start with `Fibonacci/`. |
+| `Examples/` | Small programs that show how to use Moira. Start with `Fibonacci/`. `Easy68k/` is a console tool that runs Easy68K programs (S-record files) and emulates their TRAP #15 calls. |
 | `Tests/` | All tests and test tools. See `Tests/README.md`. |
 | `Manual/` | Sources of the manual: guides (Markdown) and the API reference (Doxygen, moxygen, VitePress). Run `make` inside the folder to build it. |
 | `docs/` | The published web site. |

@@ -128,6 +128,20 @@
 		50F10000000000000000010C /* MFloat80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000013 /* MFloat80.cpp */; };
 		50F10000000000000000010D /* FpuEnv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000014 /* FpuEnv.cpp */; };
 		50F20000000000000000000C /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F20000000000000000000B /* main.cpp */; };
+		50F2E0000000000000000100 /* FpuEnvMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000001 /* FpuEnvMath.cpp */; };
+		50F2E0000000000000000101 /* MoiraDebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */; };
+		50F2E0000000000000000102 /* Moira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F332386A7DD004D3EC2 /* Moira.cpp */; };
+		50F2E0000000000000000103 /* MoiraCore68010.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55703C9956D2BECD0F343A8F /* MoiraCore68010.cpp */; };
+		50F2E0000000000000000104 /* MoiraCore68000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61F3AFFB3C6CFCEC22A0FD23 /* MoiraCore68000.cpp */; };
+		50F2E0000000000000000105 /* MoiraCore68020.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1654296120AA412377E9642D /* MoiraCore68020.cpp */; };
+		50F2E0000000000000000106 /* FPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81033098E38500E2E307 /* FPU.cpp */; };
+		50F2E0000000000000000107 /* MMU030.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E00000000000000000A002 /* MMU030.cpp */; };
+		50F2E0000000000000000108 /* MMU040.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E00000000000000000A0F3 /* MMU040.cpp */; };
+		50F2E0000000000000000109 /* Cache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C20E21D44E8A477AB1A178E8 /* Cache.cpp */; };
+		50F2E000000000000000010A /* FpuFormats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 505A81053098E38500E2E307 /* FpuFormats.cpp */; };
+		50F2E000000000000000010B /* MFloat80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000013 /* MFloat80.cpp */; };
+		50F2E000000000000000010C /* FpuEnv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000014 /* FpuEnv.cpp */; };
+		50F2E000000000000000000B /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F2E000000000000000000A /* main.cpp */; };
 		50F200000000000000000101 /* FpuEnvMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50A300000000000000000001 /* FpuEnvMath.cpp */; };
 		50F200000000000000000102 /* MoiraDebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 502C09DD23C8D82600A179E1 /* MoiraDebugger.cpp */; };
 		50F200000000000000000103 /* Moira.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50804F332386A7DD004D3EC2 /* Moira.cpp */; };
@@ -793,6 +807,13 @@
 		50F100000000000000000022 /* Smoke.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Smoke.cpp; sourceTree = "<group>"; };
 		50F100000000000000000030 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F200000000000000000002 /* fibonacci */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fibonacci; sourceTree = BUILT_PRODUCTS_DIR; };
+		50F2E0000000000000000002 /* easy68k */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = easy68k; sourceTree = BUILT_PRODUCTS_DIR; };
+		50F2E000000000000000000A /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		50F2E000000000000000000C /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		50F2E0000000000000000010 /* hello.s */ = {isa = PBXFileReference; lastKnownFileType = text; path = hello.s; sourceTree = "<group>"; };
+		50F2E0000000000000000011 /* tasks.s */ = {isa = PBXFileReference; lastKnownFileType = text; path = tasks.s; sourceTree = "<group>"; };
+		50F2E0000000000000000012 /* hello.s68 */ = {isa = PBXFileReference; lastKnownFileType = text; path = hello.s68; sourceTree = "<group>"; };
+		50F2E0000000000000000013 /* tasks.s68 */ = {isa = PBXFileReference; lastKnownFileType = text; path = tasks.s68; sourceTree = "<group>"; };
 		50F20000000000000000000B /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		50F40000000000000000000C /* unit */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = unit; sourceTree = BUILT_PRODUCTS_DIR; };
 		50F400000000000000000113 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -971,6 +992,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				50F100000000000000000017 /* libMoiraMAME.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50F2E0000000000000000004 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1371,6 +1399,7 @@
 				50FE00000000000000001020 /* sstuae */,
 				50F10000000000000000000C /* smoke */,
 				50F200000000000000000002 /* fibonacci */,
+				50F2E0000000000000000002 /* easy68k */,
 				50F40000000000000000000C /* unit */,
 			);
 			name = Products;
@@ -1523,6 +1552,19 @@
 			path = Common;
 			sourceTree = "<group>";
 		};
+		50F2E0000000000000000009 /* Easy68k */ = {
+			isa = PBXGroup;
+			children = (
+				50F2E000000000000000000C /* CMakeLists.txt */,
+				50F2E000000000000000000A /* main.cpp */,
+				50F2E0000000000000000010 /* hello.s */,
+				50F2E0000000000000000012 /* hello.s68 */,
+				50F2E0000000000000000011 /* tasks.s */,
+				50F2E0000000000000000013 /* tasks.s68 */,
+			);
+			path = Easy68k;
+			sourceTree = "<group>";
+		};
 		50F20000000000000000000A /* Fibonacci */ = {
 			isa = PBXGroup;
 			children = (
@@ -1574,6 +1616,7 @@
 			children = (
 				50F57DF630A42DB700EDBDBA /* CMakeLists.txt */,
 				50F20000000000000000000A /* Fibonacci */,
+				50F2E0000000000000000009 /* Easy68k */,
 			);
 			path = Examples;
 			sourceTree = "<group>";
@@ -1859,6 +1902,22 @@
 			productReference = 50F200000000000000000002 /* fibonacci */;
 			productType = "com.apple.product-type.tool";
 		};
+		50F2E0000000000000000001 /* easy68k */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 50F2E0000000000000000005 /* Build configuration list for PBXNativeTarget "easy68k" */;
+			buildPhases = (
+				50F2E0000000000000000003 /* Sources */,
+				50F2E0000000000000000004 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = easy68k;
+			productName = easy68k;
+			productReference = 50F2E0000000000000000002 /* easy68k */;
+			productType = "com.apple.product-type.tool";
+		};
 		50F40000000000000000000B /* unit */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 50F40000000000000000000F /* Build configuration list for PBXNativeTarget "unit" */;
@@ -2126,6 +2185,7 @@
 				50FA0000000000000000032B /* sequencemame */,
 				50F10000000000000000000B /* smoke */,
 				50F200000000000000000001 /* fibonacci */,
+				50F2E0000000000000000001 /* easy68k */,
 				50F40000000000000000000B /* unit */,
 			);
 		};
@@ -2334,6 +2394,27 @@
 				50F100000000000000000024 /* Smoke.cpp in Sources */,
 				50F100000000000000000023 /* SSTFile.cpp in Sources */,
 				50F600000000000000000032 /* Common.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50F2E0000000000000000003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				50F2E0000000000000000100 /* FpuEnvMath.cpp in Sources */,
+				50F2E0000000000000000101 /* MoiraDebugger.cpp in Sources */,
+				50F2E0000000000000000102 /* Moira.cpp in Sources */,
+				50F2E0000000000000000103 /* MoiraCore68010.cpp in Sources */,
+				50F2E0000000000000000104 /* MoiraCore68000.cpp in Sources */,
+				50F2E0000000000000000105 /* MoiraCore68020.cpp in Sources */,
+				50F2E0000000000000000106 /* FPU.cpp in Sources */,
+				50F2E0000000000000000107 /* MMU030.cpp in Sources */,
+				50F2E0000000000000000108 /* MMU040.cpp in Sources */,
+				50F2E0000000000000000109 /* Cache.cpp in Sources */,
+				50F2E000000000000000010A /* FpuFormats.cpp in Sources */,
+				50F2E000000000000000010B /* MFloat80.cpp in Sources */,
+				50F2E000000000000000010C /* FpuEnv.cpp in Sources */,
+				50F2E000000000000000000B /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3680,6 +3761,46 @@
 			};
 			name = Release;
 		};
+		50F2E0000000000000000006 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/Moira/**";
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USE_HEADERMAP = NO;
+			};
+			name = Debug;
+		};
+		50F2E0000000000000000007 /* Debug-UAE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/Moira/**";
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USE_HEADERMAP = NO;
+			};
+			name = "Debug-UAE";
+		};
+		50F2E0000000000000000008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/Moira/**";
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USE_HEADERMAP = NO;
+			};
+			name = Release;
+		};
 		50F400000000000000000010 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -4641,6 +4762,16 @@
 				50F200000000000000000006 /* Debug */,
 				50F200000000000000000007 /* Debug-UAE */,
 				50F200000000000000000008 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		50F2E0000000000000000005 /* Build configuration list for PBXNativeTarget "easy68k" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				50F2E0000000000000000006 /* Debug */,
+				50F2E0000000000000000007 /* Debug-UAE */,
+				50F2E0000000000000000008 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
