@@ -100,9 +100,8 @@ using namespace moira;
  *     C2      Checksum
  *
  * The address in the final S9 record is the entry point of the program. An
- * assembler that doesn't know it (the program has no end label) writes 0. Such
- * an address is ignored here, and the program starts at the lowest address that
- * has been loaded.
+ * assembler that doesn't know it writes 0. Such an address is ignored here,
+ * and the program starts at the lowest address that has been loaded.
  */
 
 struct Segment {
@@ -122,12 +121,6 @@ struct Image {
         u32 result = 0xFFFFFFFF;
         for (auto &s : segments) result = std::min(result, s.addr);
         return result;
-    }
-
-    bool contains(u32 addr) const
-    {
-        for (auto &s : segments) if (addr >= s.addr && addr < s.addr + s.data.size()) return true;
-        return false;
     }
 
     // Appends a block of data. Contiguous blocks are merged into one segment.
@@ -152,9 +145,8 @@ static int hexDigit(char c)
     return -1;
 }
 
-// Parses S-records. The records are separated by white space. The source
-// describes the origin of the text in error messages.
-static Image parseSRecords(const std::string &text, const std::string &source)
+// Parses S-records, separated by white space.
+static Image parseSRecords(const std::string &text)
 {
     Image image;
     std::istringstream stream(text);
@@ -162,7 +154,7 @@ static Image parseSRecords(const std::string &text, const std::string &source)
     int count = 0;
 
     auto fail = [&](const std::string &msg) {
-        throw std::runtime_error(source + ", record " + std::to_string(count) + ": " + msg);
+        throw std::runtime_error("Record " + std::to_string(count) + ": " + msg);
     };
 
     while (stream >> rec) {
@@ -211,7 +203,7 @@ static Image parseSRecords(const std::string &text, const std::string &source)
         }
     }
 
-    if (image.segments.empty()) throw std::runtime_error(source + ": No program data found");
+    if (image.segments.empty()) throw std::runtime_error("No program data found");
     return image;
 }
 
@@ -222,7 +214,7 @@ static Image loadSRecords(const std::string &path)
 
     std::stringstream buffer;
     buffer << file.rdbuf();
-    return parseSRecords(buffer.str(), path);
+    return parseSRecords(buffer.str());
 }
 
 
@@ -285,12 +277,14 @@ public:
     void write16(u32 addr, u16 val) const override { write8(addr, u8(val >> 8)); write8(addr + 1, u8(val)); }
     void write32(u32 addr, u32 val) const override { write16(addr, u16(val >> 16)); write16(addr + 2, u16(val)); }
 
-    // Easy68K does not know about exception handlers. If a program causes an
-    // exception for which no handler is installed, we stop instead of running
-    // into the code at address 0.
     void willExecute(M68kException exc, u16 vector) override
     {
+        // Easy68K knows nothing about exception handlers. If a program causes an
+        // exception for which no handler is installed, we stop instead of running
+        // into the code at address 0.
+
         if (read32(u32(vector) * 4) == 0) {
+            
             fprintf(stderr, "\nException %d at $%06X (no handler installed)\n", vector, getPC0());
             stopped = true;
             exitCode = 1;
@@ -310,6 +304,7 @@ public:
         // Reset the CPU. This loads the initial SP and PC from the vector table.
         // The table is temporarily written, because the program might use the
         // memory at address 0.
+        
         u8 saved[8];
         for (int i = 0; i < 8; i++) saved[i] = ram[i];
         for (int i = 0; i < 4; i++) {
@@ -329,21 +324,7 @@ public:
     {
         char instr[128];
         (void)disassemble(instr, getPC0());
-
         fprintf(stderr, "%06X %s\n", getPC0(), instr);
-        
-        /*
-        u16 sr = getSR();
-        char flags[6];
-        for (int i = 0; i < 5; i++) flags[i] = (sr >> (4 - i)) & 1 ? "XNZVC"[i] : '-';
-        flags[5] = 0;
-
-        fprintf(stderr, "%06X %-26s %s", getPC0(), instr, flags);
-        for (int i = 0; i < 8; i++) fprintf(stderr, " %08X", getD(i));
-        fprintf(stderr, " |");
-        for (int i = 0; i < 8; i++) fprintf(stderr, " %08X", getA(i));
-        fprintf(stderr, "\n");
-        */
     }
 
     // Runs the program until it stops
@@ -361,7 +342,7 @@ public:
 
                 trap15();
 
-                // Continue with the next instruction (this refills the prefetch queue)
+                // Continue with the next instruction (refills the prefetch queue)
                 if (!stopped) debugger.jump(pc + 2);
                 continue;
             }
@@ -412,7 +393,9 @@ public:
     std::string cstring(u32 addr) const
     {
         std::string s;
+        
         for (u32 i = 0; i < memSize; i++) {
+            
             u8 c = read8(addr + i);
             if (c == 0) break;
             s += char(c);
@@ -440,7 +423,9 @@ public:
     bool readLine(std::string &line)
     {
         fflush(stdout);
+        
         if (std::getline(std::cin, line)) {
+            
             if (!line.empty() && line.back() == '\r') line.pop_back();
             return true;
         }
@@ -474,15 +459,21 @@ public:
 
         switch (task) {
 
-            case 0:     // Display string with length D1.W, with CR/LF
+            case 0:
+                
+                // Display string with length D1.W, with CR/LF
                 put(string(a1, std::min<u32>(d1 & 0xFFFF, 255))); putNewline();
                 break;
 
-            case 1:     // Display string with length D1.W, without CR/LF
+            case 1:
+                
+                // Display string with length D1.W, without CR/LF
                 put(string(a1, std::min<u32>(d1 & 0xFFFF, 255)));
                 break;
 
-            case 2: {   // Read a string from the keyboard
+            case 2: {
+                
+                // Read a string from the keyboard
                 std::string line;
                 if (!readLine(line)) break;
                 if (line.size() > 80) line.resize(80);
@@ -491,15 +482,21 @@ public:
                 setD(1, (d1 & 0xFFFF0000) | u32(line.size()));
                 break;
             }
-            case 3:     // Display D1.L as signed decimal
+            case 3:
+                
+                // Display D1.L as signed decimal
                 put(std::to_string(i32(d1)));
                 break;
 
-            case 4:     // Read a number from the keyboard
+            case 4:
+                
+                // Read a number from the keyboard
                 readNumber();
                 break;
 
-            case 5: {   // Read a character from the keyboard
+            case 5: {
+                
+                // Read a character from the keyboard
                 fflush(stdout);
                 int c = std::cin.get();
                 if (c == EOF) {
@@ -511,15 +508,21 @@ public:
                 setD(1, (d1 & 0xFFFFFF00) | u32(c & 0xFF));
                 break;
             }
-            case 6:     // Display the character in D1.B
+            case 6:
+                
+                // Display the character in D1.B
                 put(u8(d1));
                 break;
 
-            case 7:     // Check if input is pending
+            case 7:
+                
+                // Check if input is pending
                 setD(1, (d1 & 0xFFFFFF00) | (std::cin.rdbuf()->in_avail() > 0 ? 1 : 0));
                 break;
 
-            case 8: {   // Time in hundredths of a second since midnight
+            case 8: {
+                
+                // Time in hundredths of a second since midnight
                 auto now = std::chrono::system_clock::now();
                 auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() % 1000;
                 std::time_t t = std::chrono::system_clock::to_time_t(now);
@@ -527,11 +530,15 @@ public:
                 setD(1, u32(((tm.tm_hour * 60 + tm.tm_min) * 60 + tm.tm_sec) * 100 + ms / 10));
                 break;
             }
-            case 9:     // Terminate the program
+            case 9:
+                
+                // Terminate the program
                 stopped = true;
                 break;
 
-            case 11: {  // Position the cursor, or clear the screen
+            case 11: {
+                
+                // Position the cursor, or clear the screen
                 if ((d1 & 0xFFFF) == 0xFF00) {
                     if (color) fputs("\033[2J\033[H", stdout);
                 } else {
@@ -540,43 +547,65 @@ public:
                 }
                 break;
             }
-            case 12:    // Keyboard echo (the terminal controls the echo)
-            case 16:    // Display properties (input prompt, line feed after input)
+            case 12:
+                
+                // Keyboard echo (the terminal controls the echo)
+                [[fallthrough]];
+                
+            case 16:
+                
+                // Display properties (input prompt, line feed after input)
                 break;
 
-            case 13:    // Display zero-terminated string, with CR/LF
+            case 13:
+                
+                // Display zero-terminated string, with CR/LF
                 put(cstring(a1)); putNewline();
                 break;
 
-            case 14:    // Display zero-terminated string, without CR/LF
+            case 14:
+                
+                // Display zero-terminated string, without CR/LF
                 put(cstring(a1));
                 break;
 
-            case 15:    // Display D1.L (unsigned) in the base D2.B
+            case 15:
+                
+                // Display D1.L (unsigned) in the base D2.B
                 if ((d2 & 0xFF) >= 2 && (d2 & 0xFF) <= 36) put(toBase(d1, int(d2 & 0xFF)));
                 break;
 
-            case 17:    // Display a string, then D1.L as signed decimal
+            case 17:
+                
+                // Display a string, then D1.L as signed decimal
                 put(cstring(a1)); put(std::to_string(i32(d1)));
                 break;
 
-            case 18:    // Display a string, then read a number
+            case 18:
+                
+                // Display a string, then read a number
                 put(cstring(a1)); readNumber();
                 break;
 
-            case 19:    // Key states (no keyboard scan codes on a console)
+            case 19:
+                
+                // Key states (no keyboard scan codes on a console)
                 warnUnsupported(task, "key states");
                 setD(1, 0);
                 break;
 
-            case 20: {  // Display D1.L as signed decimal in a field of D2.B columns
+            case 20: {
+                
+                // Display D1.L as signed decimal in a field of D2.B columns
                 std::string s = std::to_string(i32(d1));
                 size_t width = d2 & 0xFF;
                 if (s.size() < width) s.insert(0, width - s.size(), ' ');
                 put(s);
                 break;
             }
-            case 21: {  // Set the font color and style
+            case 21: {
+                
+                // Set the font color and style
                 if (color) {
                     printf("\033[0");
                     if (d2 & 1) printf(";1");
@@ -588,9 +617,20 @@ public:
                 }
                 break;
             }
-            case 10:    warnUnsupported(task, "printer output"); break;
-            case 22:    warnUnsupported(task, "read character from screen"); setD(1, d1 & 0xFFFFFF00); break;
-            default:    warnUnsupported(task, "unknown task"); break;
+            case 10:
+                
+                warnUnsupported(task, "printer output");
+                break;
+                
+            case 22:
+                
+                warnUnsupported(task, "read character from screen"); setD(1, d1 & 0xFFFFFF00);
+                break;
+                
+            default:
+                
+                warnUnsupported(task, "unknown task");
+                break;
         }
     }
 };
@@ -642,11 +682,15 @@ static void usage()
 int main(int argc, const char *argv[])
 {
     Options opt;
-    std::string path;           // Name of the program file (--file)
+    std::string path;
 
     // Do not synchronize with stdio, so that in_avail() reports buffered input
     std::ios::sync_with_stdio(false);
 
+    printf("Moira - A Motorola 68k CPU emulator\n\n");
+    printf("Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de\n");
+    printf("Published under the terms of the MIT License\n\n");
+    
     for (int i = 1; i < argc; i++) {
 
         std::string arg = argv[i];
@@ -674,9 +718,10 @@ int main(int argc, const char *argv[])
     try {
 
         Image image;
+        
         if (path.empty()) {
-            fprintf(stderr, "No program file given. Running the built-in example:\n\n%s\n", helloSource);
-            image = parseSRecords(helloRecords, "built-in example");
+            fprintf(stderr, "Running the built-in example:\n\n%s\n", helloSource);
+            image = parseSRecords(helloRecords);
         } else {
             image = loadSRecords(path);
         }
@@ -684,18 +729,16 @@ int main(int argc, const char *argv[])
         // Determine the start address. The S9 record of an assembler that
         // knows no entry point contains 0, which is not part of the program.
         u32 start = image.lowest();
+        
         if (opt.hasStart) {
             start = opt.start;
-        } else if (image.hasStart && image.contains(image.start)) {
-            start = image.start;
         } else {
-            if (opt.trace) fprintf(stderr, "No usable start address in the program. Starting at $%06X.\n\n", start);
+            if (opt.trace) fprintf(stderr, "No start address specified. Starting at $%06X.\n\n", start);
         }
 
         Easy68k cpu;
         cpu.setModel(opt.model);
         cpu.load(image, start);
-
         cpu.run(opt);
 
         return cpu.exitCode;
