@@ -573,6 +573,13 @@ protected:
     /// Called when the CPU jumps to an exception vector
     virtual void didJumpToVector(int nr, u32 addr) { }
 
+    /// Called when the CPU runs a CPU space cycle (FC = 7)
+    /// @param type  The cycle type
+    /// @param arg   The interrupt level (IRQ_ACK) or the breakpoint number (BREAKPOINT)
+    /// @note  readFC() returns 7 while this delegate is called. For interrupt
+    ///        acknowledge cycles, the same holds for readIrqUserVector().
+    virtual void cpuSpaceCycle(CpuSpaceType type, u8 arg) { }
+
     
     //
     // Cache register delegates
@@ -676,6 +683,9 @@ protected:
     
     // Called when the CPU jumps to an exception vector
     void didJumpToVector(int nr, u32 addr);
+
+    // Called when the CPU runs a CPU space cycle (FC = 7)
+    void cpuSpaceCycle(CpuSpaceType type, u8 arg);
     
     
     //
@@ -993,7 +1003,7 @@ public:
 private:
     
     // Selects the IRQ vector based on the interrupt level
-    u16 getIrqVector(u8 level) const;
+    u16 getIrqVector(u8 level);
 
 
     //

@@ -1560,6 +1560,12 @@ Moira::execBkpt(u16 opcode)
 
     } else {
 
+        // The CPU acknowledges the breakpoint with a CPU space cycle (FC = 7)
+        u8 oldSource = fcSource;
+        fcSource = 3;
+        cpuSpaceCycle(CpuSpaceType::BREAKPOINT, opcode & 7);
+        fcSource = oldSource;
+
         execException<C>(M68kException::BKPT);
     }
 

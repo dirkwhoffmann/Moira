@@ -293,6 +293,18 @@ enum class IrqMode
     UNINITIALIZED               ///< Uninitialized IRQ mode
 };
 
+/// Types of CPU space cycles
+/// @details A CPU space cycle is a bus cycle with all function code pins (FC2-FC0)
+///          set. The type of the cycle is driven on address lines A19-A16. Moira
+///          reports the cycles that have an observable effect on the system.
+///          Coprocessor cycles are not reported, because the FPU and the MMU are
+///          part of the emulated CPU.
+enum class CpuSpaceType : u8
+{
+    BREAKPOINT   = 0x0,         ///< Breakpoint acknowledge (BKPT instruction)
+    IRQ_ACK      = 0xF          ///< Interrupt acknowledge
+};
+
 /// Address spaces
 enum class AddrSpace
 {
@@ -479,6 +491,7 @@ static constexpr u8 USER_DATA       = 1;  ///< User-mode access to data space
 static constexpr u8 USER_PROG       = 2;  ///< User-mode access to program space
 static constexpr u8 SUPERVISOR_DATA = 5;  ///< Supervisor access to data space
 static constexpr u8 SUPERVISOR_PROG = 6;  ///< Supervisor access to program space
+static constexpr u8 CPU_SPACE       = 7;  ///< CPU space cycle (interrupt acknowledge, breakpoint acknowledge)
 }
 
 /** Availability masks for different CPU models.

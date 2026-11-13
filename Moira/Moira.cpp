@@ -1036,6 +1036,7 @@ Moira::readFC() const
         case 0: return u8((reg.sr.s ? 4 : 0) | fcl);
         case 1: return u8(reg.sfc);
         case 2: return u8(reg.dfc);
+        case 3: return FC::CPU_SPACE;
 
         default:
             fatalError;
@@ -1062,20 +1063,29 @@ Moira::setIPL(u8 val)
 }
 
 u16
-Moira::getIrqVector(u8 level) const {
+Moira::getIrqVector(u8 level) {
 
     assert(level < 8);
 
+    // The interrupt acknowledge cycle is a CPU space cycle (FC = 7)
+    u8 oldSource = fcSource;
+    fcSource = 3;
+    cpuSpaceCycle(CpuSpaceType::IRQ_ACK, level);
+
+    u16 vector = 0;
     switch (irqMode) {
 
-        case IrqMode::AUTO:          return 24 + level;
-        case IrqMode::USER:          return readIrqUserVector(level) & 0xFF;
-        case IrqMode::SPURIOUS:      return 24;
-        case IrqMode::UNINITIALIZED: return 15;
+        case IrqMode::AUTO:          vector = 24 + level; break;
+        case IrqMode::USER:          vector = readIrqUserVector(level) & 0xFF; break;
+        case IrqMode::SPURIOUS:      vector = 24; break;
+        case IrqMode::UNINITIALIZED: vector = 15; break;
 
         default:
             fatalError;
     }
+
+    fcSource = oldSource;
+    return vector;
 }
 
 InstrInfo

@@ -49,8 +49,14 @@ public:
     void write16(u32 a, u16 v) const override { note(true, a); ram[a & 0xFFFFF] = v >> 8; ram[(a + 1) & 0xFFFFF] = v & 0xFF; }
     void write32(u32 a, u32 v) const override { write16(a, v >> 16); write16(a + 2, v & 0xFFFF); }
 
-    u16 readIrqUserVector(u8 level) const override { userVecCalls.push_back(level); return userVec[level]; }
+    u16 readIrqUserVector(u8 level) const override { userVecCalls.push_back(level); userVecFC.push_back(readFC()); return userVec[level]; }
     void willInterrupt(u8 level) override { irqLevels.push_back(level); }
+
+    struct SpaceCycle { CpuSpaceType type; u8 arg; int fc; };
+    std::vector<SpaceCycle> spaceCycles;
+    mutable std::vector<int> userVecFC;     // FC seen inside readIrqUserVector
+
+    void cpuSpaceCycle(CpuSpaceType type, u8 arg) override { spaceCycles.push_back({ type, arg, readFC() }); }
 
     void note(bool w, u32 a) const { if (logging) log.push_back({ w, a & 0xFFFFFF, readFC() }); }
 
@@ -81,6 +87,8 @@ public:
         debugger.jump(codeStart);
         irqLevels.clear();
         userVecCalls.clear();
+        userVecFC.clear();
+        spaceCycles.clear();
     }
 
     void step(int n = 1) { for (int i = 0; i < n; i++) execute(); }
@@ -99,6 +107,8 @@ public:
         if (!shortFrame()) CHECK(peek16(sp + 6) == u16(vec * 4));    // Format 0, vector offset
     }
 };
+
+namespace FCv { enum { UD = 1, UP = 2, SD = 5, SP = 6, CPU = 7 }; }
 
 const CPUModel models[] = { CPUModel::M68000, CPUModel::M68010, CPUModel::M68020 };
 
@@ -302,10 +312,101 @@ TEST_CASE("A pending interrupt is taken when the mask drops")
 
 
 //
-// Function code pins
+// CPU space cycles
 //
 
-namespace FCv { enum { UD = 1, UP = 2, SD = 5, SP = 6, CPU = 7 }; }
+TEST_CASE("CPU space: interrupt acknowledge is reported with FC = 7")
+{
+    for (auto model : models) {
+        for (auto mode : { IrqMode::AUTO, IrqMode::USER, IrqMode::SPURIOUS, IrqMode::UNINITIALIZED }) {
+            for (int level = 1; level <= 7; level++) {
+
+                INFO("Model ", int(model), ", mode ", int(mode), ", level ", level);
+                IrqCPU cpu(model);
+                cpu.setIrqMode(mode);
+                cpu.load({});
+                cpu.setSR(0x2000);
+
+                cpu.step();
+                CHECK(cpu.spaceCycles.empty());             // No cycle without an interrupt
+                cpu.setIPL(level);
+                cpu.step(2);                                // The interrupt is taken after the first instruction
+
+                REQUIRE(cpu.spaceCycles.size() == 1);
+                CHECK(cpu.spaceCycles[0].type == CpuSpaceType::IRQ_ACK);
+                CHECK(cpu.spaceCycles[0].arg == level);
+                CHECK(cpu.spaceCycles[0].fc == FCv::CPU);
+
+                // The device is asked during the same cycle
+                if (mode == IrqMode::USER) {
+                    REQUIRE(cpu.userVecFC.size() == 1);
+                    CHECK(cpu.userVecFC[0] == FCv::CPU);
+                }
+            }
+        }
+    }
+}
+
+TEST_CASE("CPU space: the acknowledge cycle does not leak into later accesses")
+{
+    FOR_EACH_MODEL
+    cpu.load({ 0x3039, 0x0000, 0x2000 });                           // move.w $2000,d0
+    cpu.setSR(0x2000);
+    cpu.setIPL(4);
+    cpu.logging = true;
+    cpu.step(2);                                                    // Interrupt, then the first handler instruction
+    cpu.logging = false;
+    REQUIRE(cpu.spaceCycles.size() == 1);
+    for (auto &a : cpu.log) CHECK(a.fc != FCv::CPU);                // Stack, vector and fetch cycles are no CPU space cycles
+    CHECK(cpu.readFC() != FCv::CPU);
+    END_MODELS
+}
+
+TEST_CASE("CPU space: BKPT acknowledges the breakpoint number")
+{
+    for (auto model : { CPUModel::M68010, CPUModel::M68020 }) {
+        for (int n = 0; n < 8; n++) {
+
+            INFO("Model ", int(model), ", breakpoint ", n);
+            IrqCPU cpu(model);
+            cpu.load({ u16(0x4848 | n) });                          // bkpt #n
+            cpu.setSR(0x2700);
+            cpu.step();
+
+            REQUIRE(cpu.spaceCycles.size() == 1);
+            CHECK(cpu.spaceCycles[0].type == CpuSpaceType::BREAKPOINT);
+            CHECK(cpu.spaceCycles[0].arg == n);
+            CHECK(cpu.spaceCycles[0].fc == FCv::CPU);
+            CHECK(cpu.getPC0() == IrqCPU::handler(4));              // The exception follows the cycle
+            CHECK(cpu.readFC() != FCv::CPU);
+        }
+    }
+}
+
+TEST_CASE("CPU space: the 68000 has no BKPT cycle")
+{
+    IrqCPU cpu(CPUModel::M68000);
+    cpu.load({ 0x4848 });
+    cpu.setSR(0x2700);
+    cpu.step();
+    CHECK(cpu.spaceCycles.empty());
+    CHECK(cpu.getPC0() == IrqCPU::handler(4));                      // Illegal instruction
+}
+
+TEST_CASE("CPU space: ordinary instructions and exceptions raise no cycle")
+{
+    FOR_EACH_MODEL
+    cpu.load({ 0x4E40, 0x4E71, 0x4AFC });                           // trap #0 / nop / illegal
+    cpu.setSR(0x2700);
+    cpu.step(4);
+    CHECK(cpu.spaceCycles.empty());
+    END_MODELS
+}
+
+
+//
+// Function code pins
+//
 
 // Runs one instruction and returns the accesses that are not instruction fetches
 // (fetches are the accesses at codeStart and above, which is where the program is).
