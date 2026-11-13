@@ -589,6 +589,9 @@ Moira::execException(M68kException exc, int nr)
     // Remember the exception vector
     exception = vector;
 
+    // Exceptions terminate loop mode
+    flags &= ~State::LOOPING;
+
     // Trace on change of flow (T0) also follows the exceptions that instructions raise
     [[maybe_unused]] const bool t0 = C == Core::C68020 && reg.sr.t0 && !reg.sr.t1;
 

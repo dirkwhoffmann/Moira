@@ -422,9 +422,6 @@ Moira::execute()
         // Slow path: Process flags one by one
         //
 
-        // Start state of the instruction (if saved)
-        const Registers *saved = nullptr;
-
         if (flags & (HALTED | TRACE_EXC | TRACING)) {
 
             // Only continue if the CPU is not halted
@@ -469,19 +466,23 @@ Moira::execute()
         }
 
         // Execute the instruction
-        saved = saveRegisters();
+        {
+            const Registers *saved = saveRegisters();
 
-        if (flags & LOOPING) {
-
-            assert(loop[queue.ird]);
-            (this->*loop[queue.ird])(queue.ird);
-
-        } else {
-
-            instrStart = reg.pc0;
-            if constexpr (compat == Compatibility::UAE) instrIrd = queue.ird;
             try {
-                (this->*exec[queue.ird])(queue.ird);
+
+                if (flags & LOOPING) {
+
+                    assert(loop[queue.ird]);
+                    (this->*loop[queue.ird])(queue.ird);
+
+                } else {
+
+                    instrStart = reg.pc0;
+                    if constexpr (compat == Compatibility::UAE) instrIrd = queue.ird;
+                    (this->*exec[queue.ird])(queue.ird);
+                }
+
             } catch (const std::exception &exc) {
                 processException(exc, saved);
             }
@@ -622,6 +623,9 @@ Moira::processException(const std::exception &exc, const Registers *saved)
 template <Core C> void
 Moira::processException(const std::exception &exc, const Registers *saved)
 {
+    // A fault aborts the instruction and terminates loop mode
+    flags &= ~State::LOOPING;
+
     try {
 
         if (auto ae = dynamic_cast<const AddressError *>(&exc); ae) {
