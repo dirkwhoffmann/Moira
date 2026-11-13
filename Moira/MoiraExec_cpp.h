@@ -771,18 +771,7 @@ Moira::execAddxEa(u16 opcode)
         writeM<C, M, Word, POLL | AE_INC_PC>(ea2 + 2, result & 0xFFFF);
         if constexpr (EXACT_68000) setCCR(ccrFin);
         looping<I>() ? noPrefetch<C>() : prefetch<C, KEEP_IRD>();
-        if constexpr (compat == Compatibility::UAE) {
-
-            // UAE stacks the IRD of the executing instruction
-            try { writeM<C, M, Word>(ea2, result >> 16); }
-            catch (BusError &e) {
-                e.stackFrame.ird = irdOld;
-                e.stackFrame.code = (irdOld & 0xFFE0) | (e.stackFrame.code & 0x1F);
-                throw;
-            }
-        } else {
-            writeM<C, M, Word>(ea2, result >> 16);
-        }
+        writeM<C, M, Word>(ea2, result >> 16);
 
     } else if constexpr (S == Long && C == Core::C68010 && !(compat == Compatibility::MUSASHI)) {
 

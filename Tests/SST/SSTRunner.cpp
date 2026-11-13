@@ -356,6 +356,8 @@ void SSTRunner::runCase(const sst::Test &t, const sst::State &init, int k, int a
             if (e.write && e.fc == 5 && e.addr == (((rs.ssp & ADDR_MASK) + 2) & ~1u)) dm = 0x00FF;        // Undefined upper byte of the fault address
             if (e.write && e.fc == 5 && e.addr == (((rs.ssp & ADDR_MASK) + 8) & ~1u)) dm = ~srMask & 0x1F ? 0xFFE0 : 0xFFFF;   // Condition codes
             if (e.write && !halted && e.fc == 5 && e.addr == ((rs.ssp & ADDR_MASK) & ~1u)) dm = codeMask;   // Ignored bits of the code word
+            if (e.write && e.fc == 5 && e.addr == (((rs.ssp & ADDR_MASK) + 6) & ~1u) && ref.core->knownDifference(kd, init.prefetch[0], "frame.ird")) dm = 0;   // Stacked IRD
+            if (e.write && e.fc == 5 && e.addr == ((rs.ssp & ADDR_MASK) & ~1u) && ref.core->knownDifference(kd, init.prefetch[0], "frame.code")) dm &= 0x001F;   // IRD bits of the code word
             if (e.write && (e.data & e.mask & dm) != (g.data & g.mask & dm)) d += "data ";
             if (!d.empty() && getenv("EXC_BUS")) { for (size_t j = 0; j < mlog.size() || j < moira.log.size(); j++) { if (j < mlog.size()) printf("      ref   %2zu: cyc %3lld %c addr %06x fc %d\n", j, (long long)mlog[j].cycle, mlog[j].write ? 'W' : 'R', mlog[j].addr, mlog[j].fc); if (j < moira.log.size()) printf("      moira %2zu: cyc %3lld %c addr %06x fc %d\n", j, (long long)moira.log[j].cycle, moira.log[j].write ? 'W' : 'R', moira.log[j].addr, moira.log[j].fc); } }
             if (!d.empty()) { d.pop_back(); add("bus#" + std::to_string(i) + "(" + d + ")"); break; }

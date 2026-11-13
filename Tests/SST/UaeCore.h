@@ -144,6 +144,14 @@ struct UaeCore : RefCore {
      */
     bool knownDifference(const char *kind, u16 opcode, const std::string &field) const override
     {
+        /* 68000: If a bus error hits a bus cycle that follows the last prefetch of an instruction, UAE
+         * stacks the IRD of the executing instruction until the instruction ends. Moira follows MAME,
+         * which replaces the IRD when the last bus cycle starts. Address errors are not affected,
+         * because they are detected in the first cycle of an access (kind "ae-write").
+         */
+        if (model == CPUModel::M68000)
+            return !strcmp(kind, "write") && (field == "frame.ird" || field == "frame.code");
+
         if (model < CPUModel::M68EC020) return false;
         if (field == "frame.stagec" || field == "frame.stageb") return true;
         if (!strcmp(kind, "ae-fetch") && field == "frame.pc") return true;
