@@ -105,8 +105,8 @@ public:
         for (int i = 0; i < 4; i++) self->mem.poke(addr + i, u8(val >> (24 - 8 * i)));
     }
 
-    // Lets bus errors restore the registers (Moira does this only if an MMU is active)
-    void enableRestart() { flags |= State::MMU_ACTIVE; }
+    // Lets bus errors restore the registers (Moira does this only if an MMU is enabled or bus error emulation is on)
+    void enableRestart() { flags |= State::RESTARTABLE; }
 
     u8 dsack(u32) const override { return (wideBus || wide()) ? DSACK_32 : DSACK_16; }
 

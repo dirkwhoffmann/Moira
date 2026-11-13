@@ -63,6 +63,7 @@ target_compile_definitions(moiraMAME PUBLIC
 
     MOIRA_COMPATIBILITY=MAME
     MOIRA_EMULATE_ADDRESS_ERROR=true
+    MOIRA_EMULATE_BUS_ERROR=true
     MOIRA_PRECISE_TIMING=true
 )
 
@@ -86,6 +87,7 @@ target_compile_definitions(moiraUAEExc PUBLIC
 
     MOIRA_COMPATIBILITY=UAE
     MOIRA_EMULATE_ADDRESS_ERROR=true
+    MOIRA_EMULATE_BUS_ERROR=true
     MOIRA_PRECISE_TIMING=true
 )
 

@@ -22,6 +22,7 @@ add_executable(unit
     BusErrorTests.cpp
     DebuggerTests.cpp
     IrqFcTests.cpp
+    FastPathTests.cpp
     StackFrameTests.cpp
     ../Common/Common.cpp)
     
@@ -33,3 +34,19 @@ target_include_directories(unit PUBLIC
 
 add_test(NAME Unit COMMAND unit)
 set_tests_properties(Unit PROPERTIES LABELS "unit")
+
+# The same configuration tests against the default library (no bus error
+# emulation): The 68020 family runs on the fast path.
+add_executable(unitfast
+    main.cpp
+    FastPathTests.cpp
+    ../Common/Common.cpp)
+
+target_link_libraries(unitfast moira)
+target_include_directories(unitfast PUBLIC
+    ${CMAKE_SOURCE_DIR}/Moira
+    ${CMAKE_SOURCE_DIR}/Tests/Common
+    ${CMAKE_SOURCE_DIR}/Tests/ThirdParty)
+
+add_test(NAME UnitFast COMMAND unitfast)
+set_tests_properties(UnitFast PROPERTIES LABELS "unit")

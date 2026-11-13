@@ -267,7 +267,7 @@ protected:
     const Registers *saveRegisters()
     {
         // The registers are only needed if a bus fault can occur
-        if (!(flags & State::MMU_ACTIVE)) return nullptr;
+        if (!(flags & State::RESTARTABLE)) return nullptr;
 
         savedReg = reg;
         return &savedReg;

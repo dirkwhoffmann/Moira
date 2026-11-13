@@ -568,8 +568,8 @@ static constexpr int CHECK_WP       = (1 << 8);
 /// Enables checking for catchpoints.
 static constexpr int CHECK_CP       = (1 << 9);
 
-/// Set if a faulted instruction can be restarted (68020 and up, or active address translation). Keeps the fast path of execute() free of MMU checks.
-static constexpr int MMU_ACTIVE     = (1 << 10);
+/// Set if a faulted instruction can be restarted. This is the case if an MMU is enabled or if bus error emulation is requested (68020 and up). Keeps the fast path of execute() free of the register snapshot.
+static constexpr int RESTARTABLE    = (1 << 10);
 
 }
 

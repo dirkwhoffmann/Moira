@@ -517,13 +517,17 @@ Moira::execute(i64 cycles)
 void
 Moira::updateMmuFlag()
 {
-    // The 68020 family restarts a faulted instruction after RTE, with or without
-    // an MMU (the real CPU continues from its internal state; restarting is the
-    // approximation used by UAE).
-    if (mmu.isEnabled() || cpuModel >= CPUModel::M68EC020) {
-        flags |= State::MMU_ACTIVE;
+    // An address translation fault must be restartable. The same holds for a
+    // bus error of the 68020 family if the client asks for bus error emulation.
+    // The real CPU continues from its internal state after RTE. Restarting the
+    // instruction is the approximation used by UAE. Other models and
+    // configurations stay on the fast path, which does not save the registers.
+    bool restartable = mmu.isEnabled() || (MOIRA_EMULATE_BUS_ERROR && cpuModel >= CPUModel::M68EC020);
+
+    if (restartable) {
+        flags |= State::RESTARTABLE;
     } else {
-        flags &= ~State::MMU_ACTIVE;
+        flags &= ~State::RESTARTABLE;
     }
 }
 

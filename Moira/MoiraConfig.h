@@ -58,6 +58,25 @@
 #define MOIRA_EMULATE_ADDRESS_ERROR false
 #endif
 
+/* Set to true to enable bus error emulation.
+ *
+ * A client signals a bus error by throwing a BusError exception from one of
+ * the memory access functions. The 68000 and 68010 always process such an
+ * exception at no extra cost. The 68020 and later models can restart the
+ * faulted instruction after the exception handler returns with RTE. To
+ * support this, Moira saves the registers before each instruction, which
+ * forces these models onto the slow execution path. If this option is
+ * disabled, the 68020 family does not save the registers. A BusError that
+ * is thrown anyway is still processed, but the instruction cannot be
+ * restarted. This option has no effect while an MMU is enabled, because an
+ * address translation fault is a bus error that must be restartable.
+ *
+ * Enable to improve accuracy, disable to gain speed.
+ */
+#ifndef MOIRA_EMULATE_BUS_ERROR
+#define MOIRA_EMULATE_BUS_ERROR false
+#endif
+
 /* Set to true to emulate function code pins FC0 - FC2.
  *
  * Whenever memory is accessed, the function code pins enable external hardware
