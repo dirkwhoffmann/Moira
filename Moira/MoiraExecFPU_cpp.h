@@ -373,6 +373,9 @@ Moira::execFGen(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
+    // First cycle of the coprocessor protocol
+    if (fpu.model != FPUModel::BUILTIN) reportCoprocessorCycle(opcode, CIR::COMMAND);
+
     auto ext = queue.irc;
     auto cod = xxx_____________(ext);
     auto cmd = _________xxxxxxx(ext);
@@ -489,6 +492,9 @@ Moira::execFBcc(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
+    // First cycle of the coprocessor protocol
+    if (fpu.model != FPUModel::BUILTIN) reportCoprocessorCycle(opcode, CIR::CONDITION);
+
     u32 oldpc = reg.pc;
 
     // Conditional instructions don't leave the reset state of the 68040
@@ -531,6 +537,9 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execFDbcc(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
+
+    // First cycle of the coprocessor protocol
+    if (fpu.model != FPUModel::BUILTIN) reportCoprocessorCycle(opcode, CIR::CONDITION);
 
     auto ext = queue.irc;
     auto dn  = _____________xxx (opcode);
@@ -576,6 +585,9 @@ Moira::execFNop(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
+    // First cycle of the coprocessor protocol
+    if (fpu.model != FPUModel::BUILTIN) reportCoprocessorCycle(opcode, CIR::CONDITION);
+
     // FNOP is encoded as FBcc.W with condition F and displacement 0
     readExt<C>();
     prefetch<C, POLL>();
@@ -588,6 +600,9 @@ Moira::execFRestore(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
     SUPERVISOR_MODE_ONLY
+
+    // First cycle of the coprocessor protocol
+    if (fpu.model != FPUModel::BUILTIN) reportCoprocessorCycle(opcode, CIR::RESTORE);
 
     auto n = _____________xxx (opcode);
 
@@ -623,6 +638,9 @@ Moira::execFSave(u16 opcode)
     AVAILABILITY(Core::C68000)
     SUPERVISOR_MODE_ONLY
 
+    // First cycle of the coprocessor protocol
+    if (fpu.model != FPUModel::BUILTIN) reportCoprocessorCycle(opcode, CIR::SAVE);
+
     auto n = _____________xxx (opcode);
 
     // Frame to be written: A NULL frame if the FPU is in reset state, an IDLE frame otherwise
@@ -647,6 +665,9 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execFScc(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
+
+    // First cycle of the coprocessor protocol
+    if (fpu.model != FPUModel::BUILTIN) reportCoprocessorCycle(opcode, CIR::CONDITION);
 
     auto ext = queue.irc;
     auto dst = _____________xxx (opcode);
@@ -679,6 +700,9 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execFTrapcc(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
+
+    // First cycle of the coprocessor protocol
+    if (fpu.model != FPUModel::BUILTIN) reportCoprocessorCycle(opcode, CIR::CONDITION);
 
     auto ext = queue.irc;
 

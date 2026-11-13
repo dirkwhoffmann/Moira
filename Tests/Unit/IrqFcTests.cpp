@@ -79,7 +79,11 @@ public:
         setUSP(0x1E00);
     }
 
-    void load(std::initializer_list<u16> words)
+    void setA(int n, u32 v) { reg.a[n] = v; }
+
+    void load(std::initializer_list<u16> words) { load(std::vector<u16>(words)); }
+
+    void load(const std::vector<u16> &words)
     {
         u32 a = codeStart;
         for (auto w : words) { poke16(a, w); a += 2; }
@@ -401,6 +405,133 @@ TEST_CASE("CPU space: ordinary instructions and exceptions raise no cycle")
     cpu.step(4);
     CHECK(cpu.spaceCycles.empty());
     END_MODELS
+}
+
+// Coprocessor interface: the first cycle of the protocol is a CPU space cycle
+// with the coprocessor ID on A15-A13 and the register select on A4-A0.
+
+static u8 cpArg(int cpid, u8 cir) { return u8(cpid << 5 | cir); }
+
+TEST_CASE("CPU space: coprocessor cycles of the generic coprocessor interface")
+{
+    struct Case { const char *name; std::vector<u16> code; u8 cir; };
+
+    // cpid 5 (no coprocessor attached)
+    const Case cases[] = {
+        { "cpGEN",     { 0xFA00, 0x0000 },                         CIR::COMMAND   },
+        { "cpBcc.w",   { 0xFA80, 0x0001, 0x0000 },                 CIR::CONDITION },
+        { "cpBcc.l",   { 0xFAC0, 0x0001, 0x0000, 0x0000 },         CIR::CONDITION },
+        { "cpScc",     { 0xFA40, 0x0001 },                         CIR::CONDITION },
+        { "cpTRAPcc",  { 0xFA7A, 0x0001, 0x0000 },                 CIR::CONDITION },
+        { "cpSAVE",    { 0xFB10 },                                 CIR::SAVE      },
+        { "cpRESTORE", { 0xFB50 },                                 CIR::RESTORE   },
+    };
+
+    for (auto model : { CPUModel::M68020, CPUModel::M68EC020, CPUModel::M68030 }) {
+        for (auto &c : cases) {
+
+            INFO("Model ", int(model), ", ", c.name);
+            IrqCPU cpu(model);
+            cpu.load(c.code);
+            cpu.setSR(0x2700);
+            cpu.step();
+
+            REQUIRE(cpu.spaceCycles.size() == 1);
+            CHECK(cpu.spaceCycles[0].type == CpuSpaceType::COPROCESSOR);
+            CHECK(cpu.spaceCycles[0].arg == cpArg(5, c.cir));
+            CHECK(cpu.spaceCycles[0].fc == FCv::CPU);
+            CHECK(cpu.getPC0() == IrqCPU::handler(11));             // No coprocessor: line-F exception
+            CHECK(cpu.readFC() != FCv::CPU);
+        }
+    }
+}
+
+TEST_CASE("CPU space: the coprocessor ID is taken from the opcode")
+{
+    for (int cpid = 0; cpid < 8; cpid++) {
+
+        if (cpid == 1) continue;                                    // Reserved for the FPU
+        IrqCPU cpu(CPUModel::M68020);
+        cpu.load({ u16(0xF000 | cpid << 9), 0x0000 });              // cpGEN
+        cpu.setSR(0x2700);
+        cpu.step();
+
+        REQUIRE(cpu.spaceCycles.size() == 1);
+        CHECK(cpu.spaceCycles[0].arg == cpArg(cpid, CIR::COMMAND));
+    }
+}
+
+TEST_CASE("CPU space: models without coprocessor interface have no coprocessor cycles")
+{
+    for (auto model : { CPUModel::M68000, CPUModel::M68010 }) {
+
+        IrqCPU cpu(model);
+        cpu.load({ 0xFA00, 0x0000 });
+        cpu.setSR(0x2700);
+        cpu.step();
+        CHECK(cpu.spaceCycles.empty());
+        CHECK(cpu.getPC0() == IrqCPU::handler(11));
+    }
+}
+
+TEST_CASE("CPU space: privileged coprocessor instructions fail before the cycle")
+{
+    for (u16 op : { 0xFB10, 0xFB50 }) {                             // cpSAVE, cpRESTORE
+
+        IrqCPU cpu(CPUModel::M68020);
+        cpu.load({ op });
+        cpu.setSR(0x0700);                                          // User mode
+        cpu.step();
+        CHECK(cpu.spaceCycles.empty());
+        CHECK(cpu.getPC0() == IrqCPU::handler(8));                  // Privilege violation
+    }
+}
+
+TEST_CASE("CPU space: an external 68881 is accessed via the coprocessor interface")
+{
+    struct Case { const char *name; std::vector<u16> code; u8 cir; };
+
+    // cpid 1
+    const Case cases[] = {
+        { "FNOP",      { 0xF280, 0x0000 },                         CIR::CONDITION },
+        { "FBcc",      { 0xF281, 0x0004, 0x4E71 },                 CIR::CONDITION },
+        { "FADD",      { 0xF200, 0x0022 },                         CIR::COMMAND   },
+        { "FMOVE",     { 0xF200, 0x0400 },                         CIR::COMMAND   },
+        { "FScc",      { 0xF240, 0x0001 },                         CIR::CONDITION },
+        { "FTRAPcc",   { 0xF27A, 0x0001, 0x0000 },                 CIR::CONDITION },
+        { "FSAVE",     { 0xF310 },                                 CIR::SAVE      },
+        { "FRESTORE",  { 0xF350 },                                 CIR::RESTORE   },
+    };
+
+    for (auto fpu : { FPUModel::M68881, FPUModel::M68882 }) {
+        for (auto &c : cases) {
+
+            INFO("FPU ", int(fpu), ", ", c.name);
+            IrqCPU cpu(CPUModel::M68020);
+            cpu.setFpuModel(fpu);
+            cpu.load(c.code);
+            cpu.poke32(0x2000, 0);
+            cpu.setSR(0x2700);
+            cpu.setA(0, 0x2000);
+            cpu.step();
+
+            REQUIRE(cpu.spaceCycles.size() >= 1);
+            CHECK(cpu.spaceCycles[0].type == CpuSpaceType::COPROCESSOR);
+            CHECK(cpu.spaceCycles[0].arg == cpArg(1, c.cir));
+            CHECK(cpu.spaceCycles[0].fc == FCv::CPU);
+            CHECK(cpu.spaceCycles.size() == 1);                     // Only the first cycle is reported
+            CHECK(cpu.readFC() != FCv::CPU);
+        }
+    }
+}
+
+TEST_CASE("CPU space: the built-in FPU of the 68040 causes no coprocessor cycles")
+{
+    IrqCPU cpu(CPUModel::M68040);
+    cpu.load({ 0xF200, 0x0022, 0xF280, 0x0000 });                   // FADD, FNOP
+    cpu.setSR(0x2700);
+    cpu.step(2);
+    CHECK(cpu.spaceCycles.empty());
 }
 
 

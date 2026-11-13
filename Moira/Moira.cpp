@@ -1062,6 +1062,22 @@ Moira::setIPL(u8 val)
     }
 }
 
+void
+Moira::reportCpuSpace(CpuSpaceType type, u8 arg)
+{
+    u8 oldSource = fcSource;
+    fcSource = 3;
+    cpuSpaceCycle(type, arg);
+    fcSource = oldSource;
+}
+
+void
+Moira::reportCoprocessorCycle(u16 opcode, u8 cir)
+{
+    // Coprocessor ID (opcode bits 11-9) on A15-A13, register select on A4-A0
+    reportCpuSpace(CpuSpaceType::COPROCESSOR, u8(((opcode >> 9) & 7) << 5 | cir));
+}
+
 u16
 Moira::getIrqVector(u8 level) {
 

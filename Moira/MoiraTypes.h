@@ -297,13 +297,30 @@ enum class IrqMode
 /// @details A CPU space cycle is a bus cycle with all function code pins (FC2-FC0)
 ///          set. The type of the cycle is driven on address lines A19-A16. Moira
 ///          reports the cycles that have an observable effect on the system.
-///          Coprocessor cycles are not reported, because the FPU and the MMU are
-///          part of the emulated CPU.
+///          Coprocessor cycles are reported for the coprocessor interface of the
+///          68020 and 68030. Only the first cycle of a coprocessor protocol is
+///          reported, i.e., the access that decides whether a coprocessor
+///          responds. On a system without a coprocessor, this cycle ends with a
+///          bus error that the CPU turns into a line-F exception. Further
+///          accesses to the interface registers are not reported. The built-in
+///          FPU and MMU of the 68030 and 68040 cause no external cycles.
 enum class CpuSpaceType : u8
 {
     BREAKPOINT   = 0x0,         ///< Breakpoint acknowledge (BKPT instruction)
+    COPROCESSOR  = 0x2,         ///< Coprocessor access (first cycle of the protocol)
     IRQ_ACK      = 0xF          ///< Interrupt acknowledge
 };
+
+/// Coprocessor interface registers (CIR), as selected by address lines A4-A0
+namespace CIR {
+constexpr u8 RESPONSE  = 0x00;  ///< Response (read)
+constexpr u8 CONTROL   = 0x02;  ///< Control
+constexpr u8 SAVE      = 0x04;  ///< Save
+constexpr u8 RESTORE   = 0x06;  ///< Restore
+constexpr u8 OPERATION = 0x08;  ///< Operation word
+constexpr u8 COMMAND   = 0x0A;  ///< Command (written by general instructions)
+constexpr u8 CONDITION = 0x0E;  ///< Condition (written by conditional instructions)
+}
 
 /// Address spaces
 enum class AddrSpace

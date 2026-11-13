@@ -575,7 +575,11 @@ protected:
 
     /// Called when the CPU runs a CPU space cycle (FC = 7)
     /// @param type  The cycle type
-    /// @param arg   The interrupt level (IRQ_ACK) or the breakpoint number (BREAKPOINT)
+    /// @param arg   The interrupt level (IRQ_ACK), the breakpoint number
+    ///              (BREAKPOINT), or the coprocessor ID in bits 7-5 and the
+    ///              register select (CIR::XXX) in bits 4-0 (COPROCESSOR). This
+    ///              is the same value that appears on the address lines
+    ///              A15-A13 and A4-A0.
     /// @note  readFC() returns 7 while this delegate is called. For interrupt
     ///        acknowledge cycles, the same holds for readIrqUserVector().
     virtual void cpuSpaceCycle(CpuSpaceType type, u8 arg) { }
@@ -1004,6 +1008,12 @@ private:
     
     // Selects the IRQ vector based on the interrupt level
     u16 getIrqVector(u8 level);
+
+    // Reports a CPU space cycle (sets the function code pins to 7 meanwhile)
+    void reportCpuSpace(CpuSpaceType type, u8 arg);
+
+    // Reports the first cycle of the coprocessor protocol of a line-F instruction
+    void reportCoprocessorCycle(u16 opcode, u8 cir);
 
 
     //
