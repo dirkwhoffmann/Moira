@@ -13,13 +13,12 @@
 
 namespace MOIRA_NAMESPACE {
 
-/// Supported FPU models
+/// FPU models
 enum class FPUModel
 {
-    NONE,           ///< The FPU is not emulated (floating-point instructions cause a line F exception)
-    BUILTIN,        ///< Use the FPU of the CPU (the 68040 has one, other CPUs have none)
-    M68881,         ///< External FPU (requires a coprocessor interface, i.e., a 68020 or 68030)
-    M68882          ///< External FPU (requires a coprocessor interface, i.e., a 68020 or 68030)
+    M68881,         ///< MC68881 (coprocessor)
+    M68882,         ///< MC68882 (coprocessor)
+    M68040          ///< FPU core of the MC68040
 };
 
 /// Types of FSAVE state frames
@@ -105,15 +104,14 @@ static constexpr u32 INEX1          = 1 << 8;
 /// instruction address registers. It also implements the arithmetic of the
 /// Motorola FPUs on top of the floating-point environment FpuEnv.
 ///
-/// The FPU is part of the CPU. Which FPU is emulated is selected with
-/// Moira::setFpuModel.
+/// The FPU is part of the CPU (68040) or an external chip (68881, 68882) that is
+/// connected with Moira::setCopModel.
 class FPU {
 
 public:
 
-    /// The FPU that is effectively present (resolved by Moira from the CPU model
-    /// and the selected FPU model, hence never BUILTIN on a CPU without an FPU)
-    FPUModel model = FPUModel::NONE;
+    /// The emulated FPU core (set by Moira, see Moira::setCopModel)
+    FPUModel model = FPUModel::M68882;
 
     /// The floating-point environment (rounding mode, precision, exception flags)
     FpuEnv env;
@@ -156,7 +154,7 @@ public:
 public:
 
     FPUModel getModel() const { return model; }
-    bool isPresent() const { return model != FPUModel::NONE; }
+    bool isInternal() const { return model == FPUModel::M68040; }
     void setModel(FPUModel newModel) { model = newModel; }
 
     /// Checks whether an instruction is implemented in hardware by the emulated model

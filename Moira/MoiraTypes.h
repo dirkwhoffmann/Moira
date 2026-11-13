@@ -96,6 +96,18 @@ enum class CPUModel
     M68040                  ///< Non-cycle exact emulation (68020 core, FPU, 68040 MMU)
 };
 
+/// Coprocessors that are connected to the coprocessor interface
+/// @details The FPU of the 68040 is part of the CPU and not selected here. A
+///          coprocessor can be connected to CPUs with a coprocessor interface
+///          (68EC020, 68020, 68EC030, 68030). The selection has no effect on
+///          other CPU models.
+enum class CopModel
+{
+    NONE,                   ///< No coprocessor
+    M68881,                 ///< MC68881 floating-point coprocessor
+    M68882                  ///< MC68882 floating-point coprocessor
+};
+
 /// Execution cores
 enum class Core
 {

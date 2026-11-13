@@ -124,47 +124,34 @@ Moira::setModel(CPUModel cpuModel, CPUModel dasmModel)
 void
 Moira::updateUnits()
 {
-    // The 68040 has a built-in FPU. The 68020 and 68030 can be connected to a
-    // 6888x via the coprocessor interface. All other models have no FPU.
-    FPUModel effectiveFpu = FPUModel::NONE;
-
-    if (fpuModel != FPUModel::NONE) {
-
-        if (cpuModel == CPUModel::M68040) {
-            effectiveFpu = FPUModel::BUILTIN;
-        } else if (hasCoproInterface(cpuModel) && fpuModel != FPUModel::BUILTIN) {
-            effectiveFpu = fpuModel;
-        }
+    // The FPU of the 68040 is built in. The 68020 and the 68030 can be
+    // connected to a 6888x via the coprocessor interface. All other models have
+    // no FPU.
+    if (isInternalFpu()) {
+        fpu.setModel(FPUModel::M68040);
+    } else if (isExternalFpu()) {
+        fpu.setModel(copModel == CopModel::M68881 ? FPUModel::M68881 : FPUModel::M68882);
     }
-    fpu.setModel(effectiveFpu);
 
-    // The 68030 and the 68040 have a built-in MMU. Selecting a specific type
-    // only has an effect if it is the type the CPU provides.
-    MMUModel builtin = MMUModel::NONE;
+    // The MMU is part of the CPU
+    MMUModel mmuType = MMUModel::NONE;
     if (hasMMU(cpuModel)) {
-        builtin = (cpuModel == CPUModel::M68LC040 || cpuModel == CPUModel::M68040) ? MMUModel::M68040 : MMUModel::M68030;
+        mmuType = (cpuModel == CPUModel::M68LC040 || cpuModel == CPUModel::M68040) ? MMUModel::M68040 : MMUModel::M68030;
     }
-    mmu.setModel(mmuModel == MMUModel::BUILTIN || mmuModel == builtin ? builtin : MMUModel::NONE);
+    mmu.setModel(mmuType);
     updateMmuFlag();
 }
 
 void
-Moira::setFpuModel(FPUModel model)
+Moira::setCopModel(CopModel model)
 {
-    fpuModel = model;
+    if (copModel == model) return;
 
-    FPUModel old = fpu.getModel();
+    copModel = model;
     updateUnits();
 
-    // The FPU handlers are only registered if an FPU is present
-    if (fpu.getModel() != old) createJumpTable(cpuModel, dasmModel);
-}
-
-void
-Moira::setMmuModel(MMUModel model)
-{
-    mmuModel = model;
-    updateUnits();
+    // The FPU handlers and the disassembler entries depend on the coprocessor
+    if (hasCoproInterface(cpuModel) || hasCoproInterface(dasmModel)) createJumpTable(cpuModel, dasmModel);
 }
 
 bool
@@ -181,9 +168,15 @@ Moira::hasCoproInterface(CPUModel model)
 }
 
 bool
-Moira::has6888x() const
+Moira::isInternalFpu() const
 {
-    return fpu.getModel() == FPUModel::M68881 || fpu.getModel() == FPUModel::M68882;
+    return cpuModel == CPUModel::M68040;
+}
+
+bool
+Moira::isExternalFpu() const
+{
+    return hasCoproInterface(cpuModel) && copModel != CopModel::NONE;
 }
 
 void
@@ -249,14 +242,7 @@ Moira::hasMMU() const
 bool
 Moira::hasFPU() const
 {
-    switch (cpuModel) {
-
-        case CPUModel::M68040:
-            return true;
-
-        default:
-            return false;
-    }
+    return isInternalFpu() || isExternalFpu();
 }
 
 u32

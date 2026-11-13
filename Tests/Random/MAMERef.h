@@ -22,7 +22,7 @@ public:
     // MAME's microcoded core is a 68000
     bool supports(CPUModel model) const override { return model == CPUModel::M68000; }
 
-    void setup(CPUModel cpu, FPUModel) override { setupMAME(cpu); }
+    void setup(CPUModel cpu, FPUType) override { setupMAME(cpu); }
     void reset(const Setup &s) override { resetMAME(s); }
     void execute(Result &r) override { executeMAME(r); }
 

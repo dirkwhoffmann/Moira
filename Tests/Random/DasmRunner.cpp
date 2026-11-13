@@ -41,12 +41,12 @@ void DasmRunner::selectFpuReferences()
     if (dasmUAE) setupUAE(cpuModel, fpuModel);
 }
 
-void DasmRunner::runStages(long round, const std::vector<FPUModel> &fpus)
+void DasmRunner::runStages(long round, const std::vector<FPUType> &fpus)
 {
     runDasmCPU(round);
     runDasmMMU(round);
 
-    for (FPUModel fpu : fpus) {
+    for (FPUType fpu : fpus) {
 
         if (isCompatible(cpuModel, fpu)) {
             
@@ -124,7 +124,7 @@ void DasmRunner::runDasmFPU(long round)
     Setup setup;
     resetClocks();
 
-    if (fpuModel == FPUModel::BUILTIN)
+    if (fpuModel == FPUType::BUILTIN)
         printf("%11s FPU : DASM ", selectedModel());
     else
         printf("%5s+%5s FPU : DASM ", selectedModel(), fpuModelName(fpuModel));
@@ -258,7 +258,7 @@ bool DasmRunner::compareDasm(Result &rRef, Result &rMoira)
     }
 
     // Binutils decodes FPU instructions only for the 68040 (ENABLE_M68881 is off)
-    skipBinutils |= (rRef.opcode & 0xFE00) == 0xF200 && moiracpu->has6888x();
+    skipBinutils |= (rRef.opcode & 0xFE00) == 0xF200 && moiracpu->isExternalFpu();
 
     // Compare with the Musashi disassembler
     if (!skipMusashi) {

@@ -35,8 +35,8 @@ public:
 
     // Selects the CPU model. Returns false if the core doesn't support it.
     virtual bool supports(CPUModel) const { return true; }
-    virtual void setup(CPUModel cpu, FPUModel fpu) = 0;
-    virtual void selectFpu(CPUModel cpu, FPUModel fpu) { }
+    virtual void setup(CPUModel cpu, FPUType fpu) = 0;
+    virtual void selectFpu(CPUModel cpu, FPUType fpu) { }
     virtual void prepare(Setup &s) const { }      // Adjusts a test case before it is run
     virtual void reset(const Setup &s) = 0;
     virtual void execute(Result &r) = 0;

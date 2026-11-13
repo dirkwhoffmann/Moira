@@ -151,7 +151,7 @@ Moira::dasmFGen(StrWriter &str, u32 &addr, u16 op, Instr I, Mode M, Size S) cons
             }
 
             // 68040 only instructions
-            if (hasFPU()) {
+            if (dasmModel == CPUModel::M68040) {
 
                 switch (cmd) {
 

@@ -503,12 +503,12 @@ TEST_CASE("CPU space: an external 68881 is accessed via the coprocessor interfac
         { "FRESTORE",  { 0xF350 },                                 CIR::RESTORE   },
     };
 
-    for (auto fpu : { FPUModel::M68881, FPUModel::M68882 }) {
+    for (auto fpu : { CopModel::M68881, CopModel::M68882 }) {
         for (auto &c : cases) {
 
             INFO("FPU ", int(fpu), ", ", c.name);
             IrqCPU cpu(CPUModel::M68020);
-            cpu.setFpuModel(fpu);
+            cpu.setCopModel(fpu);
             cpu.load(c.code);
             cpu.poke32(0x2000, 0);
             cpu.setSR(0x2700);

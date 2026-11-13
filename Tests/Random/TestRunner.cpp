@@ -54,7 +54,7 @@ void TestRunner::selectModel(CPUModel model)
     cpuModel = model;
 
     // Only the 68040 has a built-in FPU. External FPUs are installed with selectFpu.
-    fpuModel = (cpuModel == CPUModel::M68040) ? FPUModel::BUILTIN : FPUModel::NONE;
+    fpuModel = (cpuModel == CPUModel::M68040) ? FPUType::BUILTIN : FPUType::NONE;
 
     setupReferences();
     setupBinutils(cpuModel);
@@ -69,10 +69,10 @@ void TestRunner::selectModel(CPUModel model)
 void TestRunner::setupMoira()
 {
     moiracpu->setModel(cpuModel);
-    moiracpu->setFpuModel(fpuModel);
+    moiracpu->setCopModel(copModel(fpuModel));
 }
 
-void TestRunner::selectFpu(FPUModel fpu)
+void TestRunner::selectFpu(FPUType fpu)
 {
     fpuModel = fpu;
 
@@ -80,7 +80,7 @@ void TestRunner::selectFpu(FPUModel fpu)
     setupMoira();
 }
 
-void TestRunner::run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const std::vector<FPUModel> &fpus)
+void TestRunner::run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const std::vector<FPUType> &fpus)
 {
     portableSrand(seed);
 
@@ -99,17 +99,17 @@ void TestRunner::run(unsigned seed, long rounds, const std::vector<CPUModel> &cp
 }
 
 
-static const struct { FPUModel model; const char *name; } fpuTable[] = {
+static const struct { FPUType model; const char *name; } fpuTable[] = {
 
-    { FPUModel::M68881,   "68881" },
-    { FPUModel::M68882,   "68882" },
-    { FPUModel::BUILTIN, "builtin" }
+    { FPUType::M68881,   "68881" },
+    { FPUType::M68882,   "68882" },
+    { FPUType::BUILTIN, "builtin" }
 };
 
-const std::vector<FPUModel> &allFpuModels()
+const std::vector<FPUType> &allFpuModels()
 {
-    static const std::vector<FPUModel> all = []() {
-        std::vector<FPUModel> result;
+    static const std::vector<FPUType> all = []() {
+        std::vector<FPUType> result;
         for (auto &m : fpuTable) result.push_back(m.model);
         return result;
     }();
@@ -117,29 +117,29 @@ const std::vector<FPUModel> &allFpuModels()
 }
 
 
-const char *fpuModelName(FPUModel model)
+const char *fpuModelName(FPUType model)
 {
     for (auto &m : fpuTable) if (m.model == model) return m.name;
     return "none";
 }
 
 
-std::optional<FPUModel> parseFpuModel(const char *name)
+std::optional<FPUType> parseFpuModel(const char *name)
 {
     for (auto &m : fpuTable) if (strcasecmp(m.name, name) == 0) return m.model;
     return std::nullopt;
 }
 
 
-bool isCompatible(CPUModel cpu, FPUModel fpu)
+bool isCompatible(CPUModel cpu, FPUType fpu)
 {
     switch (fpu) {
 
-        case FPUModel::BUILTIN:
+        case FPUType::BUILTIN:
             return cpu == CPUModel::M68040;
 
-        case FPUModel::M68881:
-        case FPUModel::M68882:
+        case FPUType::M68881:
+        case FPUType::M68882:
             return cpu == CPUModel::M68020 || cpu == CPUModel::M68EC020 ||
                    cpu == CPUModel::M68030 || cpu == CPUModel::M68EC030;
 
@@ -268,7 +268,7 @@ bool TestRunner::isMmuOpcode(u16 op)
 
 bool TestRunner::isFpuOpcode(u16 op)
 {
-    return (op & 0xFF00) == 0xF200 && moiracpu != nullptr && moiracpu->fpu.isPresent();
+    return (op & 0xFF00) == 0xF200 && moiracpu != nullptr && moiracpu->hasFPU();
 }
 
 

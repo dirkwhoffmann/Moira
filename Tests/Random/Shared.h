@@ -43,10 +43,13 @@ extern disassemble_info di;
 // Size of the buffer that receives the disassembly of the binutils disassembler
 static const size_t BINUTILS_BUFFER_SIZE = 128;
 
+// FPU selection of the test runners (a built-in FPU is selected by the 68040)
+enum class FPUType { NONE, BUILTIN, M68881, M68882 };
+
 // Initializes the reference libraries for a CPU model (implemented in the glue layer)
 void setupBinutils(moira::CPUModel model);
 void setupMusashi(moira::CPUModel model);
-void setupUAE(moira::CPUModel model, moira::FPUModel fpu);
+void setupUAE(moira::CPUModel model, FPUType fpu);
 void setupMAME(moira::CPUModel model);
 
 using common::Randomizer;

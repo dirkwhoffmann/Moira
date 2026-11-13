@@ -374,7 +374,7 @@ Moira::execFGen(u16 opcode)
     AVAILABILITY(Core::C68000)
 
     // First cycle of the coprocessor protocol
-    if (fpu.model != FPUModel::BUILTIN) reportCoprocessorCycle(opcode, CIR::COMMAND);
+    if (isExternalFpu()) reportCoprocessorCycle(opcode, CIR::COMMAND);
 
     auto ext = queue.irc;
     auto cod = xxx_____________(ext);
@@ -493,12 +493,12 @@ Moira::execFBcc(u16 opcode)
     AVAILABILITY(Core::C68000)
 
     // First cycle of the coprocessor protocol
-    if (fpu.model != FPUModel::BUILTIN) reportCoprocessorCycle(opcode, CIR::CONDITION);
+    if (isExternalFpu()) reportCoprocessorCycle(opcode, CIR::CONDITION);
 
     u32 oldpc = reg.pc;
 
     // Conditional instructions don't leave the reset state of the 68040
-    if (fpu.model != FPUModel::BUILTIN) fpu.resetState = false;
+    if (isExternalFpu()) fpu.resetState = false;
 
     if (fpu.test(opcode & 0x1F)) {
 
@@ -539,7 +539,7 @@ Moira::execFDbcc(u16 opcode)
     AVAILABILITY(Core::C68000)
 
     // First cycle of the coprocessor protocol
-    if (fpu.model != FPUModel::BUILTIN) reportCoprocessorCycle(opcode, CIR::CONDITION);
+    if (isExternalFpu()) reportCoprocessorCycle(opcode, CIR::CONDITION);
 
     auto ext = queue.irc;
     auto dn  = _____________xxx (opcode);
@@ -547,7 +547,7 @@ Moira::execFDbcc(u16 opcode)
     // Catch illegal extension words
     if (!isValidExtFPU(I, M, opcode, ext, cpuModel)) { execLineF<C, I, M, S>(opcode); return; }
 
-    if (fpu.model != FPUModel::BUILTIN) fpu.resetState = false;
+    if (isExternalFpu()) fpu.resetState = false;
     readI<C, Word>();
 
     if (!fpu.test(ext & 0x3F)) {
@@ -586,7 +586,7 @@ Moira::execFNop(u16 opcode)
     AVAILABILITY(Core::C68000)
 
     // First cycle of the coprocessor protocol
-    if (fpu.model != FPUModel::BUILTIN) reportCoprocessorCycle(opcode, CIR::CONDITION);
+    if (isExternalFpu()) reportCoprocessorCycle(opcode, CIR::CONDITION);
 
     // FNOP is encoded as FBcc.W with condition F and displacement 0
     readExt<C>();
@@ -602,7 +602,7 @@ Moira::execFRestore(u16 opcode)
     SUPERVISOR_MODE_ONLY
 
     // First cycle of the coprocessor protocol
-    if (fpu.model != FPUModel::BUILTIN) reportCoprocessorCycle(opcode, CIR::RESTORE);
+    if (isExternalFpu()) reportCoprocessorCycle(opcode, CIR::RESTORE);
 
     auto n = _____________xxx (opcode);
 
@@ -639,7 +639,7 @@ Moira::execFSave(u16 opcode)
     SUPERVISOR_MODE_ONLY
 
     // First cycle of the coprocessor protocol
-    if (fpu.model != FPUModel::BUILTIN) reportCoprocessorCycle(opcode, CIR::SAVE);
+    if (isExternalFpu()) reportCoprocessorCycle(opcode, CIR::SAVE);
 
     auto n = _____________xxx (opcode);
 
@@ -667,7 +667,7 @@ Moira::execFScc(u16 opcode)
     AVAILABILITY(Core::C68000)
 
     // First cycle of the coprocessor protocol
-    if (fpu.model != FPUModel::BUILTIN) reportCoprocessorCycle(opcode, CIR::CONDITION);
+    if (isExternalFpu()) reportCoprocessorCycle(opcode, CIR::CONDITION);
 
     auto ext = queue.irc;
     auto dst = _____________xxx (opcode);
@@ -675,7 +675,7 @@ Moira::execFScc(u16 opcode)
     // Catch illegal extension words
     if (!isValidExtFPU(I, M, opcode, ext, cpuModel)) { execLineF<C, I, M, S>(opcode); return; }
 
-    if (fpu.model != FPUModel::BUILTIN) fpu.resetState = false;
+    if (isExternalFpu()) fpu.resetState = false;
     readI<C, Word>();
 
     u32 data = fpu.test(ext & 0x3F) ? 0xFF : 0;
@@ -702,14 +702,14 @@ Moira::execFTrapcc(u16 opcode)
     AVAILABILITY(Core::C68000)
 
     // First cycle of the coprocessor protocol
-    if (fpu.model != FPUModel::BUILTIN) reportCoprocessorCycle(opcode, CIR::CONDITION);
+    if (isExternalFpu()) reportCoprocessorCycle(opcode, CIR::CONDITION);
 
     auto ext = queue.irc;
 
     // Catch illegal extension words
     if (!isValidExtFPU(I, M, opcode, ext, cpuModel)) { execLineF<C, I, M, S>(opcode); return; }
 
-    if (fpu.model != FPUModel::BUILTIN) fpu.resetState = false;
+    if (isExternalFpu()) fpu.resetState = false;
     readI<C, Word>();
 
     // Skip the optional operand

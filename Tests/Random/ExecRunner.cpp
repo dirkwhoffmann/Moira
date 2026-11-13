@@ -67,7 +67,7 @@ bool ExecRunner::replay()
     return true;
 }
 
-void ExecRunner::runStages(long round, const std::vector<FPUModel> &fpus)
+void ExecRunner::runStages(long round, const std::vector<FPUType> &fpus)
 {
     // CPU and MMU
     runCPU(round);
@@ -78,7 +78,7 @@ void ExecRunner::runStages(long round, const std::vector<FPUModel> &fpus)
     }
 
     // FPU (for all FPUs that can be combined with this CPU)
-    for (FPUModel fpu : fpus) {
+    for (FPUType fpu : fpus) {
 
         if (!isCompatible(cpuModel, fpu)) continue;
         selectFpu(fpu);
@@ -135,7 +135,7 @@ void ExecRunner::runFPU(long round)
     Setup setup;
     resetClocks();
 
-    if (fpuModel == FPUModel::BUILTIN)
+    if (fpuModel == FPUType::BUILTIN)
         printf("%11s FPU : CORE ", selectedModel());
     else
         printf("%5s+%5s FPU : CORE ", selectedModel(), fpuModelName(fpuModel));

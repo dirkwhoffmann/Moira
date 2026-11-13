@@ -42,7 +42,7 @@ public:
     const char *referenceName() const override { return reference.name(); }
     void printRanges() const override;
     bool supports(CPUModel model) const override { return reference.supports(model); }
-    void runStages(long round, const std::vector<FPUModel> &fpus) override;
+    void runStages(long round, const std::vector<FPUType> &fpus) override;
     bool replay() override;
     void setupReferences() override;
     void selectFpuReferences() override;

@@ -704,47 +704,30 @@ TEST_CASE("Bus Fault Frames")
 
 TEST_CASE("Models")
 {
-    // Only the 68030 and 68040 have an MMU
+    // The MMU is part of the CPU. Only the 68030, 68LC040 and 68040 have one.
     CHECK(!TestCPU(CPUModel::M68000).hasMMU());
     CHECK(!TestCPU(CPUModel::M68020).hasMMU());
+    CHECK(!TestCPU(CPUModel::M68EC030).hasMMU());
     CHECK(TestCPU(CPUModel::M68030).hasMMU());
+    CHECK(!TestCPU(CPUModel::M68EC040).hasMMU());
+    CHECK(TestCPU(CPUModel::M68LC040).hasMMU());
     CHECK(TestCPU(CPUModel::M68040).hasMMU());
 
-    // NONE removes the MMU (e.g., to emulate a 68EC030). The selection survives a CPU change.
+    // The MMU type follows the CPU model
+    CHECK(TestCPU(CPUModel::M68030).mmu.getModel() == MMUModel::M68030);
+    CHECK(TestCPU(CPUModel::M68LC040).mmu.getModel() == MMUModel::M68040);
+    CHECK(TestCPU(CPUModel::M68040).mmu.getModel() == MMUModel::M68040);
+    CHECK(TestCPU(CPUModel::M68020).mmu.getModel() == MMUModel::NONE);
+
+    // Changing the CPU model changes the MMU
     TestCPU cpu(CPUModel::M68030);
-    cpu.setMmuModel(MMUModel::NONE);
+    CHECK(cpu.hasMMU());
+    cpu.setModel(CPUModel::M68EC030);
     CHECK(!cpu.hasMMU());
     cpu.setModel(CPUModel::M68040);
-    CHECK(!cpu.hasMMU());
-    cpu.setMmuModel(MMUModel::BUILTIN);
-    CHECK(cpu.hasMMU());
+    CHECK(cpu.mmu.getModel() == MMUModel::M68040);
     cpu.setModel(CPUModel::M68020);
     CHECK(!cpu.hasMMU());
-
-    // BUILTIN resolves to the MMU type of the CPU
-    {
-        TestCPU c030(CPUModel::M68030);
-        CHECK(c030.mmu.getModel() == MMUModel::M68030);
-        TestCPU c040(CPUModel::M68040);
-        CHECK(c040.mmu.getModel() == MMUModel::M68040);
-        TestCPU c020(CPUModel::M68020);
-        CHECK(c020.mmu.getModel() == MMUModel::NONE);
-    }
-
-    // Selecting a type only has an effect if the CPU provides it
-    {
-        TestCPU c030(CPUModel::M68030);
-        c030.setMmuModel(MMUModel::M68030);
-        CHECK(c030.mmu.getModel() == MMUModel::M68030);
-        c030.setMmuModel(MMUModel::M68040);
-        CHECK(c030.mmu.getModel() == MMUModel::NONE);
-
-        TestCPU c040(CPUModel::M68040);
-        c040.setMmuModel(MMUModel::M68030);
-        CHECK(c040.mmu.getModel() == MMUModel::NONE);
-        c040.setMmuModel(MMUModel::M68040);
-        CHECK(c040.mmu.getModel() == MMUModel::M68040);
-    }
 }
 
 constexpr u32 dataBase = 0x20000;

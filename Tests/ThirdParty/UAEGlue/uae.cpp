@@ -17,7 +17,7 @@ static void uaeWrite(int size, uint32_t addr, uint32_t value, uint32_t fc, uint6
         sandbox.record(size == 1 ? POKE8 : POKE16, addr, cycle, fc, size == 1 ? u8(value) : u16(value));
 }
 
-void setupUAE(moira::CPUModel model, moira::FPUModel fpuModel)
+void setupUAE(moira::CPUModel model, FPUType fpuModel)
 {
     using uaecpu::Cpu;
     using uaecpu::Fpu;
@@ -32,9 +32,9 @@ void setupUAE(moira::CPUModel model, moira::FPUModel fpuModel)
     model == moira::CPUModel::M68LC040 ? Cpu::M68LC040 : Cpu::M68040;
 
     Fpu fpu =
-    fpuModel == moira::FPUModel::M68881   ? Fpu::M68881 :
-    fpuModel == moira::FPUModel::M68882   ? Fpu::M68882 :
-    fpuModel == moira::FPUModel::BUILTIN ? Fpu::Internal : Fpu::None;
+    fpuModel == FPUType::M68881   ? Fpu::M68881 :
+    fpuModel == FPUType::M68882   ? Fpu::M68882 :
+    fpuModel == FPUType::BUILTIN ? Fpu::Internal : Fpu::None;
 
     uaecpu::init(cpu, fpu, refMem, uaeWrite);
 }

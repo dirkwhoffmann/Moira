@@ -41,7 +41,7 @@ public:
     const char *description() const override;
     const char *referenceName() const override { return mit ? "Binutils (MIT)" : "Binutils, Musashi, UAE"; }
     void printRanges() const override;
-    void runStages(long round, const std::vector<FPUModel> &fpus) override;
+    void runStages(long round, const std::vector<FPUType> &fpus) override;
     void setupReferences() override;
     void selectFpuReferences() override;
 

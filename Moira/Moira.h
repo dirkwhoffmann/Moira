@@ -74,11 +74,8 @@ protected:
     // Emulated CPU model
     CPUModel cpuModel = CPUModel::M68000;
 
-    // Selected FPU model
-    FPUModel fpuModel = FPUModel::BUILTIN;
-    
-    // Selected MMU model
-    MMUModel mmuModel = MMUModel::BUILTIN;
+    // Selected coprocessor
+    CopModel copModel = CopModel::NONE;
 
     /* Register state at the beginning of the current instruction. If an MMU
      * is active, a bus fault aborts the instruction. The registers are rolled
@@ -302,41 +299,34 @@ public:
     /// Sets the emulated CPU model (the disassembler uses the same model)
     void setModel(CPUModel model) { setModel(model, model); }
 
-    /** Selects the FPU to emulate.
+    /** Selects the coprocessor that is connected to the coprocessor interface
      *
-     * NONE removes the unit, even if the CPU provides one (e.g., to emulate a
-     * 68EC030 with a 68030). BUILTIN uses the unit of the CPU, if any. An
-     * external FPU (68881, 68882) is only attached to CPUs with a coprocessor
-     * interface. On a 68040, it selects the built-in FPU. The selection is kept
-     * when the CPU model changes. The unit is present by default if the CPU
-     * provides it.
+     * The built-in units are determined by the CPU model: The 68040 has an FPU
+     * and an MMU, the 68030 and the 68LC040 have an MMU, and the EC variants
+     * have neither. A coprocessor (68881 or 68882) can be connected to CPUs
+     * with a coprocessor interface (68EC020, 68020, 68EC030, 68030). For other
+     * CPU models, the selection is remembered but has no effect. It is not
+     * changed when the CPU model changes, so the order of setModel and
+     * setCopModel does not matter.
      */
-    void setFpuModel(FPUModel model);
-
-    /** Selects the MMU to emulate.
-     *
-     * NONE removes the unit, even if the CPU provides one (e.g., to emulate a
-     * 68LC040 or 68EC030). BUILTIN uses the unit of the CPU, if any. The
-     * selection is kept when the CPU model changes. The unit is present by
-     * default if the CPU provides it.
-     */
-    void setMmuModel(MMUModel model);
+    void setCopModel(CopModel model);
 
     /// Synchronizes internal state with the MMU registers. Needs to be called
     /// if the translation control register is modified without setTC.
     void updateMmuFlag();
 
-    /// Returns the selected FPU model
-    FPUModel getFpuModel() const { return fpuModel; }
-
-    /// Returns the selected MMU model
-    MMUModel getMmuModel() const { return mmuModel; }
+    /// Returns the selected coprocessor (which may not be effective, see setCopModel)
+    CopModel getCopModel() const { return copModel; }
 
     /// Checks if a model provides a coprocessor interface (to attach a 6888x)
     static bool hasCoproInterface(CPUModel model);
 
-    /// Checks if an external floating-point coprocessor (68881 or 68882) is attached
-    bool has6888x() const;
+    /// Checks if the FPU is built into the CPU (68040)
+    bool isInternalFpu() const;
+
+    /// Checks if an external FPU (68881 or 68882) is attached. This requires a
+    /// CPU with a coprocessor interface and a coprocessor model other than NONE.
+    bool isExternalFpu() const;
     
     /// Configures the syntax style for disassembly output
     void setDasmSyntax(Syntax value);
@@ -376,7 +366,7 @@ public:
     /// Checks if a given CPU model has a memory management unit (MMU)
     static bool hasMMU(CPUModel model);
     
-    /// Checks if the emulated CPU model has a floating-point unit (FPU)
+    /// Checks if the emulated system has a floating-point unit (built-in or external)
     bool hasFPU() const;
     
     /// Returns the cache register mask, indicating the accessible CACR bits

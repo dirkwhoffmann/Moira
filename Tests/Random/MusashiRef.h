@@ -20,7 +20,7 @@ public:
     bool hasMusashiDasm() const override { return true; }
     const char *name() const override { return "Musashi"; }
 
-    void setup(CPUModel cpu, FPUModel) override { setupMusashi(cpu); }
+    void setup(CPUModel cpu, FPUType) override { setupMusashi(cpu); }
     void reset(const Setup &s) override { resetMusashi(s); }
     void execute(Result &r) override { executeMusashi(r); }
 

@@ -12,16 +12,15 @@
 
 namespace MOIRA_NAMESPACE {
 
-/** Selectable MMU types
+/** MMU types
  *
- * The model that is selected in Moira (see Moira::setMmuModel) is a request.
- * The MMU that is effectively present is derived from it and from the CPU
- * model. It is never BUILTIN.
+ * The MMU is part of the CPU. The type that is present is determined by the
+ * CPU model: 68030 and 68040 have an MMU, the 68EC030, 68EC040, and 68LC040
+ * variants are cut down accordingly.
  */
 enum class MMUModel
 {
     NONE,                   ///< The MMU is not emulated (MMU instructions cause a line F exception)
-    BUILTIN,                ///< Use the MMU of the CPU (68030, 68040), other CPUs have none
     M68030,                 ///< The MMU of the 68030
     M68040                  ///< The MMU of the 68040
 };

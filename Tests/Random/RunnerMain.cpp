@@ -16,7 +16,7 @@ int runner::runnerMain(TestRunner &runner, int argc, char **argv)
     long long seed = common::defaultSeed();
     long long rounds = 1;
     std::vector<moira::CPUModel> cpus;
-    std::vector<moira::FPUModel> fpus;
+    std::vector<FPUType> fpus;
 
     std::string cpuHelp = "CPU model to test (default: all models). May be repeated.\nModels:";
     for (auto model : runner.allModels()) cpuHelp += std::string(" ") + runner::modelName(model);

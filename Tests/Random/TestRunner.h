@@ -29,12 +29,19 @@ using namespace moira;
 using common::modelName;
 using common::parseModel;
 
-const std::vector<FPUModel> &allFpuModels();
-const char *fpuModelName(FPUModel model);
-std::optional<FPUModel> parseFpuModel(const char *name);
+const std::vector<FPUType> &allFpuModels();
+const char *fpuModelName(FPUType model);
+std::optional<FPUType> parseFpuModel(const char *name);
 
 // Returns true if the FPU can be installed in a system with the given CPU
-bool isCompatible(CPUModel cpu, FPUModel fpu);
+bool isCompatible(CPUModel cpu, FPUType fpu);
+
+// Converts an FPU selection into the coprocessor connected to the CPU
+inline moira::CopModel copModel(FPUType type)
+{
+    return type == FPUType::M68881 ? moira::CopModel::M68881 :
+           type == FPUType::M68882 ? moira::CopModel::M68882 : moira::CopModel::NONE;
+}
 
 /* Base class of all test runners. It owns the Moira instance under test and the
  * state of the test that is currently running. A concrete runner decides which
@@ -65,7 +72,7 @@ public:
 
     // The currently tested CPU type and instruction
     CPUModel cpuModel = CPUModel::M68000;
-    FPUModel fpuModel = FPUModel::NONE;
+    FPUType fpuModel = FPUType::NONE;
     u16 opcode = 0;
 
     // Set by the memory interface of Moira if an odd address is read
@@ -106,7 +113,7 @@ public:
 
     // Runs all stages of one test round for the selected CPU model. The FPU models
     // that can be combined with the CPU are passed in.
-    virtual void runStages(long round, const std::vector<FPUModel> &fpus) = 0;
+    virtual void runStages(long round, const std::vector<FPUType> &fpus) = 0;
 
     // Replays a test that has been dumped with RUNNER_DUMP. Returns true if a test was replayed.
     virtual bool replay() { return false; }
@@ -127,7 +134,7 @@ public:
     const std::vector<CPUModel> &allModels();
 
     void selectModel(CPUModel model);
-    void selectFpu(FPUModel fpu);
+    void selectFpu(FPUType fpu);
     const char *selectedModel();
 
     void setupMoira();
@@ -145,7 +152,7 @@ public:
     // Running the tests
     //
 
-    void run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const std::vector<FPUModel> &fpus);
+    void run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const std::vector<FPUType> &fpus);
 
 
     //

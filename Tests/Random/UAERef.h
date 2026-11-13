@@ -19,8 +19,8 @@ public:
 
     const char *name() const override { return "UAE"; }
 
-    void setup(CPUModel cpu, FPUModel fpu) override { setupUAE(cpu, fpu); }
-    void selectFpu(CPUModel cpu, FPUModel fpu) override { setupUAE(cpu, fpu); }
+    void setup(CPUModel cpu, FPUType fpu) override { setupUAE(cpu, fpu); }
+    void selectFpu(CPUModel cpu, FPUType fpu) override { setupUAE(cpu, fpu); }
     void reset(const Setup &s) override { resetUAE(s); }
     void execute(Result &r) override { executeUAE(r); }
 
