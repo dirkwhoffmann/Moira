@@ -18,11 +18,12 @@
  * implements the console related tasks (text input and output, number
  * conversion, time, cursor control, font colors, halting).
  *
- * Usage:  easy68k [options] [program]
+ * Usage:  easy68k [options]
+ *         easy68k [options] --file program.s68
  *
- * The program is given as a string that contains the S-records, separated by
- * white space (e.g., line breaks). Alternatively, use --file to read the
- * records from a file.
+ * Without a file, the tool runs a built-in Hello World program. It prints the
+ * source code of the program, then loads the assembled S-records from the
+ * program text below and executes them.
  *
  * Program output goes to stdout. Everything else (trace, messages) goes to
  * stderr, so that the output of the emulated program can be piped.
@@ -58,14 +59,50 @@ using namespace moira;
 // S-record loader
 //
 
-/* An S-record file is a text file. Every line is a record:
+/* The Motorola S-record format
  *
- *     S <type> <count> <address> <data> <checksum>
+ * An S-record file is a text file in which every line is one record. A record
+ * starts with the letter 'S', followed by a digit that denotes the record type.
+ * The rest of the line consists of hexadecimal digits, two per byte:
  *
- * Types 1, 2, 3 carry data with a 16, 24, or 32 bit address. Type 0 is a header,
- * types 5 and 6 are record counters, and types 7, 8, 9 carry the start address.
- * All numbers are hexadecimal. The checksum is the one's complement of the sum
- * of the count, address, and data bytes.
+ *     S  t  cc  aaaa...  dddd...  ss
+ *
+ *     t       Record type (one digit)
+ *     cc      Byte count: the number of bytes that follow (address, data, and
+ *             checksum)
+ *     aaaa    Address, big endian. The type determines its length: 2 bytes for
+ *             S0, S1, S9, 3 bytes for S2, S8, and 4 bytes for S3, S7.
+ *     dddd    Data bytes (S0, S1, S2, S3 only)
+ *     ss      Checksum: the one's complement of the low byte of the sum of the
+ *             count, address, and data bytes. Adding up all bytes after the
+ *             'S' and the type digit, including the checksum, yields $FF.
+ *
+ * The record types are:
+ *
+ *     S0      Header. Carries a name or comment, but no program data.
+ *     S1      Data with a 16-bit address
+ *     S2      Data with a 24-bit address
+ *     S3      Data with a 32-bit address
+ *     S5, S6  Number of data records in the file (not needed here)
+ *     S7      Start address (entry point), 32 bit. Terminates S3 files.
+ *     S8      Start address (entry point), 24 bit. Terminates S2 files.
+ *     S9      Start address (entry point), 16 bit. Terminates S1 files.
+ *
+ * Example (the Hello World program below):
+ *
+ *     S11D200043FA000A700D4E4F70094E4F48656C6C6F2C20776F726C642100C2
+ *
+ *     S1      A data record with a 16-bit address
+ *     1D      29 bytes follow: 2 address bytes, 26 data bytes, 1 checksum byte
+ *     2000    The data goes to address $2000
+ *     43FA... The 26 bytes of program and data (the opcodes of LEA, MOVEQ,
+ *             TRAP, ... followed by the ASCII text of the message)
+ *     C2      Checksum
+ *
+ * The address in the final S9 record is the entry point of the program. An
+ * assembler that doesn't know it (the program has no end label) writes 0. Such
+ * an address is ignored here, and the program starts at the lowest address that
+ * has been loaded.
  */
 
 struct Segment {
@@ -293,6 +330,9 @@ public:
         char instr[128];
         (void)disassemble(instr, getPC0());
 
+        fprintf(stderr, "%06X %s\n", getPC0(), instr);
+        
+        /*
         u16 sr = getSR();
         char flags[6];
         for (int i = 0; i < 5; i++) flags[i] = (sr >> (4 - i)) & 1 ? "XNZVC"[i] : '-';
@@ -303,6 +343,7 @@ public:
         fprintf(stderr, " |");
         for (int i = 0; i < 8; i++) fprintf(stderr, " %08X", getA(i));
         fprintf(stderr, "\n");
+        */
     }
 
     // Runs the program until it stops
@@ -556,19 +597,41 @@ public:
 
 
 //
+// Built-in example
+//
+
+// The source code of the example (Motorola syntax, assembled with vasm)
+static const char *helloSource =
+"        org     $2000\n"
+"\n"
+"        lea     msg(pc),a1\n"
+"        moveq   #13,d0              ; Display string with CR/LF\n"
+"        trap    #15\n"
+"        moveq   #9,d0               ; Halt\n"
+"        trap    #15\n"
+"\n"
+"msg:    dc.b    'Hello, world!',0\n";
+
+// The assembled program: vasmm68k_mot -m68000 -Fsrec -s19 hello.s
+static const char *helloRecords =
+"S00F00006F7267303030313A32303030EB\n"
+"S11D200043FA000A700D4E4F70094E4F48656C6C6F2C20776F726C642100C2\n"
+"S9032000DC\n";
+
+
+//
 // Main
 //
 
 static void usage()
 {
     fprintf(stderr,
-            "Usage: easy68k [options] [program]\n\n"
-            "Runs an Easy68K program on a Moira CPU. The program is given as a string\n"
-            "of S-records (Motorola S-record format), separated by white space. TRAP #15\n"
+            "Usage: easy68k [options] [--file program.s68]\n\n"
+            "Runs an Easy68K program (Motorola S-record format) on a Moira CPU. TRAP #15\n"
             "is emulated on the console. Program output goes to stdout, everything else\n"
-            "to stderr.\n\n"
+            "to stderr. Without --file, a built-in Hello World program is executed.\n\n"
             "Options:\n"
-            "  -f, --file <name>     Read the S-records from a file instead\n"
+            "  -f, --file <name>     Run the program in a file of S-records\n"
             "  -t, --trace           Show every executed instruction\n"
             "  -m, --model <model>   CPU model: 68000 (default), 68010, or 68020\n"
             "  -s, --start <addr>    Start address in hex (default: S9 record)\n"
@@ -580,8 +643,6 @@ int main(int argc, const char *argv[])
 {
     Options opt;
     std::string path;           // Name of the program file (--file)
-    std::string program;        // The program given on the command line
-    bool hasProgram = false;
 
     // Do not synchronize with stdio, so that in_avail() reports buffered input
     std::ios::sync_with_stdio(false);
@@ -607,15 +668,18 @@ int main(int argc, const char *argv[])
         else if (arg == "-s" || arg == "--start") { opt.hasStart = true; opt.start = u32(strtoul(value().c_str(), nullptr, 16)); }
         else if (arg == "-c" || arg == "--max-cycles") opt.maxCycles = strtoull(value().c_str(), nullptr, 10);
         else if (!arg.empty() && arg[0] == '-') { fprintf(stderr, "Unknown option %s\n\n", arg.c_str()); usage(); return 2; }
-        else if (!hasProgram) { program = arg; hasProgram = true; }
-        else { usage(); return 2; }
+        else { fprintf(stderr, "Unexpected argument %s\n\n", arg.c_str()); usage(); return 2; }
     }
-
-    if (path.empty() == !hasProgram) { usage(); return 2; }     // Exactly one source is required
 
     try {
 
-        Image image = hasProgram ? parseSRecords(program, "command line") : loadSRecords(path);
+        Image image;
+        if (path.empty()) {
+            fprintf(stderr, "No program file given. Running the built-in example:\n\n%s\n", helloSource);
+            image = parseSRecords(helloRecords, "built-in example");
+        } else {
+            image = loadSRecords(path);
+        }
 
         // Determine the start address. The S9 record of an assembler that
         // knows no entry point contains 0, which is not part of the program.

@@ -55,10 +55,6 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "/tmp/hello.s68"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
             argument = "--trace"
             isEnabled = "YES">
          </CommandLineArgument>

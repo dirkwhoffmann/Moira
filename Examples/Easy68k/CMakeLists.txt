@@ -14,15 +14,16 @@ add_executable(easy68k main.cpp)
 target_link_libraries(easy68k PRIVATE moira)
 target_include_directories(easy68k PRIVATE ${CMAKE_SOURCE_DIR}/Moira)
 
-# Tests: Hello World, passed as a string and as a file
-set(HELLO "S00F00006F7267303030313A32303030EB S11D200043FA000A700D4E4F70094E4F48656C6C6F2C20776F726C642100C2 S9030000FC")
-
-add_test(NAME Easy68kHello COMMAND easy68k "${HELLO}")
+# Tests: The built-in Hello World program, and the same program from a file.
+# The program prints the text followed by a line break. The pattern requires the
+# line break, so that the echoed source code (which also contains the text) does
+# not match.
+add_test(NAME Easy68kHello COMMAND easy68k)
 set_tests_properties(Easy68kHello PROPERTIES
     LABELS "example"
-    PASS_REGULAR_EXPRESSION "Hello, world!")
+    PASS_REGULAR_EXPRESSION "Hello, world!\n")
 
 add_test(NAME Easy68kHelloFile COMMAND easy68k --file ${CMAKE_CURRENT_SOURCE_DIR}/hello.s68)
 set_tests_properties(Easy68kHelloFile PROPERTIES
     LABELS "example"
-    PASS_REGULAR_EXPRESSION "Hello, world!")
+    PASS_REGULAR_EXPRESSION "Hello, world!\n")
