@@ -13,15 +13,19 @@
  *
  *     http://www.easy68k.com/QuickStart/TrapTasks.htm
  *
- * This example loads an assembled program in Motorola S-record format,
- * disassembles it with Moira, and runs it. TRAP #15 is intercepted by the host
- * program, which implements the console related tasks (text input and output,
- * number conversion, time, cursor control, font colors, halting).
+ * This example takes an assembled program in Motorola S-record format and runs
+ * it on a Moira CPU. TRAP #15 is intercepted by the host program, which
+ * implements the console related tasks (text input and output, number
+ * conversion, time, cursor control, font colors, halting).
  *
- * Usage:  easy68k [options] program.s68
+ * Usage:  easy68k [options] [program]
  *
- * Program output goes to stdout. Everything else (listing, trace, messages)
- * goes to stderr, so that the output of the emulated program can be piped.
+ * The program is given as a string that contains the S-records, separated by
+ * white space (e.g., line breaks). Alternatively, use --file to read the
+ * records from a file.
+ *
+ * Program output goes to stdout. Everything else (trace, messages) goes to
+ * stderr, so that the output of the emulated program can be piped.
  */
 
 #include "Moira.h"
@@ -34,6 +38,7 @@
 #include <ctime>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -110,37 +115,33 @@ static int hexDigit(char c)
     return -1;
 }
 
-static Image loadSRecords(const std::string &path)
+// Parses S-records. The records are separated by white space. The source
+// describes the origin of the text in error messages.
+static Image parseSRecords(const std::string &text, const std::string &source)
 {
-    std::ifstream file(path);
-    if (!file) throw std::runtime_error("Cannot open " + path);
-
     Image image;
-    std::string line;
-    int lineno = 0;
+    std::istringstream stream(text);
+    std::string rec;
+    int count = 0;
 
     auto fail = [&](const std::string &msg) {
-        throw std::runtime_error(path + ":" + std::to_string(lineno) + ": " + msg);
+        throw std::runtime_error(source + ", record " + std::to_string(count) + ": " + msg);
     };
 
-    while (std::getline(file, line)) {
+    while (stream >> rec) {
 
-        lineno++;
+        count++;
 
-        // Remove trailing white space (including a CR of DOS line endings)
-        while (!line.empty() && isspace((unsigned char)line.back())) line.pop_back();
-        if (line.empty()) continue;
+        if (rec[0] != 'S' || rec.size() < 4) fail("Not an S-record");
 
-        if (line[0] != 'S' || line.size() < 4) fail("Not an S-record");
-
-        int type = line[1] - '0';
+        int type = rec[1] - '0';
         if (type < 0 || type > 9) fail("Invalid record type");
 
         // Convert the remaining characters to bytes
         std::vector<u8> bytes;
-        if ((line.size() - 2) % 2) fail("Odd number of hex digits");
-        for (size_t i = 2; i < line.size(); i += 2) {
-            int hi = hexDigit(line[i]), lo = hexDigit(line[i + 1]);
+        if ((rec.size() - 2) % 2) fail("Odd number of hex digits");
+        for (size_t i = 2; i < rec.size(); i += 2) {
+            int hi = hexDigit(rec[i]), lo = hexDigit(rec[i + 1]);
             if (hi < 0 || lo < 0) fail("Invalid hex digit");
             bytes.push_back(u8(hi << 4 | lo));
         }
@@ -173,8 +174,18 @@ static Image loadSRecords(const std::string &path)
         }
     }
 
-    if (image.segments.empty()) throw std::runtime_error(path + ": The file contains no data");
+    if (image.segments.empty()) throw std::runtime_error(source + ": No program data found");
     return image;
+}
+
+static Image loadSRecords(const std::string &path)
+{
+    std::ifstream file(path);
+    if (!file) throw std::runtime_error("Cannot open " + path);
+
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return parseSRecords(buffer.str(), path);
 }
 
 
@@ -189,8 +200,6 @@ static const u32 stackAddr = 0x1000000;     // Initial stack pointer, as in Easy
 struct Options {
 
     CPUModel model = CPUModel::M68000;
-    bool listing   = true;                  // Show the disassembly
-    bool run       = true;                  // Run the program
     bool trace     = false;                 // Show a trace
     bool hasStart  = false;                 // Overrides the start address
     u32 start      = 0;
@@ -272,97 +281,6 @@ public:
         }
         reset();
         for (int i = 0; i < 8; i++) ram[i] = saved[i];
-    }
-
-
-    //
-    // Listing
-    //
-
-    // Returns true if the instruction at addr never continues with the next one
-    bool endsFlow(u32 addr) const
-    {
-        u16 op = read16(addr);
-        switch (getInstrInfo(op).I) {
-
-            case Instr::RTS: case Instr::RTE: case Instr::RTR:
-            case Instr::BRA: case Instr::JMP: case Instr::STOP:
-            case Instr::ILLEGAL:
-                return true;
-
-            default:
-                break;
-        }
-
-        // The halt call: MOVEQ #9,D0 / MOVE.B #9,D0 followed by TRAP #15
-        if (op == 0x4E4F) {
-            u16 prev = read16(addr - 2);
-            if (prev == 0x7009) return true;
-            if (read16(addr - 4) == 0x103C && prev == 0x0009) return true;
-        }
-        return false;
-    }
-
-    static bool isTextByte(u8 c) { return (c >= 0x20 && c < 0x7F) || c == 0x0A || c == 0x0D || c == 0x09; }
-
-    // Returns the length of a string that starts at addr (including the
-    // terminator and padding), or 0 if there is no string
-    u32 stringLength(u32 addr, u32 end) const
-    {
-        u32 n = 0;
-        while (addr + n < end && isTextByte(read8(addr + n))) n++;
-        if (n < 4) return 0;
-        if (addr + n < end && read8(addr + n) != 0) return 0;
-
-        // Include the terminators and align the result to a word boundary
-        while (addr + n < end && read8(addr + n) == 0) n++;
-        if (n % 2 && addr + n < end) n++;
-        return n;
-    }
-
-    void listing(const Image &image) const
-    {
-        char instr[128], bytes[128];
-
-        for (auto &seg : image.segments) {
-
-            u32 addr = seg.addr;
-            u32 end  = seg.addr + u32(seg.data.size());
-            bool data = false;
-
-            while (addr < end) {
-
-                // After an instruction that does not continue, a text may follow
-                if (data) {
-                    u32 len = stringLength(addr, end);
-                    if (len) {
-                        for (u32 i = 0; i < len; i += 8) {
-                            u32 n = std::min(len - i, 8u);
-                            std::string hex, text;
-                            for (u32 j = 0; j < n; j++) {
-                                u8 c = read8(addr + i + j);
-                                char h[4]; snprintf(h, sizeof(h), "%02X ", c);
-                                hex += h;
-                                text += (c >= 0x20 && c < 0x7F) ? char(c) : '.';
-                            }
-                            fprintf(stderr, "%06X: %-25s DC.B    '%s'\n", addr + i, hex.c_str(), text.c_str());
-                        }
-                        addr += len;
-                    }
-                    data = false;
-                    continue;
-                }
-
-                int len = disassemble(instr, addr);
-                if (addr + u32(len) > end) len = int(end - addr);
-                dump16(bytes, addr, len / 2);
-                fprintf(stderr, "%06X: %-25s %s\n", addr, bytes, instr);
-
-                data = endsFlow(addr);
-                addr += len;
-            }
-        }
-        fprintf(stderr, "\n");
     }
 
 
@@ -644,13 +562,13 @@ public:
 static void usage()
 {
     fprintf(stderr,
-            "Usage: easy68k [options] program.s68\n\n"
-            "Runs an Easy68K program (Motorola S-record format) on a Moira CPU. TRAP #15\n"
+            "Usage: easy68k [options] [program]\n\n"
+            "Runs an Easy68K program on a Moira CPU. The program is given as a string\n"
+            "of S-records (Motorola S-record format), separated by white space. TRAP #15\n"
             "is emulated on the console. Program output goes to stdout, everything else\n"
             "to stderr.\n\n"
             "Options:\n"
-            "  -q, --quiet           Do not show the disassembly before running\n"
-            "  -n, --no-run          Show the disassembly, but do not run the program\n"
+            "  -f, --file <name>     Read the S-records from a file instead\n"
             "  -t, --trace           Show every executed instruction\n"
             "  -m, --model <model>   CPU model: 68000 (default), 68010, or 68020\n"
             "  -s, --start <addr>    Start address in hex (default: S9 record)\n"
@@ -661,7 +579,9 @@ static void usage()
 int main(int argc, const char *argv[])
 {
     Options opt;
-    std::string path;
+    std::string path;           // Name of the program file (--file)
+    std::string program;        // The program given on the command line
+    bool hasProgram = false;
 
     // Do not synchronize with stdio, so that in_avail() reports buffered input
     std::ios::sync_with_stdio(false);
@@ -675,8 +595,7 @@ int main(int argc, const char *argv[])
         };
 
         if (arg == "-h" || arg == "--help") { usage(); return 0; }
-        else if (arg == "-q" || arg == "--quiet") opt.listing = false;
-        else if (arg == "-n" || arg == "--no-run") opt.run = false;
+        else if (arg == "-f" || arg == "--file") path = value();
         else if (arg == "-t" || arg == "--trace") opt.trace = true;
         else if (arg == "-m" || arg == "--model") {
             std::string m = value();
@@ -688,15 +607,15 @@ int main(int argc, const char *argv[])
         else if (arg == "-s" || arg == "--start") { opt.hasStart = true; opt.start = u32(strtoul(value().c_str(), nullptr, 16)); }
         else if (arg == "-c" || arg == "--max-cycles") opt.maxCycles = strtoull(value().c_str(), nullptr, 10);
         else if (!arg.empty() && arg[0] == '-') { fprintf(stderr, "Unknown option %s\n\n", arg.c_str()); usage(); return 2; }
-        else if (path.empty()) path = arg;
+        else if (!hasProgram) { program = arg; hasProgram = true; }
         else { usage(); return 2; }
     }
 
-    if (path.empty()) { usage(); return 2; }
+    if (path.empty() == !hasProgram) { usage(); return 2; }     // Exactly one source is required
 
     try {
 
-        Image image = loadSRecords(path);
+        Image image = hasProgram ? parseSRecords(program, "command line") : loadSRecords(path);
 
         // Determine the start address. The S9 record of an assembler that
         // knows no entry point contains 0, which is not part of the program.
@@ -706,15 +625,14 @@ int main(int argc, const char *argv[])
         } else if (image.hasStart && image.contains(image.start)) {
             start = image.start;
         } else {
-            if (opt.listing) fprintf(stderr, "No usable start address in the file. Starting at $%06X.\n\n", start);
+            if (opt.trace) fprintf(stderr, "No usable start address in the program. Starting at $%06X.\n\n", start);
         }
 
         Easy68k cpu;
         cpu.setModel(opt.model);
         cpu.load(image, start);
 
-        if (opt.listing) cpu.listing(image);
-        if (opt.run) cpu.run(opt);
+        cpu.run(opt);
 
         return cpu.exitCode;
 

@@ -811,9 +811,7 @@
 		50F2E000000000000000000A /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		50F2E000000000000000000C /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F2E0000000000000000010 /* hello.s */ = {isa = PBXFileReference; lastKnownFileType = text; path = hello.s; sourceTree = "<group>"; };
-		50F2E0000000000000000011 /* tasks.s */ = {isa = PBXFileReference; lastKnownFileType = text; path = tasks.s; sourceTree = "<group>"; };
 		50F2E0000000000000000012 /* hello.s68 */ = {isa = PBXFileReference; lastKnownFileType = text; path = hello.s68; sourceTree = "<group>"; };
-		50F2E0000000000000000013 /* tasks.s68 */ = {isa = PBXFileReference; lastKnownFileType = text; path = tasks.s68; sourceTree = "<group>"; };
 		50F20000000000000000000B /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		50F40000000000000000000C /* unit */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = unit; sourceTree = BUILT_PRODUCTS_DIR; };
 		50F400000000000000000113 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -1559,8 +1557,6 @@
 				50F2E000000000000000000A /* main.cpp */,
 				50F2E0000000000000000010 /* hello.s */,
 				50F2E0000000000000000012 /* hello.s68 */,
-				50F2E0000000000000000011 /* tasks.s */,
-				50F2E0000000000000000013 /* tasks.s68 */,
 			);
 			path = Easy68k;
 			sourceTree = "<group>";
