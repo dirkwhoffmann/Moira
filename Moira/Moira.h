@@ -980,7 +980,16 @@ public:
     
     /// Sets the value on the Interrupt Priority Level (IPL) pins
     void setIPL(u8 val);
-    
+
+    /// Retrieves the way the CPU obtains the vector number of an interrupt
+    IrqMode getIrqMode() const { return irqMode; }
+
+    /// Selects how the CPU obtains the vector number of an interrupt
+    /// @param mode  AUTO uses the autovector 24 + level (default). USER asks
+    ///              readIrqUserVector() for the vector number. SPURIOUS always
+    ///              uses vector 24 and UNINITIALIZED vector 15.
+    void setIrqMode(IrqMode mode) { irqMode = mode; }
+
 private:
     
     // Selects the IRQ vector based on the interrupt level

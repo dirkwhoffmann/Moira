@@ -21,6 +21,7 @@ add_executable(unit
     MmuExecTests.cpp
     BusErrorTests.cpp
     DebuggerTests.cpp
+    IrqFcTests.cpp
     StackFrameTests.cpp
     ../Common/Common.cpp)
     

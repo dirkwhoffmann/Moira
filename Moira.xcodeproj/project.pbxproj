@@ -163,6 +163,7 @@
 		50F40000000000000000011C /* MmuExecTests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F40000000000000000011B /* MmuExecTests.cpp */; };
 		50F4000000000000000001F2 /* BusErrorTests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F4000000000000000001F1 /* BusErrorTests.cpp */; };
 		50F4000000000000000009A2 /* DebuggerTests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F4000000000000000009A1 /* DebuggerTests.cpp */; };
+		50F4000000000000000009A4 /* IrqFcTests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50F4000000000000000009A3 /* IrqFcTests.cpp */; };
 		50F500000000000000000034 /* libMAMERef.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50F500000000000000000002 /* libMAMERef.a */; };
 		50F500000000000000000035 /* libMoiraMAME.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50F100000000000000000002 /* libMoiraMAME.a */; };
 		50F500000000000000000043 /* libUAECpu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50A200000000000000000001 /* libUAECpu.a */; };
@@ -803,6 +804,7 @@
 		50F40000000000000000011E /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50F4000000000000000001F1 /* BusErrorTests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BusErrorTests.cpp; sourceTree = "<group>"; };
 		50F4000000000000000009A1 /* DebuggerTests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DebuggerTests.cpp; sourceTree = "<group>"; };
+		50F4000000000000000009A3 /* IrqFcTests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = IrqFcTests.cpp; sourceTree = "<group>"; };
 		50F500000000000000000002 /* libMAMERef.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libMAMERef.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		50F500000000000000000016 /* exceptionmame */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = exceptionmame; sourceTree = BUILT_PRODUCTS_DIR; };
 		50F500000000000000000101 /* m68000.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = m68000.cpp; sourceTree = "<group>"; };
@@ -1595,6 +1597,7 @@
 				50F40000000000000000011B /* MmuExecTests.cpp */,
 				50F4000000000000000001F1 /* BusErrorTests.cpp */,
 				50F4000000000000000009A1 /* DebuggerTests.cpp */,
+				50F4000000000000000009A3 /* IrqFcTests.cpp */,
 				50F40000000000000000011D /* doctest.h */,
 				50F40000000000000000011E /* CMakeLists.txt */,
 				50F600000000000000000039 /* StackFrameTests.cpp */,
@@ -2379,6 +2382,7 @@
 				50F40000000000000000011C /* MmuExecTests.cpp in Sources */,
 				50F4000000000000000001F2 /* BusErrorTests.cpp in Sources */,
 				50F4000000000000000009A2 /* DebuggerTests.cpp in Sources */,
+				50F4000000000000000009A4 /* IrqFcTests.cpp in Sources */,
 				50F600000000000000000033 /* Common.cpp in Sources */,
 				50F60000000000000000003A /* StackFrameTests.cpp in Sources */,
 			);
