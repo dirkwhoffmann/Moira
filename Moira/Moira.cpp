@@ -453,9 +453,12 @@ Moira::execute()
 
         // Execute the instruction
         {
-            // Save the registers if a faulted instruction can be restarted
+            // Save the registers if a faulted instruction can be restarted.
+            // The snapshot is only needed while the instruction executes. Code
+            // that needs it receives a pointer to it (see processException).
+            Registers snapshot;
             const Registers *saved = nullptr;
-            if (flags & RESTARTABLE) { savedReg = reg; saved = &savedReg; }
+            if (flags & RESTARTABLE) { snapshot = reg; saved = &snapshot; }
 
             try {
 

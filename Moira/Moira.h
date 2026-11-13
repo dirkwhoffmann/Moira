@@ -35,6 +35,7 @@ inline constexpr int beta  = 1;
  *
  * ```cpp
  * class CPU : public moira::Moira {
+ *
  *     u8 read8(u32 addr) const override;
  *     u16 read16(u32 addr) const override;
  *     u32 read32(u32 addr) const override;
@@ -71,19 +72,11 @@ class Moira {
     
 protected:
     
-    // Emulated CPU model
+    // The emulated CPU model
     CPUModel cpuModel = CPUModel::M68000;
 
-    // Selected coprocessor
+    // The emulated coprocessor (if any)
     CopModel copModel = CopModel::NONE;
-
-    /* Register state at the beginning of the current instruction. If an MMU
-     * is active, a bus fault aborts the instruction. The registers are rolled
-     * back to this state, so that the instruction can be restarted by RTE.
-     * The snapshot is only meaningful while an instruction is executed. Code
-     * that needs it receives a pointer to it (see processException).
-     */
-    Registers savedReg;
 
     // IRD of the executing instruction after a prefetch that was followed by more cycles (MAME mode)
     u16 irdOld = 0;
