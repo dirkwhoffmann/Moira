@@ -395,7 +395,7 @@ Moira::execute()
         //
 
         instrStart = reg.pc0;
-        if constexpr (compat == Compatibility::UAE) instrIrd = queue.ird;
+        if constexpr (compat == Compatibility::UAE || compat == Compatibility::MAME) instrIrd = queue.ird;
         try {
             (this->*exec[queue.ird])(queue.ird);
         } catch (const std::exception &exc) {
@@ -470,7 +470,7 @@ Moira::execute()
                 } else {
 
                     instrStart = reg.pc0;
-                    if constexpr (compat == Compatibility::UAE) instrIrd = queue.ird;
+                    if constexpr (compat == Compatibility::UAE || compat == Compatibility::MAME) instrIrd = queue.ird;
                     (this->*exec[queue.ird])(queue.ird);
                 }
 

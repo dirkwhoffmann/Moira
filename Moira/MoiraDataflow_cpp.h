@@ -1129,7 +1129,7 @@ Moira::makeFrame(u32 addr)
     if constexpr (compat == Compatibility::MAME || compat == Compatibility::UAE) {
 
         // MAME and UAE keep the IRD of the executing instruction until its last bus cycle has started
-        return makeFrame<F>(addr, reg.pc, getSR(), irdKeep ? irdOld : getIRD());
+        return makeFrame<F>(addr, reg.pc, getSR(), irdKeep ? instrIrd : getIRD());
     }
     return makeFrame<F>(addr, reg.pc, getSR(), getIRD());
 }
@@ -1159,7 +1159,6 @@ Moira::prefetch()
         // MAME replaces the IRD when the last bus cycle of the instruction starts.
         // The value is part of the stack frame if the prefetch fails.
         u16 irc = readInstr<C, F>(reg.pc);
-        irdOld = queue.ird;
         irdKeep = true;
         queue.ird = queue.irc;
         queue.irc = irc;
