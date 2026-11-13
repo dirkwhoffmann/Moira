@@ -83,9 +83,10 @@ protected:
     /* Register state at the beginning of the current instruction. If an MMU
      * is active, a bus fault aborts the instruction. The registers are rolled
      * back to this state, so that the instruction can be restarted by RTE.
+     * The snapshot is only meaningful while an instruction is executed. Code
+     * that needs it receives a pointer to it (see processException).
      */
     Registers savedReg;
-    bool savedRegValid = false;
 
     // IRD of the executing instruction after a prefetch that was followed by more cycles (MAME mode)
     u16 irdOld = 0;
@@ -253,19 +254,23 @@ protected:
     void createJumpTable(CPUModel cpuModel, CPUModel dasmModel);
 
     // Rolls the registers back to the state saved at the start of the instruction
-    void restoreRegisters();
+    void restoreRegisters(const Registers &saved);
 
     // Takes back the predecrement of the operand that caused a bus error
-    void undoPredecrement(u32 addr);
+    void undoPredecrement(u32 addr, const Registers &saved);
 
     // Reads a program word without raising a bus error (returns 0 if the word is unreachable)
     u16 peekProgramWord(u32 addr, bool supervisor);
 
-    // Remembers the registers at the beginning of an instruction (see savedReg)
-    void saveRegisters()
+    // Remembers the registers at the beginning of an instruction (see savedReg).
+    // Returns a pointer to the snapshot, or nullptr if no snapshot was taken.
+    const Registers *saveRegisters()
     {
         // The registers are only needed if a bus fault can occur
-        if (flags & State::MMU_ACTIVE) { savedReg = reg; savedRegValid = true; }
+        if (!(flags & State::MMU_ACTIVE)) return nullptr;
+
+        savedReg = reg;
+        return &savedReg;
     }
 
     // Determines the effective FPU and MMU from the CPU model and the selection
@@ -424,11 +429,13 @@ public:
     
 private:
     
-    // Processes an exception that was caught during execution
-    void processException(const std::exception &exception);
+    // Processes an exception that was caught during execution. If the exception
+    // was raised inside an instruction whose start state has been saved, saved
+    // points to that state (nullptr otherwise).
+    void processException(const std::exception &exception, const Registers *saved = nullptr);
     
     // Processes an exception for a specific CPU core type
-    template <Core C> void processException(const std::exception &exception);
+    template <Core C> void processException(const std::exception &exception, const Registers *saved = nullptr);
     
     // Performs a core-specific reset routine
     template <Core C> void reset();

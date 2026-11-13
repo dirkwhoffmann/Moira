@@ -432,7 +432,7 @@ Moira::execAddressError(StackFrame frame, int delay)
 }
 
 template <Core C> void
-Moira::execBusError(StackFrame frame, int delay)
+Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
 {
     u16 status = getSR();
     u16 ssw = 0x60 | (readFC() & 7);
@@ -514,12 +514,12 @@ Moira::execBusError(StackFrame frame, int delay)
             writeStackFrame1011UAE<C>(status, 2, pc, ssw, frame.addr, end, status & 0x2000);
 
             // Remember how to restart the instruction
-            restart.valid = savedRegValid;
+            restart.valid = saved != nullptr;
             if (restart.valid) {
 
-                restart.pre = savedReg;
+                restart.pre = *saved;
                 restart.fault = faultReg;
-                auto sr = reg.sr; reg.sr = savedReg.sr; restart.preSr = getSR(); reg.sr = sr;
+                auto sr = reg.sr; reg.sr = saved->sr; restart.preSr = getSR(); reg.sr = sr;
                 restart.pc = instrStart;
                 restart.frameSp = reg.sp;
                 restart.frameSr = status;

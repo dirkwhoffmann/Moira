@@ -35,7 +35,7 @@ template <Core C> void execException(M68kException exc, int nr = 0);
 
 // Emulates an address or bus error
 template <Core C> void execAddressError(StackFrame frame, int delay = 0);
-template <Core C> void execBusError(StackFrame frame, int delay = 0);
+template <Core C> void execBusError(StackFrame frame, int delay = 0, const Registers *saved = nullptr);
 
 // Emulates an interrupt
 void execInterrupt(u8 level);

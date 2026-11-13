@@ -422,8 +422,8 @@ Moira::execute()
         // Slow path: Process flags one by one
         //
 
-        // Registers are only saved while an instruction is executed
-        savedRegValid = false;
+        // Start state of the instruction (if saved)
+        const Registers *saved = nullptr;
 
         if (flags & (HALTED | TRACE_EXC | TRACING)) {
 
@@ -469,7 +469,7 @@ Moira::execute()
         }
 
         // Execute the instruction
-        saveRegisters();
+        saved = saveRegisters();
 
         if (flags & LOOPING) {
 
@@ -483,7 +483,7 @@ Moira::execute()
             try {
                 (this->*exec[queue.ird])(queue.ird);
             } catch (const std::exception &exc) {
-                processException(exc);
+                processException(exc, saved);
             }
         }
 
@@ -523,12 +523,11 @@ Moira::updateMmuFlag()
         flags |= State::MMU_ACTIVE;
     } else {
         flags &= ~State::MMU_ACTIVE;
-        savedRegValid = false;
     }
 }
 
 void
-Moira::undoPredecrement(u32 addr)
+Moira::undoPredecrement(u32 addr, const Registers &saved)
 {
     /* UAE decrements an address register after the operand has been read, and before
      * a pure write. Hence, only a faulting read has to be taken back. A write fault
@@ -578,23 +577,22 @@ Moira::undoPredecrement(u32 addr)
     for (int i = 0; i < 2; i++) {
 
         int r = regs[i];
-        if (r < 0 || reg.a[r] != addr || savedReg.a[r] == reg.a[r]) continue;
+        if (r < 0 || reg.a[r] != addr || saved.a[r] == reg.a[r]) continue;
 
         // Both operands may use the same register
         bool both = regs[0] == regs[1];
-        u32 delta = savedReg.a[r] - reg.a[r];
+        u32 delta = saved.a[r] - reg.a[r];
         reg.a[r] += (both && size) ? (r == 7 && size == 1 ? 2 : size) : delta;
         break;
     }
 }
 
 void
-Moira::restoreRegisters()
+Moira::restoreRegisters(const Registers &saved)
 {
     u8 ipl = reg.ipl;
-    reg = savedReg;
+    reg = saved;
     reg.ipl = ipl;
-    savedRegValid = false;
 
     // Bring the dependent flags in sync with the restored status register
     flags &= ~(State::TRACING | State::TRACE_EXC);
@@ -609,20 +607,20 @@ Moira::executeUntil(i64 cycle)
 }
 
 void
-Moira::processException(const std::exception &exc)
+Moira::processException(const std::exception &exc, const Registers *saved)
 {
     switch (cpuModel) {
 
-        case CPUModel::M68000: processException<Core::C68000>(exc); break;
-        case CPUModel::M68010: processException<Core::C68010>(exc); break;
+        case CPUModel::M68000: processException<Core::C68000>(exc, saved); break;
+        case CPUModel::M68010: processException<Core::C68010>(exc, saved); break;
         
         default:
-            processException<Core::C68020>(exc);
+            processException<Core::C68020>(exc, saved);
     }
 }
 
 template <Core C> void
-Moira::processException(const std::exception &exc)
+Moira::processException(const std::exception &exc, const Registers *saved)
 {
     try {
 
@@ -638,13 +636,13 @@ Moira::processException(const std::exception &exc)
             // The 68020 in UAE mode keeps the registers as they are and rolls
             // them back when the handler returns (see Restart).
             bool deferred = compat == Compatibility::UAE && cpuModel <= CPUModel::M68020;
-            if (savedRegValid && !deferred) restoreRegisters();
+            if (saved && !deferred) restoreRegisters(*saved);
 
             // UAE decrements an address register after the access has succeeded
-            if (savedRegValid && deferred) undoPredecrement(be->stackFrame.addr);
+            if (saved && deferred) undoPredecrement(be->stackFrame.addr, *saved);
 
             // UAE sets the condition codes of a MOVE before it writes the result
-            if (savedRegValid && deferred && busWriteAccess && (instrIrd >> 12) >= 1 && (instrIrd >> 12) <= 3) {
+            if (saved && deferred && busWriteAccess && (instrIrd >> 12) >= 1 && (instrIrd >> 12) <= 3) {
 
                 int bits = (instrIrd >> 12) == 1 ? 8 : (instrIrd >> 12) == 3 ? 16 : 32;
                 u32 mask = bits == 32 ? 0xFFFFFFFF : (1u << bits) - 1;
@@ -655,8 +653,7 @@ Moira::processException(const std::exception &exc)
             }
 
             // A bus error while processing a bus error is a double bus fault
-            try { execBusError<C>(be->stackFrame); } catch (const BusError &) { halt(); }
-            savedRegValid = false;
+            try { execBusError<C>(be->stackFrame, 0, saved); } catch (const BusError &) { halt(); }
             return;
         }
 
