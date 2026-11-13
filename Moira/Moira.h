@@ -262,17 +262,6 @@ protected:
     // Reads a program word without raising a bus error (returns 0 if the word is unreachable)
     u16 peekProgramWord(u32 addr, bool supervisor);
 
-    // Remembers the registers at the beginning of an instruction (see savedReg).
-    // Returns a pointer to the snapshot, or nullptr if no snapshot was taken.
-    const Registers *saveRegisters()
-    {
-        // The registers are only needed if a bus fault can occur
-        if (!(flags & State::RESTARTABLE)) return nullptr;
-
-        savedReg = reg;
-        return &savedReg;
-    }
-
     // Determines the effective FPU and MMU from the CPU model and the selection
     void updateUnits();
     void createJumpTable(CPUModel model) { createJumpTable(model, model); }

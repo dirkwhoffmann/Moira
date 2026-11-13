@@ -467,7 +467,9 @@ Moira::execute()
 
         // Execute the instruction
         {
-            const Registers *saved = saveRegisters();
+            // Save the registers if a faulted instruction can be restarted
+            const Registers *saved = nullptr;
+            if (flags & RESTARTABLE) { savedReg = reg; saved = &savedReg; }
 
             try {
 
