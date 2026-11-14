@@ -137,9 +137,6 @@ protected:
     // Source of the function code pins
     u8 fcSource {};
     
-    // Remembers the vector number of the most recent exception
-    int exception {};
-
     // Controls exact timing of instructions running in loop mode (68010 only)
     int loopModeDelay {2};
     

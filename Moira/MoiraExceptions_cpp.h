@@ -587,9 +587,6 @@ Moira::execException(M68kException exc, int nr)
     // Inform the delegate
     willExecute(exc, vector);
 
-    // Remember the exception vector
-    exception = vector;
-
     // Exceptions terminate loop mode
     flags &= ~State::LOOPING;
 
