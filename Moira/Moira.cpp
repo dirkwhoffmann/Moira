@@ -125,9 +125,18 @@ Moira::updateUnits()
 {
     switch (cpuModel) {
 
+        case CPUModel::M68EC020:
+        case CPUModel::M68020:
+        case CPUModel::M68EC030:
+
+            mmu.setModel(MMUModel::NONE);
+            fpu.setModel(cpModel);
+            break;
+
         case CPUModel::M68030:
 
             mmu.setModel(MMUModel::M68030);
+            fpu.setModel(cpModel);
             break;
 
         case CPUModel::M68LC040:
@@ -148,9 +157,6 @@ Moira::updateUnits()
     }
 
     updateMmuFlag();
-
-    // A 6888x can be connected to CPUs with a coprocessor interface
-    if (hasCPI(cpuModel)) fpu.setModel(cpModel);
 }
 
 void
