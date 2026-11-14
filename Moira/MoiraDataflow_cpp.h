@@ -1365,8 +1365,7 @@ Moira::jumpToVector(int nr)
     // Stop emulation if the exception should be catched
     if (debugger.catchpointMatches(nr)) didReachCatchpoint(u8(nr));
 
-    reg.pc0 = reg.pc - 2;
-    didJumpToVector(nr, reg.pc0);
+    didJumpToVector(nr, reg.pc - 2);
 }
 
 // The following definitions are not templated. They are compiled into the

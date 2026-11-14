@@ -394,14 +394,13 @@ Moira::execute()
         //
 
         queue.lastFetch = false;
-        pct = reg.pc0;
         try {
             (this->*exec[queue.ird])(queue.ird);
             assert(queue.lastFetch || queue.ird == 0x4E72);   // Only STOP does not fetch its successor
         } catch (const std::exception &exc) {
             processException(exc);
         }
-        reg.pc0 = reg.pc - 2;
+        advancePC0();
 
     } else {
 
@@ -436,6 +435,7 @@ Moira::execute()
                 if (checkForIrq()) goto done;
             } catch (const std::exception &exc) {
                 processException(exc);
+                advancePC0();
             }
         }
 
@@ -460,8 +460,7 @@ Moira::execute()
             Registers snapshot;
             const Registers *saved = nullptr;
             queue.lastFetch = false;
-            pct = reg.pc0;
-            if (flags & RESTARTABLE) { snapshot = reg; saved = &snapshot; }
+                if (flags & RESTARTABLE) { snapshot = reg; saved = &snapshot; }
 
             try {
 
@@ -479,12 +478,12 @@ Moira::execute()
             } catch (const std::exception &exc) {
                 processException(exc, saved);
             }
-
-            // The next instruction starts where the prefetch queue points to
-            reg.pc0 = reg.pc - 2;
         }
 
     done:
+
+        // The next instruction starts where the prefetch queue points to
+        advancePC0();
 
         // Check if a breakpoint has been reached
         if (flags & CHECK_BP) {

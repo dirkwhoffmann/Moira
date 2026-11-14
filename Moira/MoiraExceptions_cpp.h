@@ -495,19 +495,19 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
 
             // UAE stacks the start of the instruction. Indexed operands move it behind the instruction words.
             // The extension word of the destination of a MOVE is consumed after the source has been read
-            u16 instrIrd = peekProgramWord(reg.pc0, status & 0x2000);
-            bool ix = hasIndexedOperand(instrIrd);
-            if (ix && (instrIrd & 0xC000) == 0 && (instrIrd & 0x3000)) {
+            u16 op = peekProgramWord(reg.pc0, status & 0x2000);
+            bool ix = hasIndexedOperand(op);
+            if (ix && (op & 0xC000) == 0 && (op & 0x3000)) {
                 auto indexed = [](u16 m, u16 r) { return m == 6 || (m == 7 && r == 3); };
-                if (!indexed((instrIrd >> 3) & 7, instrIrd & 7) && !busWriteAccess) ix = false;
+                if (!indexed((op >> 3) & 7, op & 7) && !busWriteAccess) ix = false;
             }
             u32 pc = ix ? end : reg.pc0;
 
             // If the source of a MOVE is indexed, UAE stacks the address of the extension words of the destination
-            if (ix && (instrIrd & 0xC000) == 0 && (instrIrd & 0x3000) && busWriteAccess) {
+            if (ix && (op & 0xC000) == 0 && (op & 0x3000) && busWriteAccess) {
                 auto indexed = [](u16 m, u16 r) { return m == 6 || (m == 7 && r == 3); };
-                u16 dm = (instrIrd >> 6) & 7, dr = (instrIrd >> 9) & 7;
-                if (indexed((instrIrd >> 3) & 7, instrIrd & 7)) {
+                u16 dm = (op >> 6) & 7, dr = (op >> 9) & 7;
+                if (indexed((op >> 3) & 7, op & 7)) {
                     if (dm == 5 || (dm == 7 && dr == 0)) pc -= 2;
                     else if (dm == 7 && dr == 1) pc -= 2;
                 }
@@ -715,7 +715,7 @@ Moira::execException(M68kException exc, int nr)
 
             // Write stack frame (the 68020 stacks the address of the traced instruction)
             if constexpr (C == Core::C68020) {
-                writeStackFrame0010<C>(status, reg.pc, pct, vector);
+                writeStackFrame0010<C>(status, reg.pc, reg.prev_pc0, vector);
             } else {
                 writeStackFrame0000<C>(status, reg.pc, vector);
             }

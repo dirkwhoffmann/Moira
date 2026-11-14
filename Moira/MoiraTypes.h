@@ -380,6 +380,7 @@ struct Registers {
     
     u32 pc;                     ///< Program counter (address of the word in IRC)
     u32 pc0;                    ///< Beginning of the current instruction
+    u32 prev_pc0;               ///< Beginning of the previous instruction
 
     StatusRegister sr;          ///< Status register
     

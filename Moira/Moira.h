@@ -78,8 +78,6 @@ protected:
     // The emulated coprocessor (if any)
     CopModel copModel = CopModel::NONE;
 
-    // Start address of the most recently executed instruction (stacked by the 68020 trace frame)
-    u32 pct = 0;
 
     /* Restart information of a faulted instruction (68020 in UAE mode). The handler
      * sees the registers as they were when the fault occurred (as on the real CPU,
@@ -742,8 +740,13 @@ public:
 
     /// Gets the address of the currently executed instruction
     u32 getPC0() const { return reg.pc0; }
+    /// Gets the address of the previously executed instruction
+    u32 getPrevPC0() const { return reg.prev_pc0; }
     /// Sets the address of the currently executed instruction
     void setPC0(u32 val) { reg.pc0 = val; }
+
+    // Called when an instruction (or exception) has been processed: pc0 moves to the next instruction
+    void advancePC0() { reg.prev_pc0 = reg.pc0; reg.pc0 = reg.pc - 2; }
     
     /// Gets the IRC register, which is part of the prefetch queue
     u16 getIRC() const { return queue.irc; }
