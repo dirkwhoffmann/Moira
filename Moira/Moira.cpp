@@ -510,6 +510,12 @@ Moira::execute(i64 cycles)
 }
 
 void
+Moira::executeUntil(i64 cycle)
+{
+    while (clock < cycle) { execute(); }
+}
+
+void
 Moira::updateMmuFlag()
 {
     // An address translation fault must be restartable. The same holds for a
@@ -603,12 +609,6 @@ Moira::restoreRegisters(const Registers &saved)
 }
 
 void
-Moira::executeUntil(i64 cycle)
-{
-    while (clock < cycle) { execute(); }
-}
-
-void
 Moira::processException(const std::exception &exc, const Registers *saved)
 {
     switch (cpuModel) {
@@ -675,35 +675,6 @@ Moira::processException(const std::exception &exc, const Registers *saved)
     }
 
     throw exc;
-}
-
-bool
-Moira::checkForIrq()
-{
-    // Level 7 is edge triggered. The interrupt can be taken again once the polled level has dropped.
-    if (reg.ipl < 7) nmiTaken = false;
-
-    if (reg.ipl > reg.sr.ipl || (reg.ipl == 7 && !nmiTaken)) {
-
-        // Exit loop mode
-        if (flags & State::LOOPING) flags &= ~State::LOOPING;
-
-        // Trigger interrupt
-        execInterrupt(reg.ipl);
-
-        return true;
-
-    } else {
-
-        // If the polled IPL is up to date, we disable interrupt checking for
-        // the time being, because no interrupt can occur as long as the
-        // external IPL or the IPL mask inside the status register keep the
-        // same. If one of these variables changes, we reenable interrupt
-        // checking.
-        if (reg.ipl == ipl) flags &= ~State::CHECK_IRQ;
-
-        return false;
-    }
 }
 
 void
@@ -1053,6 +1024,35 @@ Moira::setFC(u8 value)
     if constexpr (MOIRA_EMULATE_FC) {
         
         fcl = (u8)value;
+    }
+}
+
+bool
+Moira::checkForIrq()
+{
+    // Level 7 is edge triggered. The interrupt can be taken again once the polled level has dropped.
+    if (reg.ipl < 7) nmiTaken = false;
+
+    if (reg.ipl > reg.sr.ipl || (reg.ipl == 7 && !nmiTaken)) {
+
+        // Exit loop mode
+        if (flags & State::LOOPING) flags &= ~State::LOOPING;
+
+        // Trigger interrupt
+        execInterrupt(reg.ipl);
+
+        return true;
+
+    } else {
+
+        // If the polled IPL is up to date, we disable interrupt checking for
+        // the time being, because no interrupt can occur as long as the
+        // external IPL or the IPL mask inside the status register keep the
+        // same. If one of these variables changes, we reenable interrupt
+        // checking.
+        if (reg.ipl == ipl) flags &= ~State::CHECK_IRQ;
+
+        return false;
     }
 }
 

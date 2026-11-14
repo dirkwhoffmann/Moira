@@ -87,6 +87,7 @@ protected:
     // Visual style for data dumps
     DasmStyle dataStyle;
     
+    
     //
     // Subcomponents
     //
@@ -104,9 +105,11 @@ public:
 
 protected:
 
-    // Caches
-    ICache iCache = ICache(*this); // 68020+
-    DCache dCache = DCache(*this); // 68030+
+    // Instruction cache (68020+)
+    ICache iCache = ICache(*this);
+
+    // Data cache (68030+)
+    DCache dCache = DCache(*this);
 
     
     //
@@ -200,12 +203,6 @@ protected:
     
     // Creates or updates the jump tables for execution and disassembly
     void createJumpTable(CPUModel cpuModel, CPUModel dasmModel);
-
-    // Rolls the registers back to the state saved at the start of the instruction
-    void restoreRegisters(const Registers &saved);
-
-    // Takes back the predecrement of the operand that caused a bus error
-    void undoPredecrement(const StackFrame &frame, const Registers &saved, u16 ird);
 
     // Determines the effective FPU and MMU from the CPU model and the selection
     void updateUnits();
@@ -356,22 +353,8 @@ public:
     
 private:
     
-    // Processes an exception that was caught during execution. If the exception
-    // was raised inside an instruction whose start state has been saved, saved
-    // points to that state (nullptr otherwise).
-    void processException(const std::exception &exception, const Registers *saved = nullptr);
-    
-    // Processes an exception for a specific CPU core type
-    template <Core C> void processException(const std::exception &exception, const Registers *saved = nullptr);
-    
     // Performs a core-specific reset routine
     template <Core C> void reset();
-    
-    // Checks for a pending interrupt and handles it if necessary
-    bool checkForIrq();
-    
-    // Puts the CPU into a HALT state, stopping execution
-    void halt();
     
     
     //
@@ -941,6 +924,9 @@ public:
 
 private:
     
+    // Checks for a pending interrupt and handles it if necessary
+    bool checkForIrq();
+
     // Selects the IRQ vector based on the interrupt level
     u16 getIrqVector(u8 level);
 
@@ -949,6 +935,30 @@ private:
 
     // Reports the first cycle of the coprocessor protocol of a line-F instruction
     void reportCoprocessorCycle(u16 opcode, u8 cir);
+
+
+    //
+    // Handling Exceptions
+    //
+
+private:
+
+    // Processes an exception that was caught during execution. If the exception
+    // was raised inside an instruction whose start state has been saved, saved
+    // points to that state (nullptr otherwise).
+    void processException(const std::exception &exception, const Registers *saved = nullptr);
+
+    // Processes an exception for a specific CPU core type
+    template <Core C> void processException(const std::exception &exception, const Registers *saved = nullptr);
+
+    // Rolls the registers back to the state saved at the start of the instruction
+    void restoreRegisters(const Registers &saved);
+
+    // Takes back the predecrement of the operand that caused a bus error
+    void undoPredecrement(const StackFrame &frame, const Registers &saved, u16 ird);
+
+    // Puts the CPU into a HALT state, stopping execution
+    void halt();
 
 
     //
