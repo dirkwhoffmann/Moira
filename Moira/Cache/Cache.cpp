@@ -5,6 +5,7 @@
 // Published under the terms of the MIT License
 // -----------------------------------------------------------------------------
 
+#include <cassert>
 #include "../MoiraConfig.h"
 #include "../Moira.h"
 
@@ -174,13 +175,7 @@ ICache::fill(u32 base, u32 &phys)
 u16
 ICache::fetch(u32 addr, bool &busAccess, u32 &phys)
 {
-    if (!emulated) {
-
-        // Fake a permanent cache miss
-        busAccess = true;
-        phys = moira.translate<Core::C68020, false, Word>(addr, moira.readFC()) & moira.addrMask();
-        return moira.read16(phys);
-    }
+    assert(emulated);
 
     auto base = addr & moira.addrMask() & ~3;
 

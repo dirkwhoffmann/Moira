@@ -811,9 +811,20 @@ Moira::readInstr(u32 addr)
         }
         if constexpr (F & POLL) POLL_IPL;
 
-        bool busAccess;
+        bool busAccess = true;
         u32 phys;
-        u16 result = iCache.fetch(addr & addrMask<C>(), busAccess, phys);
+        u16 result;
+
+        if (iCache.emulated) {
+
+            result = iCache.fetch(addr & addrMask<C>(), busAccess, phys);
+
+        } else {
+
+            // Without a cache, every fetch is a bus access
+            phys = translate<C, false, Word>(addr & addrMask<C>(), readFC()) & addrMask<C>();
+            result = read16(phys);
+        }
         budget.cp += busAccess ? (portSize(dsack(phys)) == 4 ? 0 : 4) : -2;
 
         return result;
