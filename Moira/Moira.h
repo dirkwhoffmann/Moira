@@ -19,7 +19,7 @@ namespace MOIRA_NAMESPACE {
 /// Version of this release
 namespace Version {
 
-inline constexpr int major = 5;
+inline constexpr int major = 6;
 inline constexpr int minor = 0;
 inline constexpr int patch = 0;
 inline constexpr int beta  = 1;
@@ -78,9 +78,6 @@ protected:
     // The emulated coprocessor (if any)
     CopModel copModel = CopModel::NONE;
 
-    // Restart information of a faulted instruction (68020+)
-    Restart restart;
-
     // Instruction set used by the disassembler
     CPUModel dasmModel = CPUModel::M68000;
     
@@ -97,10 +94,19 @@ protected:
     
 public:
     
-    /// Debugger handling breakpoints, watchpoints, catchpoints, and instruction tracing
+    // The memory management unit
+    MMU mmu = MMU(*this);
+
+    // The floating-point unit
+    FPU fpu = FPU();
+
+    // Caches
+    ICache iCache = ICache(*this); // 68020+
+    DCache dCache = DCache(*this); // 68030+
+
+    // Debugger (breakpoints, watchpoints, catchpoints, tracing)
     Debugger debugger = Debugger(*this);
 
-    
     
     //
     // Internals
@@ -113,19 +119,9 @@ protected:
     
     // The CPU's register set
     Registers reg {};
-
-    // The memory management unit
-    MMU mmu = MMU(*this);
-
-    // The floating-point unit
-    FPU fpu {};
     
     // Prefetch queue for fetching instructions
     PrefetchQueue queue {};
-
-    // Instruction cache (68020 and up) and data cache (68030 and up)
-    ICache iCache = ICache(*this);
-    DCache dCache = DCache(*this);
 
     // Indicates that the data cache is enabled
     bool dCacheOn = false;
@@ -163,6 +159,9 @@ protected:
     // State flags used internally
     int flags {};
     
+    // Restart information of a faulted instruction (68020+)
+    Restart restart {};
+
     
     //
     // Lookup tables
@@ -170,24 +169,20 @@ protected:
     
 private:
     
-    // Jump table holding the instruction handlers
+    // Function pointer types
     typedef void (Moira::*ExecPtr)(u16);
+    typedef void (Moira::*DasmPtr)(StrWriter&, u32&, u16, Instr, Mode, Size) const;
+
+    // Jump table holding the instruction handlers
     ExecPtr *exec = nullptr;
     
     // Jump table holding the loop mode instruction handlers (68010 only)
     ExecPtr *loop = nullptr;
     
-    /* Jump table holding the disassembler handlers.
-     *
-     * Since the handlers are not templated, the instruction, addressing mode
-     * and size attributes that used to be template arguments are passed in at
-     * call time. They are read from the InstrInfo table, which is built
-     * alongside this one.
-     */
-    typedef void (Moira::*DasmPtr)(StrWriter&, u32&, u16, Instr, Mode, Size) const;
+    // Jump table holding the disassembler handlers
     DasmPtr *dasm = nullptr;
     
-    // Table holding instruction information
+    // Info table holding instruction descriptions
     InstrInfo *info = nullptr;
     
     
