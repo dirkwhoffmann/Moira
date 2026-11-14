@@ -157,6 +157,17 @@ public:
     bool isInternal() const { return model == FPUModel::M68040; }
     void setModel(FPUModel newModel) { model = newModel; }
 
+    /// Selects the model that matches a connected coprocessor (CPModel::NONE leaves the model unchanged)
+    void setModel(CPModel newModel)
+    {
+        switch (newModel) {
+
+            case CPModel::M68881: model = FPUModel::M68881; break;
+            case CPModel::M68882: model = FPUModel::M68882; break;
+            default:              break;
+        }
+    }
+
     /// Checks whether an instruction is implemented in hardware by the emulated model
     bool isSupported(Instr I) const;
 

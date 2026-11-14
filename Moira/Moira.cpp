@@ -123,48 +123,34 @@ Moira::setModel(CPUModel cpuModel, CPUModel dasmModel)
 void
 Moira::updateUnits()
 {
-    MMUModel mmuModel = MMUModel::NONE;
-
-    // A 68020 or 68030 can be connected to a 6888x via the coprocessor interface
-    auto connectCoprocessor = [&]() {
-
-        if (cpModel != CPModel::NONE) {
-            fpu.setModel(cpModel == CPModel::M68881 ? FPUModel::M68881 : FPUModel::M68882);
-        }
-    };
-
     switch (cpuModel) {
-
-        case CPUModel::M68EC020:
-        case CPUModel::M68020:
-        case CPUModel::M68EC030:
-
-            connectCoprocessor();
-            break;
 
         case CPUModel::M68030:
 
-            connectCoprocessor();
-            mmuModel = MMUModel::M68030;
+            mmu.setModel(MMUModel::M68030);
             break;
 
         case CPUModel::M68LC040:
 
-            mmuModel = MMUModel::M68040;
+            mmu.setModel(MMUModel::M68040);
             break;
 
         case CPUModel::M68040:
 
+            mmu.setModel(MMUModel::M68040);
             fpu.setModel(FPUModel::M68040);
-            mmuModel = MMUModel::M68040;
             break;
 
-        default:    // 68000, 68010 and 68EC040 have neither an FPU nor an MMU
+        default:
+            
+            mmu.setModel(MMUModel::NONE);
             break;
     }
 
-    mmu.setModel(mmuModel);
     updateMmuFlag();
+
+    // A 6888x can be connected to CPUs with a coprocessor interface
+    if (hasCPI(cpuModel)) fpu.setModel(cpModel);
 }
 
 void
