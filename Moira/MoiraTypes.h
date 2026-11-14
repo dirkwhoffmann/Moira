@@ -357,6 +357,9 @@ struct StackFrame
     
     u16 fc;                     ///< Function code
     u16 ssw;                    ///< Special status word (68010)
+
+    bool write;                 ///< Set if the faulting bus access was a write (68020+)
+    u32 data;                   ///< Data of a faulting write access (68020+)
 };
 
 /// The status register (SR)

@@ -77,6 +77,19 @@
 #define MOIRA_EMULATE_BUS_ERROR false
 #endif
 
+/* Set to true to report each data bus access to the delegate.
+ *
+ * If enabled, willAccessBus() is called once per operand before the bus
+ * cycles of a data access are performed. A long word access that Moira splits
+ * into several bus cycles is reported only once. The option is intended for
+ * for hosts that need to trace operand accesses such as test environments.
+ *
+ * Disable to gain speed.
+ */
+#ifndef MOIRA_REPORT_BUS_ACCESS
+#define MOIRA_REPORT_BUS_ACCESS false
+#endif
+
 /* Set to true to emulate function code pins FC0 - FC2.
  *
  * Whenever memory is accessed, the function code pins enable external hardware

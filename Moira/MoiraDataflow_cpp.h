@@ -535,9 +535,7 @@ Moira::read2x16(u32 lo, u32 hi)
     u32 result = read16(lo) << 16;
     SYNC(4);
     if constexpr (F & POLL) POLL_IPL;
-    splitHalf = 2;
     result |= read16(hi);
-    splitHalf = 0;
     SYNC(2);
     return result;
 }
@@ -560,9 +558,7 @@ Moira::write2x16(u32 lo, u32 hi, u32 valHi, u32 valLo)
         SYNC(4);
         if constexpr (F & POLL) POLL_IPL;
         if constexpr (F & COMMIT_IRD) commitIrd<C>();
-        splitHalf = 2;
         write16(hi, u16(valLo));
-        splitHalf = 0;
         SYNC(2);
     }
 }
@@ -731,10 +727,11 @@ Moira::read(u32 addr)
 
 template <Core C, Size S, Flags F> u32
 Moira::readBus(u32 addr)
+try
 {
-    u32 result;
+    if constexpr (MOIRA_REPORT_BUS_ACCESS) willAccessBus(addr, S, false);
 
-    if constexpr (C == Core::C68020) busWriteAccess = false;
+    u32 result;
 
     // Derive the physical address
     addr = translate<C, false, S>(addr, readFC());
@@ -786,6 +783,13 @@ Moira::readBus(u32 addr)
 
     return result;
 }
+catch (BusError &e)
+{
+    // Tell the fault handler whether the access was a read or a write (68030 and UAE bus error frames)
+    if constexpr (C == Core::C68020) { e.stackFrame.write = false; }
+    throw;
+}
+
 
 template <Core C, Flags F> u16
 Moira::readInstr(u32 addr)
@@ -890,9 +894,9 @@ Moira::write(u32 addr, u32 val)
 
 template <Core C, Size S, Flags F> void
 Moira::writeBus(u32 addr, u32 val, bool *ci)
+try
 {
-    // Remember the value for the bus fault frame (68030)
-    if constexpr (C == Core::C68020) { busWriteData = val; busWriteAccess = true; }
+    if constexpr (MOIRA_REPORT_BUS_ACCESS) willAccessBus(addr, S, true);
 
     // Derive the physical address
     addr = translate<C, true, S>(addr, readFC(), ci);
@@ -947,6 +951,13 @@ Moira::writeBus(u32 addr, u32 val, bool *ci)
         }
     }
 }
+catch (BusError &e)
+{
+    // Tell the fault handler whether the access was a read or a write and what data it carried
+    if constexpr (C == Core::C68020) { e.stackFrame.write = true; e.stackFrame.data = val; }
+    throw;
+}
+
 
 //
 // Data cache (68030)

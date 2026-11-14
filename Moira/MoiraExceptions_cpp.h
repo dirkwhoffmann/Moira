@@ -355,10 +355,10 @@ static bool hasIndexedOperand(u16 ird)
 }
 
 template <Core C> void
-Moira::writeStackFrame1011UAE(u16 sr, u16 nr, u32 pc, u16 ssw, u32 addr, u32 end, bool sv)
+Moira::writeStackFrame1011UAE(u16 sr, u16 nr, u32 pc, u16 ssw, u32 addr, u32 end, bool sv, bool write)
 {
     u16 stageC = 0, stageB = 0;
-    if (nr == 2 && !busWriteAccess) {
+    if (nr == 2 && !write) {
         stageC = peekProgramWord(end + 2, sv);
         stageB = peekProgramWord(end + 4, sv);
     }
@@ -473,7 +473,7 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
 
             // The write-back buffer 3 holds the data of a faulting write
             bool write = !(frame.ssw & SSW040::RW);
-            writeStackFrame0111<C>(status, reg.pc0, 2, frame.ssw, frame.addr, write ? busWriteData : 0);
+            writeStackFrame0111<C>(status, reg.pc0, 2, frame.ssw, frame.addr, write ? frame.data : 0);
 
         } else if (cpuModel >= CPUModel::M68EC030) {
 
@@ -484,7 +484,7 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
 
             // The data output buffer holds the value of a faulting write
             bool write = !(frame.ssw & SSW030::RW) && (frame.ssw & SSW030::DF);
-            u32 dataOut = write ? busWriteData : 0;
+            u32 dataOut = write ? frame.data : 0;
 
             if (write) {
                 writeStackFrame1010<C>(status, reg.pc0, 2, frame.ssw, frame.addr, dataOut, stageC, stageB);
@@ -499,12 +499,12 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
             bool ix = hasIndexedOperand(op);
             if (ix && (op & 0xC000) == 0 && (op & 0x3000)) {
                 auto indexed = [](u16 m, u16 r) { return m == 6 || (m == 7 && r == 3); };
-                if (!indexed((op >> 3) & 7, op & 7) && !busWriteAccess) ix = false;
+                if (!indexed((op >> 3) & 7, op & 7) && !frame.write) ix = false;
             }
             u32 pc = ix ? end : reg.pc0;
 
             // If the source of a MOVE is indexed, UAE stacks the address of the extension words of the destination
-            if (ix && (op & 0xC000) == 0 && (op & 0x3000) && busWriteAccess) {
+            if (ix && (op & 0xC000) == 0 && (op & 0x3000) && frame.write) {
                 auto indexed = [](u16 m, u16 r) { return m == 6 || (m == 7 && r == 3); };
                 u16 dm = (op >> 6) & 7, dr = (op >> 9) & 7;
                 if (indexed((op >> 3) & 7, op & 7)) {
@@ -512,7 +512,7 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
                     else if (dm == 7 && dr == 1) pc -= 2;
                 }
             }
-            writeStackFrame1011UAE<C>(status, 2, pc, ssw, frame.addr, end, status & 0x2000);
+            writeStackFrame1011UAE<C>(status, 2, pc, ssw, frame.addr, end, status & 0x2000, frame.write);
 
             // Remember how to restart the instruction
             restart.valid = saved != nullptr;

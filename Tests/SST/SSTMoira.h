@@ -44,15 +44,31 @@ public:
     bool wide() const { return cpuModel >= CPUModel::M68EC020; }
     bool counts() const { return !wide() || (readFC() & 3) != 2; }
 
-    /* Counts a data access and tells if it has to fail. The core splits a long word that is not
-     * aligned to 4 into two word accesses. Both halves are one operand access for the reference (except at a 64K boundary).
+    /* The core splits a long word that is not aligned to 4 into two word accesses. Both halves are
+     * one operand access for the reference (except at a 64K boundary). Hence, the 68020 and above
+     * count operands, which the core announces via willAccessBus().
      */
+    bool opPending = false;             // The next bus cycle is the first one of an operand access
+    bool opCrossing = false;            // The operand is split by the reference (long word at the end of a 64K bank)
+
+    void willAccessBus(u32 addr, Size size, bool write) override
+    {
+        opPending = true;
+        opCrossing = size == Long && (addr & 3) != 0 && (addr & 0xFFFF) == 0xFFFE;
+    }
+
+    /* Counts a data access and tells if it has to fail */
     bool failAccess(bool write, u32 addr, int size) const
     {
         if (!logging || !counts()) return false;
-        bool cont = wide() && size == 2 && splitHalf == 2 && (addr & 0xFFFF) != 0;    // UAE splits long words at the end of a 64K bank
-        const_cast<TestCPU *>(this)->splitHalf = 0;
-        return cont ? false : const_cast<TestCPU *>(this)->fault.hit();
+        auto self = const_cast<TestCPU *>(this);
+
+        if (wide()) {
+            if (opPending) { self->opPending = false; return self->fault.hit(); }
+            if (opCrossing) { self->opCrossing = false; return self->fault.hit(); }
+            return false;               // Second half of a split operand
+        }
+        return self->fault.hit();
     }
 
     u8 read8(u32 addr) const override

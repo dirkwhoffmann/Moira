@@ -527,13 +527,14 @@ Moira::updateMmuFlag()
 }
 
 void
-Moira::undoPredecrement(u32 addr, const Registers &saved, u16 ird)
+Moira::undoPredecrement(const StackFrame &frame, const Registers &saved, u16 ird)
 {
     /* UAE decrements an address register after the operand has been read, and before
      * a pure write. Hence, only a faulting read has to be taken back. A write fault
      * sees the register as it is.
      */
-    if (busWriteAccess) return;
+    if (frame.write) return;
+    u32 addr = frame.addr;
 
     int regs[2] = { -1, -1 };
     u32 size = 0;
@@ -642,15 +643,15 @@ Moira::processException(const std::exception &exc, const Registers *saved)
 
             // UAE decrements an address register after the access has succeeded
             u16 op = (saved && deferred) ? peekProgramWord(reg.pc0, reg.sr.s) : 0;
-            if (saved && deferred) undoPredecrement(be->stackFrame.addr, *saved, op);
+            if (saved && deferred) undoPredecrement(be->stackFrame, *saved, op);
 
             // UAE sets the condition codes of a MOVE before it writes the result
-            if (saved && deferred && busWriteAccess && (op >> 12) >= 1 && (op >> 12) <= 3) {
+            if (saved && deferred && be->stackFrame.write && (op >> 12) >= 1 && (op >> 12) <= 3) {
 
                 int bits = (op >> 12) == 1 ? 8 : (op >> 12) == 3 ? 16 : 32;
                 u32 mask = bits == 32 ? 0xFFFFFFFF : (1u << bits) - 1;
-                reg.sr.n = (busWriteData >> (bits - 1)) & 1;
-                reg.sr.z = (busWriteData & mask) == 0;
+                reg.sr.n = (be->stackFrame.data >> (bits - 1)) & 1;
+                reg.sr.z = (be->stackFrame.data & mask) == 0;
                 reg.sr.v = 0;
                 reg.sr.c = 0;
             }

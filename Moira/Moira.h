@@ -81,11 +81,6 @@ protected:
     // Restart information of a faulted instruction (68020+)
     Restart restart;
 
-    // The value of the most recent write access (reported in bus fault frames)
-    u32 busWriteData = 0;
-    u8 splitHalf = 0;               // Set while the second half of a split long word access is performed (used by the tests)
-    bool busWriteAccess = false;    // Is the current bus access a write? (68020 bus error frames)
-    
     // Instruction set used by the disassembler
     CPUModel dasmModel = CPUModel::M68000;
     
@@ -223,7 +218,7 @@ protected:
     void restoreRegisters(const Registers &saved);
 
     // Takes back the predecrement of the operand that caused a bus error
-    void undoPredecrement(u32 addr, const Registers &saved, u16 ird);
+    void undoPredecrement(const StackFrame &frame, const Registers &saved, u16 ird);
 
     // Reads a program word without raising a bus error (returns 0 if the word is unreachable)
     u16 peekProgramWord(u32 addr, bool supervisor);
@@ -497,6 +492,7 @@ protected:
 
     /// Called when the MMU is enabled or disabled
     virtual void mmuDidEnable() { }
+    
     /// Called when the MMU is enabled or disabled
     virtual void mmuDidDisable() { }
     
@@ -508,6 +504,9 @@ protected:
     /// Called before an instruction is executed
     virtual void willExecute(const char *func, Instr I, Mode M, Size S, u16 opcode) { }
     
+    /// Called before the bus is used to read a data operand
+    virtual void willAccessBus(u32 addr, Size size, bool write) { }
+
     /// Called after an instruction has been executed
     virtual void didExecute(const char *func, Instr I, Mode M, Size S, u16 opcode) { }
     

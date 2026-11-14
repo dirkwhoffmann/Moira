@@ -39,6 +39,7 @@ target_include_directories(moiraUAE PUBLIC ${MOIRA_DIR})
 target_compile_options(moiraUAE PUBLIC ${MOIRA_OPTIONS})
 target_compile_definitions(moiraUAE PUBLIC
 
+    MOIRA_REPORT_BUS_ACCESS=true
     MOIRA_COMPATIBILITY=UAE
     MOIRA_PRECISE_TIMING=true
 )
@@ -85,6 +86,7 @@ target_include_directories(moiraUAEExc PUBLIC ${MOIRA_DIR})
 target_compile_options(moiraUAEExc PUBLIC ${MOIRA_OPTIONS})
 target_compile_definitions(moiraUAEExc PUBLIC
 
+    MOIRA_REPORT_BUS_ACCESS=true
     MOIRA_COMPATIBILITY=UAE
     MOIRA_EMULATE_ADDRESS_ERROR=true
     MOIRA_EMULATE_BUS_ERROR=true
