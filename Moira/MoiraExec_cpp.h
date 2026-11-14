@@ -2632,7 +2632,6 @@ Moira::execDbcc(u16 opcode)
 
                 SYNC(6);
                 reg.pc = newpc;
-                reg.pc0 = reg.pc;
                 queue.ird = queue.irc;
                 queue.irc = opcode;
                 POLL_IPL;
@@ -5776,7 +5775,7 @@ Moira::execPea(u16 opcode)
             // stacks the address of the instruction plus two (recorded on real hardware)
             writeBuffer = u16(ea >> 16);
             prefetch<C>();
-            throw AddressError(makeFrame<AE_WRITE|AE_DATA>(reg.sp, instrStart + 2));
+            throw AddressError(makeFrame<AE_WRITE|AE_DATA>(reg.sp, reg.pc0 + 2));
 
         } else {
 
@@ -6481,7 +6480,6 @@ Moira::execStop(u16 opcode)
     // Sample the IPL pins with the new mask, so a stale level is not taken
     POLL_IPL;
 
-    reg.pc0 = reg.pc;
     reg.pc += 2;
 
     //           00  10  20        00  10  20        00  10  20

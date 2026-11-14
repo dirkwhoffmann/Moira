@@ -403,7 +403,7 @@ Moira::execAddressError(StackFrame frame, int delay)
         // The 68020 reports an odd instruction fetch with a frame of format B. According
         // to recordings made on a real A1200, the stacked PC is always the address of the
         // instruction (JMP, JSR, BSR, DBcc, RTS, RTR).
-        u16 op = instrIrd;
+        u16 op = peekProgramWord(pc0Now, status & 0x2000);
         u32 pc = pc0Now;
 
         // Stage C and B are not emulated faithfully (UAE shows the next instruction word)
@@ -436,7 +436,7 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
 {
     u16 status = getSR();
     u16 ssw = 0x60 | (readFC() & 7);
-    u32 end = reg.pc0 != instrStart ? reg.pc0 : reg.pc;
+    u32 end = queue.lastFetch ? reg.pc - 2 : reg.pc;
 
     // Inform the delegate
     willExecute(M68kException::BUS_ERROR, 2);
@@ -495,12 +495,13 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
 
             // UAE stacks the start of the instruction. Indexed operands move it behind the instruction words.
             // The extension word of the destination of a MOVE is consumed after the source has been read
+            u16 instrIrd = peekProgramWord(reg.pc0, status & 0x2000);
             bool ix = hasIndexedOperand(instrIrd);
             if (ix && (instrIrd & 0xC000) == 0 && (instrIrd & 0x3000)) {
                 auto indexed = [](u16 m, u16 r) { return m == 6 || (m == 7 && r == 3); };
                 if (!indexed((instrIrd >> 3) & 7, instrIrd & 7) && !busWriteAccess) ix = false;
             }
-            u32 pc = ix ? end : instrStart;
+            u32 pc = ix ? end : reg.pc0;
 
             // If the source of a MOVE is indexed, UAE stacks the address of the extension words of the destination
             if (ix && (instrIrd & 0xC000) == 0 && (instrIrd & 0x3000) && busWriteAccess) {
@@ -520,7 +521,7 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
                 restart.pre = *saved;
                 restart.fault = faultReg;
                 auto sr = reg.sr; reg.sr = saved->sr; restart.preSr = getSR(); reg.sr = sr;
-                restart.pc = instrStart;
+                restart.pc = reg.pc0;
                 restart.frameSp = reg.sp;
                 restart.frameSr = status;
                 restart.framePC = pc;
@@ -714,7 +715,7 @@ Moira::execException(M68kException exc, int nr)
 
             // Write stack frame (the 68020 stacks the address of the traced instruction)
             if constexpr (C == Core::C68020) {
-                writeStackFrame0010<C>(status, reg.pc, instrStart, vector);
+                writeStackFrame0010<C>(status, reg.pc, pct, vector);
             } else {
                 writeStackFrame0000<C>(status, reg.pc, vector);
             }

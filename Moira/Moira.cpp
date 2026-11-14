@@ -327,6 +327,7 @@ Moira::reset()
     queue.irc = read16OnReset(reg.pc & addrMask<C>());
     SYNC(2);
     prefetch<C>();
+    reg.pc0 = reg.pc - 2;
 
     // Reset subcomponents
     debugger.reset();
@@ -392,13 +393,15 @@ Moira::execute()
         // Fast path: Call the instruction handler and return
         //
 
-        instrStart = reg.pc0;
-        if constexpr (compat == Compatibility::UAE || compat == Compatibility::MAME) instrIrd = queue.ird;
+        queue.lastFetch = false;
+        pct = reg.pc0;
         try {
             (this->*exec[queue.ird])(queue.ird);
+            assert(queue.lastFetch || queue.ird == 0x4E72);   // Only STOP does not fetch its successor
         } catch (const std::exception &exc) {
             processException(exc);
         }
+        reg.pc0 = reg.pc - 2;
 
     } else {
 
@@ -456,6 +459,8 @@ Moira::execute()
             // that needs it receives a pointer to it (see processException).
             Registers snapshot;
             const Registers *saved = nullptr;
+            queue.lastFetch = false;
+            pct = reg.pc0;
             if (flags & RESTARTABLE) { snapshot = reg; saved = &snapshot; }
 
             try {
@@ -467,14 +472,16 @@ Moira::execute()
 
                 } else {
 
-                    instrStart = reg.pc0;
-                    if constexpr (compat == Compatibility::UAE || compat == Compatibility::MAME) instrIrd = queue.ird;
                     (this->*exec[queue.ird])(queue.ird);
+                    assert(queue.lastFetch || queue.ird == 0x4E72);   // Only STOP does not fetch its successor
                 }
 
             } catch (const std::exception &exc) {
                 processException(exc, saved);
             }
+
+            // The next instruction starts where the prefetch queue points to
+            reg.pc0 = reg.pc - 2;
         }
 
     done:
@@ -521,7 +528,7 @@ Moira::updateMmuFlag()
 }
 
 void
-Moira::undoPredecrement(u32 addr, const Registers &saved)
+Moira::undoPredecrement(u32 addr, const Registers &saved, u16 ird)
 {
     /* UAE decrements an address register after the operand has been read, and before
      * a pure write. Hence, only a faulting read has to be taken back. A write fault
@@ -529,7 +536,6 @@ Moira::undoPredecrement(u32 addr, const Registers &saved)
      */
     if (busWriteAccess) return;
 
-    u16 ird = instrIrd;
     int regs[2] = { -1, -1 };
     u32 size = 0;
 
@@ -636,12 +642,13 @@ Moira::processException(const std::exception &exc, const Registers *saved)
             if (saved && !deferred) restoreRegisters(*saved);
 
             // UAE decrements an address register after the access has succeeded
-            if (saved && deferred) undoPredecrement(be->stackFrame.addr, *saved);
+            u16 op = (saved && deferred) ? peekProgramWord(reg.pc0, reg.sr.s) : 0;
+            if (saved && deferred) undoPredecrement(be->stackFrame.addr, *saved, op);
 
             // UAE sets the condition codes of a MOVE before it writes the result
-            if (saved && deferred && busWriteAccess && (instrIrd >> 12) >= 1 && (instrIrd >> 12) <= 3) {
+            if (saved && deferred && busWriteAccess && (op >> 12) >= 1 && (op >> 12) <= 3) {
 
-                int bits = (instrIrd >> 12) == 1 ? 8 : (instrIrd >> 12) == 3 ? 16 : 32;
+                int bits = (op >> 12) == 1 ? 8 : (op >> 12) == 3 ? 16 : 32;
                 u32 mask = bits == 32 ? 0xFFFFFFFF : (1u << bits) - 1;
                 reg.sr.n = (busWriteData >> (bits - 1)) & 1;
                 reg.sr.z = (busWriteData & mask) == 0;

@@ -1146,8 +1146,8 @@ Moira::prefetch()
      * an instruction. It always points to the start address of the currently
      * executed instruction.
      */
-    reg.pc0 = reg.pc;
     reg.pc += 2;
+    queue.lastFetch = true;
 
     queue.ird = queue.irc;
     queue.irc = readInstr<C, F>(reg.pc);
@@ -1160,7 +1160,6 @@ Moira::fetchIrc()
     if constexpr (EXACT_68000 && ON) {
 
         // The word waits in the EDB latch (as in the real CPU) until the IRD is replaced
-        reg.pc0 = reg.pc;
         reg.pc += 2;
         queue.edb = readInstr<C, F>(reg.pc);
         readBuffer = queue.edb;
@@ -1178,6 +1177,7 @@ Moira::commitIrd()
 
         queue.ird = queue.irc;
         queue.irc = queue.edb;
+        queue.lastFetch = true;
     }
 }
 
@@ -1233,8 +1233,8 @@ Moira::noPrefetch(int delay)
 {
     assert(flags & State::LOOPING);
 
-    reg.pc0 = reg.pc;
     reg.pc += 2;
+    queue.lastFetch = true;
     std::swap(queue.irc, queue.ird);
     if (delay) SYNC(delay);
 }
@@ -1365,6 +1365,7 @@ Moira::jumpToVector(int nr)
     // Stop emulation if the exception should be catched
     if (debugger.catchpointMatches(nr)) didReachCatchpoint(u8(nr));
 
+    reg.pc0 = reg.pc - 2;
     didJumpToVector(nr, reg.pc0);
 }
 

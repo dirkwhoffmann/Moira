@@ -418,6 +418,9 @@ struct PrefetchQueue {
     u16 edb;                    ///< The external data bus latch (feeds the IRC)
     u16 irc;                    ///< The next (prefetched) instruction (feeds the IRD)
     u16 ird;                    ///< The currently executed instruction
+
+    /// Set when the last bus cycle of the executing instruction (the fetch of its successor) has taken place
+    bool lastFetch;
 };
 
 

@@ -78,9 +78,8 @@ protected:
     // The emulated coprocessor (if any)
     CopModel copModel = CopModel::NONE;
 
-    // Start address of the executing instruction (used by the 68020 exception frames) and its opcode (UAE and MAME mode)
-    u32 instrStart = 0;
-    u16 instrIrd = 0;
+    // Start address of the most recently executed instruction (stacked by the 68020 trace frame)
+    u32 pct = 0;
 
     /* Restart information of a faulted instruction (68020 in UAE mode). The handler
      * sees the registers as they were when the fault occurred (as on the real CPU,
@@ -243,7 +242,7 @@ protected:
     void restoreRegisters(const Registers &saved);
 
     // Takes back the predecrement of the operand that caused a bus error
-    void undoPredecrement(u32 addr, const Registers &saved);
+    void undoPredecrement(u32 addr, const Registers &saved, u16 ird);
 
     // Reads a program word without raising a bus error (returns 0 if the word is unreachable)
     u16 peekProgramWord(u32 addr, bool supervisor);
