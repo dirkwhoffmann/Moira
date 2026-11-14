@@ -204,8 +204,6 @@ protected:
     // Creates or updates the jump tables for execution and disassembly
     void createJumpTable(CPUModel cpuModel, CPUModel dasmModel);
 
-    // Determines the effective FPU and MMU from the CPU model and the selection
-    void updateUnits();
     void createJumpTable(CPUModel model) { createJumpTable(model, model); }
     
 private:
@@ -241,6 +239,7 @@ public:
     
     /// Sets the emulated CPU model and the model used by the disassembler
     void setModel(CPUModel cpuModel, CPUModel dasmModel);
+    
     /// Sets the emulated CPU model (the disassembler uses the same model)
     void setModel(CPUModel model) { setModel(model, model); }
 
@@ -293,6 +292,9 @@ public:
     
 private:
     
+    // Determines the effective FPU and MMU from the CPU model and the selection
+    void updateUnits();
+
     // Helper function
     void setNumberFormat(DasmStyle &style, const DasmNumberFormat &value);
     
