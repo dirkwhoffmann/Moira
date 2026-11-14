@@ -343,8 +343,8 @@ Moira::writeOp(int n, u32 val)
 {
     switch (M) {
 
-        case Mode::DN: writeD<S>(n, val); break;
-        case Mode::AN: writeA<S>(n, val); break;
+        case Mode::DN: if constexpr (F & COMMIT_IRD) commitIrd<C>(); writeD<S>(n, val); break;
+        case Mode::AN: if constexpr (F & COMMIT_IRD) commitIrd<C>(); writeA<S>(n, val); break;
         case Mode::IM: fatalError;
 
         default:
@@ -373,8 +373,8 @@ Moira::writeOp(int n, u32 ea, u32 val)
 {
     switch (M) {
 
-        case Mode::DN: writeD<S>(n, val); break;
-        case Mode::AN: writeA<S>(n, val); break;
+        case Mode::DN: if constexpr (F & COMMIT_IRD) commitIrd<C>(); writeD<S>(n, val); break;
+        case Mode::AN: if constexpr (F & COMMIT_IRD) commitIrd<C>(); writeA<S>(n, val); break;
         case Mode::IM: fatalError;
 
         default:
@@ -545,36 +545,21 @@ Moira::read2x16(u32 lo, u32 hi)
 template <Core C, Flags F> void
 Moira::write2x16(u32 lo, u32 hi, u32 valHi, u32 valLo)
 {
-    // The first half is not the last bus cycle of the instruction. If the host
-    // signals a bus error, the frame carries the IRD of the executing instruction
-    // (the outer frame builder doesn't know about the split and uses the new IRD).
-    auto first = [&](u32 addr, u16 val) {
-
-        if constexpr (C == Core::C68000 && (F & LAST_CYCLE)) {
-
-            try { write16(addr, val); }
-            catch (BusError &e) {
-                if (!e.complete) e = BusError(makeFrame<(F & ~(AE_INC_A | AE_DEC_A)) | AE_WRITE>(e.stackFrame.addr));
-                throw;
-            }
-        } else {
-            write16(addr, val);
-        }
-    };
-
     if constexpr ((F & REVERSE) && !((compat == Compatibility::UAE) && C == Core::C68020)) {
 
-        first(hi, u16(valLo));
+        write16(hi, u16(valLo));
         SYNC(4);
         if constexpr (F & POLL) POLL_IPL;
+        if constexpr (F & COMMIT_IRD) commitIrd<C>();
         write16(lo, u16(valHi));
         SYNC(2);
 
     } else {
 
-        first(lo, u16(valHi));
+        write16(lo, u16(valHi));
         SYNC(4);
         if constexpr (F & POLL) POLL_IPL;
+        if constexpr (F & COMMIT_IRD) commitIrd<C>();
         splitHalf = 2;
         write16(hi, u16(valLo));
         splitHalf = 0;
@@ -895,7 +880,7 @@ Moira::write(u32 addr, u32 val)
 
         // Let Moira complete the stack frame if the host signals a bus error
         try { writeBus<C, S, F>(addr, val); }
-        catch (BusError &e) { if (!e.complete) e = BusError(makeFrame<(F & ~(AE_INC_A | AE_DEC_A | LAST_CYCLE)) | AE_WRITE>(e.stackFrame.addr)); throw; }
+        catch (BusError &e) { if (!e.complete) e = BusError(makeFrame<(F & ~(AE_INC_A | AE_DEC_A)) | AE_WRITE>(e.stackFrame.addr)); throw; }
 
     } else {
 
@@ -920,6 +905,7 @@ Moira::writeBus(u32 addr, u32 val, bool *ci)
     if constexpr (S == Byte) {
 
         if constexpr (F & POLL) POLL_IPL;
+        if constexpr (F & COMMIT_IRD) commitIrd<C>();
         write8(addr & addrMask<C>(), (u8)val);
         SYNC(2);
     }
@@ -938,6 +924,7 @@ Moira::writeBus(u32 addr, u32 val, bool *ci)
         }
 
         if constexpr (F & POLL) POLL_IPL;
+        if constexpr (F & COMMIT_IRD) commitIrd<C>();
         write16(a, (u16)val);
         SYNC(2);
     }
@@ -1139,9 +1126,6 @@ Moira::makeFrame(u32 addr, u32 pc)
 template <Flags F> StackFrame
 Moira::makeFrame(u32 addr)
 {
-    // MAME replaces the IRD when the last bus cycle of the instruction starts
-    if constexpr (F & LAST_CYCLE) return makeFrame<F>(addr, reg.pc, getSR(), instrIrd);
-
     return makeFrame<F>(addr, reg.pc, getSR(), getIRD());
 }
 
@@ -1165,20 +1149,51 @@ Moira::prefetch()
     reg.pc0 = reg.pc;
     reg.pc += 2;
 
-    if constexpr (EXACT_68000 && (F & KEEP_IRD)) {
+    queue.ird = queue.irc;
+    queue.irc = readInstr<C, F>(reg.pc);
+    readBuffer = queue.irc;
+}
 
-        // MAME replaces the IRD when the last bus cycle of the instruction starts.
-        // The value is part of the stack frame if the prefetch fails.
-        u16 irc = readInstr<C, F>(reg.pc);
-        queue.ird = queue.irc;
-        queue.irc = irc;
+template <Core C, Flags F, bool ON> void
+Moira::fetchIrc()
+{
+    if constexpr (EXACT_68000 && ON) {
+
+        // The word waits in a latch (as in the real CPU) until the IRD is replaced
+        reg.pc0 = reg.pc;
+        reg.pc += 2;
+        pendingIrc = readInstr<C, F>(reg.pc);
+        readBuffer = pendingIrc;
 
     } else {
 
-        queue.ird = queue.irc;
-        queue.irc = readInstr<C, F>(reg.pc);
+        prefetch<C, F>();
     }
-    readBuffer = queue.irc;
+}
+
+template <Core C> void
+Moira::commitIrd()
+{
+    if constexpr (EXACT_68000) {
+
+        queue.ird = queue.irc;
+        queue.irc = pendingIrc;
+    }
+}
+
+template <Core C, Flags F, bool ON> void
+Moira::prefetchLate()
+{
+    // The prefetch is not the last bus cycle, but nothing follows that could fault
+    if constexpr (EXACT_68000 && ON) {
+
+        fetchIrc<C, F>();
+        commitIrd<C>();
+
+    } else {
+
+        prefetch<C, F>();
+    }
 }
 
 template <Core C, Flags F> void

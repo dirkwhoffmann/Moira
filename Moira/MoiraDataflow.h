@@ -171,6 +171,13 @@ template <Core C> AddressError earlyAddressError(const StackFrame &frame);
 // Prefetches the next instruction
 template <Core C, Flags F = 0> void prefetch();
 
+// Early prefetch (MAME mode): Reads the next word, but leaves the prefetch queue untouched
+// until commitIrd is called. The real CPU replaces the IRD when the last bus cycle of the
+// instruction starts. If ON is false, the call is an ordinary prefetch.
+template <Core C, Flags F = 0, bool ON = true> void fetchIrc();
+template <Core C> void commitIrd();
+template <Core C, Flags F = 0, bool ON = true> void prefetchLate();
+
 // Performs a full prefetch cycle
 template <Core C, Flags F = 0, int delay = 0> void fullPrefetch();
 

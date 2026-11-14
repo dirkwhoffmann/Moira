@@ -619,14 +619,10 @@ static constexpr u64 AE_FETCH       = (1 << 11);  ///< The fault hit an instruct
 static constexpr u64 IMPL_DEC       = (1 << 14);  // Omit 2 cycle delay in -(An) mode
 static constexpr u64 AE_KEEP_A     = (1 << 15);  ///< Don't advance (An)+ if the read fails (MAME mode)
 
-/// Prefetch flags
-static constexpr u64 KEEP_IRD      = (1 << 16);  ///< More bus cycles follow. The IRD is not replaced yet (MAME mode)
-
-/// Flags of memory accesses that follow a prefetch with KEEP_IRD (MAME mode)
-static constexpr u64 LAST_CYCLE    = (1 << 17);  ///< The access contains the last bus cycle of the instruction. MAME replaces the IRD
-                                                 ///< when that cycle starts. Address errors, which are detected before, stack the old
-                                                 ///< IRD (the opcode of the instruction). Bus errors stack the old IRD only if they hit
-                                                 ///< the first half of a split access.
+/// Flags of memory accesses that follow an early prefetch (see fetchIrc)
+static constexpr u64 COMMIT_IRD    = (1 << 16);  ///< The access contains the last bus cycle of the instruction. The IRD is replaced
+                                                 ///< when that cycle starts (after the address error check, before the second half
+                                                 ///< of a split access). Faults before that point stack the old IRD.
 }
 
 //
