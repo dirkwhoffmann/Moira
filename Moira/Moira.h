@@ -356,6 +356,9 @@ private:
     // Performs a core-specific reset routine
     template <Core C> void reset();
     
+    // Puts the CPU into a HALT state, stopping execution
+    void halt();
+    
     
     //
     // Running the disassembler
@@ -935,30 +938,6 @@ private:
 
     // Reports the first cycle of the coprocessor protocol of a line-F instruction
     void reportCoprocessorCycle(u16 opcode, u8 cir);
-
-
-    //
-    // Handling Exceptions
-    //
-
-private:
-
-    // Processes an exception that was caught during execution. If the exception
-    // was raised inside an instruction whose start state has been saved, saved
-    // points to that state (nullptr otherwise).
-    void processException(const std::exception &exception, const Registers *saved = nullptr);
-
-    // Processes an exception for a specific CPU core type
-    template <Core C> void processException(const std::exception &exception, const Registers *saved = nullptr);
-
-    // Rolls the registers back to the state saved at the start of the instruction
-    void restoreRegisters(const Registers &saved);
-
-    // Takes back the predecrement of the operand that caused a bus error
-    void undoPredecrement(const StackFrame &frame, const Registers &saved, u16 ird);
-
-    // Puts the CPU into a HALT state, stopping execution
-    void halt();
 
 
     //

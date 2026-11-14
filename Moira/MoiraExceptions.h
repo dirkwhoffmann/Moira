@@ -40,3 +40,17 @@ template <Core C> void execBusError(StackFrame frame, int delay = 0, const Regis
 // Emulates an interrupt
 void execInterrupt(u8 level);
 template <Core C> void execInterrupt(u8 level);
+
+// Processes an exception that was caught during execution. If the exception
+// was raised inside an instruction whose start state has been saved, saved
+// points to that state (nullptr otherwise).
+void processException(const std::exception &exception, const Registers *saved = nullptr);
+
+// Processes an exception for a specific CPU core type
+template <Core C> void processException(const std::exception &exception, const Registers *saved = nullptr);
+
+// Rolls the registers back to the state saved at the start of the instruction
+void restoreRegisters(const Registers &saved);
+
+// Takes back the predecrement of the operand that caused a bus error
+void undoPredecrement(const StackFrame &frame, const Registers &saved, u16 ird);
