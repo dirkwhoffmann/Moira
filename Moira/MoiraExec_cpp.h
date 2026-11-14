@@ -36,6 +36,7 @@ adjustFetchPc(Fn &&fn, int delta)
 }
 
 #define MAME_68000 (compat == Compatibility::MAME && C == Core::C68000)
+#define LASTC (EXACT_68000 ? LAST_CYCLE : 0)   // The access is the last bus cycle of the instruction (see LAST_CYCLE)
 #define EXACT_COMPAT (compat == Compatibility::MAME || (compat == Compatibility::UAE && C == Core::C68000))   // Behavior shared with UAE (bus cycle sequence)
 // NBCD is computed like SBCD, except in Musashi mode (Musashi has its own formula)
 #define nbcdInstr (compat == Compatibility::MUSASHI ? Instr::NBCD : Instr::SBCD)
@@ -256,12 +257,12 @@ Moira::execShiftEa(u16 opcode)
         // MAME updates the flags before the prefetch
         u32 result = shift<C, I, S>(1, data);
         looping<I>() ? noPrefetch<C>(4) : prefetch<C, POLL | KEEP_IRD>();
-        writeM<C, M, S>(ea, result);
+        writeM<C, M, S, LASTC>(ea, result);
 
     } else {
 
         looping<I>() ? noPrefetch<C>(4) : prefetch<C, POLL | KEEP_IRD>();
-        writeM<C, M, S>(ea, shift<C, I, S>(1, data));
+        writeM<C, M, S, LASTC>(ea, shift<C, I, S>(1, data));
     }
 
     if constexpr (I == Instr::ROR || I == Instr::ROL) {
@@ -341,7 +342,7 @@ Moira::execAbcdEa(u16 opcode)
     u32 result = bcd<C, I, Byte>(data1, data2);
     looping<I>() ? noPrefetch<C>(4) : prefetch<C, KEEP_IRD>();
 
-    writeM<C, M, Byte>(ea2, result);
+    writeM<C, M, Byte, LASTC>(ea2, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -423,7 +424,7 @@ Moira::execAddRgEa(u16 opcode)
     looping<I>() ? noPrefetch<C>(2) : prefetch<C, POLL | KEEP_IRD>();
     if constexpr (EXACT_68000 && S == Long) setCCR(ccr1);
 
-    writeM<C, M, S, ((compat == Compatibility::UAE || EXACT_COMPAT) && C != Core::C68020) ? REVERSE : 0>(ea, result);
+    writeM<C, M, S, (((compat == Compatibility::UAE || EXACT_COMPAT) && C != Core::C68020) ? REVERSE : 0) | LASTC>(ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -553,7 +554,7 @@ Moira::execAddiEa(u16 opcode)
     prefetch<C, KEEP_IRD>();
     if constexpr (EXACT_68000 && S == Long) setCCR(ccr1);
 
-    writeOp<C, M, S, POLL | (((compat == Compatibility::UAE || EXACT_COMPAT) && C != Core::C68020) ? REVERSE : 0)>(dst, ea, result);
+    writeOp<C, M, S, POLL | (((compat == Compatibility::UAE || EXACT_COMPAT) && C != Core::C68020) ? REVERSE : 0) | LASTC>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -636,7 +637,7 @@ Moira::execAddqEa(u16 opcode)
     prefetch<C, POLL | KEEP_IRD>();
     if constexpr (EXACT_68000 && S == Long) setCCR(ccr1);
 
-    writeOp<C, M, S, ((compat == Compatibility::UAE || EXACT_COMPAT) && C != Core::C68020) ? REVERSE : 0>(dst, ea, result);
+    writeOp<C, M, S, (((compat == Compatibility::UAE || EXACT_COMPAT) && C != Core::C68020) ? REVERSE : 0) | LASTC>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -771,7 +772,7 @@ Moira::execAddxEa(u16 opcode)
         writeM<C, M, Word, POLL | AE_INC_PC>(ea2 + 2, result & 0xFFFF);
         if constexpr (EXACT_68000) setCCR(ccrFin);
         looping<I>() ? noPrefetch<C>() : prefetch<C, KEEP_IRD>();
-        writeM<C, M, Word>(ea2, result >> 16);
+        writeM<C, M, Word, LASTC>(ea2, result >> 16);
 
     } else if constexpr (S == Long && C == Core::C68010 && !(compat == Compatibility::MUSASHI)) {
 
@@ -781,7 +782,7 @@ Moira::execAddxEa(u16 opcode)
     } else {
 
         looping<I>() ? noPrefetch<C>(S == Long ? 0 : 2) : prefetch<C, KEEP_IRD>();
-        writeM<C, M, S>(ea2, result);
+        writeM<C, M, S, LASTC>(ea2, result);
     }
 
     //           00  10  20        00  10  20        00  10  20
@@ -877,9 +878,9 @@ Moira::execAndRgEa(u16 opcode)
     if constexpr (S == Long && isRegMode(M)) { SYNC_68000(4); SYNC_68010(2); }
 
     if constexpr ((compat == Compatibility::MUSASHI) || ((compat == Compatibility::UAE) && C == Core::C68020)) {
-        writeOp<C, M, S>(dst, ea, result);
+        writeOp<C, M, S, LASTC>(dst, ea, result);
     } else {
-        writeOp<C, M, S, REVERSE>(dst, ea, result);
+        writeOp<C, M, S, REVERSE | LASTC>(dst, ea, result);
     }
 
     //           00  10  20        00  10  20        00  10  20
@@ -940,9 +941,9 @@ Moira::execAndiEa(u16 opcode)
     if constexpr (EXACT_68000 && S == Long) setCCR(ccr1);
 
     if constexpr ((compat == Compatibility::MUSASHI) || ((compat == Compatibility::UAE) && C == Core::C68020)) {
-        writeOp<C, M, S>(dst, ea, result);
+        writeOp<C, M, S, LASTC>(dst, ea, result);
     } else {
-        writeOp<C, M, S, REVERSE>(dst, ea, result);
+        writeOp<C, M, S, REVERSE | LASTC>(dst, ea, result);
     }
 
     //           00  10  20        00  10  20        00  10  20
@@ -1182,7 +1183,7 @@ Moira::execBitDxEa(u16 opcode)
 
     // MAME and UAE idle after the prefetch
     if constexpr ((compat == Compatibility::MAME || compat == Compatibility::UAE) && I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
-    if constexpr (I != Instr::BTST) writeM<C, M, Byte>(ea, data);
+    if constexpr (I != Instr::BTST) writeM<C, M, Byte, LASTC>(ea, data);
 
     [[maybe_unused]] auto c = I == Instr::BTST ? 0 : I == Instr::BCLR && C == Core::C68010 ? 6 : 4;
 
@@ -1243,7 +1244,7 @@ Moira::execBitImEa(u16 opcode)
 
     prefetch<C, POLL | (I == Instr::BTST ? 0 : KEEP_IRD)>();
     if constexpr (compat == Compatibility::MAME && !(I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) data = bit<C, I>(data, src);   // MAME updates the flags after the prefetch
-    if constexpr (I != Instr::BTST) writeM<C, M, S>(ea, data);
+    if constexpr (I != Instr::BTST) writeM<C, M, S, LASTC>(ea, data);
 
     [[maybe_unused]] auto c = I == Instr::BTST ? 0 : 4;
 
@@ -2019,9 +2020,9 @@ Moira::execClr(u16 opcode)
         if constexpr (S == Long && isRegMode(M)) SYNC(2);
 
         if constexpr ((compat == Compatibility::MUSASHI)) {
-            writeOp<C, M, S>(dst, ea, 0);
+            writeOp<C, M, S, LASTC>(dst, ea, 0);
         } else {
-            writeOp<C, M, S, REVERSE>(dst, ea, 0);
+            writeOp<C, M, S, REVERSE | LASTC>(dst, ea, 0);
         }
 
         reg.sr.n = 0;
@@ -2074,9 +2075,9 @@ Moira::execClr(u16 opcode)
 
                 prefetch<C, POLL | ((!isRegMode(M) || S == Long) ? KEEP_IRD : 0)>();
                 if constexpr (S == Long) {
-                    writeOp<C, M, S, REVERSE | AE_INC_PC | AE_INC_A>(dst, ea, 0);
+                    writeOp<C, M, S, REVERSE | AE_INC_PC | AE_INC_A | LASTC>(dst, ea, 0);
                 } else {
-                    writeOp<C, M, S, REVERSE | AE_INC_PC>(dst, ea, 0);
+                    writeOp<C, M, S, REVERSE | AE_INC_PC | LASTC>(dst, ea, 0);
                 }
                 break;
 
@@ -2090,9 +2091,9 @@ Moira::execClr(u16 opcode)
                 SYNC(2);
                 prefetch<C, POLL | ((!isRegMode(M) || S == Long) ? KEEP_IRD : 0)>();
                 if constexpr (S == Long) {
-                    writeOp<C, M, S, REVERSE | AE_INC_PC | AE_INC_A>(dst, ea, 0);
+                    writeOp<C, M, S, REVERSE | AE_INC_PC | AE_INC_A | LASTC>(dst, ea, 0);
                 } else {
-                    writeOp<C, M, S, REVERSE | AE_INC_PC>(dst, ea, 0);
+                    writeOp<C, M, S, REVERSE | AE_INC_PC | LASTC>(dst, ea, 0);
                 }
                 break;
 
@@ -2107,9 +2108,9 @@ Moira::execClr(u16 opcode)
 
                 prefetch<C, POLL | ((!isRegMode(M) || S == Long) ? KEEP_IRD : 0)>();
                 if constexpr (S == Long) {
-                    writeOp<C, M, S, REVERSE | AE_INC_A>(dst, ea, 0);
+                    writeOp<C, M, S, REVERSE | AE_INC_A | LASTC>(dst, ea, 0);
                 } else {
-                    writeOp<C, M, S, REVERSE>(dst, ea, 0);
+                    writeOp<C, M, S, REVERSE | LASTC>(dst, ea, 0);
                 }
                 break;
 
@@ -3352,8 +3353,6 @@ Moira::execMove4(u16 opcode)
     // Check for address error
     if (misaligned<C, S>(ea)) {
 
-        if constexpr (EXACT_COMPAT) irdKeep = false;
-
         if constexpr (S != Long) updateAn<Mode::PD, S>(dst);
         if constexpr (compat == Compatibility::UAE) SYNC(2);
         if (format == 0) { throw earlyAddressError<C>(makeFrame<flags0>(ea + 2, reg.pc, getSR(), ird)); }
@@ -3364,7 +3363,7 @@ Moira::execMove4(u16 opcode)
     if constexpr (compat == Compatibility::UAE && C == Core::C68000 && S == Long) {
 
         // UAE restores the register if a long write fails and stacks the unmasked address
-        try { writeM<C, Mode::PD, S, REVERSE>(ea, data); }
+        try { writeM<C, Mode::PD, S, REVERSE | LASTC>(ea, data); }
         catch (BusError &e) {
             e.stackFrame.addr = (e.stackFrame.addr & 0xFFFFFF) | (ea & 0xFF000000);
             throw;
@@ -3373,7 +3372,7 @@ Moira::execMove4(u16 opcode)
     } else if constexpr (EXACT_COMPAT) {
 
         // The register has already been decremented when the final write fails
-        try { writeM<C, Mode::PD, S, REVERSE>(ea, data); }
+        try { writeM<C, Mode::PD, S, REVERSE | LASTC>(ea, data); }
         catch (BusError &e) {
             if ((e.stackFrame.addr & 0xFFFFFF) == (ea & 0xFFFFFF)) updateAn<Mode::PD, S>(dst);
             throw;
@@ -3383,7 +3382,7 @@ Moira::execMove4(u16 opcode)
 
         // UAE (68020) decrements the register before it writes
         if constexpr (compat == Compatibility::UAE && C == Core::C68020) updateAn<Mode::PD, S>(dst);
-        writeM<C, Mode::PD, S, REVERSE>(ea, data);
+        writeM<C, Mode::PD, S, REVERSE | LASTC>(ea, data);
     }
     if constexpr (!(compat == Compatibility::UAE && C == Core::C68020)) updateAn<Mode::PD, S>(dst);
 
@@ -4575,7 +4574,7 @@ Moira::execMoveSrEa(u16 opcode)
         readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
         prefetch<C, KEEP_IRD>();
 
-        writeOp<C, M, S, POLL>(dst, ea, getSR());
+        writeOp<C, M, S, POLL | LASTC>(dst, ea, getSR());
 
     } else {
 
@@ -5571,9 +5570,9 @@ Moira::execNbcdEa(u16 opcode)
         prefetch<C, POLL | KEEP_IRD>();
     }
     if constexpr (EXACT_COMPAT) {
-        writeM<C, M, Byte>(ea, data);
+        writeM<C, M, Byte, LASTC>(ea, data);
     } else {
-        writeM<C, M, Byte>(ea, bcd<C, nbcdInstr, Byte>(data, 0));
+        writeM<C, M, Byte, LASTC>(ea, bcd<C, nbcdInstr, Byte>(data, 0));
     }
 
     //           00  10  20        00  10  20        00  10  20
@@ -5631,9 +5630,9 @@ Moira::execNegEa(u16 opcode)
     if constexpr (EXACT_68000 && S == Long) setCCR(ccr1);
 
     if constexpr ((compat == Compatibility::MUSASHI)) {
-        writeOp<C, M, S>(dst, ea, data);
+        writeOp<C, M, S, LASTC>(dst, ea, data);
     } else {
-        writeOp<C, M, S, REVERSE>(dst, ea, data);
+        writeOp<C, M, S, REVERSE | LASTC>(dst, ea, data);
     }
 
     //           00  10  20        00  10  20        00  10  20
@@ -5755,7 +5754,7 @@ Moira::execPea(u16 opcode)
                 throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(reg.sp));
             } else {
                 prefetch<C, KEEP_IRD>();
-                throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(reg.sp));
+                throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA|LAST_CYCLE>(reg.sp));
             }
 
         } else if constexpr (C == Core::C68000) {
@@ -5765,6 +5764,14 @@ Moira::execPea(u16 opcode)
             } else {
                 throw AddressError(makeFrame<AE_WRITE|AE_DATA|AE_INC_PC>(reg.sp));
             }
+
+        } else if constexpr (C == Core::C68010) {
+
+            // The 68010 completes the prefetch in all modes (even the absolute ones) and
+            // stacks the address of the instruction plus two (recorded on real hardware)
+            writeBuffer = u16(ea >> 16);
+            prefetch<C>();
+            throw AddressError(makeFrame<AE_WRITE|AE_DATA>(reg.sp, instrStart + 2));
 
         } else {
 
@@ -5804,18 +5811,18 @@ Moira::execPea(u16 opcode)
 
             POLL_IPL;
             prefetch<C, KEEP_IRD>();
-            push <C, Long> (ea);
+            push<C, Long, LASTC> (ea);
 
         } else {
 
             prefetch<C, POLL | KEEP_IRD>();
-            push <C, Long> (ea);
+            push<C, Long, LASTC> (ea);
         }
 
     } else {
 
         prefetch<C, POLL | KEEP_IRD>();
-        push <C, Long>(ea);
+        push<C, Long, LASTC>(ea);
     }
 
     //           00  10  20        00  10  20        00  10  20
@@ -6411,7 +6418,7 @@ Moira::execSccEa(u16 opcode)
 
         prefetch<C, POLL | KEEP_IRD>();
         data = cond<I>() ? 0xFF : 0;
-        writeOp<C, M, Byte>(dst, ea, data);
+        writeOp<C, M, Byte, LASTC>(dst, ea, data);
 
     } else {
 
@@ -6426,7 +6433,7 @@ Moira::execSccEa(u16 opcode)
 
         prefetch<C, POLL | KEEP_IRD>();
         data = cond<I>() ? 0xFF : 0;
-        writeOp<C, M, S>(dst, ea, data);
+        writeOp<C, M, S, LASTC>(dst, ea, data);
     }
 
     //           00  10  20        00  10  20        00  10  20

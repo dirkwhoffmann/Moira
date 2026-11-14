@@ -621,6 +621,12 @@ static constexpr u64 AE_KEEP_A     = (1 << 15);  ///< Don't advance (An)+ if the
 
 /// Prefetch flags
 static constexpr u64 KEEP_IRD      = (1 << 16);  ///< More bus cycles follow. The IRD is not replaced yet (MAME mode)
+
+/// Flags of memory accesses that follow a prefetch with KEEP_IRD (MAME mode)
+static constexpr u64 LAST_CYCLE    = (1 << 17);  ///< The access contains the last bus cycle of the instruction. MAME replaces the IRD
+                                                 ///< when that cycle starts. Address errors, which are detected before, stack the old
+                                                 ///< IRD (the opcode of the instruction). Bus errors stack the old IRD only if they hit
+                                                 ///< the first half of a split access.
 }
 
 //

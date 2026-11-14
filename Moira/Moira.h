@@ -100,7 +100,6 @@ protected:
         u32 entrySsp = 0;       // Supervisor stack pointer before the frame was stacked
         u32 entryUsp = 0;       // User stack pointer (while in supervisor mode)
     } restart;
-    bool irdKeep = false;
 
     // The value of the most recent write access (reported in bus fault frames)
     u32 busWriteData = 0;
