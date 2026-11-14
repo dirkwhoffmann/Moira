@@ -149,14 +149,20 @@ public:
     int numLongs() const { return layout == Layout::M68030 ? 4 : 1; }
     int numLines() const { return capacity / numLongs(); }
 
-    // Indicates whether this cache is part of the emulated CPU
+    // Indicates whether this cache is part of the emulated CPU (change via setEmulated)
     bool emulated = false;
 
     // Indicates whether the cache is emulated and enabled in the CACR
-    virtual bool active() const = 0;
+    bool active = false;
 
     // Indicates whether the CACR freezes the cache (no new entries are allocated)
-    virtual bool frozen() const = 0;
+    bool frozen = false;
+
+    // Selects whether this cache is part of the emulated CPU
+    void setEmulated(bool value) { emulated = value; refresh(); }
+
+    // Derives the active and frozen flags from the CACR (call whenever it changes)
+    virtual void refresh() = 0;
 
     // Indicates whether a miss at a physical address is served by a burst fill.
     // This requires the 68030 layout, the burst bit in the CACR and a 32 bit port.
@@ -252,8 +258,7 @@ public:
 
     using Cache::Cache;
 
-    bool active() const override;
-    bool frozen() const override;
+    void refresh() override;
     bool burstEnabled(u32 phys) const override;
 
     void flush() override;
@@ -285,8 +290,7 @@ public:
 
     using Cache::Cache;
 
-    bool active() const override;
-    bool frozen() const override;
+    void refresh() override;
     bool burstEnabled(u32 phys) const override;
 
     void cacrDidChange(u32 value) override;

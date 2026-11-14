@@ -705,7 +705,7 @@ Moira::read(u32 addr)
 
     // Route data accesses through the data cache (68030)
     if constexpr (C == Core::C68020 && AS == AddrSpace::DATA) {
-        if (dCacheOn) return readDataCache<C, S, F>(addr);
+        if (dCache.active) return readDataCache<C, S, F>(addr);
     }
 
     if constexpr (C == Core::C68000) {
@@ -888,7 +888,7 @@ Moira::write(u32 addr, u32 val)
 
     // Keep the data cache coherent (68030)
     if constexpr (C == Core::C68020 && AS == AddrSpace::DATA) {
-        if (dCacheOn) { writeDataCache<C, S, F>(addr, val); return; }
+        if (dCache.active) { writeDataCache<C, S, F>(addr, val); return; }
     }
 
     if constexpr (C == Core::C68000) {

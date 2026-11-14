@@ -88,16 +88,11 @@ Cache::burstFill(u32 logical, u32 physical, bool supervisor)
     }
 }
 
-bool
-ICache::active() const
+void
+ICache::refresh()
 {
-    return emulated && (moira.reg.cacr & CACR::E);
-}
-
-bool
-ICache::frozen() const
-{
-    return moira.reg.cacr & CACR::F;
+    active = emulated && (moira.reg.cacr & CACR::E);
+    frozen = moira.reg.cacr & CACR::F;
 }
 
 bool
@@ -136,7 +131,7 @@ ICache::fill(u32 base, u32 &phys)
     phys = base;
 
 
-    if (active() && hit(base, supervisor)) {
+    if (active && hit(base, supervisor)) {
 
         //
         // Cache hit
@@ -158,7 +153,7 @@ ICache::fill(u32 base, u32 &phys)
         u32 value = moira.readLongSplit<Core::C68020>(phys);
         
         // Update the cache
-        if (active() && !frozen() && !ci) {
+        if (active && !frozen && !ci) {
             
             insert(base, supervisor, value);
             
@@ -193,16 +188,11 @@ ICache::fetch(u32 addr, bool &busAccess, u32 &phys)
     return (addr & 2) ? u16(latch.data & 0xFFFF) : u16(latch.data >> 16);
 }
 
-bool
-DCache::active() const
+void
+DCache::refresh()
 {
-    return emulated && (moira.reg.cacr & CACR::ED);
-}
-
-bool
-DCache::frozen() const
-{
-    return moira.reg.cacr & CACR::FD;
+    active = emulated && (moira.reg.cacr & CACR::ED);
+    frozen = moira.reg.cacr & CACR::FD;
 }
 
 bool
@@ -249,7 +239,7 @@ DCache::read(u32 addr, u8 fc, u32 &result)
     // Load the entire longword, regardless of the size of the access
     result = moira.readLongSplit<Core::C68020>(phys);
 
-    if (!frozen()) {
+    if (!frozen) {
 
         insert(addr, supervisor, result);
 
@@ -279,7 +269,7 @@ DCache::write(u32 addr, bool supervisor, u32 mask, u32 value, bool ci)
         auto &d = data[slot(addr)];
         d = (d & ~mask) | (value & mask);
 
-    } else if (writeAllocate && !frozen() && !ci && full) {
+    } else if (writeAllocate && !frozen && !ci && full) {
 
         // An aligned longword write creates an entry
         insert(addr, supervisor, value);

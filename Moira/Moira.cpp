@@ -114,9 +114,8 @@ Moira::setModel(CPUModel cpuModel, CPUModel dasmModel)
         // The 68040 caches are not emulated. They are physically tagged, 4-way
         // set-associative and support copyback mode. Without them, the CPU
         // behaves like it had perfectly coherent caches.
-        iCache.emulated = MOIRA_EMULATE_ICACHE && cpuModel >= CPUModel::M68EC020 && cpuModel < CPUModel::M68EC040;
-        dCache.emulated = MOIRA_EMULATE_DCACHE && (cpuModel == CPUModel::M68030 || cpuModel == CPUModel::M68EC030);
-        dCacheOn = dCache.active();
+        iCache.setEmulated(MOIRA_EMULATE_ICACHE && cpuModel >= CPUModel::M68EC020 && cpuModel < CPUModel::M68EC040);
+        dCache.setEmulated(MOIRA_EMULATE_DCACHE && (cpuModel == CPUModel::M68030 || cpuModel == CPUModel::M68EC030));
         flags &= ~State::LOOPING;
     }
 }
@@ -308,7 +307,8 @@ Moira::reset()
 
     iCache.flush();
     dCache.flush();
-    dCacheOn = false;
+    iCache.refresh();
+    dCache.refresh();
 
     SYNC(16);
 
@@ -592,6 +592,8 @@ Moira::restoreRegisters(const Registers &saved)
 {
     u8 ipl = reg.ipl;
     reg = saved;
+    iCache.refresh();
+    dCache.refresh();
     reg.ipl = ipl;
 
     // Bring the dependent flags in sync with the restored status register
@@ -783,7 +785,8 @@ Moira::setCACR(u32 val)
     dCache.cacrDidChange(val);
 
     reg.cacr = val & cacrMask();
-    dCacheOn = dCache.active();
+    iCache.refresh();
+    dCache.refresh();
     didChangeCACR(val);
 }
 

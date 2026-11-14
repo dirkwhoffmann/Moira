@@ -123,9 +123,6 @@ protected:
     // Prefetch queue for fetching instructions
     PrefetchQueue queue {};
 
-    // Indicates that the data cache is enabled
-    bool dCacheOn = false;
-
     // Speed trackers (68020 only)
     CycleBudget budget {};
 
