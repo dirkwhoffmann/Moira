@@ -99,12 +99,14 @@ public:
     // The floating-point unit
     FPU fpu = FPU();
 
+    // Debugger (breakpoints, watchpoints, catchpoints, tracing)
+    Debugger debugger = Debugger(*this);
+
+protected:
+
     // Caches
     ICache iCache = ICache(*this); // 68020+
     DCache dCache = DCache(*this); // 68030+
-
-    // Debugger (breakpoints, watchpoints, catchpoints, tracing)
-    Debugger debugger = Debugger(*this);
 
     
     //
@@ -128,7 +130,7 @@ protected:
     // Current value on the IPL (Interrupt Priority Level) pins
     u8 ipl {};
 
-    // Level 7 is edge triggered. This flag is set when the level 7 interrupt has been taken and is cleared when the pins leave level 7.
+    // Set when a level 7 interrupt is taken; cleared when the pins leave level 7
     bool nmiTaken {};
     
     // Value on the lower two function code pins (FC1|FC0)
@@ -146,7 +148,7 @@ protected:
     // Write buffer (appears in 68010 exception frames)
     u16 writeBuffer {};
     
-    // State flags used internally
+    // Internal state flags
     int flags {};
     
     // Restart information of a faulted instruction (68020+)
@@ -204,9 +206,6 @@ protected:
 
     // Takes back the predecrement of the operand that caused a bus error
     void undoPredecrement(const StackFrame &frame, const Registers &saved, u16 ird);
-
-    // Reads a program word without raising a bus error (returns 0 if the word is unreachable)
-    u16 peekProgramWord(u32 addr, bool supervisor);
 
     // Determines the effective FPU and MMU from the CPU model and the selection
     void updateUnits();

@@ -355,12 +355,12 @@ static bool hasIndexedOperand(u16 ird)
 }
 
 template <Core C> void
-Moira::writeStackFrame1011UAE(u16 sr, u16 nr, u32 pc, u16 ssw, u32 addr, u32 end, bool sv, bool write)
+Moira::writeStackFrame1011UAE(u16 sr, u16 nr, u32 pc, u16 ssw, u32 addr, u32 end, bool write)
 {
     u16 stageC = 0, stageB = 0;
     if (nr == 2 && !write) {
-        stageC = peekProgramWord(end + 2, sv);
-        stageB = peekProgramWord(end + 4, sv);
+        stageC = read16Dasm((end + 2) & addrMask<C>());
+        stageB = read16Dasm((end + 4) & addrMask<C>());
     }
     writeStackFrame1011<C>(sr, 0, pc, nr, ssw, addr, 0, stageC, stageB);
 }
@@ -403,7 +403,7 @@ Moira::execAddressError(StackFrame frame, int delay)
         // The 68020 reports an odd instruction fetch with a frame of format B. According
         // to recordings made on a real A1200, the stacked PC is always the address of the
         // instruction (JMP, JSR, BSR, DBcc, RTS, RTR).
-        u16 op = peekProgramWord(pc0Now, status & 0x2000);
+        u16 op = read16Dasm(pc0Now & addrMask<C>());
         u32 pc = pc0Now;
 
         // Stage C and B are not emulated faithfully (UAE shows the next instruction word)
@@ -479,8 +479,18 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
 
             // The pipe stages hold the two instruction words behind the opcode
             bool supervisor = status & 0x2000;
-            u16 stageC = peekProgramWord(reg.pc0 + 2, supervisor);
-            u16 stageB = peekProgramWord(reg.pc0 + 4, supervisor);
+            auto peek = [&](u32 addr) -> u16 {
+
+                addr &= addrMask<C>();
+                if (mmu.isEnabled()) {
+                    auto phys = mmu.translate(addr, supervisor ? FC::SUPERVISOR_PROG : FC::USER_PROG, false);
+                    if (!phys) return 0;
+                    addr = *phys & addrMask<C>();
+                }
+                return read16Dasm(addr);
+            };
+            u16 stageC = peek(reg.pc0 + 2);
+            u16 stageB = peek(reg.pc0 + 4);
 
             // The data output buffer holds the value of a faulting write
             bool write = !(frame.ssw & SSW030::RW) && (frame.ssw & SSW030::DF);
@@ -495,7 +505,7 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
 
             // UAE stacks the start of the instruction. Indexed operands move it behind the instruction words.
             // The extension word of the destination of a MOVE is consumed after the source has been read
-            u16 op = peekProgramWord(reg.pc0, status & 0x2000);
+            u16 op = read16Dasm(reg.pc0 & addrMask<C>());
             bool ix = hasIndexedOperand(op);
             if (ix && (op & 0xC000) == 0 && (op & 0x3000)) {
                 auto indexed = [](u16 m, u16 r) { return m == 6 || (m == 7 && r == 3); };
@@ -512,7 +522,7 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
                     else if (dm == 7 && dr == 1) pc -= 2;
                 }
             }
-            writeStackFrame1011UAE<C>(status, 2, pc, ssw, frame.addr, end, status & 0x2000, frame.write);
+            writeStackFrame1011UAE<C>(status, 2, pc, ssw, frame.addr, end, frame.write);
 
             // Remember how to restart the instruction
             restart.valid = saved != nullptr;
@@ -547,21 +557,6 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
 // The following definitions are not templated. They are compiled into the
 // main translation unit only (see MoiraCore_cpp.h).
 #ifdef MOIRA_MAIN_TU
-
-u16
-Moira::peekProgramWord(u32 addr, bool supervisor)
-{
-    addr &= addrMask();
-
-    if (mmu.isEnabled()) {
-
-        auto phys = mmu.translate(addr, supervisor ? FC::SUPERVISOR_PROG : FC::USER_PROG, false);
-        if (!phys) return 0;
-        addr = *phys & addrMask();
-    }
-
-    return read16(addr);
-}
 
 void
 Moira::execException(M68kException exc, int nr)

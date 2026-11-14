@@ -644,7 +644,7 @@ Moira::processException(const std::exception &exc, const Registers *saved)
             if (saved && !deferred) restoreRegisters(*saved);
 
             // UAE decrements an address register after the access has succeeded
-            u16 op = (saved && deferred) ? peekProgramWord(reg.pc0, reg.sr.s) : 0;
+            u16 op = (saved && deferred) ? read16Dasm(reg.pc0 & addrMask<C>()) : 0;
             if (saved && deferred) undoPredecrement(be->stackFrame, *saved, op);
 
             // UAE sets the condition codes of a MOVE before it writes the result
