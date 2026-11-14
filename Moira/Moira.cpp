@@ -396,9 +396,7 @@ Moira::execute()
         if constexpr (compat == Compatibility::UAE || compat == Compatibility::MAME) instrIrd = queue.ird;
         try {
             (this->*exec[queue.ird])(queue.ird);
-            assert(!queue.edbFull);
         } catch (const std::exception &exc) {
-            queue.edbFull = false;
             processException(exc);
         }
 
@@ -466,18 +464,15 @@ Moira::execute()
 
                     assert(loop[queue.ird]);
                     (this->*loop[queue.ird])(queue.ird);
-                    assert(!queue.edbFull);
 
                 } else {
 
                     instrStart = reg.pc0;
                     if constexpr (compat == Compatibility::UAE || compat == Compatibility::MAME) instrIrd = queue.ird;
                     (this->*exec[queue.ird])(queue.ird);
-                    assert(!queue.edbFull);
                 }
 
             } catch (const std::exception &exc) {
-                queue.edbFull = false;
                 processException(exc, saved);
             }
         }

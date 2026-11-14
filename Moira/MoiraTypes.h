@@ -421,9 +421,6 @@ struct PrefetchQueue {
     /// External data bus latch (EDB). A word fetched early (see fetchIrc) waits here until
     /// it moves into IRC. It acts as a third queue word.
     u16 edb;
-
-    /// True while the EDB holds a word that has not been committed (debug aid)
-    bool edbFull;
 };
 
 
