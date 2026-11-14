@@ -78,9 +78,6 @@ protected:
     // The emulated coprocessor (if any)
     CopModel copModel = CopModel::NONE;
 
-    // The word of an early prefetch that has not reached the prefetch queue yet (see fetchIrc)
-    u16 pendingIrc = 0;
-
     // Start address of the executing instruction (used by the 68020 exception frames) and its opcode (UAE and MAME mode)
     u32 instrStart = 0;
     u16 instrIrd = 0;

@@ -1162,8 +1162,9 @@ Moira::fetchIrc()
         // The word waits in a latch (as in the real CPU) until the IRD is replaced
         reg.pc0 = reg.pc;
         reg.pc += 2;
-        pendingIrc = readInstr<C, F>(reg.pc);
-        readBuffer = pendingIrc;
+        queue.edb = readInstr<C, F>(reg.pc);
+        readBuffer = queue.edb;
+        queue.edbFull = true;
 
     } else {
 
@@ -1177,7 +1178,8 @@ Moira::commitIrd()
     if constexpr (EXACT_68000) {
 
         queue.ird = queue.irc;
-        queue.irc = pendingIrc;
+        queue.irc = queue.edb;
+        queue.edbFull = false;
     }
 }
 
