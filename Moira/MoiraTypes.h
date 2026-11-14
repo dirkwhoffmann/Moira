@@ -408,19 +408,16 @@ struct Registers {
     u32 dfc;                    ///< Destination Function Code        (68010+)
     
     /// Unemulated registers
-    u32 cacr;                   // Cache Control Register           (68020+)
+    u32 cacr;                   ///< Cache Control Register           (68020+)
     u32 caar;                   ///< Cache Address Register           (68020+)
 };
 
-/// The two-word prefetch queue of the CPU
+/// The prefetch queue of the CPU
 struct PrefetchQueue {
     
-    u16 irc;                    ///< The most recent word prefetched from memory
-    u16 ird;                    ///< The instruction currently being executed
-
-    /// External data bus latch (EDB). A word fetched early (see fetchIrc) waits here until
-    /// it moves into IRC. It acts as a third queue word.
-    u16 edb;
+    u16 edb;                    ///< The external data bus latch (feeds the IRC)
+    u16 irc;                    ///< The next (prefetched) instruction (feeds the IRD)
+    u16 ird;                    ///< The currently executed instruction
 };
 
 
