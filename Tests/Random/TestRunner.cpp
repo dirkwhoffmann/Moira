@@ -69,7 +69,7 @@ void TestRunner::selectModel(CPUModel model)
 void TestRunner::setupMoira()
 {
     moiracpu->setModel(cpuModel);
-    moiracpu->setCopModel(copModel(fpuModel));
+    moiracpu->setCPModel(cpModel(fpuModel));
 }
 
 void TestRunner::selectFpu(FPUType fpu)

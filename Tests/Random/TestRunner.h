@@ -37,10 +37,10 @@ std::optional<FPUType> parseFpuModel(const char *name);
 bool isCompatible(CPUModel cpu, FPUType fpu);
 
 // Converts an FPU selection into the coprocessor connected to the CPU
-inline moira::CopModel copModel(FPUType type)
+inline moira::CPModel cpModel(FPUType type)
 {
-    return type == FPUType::M68881 ? moira::CopModel::M68881 :
-           type == FPUType::M68882 ? moira::CopModel::M68882 : moira::CopModel::NONE;
+    return type == FPUType::M68881 ? moira::CPModel::M68881 :
+           type == FPUType::M68882 ? moira::CPModel::M68882 : moira::CPModel::NONE;
 }
 
 /* Base class of all test runners. It owns the Moira instance under test and the

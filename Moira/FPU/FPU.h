@@ -105,12 +105,12 @@ static constexpr u32 INEX1          = 1 << 8;
 /// Motorola FPUs on top of the floating-point environment FpuEnv.
 ///
 /// The FPU is part of the CPU (68040) or an external chip (68881, 68882) that is
-/// connected with Moira::setCopModel.
+/// connected with Moira::setCPModel.
 class FPU {
 
 public:
 
-    /// The emulated FPU core (set by Moira, see Moira::setCopModel)
+    /// The emulated FPU core (set by Moira, see Moira::setCPModel)
     FPUModel model = FPUModel::M68882;
 
     /// The floating-point environment (rounding mode, precision, exception flags)

@@ -8,7 +8,7 @@
 #define AVAILABILITY(core) \
 if constexpr ((core) == Core::C68010) { static_assert(C != Core::C68000); } \
 if constexpr ((core) == Core::C68020) { static_assert(C != Core::C68000 && C != Core::C68010); } \
-if constexpr (C == Core::C68020) budget.cp = 0; \
+if constexpr (C == Core::C68020) budget.penalty = 0; \
 if constexpr (MOIRA_WILL_EXECUTE) willExecute(__func__, I, M, S, opcode);
 
 #define FINALIZE \
@@ -2379,7 +2379,7 @@ Moira::execCpBcc(u16 opcode)
     AVAILABILITY(Core::C68020)
 
     // First cycle of the coprocessor protocol
-    reportCoprocessorCycle(opcode, CIR::CONDITION);
+    reportCPCycle(opcode, CIR::CONDITION);
 
     execLineF<C, I, M, S>(opcode);
 
@@ -2392,7 +2392,7 @@ Moira::execCpDbcc(u16 opcode)
     AVAILABILITY(Core::C68020)
 
     // First cycle of the coprocessor protocol
-    reportCoprocessorCycle(opcode, CIR::CONDITION);
+    reportCPCycle(opcode, CIR::CONDITION);
 
     execLineF<C, I, M, S>(opcode);
 
@@ -2405,7 +2405,7 @@ Moira::execCpGen(u16 opcode)
     AVAILABILITY(Core::C68020)
 
     // First cycle of the coprocessor protocol
-    reportCoprocessorCycle(opcode, CIR::COMMAND);
+    reportCPCycle(opcode, CIR::COMMAND);
 
     execLineF<C, I, M, S>(opcode);
 
@@ -2419,7 +2419,7 @@ Moira::execCpRestore(u16 opcode)
     SUPERVISOR_MODE_ONLY
 
     // First cycle of the coprocessor protocol
-    reportCoprocessorCycle(opcode, CIR::RESTORE);
+    reportCPCycle(opcode, CIR::RESTORE);
 
     execLineF<C, I, M, S>(opcode);
 
@@ -2443,7 +2443,7 @@ Moira::execCpSave(u16 opcode)
     SUPERVISOR_MODE_ONLY
 
     // First cycle of the coprocessor protocol
-    reportCoprocessorCycle(opcode, CIR::SAVE);
+    reportCPCycle(opcode, CIR::SAVE);
 
     execLineF<C, I, M, S>(opcode);
 
@@ -2456,7 +2456,7 @@ Moira::execCpScc(u16 opcode)
     AVAILABILITY(Core::C68020)
 
     // First cycle of the coprocessor protocol
-    reportCoprocessorCycle(opcode, CIR::CONDITION);
+    reportCPCycle(opcode, CIR::CONDITION);
 
     execLineF<C, I, M, S>(opcode);
 
@@ -2469,7 +2469,7 @@ Moira::execCpTrapcc(u16 opcode)
     AVAILABILITY(Core::C68020)
 
     // First cycle of the coprocessor protocol
-    reportCoprocessorCycle(opcode, CIR::CONDITION);
+    reportCPCycle(opcode, CIR::CONDITION);
 
     execLineF<C, I, M, S>(opcode);
 
@@ -4374,7 +4374,7 @@ Moira::execMoves(u16 opcode)
 
         if constexpr (S == Long) {
 
-            if (cpuModel == CPUModel::M68020 || cpuModel == CPUModel::M68EC020) budget.cp += 2;
+            if (cpuModel == CPUModel::M68020 || cpuModel == CPUModel::M68EC020) budget.penalty += 2;
         }
 
     } else {                    // Ea -> Rg
@@ -4419,7 +4419,7 @@ Moira::execMoves(u16 opcode)
         // Switch back to the old FC pin values
         fcSource = 0;
 
-        if (cpuModel == CPUModel::M68020 || cpuModel == CPUModel::M68EC020) budget.cp += 2;
+        if (cpuModel == CPUModel::M68020 || cpuModel == CPUModel::M68EC020) budget.penalty += 2;
     }
 
     prefetch<C, POLL>();

@@ -262,7 +262,7 @@ Moira::computeEAfull(u32 an)
     }
 
     // Add the number of extra cycles consumed in this addressing mode
-    budget.cp += penaltyCycles<C, M, S>(ext);
+    budget.penalty += penaltyCycles<C, M, S>(ext);
 
     return result;
 }
@@ -825,7 +825,7 @@ Moira::readInstr(u32 addr)
             phys = translate<C, false, Word>(addr & addrMask<C>(), readFC()) & addrMask<C>();
             result = read16(phys);
         }
-        budget.cp += busAccess ? (portSize(dsack(phys)) == 4 ? 0 : 4) : -2;
+        budget.penalty += busAccess ? (portSize(dsack(phys)) == 4 ? 0 : 4) : -2;
 
         return result;
 

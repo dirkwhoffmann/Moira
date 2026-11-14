@@ -129,7 +129,7 @@ Moira::updateUnits()
     if (isInternalFpu()) {
         fpu.setModel(FPUModel::M68040);
     } else if (isExternalFpu()) {
-        fpu.setModel(copModel == CopModel::M68881 ? FPUModel::M68881 : FPUModel::M68882);
+        fpu.setModel(cpModel == CPModel::M68881 ? FPUModel::M68881 : FPUModel::M68882);
     }
 
     // The MMU is part of the CPU
@@ -142,19 +142,19 @@ Moira::updateUnits()
 }
 
 void
-Moira::setCopModel(CopModel model)
+Moira::setCPModel(CPModel model)
 {
-    if (copModel == model) return;
+    if (cpModel == model) return;
 
-    copModel = model;
+    cpModel = model;
     updateUnits();
 
     // The FPU handlers and the disassembler entries depend on the coprocessor
-    if (hasCoproInterface(cpuModel) || hasCoproInterface(dasmModel)) createJumpTable(cpuModel, dasmModel);
+    if (hasCPI(cpuModel) || hasCPI(dasmModel)) createJumpTable(cpuModel, dasmModel);
 }
 
 bool
-Moira::hasCoproInterface(CPUModel model)
+Moira::hasCPI(CPUModel model)
 {
     switch (model) {
 
@@ -175,7 +175,7 @@ Moira::isInternalFpu() const
 bool
 Moira::isExternalFpu() const
 {
-    return hasCoproInterface(cpuModel) && copModel != CopModel::NONE;
+    return hasCPI(cpuModel) && cpModel != CPModel::NONE;
 }
 
 void
@@ -337,7 +337,7 @@ Moira::reset()
 }
 
 void
-Moira::syncCp(int cycles)
+Moira::syncCyclePenalty(int cycles)
 {
     // Max number of instructions that may execute without advancing the clock
     static constexpr int maxStalled = 4;
@@ -1076,7 +1076,7 @@ Moira::reportCpuSpace(CpuSpaceType type, u8 arg)
 }
 
 void
-Moira::reportCoprocessorCycle(u16 opcode, u8 cir)
+Moira::reportCPCycle(u16 opcode, u8 cir)
 {
     // Coprocessor ID (opcode bits 11-9) on A15-A13, register select on A4-A0
     reportCpuSpace(CpuSpaceType::COPROCESSOR, u8(((opcode >> 9) & 7) << 5 | cir));

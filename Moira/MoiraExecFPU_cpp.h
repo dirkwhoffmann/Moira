@@ -374,7 +374,7 @@ Moira::execFGen(u16 opcode)
     AVAILABILITY(Core::C68000)
 
     // First cycle of the coprocessor protocol
-    if (isExternalFpu()) reportCoprocessorCycle(opcode, CIR::COMMAND);
+    if (isExternalFpu()) reportCPCycle(opcode, CIR::COMMAND);
 
     auto ext = queue.irc;
     auto cod = xxx_____________(ext);
@@ -493,7 +493,7 @@ Moira::execFBcc(u16 opcode)
     AVAILABILITY(Core::C68000)
 
     // First cycle of the coprocessor protocol
-    if (isExternalFpu()) reportCoprocessorCycle(opcode, CIR::CONDITION);
+    if (isExternalFpu()) reportCPCycle(opcode, CIR::CONDITION);
 
     u32 oldpc = reg.pc;
 
@@ -539,7 +539,7 @@ Moira::execFDbcc(u16 opcode)
     AVAILABILITY(Core::C68000)
 
     // First cycle of the coprocessor protocol
-    if (isExternalFpu()) reportCoprocessorCycle(opcode, CIR::CONDITION);
+    if (isExternalFpu()) reportCPCycle(opcode, CIR::CONDITION);
 
     auto ext = queue.irc;
     auto dn  = _____________xxx (opcode);
@@ -586,7 +586,7 @@ Moira::execFNop(u16 opcode)
     AVAILABILITY(Core::C68000)
 
     // First cycle of the coprocessor protocol
-    if (isExternalFpu()) reportCoprocessorCycle(opcode, CIR::CONDITION);
+    if (isExternalFpu()) reportCPCycle(opcode, CIR::CONDITION);
 
     // FNOP is encoded as FBcc.W with condition F and displacement 0
     readExt<C>();
@@ -602,7 +602,7 @@ Moira::execFRestore(u16 opcode)
     SUPERVISOR_MODE_ONLY
 
     // First cycle of the coprocessor protocol
-    if (isExternalFpu()) reportCoprocessorCycle(opcode, CIR::RESTORE);
+    if (isExternalFpu()) reportCPCycle(opcode, CIR::RESTORE);
 
     auto n = _____________xxx (opcode);
 
@@ -639,7 +639,7 @@ Moira::execFSave(u16 opcode)
     SUPERVISOR_MODE_ONLY
 
     // First cycle of the coprocessor protocol
-    if (isExternalFpu()) reportCoprocessorCycle(opcode, CIR::SAVE);
+    if (isExternalFpu()) reportCPCycle(opcode, CIR::SAVE);
 
     auto n = _____________xxx (opcode);
 
@@ -667,7 +667,7 @@ Moira::execFScc(u16 opcode)
     AVAILABILITY(Core::C68000)
 
     // First cycle of the coprocessor protocol
-    if (isExternalFpu()) reportCoprocessorCycle(opcode, CIR::CONDITION);
+    if (isExternalFpu()) reportCPCycle(opcode, CIR::CONDITION);
 
     auto ext = queue.irc;
     auto dst = _____________xxx (opcode);
@@ -702,7 +702,7 @@ Moira::execFTrapcc(u16 opcode)
     AVAILABILITY(Core::C68000)
 
     // First cycle of the coprocessor protocol
-    if (isExternalFpu()) reportCoprocessorCycle(opcode, CIR::CONDITION);
+    if (isExternalFpu()) reportCPCycle(opcode, CIR::CONDITION);
 
     auto ext = queue.irc;
 

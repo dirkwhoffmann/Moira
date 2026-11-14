@@ -76,7 +76,7 @@ protected:
     CPUModel cpuModel = CPUModel::M68000;
 
     // The emulated coprocessor (if any)
-    CopModel copModel = CopModel::NONE;
+    CPModel cpModel = CPModel::NONE;
 
     // Instruction set used by the disassembler
     CPUModel dasmModel = CPUModel::M68000;
@@ -251,19 +251,19 @@ public:
      * with a coprocessor interface (68EC020, 68020, 68EC030, 68030). For other
      * CPU models, the selection is remembered but has no effect. It is not
      * changed when the CPU model changes, so the order of setModel and
-     * setCopModel does not matter.
+     * setCPModel does not matter.
      */
-    void setCopModel(CopModel model);
+    void setCPModel(CPModel model);
 
     /// Synchronizes internal state with the MMU registers. Needs to be called
     /// if the translation control register is modified without setTC.
     void updateMmuFlag();
 
-    /// Returns the selected coprocessor (which may not be effective, see setCopModel)
-    CopModel getCopModel() const { return copModel; }
+    /// Returns the selected coprocessor (which may not be effective, see setCPModel)
+    CPModel getCPModel() const { return cpModel; }
 
     /// Checks if a model provides a coprocessor interface (to attach a 6888x)
-    static bool hasCoproInterface(CPUModel model);
+    static bool hasCPI(CPUModel model);
 
     /// Checks if the FPU is built into the CPU (68040)
     bool isInternalFpu() const;
@@ -407,11 +407,11 @@ protected:
      * environment can only be stepped in whole bus cycles. The time is
      * therefore accumulated and spent as soon as it amounts to at least one
      * bus cycle, which keeps the discount fully effective. Should that not
-     * happen for CpStallMax instructions in a row, one bus cycle is borrowed:
+     * happen for maxStalled instructions in a row, one bus cycle is borrowed:
      * the environment is stepped from here alone, so without it the emulation
      * would make no progress and its main loop would never terminate.
      */
-    void syncCp(int cycles);
+    void syncCyclePenalty(int cycles);
 
 
     //
@@ -939,7 +939,7 @@ private:
     void reportCpuSpace(CpuSpaceType type, u8 arg);
 
     // Reports the first cycle of the coprocessor protocol of a line-F instruction
-    void reportCoprocessorCycle(u16 opcode, u8 cir);
+    void reportCPCycle(u16 opcode, u8 cir);
 
 
     //

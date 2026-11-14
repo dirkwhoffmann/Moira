@@ -2086,9 +2086,9 @@ Moira::createJumpTable12(CPUModel model, bool regDasm)
      * their line F handlers. The condition only depends on the CPU model
      * (which is the emulated model or the disassembler model, depending on the
      * pass) and the selected coprocessor. The jump table is rebuilt whenever
-     * the selection changes (see setCopModel).
+     * the selection changes (see setCPModel).
      */
-    if (model == CPUModel::M68040 || (hasCoproInterface(model) && copModel != CopModel::NONE)) {
+    if (model == CPUModel::M68040 || (hasCPI(model) && cpModel != CPModel::NONE)) {
 
         opcode = parse("1111 0010 100- ----");
         ___________XXXXX(opcode, Instr::FBcc, Mode::IP, Word, FBcc, CIMS)

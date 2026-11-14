@@ -101,7 +101,7 @@ enum class CPUModel
 ///          coprocessor can be connected to CPUs with a coprocessor interface
 ///          (68EC020, 68020, 68EC030, 68030). The selection has no effect on
 ///          other CPU models.
-enum class CopModel
+enum class CPModel
 {
     NONE,                   ///< No coprocessor
     M68881,                 ///< MC68881 floating-point coprocessor
@@ -450,7 +450,7 @@ struct Restart {
 struct CycleBudget {
 
     /// Cycle penalty
-    int cp {};
+    int penalty {};
 
     /// Cycles that have not been spent yet
     int accumulated {};
