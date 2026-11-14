@@ -203,19 +203,13 @@ protected:
     
     // Creates or updates the jump tables for execution and disassembly
     void createJumpTable(CPUModel cpuModel, CPUModel dasmModel);
-
+    
+    // Creates the jump tables for execution and disassembly with the same model
     void createJumpTable(CPUModel model) { createJumpTable(model, model); }
     
 private:
     
-    /* Core routines for creating jump tables
-     *
-     * Jump table creation is deliberately split into several parts.
-     * As a single function it expands into several hundred kilobytes of
-     * straight-line code per core, which drives the compiler's memory
-     * consumption far beyond what some environments provide.
-     */
-    
+    // Core routines for creating jump tables    
     template <Core C> void createJumpTable(CPUModel model, bool registerDasm);
     template <Core C> void createJumpTable1(CPUModel model, bool registerDasm);
     template <Core C> void createJumpTable2(CPUModel model, bool registerDasm);

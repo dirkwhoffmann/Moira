@@ -2119,10 +2119,14 @@ Moira::createJumpTable12(CPUModel model, bool regDasm)
     }
 }
 
-// Registers all instruction handlers
 template <Core C> void
 Moira::createJumpTable(CPUModel model, bool regDasm)
 {
+    // Jump table creation is deliberately split into several parts.
+    // As a single function it expands into several hundred kilobytes of
+    // straight-line code per core, which drives the compiler's memory
+    // consumption far beyond what some environments provide.
+    
     createJumpTable1<C>(model, regDasm);
     createJumpTable2<C>(model, regDasm);
     createJumpTable3<C>(model, regDasm);
