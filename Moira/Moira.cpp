@@ -1092,16 +1092,16 @@ Moira::getIrqVector(u8 level) {
     fcSource = 3;
     cpuSpaceCycle(CpuSpaceType::IRQ_ACK, level);
 
+    // Ask the interrupting device for the vector
+    u8 userVector = 0;
     u16 vector = 0;
-    switch (irqMode) {
+
+    switch (readIrqVector(level, &userVector)) {
 
         case IrqMode::AUTO:          vector = 24 + level; break;
-        case IrqMode::USER:          vector = readIrqUserVector(level) & 0xFF; break;
+        case IrqMode::USER:          vector = userVector; break;
         case IrqMode::SPURIOUS:      vector = 24; break;
         case IrqMode::UNINITIALIZED: vector = 15; break;
-
-        default:
-            fatalError;
     }
 
     fcSource = oldSource;

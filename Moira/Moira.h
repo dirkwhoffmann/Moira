@@ -87,7 +87,6 @@ protected:
     // Visual style for data dumps
     DasmStyle dataStyle;
     
-    
     //
     // Subcomponents
     //
@@ -125,9 +124,6 @@ protected:
 
     // Speed trackers (68020 only)
     CycleBudget budget {};
-
-    // Interrupt mode
-    IrqMode irqMode {IrqMode::AUTO};
     
     // Current value on the IPL (Interrupt Priority Level) pins
     u8 ipl {};
@@ -468,8 +464,12 @@ protected:
     /// Returns the DSACK bits for the addressed device (68020)
     virtual u8 dsack(u32 addr) const { return DSACK_16; }
 
-    /// Provides the interrupt vector for a given interrupt level in USER mode
-    virtual u16 readIrqUserVector(u8 level) const { return 0; }
+    /// Answers an interrupt acknowledge cycle (called with FC = 7)
+    /// @param level   The acknowledged interrupt level.
+    /// @param vector  Receives the vector number if the answer is IrqMode::USER.
+    /// @return        How the interrupt is answered. AUTO (default) selects the
+    ///                autovector 24 + level.
+    virtual IrqMode readIrqVector(u8 level, u8 *vector) const { return IrqMode::AUTO; }
 
     
     //
@@ -527,7 +527,7 @@ protected:
     ///              is the same value that appears on the address lines
     ///              A15-A13 and A4-A0.
     /// @note  readFC() returns 7 while this delegate is called. For interrupt
-    ///        acknowledge cycles, the same holds for readIrqUserVector().
+    ///        acknowledge cycles, the same holds for readIrqVector().
     virtual void cpuSpaceCycle(CpuSpaceType type, u8 arg) { }
 
     
@@ -587,9 +587,6 @@ protected:
 
     // Returns the DSACK bits for the addressed device (68020)
     u8 dsack(u32 addr) const;
-
-    // Provides the interrupt vector for a given interrupt level in USER mode
-    u16 readIrqUserVector(u8 level) const;
 
     
     //
@@ -945,15 +942,6 @@ public:
     
     /// Sets the value on the Interrupt Priority Level (IPL) pins
     void setIPL(u8 val);
-
-    /// Retrieves the way the CPU obtains the vector number of an interrupt
-    IrqMode getIrqMode() const { return irqMode; }
-
-    /// Selects how the CPU obtains the vector number of an interrupt
-    /// @param mode  AUTO uses the autovector 24 + level (default). USER asks
-    ///              readIrqUserVector() for the vector number. SPURIOUS always
-    ///              uses vector 24 and UNINITIALIZED vector 15.
-    void setIrqMode(IrqMode mode) { irqMode = mode; }
 
 private:
     

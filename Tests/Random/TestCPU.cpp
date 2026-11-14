@@ -123,10 +123,10 @@ TestCPU::write32 (u32 addr, u32 val) const
     set32(moiraMem, addr, val);
 }
 
-/* Returns the interrupt vector in IRQ_USER mode
+/* Answers interrupt acknowledge cycles (autovectors)
  */
-u16
-TestCPU::readIrqUserVector(u8 level) const { return 0; }
+moira::IrqMode
+TestCPU::readIrqVector(u8 level, u8 *vector) const { return moira::IrqMode::AUTO; }
 
 /* Breakpoint handler
  *

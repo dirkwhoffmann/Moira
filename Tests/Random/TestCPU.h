@@ -32,7 +32,7 @@ private:
     void write8 (u32 addr, u8  val) const override;
     void write16 (u32 addr, u16 val) const override;
     void write32 (u32 addr, u32 val) const override;
-    u16 readIrqUserVector(u8 level) const override;
+    moira::IrqMode readIrqVector(u8 level, u8 *vector) const override;
     void didReachBreakpoint(u32 addr) override;
     void didReachWatchpoint(u32 addr) override;
 };

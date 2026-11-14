@@ -36,7 +36,7 @@ public:
 
     // Interrupt bookkeeping
     std::vector<u8> irqLevels;              // Levels reported by willInterrupt
-    mutable std::vector<u8> userVecCalls;   // Levels passed to readIrqUserVector
+    mutable std::vector<u8> userVecCalls;   // Levels passed to readIrqVector in USER mode
     u16 userVec[8] = { 0, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47 };
 
     static constexpr u32 codeStart = 0x1000;
@@ -49,12 +49,24 @@ public:
     void write16(u32 a, u16 v) const override { note(true, a); ram[a & 0xFFFFF] = v >> 8; ram[(a + 1) & 0xFFFFF] = v & 0xFF; }
     void write32(u32 a, u32 v) const override { write16(a, v >> 16); write16(a + 2, v & 0xFFFF); }
 
-    u16 readIrqUserVector(u8 level) const override { userVecCalls.push_back(level); userVecFC.push_back(readFC()); return userVec[level]; }
+    // How the simulated device answers an interrupt acknowledge cycle
+    IrqMode irqMode = IrqMode::AUTO;
+    IrqMode getIrqMode() const { return irqMode; }
+    void setIrqMode(IrqMode mode) { irqMode = mode; }
+
+    IrqMode readIrqVector(u8 level, u8 *vector) const override
+    {
+        if (irqMode == IrqMode::USER) {
+            userVecCalls.push_back(level); userVecFC.push_back(readFC());
+            *vector = u8(userVec[level]);
+        }
+        return irqMode;
+    }
     void willInterrupt(u8 level) override { irqLevels.push_back(level); }
 
     struct SpaceCycle { CpuSpaceType type; u8 arg; int fc; };
     std::vector<SpaceCycle> spaceCycles;
-    mutable std::vector<int> userVecFC;     // FC seen inside readIrqUserVector
+    mutable std::vector<int> userVecFC;     // FC seen inside readIrqVector in USER mode
 
     void cpuSpaceCycle(CpuSpaceType type, u8 arg) override { spaceCycles.push_back({ type, arg, readFC() }); }
 

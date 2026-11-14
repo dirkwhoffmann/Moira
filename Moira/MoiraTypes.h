@@ -296,13 +296,13 @@ enum class M68kException
     BKPT                        ///< Breakpoint (maps to a native exception when triggered)
 };
 
-/// M68k interrupt modes
+/// Answers to an interrupt acknowledge cycle
 enum class IrqMode
 {
-    AUTO,                       ///< Automatic IRQ handling
-    USER,                       ///< User-defined IRQ handling
-    SPURIOUS,                   ///< Spurious IRQ handling
-    UNINITIALIZED               ///< Uninitialized IRQ mode
+    AUTO,                       ///< The autovector 24 + level is used
+    USER,                       ///< The device supplies the vector number
+    SPURIOUS,                   ///< No device responds (spurious interrupt, vector 24)
+    UNINITIALIZED               ///< The device is not initialized (vector 15)
 };
 
 /// Types of CPU space cycles
