@@ -155,8 +155,6 @@ Moira::updateUnits()
             mmu.setModel(MMUModel::NONE);
             break;
     }
-
-    updateMmuFlag();
 }
 
 void
@@ -310,8 +308,13 @@ Moira::reset()
 template <Core C> void
 Moira::reset()
 {
+    // Bus errors of the 68020 family are restartable if the client asks for
+    // bus error emulation. The real CPU continues from its internal state
+    // after RTE. Restarting the instruction is the approximation used by UAE.
+    // Other models and configurations stay on the fast path, which does not
+    // save the registers.
     flags = State::CHECK_IRQ;
-    updateMmuFlag();
+    if (MOIRA_EMULATE_BUS_ERROR && cpuModel >= CPUModel::M68EC020) flags |= State::SAVE_REGS;
 
     reg = { };
     reg.sr.s = 1;
@@ -478,7 +481,7 @@ Moira::execute()
             Registers snapshot;
             const Registers *saved = nullptr;
             queue.lastFetch = false;
-                if (flags & RESTARTABLE) { snapshot = reg; saved = &snapshot; }
+                if (flags & (State::SAVE_REGS | State::MMU)) { snapshot = reg; saved = &snapshot; }
 
             try {
 
@@ -531,23 +534,6 @@ void
 Moira::executeUntil(i64 cycle)
 {
     while (clock < cycle) { execute(); }
-}
-
-void
-Moira::updateMmuFlag()
-{
-    // An address translation fault must be restartable. The same holds for a
-    // bus error of the 68020 family if the client asks for bus error emulation.
-    // The real CPU continues from its internal state after RTE. Restarting the
-    // instruction is the approximation used by UAE. Other models and
-    // configurations stay on the fast path, which does not save the registers.
-    bool restartable = mmu.isEnabled() || (MOIRA_EMULATE_BUS_ERROR && cpuModel >= CPUModel::M68EC020);
-
-    if (restartable) {
-        flags |= State::RESTARTABLE;
-    } else {
-        flags &= ~State::RESTARTABLE;
-    }
 }
 
 void

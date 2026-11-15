@@ -14,8 +14,8 @@ using namespace moira;
 namespace {
 
 /* Models without an MMU run on the fast path of execute() unless a flag
- * requests more. The RESTARTABLE flag makes a faulted instruction restartable.
- * It is set while an MMU is enabled, or for the 68020 family if the library
+ * requests more. The SAVE_REGS and MMU flags make a faulted instruction restartable.
+ * The MMU flag is set while an MMU is enabled. SAVE_REGS is set for the 68020 family if the library
  * has been compiled with MOIRA_EMULATE_BUS_ERROR. This file is compiled into
  * two executables: One is linked against a library with bus error emulation,
  * the other against the default library.
@@ -54,11 +54,11 @@ public:
         reset();
     }
 
-    bool restartable() const { return flags & State::RESTARTABLE; }
+    bool restartable() const { return flags & (State::SAVE_REGS | State::MMU); }
     bool fastPath() const { return flags == 0; }
 
     // Programs the translation control register of the 68030 MMU
-    void setTC(u32 tc) { mmu.mmu030.tc = tc; updateMmuFlag(); }
+    void setTC(u32 tc) { mmu.mmu030.setTC(tc); }
 };
 
 const CPUModel noMmuModels[] = {

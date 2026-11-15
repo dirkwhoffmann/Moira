@@ -119,8 +119,7 @@ void setupShortTables(TestCPU &cpu)
 
     cpu.mmu.mmu030.crp = rootPointer(tableA, 2);
     cpu.mmu.mmu030.srp = cpu.mmu.mmu030.crp;
-    cpu.mmu.mmu030.tc  = TC_E | TC_4K_2L;
-    cpu.updateMmuFlag();
+    cpu.mmu.mmu030.setTC(TC_E | TC_4K_2L);
 
     // Bus error vector
     cpu.write32(2 * 4, 0x1800);
@@ -130,8 +129,7 @@ TEST_CASE("Disabled")
 {
     TestCPU cpu;
     setupShortTables(cpu);
-    cpu.mmu.mmu030.tc = TC_4K_2L;                          // E bit is cleared
-    cpu.updateMmuFlag();
+    cpu.mmu.mmu030.setTC(TC_4K_2L);                          // E bit is cleared
 
     // Without the E bit, logical addresses are physical addresses
     cpu.write32(0x2004, 0xCAFEBABE);
@@ -255,8 +253,7 @@ TEST_CASE("Early Termination")
 
     // The root pointer terminates the lookup: Physical = Table address + Logical address
     cpu.mmu.mmu030.crp = cpu.mmu.mmu030.srp = rootPointer(0x20000, 1);
-    cpu.mmu.mmu030.tc  = TC_E | TC_4K_2L;
-    cpu.updateMmuFlag();
+    cpu.mmu.mmu030.setTC(TC_E | TC_4K_2L);
 
     // Move the code and the stack to the new location
     cpu.write16(0x20000 + TestCPU::codeStart, 0x2010);
@@ -325,8 +322,7 @@ TEST_CASE("Supervisor Root Pointer")
 
     // With SRE set, the supervisor uses the SRP and the user uses the CRP.
     // The user map is empty.
-    cpu.mmu.mmu030.tc  = TC_E | TC_SRE | TC_4K_2L;
-    cpu.updateMmuFlag();
+    cpu.mmu.mmu030.setTC(TC_E | TC_SRE | TC_4K_2L);
     cpu.mmu.mmu030.crp = rootPointer(tableA + 0x800, 2);   // Table without valid descriptors
 
     // Supervisor mode
@@ -415,8 +411,7 @@ TEST_CASE("Enable Disable")
     CHECK(cpu.read32(0x2100) == TC_4K_2L);
 
     // RESET disables the MMU
-    cpu.mmu.mmu030.tc = TC_E | TC_4K_2L;
-    cpu.updateMmuFlag();
+    cpu.mmu.mmu030.setTC(TC_E | TC_4K_2L);
     cpu.mmu.mmu030.crp = cpu.mmu.mmu030.srp = rootPointer(0, 1);
     cpu.run({ 0x4E70 });
     CHECK(!(cpu.mmu.mmu030.tc & TC_E));
@@ -487,8 +482,7 @@ TEST_CASE("PTest")
 {
     TestCPU cpu;
     setupShortTables(cpu);
-    cpu.mmu.mmu030.tc = TC_E | TC_4K_2L;
-    cpu.updateMmuFlag();
+    cpu.mmu.mmu030.setTC(TC_E | TC_4K_2L);
 
     // PTESTR #1,(A0),#2,A1 (user data, level 2, return the descriptor address)
     auto ptest = [&](u32 addr, bool read, int level, bool a) {

@@ -249,10 +249,6 @@ public:
      */
     void setCPModel(CPModel model);
 
-    /// Synchronizes internal state with the MMU registers. Needs to be called
-    /// if the translation control register is modified without setTC.
-    void updateMmuFlag();
-
     /// Returns the selected coprocessor (which may not be effective, see setCPModel)
     CPModel getCPModel() const { return cpModel; }
 

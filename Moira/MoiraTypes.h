@@ -594,7 +594,7 @@ static constexpr int TRACING        = (1 << 4);
 /// Triggers a trace exception when set.
 static constexpr int TRACE_EXC      = (1 << 5);
 
-/// CPU checks for pending interrupts only if this flag is set. Cleared when no interrupt is possible.
+/// CPU checks for pending interrupts. Cleared when no interrupt is possible.
 static constexpr int CHECK_IRQ      = (1 << 6);
 
 /// Enables checking for breakpoints.
@@ -606,8 +606,11 @@ static constexpr int CHECK_WP       = (1 << 8);
 /// Enables checking for catchpoints.
 static constexpr int CHECK_CP       = (1 << 9);
 
-/// Set if a faulted instruction can be restarted. This is the case if an MMU is enabled or if bus error emulation is requested (68020 and up). Keeps the fast path of execute() free of the register snapshot.
-static constexpr int RESTARTABLE    = (1 << 10);
+/// Enables register saving, so that a faulted instruction can be restarted.
+static constexpr int SAVE_REGS      = (1 << 10);
+
+/// Set while address translation is active.
+static constexpr int MMU            = (1 << 11);
 
 }
 

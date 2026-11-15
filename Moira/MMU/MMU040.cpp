@@ -32,7 +32,7 @@ MMU040::setTC(u32 value)
     // Changing the page size invalidates all translations
     atcFlush();
 
-    moira.updateMmuFlag();
+    if (isEnabled()) moira.flags |= State::MMU; else moira.flags &= ~State::MMU;
 
     if (!oldE && newE) moira.mmuDidEnable();
     if (oldE && !newE) moira.mmuDidDisable();

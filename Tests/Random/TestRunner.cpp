@@ -250,8 +250,7 @@ void TestRunner::resetMoira(Setup &s)
 
     moiracpu->mmu.mmu030.crp = s.crp;
     moiracpu->mmu.mmu030.srp = s.srp;
-    moiracpu->mmu.mmu030.tc = s.tc;
-    moiracpu->updateMmuFlag();
+    moiracpu->mmu.mmu030.setTC(s.tc);
     moiracpu->mmu.mmu030.tt0 = s.tt0;
     moiracpu->mmu.mmu030.tt1 = s.tt1;
     moiracpu->mmu.mmu030.mmusr = s.mmusr;

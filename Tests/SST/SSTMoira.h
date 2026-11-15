@@ -122,7 +122,7 @@ public:
     }
 
     // Lets bus errors restore the registers (Moira does this only if an MMU is enabled or bus error emulation is on)
-    void enableRestart() { flags |= State::RESTARTABLE; }
+    void enableRestart() { flags |= State::SAVE_REGS; }
 
     u8 dsack(u32) const override { return (wideBus || wide()) ? DSACK_32 : DSACK_16; }
 
