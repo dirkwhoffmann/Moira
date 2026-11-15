@@ -420,18 +420,10 @@ Moira::getInstrInfo(u16 op) const
 isize
 Moira::instrLength(u32 addr) const
 {
-    if constexpr (MOIRA_ENABLE_DASM) {
+    // Use the tables of the emulated CPU model (independent of the disassembler model).
 
-        // Use the CPU model instead of the DASM model for disassembly
-        bool cpuView = true;
-        
-        char tmp[128];
-        return disassembleInstr(tmp, addr, cpuView);
-
-    } else {
-
-        throw std::runtime_error("This feature requires MOIRA_ENABLE_DASM = true\n");
-    }
+    char tmp[128];
+    return disassembleInstr(tmp, addr, true);
 }
 
 void
