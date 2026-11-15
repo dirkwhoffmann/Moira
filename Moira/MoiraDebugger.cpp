@@ -438,9 +438,7 @@ Debugger::vectorName(u8 vectorNr)
 void
 Debugger::jump(u32 addr)
 {
-    moira.reg.pc = addr & ~1;
-    moira.fullPrefetch<Core::C68000, Flag::POLL>();
-    moira.reg.pc0 = moira.reg.pc - 2;
+    moira.jump(addr);
 }
 
 }

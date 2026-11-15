@@ -271,6 +271,13 @@ public:
     /// Checks if an external FPU (68881 or 68882) is attached
     bool hasExternalFPU() const;
         
+    /// Checks if a CPU model supports an instruction
+    bool isAvailable(CPUModel model, Instr I) const;
+    /// Checks if a CPU model supports an instruction with the given addressing mode and size
+    bool isAvailable(CPUModel model, Instr I, Mode M, Size S) const;
+    /// Checks if a CPU model supports an instruction with the given addressing mode, size and extension word
+    bool isAvailable(CPUModel model, Instr I, Mode M, Size S, u16 ext) const;
+
     /// Returns the address bus mask, which defines the CPU's addressable memory range
     u32 getAddrMask() const;
     
@@ -286,17 +293,27 @@ public:
     void reset();
     
     /// Executes a single instruction
-    void execute();
+    /// @returns The number of cycles that have elapsed
+    i64 execute();
 
     /// Executes instructions for the given number of cycles.
     ///
     /// Note: Since the emulator cannot stop in the middle of an instruction,
     /// the number of actually elapsed cycles may exceed the specified cycle
     /// budget.
-    void execute(i64 cycles);
+    /// @returns The number of cycles that have actually elapsed
+    i64 execute(i64 cycles);
     
     /// Executes instructions until a specific cycle count is reached.
-    void executeUntil(i64 cycle);
+    /// @returns The number of cycles that have actually elapsed
+    i64 executeUntil(i64 cycle);
+
+    /// Continues program execution at the specified address
+    ///
+    /// Unlike setPC, this function refills the prefetch queue (which causes
+    /// bus accesses and advances the clock), so that the next call to
+    /// execute() runs the instruction at the given address.
+    void jump(u32 addr);
     
     /// Checks if the CPU is in a HALT state
     bool isHalted() const { return flags & State::HALTED; }
@@ -343,9 +360,9 @@ public:
     u32 getPrevPC0() const { return reg.prev_pc0; }
     /** Sets the address of the start of the current instruction
      *
-     * Use this together with setPC when the program counter is changed from
-     * the outside, so that both values stay consistent. Debugger::jump does
-     * both.
+     * This function only changes the bookkeeping value. To redirect program
+     * execution, use jump(), which keeps the program counter, pc0 and the
+     * prefetch queue consistent.
      */
     void setPC0(u32 val) { reg.pc0 = val; }
 
@@ -419,13 +436,19 @@ public:
     void setCAAR(u32 val);
 
     /// Sets or clears supervisor mode
+    /// @note  The active stack pointer is swapped accordingly.
     void setSupervisorMode(bool value);
     
     /// Sets or clears master mode
+    /// @note  The active stack pointer is swapped accordingly.
     void setMasterMode(bool value);
     
-    /// Sets or clear the supervisor and master flags
+    /// Sets or clears the supervisor and master flags
+    /// @note  The active stack pointer is swapped accordingly.
     void setSupervisorFlags(bool s, bool m);
+
+    /// Returns a read-only view of the complete register set
+    const Registers &getRegisters() const { return reg; }
 
 
     //
@@ -443,7 +466,9 @@ public:
     // Accessing function code and interrupt pins
     //
 
-    /// Reads the current value of the function code pins
+    /// Gets the current value of the function code pins
+    /// @note  Inside a delegate that is called before a bus cycle, the pins
+    ///        still show the value of the previous cycle.
     u8 getFC() const;
 
     /// Retrieves the value on the Interrupt Priority Level (IPL) pins
@@ -481,13 +506,6 @@ public:
      * @throws std::runtime_error if the format string is invalid
      */
     std::string disassemble(const std::string &fmt, u32 addr, int *len = nullptr) const;
-
-    /// Checks if a given CPU model supports a specific instruction
-    bool isAvailable(CPUModel model, Instr I) const;
-    /// Checks if a given CPU model supports a specific instruction
-    bool isAvailable(CPUModel model, Instr I, Mode M, Size S) const;
-    /// Checks if a given CPU model supports a specific instruction
-    bool isAvailable(CPUModel model, Instr I, Mode M, Size S, u16 ext) const;
 
 
     //
@@ -556,6 +574,9 @@ protected:
     //
 
 private:
+
+    // Executes a single instruction (the body of execute())
+    void executeInstruction();
 
     // Performs a core-specific reset routine
     template <Core C> void reset();

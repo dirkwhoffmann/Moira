@@ -21,7 +21,7 @@ This page lists the API changes that require changes in client code. It is meant
 | `dump8()`, `dump16()`, `dump24()`, `dump32()` | `disassemble(fmt, addr)` with `%p`, `%b`, `%Nd` or `%Na` |
 | `disassemble(char *str, u32 addr)` | `disassemble(fmt, addr, &len)` with `"%i"`; the instruction length is returned via `len` |
 | `disassembleSR()` | `disassemble(fmt, addr)` with `%f` |
-| `setIRC()`, `setIRD()` | Set up the prefetch queue with `Debugger::jump()`, or from a subclass via the `queue` member |
+| `setIRC()`, `setIRD()` | Redirect execution with `jump()` (refills the prefetch queue), or set up the queue from a subclass via the `queue` member |
 | `setIrqMode()`, `getIrqMode()` | Implement the delegate `readIrqVector(level, &vector)` |
 | `setDasmSyntax()`, `setDasmNumberFormat()`, `setDasmLetterCase()`, `setDasmIndentation()` | `getDasmStyle()` and `setDasmStyle()` |
 | `setDumpNumberFormat()`, `setDumpIndentation()` | `getDataStyle()` and `setDataStyle()` |
@@ -38,6 +38,7 @@ This page lists the API changes that require changes in client code. It is meant
 - **Log buffer indices.** `Debugger::loggedInstructions()`, `logEntryRel()`, `logEntryAbs()` and `disassembleRecorded()` use `isize` instead of `int`.
 - **Register types.** `getSFC()`, `getDFC()`, `setSFC()` and `setDFC()` use `u8`.
 - **Caches.** `iCache` and `dCache` are public.
-- **New functions.** `getModel()`, `getDasmModel()`, `setDasmModel()`, `isStopped()`, `getEDB()`, `getDasmStyle()`, `setDasmStyle()`, `getDataStyle()`, `setDataStyle()`, `disassemble(fmt, addr, &len)`, `Debugger::disassembleRecorded()`, `Debugger::dumpLogBuffer()` and `Debugger::disassembleRange()`.
+- **Execution functions.** `execute()`, `execute(i64)` and `executeUntil(i64)` return the number of elapsed cycles instead of `void`.
+- **New functions.** `jump()`, `getRegisters()`, `getModel()`, `getDasmModel()`, `setDasmModel()`, `isStopped()`, `getEDB()`, `getDasmStyle()`, `setDasmStyle()`, `getDataStyle()`, `setDataStyle()`, `disassemble(fmt, addr, &len)`, `Debugger::disassembleRecorded()`, `Debugger::dumpLogBuffer()` and `Debugger::disassembleRange()`.
 - **Non-virtual API.** If you build with `MOIRA_VIRTUAL_API = false`, you must define all functions of the interface (see `MoiraInterface.h`), including `readIrqVector` and `willAccessBus`.
 - **New source file.** `MoiraInterface.h` has to be part of your project.

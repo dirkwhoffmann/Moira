@@ -359,8 +359,16 @@ Moira::syncCyclePenalty(int cycles)
     }
 }
 
-void
+i64
 Moira::execute()
+{
+    const i64 start = clock;
+    executeInstruction();
+    return clock - start;
+}
+
+void
+Moira::executeInstruction()
 {
     using namespace State;
 
@@ -490,16 +498,26 @@ Moira::execute()
     assert(reg.pc == reg.pc0 + 2);
 }
 
-void
+i64
 Moira::execute(i64 cycles)
 {
-    executeUntil(clock + cycles);
+    return executeUntil(clock + cycles);
+}
+
+i64
+Moira::executeUntil(i64 cycle)
+{
+    const i64 start = clock;
+    while (clock < cycle) { executeInstruction(); }
+    return clock - start;
 }
 
 void
-Moira::executeUntil(i64 cycle)
+Moira::jump(u32 addr)
 {
-    while (clock < cycle) { execute(); }
+    reg.pc = addr & ~1;
+    fullPrefetch<Core::C68000, Flag::POLL>();
+    reg.pc0 = reg.pc - 2;
 }
 
 void

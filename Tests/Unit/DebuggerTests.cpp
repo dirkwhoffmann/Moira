@@ -759,6 +759,37 @@ TEST_CASE("Model and state queries")
     END_MODELS
 }
 
+TEST_CASE("Execution return values, jump and register view")
+{
+    FOR_EACH_MODEL
+    cpu.load({ 0x4E71, 0x4E71, 0x4E71, 0x4E71 });       // NOPs
+
+    // execute() reports the elapsed cycles
+    i64 start = cpu.getClock();
+    i64 elapsed = cpu.execute();
+    CHECK(elapsed > 0);
+    CHECK(cpu.getClock() == start + elapsed);
+
+    // execute(cycles) and executeUntil() report the elapsed cycles, too
+    start = cpu.getClock();
+    elapsed = cpu.execute(1);
+    CHECK(elapsed >= 1);
+    CHECK(cpu.getClock() == start + elapsed);
+    start = cpu.getClock();
+    elapsed = cpu.executeUntil(start);
+    CHECK(elapsed == 0);
+
+    // jump() redirects execution and refills the prefetch queue
+    cpu.jump(0x1006);
+    CHECK(cpu.getPC() == 0x1006);
+    CHECK(cpu.getPC0() == 0x1006);
+
+    // The register view reflects the live state
+    cpu.setD(3, 0x12345678);
+    CHECK(cpu.getRegisters().d[3] == 0x12345678);
+    END_MODELS
+}
+
 TEST_CASE("Disassembler styles")
 {
     FOR_EACH_MODEL

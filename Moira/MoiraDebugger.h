@@ -392,7 +392,7 @@ public:
     // Changing state
     //
 
-    /// Continues program execution at the specified address
+    /// Continues program execution at the specified address (see Moira::jump)
     void jump(u32 addr);
 };
 

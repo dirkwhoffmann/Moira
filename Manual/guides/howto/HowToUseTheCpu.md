@@ -57,7 +57,7 @@ After instantiation, the CPU is ready to use. The two key functions are:
 
   Runs the CPU's internal reset procedure.
 
-- `void execute()`
+- `i64 execute()`
 
   Emulates the CPU for one instruction.
 
@@ -65,13 +65,13 @@ Make sure to reset the CPU before executing any instruction.
 
 The following functions are convenient wrappers around `execute()`:
 
-- `void execute(i64 cycles)`
+- `i64 execute(i64 cycles)`
 
   Runs the CPU for the given number of cycles. Be aware that the number of 
   actually elapsed cycles may exceed the specified cycle budget since the 
   emulator cannot stop in the middle of an instruction.
   
-- `void executeUntil(i64 cycle)`
+- `i64 executeUntil(i64 cycle)`
 
   Executes instructions until a specific cycle count is reached.
 
