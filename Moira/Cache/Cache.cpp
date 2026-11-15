@@ -84,7 +84,7 @@ Cache::burstFill(u32 logical, u32 physical, bool supervisor)
     for (int i = 0; i < 3; i++) {
 
         lw = (lw + 1) & 3;
-        insert(lbase + 4 * lw, supervisor, moira.read32((pbase + 4 * lw) & moira.addrMask()));
+        insert(lbase + 4 * lw, supervisor, moira.read32((pbase + 4 * lw) & moira.getAddrMask()));
     }
 }
 
@@ -149,7 +149,7 @@ ICache::fill(u32 base, u32 &phys)
         bool ci;
         
         // Read new value from memory
-        phys = moira.translate<Core::C68020, false, Word>(base, moira.getFC(), &ci) & moira.addrMask() & ~3;
+        phys = moira.translate<Core::C68020, false, Word>(base, moira.getFC(), &ci) & moira.getAddrMask() & ~3;
         u32 value = moira.readLongSplit<Core::C68020>(phys);
         
         // Update the cache
@@ -172,7 +172,7 @@ ICache::fetch(u32 addr, bool &busAccess, u32 &phys)
 {
     assert(emulated);
 
-    auto base = addr & moira.addrMask() & ~3;
+    auto base = addr & moira.getAddrMask() & ~3;
 
     // Check if the latch provides the information we need
     if (latch.addr == base) {
@@ -233,7 +233,7 @@ DCache::read(u32 addr, u8 fc, u32 &result)
 
     // On a miss, the MMU provides the physical address and the cache-inhibit attribute
     bool ci;
-    u32 phys = moira.translate<Core::C68020, false, Long>(addr, fc, &ci) & moira.addrMask() & ~3;
+    u32 phys = moira.translate<Core::C68020, false, Long>(addr, fc, &ci) & moira.getAddrMask() & ~3;
     if (ci) return false;
 
     // Load the entire longword, regardless of the size of the access

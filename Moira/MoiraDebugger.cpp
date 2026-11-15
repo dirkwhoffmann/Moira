@@ -307,10 +307,10 @@ Debugger::disableLogging()
     moira.flags &= ~State::LOGGING;
 }
 
-int
+isize
 Debugger::loggedInstructions() const
 {
-    return logCnt < logBufferCapacity ? (int)logCnt : logBufferCapacity;
+    return logCnt < logBufferCapacity ? logCnt : logBufferCapacity;
 }
 
 void
@@ -323,21 +323,21 @@ Debugger::logInstruction()
 }
 
 const Registers &
-Debugger::logEntryRel(int n) const
+Debugger::logEntryRel(isize n) const
 {
     assert(n < loggedInstructions());
     return logBuffer[(logCnt - 1 - n) % logBufferCapacity];
 }
 
 const Registers &
-Debugger::logEntryAbs(int n) const
+Debugger::logEntryAbs(isize n) const
 {
     assert(n < loggedInstructions());
     return logEntryRel(loggedInstructions() - n - 1);
 }
 
 std::string
-Debugger::disassembleRecorded(const std::string &fmt, int nr, int *len) const
+Debugger::disassembleRecorded(const std::string &fmt, isize nr, int *len) const
 {
     auto &entry = logEntryAbs(nr);
     return moira.disassemble(fmt, entry.pc0, entry, len);
@@ -350,7 +350,7 @@ Debugger::dumpLogBuffer(std::ostream &os, isize count, const std::string &fmt) c
 
     for (isize i = num - count; i < num ; i++) {
 
-        if (i >= 0) os << "   " << disassembleRecorded(fmt, int(i)) << std::endl;
+        if (i >= 0) os << "   " << disassembleRecorded(fmt, i) << std::endl;
     }
 }
 

@@ -195,6 +195,10 @@ public:
     
     /// Destroys the Moira instance
     virtual ~Moira();
+
+    // A Moira instance owns its jump tables and is referenced by its subcomponents
+    Moira(const Moira &) = delete;
+    Moira &operator=(const Moira &) = delete;
     
     /// Returns a version string for this release
     static std::string version();
@@ -218,6 +222,9 @@ public:
 
     /// Returns the CPU model used by the disassembler
     CPUModel getDasmModel() const { return dasmModel; }
+
+    /// Sets the CPU model used by the disassembler (the emulated CPU model is unchanged)
+    void setDasmModel(CPUModel model) { setModel(cpuModel, model); }
 
     /** Selects the coprocessor that is connected to the coprocessor interface
      *
@@ -265,10 +272,10 @@ public:
     bool hasExternalFPU() const;
         
     /// Returns the address bus mask, which defines the CPU's addressable memory range
-    u32 addrMask() const;
+    u32 getAddrMask() const;
     
     /// Returns the cache register mask, indicating the accessible CACR bits
-    u32 cacrMask() const;
+    u32 getCacrMask() const;
 
 
     //
@@ -293,6 +300,9 @@ public:
     
     /// Checks if the CPU is in a HALT state
     bool isHalted() const { return flags & State::HALTED; }
+
+    /// Checks if the CPU is in the STOP state (waiting for an interrupt or reset)
+    bool isStopped() const { return flags & State::STOPPED; }
 
 
     //

@@ -8,6 +8,7 @@
 #include "doctest.h"
 #include "Moira.h"
 #include <vector>
+#include <type_traits>
 #include <sstream>
 #include <algorithm>
 #include <cctype>
@@ -729,6 +730,32 @@ TEST_CASE("Format string disassembler")
     CHECK_THROWS_AS(cpu.disassemble("%", 0x1000), std::runtime_error);
     CHECK_THROWS_AS(cpu.disassemble("%d", 0x1000), std::runtime_error);
     CHECK_THROWS_AS(cpu.disassemble("%8d", 0x1000), std::runtime_error);
+    END_MODELS
+}
+
+TEST_CASE("Moira instances cannot be copied")
+{
+    static_assert(!std::is_copy_constructible_v<Moira>);
+    static_assert(!std::is_copy_assignable_v<Moira>);
+}
+
+TEST_CASE("Model and state queries")
+{
+    FOR_EACH_MODEL
+    CHECK(cpu.getModel() == model);
+    CHECK(cpu.getDasmModel() == model);
+
+    // The disassembler model can be changed on its own
+    cpu.setDasmModel(CPUModel::M68040);
+    CHECK(cpu.getModel() == model);
+    CHECK(cpu.getDasmModel() == CPUModel::M68040);
+
+    // STOP
+    cpu.load({ 0x4E72, 0x2700 });               // STOP #$2700
+    CHECK(!cpu.isStopped());
+    cpu.step();
+    CHECK(cpu.isStopped());
+    CHECK(!cpu.isHalted());
     END_MODELS
 }
 

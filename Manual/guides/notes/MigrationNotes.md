@@ -7,6 +7,7 @@ This page lists the API changes that require changes in client code. It is meant
 | Old | New |
 |:----|:----|
 | `readFC()` | `getFC()` |
+| `addrMask()`, `cacrMask()` | `getAddrMask()`, `getCacrMask()` |
 | `hasInternalFpu()`, `hasExternalFpu()` | `hasInternalFPU()`, `hasExternalFPU()` |
 | `cpuDidReset()`, `cpuDidHalt()` | `didResetCPU()`, `didHaltCPU()` |
 | `mmuDidEnable()`, `mmuDidDisable()` | `didEnableMMU()`, `didDisableMMU()` |
@@ -32,8 +33,10 @@ This page lists the API changes that require changes in client code. It is meant
 - **`pc0`.** `getPC0()` returns the start of the instruction that is currently executing and the next instruction between instructions. `getPrevPC0()` returns the instruction executed before.
 - **Interrupt acknowledge and CPU space cycles.** Cycles with FC = 7 are announced with `willExecute(CpuSpaceType, u8)` and `didExecute(CpuSpaceType, u8)`. While the delegate runs, `getFC()` still returns the value of the previous cycle.
 - **Bus operands.** The optional delegate `willAccessBus(addr, size, write)` reports data operand accesses. It is only called if `MOIRA_REPORT_BUS_ACCESS` is enabled.
+- **Copying.** `Moira` instances cannot be copied.
+- **Log buffer indices.** `Debugger::loggedInstructions()`, `logEntryRel()`, `logEntryAbs()` and `disassembleRecorded()` use `isize` instead of `int`.
 - **Register types.** `getSFC()`, `getDFC()`, `setSFC()` and `setDFC()` use `u8`.
 - **Caches.** `iCache` and `dCache` are public.
-- **New functions.** `getModel()`, `getDasmModel()`, `getEDB()`, `getDasmStyle()`, `setDasmStyle()`, `getDataStyle()`, `setDataStyle()`, `disassemble(fmt, addr, &len)`, `Debugger::disassembleRecorded()`, `Debugger::dumpLogBuffer()` and `Debugger::disassembleRange()`.
+- **New functions.** `getModel()`, `getDasmModel()`, `setDasmModel()`, `isStopped()`, `getEDB()`, `getDasmStyle()`, `setDasmStyle()`, `getDataStyle()`, `setDataStyle()`, `disassemble(fmt, addr, &len)`, `Debugger::disassembleRecorded()`, `Debugger::dumpLogBuffer()` and `Debugger::disassembleRange()`.
 - **Non-virtual API.** If you build with `MOIRA_VIRTUAL_API = false`, you must define all functions of the interface (see `MoiraInterface.h`), including `readIrqVector` and `willAccessBus`.
 - **New source file.** `MoiraInterface.h` has to be part of your project.

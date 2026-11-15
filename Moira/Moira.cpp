@@ -109,7 +109,7 @@ Moira::setModel(CPUModel cpu, CPUModel dasm)
 
         createJumpTable(cpuModel, dasmModel);
 
-        reg.cacr &= cacrMask();
+        reg.cacr &= getCacrMask();
         iCache.reset(cpuModel);
         dCache.reset(cpuModel);
         
@@ -227,7 +227,7 @@ Moira::hasFPU() const
 }
 
 u32
-Moira::addrMask() const
+Moira::getAddrMask() const
 {
     switch (cpuModel) {
 
@@ -240,7 +240,7 @@ Moira::addrMask() const
 }
 
 u32
-Moira::cacrMask() const
+Moira::getCacrMask() const
 {
     switch (cpuModel) {
 
@@ -725,7 +725,7 @@ Moira::setCACR(u32 val)
     iCache.cacrDidChange(val);
     dCache.cacrDidChange(val);
 
-    reg.cacr = val & cacrMask();
+    reg.cacr = val & getCacrMask();
     iCache.refresh();
     dCache.refresh();
     didChangeCACR(val);

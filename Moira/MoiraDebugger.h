@@ -338,16 +338,16 @@ public:
     void disableLogging();
 
     /// Returns the number of logged instructions
-    int loggedInstructions() const;
+    isize loggedInstructions() const;
 
     /// Logs an instruction
     void logInstruction();
 
     /// Reads an item from the log buffer (n == 0 returns the most recently recorded entry)
-    const Registers &logEntryRel(int n) const;
+    const Registers &logEntryRel(isize n) const;
 
     /// Reads an item from the log buffer (n == 0 returns the oldest entry)
-    const Registers &logEntryAbs(int n) const;
+    const Registers &logEntryAbs(isize n) const;
 
     /// Clears the log buffer
     void clearLog() { logCnt = 0; }
@@ -361,7 +361,7 @@ public:
      * @param nr   The index of the log entry (0 is the oldest entry)
      * @param len  If provided, receives the length of the instruction in bytes
      */
-    std::string disassembleRecorded(const std::string &fmt, int nr, int *len = nullptr) const;
+    std::string disassembleRecorded(const std::string &fmt, isize nr, int *len = nullptr) const;
 
     /// Prints the most recent entries of the log buffer
     /// @param os     The output stream

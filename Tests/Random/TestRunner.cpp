@@ -160,7 +160,7 @@ void TestRunner::setupTestEnvironment(Setup &s, long round)
     s.vbr = cpuModel == CPUModel::M68000 ? 0 : u16(randomizer.rand() & ~1);
     s.sfc = u16(randomizer.rand());
     s.dfc = u16(randomizer.rand());
-    s.cacr = randomizer.rand() & moiracpu->cacrMask();
+    s.cacr = randomizer.rand() & moiracpu->getCacrMask();
     s.caar = randomizer.rand();
 
     // The FPU and MMU registers are set by setupFpuEnvironment() and the MMU tests. All other
