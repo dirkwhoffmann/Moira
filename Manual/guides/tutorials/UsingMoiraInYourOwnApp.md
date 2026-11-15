@@ -61,7 +61,7 @@ In `CPU.cpp`, you'll find the implementations of all Moira functions that intera
 
 ```c++
 void
-Moira::cpuDidReset()
+Moira::didResetCPU()
 {
 
 }

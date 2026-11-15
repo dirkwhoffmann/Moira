@@ -8,6 +8,9 @@
 #include "doctest.h"
 #include "Moira.h"
 #include <vector>
+#include <sstream>
+#include <algorithm>
+#include <cctype>
 
 using namespace moira;
 
@@ -684,6 +687,111 @@ TEST_CASE("Every vector has a name")
     CHECK(Debugger::vectorName(26) == "Level 2 interrupt");
     CHECK(Debugger::vectorName(32) == "Trap #0");
     CHECK(Debugger::vectorName(255) == "User interrupt vector");
+}
+
+//
+// Disassembling
+//
+
+static std::string lower(std::string s)
+{
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
+    return s;
+}
+
+TEST_CASE("Format string disassembler")
+{
+    FOR_EACH_MODEL
+    cpu.load({ 0x7005, 0x4E71 });               // MOVEQ #5,D0 ; NOP
+    cpu.setD(3, 0x12345678);
+    cpu.setA(2, 0x00ABCDEF);
+
+    int len = 0;
+    auto s = lower(cpu.disassemble("%i", 0x1000, &len));
+    CHECK(len == 2);
+    CHECK(s.find("moveq") != std::string::npos);
+
+    // Directives and literal text
+    CHECK(cpu.disassemble("[%p]", 0x1000).front() == '[');
+    CHECK(cpu.disassemble("[%p]", 0x1000).back() == ']');
+    CHECK(lower(cpu.disassemble("%3d", 0x1000)).find("12345678") != std::string::npos);
+    CHECK(lower(cpu.disassemble("%2a", 0x1000)).find("00abcdef") != std::string::npos);
+    CHECK(cpu.disassemble("%b", 0x1000, &len).size() > 0);
+    CHECK(len == 2);
+    CHECK(!cpu.disassemble("%f", 0x1000).empty());
+
+    // A number in front of a directive pads the output
+    CHECK(cpu.disassemble("%20i", 0x1000).size() == 20);
+    CHECK(cpu.disassemble("%20i|", 0x1000).back() == '|');
+
+    // Invalid format strings
+    CHECK_THROWS_AS(cpu.disassemble("%x", 0x1000), std::runtime_error);
+    CHECK_THROWS_AS(cpu.disassemble("%", 0x1000), std::runtime_error);
+    CHECK_THROWS_AS(cpu.disassemble("%d", 0x1000), std::runtime_error);
+    CHECK_THROWS_AS(cpu.disassemble("%8d", 0x1000), std::runtime_error);
+    END_MODELS
+}
+
+TEST_CASE("Disassembling recorded instructions")
+{
+    FOR_EACH_MODEL
+    cpu.load({ 0x7005, 0x7007, 0x4E71 });
+    cpu.debugger.enableLogging();
+    cpu.step(3);
+    REQUIRE(cpu.debugger.loggedInstructions() == 3);
+
+    // Registers are taken from the log entry, not from the current CPU state
+    CHECK(lower(cpu.disassembleRecorded("%0d", 0)).find("00000000") != std::string::npos);
+    CHECK(lower(cpu.disassembleRecorded("%0d", 1)).find("00000005") != std::string::npos);
+    CHECK(lower(cpu.disassembleRecorded("%0d", 2)).find("00000007") != std::string::npos);
+
+    int len = 0;
+    auto s = lower(cpu.disassembleRecorded("%i", 1, &len));
+    CHECK(len == 2);
+    CHECK(s.find("moveq") != std::string::npos);
+    END_MODELS
+}
+
+TEST_CASE("Dumping the log buffer and disassembling a range")
+{
+    FOR_EACH_MODEL
+    cpu.load({ 0x7005, 0x7007, 0x4E71 });
+    cpu.debugger.enableLogging();
+    cpu.step(3);
+
+    auto lines = [](const std::string &str) {
+        std::vector<std::string> out; std::istringstream is(str); std::string l;
+        while (std::getline(is, l)) out.push_back(l);
+        return out;
+    };
+
+    // The log buffer: one line per entry, newest entries last
+    std::ostringstream all, last;
+    cpu.debugger.dumpLogBuffer(all);
+    cpu.debugger.dumpLogBuffer(last, 2);
+    CHECK(lines(all.str()).size() == 3);
+    CHECK(lines(last.str()).size() == 2);
+    CHECK(lines(all.str()).back() == lines(last.str()).back());
+
+    // A range: The current instruction and breakpoints are marked
+    cpu.debugger.jump(0x1000);
+    cpu.debugger.breakpoints.setAt(0x1002);
+    std::ostringstream range;
+    cpu.debugger.disassembleRange(range, 0x1000, 3);
+    auto r = lines(range.str());
+    REQUIRE(r.size() == 3);
+    CHECK(r[0].substr(0, 3) == "-> ");
+    CHECK(r[1].substr(0, 3) == "  B");
+    CHECK(r[2].substr(0, 3) == "   ");
+
+    // Disabled breakpoints show up as 'b'
+    cpu.debugger.breakpoints.disableAt(0x1002);
+    std::ostringstream range2;
+    cpu.debugger.disassembleRange(range2, std::pair<u32, u32>(0x1000, 0x1002));
+    auto r2 = lines(range2.str());
+    REQUIRE(r2.size() == 2);
+    CHECK(r2[1].substr(0, 3) == "  b");
+    END_MODELS
 }
 
 TEST_CASE("jump() continues at an arbitrary address")

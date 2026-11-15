@@ -336,6 +336,54 @@ Debugger::logEntryAbs(int n) const
     return logEntryRel(loggedInstructions() - n - 1);
 }
 
+void
+Debugger::dumpLogBuffer(std::ostream &os, isize count) const
+{
+    isize num = loggedInstructions();
+
+    for (isize i = num - count; i < num ; i++) {
+
+        if (i >= 0) os << "   " << moira.disassembleRecorded("%p  %f  %i", int(i)) << std::endl;
+    }
+}
+
+void
+Debugger::dumpLogBuffer(std::ostream &os) const
+{
+    dumpLogBuffer(os, loggedInstructions());
+}
+
+void
+Debugger::disassembleRange(std::ostream &os, u32 addr, isize count) const
+{
+    disassembleRange(os, std::pair<u32, u32>(addr, UINT32_MAX), count);
+}
+
+void
+Debugger::disassembleRange(std::ostream &os, std::pair<u32, u32> range, isize max) const
+{
+    u32 addr = range.first;
+    int numBytes = 0;
+    auto pc = moira.getPC0();
+
+    for (isize i = 0; i < max && addr <= range.second; i++, addr += u32(numBytes)) {
+
+        auto line = moira.disassemble("%p  %15b   %i", addr, &numBytes);
+
+        os << (addr == pc ? "->" : "  ");
+
+        if (breakpoints.isDisabledAt(addr)) {
+            os << "b";
+        } else if (breakpoints.isSetAt(addr)) {
+            os << "B";
+        } else {
+            os << " ";
+        }
+
+        os << line << std::endl;
+    }
+}
+
 std::string
 Debugger::vectorName(u8 vectorNr)
 {

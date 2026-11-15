@@ -134,8 +134,8 @@ MMU030::setTC(u32 value)
 
     if (isEnabled()) moira.flags |= State::MMU; else moira.flags &= ~State::MMU;
 
-    if (!oldE && newE) moira.mmuDidEnable();
-    if (oldE && !newE) moira.mmuDidDisable();
+    if (!oldE && newE) moira.didEnableMMU();
+    if (oldE && !newE) moira.didDisableMMU();
 }
 
 void

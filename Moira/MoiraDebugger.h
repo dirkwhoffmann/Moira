@@ -10,6 +10,8 @@
 #include "MoiraTypes.h"
 #include "StrWriter.h"
 #include <unordered_map>
+#include <ostream>
+#include <utility>
 
 namespace MOIRA_NAMESPACE {
 
@@ -349,6 +351,28 @@ public:
 
     /// Clears the log buffer
     void clearLog() { logCnt = 0; }
+
+    /// Prints the most recent entries of the log buffer
+    /// @param os     The output stream
+    /// @param count  The number of entries to print
+    void dumpLogBuffer(std::ostream &os, isize count) const;
+
+    /// Prints the whole log buffer
+    void dumpLogBuffer(std::ostream &os) const;
+
+
+    //
+    // Disassembling memory
+    //
+
+    /// Disassembles a number of instructions starting at the given address
+    /// @note  Marks the instruction at the program counter with "->" and
+    ///        marks breakpoints with "B" (enabled) or "b" (disabled).
+    void disassembleRange(std::ostream &os, u32 addr, isize count) const;
+
+    /// Disassembles an address range
+    /// @param max  Stops after the given number of instructions
+    void disassembleRange(std::ostream &os, std::pair<u32, u32> range, isize max = 255) const;
 
 
     //

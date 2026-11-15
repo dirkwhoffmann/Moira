@@ -83,16 +83,16 @@ MOIRA_DEFAULT(IrqMode readIrqVector(u8 level, u8 *vector) const, return IrqMode:
 //
 
 /// Called when the CPU is reset
-MOIRA_DELEGATE(void cpuDidReset())
+MOIRA_DELEGATE(void didResetCPU())
 
 /// Called when the CPU enters the HALT state
-MOIRA_DELEGATE(void cpuDidHalt())
+MOIRA_DELEGATE(void didHaltCPU())
 
 /// Called when the MMU is enabled
-MOIRA_DELEGATE(void mmuDidEnable())
+MOIRA_DELEGATE(void didEnableMMU())
 
 /// Called when the MMU is disabled
-MOIRA_DELEGATE(void mmuDidDisable())
+MOIRA_DELEGATE(void didDisableMMU())
 
 
 //

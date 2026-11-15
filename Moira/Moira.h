@@ -470,6 +470,37 @@ public:
     /// Returns instruction metadata for a given opcode
     InstrInfo getInstrInfo(u16 op) const;
 
+    /** Disassembles an instruction according to a format string
+     *
+     * The following directives are supported:
+     *
+     *   %p  Instruction address
+     *   %b  Instruction words
+     *   %i  Instruction
+     *   %f  Status register flags
+     *   %Nd Data register DN (N = 0 ... 7)
+     *   %Na Address register AN (N = 0 ... 7)
+     *
+     * A number in front of %p, %b, %i, or %f pads the output with spaces to
+     * the given width. The register directives print the current register
+     * values. All other characters are copied to the output.
+     *
+     * @param fmt   The format string
+     * @param addr  The address of the instruction
+     * @param len   If provided, receives the length of the instruction in bytes
+     * @throws std::runtime_error if the format string is invalid
+     */
+    std::string disassemble(const std::string &fmt, u32 addr, int *len = nullptr) const;
+
+    /** Disassembles an instruction from the log buffer
+     *
+     * Works like disassemble, but prints the register values recorded when
+     * the instruction was logged (see Debugger::enableLogging).
+     *
+     * @param nr  The index of the log entry (0 is the oldest entry)
+     */
+    std::string disassembleRecorded(const std::string &fmt, int nr, int *len = nullptr) const;
+
     /// Checks if a given CPU model supports a specific instruction
     bool isAvailable(CPUModel model, Instr I) const;
     /// Checks if a given CPU model supports a specific instruction
@@ -638,6 +669,16 @@ private:
     u16 availabilityMask(Instr I) const;
     u16 availabilityMask(Instr I, Mode M, Size S) const;
     u16 availabilityMask(Instr I, Mode M, Size S, u16 ext) const;
+
+
+    //
+    // Disassembling (internal)
+    //
+
+private:
+
+    // Implements the format-string disassembler
+    std::string disassemble(const std::string &fmt, u32 addr, const Registers &regs, int *len) const;
 
 
     //

@@ -6,11 +6,11 @@ The Moira class defines various delegation functions that are triggered on speci
 
 The following functions are called when the CPU enters specific states:
 
-- `void cpuDidReset()`
+- `void didResetCPU()`
 
     Invoked at the end of the `reset()` routine. 
 
-- `void cpuDidHalt()`
+- `void didHaltCPU()`
 
     Called when the CPU is halted, e.g., after a double-fault.
 

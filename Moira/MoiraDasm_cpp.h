@@ -2084,3 +2084,70 @@ Moira::dasmMove16AlAi(StrWriter &str, u32 &addr, u16 op, Instr I, Mode M, Size S
 
 #include "MoiraDasmMMU_cpp.h"
 #include "MoiraDasmFPU_cpp.h"
+
+std::string
+Moira::disassemble(const std::string &fmt, u32 addr, int *len) const
+{
+    return disassemble(fmt, addr, reg, len);
+}
+
+std::string
+Moira::disassembleRecorded(const std::string &fmt, int nr, int *len) const
+{
+    auto &entry = debugger.logEntryAbs(nr);
+    return disassemble(fmt, entry.pc0, entry, len);
+}
+
+std::string
+Moira::disassemble(const std::string &fmt, u32 addr, const Registers &regs, int *len) const
+{
+    std::string result;
+    char buffer[256];
+
+    // The instruction length is only computed if it is needed
+    int bytes = -1;
+    auto length = [&]() {
+
+        if (bytes < 0) { char tmp[128]; bytes = disassemble(tmp, addr); }
+        return bytes;
+    };
+
+    for (size_t i = 0; i < fmt.size(); i++) {
+
+        if (fmt[i] != '%') { result += fmt[i]; continue; }
+
+        // Parse the number in front of the directive
+        int num = 0; bool hasNum = false;
+        while (++i < fmt.size() && isdigit((unsigned char)fmt[i])) { num = 10 * num + (fmt[i] - '0'); hasNum = true; }
+        if (i >= fmt.size()) throw std::runtime_error("A directive is expected after %");
+
+        // Pads the output to the requested width
+        auto pad = [&](const char *text) {
+
+            result += text;
+            for (int n = int(strlen(text)); n < num; n++) result += ' ';
+        };
+
+        switch (fmt[i]) {
+
+            case 'p': dump24(buffer, addr); pad(buffer); break;
+            case 'b': dump16(buffer, addr, length() / 2); pad(buffer); break;
+            case 'i': bytes = disassemble(buffer, addr); pad(buffer); break;
+            case 'f': disassembleSR(buffer, regs.sr); pad(buffer); break;
+
+            case 'd':
+            case 'a':
+
+                if (!hasNum || num > 7) throw std::runtime_error("0...7 is expected in front of d or a");
+                dump32(buffer, fmt[i] == 'd' ? regs.d[num] : regs.a[num]);
+                result += buffer;
+                break;
+
+            default:
+                throw std::runtime_error(std::string("p, b, i, f, d, or a is expected after %, not ") + fmt[i]);
+        }
+    }
+
+    if (len) *len = length();
+    return result;
+}

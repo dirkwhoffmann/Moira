@@ -11,6 +11,8 @@
 
 #include <cassert>
 #include <cstdio>
+#include <cstring>
+#include <cctype>
 #include <algorithm>
 #include <cmath>
 #include <bit>
@@ -321,7 +323,7 @@ Moira::reset()
     debugger.reset();
 
     // Inform the delegate
-    cpuDidReset();
+    didResetCPU();
 }
 
 void
@@ -656,7 +658,7 @@ Moira::halt()
     reg.pc = reg.pc0 + 2;
 
     // Inform the delegate
-    cpuDidHalt();
+    didHaltCPU();
 }
 
 u8

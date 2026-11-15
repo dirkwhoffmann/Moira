@@ -47,8 +47,8 @@ public:
     void write16(u32 addr, u16 val) const override { write8(addr, val >> 8); write8(addr + 1, val & 0xFF); }
     void write32(u32 addr, u32 val) const override { write16(addr, val >> 16); write16(addr + 2, val & 0xFFFF); }
 
-    void mmuDidEnable() override { enabled++; }
-    void mmuDidDisable() override { disabled++; }
+    void didEnableMMU() override { enabled++; }
+    void didDisableMMU() override { disabled++; }
 
     static constexpr u32 codeStart = 0x1000;
     static constexpr u32 stackStart = 0x0F00;
