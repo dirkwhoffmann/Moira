@@ -631,6 +631,7 @@
 		1654296120AA412377E9642D /* MoiraCore68020.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MoiraCore68020.cpp; sourceTree = "<group>"; };
 		38037577E0C9EA87178FAF59 /* MoiraCore_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraCore_cpp.h; sourceTree = "<group>"; };
 		50032B4823BCA8D600959BEC /* MoiraInit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraInit.h; sourceTree = "<group>"; };
+		7A1C0E5F2B3D4A6E8F901234 /* MoiraInterface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoiraInterface.h; sourceTree = "<group>"; };
 		5010BDAC238A897400CFD010 /* StrWriter_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StrWriter_cpp.h; sourceTree = "<group>"; };
 		5010BDAD238A897400CFD010 /* StrWriter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StrWriter.h; sourceTree = "<group>"; };
 		5028B102288D9EC000047C20 /* musashi_mamesf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = musashi_mamesf.h; sourceTree = "<group>"; };
@@ -1421,6 +1422,7 @@
 				1654296120AA412377E9642D /* MoiraCore68020.cpp */,
 				38037577E0C9EA87178FAF59 /* MoiraCore_cpp.h */,
 				50032B4823BCA8D600959BEC /* MoiraInit.h */,
+				7A1C0E5F2B3D4A6E8F901234 /* MoiraInterface.h */,
 				50804F4B23891893004D3EC2 /* MoiraInit_cpp.h */,
 				50BF14CA23BB4D2700EDFB9C /* MoiraALU.h */,
 				50804F4923891480004D3EC2 /* MoiraALU_cpp.h */,
