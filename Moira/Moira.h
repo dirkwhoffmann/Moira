@@ -252,9 +252,6 @@ public:
     /// Returns the selected coprocessor (which may not be effective, see setCPModel)
     CPModel getCPModel() const { return cpModel; }
 
-    /// Checks if a model provides a coprocessor interface (to attach a 6888x)
-    static bool hasCPI(CPUModel model);
-
     /// Checks if the FPU is built into the CPU (68040)
     bool isInternalFpu() const;
 
@@ -295,13 +292,20 @@ private:
     
 public:
     
+    /// Checks if a model provides a coprocessor interface
+    static bool hasCPI(CPUModel model);
+
+    /// Checks if a given CPU model has a built-in memory management unit
+    static bool hasMMU(CPUModel model);
+
+    /// Checks if a given CPU model has a built-in floating-point unit
+    static bool hasFPU(CPUModel model);
+    
     /// Checks if the emulated CPU model has a coprocessor interface
     bool hasCPI() const;
     
     /// Checks if the emulated CPU model has a memory management unit (MMU)
     bool hasMMU() const;
-    /// Checks if a given CPU model has a memory management unit (MMU)
-    static bool hasMMU(CPUModel model);
     
     /// Checks if the emulated system has a floating-point unit (built-in or external)
     bool hasFPU() const;

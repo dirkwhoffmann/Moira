@@ -172,14 +172,11 @@ Moira::setCPModel(CPModel model)
 bool
 Moira::hasCPI(CPUModel model)
 {
-    switch (model) {
-
-        case CPUModel::M68EC020:
-        case CPUModel::M68020:
-        case CPUModel::M68EC030:
-        case CPUModel::M68030:     return true;
-        default:                return false;
-    }
+    return
+    model == CPUModel::M68EC020 ||
+    model == CPUModel::M68020 ||
+    model == CPUModel::M68EC030 ||
+    model == CPUModel::M68030;
 }
 
 bool
@@ -238,14 +235,15 @@ Moira::hasCPI() const
 bool
 Moira::hasMMU(CPUModel model)
 {
-    switch (model) {
+    return
+    model == CPUModel::M68030 ||
+    model == CPUModel::M68LC040 ||
+    model == CPUModel::M68040;
+}
 
-        case CPUModel::M68030: case CPUModel::M68LC040: case CPUModel::M68040:
-            return true;
-
-        default:
-            return false;
-    }
+static bool hasFPU(CPUModel model)
+{
+    return model == CPUModel::M68040;
 }
 
 bool
