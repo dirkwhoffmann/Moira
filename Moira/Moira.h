@@ -182,11 +182,15 @@ private:
     
     
     //
+    // Public API
+    //
+
+public:
+
+    //
     // Constructing
     //
-    
-public:
-    
+
     /// Constructs and initializes a Moira instance
     Moira();
     
@@ -198,39 +202,12 @@ public:
 
     /// Returns a build number string for this release
     static std::string build();
-    
-protected:
-    
-    // Creates or updates the jump tables for execution and disassembly
-    void createJumpTable(CPUModel cpuModel, CPUModel dasmModel);
-    
-    // Creates the jump tables for execution and disassembly with the same model
-    void createJumpTable(CPUModel model) { createJumpTable(model, model); }
-    
-private:
-    
-    // Core routines for creating jump tables    
-    template <Core C> void createJumpTable(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable1(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable2(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable3(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable4(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable5(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable6(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable7(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable8(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable9(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable10(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable11(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable12(CPUModel model, bool registerDasm);
-    
-    
+
+
     //
     // Configuring
     //
-    
-public:
-    
+
     /// Sets the emulated CPU model and the model used by the disassembler
     void setModel(CPUModel cpuModel, CPUModel dasmModel);
     
@@ -269,22 +246,7 @@ public:
     
     /// Sets the indentation for data dumps
     void setDumpIndentation(int value) { dataStyle.tab = value; }
-    
-private:
-    
-    // Configures the FPU and MMU to match the emulated CPU configuration
-    void configureUnits();
 
-    // Helper function
-    void setNumberFormat(DasmStyle &style, const DasmNumberFormat &value);
-    
-    
-    //
-    // Querying CPU properties
-    //
-    
-public:
-    
     /// Checks if the emulated CPU has a coprocessor interface (CPI)
     bool hasCPI() const;
     
@@ -306,18 +268,11 @@ public:
     /// Returns the cache register mask, indicating the accessible CACR bits
     u32 cacrMask() const;
 
-protected:
-    
-    // Returns the address bus mask for a specific CPU core type
-    template <Core C> u32 addrMask() const;
-    
-    
+
     //
     // Running the CPU
     //
-    
-public:
-    
+
     /// Performs a hard reset, simulating the native power-up sequence
     void reset();
     
@@ -336,85 +291,12 @@ public:
     
     /// Checks if the CPU is in a HALT state
     bool isHalted() const { return flags & State::HALTED; }
-    
-private:
-    
-    // Performs a core-specific reset routine
-    template <Core C> void reset();
-    
-    // Puts the CPU into a HALT state, stopping execution
-    void halt();
-    
-    
-    //
-    // Running the disassembler
-    //
-    
-public:
-    
-    /// Disassembles an instruction and returns the instruction size in bytes
-    int disassemble(char *str, u32 addr) const;
-    
-    /// Creates a textual representation of the status register
-    void disassembleSR(char *str) const { disassembleSR(str, reg.sr); }
-    
-    /// Creates a textual representation of a given status register
-    void disassembleSR(char *str, const StatusRegister &sr) const;
-    
-    /// Converts an integer value to a textual representation
-    void dump8(char *str, u8 value) const;
-    /// Converts an integer value to a textual representation
-    void dump16(char *str, u16 value) const;
-    /// Converts an integer value to a textual representation
-    void dump24(char *str, u32 value) const;
-    /// Converts an integer value to a textual representation
-    void dump32(char *str, u32 value) const;
-    
-    /// Converts multiple 16-bit values to a textual representation
-    void dump16(char *str, u16 values[], int cnt) const;
-    /// Converts multiple 16-bit values to a textual representation
-    void dump16(char *str, u32 addr, int cnt) const;
-    
-    /// Returns instruction metadata for a given opcode
-    InstrInfo getInstrInfo(u16 op) const;
-
-    
-    //
-    // Clock
-    //
-    
-public:
-    
-    /// Returns the current CPU clock cycle count (elapsed cycles since power-up)
-    i64 getClock() const { return clock; }
-    
-    /// Sets the CPU clock cycle count
-    void setClock(i64 val) { clock = val; }
-
-
-protected:
-
-    /* Advances the clock by the cycle count computed for a 68020 instruction.
-     *
-     * Cache hits on instruction fetches are modelled as cycle discounts (see
-     * readInstructionWord), so the resulting count may be zero or negative.
-     * Since the environment can only advance in whole bus cycles, the time is
-     * accumulated until at least one bus cycle is available. This preserves the
-     * full cache discount.
-     *
-     * If no bus cycle is accumulated for maxStalled consecutive instructions,
-     * one cycle is borrowed to ensure progress. Since the environment is stepped
-     * only here, failing to do so would stall the emulation indefinitely.
-     */
-    void syncCyclePenalty(int cycles);
 
 
     //
-    // Registers
+    // Accessing registers
     //
-    
-public:
-    
+
     /// Gets the value of a data register (0 - 7)
     u32 getD(int n) const { return readD(n); }
     /// Sets the value of a data register (0 - 7)
@@ -519,9 +401,180 @@ public:
     /// Sets or clear the supervisor and master flags
     void setSupervisorFlags(bool s, bool m);
 
+
+    //
+    // Accessing the clock
+    //
+
+    /// Returns the current CPU clock cycle count (elapsed cycles since power-up)
+    i64 getClock() const { return clock; }
     
+    /// Sets the CPU clock cycle count
+    void setClock(i64 val) { clock = val; }
+
+
+    //
+    // Accessing function code and interrupt pins
+    //
+
+    /// Reads the current value of the function code pins
+    u8 readFC() const;
+
+    /// Retrieves the value on the Interrupt Priority Level (IPL) pins
+    u8 getIPL() const { return ipl; }
+    
+    /// Sets the value on the Interrupt Priority Level (IPL) pins
+    void setIPL(u8 val);
+
+
+    //
+    // Disassembling
+    //
+
+    /// Disassembles an instruction and returns the instruction size in bytes
+    int disassemble(char *str, u32 addr) const;
+    
+    /// Creates a textual representation of the status register
+    void disassembleSR(char *str) const { disassembleSR(str, reg.sr); }
+    
+    /// Creates a textual representation of a given status register
+    void disassembleSR(char *str, const StatusRegister &sr) const;
+    
+    /// Converts an integer value to a textual representation
+    void dump8(char *str, u8 value) const;
+    /// Converts an integer value to a textual representation
+    void dump16(char *str, u16 value) const;
+    /// Converts an integer value to a textual representation
+    void dump24(char *str, u32 value) const;
+    /// Converts an integer value to a textual representation
+    void dump32(char *str, u32 value) const;
+    
+    /// Converts multiple 16-bit values to a textual representation
+    void dump16(char *str, u16 values[], int cnt) const;
+    /// Converts multiple 16-bit values to a textual representation
+    void dump16(char *str, u32 addr, int cnt) const;
+    
+    /// Returns instruction metadata for a given opcode
+    InstrInfo getInstrInfo(u16 op) const;
+
+    /// Retrieves the availability mask for a given instruction
+    u16 availabilityMask(Instr I) const;
+    /// Retrieves the availability mask for a given instruction
+    u16 availabilityMask(Instr I, Mode M, Size S) const;
+    /// Retrieves the availability mask for a given instruction
+    u16 availabilityMask(Instr I, Mode M, Size S, u16 ext) const;
+    
+    /// Checks if a given CPU model supports a specific instruction
+    bool isAvailable(CPUModel model, Instr I) const;
+    /// Checks if a given CPU model supports a specific instruction
+    bool isAvailable(CPUModel model, Instr I, Mode M, Size S) const;
+    /// Checks if a given CPU model supports a specific instruction
+    bool isAvailable(CPUModel model, Instr I, Mode M, Size S, u16 ext) const;
+
+
+    //
+    // Interfacing with other components
+    //
+
+protected:
+
+#include "MoiraInterface.h"
+
+
+    //
+    // Internals
+    //
+
+
+    //
+    // Constructing (internal)
+    //
+
+protected:
+
+    // Creates or updates the jump tables for execution and disassembly
+    void createJumpTable(CPUModel cpuModel, CPUModel dasmModel);
+    
+    // Creates the jump tables for execution and disassembly with the same model
+    void createJumpTable(CPUModel model) { createJumpTable(model, model); }
+
 private:
+
+    // Core routines for creating jump tables    
+    template <Core C> void createJumpTable(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable1(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable2(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable3(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable4(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable5(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable6(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable7(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable8(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable9(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable10(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable11(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable12(CPUModel model, bool registerDasm);
+
+
+    //
+    // Configuring (internal)
+    //
+
+private:
+
+    // Configures the FPU and MMU to match the emulated CPU configuration
+    void configureUnits();
+
+    // Helper function
+    void setNumberFormat(DasmStyle &style, const DasmNumberFormat &value);
+
+
+protected:
+
+    // Returns the address bus mask for a specific CPU core type
+    template <Core C> u32 addrMask() const;
+
+
+    //
+    // Running the CPU (internal)
+    //
+
+private:
+
+    // Performs a core-specific reset routine
+    template <Core C> void reset();
     
+    // Puts the CPU into a HALT state, stopping execution
+    void halt();
+
+
+    //
+    // Clock (internal)
+    //
+
+protected:
+
+    /* Advances the clock by the cycle count computed for a 68020 instruction.
+     *
+     * Cache hits on instruction fetches are modelled as cycle discounts (see
+     * readInstructionWord), so the resulting count may be zero or negative.
+     * Since the environment can only advance in whole bus cycles, the time is
+     * accumulated until at least one bus cycle is available. This preserves the
+     * full cache discount.
+     *
+     * If no bus cycle is accumulated for maxStalled consecutive instructions,
+     * one cycle is borrowed to ensure progress. Since the environment is stepped
+     * only here, failing to do so would stall the emulation indefinitely.
+     */
+    void syncCyclePenalty(int cycles);
+
+
+    //
+    // Registers (internal)
+    //
+
+private:
+
     // Enables or disables trace mode (T1 flag)
     void setTraceFlag() { reg.sr.t1 = true; flags |= State::TRACING; }
     void clearTraceFlag() { reg.sr.t1 = false; flags &= ~State::TRACING; }
@@ -545,9 +598,8 @@ private:
     // Disables both trace flags (T0 and T1)
     void clearTraceFlags() { clearTraceFlag(); clearTrace0Flag(); }
 
-    
 protected:
-    
+
     // Reads a value from a data register (D0, D1 ... D7)
     template<Size S = Long> u32 readD(int n) const;
     
@@ -568,34 +620,9 @@ protected:
 
 
     //
-    // Interfacing with other components
+    // Extension word validation
     //
-    
-protected:
-    
-#include "MoiraInterface.h"
 
-
-    //
-    // Instruction Analysis
-    //
-    
-public:
-    
-    /// Retrieves the availability mask for a given instruction
-    u16 availabilityMask(Instr I) const;
-    /// Retrieves the availability mask for a given instruction
-    u16 availabilityMask(Instr I, Mode M, Size S) const;
-    /// Retrieves the availability mask for a given instruction
-    u16 availabilityMask(Instr I, Mode M, Size S, u16 ext) const;
-    
-    /// Checks if a given CPU model supports a specific instruction
-    bool isAvailable(CPUModel model, Instr I) const;
-    /// Checks if a given CPU model supports a specific instruction
-    bool isAvailable(CPUModel model, Instr I, Mode M, Size S) const;
-    /// Checks if a given CPU model supports a specific instruction
-    bool isAvailable(CPUModel model, Instr I, Mode M, Size S, u16 ext) const;
-    
 private:
 
     // Validates extension words for a given instruction
@@ -606,40 +633,27 @@ private:
     
     // Validates extension words for FPU-related instructions
     bool isValidExtFPU(Instr I, Mode M, u16 op, u32 ext, CPUModel model) const;
-    
-    
+
+
     //
-    // Managing the Function Code Pins
+    // Managing the Function Code Pins (internal)
     //
-    
-public:
-    
-    /// Reads the current value of the function code pins
-    u8 readFC() const;
-    
+
 private:
-    
+
     // Sets the function code pins to a specific value
     void setFC(u8 value);
     
     // Sets the function code pins based on the provided addressing mode.
     template <Mode M> void setFC();
 
-    
+
     //
-    // Handling Interrupts
+    // Handling Interrupts (internal)
     //
-    
-public:
-    
-    /// Retrieves the value on the Interrupt Priority Level (IPL) pins
-    u8 getIPL() const { return ipl; }
-    
-    /// Sets the value on the Interrupt Priority Level (IPL) pins
-    void setIPL(u8 val);
 
 private:
-    
+
     // Checks for a pending interrupt and handles it if necessary
     bool checkForIrq();
 
