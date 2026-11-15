@@ -264,7 +264,7 @@ MOIRA_DELEGATE(void didJumpToVector(int nr, u32 addr))
  * @param type  The cycle type
  * @param arg   The interrupt level (IRQ_ACK), the breakpoint number
  *              (BREAKPOINT), or the coprocessor ID in bits 7-5 and the
- *              register select (CIR::XXX) in bits 4-0 (COPROCESSOR). This
+ *              register select (a CIR value) in bits 4-0 (COPROCESSOR). This
  *              is the same value that appears on the address lines
  *              A15-A13 and A4-A0.
  * @note  The function code pins still show the value of the previous

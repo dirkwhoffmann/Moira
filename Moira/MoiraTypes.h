@@ -350,15 +350,16 @@ enum class CpuSpaceType : u8
 };
 
 /// Coprocessor interface registers (CIR), as selected by address lines A4-A0
-namespace CIR {
-constexpr u8 RESPONSE  = 0x00;  ///< Response (read)
-constexpr u8 CONTROL   = 0x02;  ///< Control
-constexpr u8 SAVE      = 0x04;  ///< Save
-constexpr u8 RESTORE   = 0x06;  ///< Restore
-constexpr u8 OPERATION = 0x08;  ///< Operation word
-constexpr u8 COMMAND   = 0x0A;  ///< Command (written by general instructions)
-constexpr u8 CONDITION = 0x0E;  ///< Condition (written by conditional instructions)
-}
+enum class CIR : u8
+{
+    RESPONSE  = 0x00,           ///< Response (read)
+    CONTROL   = 0x02,           ///< Control
+    SAVE      = 0x04,           ///< Save
+    RESTORE   = 0x06,           ///< Restore
+    OPERATION = 0x08,           ///< Operation word
+    COMMAND   = 0x0A,           ///< Command (written by general instructions)
+    CONDITION = 0x0E            ///< Condition (written by conditional instructions)
+};
 
 /// Address spaces
 enum class AddrSpace
@@ -457,29 +458,29 @@ struct PrefetchQueue {
 /// the frame, RTE rolls the instruction back, so that it is executed again from its start.
 struct Restart {
 
-    bool valid = false;
+    bool valid;
     Registers pre;              ///< Registers at the start of the instruction
     Registers fault;            ///< Registers at the time of the fault
-    u16 preSr = 0;              ///< Status register at the start of the instruction
-    u32 pc = 0;                 ///< Start of the instruction
-    u32 frameSp = 0;            ///< Location of the stacked frame
-    u16 frameSr = 0;            ///< Stacked status register
-    u32 framePC = 0;            ///< Stacked program counter
-    u32 entrySsp = 0;           ///< Supervisor stack pointer before the frame was stacked
-    u32 entryUsp = 0;           ///< User stack pointer (while in supervisor mode)
+    u16 preSr;                  ///< Status register at the start of the instruction
+    u32 pc;                     ///< Start of the instruction
+    u32 frameSp;                ///< Location of the stacked frame
+    u16 frameSr;                ///< Stacked status register
+    u32 framePC;                ///< Stacked program counter
+    u32 entrySsp;               ///< Supervisor stack pointer before the frame was stacked
+    u32 entryUsp;               ///< User stack pointer (while in supervisor mode)
 };
 
 /// Bookkeeping of the cycle penalty (68020 only)
 struct CycleBudget {
 
     /// Cycle penalty
-    int penalty {};
+    int penalty;
 
     /// Cycles that have not been spent yet
-    int accumulated {};
+    int accumulated;
 
     /// Number of consecutive instructions that did not advance the clock
-    int stalled {};
+    int stalled;
 };
 
 /// Describes an instruction by its mnemonic, addressing mode and operand size
@@ -563,7 +564,6 @@ static constexpr u16 SIZ_W  = 0x0040;   ///< Transfer size: word
  * and data memory, respectively.
  */
 namespace FC {
-
 
 static constexpr u8 USER_DATA       = 1;  ///< User-mode access to data space
 static constexpr u8 USER_PROG       = 2;  ///< User-mode access to program space
@@ -683,6 +683,7 @@ static constexpr u64 COMMIT_IRD    = (1 << 16);  ///< The access contains the la
 
 /// Thrown when an illegal instruction is executed
 struct IllegalInstruction : public std::exception { };
+
 /// Thrown when an exception occurs while another exception is processed
 struct DoubleFault : public std::exception { };
 

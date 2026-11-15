@@ -418,11 +418,11 @@ TEST_CASE("CPU space: ordinary instructions and exceptions raise no cycle")
 // Coprocessor interface: the first cycle of the protocol is a CPU space cycle
 // with the coprocessor ID on A15-A13 and the register select on A4-A0.
 
-static u8 cpArg(int cpid, u8 cir) { return u8(cpid << 5 | cir); }
+static u8 cpArg(int cpid, CIR cir) { return u8(cpid << 5 | u8(cir)); }
 
 TEST_CASE("CPU space: coprocessor cycles of the generic coprocessor interface")
 {
-    struct Case { const char *name; std::vector<u16> code; u8 cir; };
+    struct Case { const char *name; std::vector<u16> code; CIR cir; };
 
     // cpid 5 (no coprocessor attached)
     const Case cases[] = {
@@ -496,7 +496,7 @@ TEST_CASE("CPU space: privileged coprocessor instructions fail before the cycle"
 
 TEST_CASE("CPU space: an external 68881 is accessed via the coprocessor interface")
 {
-    struct Case { const char *name; std::vector<u16> code; u8 cir; };
+    struct Case { const char *name; std::vector<u16> code; CIR cir; };
 
     // cpid 1
     const Case cases[] = {

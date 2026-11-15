@@ -1051,10 +1051,10 @@ Moira::setIPL(u8 val)
 }
 
 void
-Moira::notifyCPCycle(u16 opcode, u8 cir)
+Moira::notifyCPCycle(u16 opcode, CIR cir)
 {
     // Coprocessor ID (opcode bits 11-9) on A15-A13, register select on A4-A0
-    u8 arg = u8(((opcode >> 9) & 7) << 5 | cir);
+    u8 arg = u8(((opcode >> 9) & 7) << 5 | u8(cir));
     willExecute(CpuSpaceType::COPROCESSOR, arg);
     didExecute(CpuSpaceType::COPROCESSOR, arg);
 }

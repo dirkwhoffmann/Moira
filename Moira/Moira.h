@@ -1106,7 +1106,7 @@ private:
 private:
 
     // Announces the first cycle of the coprocessor protocol of a line-F instruction
-    void notifyCPCycle(u16 opcode, u8 cir);
+    void notifyCPCycle(u16 opcode, CIR cir);
 
 
     //
