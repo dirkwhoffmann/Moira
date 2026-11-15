@@ -466,13 +466,9 @@ Moira::executeInstruction()
         }
 
         // Execute the instruction
-        {
-            // Save the registers if a faulted instruction can be restarted.
-            // The snapshot is only needed while the instruction executes. Code
-            // that needs it receives a pointer to it (see processException).
-            Registers snapshot;
-            const Registers *saved = nullptr;
-            if (flags & (State::SAVE_REGS | State::MMU)) { snapshot = reg; saved = &snapshot; }
+        if (flags & (State::SAVE_REGS | State::MMU)) {
+
+            const Registers snapshot = reg;
 
             try {
 
@@ -487,7 +483,25 @@ Moira::executeInstruction()
                 }
 
             } catch (const std::exception &exc) {
-                processException(exc, saved);
+                processException(exc, &snapshot);
+            }
+
+        } else {
+
+            try {
+
+                if (flags & LOOPING) {
+
+                    assert(loop[queue.ird]);
+                    (this->*loop[queue.ird])(queue.ird);
+
+                } else {
+
+                    (this->*exec[queue.ird])(queue.ird);
+                }
+
+            } catch (const std::exception &exc) {
+                processException(exc, nullptr);
             }
         }
 
