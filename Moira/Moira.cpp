@@ -981,8 +981,8 @@ Moira::getFC() const
     switch (fcSource) {
 
         case 0: return u8((reg.sr.s ? 4 : 0) | fcl);
-        case 1: return u8(reg.sfc);
-        case 2: return u8(reg.dfc);
+        case 1: return reg.sfc;
+        case 2: return reg.dfc;
 
         default:
             fatalError;

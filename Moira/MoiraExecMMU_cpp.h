@@ -16,7 +16,7 @@ Moira::mmuFC(u16 ext) const
 
         case 0x10: return ext & 7;
         case 0x08: return reg.d[ext & 7] & 7;
-        default:   return (ext & 1) ? u8(reg.dfc) : u8(reg.sfc);
+        default:   return (ext & 1) ? reg.dfc : reg.sfc;
     }
 }
 
@@ -608,7 +608,7 @@ Moira::execPTest40(u16 opcode)
     auto rw  = __________x_____ (opcode);
 
     // The DFC register selects the address space
-    mmu.mmu040.mmusr = mmu.mmu040.test(readA(rg), u8(reg.dfc), !rw);
+    mmu.mmu040.mmusr = mmu.mmu040.test(readA(rg), reg.dfc, !rw);
 
     prefetch<C, POLL>();
 

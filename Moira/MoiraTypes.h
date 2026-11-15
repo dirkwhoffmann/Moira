@@ -434,8 +434,8 @@ struct Registers {
     u8 ipl;                     ///< Polled Interrupt Priority Level
     
     u32 vbr;                    ///< Vector Base Register             (68010+)
-    u32 sfc;                    ///< Source Function Code             (68010+)
-    u32 dfc;                    ///< Destination Function Code        (68010+)
+    u8 sfc;                     ///< Source Function Code             (68010+)
+    u8 dfc;                     ///< Destination Function Code        (68010+)
     
     /// Unemulated registers
     u32 cacr;                   ///< Cache Control Register           (68020+)

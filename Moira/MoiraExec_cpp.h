@@ -3958,8 +3958,8 @@ Moira::execMovecRxRc(u16 opcode)
     u32  val = readR(src);
     switch (arg & 0x0FFF) {
 
-        case 0x000: setSFC(val); break;
-        case 0x001: setDFC(val); break;
+        case 0x000: setSFC(u8(val)); break;
+        case 0x001: setDFC(u8(val)); break;
         case 0x800: setUSP(val); break;
         case 0x801: setVBR(val); break;
         case 0x002: setCACR(val); break;
