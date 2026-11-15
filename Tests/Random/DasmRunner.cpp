@@ -258,7 +258,7 @@ bool DasmRunner::compareDasm(Result &rRef, Result &rMoira)
     }
 
     // Binutils decodes FPU instructions only for the 68040 (ENABLE_M68881 is off)
-    skipBinutils |= (rRef.opcode & 0xFE00) == 0xF200 && moiracpu->isExternalFpu();
+    skipBinutils |= (rRef.opcode & 0xFE00) == 0xF200 && moiracpu->hasExternalFpu();
 
     // Compare with the Musashi disassembler
     if (!skipMusashi) {

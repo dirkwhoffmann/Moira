@@ -103,7 +103,7 @@ Moira::setModel(CPUModel cpuModel, CPUModel dasmModel)
         this->cpuModel = cpuModel;
         this->dasmModel = dasmModel;
 
-        updateUnits();
+        configureUnits();
 
         createJumpTable(cpuModel, dasmModel);
 
@@ -121,7 +121,7 @@ Moira::setModel(CPUModel cpuModel, CPUModel dasmModel)
 }
 
 void
-Moira::updateUnits()
+Moira::configureUnits()
 {
     switch (cpuModel) {
 
@@ -163,32 +163,22 @@ Moira::setCPModel(CPModel model)
     if (cpModel == model) return;
 
     cpModel = model;
-    updateUnits();
+    configureUnits();
 
     // The FPU handlers and the disassembler entries depend on the coprocessor
-    if (hasCPI(cpuModel) || hasCPI(dasmModel)) createJumpTable(cpuModel, dasmModel);
+    if (moira::hasCPI(cpuModel) || moira::hasCPI(dasmModel)) createJumpTable(cpuModel, dasmModel);
 }
 
 bool
-Moira::hasCPI(CPUModel model)
-{
-    return
-    model == CPUModel::M68EC020 ||
-    model == CPUModel::M68020 ||
-    model == CPUModel::M68EC030 ||
-    model == CPUModel::M68030;
-}
-
-bool
-Moira::isInternalFpu() const
+Moira::hasInternalFpu() const
 {
     return cpuModel == CPUModel::M68040;
 }
 
 bool
-Moira::isExternalFpu() const
+Moira::hasExternalFpu() const
 {
-    return hasCPI(cpuModel) && cpModel != CPModel::NONE;
+    return moira::hasCPI(cpuModel) && cpModel != CPModel::NONE;
 }
 
 void
@@ -222,28 +212,7 @@ Moira::setNumberFormat(DasmStyle &style, const DasmNumberFormat &value)
 bool
 Moira::hasCPI() const
 {
-    switch (cpuModel) {
-
-        case CPUModel::M68EC020: case CPUModel::M68020: case CPUModel::M68EC030: case CPUModel::M68030:
-            return true;
-
-        default:
-            return false;
-    }
-}
-
-bool
-Moira::hasMMU(CPUModel model)
-{
-    return
-    model == CPUModel::M68030 ||
-    model == CPUModel::M68LC040 ||
-    model == CPUModel::M68040;
-}
-
-static bool hasFPU(CPUModel model)
-{
-    return model == CPUModel::M68040;
+    return moira::hasCPI(cpuModel);
 }
 
 bool
@@ -255,7 +224,20 @@ Moira::hasMMU() const
 bool
 Moira::hasFPU() const
 {
-    return isInternalFpu() || isExternalFpu();
+    return hasInternalFpu() || hasExternalFpu();
+}
+
+u32
+Moira::addrMask() const
+{
+    switch (cpuModel) {
+
+        case CPUModel::M68000: return addrMask<Core::C68000>();
+        case CPUModel::M68010: return addrMask<Core::C68010>();
+        
+        default:
+            return addrMask<Core::C68020>();
+    }
 }
 
 u32
@@ -271,19 +253,6 @@ Moira::cacrMask() const
 
         default:
             return 0xFFFF;
-    }
-}
-
-u32
-Moira::addrMask() const
-{
-    switch (cpuModel) {
-
-        case CPUModel::M68000: return addrMask<Core::C68000>();
-        case CPUModel::M68010: return addrMask<Core::C68010>();
-        
-        default:
-            return addrMask<Core::C68020>();
     }
 }
 

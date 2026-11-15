@@ -251,13 +251,6 @@ public:
 
     /// Returns the selected coprocessor (which may not be effective, see setCPModel)
     CPModel getCPModel() const { return cpModel; }
-
-    /// Checks if the FPU is built into the CPU (68040)
-    bool isInternalFpu() const;
-
-    /// Checks if an external FPU (68881 or 68882) is attached. This requires a
-    /// CPU with a coprocessor interface and a coprocessor model other than NONE.
-    bool isExternalFpu() const;
     
     /// Configures the syntax style for disassembly output
     void setDasmSyntax(Syntax value);
@@ -279,8 +272,8 @@ public:
     
 private:
     
-    // Determines the effective FPU and MMU from the CPU model and the selection
-    void updateUnits();
+    // Configures the FPU and MMU to match the emulated CPU configuration
+    void configureUnits();
 
     // Helper function
     void setNumberFormat(DasmStyle &style, const DasmNumberFormat &value);
@@ -292,30 +285,27 @@ private:
     
 public:
     
-    /// Checks if a model provides a coprocessor interface
-    static bool hasCPI(CPUModel model);
-
-    /// Checks if a given CPU model has a built-in memory management unit
-    static bool hasMMU(CPUModel model);
-
-    /// Checks if a given CPU model has a built-in floating-point unit
-    static bool hasFPU(CPUModel model);
-    
-    /// Checks if the emulated CPU model has a coprocessor interface
+    /// Checks if the emulated CPU has a coprocessor interface (CPI)
     bool hasCPI() const;
     
-    /// Checks if the emulated CPU model has a memory management unit (MMU)
+    /// Checks if the emulated CPU has a memory management unit (MMU)
     bool hasMMU() const;
     
     /// Checks if the emulated system has a floating-point unit (built-in or external)
     bool hasFPU() const;
     
-    /// Returns the cache register mask, indicating the accessible CACR bits
-    u32 cacrMask() const;
-    
+    /// Checks if the emulated CPU has a built-in floating-point unit
+    bool hasInternalFpu() const;
+
+    /// Checks if an external FPU (68881 or 68882) is attached
+    bool hasExternalFpu() const;
+        
     /// Returns the address bus mask, which defines the CPU's addressable memory range
     u32 addrMask() const;
     
+    /// Returns the cache register mask, indicating the accessible CACR bits
+    u32 cacrMask() const;
+
 protected:
     
     // Returns the address bus mask for a specific CPU core type
@@ -388,6 +378,7 @@ public:
     /// Returns instruction metadata for a given opcode
     InstrInfo getInstrInfo(u16 op) const;
 
+    
     //
     // Advancing the clock
     //
@@ -396,17 +387,18 @@ protected:
 
     /* Advances the clock by the cycle count computed for a 68020 instruction.
      *
-     * Instruction fetches that hit the cache are modelled as a discount (see
-     * readInstructionWord), so the total can drop to zero or below, while the
-     * environment can only be stepped in whole bus cycles. The time is
-     * therefore accumulated and spent as soon as it amounts to at least one
-     * bus cycle, which keeps the discount fully effective. Should that not
-     * happen for maxStalled instructions in a row, one bus cycle is borrowed:
-     * the environment is stepped from here alone, so without it the emulation
-     * would make no progress and its main loop would never terminate.
+     * Cache hits on instruction fetches are modelled as cycle discounts (see
+     * readInstructionWord), so the resulting count may be zero or negative.
+     * Since the environment can only advance in whole bus cycles, the time is
+     * accumulated until at least one bus cycle is available. This preserves the
+     * full cache discount.
+     *
+     * If no bus cycle is accumulated for maxStalled consecutive instructions,
+     * one cycle is borrowed to ensure progress. Since the environment is stepped
+     * only here, failing to do so would stall the emulation indefinitely.
      */
     void syncCyclePenalty(int cycles);
-
+    
 
     //
     // Interfacing with other components

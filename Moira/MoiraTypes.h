@@ -108,6 +108,26 @@ enum class CPModel
     M68882                  ///< MC68882 floating-point coprocessor
 };
 
+/// Checks if a CPU model provides a coprocessor interface
+static inline constexpr bool hasCPI(CPUModel model)
+{
+    return model == CPUModel::M68EC020 || model == CPUModel::M68020 ||
+           model == CPUModel::M68EC030 || model == CPUModel::M68030;
+}
+
+/// Checks if a CPU model has a built-in memory management unit
+static inline constexpr bool hasMMU(CPUModel model)
+{
+    return model == CPUModel::M68030 || model == CPUModel::M68LC040 ||
+           model == CPUModel::M68040;
+}
+
+/// Checks if a CPU model has a built-in floating-point unit
+static inline constexpr bool hasFPU(CPUModel model)
+{
+    return model == CPUModel::M68040;
+}
+
 /// Execution cores
 enum class Core
 {
@@ -546,7 +566,7 @@ static constexpr u8 USER_DATA       = 1;  ///< User-mode access to data space
 static constexpr u8 USER_PROG       = 2;  ///< User-mode access to program space
 static constexpr u8 SUPERVISOR_DATA = 5;  ///< Supervisor access to data space
 static constexpr u8 SUPERVISOR_PROG = 6;  ///< Supervisor access to program space
-static constexpr u8 CPU_SPACE       = 7;  ///< CPU space cycle (interrupt acknowledge, breakpoint acknowledge)
+static constexpr u8 CPU_SPACE       = 7;  ///< CPU space cycle
 }
 
 /** Availability masks for different CPU models.

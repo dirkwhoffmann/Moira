@@ -2088,7 +2088,7 @@ Moira::createJumpTable12(CPUModel model, bool regDasm)
      * pass) and the selected coprocessor. The jump table is rebuilt whenever
      * the selection changes (see setCPModel).
      */
-    if (model == CPUModel::M68040 || (hasCPI(model) && cpModel != CPModel::NONE)) {
+    if (model == CPUModel::M68040 || (moira::hasCPI(model) && cpModel != CPModel::NONE)) {
 
         opcode = parse("1111 0010 100- ----");
         ___________XXXXX(opcode, Instr::FBcc, Mode::IP, Word, FBcc, CIMS)
