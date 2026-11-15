@@ -790,6 +790,24 @@ TEST_CASE("Execution return values, jump and register view")
     END_MODELS
 }
 
+TEST_CASE("Instruction length")
+{
+    FOR_EACH_MODEL
+    cpu.load({ 0x4E71,                          // NOP
+               0x203C, 0x1234, 0x5678,          // MOVE.L #$12345678,D0
+               0x317C, 0x0001, 0x0010 });       // MOVE.W #1,16(A0)
+
+    CHECK(cpu.instrLength(0x1000) == 2);
+    CHECK(cpu.instrLength(0x1002) == 6);
+    CHECK(cpu.instrLength(0x1008) == 6);
+
+    // The variant without argument looks at the next instruction
+    CHECK(cpu.instrLength() == 2);
+    cpu.step();
+    CHECK(cpu.instrLength() == 6);
+    END_MODELS
+}
+
 TEST_CASE("Disassembler styles")
 {
     FOR_EACH_MODEL

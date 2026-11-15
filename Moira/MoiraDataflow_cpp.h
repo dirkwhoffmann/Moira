@@ -1163,13 +1163,7 @@ Moira::earlyAddressError(const StackFrame &frame)
 template <Core C, Flags F> void
 Moira::prefetch()
 {
-    /* Whereas pc is a moving target (it moves forward while an instruction is
-     * being processed, pc0 stays stable throughout the entire execution of
-     * an instruction. It always points to the start address of the currently
-     * executed instruction.
-     */
     reg.pc += 2;
-    queue.lastFetch = true;
 
     queue.ird = queue.irc;
     queue.irc = readInstr<C, F>(reg.pc);
@@ -1199,7 +1193,6 @@ Moira::commitIrd()
 
         queue.ird = queue.irc;
         queue.irc = queue.edb;
-        queue.lastFetch = true;
     }
 }
 
@@ -1256,7 +1249,6 @@ Moira::noPrefetch(int delay)
     assert(flags & State::LOOPING);
 
     reg.pc += 2;
-    queue.lastFetch = true;
     std::swap(queue.irc, queue.ird);
     if (delay) SYNC(delay);
 }
@@ -1267,6 +1259,7 @@ Moira::readExt()
     assert(!misaligned<C>(reg.pc));
 
     reg.pc += 2;
+   
 
     // MAME stacks the address of the consumed extension word if the refill fails
     if constexpr (EXACT_68000) {
@@ -1284,6 +1277,7 @@ Moira::readExtLast()
 
         assert(!misaligned<C>(reg.pc));
         reg.pc += 2;
+       
         queue.irc = readInstr<C>(reg.pc);
 
     } else {

@@ -150,6 +150,7 @@ protected:
     // Write buffer (appears in 68010 exception frames)
     u16 writeBuffer {};
     
+
     // Internal state flags
     int flags {};
     
@@ -849,6 +850,21 @@ public:
      *         library has been compiled with MOIRA_ENABLE_DASM = false
      */
     std::string disassemble(const std::string &fmt, u32 addr, int *len = nullptr) const;
+
+    /** @brief Returns the length of the instruction at a given address
+     *
+     * The length is determined by the disassembler, i.e., it depends on the
+     * disassembler model (see setDasmModel()).
+     *
+     * @param addr  The address of the instruction
+     * @return The length of the instruction in bytes (including all extension words)
+     * @throws std::runtime_error if the library has been compiled with
+     *         MOIRA_ENABLE_DASM = false
+     */
+    isize instrLength(u32 addr) const;
+
+    /// @brief Returns the length of the next instruction (the one at getPC())
+    isize instrLength() const { return instrLength(getPC()); }
 
 
     //

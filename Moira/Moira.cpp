@@ -206,6 +206,14 @@ Moira::setDataStyle(const DasmStyle &style)
     dataStyle = style;
 }
 
+isize
+Moira::instrLength(u32 addr) const
+{
+    int len = 0;
+    disassemble("%i", addr, &len);
+    return len;
+}
+
 bool
 Moira::hasCPI() const
 {
@@ -388,10 +396,8 @@ Moira::executeInstruction()
         // Fast path: Call the instruction handler and return
         //
 
-        queue.lastFetch = false;
         try {
             (this->*exec[queue.ird])(queue.ird);
-            assert(queue.lastFetch || queue.ird == 0x4E72);   // Only STOP does not fetch its successor
         } catch (const std::exception &exc) {
             processException(exc);
         }
@@ -454,8 +460,7 @@ Moira::executeInstruction()
             // that needs it receives a pointer to it (see processException).
             Registers snapshot;
             const Registers *saved = nullptr;
-            queue.lastFetch = false;
-                if (flags & (State::SAVE_REGS | State::MMU)) { snapshot = reg; saved = &snapshot; }
+                    if (flags & (State::SAVE_REGS | State::MMU)) { snapshot = reg; saved = &snapshot; }
 
             try {
 
@@ -467,7 +472,6 @@ Moira::executeInstruction()
                 } else {
 
                     (this->*exec[queue.ird])(queue.ird);
-                    assert(queue.lastFetch || queue.ird == 0x4E72);   // Only STOP does not fetch its successor
                 }
 
             } catch (const std::exception &exc) {

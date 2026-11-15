@@ -436,7 +436,6 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
 {
     u16 status = getSR();
     u16 ssw = 0x60 | (getFC() & 7);
-    u32 end = queue.lastFetch ? reg.pc - 2 : reg.pc;
 
     // Inform the delegate
     willExecute(M68kException::BUS_ERROR, 2);
@@ -511,6 +510,19 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
                 auto indexed = [](u16 m, u16 r) { return m == 6 || (m == 7 && r == 3); };
                 if (!indexed((op >> 3) & 7, op & 7) && !frame.write) ix = false;
             }
+
+            // Determine the address behind the instruction words that have been consumed when the fault occurred.
+            // This requires the disassembler model to match the emulated CPU model.
+            u32 end = reg.pc0 + u32(instrLength(reg.pc0));
+
+            // The destination extension words of a MOVE are consumed after the source has been accessed
+            if ((op & 0xC000) == 0 && (op & 0x3000)) {
+                u16 dm = (op >> 6) & 7, dr = (op >> 9) & 7;
+                u32 destBytes = (dm == 5 || dm == 6) ? 2 : (dm == 7 && dr == 0) ? 2 : (dm == 7 && dr == 1) ? 4 : 0;
+                if (!frame.write) end -= destBytes;
+                else if (dm == 7 && dr == 1) end -= 2;
+            }
+
             u32 pc = ix ? end : reg.pc0;
 
             // If the source of a MOVE is indexed, UAE stacks the address of the extension words of the destination
