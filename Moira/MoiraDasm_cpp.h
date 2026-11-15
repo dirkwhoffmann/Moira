@@ -6,7 +6,7 @@
 // -----------------------------------------------------------------------------
 
 int
-Moira::disassembleInstr(char *str, u32 addr) const
+Moira::disassembleInstr(char *str, u32 addr, bool cpuView) const
 {
     if constexpr (MOIRA_ENABLE_DASM == false) {
         throw std::runtime_error("This feature requires MOIRA_ENABLE_DASM = true\n");
@@ -17,8 +17,12 @@ Moira::disassembleInstr(char *str, u32 addr) const
 
     StrWriter writer(str, instrStyle);
 
-    auto &nfo = info[opcode];
-    (this->*dasm[opcode])(writer, pc, opcode, nfo.I, nfo.M, nfo.S);
+    // The disassembler model's tables exist only if it differs from the CPU model
+    auto *infoTable = (!cpuView && infoAlt) ? infoAlt : info;
+    auto *dasmTable = (!cpuView && dasmAlt) ? dasmAlt : dasm;
+
+    auto &nfo = infoTable[opcode];
+    (this->*dasmTable[opcode])(writer, pc, opcode, nfo.I, nfo.M, nfo.S);
     writer << Finish{};
 
     // Post process disassembler output

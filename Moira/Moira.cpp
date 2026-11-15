@@ -71,6 +71,8 @@ Moira::~Moira()
     if (loop) delete [] loop;
     if (info) delete [] info;
     if (dasm) delete [] dasm;
+    if (infoAlt) delete [] infoAlt;
+    if (dasmAlt) delete [] dasmAlt;
 }
 
 std::string
@@ -209,9 +211,16 @@ Moira::setDataStyle(const DasmStyle &style)
 isize
 Moira::instrLength(u32 addr) const
 {
-    int len = 0;
-    disassemble("%i", addr, &len);
-    return len;
+    if constexpr (MOIRA_ENABLE_DASM) {
+
+        // Use the tables of the emulated CPU model (independent of the disassembler model)
+        char tmp[128];
+        return disassembleInstr(tmp, addr, true);
+
+    } else {
+
+        throw std::runtime_error("This feature requires MOIRA_ENABLE_DASM = true\n");
+    }
 }
 
 bool
@@ -1079,7 +1088,7 @@ Moira::getInstrInfo(u16 op) const
 {
     if constexpr (MOIRA_ENABLE_DASM) {
 
-        return info[op];
+        return infoAlt ? infoAlt[op] : info[op];
 
     } else {
 

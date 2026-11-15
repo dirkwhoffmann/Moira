@@ -39,6 +39,6 @@ This page lists the API changes that require changes in client code. It is meant
 - **Register types.** `getSFC()`, `getDFC()`, `setSFC()` and `setDFC()` use `u8`.
 - **Caches.** `iCache` and `dCache` are public.
 - **Execution functions.** `execute()`, `execute(i64)` and `executeUntil(i64)` return the number of elapsed cycles instead of `void`.
-- **New functions.** `jump()`, `getRegisters()`, `getModel()`, `getDasmModel()`, `setDasmModel()`, `isStopped()`, `getEDB()`, `getDasmStyle()`, `setDasmStyle()`, `getDataStyle()`, `setDataStyle()`, `disassemble(fmt, addr, &len)`, `Debugger::disassembleRecorded()`, `Debugger::dumpLogBuffer()` and `Debugger::disassembleRange()`.
+- **New functions.** `jump()`, `instrLength()`, `getRegisters()`, `getModel()`, `getDasmModel()`, `setDasmModel()`, `isStopped()`, `getEDB()`, `getDasmStyle()`, `setDasmStyle()`, `getDataStyle()`, `setDataStyle()`, `disassemble(fmt, addr, &len)`, `Debugger::disassembleRecorded()`, `Debugger::dumpLogBuffer()` and `Debugger::disassembleRange()`.
 - **Non-virtual API.** If you build with `MOIRA_VIRTUAL_API = false`, you must define all functions of the interface (see `MoiraInterface.h`), including `readIrqVector` and `willAccessBus`.
 - **New source file.** `MoiraInterface.h` has to be part of your project.

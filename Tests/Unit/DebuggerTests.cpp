@@ -808,6 +808,27 @@ TEST_CASE("Instruction length")
     END_MODELS
 }
 
+TEST_CASE("Instruction length is independent of the disassembler model")
+{
+    TestCPU cpu(CPUModel::M68020);
+    cpu.setModel(CPUModel::M68020, CPUModel::M68000);
+
+    // LINK.L A0,#$12345678 exists on the 68020 only
+    cpu.poke16(0x1000, 0x4808); cpu.poke32(0x1002, 0x12345678);
+    CHECK(cpu.instrLength(0x1000) == 6);
+
+    // The disassembler still follows its own model (where the opcode is invalid)
+    CHECK(cpu.getDasmModel() == CPUModel::M68000);
+    int len = 0;
+    cpu.disassemble("%i", 0x1000, &len);
+    CHECK(len != 6);
+
+    // Switching both models to the same value removes the difference
+    cpu.setModel(CPUModel::M68020, CPUModel::M68020);
+    cpu.disassemble("%i", 0x1000, &len);
+    CHECK(len == 6);
+}
+
 TEST_CASE("Disassembler styles")
 {
     FOR_EACH_MODEL

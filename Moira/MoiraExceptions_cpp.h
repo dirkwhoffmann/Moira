@@ -512,15 +512,21 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
             }
 
             // Determine the address behind the instruction words that have been consumed when the fault occurred.
-            // This requires the disassembler model to match the emulated CPU model.
-            u32 end = reg.pc0 + u32(instrLength(reg.pc0));
+            u32 end = reg.pc0 + 2;
 
-            // The destination extension words of a MOVE are consumed after the source has been accessed
-            if ((op & 0xC000) == 0 && (op & 0x3000)) {
-                u16 dm = (op >> 6) & 7, dr = (op >> 9) & 7;
-                u32 destBytes = (dm == 5 || dm == 6) ? 2 : (dm == 7 && dr == 0) ? 2 : (dm == 7 && dr == 1) ? 4 : 0;
-                if (!frame.write) end -= destBytes;
-                else if (dm == 7 && dr == 1) end -= 2;
+            if constexpr (MOIRA_ENABLE_DASM) {
+
+                // The length of the instruction is determined by the disassembler handlers of the CPU model.
+                // Without MOIRA_ENABLE_DASM, the length is unknown and we fall back to the first extension word.
+                end = reg.pc0 + u32(instrLength(reg.pc0));
+
+                // The destination extension words of a MOVE are consumed after the source has been accessed
+                if ((op & 0xC000) == 0 && (op & 0x3000)) {
+                    u16 dm = (op >> 6) & 7, dr = (op >> 9) & 7;
+                    u32 destBytes = (dm == 5 || dm == 6) ? 2 : (dm == 7 && dr == 0) ? 2 : (dm == 7 && dr == 1) ? 4 : 0;
+                    if (!frame.write) end -= destBytes;
+                    else if (dm == 7 && dr == 1) end -= 2;
+                }
             }
 
             u32 pc = ix ? end : reg.pc0;

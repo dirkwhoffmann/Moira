@@ -174,12 +174,16 @@ private:
     // Jump table holding the loop mode instruction handlers (68010 only)
     ExecPtr *loop = nullptr;
     
-    // Jump table holding the disassembler handlers
+    // Jump table holding the disassembler handlers of the emulated CPU model
     DasmPtr *dasm = nullptr;
     
-    // Info table holding instruction descriptions
+    // Info table holding instruction descriptions of the emulated CPU model
     InstrInfo *info = nullptr;
-    
+
+    // Tables of the disassembler model (only allocated if it differs from the CPU model)
+    DasmPtr *dasmAlt = nullptr;
+    InstrInfo *infoAlt = nullptr;
+
     
     //
     // Public API
@@ -853,8 +857,8 @@ public:
 
     /** @brief Returns the length of the instruction at a given address
      *
-     * The length is determined by the disassembler, i.e., it depends on the
-     * disassembler model (see setDasmModel()).
+     * The length is determined by the disassembler handlers of the emulated CPU
+     * model (see setModel()). It does not depend on the disassembler model.
      *
      * @param addr  The address of the instruction
      * @return The length of the instruction in bytes (including all extension words)
@@ -890,25 +894,27 @@ protected:
     // Creates or updates the jump tables for execution and disassembly
     void createJumpTable(CPUModel cpuModel, CPUModel dasmModel);
     
+    // Computes an entry of the instruction length table
+
     // Creates the jump tables for execution and disassembly with the same model
     void createJumpTable(CPUModel model) { createJumpTable(model, model); }
 
 private:
 
     // Core routines for creating jump tables    
-    template <Core C> void createJumpTable(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable1(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable2(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable3(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable4(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable5(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable6(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable7(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable8(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable9(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable10(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable11(CPUModel model, bool registerDasm);
-    template <Core C> void createJumpTable12(CPUModel model, bool registerDasm);
+    template <Core C> void createJumpTable(CPUModel model, bool registerExec, bool registerDasm);
+    template <Core C> void createJumpTable1(CPUModel model, bool registerExec, bool registerDasm);
+    template <Core C> void createJumpTable2(CPUModel model, bool registerExec, bool registerDasm);
+    template <Core C> void createJumpTable3(CPUModel model, bool registerExec, bool registerDasm);
+    template <Core C> void createJumpTable4(CPUModel model, bool registerExec, bool registerDasm);
+    template <Core C> void createJumpTable5(CPUModel model, bool registerExec, bool registerDasm);
+    template <Core C> void createJumpTable6(CPUModel model, bool registerExec, bool registerDasm);
+    template <Core C> void createJumpTable7(CPUModel model, bool registerExec, bool registerDasm);
+    template <Core C> void createJumpTable8(CPUModel model, bool registerExec, bool registerDasm);
+    template <Core C> void createJumpTable9(CPUModel model, bool registerExec, bool registerDasm);
+    template <Core C> void createJumpTable10(CPUModel model, bool registerExec, bool registerDasm);
+    template <Core C> void createJumpTable11(CPUModel model, bool registerExec, bool registerDasm);
+    template <Core C> void createJumpTable12(CPUModel model, bool registerExec, bool registerDasm);
 
 
     //
@@ -1037,7 +1043,7 @@ private:
 private:
 
     // Disassembles a single instruction into a character buffer and returns the instruction size in bytes
-    int disassembleInstr(char *str, u32 addr) const;
+    int disassembleInstr(char *str, u32 addr, bool cpuView = false) const;
 
     // Implements the format-string disassembler
     std::string disassemble(const std::string &fmt, u32 addr, const Registers &regs, int *len) const;
@@ -1133,8 +1139,8 @@ private:
  * own splits the instantiation work three ways and keeps the compiler's peak
  * memory usage within bounds. The definitions live in MoiraCore680x0.cpp.
  */
-extern template void Moira::createJumpTable<Core::C68000>(CPUModel, bool);
-extern template void Moira::createJumpTable<Core::C68010>(CPUModel, bool);
-extern template void Moira::createJumpTable<Core::C68020>(CPUModel, bool);
+extern template void Moira::createJumpTable<Core::C68000>(CPUModel, bool, bool);
+extern template void Moira::createJumpTable<Core::C68010>(CPUModel, bool, bool);
+extern template void Moira::createJumpTable<Core::C68020>(CPUModel, bool, bool);
 
 }

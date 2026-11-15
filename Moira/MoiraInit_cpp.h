@@ -19,14 +19,14 @@
 #endif
 
 #define CIMS(id,name,I,M,S) { \
-exec[id] = EXEC_HANDLER(name,C,I,M,S); \
+if (regExec) exec[id] = EXEC_HANDLER(name,C,I,M,S); \
 REGISTER_DASM(id,name,I,M,S) \
 REGISTER_INFO(id,name,I,M,S) \
 }
 
 #define CIMSloop(id,name,I,M,S) { \
-assert(loop[id] == nullptr); \
-loop[id] = EXEC_HANDLER(name,Core::C68010,I##_LOOP,M,S); \
+if (regExec) { assert(loop[id] == nullptr); \
+loop[id] = EXEC_HANDLER(name,Core::C68010,I##_LOOP,M,S); } \
 }
 
 // Registers an instruction in one of the standard instruction formats:
@@ -171,17 +171,35 @@ Moira::createJumpTable(CPUModel cpuModel, CPUModel dasmModel)
     Core cpuCore = core(cpuModel);
     Core dasmCore = core(dasmModel);
 
-    // Register handlers based on the dasm model
-    if (dasmCore == Core::C68000) createJumpTable<Core::C68000>(dasmModel, true);
-    if (dasmCore == Core::C68010) createJumpTable<Core::C68010>(dasmModel, true);
-    if (dasmCore == Core::C68020) createJumpTable<Core::C68020>(dasmModel, true);
+    // Register the exec and dasm handlers for the CPU model
+    if (cpuCore == Core::C68000) createJumpTable<Core::C68000>(cpuModel, true, true);
+    if (cpuCore == Core::C68010) createJumpTable<Core::C68010>(cpuModel, true, true);
+    if (cpuCore == Core::C68020) createJumpTable<Core::C68020>(cpuModel, true, true);
 
-    // If both models differ, overwrite the exec handlers
+    // If the disassembler is based on a different model, register a second set of dasm handlers
     if (cpuModel != dasmModel) {
 
-        if (cpuCore == Core::C68000) createJumpTable<Core::C68000>(cpuModel, false);
-        if (cpuCore == Core::C68010) createJumpTable<Core::C68010>(cpuModel, false);
-        if (cpuCore == Core::C68020) createJumpTable<Core::C68020>(cpuModel, false);
+        if (MOIRA_ENABLE_DASM) {
+
+            if (!dasmAlt) dasmAlt = new DasmPtr[65536];
+            if (!infoAlt) infoAlt = new InstrInfo[65536];
+
+            // Redirect the dasm registration to the alternative tables
+            std::swap(dasm, dasmAlt);
+            std::swap(info, infoAlt);
+
+            if (dasmCore == Core::C68000) createJumpTable<Core::C68000>(dasmModel, false, true);
+            if (dasmCore == Core::C68010) createJumpTable<Core::C68010>(dasmModel, false, true);
+            if (dasmCore == Core::C68020) createJumpTable<Core::C68020>(dasmModel, false, true);
+
+            std::swap(dasm, dasmAlt);
+            std::swap(info, infoAlt);
+        }
+
+    } else {
+
+        delete [] dasmAlt; dasmAlt = nullptr;
+        delete [] infoAlt; infoAlt = nullptr;
     }
 }
 
@@ -190,7 +208,7 @@ Moira::createJumpTable(CPUModel cpuModel, CPUModel dasmModel)
 // Registers the instruction handlers for a subset of the instruction set
 // (prologue ... AND)
 template <Core C> void
-Moira::createJumpTable1([[maybe_unused]] CPUModel model, bool regDasm)
+Moira::createJumpTable1([[maybe_unused]] CPUModel model, bool regExec, bool regDasm)
 {
     [[maybe_unused]] u16 opcode;
 
@@ -200,8 +218,8 @@ Moira::createJumpTable1([[maybe_unused]] CPUModel model, bool regDasm)
 
     XXXXXXXXXXXXXXXX(Instr::ILLEGAL, Mode::IP, (Size)0, Illegal, CIMS)
 
-    for (int i = 0; i < 0x10000; i++) {
-        loop[i] = nullptr;
+    if (regExec) {
+        for (int i = 0; i < 0x10000; i++) loop[i] = nullptr;
     }
 
 
@@ -325,7 +343,7 @@ Moira::createJumpTable1([[maybe_unused]] CPUModel model, bool regDasm)
 // Registers the instruction handlers for a subset of the instruction set
 // (AND ... BKPT (68010+))
 template <Core C> void
-Moira::createJumpTable2([[maybe_unused]] CPUModel model, bool regDasm)
+Moira::createJumpTable2([[maybe_unused]] CPUModel model, bool regExec, bool regDasm)
 {
     [[maybe_unused]] u16 opcode;
 
@@ -583,7 +601,7 @@ Moira::createJumpTable2([[maybe_unused]] CPUModel model, bool regDasm)
 // Registers the instruction handlers for a subset of the instruction set
 // (BKPT (68010+) ... CLR)
 template <Core C> void
-Moira::createJumpTable3(CPUModel model, bool regDasm)
+Moira::createJumpTable3(CPUModel model, bool regExec, bool regDasm)
 {
     [[maybe_unused]] u16 opcode;
 
@@ -761,7 +779,7 @@ Moira::createJumpTable3(CPUModel model, bool regDasm)
 // Registers the instruction handlers for a subset of the instruction set
 // (CLR ... EOR)
 template <Core C> void
-Moira::createJumpTable4([[maybe_unused]] CPUModel model, bool regDasm)
+Moira::createJumpTable4([[maybe_unused]] CPUModel model, bool regExec, bool regDasm)
 {
     [[maybe_unused]] u16 opcode;
 
@@ -911,7 +929,7 @@ Moira::createJumpTable4([[maybe_unused]] CPUModel model, bool regDasm)
 // Registers the instruction handlers for a subset of the instruction set
 // (EOR ... LINK)
 template <Core C> void
-Moira::createJumpTable5([[maybe_unused]] CPUModel model, bool regDasm)
+Moira::createJumpTable5([[maybe_unused]] CPUModel model, bool regExec, bool regDasm)
 {
     [[maybe_unused]] u16 opcode;
 
@@ -1006,7 +1024,7 @@ Moira::createJumpTable5([[maybe_unused]] CPUModel model, bool regDasm)
 // Registers the instruction handlers for a subset of the instruction set
 // (LINK ... MOVEC)
 template <Core C> void
-Moira::createJumpTable6([[maybe_unused]] CPUModel model, bool regDasm)
+Moira::createJumpTable6([[maybe_unused]] CPUModel model, bool regExec, bool regDasm)
 {
     [[maybe_unused]] u16 opcode;
 
@@ -1182,7 +1200,7 @@ Moira::createJumpTable6([[maybe_unused]] CPUModel model, bool regDasm)
 // Registers the instruction handlers for a subset of the instruction set
 // (MOVEC ... MOVE from SR)
 template <Core C> void
-Moira::createJumpTable7([[maybe_unused]] CPUModel model, bool regDasm)
+Moira::createJumpTable7([[maybe_unused]] CPUModel model, bool regExec, bool regDasm)
 {
     [[maybe_unused]] u16 opcode;
 
@@ -1303,7 +1321,7 @@ Moira::createJumpTable7([[maybe_unused]] CPUModel model, bool regDasm)
 // Registers the instruction handlers for a subset of the instruction set
 // (MOVE from SR ... OR)
 template <Core C> void
-Moira::createJumpTable8([[maybe_unused]] CPUModel model, bool regDasm)
+Moira::createJumpTable8([[maybe_unused]] CPUModel model, bool regExec, bool regDasm)
 {
     [[maybe_unused]] u16 opcode;
 
@@ -1424,7 +1442,7 @@ Moira::createJumpTable8([[maybe_unused]] CPUModel model, bool regDasm)
 // Registers the instruction handlers for a subset of the instruction set
 // (OR ... RESET)
 template <Core C> void
-Moira::createJumpTable9([[maybe_unused]] CPUModel model, bool regDasm)
+Moira::createJumpTable9([[maybe_unused]] CPUModel model, bool regExec, bool regDasm)
 {
     [[maybe_unused]] u16 opcode;
 
@@ -1576,7 +1594,7 @@ Moira::createJumpTable9([[maybe_unused]] CPUModel model, bool regDasm)
 // Registers the instruction handlers for a subset of the instruction set
 // (RESET ... Scc)
 template <Core C> void
-Moira::createJumpTable10(CPUModel model, bool regDasm)
+Moira::createJumpTable10(CPUModel model, bool regExec, bool regDasm)
 {
     [[maybe_unused]] u16 opcode;
 
@@ -1661,7 +1679,7 @@ Moira::createJumpTable10(CPUModel model, bool regDasm)
 // Registers the instruction handlers for a subset of the instruction set
 // (Scc ... TAS)
 template <Core C> void
-Moira::createJumpTable11([[maybe_unused]] CPUModel model, bool regDasm)
+Moira::createJumpTable11([[maybe_unused]] CPUModel model, bool regExec, bool regDasm)
 {
     [[maybe_unused]] u16 opcode;
 
@@ -1820,7 +1838,7 @@ Moira::createJumpTable11([[maybe_unused]] CPUModel model, bool regDasm)
 // Registers the instruction handlers for a subset of the instruction set
 // (TAS ... end)
 template <Core C> void
-Moira::createJumpTable12(CPUModel model, bool regDasm)
+Moira::createJumpTable12(CPUModel model, bool regExec, bool regDasm)
 {
     [[maybe_unused]] u16 opcode;
 
@@ -2120,23 +2138,23 @@ Moira::createJumpTable12(CPUModel model, bool regDasm)
 }
 
 template <Core C> void
-Moira::createJumpTable(CPUModel model, bool regDasm)
+Moira::createJumpTable(CPUModel model, bool regExec, bool regDasm)
 {
     // Jump table creation is deliberately split into several parts.
     // As a single function it expands into several hundred kilobytes of
     // straight-line code per core, which drives the compiler's memory
     // consumption far beyond what some environments provide.
     
-    createJumpTable1<C>(model, regDasm);
-    createJumpTable2<C>(model, regDasm);
-    createJumpTable3<C>(model, regDasm);
-    createJumpTable4<C>(model, regDasm);
-    createJumpTable5<C>(model, regDasm);
-    createJumpTable6<C>(model, regDasm);
-    createJumpTable7<C>(model, regDasm);
-    createJumpTable8<C>(model, regDasm);
-    createJumpTable9<C>(model, regDasm);
-    createJumpTable10<C>(model, regDasm);
-    createJumpTable11<C>(model, regDasm);
-    createJumpTable12<C>(model, regDasm);
+    createJumpTable1<C>(model, regExec, regDasm);
+    createJumpTable2<C>(model, regExec, regDasm);
+    createJumpTable3<C>(model, regExec, regDasm);
+    createJumpTable4<C>(model, regExec, regDasm);
+    createJumpTable5<C>(model, regExec, regDasm);
+    createJumpTable6<C>(model, regExec, regDasm);
+    createJumpTable7<C>(model, regExec, regDasm);
+    createJumpTable8<C>(model, regExec, regDasm);
+    createJumpTable9<C>(model, regExec, regDasm);
+    createJumpTable10<C>(model, regExec, regDasm);
+    createJumpTable11<C>(model, regExec, regDasm);
+    createJumpTable12<C>(model, regExec, regDasm);
 }
