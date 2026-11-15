@@ -94,19 +94,19 @@ protected:
     
 public:
     
-    // The memory management unit
+    /// The memory management unit
     MMU mmu = MMU(*this);
 
-    // The floating-point unit
+    /// The floating-point unit
     FPU fpu = FPU();
 
-    // Debugger (breakpoints, watchpoints, catchpoints, tracing)
+    /// Debugger (breakpoints, watchpoints, catchpoints, tracing)
     Debugger debugger = Debugger(*this);
 
-    // Instruction cache (68020+)
+    /// Instruction cache (68020+)
     ICache iCache = ICache(*this);
 
-    // Data cache (68030+)
+    /// Data cache (68030+)
     DCache dCache = DCache(*this);
 
 
@@ -236,21 +236,33 @@ public:
     
     /// Configures the syntax style for disassembly output
     void setDasmSyntax(Syntax value);
+    /// Returns the syntax style for disassembly output
+    Syntax getDasmSyntax() const { return instrStyle.syntax; }
     
     /// Sets the number format for disassembly output
     void setDasmNumberFormat(DasmNumberFormat value) { setNumberFormat(instrStyle, value); }
+    /// Returns the number format for disassembly output
+    DasmNumberFormat getDasmNumberFormat() const { return instrStyle.numberFormat; }
     
     /// Sets the letter case for disassembly output
     void setDasmLetterCase(LetterCase value);
+    /// Returns the letter case for disassembly output
+    LetterCase getDasmLetterCase() const { return instrStyle.letterCase; }
     
     /// Sets the indentation for disassembly output
     void setDasmIndentation(int value) { instrStyle.tab = value; }
+    /// Returns the indentation for disassembly output
+    int getDasmIndentation() const { return instrStyle.tab; }
     
-    /// Sets the number format for data dumps
-    void setDumpNumberFormat(DasmNumberFormat value) { setNumberFormat(dataStyle, value); }
+    /// Sets the number format for data (addresses, instruction words and registers in format strings)
+    void setDataNumberFormat(DasmNumberFormat value) { setNumberFormat(dataStyle, value); }
+    /// Returns the number format for data
+    DasmNumberFormat getDataNumberFormat() const { return dataStyle.numberFormat; }
     
-    /// Sets the indentation for data dumps
-    void setDumpIndentation(int value) { dataStyle.tab = value; }
+    /// Sets the indentation between multiple data words
+    void setDataIndentation(int value) { dataStyle.tab = value; }
+    /// Returns the indentation between multiple data words
+    int getDataIndentation() const { return dataStyle.tab; }
 
     /// Checks if the emulated CPU has a coprocessor interface (CPI)
     bool hasCPI() const;
@@ -312,6 +324,8 @@ public:
     /// Sets the value of an address register (0 - 7)
     void setA(int n, u32 v) { writeA(n, v); }
     
+    // Program counter
+
     /** Gets the address of the next instruction (at an instruction boundary)
      *
      * Internally, the program counter follows the hardware: it always holds
@@ -340,6 +354,8 @@ public:
      */
     void setPC0(u32 val) { reg.pc0 = val; }
 
+    // Prefetch queue
+
     /// Gets the IRC register, which is part of the prefetch queue
     u16 getIRC() const { return queue.irc; }
     
@@ -350,6 +366,8 @@ public:
     /// @note  The latch is the EXACT_68000 pipeline stage in front of IRC.
     u16 getEDB() const { return queue.edb; }
     
+    // Status register and stack pointers
+
     /// Gets the value of the Condition Code Register (CCR)
     u8 getCCR() const;
     /// Sets the value of the Condition Code Register (CCR)
@@ -447,12 +465,6 @@ public:
     /// Disassembles an instruction and returns the instruction size in bytes
     int disassemble(char *str, u32 addr) const;
     
-    /// Creates a textual representation of the status register
-    void disassembleSR(char *str) const { disassembleSR(str, reg.sr); }
-    
-    /// Creates a textual representation of a given status register
-    void disassembleSR(char *str, const StatusRegister &sr) const;
-    
     /// Returns instruction metadata for a given opcode
     InstrInfo getInstrInfo(u16 op) const;
 
@@ -477,15 +489,6 @@ public:
      * @throws std::runtime_error if the format string is invalid
      */
     std::string disassemble(const std::string &fmt, u32 addr, int *len = nullptr) const;
-
-    /** Disassembles an instruction from the log buffer
-     *
-     * Works like disassemble, but prints the register values recorded when
-     * the instruction was logged (see Debugger::enableLogging).
-     *
-     * @param nr  The index of the log entry (0 is the oldest entry)
-     */
-    std::string disassembleRecorded(const std::string &fmt, int nr, int *len = nullptr) const;
 
     /// Checks if a given CPU model supports a specific instruction
     bool isAvailable(CPUModel model, Instr I) const;
@@ -665,6 +668,9 @@ private:
 
     // Implements the format-string disassembler
     std::string disassemble(const std::string &fmt, u32 addr, const Registers &regs, int *len) const;
+
+    // Creates a textual representation of a status register
+    void disassembleSR(char *str, const StatusRegister &sr) const;
 
     // Converts values to a textual representation (uses the data style)
     void dump16(char *str, u32 addr, int cnt) const;

@@ -8,10 +8,6 @@ Moira includes a built-in disassembler that converts instructions, the program c
 
    Disassembles the instruction at the specified address. The caller must ensure that the target string is initialized and large enough to hold the output. The function returns how many bytes the disassembled instruction occupies in memory, making it easy to know where the next instruction starts.
 
-- `void disassembleSR(char *str, const StatusRegister &sr) const;`
-
-    Creates a textual representation for the referenced status register state. If the second parameter is omitted, the current state of the status register is disassembled.
-
 - `std::string disassemble(const std::string &fmt, u32 addr, int *len = nullptr) const`
 
     Disassembles the instruction at the specified address according to a format string. The following directives are supported:
@@ -27,11 +23,11 @@ Moira includes a built-in disassembler that converts instructions, the program c
 
     A number in front of `%p`, `%b`, `%i`, or `%f` pads the output with spaces to the given width. Other characters are copied to the output. If `len` is given, it receives the instruction length in bytes. An invalid format string throws `std::runtime_error`.
 
-- `std::string disassembleRecorded(const std::string &fmt, int nr, int *len = nullptr) const`
+- `std::string Debugger::disassembleRecorded(const std::string &fmt, int nr, int *len = nullptr) const`
 
     Works like the function above, but disassembles an entry of the instruction log buffer and prints the register values recorded at that time.
 
-The debugger builds on these functions: `Debugger::dumpLogBuffer` prints the log buffer, and `Debugger::disassembleRange` disassembles a range of memory and marks the current instruction and breakpoints.
+The debugger builds on these functions: `Debugger::dumpLogBuffer` prints the log buffer, and `Debugger::disassembleRange` disassembles a range of memory and marks the current instruction and breakpoints. Both accept an optional format string.
 
     
 ## Customizing Output
@@ -79,6 +75,12 @@ The disassembler output can be customized in various ways by calling one of the 
 - `void setDasmIndentation(int value)`
 
     Adjusts the spacing between the mnemonic and the rest of the instruction for better readability.
+
+- `void setDataNumberFormat(DasmNumberFormat value)` and `void setDataIndentation(int value)`
+
+    Configure how addresses (`%p`), instruction words (`%b`) and registers (`%Nd`, `%Na`) are printed by the format-string disassembler.
+
+Each setter has a matching getter (`getDasmSyntax`, `getDasmNumberFormat`, `getDasmLetterCase`, `getDasmIndentation`, `getDataNumberFormat`, `getDataIndentation`).
 
 ## Examples
 

@@ -2068,13 +2068,6 @@ Moira::disassemble(const std::string &fmt, u32 addr, int *len) const
 }
 
 std::string
-Moira::disassembleRecorded(const std::string &fmt, int nr, int *len) const
-{
-    auto &entry = debugger.logEntryAbs(nr);
-    return disassemble(fmt, entry.pc0, entry, len);
-}
-
-std::string
 Moira::disassemble(const std::string &fmt, u32 addr, const Registers &regs, int *len) const
 {
     std::string result;

@@ -352,13 +352,25 @@ public:
     /// Clears the log buffer
     void clearLog() { logCnt = 0; }
 
+    /** Disassembles an instruction from the log buffer
+     *
+     * Works like Moira::disassemble, but prints the register values recorded
+     * when the instruction was logged.
+     *
+     * @param fmt  The format string (see Moira::disassemble)
+     * @param nr   The index of the log entry (0 is the oldest entry)
+     * @param len  If provided, receives the length of the instruction in bytes
+     */
+    std::string disassembleRecorded(const std::string &fmt, int nr, int *len = nullptr) const;
+
     /// Prints the most recent entries of the log buffer
     /// @param os     The output stream
     /// @param count  The number of entries to print
-    void dumpLogBuffer(std::ostream &os, isize count) const;
+    /// @param fmt    The format string (see Moira::disassemble)
+    void dumpLogBuffer(std::ostream &os, isize count, const std::string &fmt = "%p  %f  %i") const;
 
     /// Prints the whole log buffer
-    void dumpLogBuffer(std::ostream &os) const;
+    void dumpLogBuffer(std::ostream &os, const std::string &fmt = "%p  %f  %i") const;
 
 
     //
@@ -368,11 +380,12 @@ public:
     /// Disassembles a number of instructions starting at the given address
     /// @note  Marks the instruction at the program counter with "->" and
     ///        marks breakpoints with "B" (enabled) or "b" (disabled).
-    void disassembleRange(std::ostream &os, u32 addr, isize count) const;
+    /// @param fmt  The format string (see Moira::disassemble)
+    void disassembleRange(std::ostream &os, u32 addr, isize count, const std::string &fmt = "%p  %15b   %i") const;
 
     /// Disassembles an address range
     /// @param max  Stops after the given number of instructions
-    void disassembleRange(std::ostream &os, std::pair<u32, u32> range, isize max = 255) const;
+    void disassembleRange(std::ostream &os, std::pair<u32, u32> range, isize max = 255, const std::string &fmt = "%p  %15b   %i") const;
 
 
     //

@@ -336,31 +336,38 @@ Debugger::logEntryAbs(int n) const
     return logEntryRel(loggedInstructions() - n - 1);
 }
 
+std::string
+Debugger::disassembleRecorded(const std::string &fmt, int nr, int *len) const
+{
+    auto &entry = logEntryAbs(nr);
+    return moira.disassemble(fmt, entry.pc0, entry, len);
+}
+
 void
-Debugger::dumpLogBuffer(std::ostream &os, isize count) const
+Debugger::dumpLogBuffer(std::ostream &os, isize count, const std::string &fmt) const
 {
     isize num = loggedInstructions();
 
     for (isize i = num - count; i < num ; i++) {
 
-        if (i >= 0) os << "   " << moira.disassembleRecorded("%p  %f  %i", int(i)) << std::endl;
+        if (i >= 0) os << "   " << disassembleRecorded(fmt, int(i)) << std::endl;
     }
 }
 
 void
-Debugger::dumpLogBuffer(std::ostream &os) const
+Debugger::dumpLogBuffer(std::ostream &os, const std::string &fmt) const
 {
-    dumpLogBuffer(os, loggedInstructions());
+    dumpLogBuffer(os, loggedInstructions(), fmt);
 }
 
 void
-Debugger::disassembleRange(std::ostream &os, u32 addr, isize count) const
+Debugger::disassembleRange(std::ostream &os, u32 addr, isize count, const std::string &fmt) const
 {
-    disassembleRange(os, std::pair<u32, u32>(addr, UINT32_MAX), count);
+    disassembleRange(os, std::pair<u32, u32>(addr, UINT32_MAX), count, fmt);
 }
 
 void
-Debugger::disassembleRange(std::ostream &os, std::pair<u32, u32> range, isize max) const
+Debugger::disassembleRange(std::ostream &os, std::pair<u32, u32> range, isize max, const std::string &fmt) const
 {
     u32 addr = range.first;
     int numBytes = 0;
@@ -368,7 +375,7 @@ Debugger::disassembleRange(std::ostream &os, std::pair<u32, u32> range, isize ma
 
     for (isize i = 0; i < max && addr <= range.second; i++, addr += u32(numBytes)) {
 
-        auto line = moira.disassemble("%p  %15b   %i", addr, &numBytes);
+        auto line = moira.disassemble(fmt, addr, &numBytes);
 
         os << (addr == pc ? "->" : "  ");
 

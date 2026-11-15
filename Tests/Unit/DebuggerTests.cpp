@@ -732,6 +732,24 @@ TEST_CASE("Format string disassembler")
     END_MODELS
 }
 
+TEST_CASE("Disassembler style getters")
+{
+    FOR_EACH_MODEL
+    cpu.setDasmSyntax(Syntax::GNU);
+    CHECK(cpu.getDasmSyntax() == Syntax::GNU);
+    cpu.setDasmLetterCase(LetterCase::UPPER_CASE);
+    CHECK(cpu.getDasmLetterCase() == LetterCase::UPPER_CASE);
+    cpu.setDasmIndentation(3);
+    CHECK(cpu.getDasmIndentation() == 3);
+    cpu.setDasmNumberFormat({ .prefix = "0x", .radix = 16 });
+    CHECK(std::string(cpu.getDasmNumberFormat().prefix) == "0x");
+    cpu.setDataNumberFormat({ .prefix = "$", .radix = 16 });
+    CHECK(std::string(cpu.getDataNumberFormat().prefix) == "$");
+    cpu.setDataIndentation(2);
+    CHECK(cpu.getDataIndentation() == 2);
+    END_MODELS
+}
+
 TEST_CASE("Disassembling recorded instructions")
 {
     FOR_EACH_MODEL
@@ -741,12 +759,12 @@ TEST_CASE("Disassembling recorded instructions")
     REQUIRE(cpu.debugger.loggedInstructions() == 3);
 
     // Registers are taken from the log entry, not from the current CPU state
-    CHECK(lower(cpu.disassembleRecorded("%0d", 0)).find("00000000") != std::string::npos);
-    CHECK(lower(cpu.disassembleRecorded("%0d", 1)).find("00000005") != std::string::npos);
-    CHECK(lower(cpu.disassembleRecorded("%0d", 2)).find("00000007") != std::string::npos);
+    CHECK(lower(cpu.debugger.disassembleRecorded("%0d", 0)).find("00000000") != std::string::npos);
+    CHECK(lower(cpu.debugger.disassembleRecorded("%0d", 1)).find("00000005") != std::string::npos);
+    CHECK(lower(cpu.debugger.disassembleRecorded("%0d", 2)).find("00000007") != std::string::npos);
 
     int len = 0;
-    auto s = lower(cpu.disassembleRecorded("%i", 1, &len));
+    auto s = lower(cpu.debugger.disassembleRecorded("%i", 1, &len));
     CHECK(len == 2);
     CHECK(s.find("moveq") != std::string::npos);
     END_MODELS
