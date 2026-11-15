@@ -12,12 +12,26 @@ Moira includes a built-in disassembler that converts instructions, the program c
 
     Creates a textual representation for the referenced status register state. If the second parameter is omitted, the current state of the status register is disassembled.
 
-- `void dump8(char *str, u8 value) const`
-- `void dump16(char *str, u16 value) const`
-- `void dump24(char *str, u32 value) const`
-- `void dump32(char *str, u32 value) const`
-    
-   These functions generate a textual representation of the provided integer value.
+- `std::string disassemble(const std::string &fmt, u32 addr, int *len = nullptr) const`
+
+    Disassembles the instruction at the specified address according to a format string. The following directives are supported:
+
+    | Directive | Output |
+    |-----------|--------|
+    | `%p`      | Instruction address |
+    | `%b`      | Instruction words |
+    | `%i`      | Instruction |
+    | `%f`      | Status register flags |
+    | `%Nd`     | Data register DN (N = 0 ... 7) |
+    | `%Na`     | Address register AN (N = 0 ... 7) |
+
+    A number in front of `%p`, `%b`, `%i`, or `%f` pads the output with spaces to the given width. Other characters are copied to the output. If `len` is given, it receives the instruction length in bytes. An invalid format string throws `std::runtime_error`.
+
+- `std::string disassembleRecorded(const std::string &fmt, int nr, int *len = nullptr) const`
+
+    Works like the function above, but disassembles an entry of the instruction log buffer and prints the register values recorded at that time.
+
+The debugger builds on these functions: `Debugger::dumpLogBuffer` prints the log buffer, and `Debugger::disassembleRange` disassembles a range of memory and marks the current instruction and breakpoints.
 
     
 ## Customizing Output

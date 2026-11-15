@@ -69,18 +69,6 @@ Moira::disassembleSR(char *str, const StatusRegister &sr) const
 }
 
 void
-Moira::dump8(char *str, u8 value) const
-{
-    StrWriter(str, dataStyle) << UInt8{value} << Finish{};
-}
-
-void
-Moira::dump16(char *str, u16 value) const
-{
-    StrWriter(str, dataStyle) << UInt16{value} << Finish{};
-}
-
-void
 Moira::dump24(char *str, u32 value) const
 {
     StrWriter(str, dataStyle) << UInt24{value} << Finish{};
@@ -90,18 +78,6 @@ void
 Moira::dump32(char *str, u32 value) const
 {
     StrWriter(str, dataStyle) << UInt32{value} << Finish{};
-}
-
-void
-Moira::dump16(char *str, u16 values[], int cnt) const
-{
-    StrWriter writer(str, dataStyle);
-
-    for (int i = 0; i < cnt; i++) {
-
-        for (int j = 0; i && j < dataStyle.tab; j++) writer << ' ';
-        writer << UInt16{values[i]} << Finish{};
-    }
 }
 
 void

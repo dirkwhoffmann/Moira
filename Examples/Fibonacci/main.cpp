@@ -70,8 +70,8 @@ public:
     // Prints the CPU state, the instruction that is about to be executed, and the result table
     void dump()
     {
-        char instr[64];
-        (void)disassemble(instr, getPC0());
+        // Disassemble the instruction at the program counter (padded to 26 characters)
+        auto instr = disassemble("%26i", getPC0());
 
         // The five condition code flags in the order X N Z V C
         u16 sr = getSR();
@@ -79,8 +79,8 @@ public:
         for (int i = 0; i < 5; i++) flags[i] = (sr >> (4 - i)) & 1 ? "XNZVC"[i] : '-';
         flags[5] = 0;
 
-        printf("%06X %04X %s  %08X %08X %08X %08X  %-26s",
-               getPC0(), sr, flags, getD(0), getD(1), getA(0), getSP(), instr);
+        printf("%06X %04X %s  %08X %08X %08X %08X  %s",
+               getPC0(), sr, flags, getD(0), getD(1), getA(0), getSP(), instr.c_str());
 
         // Memory dump of the result table
         for (int i = 0; i < 10; i++) printf("%3d ", ram[tableAddr + i]);
@@ -114,13 +114,15 @@ int main(int argc, const char *argv[])
     // Disassemble the program
     printf("Test program:\n\n");
 
-    char instr[64], bytes[64];
+    // The format string selects the address, the instruction words (padded to
+    // 16 characters), and the instruction. The length of the instruction tells
+    // us where the next one starts.
     for (u32 addr = progAddr; addr < progAddr + sizeof(prog); ) {
 
-        int len = cpu.disassemble(instr, addr);
-        cpu.dump16(bytes, addr, len / 2);
+        int len = 0;
+        auto line = cpu.disassemble("%p: %16b %i", addr, &len);
 
-        printf("%06X: %-16s %s\n", addr, bytes, instr);
+        printf("%s\n", line.c_str());
         addr += len;
     }
 

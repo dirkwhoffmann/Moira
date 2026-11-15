@@ -453,20 +453,6 @@ public:
     /// Creates a textual representation of a given status register
     void disassembleSR(char *str, const StatusRegister &sr) const;
     
-    /// Converts an integer value to a textual representation
-    void dump8(char *str, u8 value) const;
-    /// Converts an integer value to a textual representation
-    void dump16(char *str, u16 value) const;
-    /// Converts an integer value to a textual representation
-    void dump24(char *str, u32 value) const;
-    /// Converts an integer value to a textual representation
-    void dump32(char *str, u32 value) const;
-    
-    /// Converts multiple 16-bit values to a textual representation
-    void dump16(char *str, u16 values[], int cnt) const;
-    /// Converts multiple 16-bit values to a textual representation
-    void dump16(char *str, u32 addr, int cnt) const;
-    
     /// Returns instruction metadata for a given opcode
     InstrInfo getInstrInfo(u16 op) const;
 
@@ -679,6 +665,11 @@ private:
 
     // Implements the format-string disassembler
     std::string disassemble(const std::string &fmt, u32 addr, const Registers &regs, int *len) const;
+
+    // Converts values to a textual representation (uses the data style)
+    void dump16(char *str, u32 addr, int cnt) const;
+    void dump24(char *str, u32 value) const;
+    void dump32(char *str, u32 value) const;
 
 
     //
