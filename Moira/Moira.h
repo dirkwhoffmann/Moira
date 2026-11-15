@@ -234,35 +234,20 @@ public:
     /// Returns the selected coprocessor (which may not be effective, see setCPModel)
     CPModel getCPModel() const { return cpModel; }
     
-    /// Configures the syntax style for disassembly output
-    void setDasmSyntax(Syntax value);
-    /// Returns the syntax style for disassembly output
-    Syntax getDasmSyntax() const { return instrStyle.syntax; }
-    
-    /// Sets the number format for disassembly output
-    void setDasmNumberFormat(DasmNumberFormat value) { setNumberFormat(instrStyle, value); }
-    /// Returns the number format for disassembly output
-    DasmNumberFormat getDasmNumberFormat() const { return instrStyle.numberFormat; }
-    
-    /// Sets the letter case for disassembly output
-    void setDasmLetterCase(LetterCase value);
-    /// Returns the letter case for disassembly output
-    LetterCase getDasmLetterCase() const { return instrStyle.letterCase; }
-    
-    /// Sets the indentation for disassembly output
-    void setDasmIndentation(int value) { instrStyle.tab = value; }
-    /// Returns the indentation for disassembly output
-    int getDasmIndentation() const { return instrStyle.tab; }
-    
-    /// Sets the number format for data (addresses, instruction words and registers in format strings)
-    void setDataNumberFormat(DasmNumberFormat value) { setNumberFormat(dataStyle, value); }
-    /// Returns the number format for data
-    DasmNumberFormat getDataNumberFormat() const { return dataStyle.numberFormat; }
-    
-    /// Sets the indentation between multiple data words
-    void setDataIndentation(int value) { dataStyle.tab = value; }
-    /// Returns the indentation between multiple data words
-    int getDataIndentation() const { return dataStyle.tab; }
+    /// Returns the visual style of the disassembler output
+    DasmStyle getDasmStyle() const { return instrStyle; }
+
+    /// Sets the visual style of the disassembler output
+    /// @throws std::runtime_error if the number format is invalid (see DasmNumberFormat)
+    void setDasmStyle(const DasmStyle &style);
+
+    /// Returns the style used for data (addresses, instruction words and registers in format strings)
+    DasmStyle getDataStyle() const { return dataStyle; }
+
+    /// Sets the style used for data
+    /// @note  Only the number format and the indentation between multiple words matter.
+    /// @throws std::runtime_error if the number format is invalid (see DasmNumberFormat)
+    void setDataStyle(const DasmStyle &style);
 
     /// Checks if the emulated CPU has a coprocessor interface (CPI)
     bool hasCPI() const;
@@ -551,8 +536,6 @@ private:
     // Configures the FPU and MMU to match the emulated CPU configuration
     void configureUnits();
 
-    // Helper function
-    void setNumberFormat(DasmStyle &style, const DasmNumberFormat &value);
 
 
 protected:

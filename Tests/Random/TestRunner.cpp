@@ -376,30 +376,35 @@ void TestRunner::disassembleMoira(Setup &s, Result &r)
     r.dasmCntMusashi = r.dasmCntMoiraUAE = 0;
 
     // Disassemble the instruction in GNU format (binutils)
-    moiracpu->setDasmSyntax(mit ? Syntax::GNU_MIT : Syntax::GNU);
-    moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 10, .plainZero = true });
+    auto style = moiracpu->getDasmStyle();
+    style.syntax = mit ? Syntax::GNU_MIT : Syntax::GNU;
+    style.numberFormat = { .prefix = "$", .radix = 10, .plainZero = true };
+    moiracpu->setDasmStyle(style);
     r.dasmCntBinutils = moiracpu->disassemble(r.dasmBinutils, r.oldpc);
 
     // Disassemble the instruction in Moira's own syntax
     r.dasmMoiraSyn[0] = 0;
-    moiracpu->setDasmSyntax(mit ? Syntax::MOIRA_MIT : Syntax::MOIRA);
-    moiracpu->setDasmLetterCase(LetterCase::MIXED_CASE);
-    moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
+    style.syntax = mit ? Syntax::MOIRA_MIT : Syntax::MOIRA;
+    style.letterCase = LetterCase::MIXED_CASE;
+    style.numberFormat = { .prefix = "$", .radix = 16 };
+    moiracpu->setDasmStyle(style);
     r.dasmCntMoiraSyn = moiracpu->disassemble(r.dasmMoiraSyn, r.oldpc);
 
     // Disassemble the instruction in Musashi format
     if (dasmMusashi) {
-        moiracpu->setDasmSyntax(Syntax::MUSASHI);
-        moiracpu->setDasmLetterCase(LetterCase::MIXED_CASE);
-        moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
+        style.syntax = Syntax::MUSASHI;
+        style.letterCase = LetterCase::MIXED_CASE;
+        style.numberFormat = { .prefix = "$", .radix = 16 };
+        moiracpu->setDasmStyle(style);
         r.dasmCntMusashi = moiracpu->disassemble(r.dasmMusashi, r.oldpc);
     }
 
     // Disassemble the instruction in UAE format
     if (dasmUAE) {
-        moiracpu->setDasmSyntax(Syntax::UAE);
-        moiracpu->setDasmLetterCase(LetterCase::LOWER_CASE);
-        moiracpu->setDasmNumberFormat({ .prefix = "$", .radix = 16 });
+        style.syntax = Syntax::UAE;
+        style.letterCase = LetterCase::LOWER_CASE;
+        style.numberFormat = { .prefix = "$", .radix = 16 };
+        moiracpu->setDasmStyle(style);
         r.dasmCntMoiraUAE = moiracpu->disassemble(r.dasmMoiraUAE, r.oldpc);
     }
 

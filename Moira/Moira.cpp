@@ -183,32 +183,29 @@ Moira::hasExternalFPU() const
     return moira::hasCPI(cpuModel) && cpModel != CPModel::NONE;
 }
 
-void
-Moira::setDasmSyntax(Syntax value)
+static void
+validate(const DasmStyle &style)
 {
-    instrStyle.syntax = value;
-}
-
-void
-Moira::setDasmLetterCase(LetterCase value)
-{
-    instrStyle.letterCase = value;
-}
-
-void
-Moira::setNumberFormat(DasmStyle &style, const DasmNumberFormat &value)
-{
-    auto validPrefix = [&](DasmNumberFormat fmt) { return fmt.prefix != nullptr; };
-    auto validRadix = [&](DasmNumberFormat fmt) { return fmt.radix == 10 || fmt.radix == 16; };
-
-    if (!validPrefix(value)) {
+    if (style.numberFormat.prefix == nullptr) {
         throw std::runtime_error("prefix must not be NULL");
     }
-    if (!validRadix(value)) {
+    if (style.numberFormat.radix != 10 && style.numberFormat.radix != 16) {
         throw std::runtime_error("radix must be 10 or 16");
     }
+}
 
-    style.numberFormat = value;
+void
+Moira::setDasmStyle(const DasmStyle &style)
+{
+    validate(style);
+    instrStyle = style;
+}
+
+void
+Moira::setDataStyle(const DasmStyle &style)
+{
+    validate(style);
+    dataStyle = style;
 }
 
 bool

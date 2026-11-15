@@ -32,9 +32,37 @@ The debugger builds on these functions: `Debugger::dumpLogBuffer` prints the log
     
 ## Customizing Output
 
-The disassembler output can be customized in various ways by calling one of the following API functions:
+The disassembler output is controlled by a `DasmStyle`:
 
-- `void setDasmSyntax(Syntax value)` 
+````c++
+struct DasmStyle
+{
+    Syntax syntax;                  // The syntax style
+    LetterCase letterCase;          // The letter case
+    DasmNumberFormat numberFormat;  // The number format
+    int tab;                        // Indentation of the operands
+};
+````
+
+To customize the output, read the current style, modify it, and write it back:
+
+````c++
+auto style = cpu.getDasmStyle();
+style.syntax = Syntax::GNU;
+cpu.setDasmStyle(style);
+````
+
+- `DasmStyle getDasmStyle() const` and `void setDasmStyle(const DasmStyle &style)`
+
+    Read and write the style of the instruction output. `setDasmStyle` throws `std::runtime_error` if the number format is invalid (the prefix must not be `NULL` and the radix must be 10 or 16).
+
+- `DasmStyle getDataStyle() const` and `void setDataStyle(const DasmStyle &style)`
+
+    Read and write the style used for data: addresses (`%p`), instruction words (`%b`) and registers (`%Nd`, `%Na`) in format strings. Only `numberFormat` and `tab` (the spacing between multiple words) matter here.
+
+The fields have the following meaning:
+
+- `syntax`
 
     Moira supports the following syntax styles: 
     - `MOIRA` (default)
@@ -48,7 +76,7 @@ The disassembler output can be customized in various ways by calling one of the 
     - `MUSASHI`
         Reproduces the exact output of the Musashi disassembler.
 
-- `void setDasmNumberFormat(DasmNumberFormat value)`
+- `numberFormat`
 
     Controls the formatting of numbers in disassembly output. The structure below defines the configurable parameters:
 
@@ -62,7 +90,7 @@ The disassembler output can be customized in various ways by calling one of the 
     };
     ````
 
-- `void setDasmLetterCase(LetterCase value)`
+- `letterCase`
 
     The letter case determines the appearance of mnemonics and register names. The following options are availabe: 
     - `MIXED_CASE`
@@ -72,15 +100,9 @@ The disassembler output can be customized in various ways by calling one of the 
     - `UPPER_CASE`
         Outputs mnemonics and register names in uppercase.
     
-- `void setDasmIndentation(int value)`
+- `tab`
 
     Adjusts the spacing between the mnemonic and the rest of the instruction for better readability.
-
-- `void setDataNumberFormat(DasmNumberFormat value)` and `void setDataIndentation(int value)`
-
-    Configure how addresses (`%p`), instruction words (`%b`) and registers (`%Nd`, `%Na`) are printed by the format-string disassembler.
-
-Each setter has a matching getter (`getDasmSyntax`, `getDasmNumberFormat`, `getDasmLetterCase`, `getDasmIndentation`, `getDataNumberFormat`, `getDataIndentation`).
 
 ## Examples
 

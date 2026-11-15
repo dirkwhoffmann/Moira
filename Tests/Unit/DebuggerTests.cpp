@@ -732,21 +732,36 @@ TEST_CASE("Format string disassembler")
     END_MODELS
 }
 
-TEST_CASE("Disassembler style getters")
+TEST_CASE("Disassembler styles")
 {
     FOR_EACH_MODEL
-    cpu.setDasmSyntax(Syntax::GNU);
-    CHECK(cpu.getDasmSyntax() == Syntax::GNU);
-    cpu.setDasmLetterCase(LetterCase::UPPER_CASE);
-    CHECK(cpu.getDasmLetterCase() == LetterCase::UPPER_CASE);
-    cpu.setDasmIndentation(3);
-    CHECK(cpu.getDasmIndentation() == 3);
-    cpu.setDasmNumberFormat({ .prefix = "0x", .radix = 16 });
-    CHECK(std::string(cpu.getDasmNumberFormat().prefix) == "0x");
-    cpu.setDataNumberFormat({ .prefix = "$", .radix = 16 });
-    CHECK(std::string(cpu.getDataNumberFormat().prefix) == "$");
-    cpu.setDataIndentation(2);
-    CHECK(cpu.getDataIndentation() == 2);
+    auto style = cpu.getDasmStyle();
+    style.syntax = Syntax::GNU;
+    style.letterCase = LetterCase::UPPER_CASE;
+    style.numberFormat = { .prefix = "0x", .radix = 16 };
+    style.tab = 3;
+    cpu.setDasmStyle(style);
+
+    auto s = cpu.getDasmStyle();
+    CHECK(s.syntax == Syntax::GNU);
+    CHECK(s.letterCase == LetterCase::UPPER_CASE);
+    CHECK(std::string(s.numberFormat.prefix) == "0x");
+    CHECK(s.tab == 3);
+
+    auto data = cpu.getDataStyle();
+    data.numberFormat = { .prefix = "$", .radix = 16 };
+    data.tab = 2;
+    cpu.setDataStyle(data);
+    CHECK(std::string(cpu.getDataStyle().numberFormat.prefix) == "$");
+    CHECK(cpu.getDataStyle().tab == 2);
+
+    // Invalid number formats are rejected and leave the style unchanged
+    style.numberFormat.prefix = nullptr;
+    CHECK_THROWS_AS(cpu.setDasmStyle(style), std::runtime_error);
+    style.numberFormat = { .prefix = "$", .radix = 8 };
+    CHECK_THROWS_AS(cpu.setDasmStyle(style), std::runtime_error);
+    CHECK_THROWS_AS(cpu.setDataStyle(style), std::runtime_error);
+    CHECK(std::string(cpu.getDasmStyle().numberFormat.prefix) == "0x");
     END_MODELS
 }
 
