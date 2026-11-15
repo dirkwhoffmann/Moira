@@ -982,7 +982,6 @@ Moira::readFC() const
         case 0: return u8((reg.sr.s ? 4 : 0) | fcl);
         case 1: return u8(reg.sfc);
         case 2: return u8(reg.dfc);
-        case 3: return FC::CPU_SPACE;
 
         default:
             fatalError;
@@ -1038,19 +1037,12 @@ Moira::setIPL(u8 val)
 }
 
 void
-Moira::reportCpuSpace(CpuSpaceType type, u8 arg)
-{
-    u8 oldSource = fcSource;
-    fcSource = 3;
-    cpuSpaceCycle(type, arg);
-    fcSource = oldSource;
-}
-
-void
-Moira::reportCPCycle(u16 opcode, u8 cir)
+Moira::notifyCPCycle(u16 opcode, u8 cir)
 {
     // Coprocessor ID (opcode bits 11-9) on A15-A13, register select on A4-A0
-    reportCpuSpace(CpuSpaceType::COPROCESSOR, u8(((opcode >> 9) & 7) << 5 | cir));
+    u8 arg = u8(((opcode >> 9) & 7) << 5 | cir);
+    willExecute(CpuSpaceType::COPROCESSOR, arg);
+    didExecute(CpuSpaceType::COPROCESSOR, arg);
 }
 
 u16
@@ -1058,10 +1050,8 @@ Moira::getIrqVector(u8 level) {
 
     assert(level < 8);
 
-    // The interrupt acknowledge cycle is a CPU space cycle (FC = 7)
-    u8 oldSource = fcSource;
-    fcSource = 3;
-    cpuSpaceCycle(CpuSpaceType::IRQ_ACK, level);
+    // The interrupt acknowledge cycle is a CPU space cycle
+    willExecute(CpuSpaceType::IRQ_ACK, level);
 
     // Ask the interrupting device for the vector
     u8 userVector = 0;
@@ -1075,7 +1065,7 @@ Moira::getIrqVector(u8 level) {
         case IrqMode::UNINITIALIZED: vector = 15; break;
     }
 
-    fcSource = oldSource;
+    didExecute(CpuSpaceType::IRQ_ACK, level);
     return vector;
 }
 

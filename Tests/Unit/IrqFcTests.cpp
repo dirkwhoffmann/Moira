@@ -57,18 +57,19 @@ public:
     IrqMode readIrqVector(u8 level, u8 *vector) const override
     {
         if (irqMode == IrqMode::USER) {
-            userVecCalls.push_back(level); userVecFC.push_back(readFC());
+            userVecCalls.push_back(level);
             *vector = u8(userVec[level]);
         }
         return irqMode;
     }
     void willInterrupt(u8 level) override { irqLevels.push_back(level); }
 
-    struct SpaceCycle { CpuSpaceType type; u8 arg; int fc; };
+    struct SpaceCycle { CpuSpaceType type; u8 arg; };
     std::vector<SpaceCycle> spaceCycles;
-    mutable std::vector<int> userVecFC;     // FC seen inside readIrqVector in USER mode
+    std::vector<SpaceCycle> didSpaceCycles;
 
-    void cpuSpaceCycle(CpuSpaceType type, u8 arg) override { spaceCycles.push_back({ type, arg, readFC() }); }
+    void willExecute(CpuSpaceType type, u8 arg) override { spaceCycles.push_back({ type, arg }); }
+    void didExecute(CpuSpaceType type, u8 arg) override { didSpaceCycles.push_back({ type, arg }); }
 
     void note(bool w, u32 a) const { if (logging) log.push_back({ w, a & 0xFFFFFF, readFC() }); }
 
@@ -103,8 +104,8 @@ public:
         debugger.jump(codeStart);
         irqLevels.clear();
         userVecCalls.clear();
-        userVecFC.clear();
         spaceCycles.clear();
+        didSpaceCycles.clear();
     }
 
     void step(int n = 1) { for (int i = 0; i < n; i++) execute(); }
@@ -331,7 +332,7 @@ TEST_CASE("A pending interrupt is taken when the mask drops")
 // CPU space cycles
 //
 
-TEST_CASE("CPU space: interrupt acknowledge is reported with FC = 7")
+TEST_CASE("CPU space: interrupt acknowledge is reported")
 {
     for (auto model : models) {
         for (auto mode : { IrqMode::AUTO, IrqMode::USER, IrqMode::SPURIOUS, IrqMode::UNINITIALIZED }) {
@@ -351,13 +352,9 @@ TEST_CASE("CPU space: interrupt acknowledge is reported with FC = 7")
                 REQUIRE(cpu.spaceCycles.size() == 1);
                 CHECK(cpu.spaceCycles[0].type == CpuSpaceType::IRQ_ACK);
                 CHECK(cpu.spaceCycles[0].arg == level);
-                CHECK(cpu.spaceCycles[0].fc == FCv::CPU);
-
-                // The device is asked during the same cycle
-                if (mode == IrqMode::USER) {
-                    REQUIRE(cpu.userVecFC.size() == 1);
-                    CHECK(cpu.userVecFC[0] == FCv::CPU);
-                }
+                REQUIRE(cpu.didSpaceCycles.size() == 1);        // The cycle is also reported when it ends
+                CHECK(cpu.didSpaceCycles[0].type == CpuSpaceType::IRQ_ACK);
+                CHECK(cpu.didSpaceCycles[0].arg == level);
             }
         }
     }
@@ -392,7 +389,6 @@ TEST_CASE("CPU space: BKPT acknowledges the breakpoint number")
             REQUIRE(cpu.spaceCycles.size() == 1);
             CHECK(cpu.spaceCycles[0].type == CpuSpaceType::BREAKPOINT);
             CHECK(cpu.spaceCycles[0].arg == n);
-            CHECK(cpu.spaceCycles[0].fc == FCv::CPU);
             CHECK(cpu.getPC0() == IrqCPU::handler(4));              // The exception follows the cycle
             CHECK(cpu.readFC() != FCv::CPU);
         }
@@ -451,7 +447,6 @@ TEST_CASE("CPU space: coprocessor cycles of the generic coprocessor interface")
             REQUIRE(cpu.spaceCycles.size() == 1);
             CHECK(cpu.spaceCycles[0].type == CpuSpaceType::COPROCESSOR);
             CHECK(cpu.spaceCycles[0].arg == cpArg(5, c.cir));
-            CHECK(cpu.spaceCycles[0].fc == FCv::CPU);
             CHECK(cpu.getPC0() == IrqCPU::handler(11));             // No coprocessor: line-F exception
             CHECK(cpu.readFC() != FCv::CPU);
         }
@@ -530,7 +525,6 @@ TEST_CASE("CPU space: an external 68881 is accessed via the coprocessor interfac
             REQUIRE(cpu.spaceCycles.size() >= 1);
             CHECK(cpu.spaceCycles[0].type == CpuSpaceType::COPROCESSOR);
             CHECK(cpu.spaceCycles[0].arg == cpArg(1, c.cir));
-            CHECK(cpu.spaceCycles[0].fc == FCv::CPU);
             CHECK(cpu.spaceCycles.size() == 1);                     // Only the first cycle is reported
             CHECK(cpu.readFC() != FCv::CPU);
         }

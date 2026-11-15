@@ -1552,8 +1552,9 @@ Moira::execBkpt(u16 opcode)
 
     } else {
 
-        // The CPU acknowledges the breakpoint with a CPU space cycle (FC = 7)
-        reportCpuSpace(CpuSpaceType::BREAKPOINT, opcode & 7);
+        // The CPU acknowledges the breakpoint with a CPU space cycle
+        willExecute(CpuSpaceType::BREAKPOINT, opcode & 7);
+        didExecute(CpuSpaceType::BREAKPOINT, opcode & 7);
 
         execException<C>(M68kException::BKPT);
     }
@@ -2379,7 +2380,7 @@ Moira::execCpBcc(u16 opcode)
     AVAILABILITY(Core::C68020)
 
     // First cycle of the coprocessor protocol
-    reportCPCycle(opcode, CIR::CONDITION);
+    notifyCPCycle(opcode, CIR::CONDITION);
 
     execLineF<C, I, M, S>(opcode);
 
@@ -2392,7 +2393,7 @@ Moira::execCpDbcc(u16 opcode)
     AVAILABILITY(Core::C68020)
 
     // First cycle of the coprocessor protocol
-    reportCPCycle(opcode, CIR::CONDITION);
+    notifyCPCycle(opcode, CIR::CONDITION);
 
     execLineF<C, I, M, S>(opcode);
 
@@ -2405,7 +2406,7 @@ Moira::execCpGen(u16 opcode)
     AVAILABILITY(Core::C68020)
 
     // First cycle of the coprocessor protocol
-    reportCPCycle(opcode, CIR::COMMAND);
+    notifyCPCycle(opcode, CIR::COMMAND);
 
     execLineF<C, I, M, S>(opcode);
 
@@ -2419,7 +2420,7 @@ Moira::execCpRestore(u16 opcode)
     SUPERVISOR_MODE_ONLY
 
     // First cycle of the coprocessor protocol
-    reportCPCycle(opcode, CIR::RESTORE);
+    notifyCPCycle(opcode, CIR::RESTORE);
 
     execLineF<C, I, M, S>(opcode);
 
@@ -2443,7 +2444,7 @@ Moira::execCpSave(u16 opcode)
     SUPERVISOR_MODE_ONLY
 
     // First cycle of the coprocessor protocol
-    reportCPCycle(opcode, CIR::SAVE);
+    notifyCPCycle(opcode, CIR::SAVE);
 
     execLineF<C, I, M, S>(opcode);
 
@@ -2456,7 +2457,7 @@ Moira::execCpScc(u16 opcode)
     AVAILABILITY(Core::C68020)
 
     // First cycle of the coprocessor protocol
-    reportCPCycle(opcode, CIR::CONDITION);
+    notifyCPCycle(opcode, CIR::CONDITION);
 
     execLineF<C, I, M, S>(opcode);
 
@@ -2469,7 +2470,7 @@ Moira::execCpTrapcc(u16 opcode)
     AVAILABILITY(Core::C68020)
 
     // First cycle of the coprocessor protocol
-    reportCPCycle(opcode, CIR::CONDITION);
+    notifyCPCycle(opcode, CIR::CONDITION);
 
     execLineF<C, I, M, S>(opcode);
 

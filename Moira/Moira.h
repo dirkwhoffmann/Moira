@@ -434,7 +434,7 @@ protected:
     /// Returns the DSACK bits for the addressed device (68020)
     virtual u8 dsack(u32 addr) const { return DSACK_16; }
 
-    /// Answers an interrupt acknowledge cycle (called with FC = 7)
+    /// Answers an interrupt acknowledge cycle
     /// @param level   The acknowledged interrupt level.
     /// @param vector  Receives the vector number if the answer is IrqMode::USER.
     /// @return        How the interrupt is answered. AUTO (default) selects the
@@ -489,16 +489,22 @@ protected:
     /// Called when the CPU jumps to an exception vector
     virtual void didJumpToVector(int nr, u32 addr) { }
 
-    /// Called when the CPU runs a CPU space cycle (FC = 7)
+    /// Called before a CPU space cycle (FC = 7) is executed
     /// @param type  The cycle type
     /// @param arg   The interrupt level (IRQ_ACK), the breakpoint number
     ///              (BREAKPOINT), or the coprocessor ID in bits 7-5 and the
     ///              register select (CIR::XXX) in bits 4-0 (COPROCESSOR). This
     ///              is the same value that appears on the address lines
     ///              A15-A13 and A4-A0.
-    /// @note  readFC() returns 7 while this delegate is called. For interrupt
-    ///        acknowledge cycles, the same holds for readIrqVector().
-    virtual void cpuSpaceCycle(CpuSpaceType type, u8 arg) { }
+    /// @note  The function code pins still show the value of the previous
+    ///        cycle (readFC()). The cycle type implies FC = 7. For interrupt
+    ///        acknowledge cycles, the notification precedes readIrqVector().
+    virtual void willExecute(CpuSpaceType type, u8 arg) { }
+
+    /// Called after a CPU space cycle has been executed
+    /// @note  For interrupt acknowledge cycles, readIrqVector() has been
+    ///        called at this point.
+    virtual void didExecute(CpuSpaceType type, u8 arg) { }
 
     
     //
@@ -601,8 +607,9 @@ protected:
     // Called when the CPU jumps to an exception vector
     void didJumpToVector(int nr, u32 addr);
 
-    // Called when the CPU runs a CPU space cycle (FC = 7)
-    void cpuSpaceCycle(CpuSpaceType type, u8 arg);
+    // Called before and after a CPU space cycle (FC = 7)
+    void willExecute(CpuSpaceType type, u8 arg);
+    void didExecute(CpuSpaceType type, u8 arg);
     
     
     //
@@ -921,11 +928,8 @@ private:
     // Selects the IRQ vector based on the interrupt level
     u16 getIrqVector(u8 level);
 
-    // Reports a CPU space cycle (sets the function code pins to 7 meanwhile)
-    void reportCpuSpace(CpuSpaceType type, u8 arg);
-
-    // Reports the first cycle of the coprocessor protocol of a line-F instruction
-    void reportCPCycle(u16 opcode, u8 cir);
+    // Announces the first cycle of the coprocessor protocol of a line-F instruction
+    void notifyCPCycle(u16 opcode, u8 cir);
 
 
     //
