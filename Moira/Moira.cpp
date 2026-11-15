@@ -213,9 +213,11 @@ Moira::instrLength(u32 addr) const
 {
     if constexpr (MOIRA_ENABLE_DASM) {
 
-        // Use the tables of the emulated CPU model (independent of the disassembler model)
+        // Use the CPU model instead of the DASM model for disassembly
+        bool cpuView = true;
+        
         char tmp[128];
-        return disassembleInstr(tmp, addr, true);
+        return disassembleInstr(tmp, addr, cpuView);
 
     } else {
 
@@ -410,6 +412,7 @@ Moira::executeInstruction()
         } catch (const std::exception &exc) {
             processException(exc);
         }
+        
         advancePC0();
 
     } else {
@@ -469,7 +472,7 @@ Moira::executeInstruction()
             // that needs it receives a pointer to it (see processException).
             Registers snapshot;
             const Registers *saved = nullptr;
-                    if (flags & (State::SAVE_REGS | State::MMU)) { snapshot = reg; saved = &snapshot; }
+            if (flags & (State::SAVE_REGS | State::MMU)) { snapshot = reg; saved = &snapshot; }
 
             try {
 
