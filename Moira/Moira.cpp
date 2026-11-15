@@ -123,43 +123,6 @@ Moira::setModel(CPUModel cpu, CPUModel dasm)
 }
 
 void
-Moira::configureUnits()
-{
-    switch (cpuModel) {
-
-        case CPUModel::M68EC020:
-        case CPUModel::M68020:
-        case CPUModel::M68EC030:
-
-            mmu.setModel(MMUModel::NONE);
-            fpu.setModel(cpModel);
-            break;
-
-        case CPUModel::M68030:
-
-            mmu.setModel(MMUModel::M68030);
-            fpu.setModel(cpModel);
-            break;
-
-        case CPUModel::M68LC040:
-
-            mmu.setModel(MMUModel::M68040);
-            break;
-
-        case CPUModel::M68040:
-
-            mmu.setModel(MMUModel::M68040);
-            fpu.setModel(FPUModel::M68040);
-            break;
-
-        default:
-            
-            mmu.setModel(MMUModel::NONE);
-            break;
-    }
-}
-
-void
 Moira::setCPModel(CPModel model)
 {
     if (cpModel == model) return;
@@ -169,18 +132,6 @@ Moira::setCPModel(CPModel model)
 
     // The FPU handlers and the disassembler entries depend on the coprocessor
     if (moira::hasCPI(cpuModel) || moira::hasCPI(dasmModel)) createJumpTable(cpuModel, dasmModel);
-}
-
-bool
-Moira::hasInternalFPU() const
-{
-    return cpuModel == CPUModel::M68040;
-}
-
-bool
-Moira::hasExternalFPU() const
-{
-    return moira::hasCPI(cpuModel) && cpModel != CPModel::NONE;
 }
 
 static void
@@ -208,23 +159,6 @@ Moira::setDataStyle(const DasmStyle &style)
     dataStyle = style;
 }
 
-isize
-Moira::instrLength(u32 addr) const
-{
-    if constexpr (MOIRA_ENABLE_DASM) {
-
-        // Use the CPU model instead of the DASM model for disassembly
-        bool cpuView = true;
-        
-        char tmp[128];
-        return disassembleInstr(tmp, addr, cpuView);
-
-    } else {
-
-        throw std::runtime_error("This feature requires MOIRA_ENABLE_DASM = true\n");
-    }
-}
-
 bool
 Moira::hasCPI() const
 {
@@ -241,6 +175,36 @@ bool
 Moira::hasFPU() const
 {
     return hasInternalFPU() || hasExternalFPU();
+}
+
+bool
+Moira::hasInternalFPU() const
+{
+    return cpuModel == CPUModel::M68040;
+}
+
+bool
+Moira::hasExternalFPU() const
+{
+    return moira::hasCPI(cpuModel) && cpModel != CPModel::NONE;
+}
+
+bool
+Moira::isAvailable(CPUModel model, Instr I) const
+{
+    return availabilityMask(I) & (1 << (int)model);
+}
+
+bool
+Moira::isAvailable(CPUModel model, Instr I, Mode M, Size S) const
+{
+    return availabilityMask(I, M, S) & (1 << (int)model);
+}
+
+bool
+Moira::isAvailable(CPUModel model, Instr I, Mode M, Size S, u16 ext) const
+{
+    return availabilityMask(I, M, S, ext) & (1 << (int)model);
 }
 
 u32
@@ -288,101 +252,233 @@ Moira::reset()
     }
 }
 
-template <Core C> void
-Moira::reset()
+i64
+Moira::execute(i64 cycles)
 {
-    flags = State::CHECK_IRQ;
+    return executeUntil(clock + cycles);
+}
 
-    if constexpr (MOIRA_EMULATE_BUS_ERROR && C == Core::C68020) {
-        
-        // Let Moira snapshot the register set before invoking an execution handler.
-        //
-        // Background: Bus errors on the 68020 family are restartable. After an RTE,
-        // the CPU resumes execution from its internal state. Moira approximates this
-        // behavior by restarting the current instruction, which requires the original
-        // register state to be available.
-        //
-        // Note that this comes with a performance penalty: the 68020 must remain on
-        // the slow path at all times. Other CPU models are unaffected and stay on the
-        // fast path, as they do not require register snapshots.
-        
-        flags |= State::SAVE_REGS;
-    }
-    
-    reg = { };
-    reg.sr.s = 1;
-    reg.sr.ipl = 7;
-
-    ipl = 0;
-    nmiTaken = false;
-    fcl = 2;
-    fcSource = 0;
-    budget = { };
-
-    iCache.flush();
-    dCache.flush();
-    iCache.refresh();
-    dCache.refresh();
-
-    SYNC(16);
-
-    // Read the initial (supervisor) stack pointer from memory
-    SYNC(2);
-    reg.sp = read16OnReset(0);
-    SYNC(4);
-    reg.isp = reg.sp = (read16OnReset(2) & ~0x1) | reg.sp << 16;
-    SYNC(4);
-    reg.pc = read16OnReset(4);
-    SYNC(4);
-    reg.pc = (read16OnReset(6) & ~0x1) | reg.pc << 16;
-
-    // Fill the prefetch queue
-    SYNC(4);
-    queue.irc = read16OnReset(reg.pc & addrMask<C>());
-    SYNC(2);
-    prefetch<C>();
-    reg.pc0 = reg.pc - 2;
-
-    // Reset subcomponents
-    debugger.reset();
-
-    // Inform the delegate
-    didResetCPU();
+i64
+Moira::executeUntil(i64 cycle)
+{
+    const i64 start = clock;
+    while (clock < cycle) { executeInstruction(); }
+    return clock - start;
 }
 
 void
-Moira::syncCyclePenalty(int cycles)
+Moira::jump(u32 addr)
 {
-    // Max number of instructions that may execute without advancing the clock
-    static constexpr int maxStalled = 4;
+    reg.pc = addr & ~1;
+    fullPrefetch<Core::C68000, Flag::POLL>();
+    reg.pc0 = reg.pc - 2;
+}
 
-    // Lower bound for the model time debt
-    static constexpr int minAccum = -454;
+u8
+Moira::getCCR() const
+{
+    auto result =
+    reg.sr.c << 0 |
+    reg.sr.v << 1 |
+    reg.sr.z << 2 |
+    reg.sr.n << 3 |
+    reg.sr.x << 4 ;
 
-    // Accumulate the cycle penalty (may become negative)
-    budget.accumulated += cycles;
+    return u8(result);
+}
 
-    if (budget.accumulated >= 2) {
+void
+Moira::setCCR(u8 val)
+{
+    reg.sr.c = (val >> 0) & 1;
+    reg.sr.v = (val >> 1) & 1;
+    reg.sr.z = (val >> 2) & 1;
+    reg.sr.n = (val >> 3) & 1;
+    reg.sr.x = (val >> 4) & 1;
+}
 
-        // The CPU is ahead of its environment. Spend everything that amounts
-        // to whole bus cycles
+u16
+Moira::getSR() const
+{
+    auto flags =
+    reg.sr.t1  << 15 |
+    reg.sr.t0  << 14 |
+    reg.sr.s   << 13 |
+    reg.sr.m   << 12 |
+    reg.sr.ipl <<  8 ;
 
-        int step = budget.accumulated & ~1;
-        budget.accumulated -= step;
-        budget.stalled = 0;
-        sync(step);
+    return u16(flags | getCCR());
+}
 
-    } else if (++budget.stalled >= maxStalled) {
+void
+Moira::setSR(u16 val)
+{
+    bool t1  = (val >> 15) & 1;
+    bool s   = (val >> 13) & 1;
+    u8   ipl = (val >>  8) & 7;
 
-        // Nothing was spend for a while now. Since the environment is stepped
-        // from here alone, it has to be moved forward regardless - otherwise
-        // the emulation makes no progress and its main loop never terminates.
-        // The borrowed bus cycle is booked as a debt.
+    reg.sr.ipl = ipl;
+    flags |= State::CHECK_IRQ;
+    t1 ? setTraceFlag() : clearTraceFlag();
 
-        budget.stalled = 0;
-        budget.accumulated -= 2;
-        if (budget.accumulated < minAccum) budget.accumulated = minAccum;
-        sync(2);
+    setCCR(u8(val));
+    setSupervisorMode(s);
+
+    if (cpuModel > CPUModel::M68010) {
+
+        bool t0 = (val >> 14) & 1;
+        bool m = (val >> 12) & 1;
+
+        t0 ? setTrace0Flag() : clearTrace0Flag();
+        setMasterMode(m);
+    }
+}
+
+void
+Moira::setCACR(u32 val)
+{
+    // Setting the clear bits invalidates (parts of) the caches
+    iCache.cacrDidChange(val);
+    dCache.cacrDidChange(val);
+
+    reg.cacr = val & getCacrMask();
+    iCache.refresh();
+    dCache.refresh();
+    didChangeCACR(val);
+}
+
+void
+Moira::setCAAR(u32 val)
+{
+    reg.caar = val;
+    iCache.caarDidChange(val);
+    dCache.caarDidChange(val);
+    didChangeCAAR(val);
+}
+
+void
+Moira::setSupervisorMode(bool s)
+{
+    if (s != reg.sr.s) setSupervisorFlags(s, reg.sr.m);
+}
+
+void
+Moira::setMasterMode(bool m)
+{
+    if (m != reg.sr.m) setSupervisorFlags(reg.sr.s, m);
+}
+
+void
+Moira::setSupervisorFlags(bool s, bool m)
+{
+    bool uspWasVisible = !reg.sr.s;
+    bool ispWasVisible =  reg.sr.s && !reg.sr.m;
+    bool mspWasVisible =  reg.sr.s &&  reg.sr.m;
+
+    if (uspWasVisible) reg.usp = reg.sp;
+    if (ispWasVisible) reg.isp = reg.sp;
+    if (mspWasVisible) reg.msp = reg.sp;
+
+    reg.sr.s = s;
+    reg.sr.m = m;
+
+    bool uspIsVisible  = !reg.sr.s;
+    bool ispIsVisible  =  reg.sr.s && !reg.sr.m;
+    bool mspIsVisible  =  reg.sr.s &&  reg.sr.m;
+
+    if (uspIsVisible)  reg.sp = reg.usp;
+    if (ispIsVisible)  reg.sp = reg.isp;
+    if (mspIsVisible)  reg.sp = reg.msp;
+}
+
+u8
+Moira::getFC() const
+{
+    switch (fcSource) {
+
+        case 0: return u8((reg.sr.s ? 4 : 0) | fcl);
+        case 1: return reg.sfc;
+        case 2: return reg.dfc;
+
+        default:
+            fatalError;
+    }
+}
+
+void
+Moira::setIPL(u8 val)
+{
+    if (ipl != val) {
+        
+        ipl = val;
+        flags |= State::CHECK_IRQ;
+    }
+}
+
+InstrInfo
+Moira::getInstrInfo(u16 op) const
+{
+    if constexpr (MOIRA_ENABLE_DASM) {
+
+        return infoAlt ? infoAlt[op] : info[op];
+
+    } else {
+
+        throw std::runtime_error("This feature requires MOIRA_ENABLE_DASM = true\n");
+    }
+}
+
+isize
+Moira::instrLength(u32 addr) const
+{
+    if constexpr (MOIRA_ENABLE_DASM) {
+
+        // Use the CPU model instead of the DASM model for disassembly
+        bool cpuView = true;
+        
+        char tmp[128];
+        return disassembleInstr(tmp, addr, cpuView);
+
+    } else {
+
+        throw std::runtime_error("This feature requires MOIRA_ENABLE_DASM = true\n");
+    }
+}
+
+void
+Moira::configureUnits()
+{
+    switch (cpuModel) {
+
+        case CPUModel::M68EC020:
+        case CPUModel::M68020:
+        case CPUModel::M68EC030:
+
+            mmu.setModel(MMUModel::NONE);
+            fpu.setModel(cpModel);
+            break;
+
+        case CPUModel::M68030:
+
+            mmu.setModel(MMUModel::M68030);
+            fpu.setModel(cpModel);
+            break;
+
+        case CPUModel::M68LC040:
+
+            mmu.setModel(MMUModel::M68040);
+            break;
+
+        case CPUModel::M68040:
+
+            mmu.setModel(MMUModel::M68040);
+            fpu.setModel(FPUModel::M68040);
+            break;
+
+        default:
+            
+            mmu.setModel(MMUModel::NONE);
+            break;
     }
 }
 
@@ -528,26 +624,66 @@ Moira::executeInstruction()
     assert(reg.pc == reg.pc0 + 2);
 }
 
-i64
-Moira::execute(i64 cycles)
+template <Core C> void
+Moira::reset()
 {
-    return executeUntil(clock + cycles);
-}
+    flags = State::CHECK_IRQ;
 
-i64
-Moira::executeUntil(i64 cycle)
-{
-    const i64 start = clock;
-    while (clock < cycle) { executeInstruction(); }
-    return clock - start;
-}
+    if constexpr (MOIRA_EMULATE_BUS_ERROR && C == Core::C68020) {
+        
+        // Let Moira snapshot the register set before invoking an execution handler.
+        //
+        // Background: Bus errors on the 68020 family are restartable. After an RTE,
+        // the CPU resumes execution from its internal state. Moira approximates this
+        // behavior by restarting the current instruction, which requires the original
+        // register state to be available.
+        //
+        // Note that this comes with a performance penalty: the 68020 must remain on
+        // the slow path at all times. Other CPU models are unaffected and stay on the
+        // fast path, as they do not require register snapshots.
+        
+        flags |= State::SAVE_REGS;
+    }
+    
+    reg = { };
+    reg.sr.s = 1;
+    reg.sr.ipl = 7;
 
-void
-Moira::jump(u32 addr)
-{
-    reg.pc = addr & ~1;
-    fullPrefetch<Core::C68000, Flag::POLL>();
+    ipl = 0;
+    nmiTaken = false;
+    fcl = 2;
+    fcSource = 0;
+    budget = { };
+
+    iCache.flush();
+    dCache.flush();
+    iCache.refresh();
+    dCache.refresh();
+
+    SYNC(16);
+
+    // Read the initial (supervisor) stack pointer from memory
+    SYNC(2);
+    reg.sp = read16OnReset(0);
+    SYNC(4);
+    reg.isp = reg.sp = (read16OnReset(2) & ~0x1) | reg.sp << 16;
+    SYNC(4);
+    reg.pc = read16OnReset(4);
+    SYNC(4);
+    reg.pc = (read16OnReset(6) & ~0x1) | reg.pc << 16;
+
+    // Fill the prefetch queue
+    SYNC(4);
+    queue.irc = read16OnReset(reg.pc & addrMask<C>());
+    SYNC(2);
+    prefetch<C>();
     reg.pc0 = reg.pc - 2;
+
+    // Reset subcomponents
+    debugger.reset();
+
+    // Inform the delegate
+    didResetCPU();
 }
 
 void
@@ -561,121 +697,40 @@ Moira::halt()
     didHaltCPU();
 }
 
-u8
-Moira::getCCR() const
-{
-    auto result =
-    reg.sr.c << 0 |
-    reg.sr.v << 1 |
-    reg.sr.z << 2 |
-    reg.sr.n << 3 |
-    reg.sr.x << 4 ;
-
-    return u8(result);
-}
-
 void
-Moira::setCCR(u8 val)
+Moira::syncCyclePenalty(int cycles)
 {
-    reg.sr.c = (val >> 0) & 1;
-    reg.sr.v = (val >> 1) & 1;
-    reg.sr.z = (val >> 2) & 1;
-    reg.sr.n = (val >> 3) & 1;
-    reg.sr.x = (val >> 4) & 1;
-}
+    // Max number of instructions that may execute without advancing the clock
+    static constexpr int maxStalled = 4;
 
-u16
-Moira::getSR() const
-{
-    auto flags =
-    reg.sr.t1  << 15 |
-    reg.sr.t0  << 14 |
-    reg.sr.s   << 13 |
-    reg.sr.m   << 12 |
-    reg.sr.ipl <<  8 ;
+    // Lower bound for the model time debt
+    static constexpr int minAccum = -454;
 
-    return u16(flags | getCCR());
-}
+    // Accumulate the cycle penalty (may become negative)
+    budget.accumulated += cycles;
 
-void
-Moira::setSR(u16 val)
-{
-    bool t1  = (val >> 15) & 1;
-    bool s   = (val >> 13) & 1;
-    u8   ipl = (val >>  8) & 7;
+    if (budget.accumulated >= 2) {
 
-    reg.sr.ipl = ipl;
-    flags |= State::CHECK_IRQ;
-    t1 ? setTraceFlag() : clearTraceFlag();
+        // The CPU is ahead of its environment. Spend everything that amounts
+        // to whole bus cycles
 
-    setCCR(u8(val));
-    setSupervisorMode(s);
+        int step = budget.accumulated & ~1;
+        budget.accumulated -= step;
+        budget.stalled = 0;
+        sync(step);
 
-    if (cpuModel > CPUModel::M68010) {
+    } else if (++budget.stalled >= maxStalled) {
 
-        bool t0 = (val >> 14) & 1;
-        bool m = (val >> 12) & 1;
+        // Nothing was spend for a while now. Since the environment is stepped
+        // from here alone, it has to be moved forward regardless - otherwise
+        // the emulation makes no progress and its main loop never terminates.
+        // The borrowed bus cycle is booked as a debt.
 
-        t0 ? setTrace0Flag() : clearTrace0Flag();
-        setMasterMode(m);
+        budget.stalled = 0;
+        budget.accumulated -= 2;
+        if (budget.accumulated < minAccum) budget.accumulated = minAccum;
+        sync(2);
     }
-}
-
-void
-Moira::setCACR(u32 val)
-{
-    // Setting the clear bits invalidates (parts of) the caches
-    iCache.cacrDidChange(val);
-    dCache.cacrDidChange(val);
-
-    reg.cacr = val & getCacrMask();
-    iCache.refresh();
-    dCache.refresh();
-    didChangeCACR(val);
-}
-
-void
-Moira::setCAAR(u32 val)
-{
-    reg.caar = val;
-    iCache.caarDidChange(val);
-    dCache.caarDidChange(val);
-    didChangeCAAR(val);
-}
-
-void
-Moira::setSupervisorMode(bool s)
-{
-    if (s != reg.sr.s) setSupervisorFlags(s, reg.sr.m);
-}
-
-void
-Moira::setMasterMode(bool m)
-{
-    if (m != reg.sr.m) setSupervisorFlags(reg.sr.s, m);
-}
-
-void
-Moira::setSupervisorFlags(bool s, bool m)
-{
-    bool uspWasVisible = !reg.sr.s;
-    bool ispWasVisible =  reg.sr.s && !reg.sr.m;
-    bool mspWasVisible =  reg.sr.s &&  reg.sr.m;
-
-    if (uspWasVisible) reg.usp = reg.sp;
-    if (ispWasVisible) reg.isp = reg.sp;
-    if (mspWasVisible) reg.msp = reg.sp;
-
-    reg.sr.s = s;
-    reg.sr.m = m;
-
-    bool uspIsVisible  = !reg.sr.s;
-    bool ispIsVisible  =  reg.sr.s && !reg.sr.m;
-    bool mspIsVisible  =  reg.sr.s &&  reg.sr.m;
-
-    if (uspIsVisible)  reg.sp = reg.usp;
-    if (ispIsVisible)  reg.sp = reg.isp;
-    if (mspIsVisible)  reg.sp = reg.msp;
 }
 
 u16
@@ -818,24 +873,6 @@ u16 Moira::availabilityMask(Instr I, Mode M, Size S, u16 ext) const
 }
 
 bool
-Moira::isAvailable(CPUModel model, Instr I) const
-{
-    return availabilityMask(I) & (1 << (int)model);
-}
-
-bool
-Moira::isAvailable(CPUModel model, Instr I, Mode M, Size S) const
-{
-    return availabilityMask(I, M, S) & (1 << (int)model);
-}
-
-bool
-Moira::isAvailable(CPUModel model, Instr I, Mode M, Size S, u16 ext) const
-{
-    return availabilityMask(I, M, S, ext) & (1 << (int)model);
-}
-
-bool
 Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext) const
 {
     switch (I) {
@@ -854,20 +891,6 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext) const
         case Instr::CMP2:      return (ext & 0x0FFF) == 0;
         case Instr::MULL:      return (ext & 0x83F8) == 0;
         case Instr::DIVL:      return (ext & 0x83F8) == 0;
-
-        default:
-            fatalError;
-    }
-}
-
-u8
-Moira::getFC() const
-{
-    switch (fcSource) {
-
-        case 0: return u8((reg.sr.s ? 4 : 0) | fcl);
-        case 1: return reg.sfc;
-        case 2: return reg.dfc;
 
         default:
             fatalError;
@@ -912,25 +935,6 @@ Moira::checkForIrq()
     }
 }
 
-void
-Moira::setIPL(u8 val)
-{
-    if (ipl != val) {
-        
-        ipl = val;
-        flags |= State::CHECK_IRQ;
-    }
-}
-
-void
-Moira::notifyCPCycle(u16 opcode, CIR cir)
-{
-    // Coprocessor ID (opcode bits 11-9) on A15-A13, register select on A4-A0
-    u8 arg = u8(((opcode >> 9) & 7) << 5 | u8(cir));
-    willExecute(CpuSpaceType::COPROCESSOR, arg);
-    didExecute(CpuSpaceType::COPROCESSOR, arg);
-}
-
 u16
 Moira::getIrqVector(u8 level) {
 
@@ -955,17 +959,13 @@ Moira::getIrqVector(u8 level) {
     return vector;
 }
 
-InstrInfo
-Moira::getInstrInfo(u16 op) const
+void
+Moira::notifyCPCycle(u16 opcode, CIR cir)
 {
-    if constexpr (MOIRA_ENABLE_DASM) {
-
-        return infoAlt ? infoAlt[op] : info[op];
-
-    } else {
-
-        throw std::runtime_error("This feature requires MOIRA_ENABLE_DASM = true\n");
-    }
+    // Coprocessor ID (opcode bits 11-9) on A15-A13, register select on A4-A0
+    u8 arg = u8(((opcode >> 9) & 7) << 5 | u8(cir));
+    willExecute(CpuSpaceType::COPROCESSOR, arg);
+    didExecute(CpuSpaceType::COPROCESSOR, arg);
 }
 
 template u32 Moira::readD <Long> (int n) const;

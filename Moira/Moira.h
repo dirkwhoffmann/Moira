@@ -269,6 +269,13 @@ public:
      */
     void setDasmModel(CPUModel model) { setModel(cpuModel, model); }
 
+    /** @brief Returns the selected coprocessor
+     *
+     * The returned value is the selection made with setCPModel(). It does not
+     * tell whether the coprocessor is effective. Use hasExternalFPU() for that.
+     */
+    CPModel getCPModel() const { return cpModel; }
+    
     /** @brief Selects the coprocessor that is connected to the coprocessor interface
      *
      * The built-in units are determined by the CPU model: The 68040 has an FPU
@@ -282,13 +289,6 @@ public:
      * @param model  The coprocessor to connect, or CPModel::NONE
      */
     void setCPModel(CPModel model);
-
-    /** @brief Returns the selected coprocessor
-     *
-     * The returned value is the selection made with setCPModel(). It does not
-     * tell whether the coprocessor is effective. Use hasExternalFPU() for that.
-     */
-    CPModel getCPModel() const { return cpModel; }
     
     /** @brief Returns the visual style of the disassembler output
      *
