@@ -380,8 +380,17 @@ public:
 
     
     //
-    // Advancing the clock
+    // Clock
     //
+    
+public:
+    
+    /// Returns the current CPU clock cycle count (elapsed cycles since power-up)
+    i64 getClock() const { return clock; }
+    
+    /// Sets the CPU clock cycle count
+    void setClock(i64 val) { clock = val; }
+
 
 protected:
 
@@ -398,31 +407,10 @@ protected:
      * only here, failing to do so would stall the emulation indefinitely.
      */
     void syncCyclePenalty(int cycles);
-    
+
 
     //
-    // Interfacing with other components
-    //
-    
-protected:
-    
-#include "MoiraInterface.h"
-    
-    //
-    // Accessing the clock
-    //
-    
-public:
-    
-    /// Returns the current CPU clock cycle count (elapsed cycles since power-up)
-    i64 getClock() const { return clock; }
-    
-    /// Sets the CPU clock cycle count
-    void setClock(i64 val) { clock = val; }
-    
-    
-    //
-    // Accessing registers
+    // Registers
     //
     
 public:
@@ -522,13 +510,6 @@ public:
     /// Sets the Cache Address Register (CAAR)
     void setCAAR(u32 val);
 
-    
-    //
-    // Supervisor mode
-    //
-    
-public:
-    
     /// Sets or clears supervisor mode
     void setSupervisorMode(bool value);
     
@@ -537,11 +518,7 @@ public:
     
     /// Sets or clear the supervisor and master flags
     void setSupervisorFlags(bool s, bool m);
-    
-    
-    //
-    // Trace Flags
-    //
+
     
 private:
     
@@ -567,11 +544,7 @@ private:
     
     // Disables both trace flags (T0 and T1)
     void clearTraceFlags() { clearTraceFlag(); clearTrace0Flag(); }
-    
-    
-    //
-    // Register Access
-    //
+
     
 protected:
     
@@ -593,7 +566,16 @@ protected:
     // Writes a value to a register (D0, D1 ... D7, A0, A1 ... A7)
     template <Size S = Long> void writeR(int n, u32 v);
 
+
+    //
+    // Interfacing with other components
+    //
     
+protected:
+    
+#include "MoiraInterface.h"
+
+
     //
     // Instruction Analysis
     //
