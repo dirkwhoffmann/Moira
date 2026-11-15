@@ -4,10 +4,6 @@
 
 Moira includes a built-in disassembler that converts instructions, the program counter, and the status register into human-readable text. The following API functions generate textual representations:
 
-- `int disassemble(char *str, u32 addr) const`
-
-   Disassembles the instruction at the specified address. The caller must ensure that the target string is initialized and large enough to hold the output. The function returns how many bytes the disassembled instruction occupies in memory, making it easy to know where the next instruction starts.
-
 - `std::string disassemble(const std::string &fmt, u32 addr, int *len = nullptr) const`
 
     Disassembles the instruction at the specified address according to a format string. The following directives are supported:

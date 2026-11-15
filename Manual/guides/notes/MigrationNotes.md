@@ -19,6 +19,7 @@ This page lists the API changes that require changes in client code. It is meant
 | Removed | Use instead |
 |:--------|:------------|
 | `dump8()`, `dump16()`, `dump24()`, `dump32()` | `disassemble(fmt, addr)` with `%p`, `%b`, `%Nd` or `%Na` |
+| `disassemble(char *str, u32 addr)` | `disassemble(fmt, addr, &len)` with `"%i"`; the instruction length is returned via `len` |
 | `disassembleSR()` | `disassemble(fmt, addr)` with `%f` |
 | `setIRC()`, `setIRD()` | Set up the prefetch queue with `Debugger::jump()`, or from a subclass via the `queue` member |
 | `setIrqMode()`, `getIrqMode()` | Implement the delegate `readIrqVector(level, &vector)` |

@@ -6,7 +6,7 @@
 // -----------------------------------------------------------------------------
 
 int
-Moira::disassemble(char *str, u32 addr) const
+Moira::disassembleInstr(char *str, u32 addr) const
 {
     if constexpr (MOIRA_ENABLE_DASM == false) {
         throw std::runtime_error("This feature requires MOIRA_ENABLE_DASM = true\n");
@@ -2077,7 +2077,7 @@ Moira::disassemble(const std::string &fmt, u32 addr, const Registers &regs, int 
     int bytes = -1;
     auto length = [&]() {
 
-        if (bytes < 0) { char tmp[128]; bytes = disassemble(tmp, addr); }
+        if (bytes < 0) { char tmp[128]; bytes = disassembleInstr(tmp, addr); }
         return bytes;
     };
 
@@ -2101,7 +2101,7 @@ Moira::disassemble(const std::string &fmt, u32 addr, const Registers &regs, int 
 
             case 'p': dump24(buffer, addr); pad(buffer); break;
             case 'b': dump16(buffer, addr, length() / 2); pad(buffer); break;
-            case 'i': bytes = disassemble(buffer, addr); pad(buffer); break;
+            case 'i': bytes = disassembleInstr(buffer, addr); pad(buffer); break;
             case 'f': disassembleSR(buffer, regs.sr); pad(buffer); break;
 
             case 'd':

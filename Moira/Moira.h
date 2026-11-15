@@ -457,9 +457,6 @@ public:
     // Disassembling
     //
 
-    /// Disassembles an instruction and returns the instruction size in bytes
-    int disassemble(char *str, u32 addr) const;
-    
     /// Returns instruction metadata for a given opcode
     InstrInfo getInstrInfo(u16 op) const;
 
@@ -658,6 +655,9 @@ private:
     //
 
 private:
+
+    // Disassembles a single instruction into a character buffer and returns the instruction size in bytes
+    int disassembleInstr(char *str, u32 addr) const;
 
     // Implements the format-string disassembler
     std::string disassemble(const std::string &fmt, u32 addr, const Registers &regs, int *len) const;

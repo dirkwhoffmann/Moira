@@ -354,7 +354,7 @@ int sequence::run(int argc, char **argv, Reference &ref)
                 u32 pcBefore = moira.getPC0();
                 u16 srBefore = moira.getSR();
                 std::string text = ref.disassemble(pcBefore);
-                if (text.empty()) { char buf[128]; moira.disassemble(buf, pcBefore); text = buf; }
+                if (text.empty()) { text = moira.disassemble("%i", pcBefore); }
                 moira.step();
                 ref.step();
                 if (ref.unreliable()) { unreliable++; break; }

@@ -259,8 +259,9 @@ Debugger::stepInto()
 void
 Debugger::stepOver()
 {
-    char tmp[64];
-    softStop = moira.getPC() + moira.disassemble(tmp, moira.getPC());
+    int len = 0;
+    moira.disassemble("%i", moira.getPC(), &len);
+    softStop = moira.getPC() + len;
     breakpoints.setNeedsCheck(true);
 }
 

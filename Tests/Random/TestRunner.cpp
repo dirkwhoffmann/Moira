@@ -365,6 +365,15 @@ void TestRunner::disassembleReference(Setup &s, Result &r)
     if (dasmUAE) { t0 = clock(); disassembleUAE(s, r); dasmclk[2] += clock() - t0; }
 }
 
+// Disassembles an instruction into a character buffer and returns its length in bytes
+static int dasmString(const moira::Moira *cpu, char *dst, size_t size, u32 addr)
+{
+    int len = 0;
+    auto text = cpu->disassemble("%i", addr, &len);
+    snprintf(dst, size, "%s", text.c_str());
+    return len;
+}
+
 // Disassembles the instruction with Moira in all supported syntax flavors
 void TestRunner::disassembleMoira(Setup &s, Result &r)
 {
@@ -380,7 +389,7 @@ void TestRunner::disassembleMoira(Setup &s, Result &r)
     style.syntax = mit ? Syntax::GNU_MIT : Syntax::GNU;
     style.numberFormat = { .prefix = "$", .radix = 10, .plainZero = true };
     moiracpu->setDasmStyle(style);
-    r.dasmCntBinutils = moiracpu->disassemble(r.dasmBinutils, r.oldpc);
+    r.dasmCntBinutils = dasmString(moiracpu, r.dasmBinutils, sizeof(r.dasmBinutils), r.oldpc);
 
     // Disassemble the instruction in Moira's own syntax
     r.dasmMoiraSyn[0] = 0;
@@ -388,7 +397,7 @@ void TestRunner::disassembleMoira(Setup &s, Result &r)
     style.letterCase = LetterCase::MIXED_CASE;
     style.numberFormat = { .prefix = "$", .radix = 16 };
     moiracpu->setDasmStyle(style);
-    r.dasmCntMoiraSyn = moiracpu->disassemble(r.dasmMoiraSyn, r.oldpc);
+    r.dasmCntMoiraSyn = dasmString(moiracpu, r.dasmMoiraSyn, sizeof(r.dasmMoiraSyn), r.oldpc);
 
     // Disassemble the instruction in Musashi format
     if (dasmMusashi) {
@@ -396,7 +405,7 @@ void TestRunner::disassembleMoira(Setup &s, Result &r)
         style.letterCase = LetterCase::MIXED_CASE;
         style.numberFormat = { .prefix = "$", .radix = 16 };
         moiracpu->setDasmStyle(style);
-        r.dasmCntMusashi = moiracpu->disassemble(r.dasmMusashi, r.oldpc);
+        r.dasmCntMusashi = dasmString(moiracpu, r.dasmMusashi, sizeof(r.dasmMusashi), r.oldpc);
     }
 
     // Disassemble the instruction in UAE format
@@ -405,7 +414,7 @@ void TestRunner::disassembleMoira(Setup &s, Result &r)
         style.letterCase = LetterCase::LOWER_CASE;
         style.numberFormat = { .prefix = "$", .radix = 16 };
         moiracpu->setDasmStyle(style);
-        r.dasmCntMoiraUAE = moiracpu->disassemble(r.dasmMoiraUAE, r.oldpc);
+        r.dasmCntMoiraUAE = dasmString(moiracpu, r.dasmMoiraUAE, sizeof(r.dasmMoiraUAE), r.oldpc);
     }
 
     // Time spent in all syntax flavors
