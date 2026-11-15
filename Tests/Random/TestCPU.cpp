@@ -94,7 +94,7 @@ void
 TestCPU::write8(u32 addr, u8  val) const
 {
     if (CHECK_MEM_WRITES)
-        sandbox.replayPoke(POKE8, addr, getClock(), readFC(), val);
+        sandbox.replayPoke(POKE8, addr, getClock(), getFC(), val);
     set8(moiraMem, addr, val);
 }
 
@@ -107,7 +107,7 @@ void
 TestCPU::write16 (u32 addr, u16 val) const
 {
     if (CHECK_MEM_WRITES)
-        sandbox.replayPoke(POKE16, addr, getClock(), readFC(), val);
+        sandbox.replayPoke(POKE16, addr, getClock(), getFC(), val);
     set16(moiraMem, addr, val);
 }
 

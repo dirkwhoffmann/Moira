@@ -134,7 +134,7 @@ MOIRA_DELEGATE(void didJumpToVector(int nr, u32 addr))
 ///              is the same value that appears on the address lines
 ///              A15-A13 and A4-A0.
 /// @note  The function code pins still show the value of the previous
-///        cycle (readFC()). The cycle type implies FC = 7. For interrupt
+///        cycle (getFC()). The cycle type implies FC = 7. For interrupt
 ///        acknowledge cycles, the notification precedes readIrqVector().
 MOIRA_DELEGATE(void willExecute(CpuSpaceType type, u8 arg))
 

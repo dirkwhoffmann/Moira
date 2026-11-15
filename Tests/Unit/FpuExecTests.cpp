@@ -612,7 +612,7 @@ TEST_CASE("Models")
     // The FPU is derived from the CPU model and the selected external FPU
     {
         TestCPU cpu(CPModel::NONE, CPUModel::M68040);
-        CHECK(cpu.hasInternalFpu());                                 // The FPU of the 68040 is built in
+        CHECK(cpu.hasInternalFPU());                                 // The FPU of the 68040 is built in
         CHECK(cpu.fpu.getModel() == FPUModel::M68040);
         cpu.setModel(CPUModel::M68030);
         CHECK(!cpu.hasFPU());                                // The 68030 has no built-in FPU
@@ -621,8 +621,8 @@ TEST_CASE("Models")
         cpu.setModel(CPUModel::M68020);
         CHECK(cpu.fpu.getModel() == FPUModel::M68882);               // The selection survives a CPU change
         cpu.setModel(CPUModel::M68040);
-        CHECK(cpu.hasInternalFpu());                                 // The 68040 has no coprocessor interface
-        CHECK(!cpu.hasExternalFpu());
+        CHECK(cpu.hasInternalFPU());                                 // The 68040 has no coprocessor interface
+        CHECK(!cpu.hasExternalFPU());
         cpu.setModel(CPUModel::M68000);
         CHECK(!cpu.hasFPU());
         cpu.setModel(CPUModel::M68030);
@@ -650,7 +650,7 @@ TEST_CASE("Models")
         // An FPU cannot be attached to a 68000
         TestCPU cpu4(CPModel::M68882, CPUModel::M68000);
         CHECK(!cpu4.hasFPU());
-        CHECK(!cpu4.hasExternalFpu());
+        CHECK(!cpu4.hasExternalFPU());
     }
 }
 

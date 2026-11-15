@@ -63,7 +63,7 @@ public:
     bool logging = false;
 
     void record(bool write, int size, u32 addr, u32 data) const {
-        if (logging) log.push_back({ getClock(), write, size, addr & 0xFFFFFF, data, readFC() });
+        if (logging) log.push_back({ getClock(), write, size, addr & 0xFFFFFF, data, getFC() });
     }
 
     // Memory access without logging

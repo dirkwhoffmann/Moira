@@ -734,7 +734,7 @@ try
     u32 result;
 
     // Derive the physical address
-    addr = translate<C, false, S>(addr, readFC());
+    addr = translate<C, false, S>(addr, getFC());
 
     // Check if a watchpoint has been reached
     if ((flags & State::CHECK_WP) && debugger.watchpointMatches(addr, S)) {
@@ -822,7 +822,7 @@ Moira::readInstr(u32 addr)
         } else {
 
             // Without a cache, every fetch is a bus access
-            phys = translate<C, false, Word>(addr & addrMask<C>(), readFC()) & addrMask<C>();
+            phys = translate<C, false, Word>(addr & addrMask<C>(), getFC()) & addrMask<C>();
             result = read16(phys);
         }
         budget.penalty += busAccess ? (portSize(dsack(phys)) == 4 ? 0 : 4) : -2;
@@ -832,7 +832,7 @@ Moira::readInstr(u32 addr)
     } else {
 
         // Derive the physical address
-        addr = translate<C, false, Word>(addr, readFC());
+        addr = translate<C, false, Word>(addr, getFC());
 
         // Check if a watchpoint has been reached
         if ((flags & State::CHECK_WP) && debugger.watchpointMatches(addr, Word)) {
@@ -910,7 +910,7 @@ try
     if constexpr (MOIRA_REPORT_BUS_ACCESS) willAccessBus(addr, S, true);
 
     // Derive the physical address
-    addr = translate<C, true, S>(addr, readFC(), ci);
+    addr = translate<C, true, S>(addr, getFC(), ci);
 
     // Check if a watchpoint has been reached
     if ((flags & State::CHECK_WP) && debugger.watchpointMatches(addr, S)) {
@@ -977,7 +977,7 @@ catch (BusError &e)
 template <Core C, Size S, Flags F> u32
 Moira::readDataCache(u32 addr)
 {
-    u8 fc = readFC();
+    u8 fc = getFC();
 
     u32 offset = addr & 3;
     bool spans = offset + S > 4;
@@ -1005,7 +1005,7 @@ Moira::readDataCache(u32 addr)
 template <Core C, Size S, Flags F> void
 Moira::writeDataCache(u32 addr, u32 val)
 {
-    u8 fc = readFC();
+    u8 fc = getFC();
     bool supervisor = fc & 4;
 
     // The cache is write-through. The bus write also reveals the cache-inhibit attribute.
@@ -1115,12 +1115,12 @@ Moira::makeFrame(u32 addr, u32 pc, u16 sr, u16 ird)
     if constexpr (F & AE_DATA) setFC(FC::USER_DATA);
 
     // Create
-    frame.code = (ird & 0xFFE0) | (u16)readFC() | read;
+    frame.code = (ird & 0xFFE0) | (u16)getFC() | read;
     frame.addr = addr;
     frame.ird = ird;
     frame.sr = sr;
     frame.pc = pc;
-    frame.fc = readFC();
+    frame.fc = getFC();
     frame.ssw = frame.fc;
 
     // Special status word of the 68010: R/W (bit 8), DF (bit 12) and IF (bit 13).

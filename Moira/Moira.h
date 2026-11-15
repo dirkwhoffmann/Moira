@@ -209,10 +209,16 @@ public:
     //
 
     /// Sets the emulated CPU model and the model used by the disassembler
-    void setModel(CPUModel cpuModel, CPUModel dasmModel);
+    void setModel(CPUModel cpu, CPUModel dasm);
     
     /// Sets the emulated CPU model (the disassembler uses the same model)
     void setModel(CPUModel model) { setModel(model, model); }
+
+    /// Returns the emulated CPU model
+    CPUModel getModel() const { return cpuModel; }
+
+    /// Returns the CPU model used by the disassembler
+    CPUModel getDasmModel() const { return dasmModel; }
 
     /** Selects the coprocessor that is connected to the coprocessor interface
      *
@@ -257,10 +263,10 @@ public:
     bool hasFPU() const;
     
     /// Checks if the emulated CPU has a built-in floating-point unit
-    bool hasInternalFpu() const;
+    bool hasInternalFPU() const;
 
     /// Checks if an external FPU (68881 or 68882) is attached
-    bool hasExternalFpu() const;
+    bool hasExternalFPU() const;
         
     /// Returns the address bus mask, which defines the CPU's addressable memory range
     u32 addrMask() const;
@@ -317,16 +323,24 @@ public:
     /// Sets the address of the next instruction (see getPC)
     void setPC(u32 val) { reg.pc = val + 2; }
 
-    /// Gets the address of the currently executed instruction
+    /** Gets the address of the start of the current instruction
+     *
+     * While an instruction executes (e.g., inside a delegate), this is the
+     * address of the instruction being executed. Between instructions, it is
+     * the address of the next instruction to execute. This is what debuggers
+     * need to display the current position.
+     */
     u32 getPC0() const { return reg.pc0; }
-    /// Gets the address of the previously executed instruction
+    /// Gets the address of the instruction that executed before the current one
     u32 getPrevPC0() const { return reg.prev_pc0; }
-    /// Sets the address of the currently executed instruction
+    /** Sets the address of the start of the current instruction
+     *
+     * Use this together with setPC when the program counter is changed from
+     * the outside, so that both values stay consistent. Debugger::jump does
+     * both.
+     */
     void setPC0(u32 val) { reg.pc0 = val; }
 
-    // Called when an instruction (or exception) has been processed: pc0 moves to the next instruction
-    void advancePC0() { reg.prev_pc0 = reg.pc0; reg.pc0 = reg.pc - 2; }
-    
     /// Gets the IRC register, which is part of the prefetch queue
     u16 getIRC() const { return queue.irc; }
     /// Sets the IRC register, which is part of the prefetch queue
@@ -418,7 +432,7 @@ public:
     //
 
     /// Reads the current value of the function code pins
-    u8 readFC() const;
+    u8 getFC() const;
 
     /// Retrieves the value on the Interrupt Priority Level (IPL) pins
     u8 getIPL() const { return ipl; }
@@ -575,6 +589,9 @@ protected:
 
 private:
 
+    // Called when an instruction (or exception) has been processed: pc0 moves to the next instruction
+    void advancePC0() { reg.prev_pc0 = reg.pc0; reg.pc0 = reg.pc - 2; }
+
     // Enables or disables trace mode (T1 flag)
     void setTraceFlag() { reg.sr.t1 = true; flags |= State::TRACING; }
     void clearTraceFlag() { reg.sr.t1 = false; flags &= ~State::TRACING; }
@@ -696,24 +713,13 @@ private:
 #include "MoiraDasm.h"
 };
 
-/** The jump table builders are the only place where the instruction handler
+/* The jump table builders are the only place where the instruction handler
  * templates are instantiated. Keeping each core in a translation unit of its
  * own splits the instantiation work three ways and keeps the compiler's peak
  * memory usage within bounds. The definitions live in MoiraCore680x0.cpp.
  */
 extern template void Moira::createJumpTable<Core::C68000>(CPUModel, bool);
-/** The jump table builders are the only place where the instruction handler
- * templates are instantiated. Keeping each core in a translation unit of its
- * own splits the instantiation work three ways and keeps the compiler's peak
- * memory usage within bounds. The definitions live in MoiraCore680x0.cpp.
- */
 extern template void Moira::createJumpTable<Core::C68010>(CPUModel, bool);
-/** The jump table builders are the only place where the instruction handler
- * templates are instantiated. Keeping each core in a translation unit of its
- * own splits the instantiation work three ways and keeps the compiler's peak
- * memory usage within bounds. The definitions live in MoiraCore680x0.cpp.
- */
 extern template void Moira::createJumpTable<Core::C68020>(CPUModel, bool);
-
 
 }

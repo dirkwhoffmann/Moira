@@ -71,7 +71,7 @@ public:
     void willExecute(CpuSpaceType type, u8 arg) override { spaceCycles.push_back({ type, arg }); }
     void didExecute(CpuSpaceType type, u8 arg) override { didSpaceCycles.push_back({ type, arg }); }
 
-    void note(bool w, u32 a) const { if (logging) log.push_back({ w, a & 0xFFFFFF, readFC() }); }
+    void note(bool w, u32 a) const { if (logging) log.push_back({ w, a & 0xFFFFFF, getFC() }); }
 
     void poke16(u32 a, u16 v) { ram[a] = v >> 8; ram[a + 1] = v & 0xFF; }
     void poke32(u32 a, u32 v) { poke16(a, v >> 16); poke16(a + 2, v & 0xFFFF); }
@@ -371,7 +371,7 @@ TEST_CASE("CPU space: the acknowledge cycle does not leak into later accesses")
     cpu.logging = false;
     REQUIRE(cpu.spaceCycles.size() == 1);
     for (auto &a : cpu.log) CHECK(a.fc != FCv::CPU);                // Stack, vector and fetch cycles are no CPU space cycles
-    CHECK(cpu.readFC() != FCv::CPU);
+    CHECK(cpu.getFC() != FCv::CPU);
     END_MODELS
 }
 
@@ -390,7 +390,7 @@ TEST_CASE("CPU space: BKPT acknowledges the breakpoint number")
             CHECK(cpu.spaceCycles[0].type == CpuSpaceType::BREAKPOINT);
             CHECK(cpu.spaceCycles[0].arg == n);
             CHECK(cpu.getPC0() == IrqCPU::handler(4));              // The exception follows the cycle
-            CHECK(cpu.readFC() != FCv::CPU);
+            CHECK(cpu.getFC() != FCv::CPU);
         }
     }
 }
@@ -448,7 +448,7 @@ TEST_CASE("CPU space: coprocessor cycles of the generic coprocessor interface")
             CHECK(cpu.spaceCycles[0].type == CpuSpaceType::COPROCESSOR);
             CHECK(cpu.spaceCycles[0].arg == cpArg(5, c.cir));
             CHECK(cpu.getPC0() == IrqCPU::handler(11));             // No coprocessor: line-F exception
-            CHECK(cpu.readFC() != FCv::CPU);
+            CHECK(cpu.getFC() != FCv::CPU);
         }
     }
 }
@@ -526,7 +526,7 @@ TEST_CASE("CPU space: an external 68881 is accessed via the coprocessor interfac
             CHECK(cpu.spaceCycles[0].type == CpuSpaceType::COPROCESSOR);
             CHECK(cpu.spaceCycles[0].arg == cpArg(1, c.cir));
             CHECK(cpu.spaceCycles.size() == 1);                     // Only the first cycle is reported
-            CHECK(cpu.readFC() != FCv::CPU);
+            CHECK(cpu.getFC() != FCv::CPU);
         }
     }
 }

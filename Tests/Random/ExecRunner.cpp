@@ -337,7 +337,7 @@ void ExecRunner::recordMoiraRegisters(Result &r)
     r.usp = moiracpu->getUSP();
     r.isp = moiracpu->getISP();
     r.msp = moiracpu->getMSP();
-    r.fc = moiracpu->readFC();
+    r.fc = moiracpu->getFC();
     r.vbr = moiracpu->getVBR();
     r.sfc = moiracpu->getSFC();
     r.dfc = moiracpu->getDFC();

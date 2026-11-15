@@ -37,12 +37,12 @@ public:
     {
         u16 mask = size == 2 ? 0xFFFF : (addr & 1) ? 0x00FF : 0xFF00;
         u16 word = size == 2 ? data : (addr & 1) ? data & 0xFF : u16(data << 8);
-        if (logging) log.push_back({ getClock() - 2, write, addr & ADDR_MASK & ~1u, mask, word, readFC() });
+        if (logging) log.push_back({ getClock() - 2, write, addr & ADDR_MASK & ~1u, mask, word, getFC() });
     }
 
     // The 68020 and above count data accesses only (as one access per operand)
     bool wide() const { return cpuModel >= CPUModel::M68EC020; }
-    bool counts() const { return !wide() || (readFC() & 3) != 2; }
+    bool counts() const { return !wide() || (getFC() & 3) != 2; }
 
     /* The core splits a long word that is not aligned to 4 into two word accesses. Both halves are
      * one operand access for the reference (except at a 64K boundary). Hence, the 68020 and above

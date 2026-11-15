@@ -370,7 +370,7 @@ Moira::execAddressError(StackFrame frame, int delay)
 {
     u16 status = getSR();
     u32 pcNow = reg.pc, pc0Now = reg.pc0;
-    u16 ssw = 0x60 | (readFC() & 7);
+    u16 ssw = 0x60 | (getFC() & 7);
 
     // Inform the delegate
     willExecute(M68kException::ADDRESS_ERROR, 3);
@@ -435,7 +435,7 @@ template <Core C> void
 Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
 {
     u16 status = getSR();
-    u16 ssw = 0x60 | (readFC() & 7);
+    u16 ssw = 0x60 | (getFC() & 7);
     u32 end = queue.lastFetch ? reg.pc - 2 : reg.pc;
 
     // Inform the delegate

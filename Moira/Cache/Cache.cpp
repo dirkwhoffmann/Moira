@@ -149,7 +149,7 @@ ICache::fill(u32 base, u32 &phys)
         bool ci;
         
         // Read new value from memory
-        phys = moira.translate<Core::C68020, false, Word>(base, moira.readFC(), &ci) & moira.addrMask() & ~3;
+        phys = moira.translate<Core::C68020, false, Word>(base, moira.getFC(), &ci) & moira.addrMask() & ~3;
         u32 value = moira.readLongSplit<Core::C68020>(phys);
         
         // Update the cache

@@ -96,12 +96,12 @@ Moira::build()
 }
 
 void
-Moira::setModel(CPUModel cpuModel, CPUModel dasmModel)
+Moira::setModel(CPUModel cpu, CPUModel dasm)
 {
-    if (this->cpuModel != cpuModel || this->dasmModel != dasmModel) {
+    if (cpuModel != cpu || dasmModel != dasm) {
         
-        this->cpuModel = cpuModel;
-        this->dasmModel = dasmModel;
+        cpuModel = cpu;
+        dasmModel = dasm;
 
         configureUnits();
 
@@ -170,13 +170,13 @@ Moira::setCPModel(CPModel model)
 }
 
 bool
-Moira::hasInternalFpu() const
+Moira::hasInternalFPU() const
 {
     return cpuModel == CPUModel::M68040;
 }
 
 bool
-Moira::hasExternalFpu() const
+Moira::hasExternalFPU() const
 {
     return moira::hasCPI(cpuModel) && cpModel != CPModel::NONE;
 }
@@ -224,7 +224,7 @@ Moira::hasMMU() const
 bool
 Moira::hasFPU() const
 {
-    return hasInternalFpu() || hasExternalFpu();
+    return hasInternalFPU() || hasExternalFPU();
 }
 
 u32
@@ -959,7 +959,7 @@ Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext) const
 }
 
 u8
-Moira::readFC() const
+Moira::getFC() const
 {
     switch (fcSource) {
 
