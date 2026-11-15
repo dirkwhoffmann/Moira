@@ -247,6 +247,12 @@ enum class Instr : u16
     SUBA_LOOP,  SUBX_LOOP,  TST_LOOP
 };
 
+/// Checks if an instruction is a loop mode instruction (68010)
+template <Instr I> constexpr bool looping()
+{
+    return I >= Instr::ABCD_LOOP && I <= Instr::TST_LOOP;
+}
+
 /// Addressing modes
 enum class Mode : u8
 {

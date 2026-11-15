@@ -933,22 +933,6 @@ Moira::isAvailable(CPUModel model, Instr I, Mode M, Size S, u16 ext) const
     return availabilityMask(I, M, S, ext) & (1 << (int)model);
 }
 
-const char *
-Moira::availabilityString(Instr I, Mode M, Size S, u16 ext)
-{
-    switch (availabilityMask(I, M, S, ext)) {
-
-        case AV::M68010_UP:           return "(1+)";
-        case AV::M68020:              return "(2)";
-        case AV::M68020 | AV::M68030: return "(2-3)";
-        case AV::M68020_UP:           return "(2+)";
-        case AV::M68040:              return "(4+)";
-
-        default:
-            return "(?)";
-    }
-}
-
 bool
 Moira::isValidExt(Instr I, Mode M, u16 op, u32 ext) const
 {

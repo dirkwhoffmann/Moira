@@ -596,11 +596,6 @@ public:
     /// Checks if a given CPU model supports a specific instruction
     bool isAvailable(CPUModel model, Instr I, Mode M, Size S, u16 ext) const;
     
-    
-    //
-    // Extension Word Validation
-    //
-
 private:
 
     // Validates extension words for a given instruction
@@ -611,26 +606,6 @@ private:
     
     // Validates extension words for FPU-related instructions
     bool isValidExtFPU(Instr I, Mode M, u16 op, u32 ext, CPUModel model) const;
-    
-    
-    //
-    // Disassembler Support
-    //
-    
-private:
-    
-    // Returns an availability string for a given instruction
-    const char *availabilityString(Instr I, Mode M, Size S, u16 ext);
-
-    
-    //
-    // Loop Mode Detection
-    //
-    
-    // Checks if an instruction is a loop mode instruction
-    template <Instr I> constexpr bool looping() {
-        return I >= Instr::ABCD_LOOP && I <= Instr::TST_LOOP;
-    }
     
     
     //
