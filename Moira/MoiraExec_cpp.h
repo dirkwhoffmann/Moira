@@ -1552,7 +1552,7 @@ Moira::execBkpt(u16 opcode)
 
     } else {
 
-        // The CPU acknowledges the breakpoint with a CPU space cycle
+        // Acknowledges the breakpoint with a CPU space cycle
         willExecute(CpuSpaceType::BREAKPOINT, opcode & 7);
         didExecute(CpuSpaceType::BREAKPOINT, opcode & 7);
 

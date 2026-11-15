@@ -928,6 +928,13 @@ private:
     // Selects the IRQ vector based on the interrupt level
     u16 getIrqVector(u8 level);
 
+
+    //
+    // Running the coprocessor interface
+    //
+
+private:
+
     // Announces the first cycle of the coprocessor protocol of a line-F instruction
     void notifyCPCycle(u16 opcode, u8 cir);
 
