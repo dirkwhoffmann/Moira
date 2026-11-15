@@ -43,8 +43,8 @@ Moira::Moira()
 {
     exec = new ExecPtr[65536];
     loop = new ExecPtr[65536];
-    if (MOIRA_ENABLE_DASM) info = new InstrInfo[65536];
-    if (MOIRA_ENABLE_DASM) dasm = new DasmPtr[65536];
+    info = MOIRA_ENABLE_DASM ? new InstrInfo[65536] : nullptr;
+    dasm = MOIRA_ENABLE_DASM ? new DasmPtr[65536] : nullptr;
 
     createJumpTable(cpuModel, dasmModel);
 
@@ -106,18 +106,16 @@ Moira::setModel(CPUModel cpu, CPUModel dasm)
         dasmModel = dasm;
 
         configureUnits();
-
         createJumpTable(cpuModel, dasmModel);
 
         reg.cacr &= getCacrMask();
         iCache.reset(cpuModel);
         dCache.reset(cpuModel);
         
-        // The 68040 caches are not emulated. They are physically tagged, 4-way
-        // set-associative and support copyback mode. Without them, the CPU
-        // behaves like it had perfectly coherent caches.
+        // The 68040 caches are not emulated. The CPU behaves like it had perfectly coherent caches
         iCache.setEmulated(MOIRA_EMULATE_ICACHE && cpuModel >= CPUModel::M68EC020 && cpuModel < CPUModel::M68EC040);
         dCache.setEmulated(MOIRA_EMULATE_DCACHE && (cpuModel == CPUModel::M68030 || cpuModel == CPUModel::M68EC030));
+        
         flags &= ~State::LOOPING;
     }
 }
@@ -187,10 +185,10 @@ static void
 validate(const DasmStyle &style)
 {
     if (style.numberFormat.prefix == nullptr) {
-        throw std::runtime_error("prefix must not be NULL");
+        throw std::runtime_error("Prefix must not be NULL");
     }
     if (style.numberFormat.radix != 10 && style.numberFormat.radix != 16) {
-        throw std::runtime_error("radix must be 10 or 16");
+        throw std::runtime_error("Radix must be 10 or 16");
     }
 }
 
@@ -263,8 +261,8 @@ Moira::reset()
 
     switch (cpuModel) {
 
-        case CPUModel::M68000:    reset<Core::C68000>(); break;
-        case CPUModel::M68010:    reset<Core::C68010>(); break;
+        case CPUModel::M68000: reset<Core::C68000>(); break;
+        case CPUModel::M68010: reset<Core::C68010>(); break;
         
         default:
             reset<Core::C68020>();
@@ -274,14 +272,24 @@ Moira::reset()
 template <Core C> void
 Moira::reset()
 {
-    // Bus errors of the 68020 family are restartable if the client asks for
-    // bus error emulation. The real CPU continues from its internal state
-    // after RTE. Restarting the instruction is the approximation used by UAE.
-    // Other models and configurations stay on the fast path, which does not
-    // save the registers.
     flags = State::CHECK_IRQ;
-    if (MOIRA_EMULATE_BUS_ERROR && cpuModel >= CPUModel::M68EC020) flags |= State::SAVE_REGS;
 
+    if constexpr (MOIRA_EMULATE_BUS_ERROR && C == Core::C68020) {
+        
+        // Let Moira snapshot the register set before invoking an execution handler.
+        //
+        // Background: Bus errors on the 68020 family are restartable. After an RTE,
+        // the CPU resumes execution from its internal state. Moira approximates this
+        // behavior by restarting the current instruction, which requires the original
+        // register state to be available.
+        //
+        // Note that this comes with a performance penalty: the 68020 must remain on
+        // the slow path at all times. Other CPU models are unaffected and stay on the
+        // fast path, as they do not require register snapshots.
+        
+        flags |= State::SAVE_REGS;
+    }
+    
     reg = { };
     reg.sr.s = 1;
     reg.sr.ipl = 7;
