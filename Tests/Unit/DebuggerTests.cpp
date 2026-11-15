@@ -801,10 +801,10 @@ TEST_CASE("Instruction length")
     CHECK(cpu.instrLength(0x1002) == 6);
     CHECK(cpu.instrLength(0x1008) == 6);
 
-    // The variant without argument looks at the next instruction
-    CHECK(cpu.instrLength() == 2);
+    // The instruction at the program counter
+    CHECK(cpu.instrLength(cpu.getPC()) == 2);
     cpu.step();
-    CHECK(cpu.instrLength() == 6);
+    CHECK(cpu.instrLength(cpu.getPC()) == 6);
     END_MODELS
 }
 

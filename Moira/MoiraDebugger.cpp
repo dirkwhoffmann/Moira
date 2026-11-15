@@ -259,7 +259,8 @@ Debugger::stepInto()
 void
 Debugger::stepOver()
 {
-    softStop = moira.getPC() + moira.instrLength();
+    u32 pc = moira.getPC();
+    softStop = pc + moira.instrLength(pc);
     breakpoints.setNeedsCheck(true);
 }
 

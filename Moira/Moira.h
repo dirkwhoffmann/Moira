@@ -867,9 +867,6 @@ public:
      */
     isize instrLength(u32 addr) const;
 
-    /// @brief Returns the length of the next instruction (the one at getPC())
-    isize instrLength() const { return instrLength(getPC()); }
-
 
     //
     // Interfacing with other components

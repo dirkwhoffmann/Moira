@@ -134,28 +134,17 @@ Moira::setCPModel(CPModel model)
     if (moira::hasCPI(cpuModel) || moira::hasCPI(dasmModel)) createJumpTable(cpuModel, dasmModel);
 }
 
-static void
-validate(const DasmStyle &style)
-{
-    if (style.numberFormat.prefix == nullptr) {
-        throw std::runtime_error("Prefix must not be NULL");
-    }
-    if (style.numberFormat.radix != 10 && style.numberFormat.radix != 16) {
-        throw std::runtime_error("Radix must be 10 or 16");
-    }
-}
-
 void
 Moira::setDasmStyle(const DasmStyle &style)
 {
-    validate(style);
+    style.validate();
     instrStyle = style;
 }
 
 void
 Moira::setDataStyle(const DasmStyle &style)
 {
-    validate(style);
+    style.validate();
     dataStyle = style;
 }
 

@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <string>
 #include <optional>
+#include <stdexcept>
 
 namespace MOIRA_NAMESPACE {
 
@@ -498,6 +499,14 @@ struct DasmNumberFormat
     u8 radix;                   ///< 10 (decimal) or 16 (hexadecimal)
     bool upperCase;             ///< Lettercase for hexadecimal digits A...F
     bool plainZero;             ///< Determines whether 0 is printed with a prefix
+
+    /// Checks the format for consistency
+    /// @throws std::runtime_error if the prefix is NULL or the radix is neither 10 nor 16
+    void validate() const
+    {
+        if (prefix == nullptr) throw std::runtime_error("Prefix must not be NULL");
+        if (radix != 10 && radix != 16) throw std::runtime_error("Radix must be 10 or 16");
+    }
 };
 
 /// The visual style of the disassembler output
@@ -507,6 +516,10 @@ struct DasmStyle
     LetterCase letterCase;          ///< The letter case
     DasmNumberFormat numberFormat;  ///< The number format
     int tab;                        ///< Indentation of the operands
+
+    /// Checks the style for consistency
+    /// @throws std::runtime_error if the number format is invalid
+    void validate() const { numberFormat.validate(); }
 };
 
 
