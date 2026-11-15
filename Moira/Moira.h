@@ -103,13 +103,12 @@ public:
     // Debugger (breakpoints, watchpoints, catchpoints, tracing)
     Debugger debugger = Debugger(*this);
 
-protected:
-
     // Instruction cache (68020+)
     ICache iCache = ICache(*this);
 
     // Data cache (68030+)
     DCache dCache = DCache(*this);
+
 
     
     //
@@ -343,13 +342,13 @@ public:
 
     /// Gets the IRC register, which is part of the prefetch queue
     u16 getIRC() const { return queue.irc; }
-    /// Sets the IRC register, which is part of the prefetch queue
-    void setIRC(u16 val) { queue.irc = val; }
     
     /// Gets the IRD register, which is part of the prefetch queue
     u16 getIRD() const { return queue.ird; }
-    /// Sets the IRD register, which is part of the prefetch queue
-    void setIRD(u16 val) { queue.ird = val; }
+
+    /// Gets the data latch that holds the most recently fetched word
+    /// @note  The latch is the EXACT_68000 pipeline stage in front of IRC.
+    u16 getEDB() const { return queue.edb; }
     
     /// Gets the value of the Condition Code Register (CCR)
     u8 getCCR() const;
@@ -387,14 +386,14 @@ public:
     void setVBR(u32 val) { reg.vbr = val; }
     
     /// Gets the Source Function Code (SFC)
-    u32 getSFC() const { return reg.sfc; }
+    u8 getSFC() const { return reg.sfc; }
     /// Sets the Source Function Code (SFC)
-    void setSFC(u32 val) { reg.sfc = val & 0b111; }
+    void setSFC(u8 val) { reg.sfc = val & 0b111; }
     
     /// Gets the Destination Function Code (DFC)
-    u32 getDFC() const { return reg.dfc; }
+    u8 getDFC() const { return reg.dfc; }
     /// Sets the Destination Function Code (DFC)
-    void setDFC(u32 val) { reg.dfc = val & 0b111; }
+    void setDFC(u8 val) { reg.dfc = val & 0b111; }
     
     /// Gets the Cache Control Register (CACR)
     u32 getCACR() const { return reg.cacr; }
@@ -471,13 +470,6 @@ public:
     /// Returns instruction metadata for a given opcode
     InstrInfo getInstrInfo(u16 op) const;
 
-    /// Retrieves the availability mask for a given instruction
-    u16 availabilityMask(Instr I) const;
-    /// Retrieves the availability mask for a given instruction
-    u16 availabilityMask(Instr I, Mode M, Size S) const;
-    /// Retrieves the availability mask for a given instruction
-    u16 availabilityMask(Instr I, Mode M, Size S, u16 ext) const;
-    
     /// Checks if a given CPU model supports a specific instruction
     bool isAvailable(CPUModel model, Instr I) const;
     /// Checks if a given CPU model supports a specific instruction
@@ -634,6 +626,18 @@ protected:
     
     // Writes a value to a register (D0, D1 ... D7, A0, A1 ... A7)
     template <Size S = Long> void writeR(int n, u32 v);
+
+
+    //
+    // Instruction availability (internal)
+    //
+
+private:
+
+    // Retrieves the availability mask for a given instruction
+    u16 availabilityMask(Instr I) const;
+    u16 availabilityMask(Instr I, Mode M, Size S) const;
+    u16 availabilityMask(Instr I, Mode M, Size S, u16 ext) const;
 
 
     //

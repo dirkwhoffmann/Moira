@@ -24,7 +24,6 @@ public:
 
     using Moira::reg;
     using Moira::mmu;
-    using Moira::iCache;
 
     mutable std::vector<u8> ram = std::vector<u8>(1 << 20);
 

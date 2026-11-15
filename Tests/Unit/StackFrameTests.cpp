@@ -30,6 +30,8 @@ class AmigaCPU : public Moira {
 
 public:
 
+    void setPrefetch(u16 ird, u16 irc) { queue.ird = ird; queue.irc = irc; }
+
     mutable std::vector<u8> ram = std::vector<u8>(1 << 20);
 
     static constexpr u32 progStart = 0x757C0;   // Address of the "lea 0(pc),a6" instruction
@@ -75,8 +77,7 @@ public:
         setISP(stackTop);
         setPC(progStart - 8);
         setPC0(progStart - 8);
-        setIRD(read16(progStart - 8));
-        setIRC(read16(progStart - 6));
+        setPrefetch(read16(progStart - 8), read16(progStart - 6));
 
         for (int i = 0; i < 200 && getPC() != handler; i++) execute();
         REQUIRE(getPC() == handler);
@@ -316,8 +317,7 @@ TEST_CASE("68020 exception frames match real hardware")
         cpu.setD(0, t.d0);
         cpu.setPC(t.start);
         cpu.setPC0(t.start);
-        cpu.setIRD(cpu.read16(t.start));
-        cpu.setIRC(cpu.read16(t.start + 2));
+        cpu.setPrefetch(cpu.read16(t.start), cpu.read16(t.start + 2));
 
         for (int i = 0; i < 200 && cpu.getPC() != AmigaCPU::handler; i++) cpu.execute();
         REQUIRE(cpu.getPC() == AmigaCPU::handler);

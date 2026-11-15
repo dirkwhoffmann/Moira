@@ -138,8 +138,8 @@ public:
         for (int i = 0; i < 7; i++) setA(i, s.a[i]);
         setPC(s.pc - 4);
         setPC0(s.pc - 4);
-        setIRD(u16(s.prefetch[0]));
-        setIRC(u16(s.prefetch[1]));
+        queue.ird = u16(s.prefetch[0]);
+        queue.irc = u16(s.prefetch[1]);
         setClock(0);
         log.clear();
         exceptions = 0;

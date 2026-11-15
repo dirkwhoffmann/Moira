@@ -54,6 +54,8 @@ class SeqMoira : public Moira {
 
 public:
 
+    void setPrefetch(u16 ird, u16 irc) { queue.ird = ird; queue.irc = irc; }
+
     std::vector<u8> mem = std::vector<u8>(MEM_MASK + 1);
     mutable std::vector<Write> writes;
     bool interrupted = false;
@@ -328,7 +330,7 @@ int sequence::run(int argc, char **argv, Reference &ref)
             for (int i = 0; i < 8; i++) moira.setD(i, prog.d[i]);
             for (int i = 0; i < 7; i++) moira.setA(i, prog.a[i]);
             moira.setPC(PROG); moira.setPC0(PROG);
-            moira.setIRD(moira.read16(PROG)); moira.setIRC(moira.read16(PROG + 2));
+            moira.setPrefetch(moira.read16(PROG), moira.read16(PROG + 2));
             moira.setIPL(0);
             moira.ack = prog.ack && !noAck;
             moira.setClock(0);

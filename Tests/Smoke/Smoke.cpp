@@ -111,8 +111,8 @@ public:
         // The test's PC is the address of the next prefetch, which is 4 bytes behind the instruction
         setPC(s.pc - 4);
         setPC0(s.pc - 4);
-        setIRD(u16(s.prefetch[0]));
-        setIRC(u16(s.prefetch[1]));
+        queue.ird = u16(s.prefetch[0]);
+        queue.irc = u16(s.prefetch[1]);
         setClock(0);
     }
 };
