@@ -433,7 +433,7 @@ public:
      *
      * @return The number of cycles that have elapsed
      */
-    i64 execute();
+    i64 execute() { const i64 start = clock; executeInstruction(); return clock - start; }
 
     /** @brief Executes instructions for a given number of cycles
      *

@@ -367,14 +367,6 @@ Moira::syncCyclePenalty(int cycles)
     }
 }
 
-i64
-Moira::execute()
-{
-    const i64 start = clock;
-    executeInstruction();
-    return clock - start;
-}
-
 void
 Moira::executeInstruction()
 {
