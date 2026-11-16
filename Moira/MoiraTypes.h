@@ -527,6 +527,17 @@ struct DasmStyle
 // Flags and masks
 //
 
+/// Condition code register bits
+namespace CCR {
+
+static constexpr u8 C = 1 << 0;     ///< Carry
+static constexpr u8 V = 1 << 1;     ///< Overflow
+static constexpr u8 Z = 1 << 2;     ///< Zero
+static constexpr u8 N = 1 << 3;     ///< Negative
+static constexpr u8 X = 1 << 4;     ///< Extend
+static constexpr u8 ALL = 0x1F;     ///< All condition codes
+}
+
 /// Cache control register bits (68020 and 68030)
 namespace CACR {
 

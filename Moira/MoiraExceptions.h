@@ -54,3 +54,10 @@ void restoreRegisters(const Registers &saved);
 
 // Takes back the predecrement of the operand that caused a bus error
 void undoPredecrement(const StackFrame &frame, const Registers &saved, u16 ird);
+
+// Rethrows a bus error that has been caught inside an instruction handler.
+// Instructions that have already changed some condition codes when the access
+// fails (in the reference CPUs) call this function to make those flags visible
+// in the register file and in the stacked status register. Only the bits in
+// 'mask' are taken from 'ccr'. Must be called from within a catch block.
+template <Core C> [[noreturn]] void rethrow(BusError &e, u8 mask, u8 ccr);

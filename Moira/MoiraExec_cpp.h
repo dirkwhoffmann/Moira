@@ -71,6 +71,19 @@ adjustFetchPc(Fn &&fn, int delta)
 (M == Mode::DIPC)            ? AE_DEC_PC : \
 (M == Mode::IXPC)            ? AE_DEC_PC : 0)
 
+template <Core C> void
+Moira::rethrow(BusError &e, u8 mask, u8 ccr)
+{
+    // MAME and UAE (68000) show the flags in the frame of a failed access, although the instruction has not finished
+    if constexpr (EXACT_COMPAT) {
+
+        setCCR((getCCR() & ~mask) | (ccr & mask));
+        e.stackFrame.sr = (e.stackFrame.sr & ~CCR::ALL) | getCCR();
+    }
+
+    throw;
+}
+
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execLineA(u16 opcode)
 {
@@ -139,15 +152,21 @@ Moira::execShiftRg(u16 opcode)
     int cnt = readD(src) & 0x3F;
     int cyc = (S == Long ? 4 : 2) + 2 * cnt;
 
-    // MAME has already set the flags from the operand when the prefetch starts.
-    // This matters if the prefetch fails with a bus error.
-    u32 operand = readD<S>(dst);
-    reg.sr.n = NBIT<S == Long ? Word : S>(operand);         // Long operands are processed word by word
-    reg.sr.z = ZERO<S == Long ? Word : S>(operand);
-    reg.sr.v = 0;
-    reg.sr.c = (I == Instr::ROXL || I == Instr::ROXR) ? reg.sr.x : 0;
+    try {
 
-    prefetchLate<C, POLL>();
+        prefetchLate<C, POLL>();
+
+    } catch (BusError &e) {
+
+        // MAME has already set the flags from the operand when the prefetch starts
+        u32 operand = readD<S>(dst);
+        u8 ccr = 0;
+        if (NBIT<S == Long ? Word : S>(operand)) ccr |= CCR::N;     // Long operands are processed word by word
+        if (ZERO<S == Long ? Word : S>(operand)) ccr |= CCR::Z;
+        if (I == Instr::ROXL || I == Instr::ROXR) ccr |= reg.sr.x ? CCR::C : 0;
+
+        rethrow<C>(e, CCR::N | CCR::Z | CCR::V | CCR::C, ccr);
+    }
     SYNC(cyc);
 
     writeD<S>(dst, shift<C, I, S>(cnt, readD<S>(dst)));
