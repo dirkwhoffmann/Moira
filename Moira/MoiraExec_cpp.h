@@ -3698,36 +3698,30 @@ Moira::execMove7(u16 opcode)
 
     readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
 
-    reg.sr.n = NBIT<S == Long && EXACT_68000 ? Word : S>(u64(data));
-    reg.sr.z = ZERO<S == Long && EXACT_68000 ? Word : S>(u64(data));
-    reg.sr.v = 0;
-    reg.sr.c = 0;
+    if constexpr (C == Core::C68000) {
 
-    if constexpr (EXACT_68000 && S == Long) {
+        // A failed extension word fetch shows the flags of the (low word of the) operation
+        reg.sr.n = NBIT<S == Long ? Word : S>(u64(data));
+        reg.sr.z = ZERO<S == Long ? Word : S>(u64(data));
+        reg.sr.v = 0;
+        reg.sr.c = 0;
+
+        writeBuffer = (S == Long) ? u16(data >> 16) : u16(data & 0xFFFF);
+        u32 ea2 = computeEA<C, Mode::AW, S>(dst);
 
         // A failed write shows the final flags
-        try { writeOp<C, Mode::AW, S>(dst, data); }
-        catch (BusError &e) {
-            if ((e.stackFrame.fc & 3) != 2) {
-                reg.sr.n = NBIT<S>(data);
-                reg.sr.z = ZERO<S>(data);
-                e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | getCCR();
-            }
-            throw;
-        }
-        catch (AddressError &e) {
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
-            e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | getCCR();
-            throw;
-        }
+        reg.sr.n = NBIT<S>(u64(data));
+        reg.sr.z = ZERO<S>(u64(data));
+        writeM<C, Mode::AW, S>(ea2, data);
 
     } else {
 
         writeOp<C, Mode::AW, S>(dst, data);
+        reg.sr.n = NBIT<S>(u64(data));
+        reg.sr.z = ZERO<S>(u64(data));
+        reg.sr.v = 0;
+        reg.sr.c = 0;
     }
-    reg.sr.n = NBIT<S>(u64(data));
-    reg.sr.z = ZERO<S>(u64(data));
     prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -3774,88 +3768,89 @@ Moira::execMove8(u16 opcode)
 
         readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
 
-        if constexpr (!(EXACT_68000 && S == Long)) {
-            reg.sr.n = NBIT<S == Long ? Word : S>(data);
-            reg.sr.z = ZERO<S == Long ? Word : S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
-        }
+        if constexpr (C == Core::C68000) {
 
-        u32 ea2 = queue.irc << 16;
-        NO_DEC_PC(readExt<C>());
-        ea2 |= queue.irc;
+            // A failed first extension word fetch shows the flags of the operation (untouched if long)
+            if constexpr (S != Long) {
+                reg.sr.n = NBIT<S>(data);
+                reg.sr.z = ZERO<S>(data);
+                reg.sr.v = 0;
+                reg.sr.c = 0;
+            }
+            u32 ea2 = queue.irc << 16;
+            NO_DEC_PC(readExt<C>());
+            ea2 |= queue.irc;
 
-        // Check for address error
-        if (misaligned<C, S>(ea2)) {
-            if constexpr (EXACT_68000 && S == Long) {
+            if constexpr (S == Long) {
                 reg.sr.n = NBIT<Word>(data);
                 reg.sr.z = ZERO<Word>(data);
                 reg.sr.v = 0;
                 reg.sr.c = 0;
             }
-            throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(ea2));
-        }
 
-        if constexpr (EXACT_68000 && S == Long) {
-            reg.sr.n = NBIT<Word>(data);
-            reg.sr.z = ZERO<Word>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
-        } else {
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
-        }
+            // Check for address error
+            if (misaligned<C, S>(ea2)) throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(ea2));
 
-        if constexpr (EXACT_68000 && S == Long) {
+            if constexpr (S == Long) {
 
-            // A failed second write shows the final flags
-            try { writeM<C, Mode::AL, S>(ea2, data); }
-            catch (BusError &e) {
-                if ((e.stackFrame.fc & 3) != 2 && ((e.stackFrame.addr ^ (ea2 + 2)) & 0xFFFFFF) == 0) {
-                    reg.sr.n = NBIT<S>(data);
-                    reg.sr.z = ZERO<S>(data);
-                    e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | getCCR();
-                }
-                throw;
+                // The first write shows the flags of the low word, the second one the final flags
+                writeM<C, Mode::AL, Word>(ea2, data >> 16);
+                reg.sr.n = NBIT<S>(data);
+                reg.sr.z = ZERO<S>(data);
+                writeM<C, Mode::AL, Word>(ea2 + 2, data & 0xFFFF);
+
+            } else {
+
+                writeM<C, Mode::AL, S>(ea2, data);
             }
 
         } else {
 
+            u32 ea2 = queue.irc << 16;
+            NO_DEC_PC(readExt<C>());
+            ea2 |= queue.irc;
+
+            if (misaligned<C, S>(ea2)) throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(ea2));
             writeM<C, Mode::AL, S>(ea2, data);
         }
         reg.sr.n = NBIT<S>(data);
         reg.sr.z = ZERO<S>(data);
+        reg.sr.v = 0;
+        reg.sr.c = 0;
         NO_DEC_PC(readExt<C>());
 
     } else {
 
         readOp<C, M, S>(src, &ea, &data);
 
-        [[maybe_unused]] u8 ccr0 = getCCR();
-        [[maybe_unused]] u32 firstExt = reg.pc + 2;
-        reg.sr.n = NBIT<S>(data);
-        reg.sr.z = ZERO<S>(data);
-        reg.sr.v = 0;
-        reg.sr.c = 0;
+        if constexpr (C == Core::C68000) {
 
-        if constexpr (EXACT_68000) {
+            // The first extension word is fetched with the flags untouched
+            writeBuffer = (S == Long) ? u16(data >> 16) : u16(data & 0xFFFF);
+            u32 ea2 = queue.irc << 16;
+            readExt<C>();
+            ea2 |= queue.irc;
+            readBuffer = queue.irc;
 
-            // A failed fetch of the first extension word leaves the flags untouched
-            try { writeOp<C, Mode::AL, S>(dst, data); }
-            catch (BusError &e) {
-                if ((e.stackFrame.fc & 3) == 2 && S == Long && (e.stackFrame.addr & 0xFFFFFF) != (firstExt & 0xFFFFFF)) {
-                    reg.sr.n = NBIT<Word>(data);
-                    reg.sr.z = ZERO<Word>(data);
-                    e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | getCCR();
-                } else if ((e.stackFrame.fc & 3) == 2 && (e.stackFrame.addr & 0xFFFFFF) == (firstExt & 0xFFFFFF)) { e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | ccr0; setCCR(ccr0); }
-                throw;
-            }
+            // A failed fetch of the second extension word shows the flags of the (low word of the) operation
+            reg.sr.n = NBIT<S == Long ? Word : S>(data);
+            reg.sr.z = ZERO<S == Long ? Word : S>(data);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+            readExtLast<C>();
+
+            // A failed write shows the final flags
+            reg.sr.n = NBIT<S>(data);
+            reg.sr.z = ZERO<S>(data);
+            writeM<C, Mode::AL, S>(ea2, data);
 
         } else {
 
             writeOp<C, Mode::AL, S>(dst, data);
+            reg.sr.n = NBIT<S>(data);
+            reg.sr.z = ZERO<S>(data);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
         }
     }
 
