@@ -3394,15 +3394,13 @@ Moira::execMove4(u16 opcode)
 
     if constexpr (EXACT_COMPAT) {
 
-        // MAME shows the flags of the low word while the prefetch is pending
-        if constexpr (EXACT_68000 && S == Long) {
-            reg.sr.n = NBIT<Word>(data);
-            reg.sr.z = ZERO<Word>(data);
-        }
-        looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>();
-        if constexpr (EXACT_68000 && S == Long) {
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
+        // MAME shows the flags of the low word if the prefetch fails
+        try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); }
+        catch (BusError &e) {
+            if constexpr (EXACT_68000 && S == Long)
+                rethrow<C>(e, CCR::N | CCR::Z, (NBIT<Word>(data) ? CCR::N : 0) | (ZERO<Word>(data) ? CCR::Z : 0));
+            else
+                rethrow<C>(e);
         }
 
     } else {
