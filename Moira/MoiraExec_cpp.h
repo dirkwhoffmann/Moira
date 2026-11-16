@@ -88,6 +88,21 @@ Moira::rethrow(BusError &e)
     rethrow<C>(e, CCR::ALL, getCCR());
 }
 
+template <Core C, Size S> void
+Moira::rethrowD(BusError &e, int n, u32 value)
+{
+    // MAME updates the register (lower word for longs) before the prefetch
+    if constexpr (EXACT_COMPAT) writeD<S == Long ? Word : S>(n, value);
+    rethrow<C>(e);
+}
+
+template <Core C, Size S> void
+Moira::rethrowA(BusError &e, int n, u32 value)
+{
+    if constexpr (EXACT_COMPAT) writeA<S>(n, value);
+    rethrow<C>(e);
+}
+
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execLineA(u16 opcode)
 {
@@ -461,18 +476,21 @@ Moira::execAdda(u16 opcode)
     data = SEXT<S>(data);
 
     result = (I == Instr::ADDA || I == Instr::ADDA_LOOP) ? U32_ADD(readA(dst), data) : U32_SUB(readA(dst), data);
-    if constexpr (EXACT_COMPAT && C == Core::C68000) writeA<Word>(dst, result);   // MAME updates the lower word before the prefetch
-    else writeA(dst, result);
 
     if constexpr (C == Core::C68000) {
 
-        prefetchLate<C, POLL>();
+        try { prefetchLate<C, POLL>(); }
+        catch (BusError &e) {
+            if constexpr (!EXACT_COMPAT) writeA(dst, result);
+            rethrowA<C, Word>(e, dst, result);   // MAME updates the lower word
+        }
         SYNC(2);
         if constexpr (S == Word || isRegMode(M) || isImmMode(M)) SYNC(2);
-        if constexpr (EXACT_COMPAT) writeA(dst, result);
+        writeA(dst, result);
 
     } else {
 
+        writeA(dst, result);
         SYNC(2);
         POLL_IPL;
         if constexpr (S == Word || isRegMode(M) || isImmMode(M)) SYNC(2);
@@ -519,12 +537,13 @@ Moira::execAddiRg(u16 opcode)
     u32 ea, data, result;
     readOp<C, M, S>(dst, &ea, &data);
 
-    [[maybe_unused]] u8 ccr0 = getCCR(), ccr1 = 0;
+    [[maybe_unused]] u8 ccr0 = getCCR();
     result = addsub<C, I, S>(src, data);
-    if constexpr (EXACT_68000 && S == Long) { ccr1 = getCCR(); setCCR(ccr0); addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF); }
-    if constexpr (EXACT_COMPAT) writeD<S == Long ? Word : S>(dst, result);   // MAME updates the register (lower word) before the prefetch
-    prefetchLate<C, POLL, (S == Long)>();
-    if constexpr (EXACT_68000 && S == Long) setCCR(ccr1);
+    try { prefetchLate<C, POLL, (S == Long)>(); }
+    catch (BusError &e) {
+        if constexpr (EXACT_68000 && S == Long) { setCCR(ccr0); addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF); }
+        rethrowD<C, S>(e, dst, result);
+    }
 
     if constexpr (S == Long) { SYNC_68000(4); SYNC_68010(2); }
     writeD<S>(dst, result);
@@ -588,12 +607,13 @@ Moira::execAddqDn(u16 opcode)
     int dst = _____________xxx(opcode);
 
     if (src == 0) src = 8;
-    [[maybe_unused]] u8 ccr0 = getCCR(), ccr1 = 0;
+    [[maybe_unused]] u8 ccr0 = getCCR();
     u32 result = addsub<C, I, S>(src, readD<S>(dst));
-    if constexpr (EXACT_68000 && S == Long) { ccr1 = getCCR(); setCCR(ccr0); addsub<C, I, Word>(src, readD<Word>(dst)); }
-    if constexpr (EXACT_COMPAT) writeD<S == Long ? Word : S>(dst, result);   // MAME updates the register (lower word) before the prefetch
-    prefetchLate<C, POLL, (S == Long)>();
-    if constexpr (EXACT_68000 && S == Long) setCCR(ccr1);
+    try { prefetchLate<C, POLL, (S == Long)>(); }
+    catch (BusError &e) {
+        if constexpr (EXACT_68000 && S == Long) { setCCR(ccr0); addsub<C, I, Word>(src, readD<Word>(dst)); }
+        rethrowD<C, S>(e, dst, result);
+    }
 
     if constexpr (S == Long) SYNC(4);
     writeD<S>(dst, result);
@@ -615,8 +635,8 @@ Moira::execAddqAn(u16 opcode)
 
     if (src == 0) src = 8;
     u32 result = (I == Instr::ADDQ) ? U32_ADD(readA(dst), src) : U32_SUB(readA(dst), src);
-    if constexpr (EXACT_COMPAT) writeA(dst, result);   // MAME writes the register before the prefetch
-    prefetchLate<C, POLL>();
+    try { prefetchLate<C, POLL>(); }
+    catch (BusError &e) { rethrowA<C>(e, dst, result); }
     SYNC(4);
     writeA(dst, result);
 
@@ -668,18 +688,16 @@ Moira::execAddxRg(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    [[maybe_unused]] u8 ccr0 = getCCR(), ccr1 = 0;
+    [[maybe_unused]] u8 ccr0 = getCCR();
     u32 result = addsub<C, I, S>(readD<S>(src), readD<S>(dst));
 
     if constexpr (C == Core::C68000) {
 
-        if constexpr (EXACT_68000 && S == Long) {
-            ccr1 = getCCR(); setCCR(ccr0);
-            addsub<C, I, Word>(readD<Word>(src), readD<Word>(dst));
+        try { prefetchLate<C, POLL, (S == Long)>(); }
+        catch (BusError &e) {
+            if constexpr (EXACT_68000 && S == Long) { setCCR(ccr0); addsub<C, I, Word>(readD<Word>(src), readD<Word>(dst)); }
+            rethrowD<C, S>(e, dst, result);
         }
-        if constexpr (EXACT_COMPAT) writeD<S == Long ? Word : S>(dst, result);
-        prefetchLate<C, POLL, (S == Long)>();
-        if constexpr (EXACT_68000 && S == Long) setCCR(ccr1);
         if constexpr (S == Long) SYNC(4);
 
     } else {
@@ -918,12 +936,13 @@ Moira::execAndiRg(u16 opcode)
     u32 src = readIFrame<C, S>();
     int dst = _____________xxx(opcode);
 
-    [[maybe_unused]] u8 ccr0 = getCCR(), ccr1 = 0;
+    [[maybe_unused]] u8 ccr0 = getCCR();
     u32 result = logic<C, I, S>(src, readD<S>(dst));
-    if constexpr (EXACT_68000 && S == Long) { ccr1 = getCCR(); setCCR(ccr0); logic<C, I, Word>(src & 0xFFFF, readD<Word>(dst)); }
-    if constexpr (EXACT_COMPAT) writeD<S == Long ? Word : S>(dst, result);   // MAME updates the register (lower word) before the prefetch
-    prefetchLate<C, POLL, (S == Long)>();
-    if constexpr (EXACT_68000 && S == Long) setCCR(ccr1);
+    try { prefetchLate<C, POLL, (S == Long)>(); }
+    catch (BusError &e) {
+        if constexpr (EXACT_68000 && S == Long) { setCCR(ccr0); logic<C, I, Word>(src & 0xFFFF, readD<Word>(dst)); }
+        rethrowD<C, S>(e, dst, result);
+    }
 
     if constexpr (S == Long) { SYNC_68000(4); SYNC_68010(2); }
     writeD<S>(dst, result);
@@ -3884,8 +3903,8 @@ Moira::execMovea(u16 opcode)
         throw exc;
     }
 
-    if constexpr (EXACT_COMPAT) writeA(dst, SEXT<S>(data));   // MAME writes the register before the prefetch
-    prefetch<C, POLL>();
+    try { prefetch<C, POLL>(); }
+    catch (BusError &e) { rethrowA<C>(e, dst, SEXT<S>(data)); }
     writeA(dst, SEXT<S>(data));
 
     //           00  10  20        00  10  20        00  10  20
@@ -4592,8 +4611,8 @@ Moira::execMoveSrRg(u16 opcode)
 
     u32 ea, data;
     readOp<C, M, S>(dst, &ea, &data);
-    if constexpr (EXACT_COMPAT) writeD<S>(dst, getSR());   // MAME writes the register before the prefetch
-    prefetchLate<C, POLL>();
+    try { prefetchLate<C, POLL>(); }
+    catch (BusError &e) { rethrowD<C, S>(e, dst, getSR()); }
 
     if constexpr (C == Core::C68000) SYNC(2);
     writeD<S>(dst, getSR());
@@ -4720,9 +4739,9 @@ Moira::execMoveUspAn(u16 opcode)
 
     if constexpr (C >= Core::C68010) SYNC(2);
 
-    if constexpr (EXACT_COMPAT) writeA(an, getUSP());   // MAME writes before the prefetch
-    prefetch<C, POLL>();
-    if constexpr (compat != Compatibility::MAME) writeA(an, getUSP());
+    try { prefetch<C, POLL>(); }
+    catch (BusError &e) { rethrowA<C>(e, an, getUSP()); }
+    writeA(an, getUSP());
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -4741,9 +4760,9 @@ Moira::execMoveAnUsp(u16 opcode)
 
     if constexpr (C >= Core::C68010) SYNC(2);
 
-    if constexpr (EXACT_COMPAT) setUSP(readA(an));   // MAME writes before the prefetch
-    prefetch<C, POLL>();
-    if constexpr (compat != Compatibility::MAME) setUSP(readA(an));
+    try { prefetch<C, POLL>(); }
+    catch (BusError &e) { if constexpr (EXACT_COMPAT) setUSP(readA(an)); rethrow<C>(e); }
+    setUSP(readA(an));
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -5640,8 +5659,8 @@ Moira::execNegRg(u16 opcode)
     readOp<C, M, S>(dst, &ea, &data);
 
     data = logic<C, I, S>(data);
-    if constexpr (EXACT_COMPAT) writeD<S == Long ? Word : S>(dst, data);   // MAME updates the register (lower word) before the prefetch
-    prefetchLate<C, POLL, (S == Long)>();
+    try { prefetchLate<C, POLL, (S == Long)>(); }
+    catch (BusError &e) { rethrowD<C, S>(e, dst, data); }
 
     if constexpr (S == Long) SYNC(2);
     writeD<S>(dst, data);
@@ -6423,16 +6442,15 @@ Moira::execSccRg(u16 opcode)
     readOp<C, M, S>(dst, &ea, &data);
 
     data = cond<I>() ? 0xFF : 0;
-    if constexpr (EXACT_COMPAT) {
-
-        // MAME clears the register before the prefetch. If the condition is
-        // true, the register is written at the end and the IRD is kept.
-        if (!data) writeD<S>(dst, 0);
-        if (data) prefetchLate<C, POLL>(); else prefetch<C, POLL>();
-
-    } else {
-
-        prefetch<C, POLL>();
+    try {
+        // If the condition is true, the register is written at the end and the IRD is kept
+        if constexpr (EXACT_COMPAT) { if (data) prefetchLate<C, POLL>(); else prefetch<C, POLL>(); }
+        else prefetch<C, POLL>();
+    }
+    catch (BusError &e) {
+        // MAME clears the register before the prefetch
+        if constexpr (EXACT_COMPAT) { if (!data) writeD<S>(dst, 0); }
+        rethrow<C>(e);
     }
     if constexpr (C == Core::C68000) { if (data) SYNC(2); }
 
@@ -6536,16 +6554,20 @@ Moira::execSwap(u16 opcode)
 
     dat = (dat >> 16) | (dat & 0xFFFF) << 16;
 
-    // MAME writes the register before the prefetch
-    if constexpr (EXACT_COMPAT) {
+    try { prefetch<C, POLL>(); }
+    catch (BusError &e) {
 
-        writeD(rg, dat);
-        reg.sr.n = NBIT<Long>(dat);
-        reg.sr.z = ZERO<Long>(dat);
-        reg.sr.v = 0;
-        reg.sr.c = 0;
+        // MAME writes the register and the flags before the prefetch
+        if constexpr (EXACT_COMPAT) {
+
+            writeD(rg, dat);
+            reg.sr.n = NBIT<Long>(dat);
+            reg.sr.z = ZERO<Long>(dat);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+        }
+        rethrow<C>(e);
     }
-    prefetch<C, POLL>();
     writeD(rg, dat);
 
     reg.sr.n = NBIT<Long>(dat);

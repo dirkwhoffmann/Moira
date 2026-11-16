@@ -66,6 +66,8 @@ template <Core C> [[noreturn]] void rethrow(BusError &e, u8 mask, u8 ccr);
 // Variant for handlers that have already set the flags in the status register.
 // The current flags are shown in the stacked status register.
 template <Core C> [[noreturn]] void rethrow(BusError &e);
+template <Core C, Size S> [[noreturn]] void rethrowD(BusError &e, int n, u32 value);
+template <Core C, Size S = Long> [[noreturn]] void rethrowA(BusError &e, int n, u32 value);
 
 // Returns the condition codes that MAME shows while the prefetch of a register
 // shift is pending. They are computed from the unshifted operand.
