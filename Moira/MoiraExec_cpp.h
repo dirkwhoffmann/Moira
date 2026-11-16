@@ -2027,6 +2027,12 @@ Moira::execClr(u16 opcode)
             readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
         }
 
+        // MAME and UAE (68020) set the flags first
+        reg.sr.n = 0;
+        reg.sr.z = 1;
+        reg.sr.v = 0;
+        reg.sr.c = 0;
+
         try {
 
             fetchIrc<C, POLL, (!isRegMode(M) || S == Long)>();
@@ -2043,16 +2049,8 @@ Moira::execClr(u16 opcode)
 
             // MAME clears the register (lower word) before the prefetch
             if constexpr (C == Core::C68000 && isRegMode(M)) writeD<S == Long ? Word : S>(dst, 0);
-
-            // MAME and UAE (68020) set the flags first
-            reg.sr.n = 0; reg.sr.z = 1; reg.sr.v = 0; reg.sr.c = 0;
             rethrow<C>(e);
         }
-
-        reg.sr.n = 0;
-        reg.sr.z = 1;
-        reg.sr.v = 0;
-        reg.sr.c = 0;
     }
 
     if constexpr (C == Core::C68010) {
@@ -2265,11 +2263,11 @@ Moira::execCmpiRg(u16 opcode)
     u32 data = readD<S>(dst);
 
     // MAME updates the flags before the prefetch
-    try { prefetchLate<C, POLL, (S == Long)>(); }
-    catch (BusError &e) { cmp<C, S>(src, data); rethrow<C>(e); }
+    cmp<C, S>(src, data);
+
+    prefetchLate<C, POLL, (S == Long)>();
 
     if constexpr (S == Long && C == Core::C68000) SYNC(2);
-    cmp<C, S>(src, data);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -2299,10 +2297,9 @@ Moira::execCmpiEa(u16 opcode)
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
     // MAME updates the flags before the prefetch
-    try { prefetch<C, POLL>(); }
-    catch (BusError &e) { cmp<C, S>(src, data); rethrow<C>(e); }
-
     cmp<C, S>(src, data);
+
+    prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -5562,11 +5559,12 @@ Moira::execNbcdRg(u16 opcode)
     u32 data = readD<Byte>(reg);
 
     // MAME computes the result (and the flags) before the prefetch
-    try { looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>(); }
-    catch (BusError &e) { bcd<C, nbcdInstr, Byte>(data, 0); rethrow<C>(e); }
+    u32 result = bcd<C, nbcdInstr, Byte>(data, 0);
+
+    looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>();
 
     SYNC(2);
-    writeD<Byte>(reg, bcd<C, nbcdInstr, Byte>(data, 0));
+    writeD<Byte>(reg, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -5586,19 +5584,18 @@ Moira::execNbcdEa(u16 opcode)
     readOp<C, M, Byte, STD_AE_FRAME>(reg, &ea, &data);
 
     // MAME updates the flags before the prefetch
-    try {
-        if (looping<I>()) {
-            if constexpr (M == Mode::AI) noPrefetch<C>(4);
-            else if constexpr (M == Mode::PI) noPrefetch<C>(4);
-            else if constexpr (M == Mode::PD) noPrefetch<C>(4);
-            else noPrefetch<C>(2);
-        } else {
-            fetchIrc<C, POLL>();
-        }
-    }
-    catch (BusError &e) { bcd<C, nbcdInstr, Byte>(data, 0); rethrow<C>(e); }
+    u32 result = bcd<C, nbcdInstr, Byte>(data, 0);
 
-    writeM<C, M, Byte, COMMITC>(ea, bcd<C, nbcdInstr, Byte>(data, 0));
+    if (looping<I>()) {
+        if constexpr (M == Mode::AI) noPrefetch<C>(4);
+        else if constexpr (M == Mode::PI) noPrefetch<C>(4);
+        else if constexpr (M == Mode::PD) noPrefetch<C>(4);
+        else noPrefetch<C>(2);
+    } else {
+        fetchIrc<C, POLL>();
+    }
+
+    writeM<C, M, Byte, COMMITC>(ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
