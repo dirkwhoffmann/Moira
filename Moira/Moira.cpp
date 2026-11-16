@@ -420,10 +420,11 @@ Moira::getInstrInfo(u16 op) const
 isize
 Moira::instrLength(u32 addr) const
 {
-    // Use the tables of the emulated CPU model (independent of the disassembler model).
-
+    // Use the CPU model instead of the DASM model for disassembly
+    constexpr bool cpuView = true;
+    
     char tmp[128];
-    return disassembleInstr(tmp, addr, true);
+    return disassembleInstr(tmp, addr, cpuView);
 }
 
 void
@@ -548,17 +549,7 @@ Moira::executeInstruction()
             const Registers snapshot = reg;
 
             try {
-
-                if (flags & LOOPING) {
-
-                    assert(loop[queue.ird]);
-                    (this->*loop[queue.ird])(queue.ird);
-
-                } else {
-
-                    (this->*exec[queue.ird])(queue.ird);
-                }
-
+                (this->*((flags & LOOPING) ? loop[queue.ird] : exec[queue.ird]))(queue.ird);
             } catch (const std::exception &exc) {
                 processException(exc, &snapshot);
             }
@@ -566,17 +557,7 @@ Moira::executeInstruction()
         } else {
 
             try {
-
-                if (flags & LOOPING) {
-
-                    assert(loop[queue.ird]);
-                    (this->*loop[queue.ird])(queue.ird);
-
-                } else {
-
-                    (this->*exec[queue.ird])(queue.ird);
-                }
-
+                (this->*((flags & LOOPING) ? loop[queue.ird] : exec[queue.ird]))(queue.ird);
             } catch (const std::exception &exc) {
                 processException(exc, nullptr);
             }
