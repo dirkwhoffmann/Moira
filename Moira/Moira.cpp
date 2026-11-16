@@ -242,6 +242,132 @@ Moira::reset()
 }
 
 i64
+Moira::execute()
+{
+    using namespace State;
+
+    const auto start = clock;
+
+    // Check the integrity of the IRQ flag
+    if (reg.ipl > reg.sr.ipl || (reg.ipl == 7 && !nmiTaken)) assert(flags & CHECK_IRQ);
+
+    // Check the integrity of the trace flag
+    assert(!!(flags & TRACING) == reg.sr.t1);
+
+    // Check the integrity of the program counter
+    assert(reg.pc == reg.pc0 + 2);
+
+    // Take the fast path or the slow path
+    if (!flags) {
+
+        //
+        // Fast path: Call the instruction handler and return
+        //
+
+        try {
+            (this->*exec[queue.ird])(queue.ird);
+        } catch (const std::exception &exc) {
+            processException(exc);
+        }
+        
+        advancePC0();
+
+    } else {
+
+        //
+        // Slow path: Process flags one by one
+        //
+
+        if (flags & (HALTED | TRACE_EXC | TRACING)) {
+
+            // Only continue if the CPU is not halted
+            if (flags & HALTED) {
+                sync(2);
+                return clock - start;
+            }
+
+            // Process pending trace exception (if any)
+            if (flags & TRACE_EXC) {
+                execException(M68kException::TRACE);
+                goto done;
+            }
+
+            // Check if the T flag is set inside the status register
+            if ((flags & TRACING) && !(flags & STOPPED)) {
+                flags |= TRACE_EXC;
+            }
+        }
+
+        // Process pending interrupt (if any)
+        if (flags & CHECK_IRQ) {
+
+            try {
+                if (checkForIrq()) goto done;
+            } catch (const std::exception &exc) {
+                processException(exc);
+                advancePC0();
+            }
+        }
+
+        // If the CPU is stopped, poll the IPL lines and return
+        if (flags & STOPPED) {
+
+            POLL_IPL;
+            sync((compat == Compatibility::MUSASHI) ? 1 : 2);
+            return clock - start;
+        }
+
+        // If logging is enabled, record the executed instruction
+        if (flags & LOGGING) {
+            debugger.logInstruction();
+        }
+
+        // Execute the instruction
+        if (flags & (State::SAVE_REGS | State::MMU)) {
+
+            const Registers snapshot = reg;
+
+            try {
+                (this->*((flags & LOOPING) ? loop[queue.ird] : exec[queue.ird]))(queue.ird);
+            } catch (const std::exception &exc) {
+                processException(exc, &snapshot);
+            }
+
+        } else {
+
+            try {
+                (this->*((flags & LOOPING) ? loop[queue.ird] : exec[queue.ird]))(queue.ird);
+            } catch (const std::exception &exc) {
+                processException(exc);
+            }
+        }
+
+    done:
+
+        // The next instruction starts where the prefetch queue points to
+        advancePC0();
+
+        // Check if a breakpoint has been reached
+        if (flags & CHECK_BP) {
+
+            // Don't break if the instruction won't be executed due to tracing
+            if (flags & TRACE_EXC) return clock - start;
+
+            // Check if a softstop has been reached
+            if (debugger.softstopMatches(reg.pc0)) didReachSoftstop(reg.pc0);
+
+            // Check if a breakpoint has been reached
+            if (debugger.breakpointMatches(reg.pc0)) didReachBreakpoint(reg.pc0);
+        }
+    }
+
+    // Check the integrity of the program counter again
+    assert(reg.pc == reg.pc0 + 2);
+
+    return clock - start;
+}
+
+i64
 Moira::execute(i64 cycles)
 {
     return executeUntil(clock + cycles);
@@ -251,7 +377,7 @@ i64
 Moira::executeUntil(i64 cycle)
 {
     const i64 start = clock;
-    while (clock < cycle) { executeInstruction(); }
+    while (clock < cycle) { execute(); }
     return clock - start;
 }
 
@@ -407,14 +533,10 @@ Moira::setIPL(u8 val)
 InstrInfo
 Moira::getInstrInfo(u16 op) const
 {
-    if constexpr (MOIRA_ENABLE_DASM) {
-
-        return infoAlt ? infoAlt[op] : info[op];
-
-    } else {
-
+    if constexpr (!MOIRA_ENABLE_DASM)
         throw std::runtime_error("This feature requires MOIRA_ENABLE_DASM = true\n");
-    }
+        
+    return infoAlt ? infoAlt[op] : info[op];
 }
 
 isize
@@ -462,128 +584,6 @@ Moira::configureUnits()
             mmu.setModel(MMUModel::NONE);
             break;
     }
-}
-
-void
-Moira::executeInstruction()
-{
-    using namespace State;
-
-    // Check the integrity of the IRQ flag
-    if (reg.ipl > reg.sr.ipl || (reg.ipl == 7 && !nmiTaken)) assert(flags & CHECK_IRQ);
-
-    // Check the integrity of the trace flag
-    assert(!!(flags & TRACING) == reg.sr.t1);
-
-    // Check the integrity of the program counter
-    assert(reg.pc == reg.pc0 + 2);
-
-    // Take the fast path or the slow path
-    if (!flags) {
-
-        //
-        // Fast path: Call the instruction handler and return
-        //
-
-        try {
-            (this->*exec[queue.ird])(queue.ird);
-        } catch (const std::exception &exc) {
-            processException(exc);
-        }
-        
-        advancePC0();
-
-    } else {
-
-        //
-        // Slow path: Process flags one by one
-        //
-
-        if (flags & (HALTED | TRACE_EXC | TRACING)) {
-
-            // Only continue if the CPU is not halted
-            if (flags & HALTED) {
-                sync(2);
-                return;
-            }
-
-            // Process pending trace exception (if any)
-            if (flags & TRACE_EXC) {
-                execException(M68kException::TRACE);
-                goto done;
-            }
-
-            // Check if the T flag is set inside the status register
-            if ((flags & TRACING) && !(flags & STOPPED)) {
-                flags |= TRACE_EXC;
-            }
-        }
-
-        // Process pending interrupt (if any)
-        if (flags & CHECK_IRQ) {
-
-            try {
-                if (checkForIrq()) goto done;
-            } catch (const std::exception &exc) {
-                processException(exc);
-                advancePC0();
-            }
-        }
-
-        // If the CPU is stopped, poll the IPL lines and return
-        if (flags & STOPPED) {
-
-            POLL_IPL;
-            sync((compat == Compatibility::MUSASHI) ? 1 : 2);
-            return;
-        }
-
-        // If logging is enabled, record the executed instruction
-        if (flags & LOGGING) {
-            debugger.logInstruction();
-        }
-
-        // Execute the instruction
-        if (flags & (State::SAVE_REGS | State::MMU)) {
-
-            const Registers snapshot = reg;
-
-            try {
-                (this->*((flags & LOOPING) ? loop[queue.ird] : exec[queue.ird]))(queue.ird);
-            } catch (const std::exception &exc) {
-                processException(exc, &snapshot);
-            }
-
-        } else {
-
-            try {
-                (this->*((flags & LOOPING) ? loop[queue.ird] : exec[queue.ird]))(queue.ird);
-            } catch (const std::exception &exc) {
-                processException(exc, nullptr);
-            }
-        }
-
-    done:
-
-        // The next instruction starts where the prefetch queue points to
-        advancePC0();
-
-        // Check if a breakpoint has been reached
-        if (flags & CHECK_BP) {
-
-            // Don't break if the instruction won't be executed due to tracing
-            if (flags & TRACE_EXC) return;
-
-            // Check if a softstop has been reached
-            if (debugger.softstopMatches(reg.pc0)) didReachSoftstop(reg.pc0);
-
-            // Check if a breakpoint has been reached
-            if (debugger.breakpointMatches(reg.pc0)) didReachBreakpoint(reg.pc0);
-        }
-    }
-
-    // Check the integrity of the program counter again
-    assert(reg.pc == reg.pc0 + 2);
 }
 
 template <Core C> void

@@ -438,7 +438,7 @@ public:
      *
      * @return The number of cycles that have elapsed
      */
-    i64 execute() { const i64 start = clock; executeInstruction(); return clock - start; }
+    i64 execute();
 
     /** @brief Executes instructions for a given number of cycles
      *
@@ -936,9 +936,6 @@ protected:
     //
 
 private:
-
-    // Executes a single instruction (the body of execute())
-    void executeInstruction();
 
     // Performs a core-specific reset routine
     template <Core C> void reset();
