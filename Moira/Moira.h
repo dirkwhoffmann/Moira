@@ -329,6 +329,11 @@ public:
      */
     void setDataStyle(const DasmStyle &style);
 
+
+    //
+    // Querying the model
+    //
+
     /** @brief Checks if the emulated CPU has a coprocessor interface (CPI)
      *
      * Only the 68020 and the 68030 (including their EC variants) can be
