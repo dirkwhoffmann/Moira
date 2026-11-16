@@ -139,14 +139,14 @@ Moira::execShiftRg(u16 opcode)
     int cnt = readD(src) & 0x3F;
     int cyc = (S == Long ? 4 : 2) + 2 * cnt;
 
-    // MAME has already set the flags from the operand when the prefetch starts
-    if constexpr (EXACT_COMPAT) {
-        u32 operand = readD<S>(dst);
-        reg.sr.n = NBIT<S == Long ? Word : S>(operand);     // Long operands are processed word by word
-        reg.sr.z = ZERO<S == Long ? Word : S>(operand);
-        reg.sr.v = 0;
-        reg.sr.c = (I == Instr::ROXL || I == Instr::ROXR) ? reg.sr.x : 0;
-    }
+    // MAME has already set the flags from the operand when the prefetch starts.
+    // This matters if the prefetch fails with a bus error.
+    u32 operand = readD<S>(dst);
+    reg.sr.n = NBIT<S == Long ? Word : S>(operand);         // Long operands are processed word by word
+    reg.sr.z = ZERO<S == Long ? Word : S>(operand);
+    reg.sr.v = 0;
+    reg.sr.c = (I == Instr::ROXL || I == Instr::ROXR) ? reg.sr.x : 0;
+
     prefetchLate<C, POLL>();
     SYNC(cyc);
 
@@ -193,14 +193,14 @@ Moira::execShiftIm(u16 opcode)
     int cnt = src ? src : 8;
     int cyc = (S == Long ? 4 : 2) + 2 * cnt;
 
-    // MAME has already set the flags from the operand when the prefetch starts
-    if constexpr (EXACT_COMPAT) {
-        u32 operand = readD<S>(dst);
-        reg.sr.n = NBIT<S == Long ? Word : S>(operand);     // Long operands are processed word by word
-        reg.sr.z = ZERO<S == Long ? Word : S>(operand);
-        reg.sr.v = 0;
-        reg.sr.c = (I == Instr::ROXL || I == Instr::ROXR) ? reg.sr.x : 0;
-    }
+    // MAME has already set the flags from the operand when the prefetch starts.
+    // This matters if the prefetch fails with a bus error.
+    u32 operand = readD<S>(dst);
+    reg.sr.n = NBIT<S == Long ? Word : S>(operand);         // Long operands are processed word by word
+    reg.sr.z = ZERO<S == Long ? Word : S>(operand);
+    reg.sr.v = 0;
+    reg.sr.c = (I == Instr::ROXL || I == Instr::ROXR) ? reg.sr.x : 0;
+
     prefetchLate<C, POLL>();
     SYNC(cyc);
 

@@ -101,8 +101,10 @@ add_executable(retrymoira
 target_link_libraries(retrymoira PRIVATE moiraUAEExc mameref uaecpu)
 target_include_directories(retrymoira PRIVATE ${SST_INCLUDE_DIRS})
 
-add_test(NAME ExceptionMame COMMAND exceptionmame --ignore ccr,cycles,nbit)
+# MAME is compared including the condition codes (they matter in the frames of failed prefetches)
+add_test(NAME ExceptionMame COMMAND exceptionmame --ignore cycles,nbit)
 add_test(NAME ReferenceMame COMMAND exceptionmame --check)
+# UAE stacks different condition codes than MAME for some instructions (shifts, ADDX.l, SUBX.l, NOT.l, BTST/BCHG/BCLR/BSET, MOVE.l)
 add_test(NAME ExceptionUAE COMMAND exceptionuae --ignore ccr,cycles,nbit)
 add_test(NAME ExceptionUAE020 COMMAND exceptionuae --cpu 68020 --min 100)
 add_test(NAME RetryMoira030 COMMAND retrymoira --cpu 68030 --limit 100)
