@@ -35,26 +35,12 @@ adjustFetchPc(Fn &&fn, int delta)
     }
 }
 
-#define MAME_68000 (compat == Compatibility::MAME && C == Core::C68000)
 #define COMMITC (EXACT_68000 ? COMMIT_IRD : 0)   // The access contains the last bus cycle of the instruction (see COMMIT_IRD)
 #define CLRC ((!isRegMode(M) || S == Long) ? COMMITC : 0)   // CLR defers the IRD update only if the prefetch is not the last cycle
 // NBCD is computed like SBCD, except in Musashi mode (Musashi has its own formula)
 #define nbcdInstr (compat == Compatibility::MUSASHI ? Instr::NBCD : Instr::SBCD)
 #define EXACT_ABORT EXACT_68000   // MAME and UAE abort misaligned stack accesses without a bus cycle
 #define NO_DEC_PC(...) adjustFetchPc<EXACT_68000>([&]{ __VA_ARGS__; }, 2)
-
-// MAME shows modified flags in the frame if the second word of a long write fails
-#define MAME_LONG_WRITE(ea0, nexpr, zexpr, ...) \
-    if constexpr (MAME_68000 && S == Long) { \
-        u8 ccr0_ = getCCR(); \
-        try { __VA_ARGS__; } \
-        catch (BusError &e) { \
-            if (((e.stackFrame.addr ^ ((ea0) + 2)) & 0xFFFFFF) == 0) \
-                rethrow<C>(e, CCR::N | CCR::Z | CCR::V | CCR::C, ((nexpr) ? CCR::N : 0) | ((zexpr) ? CCR::Z : 0)); \
-            setCCR(ccr0_); \
-            throw; \
-        } \
-    } else { __VA_ARGS__; }
 
 // UAE stacks the PC of the executing instruction if a bus error hits a write that precedes the final prefetch
 #define UAE_BE_PC(...) \
@@ -3211,33 +3197,46 @@ Moira::execMove2(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        if constexpr (!isMemMode(M) && S == Long) {
+        // A failed write shows the flags set up in front of it
+        constexpr Flags F = AE_INC_PC | ((S == Long && !isMemMode(M)) ? POLL : 0);
+        writeBuffer = (S == Long) ? u16(data >> 16) : u16(data & 0xFFFF);
+        u32 ea2 = readA(dst);
 
-            MAME_LONG_WRITE(readA<Long>(dst), (NBIT<Word>(data)), (ZERO<Word>(data)),
-                            UAE_BE_PC(writeOp<C, Mode::AI, S, AE_INC_PC|POLL>(dst, data)))
+        if constexpr (S == Long) {
 
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
+            // First write: untouched flags (register source) or the flags of the low word (memory source)
+            if constexpr (isMemMode(M)) {
+                reg.sr.n = NBIT<Word>(data);
+                reg.sr.z = ZERO<Word>(data);
+                reg.sr.v = 0;
+                reg.sr.c = 0;
+            }
+            UAE_BE_PC(writeM<C, Mode::AI, Word, AE_INC_PC>(ea2, data >> 16));
+
+            // Second write: the flags of the low word (register source) or the final flags (memory source)
+            reg.sr.n = NBIT<isMemMode(M) ? Long : Word>(data);
+            reg.sr.z = ZERO<isMemMode(M) ? Long : Word>(data);
             reg.sr.v = 0;
             reg.sr.c = 0;
-
-            looping<I>() ? noPrefetch<C>() : prefetch<C>();
+            UAE_BE_PC(writeM<C, Mode::AI, Word, F>(ea2 + 2, data & 0xFFFF));
 
         } else {
 
-            reg.sr.n = NBIT<S == Long ? Word : S>(data);
-            reg.sr.z = ZERO<S == Long ? Word : S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
-
-            MAME_LONG_WRITE(readA<Long>(dst), (NBIT<S>(data)), (ZERO<S>(data)),
-                            UAE_BE_PC(writeOp<C, Mode::AI, S, AE_INC_PC>(dst, data)))
-
             reg.sr.n = NBIT<S>(data);
             reg.sr.z = ZERO<S>(data);
-
-            looping<I>() ? noPrefetch<C>() : prefetch<C, POLL>();
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+            UAE_BE_PC(writeM<C, Mode::AI, S, F>(ea2, data));
         }
+
+        reg.sr.n = NBIT<S>(data);
+        reg.sr.z = ZERO<S>(data);
+        reg.sr.v = 0;
+        reg.sr.c = 0;
+
+        // The interrupt level is polled in the second write if it is the last bus cycle (register source)
+        if constexpr (S == Long && !isMemMode(M)) looping<I>() ? noPrefetch<C>() : prefetch<C>();
+        else looping<I>() ? noPrefetch<C>() : prefetch<C, POLL>();
 
     } else {
 
@@ -3261,8 +3260,7 @@ Moira::execMove2(u16 opcode)
             reg.sr.v = 0;
             reg.sr.c = 0;
 
-            MAME_LONG_WRITE(readA<Long>(dst), (NBIT<S>(data)), (ZERO<S>(data)),
-                            UAE_BE_PC(writeOp<C, Mode::AI, S, AE_INC_PC>(dst, data)))
+            writeOp<C, Mode::AI, S, AE_INC_PC>(dst, data);
 
             reg.sr.n = NBIT<S>(data);
             reg.sr.z = ZERO<S>(data);
@@ -3304,33 +3302,45 @@ Moira::execMove3(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        if constexpr (S == Long && !isMemMode(M)) {
+        // A failed write shows the flags set up in front of it
+        constexpr Flags F = AE_INC_PC | (true ? POLL : 0);
+        writeBuffer = (S == Long) ? u16(data >> 16) : u16(data & 0xFFFF);
+        u32 ea2 = readA(dst);
 
-            MAME_LONG_WRITE(readA<Long>(dst), (NBIT<Word>(data)), (ZERO<Word>(data)),
-                            UAE_BE_PC(writeOp<C, Mode::PI, S, AE_INC_PC|POLL>(dst, data)))
+        if constexpr (S == Long) {
 
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
+            // First write: untouched flags (register source) or the flags of the low word (memory source)
+            if constexpr (isMemMode(M)) {
+                reg.sr.n = NBIT<Word>(data);
+                reg.sr.z = ZERO<Word>(data);
+                reg.sr.v = 0;
+                reg.sr.c = 0;
+            }
+            UAE_BE_PC(writeM<C, Mode::PI, Word, AE_INC_PC>(ea2, data >> 16));
+
+            // Second write: the flags of the low word (register source) or the final flags (memory source)
+            reg.sr.n = NBIT<isMemMode(M) ? Long : Word>(data);
+            reg.sr.z = ZERO<isMemMode(M) ? Long : Word>(data);
             reg.sr.v = 0;
             reg.sr.c = 0;
-
-            looping<I>() ? noPrefetch<C>() : prefetch<C>();
+            UAE_BE_PC(writeM<C, Mode::PI, Word, F>(ea2 + 2, data & 0xFFFF));
 
         } else {
 
-            reg.sr.n = NBIT<S == Long ? Word : S>(data);
-            reg.sr.z = ZERO<S == Long ? Word : S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
-
-            MAME_LONG_WRITE(readA<Long>(dst), (NBIT<S>(data)), (ZERO<S>(data)),
-                            UAE_BE_PC(writeOp<C, Mode::PI, S, AE_INC_PC|POLL>(dst, data)))
-
             reg.sr.n = NBIT<S>(data);
             reg.sr.z = ZERO<S>(data);
-
-            looping<I>() ? noPrefetch<C>() : prefetch<C>();
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+            UAE_BE_PC(writeM<C, Mode::PI, S, F>(ea2, data));
         }
+        updateAnPI<Mode::PI, S>(dst);
+
+        reg.sr.n = NBIT<S>(data);
+        reg.sr.z = ZERO<S>(data);
+        reg.sr.v = 0;
+        reg.sr.c = 0;
+
+        looping<I>() ? noPrefetch<C>() : prefetch<C>();
 
     } else {
 
