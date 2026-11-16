@@ -440,12 +440,14 @@ Moira::execAddRgEa(u16 opcode)
     int dst = _____________xxx(opcode);
 
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
-    [[maybe_unused]] u8 ccr0 = getCCR(), ccr1 = 0;
+    [[maybe_unused]] u8 ccr0 = getCCR();
     result = addsub<C, I, S>(readD<S>(src), data);
-    if constexpr (EXACT_68000 && S == Long) { ccr1 = getCCR(); setCCR(ccr0); addsub<C, I, Word>(readD<Word>(src), data & 0xFFFF); }
 
-    looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>();
-    if constexpr (EXACT_68000 && S == Long) setCCR(ccr1);
+    try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); }
+    catch (BusError &e) {
+        if constexpr (EXACT_68000 && S == Long) { setCCR(ccr0); addsub<C, I, Word>(readD<Word>(src), data & 0xFFFF); }
+        rethrow<C>(e);
+    }
 
     writeM<C, M, S, (((compat == Compatibility::UAE || EXACT_COMPAT) && C != Core::C68020) ? REVERSE : 0) | COMMITC>(ea, result);
 
@@ -575,11 +577,13 @@ Moira::execAddiEa(u16 opcode)
     u32 ea, data, result;
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    [[maybe_unused]] u8 ccr0 = getCCR(), ccr1 = 0;
+    [[maybe_unused]] u8 ccr0 = getCCR();
     result = addsub<C, I, S>(src, data);
-    if constexpr (EXACT_68000 && S == Long) { ccr1 = getCCR(); setCCR(ccr0); addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF); }
-    fetchIrc<C>();
-    if constexpr (EXACT_68000 && S == Long) setCCR(ccr1);
+    try { fetchIrc<C>(); }
+    catch (BusError &e) {
+        if constexpr (EXACT_68000 && S == Long) { setCCR(ccr0); addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF); }
+        rethrow<C>(e);
+    }
 
     writeOp<C, M, S, POLL | (((compat == Compatibility::UAE || EXACT_COMPAT) && C != Core::C68020) ? REVERSE : 0) | COMMITC>(dst, ea, result);
 
@@ -659,11 +663,13 @@ Moira::execAddqEa(u16 opcode)
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
     if (src == 0) src = 8;
-    [[maybe_unused]] u8 ccr0 = getCCR(), ccr1 = 0;
+    [[maybe_unused]] u8 ccr0 = getCCR();
     result = addsub<C, I, S>(src, data);
-    if constexpr (EXACT_68000 && S == Long) { ccr1 = getCCR(); setCCR(ccr0); addsub<C, I, Word>(src, data & 0xFFFF); }
-    fetchIrc<C, POLL>();
-    if constexpr (EXACT_68000 && S == Long) setCCR(ccr1);
+    try { fetchIrc<C, POLL>(); }
+    catch (BusError &e) {
+        if constexpr (EXACT_68000 && S == Long) { setCCR(ccr0); addsub<C, I, Word>(src, data & 0xFFFF); }
+        rethrow<C>(e);
+    }
 
     writeOp<C, M, S, (((compat == Compatibility::UAE || EXACT_COMPAT) && C != Core::C68020) ? REVERSE : 0) | COMMITC>(dst, ea, result);
 
@@ -886,24 +892,19 @@ Moira::execAndRgEa(u16 opcode)
     u32 ea, data;
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    [[maybe_unused]] u8 ccr0 = getCCR(), ccr1 = 0;
+    [[maybe_unused]] u8 ccr0 = getCCR();
     u32 result = logic<C, I, S>(readD<S>(src), data);
-    if constexpr (EXACT_COMPAT && isRegMode(M)) {
-
-        // MAME updates the register (lower word) before the prefetch
-        if constexpr (EXACT_68000 && S == Long) {
-            ccr1 = getCCR(); setCCR(ccr0);
-            logic<C, I, Word>(readD<Word>(src), data & 0xFFFF);
+    try {
+        if constexpr (EXACT_COMPAT && isRegMode(M)) {
+            looping<I>() ? noPrefetch<C>(2) : prefetchLate<C, POLL, (S == Long)>();
+        } else {
+            looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>();
         }
-        writeD<S == Long ? Word : S>(dst, result);
-        looping<I>() ? noPrefetch<C>(2) : prefetchLate<C, POLL, (S == Long)>();
-        if constexpr (EXACT_68000 && S == Long) setCCR(ccr1);
-
-    } else {
-
-        if constexpr (EXACT_68000 && S == Long) { ccr1 = getCCR(); setCCR(ccr0); logic<C, I, Word>(readD<Word>(src), data & 0xFFFF); }
-        looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>();
-        if constexpr (EXACT_68000 && S == Long) setCCR(ccr1);
+    }
+    catch (BusError &e) {
+        if constexpr (EXACT_68000 && S == Long) { setCCR(ccr0); logic<C, I, Word>(readD<Word>(src), data & 0xFFFF); }
+        if constexpr (isRegMode(M)) rethrowD<C, S>(e, dst, result);   // MAME updates the register (lower word)
+        else rethrow<C>(e);
     }
 
     if constexpr (S == Long && isRegMode(M)) { SYNC_68000(4); SYNC_68010(2); }
@@ -966,11 +967,13 @@ Moira::execAndiEa(u16 opcode)
 
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    [[maybe_unused]] u8 ccr0 = getCCR(), ccr1 = 0;
+    [[maybe_unused]] u8 ccr0 = getCCR();
     result = logic<C, I, S>(src, data);
-    if constexpr (EXACT_68000 && S == Long) { ccr1 = getCCR(); setCCR(ccr0); logic<C, I, Word>(src & 0xFFFF, data & 0xFFFF); }
-    fetchIrc<C, POLL>();
-    if constexpr (EXACT_68000 && S == Long) setCCR(ccr1);
+    try { fetchIrc<C, POLL>(); }
+    catch (BusError &e) {
+        if constexpr (EXACT_68000 && S == Long) { setCCR(ccr0); logic<C, I, Word>(src & 0xFFFF, data & 0xFFFF); }
+        rethrow<C>(e);
+    }
 
     if constexpr ((compat == Compatibility::MUSASHI) || ((compat == Compatibility::UAE) && C == Core::C68020)) {
         writeOp<C, M, S, COMMITC>(dst, ea, result);
@@ -5682,12 +5685,14 @@ Moira::execNegEa(u16 opcode)
 
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    [[maybe_unused]] u8 ccr0 = getCCR(), ccr1 = 0;
+    [[maybe_unused]] u8 ccr0 = getCCR();
     [[maybe_unused]] u16 lo = u16(data);
     data = logic<C, I, S>(data);
-    if constexpr (EXACT_68000 && S == Long) { ccr1 = getCCR(); setCCR(ccr0); logic<C, I, Word>(lo); }
-    looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>();
-    if constexpr (EXACT_68000 && S == Long) setCCR(ccr1);
+    try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); }
+    catch (BusError &e) {
+        if constexpr (EXACT_68000 && S == Long) { setCCR(ccr0); logic<C, I, Word>(lo); }
+        rethrow<C>(e);
+    }
 
     if constexpr ((compat == Compatibility::MUSASHI)) {
         writeOp<C, M, S, COMMITC>(dst, ea, data);
