@@ -684,19 +684,29 @@ Moira::execAddxRg(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    [[maybe_unused]] u8 ccr0 = getCCR();
-    u32 result = addsub<C, I, S>(readD<S>(src), readD<S>(dst));
+    u32 result;
 
     if constexpr (C == Core::C68000) {
 
-        try { prefetchLate<C, POLL, (S == Long)>(); }
-        catch (BusError &e) {
-            if constexpr (S == Long) { setCCR(ccr0); addsub<C, I, Word>(readD<Word>(src), readD<Word>(dst)); }
-            rethrowD<C, S>(e, dst, result);
+        if constexpr (S == Long) {
+
+            // MAME shows the flags of the low word operation if the prefetch fails
+            try { prefetchLate<C, POLL>(); }
+            catch (BusError &e) { rethrowD<C, Word>(e, dst, addsub<C, I, Word>(readD<Word>(src), readD<Word>(dst))); }
+
+            result = addsub<C, I, S>(readD<S>(src), readD<S>(dst));
+            SYNC(4);
+
+        } else {
+
+            result = addsub<C, I, S>(readD<S>(src), readD<S>(dst));
+            try { prefetchLate<C, POLL, false>(); }
+            catch (BusError &e) { rethrowD<C, S>(e, dst, result); }
         }
-        if constexpr (S == Long) SYNC(4);
 
     } else {
+
+        result = addsub<C, I, S>(readD<S>(src), readD<S>(dst));
 
         POLL_IPL;
         if constexpr (S == Long) SYNC(2);
