@@ -186,7 +186,7 @@ Moira::translate(u32 addr, u8 fc, bool *ci)
                 if (!write) frame.ssw |= SSW030::RW;
             }
 
-            throw BusError(frame);
+            throw BusError(frame, false);
         }
 
         return *physical;

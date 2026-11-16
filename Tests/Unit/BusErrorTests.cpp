@@ -39,10 +39,21 @@ public:
     void write32(u32 addr, u32 val) const override { write16(addr, val >> 16); write16(addr + 2, val & 0xFFFF); }
     void write16(u32 addr, u16 val) const override { check(addr, true); ram[addr & 0xFFFFF] = val >> 8; ram[(addr + 1) & 0xFFFFF] = val & 0xFF; }
 
+    // If set, the host supplies the complete stack frame itself
+    bool customFrame = false;
+    u16 customSR = 0;
+
     void check(u32 addr, bool write) const
     {
         if ((addr & ~1u) != faultAddr) return;
-        if (write ? faultOnWrite : faultOnRead) throw BusError(addr);
+        if (!(write ? faultOnWrite : faultOnRead)) return;
+        if (customFrame) {
+            StackFrame frame = {};
+            frame.addr = addr;
+            frame.sr = customSR;
+            throw BusError(frame);
+        }
+        throw BusError(addr);
     }
 
     u16 peek16(u32 addr) const { return ram[addr] << 8 | ram[addr + 1]; }
@@ -125,6 +136,36 @@ TEST_CASE("Moira completes bus error frames (write)")
     // frame still holds the instruction that is being executed
     CHECK(f.pc == 0x1004);
     CHECK(f.ird == 0x3080);
+}
+
+TEST_CASE("A failed prefetch shows the flags that the instruction has set")
+{
+    TestCPU cpu;
+    cpu.faultAddr = 0x1004;
+    cpu.setD(0, 0x00008000);
+    cpu.setD(1, 1);
+
+    // LSL.W D1,D0 (MAME shows the flags of the unshifted operand while the prefetch is pending)
+    auto f = cpu.run({ 0xE368 });
+
+    CHECK((f.sr & 0x1F) == 0x08);                   // N set (operand is negative), Z, V, C clear
+    CHECK((cpu.getSR() & 0x1F) == 0x08);
+    CHECK(cpu.getD(0) == 0x00008000);               // The instruction has not been completed
+}
+
+TEST_CASE("Moira does not modify a stack frame supplied by the host")
+{
+    TestCPU cpu;
+    cpu.faultAddr = 0x1004;
+    cpu.customFrame = true;
+    cpu.customSR = 0x0015;
+    cpu.setD(0, 0x00008000);
+    cpu.setD(1, 1);
+
+    // The same failing prefetch as above, but the host provides the frame
+    auto f = cpu.run({ 0xE368 });
+
+    CHECK(f.sr == 0x0015);
 }
 
 TEST_CASE("Bus error frames follow the addressing mode")

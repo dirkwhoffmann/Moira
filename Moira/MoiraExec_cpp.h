@@ -50,10 +50,9 @@ adjustFetchPc(Fn &&fn, int delta)
         u8 ccr0_ = getCCR(); \
         try { __VA_ARGS__; } \
         catch (BusError &e) { \
-            if (((e.stackFrame.addr ^ ((ea0) + 2)) & 0xFFFFFF) == 0) { \
-                reg.sr.n = (nexpr); reg.sr.z = (zexpr); reg.sr.v = 0; reg.sr.c = 0; \
-                e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | getCCR(); \
-            } else setCCR(ccr0_); \
+            if (((e.stackFrame.addr ^ ((ea0) + 2)) & 0xFFFFFF) == 0) \
+                rethrow<C>(e, CCR::N | CCR::Z | CCR::V | CCR::C, ((nexpr) ? CCR::N : 0) | ((zexpr) ? CCR::Z : 0)); \
+            setCCR(ccr0_); \
             throw; \
         } \
     } else { __VA_ARGS__; }
@@ -74,12 +73,11 @@ adjustFetchPc(Fn &&fn, int delta)
 template <Core C> void
 Moira::rethrow(BusError &e, u8 mask, u8 ccr)
 {
-    // MAME and UAE (68000) show the flags in the frame of a failed access, although the instruction has not finished
-    if constexpr (EXACT_COMPAT) {
+    // The reference CPUs have already changed the flags when the access fails
+    setCCR((getCCR() & ~mask) | (ccr & mask));
 
-        setCCR((getCCR() & ~mask) | (ccr & mask));
-        e.stackFrame.sr = (e.stackFrame.sr & ~CCR::ALL) | getCCR();
-    }
+    // Show the flags in the stacked status register (a frame supplied by the host is left alone)
+    if (!e.custom) e.stackFrame.sr = (e.stackFrame.sr & ~CCR::ALL) | getCCR();
 
     throw;
 }

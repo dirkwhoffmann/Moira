@@ -735,8 +735,11 @@ struct BusError : public std::exception {
     /// Indicates whether the stack frame is complete
     bool complete = true;
 
-    /// Creates a bus error with a complete stack frame
-    BusError(const StackFrame frame) { stackFrame = frame; }
+    /// Indicates whether the stack frame has been supplied by the host. Moira never modifies such a frame.
+    bool custom = false;
+
+    /// Creates a bus error with a complete stack frame (supplied by the host unless 'custom' is false)
+    BusError(const StackFrame frame, bool custom = true) { stackFrame = frame; this->custom = custom; }
 
     /// Creates a bus error that only carries the fault address
     BusError(u32 addr) { stackFrame = StackFrame(); stackFrame.addr = addr; complete = false; }
