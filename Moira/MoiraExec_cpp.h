@@ -3600,88 +3600,72 @@ Moira::execMove6(u16 opcode)
 
     readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
 
-    if constexpr (S == Long && !isMemMode(M)) {
+    if constexpr (C == Core::C68000) {
 
-        [[maybe_unused]] u8 ccr0 = getCCR();
-        reg.sr.n = NBIT<Word>(data >> 16);
-        reg.sr.z = ZERO<Word>(data >> 16) && reg.sr.z;
+        // Execute the access sequence step by step (extension word, first word, second word).
+        // The flags are set up in front of each step, so every frame shows the right ones.
+        writeBuffer = (S == Long) ? u16(data >> 16) : u16(data & 0xFFFF);
 
-        if constexpr (EXACT_68000) {
+        // A failed extension word fetch shows the flags of the source: untouched for register
+        // sources and for memory sources the flags of the (low word of the) operation
+        if constexpr (isMemMode(M)) {
+            reg.sr.n = NBIT<S == Long ? Word : S>(data);
+            reg.sr.z = ZERO<S == Long ? Word : S>(data);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+        }
+        u32 ea2;
+        NO_DEC_PC(ea2 = computeEA<C, Mode::IX, S>(dst));
 
-            // A failed extension word fetch leaves the flags untouched. A failed second write shows
-            // the flags of the low word (data register) or the final flags (address register).
-            u16 ext = queue.irc;
-        u32 idx = (ext & 0x8000) ? readA<Long>((ext >> 12) & 7) : readD<Long>((ext >> 12) & 7);
-        if (!(ext & 0x800)) idx = u32(i16(idx));
-        u32 ea0 = readA<Long>(dst) + u32(i8(ext)) + idx;
-            try { NO_DEC_PC(writeOp<C, Mode::IX, S, POLL>(dst, data);); }
-            catch (BusError &e) {
-                if ((e.stackFrame.fc & 3) == 2) {
-                    e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | ccr0; setCCR(ccr0);
-                } else if (((e.stackFrame.addr ^ (ea0 + 2)) & 0xFFFFFF) == 0) {
-                    reg.sr.n = NBIT<Word>(data);
-                    reg.sr.z = ZERO<Word>(data);
-                    reg.sr.v = 0; reg.sr.c = 0;
-                    e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | getCCR();
-                }
-                throw;
-            }
+        if constexpr (S == Long && !isMemMode(M)) {
+
+            // The first write shows the flags of the high word, the second one those of the low word
+            reg.sr.n = NBIT<Word>(data >> 16);
+            reg.sr.z = ZERO<Word>(data >> 16) && reg.sr.z;
+            writeM<C, Mode::IX, Word>(ea2, data >> 16);
+
+            reg.sr.n = NBIT<Word>(data);
+            reg.sr.z = ZERO<Word>(data);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+            writeM<C, Mode::IX, Word, POLL>(ea2 + 2, data & 0xFFFF);
+
+            reg.sr.n = NBIT<S>(data);
+            reg.sr.z = ZERO<S>(data);
+            prefetch<C>();
 
         } else {
 
-            writeOp<C, Mode::IX, S, POLL>(dst, data);
+            // A failed write shows the final flags
+            reg.sr.n = NBIT<S>(data);
+            reg.sr.z = ZERO<S>(data);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+            writeM<C, Mode::IX, S>(ea2, data);
+
+            prefetch<C, POLL>();
         }
-
-        reg.sr.n = NBIT<S>(data);
-        reg.sr.z = ZERO<S>(data);
-        reg.sr.v = 0;
-        reg.sr.c = 0;
-
-        prefetch<C>();
 
     } else {
 
-        [[maybe_unused]] u8 ccr0 = getCCR();
-        reg.sr.n = NBIT<S == Long && EXACT_68000 ? Word : S>(data);
-        reg.sr.z = ZERO<S == Long && EXACT_68000 ? Word : S>(data);
-        reg.sr.v = 0;
-        reg.sr.c = 0;
+        if constexpr (S == Long && !isMemMode(M)) {
 
-        if constexpr (EXACT_68000 && !isMemMode(M)) {
-
-            // A failed extension word fetch leaves the flags untouched (register sources)
-            try { NO_DEC_PC(writeOp<C, Mode::IX, S>(dst, data);); }
-            catch (BusError &e) {
-                if ((e.stackFrame.fc & 3) == 2) { e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | ccr0; setCCR(ccr0); }
-                throw;
-            }
-
-        } else if constexpr (EXACT_68000 && S == Long) {
-
-            // A failed write shows the final flags
-            try { NO_DEC_PC(writeOp<C, Mode::IX, S>(dst, data);); }
-            catch (BusError &e) {
-                if ((e.stackFrame.fc & 3) != 2) {
-                    reg.sr.n = NBIT<S>(data);
-                    reg.sr.z = ZERO<S>(data);
-                    e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | getCCR();
-                }
-                throw;
-            }
-            catch (AddressError &e) {
-                reg.sr.n = NBIT<S>(data);
-                reg.sr.z = ZERO<S>(data);
-                e.stackFrame.sr = (e.stackFrame.sr & ~0x1F) | getCCR();
-                throw;
-            }
+            writeOp<C, Mode::IX, S, POLL>(dst, data);
+            reg.sr.n = NBIT<S>(data);
+            reg.sr.z = ZERO<S>(data);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+            prefetch<C>();
 
         } else {
 
-            NO_DEC_PC(writeOp<C, Mode::IX, S>(dst, data););
+            writeOp<C, Mode::IX, S>(dst, data);
+            reg.sr.n = NBIT<S>(data);
+            reg.sr.z = ZERO<S>(data);
+            reg.sr.v = 0;
+            reg.sr.c = 0;
+            prefetch<C, POLL>();
         }
-        reg.sr.n = NBIT<S>(data);
-        reg.sr.z = ZERO<S>(data);
-        prefetch<C, POLL>();
     }
 
     //           00  10  20        00  10  20        00  10  20
