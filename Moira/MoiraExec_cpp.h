@@ -345,28 +345,45 @@ Moira::execAddEaRg(u16 opcode)
 
     readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
 
-    [[maybe_unused]] u8 ccr0 = getCCR();
-    result = addsub<C, I, S>(data, readD<S>(dst));
-
     if constexpr (C == Core::C68000) {
 
-        try { prefetchLate<C, POLL, (S == Long)>(); }
-        catch (BusError &e) {
+        if constexpr (S == Long) {
 
-            // MAME shows the flags of the low word operation while the prefetch is pending (register and immediate sources)
-            if constexpr (S == Long && !isMemMode(M)) { setCCR(ccr0); addsub<C, I, Word>(data & 0xFFFF, readD<Word>(dst)); }
-            rethrowD<C, S>(e, dst, result);
+            try { prefetchLate<C, POLL, true>(); } catch (BusError &e) {
+
+                if constexpr (isMemMode(M)) {
+                    result = addsub<C, I, S>(data, readD<S>(dst));
+                } else {
+                    result = addsub<C, I, Word>(data & 0xFFFF, readD<Word>(dst));
+                }
+
+                rethrowD<C, Word>(e, dst, result);
+            }
+
+            result = addsub<C, I, S>(data, readD<S>(dst));
+            SYNC(2 + (isMemMode(M) ? 0 : 2));
+            writeD<S>(dst, result);
+
+        } else {
+
+            result = addsub<C, I, S>(data, readD<S>(dst));
+
+            try { prefetchLate<C, POLL, false>(); }
+            catch (BusError &e) {
+
+                rethrowD<C, S>(e, dst, result);
+            }
+            writeD<S>(dst, result);
         }
-        if constexpr (S == Long) SYNC(2 + (isMemMode(M) ? 0 : 2));
-        writeD<S>(dst, result);
 
     } else {
+
+        result = addsub<C, I, S>(data, readD<S>(dst));
 
         writeD<S>(dst, result);
         POLL_IPL;
         if constexpr (S == Long) SYNC(2);
         looping<I>() ? noPrefetch<C>(6) : prefetch<C>();
-
     }
 
     //           00  10  20        00  10  20        00  10  20
