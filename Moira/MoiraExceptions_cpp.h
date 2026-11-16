@@ -394,7 +394,7 @@ Moira::execAddressError(StackFrame frame, int delay)
 
     // Write stack frame
     // MAME delays the stack frame instead of the vector fetch
-    if constexpr ((compat == Compatibility::MAME || (compat == Compatibility::UAE && C == Core::C68000))) SYNC(2);
+    if constexpr (EXACT_68000) SYNC(2);
 
     if constexpr (C == Core::C68000) {
         writeStackFrameAEBE<C>(frame);
@@ -422,7 +422,7 @@ Moira::execAddressError(StackFrame frame, int delay)
     } else {
         writeStackFrame1000<C>(frame, status, frame.pc, reg.pc0, 3, frame.addr);
     }
-    if constexpr (!(compat == Compatibility::MAME || (compat == Compatibility::UAE && C == Core::C68000))) SYNC(2);
+    if constexpr (!EXACT_68000) SYNC(2);
 
     // Jump to exception vector
     jumpToVector<C>(3);
