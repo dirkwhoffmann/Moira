@@ -139,6 +139,18 @@ Moira::execIllegal(u16 opcode)
     FINALIZE
 }
 
+// Condition codes that MAME shows while the prefetch of a register shift is pending. They are computed from the
+// unshifted operand (Long operands are processed word by word). ROXL and ROXR copy the X flag into C.
+template <Instr I, Size S> static u8
+shiftPendingCCR(u32 operand, bool x)
+{
+    u8 ccr = 0;
+    if (NBIT<S == Long ? Word : S>(operand)) ccr |= CCR::N;
+    if (ZERO<S == Long ? Word : S>(operand)) ccr |= CCR::Z;
+    if (I == Instr::ROXL || I == Instr::ROXR) ccr |= x ? CCR::C : 0;
+    return ccr;
+}
+
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execShiftRg(u16 opcode)
 {
@@ -150,24 +162,14 @@ Moira::execShiftRg(u16 opcode)
     int cnt = readD(src) & 0x3F;
     int cyc = (S == Long ? 4 : 2) + 2 * cnt;
 
-    try {
+    u32 operand = readD<S>(dst);
 
-        prefetchLate<C, POLL>();
+    try { prefetchLate<C, POLL>(); }
+    catch (BusError &e) { rethrow<C>(e, CCR::N | CCR::Z | CCR::V | CCR::C, shiftPendingCCR<I, S>(operand, reg.sr.x)); }
 
-    } catch (BusError &e) {
-
-        // MAME has already set the flags from the operand when the prefetch starts
-        u32 operand = readD<S>(dst);
-        u8 ccr = 0;
-        if (NBIT<S == Long ? Word : S>(operand)) ccr |= CCR::N;     // Long operands are processed word by word
-        if (ZERO<S == Long ? Word : S>(operand)) ccr |= CCR::Z;
-        if (I == Instr::ROXL || I == Instr::ROXR) ccr |= reg.sr.x ? CCR::C : 0;
-
-        rethrow<C>(e, CCR::N | CCR::Z | CCR::V | CCR::C, ccr);
-    }
     SYNC(cyc);
 
-    writeD<S>(dst, shift<C, I, S>(cnt, readD<S>(dst)));
+    writeD<S>(dst, shift<C, I, S>(cnt, operand));
 
     if constexpr (C == Core::C68000 || C == Core::C68010) {
 
@@ -210,18 +212,14 @@ Moira::execShiftIm(u16 opcode)
     int cnt = src ? src : 8;
     int cyc = (S == Long ? 4 : 2) + 2 * cnt;
 
-    // MAME has already set the flags from the operand when the prefetch starts.
-    // This matters if the prefetch fails with a bus error.
     u32 operand = readD<S>(dst);
-    reg.sr.n = NBIT<S == Long ? Word : S>(operand);         // Long operands are processed word by word
-    reg.sr.z = ZERO<S == Long ? Word : S>(operand);
-    reg.sr.v = 0;
-    reg.sr.c = (I == Instr::ROXL || I == Instr::ROXR) ? reg.sr.x : 0;
 
-    prefetchLate<C, POLL>();
+    try { prefetchLate<C, POLL>(); }
+    catch (BusError &e) { rethrow<C>(e, CCR::N | CCR::Z | CCR::V | CCR::C, shiftPendingCCR<I, S>(operand, reg.sr.x)); }
+
     SYNC(cyc);
 
-    writeD<S>(dst, shift<C, I, S>(cnt, readD<S>(dst)));
+    writeD<S>(dst, shift<C, I, S>(cnt, operand));
 
     if constexpr (C == Core::C68000 || C == Core::C68010) {
 
