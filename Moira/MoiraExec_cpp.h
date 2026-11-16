@@ -82,6 +82,12 @@ Moira::rethrow(BusError &e, u8 mask, u8 ccr)
     throw;
 }
 
+template <Core C> void
+Moira::rethrow(BusError &e)
+{
+    rethrow<C>(e, CCR::ALL, getCCR());
+}
+
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execLineA(u16 opcode)
 {
@@ -258,7 +264,7 @@ Moira::execShiftEa(u16 opcode)
 
     // MAME has already updated the flags when the prefetch starts
     try { looping<I>() ? noPrefetch<C>(4) : fetchIrc<C, POLL>(); }
-    catch (BusError &e) { shift<C, I, S>(1, data); rethrow<C>(e, CCR::ALL, getCCR()); }
+    catch (BusError &e) { shift<C, I, S>(1, data); rethrow<C>(e); }
 
     writeM<C, M, S, COMMITC>(ea, shift<C, I, S>(1, data));
 
@@ -360,25 +366,30 @@ Moira::execAddEaRg(u16 opcode)
 
     readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
 
-    [[maybe_unused]] u8 ccr0 = getCCR(), ccr1 = 0;
+    [[maybe_unused]] u8 ccr0 = getCCR();
     result = addsub<C, I, S>(data, readD<S>(dst));
-    if constexpr (EXACT_68000 && S == Long) {
-
-        // MAME shows the flags of the low word operation while the prefetch is pending (register and immediate sources)
-        if constexpr (!isMemMode(M)) { ccr1 = getCCR(); setCCR(ccr0); addsub<C, I, Word>(data & 0xFFFF, readD<Word>(dst)); }
-        writeD<Word>(dst, result);
-
-    } else writeD<S>(dst, result);
 
     if constexpr (C == Core::C68000) {
 
-        prefetchLate<C, POLL, (S == Long)>();
+        try { prefetchLate<C, POLL, (S == Long)>(); }
+        catch (BusError &e) {
+
+            if constexpr (EXACT_68000 && S == Long) {
+
+                // MAME shows the flags of the low word operation while the prefetch is pending (register and immediate sources)
+                if constexpr (!isMemMode(M)) { setCCR(ccr0); addsub<C, I, Word>(data & 0xFFFF, readD<Word>(dst)); }
+                writeD<Word>(dst, result);
+
+            } else writeD<S>(dst, result);
+
+            rethrow<C>(e);
+        }
         if constexpr (S == Long) SYNC(2 + (isMemMode(M) ? 0 : 2));
-        if constexpr (EXACT_68000 && S == Long && !isMemMode(M)) setCCR(ccr1);
-        if constexpr (EXACT_COMPAT && S == Long) writeD<S>(dst, result);
+        writeD<S>(dst, result);
 
     } else {
 
+        writeD<S>(dst, result);
         POLL_IPL;
         if constexpr (S == Long) SYNC(2);
         looping<I>() ? noPrefetch<C>(6) : prefetch<C>();
@@ -800,25 +811,30 @@ Moira::execAndEaRg(u16 opcode)
     u32 ea, data;
     readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
 
-    [[maybe_unused]] u8 ccr0 = getCCR(), ccr1 = 0;
+    [[maybe_unused]] u8 ccr0 = getCCR();
     u32 result = logic<C, I, S>(data, readD<S>(dst));
-    if constexpr (EXACT_68000 && S == Long) {
-
-        // MAME shows the flags of the low word operation while the prefetch is pending (register and immediate sources)
-        if constexpr (!isMemMode(M)) { ccr1 = getCCR(); setCCR(ccr0); logic<C, I, Word>(data & 0xFFFF, readD<Word>(dst)); }
-        writeD<Word>(dst, result);
-
-    } else writeD<S>(dst, result);
 
     if constexpr (C == Core::C68000) {
 
-        looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL, (S == Long)>();
-        if constexpr (EXACT_68000 && S == Long && !isMemMode(M)) setCCR(ccr1);
+        try { looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL, (S == Long)>(); }
+        catch (BusError &e) {
+
+            if constexpr (EXACT_68000 && S == Long) {
+
+                // MAME shows the flags of the low word operation while the prefetch is pending (register and immediate sources)
+                if constexpr (!isMemMode(M)) { setCCR(ccr0); logic<C, I, Word>(data & 0xFFFF, readD<Word>(dst)); }
+                writeD<Word>(dst, result);
+
+            } else writeD<S>(dst, result);
+
+            rethrow<C>(e);
+        }
         if constexpr (S == Long) SYNC(isRegMode(M) || isImmMode(M) ? 4 : 2);
-        if constexpr (EXACT_COMPAT && S == Long) writeD<S>(dst, result);
+        writeD<S>(dst, result);
 
     } else {
 
+        writeD<S>(dst, result);
         POLL_IPL;
         if constexpr (S == Long) SYNC(2);
         looping<I>() ? noPrefetch<C>(6) : prefetch<C>();
@@ -1136,10 +1152,14 @@ Moira::execBitDxDy(u16 opcode)
     [[maybe_unused]] auto c = cyclesBit<C, I>(b);
 
     u32 data = readD(dst);
-    if constexpr (compat != Compatibility::MAME || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) data = bit<C, I>(data, b);
 
-    prefetchLate<C, POLL>();
-    if constexpr (compat == Compatibility::MAME && !(I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) data = bit<C, I>(data, b);   // MAME updates the flags after the prefetch
+    try { prefetchLate<C, POLL>(); }
+    catch (BusError &e) {
+        // MAME updates the flags after the prefetch
+        if constexpr (compat != Compatibility::MAME || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) { bit<C, I>(data, b); rethrow<C>(e); }
+        throw;
+    }
+    data = bit<C, I>(data, b);
 
     SYNC(c);
     if constexpr (I != Instr::BTST) writeD(dst, data);
@@ -1171,12 +1191,15 @@ Moira::execBitDxEa(u16 opcode)
         readOp<C, M, Byte>(dst, &ea, &data);
     }
 
-    if constexpr (compat != Compatibility::MAME || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) data = bit<C, I>(data, b);
-
     if constexpr (I == Instr::BCLR && C == Core::C68010) { SYNC(2); }
 
-    fetchIrc<C, POLL, !(I == Instr::BTST && M != Mode::IM)>();
-    if constexpr (compat == Compatibility::MAME && !(I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) data = bit<C, I>(data, b);   // MAME updates the flags after the prefetch
+    try { fetchIrc<C, POLL, !(I == Instr::BTST && M != Mode::IM)>(); }
+    catch (BusError &e) {
+        // MAME updates the flags after the prefetch
+        if constexpr (compat != Compatibility::MAME || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) { bit<C, I>(data, b); rethrow<C>(e); }
+        throw;
+    }
+    data = bit<C, I>(data, b);
 
     // MAME and UAE idle after the prefetch
     if constexpr ((compat == Compatibility::MAME || compat == Compatibility::UAE) && I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
@@ -1211,10 +1234,14 @@ Moira::execBitImDy(u16 opcode)
 
     src &= 0b11111;
     u32 data = readD(dst);
-    if constexpr (compat != Compatibility::MAME) data = bit<C, I>(data, src);
 
-    prefetchLate<C, POLL>();
-    if constexpr (compat == Compatibility::MAME) data = bit<C, I>(data, src);   // MAME updates the flags after the prefetch
+    try { prefetchLate<C, POLL>(); }
+    catch (BusError &e) {
+        // MAME updates the flags after the prefetch
+        if constexpr (compat != Compatibility::MAME) { bit<C, I>(data, src); rethrow<C>(e); }
+        throw;
+    }
+    data = bit<C, I>(data, src);
 
     [[maybe_unused]] auto c = cyclesBit<C, I>(src);
     SYNC(c);
@@ -1238,10 +1265,13 @@ Moira::execBitImEa(u16 opcode)
     u32 ea, data;
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    if constexpr (compat != Compatibility::MAME || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) data = bit<C, I>(data, src);
-
-    fetchIrc<C, POLL, (I != Instr::BTST)>();
-    if constexpr (compat == Compatibility::MAME && !(I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) data = bit<C, I>(data, src);   // MAME updates the flags after the prefetch
+    try { fetchIrc<C, POLL, (I != Instr::BTST)>(); }
+    catch (BusError &e) {
+        // MAME updates the flags after the prefetch
+        if constexpr (compat != Compatibility::MAME || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) { bit<C, I>(data, src); rethrow<C>(e); }
+        throw;
+    }
+    data = bit<C, I>(data, src);
     if constexpr (I != Instr::BTST) writeM<C, M, S, COMMITC>(ea, data);
 
     [[maybe_unused]] auto c = I == Instr::BTST ? 0 : 4;
@@ -2011,17 +2041,26 @@ Moira::execClr(u16 opcode)
             readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
         }
 
-        // MAME clears the register (lower word) before the prefetch
-        if constexpr (EXACT_COMPAT && isRegMode(M)) writeD<S == Long ? Word : S>(dst, 0);
-        if constexpr (EXACT_COMPAT || (compat == Compatibility::UAE && C == Core::C68020)) { reg.sr.n = 0; reg.sr.z = 1; reg.sr.v = 0; reg.sr.c = 0; }   // MAME and UAE (68020) set the flags first
-        fetchIrc<C, POLL, (!isRegMode(M) || S == Long)>();
+        try {
 
-        if constexpr (S == Long && isRegMode(M)) SYNC(2);
+            fetchIrc<C, POLL, (!isRegMode(M) || S == Long)>();
 
-        if constexpr ((compat == Compatibility::MUSASHI)) {
-            writeOp<C, M, S, CLRC>(dst, ea, 0);
-        } else {
-            writeOp<C, M, S, REVERSE | CLRC>(dst, ea, 0);
+            if constexpr (S == Long && isRegMode(M)) SYNC(2);
+
+            if constexpr ((compat == Compatibility::MUSASHI)) {
+                writeOp<C, M, S, CLRC>(dst, ea, 0);
+            } else {
+                writeOp<C, M, S, REVERSE | CLRC>(dst, ea, 0);
+            }
+
+        } catch (BusError &e) {
+
+            // MAME clears the register (lower word) before the prefetch
+            if constexpr (EXACT_COMPAT && isRegMode(M)) writeD<S == Long ? Word : S>(dst, 0);
+
+            // MAME and UAE (68020) set the flags first
+            reg.sr.n = 0; reg.sr.z = 1; reg.sr.v = 0; reg.sr.c = 0;
+            rethrow<C>(e);
         }
 
         reg.sr.n = 0;
@@ -2237,11 +2276,14 @@ Moira::execCmpiRg(u16 opcode)
     u32 src = readI<C, S>();
     int dst = _____________xxx(opcode);
 
-    if constexpr (EXACT_COMPAT) cmp<C, S>(src, readD<S>(dst));   // MAME updates the flags before the prefetch
-    prefetchLate<C, POLL, (S == Long)>();
+    u32 data = readD<S>(dst);
+
+    // MAME updates the flags before the prefetch
+    try { prefetchLate<C, POLL, (S == Long)>(); }
+    catch (BusError &e) { cmp<C, S>(src, data); rethrow<C>(e); }
 
     if constexpr (S == Long && C == Core::C68000) SYNC(2);
-    if constexpr (compat != Compatibility::MAME) cmp<C, S>(src, readD<S>(dst));
+    cmp<C, S>(src, data);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -2269,10 +2311,12 @@ Moira::execCmpiEa(u16 opcode)
 
     u32 ea, data;
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
-    if constexpr (EXACT_COMPAT) cmp<C, S>(src, data);   // MAME updates the flags before the prefetch
-    prefetch<C, POLL>();
 
-    if constexpr (compat != Compatibility::MAME) cmp<C, S>(src, data);
+    // MAME updates the flags before the prefetch
+    try { prefetch<C, POLL>(); }
+    catch (BusError &e) { cmp<C, S>(src, data); rethrow<C>(e); }
+
+    cmp<C, S>(src, data);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -4751,12 +4795,14 @@ Moira::execMulsMoira(u16 opcode)
         // The low word is cleared before the prefetch (which precedes the multiplication)
         result = muls<C>(data, readD<Word>(dst));
         writeD<Word>(dst, 0);
-        // MAME shows N=0, Z=1, V=0, C=0 in the frame of a failed prefetch
-        bool fn = reg.sr.n, fz = reg.sr.z, fv = reg.sr.v, fc = reg.sr.c;
-        reg.sr.n = 0; reg.sr.z = 1; reg.sr.v = 0; reg.sr.c = 0;
         try { prefetchLate<C, POLL>(); }
-        catch (BusError &e) { e.stackFrame.pc -= (M == Mode::PD) ? 0 : (M == Mode::DI || M == Mode::IX || M == Mode::DIPC || M == Mode::IXPC) ? 4 : 2; throw; }
-        reg.sr.n = fn; reg.sr.z = fz; reg.sr.v = fv; reg.sr.c = fc;
+        catch (BusError &e) {
+
+            // MAME shows N=0, Z=1, V=0, C=0 in the frame of a failed prefetch
+            e.stackFrame.pc -= (M == Mode::PD) ? 0 : (M == Mode::DI || M == Mode::IX || M == Mode::DIPC || M == Mode::IXPC) ? 4 : 2;
+            reg.sr.n = 0; reg.sr.z = 1; reg.sr.v = 0; reg.sr.c = 0;
+            rethrow<C>(e);
+        }
         [[maybe_unused]] auto cycles = cyclesMul<C, I>(u16(data));
         SYNC(cycles);
 
@@ -4840,12 +4886,14 @@ Moira::execMuluMoira(u16 opcode)
         // The low word is cleared before the prefetch (which precedes the multiplication)
         result = mulu<C>(data, readD<Word>(dst));
         writeD<Word>(dst, 0);
-        // MAME shows N=0, Z=1, V=0, C=0 in the frame of a failed prefetch
-        bool fn = reg.sr.n, fz = reg.sr.z, fv = reg.sr.v, fc = reg.sr.c;
-        reg.sr.n = 0; reg.sr.z = 1; reg.sr.v = 0; reg.sr.c = 0;
         try { prefetchLate<C, POLL>(); }
-        catch (BusError &e) { e.stackFrame.pc -= (M == Mode::PD) ? 0 : (M == Mode::DI || M == Mode::IX || M == Mode::DIPC || M == Mode::IXPC) ? 4 : 2; throw; }
-        reg.sr.n = fn; reg.sr.z = fz; reg.sr.v = fv; reg.sr.c = fc;
+        catch (BusError &e) {
+
+            // MAME shows N=0, Z=1, V=0, C=0 in the frame of a failed prefetch
+            e.stackFrame.pc -= (M == Mode::PD) ? 0 : (M == Mode::DI || M == Mode::IX || M == Mode::DIPC || M == Mode::IXPC) ? 4 : 2;
+            reg.sr.n = 0; reg.sr.z = 1; reg.sr.v = 0; reg.sr.c = 0;
+            rethrow<C>(e);
+        }
         [[maybe_unused]] auto cycles = cyclesMul<C, I>(u16(data));
         SYNC(cycles);
 
@@ -5527,20 +5575,14 @@ Moira::execNbcdRg(u16 opcode)
 
     int reg = _____________xxx(opcode);
 
-    if constexpr (EXACT_COMPAT) {
+    u32 data = readD<Byte>(reg);
 
-        // MAME computes the result (and the flags) before the prefetch
-        u32 result = bcd<C, nbcdInstr, Byte>(readD<Byte>(reg), 0);
-        looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>();
-        SYNC(2);
-        writeD<Byte>(reg, result);
+    // MAME computes the result (and the flags) before the prefetch
+    try { looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>(); }
+    catch (BusError &e) { bcd<C, nbcdInstr, Byte>(data, 0); rethrow<C>(e); }
 
-    } else {
-
-        looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>();
-        SYNC(2);
-        writeD<Byte>(reg, bcd<C, nbcdInstr, Byte>(readD<Byte>(reg), 0));
-    }
+    SYNC(2);
+    writeD<Byte>(reg, bcd<C, nbcdInstr, Byte>(data, 0));
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -5560,21 +5602,19 @@ Moira::execNbcdEa(u16 opcode)
     readOp<C, M, Byte, STD_AE_FRAME>(reg, &ea, &data);
 
     // MAME updates the flags before the prefetch
-    if constexpr (EXACT_COMPAT) data = bcd<C, nbcdInstr, Byte>(data, 0);
+    try {
+        if (looping<I>()) {
+            if constexpr (M == Mode::AI) noPrefetch<C>(4);
+            else if constexpr (M == Mode::PI) noPrefetch<C>(4);
+            else if constexpr (M == Mode::PD) noPrefetch<C>(4);
+            else noPrefetch<C>(2);
+        } else {
+            fetchIrc<C, POLL>();
+        }
+    }
+    catch (BusError &e) { bcd<C, nbcdInstr, Byte>(data, 0); rethrow<C>(e); }
 
-    if (looping<I>()) {
-        if constexpr (M == Mode::AI) noPrefetch<C>(4);
-        else if constexpr (M == Mode::PI) noPrefetch<C>(4);
-        else if constexpr (M == Mode::PD) noPrefetch<C>(4);
-        else noPrefetch<C>(2);
-    } else {
-        fetchIrc<C, POLL>();
-    }
-    if constexpr (EXACT_COMPAT) {
-        writeM<C, M, Byte, COMMITC>(ea, data);
-    } else {
-        writeM<C, M, Byte, COMMITC>(ea, bcd<C, nbcdInstr, Byte>(data, 0));
-    }
+    writeM<C, M, Byte, COMMITC>(ea, bcd<C, nbcdInstr, Byte>(data, 0));
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l

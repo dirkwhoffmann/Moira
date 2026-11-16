@@ -63,6 +63,10 @@ void undoPredecrement(const StackFrame &frame, const Registers &saved, u16 ird);
 // BusError::custom) is not modified. Must be called from within a catch block.
 template <Core C> [[noreturn]] void rethrow(BusError &e, u8 mask, u8 ccr);
 
+// Variant for handlers that have already set the flags in the status register.
+// The current flags are shown in the stacked status register.
+template <Core C> [[noreturn]] void rethrow(BusError &e);
+
 // Returns the condition codes that MAME shows while the prefetch of a register
 // shift is pending. They are computed from the unshifted operand.
 u8 shiftPendingCCR(Instr I, Size S, u32 operand) const;
