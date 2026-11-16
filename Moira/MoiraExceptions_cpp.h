@@ -943,14 +943,14 @@ template <Core C, Size S> void
 Moira::rethrowD(BusError &e, int n, u32 value)
 {
     // MAME updates the register (lower word for longs) before the prefetch
-    if constexpr (EXACT_COMPAT) writeD<S == Long ? Word : S>(n, value);
+    if constexpr (C == Core::C68000) writeD<S == Long ? Word : S>(n, value);
     rethrow<C>(e);
 }
 
 template <Core C, Size S> void
 Moira::rethrowA(BusError &e, int n, u32 value)
 {
-    if constexpr (EXACT_COMPAT) writeA<S>(n, value);
+    if constexpr (C == Core::C68000) writeA<S>(n, value);
     rethrow<C>(e);
 }
 
