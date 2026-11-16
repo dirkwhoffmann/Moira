@@ -807,22 +807,40 @@ Moira::execAndEaRg(u16 opcode)
     u32 ea, data;
     readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
 
-    [[maybe_unused]] u8 ccr0 = getCCR();
-    u32 result = logic<C, I, S>(data, readD<S>(dst));
+    u32 result;
 
     if constexpr (C == Core::C68000) {
 
-        try { looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL, (S == Long)>(); }
-        catch (BusError &e) {
+        if constexpr (S == Long) {
 
-            // MAME shows the flags of the low word operation while the prefetch is pending (register and immediate sources)
-            if constexpr (S == Long && !isMemMode(M)) { setCCR(ccr0); logic<C, I, Word>(data & 0xFFFF, readD<Word>(dst)); }
-            rethrowD<C, S>(e, dst, result);
+            // MAME shows the flags of the low word operation if the prefetch fails (register and immediate sources)
+            try { looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>(); }
+            catch (BusError &e) {
+
+                if constexpr (isMemMode(M)) {
+                    result = logic<C, I, S>(data, readD<S>(dst));
+                } else {
+                    result = logic<C, I, Word>(data & 0xFFFF, readD<Word>(dst));
+                }
+                rethrowD<C, Word>(e, dst, result);
+            }
+
+            result = logic<C, I, S>(data, readD<S>(dst));
+            SYNC(isRegMode(M) || isImmMode(M) ? 4 : 2);
+            writeD<S>(dst, result);
+
+        } else {
+
+            result = logic<C, I, S>(data, readD<S>(dst));
+
+            try { looping<I>() ? noPrefetch<C>() : prefetch<C, POLL>(); }
+            catch (BusError &e) { rethrowD<C, S>(e, dst, result); }
+            writeD<S>(dst, result);
         }
-        if constexpr (S == Long) SYNC(isRegMode(M) || isImmMode(M) ? 4 : 2);
-        writeD<S>(dst, result);
 
     } else {
+
+        result = logic<C, I, S>(data, readD<S>(dst));
 
         writeD<S>(dst, result);
         POLL_IPL;
