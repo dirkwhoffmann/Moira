@@ -511,15 +511,21 @@ Moira::execAddiRg(u16 opcode)
     u32 ea, data, result;
     readOp<C, M, S>(dst, &ea, &data);
 
-    [[maybe_unused]] u8 ccr0 = getCCR();
-    result = addsub<C, I, S>(src, data);
-    try { prefetchLate<C, POLL, (S == Long)>(); }
-    catch (BusError &e) {
-        if constexpr (S == Long) { setCCR(ccr0); addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF); }
-        rethrowD<C, S>(e, dst, result);
-    }
+    if constexpr (S == Long) {
 
-    if constexpr (S == Long) { SYNC_68000(4); SYNC_68010(2); }
+        // MAME shows the flags of the low word operation if the prefetch fails
+        try { prefetchLate<C, POLL>(); }
+        catch (BusError &e) { rethrowD<C, Word>(e, dst, addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF)); }
+
+        result = addsub<C, I, S>(src, data);
+        SYNC_68000(4); SYNC_68010(2);
+
+    } else {
+
+        result = addsub<C, I, S>(src, data);
+        try { prefetchLate<C, POLL, false>(); }
+        catch (BusError &e) { rethrowD<C, S>(e, dst, result); }
+    }
     writeD<S>(dst, result);
 
     //           00  10  20        00  10  20        00  10  20
@@ -583,15 +589,22 @@ Moira::execAddqDn(u16 opcode)
     int dst = _____________xxx(opcode);
 
     if (src == 0) src = 8;
-    [[maybe_unused]] u8 ccr0 = getCCR();
-    u32 result = addsub<C, I, S>(src, readD<S>(dst));
-    try { prefetchLate<C, POLL, (S == Long)>(); }
-    catch (BusError &e) {
-        if constexpr (S == Long) { setCCR(ccr0); addsub<C, I, Word>(src, readD<Word>(dst)); }
-        rethrowD<C, S>(e, dst, result);
-    }
+    u32 result;
+    if constexpr (S == Long) {
 
-    if constexpr (S == Long) SYNC(4);
+        // MAME shows the flags of the low word operation if the prefetch fails
+        try { prefetchLate<C, POLL>(); }
+        catch (BusError &e) { rethrowD<C, Word>(e, dst, addsub<C, I, Word>(src, readD<Word>(dst))); }
+
+        result = addsub<C, I, S>(src, readD<S>(dst));
+        SYNC(4);
+
+    } else {
+
+        result = addsub<C, I, S>(src, readD<S>(dst));
+        try { prefetchLate<C, POLL, false>(); }
+        catch (BusError &e) { rethrowD<C, S>(e, dst, result); }
+    }
     writeD<S>(dst, result);
 
     //           00  10  20        00  10  20        00  10  20
@@ -921,15 +934,22 @@ Moira::execAndiRg(u16 opcode)
     u32 src = readIFrame<C, S>();
     int dst = _____________xxx(opcode);
 
-    [[maybe_unused]] u8 ccr0 = getCCR();
-    u32 result = logic<C, I, S>(src, readD<S>(dst));
-    try { prefetchLate<C, POLL, (S == Long)>(); }
-    catch (BusError &e) {
-        if constexpr (S == Long) { setCCR(ccr0); logic<C, I, Word>(src & 0xFFFF, readD<Word>(dst)); }
-        rethrowD<C, S>(e, dst, result);
-    }
+    u32 result;
+    if constexpr (S == Long) {
 
-    if constexpr (S == Long) { SYNC_68000(4); SYNC_68010(2); }
+        // MAME shows the flags of the low word operation if the prefetch fails
+        try { prefetchLate<C, POLL>(); }
+        catch (BusError &e) { rethrowD<C, Word>(e, dst, logic<C, I, Word>(src & 0xFFFF, readD<Word>(dst))); }
+
+        result = logic<C, I, S>(src, readD<S>(dst));
+        SYNC_68000(4); SYNC_68010(2);
+
+    } else {
+
+        result = logic<C, I, S>(src, readD<S>(dst));
+        try { prefetchLate<C, POLL, false>(); }
+        catch (BusError &e) { rethrowD<C, S>(e, dst, result); }
+    }
     writeD<S>(dst, result);
 
     //           00  10  20        00  10  20        00  10  20
