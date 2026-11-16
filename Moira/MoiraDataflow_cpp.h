@@ -1199,16 +1199,8 @@ Moira::commitIrd()
 template <Core C, Flags F, bool ON> void
 Moira::prefetchLate()
 {
-    // The prefetch is not the last bus cycle, but nothing follows that could fault
-    if constexpr (EXACT_68000 && ON) {
-
-        fetchIrc<C, F>();
-        commitIrd<C>();
-
-    } else {
-
-        prefetch<C, F>();
-    }
+    fetchIrc<C, F, ON>();
+    if constexpr (ON) commitIrd<C>();
 }
 
 template <Core C, Flags F> void

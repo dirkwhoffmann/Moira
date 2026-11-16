@@ -243,11 +243,8 @@ Moira::execShiftEa(u16 opcode)
     u32 ea, data;
     readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
 
-    // MAME has already updated the flags when the prefetch starts
     u32 result = shift<C, I, S>(1, data);
-
     looping<I>() ? noPrefetch<C>(4) : fetchIrc<C, POLL>();
-
     writeM<C, M, S, COMMITC>(ea, result);
 
     if constexpr (I == Instr::ROR || I == Instr::ROL) {
