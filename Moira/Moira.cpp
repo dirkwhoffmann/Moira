@@ -384,8 +384,21 @@ Moira::executeUntil(i64 cycle)
 void
 Moira::jump(u32 addr)
 {
+    switch (cpuModel) {
+
+        case CPUModel::M68000: jump<Core::C68000>(addr); break;
+        case CPUModel::M68010: jump<Core::C68010>(addr); break;
+
+        default:
+            jump<Core::C68020>(addr);
+    }
+}
+
+template <Core C> void
+Moira::jump(u32 addr)
+{
     reg.pc = addr & ~1;
-    fullPrefetch<Core::C68000, Flag::POLL>();
+    fullPrefetch<C, Flag::POLL>();
     reg.pc0 = reg.pc - 2;
 }
 

@@ -939,6 +939,9 @@ private:
 
     // Performs a core-specific reset routine
     template <Core C> void reset();
+
+    // Core-specific implementation of jump()
+    template <Core C> void jump(u32 addr);
     
     // Puts the CPU into a HALT state, stopping execution
     void halt();
