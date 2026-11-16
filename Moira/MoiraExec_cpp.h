@@ -409,7 +409,7 @@ Moira::execAddRgEa(u16 opcode)
 
     try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); }
     catch (BusError &e) {
-        if constexpr (C == Core::C68000 && S == Long) { setCCR(ccr0); addsub<C, I, Word>(readD<Word>(src), data & 0xFFFF); }
+        if constexpr (S == Long) { setCCR(ccr0); addsub<C, I, Word>(readD<Word>(src), data & 0xFFFF); }
         rethrow<C>(e);
     }
 
@@ -504,7 +504,7 @@ Moira::execAddiRg(u16 opcode)
     result = addsub<C, I, S>(src, data);
     try { prefetchLate<C, POLL, (S == Long)>(); }
     catch (BusError &e) {
-        if constexpr (C == Core::C68000 && S == Long) { setCCR(ccr0); addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF); }
+        if constexpr (S == Long) { setCCR(ccr0); addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF); }
         rethrowD<C, S>(e, dst, result);
     }
 
@@ -542,7 +542,7 @@ Moira::execAddiEa(u16 opcode)
     result = addsub<C, I, S>(src, data);
     try { fetchIrc<C>(); }
     catch (BusError &e) {
-        if constexpr (C == Core::C68000 && S == Long) { setCCR(ccr0); addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF); }
+        if constexpr (S == Long) { setCCR(ccr0); addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF); }
         rethrow<C>(e);
     }
 
@@ -576,7 +576,7 @@ Moira::execAddqDn(u16 opcode)
     u32 result = addsub<C, I, S>(src, readD<S>(dst));
     try { prefetchLate<C, POLL, (S == Long)>(); }
     catch (BusError &e) {
-        if constexpr (C == Core::C68000 && S == Long) { setCCR(ccr0); addsub<C, I, Word>(src, readD<Word>(dst)); }
+        if constexpr (S == Long) { setCCR(ccr0); addsub<C, I, Word>(src, readD<Word>(dst)); }
         rethrowD<C, S>(e, dst, result);
     }
 
@@ -628,7 +628,7 @@ Moira::execAddqEa(u16 opcode)
     result = addsub<C, I, S>(src, data);
     try { fetchIrc<C, POLL>(); }
     catch (BusError &e) {
-        if constexpr (C == Core::C68000 && S == Long) { setCCR(ccr0); addsub<C, I, Word>(src, data & 0xFFFF); }
+        if constexpr (S == Long) { setCCR(ccr0); addsub<C, I, Word>(src, data & 0xFFFF); }
         rethrow<C>(e);
     }
 
@@ -662,7 +662,7 @@ Moira::execAddxRg(u16 opcode)
 
         try { prefetchLate<C, POLL, (S == Long)>(); }
         catch (BusError &e) {
-            if constexpr (C == Core::C68000 && S == Long) { setCCR(ccr0); addsub<C, I, Word>(readD<Word>(src), readD<Word>(dst)); }
+            if constexpr (S == Long) { setCCR(ccr0); addsub<C, I, Word>(readD<Word>(src), readD<Word>(dst)); }
             rethrowD<C, S>(e, dst, result);
         }
         if constexpr (S == Long) SYNC(4);
@@ -863,7 +863,7 @@ Moira::execAndRgEa(u16 opcode)
         }
     }
     catch (BusError &e) {
-        if constexpr (C == Core::C68000 && S == Long) { setCCR(ccr0); logic<C, I, Word>(readD<Word>(src), data & 0xFFFF); }
+        if constexpr (S == Long) { setCCR(ccr0); logic<C, I, Word>(readD<Word>(src), data & 0xFFFF); }
         if constexpr (isRegMode(M)) rethrowD<C, S>(e, dst, result);   // MAME updates the register (lower word)
         else rethrow<C>(e);
     }
@@ -902,7 +902,7 @@ Moira::execAndiRg(u16 opcode)
     u32 result = logic<C, I, S>(src, readD<S>(dst));
     try { prefetchLate<C, POLL, (S == Long)>(); }
     catch (BusError &e) {
-        if constexpr (C == Core::C68000 && S == Long) { setCCR(ccr0); logic<C, I, Word>(src & 0xFFFF, readD<Word>(dst)); }
+        if constexpr (S == Long) { setCCR(ccr0); logic<C, I, Word>(src & 0xFFFF, readD<Word>(dst)); }
         rethrowD<C, S>(e, dst, result);
     }
 
@@ -932,7 +932,7 @@ Moira::execAndiEa(u16 opcode)
     result = logic<C, I, S>(src, data);
     try { fetchIrc<C, POLL>(); }
     catch (BusError &e) {
-        if constexpr (C == Core::C68000 && S == Long) { setCCR(ccr0); logic<C, I, Word>(src & 0xFFFF, data & 0xFFFF); }
+        if constexpr (S == Long) { setCCR(ccr0); logic<C, I, Word>(src & 0xFFFF, data & 0xFFFF); }
         rethrow<C>(e);
     }
 
@@ -3355,7 +3355,7 @@ Moira::execMove4(u16 opcode)
         // MAME shows the flags of the low word if the prefetch fails
         try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); }
         catch (BusError &e) {
-            if constexpr (C == Core::C68000 && S == Long)
+            if constexpr (S == Long)
                 rethrow<C>(e, CCR::N | CCR::Z, (NBIT<Word>(data) ? CCR::N : 0) | (ZERO<Word>(data) ? CCR::Z : 0));
             else
                 rethrow<C>(e);
@@ -5646,7 +5646,7 @@ Moira::execNegEa(u16 opcode)
     data = logic<C, I, S>(data);
     try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); }
     catch (BusError &e) {
-        if constexpr (C == Core::C68000 && S == Long) { setCCR(ccr0); logic<C, I, Word>(lo); }
+        if constexpr (S == Long) { setCCR(ccr0); logic<C, I, Word>(lo); }
         rethrow<C>(e);
     }
 
