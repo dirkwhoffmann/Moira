@@ -150,6 +150,8 @@ inline constexpr Compatibility compat = Compatibility::MOIRA_COMPATIBILITY;
 
 // Selects the cycle-exact 68000 behavior shared by the MAME and UAE modes (exceptions in the middle of an instruction)
 #define EXACT_68000 ((compat == Compatibility::MAME || compat == Compatibility::UAE) && C == Core::C68000)
+// Selects the behavior shared by MAME and UAE on the 68000 (bus cycle sequence)
+#define EXACT_COMPAT (compat == Compatibility::MAME || (compat == Compatibility::UAE && C == Core::C68000))
 
 // UAE's bus access timing can only be reproduced with precise timing
 static_assert(compat != Compatibility::UAE || MOIRA_PRECISE_TIMING,

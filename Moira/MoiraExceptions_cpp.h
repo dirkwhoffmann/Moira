@@ -921,6 +921,39 @@ Moira::execException(M68kException exc, int nr)
 
 // The following definitions are not templated. They are compiled into the
 // main translation unit only (see MoiraCore_cpp.h).
+template <Core C> void
+Moira::rethrow(BusError &e, u8 mask, u8 ccr)
+{
+    // The reference CPUs have already changed the flags when the access fails
+    setCCR((getCCR() & ~mask) | (ccr & mask));
+
+    // Show the flags in the stacked status register (a frame supplied by the host is left alone)
+    if (!e.custom) e.stackFrame.sr = (e.stackFrame.sr & ~CCR::ALL) | getCCR();
+
+    throw;
+}
+
+template <Core C> void
+Moira::rethrow(BusError &e)
+{
+    rethrow<C>(e, CCR::ALL, getCCR());
+}
+
+template <Core C, Size S> void
+Moira::rethrowD(BusError &e, int n, u32 value)
+{
+    // MAME updates the register (lower word for longs) before the prefetch
+    if constexpr (EXACT_COMPAT) writeD<S == Long ? Word : S>(n, value);
+    rethrow<C>(e);
+}
+
+template <Core C, Size S> void
+Moira::rethrowA(BusError &e, int n, u32 value)
+{
+    if constexpr (EXACT_COMPAT) writeA<S>(n, value);
+    rethrow<C>(e);
+}
+
 #ifdef MOIRA_MAIN_TU
 
 u8
