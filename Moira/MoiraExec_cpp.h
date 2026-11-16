@@ -353,15 +353,9 @@ Moira::execAddEaRg(u16 opcode)
         try { prefetchLate<C, POLL, (S == Long)>(); }
         catch (BusError &e) {
 
-            if constexpr (EXACT_68000 && S == Long) {
-
-                // MAME shows the flags of the low word operation while the prefetch is pending (register and immediate sources)
-                if constexpr (!isMemMode(M)) { setCCR(ccr0); addsub<C, I, Word>(data & 0xFFFF, readD<Word>(dst)); }
-                writeD<Word>(dst, result);
-
-            } else writeD<S>(dst, result);
-
-            rethrow<C>(e);
+            // MAME shows the flags of the low word operation while the prefetch is pending (register and immediate sources)
+            if constexpr (S == Long && !isMemMode(M)) { setCCR(ccr0); addsub<C, I, Word>(data & 0xFFFF, readD<Word>(dst)); }
+            rethrowD<C, S>(e, dst, result);
         }
         if constexpr (S == Long) SYNC(2 + (isMemMode(M) ? 0 : 2));
         writeD<S>(dst, result);
@@ -804,15 +798,9 @@ Moira::execAndEaRg(u16 opcode)
         try { looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL, (S == Long)>(); }
         catch (BusError &e) {
 
-            if constexpr (EXACT_68000 && S == Long) {
-
-                // MAME shows the flags of the low word operation while the prefetch is pending (register and immediate sources)
-                if constexpr (!isMemMode(M)) { setCCR(ccr0); logic<C, I, Word>(data & 0xFFFF, readD<Word>(dst)); }
-                writeD<Word>(dst, result);
-
-            } else writeD<S>(dst, result);
-
-            rethrow<C>(e);
+            // MAME shows the flags of the low word operation while the prefetch is pending (register and immediate sources)
+            if constexpr (S == Long && !isMemMode(M)) { setCCR(ccr0); logic<C, I, Word>(data & 0xFFFF, readD<Word>(dst)); }
+            rethrowD<C, S>(e, dst, result);
         }
         if constexpr (S == Long) SYNC(isRegMode(M) || isImmMode(M) ? 4 : 2);
         writeD<S>(dst, result);
