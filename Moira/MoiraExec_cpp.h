@@ -3423,20 +3423,13 @@ Moira::execMove4(u16 opcode)
     reg.sr.v = 0;
     reg.sr.c = 0;
 
-    if constexpr (EXACT_COMPAT) {
-
-        // MAME shows the flags of the low word if the prefetch fails
-        try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); }
-        catch (BusError &e) {
-            if constexpr (S == Long)
-                rethrow<C>(e, CCR::N | CCR::Z, (NBIT<Word>(data) ? CCR::N : 0) | (ZERO<Word>(data) ? CCR::Z : 0));
-            else
-                rethrow<C>(e);
-        }
-
-    } else {
-
-        looping<I>() ? noPrefetch<C>(2) : prefetch<C, POLL>();
+    // MAME shows the flags of the low word if the prefetch fails
+    try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); }
+    catch (BusError &e) {
+        if constexpr (S == Long)
+            rethrow<C>(e, CCR::N | CCR::Z, (NBIT<Word>(data) ? CCR::N : 0) | (ZERO<Word>(data) ? CCR::Z : 0));
+        else
+            rethrow<C>(e);
     }
     if (looping<I>() && S == Long) loopModeDelay = 0;
 
@@ -3470,9 +3463,11 @@ Moira::execMove4(u16 opcode)
             writeM<C, Mode::PD, Word, COMMITC>(ea, data >> 16);
         }
         catch (BusError &e) {
-            if constexpr (compat == Compatibility::UAE) e.stackFrame.addr = (e.stackFrame.addr & 0xFFFFFF) | (ea & 0xFF000000);
+            if constexpr (compat == Compatibility::UAE)
+                e.stackFrame.addr = (e.stackFrame.addr & 0xFFFFFF) | (ea & 0xFF000000);
             throw;
         }
+        
         if constexpr (compat == Compatibility::UAE) updateAn<Mode::PD, S>(dst);
 
     } else {
