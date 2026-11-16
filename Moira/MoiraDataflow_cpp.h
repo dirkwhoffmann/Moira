@@ -1173,7 +1173,7 @@ Moira::prefetch()
 template <Core C, Flags F, bool ON> void
 Moira::fetchIrc()
 {
-    if constexpr (EXACT_68000 && ON) {
+    if constexpr (C == Core::C68000 && ON) {
 
         // The word waits in the EDB latch (as in the real CPU) until the IRD is replaced
         reg.pc += 2;
@@ -1189,7 +1189,7 @@ Moira::fetchIrc()
 template <Core C> void
 Moira::commitIrd()
 {
-    if constexpr (EXACT_68000) {
+    if constexpr (C == Core::C68000) {
 
         queue.ird = queue.irc;
         queue.irc = queue.edb;

@@ -35,7 +35,7 @@ adjustFetchPc(Fn &&fn, int delta)
     }
 }
 
-#define COMMITC (EXACT_68000 ? COMMIT_IRD : 0)   // The access contains the last bus cycle of the instruction (see COMMIT_IRD)
+#define COMMITC (C == Core::C68000 ? COMMIT_IRD : 0)   // The access contains the last bus cycle of the instruction (see COMMIT_IRD)
 #define CLRC ((!isRegMode(M) || S == Long) ? COMMITC : 0)   // CLR defers the IRD update only if the prefetch is not the last cycle
 // NBCD is computed like SBCD, except in Musashi mode (Musashi has its own formula)
 #define nbcdInstr (compat == Compatibility::MUSASHI ? Instr::NBCD : Instr::SBCD)
