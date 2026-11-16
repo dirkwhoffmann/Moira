@@ -62,3 +62,7 @@ void undoPredecrement(const StackFrame &frame, const Registers &saved, u16 ird);
 // 'mask' are taken from 'ccr'. A stack frame supplied by the host (see
 // BusError::custom) is not modified. Must be called from within a catch block.
 template <Core C> [[noreturn]] void rethrow(BusError &e, u8 mask, u8 ccr);
+
+// Returns the condition codes that MAME shows while the prefetch of a register
+// shift is pending. They are computed from the unshifted operand.
+u8 shiftPendingCCR(Instr I, Size S, u32 operand) const;

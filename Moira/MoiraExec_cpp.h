@@ -139,18 +139,6 @@ Moira::execIllegal(u16 opcode)
     FINALIZE
 }
 
-// Condition codes that MAME shows while the prefetch of a register shift is pending. They are computed from the
-// unshifted operand (Long operands are processed word by word). ROXL and ROXR copy the X flag into C.
-template <Instr I, Size S> static u8
-shiftPendingCCR(u32 operand, bool x)
-{
-    u8 ccr = 0;
-    if (NBIT<S == Long ? Word : S>(operand)) ccr |= CCR::N;
-    if (ZERO<S == Long ? Word : S>(operand)) ccr |= CCR::Z;
-    if (I == Instr::ROXL || I == Instr::ROXR) ccr |= x ? CCR::C : 0;
-    return ccr;
-}
-
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execShiftRg(u16 opcode)
 {
@@ -165,7 +153,7 @@ Moira::execShiftRg(u16 opcode)
     u32 operand = readD<S>(dst);
 
     try { prefetchLate<C, POLL>(); }
-    catch (BusError &e) { rethrow<C>(e, CCR::N | CCR::Z | CCR::V | CCR::C, shiftPendingCCR<I, S>(operand, reg.sr.x)); }
+    catch (BusError &e) { rethrow<C>(e, CCR::N | CCR::Z | CCR::V | CCR::C, shiftPendingCCR(I, S, operand)); }
 
     SYNC(cyc);
 
@@ -215,7 +203,7 @@ Moira::execShiftIm(u16 opcode)
     u32 operand = readD<S>(dst);
 
     try { prefetchLate<C, POLL>(); }
-    catch (BusError &e) { rethrow<C>(e, CCR::N | CCR::Z | CCR::V | CCR::C, shiftPendingCCR<I, S>(operand, reg.sr.x)); }
+    catch (BusError &e) { rethrow<C>(e, CCR::N | CCR::Z | CCR::V | CCR::C, shiftPendingCCR(I, S, operand)); }
 
     SYNC(cyc);
 
@@ -268,18 +256,11 @@ Moira::execShiftEa(u16 opcode)
     u32 ea, data;
     readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
 
-    if constexpr (EXACT_COMPAT) {
+    // MAME has already updated the flags when the prefetch starts
+    try { looping<I>() ? noPrefetch<C>(4) : fetchIrc<C, POLL>(); }
+    catch (BusError &e) { shift<C, I, S>(1, data); rethrow<C>(e, CCR::ALL, getCCR()); }
 
-        // MAME updates the flags before the prefetch
-        u32 result = shift<C, I, S>(1, data);
-        looping<I>() ? noPrefetch<C>(4) : fetchIrc<C, POLL>();
-        writeM<C, M, S, COMMITC>(ea, result);
-
-    } else {
-
-        looping<I>() ? noPrefetch<C>(4) : fetchIrc<C, POLL>();
-        writeM<C, M, S, COMMITC>(ea, shift<C, I, S>(1, data));
-    }
+    writeM<C, M, S, COMMITC>(ea, shift<C, I, S>(1, data));
 
     if constexpr (I == Instr::ROR || I == Instr::ROL) {
 

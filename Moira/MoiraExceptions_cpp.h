@@ -923,6 +923,23 @@ Moira::execException(M68kException exc, int nr)
 // main translation unit only (see MoiraCore_cpp.h).
 #ifdef MOIRA_MAIN_TU
 
+u8
+Moira::shiftPendingCCR(Instr I, Size S, u32 operand) const
+{
+    // Long operands are processed word by word
+    u32 nbit = S == Byte ? 0x80 : 0x8000;
+    u32 zmask = S == Byte ? 0xFF : 0xFFFF;
+
+    u8 ccr = 0;
+    if (operand & nbit) ccr |= CCR::N;
+    if ((operand & zmask) == 0) ccr |= CCR::Z;
+
+    // ROXL and ROXR copy the X flag into C
+    if ((I == Instr::ROXL || I == Instr::ROXR) && reg.sr.x) ccr |= CCR::C;
+
+    return ccr;
+}
+
 void
 Moira::execInterrupt(u8 level)
 {
