@@ -3443,44 +3443,43 @@ Moira::execMove4(u16 opcode)
     ea = computeEA<C, Mode::PD, S, IMPL_DEC>(dst);
     writeBuffer = u16(data);
 
+    // MAME and UAE decrement the register before the only write of a byte or word operation.
+    // UAE (68020) also does it before a long write (the register stays decremented if the write fails).
+    constexpr bool early = S != Long || (compat == Compatibility::UAE && C == Core::C68020);
+    if constexpr (early) updateAn<Mode::PD, S>(dst);
+
     // Check for address error
     if (misaligned<C, S>(ea)) {
 
         // MAME has replaced the IRD when the address error is detected
         commitIrd<C>();
 
-        if constexpr (S != Long) updateAn<Mode::PD, S>(dst);
         if constexpr (compat == Compatibility::UAE) SYNC(2);
         if (format == 0) { throw earlyAddressError<C>(makeFrame<flags0>(ea + 2, reg.pc, getSR(), ird)); }
         if (format == 1) { SYNC(2); throw AddressError(makeFrame<flags1>(ea)); }
         if (format == 2) { SYNC(2); throw AddressError(makeFrame<flags2>(ea)); }
     }
 
-    if constexpr (compat == Compatibility::UAE && C == Core::C68000 && S == Long) {
+    if constexpr (S == Long && C == Core::C68000) {
 
-        // UAE restores the register if a long write fails and stacks the unmasked address
-        try { writeM<C, Mode::PD, S, REVERSE | COMMITC>(ea, data); }
+        // The low word is written first. MAME decrements the register before the second write.
+        // UAE restores it if a write fails and stacks the unmasked address.
+        try {
+            writeM<C, Mode::PD, Word>(ea + 2, data & 0xFFFF);
+            if constexpr (compat != Compatibility::UAE) updateAn<Mode::PD, S>(dst);
+            writeM<C, Mode::PD, Word, COMMITC>(ea, data >> 16);
+        }
         catch (BusError &e) {
-            e.stackFrame.addr = (e.stackFrame.addr & 0xFFFFFF) | (ea & 0xFF000000);
+            if constexpr (compat == Compatibility::UAE) e.stackFrame.addr = (e.stackFrame.addr & 0xFFFFFF) | (ea & 0xFF000000);
             throw;
         }
-
-    } else if constexpr (EXACT_COMPAT) {
-
-        // The register has already been decremented when the final write fails
-        try { writeM<C, Mode::PD, S, REVERSE | COMMITC>(ea, data); }
-        catch (BusError &e) {
-            if ((e.stackFrame.addr & 0xFFFFFF) == (ea & 0xFFFFFF)) updateAn<Mode::PD, S>(dst);
-            throw;
-        }
+        if constexpr (compat == Compatibility::UAE) updateAn<Mode::PD, S>(dst);
 
     } else {
 
-        // UAE (68020) decrements the register before it writes
-        if constexpr (compat == Compatibility::UAE && C == Core::C68020) updateAn<Mode::PD, S>(dst);
         writeM<C, Mode::PD, S, REVERSE | COMMITC>(ea, data);
+        if constexpr (!early) updateAn<Mode::PD, S>(dst);
     }
-    if constexpr (!(compat == Compatibility::UAE && C == Core::C68020)) updateAn<Mode::PD, S>(dst);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
