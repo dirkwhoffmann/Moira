@@ -758,53 +758,68 @@ Moira::execAddxEa(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    // MAME reads the lower word of a long operand first
-    // (The 68010 stacks the PC of the executing instruction)
-    constexpr Flags flags = C == Core::C68010 ? (S == Long ? AE_INC_A : 0) :
-    (S == Word || S == Byte) ? AE_INC_PC : (S == Long) ? AE_INC_PC | AE_INC_A | (EXACT_68000 ? REVERSE : 0) : 0;
-
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    u32 ea1, ea2, data1, data2;
+    u32 ea1, ea2, data1, data2, result;
 
-    try {
-        readOp<C, M, S, flags>(src, &ea1, &data1);
+    if constexpr (S == Long) {
 
-    } catch (const AddressError &exc) {
+        // MAME reads the lower word of a long operand first
+        // (The 68010 stacks the PC of the executing instruction)
+        constexpr Flags flags = C == Core::C68010 ? AE_INC_A : AE_INC_PC | AE_INC_A | (EXACT_68000 ? REVERSE : 0);
 
-        // Rectify stack frame (the 68010 has undone the decrement already)
-        if constexpr (S == Long && C != Core::C68010) undoAnPD<M,S>(src);
-        throw exc;
-    }
-    if constexpr (S != Long) POLL_IPL;
+        try {
+            readOp<C, M, S, flags>(src, &ea1, &data1);
 
-    try {
-        readOp<C, M, S, flags|IMPL_DEC> (dst, &ea2, &data2);
+        } catch (const AddressError &exc) {
 
-    } catch (const AddressError &exc) {
+            // Rectify stack frame (the 68010 has undone the decrement already)
+            if constexpr (C != Core::C68010) undoAnPD<M,S>(src);
+            throw exc;
+        }
 
-        // Rectify stack frame (the 68010 has undone the decrement already)
-        if constexpr (S == Long && C != Core::C68010) undoAnPD<M,S>(dst);
-        throw exc;
-    }
+        try {
+            readOp<C, M, S, flags|IMPL_DEC> (dst, &ea2, &data2);
 
-    u32 result = addsub<C, I, S>(data1, data2);
+        } catch (const AddressError &exc) {
 
-    if constexpr (S == Long && EXACT_68000) {
+            // Rectify stack frame (the 68010 has undone the decrement already)
+            if constexpr (C != Core::C68010) undoAnPD<M,S>(dst);
+            throw exc;
+        }
 
-        writeM<C, M, Word, POLL | AE_INC_PC>(ea2 + 2, result & 0xFFFF);
-        looping<I>() ? noPrefetch<C>() : fetchIrc<C>();
-        writeM<C, M, Word, COMMITC>(ea2, result >> 16);
+        result = addsub<C, I, S>(data1, data2);
 
-    } else if constexpr (S == Long && C == Core::C68010 && compat != Compatibility::MUSASHI) {
+        if constexpr (EXACT_68000) {
 
-        writeM<C, M, S, REVERSE>(ea2, result);
-        looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>();
+            writeM<C, M, Word, POLL | AE_INC_PC>(ea2 + 2, result & 0xFFFF);
+            looping<I>() ? noPrefetch<C>() : fetchIrc<C>();
+            writeM<C, M, Word, COMMITC>(ea2, result >> 16);
+
+        } else if constexpr (C == Core::C68010 && compat != Compatibility::MUSASHI) {
+
+            writeM<C, M, S, REVERSE>(ea2, result);
+            looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>();
+
+        } else {
+
+            looping<I>() ? noPrefetch<C>() : fetchIrc<C>();
+            writeM<C, M, S, COMMITC>(ea2, result);
+        }
 
     } else {
 
-        looping<I>() ? noPrefetch<C>(S == Long ? 0 : 2) : fetchIrc<C>();
+        // The 68010 stacks the PC of the executing instruction
+        constexpr Flags flags = C == Core::C68010 ? 0 : AE_INC_PC;
+
+        readOp<C, M, S, flags>(src, &ea1, &data1);
+        POLL_IPL;
+        readOp<C, M, S, flags|IMPL_DEC> (dst, &ea2, &data2);
+
+        result = addsub<C, I, S>(data1, data2);
+
+        looping<I>() ? noPrefetch<C>(2) : fetchIrc<C>();
         writeM<C, M, S, COMMITC>(ea2, result);
     }
 
