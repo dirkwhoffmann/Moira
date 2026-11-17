@@ -555,17 +555,26 @@ Moira::execAddiEa(u16 opcode)
     u32 ea, data, result;
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    // MAME shows the flags of the low word operation if the prefetch of a long operation fails
-    if constexpr (S != Long) result = addsub<C, I, S>(src, data);
+    constexpr Flags flags = POLL | ((C == Core::C68020 || compat == Compatibility::MUSASHI) ? 0 : REVERSE) | COMMITC;
 
-    try { fetchIrc<C>(); }
-    catch (BusError &e) {
-        if constexpr (S == Long) addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF);
-        rethrow<C>(e);
+    if constexpr (S == Long) {
+
+        // MAME shows the flags of the low word operation if the prefetch fails
+        try { fetchIrc<C>(); } catch (BusError &e) {
+
+            addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF);
+            rethrow<C>(e);
+        }
+        result = addsub<C, I, S>(src, data);
+
+    } else {
+
+        result = addsub<C, I, S>(src, data);
+
+        try { fetchIrc<C>(); } catch (BusError &e) { rethrow<C>(e); }
     }
-    if constexpr (S == Long) result = addsub<C, I, S>(src, data);
 
-    writeOp<C, M, S, POLL | (((compat == Compatibility::UAE || EXACT_68000) && C != Core::C68020) ? REVERSE : 0) | COMMITC>(dst, ea, result);
+    writeOp<C, M, S, flags>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -650,17 +659,26 @@ Moira::execAddqEa(u16 opcode)
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
     if (src == 0) src = 8;
-    // MAME shows the flags of the low word operation if the prefetch of a long operation fails
-    if constexpr (S != Long) result = addsub<C, I, S>(src, data);
+    constexpr Flags flags = ((C == Core::C68020 || compat == Compatibility::MUSASHI) ? 0 : REVERSE) | COMMITC;
 
-    try { fetchIrc<C, POLL>(); }
-    catch (BusError &e) {
-        if constexpr (S == Long) addsub<C, I, Word>(src, data & 0xFFFF);
-        rethrow<C>(e);
+    if constexpr (S == Long) {
+
+        // MAME shows the flags of the low word operation if the prefetch fails
+        try { fetchIrc<C, POLL>(); } catch (BusError &e) {
+
+            addsub<C, I, Word>(src, data & 0xFFFF);
+            rethrow<C>(e);
+        }
+        result = addsub<C, I, S>(src, data);
+
+    } else {
+
+        result = addsub<C, I, S>(src, data);
+
+        try { fetchIrc<C, POLL>(); } catch (BusError &e) { rethrow<C>(e); }
     }
-    if constexpr (S == Long) result = addsub<C, I, S>(src, data);
 
-    writeOp<C, M, S, (((compat == Compatibility::UAE || EXACT_68000) && C != Core::C68020) ? REVERSE : 0) | COMMITC>(dst, ea, result);
+    writeOp<C, M, S, flags>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -807,7 +825,7 @@ Moira::execAddxEa(u16 opcode)
 
     } else if constexpr (S == Long && C == Core::C68010 && !(compat == Compatibility::MUSASHI)) {
 
-        writeM<C, M, S, ((compat == Compatibility::UAE || EXACT_68000) && C != Core::C68020) ? REVERSE : 0>(ea2, result);
+        writeM<C, M, S, REVERSE>(ea2, result);
         looping<I>() ? noPrefetch<C>(S == Long ? 0 : 2) : prefetchLate<C, POLL>();
 
     } else {
@@ -923,11 +941,8 @@ Moira::execAndRgEa(u16 opcode)
 
     if constexpr (S == Long && isRegMode(M)) { SYNC_68000(4); SYNC_68010(2); }
 
-    if constexpr ((compat == Compatibility::MUSASHI) || ((compat == Compatibility::UAE) && C == Core::C68020)) {
-        writeOp<C, M, S, (isRegMode(M) ? 0 : COMMITC)>(dst, ea, result);
-    } else {
-        writeOp<C, M, S, REVERSE | (isRegMode(M) ? 0 : COMMITC)>(dst, ea, result);
-    }
+    constexpr Flags rev = (compat == Compatibility::MUSASHI || (compat == Compatibility::UAE && C == Core::C68020)) ? 0 : REVERSE;
+    writeOp<C, M, S, rev | (isRegMode(M) ? 0 : COMMITC)>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -988,21 +1003,26 @@ Moira::execAndiEa(u16 opcode)
 
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    // MAME shows the flags of the low word operation if the prefetch of a long operation fails
-    if constexpr (S != Long) result = logic<C, I, S>(src, data);
+    constexpr Flags rev = (compat == Compatibility::MUSASHI || (compat == Compatibility::UAE && C == Core::C68020)) ? 0 : REVERSE;
 
-    try { fetchIrc<C, POLL>(); }
-    catch (BusError &e) {
-        if constexpr (S == Long) logic<C, I, Word>(src & 0xFFFF, data & 0xFFFF);
-        rethrow<C>(e);
-    }
-    if constexpr (S == Long) result = logic<C, I, S>(src, data);
+    if constexpr (S == Long) {
 
-    if constexpr ((compat == Compatibility::MUSASHI) || ((compat == Compatibility::UAE) && C == Core::C68020)) {
-        writeOp<C, M, S, COMMITC>(dst, ea, result);
+        // MAME shows the flags of the low word operation if the prefetch fails
+        try { fetchIrc<C, POLL>(); } catch (BusError &e) {
+
+            logic<C, I, Word>(src & 0xFFFF, data & 0xFFFF);
+            rethrow<C>(e);
+        }
+        result = logic<C, I, S>(src, data);
+
     } else {
-        writeOp<C, M, S, REVERSE | COMMITC>(dst, ea, result);
+
+        result = logic<C, I, S>(src, data);
+
+        try { fetchIrc<C, POLL>(); } catch (BusError &e) { rethrow<C>(e); }
     }
+
+    writeOp<C, M, S, rev | COMMITC>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
