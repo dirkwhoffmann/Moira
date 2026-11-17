@@ -944,7 +944,8 @@ Moira::createJumpTable5([[maybe_unused]] CPUModel model, bool regExec, bool regD
     //                 X       X   X   X   X   X   X   X
 
     opcode = parse("1011 ---1 ---- ----");
-    ____XXX_SSMMMXXX(opcode, Instr::EOR, 0b101111111000, Byte | Word | Long, AndRgEa, CIMS)
+    ____XXX_SSMMMXXX(opcode, Instr::EOR, 0b100000000000, Byte | Word | Long, AndRgRg, CIMS)
+    ____XXX_SSMMMXXX(opcode, Instr::EOR, 0b001111111000, Byte | Word | Long, AndRgEa, CIMS)
     ____XXX_SSMMMXXX(opcode, Instr::EOR, 0b001110000000, Byte | Word | Long, AndRgEa, CIMSloop)
 
 

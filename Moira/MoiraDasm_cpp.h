@@ -446,6 +446,15 @@ Moira::dasmAndRgEa(StrWriter &str, u32 &addr, u16 op, Instr I, Mode M, Size S) c
 }
 
 void
+Moira::dasmAndRgRg(StrWriter &str, u32 &addr, u16 op, Instr I, [[maybe_unused]] Mode M, Size S) const
+{
+    auto src = Dn ( ____xxx_________(op) );
+    auto dst = Dn ( _____________xxx(op) );
+
+    str << Ins{I} << Sz{S} << str.tab << src << Sep{} << dst;
+}
+
+void
 Moira::dasmAndiRg(StrWriter &str, u32 &addr, u16 op, Instr I, [[maybe_unused]] Mode M, Size S) const
 {
     auto src = dasmIncRead(addr, S);

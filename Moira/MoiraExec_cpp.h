@@ -911,6 +911,47 @@ Moira::execAndEaRg(u16 opcode)
 }
 
 template <Core C, Instr I, Mode M, Size S> void
+Moira::execAndRgRg(u16 opcode)
+{
+    AVAILABILITY(Core::C68000)
+
+    int src = ____xxx_________(opcode);
+    int dst = _____________xxx(opcode);
+
+    u32 result;
+
+    auto prefetchOp = [&]() {
+
+        if constexpr (EXACT_68000) prefetchLate<C, POLL, (S == Long)>(); else fetchIrc<C, POLL>();
+    };
+
+    if constexpr (S == Long) {
+
+        // MAME shows the flags of the low word operation if the prefetch fails
+        try { prefetchOp(); }
+        catch (BusError &e) { rethrowD<C, Word>(e, dst, logic<C, I, Word>(readD<Word>(src), readD<Word>(dst))); }
+
+        result = logic<C, I, S>(readD<S>(src), readD<S>(dst));
+        SYNC_68000(4); SYNC_68010(2);
+
+    } else {
+
+        result = logic<C, I, S>(readD<S>(src), readD<S>(dst));
+
+        try { prefetchOp(); }
+        catch (BusError &e) { rethrowD<C, S>(e, dst, result); }
+    }
+
+    writeD<S>(dst, result);
+
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   ( 4,  4,  2,        4,  4,  2,        8,  6,  2)
+
+    FINALIZE
+}
+
+template <Core C, Instr I, Mode M, Size S> void
 Moira::execAndRgEa(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
@@ -918,50 +959,32 @@ Moira::execAndRgEa(u16 opcode)
     int src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
 
-    u32 ea, data;
+    u32 ea, data, result;
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    u32 result;
-
-    auto prefetchOp = [&]() {
-
-        if constexpr (EXACT_68000 && isRegMode(M)) {
-            looping<I>() ? noPrefetch<C>(2) : prefetchLate<C, POLL, (S == Long)>();
-        } else {
-            looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>();
-        }
-    };
+    constexpr Flags flags = ((compat == Compatibility::MUSASHI || (compat == Compatibility::UAE && C == Core::C68020)) ? 0 : REVERSE) | COMMITC;
 
     if constexpr (S == Long) {
 
         // MAME shows the flags of the low word operation if the prefetch fails
-        try { prefetchOp(); } catch (BusError &e) {
+        try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); } catch (BusError &e) {
 
-            result = logic<C, I, Word>(readD<Word>(src), data & 0xFFFF);
-            if constexpr (isRegMode(M)) rethrowD<C, Word>(e, dst, result);   // MAME updates the lower word
+            logic<C, I, Word>(readD<Word>(src), data & 0xFFFF);
             rethrow<C>(e);
         }
         result = logic<C, I, S>(readD<S>(src), data);
-
-        if constexpr (isRegMode(M)) { SYNC_68000(4); SYNC_68010(2); }
 
     } else {
 
         result = logic<C, I, S>(readD<S>(src), data);
 
-        try { prefetchOp(); } catch (BusError &e) {
-
-            if constexpr (isRegMode(M)) rethrowD<C, S>(e, dst, result);
-            rethrow<C>(e);
-        }
+        try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); } catch (BusError &e) { rethrow<C>(e); }
     }
 
-    constexpr Flags rev = (compat == Compatibility::MUSASHI || (compat == Compatibility::UAE && C == Core::C68020)) ? 0 : REVERSE;
-    writeOp<C, M, S, rev | (isRegMode(M) ? 0 : COMMITC)>(dst, ea, result);
+    writeOp<C, M, S, flags>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
-    CYCLES_DN   ( 4,  4,  2,        4,  4,  2,        8,  6,  2)
     CYCLES_AI   (12, 12,  8,       12, 12,  8,       20, 20,  8)
     CYCLES_PI   (12, 12,  8,       12, 12,  8,       20, 20,  8)
     CYCLES_PD   (14, 14,  9,       14, 14,  9,       22, 22,  9)
