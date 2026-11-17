@@ -760,7 +760,7 @@ Moira::execAddxEa(u16 opcode)
 
     // MAME reads the lower word of a long operand first
     // (The 68010 stacks the PC of the executing instruction)
-    const u64 flags = C == Core::C68010 ? (S == Long ? AE_INC_A : 0) :
+    constexpr Flags flags = C == Core::C68010 ? (S == Long ? AE_INC_A : 0) :
     (S == Word || S == Byte) ? AE_INC_PC : (S == Long) ? AE_INC_PC | AE_INC_A | (EXACT_68000 ? REVERSE : 0) : 0;
 
     int src = _____________xxx(opcode);
@@ -776,70 +776,31 @@ Moira::execAddxEa(u16 opcode)
         // Rectify stack frame (the 68010 has undone the decrement already)
         if constexpr (S == Long && C != Core::C68010) undoAnPD<M,S>(src);
         throw exc;
-
-    } catch (const BusError &e) {
-
-        // MAME updates the register between the two word reads
-        // UAE updates the register after both reads
-        if constexpr (EXACT_68000 && S == Long) {
-            if (compat == Compatibility::UAE || (e.stackFrame.addr & 0xFFFFFF) == ((ea1 + 2) & 0xFFFFFF)) undoAnPD<M,S>(src);
-        }
-        throw;
     }
     if constexpr (S != Long) POLL_IPL;
 
-    [[maybe_unused]] u8 ccr0 = getCCR(), ccrLow = 0;
-
     try {
-        if (EXACT_68000 && S == Long && !((readA<Long>(dst) - 4) & 1)) {
-
-            // MAME adds the low words before the high word of the destination is read
-            ea2 = computeEA<C, M, S, flags|IMPL_DEC>(dst);
-            updateAnPD<M, S>(dst);
-            u32 lo2 = 0, hi2 = 0;
-            lo2 = readM<C, M, Word, flags>(ea2 + 2);
-            addsub<C, I, Word>(data1 & 0xFFFF, lo2);
-            ccrLow = getCCR();
-            hi2 = readM<C, M, Word, flags>(ea2);
-            data2 = hi2 << 16 | lo2;
-            setCCR(ccr0);
-            updateAnPI<M, S>(dst);
-
-        } else {
-            readOp<C, M, S, flags|IMPL_DEC> (dst, &ea2, &data2);
-        }
+        readOp<C, M, S, flags|IMPL_DEC> (dst, &ea2, &data2);
 
     } catch (const AddressError &exc) {
 
-        // Rectify stack frame
-        // The 68010 has undone the decrement already (see readOp)
+        // Rectify stack frame (the 68010 has undone the decrement already)
         if constexpr (S == Long && C != Core::C68010) undoAnPD<M,S>(dst);
         throw exc;
-
-    } catch (const BusError &e) {
-
-        // UAE updates the register after both reads
-        if constexpr (EXACT_68000 && S == Long) {
-            if (compat == Compatibility::UAE || (e.stackFrame.addr & 0xFFFFFF) == ((ea2 + 2) & 0xFFFFFF)) undoAnPD<M,S>(dst);
-        }
-        throw;
     }
 
     u32 result = addsub<C, I, S>(data1, data2);
 
-    if constexpr (S == Long && C == Core::C68000 && !(compat == Compatibility::MUSASHI)) {
+    if constexpr (S == Long && EXACT_68000) {
 
-        u8 ccrFin = getCCR();
-        if constexpr (EXACT_68000) setCCR(ccrLow);
         writeM<C, M, Word, POLL | AE_INC_PC>(ea2 + 2, result & 0xFFFF);
-        if constexpr (EXACT_68000) setCCR(ccrFin);
         looping<I>() ? noPrefetch<C>() : fetchIrc<C>();
         writeM<C, M, Word, COMMITC>(ea2, result >> 16);
 
-    } else if constexpr (S == Long && C == Core::C68010 && !(compat == Compatibility::MUSASHI)) {
+    } else if constexpr (S == Long && C == Core::C68010 && compat != Compatibility::MUSASHI) {
 
         writeM<C, M, S, REVERSE>(ea2, result);
-        looping<I>() ? noPrefetch<C>(S == Long ? 0 : 2) : prefetchLate<C, POLL>();
+        looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>();
 
     } else {
 
