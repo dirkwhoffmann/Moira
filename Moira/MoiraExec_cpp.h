@@ -830,7 +830,7 @@ Moira::execAddxEa(u16 opcode)
 
         } else if constexpr (C == Core::C68010) {
 
-            writeM<C, M, S>(ea2, result);
+            writeM<C, M, S, REVERSE>(ea2, result);   // The low word is written first
             looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>();
 
         } else {
