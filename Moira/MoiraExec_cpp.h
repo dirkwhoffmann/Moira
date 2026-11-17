@@ -402,7 +402,7 @@ Moira::execAddRgEa(u16 opcode)
 
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    constexpr Flags flags = ((compat != Compatibility::MUSASHI && C != Core::C68020) ? REVERSE : 0) | COMMITC;
+    constexpr Flags flags = ((C == Core::C68020 || compat == Compatibility::MUSASHI) ? 0 : REVERSE) | COMMITC;
 
     if constexpr (S == Long) {
 
