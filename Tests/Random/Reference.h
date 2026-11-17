@@ -60,6 +60,7 @@ public:
     // Sandbox configuration
     virtual bool checksCycles(CPUModel) const { return false; }
     virtual bool byteGranular(CPUModel) const { return false; }
+    virtual bool swapsLongWrites(CPUModel) const { return false; }
 
     //
     // Tolerating known differences

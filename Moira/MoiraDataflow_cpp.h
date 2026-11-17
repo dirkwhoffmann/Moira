@@ -543,7 +543,7 @@ Moira::read2x16(u32 lo, u32 hi)
 template <Core C, Flags F> void
 Moira::write2x16(u32 lo, u32 hi, u32 valHi, u32 valLo)
 {
-    if constexpr ((F & REVERSE) && !((compat == Compatibility::UAE) && C == Core::C68020)) {
+    if constexpr ((F & REVERSE) && C != Core::C68020) {
 
         write16(hi, u16(valLo));
         SYNC(4);
@@ -577,7 +577,7 @@ Moira::read2x8(u32 addr)
 template <Core C, Flags F> void
 Moira::write2x8(u32 addr, u32 val)
 {
-    if constexpr ((F & REVERSE) && !((compat == Compatibility::UAE) && C == Core::C68020)) {
+    if constexpr ((F & REVERSE) && C != Core::C68020) {
 
         write8(addr + 1, u8(val));
         SYNC(4);
@@ -613,7 +613,7 @@ Moira::read4x8(u32 addr)
 template <Core C, Flags F> void
 Moira::write4x8(u32 addr, u32 val)
 {
-    if constexpr ((F & REVERSE) && !((compat == Compatibility::UAE) && C == Core::C68020)) {
+    if constexpr ((F & REVERSE) && C != Core::C68020) {
 
         write8(addr + 3, u8(val));
         SYNC(4);

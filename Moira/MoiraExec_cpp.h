@@ -402,7 +402,7 @@ Moira::execAddRgEa(u16 opcode)
 
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    constexpr Flags flags = ((C == Core::C68020 || compat == Compatibility::MUSASHI) ? 0 : REVERSE) | COMMITC;
+    constexpr Flags flags = REVERSE | COMMITC;
 
     if constexpr (S == Long) {
 
@@ -567,7 +567,7 @@ Moira::execAddiEa(u16 opcode)
     u32 ea, data, result;
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    constexpr Flags flags = POLL | ((C == Core::C68020 || compat == Compatibility::MUSASHI) ? 0 : REVERSE) | COMMITC;
+    constexpr Flags flags = POLL | REVERSE | COMMITC;
 
     if constexpr (S == Long) {
 
@@ -673,7 +673,7 @@ Moira::execAddqEa(u16 opcode)
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
     if (src == 0) src = 8;
-    constexpr Flags flags = ((C == Core::C68020 || compat == Compatibility::MUSASHI) ? 0 : REVERSE) | COMMITC;
+    constexpr Flags flags = REVERSE | COMMITC;
 
     if constexpr (S == Long) {
 
@@ -975,7 +975,7 @@ Moira::execAndRgEa(u16 opcode)
     u32 ea, data, result;
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    constexpr Flags flags = ((compat == Compatibility::MUSASHI || (compat == Compatibility::UAE && C == Core::C68020)) ? 0 : REVERSE) | COMMITC;
+    constexpr Flags flags = REVERSE | COMMITC;
 
     if constexpr (S == Long) {
 
@@ -1054,8 +1054,6 @@ Moira::execAndiEa(u16 opcode)
 
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    constexpr Flags rev = (compat == Compatibility::MUSASHI || (compat == Compatibility::UAE && C == Core::C68020)) ? 0 : REVERSE;
-
     if constexpr (S == Long) {
 
         // MAME shows the flags of the low word operation if the prefetch fails
@@ -1073,7 +1071,7 @@ Moira::execAndiEa(u16 opcode)
         try { fetchIrc<C, POLL>(); } catch (BusError &e) { rethrow<C>(e); }
     }
 
-    writeOp<C, M, S, rev | COMMITC>(dst, ea, result);
+    writeOp<C, M, S, REVERSE | COMMITC>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -5749,7 +5747,7 @@ Moira::execNegEa(u16 opcode)
 
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    constexpr Flags flags = ((compat == Compatibility::MUSASHI) ? 0 : REVERSE) | COMMITC;
+    constexpr Flags flags = REVERSE | COMMITC;
 
     if constexpr (S == Long) {
 

@@ -56,6 +56,9 @@ public:
 
     // Compare writes byte by byte (misaligned accesses are split differently)
     bool byteGranular = false;
+
+    // Accept the two word writes of a long word access in either order
+    bool swapLongWrites = false;
     u32 addrMask = 0xFFFFFFFF;
 
     Sandbox() { };
@@ -66,5 +69,6 @@ public:
     void record(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value);
     void replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value);
 
+    bool swappable(int i) const;
     void error(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value = 0);
 };
