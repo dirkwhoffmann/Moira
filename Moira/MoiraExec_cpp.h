@@ -921,25 +921,40 @@ Moira::execAndRgEa(u16 opcode)
     u32 ea, data;
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    // MAME shows the flags of the low word operation if the prefetch of a long operation fails
-    u32 result = 0;
-    if constexpr (S != Long) result = logic<C, I, S>(readD<S>(src), data);
+    u32 result;
 
-    try {
+    auto prefetchOp = [&]() {
+
         if constexpr (EXACT_68000 && isRegMode(M)) {
             looping<I>() ? noPrefetch<C>(2) : prefetchLate<C, POLL, (S == Long)>();
         } else {
             looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>();
         }
-    }
-    catch (BusError &e) {
-        if constexpr (S == Long) result = logic<C, I, Word>(readD<Word>(src), data & 0xFFFF);
-        if constexpr (isRegMode(M)) rethrowD<C, S == Long ? Word : S>(e, dst, result);   // MAME updates the register (lower word)
-        else rethrow<C>(e);
-    }
-    if constexpr (S == Long) result = logic<C, I, S>(readD<S>(src), data);
+    };
 
-    if constexpr (S == Long && isRegMode(M)) { SYNC_68000(4); SYNC_68010(2); }
+    if constexpr (S == Long) {
+
+        // MAME shows the flags of the low word operation if the prefetch fails
+        try { prefetchOp(); } catch (BusError &e) {
+
+            result = logic<C, I, Word>(readD<Word>(src), data & 0xFFFF);
+            if constexpr (isRegMode(M)) rethrowD<C, Word>(e, dst, result);   // MAME updates the lower word
+            rethrow<C>(e);
+        }
+        result = logic<C, I, S>(readD<S>(src), data);
+
+        if constexpr (isRegMode(M)) { SYNC_68000(4); SYNC_68010(2); }
+
+    } else {
+
+        result = logic<C, I, S>(readD<S>(src), data);
+
+        try { prefetchOp(); } catch (BusError &e) {
+
+            if constexpr (isRegMode(M)) rethrowD<C, S>(e, dst, result);
+            rethrow<C>(e);
+        }
+    }
 
     constexpr Flags rev = (compat == Compatibility::MUSASHI || (compat == Compatibility::UAE && C == Core::C68020)) ? 0 : REVERSE;
     writeOp<C, M, S, rev | (isRegMode(M) ? 0 : COMMITC)>(dst, ea, result);
