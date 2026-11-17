@@ -523,8 +523,8 @@ Moira::read2x16(u32 lo, u32 hi)
 {
     if constexpr ((F & REVERSE) && EXACT_68000) {
 
-        // MAME reads the lower word first
-        u32 result = read16(hi);
+        // MAME reads the lower word first (the read buffer keeps it in case the upper word fails)
+        u32 result = readBuffer = read16(hi);
         SYNC(4);
         if constexpr (F & POLL) POLL_IPL;
         result |= read16(lo) << 16;

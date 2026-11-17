@@ -769,6 +769,11 @@ Moira::execAddxEa(u16 opcode)
         // (The 68010 stacks the PC of the executing instruction)
         constexpr Flags flags = C == Core::C68010 ? AE_INC_A : AE_INC_PC | AE_INC_A | (EXACT_68000 ? REVERSE : 0);
 
+        // Checks whether a bus error was caused by the first access (the low word)
+        auto lowWordFailed = [](const BusError &e, u32 ea) {
+            return (e.stackFrame.addr & 0xFFFFFF) == ((ea + 2) & 0xFFFFFF);
+        };
+
         try {
             readOp<C, M, S, flags>(src, &ea1, &data1);
 
@@ -777,6 +782,14 @@ Moira::execAddxEa(u16 opcode)
             // Rectify stack frame (the 68010 has undone the decrement already)
             if constexpr (C != Core::C68010) undoAnPD<M,S>(src);
             throw exc;
+
+        } catch (const BusError &e) {
+
+            // MAME decrements An between the two word reads, UAE after both
+            if constexpr (C == Core::C68000) {
+                if (compat == Compatibility::UAE || lowWordFailed(e, ea1)) undoAnPD<M,S>(src);
+            }
+            throw;
         }
 
         try {
@@ -787,13 +800,31 @@ Moira::execAddxEa(u16 opcode)
             // Rectify stack frame (the 68010 has undone the decrement already)
             if constexpr (C != Core::C68010) undoAnPD<M,S>(dst);
             throw exc;
+
+        } catch (BusError &e) {
+
+            if constexpr (C == Core::C68000) {
+
+                // MAME decrements An between the two word reads, UAE after both
+                if (compat == Compatibility::UAE || lowWordFailed(e, ea2)) undoAnPD<M,S>(dst);
+
+                // If the high word fails, the low words have been added already
+                if (!lowWordFailed(e, ea2)) {
+                    addsub<C, I, Word>(data1 & 0xFFFF, readBuffer);
+                    rethrow<C>(e);
+                }
+            }
+            throw;
         }
 
+        [[maybe_unused]] u8 ccr = getCCR();
         result = addsub<C, I, S>(data1, data2);
 
         if constexpr (EXACT_68000) {
 
-            writeM<C, M, Word, POLL | AE_INC_PC>(ea2 + 2, result & 0xFFFF);
+            // If the low word fails, the stacked flags are those of the low word addition
+            try { writeM<C, M, Word, POLL | AE_INC_PC>(ea2 + 2, result & 0xFFFF); }
+            catch (BusError &e) { setCCR(ccr); addsub<C, I, Word>(data1 & 0xFFFF, data2 & 0xFFFF); rethrow<C>(e); }
             looping<I>() ? noPrefetch<C>() : fetchIrc<C>();
             writeM<C, M, Word, COMMITC>(ea2, result >> 16);
 
