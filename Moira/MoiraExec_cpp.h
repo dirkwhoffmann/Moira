@@ -797,9 +797,9 @@ Moira::execAddxEa(u16 opcode)
             looping<I>() ? noPrefetch<C>() : fetchIrc<C>();
             writeM<C, M, Word, COMMITC>(ea2, result >> 16);
 
-        } else if constexpr (C == Core::C68010 && compat != Compatibility::MUSASHI) {
+        } else if constexpr (C == Core::C68010) {
 
-            writeM<C, M, S, REVERSE>(ea2, result);
+            writeM<C, M, S>(ea2, result);
             looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>();
 
         } else {
