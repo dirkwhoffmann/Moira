@@ -467,17 +467,29 @@ Moira::execAdda(u16 opcode)
         writeA(dst, result);
         SYNC(2);
         POLL_IPL;
+        
         if constexpr (S == Word || isRegMode(M) || isImmMode(M)) SYNC(2);
+
         if (looping<I>()) {
-            if constexpr (M == Mode::DN && S == Long) noPrefetch<C>(6);
-            else if constexpr (M == Mode::AI && S == Long) noPrefetch<C>(6);
-            else if constexpr (M == Mode::AI && S != Long) noPrefetch<C>(4);
-            else if constexpr (M == Mode::PI && S == Long) noPrefetch<C>(6);
-            else if constexpr (M == Mode::PI && S != Long) noPrefetch<C>(4);
-            else if constexpr (M == Mode::PD && S == Long) noPrefetch<C>(6);
-            else if constexpr (M == Mode::PD && S != Long) noPrefetch<C>(4);
-            else noPrefetch<C>();
+
+            switch (M) {
+                case Mode::DN:
+                    noPrefetch<C>(S == Long ? 6 : 0);
+                    break;
+
+                case Mode::AI:
+                case Mode::PI:
+                case Mode::PD:
+                    noPrefetch<C>(S == Long ? 6 : 4);
+                    break;
+
+                default:
+                    noPrefetch<C>();
+                    break;
+            }
+
         } else {
+
             prefetch<C>();
         }
     }
@@ -513,12 +525,12 @@ Moira::execAddiRg(u16 opcode)
 
     if constexpr (S == Long) {
 
-        // MAME shows the flags of the low word operation if the prefetch fails
         try { prefetchLate<C, POLL>(); }
         catch (BusError &e) { rethrowD<C, Word>(e, dst, addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF)); }
 
         result = addsub<C, I, S>(src, data);
-        SYNC_68000(4); SYNC_68010(2);
+        SYNC_68000(4);
+        SYNC_68010(2);
 
     } else {
 
@@ -559,9 +571,9 @@ Moira::execAddiEa(u16 opcode)
 
     if constexpr (S == Long) {
 
-        // MAME shows the flags of the low word operation if the prefetch fails
         try { fetchIrc<C>(); } catch (BusError &e) {
 
+            // If prefetch fails, the flags of the low word operation show up
             addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF);
             rethrow<C>(e);
         }
@@ -603,7 +615,7 @@ Moira::execAddqDn(u16 opcode)
     u32 result;
     if constexpr (S == Long) {
 
-        // MAME shows the flags of the low word operation if the prefetch fails
+        // If prefetch fails, the flags of the low word operation show up
         try { prefetchLate<C, POLL>(); }
         catch (BusError &e) { rethrowD<C, Word>(e, dst, addsub<C, I, Word>(src, readD<Word>(dst))); }
 
@@ -635,8 +647,10 @@ Moira::execAddqAn(u16 opcode)
 
     if (src == 0) src = 8;
     u32 result = (I == Instr::ADDQ) ? U32_ADD(readA(dst), src) : U32_SUB(readA(dst), src);
+    
     try { prefetchLate<C, POLL>(); }
     catch (BusError &e) { rethrowA<C>(e, dst, result); }
+    
     SYNC(4);
     writeA(dst, result);
 
@@ -663,7 +677,7 @@ Moira::execAddqEa(u16 opcode)
 
     if constexpr (S == Long) {
 
-        // MAME shows the flags of the low word operation if the prefetch fails
+        // If prefetch fails, the flags of the low word operation show up
         try { fetchIrc<C, POLL>(); } catch (BusError &e) {
 
             addsub<C, I, Word>(src, data & 0xFFFF);
@@ -674,8 +688,8 @@ Moira::execAddqEa(u16 opcode)
     } else {
 
         result = addsub<C, I, S>(src, data);
-
-        try { fetchIrc<C, POLL>(); } catch (BusError &e) { rethrow<C>(e); }
+        try { fetchIrc<C, POLL>(); }
+        catch (BusError &e) { rethrow<C>(e); }
     }
 
     writeOp<C, M, S, flags>(dst, ea, result);
@@ -707,7 +721,7 @@ Moira::execAddxRg(u16 opcode)
 
         if constexpr (S == Long) {
 
-            // MAME shows the flags of the low word operation if the prefetch fails
+            // If prefetch fails, the flags of the low word operation show up
             try { prefetchLate<C, POLL>(); }
             catch (BusError &e) { rethrowD<C, Word>(e, dst, addsub<C, I, Word>(readD<Word>(src), readD<Word>(dst))); }
 
@@ -759,8 +773,7 @@ Moira::execAddxEa(u16 opcode)
 
     } catch (const AddressError &exc) {
 
-        // Rectify stack frame
-        // The 68010 has undone the decrement already (see readOp)
+        // Rectify stack frame (the 68010 has undone the decrement already)
         if constexpr (S == Long && C != Core::C68010) undoAnPD<M,S>(src);
         throw exc;
 
