@@ -1261,15 +1261,8 @@ Moira::execBitDxEa(u16 opcode)
     u8 b = readD(src) & 0b111;
 
     u32 ea, data;
-    if constexpr (EXACT_68000) {
-
-        try { readOp<C, M, Byte, STD_AE_FRAME>(dst, &ea, &data); }
-        catch (BusError &) { throw; }
-
-    } else {
-
-        readOp<C, M, Byte>(dst, &ea, &data);
-    }
+    if constexpr (EXACT_68000) { readOp<C, M, Byte, STD_AE_FRAME>(dst, &ea, &data); }
+    else                       { readOp<C, M, Byte>(dst, &ea, &data); }
 
     if constexpr (I == Instr::BCLR && C == Core::C68010) { SYNC(2); }
 
@@ -5720,22 +5713,26 @@ Moira::execNegEa(u16 opcode)
 
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    // MAME shows the flags of the low word operation if the prefetch of a long operation fails
-    [[maybe_unused]] u16 lo = u16(data);
-    if constexpr (S != Long) data = logic<C, I, S>(data);
+    constexpr Flags flags = ((compat == Compatibility::MUSASHI) ? 0 : REVERSE) | COMMITC;
 
-    try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); }
-    catch (BusError &e) {
-        if constexpr (S == Long) logic<C, I, Word>(lo);
-        rethrow<C>(e);
-    }
-    if constexpr (S == Long) data = logic<C, I, S>(data);
+    if constexpr (S == Long) {
 
-    if constexpr ((compat == Compatibility::MUSASHI)) {
-        writeOp<C, M, S, COMMITC>(dst, ea, data);
+        // MAME shows the flags of the low word operation if the prefetch fails
+        try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); } catch (BusError &e) {
+
+            logic<C, I, Word>(u16(data));
+            rethrow<C>(e);
+        }
+        data = logic<C, I, S>(data);
+
     } else {
-        writeOp<C, M, S, REVERSE | COMMITC>(dst, ea, data);
+
+        data = logic<C, I, S>(data);
+
+        try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); } catch (BusError &e) { rethrow<C>(e); }
     }
+
+    writeOp<C, M, S, flags>(dst, ea, data);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
