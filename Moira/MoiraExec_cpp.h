@@ -767,7 +767,7 @@ Moira::execAddxEa(u16 opcode)
 
         // MAME reads the lower word of a long operand first
         // (The 68010 stacks the PC of the executing instruction)
-        constexpr Flags flags = C == Core::C68010 ? AE_INC_A : AE_INC_PC | AE_INC_A | (EXACT_68000 ? REVERSE : 0);
+        constexpr Flags flags = C == Core::C68010 ? AE_INC_A : AE_INC_PC | AE_INC_A | REVERSE;
 
         // Checks whether a bus error was caused by the first access (the low word)
         auto lowWordFailed = [](const BusError &e, u32 ea) {
@@ -820,7 +820,7 @@ Moira::execAddxEa(u16 opcode)
         [[maybe_unused]] u8 ccr = getCCR();
         result = addsub<C, I, S>(data1, data2);
 
-        if constexpr (EXACT_68000) {
+        if constexpr (C == Core::C68000) {
 
             // If the low word fails, the stacked flags are those of the low word addition
             try { writeM<C, M, Word, POLL | AE_INC_PC>(ea2 + 2, result & 0xFFFF); }
