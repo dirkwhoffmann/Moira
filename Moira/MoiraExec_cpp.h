@@ -22,25 +22,11 @@ CYCLES_68010(38) \
 CYCLES_68020(34) \
 return; }
 
-// Runs a block of code. If a fetch (program space) bus error occurs, the
-// stacked PC is moved forward by 'delta' (MAME and UAE mode only)
-template <bool Enable, typename Fn> static inline void
-adjustFetchPc(Fn &&fn, int delta)
-{
-    if constexpr (Enable) {
-        try { fn(); }
-        catch (BusError &e) { if ((e.stackFrame.fc & 3) == 2) e.stackFrame.pc += delta; throw; }
-    } else {
-        fn();
-    }
-}
-
 #define COMMITC (C == Core::C68000 ? COMMIT_IRD : 0)   // The access contains the last bus cycle of the instruction (see COMMIT_IRD)
 #define CLRC ((!isRegMode(M) || S == Long) ? COMMITC : 0)   // CLR defers the IRD update only if the prefetch is not the last cycle
 // NBCD is computed like SBCD, except in Musashi mode (Musashi has its own formula)
 #define nbcdInstr (compat == Compatibility::MUSASHI ? Instr::NBCD : Instr::SBCD)
 #define EXACT_ABORT C == Core::C68000   // MAME and UAE abort misaligned stack accesses without a bus cycle
-#define NO_DEC_PC(...) adjustFetchPc<C == Core::C68000>([&]{ __VA_ARGS__; }, 2)
 
 // UAE stacks the PC of the executing instruction if a bus error hits a write that precedes the final prefetch
 #define UAE_BE_PC(...) \
@@ -3582,7 +3568,7 @@ Moira::execMove5(u16 opcode)
             reg.sr.c = 0;
         }
         u32 ea2;
-        NO_DEC_PC(ea2 = computeEA<C, Mode::DI, S>(dst));
+        ea2 = computeEA<C, Mode::DI, S, NO_DEC_PC>(dst);
 
         if constexpr (S == Long && !isMemMode(M)) {
 
@@ -3680,7 +3666,7 @@ Moira::execMove6(u16 opcode)
             reg.sr.c = 0;
         }
         u32 ea2;
-        NO_DEC_PC(ea2 = computeEA<C, Mode::IX, S>(dst));
+        ea2 = computeEA<C, Mode::IX, S, NO_DEC_PC>(dst);
 
         if constexpr (S == Long && !isMemMode(M)) {
 
@@ -3843,7 +3829,7 @@ Moira::execMove8(u16 opcode)
                 reg.sr.c = 0;
             }
             u32 ea2 = queue.irc << 16;
-            NO_DEC_PC(readExt<C>());
+            readExt<C, NO_DEC_PC>();
             ea2 |= queue.irc;
 
             if constexpr (S == Long) {
@@ -3872,7 +3858,7 @@ Moira::execMove8(u16 opcode)
         } else {
 
             u32 ea2 = queue.irc << 16;
-            NO_DEC_PC(readExt<C>());
+            readExt<C>();
             ea2 |= queue.irc;
 
             if (misaligned<C, S>(ea2)) throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(ea2));
@@ -3882,7 +3868,7 @@ Moira::execMove8(u16 opcode)
         reg.sr.z = ZERO<S>(data);
         reg.sr.v = 0;
         reg.sr.c = 0;
-        NO_DEC_PC(readExt<C>());
+        readExt<C, NO_DEC_PC>();
 
     } else {
 

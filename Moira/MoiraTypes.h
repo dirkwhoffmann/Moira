@@ -691,6 +691,9 @@ static constexpr u64 AE_FETCH       = (1 << 11);  ///< The fault hit an instruct
 /// Timing flags
 static constexpr u64 IMPL_DEC       = (1 << 14);  // Omit 2 cycle delay in -(An) mode
 
+/// Extension word flags
+static constexpr u64 NO_DEC_PC      = (1 << 15);  ///< A failing extension word fetch stacks the PC of the next word (68000)
+
 /// Flags of memory accesses that follow an early prefetch (see fetchIrc)
 static constexpr u64 COMMIT_IRD    = (1 << 16);  ///< The access contains the last bus cycle of the instruction. The IRD is replaced
                                                  ///< when that cycle starts (after the address error check, before the second half

@@ -188,9 +188,8 @@ template <Core C, Flags F = 0> void fullPrefetchAt(u32 newpc);
 template <Core C> void noPrefetch(int delay = 0);
 
 // Reads an extension word from memory
-template <Core C> void readExt();
+template <Core C, Flags F = 0> void readExt();
 template <Core C> void readExtLast();
-template <Core C, Size S> u32 readExt();
 
 /* Reads and writes floating-point operands. Depending on the addressing mode,
  * the operand is located in a data register, in memory, or in the instruction

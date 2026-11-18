@@ -106,7 +106,7 @@ Moira::computeEA(u32 n) {
             i16  d = (i16)queue.irc;
 
             result = U32_ADD(an, d);
-            if constexpr ((F & SKIP_LAST_RD) == 0) { readExt<C>(); } else { reg.pc += 2; }
+            if constexpr ((F & SKIP_LAST_RD) == 0) { readExt<C, F & NO_DEC_PC>(); } else { reg.pc += 2; }
             break;
         }
         case 6: // (d,An,Xi)
@@ -128,7 +128,7 @@ Moira::computeEA(u32 n) {
                 result = U32_ADD3(an, d, ((queue.irc & 0x800) ? xi : SEXT<Word>(xi)));
 
                 SYNC(2);
-                if constexpr ((F & SKIP_LAST_RD) == 0) { readExt<C>(); } else { reg.pc += 2; }
+                if constexpr ((F & SKIP_LAST_RD) == 0) { readExt<C, F & NO_DEC_PC>(); } else { reg.pc += 2; }
             }
             break;
         }
@@ -240,11 +240,11 @@ Moira::computeEAfull(u32 an)
     // Read extension words
     readExt<C>();
     auto dw = baseDispWords(ext);
-    if (dw == 1) bd = SEXT<Word>(readExt<C, Word>());
-    if (dw == 2) bd = readExt<C, Long>();
+    if (dw == 1) bd = SEXT<Word>(readI<C, Word>());
+    if (dw == 2) bd = readI<C, Long>();
     auto ow = outerDispWords(ext);
-    if (ow == 1) od = SEXT<Word>(readExt<C, Word>());
-    if (ow == 2) od = readExt<C, Long>();
+    if (ow == 1) od = SEXT<Word>(readI<C, Word>());
+    if (ow == 2) od = readI<C, Long>();
 
     // Wipe out an if base register is present
     if (bs) an = 0;
@@ -1257,17 +1257,16 @@ Moira::noPrefetch(int delay)
     if (delay) SYNC(delay);
 }
 
-template <Core C> void
+template <Core C, Flags F> void
 Moira::readExt()
 {
     assert(!misaligned<C>(reg.pc));
 
     reg.pc += 2;
-   
 
-    // MAME stacks the address of the consumed extension word if the refill fails
+    // MAME stacks the address of the consumed extension word if the refill fails (unless NO_DEC_PC is set)
     if constexpr (C == Core::C68000) {
-        queue.irc = readInstr<C, AE_DEC_PC>(reg.pc);
+        queue.irc = readInstr<C, (F & NO_DEC_PC) ? 0 : AE_DEC_PC>(reg.pc);
     } else {
         queue.irc = readInstr<C>(reg.pc);
     }
@@ -1290,20 +1289,6 @@ Moira::readExtLast()
     }
 }
 
-template <Core C, Size S> u32
-Moira::readExt()
-{
-    u32 result = queue.irc;
-    readExt<C>();
-
-    if constexpr (S == Long) {
-
-        result = result << 16 | queue.irc;
-        readExt<C>();
-    }
-
-    return result;
-}
 
 template <Core C, Flags F> void
 Moira::jumpToVector(int nr)
