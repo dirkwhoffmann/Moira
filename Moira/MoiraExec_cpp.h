@@ -1905,32 +1905,18 @@ Moira::execChk(u16 opcode)
     u32 ea = 0, data, dy;
     [[maybe_unused]] auto c = clock;
 
-    try {
+    try { readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data); }
+    catch (const AddressError &) {
 
-        readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
+        // Rectify the stack frame (68010 and above). The register has been advanced by readOp already.
+        // The DIB still holds the last prefetch.
+        if constexpr (C != Core::C68000) {
 
-    } catch (const AddressError &) {
-
-        // Rectify the stack frame
-        if constexpr (C == Core::C68000) {
-
-            if constexpr (compat == Compatibility::MUSASHI) SYNC(2);
-            throw AddressError(makeFrame<STD_AE_FRAME>(ea));
-
-        } else {
-
-            // The register has been advanced by readOp already. The DIB still holds the last prefetch.
-            if (isAbsMode(M) || M == Mode::AI || M == Mode::PI || M == Mode::PD) {
-
-                SYNC(2);
-                throw AddressError(makeFrame<0>(ea));
-
-            } else {
-
-                SYNC(2);
-                throw AddressError(makeFrame<AE_DEC_PC>(ea));
-            }
+            constexpr bool noDec = isAbsMode(M) || M == Mode::AI || M == Mode::PI || M == Mode::PD;
+            SYNC(2);
+            throw AddressError(makeFrame<noDec ? 0 : AE_DEC_PC>(ea));
         }
+        throw;
     }
     dy = readD<S>(dst);
 
@@ -1948,10 +1934,16 @@ Moira::execChk(u16 opcode)
         setUndefinedCHK<C, S>(SEXT<S>(data), SEXT<S>(dy));
     }
 
-    // MAME additionally takes the branch if the difference of both operands has a negative sign,
-    // which includes the case where an arithmetic overflow occurs
+   
     bool above = SEXT<S>(dy) > SEXT<S>(data);
-    if constexpr (compat == Compatibility::MAME) above |= S == Word && (i16)(data - dy) < 0;
+    
+    if constexpr (compat == Compatibility::MAME) {
+        
+        // MAME additionally takes the branch if the difference of both operands has a
+        // negative sign, which includes the case where an arithmetic overflow occurs
+        
+        above |= S == Word && (i16)(data - dy) < 0;
+    }
 
     if (above) {
 
