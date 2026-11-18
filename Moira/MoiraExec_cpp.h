@@ -2971,17 +2971,10 @@ Moira::execLea(u16 opcode)
 
     } else if constexpr (C == Core::C68000 && (M == Mode::AW || M == Mode::DI || M == Mode::DIPC)) {
 
-        // MAME has already loaded the address register when the extension word refill fails
-        u16 ext = queue.irc;
-        u32 base = M == Mode::DI ? reg.a[src] : reg.pc;
-        try { reg.a[dst] = computeEA<C, M, S>(src); }
-        catch (BusError &e) {
-            if constexpr (M == Mode::AW) e.stackFrame.pc -= 2;   // LEA still stacks the consumed word
-            u32 val = (u32)(i16)ext;
-            if constexpr (M != Mode::AW) val += base;
-            reg.a[dst] = val;
-            throw;
-        }
+        // MAME loads the address register before the extension word is refilled
+        i16 d = (i16)queue.irc;
+        reg.a[dst] = M == Mode::AW ? (u32)d : U32_ADD(M == Mode::DI ? reg.a[src] : reg.pc, d);
+        readExt<C>();
 
     } else {
 
