@@ -81,11 +81,15 @@ template <Size S> bool ZERO(u64 data) {
     if constexpr (S == Long) return !(data & 0xFFFFFFFF);
 }
 
-template <Size S> u32 WRITE(u32 d1, u32 d2) {
+// Replaces the n-th byte, word, or long word of d1 (counted from the least significant end) by d2
+template <Size S, int n = 0> u32 WRITE(u32 d1, u32 d2) {
 
-    if constexpr (S == Byte) return (d1 & 0xFFFFFF00) | (d2 & 0x000000FF);
-    if constexpr (S == Word) return (d1 & 0xFFFF0000) | (d2 & 0x0000FFFF);
-    if constexpr (S == Long) return d2;
+    static_assert(S * (n + 1) <= Long, "Portion exceeds 32 bits");
+
+    constexpr int shift = 8 * S * n;
+    constexpr u32 mask = (S == Long) ? 0xFFFFFFFF : (((1u << (8 * S)) - 1) << shift);
+
+    return (d1 & ~mask) | ((d2 << shift) & mask);
 }
 
 template <Cond C> bool

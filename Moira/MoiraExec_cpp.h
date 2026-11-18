@@ -2959,9 +2959,9 @@ Moira::execLea(u16 opcode)
     if constexpr (C == Core::C68000 && M == Mode::AL) {
 
         // MAME loads the high word into the register first, then the complete address
-        reg.a[dst] = (u32)queue.irc << 16 | (reg.a[dst] & 0xFFFF);
+        reg.a[dst] = WRITE<Word, 1>(reg.a[dst], queue.irc);
         readExt<C>();
-        reg.a[dst] = (reg.a[dst] & 0xFFFF0000) | queue.irc;
+        reg.a[dst] = WRITE<Word, 0>(reg.a[dst], queue.irc);
         readExtLast<C>();
 
     } else if constexpr (C == Core::C68000 && (M == Mode::AW || M == Mode::DI || M == Mode::DIPC)) {
@@ -4006,7 +4006,7 @@ Moira::execMovemEaRg(u16 opcode)
 
                 // MAME loads the upper word first
                 u32 hi = readM<C, M, Word, AE_INC_PC>(ea);
-                writeR(i, hi << 16 | (reg.r[i] & 0xFFFF));
+                writeR(i, WRITE<Word, 1>(reg.r[i], hi));
                 writeR(i, hi << 16 | readM<C, M, Word, AE_INC_PC>(ea + 2));
 
             } else {
@@ -4031,7 +4031,7 @@ Moira::execMovemEaRg(u16 opcode)
 
                 // MAME loads the upper word first
                 u32 hi = readM<C, M, Word, AE_INC_PC>(ea);
-                writeR(i, hi << 16 | (reg.r[i] & 0xFFFF));
+                writeR(i, WRITE<Word, 1>(reg.r[i], hi));
                 writeR(i, hi << 16 | readM<C, M, Word, AE_INC_PC>(ea + 2));
 
             } else {
