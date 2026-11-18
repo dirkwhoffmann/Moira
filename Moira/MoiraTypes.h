@@ -148,10 +148,6 @@ enum class Compatibility
 
 inline constexpr Compatibility compat = Compatibility::MOIRA_COMPATIBILITY;
 
-// Selects the cycle-exact 68000 behavior (exceptions in the middle of an instruction, bus cycle sequence). It is the
-// behavior of the MAME and UAE reference cores. Only the Musashi mode keeps the old behavior.
-#define EXACT_68000 (compat != Compatibility::MUSASHI && C == Core::C68000)
-
 // UAE's bus access timing can only be reproduced with precise timing
 static_assert(compat != Compatibility::UAE || MOIRA_PRECISE_TIMING,
               "MOIRA_COMPATIBILITY=UAE requires MOIRA_PRECISE_TIMING=true");

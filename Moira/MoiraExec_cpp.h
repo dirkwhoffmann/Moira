@@ -39,8 +39,8 @@ adjustFetchPc(Fn &&fn, int delta)
 #define CLRC ((!isRegMode(M) || S == Long) ? COMMITC : 0)   // CLR defers the IRD update only if the prefetch is not the last cycle
 // NBCD is computed like SBCD, except in Musashi mode (Musashi has its own formula)
 #define nbcdInstr (compat == Compatibility::MUSASHI ? Instr::NBCD : Instr::SBCD)
-#define EXACT_ABORT EXACT_68000   // MAME and UAE abort misaligned stack accesses without a bus cycle
-#define NO_DEC_PC(...) adjustFetchPc<EXACT_68000>([&]{ __VA_ARGS__; }, 2)
+#define EXACT_ABORT C == Core::C68000   // MAME and UAE abort misaligned stack accesses without a bus cycle
+#define NO_DEC_PC(...) adjustFetchPc<C == Core::C68000>([&]{ __VA_ARGS__; }, 2)
 
 // UAE stacks the PC of the executing instruction if a bus error hits a write that precedes the final prefetch
 #define UAE_BE_PC(...) \
@@ -928,7 +928,7 @@ Moira::execAndRgRg(u16 opcode)
 
     auto prefetchOp = [&]() {
 
-        if constexpr (EXACT_68000) prefetchLate<C, POLL, (S == Long)>(); else fetchIrc<C, POLL>();
+        if constexpr (C == Core::C68000) prefetchLate<C, POLL, (S == Long)>(); else fetchIrc<C, POLL>();
     };
 
     if constexpr (S == Long) {
@@ -1090,7 +1090,7 @@ Moira::execAndiccr(u16 opcode)
     if constexpr (C == Core::C68000) {
 
         u32 src;
-        if constexpr (EXACT_68000) {
+        if constexpr (C == Core::C68000) {
 
             // MAME does not decrement the stacked PC if the refill fails
             src = readI<C, S>();
@@ -1103,7 +1103,7 @@ Moira::execAndiccr(u16 opcode)
         setCCR(u8(logic<C, I, S>(src, dst)));
         SYNC(8);
         // MAME reads the word at the current PC from program space
-        if constexpr (EXACT_68000) { (void)read<C, AddrSpace::PROG, Word>(reg.pc); }
+        if constexpr (C == Core::C68000) { (void)read<C, AddrSpace::PROG, Word>(reg.pc); }
         else { (void)read<C, AddrSpace::DATA, Word>(reg.pc + 2); }
 
     } else {
@@ -1134,7 +1134,7 @@ Moira::execAndisr(u16 opcode)
     changeOfFlow<C>();
 
     u32 src;
-    if constexpr (EXACT_68000) {
+    if constexpr (C == Core::C68000) {
 
         // MAME does not decrement the stacked PC if the refill fails
         src = readI<C, S>();
@@ -1152,7 +1152,7 @@ Moira::execAndisr(u16 opcode)
     setSR((u16)result);
 
     // MAME reads the word at the current PC from program space
-    if constexpr (EXACT_68000) { (void)read<C, AddrSpace::PROG, Word>(reg.pc); }
+    if constexpr (C == Core::C68000) { (void)read<C, AddrSpace::PROG, Word>(reg.pc); }
     else { (void)read<C, AddrSpace::DATA, Word>(reg.pc + 2); }
     prefetch<C, POLL>();
 
@@ -1288,7 +1288,7 @@ Moira::execBitDxEa(u16 opcode)
     u8 b = readD(src) & 0b111;
 
     u32 ea, data;
-    if constexpr (EXACT_68000) { readOp<C, M, Byte, STD_AE_FRAME>(dst, &ea, &data); }
+    if constexpr (C == Core::C68000) { readOp<C, M, Byte, STD_AE_FRAME>(dst, &ea, &data); }
     else                       { readOp<C, M, Byte>(dst, &ea, &data); }
 
     if constexpr (I == Instr::BCLR && C == Core::C68010) { SYNC(2); }
@@ -1302,7 +1302,7 @@ Moira::execBitDxEa(u16 opcode)
     data = bit<C, I>(data, b);
 
     // MAME and UAE idle after the prefetch
-    if constexpr (EXACT_68000 && I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
+    if constexpr (C == Core::C68000 && I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
     if constexpr (I != Instr::BTST) writeM<C, M, Byte, COMMITC>(ea, data);
     else if constexpr (M == Mode::IM) commitIrd<C>();
 
@@ -1719,7 +1719,7 @@ Moira::execBsr(u16 opcode)
             throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(reg.sp));
         }
         if (misalignedPC<C>(newpc)) {
-            if constexpr (EXACT_68000) {
+            if constexpr (C == Core::C68000) {
 
                 // MAME pushes the return address before it detects the misaligned target
                 push<C, Long>(retpc);
@@ -2462,7 +2462,7 @@ Moira::execCmpm(u16 opcode)
             catch (const AddressError &) { reg.a[dst] = an; throw; }
             catch (const BusError &) { reg.a[dst] = an; if (S == Word) U32_INC(reg.a[dst], 2); throw; }
 
-        } else if constexpr (EXACT_68000) {
+        } else if constexpr (C == Core::C68000) {
 
             // MAME advances the source register by 2 if the source read fails, but not the destination register
             try { readOp<C, M, S, AE_INC_PC | AE_KEEP_A>(src, &ea1, &data1); }
@@ -2642,11 +2642,11 @@ Moira::execDbcc(u16 opcode)
             }
 
             // Decrement loop counter
-            if constexpr (!(EXACT_68000 || compat == Compatibility::UAE)) writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+            if constexpr (C != Core::C68000 && compat != Compatibility::UAE) writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
 
             // Branch
             if (takeBranch) {
-                if constexpr (EXACT_68000 || compat == Compatibility::UAE) {
+                if constexpr (C == Core::C68000 || compat == Compatibility::UAE) {
 
                     // MAME decrements the counter after the first fetch at the branch target
                     reg.pc += 2;
@@ -2667,7 +2667,7 @@ Moira::execDbcc(u16 opcode)
 
             } else {
 
-                if constexpr (EXACT_68000 || compat == Compatibility::UAE) writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+                if constexpr (C == Core::C68000 || compat == Compatibility::UAE) writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
                 (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
                 CYCLES_68000(14);
                 CYCLES_68020(10);
@@ -2935,7 +2935,7 @@ Moira::execJmp(u16 opcode)
     }
 
     // Jump to new address
-    if constexpr (EXACT_68000 && C == Core::C68000) {
+    if constexpr (C == Core::C68000) {
         try { fullPrefetchAt<C, POLL>(ea); }
         catch (BusError &e) {
             // A fault on the first fetch stacks the address of the extension word
@@ -2986,7 +2986,7 @@ Moira::execJsr(u16 opcode)
                 throw earlyAddressError<C>(makeFrame<AE_FETCH>(ea));
             }
 
-            if constexpr (compat == Compatibility::UAE || EXACT_68000) {
+            if constexpr (compat == Compatibility::UAE || C == Core::C68000) {
 
                 // Fetch the first word of the subroutine before pushing
                 u32 ret = reg.pc;
@@ -3004,7 +3004,7 @@ Moira::execJsr(u16 opcode)
                 } catch (AddressError &e) {
 
                     // MAME stacks the return address of the subroutine call
-                    if constexpr (EXACT_68000) e.stackFrame.pc = ret;
+                    if constexpr (C == Core::C68000) e.stackFrame.pc = ret;
                     throw;
                 }
                 prefetch<C, POLL>();
@@ -3101,7 +3101,7 @@ Moira::execLea(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
-    if constexpr (EXACT_68000 && M == Mode::AL) {
+    if constexpr (C == Core::C68000 && M == Mode::AL) {
 
         // MAME loads the high word into the register first, then the complete address
         u16 hi = queue.irc;
@@ -3113,7 +3113,7 @@ Moira::execLea(u16 opcode)
             throw;
         }
 
-    } else if constexpr (EXACT_68000 && (M == Mode::AW || M == Mode::DI || M == Mode::DIPC)) {
+    } else if constexpr (C == Core::C68000 && (M == Mode::AW || M == Mode::DI || M == Mode::DIPC)) {
 
         // MAME has already loaded the address register when the extension word refill fails
         u16 ext = queue.irc;
@@ -3163,7 +3163,7 @@ Moira::execLink(u16 opcode)
     int ax   = _____________xxx(opcode);
     i32 disp;
 
-    if constexpr (EXACT_68000 && C == Core::C68000) {
+    if constexpr (C == Core::C68000) {
 
         // MAME stacks the address behind the faulting fetch
         try { disp = SEXT <S> (readI<C, S>()); }
@@ -3179,23 +3179,24 @@ Moira::execLink(u16 opcode)
 
         writeBuffer = u16(readA(ax) >> 16);
         writeA(ax, sp);
-        if constexpr (EXACT_68000) throw earlyAddressError<C>(makeFrame<AE_DATA|AE_WRITE|AE_INC_PC>(sp));
+        if constexpr (C == Core::C68000) throw earlyAddressError<C>(makeFrame<AE_DATA|AE_WRITE|AE_INC_PC>(sp));
         throw AddressError(makeFrame<AE_DATA|AE_WRITE|AE_INC_PC>(sp));
     }
 
     POLL_IPL;
 
+    // LINK A7 pushes the decremented stack pointer on the 68040 (and in Musashi)
+    bool decremented = ax == 7 && (compat == Compatibility::MUSASHI || cpuModel >= CPUModel::M68EC040);
+
     // Write to stack
-    if constexpr (EXACT_68000 && C == Core::C68000) {
+    if constexpr (C == Core::C68000) {
 
         // MAME loads the address register first and leaves the stack pointer alone if the push fails
-        try { push <C, Long, AE_INC_PC>(readA(ax)); }
+        try { push <C, Long, AE_INC_PC>(readA(ax) - (decremented ? 4 : 0)); }
         catch (BusError &) { reg.sp += 4; writeA(ax, sp); throw; }
 
     } else {
 
-        // LINK A7 pushes the decremented stack pointer on the 68040 (and in Musashi)
-        bool decremented = ax == 7 && (compat == Compatibility::MUSASHI || cpuModel >= CPUModel::M68EC040);
         push <C, Long>(readA(ax) - (decremented ? 4 : 0));
     }
 
@@ -3482,7 +3483,7 @@ Moira::execMove4(u16 opcode)
     // Determine next address error stack frame format
     const u64 flags0 = AE_WRITE | AE_DATA;
     // MAME never sets bit 3 in the code word
-    const u64 flags1 = AE_WRITE | AE_DATA | (EXACT_68000 ? 0 : AE_SET_CB3);
+    const u64 flags1 = AE_WRITE | AE_DATA | (C == Core::C68000 ? 0 : AE_SET_CB3);
     const u64 flags2 = AE_WRITE | AE_DATA;
     int format = (S == Long) ? 0 : (reg.sr.s || reg.sr.c) ? 2 : 1;
 
@@ -4114,7 +4115,7 @@ Moira::execMovemEaRg(u16 opcode)
 
     int src  = _____________xxx(opcode);
         u16 mask;
-    if constexpr (EXACT_68000 && C == Core::C68000) {
+    if constexpr (C == Core::C68000) {
 
         // MAME does not decrement the stacked PC if the mask refill fails
         try { mask = (u16)readI<C, Word>(); }
@@ -4125,7 +4126,7 @@ Moira::execMovemEaRg(u16 opcode)
         mask = (u16)readI<C, Word>();
     }
     u32 ea;
-    if constexpr (EXACT_68000 && M == Mode::AW) {
+    if constexpr (C == Core::C68000 && M == Mode::AW) {
 
         // MAME stacks the address of the consumed word here
         try { ea = computeEA<C, M, S>(src); }
@@ -4159,7 +4160,7 @@ Moira::execMovemEaRg(u16 opcode)
             // Only proceed if the mask bit is set
             if ((mask & (1 << i)) == 0) continue;
 
-            if constexpr (EXACT_68000 && S == Long) {
+            if constexpr (C == Core::C68000 && S == Long) {
 
                 // MAME loads the upper word first
                 u32 hi = readM<C, M, Word, AE_INC_PC>(ea);
@@ -4184,7 +4185,7 @@ Moira::execMovemEaRg(u16 opcode)
             // Only proceed if the mask bit is set
             if ((mask & (1 << i)) == 0) continue;
 
-            if constexpr (EXACT_68000 && S == Long) {
+            if constexpr (C == Core::C68000 && S == Long) {
 
                 // MAME loads the upper word first
                 u32 hi = readM<C, M, Word, AE_INC_PC>(ea);
@@ -4199,13 +4200,13 @@ Moira::execMovemEaRg(u16 opcode)
             cnt++;
         }
     }
-    if constexpr (S == Word || EXACT_68000) {
+    if constexpr (S == Word || C == Core::C68000) {
 
         // MAME reads from program space if the operand is addressed relative to the PC
-        constexpr bool pcRel = EXACT_68000 && (M == Mode::DIPC || M == Mode::IXPC);
+        constexpr bool pcRel = C == Core::C68000 && (M == Mode::DIPC || M == Mode::IXPC);
         (void)read<C, pcRel ? AddrSpace::PROG : AddrSpace::DATA, Word, AE_INC_PC>(ea);
     }
-    if constexpr (EXACT_68000 && M == Mode(3)) writeA(src, ea);
+    if constexpr (C == Core::C68000 && M == Mode(3)) writeA(src, ea);
 
     prefetch<C, POLL>();
 
@@ -4232,7 +4233,7 @@ Moira::execMovemRgEa(u16 opcode)
 
     int dst  = _____________xxx(opcode);
         u16 mask;
-    if constexpr (EXACT_68000 && C == Core::C68000) {
+    if constexpr (C == Core::C68000) {
 
         // MAME does not decrement the stacked PC if the mask refill fails
         try { mask = (u16)readI<C, Word>(); }
@@ -4273,7 +4274,7 @@ Moira::execMovemRgEa(u16 opcode)
             if constexpr ((compat == Compatibility::UAE) && C == Core::C68020) {
                 if (i == 8 + dst) value = initial - S;
             }
-            writeM<C, M, S, (((compat == Compatibility::MUSASHI) || (compat == Compatibility::UAE) || (EXACT_68000)) ? REVERSE : 0) | AE_INC_PC>(ea, value);
+            writeM<C, M, S, (C == Core::C68000 || compat == Compatibility::MUSASHI || compat == Compatibility::UAE ? REVERSE : 0) | AE_INC_PC>(ea, value);
             cnt++;
         }
         if constexpr (C != Core::C68020 || (compat == Compatibility::MUSASHI) || (compat == Compatibility::UAE)) writeA(dst, ea);
@@ -4281,7 +4282,7 @@ Moira::execMovemRgEa(u16 opcode)
     } else {
 
         u32 ea;
-        if constexpr (EXACT_68000 && C == Core::C68000) {
+        if constexpr (C == Core::C68000) {
 
             // MAME stacks the address behind the faulting fetch
             [[maybe_unused]] u32 pc0 = reg.pc;
@@ -4386,7 +4387,7 @@ Moira::execMovepEaDx(u16 opcode)
             dx |= read<C, AddrSpace::DATA, Byte, AE_DEC_PC>(ea) << 16; ea += 2;
 
             // MAME stores the upper word right away
-            if constexpr (EXACT_68000) writeD<Long>(dst, (readD(dst) & 0xFFFF) | dx);
+            if constexpr (C == Core::C68000) writeD<Long>(dst, (readD(dst) & 0xFFFF) | dx);
             [[fallthrough]];
         }
         case Word:
@@ -4644,7 +4645,7 @@ Moira::execMoveToCcr(u16 opcode)
     SYNC(4);
     setCCR((u8)data);
 
-    (void)read<C, AddrSpace::PROG, Word>(EXACT_68000 ? reg.pc : reg.pc + 2);
+    (void)read<C, AddrSpace::PROG, Word>(C == Core::C68000 ? reg.pc : reg.pc + 2);
     prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -4767,7 +4768,7 @@ Moira::execMoveToSr(u16 opcode)
     SYNC(4);
     setSR((u16)data);
 
-    (void)read<C, AddrSpace::PROG, Word>(EXACT_68000 ? reg.pc : reg.pc + 2);
+    (void)read<C, AddrSpace::PROG, Word>(C == Core::C68000 ? reg.pc : reg.pc + 2);
     prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -4867,7 +4868,7 @@ Moira::execMulsMoira(u16 opcode)
 
     readOp<C, M, Word, STD_AE_FRAME>(src, &ea, &data);
 
-    if constexpr (EXACT_68000 && C == Core::C68000) {
+    if constexpr (C == Core::C68000) {
 
         // The low word is cleared before the prefetch (which precedes the multiplication)
         result = muls<C>(data, readD<Word>(dst));
@@ -4958,7 +4959,7 @@ Moira::execMuluMoira(u16 opcode)
 
     readOp<C, M, Word, STD_AE_FRAME>(src, &ea, &data);
 
-    if constexpr (EXACT_68000 && C == Core::C68000) {
+    if constexpr (C == Core::C68000) {
 
         // The low word is cleared before the prefetch (which precedes the multiplication)
         result = mulu<C>(data, readD<Word>(dst));
@@ -5873,7 +5874,7 @@ Moira::execPea(u16 opcode)
 
         U32_DEC(reg.sp, S);
 
-        if constexpr (EXACT_68000) {
+        if constexpr (C == Core::C68000) {
 
             // MAME completes the prefetch before it detects the misaligned push
             if (isAbsMode(M)) {
@@ -6341,7 +6342,7 @@ Moira::execRte(u16 opcode)
         throw earlyAddressError<C>(makeFrame<AE_PROG>(newpc));
     }
 
-    if constexpr (EXACT_68000 && C == Core::C68000) {
+    if constexpr (C == Core::C68000) {
 
         // A fault on the first fetch stacks the address of the following word
         try { fullPrefetchAt<C, POLL>(newpc); }
@@ -6426,7 +6427,7 @@ Moira::execRtr(u16 opcode)
         throw earlyAddressError<C>(makeFrame<AE_PROG>(newpc));
     }
 
-    if constexpr (EXACT_68000) {
+    if constexpr (C == Core::C68000) {
 
         // MAME stacks the old PC if the first fetch at the return address fails
         u32 oldpc = reg.pc;
@@ -6475,7 +6476,7 @@ Moira::execRts(u16 opcode)
         throw earlyAddressError<C>(makeFrame<AE_PROG>(newpc));
     }
 
-    if constexpr (EXACT_68000) {
+    if constexpr (C == Core::C68000) {
 
         // MAME stacks the old PC if the first fetch at the return address fails
         u32 oldpc = reg.pc;
@@ -6510,7 +6511,7 @@ Moira::execSccRg(u16 opcode)
     data = cond<I>() ? 0xFF : 0;
     try {
         // If the condition is true, the register is written at the end and the IRD is kept
-        if constexpr (EXACT_68000) { if (data) prefetchLate<C, POLL>(); else prefetch<C, POLL>(); }
+        if constexpr (C == Core::C68000) { if (data) prefetchLate<C, POLL>(); else prefetch<C, POLL>(); }
         else prefetch<C, POLL>();
     }
     catch (BusError &e) {
@@ -6583,7 +6584,7 @@ Moira::execStop(u16 opcode)
 
     u16 src;
 
-    if constexpr (EXACT_68000) {
+    if constexpr (C == Core::C68000) {
 
         // MAME does not fetch the next instruction word. The CPU just idles for four cycles.
         src = queue.irc;
@@ -6781,7 +6782,7 @@ Moira::execTrapv(u16 opcode)
     if (reg.sr.v) {
 
         if constexpr (C == Core::C68000) {
-            if constexpr (EXACT_68000) {
+            if constexpr (C == Core::C68000) {
 
                 // In MAME, the word is read in supervisor mode. A bus error at this point
                 // is raised after the exception has already been entered.
@@ -6908,7 +6909,7 @@ Moira::execUnlk(u16 opcode)
 
     // Update address register
     u32 ea, data;
-    if constexpr ((EXACT_68000 && C == Core::C68000) || (compat == Compatibility::UAE && C == Core::C68020)) {
+    if constexpr (C == Core::C68000 || (compat == Compatibility::UAE && C == Core::C68020)) {
 
         // MAME and UAE leave the stack pointer alone if the read fails
         try { readOp<C, Mode::AI, Long, AE_DATA|AE_INC_PC|POLL>(7, &ea, &data); }

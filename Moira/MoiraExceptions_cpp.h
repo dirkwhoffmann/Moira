@@ -8,7 +8,7 @@
 template <Core C> void
 Moira::writeStackFrameAEBE(StackFrame &frame)
 {
-    if constexpr (EXACT_68000) {
+    if constexpr (C == Core::C68000) {
 
         // MAME and UAE write the words in a different order
         U32_DEC(reg.sp, 14);
@@ -394,7 +394,7 @@ Moira::execAddressError(StackFrame frame, int delay)
 
     // Write stack frame
     // MAME delays the stack frame instead of the vector fetch
-    if constexpr (EXACT_68000) SYNC(2);
+    if constexpr (C == Core::C68000) SYNC(2);
 
     if constexpr (C == Core::C68000) {
         writeStackFrameAEBE<C>(frame);
@@ -422,7 +422,7 @@ Moira::execAddressError(StackFrame frame, int delay)
     } else {
         writeStackFrame1000<C>(frame, status, frame.pc, reg.pc0, 3, frame.addr);
     }
-    if constexpr (!EXACT_68000) SYNC(2);
+    if constexpr (C != Core::C68000) SYNC(2);
 
     // Jump to exception vector
     jumpToVector<C>(3);
@@ -458,7 +458,7 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
 
     // Write stack frame
     // MAME completes the faulting bus cycle and delays the frame instead of the vector fetch
-    if constexpr (EXACT_68000) sync(4);
+    if constexpr (C == Core::C68000) sync(4);
 
     if constexpr (C == Core::C68000) {
         writeStackFrameAEBE<C>(frame);
@@ -563,7 +563,7 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
     } else {
         writeStackFrame1000<C>(frame, status, frame.pc, reg.pc0, 2, frame.addr);
     }
-    if constexpr (!(EXACT_68000)) SYNC(2);
+    if constexpr (C != Core::C68000) SYNC(2);
 
     // Jump to exception vector
     jumpToVector<C>(2);
@@ -756,7 +756,7 @@ Moira::execException(M68kException exc, int nr)
     clearTraceFlags();
 
     // A misaligned stack pointer causes a double fault
-    if constexpr (EXACT_68000) {
+    if constexpr (C == Core::C68000) {
         if (exc != M68kException::BUS_ERROR && misaligned<C>(reg.sp)) throw DoubleFault();
     }
 
@@ -781,7 +781,7 @@ Moira::execException(M68kException exc, int nr)
             SYNC(4);
 
             // Write stack frame
-            if constexpr (EXACT_68000) {
+            if constexpr (C == Core::C68000) {
 
                 // MAME marks bus errors during the exception sequence as "not instruction" cycles
                 try {
@@ -839,7 +839,7 @@ Moira::execException(M68kException exc, int nr)
             SYNC(4);
 
             // Write stack frame
-            if constexpr (EXACT_68000) {
+            if constexpr (C == Core::C68000) {
 
                 try {
                     try { writeStackFrame0000<C>(status, reg.pc - 2, vector); }

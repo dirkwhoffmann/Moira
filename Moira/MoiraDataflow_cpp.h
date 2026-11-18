@@ -521,7 +521,7 @@ Moira::readM(u32 addr)
 template <Core C, Flags F> u32
 Moira::read2x16(u32 lo, u32 hi)
 {
-    if constexpr ((F & REVERSE) && EXACT_68000) {
+    if constexpr ((F & REVERSE) && C == Core::C68000) {
 
         // MAME reads the lower word first (the read buffer keeps it in case the upper word fails)
         u32 result;
@@ -600,15 +600,23 @@ Moira::write2x8(u32 addr, u32 val)
 template <Core C, Flags F> u32
 Moira::read4x8(u32 addr)
 {
-    u32 result = u32(read8(addr)) << 24;
-    SYNC(4);
-    result |= u32(read8(addr + 1)) << 16;
-    SYNC(4);
-    result |= u32(read8(addr + 2)) << 8;
-    SYNC(4);
-    if constexpr (F & POLL) POLL_IPL;
-    result |= u32(read8(addr + 3));
-    SYNC(2);
+    u32 result;
+
+    try {
+        result = u32(read8(addr)) << 24;
+        SYNC(4);
+        result |= u32(read8(addr + 1)) << 16;
+        SYNC(4);
+    } catch (BusError &e) { e.upperWord = true; throw; }
+
+    try {
+        result |= u32(read8(addr + 2)) << 8;
+        SYNC(4);
+        if constexpr (F & POLL) POLL_IPL;
+        result |= u32(read8(addr + 3));
+        SYNC(2);
+    } catch (BusError &e) { e.upperWord = false; throw; }
+
     return result;
 }
 
@@ -652,7 +660,9 @@ Moira::readLongSplit(u32 addr)
 
         case 4:
         {
-            u32 result = read32(addr);
+            // A failing single cycle access is reported as an upper word failure (the fault address is ea)
+            u32 result;
+            try { result = read32(addr); } catch (BusError &e) { e.upperWord = true; throw; }
             if constexpr (F & POLL) POLL_IPL;
             SYNC(2);
             return result;
@@ -1157,7 +1167,7 @@ template <Core C> AddressError
 Moira::earlyAddressError(const StackFrame &frame)
 {
     // MAME spends two extra cycles if an address error is detected without a bus access
-    if constexpr (EXACT_68000) sync(2);
+    if constexpr (C == Core::C68000) sync(2);
 
     return AddressError(frame);
 }
@@ -1208,7 +1218,7 @@ Moira::prefetchLate()
 template <Core C, Flags F> void
 Moira::fullPrefetchAt(u32 newpc)
 {
-    if constexpr (EXACT_68000) {
+    if constexpr (C == Core::C68000) {
 
         u32 oldpc = reg.pc;
         reg.pc = newpc;
@@ -1256,7 +1266,7 @@ Moira::readExt()
    
 
     // MAME stacks the address of the consumed extension word if the refill fails
-    if constexpr (EXACT_68000) {
+    if constexpr (C == Core::C68000) {
         queue.irc = readInstr<C, AE_DEC_PC>(reg.pc);
     } else {
         queue.irc = readInstr<C>(reg.pc);
@@ -1267,7 +1277,7 @@ template <Core C> void
 Moira::readExtLast()
 {
     // MAME does not decrement the stacked PC if the refill after the last word of a long operand fails
-    if constexpr (EXACT_68000) {
+    if constexpr (C == Core::C68000) {
 
         assert(!misaligned<C>(reg.pc));
         reg.pc += 2;
@@ -1303,7 +1313,7 @@ Moira::jumpToVector(int nr)
     u32 oldpc = reg.pc;
 
     // Update the program counter
-    if constexpr (EXACT_68000) {
+    if constexpr (C == Core::C68000) {
 
         // MAME stacks the vector address if a bus error occurs while the vector is fetched
         try { reg.pc = read<C, AddrSpace::DATA, Long>(vectorAddr); }
@@ -1357,7 +1367,7 @@ Moira::jumpToVector(int nr)
     }
 
     // Update the prefetch queue
-    if constexpr (EXACT_68000) {
+    if constexpr (C == Core::C68000) {
 
         // The first fetch also stacks the vector address, the second one the handler address
         try { queue.irc = (u16)read<C, AddrSpace::PROG, Word>(reg.pc); }

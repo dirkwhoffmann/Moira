@@ -592,7 +592,7 @@ public:
     u16 getIRD() const { return queue.ird; }
 
     /** @brief Gets the data latch that holds the most recently fetched word
-     *  @note  The latch is the EXACT_68000 pipeline stage in front of IRC.
+     *  @note  The latch is the 68000 pipeline stage in front of IRC.
      */
     u16 getEDB() const { return queue.edb; }
     
