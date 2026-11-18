@@ -2856,72 +2856,54 @@ Moira::execJsr(u16 opcode)
     [[maybe_unused]] const int delay[] = { 0,0,0,0,0,2,4,2,0,2,4,0 };
     SYNC(delay[(int)M]);
 
-    switch (C) {
+    if constexpr (C == Core::C68000) {
 
-        case Core::C68000:
+        // MAME keeps the program counter unchanged, UAE decrements it in (d,An) and (d,An,Xi) mode
+        constexpr Flags flags = isDspMode(M) && compat != Compatibility::MAME ? AE_DEC_PC : AE_FETCH;
+        checkEven<C, Word, flags>(ea);
 
-            // Check for address errors
-            if (isDspMode(M) && misaligned<C>(ea)) {
-                // MAME keeps the program counter in the stack frame unchanged
-                if constexpr (compat == Compatibility::MAME) throw earlyAddressError<C>(makeFrame<AE_FETCH>(ea));
-                throw earlyAddressError<C>(makeFrame<AE_DEC_PC>(ea));
-            }
-            checkEven<C, Word, AE_FETCH>(ea);
-
-            if constexpr (compat == Compatibility::UAE || C == Core::C68000) {
-
-                // Fetch the first word of the subroutine before pushing
-                u32 ret = reg.pc;
-                reg.pc = ea;
-                [[maybe_unused]] bool pushing = false;
-                try {
-                    queue.irc = (u16)read<C, AddrSpace::PROG, Word>(ea);
-                    pushing = true;
-                    push<C, Long>(ret);
-                } catch (BusError &e) {
-
-                    // MAME stacks the return address of the subroutine call. UAE stacks the target address if the push fails.
-                    e.stackFrame.pc = (compat == Compatibility::UAE && pushing) ? ea + 2 + (M == Mode::AW ? 2 : M == Mode::AL ? 4 : 0) : ret;
-                    throw;
-                } catch (AddressError &e) {
-
-                    // MAME stacks the return address of the subroutine call
-                    if constexpr (C == Core::C68000) e.stackFrame.pc = ret;
-                    throw;
-                }
-                prefetch<C, POLL>();
-                break;
-            }
-
-            // Save return address on stack
-            push<C, Long>(reg.pc);
-
-            // Jump to new address
-            reg.pc = ea;
-
+        // Fetch the first word of the subroutine before pushing
+        u32 ret = reg.pc;
+        reg.pc = ea;
+        bool pushing = false;
+        try {
             queue.irc = (u16)read<C, AddrSpace::PROG, Word>(ea);
-            prefetch<C, POLL>();
-            break;
+            pushing = true;
+            push<C, Long>(ret);
+        } catch (BusError &e) {
 
-        default:
+            // MAME stacks the return address. UAE stacks the target address if the push fails.
+            u32 target = ea + 2 + (M == Mode::AW ? 2 : M == Mode::AL ? 4 : 0);
+            e.stackFrame.pc = (compat == Compatibility::UAE && pushing) ? target : ret;
+            throw;
+        } catch (AddressError &e) {
 
-            // Check for address errors
-            if (misaligned<C>(ea) && misaligned<C>(reg.sp)) {
+            // MAME stacks the return address of the subroutine call
+            e.stackFrame.pc = ret;
+            throw;
+        }
+        prefetch<C, POLL>();
+
+    } else if constexpr (C == Core::C68010) {
+
+        if (misaligned<C>(reg.sp)) {
+
+            // Both addresses are misaligned
+            if (misaligned<C>(ea)) {
 
                 if constexpr (M == Mode::AI) {
 
                     reg.pc = ea & ~1;
                     queue.irc = (u16)read<C, AddrSpace::PROG, Word>(ea & ~1);
                     throw earlyAddressError<C>(makeFrame<AE_FETCH>(ea));
-                }
 
-                else if (isAbsMode(M)) {
+                } else if constexpr (isAbsMode(M)) {
 
                     auto frame = makeFrame<AE_FETCH>(ea);
                     frame.pc -= 4;
                     throw earlyAddressError<C>(frame);
-                }
-                else if (isDspMode(M)) {
+
+                } else if constexpr (isDspMode(M)) {
 
                     throw earlyAddressError<C>(makeFrame<AE_DEC_PC|AE_FETCH>(ea));
 
@@ -2931,28 +2913,36 @@ Moira::execJsr(u16 opcode)
                 }
             }
 
-            if (misalignedPC<C>(ea)) {
+            // Only the stack pointer is misaligned
+            prefetch<C>();
+            reg.sp -= 4;
+            writeBuffer = u16(reg.pc >> 16);
+            throw earlyAddressError<C>(makeFrame<AE_DATA>(reg.sp));
+        }
+        checkEvenPC<C, AE_FETCH>(ea);
 
-                // UAE makes room for the return address on the stack (but does not write it)
-                if constexpr (C == Core::C68020) reg.sp -= 4;
-                throw earlyAddressError<C>(makeFrame<AE_FETCH>(ea));
-            }
+        // Save return address on stack
+        push<C, Long, POLL>(reg.pc);
 
-            if (misaligned<C>(reg.sp)) {
+        // Jump to new address
+        reg.pc = ea;
+        fullPrefetch<C>();
 
-                prefetch<C>();
-                reg.sp -= 4;
-                writeBuffer = u16(reg.pc >> 16);
-                throw earlyAddressError<C>(makeFrame<AE_DATA>(reg.sp));
-            }
+    } else if constexpr (C == Core::C68020) {
 
-            // Save return address on stack
-            push<C, Long, POLL>(reg.pc);
+        if (misalignedPC<C>(ea)) {
 
-            // Jump to new address
-            reg.pc = ea;
-            fullPrefetch<C>();
-            break;
+            // UAE makes room for the return address on the stack (but does not write it)
+            reg.sp -= 4;
+            throw earlyAddressError<C>(makeFrame<AE_FETCH>(ea));
+        }
+
+        // Save return address on stack
+        push<C, Long, POLL>(reg.pc);
+
+        // Jump to new address
+        reg.pc = ea;
+        fullPrefetch<C>();
     }
 
     changeOfFlow<C>();
