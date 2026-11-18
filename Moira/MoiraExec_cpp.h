@@ -2123,15 +2123,10 @@ Moira::execClr(u16 opcode)
 
             if constexpr (S == Long && isRegMode(M)) SYNC(2);
 
-            if constexpr ((compat == Compatibility::MUSASHI)) {
-                writeOp<C, M, S, CLRC>(dst, ea, 0);
-            } else {
-                writeOp<C, M, S, REVERSE | CLRC>(dst, ea, 0);
-            }
+            writeOp<C, M, S, REVERSE | CLRC>(dst, ea, 0);
 
         } catch (BusError &e) {
 
-            // MAME clears the register (lower word) before the prefetch
             if constexpr (C == Core::C68000 && isRegMode(M)) writeD<S == Long ? Word : S>(dst, 0);
             rethrow<C>(e);
         }
@@ -2341,14 +2336,11 @@ Moira::execCmpiRg(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    u32 src = readI<C, S>();
-    int dst = _____________xxx(opcode);
-
+    u32 src  = readI<C, S>();
+    int dst  = _____________xxx(opcode);
     u32 data = readD<S>(dst);
 
-    // MAME updates the flags before the prefetch
     cmp<C, S>(src, data);
-
     prefetchLate<C, POLL, (S == Long)>();
 
     if constexpr (S == Long && C == Core::C68000) SYNC(2);
