@@ -401,6 +401,8 @@ Moira::bcd(u32 op1, u32 op2)
         }
         case Instr::SBCD:
         case Instr::SBCD_LOOP:
+        case Instr::NBCD:           // NBCD is computed as an SBCD with a zero destination operand
+        case Instr::NBCD_LOOP:
         {
             // Subtract digits
             u16 lo = lo2 - lo1 - reg.sr.x;

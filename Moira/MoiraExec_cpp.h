@@ -24,9 +24,6 @@ return; }
 
 #define COMMITC (C == Core::C68000 ? COMMIT_IRD : 0)   // The access contains the last bus cycle of the instruction (see COMMIT_IRD)
 #define CLRC ((!isRegMode(M) || S == Long) ? COMMITC : 0)   // CLR defers the IRD update only if the prefetch is not the last cycle
-// NBCD is computed like SBCD, except in Musashi mode (Musashi has its own formula)
-#define nbcdInstr (compat == Compatibility::MUSASHI ? Instr::NBCD : Instr::SBCD)
-#define EXACT_ABORT C == Core::C68000   // MAME and UAE abort misaligned stack accesses without a bus cycle
 
 
 #define STD_AE_FRAME (\
@@ -5626,7 +5623,7 @@ Moira::execNbcdRg(u16 opcode)
     u32 data = readD<Byte>(reg);
 
     // MAME computes the result (and the flags) before the prefetch
-    u32 result = bcd<C, nbcdInstr, Byte>(data, 0);
+    u32 result = bcd<C, I, Byte>(data, 0);
 
     looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>();
 
@@ -5651,7 +5648,7 @@ Moira::execNbcdEa(u16 opcode)
     readOp<C, M, Byte, STD_AE_FRAME>(reg, &ea, &data);
 
     // MAME updates the flags before the prefetch
-    u32 result = bcd<C, nbcdInstr, Byte>(data, 0);
+    u32 result = bcd<C, I, Byte>(data, 0);
 
     if (looping<I>()) {
         if constexpr (M == Mode::AI) noPrefetch<C>(4);
@@ -6360,7 +6357,7 @@ Moira::execRtr(u16 opcode)
     if (misaligned<C>(reg.sp)) {
 
         setFC<M>();
-        if constexpr (EXACT_ABORT) {
+        if constexpr (C == Core::C68000) {
 
             // MAME and UAE abort the access without a bus cycle
             throw earlyAddressError<C>(makeFrame<0>(reg.sp));
@@ -6428,7 +6425,7 @@ Moira::execRts(u16 opcode)
     if (misaligned<C>(reg.sp)) {
 
         setFC<M>();
-        if constexpr (EXACT_ABORT) {
+        if constexpr (C == Core::C68000) {
 
             // MAME and UAE abort the access without a bus cycle
             throw earlyAddressError<C>(makeFrame<0>(reg.sp));
