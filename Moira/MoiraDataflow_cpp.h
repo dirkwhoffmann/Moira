@@ -357,7 +357,7 @@ Moira::writeOp(int n, u32 val)
 
         default:
 
-            writeBuffer = (S == Long) ? u16(val >> 16) : u16(val & 0xFFFF);
+            writeBuffer = READ<Word, S == Long ? 1 : 0>(val);
 
             // Compute effective address
             u32 ea = computeEA<C, M, S>(n);
@@ -387,7 +387,7 @@ Moira::writeOp(int n, u32 ea, u32 val)
 
         default:
 
-            writeBuffer = (S == Long) ? u16(val >> 16) : u16(val & 0xFFFF);
+            writeBuffer = READ<Word, S == Long ? 1 : 0>(val);
 
             // Write to effective address
             writeM<C, M, S, F>(ea, val);

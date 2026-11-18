@@ -2904,7 +2904,7 @@ Moira::execJsr(u16 opcode)
             // Only the stack pointer is misaligned
             prefetch<C>();
             reg.sp -= 4;
-            writeBuffer = u16(reg.pc >> 16);
+            writeBuffer = READ<Word, 1>(reg.pc);
             throw earlyAddressError<C>(makeFrame<AE_DATA>(reg.sp));
         }
         checkEvenPC<C, AE_FETCH>(ea);
@@ -3021,7 +3021,7 @@ Moira::execLink(u16 opcode)
     // Check for address error
     if (misaligned<C>(sp)) {
 
-        writeBuffer = u16(readA(ax) >> 16);
+        writeBuffer = READ<Word, 1>(readA(ax));
         writeA(ax, sp);
         throw earlyAddressError<C>(makeFrame<AE_DATA|AE_WRITE|AE_INC_PC>(sp));
     }
@@ -3111,7 +3111,7 @@ Moira::execMove2(u16 opcode)
 
         // A failed write shows the flags set up in front of it
         constexpr Flags F = AE_INC_PC | ((S == Long && !isMemMode(M)) ? POLL : 0);
-        writeBuffer = (S == Long) ? u16(data >> 16) : u16(data & 0xFFFF);
+        writeBuffer = READ<Word, S == Long ? 1 : 0>(data);
         u32 ea2 = readA(dst);
 
         if constexpr (S == Long) {
@@ -3216,7 +3216,7 @@ Moira::execMove3(u16 opcode)
 
         // A failed write shows the flags set up in front of it
         constexpr Flags F = AE_INC_PC | (true ? POLL : 0);
-        writeBuffer = (S == Long) ? u16(data >> 16) : u16(data & 0xFFFF);
+        writeBuffer = READ<Word, S == Long ? 1 : 0>(data);
         u32 ea2 = readA(dst);
 
         if constexpr (S == Long) {
@@ -3425,7 +3425,7 @@ Moira::execMove5(u16 opcode)
 
         // Execute the access sequence step by step (extension word, first word, second word).
         // The flags are set up in front of each step, so every frame shows the right ones.
-        writeBuffer = (S == Long) ? u16(data >> 16) : u16(data & 0xFFFF);
+        writeBuffer = READ<Word, S == Long ? 1 : 0>(data);
 
         // A failed extension word fetch shows the flags of the source: untouched for register
         // sources and for memory sources the flags of the (low word of the) operation
@@ -3523,7 +3523,7 @@ Moira::execMove6(u16 opcode)
 
         // Execute the access sequence step by step (extension word, first word, second word).
         // The flags are set up in front of each step, so every frame shows the right ones.
-        writeBuffer = (S == Long) ? u16(data >> 16) : u16(data & 0xFFFF);
+        writeBuffer = READ<Word, S == Long ? 1 : 0>(data);
 
         // A failed extension word fetch shows the flags of the source: untouched for register
         // sources and for memory sources the flags of the (low word of the) operation
@@ -3625,7 +3625,7 @@ Moira::execMove7(u16 opcode)
         reg.sr.v = 0;
         reg.sr.c = 0;
 
-        writeBuffer = (S == Long) ? u16(data >> 16) : u16(data & 0xFFFF);
+        writeBuffer = READ<Word, S == Long ? 1 : 0>(data);
         u32 ea2 = computeEA<C, Mode::AW, S>(dst);
 
         // A failed write shows the final flags
@@ -3744,7 +3744,7 @@ Moira::execMove8(u16 opcode)
         if constexpr (C == Core::C68000) {
 
             // The first extension word is fetched with the flags untouched
-            writeBuffer = (S == Long) ? u16(data >> 16) : u16(data & 0xFFFF);
+            writeBuffer = READ<Word, S == Long ? 1 : 0>(data);
             u32 ea2 = queue.irc << 16;
             readExt<C>();
             ea2 |= queue.irc;
@@ -4103,7 +4103,7 @@ Moira::execMovemRgEa(u16 opcode)
 
                 setFC<M>();
                 readBuffer = mask;
-                writeBuffer = u16(reg.r[i] & 0xFFFF);
+                writeBuffer = READ<Word>(reg.r[i]);
                 throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_WRITE>(U32_SUB(ea, 2)));
             }
 
@@ -4155,7 +4155,7 @@ Moira::execMovemRgEa(u16 opcode)
 
                 setFC<M>();
                 readBuffer = mask;
-                writeBuffer = S == Long ? u16(reg.r[i] >> 16) : u16(reg.r[i] & 0xFFFF);
+                writeBuffer = READ<Word, S == Long ? 1 : 0>(reg.r[i]);
                 throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_WRITE>(ea));
             }
 
@@ -4196,14 +4196,14 @@ Moira::execMovepDxEa(u16 opcode)
 
         case Long:
         {
-            writeM<C, M, Byte, AE_DEC_PC>(ea, (dx >> 24) & 0xFF); ea += 2;
-            writeM<C, M, Byte, AE_DEC_PC>(ea, (dx >> 16) & 0xFF); ea += 2;
+            writeM<C, M, Byte, AE_DEC_PC>(ea, READ<Byte, 3>(dx)); ea += 2;
+            writeM<C, M, Byte, AE_DEC_PC>(ea, READ<Byte, 2>(dx)); ea += 2;
             [[fallthrough]];
         }
         case Word:
         {
-            writeM<C, M, Byte, AE_DEC_PC>(ea, (dx >>  8) & 0xFF); ea += 2;
-            writeM<C, M, Byte, AE_DEC_PC>(ea, (dx >>  0) & 0xFF);
+            writeM<C, M, Byte, AE_DEC_PC>(ea, READ<Byte, 1>(dx)); ea += 2;
+            writeM<C, M, Byte, AE_DEC_PC>(ea, READ<Byte, 0>(dx));
         }
     }
     prefetch<C, POLL>();
@@ -4332,7 +4332,7 @@ Moira::execMoves(u16 opcode)
             writeM<C, M, S, AE_INC_PC>(ea, value);
         } catch (AddressError &exc) {
 
-            writeBuffer = (S == Long ? u16(value >> 16) : u16(value & 0xFFFF));
+            writeBuffer = READ<Word, S == Long ? 1 : 0>(value);
 
             // EXPERIMENTAL: CLEAN THIS UP (RENAME stackFrame.ird to irc?!)
             fcSource = 0;
@@ -5723,13 +5723,13 @@ Moira::execPea(u16 opcode)
 
             // The 68010 completes the prefetch in all modes (even the absolute ones) and
             // stacks the address of the instruction plus two (recorded on real hardware)
-            writeBuffer = u16(ea >> 16);
+            writeBuffer = READ<Word, 1>(ea);
             prefetch<C>();
             throw AddressError(makeFrame<AE_WRITE|AE_DATA>(reg.sp, reg.pc0 + 2));
 
         } else {
 
-            writeBuffer = u16(ea >> 16);
+            writeBuffer = READ<Word, 1>(ea);
             if (isAbsMode(M)) {
                 readBuffer = queue.irc;
                 throw AddressError(makeFrame<AE_WRITE|AE_DATA>(reg.sp, U32_SUB(reg.pc, 4)));

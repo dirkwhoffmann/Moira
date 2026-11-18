@@ -81,6 +81,14 @@ template <Size S> bool ZERO(u64 data) {
     if constexpr (S == Long) return !(data & 0xFFFFFFFF);
 }
 
+// Returns the n-th byte, word, or long word of data (counted from the least significant end)
+template <Size S, int n = 0> u32 READ(u32 data) {
+
+    static_assert(S * (n + 1) <= Long, "Portion exceeds 32 bits");
+
+    return CLIP<S>(data >> (8 * S * n));
+}
+
 // Replaces the n-th byte, word, or long word of d1 (counted from the least significant end) by d2
 template <Size S, int n = 0> u32 WRITE(u32 d1, u32 d2) {
 
