@@ -744,28 +744,13 @@ Moira::execAddxEa(u16 opcode)
     if constexpr (S == Long && C == Core::C68000) {
 
         // The 68000 reads and writes the lower word of a long operand first
-        constexpr Flags flags = AE_INC_PC | AE_INC_A | REVERSE;
+        constexpr Flags flags = AE_INC_PC | AE_INC_A | REVERSE | DEC_LATE;
 
-        try { readOp<C, M, S, flags>(src, &ea1, &data1); }
-        catch (const AddressError &) { undoAnPD<M,S>(src); throw; }
-        catch (const BusError &e) {
+        readOp<C, M, S, flags>(src, &ea1, &data1);
 
-            // MAME decrements An between the two word reads, UAE after both
-            if (compat == Compatibility::UAE || !e.upperWord) undoAnPD<M,S>(src);
-            throw;
-        }
-
+        // If the high word fails, the low words have been added already
         try { readOp<C, M, S, flags|IMPL_DEC>(dst, &ea2, &data2); }
-        catch (const AddressError &) { undoAnPD<M,S>(dst); throw; }
-        catch (BusError &e) {
-
-            // MAME decrements An between the two word reads, UAE after both
-            if (compat == Compatibility::UAE || !e.upperWord) undoAnPD<M,S>(dst);
-
-            // If the high word fails, the low words have been added already
-            if (e.upperWord) { addsub<C, I, Word>(data1 & 0xFFFF, readBuffer); rethrow<C>(e); }
-            throw;
-        }
+        catch (BusError &e) { if (e.upperWord) { addsub<C, I, Word>(data1 & 0xFFFF, readBuffer); rethrow<C>(e); } throw; }
 
         u8 ccr = getCCR();
         result = addsub<C, I, S>(data1, data2);
@@ -4225,7 +4210,7 @@ Moira::execMovemRgEa(u16 opcode)
             if constexpr ((compat == Compatibility::UAE) && C == Core::C68020) {
                 if (i == 8 + dst) value = initial - S;
             }
-            writeM<C, M, S, (C == Core::C68000 || compat == Compatibility::MUSASHI || compat == Compatibility::UAE ? REVERSE : 0) | AE_INC_PC>(ea, value);
+            writeM<C, M, S, (C == Core::C68000 || compat == Compatibility::UAE ? REVERSE : 0) | AE_INC_PC>(ea, value);
             cnt++;
         }
         if constexpr (C != Core::C68020 || (compat == Compatibility::MUSASHI) || (compat == Compatibility::UAE)) writeA(dst, ea);
@@ -5133,28 +5118,18 @@ Moira::execDivsMoira(u16 opcode, bool *divByZero)
 
     u32 ea = 0, divisor, result;
 
-    try {
-        readOp<C, M, Word, STD_AE_FRAME>(src, &ea, &divisor);
-    } catch (AddressError &exc) {
+    try { readOp<C, M, Word, STD_AE_FRAME>(src, &ea, &divisor); }
+    catch (const AddressError &) {
 
-        // Rectify the stack frame
-        if constexpr (C == Core::C68000) {
+        // Rectify the stack frame (68010 and above). The register has been advanced by readOp already.
+        // The DIB still holds the last prefetch.
+        if constexpr (C != Core::C68000) {
 
-            if constexpr (compat == Compatibility::MUSASHI) SYNC(2);
-            exc.stackFrame = makeFrame<STD_AE_FRAME>(ea);
-
-        } else {
-
-            // The register has been advanced by readOp already. The DIB still holds the last prefetch.
-            if (isAbsMode(M) || M == Mode::AI || M == Mode::PI || M == Mode::PD) {
-                SYNC(2);
-                exc.stackFrame = makeFrame<0>(ea);
-            } else {
-                SYNC(2);
-                exc.stackFrame = makeFrame<AE_DEC_PC>(ea);
-            }
+            constexpr bool noDec = isAbsMode(M) || M == Mode::AI || M == Mode::PI || M == Mode::PD;
+            SYNC(2);
+            throw AddressError(makeFrame<noDec ? 0 : AE_DEC_PC>(ea));
         }
-        throw exc;
+        throw;
     }
 
     u32 dividend = readD(dst);
@@ -5279,28 +5254,18 @@ Moira::execDivuMoira(u16 opcode, bool *divByZero)
 
     u32 ea = 0, divisor, result;
 
-    try {
-        readOp<C, M, Word, STD_AE_FRAME>(src, &ea, &divisor);
-    } catch (AddressError &exc) {
+    try { readOp<C, M, Word, STD_AE_FRAME>(src, &ea, &divisor); }
+    catch (const AddressError &) {
 
-        // Rectify the stack frame
-        if constexpr (C == Core::C68000) {
+        // Rectify the stack frame (68010 and above). The register has been advanced by readOp already.
+        // The DIB still holds the last prefetch.
+        if constexpr (C != Core::C68000) {
 
-            if constexpr (compat == Compatibility::MUSASHI) SYNC(2);
-            exc.stackFrame = makeFrame<STD_AE_FRAME>(ea);
-            throw exc;
-
-        } else {
-
-            // The register has been advanced by readOp already. The DIB still holds the last prefetch.
+            constexpr bool noDec = isAbsMode(M) || M == Mode::AI || M == Mode::PI || M == Mode::PD;
             SYNC(2);
-            if (isAbsMode(M) || M == Mode::AI || M == Mode::PI || M == Mode::PD) {
-                exc.stackFrame = makeFrame<0>(ea);
-            } else {
-                exc.stackFrame = makeFrame<AE_DEC_PC>(ea);
-            }
-            throw exc;
+            throw AddressError(makeFrame<noDec ? 0 : AE_DEC_PC>(ea));
         }
+        throw;
     }
 
     u32 dividend = readD(dst);

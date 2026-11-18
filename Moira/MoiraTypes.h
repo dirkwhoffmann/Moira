@@ -693,6 +693,7 @@ static constexpr u64 UAE_DEC_PC     = (1 << 12);  ///< UAE stacks the PC of the 
 
 /// Timing flags
 static constexpr u64 IMPL_DEC       = (1 << 14);  // Omit 2 cycle delay in -(An) mode
+static constexpr u64 DEC_LATE       = (1 << 13);  ///< -(An) is decremented after the first word of a long operand has been read (68000)
 
 /// Extension word flags
 static constexpr u64 NO_DEC_PC      = (1 << 15);  ///< A failing extension word fetch stacks the PC of the next word (68000)

@@ -308,6 +308,14 @@ Moira::readOp(int n, u32 *ea, u32 *result)
                     *result = readM<C, M, S, F>(*ea);
                 }
 
+            } else if constexpr ((F & DEC_LATE) && C == Core::C68000 && M == Mode::PD && S == Long) {
+
+                // MAME decrements the register between the two word reads, UAE after both. Hence, a failing
+                // first access (the lower word) leaves the register untouched, and so does any failure in UAE.
+                try { *result = readM<C, M, S, F>(*ea); }
+                catch (const AddressError &) { undoAnPD<M, S>(n); throw; }
+                catch (const BusError &e) { if (compat == Compatibility::UAE || !e.upperWord) undoAnPD<M, S>(n); throw; }
+
             } else if constexpr (compat == Compatibility::MAME && C == Core::C68000 && M == Mode::PI && S == Word) {
 
                 // MAME advances the register before the bus or address error is reported
