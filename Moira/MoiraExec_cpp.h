@@ -2959,11 +2959,10 @@ Moira::execLea(u16 opcode)
     if constexpr (C == Core::C68000 && M == Mode::AL) {
 
         // MAME loads the high word into the register first, then the complete address
-        u32 ea = (u32)queue.irc << 16;
-        try { readExt<C>(); } catch (BusError &) { reg.a[dst] = ea | (reg.a[dst] & 0xFFFF); throw; }
-        ea |= queue.irc;
-        try { readExtLast<C>(); } catch (BusError &) { reg.a[dst] = ea; throw; }
-        reg.a[dst] = ea;
+        reg.a[dst] = (u32)queue.irc << 16 | (reg.a[dst] & 0xFFFF);
+        readExt<C>();
+        reg.a[dst] = (reg.a[dst] & 0xFFFF0000) | queue.irc;
+        readExtLast<C>();
 
     } else if constexpr (C == Core::C68000 && (M == Mode::AW || M == Mode::DI || M == Mode::DIPC)) {
 
