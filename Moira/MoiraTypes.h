@@ -688,6 +688,9 @@ static constexpr u64 AE_DEC_A       = (1 << 9);   ///< Decrement ADDR by 2 in st
 static constexpr u64 AE_SET_CB3     = (1 << 10);  ///< Set bit 3 in CODE segment
 static constexpr u64 AE_FETCH       = (1 << 11);  ///< The fault hit an instruction fetch (IF bit of the 68010 special status word)
 
+/// Bus error flags
+static constexpr u64 UAE_DEC_PC     = (1 << 12);  ///< UAE stacks the PC of the executing instruction if the access fails (68000)
+
 /// Timing flags
 static constexpr u64 IMPL_DEC       = (1 << 14);  // Omit 2 cycle delay in -(An) mode
 
@@ -698,6 +701,11 @@ static constexpr u64 NO_DEC_PC      = (1 << 15);  ///< A failing extension word 
 static constexpr u64 COMMIT_IRD    = (1 << 16);  ///< The access contains the last bus cycle of the instruction. The IRD is replaced
                                                  ///< when that cycle starts (after the address error check, before the second half
                                                  ///< of a split access). Faults before that point stack the old IRD.
+
+/// Returns the flags for completing a bus error stack frame. The ADDR adjustments of address error frames don't apply.
+template <Flags F> constexpr Flags beFrameFlags() {
+    return (F & ~(AE_INC_A | AE_DEC_A)) | ((F & UAE_DEC_PC) && compat == Compatibility::UAE ? AE_DEC_PC : 0);
+}
 }
 
 //

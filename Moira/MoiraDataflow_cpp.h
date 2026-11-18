@@ -724,7 +724,7 @@ Moira::read(u32 addr)
 
         // Let Moira complete the stack frame if the host signals a bus error
         try { return readBus<C, S, F>(addr); }
-        catch (BusError &e) { if (!e.complete) { e.stackFrame = makeFrame<F & ~(AE_INC_A | AE_DEC_A)>(e.stackFrame.addr); e.complete = true; } throw; }
+        catch (BusError &e) { if (!e.complete) { e.stackFrame = makeFrame<beFrameFlags<F>()>(e.stackFrame.addr); e.complete = true; } throw; }
 
     } else {
 
@@ -861,7 +861,7 @@ Moira::readInstr(u32 addr)
                 SYNC(2);
                 return result;
             } catch (BusError &e) {
-                if (!e.complete) { e.stackFrame = makeFrame<F & ~(AE_INC_A | AE_DEC_A)>(e.stackFrame.addr); e.complete = true; }
+                if (!e.complete) { e.stackFrame = makeFrame<beFrameFlags<F>()>(e.stackFrame.addr); e.complete = true; }
                 throw;
             }
 
@@ -907,7 +907,7 @@ Moira::write(u32 addr, u32 val)
 
         // Let Moira complete the stack frame if the host signals a bus error
         try { writeBus<C, S, F>(addr, val); }
-        catch (BusError &e) { if (!e.complete) { e.stackFrame = makeFrame<(F & ~(AE_INC_A | AE_DEC_A)) | AE_WRITE>(e.stackFrame.addr); e.complete = true; } throw; }
+        catch (BusError &e) { if (!e.complete) { e.stackFrame = makeFrame<beFrameFlags<F>() | AE_WRITE>(e.stackFrame.addr); e.complete = true; } throw; }
 
     } else {
 

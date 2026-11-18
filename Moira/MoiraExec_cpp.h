@@ -28,11 +28,6 @@ return; }
 #define nbcdInstr (compat == Compatibility::MUSASHI ? Instr::NBCD : Instr::SBCD)
 #define EXACT_ABORT C == Core::C68000   // MAME and UAE abort misaligned stack accesses without a bus cycle
 
-// UAE stacks the PC of the executing instruction if a bus error hits a write that precedes the final prefetch
-#define UAE_BE_PC(...) \
-    if constexpr (compat == Compatibility::UAE && C == Core::C68000) { \
-        try { __VA_ARGS__; } catch (BusError &e) { e.stackFrame.pc -= 2; throw; } \
-    } else { __VA_ARGS__; }
 
 #define STD_AE_FRAME (\
 (M == Mode::PD && S != Long) ? AE_INC_PC : \
@@ -1716,7 +1711,7 @@ Moira::execBsr(u16 opcode)
         }
 
         // Save return address on stack
-        UAE_BE_PC(push<C, Long>(retpc));
+        push<C, Long, UAE_DEC_PC>(retpc);
 
         // Jump to new address
         reg.pc = newpc;
@@ -3255,14 +3250,14 @@ Moira::execMove2(u16 opcode)
                 reg.sr.v = 0;
                 reg.sr.c = 0;
             }
-            UAE_BE_PC(writeM<C, Mode::AI, Word, AE_INC_PC>(ea2, data >> 16));
+            writeM<C, Mode::AI, Word, AE_INC_PC | UAE_DEC_PC>(ea2, data >> 16);
 
             // Second write: the flags of the low word (register source) or the final flags (memory source)
             reg.sr.n = NBIT<isMemMode(M) ? Long : Word>(data);
             reg.sr.z = ZERO<isMemMode(M) ? Long : Word>(data);
             reg.sr.v = 0;
             reg.sr.c = 0;
-            UAE_BE_PC(writeM<C, Mode::AI, Word, F>(ea2 + 2, data & 0xFFFF));
+            writeM<C, Mode::AI, Word, F | UAE_DEC_PC>(ea2 + 2, data & 0xFFFF);
 
         } else {
 
@@ -3270,7 +3265,7 @@ Moira::execMove2(u16 opcode)
             reg.sr.z = ZERO<S>(data);
             reg.sr.v = 0;
             reg.sr.c = 0;
-            UAE_BE_PC(writeM<C, Mode::AI, S, F>(ea2, data));
+            writeM<C, Mode::AI, S, F | UAE_DEC_PC>(ea2, data);
         }
 
         reg.sr.n = NBIT<S>(data);
@@ -3360,14 +3355,14 @@ Moira::execMove3(u16 opcode)
                 reg.sr.v = 0;
                 reg.sr.c = 0;
             }
-            UAE_BE_PC(writeM<C, Mode::PI, Word, AE_INC_PC>(ea2, data >> 16));
+            writeM<C, Mode::PI, Word, AE_INC_PC | UAE_DEC_PC>(ea2, data >> 16);
 
             // Second write: the flags of the low word (register source) or the final flags (memory source)
             reg.sr.n = NBIT<isMemMode(M) ? Long : Word>(data);
             reg.sr.z = ZERO<isMemMode(M) ? Long : Word>(data);
             reg.sr.v = 0;
             reg.sr.c = 0;
-            UAE_BE_PC(writeM<C, Mode::PI, Word, F>(ea2 + 2, data & 0xFFFF));
+            writeM<C, Mode::PI, Word, F | UAE_DEC_PC>(ea2 + 2, data & 0xFFFF);
 
         } else {
 
@@ -3375,7 +3370,7 @@ Moira::execMove3(u16 opcode)
             reg.sr.z = ZERO<S>(data);
             reg.sr.v = 0;
             reg.sr.c = 0;
-            UAE_BE_PC(writeM<C, Mode::PI, S, F>(ea2, data));
+            writeM<C, Mode::PI, S, F | UAE_DEC_PC>(ea2, data);
         }
         updateAnPI<Mode::PI, S>(dst);
 
@@ -6027,10 +6022,10 @@ Moira::execRte(u16 opcode)
             if constexpr (compat == Compatibility::UAE) {
 
                 // UAE adjusts the stack pointer after the status register has been read
-                UAE_BE_PC(newsr = (u16)read<C, AddrSpace::DATA, Word>(reg.sp));
+                newsr = (u16)read<C, AddrSpace::DATA, Word, UAE_DEC_PC>(reg.sp);
                 reg.sp += 6;
-                UAE_BE_PC(newpc = (u32)read<C, AddrSpace::DATA, Word>(reg.sp - 4) << 16);
-                UAE_BE_PC(newpc |= read<C, AddrSpace::DATA, Word>(reg.sp - 2));
+                newpc = (u32)read<C, AddrSpace::DATA, Word, UAE_DEC_PC>(reg.sp - 4) << 16;
+                newpc |= read<C, AddrSpace::DATA, Word, UAE_DEC_PC>(reg.sp - 2);
                 break;
             }
 
@@ -6443,7 +6438,7 @@ Moira::execRts(u16 opcode)
     }
 
     u32 newpc;
-    UAE_BE_PC(newpc = readM<C, M, Long>(reg.sp));
+    newpc = readM<C, M, Long, UAE_DEC_PC>(reg.sp);
     reg.sp += 4;
 
     // Check for address error
