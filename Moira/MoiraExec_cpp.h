@@ -2445,39 +2445,28 @@ Moira::execCmpm(u16 opcode)
 
         if constexpr (compat == Compatibility::UAE) {
 
-            // UAE advances the source register by the number of words read (including the failing one).
-            // If a word-sized destination read fails, the destination register is advanced, too.
-            u32 inc = (S == Byte && src == 7) ? 2 : (S == Byte) ? 1 : 2;
-            u32 anSrc = reg.a[src];
-            try { readOp<C, M, S, AE_INC_PC | AE_KEEP_A>(src, &ea1, &data1); }
-            catch (const AddressError &) { reg.a[src] = anSrc; throw; }
+            // UAE advances the source register by the number of words read (including the failing one)
+            try { readOp<C, M, S, AE_INC_PC>(src, &ea1, &data1); }
             catch (const BusError &e) {
-                if (S == Long && !e.upperWord) inc = 4;
-                U32_INC(reg.a[src], inc);
+                if constexpr (S == Byte) updateAnPI<M, S>(src);
+                if constexpr (S == Long) U32_INC(reg.a[src], e.upperWord ? 2 : 4);
                 throw;
             }
             POLL_IPL;
-            u32 an = reg.a[dst];
-            try { readOp<C, M, S, AE_INC_PC | AE_KEEP_A>(dst, &ea2, &data2); }
-            catch (const AddressError &) { reg.a[dst] = an; throw; }
-            catch (const BusError &) { reg.a[dst] = an; if (S == Word) U32_INC(reg.a[dst], 2); throw; }
-
-        } else if constexpr (C == Core::C68000) {
-
-            // MAME advances the source register by 2 if the source read fails, but not the destination register
-            try { readOp<C, M, S, AE_INC_PC | AE_KEEP_A>(src, &ea1, &data1); }
-            catch (const AddressError &) { U32_INC(reg.a[src], 2); throw; }
-            catch (const BusError &e) { if (S == Long && e.upperWord) U32_INC(reg.a[src], 2); throw; }
-            POLL_IPL;
-            u32 an = reg.a[dst];
-            try { readOp<C, M, S, AE_INC_PC | AE_KEEP_A>(dst, &ea2, &data2); }
-            catch (const BusError &) { reg.a[dst] = an; throw; }   // MAME does not advance the destination register
+            readOp<C, M, S, AE_INC_PC>(dst, &ea2, &data2);
 
         } else {
 
-            readOp<C, M, S, AE_INC_PC>(src, &ea1, &data1);
+            // MAME advances the source register by 2 if the upper word of a long operand fails
+            try { readOp<C, M, S, AE_INC_PC>(src, &ea1, &data1); }
+            catch (const AddressError &) { if constexpr (S == Long) U32_INC(reg.a[src], 2); throw; }
+            catch (const BusError &e) { if (S == Long && e.upperWord) U32_INC(reg.a[src], 2); throw; }
             POLL_IPL;
-            readOp<C, M, S, AE_INC_PC>(dst, &ea2, &data2);
+
+            // MAME does not advance the destination register if the read fails
+            u32 an = reg.a[dst];
+            try { readOp<C, M, S, AE_INC_PC>(dst, &ea2, &data2); }
+            catch (...) { reg.a[dst] = an; throw; }
         }
 
         cmp<C, S>(data1, data2);
@@ -2485,9 +2474,9 @@ Moira::execCmpm(u16 opcode)
 
     } else if constexpr (C == Core::C68010) {
 
-        // The 68010 stacks the PC of the executing instruction. A failing read advances the source register by 2.
-        try { readOp<C, M, S, AE_KEEP_A>(src, &ea1, &data1); }
-        catch (const AddressError &) { U32_INC(reg.a[src], 2); throw; }
+        // The 68010 stacks the PC of the executing instruction. A failing long read advances the source register by 2.
+        try { readOp<C, M, S, 0>(src, &ea1, &data1); }
+        catch (const AddressError &) { if constexpr (S == Long) U32_INC(reg.a[src], 2); throw; }
         readOp<C, M, S, 0>(dst, &ea2, &data2);
         POLL_IPL;
 

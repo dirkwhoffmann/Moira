@@ -285,7 +285,7 @@ Moira::readOp(int n, u32 *ea, u32 *result)
             updateAnPD<M, S>(n);
 
             // Read from effective address
-            if constexpr (C == Core::C68010 && !(F & AE_KEEP_A)) {
+            if constexpr (C == Core::C68010) {
 
                 // Behavior of the 68010 as observed on real hardware (see Tests/Unit/StackFrameTests.cpp):
                 // A failing word read advances the (An)+ register, a failing long read leaves the -(An)
@@ -308,12 +308,12 @@ Moira::readOp(int n, u32 *ea, u32 *result)
                     *result = readM<C, M, S, F>(*ea);
                 }
 
-            } else if constexpr (compat == Compatibility::MAME && C == Core::C68000 && M == Mode::PI && S == Word && !(F & AE_KEEP_A)) {
+            } else if constexpr (compat == Compatibility::MAME && C == Core::C68000 && M == Mode::PI && S == Word) {
 
                 // MAME advances the register before the bus or address error is reported
                 try { *result = readM<C, M, S, F>(*ea); } catch (const AddressError &) { updateAnPI<M, S>(n); throw; } catch (const BusError &) { updateAnPI<M, S>(n); throw; }
 
-            } else if constexpr (compat == Compatibility::UAE && C == Core::C68000 && M == Mode::PI && S == Word && !(F & AE_KEEP_A)) {
+            } else if constexpr (compat == Compatibility::UAE && C == Core::C68000 && M == Mode::PI && S == Word) {
 
                 // UAE advances the register before a word read, but only a bus error leaves it advanced
                 try { *result = readM<C, M, S, F>(*ea); } catch (const BusError &) { updateAnPI<M, S>(n); throw; }
