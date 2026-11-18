@@ -763,81 +763,72 @@ Moira::execAddxEa(u16 opcode)
 
     u32 ea1, ea2, data1, data2, result;
 
-    if constexpr (S == Long) {
+    if constexpr (S == Long && C == Core::C68000) {
 
-        // MAME reads the lower word of a long operand first
-        // (The 68010 stacks the PC of the executing instruction)
-        constexpr Flags flags = C == Core::C68010 ? AE_INC_A : AE_INC_PC | AE_INC_A | REVERSE;
+        // The 68000 reads and writes the lower word of a long operand first
+        constexpr Flags flags = AE_INC_PC | AE_INC_A | REVERSE;
 
         // Checks whether a bus error was caused by the first access (the low word)
         auto lowWordFailed = [](const BusError &e, u32 ea) {
             return (e.stackFrame.addr & 0xFFFFFF) == ((ea + 2) & 0xFFFFFF);
         };
 
-        try {
-            readOp<C, M, S, flags>(src, &ea1, &data1);
-
-        } catch (const AddressError &exc) {
-
-            // Rectify stack frame (the 68010 has undone the decrement already)
-            if constexpr (C != Core::C68010) undoAnPD<M,S>(src);
-            throw exc;
-
-        } catch (const BusError &e) {
+        try { readOp<C, M, S, flags>(src, &ea1, &data1); }
+        catch (const AddressError &) { undoAnPD<M,S>(src); throw; }
+        catch (const BusError &e) {
 
             // MAME decrements An between the two word reads, UAE after both
-            if constexpr (C == Core::C68000) {
-                if (compat == Compatibility::UAE || lowWordFailed(e, ea1)) undoAnPD<M,S>(src);
-            }
+            if (compat == Compatibility::UAE || lowWordFailed(e, ea1)) undoAnPD<M,S>(src);
             throw;
         }
 
-        try {
-            readOp<C, M, S, flags|IMPL_DEC> (dst, &ea2, &data2);
+        try { readOp<C, M, S, flags|IMPL_DEC>(dst, &ea2, &data2); }
+        catch (const AddressError &) { undoAnPD<M,S>(dst); throw; }
+        catch (BusError &e) {
 
-        } catch (const AddressError &exc) {
+            // MAME decrements An between the two word reads, UAE after both
+            if (compat == Compatibility::UAE || lowWordFailed(e, ea2)) undoAnPD<M,S>(dst);
 
-            // Rectify stack frame (the 68010 has undone the decrement already)
-            if constexpr (C != Core::C68010) undoAnPD<M,S>(dst);
-            throw exc;
-
-        } catch (BusError &e) {
-
-            if constexpr (C == Core::C68000) {
-
-                // MAME decrements An between the two word reads, UAE after both
-                if (compat == Compatibility::UAE || lowWordFailed(e, ea2)) undoAnPD<M,S>(dst);
-
-                // If the high word fails, the low words have been added already
-                if (!lowWordFailed(e, ea2)) {
-                    addsub<C, I, Word>(data1 & 0xFFFF, readBuffer);
-                    rethrow<C>(e);
-                }
-            }
+            // If the high word fails, the low words have been added already
+            if (!lowWordFailed(e, ea2)) { addsub<C, I, Word>(data1 & 0xFFFF, readBuffer); rethrow<C>(e); }
             throw;
         }
 
-        [[maybe_unused]] u8 ccr = getCCR();
+        u8 ccr = getCCR();
         result = addsub<C, I, S>(data1, data2);
 
-        if constexpr (C == Core::C68000) {
-
-            // If the low word fails, the stacked flags are those of the low word addition
-            try { writeM<C, M, Word, POLL | AE_INC_PC>(ea2 + 2, result & 0xFFFF); }
-            catch (BusError &e) { setCCR(ccr); addsub<C, I, Word>(data1 & 0xFFFF, data2 & 0xFFFF); rethrow<C>(e); }
-            looping<I>() ? noPrefetch<C>() : fetchIrc<C>();
-            writeM<C, M, Word, COMMITC>(ea2, result >> 16);
-
-        } else if constexpr (C == Core::C68010) {
-
-            writeM<C, M, S, REVERSE>(ea2, result);   // The low word is written first
-            looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>();
-
-        } else {
-
-            looping<I>() ? noPrefetch<C>() : fetchIrc<C>();
-            writeM<C, M, S, COMMITC>(ea2, result);
+        // If the low word fails, the stacked flags are those of the low word addition
+        try { writeM<C, M, Word, POLL | AE_INC_PC>(ea2 + 2, result & 0xFFFF); }
+        catch (BusError &e) {
+            
+            setCCR(ccr);
+            addsub<C, I, Word>(data1 & 0xFFFF, data2 & 0xFFFF);
+            rethrow<C>(e);
         }
+        
+        looping<I>() ? noPrefetch<C>() : fetchIrc<C>();
+        writeM<C, M, Word, COMMITC>(ea2, result >> 16);
+
+    } else if constexpr (S == Long && C == Core::C68010) {
+
+        // The 68010 stacks the PC of the executing instruction and has undone the decrement already
+        readOp<C, M, S, AE_INC_A>(src, &ea1, &data1);
+        readOp<C, M, S, AE_INC_A|IMPL_DEC>(dst, &ea2, &data2);
+
+        result = addsub<C, I, S>(data1, data2);
+
+        writeM<C, M, S, REVERSE>(ea2, result);   // The low word is written first
+        looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>();
+
+    } else if constexpr (S == Long && C == Core::C68020) {
+
+        readOp<C, M, S>(src, &ea1, &data1);
+        readOp<C, M, S, IMPL_DEC>(dst, &ea2, &data2);
+
+        result = addsub<C, I, S>(data1, data2);
+
+        looping<I>() ? noPrefetch<C>() : fetchIrc<C>();
+        writeM<C, M, S, COMMITC>(ea2, result);
 
     } else {
 
