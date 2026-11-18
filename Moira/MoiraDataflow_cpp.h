@@ -1242,21 +1242,21 @@ Moira::fullPrefetchAt(u32 newpc)
     fullPrefetchAt<C, F>(newpc, reg.pc);
 }
 
+template <Core C> void
+Moira::fetchFirstAt(u32 newpc, u32 framePc)
+{
+    reg.pc = newpc;
+    iCache.flushLatch();
+
+    try { queue.irc = readInstr<C>(reg.pc); }
+    catch (BusError &e) { if constexpr (C == Core::C68000) e.stackFrame.pc = framePc; throw; }
+}
+
 template <Core C, Flags F> void
 Moira::fullPrefetchAt(u32 newpc, u32 framePc)
 {
-    reg.pc = newpc;
-
-    if constexpr (C == Core::C68000) {
-
-        iCache.flushLatch();
-        try { queue.irc = readInstr<C>(reg.pc); } catch (BusError &e) { e.stackFrame.pc = framePc; throw; }
-        prefetch<C, F>();
-
-    } else {
-
-        fullPrefetch<C, F>();
-    }
+    fetchFirstAt<C>(newpc, framePc);
+    prefetch<C, F>();
 }
 
 template <Core C, Flags F, int delay> void

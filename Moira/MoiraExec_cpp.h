@@ -2533,13 +2533,9 @@ Moira::execDbcc(u16 opcode)
                 if constexpr (C == Core::C68000 || compat == Compatibility::UAE) {
 
                     // MAME decrements the counter after the first fetch at the branch target
-                    reg.pc += 2;
-                    try { fullPrefetchAt<C, POLL>(newpc); }
-                    catch (BusError &e) {
-                        if ((e.stackFrame.addr & 0xFFFFFF) != (newpc & 0xFFFFFF)) writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
-                        throw;
-                    }
+                    fetchFirstAt<C>(newpc, reg.pc + 2);
                     writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+                    prefetch<C, POLL>();
 
                 } else {
 
