@@ -768,17 +768,12 @@ Moira::execAddxEa(u16 opcode)
         // The 68000 reads and writes the lower word of a long operand first
         constexpr Flags flags = AE_INC_PC | AE_INC_A | REVERSE;
 
-        // Checks whether a bus error was caused by the first access (the low word)
-        auto lowWordFailed = [](const BusError &e, u32 ea) {
-            return (e.stackFrame.addr & 0xFFFFFF) == ((ea + 2) & 0xFFFFFF);
-        };
-
         try { readOp<C, M, S, flags>(src, &ea1, &data1); }
         catch (const AddressError &) { undoAnPD<M,S>(src); throw; }
         catch (const BusError &e) {
 
             // MAME decrements An between the two word reads, UAE after both
-            if (compat == Compatibility::UAE || lowWordFailed(e, ea1)) undoAnPD<M,S>(src);
+            if (compat == Compatibility::UAE || !e.upperWord) undoAnPD<M,S>(src);
             throw;
         }
 
@@ -787,10 +782,10 @@ Moira::execAddxEa(u16 opcode)
         catch (BusError &e) {
 
             // MAME decrements An between the two word reads, UAE after both
-            if (compat == Compatibility::UAE || lowWordFailed(e, ea2)) undoAnPD<M,S>(dst);
+            if (compat == Compatibility::UAE || !e.upperWord) undoAnPD<M,S>(dst);
 
             // If the high word fails, the low words have been added already
-            if (!lowWordFailed(e, ea2)) { addsub<C, I, Word>(data1 & 0xFFFF, readBuffer); rethrow<C>(e); }
+            if (e.upperWord) { addsub<C, I, Word>(data1 & 0xFFFF, readBuffer); rethrow<C>(e); }
             throw;
         }
 
@@ -2457,7 +2452,7 @@ Moira::execCmpm(u16 opcode)
             try { readOp<C, M, S, AE_INC_PC | AE_KEEP_A>(src, &ea1, &data1); }
             catch (const AddressError &) { reg.a[src] = anSrc; throw; }
             catch (const BusError &e) {
-                if (S == Long && (e.stackFrame.addr & 0xFFFFFF) == ((anSrc + 2) & 0xFFFFFF)) inc = 4;
+                if (S == Long && !e.upperWord) inc = 4;
                 U32_INC(reg.a[src], inc);
                 throw;
             }
@@ -2472,7 +2467,7 @@ Moira::execCmpm(u16 opcode)
             // MAME advances the source register by 2 if the source read fails, but not the destination register
             try { readOp<C, M, S, AE_INC_PC | AE_KEEP_A>(src, &ea1, &data1); }
             catch (const AddressError &) { U32_INC(reg.a[src], 2); throw; }
-            catch (const BusError &e) { if (S == Long && (e.stackFrame.addr & 0xFFFFFF) == (reg.a[src] & 0xFFFFFF)) U32_INC(reg.a[src], 2); throw; }
+            catch (const BusError &e) { if (S == Long && e.upperWord) U32_INC(reg.a[src], 2); throw; }
             POLL_IPL;
             u32 an = reg.a[dst];
             try { readOp<C, M, S, AE_INC_PC | AE_KEEP_A>(dst, &ea2, &data2); }

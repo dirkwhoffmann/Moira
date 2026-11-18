@@ -739,6 +739,9 @@ struct BusError : public std::exception {
     /// Indicates whether the stack frame has been supplied by the host. Moira never modifies such a frame.
     bool custom = false;
 
+    /// Indicates which half of a word-split long access has failed (true = upper word at ea, false = lower word at ea + 2)
+    bool upperWord = false;
+
     /// Creates a bus error with a complete stack frame (supplied by the host unless 'custom' is false)
     BusError(const StackFrame frame, bool custom = true) { stackFrame = frame; this->custom = custom; }
 

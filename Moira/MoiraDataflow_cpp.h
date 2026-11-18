@@ -324,7 +324,7 @@ Moira::readOp(int n, u32 *ea, u32 *result)
                 // is advanced between the two word accesses.
                 try { *result = readM<C, M, S, F>(*ea); }
                 catch (const BusError &e) {
-                    if (S != Long || (e.stackFrame.addr & 0xFFFFFF) == ((*ea + 2) & 0xFFFFFF)) updateAnPI<M, S>(n);
+                    if (S != Long || !e.upperWord) updateAnPI<M, S>(n);
                     throw;
                 }
 
@@ -524,18 +524,20 @@ Moira::read2x16(u32 lo, u32 hi)
     if constexpr ((F & REVERSE) && EXACT_68000) {
 
         // MAME reads the lower word first (the read buffer keeps it in case the upper word fails)
-        u32 result = readBuffer = read16(hi);
+        u32 result;
+        try { result = readBuffer = read16(hi); } catch (BusError &e) { e.upperWord = false; throw; }
         SYNC(4);
         if constexpr (F & POLL) POLL_IPL;
-        result |= read16(lo) << 16;
+        try { result |= read16(lo) << 16; } catch (BusError &e) { e.upperWord = true; throw; }
         SYNC(2);
         return result;
     }
 
-    u32 result = read16(lo) << 16;
+    u32 result;
+    try { result = read16(lo) << 16; } catch (BusError &e) { e.upperWord = true; throw; }
     SYNC(4);
     if constexpr (F & POLL) POLL_IPL;
-    result |= read16(hi);
+    try { result |= read16(hi); } catch (BusError &e) { e.upperWord = false; throw; }
     SYNC(2);
     return result;
 }
@@ -545,20 +547,20 @@ Moira::write2x16(u32 lo, u32 hi, u32 valHi, u32 valLo)
 {
     if constexpr ((F & REVERSE) && C != Core::C68020) {
 
-        write16(hi, u16(valLo));
+        try { write16(hi, u16(valLo)); } catch (BusError &e) { e.upperWord = false; throw; }
         SYNC(4);
         if constexpr (F & POLL) POLL_IPL;
         if constexpr (F & COMMIT_IRD) commitIrd<C>();
-        write16(lo, u16(valHi));
+        try { write16(lo, u16(valHi)); } catch (BusError &e) { e.upperWord = true; throw; }
         SYNC(2);
 
     } else {
 
-        write16(lo, u16(valHi));
+        try { write16(lo, u16(valHi)); } catch (BusError &e) { e.upperWord = true; throw; }
         SYNC(4);
         if constexpr (F & POLL) POLL_IPL;
         if constexpr (F & COMMIT_IRD) commitIrd<C>();
-        write16(hi, u16(valLo));
+        try { write16(hi, u16(valLo)); } catch (BusError &e) { e.upperWord = false; throw; }
         SYNC(2);
     }
 }
@@ -712,7 +714,7 @@ Moira::read(u32 addr)
 
         // Let Moira complete the stack frame if the host signals a bus error
         try { return readBus<C, S, F>(addr); }
-        catch (BusError &e) { if (!e.complete) e = BusError(makeFrame<F & ~(AE_INC_A | AE_DEC_A)>(e.stackFrame.addr), false); throw; }
+        catch (BusError &e) { if (!e.complete) { e.stackFrame = makeFrame<F & ~(AE_INC_A | AE_DEC_A)>(e.stackFrame.addr); e.complete = true; } throw; }
 
     } else {
 
@@ -849,7 +851,7 @@ Moira::readInstr(u32 addr)
                 SYNC(2);
                 return result;
             } catch (BusError &e) {
-                if (!e.complete) e = BusError(makeFrame<F & ~(AE_INC_A | AE_DEC_A)>(e.stackFrame.addr), false);
+                if (!e.complete) { e.stackFrame = makeFrame<F & ~(AE_INC_A | AE_DEC_A)>(e.stackFrame.addr); e.complete = true; }
                 throw;
             }
 
@@ -895,7 +897,7 @@ Moira::write(u32 addr, u32 val)
 
         // Let Moira complete the stack frame if the host signals a bus error
         try { writeBus<C, S, F>(addr, val); }
-        catch (BusError &e) { if (!e.complete) e = BusError(makeFrame<(F & ~(AE_INC_A | AE_DEC_A)) | AE_WRITE>(e.stackFrame.addr), false); throw; }
+        catch (BusError &e) { if (!e.complete) { e.stackFrame = makeFrame<(F & ~(AE_INC_A | AE_DEC_A)) | AE_WRITE>(e.stackFrame.addr); e.complete = true; } throw; }
 
     } else {
 
