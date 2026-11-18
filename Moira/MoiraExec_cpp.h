@@ -1025,22 +1025,12 @@ Moira::execAndiccr(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        u32 src;
-        if constexpr (C == Core::C68000) {
-
-            // MAME does not decrement the stacked PC if the refill fails
-            src = readI<C, S>();
-
-        } else {
-
-            src = readI<C, S>();
-        }
+        u32 src = readI<C, S>();
         u8  dst = getCCR();
         setCCR(u8(logic<C, I, S>(src, dst)));
+        
         SYNC(8);
-        // MAME reads the word at the current PC from program space
-        if constexpr (C == Core::C68000) { (void)read<C, AddrSpace::PROG, Word>(reg.pc); }
-        else { (void)read<C, AddrSpace::DATA, Word>(reg.pc + 2); }
+        (void)read<C, AddrSpace::PROG, Word>(reg.pc);
 
     } else {
 
@@ -1069,16 +1059,7 @@ Moira::execAndisr(u16 opcode)
     // Trace on change of flow: T0 is sampled before the status register changes
     changeOfFlow<C>();
 
-    u32 src;
-    if constexpr (C == Core::C68000) {
-
-        // MAME does not decrement the stacked PC if the refill fails
-        src = readI<C, S>();
-
-    } else {
-
-        src = readI<C, S>();
-    }
+    u32 src = readI<C, S>();
     u16 dst = getSR();
 
     SYNC_68000(8);
