@@ -1068,9 +1068,12 @@ Moira::execAndisr(u16 opcode)
     u32 result = logic<C, I, S>(src, dst);
     setSR((u16)result);
 
-    // MAME reads the word at the current PC from program space
-    if constexpr (C == Core::C68000) { (void)read<C, AddrSpace::PROG, Word>(reg.pc); }
-    else { (void)read<C, AddrSpace::DATA, Word>(reg.pc + 2); }
+    if constexpr (C == Core::C68000) {
+        (void)read<C, AddrSpace::PROG, Word>(reg.pc);
+    } else {
+        (void)read<C, AddrSpace::DATA, Word>(reg.pc + 2);
+    }
+    
     prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -1098,10 +1101,7 @@ Moira::execBra(u16 opcode)
 
     u32 newpc = U32_ADD(oldpc, SEXT<S>(disp));
 
-    // Check for address error
-    if (misalignedPC<C>(newpc)) {
-        throw earlyAddressError<C>(makeFrame<AE_FETCH>(newpc));
-    }
+    checkEvenPC<C, AE_FETCH>(newpc);
 
     fullPrefetchAt<C, POLL>(newpc);
 
@@ -1135,10 +1135,7 @@ Moira::execBcc(u16 opcode)
 
         u32 newpc = U32_ADD(oldpc, SEXT<S>(disp));
 
-        // Check for address error
-        if (misalignedPC<C>(newpc)) {
-            throw earlyAddressError<C>(makeFrame<AE_FETCH>(newpc));
-        }
+        checkEvenPC<C, AE_FETCH>(newpc);
 
         // Take branch
         fullPrefetchAt<C, POLL>(newpc);
@@ -1636,14 +1633,11 @@ Moira::execBsr(u16 opcode)
             throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(reg.sp));
         }
         if (misalignedPC<C>(newpc)) {
-            if constexpr (C == Core::C68000) {
 
-                // MAME pushes the return address before it detects the misaligned target
-                push<C, Long>(retpc);
-                reg.pc = newpc;
-                throw earlyAddressError<C>(makeFrame<AE_PROG>(newpc));
-            }
-            throw earlyAddressError<C>(makeFrame<AE_FETCH>(newpc));
+            // MAME pushes the return address before it detects the misaligned target
+            push<C, Long>(retpc);
+            reg.pc = newpc;
+            throw earlyAddressError<C>(makeFrame<AE_PROG>(newpc));
         }
 
         // Save return address on stack
@@ -2872,9 +2866,7 @@ Moira::execJsr(u16 opcode)
                 if constexpr (compat == Compatibility::MAME) throw earlyAddressError<C>(makeFrame<AE_FETCH>(ea));
                 throw earlyAddressError<C>(makeFrame<AE_DEC_PC>(ea));
             }
-            if (misaligned<C>(ea)) {
-                throw earlyAddressError<C>(makeFrame<AE_FETCH>(ea));
-            }
+            checkEven<C, Word, AE_FETCH>(ea);
 
             if constexpr (compat == Compatibility::UAE || C == Core::C68000) {
 
@@ -2943,12 +2935,7 @@ Moira::execJsr(u16 opcode)
 
                 // UAE makes room for the return address on the stack (but does not write it)
                 if constexpr (C == Core::C68020) reg.sp -= 4;
-
-                if (isDspMode(M)) {
-                    throw earlyAddressError<C>(makeFrame<AE_FETCH>(ea));
-                } else {
-                    throw earlyAddressError<C>(makeFrame<AE_FETCH>(ea));
-                }
+                throw earlyAddressError<C>(makeFrame<AE_FETCH>(ea));
             }
 
             if (misaligned<C>(reg.sp)) {
@@ -3069,8 +3056,7 @@ Moira::execLink(u16 opcode)
 
         writeBuffer = u16(readA(ax) >> 16);
         writeA(ax, sp);
-        if constexpr (C == Core::C68000) throw earlyAddressError<C>(makeFrame<AE_DATA|AE_WRITE|AE_INC_PC>(sp));
-        throw AddressError(makeFrame<AE_DATA|AE_WRITE|AE_INC_PC>(sp));
+        throw earlyAddressError<C>(makeFrame<AE_DATA|AE_WRITE|AE_INC_PC>(sp));
     }
 
     POLL_IPL;
@@ -3754,8 +3740,7 @@ Moira::execMove8(u16 opcode)
                 reg.sr.c = 0;
             }
 
-            // Check for address error
-            if (misaligned<C, S>(ea2)) throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(ea2));
+            checkEven<C, S, AE_WRITE|AE_DATA>(ea2);
 
             if constexpr (S == Long) {
 
@@ -3776,7 +3761,7 @@ Moira::execMove8(u16 opcode)
             readExt<C>();
             ea2 |= queue.irc;
 
-            if (misaligned<C, S>(ea2)) throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(ea2));
+            checkEven<C, S, AE_WRITE|AE_DATA>(ea2);
             writeM<C, Mode::AL, S>(ea2, data);
         }
         reg.sr.n = NBIT<S>(data);
@@ -6207,10 +6192,7 @@ Moira::execRte(u16 opcode)
 
     setSR(newsr);
 
-    // Check for address error
-    if (misalignedPC<C>(newpc)) {
-        throw earlyAddressError<C>(makeFrame<AE_PROG>(newpc));
-    }
+    checkEvenPC<C, AE_PROG>(newpc);
 
     if constexpr (C == Core::C68000) {
 
@@ -6292,10 +6274,7 @@ Moira::execRtr(u16 opcode)
 
     setCCR((u8)newccr);
 
-    // Check for address error
-    if (misalignedPC<C>(newpc)) {
-        throw earlyAddressError<C>(makeFrame<AE_PROG>(newpc));
-    }
+    checkEvenPC<C, AE_PROG>(newpc);
 
     if constexpr (C == Core::C68000) {
 
@@ -6341,10 +6320,7 @@ Moira::execRts(u16 opcode)
     newpc = readM<C, M, Long, UAE_DEC_PC>(reg.sp);
     reg.sp += 4;
 
-    // Check for address error
-    if (misalignedPC<C>(newpc)) {
-        throw earlyAddressError<C>(makeFrame<AE_PROG>(newpc));
-    }
+    checkEvenPC<C, AE_PROG>(newpc);
 
     if constexpr (C == Core::C68000) {
 
@@ -6768,10 +6744,7 @@ Moira::execUnlk(u16 opcode)
 
     int an = _____________xxx(opcode);
 
-    // Check for address error
-    if (misaligned<C>(readA(an))) {
-        throw earlyAddressError<C>(makeFrame<AE_DATA|AE_INC_PC>(readA(an)));
-    }
+    checkEven<C, Word, AE_DATA|AE_INC_PC>(readA(an));
 
     // Move address register to stack pointer
     [[maybe_unused]] u32 oldsp = reg.sp;

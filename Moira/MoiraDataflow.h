@@ -168,6 +168,10 @@ template <Flags F = 0> StackFrame makeFrame(u32 addr);
 // Creates an address error that is raised before the bus cycle has started
 template <Core C> AddressError earlyAddressError(const StackFrame &frame);
 
+// Raises an early address error with a frame of type F if the provided address is misaligned
+template <Core C, Size S = Word, Flags F = 0> void checkEven(u32 addr);
+template <Core C, Flags F = 0> void checkEvenPC(u32 addr);
+
 // Prefetches the next instruction
 template <Core C, Flags F = 0> void prefetch();
 

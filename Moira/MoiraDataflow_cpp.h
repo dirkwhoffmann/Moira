@@ -1180,6 +1180,18 @@ Moira::earlyAddressError(const StackFrame &frame)
     return AddressError(frame);
 }
 
+template <Core C, Size S, Flags F> void
+Moira::checkEven(u32 addr)
+{
+    if (misaligned<C, S>(addr)) throw earlyAddressError<C>(makeFrame<F>(addr));
+}
+
+template <Core C, Flags F> void
+Moira::checkEvenPC(u32 addr)
+{
+    if (misalignedPC<C>(addr)) throw earlyAddressError<C>(makeFrame<F>(addr));
+}
+
 template <Core C, Flags F> void
 Moira::prefetch()
 {
