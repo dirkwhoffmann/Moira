@@ -187,6 +187,7 @@ template <Core C, Flags F = 0, int delay = 0> void fullPrefetch();
 
 // Jumps to a new address. MAME stacks the old PC if the first fetch fails.
 template <Core C, Flags F = 0> void fullPrefetchAt(u32 newpc);
+template <Core C, Flags F = 0> void fullPrefetchAt(u32 newpc, u32 framePc);   // A failing first fetch stacks framePc (68000)
 
 // prefetch replacement if loop mode is active
 template <Core C> void noPrefetch(int delay = 0);

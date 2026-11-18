@@ -1238,20 +1238,23 @@ Moira::prefetchLate()
 template <Core C, Flags F> void
 Moira::fullPrefetchAt(u32 newpc)
 {
+    // MAME stacks the old program counter if the first fetch fails
+    fullPrefetchAt<C, F>(newpc, reg.pc);
+}
+
+template <Core C, Flags F> void
+Moira::fullPrefetchAt(u32 newpc, u32 framePc)
+{
+    reg.pc = newpc;
+
     if constexpr (C == Core::C68000) {
 
-        u32 oldpc = reg.pc;
-        reg.pc = newpc;
-
-        try { fullPrefetch<C, F>(); }
-        catch (BusError &e) {
-            if ((e.stackFrame.addr & 0xFFFFFF) == (newpc & 0xFFFFFF)) e.stackFrame.pc = oldpc;
-            throw;
-        }
+        iCache.flushLatch();
+        try { queue.irc = readInstr<C>(reg.pc); } catch (BusError &e) { e.stackFrame.pc = framePc; throw; }
+        prefetch<C, F>();
 
     } else {
 
-        reg.pc = newpc;
         fullPrefetch<C, F>();
     }
 }

@@ -2819,16 +2819,8 @@ Moira::execJmp(u16 opcode)
     }
 
     // Jump to new address
-    if constexpr (C == Core::C68000) {
-        try { fullPrefetchAt<C, POLL>(ea); }
-        catch (BusError &e) {
-            // A fault on the first fetch stacks the address of the extension word
-            if ((e.stackFrame.addr & 0xFFFFFF) == (ea & 0xFFFFFF)) e.stackFrame.pc = reg.pc0 + 2;
-            throw;
-        }
-    } else {
-        fullPrefetchAt<C, POLL>(ea);
-    }
+    // A fault on the first fetch stacks the address of the extension word
+    fullPrefetchAt<C, POLL>(ea, reg.pc0 + 2);
 
     changeOfFlow<C>();
 
@@ -2971,14 +2963,11 @@ Moira::execLea(u16 opcode)
     if constexpr (C == Core::C68000 && M == Mode::AL) {
 
         // MAME loads the high word into the register first, then the complete address
-        u16 hi = queue.irc;
-        u32 pc0 = reg.pc;
-        try { reg.a[dst] = computeEA<C, M, S>(src); }
-        catch (BusError &e) {
-            if ((e.stackFrame.addr & 0xFFFFFF) == ((pc0 + 2) & 0xFFFFFF)) reg.a[dst] = (u32)hi << 16 | (reg.a[dst] & 0xFFFF);
-            else                                                           reg.a[dst] = (u32)hi << 16 | queue.irc;
-            throw;
-        }
+        u32 ea = (u32)queue.irc << 16;
+        try { readExt<C>(); } catch (BusError &) { reg.a[dst] = ea | (reg.a[dst] & 0xFFFF); throw; }
+        ea |= queue.irc;
+        try { readExtLast<C>(); } catch (BusError &) { reg.a[dst] = ea; throw; }
+        reg.a[dst] = ea;
 
     } else if constexpr (C == Core::C68000 && (M == Mode::AW || M == Mode::DI || M == Mode::DIPC)) {
 
@@ -4150,12 +4139,17 @@ Moira::execMovemRgEa(u16 opcode)
         if constexpr (C == Core::C68000) {
 
             // MAME stacks the address behind the faulting fetch
-            [[maybe_unused]] u32 pc0 = reg.pc;
-            try { ea = computeEA<C, M, S>(dst); }
-            catch (BusError &e) {
-                if constexpr (M == Mode::AL) e.stackFrame.pc += ((e.stackFrame.addr & 0xFFFFFF) == ((pc0 + 2) & 0xFFFFFF)) ? 0 : 2;
-                else e.stackFrame.pc += (M == Mode::AW) ? 2 : 4;
-                throw;
+            if constexpr (M == Mode::AL) {
+
+                ea = (u32)queue.irc << 16;
+                readExt<C>();
+                ea |= queue.irc;
+                try { readExtLast<C>(); } catch (BusError &e) { e.stackFrame.pc += 2; throw; }
+
+            } else {
+
+                try { ea = computeEA<C, M, S>(dst); }
+                catch (BusError &e) { e.stackFrame.pc += (M == Mode::AW) ? 2 : 4; throw; }
             }
 
         } else {
@@ -6184,20 +6178,8 @@ Moira::execRte(u16 opcode)
 
     checkEvenPC<C, AE_PROG>(newpc);
 
-    if constexpr (C == Core::C68000) {
-
-        // A fault on the first fetch stacks the address of the following word
-        try { fullPrefetchAt<C, POLL>(newpc); }
-        catch (BusError &e) {
-            if ((e.stackFrame.addr & 0xFFFFFF) == (newpc & 0xFFFFFF)) e.stackFrame.pc = reg.pc0 + 2;
-            throw;
-        }
-
-    } else {
-
-        reg.pc = newpc;
-        fullPrefetch<C, POLL>();
-    }
+    // A fault on the first fetch stacks the address of the following word
+    fullPrefetchAt<C, POLL>(newpc, reg.pc0 + 2);
 
     // The trace bits are sampled at the start of the instruction (not the ones that RTE loads)
     if (t0AtStart) flags |= State::TRACE_EXC;
@@ -6266,18 +6248,8 @@ Moira::execRtr(u16 opcode)
 
     checkEvenPC<C, AE_PROG>(newpc);
 
-    if constexpr (C == Core::C68000) {
-
-        // MAME stacks the old PC if the first fetch at the return address fails
-        u32 oldpc = reg.pc;
-        reg.pc = newpc;
-        try { fullPrefetch<C, POLL>(); } catch (BusError &e) { if ((e.stackFrame.addr & 0xFFFFFF) == (newpc & 0xFFFFFF)) e.stackFrame.pc = oldpc; throw; }
-
-    } else {
-
-        reg.pc = newpc;
-        fullPrefetch<C, POLL>();
-    }
+    // MAME stacks the old PC if the first fetch at the return address fails
+    fullPrefetchAt<C, POLL>(newpc);
 
     changeOfFlow<C>();
 
@@ -6312,18 +6284,8 @@ Moira::execRts(u16 opcode)
 
     checkEvenPC<C, AE_PROG>(newpc);
 
-    if constexpr (C == Core::C68000) {
-
-        // MAME stacks the old PC if the first fetch at the return address fails
-        u32 oldpc = reg.pc;
-        reg.pc = newpc;
-        try { fullPrefetch<C, POLL>(); } catch (BusError &e) { if ((e.stackFrame.addr & 0xFFFFFF) == (newpc & 0xFFFFFF)) e.stackFrame.pc = oldpc; throw; }
-
-    } else {
-
-        reg.pc = newpc;
-        fullPrefetch<C, POLL>();
-    }
+    // MAME stacks the old PC if the first fetch at the return address fails
+    fullPrefetchAt<C, POLL>(newpc);
 
     changeOfFlow<C>();
 
