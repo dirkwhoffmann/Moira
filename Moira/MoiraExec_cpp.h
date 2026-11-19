@@ -1810,7 +1810,7 @@ Moira::execChk(u16 opcode)
 
     SYNC_68000(6);
 
-    if ((compat == Compatibility::MUSASHI)) {
+    if constexpr (compat == Compatibility::MUSASHI) {
 
         reg.sr.z = ZERO<S>(dy);
         reg.sr.v = 0;
@@ -1822,65 +1822,31 @@ Moira::execChk(u16 opcode)
         setUndefinedCHK<C, S>(SEXT<S>(data), SEXT<S>(dy));
     }
 
-   
     bool above = SEXT<S>(dy) > SEXT<S>(data);
-    
+    bool below = SEXT<S>(dy) < 0;
+
     if constexpr (compat == Compatibility::MAME) {
-        
+
         // MAME additionally takes the branch if the difference of both operands has a
         // negative sign, which includes the case where an arithmetic overflow occurs
-        
         above |= S == Word && (i16)(data - dy) < 0;
     }
 
-    if (above) {
+    if (above || below) {
 
-        switch (C) {
+        if constexpr (C == Core::C68010) {
 
-            case Core::C68000:
-            case Core::C68020:
+            // The 68010 prefetches before it traps. The stacked PC is the address of the next instruction.
+            prefetch<C, POLL>();
+            SYNC(above ? 4 : 6);
+            reg.pc -= 2;
 
-                SYNC((compat == Compatibility::MUSASHI) ? 10 - (int)(clock - c) : 2);
-                break;
+        } else {
 
-            case Core::C68010:
-
-                prefetch<C, POLL>();
-                SYNC_68010(4);
-
-                // The stacked PC is the address of the next instruction, which the prefetch has moved on
-                reg.pc -= 2;
-                break;
+            SYNC((compat == Compatibility::MUSASHI) ? 10 - (int)(clock - c) : above ? 2 : 4);
         }
-        reg.sr.n = NBIT<S>(dy);
-        execException<C>(M68kException::CHK);
 
-
-        CYCLES_68000(40)
-        CYCLES_68010(44)
-        CYCLES_68020(40)
-        return;
-    }
-
-    if (SEXT<S>(dy) < 0) {
-
-        switch (C) {
-
-            case Core::C68000:
-            case Core::C68020:
-
-                SYNC((compat == Compatibility::MUSASHI) ? 10 - (int)(clock - c) : 4);
-                break;
-
-            case Core::C68010:
-
-                prefetch<C, POLL>();
-                SYNC_68010(6);
-
-                // The stacked PC is the address of the next instruction, which the prefetch has moved on
-                reg.pc -= 2;
-        }
-        reg.sr.n = (compat == Compatibility::MUSASHI) ? NBIT<S>(dy) : 1;
+        reg.sr.n = (above || compat == Compatibility::MUSASHI) ? NBIT<S>(dy) : 1;
         execException<C>(M68kException::CHK);
 
         CYCLES_68000(40)
