@@ -1541,7 +1541,7 @@ Moira::execBkpt(u16 opcode)
 {
     AVAILABILITY(Core::C68010)
 
-    if ((compat == Compatibility::MUSASHI)) {
+    if constexpr (compat == Compatibility::MUSASHI) {
 
         execException<C>(M68kException::ILLEGAL);
 
@@ -1767,7 +1767,7 @@ Moira::execCas2(u16 opcode)
         }
     }
 
-    if ((compat == Compatibility::MUSASHI)) {
+    if constexpr (compat == Compatibility::MUSASHI) {
 
         if (rn1 & 0x8) {
             writeD(dc1, SEXT<S>(data1));
@@ -1900,10 +1900,10 @@ Moira::execChkCmp2(u16 opcode)
     readOp<C, M, S>(src, &ea, &data1);
     data2 = readM<C, M, S>(ea + S);
 
-    if ((compat == Compatibility::MUSASHI)) {
+    if constexpr (compat == Compatibility::MUSASHI) {
 
-        auto bound1 = ((M == Mode(9) || M == Mode(10)) && S == Byte) ? (i32)data1 : SEXT<S>(data1);
-        auto bound2 = ((M == Mode(9) || M == Mode(10)) && S == Byte) ? (i32)data2 : SEXT<S>(data2);
+        auto bound1 = ((M == Mode::DIPC || M == Mode::IXPC) && S == Byte) ? (i32)data1 : SEXT<S>(data1);
+        auto bound2 = ((M == Mode::DIPC || M == Mode::IXPC) && S == Byte) ? (i32)data2 : SEXT<S>(data2);
         i32 compare = readR<S>(dst);
         if (dst < 8) compare = SEXT<S>(compare);
 
@@ -3912,8 +3912,9 @@ Moira::execMovemEaRg(u16 opcode)
         cnt++;
     }
 
-    // MAME updates the address register after the final (extra) read
-    if constexpr (M == Mode::PI && compat != Compatibility::MAME && !(compat == Compatibility::UAE && C == Core::C68000)) writeA(src, ea);
+    // MAME (and UAE on the 68000) update the address register after the final (extra) read
+    constexpr bool lateUpdate = compat == Compatibility::MAME || (compat == Compatibility::UAE && C == Core::C68000);
+    if constexpr (M == Mode::PI && !lateUpdate) writeA(src, ea);
 
     if constexpr (S == Word || C == Core::C68000) {
 
@@ -4196,7 +4197,6 @@ Moira::execMoves(u16 opcode)
         // Make the DFC register visible on the FC pins
         fcSource = 2;
 
-        // writeOp<C, M, S>(dst, value);
         try {
             writeM<C, M, S, AE_INC_PC>(ea, value);
         } catch (AddressError &exc) {
@@ -4223,8 +4223,6 @@ Moira::execMoves(u16 opcode)
         int src = _____________xxx(opcode);
         int dst = xxxx____________(arg);
 
-        // u32 ea, data;
-        // readOp<C, M, S, STD_AE_FRAME | SKIP_READ>(src, &ea, &data);
         u32 ea;
         try {
 
@@ -4327,13 +4325,14 @@ Moira::execMoveCcrEa(u16 opcode)
     }
 
     // UAE (68020) advances the register before it writes
-    if constexpr (compat == Compatibility::UAE && C == Core::C68020) updateAnPI<M, S>(dst);
+    constexpr bool earlyUpdate = compat == Compatibility::UAE && C == Core::C68020;
+    if constexpr (earlyUpdate) updateAnPI<M, S>(dst);
 
     // Write to effective address
     writeM<C, M, S, POLL>(ea, val);
 
     // Emulate (An)+ register modification
-    if constexpr (!(compat == Compatibility::UAE && C == Core::C68020)) updateAnPI<M, S>(dst);
+    if constexpr (!earlyUpdate) updateAnPI<M, S>(dst);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -4444,13 +4443,14 @@ Moira::execMoveSrEa(u16 opcode)
         }
 
         // UAE (68020) advances the register before it writes
-        if constexpr (compat == Compatibility::UAE && C == Core::C68020) updateAnPI<M, S>(dst);
+        constexpr bool earlyUpdate = compat == Compatibility::UAE && C == Core::C68020;
+        if constexpr (earlyUpdate) updateAnPI<M, S>(dst);
 
         // Write to effective address
         writeM<C, M, S, POLL>(ea, val);
 
         // Emulate (An)+ register modification
-        if constexpr (!(compat == Compatibility::UAE && C == Core::C68020)) updateAnPI<M, S>(dst);
+        if constexpr (!earlyUpdate) updateAnPI<M, S>(dst);
     }
 
     //           00  10  20        00  10  20        00  10  20
@@ -5503,7 +5503,7 @@ Moira::execPackPd(u16 opcode)
     int ax  = _____________xxx(opcode);
     int ay  = ____xxx_________(opcode);
 
-    if ((compat == Compatibility::MUSASHI)) {
+    if constexpr (compat == Compatibility::MUSASHI) {
 
         u32 ea1, data1;
         readOp<C, M, Byte>(ax, &ea1, &data1);
@@ -6117,7 +6117,6 @@ Moira::execSccEa(u16 opcode)
 
     } else {
 
-        // readOp<C, M, Byte, SKIP_READ>(dst, &ea, &data);
         ea = computeEA<C, M, S>(dst);
         updateAn<M, S>(dst);
 
@@ -6255,30 +6254,25 @@ Moira::execTasEa(u16 opcode)
 
         constexpr Flags tas = AE_INC_PC;
 
-        if constexpr (compat == Compatibility::MAME && !isRegMode(M)) {
+        try { readOp<C, M, Byte, tas>(dst, &ea, &data); } catch (BusError &e) {
 
-            // MAME completes a failed read like a failed write
-            try { readOp<C, M, Byte, tas>(dst, &ea, &data); } catch (BusError &e) {
-                
-                if ((e.stackFrame.fc & 3) != 2) {
+            // Only a failing read cycle is special (not a failing extension word fetch)
+            if ((e.stackFrame.fc & 3) != 2) {
+
+                if constexpr (compat == Compatibility::MAME) {
+
+                    // MAME completes a failed read like a failed write
                     e.stackFrame.code &= ~0x10;
                     e.stackFrame.sr = (e.stackFrame.sr & ~0x0F) | 0x04;    // N=0, Z=1, V=0, C=0
                     reg.sr.n = 0; reg.sr.z = 1; reg.sr.v = 0; reg.sr.c = 0;
                 }
-                throw;
+                if constexpr (compat == Compatibility::UAE && M != Mode::PD) {
+
+                    // UAE does not advance the stacked PC for a bus error in the read cycle
+                    e.stackFrame.pc -= (M == Mode::DI || M == Mode::IX) ? 4 : 2;
+                }
             }
-
-        } else if constexpr (compat == Compatibility::UAE && !isRegMode(M)) {
-
-            // UAE does not advance the stacked PC for a bus error in the read cycle
-            try { readOp<C, M, Byte, tas>(dst, &ea, &data); } catch (BusError &e) {
-                if ((e.stackFrame.fc & 3) != 2 && M != Mode::PD) e.stackFrame.pc -= (M == Mode::DI || M == Mode::IX) ? 4 : 2;
-                throw;
-            }
-
-        } else {
-
-            readOp<C, M, Byte, tas>(dst, &ea, &data);
+            throw;
         }
 
         reg.sr.n = NBIT<Byte>(data);
@@ -6351,26 +6345,25 @@ Moira::execTrapv(u16 opcode)
 
     if (reg.sr.v) {
 
-        if constexpr (C == Core::C68000) {
+        // In MAME, the word is read in supervisor mode (UAE reads in the current mode)
+        bool s = reg.sr.s;
+        if constexpr (C == Core::C68000 && compat == Compatibility::MAME) reg.sr.s = true;
 
-            // In MAME, the word is read in supervisor mode. A bus error at this point
-            // is raised after the exception has already been entered.
-            bool s = reg.sr.s;
-            if constexpr (compat == Compatibility::MAME) reg.sr.s = true;   // UAE reads in the current mode
-            try { (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2); } catch (BusError &e) {
+        try { (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2); } catch (BusError &e) {
+
+            // On the 68000, a bus error at this point is raised after the exception has already been entered
+            if constexpr (C == Core::C68000) {
+
                 reg.sr.s = s;
                 setSupervisorMode(true);
                 clearTraceFlags();
                 e.stackFrame.sr = (e.stackFrame.sr | 0x2000) & ~0x8000;   // Stacked with S set and T cleared
                 if constexpr (compat == Compatibility::UAE) e.stackFrame.code = (e.stackFrame.code & ~7) | 6;   // Supervisor program space
-                throw;
             }
-            reg.sr.s = s;
-
-        } else {
-            (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
-            SYNC(2);
+            throw;
         }
+        reg.sr.s = s;
+        if constexpr (C != Core::C68000) SYNC(2);
         execException<C>(M68kException::TRAPV);
 
         //           00  10  20        00  10  20        00  10  20
@@ -6465,21 +6458,16 @@ Moira::execUnlk(u16 opcode)
     checkEven<C, Word, AE_DATA|AE_INC_PC>(readA(an));
 
     // Move address register to stack pointer
-    [[maybe_unused]] u32 oldsp = reg.sp;
+    u32 oldsp = reg.sp;
     reg.sp = readA(an);
 
     // Update address register
     u32 ea, data;
-    if constexpr (C == Core::C68000 || (compat == Compatibility::UAE && C == Core::C68020)) {
+    try { readOp<C, Mode::AI, Long, AE_DATA|AE_INC_PC|POLL>(7, &ea, &data); } catch (BusError &) {
 
         // MAME and UAE leave the stack pointer alone if the read fails
-        try { readOp<C, Mode::AI, Long, AE_DATA|AE_INC_PC|POLL>(7, &ea, &data); } catch (BusError &) {
-            reg.sp = oldsp; throw;
-        }
-
-    } else {
-
-        readOp<C, Mode::AI, Long, AE_DATA|AE_INC_PC|POLL>(7, &ea, &data);
+        if constexpr (C == Core::C68000 || (compat == Compatibility::UAE && C == Core::C68020)) reg.sp = oldsp;
+        throw;
     }
     writeA(an, data);
 
@@ -6530,12 +6518,12 @@ Moira::execUnpkPd(u16 opcode)
     u16 adj = (u16)readI<C, Word>();
     u32 dst = ((data << 4 & 0x0F00) | (data & 0x000F)) + adj;
 
-    if ((compat == Compatibility::MUSASHI)) {
+    if constexpr (compat == Compatibility::MUSASHI) {
 
         writeOp<C, M, Byte>(ay, READ<Byte, 1>(dst));
         writeOp<C, M, Byte>(ay, dst);
 
-    } else if constexpr ((compat == Compatibility::UAE)) {
+    } else if constexpr (compat == Compatibility::UAE) {
 
         // UAE writes the result as a single (possibly misaligned) word
         reg.a[ay] -= 2;
