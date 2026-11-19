@@ -5660,92 +5660,75 @@ Moira::execPea(u16 opcode)
 
     if (isIdxMode(M)) SYNC(2);
 
-    // Check for address error
-    if (misaligned<C>(reg.sp)) {
+    if constexpr (C == Core::C68000) {
 
-        U32_DEC(reg.sp, S);
-
-        if constexpr (C == Core::C68000) {
+        if (misaligned<C>(reg.sp)) {
 
             // MAME completes the prefetch before it detects the misaligned push
-            if (isAbsMode(M)) {
-                throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(reg.sp));
-            } else {
-                fetchIrc<C>();
-                throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(reg.sp));
-            }
-
-        } else if constexpr (C == Core::C68000) {
-
-            if (isAbsMode(M)) {
-                throw AddressError(makeFrame<AE_WRITE|AE_DATA>(reg.sp));
-            } else {
-                throw AddressError(makeFrame<AE_WRITE|AE_DATA|AE_INC_PC>(reg.sp));
-            }
-
-        } else if constexpr (C == Core::C68010) {
-
-            // The 68010 completes the prefetch in all modes (even the absolute ones) and
-            // stacks the address of the instruction plus two (recorded on real hardware)
-            writeBuffer = READ<Word, 1>(ea);
-            prefetch<C>();
-            throw AddressError(makeFrame<AE_WRITE|AE_DATA>(reg.sp, reg.pc0 + 2));
-
-        } else {
-
-            writeBuffer = READ<Word, 1>(ea);
-            if (isAbsMode(M)) {
-                readBuffer = queue.irc;
-                throw AddressError(makeFrame<AE_WRITE|AE_DATA>(reg.sp, U32_SUB(reg.pc, 4)));
-            } else if (isDspMode(M)) {
-                prefetch<C>();
-                throw AddressError(makeFrame<AE_WRITE|AE_DATA|AE_DEC_PC>(reg.sp));
-            } else {
-                prefetch<C>();
-                throw AddressError(makeFrame<AE_WRITE|AE_DATA>(reg.sp));
-            }
+            U32_DEC(reg.sp, S);
+            if constexpr (!isAbsMode(M)) fetchIrc<C>();
+            throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(reg.sp));
         }
-    }
 
-    if (isAbsMode(M)) {
+        if constexpr (isAbsMode(M)) {
 
-        if constexpr (C == Core::C68000) {
+            try { push<C, Long>(ea); } catch (BusError &e) {
 
-            // UAE stacks the PC two bytes further if the push fails
-            if constexpr (compat == Compatibility::UAE) {
-                try { push <C, Long> (ea); } catch (BusError &e) {
-                    e.stackFrame.pc += 2; throw;
-                }
-            } else {
-                push <C, Long> (ea);
+                // UAE stacks the PC two bytes further if the push fails
+                if constexpr (compat == Compatibility::UAE) e.stackFrame.pc += 2;
+                throw;
             }
             prefetch<C, POLL>();
 
-        } else {
-
-            POLL_IPL;
-            push <C, Long> (ea);
-            prefetch<C>();
-        }
-
-    } else if (isIdxMode(M)) {
-
-        if constexpr (C == Core::C68000) {
+        } else if constexpr (isIdxMode(M)) {
 
             POLL_IPL;
             fetchIrc<C>();
-            push<C, Long, COMMIT_IRD> (ea);
+            push<C, Long, COMMIT_IRD>(ea);
 
         } else {
 
             fetchIrc<C, POLL>();
-            push<C, Long, COMMIT_IRD> (ea);
+            push<C, Long, COMMIT_IRD>(ea);
         }
 
-    } else {
+    } else if constexpr (C == Core::C68010) {
 
-        fetchIrc<C, POLL>();
-        push<C, Long, COMMIT_IRD>(ea);
+        if (misaligned<C>(reg.sp)) {
+
+            // The 68010 completes the prefetch in all modes (even the absolute ones) and
+            // stacks the address of the instruction plus two (recorded on real hardware)
+            U32_DEC(reg.sp, S);
+            writeBuffer = READ<Word, 1>(ea);
+            prefetch<C>();
+            throw AddressError(makeFrame<AE_WRITE|AE_DATA>(reg.sp, reg.pc0 + 2));
+        }
+
+        if constexpr (isAbsMode(M)) {
+
+            POLL_IPL;
+            push<C, Long>(ea);
+            prefetch<C>();
+
+        } else {
+
+            fetchIrc<C, POLL>();
+            push<C, Long>(ea);
+        }
+
+    } else if constexpr (C == Core::C68020) {
+
+        if constexpr (isAbsMode(M)) {
+
+            POLL_IPL;
+            push<C, Long>(ea);
+            prefetch<C>();
+
+        } else {
+
+            fetchIrc<C, POLL>();
+            push<C, Long>(ea);
+        }
     }
 
     //           00  10  20        00  10  20        00  10  20
