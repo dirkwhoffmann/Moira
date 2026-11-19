@@ -3864,101 +3864,66 @@ Moira::execMovemEaRg(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    int src  = _____________xxx(opcode);
-        u16 mask;
-    if constexpr (C == Core::C68000) {
+    int src = _____________xxx(opcode);
+
+    u16 mask;
+    try { mask = (u16)readI<C, Word>(); } catch (BusError &e) {
 
         // MAME does not decrement the stacked PC if the mask refill fails
-        try { mask = (u16)readI<C, Word>(); } catch (BusError &e) {
-            if constexpr (M == Mode::AI || M == Mode::PI || M == Mode::PD) e.stackFrame.pc -= 2; throw;
-        }
-
-    } else {
-
-        mask = (u16)readI<C, Word>();
+        if constexpr (C == Core::C68000 && (M == Mode::AI || M == Mode::PI || M == Mode::PD)) e.stackFrame.pc -= 2;
+        throw;
     }
+
     u32 ea;
-    if constexpr (C == Core::C68000 && M == Mode::AW) {
+    try { ea = computeEA<C, M, S>(src); } catch (BusError &e) {
 
         // MAME stacks the address of the consumed word here
-        try { ea = computeEA<C, M, S>(src); }
-        catch (BusError &e) { e.stackFrame.pc -= 2; throw; }
-
-    } else {
-
-        ea = computeEA<C, M, S>(src);
+        if constexpr (C == Core::C68000 && M == Mode::AW) e.stackFrame.pc -= 2;
+        throw;
     }
-
-    int cnt = 0;
 
     // Check for address error
     if (misaligned<C, S>(ea)) {
 
+        constexpr Flags flags = (M == Mode::IX || M == Mode::IXPC) && compat != Compatibility::MAME ? AE_DEC_PC : AE_INC_PC;
         setFC<M>();
-        if constexpr ((M == Mode::IX || M == Mode::IXPC) && compat != Compatibility::MAME) {
-            throw earlyAddressError<C>(makeFrame<AE_DEC_PC>(ea));
-        } else {
-            throw earlyAddressError<C>(makeFrame<AE_INC_PC>(ea));
-        }
+        throw earlyAddressError<C>(makeFrame<flags>(ea));
     }
 
     // MAME does not read ahead, it reads one word too many at the end. UAE neither reads ahead nor too far.
-    if constexpr (S == Long && compat != Compatibility::MAME && !(compat == Compatibility::UAE)) (void)read<C, AddrSpace::DATA, Word>(ea);
+    if constexpr (S == Long && compat != Compatibility::MAME && compat != Compatibility::UAE) (void)read<C, AddrSpace::DATA, Word>(ea);
 
-    if constexpr (M == Mode(3)) {     // (An)+
+    int cnt = 0;
+    for (int i = 0; i <= 15; i++) {
 
-        for (int i = 0; i <= 15; i++) {
+        // Only proceed if the mask bit is set
+        if ((mask & (1 << i)) == 0) continue;
 
-            // Only proceed if the mask bit is set
-            if ((mask & (1 << i)) == 0) continue;
+        if constexpr (C == Core::C68000 && S == Long) {
 
-            if constexpr (C == Core::C68000 && S == Long) {
+            // MAME loads the upper word first
+            u32 hi = readM<C, M, Word, AE_INC_PC>(ea);
+            writeR(i, WRITE<Word, 1>(reg.r[i], hi));
+            writeR(i, hi << 16 | readM<C, M, Word, AE_INC_PC>(ea + 2));
 
-                // MAME loads the upper word first
-                u32 hi = readM<C, M, Word, AE_INC_PC>(ea);
-                writeR(i, WRITE<Word, 1>(reg.r[i], hi));
-                writeR(i, hi << 16 | readM<C, M, Word, AE_INC_PC>(ea + 2));
+        } else {
 
-            } else {
-
-                writeR(i, SEXT<S>(readM<C, M, S, AE_INC_PC>(ea)));
-            }
-            ea += S;
-            cnt++;
+            writeR(i, SEXT<S>(readM<C, M, S, AE_INC_PC>(ea)));
         }
-
-        // MAME updates the address register after the final (extra) read
-        if constexpr (compat != Compatibility::MAME && !(compat == Compatibility::UAE && C == Core::C68000)) writeA(src, ea);
-
-    } else {
-
-        for(int i = 0; i <= 15; i++) {
-
-            // Only proceed if the mask bit is set
-            if ((mask & (1 << i)) == 0) continue;
-
-            if constexpr (C == Core::C68000 && S == Long) {
-
-                // MAME loads the upper word first
-                u32 hi = readM<C, M, Word, AE_INC_PC>(ea);
-                writeR(i, WRITE<Word, 1>(reg.r[i], hi));
-                writeR(i, hi << 16 | readM<C, M, Word, AE_INC_PC>(ea + 2));
-
-            } else {
-
-                writeR(i, SEXT<S>(readM<C, M, S, AE_INC_PC>(ea)));
-            }
-            ea += S;
-            cnt++;
-        }
+        ea += S;
+        cnt++;
     }
+
+    // MAME updates the address register after the final (extra) read
+    if constexpr (M == Mode::PI && compat != Compatibility::MAME && !(compat == Compatibility::UAE && C == Core::C68000)) writeA(src, ea);
+
     if constexpr (S == Word || C == Core::C68000) {
 
         // MAME reads from program space if the operand is addressed relative to the PC
         constexpr bool pcRel = C == Core::C68000 && (M == Mode::DIPC || M == Mode::IXPC);
         (void)read<C, pcRel ? AddrSpace::PROG : AddrSpace::DATA, Word, AE_INC_PC>(ea);
     }
-    if constexpr (C == Core::C68000 && M == Mode(3)) writeA(src, ea);
+    if constexpr (M == Mode::PI && C == Core::C68000) writeA(src, ea);
 
     prefetch<C, POLL>();
 
@@ -3983,25 +3948,23 @@ Moira::execMovemRgEa(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    int dst  = _____________xxx(opcode);
-        u16 mask;
-    if constexpr (C == Core::C68000) {
+    int dst = _____________xxx(opcode);
+
+    u16 mask;
+    try { mask = (u16)readI<C, Word>(); } catch (BusError &e) {
 
         // MAME does not decrement the stacked PC if the mask refill fails
-        try { mask = (u16)readI<C, Word>(); } catch (BusError &e) {
-            if constexpr (M == Mode::AI || M == Mode::PI || M == Mode::PD) e.stackFrame.pc += 2;
-            if constexpr (M == Mode::IX) e.stackFrame.pc -= 2;
-            throw;
-        }
-
-    } else {
-
-        mask = (u16)readI<C, Word>();
+        if constexpr (C == Core::C68000 && (M == Mode::AI || M == Mode::PI || M == Mode::PD)) e.stackFrame.pc += 2;
+        if constexpr (C == Core::C68000 && M == Mode::IX) e.stackFrame.pc -= 2;
+        throw;
     }
 
     int cnt = 0;
 
-    if constexpr (M == Mode(4)) {     // -(An)
+    if constexpr (M == Mode::PD) {
+
+        // The 68020 updates the address register with each write (Musashi and UAE update it at the end)
+        constexpr bool updateEach = C == Core::C68020 && compat != Compatibility::MUSASHI && compat != Compatibility::UAE;
 
         u32 ea = readA(dst);
         [[maybe_unused]] u32 initial = ea;
@@ -4022,44 +3985,35 @@ Moira::execMovemRgEa(u16 opcode)
 
             // Write register contents into memory
             ea -= S;
-            if constexpr (C == Core::C68020 && !(compat == Compatibility::MUSASHI) && !(compat == Compatibility::UAE)) writeA(dst, ea);
+            if constexpr (updateEach) writeA(dst, ea);
 
             // UAE stores the initial value minus the operand size
             u32 value = reg.r[i];
-            if constexpr ((compat == Compatibility::UAE) && C == Core::C68020) {
+            if constexpr (compat == Compatibility::UAE && C == Core::C68020) {
                 if (i == 8 + dst) value = initial - S;
             }
             writeM<C, M, S, (C == Core::C68000 || compat == Compatibility::UAE ? REVERSE : 0) | AE_INC_PC>(ea, value);
             cnt++;
         }
-        if constexpr (C != Core::C68020 || (compat == Compatibility::MUSASHI) || (compat == Compatibility::UAE)) writeA(dst, ea);
+        if constexpr (!updateEach) writeA(dst, ea);
 
     } else {
 
+        // MAME stacks the address behind the faulting fetch
         u32 ea;
-        if constexpr (C == Core::C68000) {
+        if constexpr (C == Core::C68000 && M == Mode::AL) {
 
-            // MAME stacks the address behind the faulting fetch
-            if constexpr (M == Mode::AL) {
-
-                ea = (u32)queue.irc << 16;
-                readExt<C>();
-                ea |= queue.irc;
-                try { readExtLast<C>(); } catch (BusError &e) {
-                    e.stackFrame.pc += 2; throw;
-                }
-
-            } else {
-
-                try { ea = computeEA<C, M, S>(dst); }
-                catch (BusError &e) {
-                    e.stackFrame.pc += (M == Mode::AW) ? 2 : 4; throw;
-                }
-            }
+            ea = (u32)queue.irc << 16;
+            readExt<C>();
+            ea |= queue.irc;
+            try { readExtLast<C>(); } catch (BusError &e) { e.stackFrame.pc += 2; throw; }
 
         } else {
 
-            ea = computeEA<C, M, S>(dst);
+            try { ea = computeEA<C, M, S>(dst); } catch (BusError &e) {
+                if constexpr (C == Core::C68000) e.stackFrame.pc += (M == Mode::AW) ? 2 : 4;
+                throw;
+            }
         }
 
         for(int i = 0; i < 16; i++) {
