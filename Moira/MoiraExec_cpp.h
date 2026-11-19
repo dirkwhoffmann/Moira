@@ -2455,36 +2455,178 @@ Moira::execDbcc(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    auto exec68000 = [&]() {
+    if constexpr (C == Core::C68000) {
 
         SYNC(2);
         if (!cond<I>()) {
 
             int dn = _____________xxx(opcode);
             u32 newpc = U32_ADD(reg.pc, (i16)queue.irc);
-
             bool takeBranch = readD<Word>(dn) != 0;
 
-            // Check for address error
-            if (misalignedPC<C>(newpc) && (C != Core::C68020 || takeBranch)) {
-
-                // The 68020 has decremented the counter at this point
-                if constexpr (C == Core::C68020) writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+            if (misalignedPC<C>(newpc)) {
 
                 // MAME stores the address of the prefetched word as program counter
-                if constexpr (compat == Compatibility::MAME) throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_FETCH>(newpc));
-                reg.pc = newpc;
+                if constexpr (compat != Compatibility::MAME) reg.pc = newpc;
                 throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_FETCH>(newpc));
             }
 
-            // Decrement loop counter
-            if constexpr (C != Core::C68000 && compat != Compatibility::UAE) writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
-
-            // Branch
             if (takeBranch) {
-                if constexpr (C == Core::C68000 || compat == Compatibility::UAE) {
 
-                    // MAME decrements the counter after the first fetch at the branch target
+                // MAME decrements the counter after the first fetch at the branch target
+                fetchFirstAt<C>(newpc, reg.pc + 2);
+                writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+                prefetch<C, POLL>();
+                changeOfFlow<C>();
+                CYCLES_68000(10);
+
+            } else {
+
+                writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+                (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
+                CYCLES_68000(14);
+                fullPrefetchAt<C, POLL>(reg.pc + 2);
+            }
+
+        } else {
+
+            SYNC(2);
+            CYCLES_68000(12);
+
+            // Fall through to next instruction
+            fullPrefetchAt<C, POLL>(reg.pc + 2);
+        }
+
+    } else if constexpr (C == Core::C68010) {
+
+        if (looping<I>()) {
+
+            if (!cond<I>()) {
+
+                int dn = _____________xxx(opcode);
+                u32 newpc = U32_ADD(reg.pc, -4);
+                bool takeBranch = readD<Word>(dn) != 0;
+
+                if (misalignedPC<C>(newpc)) {
+
+                    reg.pc = newpc;
+                    throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_FETCH>(newpc));
+                }
+
+                // Decrement loop counter
+                writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+
+                if (takeBranch) {
+
+                    // Stay in loop mode
+                    SYNC(6);
+                    reg.pc = newpc;
+                    queue.ird = queue.irc;
+                    queue.irc = opcode;
+                    POLL_IPL;
+
+                } else {
+
+                    // Leave loop mode and fall through to next instruction
+                    if (loopModeDelay) SYNC(loopModeDelay);
+                    loopModeDelay = 2;
+                    reg.pc += 2;
+                    fullPrefetch<C, POLL>();
+                    flags &= ~State::LOOPING;
+                }
+
+            } else {
+
+                // Leave loop mode and fall through to next instruction
+                SYNC(4);
+                reg.pc += 2;
+                fullPrefetch<C, POLL>();
+                flags &= ~State::LOOPING;
+            }
+
+        } else {
+
+            if (!cond<I>()) {
+
+                SYNC(2);
+
+                int dn = _____________xxx(opcode);
+                i16 disp = (i16)queue.irc;
+                u32 newpc = U32_ADD(reg.pc, disp);
+                bool takeBranch = readD<Word>(dn) != 0;
+
+                if (misalignedPC<C>(newpc)) {
+
+                    reg.pc = newpc;
+                    throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_FETCH>(newpc));
+                }
+
+                // Decrement loop counter
+                writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+
+                if (takeBranch) {
+
+                    reg.pc = newpc;
+                    fullPrefetch<C, POLL>();
+
+                    // Enter loop mode if the loop body is a single loopable instruction
+                    if (loop[queue.ird] && disp == -4) {
+
+                        flags |= State::LOOPING;
+                        queue.irc = opcode;
+                    }
+
+                    if constexpr (compat == Compatibility::MUSASHI) SYNC(2);
+                    CYCLES_68010(12);
+
+                } else {
+
+                    (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
+                    SYNC((compat == Compatibility::MUSASHI) ? 4 : 2);
+                    CYCLES_68010(8);
+
+                    reg.pc += 2;
+                    fullPrefetch<C, POLL>();
+                    CYCLES_68010(10);
+                }
+
+            } else {
+
+                SYNC(2);
+                CYCLES_68010(2);
+
+                // Fall through to next instruction
+                reg.pc += 2;
+                fullPrefetch<C, POLL>();
+                CYCLES_68010(10);
+            }
+        }
+
+    } else if constexpr (C == Core::C68020) {
+
+        SYNC(2);
+        if (!cond<I>()) {
+
+            int dn = _____________xxx(opcode);
+            u32 newpc = U32_ADD(reg.pc, (i16)queue.irc);
+            bool takeBranch = readD<Word>(dn) != 0;
+
+            if (misalignedPC<C>(newpc) && takeBranch) {
+
+                // The 68020 has decremented the counter at this point
+                writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+                if constexpr (compat != Compatibility::MAME) reg.pc = newpc;
+                throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_FETCH>(newpc));
+            }
+
+            // UAE decrements the counter later
+            if constexpr (compat != Compatibility::UAE) writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+
+            if (takeBranch) {
+
+                if constexpr (compat == Compatibility::UAE) {
+
+                    // UAE decrements the counter after the first fetch at the branch target
                     fetchFirstAt<C>(newpc, reg.pc + 2);
                     writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
                     prefetch<C, POLL>();
@@ -2494,147 +2636,24 @@ Moira::execDbcc(u16 opcode)
                     fullPrefetchAt<C, POLL>(newpc);
                 }
                 changeOfFlow<C>();
-                CYCLES_68000(10);
                 CYCLES_68020(6);
 
             } else {
 
-                if constexpr (C == Core::C68000 || compat == Compatibility::UAE) writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+                if constexpr (compat == Compatibility::UAE) writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
                 (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
-                CYCLES_68000(14);
                 CYCLES_68020(10);
-
                 fullPrefetchAt<C, POLL>(reg.pc + 2);
             }
 
         } else {
 
             SYNC(2);
-            CYCLES_68000(12);
             CYCLES_68020(6);
 
             // Fall through to next instruction
             fullPrefetchAt<C, POLL>(reg.pc + 2);
         }
-    };
-
-    auto exec68010 = [&]() {
-
-        if (!cond<I>()) {
-
-            SYNC(2);
-
-            int dn = _____________xxx(opcode);
-            i16 disp = (i16)queue.irc;
-
-            u32 newpc = U32_ADD(reg.pc, disp);
-
-            bool takeBranch = readD<Word>(dn) != 0;
-
-            // Check for address error
-            if (misalignedPC<C>(newpc)) {
-                reg.pc = newpc;
-                throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_FETCH>(newpc));
-            }
-
-            // Decrement loop counter
-            writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
-
-            // Branch
-            if (takeBranch) {
-
-                reg.pc = newpc;
-                fullPrefetch<C, POLL>();
-
-                if (loop[queue.ird] && disp == -4) {
-
-                    // Enter loop mode
-                    flags |= State::LOOPING;
-                    queue.irc = opcode;
-                }
-
-                if ((compat == Compatibility::MUSASHI)) SYNC(2);
-                CYCLES_68010(12);
-                return;
-
-            } else {
-
-                (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
-                SYNC((compat == Compatibility::MUSASHI) ? 4 : 2);
-                CYCLES_68010(8);
-
-                reg.pc += 2;
-                fullPrefetch<C, POLL>();
-            }
-
-        } else {
-
-            SYNC(2);
-            CYCLES_68010(2);
-
-            reg.pc += 2;
-            fullPrefetch<C, POLL>();
-        }
-
-        CYCLES_68010(10);
-    };
-
-    auto execLoop = [&]() {
-
-        if (!cond<I>()) {
-
-            int dn = _____________xxx(opcode);
-            u32 newpc = U32_ADD(reg.pc, -4);
-
-            bool takeBranch = readD<Word>(dn) != 0;
-
-            // Check for address error
-            if (misalignedPC<C>(newpc)) {
-                reg.pc = newpc;
-                throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_FETCH>(newpc));
-            }
-
-            // Decrement loop counter
-            writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
-
-            // Branch
-            if (takeBranch) {
-
-                SYNC(6);
-                reg.pc = newpc;
-                queue.ird = queue.irc;
-                queue.irc = opcode;
-                POLL_IPL;
-                return;
-
-            } else {
-
-                // Fall through to next instruction
-                if (loopModeDelay) SYNC(loopModeDelay);
-                loopModeDelay = 2;
-                reg.pc += 2;
-                fullPrefetch<C, POLL>();
-                flags &= ~State::LOOPING;
-            }
-
-        } else {
-
-            SYNC(4);
-            // Fall through to next instruction
-            reg.pc += 2;
-            fullPrefetch<C, POLL>();
-            flags &= ~State::LOOPING;
-        }
-    };
-
-    switch (C) {
-
-        case Core::C68000: exec68000(); break;
-        case Core::C68010: looping<I>() ? execLoop() : exec68010(); break;
-        case Core::C68020: exec68000(); break;
-
-        default:
-            fatalError;
     }
 
     FINALIZE
