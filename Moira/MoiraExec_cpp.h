@@ -284,7 +284,6 @@ Moira::execAbcdEa(u16 opcode)
 
     u32 result = bcd<C, I, Byte>(data1, data2);
     looping<I>() ? noPrefetch<C>(4) : fetchIrc<C>();
-
     writeM<C, M, Byte, COMMIT_IRD>(ea2, result);
 
     //           00  10  20        00  10  20        00  10  20
@@ -306,41 +305,36 @@ Moira::execAddEaRg(u16 opcode)
 
     readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
 
-    if constexpr (C == Core::C68000) {
+    if constexpr (C == Core::C68000 && S == Long && isMemMode(M)) {
 
-        if constexpr (S == Long) {
-
-            try { prefetchLate<C, POLL, true>(); } catch (BusError &e) {
-
-                if constexpr (isMemMode(M)) {
-                    result = addsub<C, I, S>(data, readD<S>(dst));
-                } else {
-                    result = addsub<C, I, Word>(data & 0xFFFF, readD<Word>(dst));
-                }
-
-                rethrowD<C, Word>(e, dst, result);
-            }
-
-            result = addsub<C, I, S>(data, readD<S>(dst));
-            SYNC(2 + (isMemMode(M) ? 0 : 2));
-            writeD<S>(dst, result);
-
-        } else {
-
-            result = addsub<C, I, S>(data, readD<S>(dst));
-
-            try { prefetchLate<C, POLL, false>(); }
-            catch (BusError &e) {
-
-                rethrowD<C, S>(e, dst, result);
-            }
-            writeD<S>(dst, result);
+        result = addsub<C, I, S>(data, readD<S>(dst));
+        try { prefetchLate<C, POLL, true>(); } catch (BusError &e) {
+            rethrowD<C, Word>(e, dst, result);
         }
+        SYNC(2);
+        writeD<S>(dst, result);
 
+    } else if constexpr (C == Core::C68000 && S == Long) {
+
+        try { prefetchLate<C, POLL, true>(); } catch (BusError &e) {
+            rethrowD<C, Word>(e, dst, addsub<C, I, Word>(data & 0xFFFF, readD<Word>(dst)));
+        }
+        result = addsub<C, I, S>(data, readD<S>(dst));
+        SYNC(4);
+        writeD<S>(dst, result);
+
+    } else if constexpr (C == Core::C68000) {
+        
+        result = addsub<C, I, S>(data, readD<S>(dst));
+
+        try { prefetchLate<C, POLL, false>(); } catch (BusError &e) {
+            rethrowD<C, S>(e, dst, result);
+        }
+        writeD<S>(dst, result);
+        
     } else {
 
         result = addsub<C, I, S>(data, readD<S>(dst));
-
         writeD<S>(dst, result);
         POLL_IPL;
         if constexpr (S == Long) SYNC(2);
