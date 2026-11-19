@@ -1602,18 +1602,30 @@ Moira::execBsr(u16 opcode)
         reg.pc = newpc;
         fullPrefetch<C, POLL>();
 
-    } else {
+    } else if constexpr (C == Core::C68010) {
 
         // Check for address errors
         if (misaligned<C>(reg.sp)) {
+
             writeBuffer = 0;
             throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(newpc));
-
         }
+        checkEvenPC<C, AE_FETCH>(newpc);
+
+        // Save return address on stack
+        push<C, Long, POLL>(retpc);
+
+        // Jump to new address
+        reg.pc = newpc;
+        fullPrefetch<C>();
+
+    } else if constexpr (C == Core::C68020) {
+
+        // Check for address error
         if (misalignedPC<C>(newpc)) {
 
             // The 68020 reserves the space for the return address (UAE does not write it)
-            if constexpr (C == Core::C68020) reg.sp -= 4;
+            reg.sp -= 4;
             throw earlyAddressError<C>(makeFrame<AE_FETCH>(newpc));
         }
 
@@ -1622,10 +1634,8 @@ Moira::execBsr(u16 opcode)
 
         // Jump to new address
         reg.pc = newpc;
-
         fullPrefetch<C>();
     }
-
 
     changeOfFlow<C>();
 
@@ -2910,22 +2920,15 @@ Moira::execLink(u16 opcode)
 {
     AVAILABILITY(S == Long ? Core::C68020 : Core::C68000)
 
-    [[maybe_unused]] u16 ird  = getIRD();
-    u32 sp   = getSP() - 4;
+    u32 sp = getSP() - 4;
+    int ax = _____________xxx(opcode);
 
-    int ax   = _____________xxx(opcode);
     i32 disp;
-
-    if constexpr (C == Core::C68000) {
+    try { disp = SEXT<S>(readI<C, S>()); } catch (BusError &e) {
 
         // MAME stacks the address behind the faulting fetch
-        try { disp = SEXT <S> (readI<C, S>()); } catch (BusError &e) {
-            e.stackFrame.pc += 2; throw;
-        }
-
-    } else {
-
-        disp = SEXT <S> (readI<C, S>());
+        if constexpr (C == Core::C68000) e.stackFrame.pc += 2;
+        throw;
     }
 
     // Check for address error
@@ -2942,16 +2945,11 @@ Moira::execLink(u16 opcode)
     bool decremented = ax == 7 && (compat == Compatibility::MUSASHI || cpuModel >= CPUModel::M68EC040);
 
     // Write to stack
-    if constexpr (C == Core::C68000) {
+    try { push<C, Long, AE_INC_PC>(readA(ax) - (decremented ? 4 : 0)); } catch (BusError &) {
 
         // MAME loads the address register first and leaves the stack pointer alone if the push fails
-        try { push <C, Long, AE_INC_PC>(readA(ax) - (decremented ? 4 : 0)); } catch (BusError &) {
-            reg.sp += 4; writeA(ax, sp); throw;
-        }
-
-    } else {
-
-        push <C, Long>(readA(ax) - (decremented ? 4 : 0));
+        if constexpr (C == Core::C68000) { reg.sp += 4; writeA(ax, sp); }
+        throw;
     }
 
     // Modify address register and stack pointer
