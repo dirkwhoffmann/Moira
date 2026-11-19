@@ -742,7 +742,7 @@ Moira::execAddxEa(u16 opcode)
         result = addsub<C, I, S>(data1, data2);
 
         // If the low word fails, the stacked flags are those of the low word addition
-        try { writeM<C, M, Word, POLL | AE_INC_PC>(ea2 + 2, result & 0xFFFF); }
+        try { writeM<C, M, Word, POLL | AE_INC_PC>(ea2 + 2, READ<Word>(result)); }
         catch (BusError &e) {
             
             setCCR(ccr);
@@ -751,7 +751,7 @@ Moira::execAddxEa(u16 opcode)
         }
         
         looping<I>() ? noPrefetch<C>() : fetchIrc<C>();
-        writeM<C, M, Word, COMMITC>(ea2, result >> 16);
+        writeM<C, M, Word, COMMITC>(ea2, READ<Word, 1>(result));
 
     } else if constexpr (S == Long && C == Core::C68010) {
 
@@ -3123,14 +3123,14 @@ Moira::execMove2(u16 opcode)
                 reg.sr.v = 0;
                 reg.sr.c = 0;
             }
-            writeM<C, Mode::AI, Word, AE_INC_PC | UAE_DEC_PC>(ea2, data >> 16);
+            writeM<C, Mode::AI, Word, AE_INC_PC | UAE_DEC_PC>(ea2, READ<Word, 1>(data));
 
             // Second write: the flags of the low word (register source) or the final flags (memory source)
             reg.sr.n = NBIT<isMemMode(M) ? Long : Word>(data);
             reg.sr.z = ZERO<isMemMode(M) ? Long : Word>(data);
             reg.sr.v = 0;
             reg.sr.c = 0;
-            writeM<C, Mode::AI, Word, F | UAE_DEC_PC>(ea2 + 2, data & 0xFFFF);
+            writeM<C, Mode::AI, Word, F | UAE_DEC_PC>(ea2 + 2, READ<Word>(data));
 
         } else {
 
@@ -3228,14 +3228,14 @@ Moira::execMove3(u16 opcode)
                 reg.sr.v = 0;
                 reg.sr.c = 0;
             }
-            writeM<C, Mode::PI, Word, AE_INC_PC | UAE_DEC_PC>(ea2, data >> 16);
+            writeM<C, Mode::PI, Word, AE_INC_PC | UAE_DEC_PC>(ea2, READ<Word, 1>(data));
 
             // Second write: the flags of the low word (register source) or the final flags (memory source)
             reg.sr.n = NBIT<isMemMode(M) ? Long : Word>(data);
             reg.sr.z = ZERO<isMemMode(M) ? Long : Word>(data);
             reg.sr.v = 0;
             reg.sr.c = 0;
-            writeM<C, Mode::PI, Word, F | UAE_DEC_PC>(ea2 + 2, data & 0xFFFF);
+            writeM<C, Mode::PI, Word, F | UAE_DEC_PC>(ea2 + 2, READ<Word>(data));
 
         } else {
 
@@ -3346,7 +3346,7 @@ Moira::execMove4(u16 opcode)
     if (looping<I>() && S == Long) loopModeDelay = 0;
 
     ea = computeEA<C, Mode::PD, S, IMPL_DEC>(dst);
-    writeBuffer = u16(data);
+    writeBuffer = READ<Word>(data);
 
     // MAME and UAE decrement the register before the only write of a byte or word operation.
     // UAE (68020) also does it before a long write (the register stays decremented if the write fails).
@@ -3369,8 +3369,8 @@ Moira::execMove4(u16 opcode)
 
         // The low word is written first. UAE restores the register if a write fails and stacks the unmasked address.
         try {
-            writeM<C, Mode::PD, Word>(ea + 2, data & 0xFFFF);
-            writeM<C, Mode::PD, Word, COMMITC>(ea, data >> 16);
+            writeM<C, Mode::PD, Word>(ea + 2, READ<Word>(data));
+            writeM<C, Mode::PD, Word, COMMITC>(ea, READ<Word, 1>(data));
         }
         catch (BusError &e) {
             e.stackFrame.addr = (e.stackFrame.addr & 0xFFFFFF) | (ea & 0xFF000000);
@@ -3381,9 +3381,9 @@ Moira::execMove4(u16 opcode)
     } else if constexpr (S == Long && C == Core::C68000) {
 
         // The low word is written first. MAME decrements the register before the second write.
-        writeM<C, Mode::PD, Word>(ea + 2, data & 0xFFFF);
+        writeM<C, Mode::PD, Word>(ea + 2, READ<Word>(data));
         updateAn<Mode::PD, S>(dst);
-        writeM<C, Mode::PD, Word, COMMITC>(ea, data >> 16);
+        writeM<C, Mode::PD, Word, COMMITC>(ea, READ<Word, 1>(data));
 
     } else {
 
@@ -3441,15 +3441,15 @@ Moira::execMove5(u16 opcode)
         if constexpr (S == Long && !isMemMode(M)) {
 
             // The first write shows the flags of the high word, the second one those of the low word
-            reg.sr.n = NBIT<Word>(data >> 16);
-            reg.sr.z = ZERO<Word>(data >> 16) && reg.sr.z;
-            writeM<C, Mode::DI, Word>(ea2, data >> 16);
+            reg.sr.n = NBIT<Word>(READ<Word, 1>(data));
+            reg.sr.z = ZERO<Word>(READ<Word, 1>(data)) && reg.sr.z;
+            writeM<C, Mode::DI, Word>(ea2, READ<Word, 1>(data));
 
             reg.sr.n = NBIT<Word>(data);
             reg.sr.z = ZERO<Word>(data);
             reg.sr.v = 0;
             reg.sr.c = 0;
-            writeM<C, Mode::DI, Word, POLL>(ea2 + 2, data & 0xFFFF);
+            writeM<C, Mode::DI, Word, POLL>(ea2 + 2, READ<Word>(data));
 
             reg.sr.n = NBIT<S>(data);
             reg.sr.z = ZERO<S>(data);
@@ -3539,15 +3539,15 @@ Moira::execMove6(u16 opcode)
         if constexpr (S == Long && !isMemMode(M)) {
 
             // The first write shows the flags of the high word, the second one those of the low word
-            reg.sr.n = NBIT<Word>(data >> 16);
-            reg.sr.z = ZERO<Word>(data >> 16) && reg.sr.z;
-            writeM<C, Mode::IX, Word>(ea2, data >> 16);
+            reg.sr.n = NBIT<Word>(READ<Word, 1>(data));
+            reg.sr.z = ZERO<Word>(READ<Word, 1>(data)) && reg.sr.z;
+            writeM<C, Mode::IX, Word>(ea2, READ<Word, 1>(data));
 
             reg.sr.n = NBIT<Word>(data);
             reg.sr.z = ZERO<Word>(data);
             reg.sr.v = 0;
             reg.sr.c = 0;
-            writeM<C, Mode::IX, Word, POLL>(ea2 + 2, data & 0xFFFF);
+            writeM<C, Mode::IX, Word, POLL>(ea2 + 2, READ<Word>(data));
 
             reg.sr.n = NBIT<S>(data);
             reg.sr.z = ZERO<S>(data);
@@ -3712,10 +3712,10 @@ Moira::execMove8(u16 opcode)
             if constexpr (S == Long) {
 
                 // The first write shows the flags of the low word, the second one the final flags
-                writeM<C, Mode::AL, Word>(ea2, data >> 16);
+                writeM<C, Mode::AL, Word>(ea2, READ<Word, 1>(data));
                 reg.sr.n = NBIT<S>(data);
                 reg.sr.z = ZERO<S>(data);
-                writeM<C, Mode::AL, Word>(ea2 + 2, data & 0xFFFF);
+                writeM<C, Mode::AL, Word>(ea2 + 2, READ<Word>(data));
 
             } else {
 
@@ -4451,7 +4451,7 @@ Moira::execMoveCcrEa(u16 opcode)
 
     if (misaligned<C>(ea)) {
 
-        writeBuffer = val & 0xFFFF;
+        writeBuffer = READ<Word>(val);
         updateAnPI<M, S>(dst);
         setFC<M>();
         throw AddressError(makeFrame<AE_WRITE|AE_INC_PC>(ea));
@@ -4567,7 +4567,7 @@ Moira::execMoveSrEa(u16 opcode)
 
         if (misaligned<C>(ea)) {
 
-            writeBuffer = val & 0xFFFF;
+            writeBuffer = READ<Word>(val);
             updateAnPI<M, S>(dst);
             setFC<M>();
             throw AddressError(makeFrame<AE_WRITE>(ea));
