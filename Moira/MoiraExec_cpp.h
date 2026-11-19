@@ -782,34 +782,31 @@ Moira::execAndEaRg(u16 opcode)
 
     u32 result;
 
-    if constexpr (C == Core::C68000) {
+    if constexpr (C == Core::C68000 && S == Long && isMemMode(M)) {
 
-        if constexpr (S == Long) {
+        // A failing prefetch shows the flags of the long operation and the low word of the result
+        result = logic<C, I, S>(data, readD<S>(dst));
+        try { looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>(); }
+        catch (BusError &e) { rethrowD<C, Word>(e, dst, result); }
+        SYNC(2);
+        writeD<S>(dst, result);
 
-            // MAME shows the flags of the low word operation if the prefetch fails (register and immediate sources)
-            try { looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>(); }
-            catch (BusError &e) {
+    } else if constexpr (C == Core::C68000 && S == Long) {
 
-                if constexpr (isMemMode(M)) {
-                    result = logic<C, I, S>(data, readD<S>(dst));
-                } else {
-                    result = logic<C, I, Word>(data & 0xFFFF, readD<Word>(dst));
-                }
-                rethrowD<C, Word>(e, dst, result);
-            }
+        // A failing prefetch shows the flags and the result of the low word operation
+        try { looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>(); }
+        catch (BusError &e) { rethrowD<C, Word>(e, dst, logic<C, I, Word>(data & 0xFFFF, readD<Word>(dst))); }
+        result = logic<C, I, S>(data, readD<S>(dst));
+        SYNC(4);
+        writeD<S>(dst, result);
 
-            result = logic<C, I, S>(data, readD<S>(dst));
-            SYNC(isRegMode(M) || isImmMode(M) ? 4 : 2);
-            writeD<S>(dst, result);
+    } else if constexpr (C == Core::C68000) {
 
-        } else {
+        result = logic<C, I, S>(data, readD<S>(dst));
 
-            result = logic<C, I, S>(data, readD<S>(dst));
-
-            try { looping<I>() ? noPrefetch<C>() : prefetch<C, POLL>(); }
-            catch (BusError &e) { rethrowD<C, S>(e, dst, result); }
-            writeD<S>(dst, result);
-        }
+        try { looping<I>() ? noPrefetch<C>() : prefetch<C, POLL>(); }
+        catch (BusError &e) { rethrowD<C, S>(e, dst, result); }
+        writeD<S>(dst, result);
 
     } else {
 
