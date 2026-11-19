@@ -4189,11 +4189,17 @@ Moira::execMoves(u16 opcode)
         // Make the DFC register visible on the FC pins
         fcSource = 2;
 
+        // A failing access resets the FC pins after the stack frame has been created
         try { writeM<C, M, S, AE_INC_PC>(ea, value); } catch (const AddressError &) {
 
             writeBuffer = READ<Word, S == Long ? 1 : 0>(value);
             fcSource = 0;
             queue.irc = arg;
+            throw;
+
+        } catch (const BusError &) {
+
+            fcSource = 0;
             throw;
         }
 
@@ -4227,7 +4233,13 @@ Moira::execMoves(u16 opcode)
 
         SYNC(delay);
 
-        u32 data = readM<C, M, S>(ea);
+        // A failing access resets the FC pins after the stack frame has been created
+        u32 data;
+        try { data = readM<C, M, S>(ea); } catch (...) {
+
+            fcSource = 0;
+            throw;
+        }
 
         if (dst < 8) {
             writeR<S>(dst, data);
