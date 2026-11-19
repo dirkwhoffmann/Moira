@@ -4695,13 +4695,6 @@ Moira::execMulsMoira(u16 opcode)
         [[maybe_unused]] auto cycles = cyclesMul<C, I>(u16(data));
         SYNC(cycles);
 
-    } else if constexpr (C == Core::C68000) {
-
-        prefetchLate<C, POLL>();
-        result = muls<C>(data, readD<Word>(dst));
-        [[maybe_unused]] auto cycles = cyclesMul<C, I>(u16(data));
-        SYNC(cycles);
-
     } else {
 
         result = muls<C>(data, readD<Word>(dst));
@@ -4782,13 +4775,6 @@ Moira::execMuluMoira(u16 opcode)
             reg.sr.n = 0; reg.sr.z = 1; reg.sr.v = 0; reg.sr.c = 0;
             rethrow<C>(e);
         }
-        [[maybe_unused]] auto cycles = cyclesMul<C, I>(u16(data));
-        SYNC(cycles);
-
-    } else if constexpr (C == Core::C68000) {
-
-        prefetchLate<C, POLL>();
-        result = mulu<C>(data, readD<Word>(dst));
         [[maybe_unused]] auto cycles = cyclesMul<C, I>(u16(data));
         SYNC(cycles);
 
@@ -6521,26 +6507,21 @@ Moira::execTrapv(u16 opcode)
     if (reg.sr.v) {
 
         if constexpr (C == Core::C68000) {
-            if constexpr (C == Core::C68000) {
 
-                // In MAME, the word is read in supervisor mode. A bus error at this point
-                // is raised after the exception has already been entered.
-                bool s = reg.sr.s;
-                if constexpr (compat == Compatibility::MAME) reg.sr.s = true;   // UAE reads in the current mode
-                try { (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2); } catch (BusError &e) {
-                    reg.sr.s = s;
-                    setSupervisorMode(true);
-                    clearTraceFlags();
-                    e.stackFrame.sr = (e.stackFrame.sr | 0x2000) & ~0x8000;   // Stacked with S set and T cleared
-                    if constexpr (compat == Compatibility::UAE) e.stackFrame.code = (e.stackFrame.code & ~7) | 6;   // Supervisor program space
-                    throw;
-                }
+            // In MAME, the word is read in supervisor mode. A bus error at this point
+            // is raised after the exception has already been entered.
+            bool s = reg.sr.s;
+            if constexpr (compat == Compatibility::MAME) reg.sr.s = true;   // UAE reads in the current mode
+            try { (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2); } catch (BusError &e) {
                 reg.sr.s = s;
-
-            } else {
-
-                (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
+                setSupervisorMode(true);
+                clearTraceFlags();
+                e.stackFrame.sr = (e.stackFrame.sr | 0x2000) & ~0x8000;   // Stacked with S set and T cleared
+                if constexpr (compat == Compatibility::UAE) e.stackFrame.code = (e.stackFrame.code & ~7) | 6;   // Supervisor program space
+                throw;
             }
+            reg.sr.s = s;
+
         } else {
             (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
             SYNC(2);
