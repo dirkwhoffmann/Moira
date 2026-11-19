@@ -105,7 +105,6 @@ Moira::execShiftRg(u16 opcode)
 
     try { prefetchLate<C, POLL>(); }
     catch (BusError &e) { rethrow<C>(e, CCR::N | CCR::Z | CCR::V | CCR::C, shiftPendingCCR(I, S, operand)); }
-
     SYNC(cyc);
 
     writeD<S>(dst, shift<C, I, S>(cnt, operand));
@@ -155,7 +154,6 @@ Moira::execShiftIm(u16 opcode)
 
     try { prefetchLate<C, POLL>(); }
     catch (BusError &e) { rethrow<C>(e, CCR::N | CCR::Z | CCR::V | CCR::C, shiftPendingCCR(I, S, operand)); }
-
     SYNC(cyc);
 
     writeD<S>(dst, shift<C, I, S>(cnt, operand));
@@ -4230,18 +4228,18 @@ Moira::execMovepEaDx(u16 opcode)
 
         case Long:
         {
-            dx |= read<C, AddrSpace::DATA, Byte, AE_DEC_PC>(ea) << 24; ea += 2;
-            dx |= read<C, AddrSpace::DATA, Byte, AE_DEC_PC>(ea) << 16; ea += 2;
+            dx = WRITE<Byte, 3>(dx, read<C, AddrSpace::DATA, Byte, AE_DEC_PC>(ea)); ea += 2;
+            dx = WRITE<Byte, 2>(dx, read<C, AddrSpace::DATA, Byte, AE_DEC_PC>(ea)); ea += 2;
 
             // MAME stores the upper word right away
-            if constexpr (C == Core::C68000) writeD<Long>(dst, (readD(dst) & 0xFFFF) | dx);
+            if constexpr (C == Core::C68000) writeD<Long>(dst, WRITE<Word, 1>(readD(dst), READ<Word, 1>(dx)));
             [[fallthrough]];
         }
         case Word:
         {
-            dx |= read<C, AddrSpace::DATA, Byte, AE_DEC_PC>(ea) << 8; ea += 2;
+            dx = WRITE<Byte, 1>(dx, read<C, AddrSpace::DATA, Byte, AE_DEC_PC>(ea)); ea += 2;
             POLL_IPL;
-            dx |= read<C, AddrSpace::DATA, Byte, AE_DEC_PC>(ea) << 0;
+            dx = WRITE<Byte, 0>(dx, read<C, AddrSpace::DATA, Byte, AE_DEC_PC>(ea));
         }
 
     }
