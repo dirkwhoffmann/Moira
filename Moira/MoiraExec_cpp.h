@@ -373,20 +373,12 @@ Moira::execAddRgEa(u16 opcode)
 
     constexpr Flags flags = REVERSE | COMMIT_IRD;
 
-    if constexpr (S == Long) {
+    result = addsub<C, I, S>(readD<S>(src), data);
 
-        try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); } catch (BusError &e) {
-            addsub<C, I, Word>(readD<Word>(src), data);
-            rethrow<C>(e);
-        }
-        result = addsub<C, I, S>(readD<S>(src), data);
-
-    } else {
-
-        result = addsub<C, I, S>(readD<S>(src), data);
-        try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); } catch (BusError &e) {
-            rethrow<C>(e);
-        }
+    // If the prefetch of a long operation fails, the flags of the low word operation show up
+    try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); } catch (BusError &e) {
+        if constexpr (S == Long) addsub<C, I, Word>(readD<Word>(src), data);
+        rethrow<C>(e);
     }
 
     writeM<C, M, S, flags>(ea, result);
@@ -709,8 +701,8 @@ Moira::execAddxEa(u16 opcode)
 
         // If the high word fails, the low words have been added already
         try { readOp<C, M, S, flags|IMPL_DEC>(dst, &ea2, &data2); } catch (BusError &e) {
-            if (e.upperWord) { addsub<C, I, Word>(data1, readBuffer); rethrow<C>(e); }
-            throw;
+            if (e.upperWord) addsub<C, I, Word>(data1, readBuffer);
+            rethrow<C>(e);
         }
 
         u8 ccr = getCCR();
@@ -1141,8 +1133,8 @@ Moira::execBitDxDy(u16 opcode)
     try { prefetchLate<C, POLL>(); }
     catch (BusError &e) {
         // MAME updates the flags after the prefetch
-        if constexpr (compat != Compatibility::MAME || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) { bit<C, I>(data, b); rethrow<C>(e); }
-        throw;
+        if constexpr (compat != Compatibility::MAME || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) bit<C, I>(data, b);
+        rethrow<C>(e);
     }
     data = bit<C, I>(data, b);
 
@@ -1174,8 +1166,8 @@ Moira::execBitDxEa(u16 opcode)
     try { fetchIrc<C, POLL, !(I == Instr::BTST && M != Mode::IM)>(); }
     catch (BusError &e) {
         // MAME updates the flags after the prefetch
-        if constexpr (compat != Compatibility::MAME || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) { bit<C, I>(data, b); rethrow<C>(e); }
-        throw;
+        if constexpr (compat != Compatibility::MAME || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) bit<C, I>(data, b);
+        rethrow<C>(e);
     }
     data = bit<C, I>(data, b);
 
@@ -1216,8 +1208,8 @@ Moira::execBitImDy(u16 opcode)
     try { prefetchLate<C, POLL>(); }
     catch (BusError &e) {
         // MAME updates the flags after the prefetch
-        if constexpr (compat != Compatibility::MAME) { bit<C, I>(data, src); rethrow<C>(e); }
-        throw;
+        if constexpr (compat != Compatibility::MAME) bit<C, I>(data, src);
+        rethrow<C>(e);
     }
     data = bit<C, I>(data, src);
 
@@ -1246,8 +1238,8 @@ Moira::execBitImEa(u16 opcode)
     try { fetchIrc<C, POLL, (I != Instr::BTST)>(); }
     catch (BusError &e) {
         // MAME updates the flags after the prefetch
-        if constexpr (compat != Compatibility::MAME || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) { bit<C, I>(data, src); rethrow<C>(e); }
-        throw;
+        if constexpr (compat != Compatibility::MAME || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) bit<C, I>(data, src);
+        rethrow<C>(e);
     }
     data = bit<C, I>(data, src);
     if constexpr (I != Instr::BTST) writeM<C, M, S, COMMIT_IRD>(ea, data);
