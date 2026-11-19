@@ -1160,8 +1160,7 @@ Moira::execBitDxEa(u16 opcode)
     u8 b = readD(src) & 0b111;
 
     u32 ea, data;
-    if constexpr (C == Core::C68000) { readOp<C, M, Byte, STD_AE_FRAME>(dst, &ea, &data); }
-    else                       { readOp<C, M, Byte>(dst, &ea, &data); }
+    readOp<C, M, Byte, C == Core::C68000 ? STD_AE_FRAME : 0>(dst, &ea, &data);
 
     if constexpr (I == Instr::BCLR && C == Core::C68010) { SYNC(2); }
 
@@ -2723,8 +2722,9 @@ Moira::execJmp(u16 opcode)
     int src = _____________xxx(opcode);
     u32 ea  = computeEA<C, M, Long, SKIP_LAST_RD>(src);
 
-    [[maybe_unused]] const int delay[] = { 0,0,0,0,0,2,4,2,0,2,4,0 };
-    SYNC(delay[(int)M]);
+    // Indexed modes take 4 extra cycles, the other modes with an extension word 2 (except absolute long)
+    constexpr int delay = (M == Mode::IX || M == Mode::IXPC) ? 4 : (M == Mode::DI || M == Mode::AW || M == Mode::DIPC) ? 2 : 0;
+    SYNC(delay);
 
     // Check for address error
     if (misalignedPC<C>(ea)) {
@@ -2758,8 +2758,9 @@ Moira::execJsr(u16 opcode)
     int src = _____________xxx(opcode);
     u32 ea  = computeEA<C, M, Long, SKIP_LAST_RD>(src);
 
-    [[maybe_unused]] const int delay[] = { 0,0,0,0,0,2,4,2,0,2,4,0 };
-    SYNC(delay[(int)M]);
+    // Indexed modes take 4 extra cycles, the other modes with an extension word 2 (except absolute long)
+    constexpr int delay = (M == Mode::IX || M == Mode::IXPC) ? 4 : (M == Mode::DI || M == Mode::AW || M == Mode::DIPC) ? 2 : 0;
+    SYNC(delay);
 
     if constexpr (C == Core::C68000) {
 
@@ -2977,10 +2978,7 @@ Moira::execMove0(u16 opcode)
 
     readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
 
-    reg.sr.n = NBIT<S>(data);
-    reg.sr.z = ZERO<S>(data);
-    reg.sr.v = 0;
-    reg.sr.c = 0;
+    setMoveFlags<S>(data);
 
     writeOp<C, Mode::DN, S>(dst, data);
 
@@ -3027,33 +3025,21 @@ Moira::execMove2(u16 opcode)
 
             // First write: untouched flags (register source) or the flags of the low word (memory source)
             if constexpr (isMemMode(M)) {
-                reg.sr.n = NBIT<Word>(data);
-                reg.sr.z = ZERO<Word>(data);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
+                setMoveFlags<Word>(data);
             }
             writeM<C, Mode::AI, Word, AE_INC_PC | UAE_DEC_PC>(ea2, READ<Word, 1>(data));
 
             // Second write: the flags of the low word (register source) or the final flags (memory source)
-            reg.sr.n = NBIT<isMemMode(M) ? Long : Word>(data);
-            reg.sr.z = ZERO<isMemMode(M) ? Long : Word>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<isMemMode(M) ? Long : Word>(data);
             writeM<C, Mode::AI, Word, F | UAE_DEC_PC>(ea2 + 2, READ<Word>(data));
 
         } else {
 
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<S>(data);
             writeM<C, Mode::AI, S, F | UAE_DEC_PC>(ea2, data);
         }
 
-        reg.sr.n = NBIT<S>(data);
-        reg.sr.z = ZERO<S>(data);
-        reg.sr.v = 0;
-        reg.sr.c = 0;
+        setMoveFlags<S>(data);
 
         // The interrupt level is polled in the second write if it is the last bus cycle (register source)
         if constexpr (S == Long && !isMemMode(M)) looping<I>() ? noPrefetch<C>() : prefetch<C>();
@@ -3067,24 +3053,17 @@ Moira::execMove2(u16 opcode)
 
             writeOp<C, Mode::AI, S, AE_INC_PC>(dst, data);
 
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<S>(data);
 
             looping<I>() ? noPrefetch<C>() : prefetch<C>();
 
         } else {
 
-            reg.sr.n = NBIT<S == Long ? Word : S>(data);
-            reg.sr.z = ZERO<S == Long ? Word : S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<S == Long ? Word : S>(data);
 
             writeOp<C, Mode::AI, S, AE_INC_PC>(dst, data);
 
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
+            setMoveFlags<S>(data);
 
             looping<I>() ? noPrefetch<C>() : prefetch<C, POLL>();
             if (looping<I>() && S == Long) loopModeDelay = 0;
@@ -3132,34 +3111,22 @@ Moira::execMove3(u16 opcode)
 
             // First write: untouched flags (register source) or the flags of the low word (memory source)
             if constexpr (isMemMode(M)) {
-                reg.sr.n = NBIT<Word>(data);
-                reg.sr.z = ZERO<Word>(data);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
+                setMoveFlags<Word>(data);
             }
             writeM<C, Mode::PI, Word, AE_INC_PC | UAE_DEC_PC>(ea2, READ<Word, 1>(data));
 
             // Second write: the flags of the low word (register source) or the final flags (memory source)
-            reg.sr.n = NBIT<isMemMode(M) ? Long : Word>(data);
-            reg.sr.z = ZERO<isMemMode(M) ? Long : Word>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<isMemMode(M) ? Long : Word>(data);
             writeM<C, Mode::PI, Word, F | UAE_DEC_PC>(ea2 + 2, READ<Word>(data));
 
         } else {
 
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<S>(data);
             writeM<C, Mode::PI, S, F | UAE_DEC_PC>(ea2, data);
         }
         updateAnPI<Mode::PI, S>(dst);
 
-        reg.sr.n = NBIT<S>(data);
-        reg.sr.z = ZERO<S>(data);
-        reg.sr.v = 0;
-        reg.sr.c = 0;
+        setMoveFlags<S>(data);
 
         looping<I>() ? noPrefetch<C>() : prefetch<C>();
 
@@ -3170,26 +3137,19 @@ Moira::execMove3(u16 opcode)
             POLL_IPL;
             writeOp<C, Mode::PI, S, AE_INC_PC>(dst, data);
 
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<S>(data);
 
             looping<I>() ? noPrefetch<C>() : prefetch<C>();
 
         } else {
 
-            reg.sr.n = NBIT<S == Long ? Word : S>(data);
-            reg.sr.z = ZERO<S == Long ? Word : S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<S == Long ? Word : S>(data);
 
             writeOp<C, Mode::PI, S, AE_INC_PC|POLL>(dst, data);
             looping<I>() ? noPrefetch<C>() : prefetch<C>();
             if (looping<I>() && S == Long) loopModeDelay = 0;
 
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
+            setMoveFlags<S>(data);
         }
     }
 
@@ -3235,10 +3195,7 @@ Moira::execMove4(u16 opcode)
     // A misaligned byte or word write sets bit 3 in the code word if neither S nor the old C flag is set (not in MAME)
     [[maybe_unused]] bool cb3 = !reg.sr.s && !reg.sr.c;
 
-    reg.sr.n = NBIT<S>(data);
-    reg.sr.z = ZERO<S>(data);
-    reg.sr.v = 0;
-    reg.sr.c = 0;
+    setMoveFlags<S>(data);
 
     // MAME shows the flags of the low word if the prefetch fails
     try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); } catch (BusError &e) {
@@ -3333,10 +3290,7 @@ Moira::execMove5(u16 opcode)
         // A failed extension word fetch shows the flags of the source: untouched for register
         // sources and for memory sources the flags of the (low word of the) operation
         if constexpr (isMemMode(M)) {
-            reg.sr.n = NBIT<S == Long ? Word : S>(data);
-            reg.sr.z = ZERO<S == Long ? Word : S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<S == Long ? Word : S>(data);
         }
         u32 ea2;
         ea2 = computeEA<C, Mode::DI, S, NO_DEC_PC>(dst);
@@ -3348,23 +3302,16 @@ Moira::execMove5(u16 opcode)
             reg.sr.z = ZERO<Word>(READ<Word, 1>(data)) && reg.sr.z;
             writeM<C, Mode::DI, Word>(ea2, READ<Word, 1>(data));
 
-            reg.sr.n = NBIT<Word>(data);
-            reg.sr.z = ZERO<Word>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<Word>(data);
             writeM<C, Mode::DI, Word, POLL>(ea2 + 2, READ<Word>(data));
 
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
+            setMoveFlags<S>(data);
             prefetch<C>();
 
         } else {
 
             // A failed write shows the final flags
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<S>(data);
             writeM<C, Mode::DI, S>(ea2, data);
 
             prefetch<C, POLL>();
@@ -3375,19 +3322,13 @@ Moira::execMove5(u16 opcode)
         if constexpr (S == Long && !isMemMode(M)) {
 
             writeOp<C, Mode::DI, S, POLL>(dst, data);
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<S>(data);
             prefetch<C>();
 
         } else {
 
             writeOp<C, Mode::DI, S>(dst, data);
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<S>(data);
             prefetch<C, POLL>();
         }
     }
@@ -3431,10 +3372,7 @@ Moira::execMove6(u16 opcode)
         // A failed extension word fetch shows the flags of the source: untouched for register
         // sources and for memory sources the flags of the (low word of the) operation
         if constexpr (isMemMode(M)) {
-            reg.sr.n = NBIT<S == Long ? Word : S>(data);
-            reg.sr.z = ZERO<S == Long ? Word : S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<S == Long ? Word : S>(data);
         }
         u32 ea2;
         ea2 = computeEA<C, Mode::IX, S, NO_DEC_PC>(dst);
@@ -3446,23 +3384,16 @@ Moira::execMove6(u16 opcode)
             reg.sr.z = ZERO<Word>(READ<Word, 1>(data)) && reg.sr.z;
             writeM<C, Mode::IX, Word>(ea2, READ<Word, 1>(data));
 
-            reg.sr.n = NBIT<Word>(data);
-            reg.sr.z = ZERO<Word>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<Word>(data);
             writeM<C, Mode::IX, Word, POLL>(ea2 + 2, READ<Word>(data));
 
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
+            setMoveFlags<S>(data);
             prefetch<C>();
 
         } else {
 
             // A failed write shows the final flags
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<S>(data);
             writeM<C, Mode::IX, S>(ea2, data);
 
             prefetch<C, POLL>();
@@ -3473,19 +3404,13 @@ Moira::execMove6(u16 opcode)
         if constexpr (S == Long && !isMemMode(M)) {
 
             writeOp<C, Mode::IX, S, POLL>(dst, data);
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<S>(data);
             prefetch<C>();
 
         } else {
 
             writeOp<C, Mode::IX, S>(dst, data);
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<S>(data);
             prefetch<C, POLL>();
         }
     }
@@ -3523,26 +3448,19 @@ Moira::execMove7(u16 opcode)
     if constexpr (C == Core::C68000) {
 
         // A failed extension word fetch shows the flags of the (low word of the) operation
-        reg.sr.n = NBIT<S == Long ? Word : S>(u64(data));
-        reg.sr.z = ZERO<S == Long ? Word : S>(u64(data));
-        reg.sr.v = 0;
-        reg.sr.c = 0;
+        setMoveFlags<S == Long ? Word : S>(data);
 
         writeBuffer = READ<Word, S == Long ? 1 : 0>(data);
         u32 ea2 = computeEA<C, Mode::AW, S>(dst);
 
         // A failed write shows the final flags
-        reg.sr.n = NBIT<S>(u64(data));
-        reg.sr.z = ZERO<S>(u64(data));
+        setMoveFlags<S>(data);
         writeM<C, Mode::AW, S>(ea2, data);
 
     } else {
 
         writeOp<C, Mode::AW, S>(dst, data);
-        reg.sr.n = NBIT<S>(u64(data));
-        reg.sr.z = ZERO<S>(u64(data));
-        reg.sr.v = 0;
-        reg.sr.c = 0;
+        setMoveFlags<S>(data);
     }
     prefetch<C, POLL>();
 
@@ -3586,8 +3504,6 @@ Moira::execMove8(u16 opcode)
      *  operand is a data or address register, or immediate, then the behavior
      *  is the same as other MOVE variants (class 1 instruction)."
      */
-    auto setFlags = [&](bool n, bool z) { reg.sr.n = n; reg.sr.z = z; reg.sr.v = 0; reg.sr.c = 0; };
-
     if constexpr (isMemMode(M)) {
 
         readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
@@ -3595,20 +3511,20 @@ Moira::execMove8(u16 opcode)
         if constexpr (C == Core::C68000) {
 
             // A failed first extension word fetch shows the flags of the operation (untouched if long)
-            if constexpr (S != Long) setFlags(NBIT<S>(data), ZERO<S>(data));
+            if constexpr (S != Long) setMoveFlags<S>(data);
             u32 ea2 = queue.irc << 16;
             readExt<C, NO_DEC_PC>();
             ea2 |= queue.irc;
 
             // An address error shows the flags of the (low word of the) operation
-            if constexpr (S == Long) setFlags(NBIT<Word>(data), ZERO<Word>(data));
+            if constexpr (S == Long) setMoveFlags<Word>(data);
             checkEven<C, S, AE_WRITE|AE_DATA>(ea2);
 
             if constexpr (S == Long) {
 
                 // The first write shows the flags of the low word, the second one the final flags
                 writeM<C, Mode::AL, Word>(ea2, READ<Word, 1>(data));
-                setFlags(NBIT<S>(data), ZERO<S>(data));
+                setMoveFlags<S>(data);
                 writeM<C, Mode::AL, Word>(ea2 + 2, READ<Word>(data));
 
             } else {
@@ -3626,7 +3542,7 @@ Moira::execMove8(u16 opcode)
             writeM<C, Mode::AL, S>(ea2, data);
         }
 
-        setFlags(NBIT<S>(data), ZERO<S>(data));
+        setMoveFlags<S>(data);
         readExt<C, NO_DEC_PC>();
 
     } else {
@@ -3643,17 +3559,17 @@ Moira::execMove8(u16 opcode)
             readBuffer = queue.irc;
 
             // A failed fetch of the second extension word shows the flags of the (low word of the) operation
-            setFlags(NBIT<S == Long ? Word : S>(data), ZERO<S == Long ? Word : S>(data));
+            setMoveFlags<S == Long ? Word : S>(data);
             readExtLast<C>();
 
             // A failed write shows the final flags
-            setFlags(NBIT<S>(data), ZERO<S>(data));
+            setMoveFlags<S>(data);
             writeM<C, Mode::AL, S>(ea2, data);
 
         } else {
 
             writeOp<C, Mode::AL, S>(dst, data);
-            setFlags(NBIT<S>(data), ZERO<S>(data));
+            setMoveFlags<S>(data);
         }
     }
 
@@ -4274,9 +4190,8 @@ Moira::execMoveCcrEa(u16 opcode)
 
     int dst = _____________xxx(opcode);
 
-    if constexpr (M == Mode::AI) SYNC(2);
-    if constexpr (M == Mode::PI) SYNC(4);
-    if constexpr (M == Mode::PD) SYNC(2);
+    constexpr int delay = M == Mode::PI ? 4 : (M == Mode::AI || M == Mode::PD) ? 2 : 0;
+    if constexpr (delay) SYNC(delay);
 
     auto val = getCCR();
 
@@ -4358,7 +4273,7 @@ Moira::execMoveSrRg(u16 opcode)
     AVAILABILITY(Core::C68000)
     if constexpr (C != Core::C68000) SUPERVISOR_MODE_ONLY
 
-        int dst = _____________xxx(opcode);
+    int dst = _____________xxx(opcode);
 
     u32 ea, data;
     readOp<C, M, S>(dst, &ea, &data);
@@ -4382,7 +4297,7 @@ Moira::execMoveSrEa(u16 opcode)
     AVAILABILITY(Core::C68000)
     if constexpr (C != Core::C68000) SUPERVISOR_MODE_ONLY
 
-        int dst = _____________xxx(opcode);
+    int dst = _____________xxx(opcode);
 
     if constexpr (C == Core::C68000) {
 
@@ -4394,9 +4309,8 @@ Moira::execMoveSrEa(u16 opcode)
 
     } else {
 
-        if constexpr (M == Mode::AI) SYNC(2);
-        if constexpr (M == Mode::PI) SYNC(4);
-        if constexpr (M == Mode::PD) SYNC(2);
+        constexpr int delay = M == Mode::PI ? 4 : (M == Mode::AI || M == Mode::PD) ? 2 : 0;
+        if constexpr (delay) SYNC(delay);
 
         auto val = getSR();
         u32 ea = computeEA<C, M, S>(dst);
@@ -6086,9 +6000,8 @@ Moira::execSccEa(u16 opcode)
         ea = computeEA<C, M, S>(dst);
         updateAn<M, S>(dst);
 
-        if constexpr (M == Mode::AI) SYNC(2);
-        if constexpr (M == Mode::PI) SYNC(4);
-        if constexpr (M == Mode::PD) SYNC(2);
+        constexpr int delay = M == Mode::PI ? 4 : (M == Mode::AI || M == Mode::PD) ? 2 : 0;
+        if constexpr (delay) SYNC(delay);
         if constexpr (M == Mode::IX) SYNC(2);
 
         fetchIrc<C, POLL>();
@@ -6254,9 +6167,8 @@ Moira::execTasEa(u16 opcode)
 
     } else {
 
-        if constexpr (M == Mode::AI) SYNC(2);
-        if constexpr (M == Mode::PI) SYNC(4);
-        if constexpr (M == Mode::PD) SYNC(2);
+        constexpr int delay = M == Mode::PI ? 4 : (M == Mode::AI || M == Mode::PD) ? 2 : 0;
+        if constexpr (delay) SYNC(delay);
         if constexpr (M == Mode::IX) SYNC(2);
 
         readOp<C, M, Byte>(dst, &ea, &data);

@@ -456,6 +456,15 @@ Moira::bcd(u32 op1, u32 op2)
     return (u32)result;
 }
 
+template <Size S> void
+Moira::setMoveFlags(u32 data)
+{
+    reg.sr.n = NBIT<S>(data);
+    reg.sr.z = ZERO<S>(data);
+    reg.sr.v = 0;
+    reg.sr.c = 0;
+}
+
 template <Core C, Size S> void
 Moira::cmp(u32 op1, u32 op2)
 {
