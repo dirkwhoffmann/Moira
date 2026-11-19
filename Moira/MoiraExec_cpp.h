@@ -327,7 +327,7 @@ Moira::execAddEaRg(u16 opcode)
         
         result = addsub<C, I, S>(data, readD<S>(dst));
 
-        try { prefetchLate<C, POLL, false>(); } catch (BusError &e) {
+        try { prefetch<C, POLL>(); } catch (BusError &e) {
             rethrowD<C, S>(e, dst, result);
         }
         writeD<S>(dst, result);
@@ -500,7 +500,7 @@ Moira::execAddiRg(u16 opcode)
     } else {
 
         result = addsub<C, I, S>(src, data);
-        try { prefetchLate<C, POLL, false>(); }
+        try { prefetch<C, POLL>(); }
         catch (BusError &e) { rethrowD<C, S>(e, dst, result); }
     }
     writeD<S>(dst, result);
@@ -577,7 +577,7 @@ Moira::execAddqDn(u16 opcode)
     } else {
 
         result = addsub<C, I, S>(src, readD<S>(dst));
-        try { prefetchLate<C, POLL, false>(); } catch (BusError &e) {
+        try { prefetch<C, POLL>(); } catch (BusError &e) {
             rethrowD<C, S>(e, dst, result);
         }
     }
@@ -669,7 +669,7 @@ Moira::execAddxRg(u16 opcode)
     } else if constexpr (C == Core::C68000) {
     
         result = addsub<C, I, S>(readD<S>(src), readD<S>(dst));
-        try { prefetchLate<C, POLL, false>(); } catch (BusError &e) {
+        try { prefetch<C, POLL>(); } catch (BusError &e) {
             rethrowD<C, S>(e, dst, result);
         }
         
@@ -931,7 +931,7 @@ Moira::execAndiRg(u16 opcode)
 
         result = logic<C, I, S>(src, readD<S>(dst));
         
-        try { prefetchLate<C, POLL, false>(); }
+        try { prefetch<C, POLL>(); }
         catch (BusError &e) { rethrowD<C, S>(e, dst, result); }
     }
     writeD<S>(dst, result);
