@@ -702,6 +702,7 @@ static constexpr u64 NO_DEC_PC      = (1 << 15);  ///< A failing extension word 
 static constexpr u64 COMMIT_IRD    = (1 << 16);  ///< The access contains the last bus cycle of the instruction. The IRD is replaced
                                                  ///< when that cycle starts (after the address error check, before the second half
                                                  ///< of a split access). Faults before that point stack the old IRD.
+                                                 ///< Only the 68000 defers the IRD update (see commitIrd).
 
 /// Returns the flags for completing a bus error stack frame. The ADDR adjustments of address error frames don't apply.
 template <Flags F> constexpr Flags beFrameFlags() {

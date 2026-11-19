@@ -22,8 +22,7 @@ CYCLES_68010(38) \
 CYCLES_68020(34) \
 return; }
 
-#define COMMITC (C == Core::C68000 ? COMMIT_IRD : 0)   // The access contains the last bus cycle of the instruction (see COMMIT_IRD)
-#define CLRC ((!isRegMode(M) || S == Long) ? COMMITC : 0)   // CLR defers the IRD update only if the prefetch is not the last cycle
+#define CLRC ((!isRegMode(M) || S == Long) ? COMMIT_IRD : 0)   // CLR defers the IRD update only if the prefetch is not the last cycle
 
 
 #define STD_AE_FRAME (\
@@ -207,7 +206,7 @@ Moira::execShiftEa(u16 opcode)
 
     u32 result = shift<C, I, S>(1, data);
     looping<I>() ? noPrefetch<C>(4) : fetchIrc<C, POLL>();
-    writeM<C, M, S, COMMITC>(ea, result);
+    writeM<C, M, S, COMMIT_IRD>(ea, result);
 
     if constexpr (I == Instr::ROR || I == Instr::ROL) {
 
@@ -286,7 +285,7 @@ Moira::execAbcdEa(u16 opcode)
     u32 result = bcd<C, I, Byte>(data1, data2);
     looping<I>() ? noPrefetch<C>(4) : fetchIrc<C>();
 
-    writeM<C, M, Byte, COMMITC>(ea2, result);
+    writeM<C, M, Byte, COMMIT_IRD>(ea2, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -378,7 +377,7 @@ Moira::execAddRgEa(u16 opcode)
 
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    constexpr Flags flags = REVERSE | COMMITC;
+    constexpr Flags flags = REVERSE | COMMIT_IRD;
 
     if constexpr (S == Long) {
 
@@ -543,7 +542,7 @@ Moira::execAddiEa(u16 opcode)
     u32 ea, data, result;
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    constexpr Flags flags = POLL | REVERSE | COMMITC;
+    constexpr Flags flags = POLL | REVERSE | COMMIT_IRD;
 
     result = addsub<C, I, S>(src, data);
 
@@ -642,7 +641,7 @@ Moira::execAddqEa(u16 opcode)
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
     if (src == 0) src = 8;
-    constexpr Flags flags = REVERSE | COMMITC;
+    constexpr Flags flags = REVERSE | COMMIT_IRD;
 
     result = addsub<C, I, S>(src, data);
 
@@ -749,7 +748,7 @@ Moira::execAddxEa(u16 opcode)
         }
         
         looping<I>() ? noPrefetch<C>() : fetchIrc<C>();
-        writeM<C, M, Word, COMMITC>(ea2, READ<Word, 1>(result));
+        writeM<C, M, Word, COMMIT_IRD>(ea2, READ<Word, 1>(result));
 
     } else if constexpr (S == Long && C == Core::C68010) {
 
@@ -770,7 +769,7 @@ Moira::execAddxEa(u16 opcode)
         result = addsub<C, I, S>(data1, data2);
 
         looping<I>() ? noPrefetch<C>() : fetchIrc<C>();
-        writeM<C, M, S, COMMITC>(ea2, result);
+        writeM<C, M, S, COMMIT_IRD>(ea2, result);
 
     } else {
 
@@ -784,7 +783,7 @@ Moira::execAddxEa(u16 opcode)
         result = addsub<C, I, S>(data1, data2);
 
         looping<I>() ? noPrefetch<C>(2) : fetchIrc<C>();
-        writeM<C, M, S, COMMITC>(ea2, result);
+        writeM<C, M, S, COMMIT_IRD>(ea2, result);
     }
 
     //           00  10  20        00  10  20        00  10  20
@@ -915,7 +914,7 @@ Moira::execAndRgEa(u16 opcode)
     u32 ea, data, result;
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    constexpr Flags flags = REVERSE | COMMITC;
+    constexpr Flags flags = REVERSE | COMMIT_IRD;
 
     result = logic<C, I, S>(readD<S>(src), data);
 
@@ -998,7 +997,7 @@ Moira::execAndiEa(u16 opcode)
         throw;
     }
 
-    writeOp<C, M, S, REVERSE | COMMITC>(dst, ea, result);
+    writeOp<C, M, S, REVERSE | COMMIT_IRD>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -1215,7 +1214,7 @@ Moira::execBitDxEa(u16 opcode)
 
     // MAME and UAE idle after the prefetch
     if constexpr (C == Core::C68000 && I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
-    if constexpr (I != Instr::BTST) writeM<C, M, Byte, COMMITC>(ea, data);
+    if constexpr (I != Instr::BTST) writeM<C, M, Byte, COMMIT_IRD>(ea, data);
     else if constexpr (M == Mode::IM) commitIrd<C>();
 
     [[maybe_unused]] auto c = I == Instr::BTST ? 0 : I == Instr::BCLR && C == Core::C68010 ? 6 : 4;
@@ -1284,7 +1283,7 @@ Moira::execBitImEa(u16 opcode)
         throw;
     }
     data = bit<C, I>(data, src);
-    if constexpr (I != Instr::BTST) writeM<C, M, S, COMMITC>(ea, data);
+    if constexpr (I != Instr::BTST) writeM<C, M, S, COMMIT_IRD>(ea, data);
 
     [[maybe_unused]] auto c = I == Instr::BTST ? 0 : 4;
 
@@ -3368,7 +3367,7 @@ Moira::execMove4(u16 opcode)
         // The low word is written first. UAE restores the register if a write fails and stacks the unmasked address.
         try {
             writeM<C, Mode::PD, Word>(ea + 2, READ<Word>(data));
-            writeM<C, Mode::PD, Word, COMMITC>(ea, READ<Word, 1>(data));
+            writeM<C, Mode::PD, Word, COMMIT_IRD>(ea, READ<Word, 1>(data));
         }
         catch (BusError &e) {
             e.stackFrame.addr = (e.stackFrame.addr & 0xFFFFFF) | (ea & 0xFF000000);
@@ -3381,11 +3380,11 @@ Moira::execMove4(u16 opcode)
         // The low word is written first. MAME decrements the register before the second write.
         writeM<C, Mode::PD, Word>(ea + 2, READ<Word>(data));
         updateAn<Mode::PD, S>(dst);
-        writeM<C, Mode::PD, Word, COMMITC>(ea, READ<Word, 1>(data));
+        writeM<C, Mode::PD, Word, COMMIT_IRD>(ea, READ<Word, 1>(data));
 
     } else {
 
-        writeM<C, Mode::PD, S, REVERSE | COMMITC>(ea, data);
+        writeM<C, Mode::PD, S, REVERSE | COMMIT_IRD>(ea, data);
         if constexpr (!early) updateAn<Mode::PD, S>(dst);
     }
 
@@ -4547,7 +4546,7 @@ Moira::execMoveSrEa(u16 opcode)
         readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
         fetchIrc<C>();
 
-        writeOp<C, M, S, POLL | COMMITC>(dst, ea, getSR());
+        writeOp<C, M, S, POLL | COMMIT_IRD>(dst, ea, getSR());
 
     } else {
 
@@ -5517,7 +5516,7 @@ Moira::execNbcdEa(u16 opcode)
         fetchIrc<C, POLL>();
     }
 
-    writeM<C, M, Byte, COMMITC>(ea, result);
+    writeM<C, M, Byte, COMMIT_IRD>(ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -5566,7 +5565,7 @@ Moira::execNegEa(u16 opcode)
 
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    constexpr Flags flags = REVERSE | COMMITC;
+    constexpr Flags flags = REVERSE | COMMIT_IRD;
 
     if constexpr (S == Long) {
 
@@ -5763,18 +5762,18 @@ Moira::execPea(u16 opcode)
 
             POLL_IPL;
             fetchIrc<C>();
-            push<C, Long, COMMITC> (ea);
+            push<C, Long, COMMIT_IRD> (ea);
 
         } else {
 
             fetchIrc<C, POLL>();
-            push<C, Long, COMMITC> (ea);
+            push<C, Long, COMMIT_IRD> (ea);
         }
 
     } else {
 
         fetchIrc<C, POLL>();
-        push<C, Long, COMMITC>(ea);
+        push<C, Long, COMMIT_IRD>(ea);
     }
 
     //           00  10  20        00  10  20        00  10  20
@@ -6328,7 +6327,7 @@ Moira::execSccEa(u16 opcode)
 
         fetchIrc<C, POLL>();
         data = cond<I>() ? 0xFF : 0;
-        writeOp<C, M, Byte, COMMITC>(dst, ea, data);
+        writeOp<C, M, Byte, COMMIT_IRD>(dst, ea, data);
 
     } else {
 
@@ -6343,7 +6342,7 @@ Moira::execSccEa(u16 opcode)
 
         fetchIrc<C, POLL>();
         data = cond<I>() ? 0xFF : 0;
-        writeOp<C, M, S, COMMITC>(dst, ea, data);
+        writeOp<C, M, S, COMMIT_IRD>(dst, ea, data);
     }
 
     //           00  10  20        00  10  20        00  10  20
