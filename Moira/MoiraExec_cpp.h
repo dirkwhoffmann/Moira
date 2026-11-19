@@ -1981,25 +1981,14 @@ Moira::execClr(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    if constexpr (C == Core::C68000 || C == Core::C68020) {
+    int dst = _____________xxx(opcode);
 
-        int dst = _____________xxx(opcode);
+    if constexpr (C == Core::C68000) {
 
         u32 ea, data;
-        if constexpr (C == Core::C68020 && !isRegMode(M)) {
+        readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-            // The 68020 does not read the operand before it clears it
-            ea = computeEA<C, M, S>(dst);
-            updateAnPD<M, S>(dst);
-            updateAnPI<M, S>(dst);
-            data = 0;
-
-        } else {
-
-            readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
-        }
-
-        // MAME and UAE (68020) set the flags first
+        // MAME sets the flags first
         reg.sr.n = 0;
         reg.sr.z = 1;
         reg.sr.v = 0;
@@ -2013,61 +2002,33 @@ Moira::execClr(u16 opcode)
 
         } catch (BusError &e) {
 
-            if constexpr (C == Core::C68000 && isRegMode(M)) writeD<S == Long ? Word : S>(dst, 0);
+            if constexpr (isRegMode(M)) writeD<S == Long ? Word : S>(dst, 0);
             throw;
         }
-    }
 
-    if constexpr (C == Core::C68010) {
+    } else if constexpr (C == Core::C68010) {
 
-        int dst = _____________xxx(opcode);
-
+        constexpr Flags incA = S == Long ? AE_INC_A : 0;
         u32 ea = computeEA<C, M, S>(dst);
 
         switch (M) {
 
             case Mode::AI:
-
-                writeOp<C, M, S, POLL | AE_INC_PC>(dst, ea, 0);
-                looping<I>() ? noPrefetch<C>() : prefetch<C>();
-                if (looping<I>()) loopModeDelay = 4;
-                break;
-
             case Mode::PI:
 
                 writeOp<C, M, S, POLL | AE_INC_PC>(dst, ea, 0);
                 updateAnPI<M, S>(dst);
-                looping<I>() ? noPrefetch<C>() : prefetch<C>();
-                if (looping<I>()) loopModeDelay = 4;
+                if (looping<I>()) { noPrefetch<C>(); loopModeDelay = 4; } else { prefetch<C>(); }
                 break;
 
             case Mode::PD:
 
-                if constexpr (S == Long) {
-                    writeOp<C, M, S, REVERSE | POLL | AE_INC_PC | AE_INC_A>(dst, ea, 0);
-                } else {
-                    writeOp<C, M, S, REVERSE | POLL | AE_INC_PC>(dst, ea, 0);
-                }
+                writeOp<C, M, S, REVERSE | POLL | AE_INC_PC | incA>(dst, ea, 0);
                 updateAnPD<M, S>(dst);
-                looping<I>() ? noPrefetch<C>() : prefetch<C>();
-                if (looping<I>()) loopModeDelay = 4;
+                if (looping<I>()) { noPrefetch<C>(); loopModeDelay = 4; } else { prefetch<C>(); }
                 break;
 
             case Mode::DI:
-
-                reg.sr.n = 0;
-                reg.sr.z = 1;
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-
-                fetchIrc<C, POLL, (!isRegMode(M) || S == Long)>();
-                if constexpr (S == Long) {
-                    writeOp<C, M, S, REVERSE | AE_INC_PC | AE_INC_A | CLRC>(dst, ea, 0);
-                } else {
-                    writeOp<C, M, S, REVERSE | AE_INC_PC | CLRC>(dst, ea, 0);
-                }
-                break;
-
             case Mode::IX:
 
                 reg.sr.n = 0;
@@ -2075,13 +2036,9 @@ Moira::execClr(u16 opcode)
                 reg.sr.v = 0;
                 reg.sr.c = 0;
 
-                SYNC(2);
-                fetchIrc<C, POLL, (!isRegMode(M) || S == Long)>();
-                if constexpr (S == Long) {
-                    writeOp<C, M, S, REVERSE | AE_INC_PC | AE_INC_A | CLRC>(dst, ea, 0);
-                } else {
-                    writeOp<C, M, S, REVERSE | AE_INC_PC | CLRC>(dst, ea, 0);
-                }
+                if constexpr (M == Mode::IX) SYNC(2);
+                fetchIrc<C, POLL>();
+                writeOp<C, M, S, REVERSE | AE_INC_PC | incA>(dst, ea, 0);
                 break;
 
             case Mode::AW:
@@ -2093,12 +2050,8 @@ Moira::execClr(u16 opcode)
                 reg.sr.v = 0;
                 reg.sr.c = 0;
 
-                fetchIrc<C, POLL, (!isRegMode(M) || S == Long)>();
-                if constexpr (S == Long) {
-                    writeOp<C, M, S, REVERSE | AE_INC_A | CLRC>(dst, ea, 0);
-                } else {
-                    writeOp<C, M, S, REVERSE | CLRC>(dst, ea, 0);
-                }
+                fetchIrc<C, POLL>();
+                writeOp<C, M, S, REVERSE | incA>(dst, ea, 0);
                 break;
 
             default:
@@ -2111,6 +2064,23 @@ Moira::execClr(u16 opcode)
         reg.sr.z = 1;
         reg.sr.v = 0;
         reg.sr.c = 0;
+
+    } else if constexpr (C == Core::C68020) {
+
+        // The 68020 does not read the operand before it clears it
+        u32 ea = computeEA<C, M, S>(dst);
+        updateAnPD<M, S>(dst);
+        updateAnPI<M, S>(dst);
+
+        // UAE sets the flags first
+        reg.sr.n = 0;
+        reg.sr.z = 1;
+        reg.sr.v = 0;
+        reg.sr.c = 0;
+
+        fetchIrc<C, POLL>();
+        if constexpr (S == Long && isRegMode(M)) SYNC(2);
+        writeOp<C, M, S>(dst, ea, 0);
     }
 
     //           00  10  20        00  10  20        00  10  20
