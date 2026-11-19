@@ -376,8 +376,6 @@ Moira::execAddRgEa(u16 opcode)
     if constexpr (S == Long) {
 
         try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); } catch (BusError &e) {
-
-            // If prefetch fails, the flags of the low word operation show up
             addsub<C, I, Word>(readD<Word>(src), data & 0xFFFF);
             rethrow<C>(e);
         }
@@ -386,9 +384,7 @@ Moira::execAddRgEa(u16 opcode)
     } else {
 
         result = addsub<C, I, S>(readD<S>(src), data);
-
         try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); } catch (BusError &e) {
-
             rethrow<C>(e);
         }
     }
@@ -425,8 +421,9 @@ Moira::execAdda(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        try { prefetchLate<C, POLL>(); }
-        catch (BusError &e) { rethrowA<C, Word>(e, dst, result); }   // MAME updates the lower word
+        try { prefetchLate<C, POLL>(); } catch (BusError &e) {
+            rethrowA<C, Word>(e, dst, result);
+        }
         SYNC(2);
         if constexpr (S == Word || isRegMode(M) || isImmMode(M)) SYNC(2);
         writeA(dst, result);
@@ -436,7 +433,6 @@ Moira::execAdda(u16 opcode)
         writeA(dst, result);
         SYNC(2);
         POLL_IPL;
-        
         if constexpr (S == Word || isRegMode(M) || isImmMode(M)) SYNC(2);
 
         if (looping<I>()) {
@@ -494,9 +490,9 @@ Moira::execAddiRg(u16 opcode)
 
     if constexpr (S == Long) {
 
-        try { prefetchLate<C, POLL>(); }
-        catch (BusError &e) { rethrowD<C, Word>(e, dst, addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF)); }
-
+        try { prefetchLate<C, POLL>(); } catch (BusError &e) {
+            rethrowD<C, Word>(e, dst, addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF));
+        }
         result = addsub<C, I, S>(src, data);
         SYNC_68000(4);
         SYNC_68010(2);
@@ -535,20 +531,14 @@ Moira::execAddiEa(u16 opcode)
 
     u32 ea, data, result;
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
-
-    constexpr Flags flags = POLL | REVERSE | COMMIT_IRD;
-
     result = addsub<C, I, S>(src, data);
 
-    // If the prefetch of a long operation fails, the flags of the low word operation show up
-    try { fetchIrc<C>(); }
-    catch (BusError &e) {
-
+    try { fetchIrc<C>(); } catch (BusError &e) {
         if constexpr (S == Long) { addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF); rethrow<C>(e); }
         throw;
     }
 
-    writeOp<C, M, S, flags>(dst, ea, result);
+    writeOp<C, M, S, POLL | REVERSE | COMMIT_IRD>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -575,20 +565,21 @@ Moira::execAddqDn(u16 opcode)
 
     if (src == 0) src = 8;
     u32 result;
+    
     if constexpr (S == Long) {
 
-        // If prefetch fails, the flags of the low word operation show up
-        try { prefetchLate<C, POLL>(); }
-        catch (BusError &e) { rethrowD<C, Word>(e, dst, addsub<C, I, Word>(src, readD<Word>(dst))); }
-
+        try { prefetchLate<C, POLL>(); } catch (BusError &e) {
+            rethrowD<C, Word>(e, dst, addsub<C, I, Word>(src, readD<Word>(dst)));
+        }
         result = addsub<C, I, S>(src, readD<S>(dst));
         SYNC(4);
 
     } else {
 
         result = addsub<C, I, S>(src, readD<S>(dst));
-        try { prefetchLate<C, POLL, false>(); }
-        catch (BusError &e) { rethrowD<C, S>(e, dst, result); }
+        try { prefetchLate<C, POLL, false>(); } catch (BusError &e) {
+            rethrowD<C, S>(e, dst, result);
+        }
     }
     writeD<S>(dst, result);
 
@@ -610,9 +601,9 @@ Moira::execAddqAn(u16 opcode)
     if (src == 0) src = 8;
     u32 result = (I == Instr::ADDQ) ? U32_ADD(readA(dst), src) : U32_SUB(readA(dst), src);
     
-    try { prefetchLate<C, POLL>(); }
-    catch (BusError &e) { rethrowA<C>(e, dst, result); }
-    
+    try { prefetchLate<C, POLL>(); } catch (BusError &e) {
+        rethrowA<C>(e, dst, result);
+    }
     SYNC(4);
     writeA(dst, result);
 
@@ -630,24 +621,19 @@ Moira::execAddqEa(u16 opcode)
 
     i8  src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
-
+    if (src == 0) src = 8;
+    
     u32 ea, data, result;
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    if (src == 0) src = 8;
-    constexpr Flags flags = REVERSE | COMMIT_IRD;
-
     result = addsub<C, I, S>(src, data);
 
-    // If the prefetch of a long operation fails, the flags of the low word operation show up
-    try { fetchIrc<C, POLL>(); }
-    catch (BusError &e) {
-
+    try { fetchIrc<C, POLL>(); } catch (BusError &e) {
         if constexpr (S == Long) { addsub<C, I, Word>(src, data & 0xFFFF); rethrow<C>(e); }
         throw;
     }
 
-    writeOp<C, M, S, flags>(dst, ea, result);
+    writeOp<C, M, S, REVERSE | COMMIT_IRD>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -672,28 +658,24 @@ Moira::execAddxRg(u16 opcode)
 
     u32 result;
 
-    if constexpr (C == Core::C68000) {
-
-        if constexpr (S == Long) {
-
-            // If prefetch fails, the flags of the low word operation show up
-            try { prefetchLate<C, POLL>(); }
-            catch (BusError &e) { rethrowD<C, Word>(e, dst, addsub<C, I, Word>(readD<Word>(src), readD<Word>(dst))); }
-
-            result = addsub<C, I, S>(readD<S>(src), readD<S>(dst));
-            SYNC(4);
-
-        } else {
-
-            result = addsub<C, I, S>(readD<S>(src), readD<S>(dst));
-            try { prefetchLate<C, POLL, false>(); }
-            catch (BusError &e) { rethrowD<C, S>(e, dst, result); }
+    if constexpr (C == Core::C68000 && S == Long) {
+        
+        try { prefetchLate<C, POLL>(); } catch (BusError &e) {
+            rethrowD<C, Word>(e, dst, addsub<C, I, Word>(readD<Word>(src), readD<Word>(dst)));
         }
-
+        result = addsub<C, I, S>(readD<S>(src), readD<S>(dst));
+        SYNC(4);
+        
+    } else if constexpr (C == Core::C68000) {
+    
+        result = addsub<C, I, S>(readD<S>(src), readD<S>(dst));
+        try { prefetchLate<C, POLL, false>(); } catch (BusError &e) {
+            rethrowD<C, S>(e, dst, result);
+        }
+        
     } else {
 
         result = addsub<C, I, S>(readD<S>(src), readD<S>(dst));
-
         POLL_IPL;
         if constexpr (S == Long) SYNC(2);
         prefetch<C>();
@@ -718,7 +700,7 @@ Moira::execAddxEa(u16 opcode)
 
     u32 ea1, ea2, data1, data2, result;
 
-    if constexpr (S == Long && C == Core::C68000) {
+    if constexpr (C == Core::C68000 && S == Long) {
 
         // The 68000 reads and writes the lower word of a long operand first
         constexpr Flags flags = AE_INC_PC | AE_INC_A | REVERSE | DEC_LATE;
@@ -726,16 +708,16 @@ Moira::execAddxEa(u16 opcode)
         readOp<C, M, S, flags>(src, &ea1, &data1);
 
         // If the high word fails, the low words have been added already
-        try { readOp<C, M, S, flags|IMPL_DEC>(dst, &ea2, &data2); }
-        catch (BusError &e) { if (e.upperWord) { addsub<C, I, Word>(data1 & 0xFFFF, readBuffer); rethrow<C>(e); } throw; }
+        try { readOp<C, M, S, flags|IMPL_DEC>(dst, &ea2, &data2); } catch (BusError &e) {
+            if (e.upperWord) { addsub<C, I, Word>(data1 & 0xFFFF, readBuffer); rethrow<C>(e); }
+            throw;
+        }
 
         u8 ccr = getCCR();
         result = addsub<C, I, S>(data1, data2);
 
         // If the low word fails, the stacked flags are those of the low word addition
-        try { writeM<C, M, Word, POLL | AE_INC_PC>(ea2 + 2, READ<Word>(result)); }
-        catch (BusError &e) {
-            
+        try { writeM<C, M, Word, POLL | AE_INC_PC>(ea2 + 2, READ<Word>(result)); } catch (BusError &e) {
             setCCR(ccr);
             addsub<C, I, Word>(data1 & 0xFFFF, data2 & 0xFFFF);
             rethrow<C>(e);
@@ -744,7 +726,7 @@ Moira::execAddxEa(u16 opcode)
         looping<I>() ? noPrefetch<C>() : fetchIrc<C>();
         writeM<C, M, Word, COMMIT_IRD>(ea2, READ<Word, 1>(result));
 
-    } else if constexpr (S == Long && C == Core::C68010) {
+    } else if constexpr (C == Core::C68010 && S == Long) {
 
         // The 68010 stacks the PC of the executing instruction and has undone the decrement already
         readOp<C, M, S, AE_INC_A>(src, &ea1, &data1);
@@ -752,10 +734,10 @@ Moira::execAddxEa(u16 opcode)
 
         result = addsub<C, I, S>(data1, data2);
 
-        writeM<C, M, S, REVERSE>(ea2, result);   // The low word is written first
+        writeM<C, M, S, REVERSE>(ea2, result);
         looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>();
 
-    } else if constexpr (S == Long && C == Core::C68020) {
+    } else if constexpr (C == Core::C68020 && S == Long) {
 
         readOp<C, M, S>(src, &ea1, &data1);
         readOp<C, M, S, IMPL_DEC>(dst, &ea2, &data2);
@@ -772,7 +754,7 @@ Moira::execAddxEa(u16 opcode)
 
         readOp<C, M, S, flags>(src, &ea1, &data1);
         POLL_IPL;
-        readOp<C, M, S, flags|IMPL_DEC> (dst, &ea2, &data2);
+        readOp<C, M, S, flags | IMPL_DEC> (dst, &ea2, &data2);
 
         result = addsub<C, I, S>(data1, data2);
 
