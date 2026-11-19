@@ -5800,239 +5800,192 @@ Moira::execRte(u16 opcode)
     u32 newpc = 0;
     bool rollback = false;
 
-    switch (C) {
+    if constexpr (C == Core::C68000) {
 
-        case Core::C68000:
-        {
-            if constexpr (compat == Compatibility::MAME) {
+        if constexpr (compat == Compatibility::MAME) {
 
-                // SP is adjusted after the last read
-                newsr = (u16)read<C, AddrSpace::DATA, Word>(reg.sp);
-                newpc = (u32)read<C, AddrSpace::DATA, Word>(reg.sp + 2) << 16;
-                reg.sp += 6;
-                newpc |= read<C, AddrSpace::DATA, Word>(reg.sp - 2);
+            // SP is adjusted after the last read
+            newsr = (u16)read<C, AddrSpace::DATA, Word>(reg.sp);
+            newpc = (u32)read<C, AddrSpace::DATA, Word>(reg.sp + 2) << 16;
+            reg.sp += 6;
+            newpc |= read<C, AddrSpace::DATA, Word>(reg.sp - 2);
+
+        } else if constexpr (compat == Compatibility::UAE) {
+
+            // UAE adjusts the stack pointer after the status register has been read
+            newsr = (u16)read<C, AddrSpace::DATA, Word, UAE_DEC_PC>(reg.sp);
+            reg.sp += 6;
+            newpc = (u32)read<C, AddrSpace::DATA, Word, UAE_DEC_PC>(reg.sp - 4) << 16;
+            newpc |= read<C, AddrSpace::DATA, Word, UAE_DEC_PC>(reg.sp - 2);
+
+        } else {
+
+            newsr = (u16)pop<C, Word>();
+            newpc = pop<C, Long>();
+        }
+
+    } else if constexpr (C == Core::C68010) {
+
+        u16 format = (u16)read<C, AddrSpace::DATA, Word>(reg.sp + 6);
+
+        // Check the frame format
+        switch (format >> 12) {
+
+            case 0b0000: // Short format
+
+                newsr = (u16)read<C, AddrSpace::DATA, Word>(reg.sp + 0);
+                newpc = read<C, AddrSpace::DATA, Long>(reg.sp + 2);
+                reg.sp += 8;
+                break;
+
+            case 0b1000: // Long format (keep on reading)
+            {
+                newsr = (u16)read<C, AddrSpace::DATA, Word>(reg.sp + 0);
+                newpc = read<C, AddrSpace::DATA, Long>(reg.sp + 2);
+
+                (void)read<C, AddrSpace::DATA, Word>(reg.sp + 8); // special status word
+                (void)read<C, AddrSpace::DATA, Long>(reg.sp + 10); // fault address
+
+                u16 value = (u16)read<C, AddrSpace::DATA, Word>(reg.sp + 26); // internal information, 16 words
+                u16 version = (value >> 10) & 0xF;
+
+                if (version != 0) { // TODO: PUT IN CPU VERSION NUMBER (GET FROM REAL CPU)
+
+                    SYNC(4);
+                    execException(M68kException::FORMAT_ERROR);
+                    return;
+                }
+
+                (void)read<C, AddrSpace::DATA, Word>(reg.sp + 28); // internal information, 16 words
+
+                (void)read<C, AddrSpace::DATA, Word>(reg.sp + 14); // unused/reserved
+                (void)read<C, AddrSpace::DATA, Word>(reg.sp + 16); // data output buffer
+                (void)read<C, AddrSpace::DATA, Word>(reg.sp + 18); // unused/reserved
+                (void)read<C, AddrSpace::DATA, Word>(reg.sp + 20); // data input buffer
+                (void)read<C, AddrSpace::DATA, Word>(reg.sp + 22); // unused/reserved
+                (void)read<C, AddrSpace::DATA, Word>(reg.sp + 24); // instruction input buffer
+
+                (void)read<C, AddrSpace::DATA, Long>(reg.sp + 34); // internal information, 16 words
+                (void)read<C, AddrSpace::DATA, Long>(reg.sp + 36); // internal information, 16 words
+                (void)read<C, AddrSpace::DATA, Long>(reg.sp + 38); // internal information, 16 words
+                (void)read<C, AddrSpace::DATA, Long>(reg.sp + 42); // internal information, 16 words
+                (void)read<C, AddrSpace::DATA, Long>(reg.sp + 46); // internal information, 16 words
+                (void)read<C, AddrSpace::DATA, Long>(reg.sp + 50); // internal information, 16 words
+                (void)read<C, AddrSpace::DATA, Long>(reg.sp + 54); // internal information, 16 words
+
+                reg.sp += 58;
                 break;
             }
+            default: // Format error
+
+                if constexpr (compat != Compatibility::MUSASHI) {
+
+                    reg.sr.n = (format >> 12) & 0b1000;
+                    reg.sr.z = 0;
+                    reg.sr.v = 0;
+                }
+
+                SYNC(4);
+                (void)read<C, AddrSpace::DATA, Long>(reg.sp + 2);
+
+                // reg.sr.c = 1; // Check test case Exceptions/StackFrame/stackframe2
+                execException(M68kException::FORMAT_ERROR);
+                return;
+        }
+
+    } else if constexpr (C == Core::C68020) {
+
+        while (1) {
+
+            /* UAE reads the status register, the program counter and the format word, in this order.
+             * The values are kept, so that the frame handlers below do not read them a second time.
+             */
+            bool cached = false;
+            u16 cSr = 0;
+            u32 cPc = 0;
+            u16 format;
 
             if constexpr (compat == Compatibility::UAE) {
 
-                // UAE adjusts the stack pointer after the status register has been read
-                newsr = (u16)read<C, AddrSpace::DATA, Word, UAE_DEC_PC>(reg.sp);
-                reg.sp += 6;
-                newpc = (u32)read<C, AddrSpace::DATA, Word, UAE_DEC_PC>(reg.sp - 4) << 16;
-                newpc |= read<C, AddrSpace::DATA, Word, UAE_DEC_PC>(reg.sp - 2);
-                break;
+                cSr = (u16)read<C, AddrSpace::DATA, Word>(reg.sp);
+                cPc = read<C, AddrSpace::DATA, Long>(reg.sp + 2);
+                format = (u16)(read<C, AddrSpace::DATA, Word>(reg.sp + 6) >> 12);
+                cached = true;
+
+            } else {
+
+                format = (u16)(read<C, AddrSpace::DATA, Word>(reg.sp + 6) >> 12);
             }
 
-            // Status register
-            newsr = (u16)pop<C, Word>();
-
-            // Program counter
-            newpc = pop<C, Long>();
-            break;
-        }
-        case Core::C68010:
-        {
-            u16 format = (u16)read<C, AddrSpace::DATA, Word>(reg.sp + 6);
+            auto popSr = [&]() -> u16 { if (cached) { reg.sp += 2; return cSr; } return (u16)pop<C, Word>(); };
+            auto popPc = [&]() -> u32 { if (cached) { reg.sp += 4; return cPc; } return pop<C, Long>(); };
+            auto popFmt = [&]() { if (cached) { reg.sp += 2; return; } (void)pop<C, Word>(); };
 
             // Check the frame format
-            switch (format >> 12) {
+            bool supported =
+            format == 0b0000 ||                                         // Standard frame
+            format == 0b0001 ||                                         // Throwaway frame
+            format == 0b0010 ||                                         // Trap frame
+            (format == 0b0111 && cpuModel >= CPUModel::M68EC040) ||     // Access error frame (68040)
+            format == 0b1010 ||                                         // Short bus fault frame
+            format == 0b1011;                                           // Long bus fault frame
 
-                case 0b0000: // Short format
+            if (!supported) {
 
-                    newsr = (u16)read<C, AddrSpace::DATA, Word>(reg.sp + 0);
-                    if ((format & 0xFF) == 0x10) {
-                        // SYNC(4); // ???? TODO: LOOKS WRONG
-                    }
-                    newpc = read<C, AddrSpace::DATA, Long>(reg.sp + 2);
-                    reg.sp += 8;
-
-                    break;
-
-                case 0b1000: // Long format (keep on reading)
-                {
-                    newsr = (u16)read<C, AddrSpace::DATA, Word>(reg.sp + 0);
-                    if ((format & 0xFF) == 0x10) {
-                        // SYNC(4); // ???? TODO: LOOKS WRONG
-                    }
-                    newpc = read<C, AddrSpace::DATA, Long>(reg.sp + 2);
-
-                    (void)read<C, AddrSpace::DATA, Word>(reg.sp + 8); // special status word
-                    (void)read<C, AddrSpace::DATA, Long>(reg.sp + 10); // fault address
-
-                    u16 value = (u16)read<C, AddrSpace::DATA, Word>(reg.sp + 26); // internal information, 16 words
-                    u16 version = (value >> 10) & 0xF;
-
-                    if (version != 0) { // TODO: PUT IN CPU VERSION NUMBER (GET FROM REAL CPU)
-
-                        SYNC(4);
-                        execException(M68kException::FORMAT_ERROR);
-                        return;
-                    }
-
-                    (void)read<C, AddrSpace::DATA, Word>(reg.sp + 28); // internal information, 16 words
-
-                    (void)read<C, AddrSpace::DATA, Word>(reg.sp + 14); // unused/reserved
-                    (void)read<C, AddrSpace::DATA, Word>(reg.sp + 16); // data output buffer
-                    (void)read<C, AddrSpace::DATA, Word>(reg.sp + 18); // unused/reserved
-                    (void)read<C, AddrSpace::DATA, Word>(reg.sp + 20); // data input buffer
-                    (void)read<C, AddrSpace::DATA, Word>(reg.sp + 22); // unused/reserved
-                    (void)read<C, AddrSpace::DATA, Word>(reg.sp + 24); // instruction input buffer
-
-                    (void)read<C, AddrSpace::DATA, Long>(reg.sp + 34); // internal information, 16 words
-                    (void)read<C, AddrSpace::DATA, Long>(reg.sp + 36); // internal information, 16 words
-                    (void)read<C, AddrSpace::DATA, Long>(reg.sp + 38); // internal information, 16 words
-                    (void)read<C, AddrSpace::DATA, Long>(reg.sp + 42); // internal information, 16 words
-                    (void)read<C, AddrSpace::DATA, Long>(reg.sp + 46); // internal information, 16 words
-                    (void)read<C, AddrSpace::DATA, Long>(reg.sp + 50); // internal information, 16 words
-                    (void)read<C, AddrSpace::DATA, Long>(reg.sp + 54); // internal information, 16 words
-
-                    reg.sp += 58;
-                    break;
-                }
-                default: // Format error
-
-                    if (!(compat == Compatibility::MUSASHI)) {
-
-                        reg.sr.n = (format >> 12) & 0b1000;
-                        reg.sr.z = 0;
-                        reg.sr.v = 0;
-                    }
-
-                    SYNC(4);
-                    (void)read<C, AddrSpace::DATA, Long>(reg.sp + 2);
-
-                    // reg.sr.c = 1; // Check test case Exceptions/StackFrame/stackframe2
-                    execException(M68kException::FORMAT_ERROR);
-                    return;
+                execException(M68kException::FORMAT_ERROR);
+                CYCLES_68020(4)
+                return;
             }
-            break;
-        }
-        case Core::C68020:
-        {
-            while (1) {
 
-                /* UAE reads the status register, the program counter and the format word, in this order.
-                 * The values are kept, so that the frame handlers below do not read them a second time.
-                 */
-                bool cached = false;
-                u16 cSr = 0;
-                u32 cPc = 0;
-                u16 format;
+            // All frames start with the status register, the program counter and the format word
+            u32 frameBase = reg.sp;
+            newsr = popSr();
+            newpc = popPc();
 
-                if constexpr (compat == Compatibility::UAE) {
+            if (format == 0b1011) {
 
-                    cSr = (u16)read<C, AddrSpace::DATA, Word>(reg.sp);
-                    cPc = read<C, AddrSpace::DATA, Long>(reg.sp + 2);
-                    format = (u16)(read<C, AddrSpace::DATA, Word>(reg.sp + 6) >> 12);
-                    cached = true;
+                // If the handler has not touched the frame, restart the instruction
+                if (restart.valid && frameBase == restart.frameSp && newsr == restart.frameSr && newpc == restart.framePC) {
 
-                } else {
-
-                    format = (u16)(read<C, AddrSpace::DATA, Word>(reg.sp + 6) >> 12);
+                    newpc = restart.pc;
+                    newsr = restart.preSr;
+                    rollback = true;
                 }
+                restart.valid = false;
+            }
 
-                auto popSr = [&]() -> u16 { if (cached) { reg.sp += 2; return cSr; } return (u16)pop<C, Word>(); };
-                auto popPc = [&]() -> u32 { if (cached) { reg.sp += 4; return cPc; } return pop<C, Long>(); };
-                auto popFmt = [&]() { if (cached) { reg.sp += 2; return; } (void)pop<C, Word>(); };
+            popFmt();
 
-                if (format == 0b000) {  // Standard frame
+            // Skip the rest of the frame
+            switch (format) {
 
-                    // Status register
-                    newsr = popSr();
-                    
-                    // Program counter
-                    newpc = popPc();
-                    
-                    //
-                    popFmt();
-                    break;
+                case 0b0001: // Throwaway frame (continue with the next frame)
 
-                } else if (format == 0b001) {  // Throwaway frame
-
-                    // Status register
-                    newsr = popSr();
-                    
-                    //
-                    (void)popPc();
-                    
-                    //
-                    popFmt();
-                    
                     setSR(newsr);
                     continue;
 
-                } else if (format == 0b010) {  // Trap
+                case 0b0010: // Trap frame
 
-                    // Status register
-                    newsr = popSr();
-                    
-                    // Program counter
-                    newpc = popPc();
-                    
-                    //
-                    popFmt();
-                    
-                    //
+                    // Instruction address
                     (void)pop<C, Long>();
                     break;
 
-                } else if (format == 0b0111 && cpuModel >= CPUModel::M68EC040) {  // Access error frame (68040)
-
-                    // Status register, program counter, format and vector offset
-                    newsr = popSr();
-                    newpc = popPc();
-                    popFmt();
+                case 0b0111: // Access error frame
 
                     // Effective address, special status word, write-back data
                     for (int i = 0; i < 13; i++) (void)pop<C, Long>();
                     break;
 
-                } else if (format == 0b1010) {  // Short bus fault frame
-
-                    // Status register, program counter, format and vector offset
-                    newsr = popSr();
-                    newpc = popPc();
-                    popFmt();
+                case 0b1010: // Short bus fault frame
 
                     // Special status word, instruction pipe, fault address, internal registers
                     for (int i = 0; i < 6; i++) (void)pop<C, Long>();
                     break;
 
-                } else if (format == 0b1011) {
+                case 0b1011: // Long bus fault frame
 
-                    u32 frameBase = reg.sp;
-
-                    // Status register
-                    newsr = popSr();
-
-                    // Program counter
-                    newpc = popPc();
-
-                    // If the handler has not touched the frame, restart the instruction
-                    if (restart.valid && frameBase == restart.frameSp && newsr == restart.frameSr && newpc == restart.framePC) {
-
-                        newpc = restart.pc;
-                        newsr = restart.preSr;
-
-                        rollback = true;
-                    }
-                    restart.valid = false;
-
-                    // 1011 | Vector offset
-                    popFmt();
-
-                    // Internal register
-                    (void)pop<C, Word>();
-
-                    // Special status register
-                    (void)pop<C, Word>();
-
-                    // Instruction pipe stage C
-                    (void)pop<C, Word>();
-
-                    // Instruction pipe stage B
-                    (void)pop<C, Word>();
+                    // Internal register, special status register, instruction pipe stage C and B
+                    for (int i = 0; i < 4; i++) (void)pop<C, Word>();
 
                     // Data cycle fault address
                     (void)pop<C, Long>();
@@ -6065,23 +6018,8 @@ Moira::execRte(u16 opcode)
                     (void)pop<C, Word>();
 
                     // Internal registers
-                    (void)pop<C, Long>();
-                    (void)pop<C, Long>();
-                    (void)pop<C, Long>();
-                    (void)pop<C, Long>();
-                    (void)pop<C, Long>();
-                    (void)pop<C, Long>();
-                    (void)pop<C, Long>();
-                    (void)pop<C, Long>();
-                    (void)pop<C, Long>();
+                    for (int i = 0; i < 9; i++) (void)pop<C, Long>();
                     break;
-
-                } else {
-
-                    execException(M68kException::FORMAT_ERROR);
-                    CYCLES_68020(4)
-                    return;
-                }
             }
             break;
         }
