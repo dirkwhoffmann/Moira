@@ -12,9 +12,9 @@ Moira::writeStackFrameAEBE(StackFrame &frame)
 
         // MAME and UAE write the words in a different order
         U32_DEC(reg.sp, 14);
-        write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 12), (u16)frame.pc);
+        write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 12), READ<Word>(frame.pc));
         write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 8), frame.sr);
-        write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 10), frame.pc >> 16);
+        write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 10), READ<Word, 1>(frame.pc));
         write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6), frame.ird);
         write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4), (u16)frame.addr);
         write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0), frame.code);
@@ -23,8 +23,8 @@ Moira::writeStackFrameAEBE(StackFrame &frame)
     }
 
     // Push PC
-    push<C, Word>((u16)frame.pc);
-    push<C, Word>(frame.pc >> 16);
+    push<C, Word>(READ<Word>(frame.pc));
+    push<C, Word>(READ<Word, 1>(frame.pc));
 
     // Push SR and IRD
     push<C, Word>(frame.sr);
@@ -56,15 +56,15 @@ Moira::writeStackFrame0000(u16 sr, u32 pc, u16 nr)
                 if constexpr (compat == Compatibility::MAME) {
 
                     // MAME has not adjusted the stack pointer yet if the first write fails
-                    try { write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), pc & 0xFFFF); }
+                    try { write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc)); }
                     catch (BusError &) { U32_INC(reg.sp, 6); throw; }
 
                 } else {
 
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), pc & 0xFFFF);
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc));
                 }
                 write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
-                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), pc >> 16);
+                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), READ<Word, 1>(pc));
             }
             break;
 
@@ -81,20 +81,20 @@ Moira::writeStackFrame0000(u16 sr, u32 pc, u16 nr)
 
                 U32_DEC(reg.sp, 8);
                 if constexpr ((compat == Compatibility::UAE) && C == Core::C68010) {
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), pc & 0xFFFF);
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc));
                     write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), pc >> 16);
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), READ<Word, 1>(pc));
                     write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & (C == Core::C68020 ? ~0u : ~1u), 4 * nr);
                 } else if constexpr ((compat == Compatibility::UAE) && C == Core::C68020) {
                     write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & (C == Core::C68020 ? ~0u : ~1u), 4 * nr);
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), pc >> 16);
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), pc & 0xFFFF);
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), READ<Word, 1>(pc));
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc));
                     write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
                 } else {
                     write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & (C == Core::C68020 ? ~0u : ~1u), 4 * nr);
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), pc & 0xFFFF);
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc));
                     write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), pc >> 16);
+                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), READ<Word, 1>(pc));
                 }
             }
             break;
@@ -1024,14 +1024,14 @@ Moira::execInterrupt(u8 level)
 
             SYNC(6);
             reg.sp -= 6;
-            write<C, AddrSpace::DATA, Word>(reg.sp + 4, (reg.pc - 2) & 0xFFFF);
+            write<C, AddrSpace::DATA, Word>(reg.sp + 4, READ<Word>(reg.pc - 2));
 
             SYNC(4);
             queue.ird = getIrqVector(level);
 
             SYNC(4);
             write<C, AddrSpace::DATA, Word>(reg.sp + 0, status);
-            write<C, AddrSpace::DATA, Word>(reg.sp + 2, (reg.pc - 2) >> 16);
+            write<C, AddrSpace::DATA, Word>(reg.sp + 2, READ<Word, 1>(reg.pc - 2));
             break;
 
         case Core::C68010:
@@ -1039,9 +1039,9 @@ Moira::execInterrupt(u8 level)
             SYNC(12);
             reg.sp -= 8;
             queue.ird = getIrqVector(level);
-            write<C, AddrSpace::DATA, Word>(reg.sp + 4, (reg.pc - 2) & 0xFFFF);
+            write<C, AddrSpace::DATA, Word>(reg.sp + 4, READ<Word>(reg.pc - 2));
             write<C, AddrSpace::DATA, Word>(reg.sp + 0, status);
-            write<C, AddrSpace::DATA, Word>(reg.sp + 2, (reg.pc - 2) >> 16);
+            write<C, AddrSpace::DATA, Word>(reg.sp + 2, READ<Word, 1>(reg.pc - 2));
             write<C, AddrSpace::DATA, Word>(reg.sp + 6, 4 * queue.ird);
             break;
 

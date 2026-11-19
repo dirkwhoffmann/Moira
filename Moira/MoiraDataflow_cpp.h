@@ -700,7 +700,7 @@ Moira::writeLongSplit(u32 addr, u32 val)
 
         case 2:
 
-            write2x16<C,F>(addr, addr + 2, val >> 16, val & 0xFFFF);
+            write2x16<C,F>(addr, addr + 2, READ<Word, 1>(val), READ<Word>(val));
             return;
 
         default:
@@ -972,13 +972,13 @@ try
                 writeLongSplit<C,F>(addr & addrMask<C>(), val);
             } else {
                 write2x16<C,F>(addr & addrMask<C>(), (addr + 2) & addrMask<C>(),
-                                  val >> 16, val & 0xFFFF);
+                                  READ<Word, 1>(val), READ<Word>(val));
             }
 
         } else {
 
             write2x16<C,F>(addr & addrMask<C>(), (addr + 2) & addrMask<C>(),
-                              val >> 16, val & 0xFFFF);
+                              READ<Word, 1>(val), READ<Word>(val));
         }
     }
 }

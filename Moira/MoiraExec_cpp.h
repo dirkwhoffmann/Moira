@@ -786,16 +786,18 @@ Moira::execAndEaRg(u16 opcode)
 
         // A failing prefetch shows the flags of the long operation and the low word of the result
         result = logic<C, I, S>(data, readD<S>(dst));
-        try { looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>(); }
-        catch (BusError &e) { rethrowD<C, Word>(e, dst, result); }
+        try { looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>(); } catch (BusError &e) {
+            rethrowD<C, Word>(e, dst, result);
+        }
         SYNC(2);
         writeD<S>(dst, result);
 
     } else if constexpr (C == Core::C68000 && S == Long) {
 
         // A failing prefetch shows the flags and the result of the low word operation
-        try { looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>(); }
-        catch (BusError &e) { rethrowD<C, Word>(e, dst, logic<C, I, Word>(data, readD<Word>(dst))); }
+        try { looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>(); } catch (BusError &e) {
+            rethrowD<C, Word>(e, dst, logic<C, I, Word>(data, readD<Word>(dst)));
+        }
         result = logic<C, I, S>(data, readD<S>(dst));
         SYNC(4);
         writeD<S>(dst, result);
@@ -804,8 +806,9 @@ Moira::execAndEaRg(u16 opcode)
 
         result = logic<C, I, S>(data, readD<S>(dst));
 
-        try { looping<I>() ? noPrefetch<C>() : prefetch<C, POLL>(); }
-        catch (BusError &e) { rethrowD<C, S>(e, dst, result); }
+        try { looping<I>() ? noPrefetch<C>() : prefetch<C, POLL>(); } catch (BusError &e) {
+            rethrowD<C, S>(e, dst, result);
+        }
         writeD<S>(dst, result);
 
     } else {
@@ -846,23 +849,21 @@ Moira::execAndRgRg(u16 opcode)
     u32 result;
 
     auto prefetchOp = [&]() {
-
         if constexpr (C == Core::C68000) prefetchLate<C, POLL, (S == Long)>(); else fetchIrc<C, POLL>();
     };
 
     if constexpr (S == Long) {
 
-        // MAME shows the flags of the low word operation if the prefetch fails
-        try { prefetchOp(); }
-        catch (BusError &e) { rethrowD<C, Word>(e, dst, logic<C, I, Word>(readD<Word>(src), readD<Word>(dst))); }
-
+        try { prefetchOp(); } catch (BusError &e) {
+            rethrowD<C, Word>(e, dst, logic<C, I, Word>(readD<Word>(src), readD<Word>(dst)));
+        }
         result = logic<C, I, S>(readD<S>(src), readD<S>(dst));
-        SYNC_68000(4); SYNC_68010(2);
+        SYNC_68000(4);
+        SYNC_68010(2);
 
     } else {
 
         result = logic<C, I, S>(readD<S>(src), readD<S>(dst));
-
         try { prefetchOp(); }
         catch (BusError &e) { rethrowD<C, S>(e, dst, result); }
     }
@@ -892,9 +893,7 @@ Moira::execAndRgEa(u16 opcode)
     result = logic<C, I, S>(readD<S>(src), data);
 
     // MAME shows the flags of the low word operation if the prefetch of a long operation fails
-    try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); }
-    catch (BusError &e) {
-
+    try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); } catch (BusError &e) {
         if constexpr (S == Long) { logic<C, I, Word>(readD<Word>(src), data); rethrow<C>(e); }
         throw;
     }
@@ -1693,7 +1692,7 @@ Moira::execCas(u16 opcode)
     auto compare = readD(dc);
 
     // Set flags
-    cmp<C, S>(CLIP<S>(compare), data);
+    cmp<C, S>(compare, data);
 
     if (!reg.sr.z) {
 
@@ -1755,12 +1754,12 @@ Moira::execCas2(u16 opcode)
     auto compare2 = readD(dc2);
 
     // Set flags
-    cmp<C, S>(CLIP<S>(compare1), data1);
+    cmp<C, S>(compare1, data1);
 
     if (reg.sr.z) {
 
         // Set flags
-        cmp<C, S>(CLIP<S>(compare2), data2);
+        cmp<C, S>(compare2, data2);
         if (reg.sr.z) {
 
             writeM<C, M, S>(ea1, reg.d[du1]);
@@ -4230,7 +4229,7 @@ Moira::execMoveq(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    i8  src = (i8)(opcode & 0xFF);
+    i8  src = (i8)opcode;
     int dst = ____xxx_________(opcode);
 
     writeD <Long> (dst, (i32)src);
@@ -6375,7 +6374,7 @@ Moira::execSwap(u16 opcode)
     int rg  = ( _____________xxx(opcode) );
     u32 dat = readD(rg);
 
-    dat = (dat >> 16) | (dat & 0xFFFF) << 16;
+    dat = std::rotl(dat, 16);
 
     try { prefetch<C, POLL>(); }
     catch (BusError &e) {
@@ -6723,22 +6722,22 @@ Moira::execUnpkPd(u16 opcode)
 
     if ((compat == Compatibility::MUSASHI)) {
 
-        writeOp<C, M, Byte>(ay, dst >> 8 & 0xFF);
-        writeOp<C, M, Byte>(ay, dst & 0xFF);
+        writeOp<C, M, Byte>(ay, READ<Byte, 1>(dst));
+        writeOp<C, M, Byte>(ay, dst);
 
     } else if constexpr ((compat == Compatibility::UAE)) {
 
         // UAE writes the result as a single (possibly misaligned) word
         reg.a[ay] -= 2;
-        write<C, AddrSpace::DATA, Word>(readA(ay), dst & 0xFFFF);
+        write<C, AddrSpace::DATA, Word>(readA(ay), dst);
 
     } else {
 
         reg.a[ay]--;
-        write<C, AddrSpace::DATA, Byte>(readA(ay), dst & 0xFF);
+        write<C, AddrSpace::DATA, Byte>(readA(ay), dst);
 
         reg.a[ay]--;
-        write<C, AddrSpace::DATA, Byte>(readA(ay), dst >> 8 & 0xFF);
+        write<C, AddrSpace::DATA, Byte>(readA(ay), READ<Byte, 1>(dst));
     }
 
     prefetch<C>();

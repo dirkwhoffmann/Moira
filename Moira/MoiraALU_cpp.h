@@ -459,6 +459,10 @@ Moira::bcd(u32 op1, u32 op2)
 template <Core C, Size S> void
 Moira::cmp(u32 op1, u32 op2)
 {
+    // Only the lower S bytes of the operands are taken into account (the borrow is derived from bit 8 * S)
+    op1 = CLIP<S>(op1);
+    op2 = CLIP<S>(op2);
+
     u64 result = U64_SUB(op2, op1);
 
     reg.sr.c = NBIT<S>(result >> 1);
