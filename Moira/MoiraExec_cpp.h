@@ -534,8 +534,8 @@ Moira::execAddiEa(u16 opcode)
     result = addsub<C, I, S>(src, data);
 
     try { fetchIrc<C>(); } catch (BusError &e) {
-        if constexpr (S == Long) { addsub<C, I, Word>(src, data); rethrow<C>(e); }
-        throw;
+        if constexpr (S == Long) addsub<C, I, Word>(src, data);
+        rethrow<C>(e);
     }
 
     writeOp<C, M, S, POLL | REVERSE | COMMIT_IRD>(dst, ea, result);
@@ -629,8 +629,8 @@ Moira::execAddqEa(u16 opcode)
     result = addsub<C, I, S>(src, data);
 
     try { fetchIrc<C, POLL>(); } catch (BusError &e) {
-        if constexpr (S == Long) { addsub<C, I, Word>(src, data); rethrow<C>(e); }
-        throw;
+        if constexpr (S == Long) addsub<C, I, Word>(src, data);
+        rethrow<C>(e);
     }
 
     writeOp<C, M, S, REVERSE | COMMIT_IRD>(dst, ea, result);
@@ -888,10 +888,9 @@ Moira::execAndRgEa(u16 opcode)
 
     result = logic<C, I, S>(readD<S>(src), data);
 
-    // MAME shows the flags of the low word operation if the prefetch of a long operation fails
     try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); } catch (BusError &e) {
-        if constexpr (S == Long) { logic<C, I, Word>(readD<Word>(src), data); rethrow<C>(e); }
-        throw;
+        if constexpr (S == Long) logic<C, I, Word>(readD<Word>(src), data);
+        rethrow<C>(e);
     }
 
     writeOp<C, M, S, flags>(dst, ea, result);
@@ -961,8 +960,8 @@ Moira::execAndiEa(u16 opcode)
     try { fetchIrc<C, POLL>(); }
     catch (BusError &e) {
 
-        if constexpr (S == Long) { logic<C, I, Word>(src, data); rethrow<C>(e); }
-        throw;
+        if constexpr (S == Long) logic<C, I, Word>(src, data);
+        rethrow<C>(e);
     }
 
     writeOp<C, M, S, REVERSE | COMMIT_IRD>(dst, ea, result);
