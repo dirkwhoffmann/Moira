@@ -2014,7 +2014,7 @@ Moira::execClr(u16 opcode)
         } catch (BusError &e) {
 
             if constexpr (C == Core::C68000 && isRegMode(M)) writeD<S == Long ? Word : S>(dst, 0);
-            rethrow<C>(e);
+            throw;
         }
     }
 
@@ -3293,10 +3293,8 @@ Moira::execMove4(u16 opcode)
 
     // MAME shows the flags of the low word if the prefetch fails
     try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); } catch (BusError &e) {
-        if constexpr (S == Long)
-            rethrow<C>(e, CCR::N | CCR::Z, (NBIT<Word>(data) ? CCR::N : 0) | (ZERO<Word>(data) ? CCR::Z : 0));
-        else
-            rethrow<C>(e);
+        if constexpr (S == Long) rethrow<C>(e, CCR::N | CCR::Z, (NBIT<Word>(data) ? CCR::N : 0) | (ZERO<Word>(data) ? CCR::Z : 0));
+        throw;
     }
     if (looping<I>() && S == Long) loopModeDelay = 0;
 
