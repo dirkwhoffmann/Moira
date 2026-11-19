@@ -848,13 +848,9 @@ Moira::execAndRgRg(u16 opcode)
 
     u32 result;
 
-    auto prefetchOp = [&]() {
-        if constexpr (C == Core::C68000) prefetchLate<C, POLL, (S == Long)>(); else fetchIrc<C, POLL>();
-    };
-
     if constexpr (S == Long) {
 
-        try { prefetchOp(); } catch (BusError &e) {
+        try { prefetchLate<C, POLL, true>(); } catch (BusError &e) {
             rethrowD<C, Word>(e, dst, logic<C, I, Word>(readD<Word>(src), readD<Word>(dst)));
         }
         result = logic<C, I, S>(readD<S>(src), readD<S>(dst));
@@ -864,7 +860,7 @@ Moira::execAndRgRg(u16 opcode)
     } else {
 
         result = logic<C, I, S>(readD<S>(src), readD<S>(dst));
-        try { prefetchOp(); }
+        try { prefetch<C, POLL>(); }
         catch (BusError &e) { rethrowD<C, S>(e, dst, result); }
     }
 
