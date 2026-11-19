@@ -5420,24 +5420,18 @@ Moira::execNegEa(u16 opcode)
 
     constexpr Flags flags = REVERSE | COMMIT_IRD;
 
-    if constexpr (S == Long) {
+    [[maybe_unused]] u8 ccr = getCCR();
+    u32 result = logic<C, I, S>(data);
 
-        // MAME shows the flags of the low word operation if the prefetch fails
-        try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); } catch (BusError &e) {
+    // MAME shows the flags of the low word operation if the prefetch of a long operation fails
+    try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); } catch (BusError &e) {
 
-            logic<C, I, Word>(u16(data));
-            rethrow<C>(e);
-        }
-        data = logic<C, I, S>(data);
-
-    } else {
-
-        data = logic<C, I, S>(data);
-
-        looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>();
+        // NEGX reads the X flag, which the long operation has modified already
+        if constexpr (S == Long) { setCCR(ccr); logic<C, I, Word>(data); }
+        rethrow<C>(e);
     }
 
-    writeOp<C, M, S, flags>(dst, ea, data);
+    writeOp<C, M, S, flags>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
