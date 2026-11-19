@@ -3232,12 +3232,8 @@ Moira::execMove4(u16 opcode)
      */
     readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
 
-    // Determine next address error stack frame format
-    const u64 flags0 = AE_WRITE | AE_DATA;
-    // MAME never sets bit 3 in the code word
-    const u64 flags1 = AE_WRITE | AE_DATA | (C == Core::C68000 ? 0 : AE_SET_CB3);
-    const u64 flags2 = AE_WRITE | AE_DATA;
-    int format = (S == Long) ? 0 : (reg.sr.s || reg.sr.c) ? 2 : 1;
+    // A misaligned byte or word write sets bit 3 in the code word if neither S nor the old C flag is set (not in MAME)
+    [[maybe_unused]] bool cb3 = !reg.sr.s && !reg.sr.c;
 
     reg.sr.n = NBIT<S>(data);
     reg.sr.z = ZERO<S>(data);
@@ -3266,30 +3262,31 @@ Moira::execMove4(u16 opcode)
         commitIrd<C>();
 
         if constexpr (compat == Compatibility::UAE) SYNC(2);
-        if (format == 0) { throw earlyAddressError<C>(makeFrame<flags0>(ea + 2, reg.pc, getSR(), ird)); }
-        if (format == 1) { SYNC(2); throw AddressError(makeFrame<flags1>(ea)); }
-        if (format == 2) { SYNC(2); throw AddressError(makeFrame<flags2>(ea)); }
+        if constexpr (S == Long) throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(ea + 2, reg.pc, getSR(), ird));
+
+        SYNC(2);
+        if (cb3) throw AddressError(makeFrame<AE_WRITE|AE_DATA|(C == Core::C68000 ? 0 : AE_SET_CB3)>(ea));
+        throw AddressError(makeFrame<AE_WRITE|AE_DATA>(ea));
     }
 
-    if constexpr (compat == Compatibility::UAE && S == Long && C == Core::C68000) {
+    if constexpr (S == Long && C == Core::C68000) {
 
-        // The low word is written first. UAE restores the register if a write fails and stacks the unmasked address.
+        // The low word is written first
         try {
+
             writeM<C, Mode::PD, Word>(ea + 2, READ<Word>(data));
+
+            // MAME decrements the register before the second write (UAE after both writes)
+            if constexpr (compat != Compatibility::UAE) updateAn<Mode::PD, S>(dst);
             writeM<C, Mode::PD, Word, COMMIT_IRD>(ea, READ<Word, 1>(data));
-        }
-        catch (BusError &e) {
-            e.stackFrame.addr = (e.stackFrame.addr & 0xFFFFFF) | (ea & 0xFF000000);
+
+        } catch (BusError &e) {
+
+            // UAE stacks the unmasked address
+            if constexpr (compat == Compatibility::UAE) e.stackFrame.addr = (e.stackFrame.addr & 0xFFFFFF) | (ea & 0xFF000000);
             throw;
         }
-        updateAn<Mode::PD, S>(dst);
-
-    } else if constexpr (S == Long && C == Core::C68000) {
-
-        // The low word is written first. MAME decrements the register before the second write.
-        writeM<C, Mode::PD, Word>(ea + 2, READ<Word>(data));
-        updateAn<Mode::PD, S>(dst);
-        writeM<C, Mode::PD, Word, COMMIT_IRD>(ea, READ<Word, 1>(data));
+        if constexpr (compat == Compatibility::UAE) updateAn<Mode::PD, S>(dst);
 
     } else {
 
@@ -3589,38 +3586,29 @@ Moira::execMove8(u16 opcode)
      *  operand is a data or address register, or immediate, then the behavior
      *  is the same as other MOVE variants (class 1 instruction)."
      */
-    if (isMemMode(M)) {
+    auto setFlags = [&](bool n, bool z) { reg.sr.n = n; reg.sr.z = z; reg.sr.v = 0; reg.sr.c = 0; };
+
+    if constexpr (isMemMode(M)) {
 
         readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
 
         if constexpr (C == Core::C68000) {
 
             // A failed first extension word fetch shows the flags of the operation (untouched if long)
-            if constexpr (S != Long) {
-                reg.sr.n = NBIT<S>(data);
-                reg.sr.z = ZERO<S>(data);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-            }
+            if constexpr (S != Long) setFlags(NBIT<S>(data), ZERO<S>(data));
             u32 ea2 = queue.irc << 16;
             readExt<C, NO_DEC_PC>();
             ea2 |= queue.irc;
 
-            if constexpr (S == Long) {
-                reg.sr.n = NBIT<Word>(data);
-                reg.sr.z = ZERO<Word>(data);
-                reg.sr.v = 0;
-                reg.sr.c = 0;
-            }
-
+            // An address error shows the flags of the (low word of the) operation
+            if constexpr (S == Long) setFlags(NBIT<Word>(data), ZERO<Word>(data));
             checkEven<C, S, AE_WRITE|AE_DATA>(ea2);
 
             if constexpr (S == Long) {
 
                 // The first write shows the flags of the low word, the second one the final flags
                 writeM<C, Mode::AL, Word>(ea2, READ<Word, 1>(data));
-                reg.sr.n = NBIT<S>(data);
-                reg.sr.z = ZERO<S>(data);
+                setFlags(NBIT<S>(data), ZERO<S>(data));
                 writeM<C, Mode::AL, Word>(ea2 + 2, READ<Word>(data));
 
             } else {
@@ -3637,10 +3625,8 @@ Moira::execMove8(u16 opcode)
             checkEven<C, S, AE_WRITE|AE_DATA>(ea2);
             writeM<C, Mode::AL, S>(ea2, data);
         }
-        reg.sr.n = NBIT<S>(data);
-        reg.sr.z = ZERO<S>(data);
-        reg.sr.v = 0;
-        reg.sr.c = 0;
+
+        setFlags(NBIT<S>(data), ZERO<S>(data));
         readExt<C, NO_DEC_PC>();
 
     } else {
@@ -3657,24 +3643,17 @@ Moira::execMove8(u16 opcode)
             readBuffer = queue.irc;
 
             // A failed fetch of the second extension word shows the flags of the (low word of the) operation
-            reg.sr.n = NBIT<S == Long ? Word : S>(data);
-            reg.sr.z = ZERO<S == Long ? Word : S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setFlags(NBIT<S == Long ? Word : S>(data), ZERO<S == Long ? Word : S>(data));
             readExtLast<C>();
 
             // A failed write shows the final flags
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
+            setFlags(NBIT<S>(data), ZERO<S>(data));
             writeM<C, Mode::AL, S>(ea2, data);
 
         } else {
 
             writeOp<C, Mode::AL, S>(dst, data);
-            reg.sr.n = NBIT<S>(data);
-            reg.sr.z = ZERO<S>(data);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setFlags(NBIT<S>(data), ZERO<S>(data));
         }
     }
 
