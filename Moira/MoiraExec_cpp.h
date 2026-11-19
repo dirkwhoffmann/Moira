@@ -317,7 +317,7 @@ Moira::execAddEaRg(u16 opcode)
     } else if constexpr (C == Core::C68000 && S == Long) {
 
         try { prefetchLate<C, POLL, true>(); } catch (BusError &e) {
-            rethrowD<C, Word>(e, dst, addsub<C, I, Word>(data & 0xFFFF, readD<Word>(dst)));
+            rethrowD<C, Word>(e, dst, addsub<C, I, Word>(data, readD<Word>(dst)));
         }
         result = addsub<C, I, S>(data, readD<S>(dst));
         SYNC(4);
@@ -376,7 +376,7 @@ Moira::execAddRgEa(u16 opcode)
     if constexpr (S == Long) {
 
         try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); } catch (BusError &e) {
-            addsub<C, I, Word>(readD<Word>(src), data & 0xFFFF);
+            addsub<C, I, Word>(readD<Word>(src), data);
             rethrow<C>(e);
         }
         result = addsub<C, I, S>(readD<S>(src), data);
@@ -491,7 +491,7 @@ Moira::execAddiRg(u16 opcode)
     if constexpr (S == Long) {
 
         try { prefetchLate<C, POLL>(); } catch (BusError &e) {
-            rethrowD<C, Word>(e, dst, addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF));
+            rethrowD<C, Word>(e, dst, addsub<C, I, Word>(src, data));
         }
         result = addsub<C, I, S>(src, data);
         SYNC_68000(4);
@@ -534,7 +534,7 @@ Moira::execAddiEa(u16 opcode)
     result = addsub<C, I, S>(src, data);
 
     try { fetchIrc<C>(); } catch (BusError &e) {
-        if constexpr (S == Long) { addsub<C, I, Word>(src & 0xFFFF, data & 0xFFFF); rethrow<C>(e); }
+        if constexpr (S == Long) { addsub<C, I, Word>(src, data); rethrow<C>(e); }
         throw;
     }
 
@@ -629,7 +629,7 @@ Moira::execAddqEa(u16 opcode)
     result = addsub<C, I, S>(src, data);
 
     try { fetchIrc<C, POLL>(); } catch (BusError &e) {
-        if constexpr (S == Long) { addsub<C, I, Word>(src, data & 0xFFFF); rethrow<C>(e); }
+        if constexpr (S == Long) { addsub<C, I, Word>(src, data); rethrow<C>(e); }
         throw;
     }
 
@@ -709,7 +709,7 @@ Moira::execAddxEa(u16 opcode)
 
         // If the high word fails, the low words have been added already
         try { readOp<C, M, S, flags|IMPL_DEC>(dst, &ea2, &data2); } catch (BusError &e) {
-            if (e.upperWord) { addsub<C, I, Word>(data1 & 0xFFFF, readBuffer); rethrow<C>(e); }
+            if (e.upperWord) { addsub<C, I, Word>(data1, readBuffer); rethrow<C>(e); }
             throw;
         }
 
@@ -719,7 +719,7 @@ Moira::execAddxEa(u16 opcode)
         // If the low word fails, the stacked flags are those of the low word addition
         try { writeM<C, M, Word, POLL | AE_INC_PC>(ea2 + 2, READ<Word>(result)); } catch (BusError &e) {
             setCCR(ccr);
-            addsub<C, I, Word>(data1 & 0xFFFF, data2 & 0xFFFF);
+            addsub<C, I, Word>(data1, data2);
             rethrow<C>(e);
         }
         
@@ -795,7 +795,7 @@ Moira::execAndEaRg(u16 opcode)
 
         // A failing prefetch shows the flags and the result of the low word operation
         try { looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>(); }
-        catch (BusError &e) { rethrowD<C, Word>(e, dst, logic<C, I, Word>(data & 0xFFFF, readD<Word>(dst))); }
+        catch (BusError &e) { rethrowD<C, Word>(e, dst, logic<C, I, Word>(data, readD<Word>(dst))); }
         result = logic<C, I, S>(data, readD<S>(dst));
         SYNC(4);
         writeD<S>(dst, result);
@@ -895,7 +895,7 @@ Moira::execAndRgEa(u16 opcode)
     try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); }
     catch (BusError &e) {
 
-        if constexpr (S == Long) { logic<C, I, Word>(readD<Word>(src), data & 0xFFFF); rethrow<C>(e); }
+        if constexpr (S == Long) { logic<C, I, Word>(readD<Word>(src), data); rethrow<C>(e); }
         throw;
     }
 
@@ -927,7 +927,7 @@ Moira::execAndiRg(u16 opcode)
 
         // MAME shows the flags of the low word operation if the prefetch fails
         try { prefetchLate<C, POLL>(); }
-        catch (BusError &e) { rethrowD<C, Word>(e, dst, logic<C, I, Word>(src & 0xFFFF, readD<Word>(dst))); }
+        catch (BusError &e) { rethrowD<C, Word>(e, dst, logic<C, I, Word>(src, readD<Word>(dst))); }
 
         result = logic<C, I, S>(src, readD<S>(dst));
         SYNC_68000(4); SYNC_68010(2);
@@ -966,7 +966,7 @@ Moira::execAndiEa(u16 opcode)
     try { fetchIrc<C, POLL>(); }
     catch (BusError &e) {
 
-        if constexpr (S == Long) { logic<C, I, Word>(src & 0xFFFF, data & 0xFFFF); rethrow<C>(e); }
+        if constexpr (S == Long) { logic<C, I, Word>(src, data); rethrow<C>(e); }
         throw;
     }
 

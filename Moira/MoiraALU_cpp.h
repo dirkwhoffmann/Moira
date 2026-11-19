@@ -662,6 +662,10 @@ Moira::addsub(u32 op1, u32 op2)
 {
     u64 result;
 
+    // Only the lower S bytes of the operands are taken into account (the carry is derived from bit 8 * S)
+    op1 = CLIP<S>(op1);
+    op2 = CLIP<S>(op2);
+
     switch (I) {
 
         case Instr::ADD:
