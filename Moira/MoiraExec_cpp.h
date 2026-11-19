@@ -4155,11 +4155,17 @@ Moira::execMoves(u16 opcode)
     AVAILABILITY(Core::C68010)
     SUPERVISOR_MODE_ONLY
 
-    auto old = queue.irc;
+    // The extension word selects the direction and the register
+    u16 arg = (u16)readI<C, Word>();
 
-    if (queue.irc & 0x800) {    // Rg -> Ea
+    // Both directions spend the same number of cycles before the access
+    constexpr int delay =
+    M == Mode::PI ? 8 :
+    M == Mode::AI || M == Mode::PD || M == Mode::IX ? 6 :
+    M == Mode::DI || M == Mode::AW || M == Mode::AL ? 4 : 0;
 
-        auto arg = readI<C, Word>();
+    if (arg & 0x800) {          // Rg -> Ea
+
         int src = xxxx____________(arg);
         int dst = _____________xxx(opcode);
 
@@ -4168,45 +4174,27 @@ Moira::execMoves(u16 opcode)
         u32 ea = computeEA<C, M, S>(dst);
         updateAn<M, S>(dst);
 
-        // Take care of some special cases
-        if constexpr (M == Mode::PI) {
+        // MOVES An,(An)+ and MOVES An,-(An) store the modified register
+        if constexpr (M == Mode::PI || M == Mode::PD) {
 
             if (src == (dst | 0x8)) {
 
-                // MOVES An,(An)+
-                value += dst == 7 ? (S == Long ? 4 : 2) : S;
-            }
-        }
-        if constexpr (M == Mode::PD) {
-
-            if (src == (dst | 0x8)) {
-
-                // MOVES An,-(An)
-                value -= dst == 7 ? (S == Long ? 4 : 2) : S;
+                int delta = dst == 7 ? (S == Long ? 4 : 2) : S;
+                value = M == Mode::PI ? value + delta : value - delta;
             }
         }
 
-        if constexpr (M == Mode::AI) SYNC(6);
-        if constexpr (M == Mode::PI) SYNC(8);
-        if constexpr (M == Mode::PD) SYNC(6);
-        if constexpr (M == Mode::DI) SYNC(4);
-        if constexpr (M == Mode::IX) SYNC(6);
-        if constexpr (M == Mode::AW) SYNC(4);
-        if constexpr (M == Mode::AL) SYNC(4);
+        SYNC(delay);
 
         // Make the DFC register visible on the FC pins
         fcSource = 2;
 
-        try {
-            writeM<C, M, S, AE_INC_PC>(ea, value);
-        } catch (AddressError &exc) {
+        try { writeM<C, M, S, AE_INC_PC>(ea, value); } catch (const AddressError &) {
 
             writeBuffer = READ<Word, S == Long ? 1 : 0>(value);
-
-            // EXPERIMENTAL: CLEAN THIS UP (RENAME stackFrame.ird to irc?!)
             fcSource = 0;
-            queue.irc = old;
-            throw exc;
+            queue.irc = arg;
+            throw;
         }
 
         // Switch back to the old FC pin values
@@ -4219,7 +4207,6 @@ Moira::execMoves(u16 opcode)
 
     } else {                    // Ea -> Rg
 
-        auto arg = readI<C, Word>();
         int src = _____________xxx(opcode);
         int dst = xxxx____________(arg);
 
@@ -4231,20 +4218,14 @@ Moira::execMoves(u16 opcode)
 
         } catch (AddressError &exc) {
 
-            exc.stackFrame.ird = old;
-            throw exc;
+            exc.stackFrame.ird = arg;
+            throw;
         }
 
         // Make the SFC register visible on the FC pins
         fcSource = 1;
 
-        if constexpr (M == Mode::AI) SYNC(6);
-        if constexpr (M == Mode::PI) SYNC(8);
-        if constexpr (M == Mode::PD) SYNC(6);
-        if constexpr (M == Mode::DI) SYNC(4);
-        if constexpr (M == Mode::IX) SYNC(6);
-        if constexpr (M == Mode::AW) SYNC(4);
-        if constexpr (M == Mode::AL) SYNC(4);
+        SYNC(delay);
 
         u32 data = readM<C, M, S>(ea);
 
