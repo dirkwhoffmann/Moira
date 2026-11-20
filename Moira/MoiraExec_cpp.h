@@ -3630,9 +3630,6 @@ Moira::execMovemRgEa(u16 opcode)
 
     if constexpr (M == Mode::PD) {
 
-        // The 68020 updates the address register with each write (UAE updates it at the end)
-        constexpr bool updateEach = C == Core::C68020 && compat != Compatibility::UAE;
-
         u32 ea = readA(dst);
         [[maybe_unused]] u32 initial = ea;
 
@@ -3652,17 +3649,17 @@ Moira::execMovemRgEa(u16 opcode)
 
             // Write register contents into memory
             ea -= S;
-            if constexpr (updateEach) writeA(dst, ea);
 
-            // UAE stores the initial value minus the operand size
+            // If the address register is part of the list, the 68000 and the 68010 store its initial value
+            // and the 68020 stores the initial value minus the operand size (vAmigaTS, CPU/Misc/Movem/movem1)
             u32 value = reg.r[i];
-            if constexpr (compat == Compatibility::UAE && C == Core::C68020) {
+            if constexpr (C == Core::C68020) {
                 if (i == 8 + dst) value = initial - S;
             }
             writeM<C, M, S, (C == Core::C68000 || compat == Compatibility::UAE ? REVERSE : 0) | AE_INC_PC>(ea, value);
             cnt++;
         }
-        if constexpr (!updateEach) writeA(dst, ea);
+        writeA(dst, ea);
 
     } else {
 
@@ -5643,20 +5640,9 @@ Moira::execUnpkPd(u16 opcode)
     u16 adj = (u16)readI<C, Word>();
     u32 dst = ((data << 4 & 0x0F00) | (data & 0x000F)) + adj;
 
-    if constexpr (compat == Compatibility::UAE) {
-
-        // UAE writes the result as a single (possibly misaligned) word
-        reg.a[ay] -= 2;
-        write<C, AddrSpace::DATA, Word>(readA(ay), dst);
-
-    } else {
-
-        reg.a[ay]--;
-        write<C, AddrSpace::DATA, Byte>(readA(ay), dst);
-
-        reg.a[ay]--;
-        write<C, AddrSpace::DATA, Byte>(readA(ay), READ<Byte, 1>(dst));
-    }
+    // The result is written as a single (possibly misaligned) word (vAmigaTS, CPU/68020/Misc/unpk1)
+    reg.a[ay] -= 2;
+    write<C, AddrSpace::DATA, Word>(readA(ay), dst);
 
     prefetch<C>();
 
