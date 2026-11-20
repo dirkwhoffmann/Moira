@@ -321,12 +321,13 @@ Moira::readOp(int n, u32 *ea, u32 *result)
                 // MAME advances the register before the bus or address error is reported
                 try { *result = readM<C, M, S, F>(*ea); } catch (const AddressError &) { updateAnPI<M, S>(n); throw; } catch (const BusError &) { updateAnPI<M, S>(n); throw; }
 
-            } else if constexpr (compat == Compatibility::UAE && C == Core::C68000 && M == Mode::PI && S == Word) {
+            } else if constexpr (compat != Compatibility::MAME && C == Core::C68000 && M == Mode::PI && S == Word) {
 
-                // UAE advances the register before a word read, but only a bus error leaves it advanced
+                // The register is advanced before a word read, but only a bus error leaves it advanced (MAME, UAE).
+                // A real 68000 leaves the register untouched on an address error (recorded on an A500).
                 try { *result = readM<C, M, S, F>(*ea); } catch (const BusError &) { updateAnPI<M, S>(n); throw; }
 
-            } else if constexpr (compat == Compatibility::MAME && C == Core::C68000 && M == Mode::PI) {
+            } else if constexpr (followsMame<C>() && C == Core::C68000 && M == Mode::PI) {
 
                 // MAME advances the register before a bus error is reported. A long operand
                 // is advanced between the two word accesses.

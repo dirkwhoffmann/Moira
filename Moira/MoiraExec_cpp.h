@@ -1077,7 +1077,7 @@ Moira::execBitDxDy(u16 opcode)
 
     try { prefetchLate<C, POLL>(); } catch (BusError &e) {
         // MAME updates the flags after the prefetch
-        if constexpr (compat != Compatibility::MAME) bit<C, I>(data, b);
+        if constexpr (!followsMame<C>()) bit<C, I>(data, b);
         rethrow<C>(e);
     }
     data = bit<C, I>(data, b);
@@ -1108,7 +1108,7 @@ Moira::execBitDxEa(u16 opcode)
 
     try { fetchIrc<C, POLL, !(I == Instr::BTST && M != Mode::IM)>(); } catch (BusError &e) {
         // MAME updates the flags after the prefetch
-        if constexpr (compat != Compatibility::MAME || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) bit<C, I>(data, b);
+        if constexpr (!followsMame<C>() || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) bit<C, I>(data, b);
         rethrow<C>(e);
     }
     data = bit<C, I>(data, b);
@@ -1149,7 +1149,7 @@ Moira::execBitImDy(u16 opcode)
 
     try { prefetchLate<C, POLL>(); } catch (BusError &e) {
         // MAME updates the flags after the prefetch
-        if constexpr (compat != Compatibility::MAME) bit<C, I>(data, src);
+        if constexpr (!followsMame<C>()) bit<C, I>(data, src);
         rethrow<C>(e);
     }
     data = bit<C, I>(data, src);
@@ -1178,7 +1178,7 @@ Moira::execBitImEa(u16 opcode)
 
     try { fetchIrc<C, POLL, (I != Instr::BTST)>(); } catch (BusError &e) {
         // MAME updates the flags after the prefetch
-        if constexpr (compat != Compatibility::MAME || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) bit<C, I>(data, src);
+        if constexpr (!followsMame<C>() || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) bit<C, I>(data, src);
         rethrow<C>(e);
     }
     data = bit<C, I>(data, src);
@@ -3580,8 +3580,8 @@ Moira::execMovemEaRg(u16 opcode)
         cnt++;
     }
 
-    // MAME (and UAE on the 68000) update the address register after the final (extra) read
-    constexpr bool lateUpdate = compat == Compatibility::MAME || (compat == Compatibility::UAE && C == Core::C68000);
+    // MAME and UAE update the address register of a 68000 after the final (extra) read
+    constexpr bool lateUpdate = compat == Compatibility::MAME || C == Core::C68000;
     if constexpr (M == Mode::PI && !lateUpdate) writeA(src, ea);
 
     if constexpr (S == Word || C == Core::C68000) {
@@ -4887,26 +4887,21 @@ Moira::execRte(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        if constexpr (compat == Compatibility::MAME) {
+        if constexpr (followsMame<C>()) {
 
-            // SP is adjusted after the last read
+            // MAME adjusts the stack pointer after the last read
             newsr = (u16)read<C, AddrSpace::DATA, Word>(reg.sp);
             newpc = (u32)read<C, AddrSpace::DATA, Word>(reg.sp + 2) << 16;
             reg.sp += 6;
             newpc |= read<C, AddrSpace::DATA, Word>(reg.sp - 2);
 
-        } else if constexpr (compat == Compatibility::UAE) {
+        } else {
 
             // UAE adjusts the stack pointer after the status register has been read
             newsr = (u16)read<C, AddrSpace::DATA, Word, UAE_DEC_PC>(reg.sp);
             reg.sp += 6;
             newpc = (u32)read<C, AddrSpace::DATA, Word, UAE_DEC_PC>(reg.sp - 4) << 16;
             newpc |= read<C, AddrSpace::DATA, Word, UAE_DEC_PC>(reg.sp - 2);
-
-        } else {
-
-            newsr = (u16)pop<C, Word>();
-            newpc = pop<C, Long>();
         }
 
     } else if constexpr (C == Core::C68010) {
@@ -5167,7 +5162,7 @@ Moira::execRtr(u16 opcode)
     u16 newccr;
     u32 newpc;
 
-    if constexpr (compat == Compatibility::MAME) {
+    if constexpr (followsMame<C>()) {
 
         // MAME adjusts the stack pointer right before the last word is read
         u32 sp = reg.sp;
@@ -5400,7 +5395,7 @@ Moira::execTasEa(u16 opcode)
             // Only a failing read cycle is special (not a failing extension word fetch)
             if ((e.stackFrame.fc & 3) != 2) {
 
-                if constexpr (compat == Compatibility::MAME) {
+                if constexpr (followsMame<C>()) {
 
                     // MAME completes a failed read like a failed write
                     e.stackFrame.code &= ~0x10;
@@ -5480,7 +5475,7 @@ Moira::execTrapv(u16 opcode)
 
         // In MAME, the word is read in supervisor mode (UAE reads in the current mode)
         bool s = reg.sr.s;
-        if constexpr (C == Core::C68000 && compat == Compatibility::MAME) reg.sr.s = true;
+        if constexpr (C == Core::C68000 && followsMame<C>()) reg.sr.s = true;
 
         try { (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2); } catch (BusError &e) {
 

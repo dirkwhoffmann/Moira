@@ -46,7 +46,7 @@ Moira::writeStackFrame0000(u16 sr, u32 pc, u16 nr)
         case Core::C68000:
 
             U32_DEC(reg.sp, 6);
-            if constexpr (compat == Compatibility::MAME) {
+            if constexpr (followsMame<C>()) {
 
                 // MAME has not adjusted the stack pointer yet if the first write fails
                 try { write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc)); }
