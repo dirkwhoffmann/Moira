@@ -1718,7 +1718,6 @@ Moira::execChk(u16 opcode)
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
     u32 ea = 0, data, dy;
-    [[maybe_unused]] auto c = clock;
 
     try { readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data); }
     catch (const AddressError &) {
@@ -1737,17 +1736,8 @@ Moira::execChk(u16 opcode)
 
     SYNC_68000(6);
 
-    if constexpr (compat == Compatibility::MUSASHI) {
-
-        reg.sr.z = ZERO<S>(dy);
-        reg.sr.v = 0;
-        reg.sr.c = 0;
-
-    } else {
-
-        reg.sr.n = 0;
-        setUndefinedCHK<C, S>(SEXT<S>(data), SEXT<S>(dy));
-    }
+    reg.sr.n = 0;
+    setUndefinedCHK<C, S>(SEXT<S>(data), SEXT<S>(dy));
 
     bool above = SEXT<S>(dy) > SEXT<S>(data);
     bool below = SEXT<S>(dy) < 0;
@@ -1770,10 +1760,10 @@ Moira::execChk(u16 opcode)
 
         } else {
 
-            SYNC((compat == Compatibility::MUSASHI) ? 10 - (int)(clock - c) : above ? 2 : 4);
+            SYNC(above ? 2 : 4);
         }
 
-        reg.sr.n = (above || compat == Compatibility::MUSASHI) ? NBIT<S>(dy) : 1;
+        reg.sr.n = above ? NBIT<S>(dy) : 1;
         execException<C>(M68kException::CHK);
 
         CYCLES_68000(40)

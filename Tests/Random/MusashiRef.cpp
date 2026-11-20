@@ -66,4 +66,13 @@ MusashiRef::skipSetup(const Setup &s) const
     return result;
 }
 
+u32
+MusashiRef::srMask(Instr instr) const
+{
+    // Musashi computes N, Z, V and C of CHK differently (Moira follows MAME and UAE)
+    if (instr == Instr::CHK) return ~0x0Fu;
+
+    return 0xFFFFFFFF;
+}
+
 }
