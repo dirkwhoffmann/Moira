@@ -209,16 +209,6 @@ MOIRA_DECLARE(Move16AlAi)
 
 // Sub handlers
 template <Core C, Mode M> void execPMove(u16, MmuReg, bool);
-template <Core C, Instr I, Mode M, Size S> void execMulsMoira(u16);
-template <Core C, Instr I, Mode M, Size S> void execMuluMoira(u16);
-template <Core C, Instr I, Mode M, Size S> void execMullMoira(u16);
-template <Core C, Instr I, Mode M, Size S> void execDivsMoira(u16, bool *);
-template <Core C, Instr I, Mode M, Size S> void execDivuMoira(u16, bool *);
-template <Core C, Instr I, Mode M, Size S> bool execDivlMoira(u16, bool *);
-
-template <Core C, Instr I, Mode M, Size S> void execMulsMusashi(u16);
-template <Core C, Instr I, Mode M, Size S> void execMuluMusashi(u16);
-template <Core C, Instr I, Mode M, Size S> void execMullMusashi(u16);
-template <Core C, Instr I, Mode M, Size S> void execDivsMusashi(u16, bool *);
-template <Core C, Instr I, Mode M, Size S> void execDivuMusashi(u16, bool *);
-template <Core C, Instr I, Mode M, Size S> bool execDivlMusashi(u16, bool *);
+template <Core C, Instr I, Mode M, Size S> void execMulWord(u16);
+template <Core C, Instr I, Mode M, Size S> bool execDivWord(u16);
+template <Core C, Instr I, Mode M, Size S> bool execDivLong(u16, bool *);

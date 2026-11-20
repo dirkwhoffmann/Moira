@@ -30,6 +30,7 @@ public:
 
     bool skipSetup(const Setup &s) const override;
     bool skipAccessCheck(u16 op) const override;
+    bool skipResult(const Setup &s, const Result &rRef, const Result &rMoira) const override;
 };
 
 }

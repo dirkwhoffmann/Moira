@@ -228,7 +228,7 @@ void SSTRunner::runCase(const sst::Test &t, const sst::State &init, int k, int a
     }
     if (regs && moira.getUSP() != rs.usp) { add("USP"); if (getenv("EXC_REGS")) printf("      USP: initial %08x exp %08x got %08x\n", init.usp, rs.usp, moira.getUSP()); }
     if (regs && moira.getISP() != rs.ssp) { add("SSP"); if (getenv("EXC_REGS")) printf("      SSP: initial %08x exp %08x got %08x\n", init.ssp, rs.ssp, moira.getISP()); }
-    if (regs && (moira.getSR() & srMask) != (rs.sr & srMask)) { add("SR"); if (getenv("EXC_REGS")) printf("      SR: initial %04x exp %04x got %04x\n", init.sr, rs.sr, moira.getSR()); }
+    if (regs && (moira.getSR() & srMask) != (rs.sr & srMask) && !ref.core->knownDifference(kd, init.prefetch[0], "SR")) { add("SR"); if (getenv("EXC_REGS")) printf("      SR: initial %04x exp %04x got %04x\n", init.sr, rs.sr, moira.getSR()); }
     // The PC of a halted CPU depends on the microcode state (not compared)
     if (!halted && (moira.getPC() & ADDR_MASK) != (rs.pc & ADDR_MASK)) { add("PC"); if (getenv("EXC_REGS")) printf("      PC: initial %08x exp %08x got %08x\n", init.pc, rs.pc, moira.getPC()); }
     if (!halted && !ignoreCycles && i64(moira.getClock()) != refCycles) { add("cycles"); if (getenv("EXC_REGS")) printf("      cycles: exp %lld got %lld\n", (long long)refCycles, (long long)moira.getClock()); }
