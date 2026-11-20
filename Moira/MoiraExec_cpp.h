@@ -3678,9 +3678,9 @@ Moira::execMovecRxRc(u16 opcode)
 
     if constexpr (C == Core::C68010) {
 
-        auto reg = arg & 0xFFF;
+        auto rc = arg & 0xFFF;
 
-        if (reg != 0x000 && reg != 0x001 && reg != 0x800 && reg != 0x801) {
+        if (rc != 0x000 && rc != 0x001 && rc != 0x800 && rc != 0x801) {
 
             execIllegal<C, I, M, S>(opcode);
             return;
@@ -4163,33 +4163,7 @@ Moira::execMoveCcrEa(u16 opcode)
     constexpr int delay = M == Mode::PI ? 4 : (M == Mode::AI || M == Mode::PD) ? 2 : 0;
     if constexpr (delay) SYNC(delay);
 
-    auto val = getCCR();
-
-    // Compute effective address
-    u32 ea = computeEA<C, M, S>(dst);
-
-    // Emulate -(An) register modification
-    updateAnPD<M, S>(dst);
-
-    prefetch<C>();
-
-    if (misaligned<C>(ea)) {
-
-        writeBuffer = READ<Word>(val);
-        updateAnPI<M, S>(dst);
-        setFC<M>();
-        throw AddressError(makeFrame<AE_WRITE|AE_INC_PC>(ea));
-    }
-
-    // UAE (68020) advances the register before it writes
-    constexpr bool earlyUpdate = compat == Compatibility::UAE && C == Core::C68020;
-    if constexpr (earlyUpdate) updateAnPI<M, S>(dst);
-
-    // Write to effective address
-    writeM<C, M, S, POLL>(ea, val);
-
-    // Emulate (An)+ register modification
-    if constexpr (!earlyUpdate) updateAnPI<M, S>(dst);
+    writeStatusEa<C, M, S, AE_WRITE|AE_INC_PC>(dst, getCCR());
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -4282,31 +4256,7 @@ Moira::execMoveSrEa(u16 opcode)
         constexpr int delay = M == Mode::PI ? 4 : (M == Mode::AI || M == Mode::PD) ? 2 : 0;
         if constexpr (delay) SYNC(delay);
 
-        auto val = getSR();
-        u32 ea = computeEA<C, M, S>(dst);
-
-        // Emulate -(An) register modification
-        updateAnPD<M, S>(dst);
-
-        prefetch<C>();
-
-        if (misaligned<C>(ea)) {
-
-            writeBuffer = READ<Word>(val);
-            updateAnPI<M, S>(dst);
-            setFC<M>();
-            throw AddressError(makeFrame<AE_WRITE>(ea));
-        }
-
-        // UAE (68020) advances the register before it writes
-        constexpr bool earlyUpdate = compat == Compatibility::UAE && C == Core::C68020;
-        if constexpr (earlyUpdate) updateAnPI<M, S>(dst);
-
-        // Write to effective address
-        writeM<C, M, S, POLL>(ea, val);
-
-        // Emulate (An)+ register modification
-        if constexpr (!earlyUpdate) updateAnPI<M, S>(dst);
+        writeStatusEa<C, M, S, AE_WRITE>(dst, getSR());
     }
 
     //           00  10  20        00  10  20        00  10  20
@@ -5185,9 +5135,9 @@ Moira::execNbcdRg(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    int reg = _____________xxx(opcode);
+    int dst = _____________xxx(opcode);
 
-    u32 data = readD<Byte>(reg);
+    u32 data = readD<Byte>(dst);
 
     // MAME computes the result (and the flags) before the prefetch
     u32 result = bcd<C, I, Byte>(data, 0);
@@ -5195,7 +5145,7 @@ Moira::execNbcdRg(u16 opcode)
     looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>();
 
     SYNC(2);
-    writeD<Byte>(reg, result);
+    writeD<Byte>(dst, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -5209,10 +5159,10 @@ Moira::execNbcdEa(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    int reg = _____________xxx(opcode);
+    int dst = _____________xxx(opcode);
 
     u32 ea, data;
-    readOp<C, M, Byte, STD_AE_FRAME>(reg, &ea, &data);
+    readOp<C, M, Byte, STD_AE_FRAME>(dst, &ea, &data);
 
     // MAME updates the flags before the prefetch
     u32 result = bcd<C, I, Byte>(data, 0);
@@ -5826,18 +5776,7 @@ Moira::execRtr(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    // Check for address error
-    if (misaligned<C>(reg.sp)) {
-
-        setFC<M>();
-        if constexpr (C == Core::C68000) {
-
-            // MAME and UAE abort the access without a bus cycle
-            throw earlyAddressError<C>(makeFrame<0>(reg.sp));
-        }
-        readBuffer = u16(readM<C, M, Word>(reg.sp & ~1));
-        throw earlyAddressError<C>(makeFrame<0>(reg.sp));
-    }
+    checkEvenSP<C, M>();
 
     u16 newccr;
     u32 newpc;
@@ -5858,9 +5797,8 @@ Moira::execRtr(u16 opcode)
         reg.sp += 2;
         newpc = read<C, AddrSpace::DATA, Long>(reg.sp);
         reg.sp += 4;
+        setCCR((u8)newccr);
     }
-
-    setCCR((u8)newccr);
 
     checkEvenPC<C, AE_PROG>(newpc);
 
@@ -5881,21 +5819,9 @@ Moira::execRts(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    // Check for address error
-    if (misaligned<C>(reg.sp)) {
+    checkEvenSP<C, M>();
 
-        setFC<M>();
-        if constexpr (C == Core::C68000) {
-
-            // MAME and UAE abort the access without a bus cycle
-            throw earlyAddressError<C>(makeFrame<0>(reg.sp));
-        }
-        readBuffer = u16(readM<C, M, Word>(reg.sp & ~1));
-        throw earlyAddressError<C>(makeFrame<0>(reg.sp));
-    }
-
-    u32 newpc;
-    newpc = readM<C, M, Long, UAE_DEC_PC>(reg.sp);
+    u32 newpc = readM<C, M, Long, UAE_DEC_PC>(reg.sp);
     reg.sp += 4;
 
     checkEvenPC<C, AE_PROG>(newpc);

@@ -78,6 +78,10 @@ template <Core C, Mode M, Size S, Flags F = 0> void writeOp(int n, u32 ea, u32 v
 // Writes a 64-bit operand (used by the MMU)
 template <Core C, Mode M, Flags F = 0> void writeOp64(int n, u64 val);
 
+// Writes a status register value to memory (MOVE from SR/CCR on the 68010 and above).
+// F is the frame type of the address error raised for a misaligned address.
+template <Core C, Mode M, Size S, Flags F> void writeStatusEa(int n, u16 val);
+
 // Emulates the address register modification for modes (An)+, (An)- (DEPRECATED)
 template <Mode M, Size S> void updateAn(int n);
 template <Mode M, Size S> void updateAnPI(int n);
@@ -171,6 +175,9 @@ template <Core C> AddressError earlyAddressError(const StackFrame &frame);
 // Raises an early address error with a frame of type F if the provided address is misaligned
 template <Core C, Size S = Word, Flags F = 0> void checkEven(u32 addr);
 template <Core C, Flags F = 0> void checkEvenPC(u32 addr);
+
+// Raises an address error if the stack pointer is misaligned before a value is popped
+template <Core C, Mode M> void checkEvenSP();
 
 // Prefetches the next instruction
 template <Core C, Flags F = 0> void prefetch();

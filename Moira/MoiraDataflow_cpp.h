@@ -415,6 +415,36 @@ Moira::readOp64(int n, u32 *ea, u64 *result)
     *result = hi << 32 | lo;
 }
 
+template <Core C, Mode M, Size S, Flags F> void
+Moira::writeStatusEa(int n, u16 val)
+{
+    // Compute effective address
+    u32 ea = computeEA<C, M, S>(n);
+
+    // Emulate -(An) register modification
+    updateAnPD<M, S>(n);
+
+    prefetch<C>();
+
+    if (misaligned<C>(ea)) {
+
+        writeBuffer = READ<Word>(val);
+        updateAnPI<M, S>(n);
+        setFC<M>();
+        throw AddressError(makeFrame<F>(ea));
+    }
+
+    // UAE (68020) advances the register before it writes
+    constexpr bool earlyUpdate = compat == Compatibility::UAE && C == Core::C68020;
+    if constexpr (earlyUpdate) updateAnPI<M, S>(n);
+
+    // Write to effective address
+    writeM<C, M, S, POLL>(ea, val);
+
+    // Emulate (An)+ register modification
+    if constexpr (!earlyUpdate) updateAnPI<M, S>(n);
+}
+
 template <Core C, Mode M, Flags F> void
 Moira::writeOp64(int n, u64 val)
 {
@@ -1190,6 +1220,19 @@ template <Core C, Flags F> void
 Moira::checkEvenPC(u32 addr)
 {
     if (misalignedPC<C>(addr)) throw earlyAddressError<C>(makeFrame<F>(addr));
+}
+
+template <Core C, Mode M> void
+Moira::checkEvenSP()
+{
+    if (misaligned<C>(reg.sp)) {
+
+        setFC<M>();
+
+        // MAME and UAE (68000) abort the access without a bus cycle
+        if constexpr (C != Core::C68000) readBuffer = u16(readM<C, M, Word>(reg.sp & ~1));
+        throw earlyAddressError<C>(makeFrame<0>(reg.sp));
+    }
 }
 
 template <Core C, Flags F> void
