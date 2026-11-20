@@ -57,6 +57,9 @@ MusashiRef::skipSetup(const Setup &s) const
 
     if (tr().cpuModel != CPUModel::M68000) result |= instr == Instr::RTE;
 
+    // LINK A7: Musashi pushes the decremented stack pointer (UAE and Moira push the old value, except on the 68040)
+    if (instr == Instr::LINK && (s.opcode & 7) == 7 && tr().cpuModel < CPUModel::M68EC040) result = true;
+
     // MULL with a 64-bit result in Dh = Dl (undefined): Musashi writes Dh first, Moira writes Dl first
     if (instr == Instr::MULL && (s.ext1 & 0x400) && (s.ext1 >> 12 & 7) == (s.ext1 & 7)) result = true;
 

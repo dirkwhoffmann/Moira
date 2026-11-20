@@ -38,12 +38,17 @@ struct MusashiCore : RefCore {
     const char *name() const override { return "Musashi"; }
     const char *shortName() const override { return "Musashi"; }
 
-    // Musashi computes the flags of DIVU and DIVS differently. It sets only V on an overflow and leaves
-    // the flags alone on a division by zero (the stacked SR shows up as the first frame word).
+    // Known functional differences:
+    // - Musashi computes the flags of DIVU and DIVS differently. It sets only V on an overflow and leaves
+    //   the flags alone on a division by zero (the stacked SR shows up as the first frame word).
+    // - LINK A7 pushes the decremented stack pointer in Musashi (the supported models push the old value).
     bool knownDifference(const char *kind, u16 opcode, const std::string &field) const override
     {
         bool div = (opcode & 0xF1C0) == 0x80C0 || (opcode & 0xF1C0) == 0x81C0;
-        return div && (field == "SR" || field == "frame.code" || field == "frame.sr");
+        if (div && (field == "SR" || field == "frame.code" || field == "frame.sr")) return true;
+
+        bool linkA7 = opcode == 0x4E57 || opcode == 0x480F;
+        return linkA7 && field == "mem";
     }
 
     // Musashi executes MOVE16 (F620-F627) on the 68000, which has no such instruction

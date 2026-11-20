@@ -2840,8 +2840,8 @@ Moira::execLink(u16 opcode)
 
     POLL_IPL;
 
-    // LINK A7 pushes the decremented stack pointer on the 68040 (and in Musashi)
-    bool decremented = ax == 7 && (compat == Compatibility::MUSASHI || cpuModel >= CPUModel::M68EC040);
+    // LINK A7 pushes the decremented stack pointer on the 68040
+    bool decremented = ax == 7 && cpuModel >= CPUModel::M68EC040;
 
     // Write to stack
     try { push<C, Long, AE_INC_PC>(readA(ax) - (decremented ? 4 : 0)); } catch (BusError &) {
