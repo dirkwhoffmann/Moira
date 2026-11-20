@@ -115,26 +115,11 @@ Moira::execShiftRg(u16 opcode)
 
     } else {
 
-        switch (I) {
+        constexpr int base =
+        (I == Instr::ROL || I == Instr::ROR || I == Instr::ASL) ? 8 :
+        (I == Instr::ROXL || I == Instr::ROXR) ? 12 : 6;
 
-            case Instr::ROL:
-            case Instr::ROR:
-            case Instr::ASL:
-                
-                CYCLES(  8 + cnt );
-                break;
-                
-            case Instr::ROXL:
-            case Instr::ROXR:
-                
-                CYCLES( 12 + cnt );
-                break;
-                
-            default:
-                
-                CYCLES(  6 + cnt );
-                break;
-        }
+        CYCLES(base + cnt);
     }
 
     FINALIZE
@@ -165,32 +150,12 @@ Moira::execShiftIm(u16 opcode)
 
     } else {
 
-        switch (I) {
+        constexpr int cycles =
+        (I == Instr::LSL || I == Instr::LSR) ? 4 :
+        (I == Instr::ROL || I == Instr::ROR || I == Instr::ASL) ? 8 :
+        (I == Instr::ROXL || I == Instr::ROXR) ? 12 : 6;
 
-            case Instr::LSL:
-            case Instr::LSR:
-                
-                CYCLES(4);
-                break;
-                
-            case Instr::ROL:
-            case Instr::ROR:
-            case Instr::ASL:
-                
-                CYCLES(8);
-                break;
-                
-            case Instr::ROXL:
-            case Instr::ROXR:
-                
-                CYCLES(12);
-                break;
-                
-            default:
-                
-                CYCLES(6);
-                break;
-        }
+        CYCLES(cycles);
     }
 
     FINALIZE
@@ -373,8 +338,6 @@ Moira::execAddRgEa(u16 opcode)
 
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    constexpr Flags flags = REVERSE | COMMIT_IRD;
-
     result = addsub<C, I, S>(readD<S>(src), data);
 
     // If the prefetch of a long operation fails, the flags of the low word operation show up
@@ -383,7 +346,7 @@ Moira::execAddRgEa(u16 opcode)
         rethrow<C>(e);
     }
 
-    writeM<C, M, S, flags>(ea, result);
+    writeM<C, M, S, REVERSE | COMMIT_IRD>(ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -429,28 +392,11 @@ Moira::execAdda(u16 opcode)
         POLL_IPL;
         if constexpr (S == Word || isRegMode(M) || isImmMode(M)) SYNC(2);
 
-        if (looping<I>()) {
+        constexpr int loopDelay =
+        M == Mode::DN ? (S == Long ? 6 : 0) :
+        (M == Mode::AI || M == Mode::PI || M == Mode::PD) ? (S == Long ? 6 : 4) : 0;
 
-            switch (M) {
-                case Mode::DN:
-                    noPrefetch<C>(S == Long ? 6 : 0);
-                    break;
-
-                case Mode::AI:
-                case Mode::PI:
-                case Mode::PD:
-                    noPrefetch<C>(S == Long ? 6 : 4);
-                    break;
-
-                default:
-                    noPrefetch<C>();
-                    break;
-            }
-
-        } else {
-
-            prefetch<C>();
-        }
+        looping<I>() ? noPrefetch<C>(loopDelay) : prefetch<C>();
     }
 
     //           00  10  20        00  10  20        00  10  20
@@ -880,8 +826,6 @@ Moira::execAndRgEa(u16 opcode)
     u32 ea, data, result;
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
-    constexpr Flags flags = REVERSE | COMMIT_IRD;
-
     result = logic<C, I, S>(readD<S>(src), data);
 
     try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); } catch (BusError &e) {
@@ -889,7 +833,7 @@ Moira::execAndRgEa(u16 opcode)
         rethrow<C>(e);
     }
 
-    writeOp<C, M, S, flags>(dst, ea, result);
+    writeOp<C, M, S, REVERSE | COMMIT_IRD>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -1135,7 +1079,7 @@ Moira::execBitDxDy(u16 opcode)
 
     try { prefetchLate<C, POLL>(); } catch (BusError &e) {
         // MAME updates the flags after the prefetch
-        if constexpr (compat != Compatibility::MAME || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) bit<C, I>(data, b);
+        if constexpr (compat != Compatibility::MAME) bit<C, I>(data, b);
         rethrow<C>(e);
     }
     data = bit<C, I>(data, b);
@@ -1162,7 +1106,7 @@ Moira::execBitDxEa(u16 opcode)
     u32 ea, data;
     readOp<C, M, Byte, C == Core::C68000 ? STD_AE_FRAME : 0>(dst, &ea, &data);
 
-    if constexpr (I == Instr::BCLR && C == Core::C68010) { SYNC(2); }
+    if constexpr (I == Instr::BCLR && C == Core::C68010) SYNC(2);
 
     try { fetchIrc<C, POLL, !(I == Instr::BTST && M != Mode::IM)>(); } catch (BusError &e) {
         // MAME updates the flags after the prefetch
@@ -1172,7 +1116,7 @@ Moira::execBitDxEa(u16 opcode)
     data = bit<C, I>(data, b);
 
     // MAME and UAE idle after the prefetch
-    if constexpr (C == Core::C68000 && I == Instr::BTST && M == Mode::IM) { SYNC_68000(2); }
+    if constexpr (C == Core::C68000 && I == Instr::BTST && M == Mode::IM) SYNC(2);
     if constexpr (I != Instr::BTST) writeM<C, M, Byte, COMMIT_IRD>(ea, data);
     else if constexpr (M == Mode::IM) commitIrd<C>();
 
@@ -1313,7 +1257,7 @@ Moira::execBitFieldDn(u16 opcode)
             break;
 
         case Instr::BFFFO:
-        {
+
             data = std::rotl(data, offset);
             result = bitfield<I>(data, rawOffset, width, mask);
             writeD(dn, result);
@@ -1322,7 +1266,7 @@ Moira::execBitFieldDn(u16 opcode)
             //           .b  .b  .b        .w  .w  .w        .l  .l  .l
             CYCLES_DN   ( 0,  0,  0,        0,  0,  0,        0,  0, 18)
             break;
-        }
+
         case Instr::BFINS:
 
             insert = readD(dn);
@@ -1365,27 +1309,27 @@ Moira::execBitFieldEa(u16 opcode)
 
     int dy     = _____________xxx (opcode);
     int dn     = _xxx____________ (ext);
-    int offset = _____xxxxx______ (ext);
+    int of     = _____xxxxx______ (ext);
     int doBit  = ____x___________ (ext);
-    int width  = ___________xxxxx (ext);
+    int wi     = ___________xxxxx (ext);
     int dwBit  = __________x_____ (ext);
 
-    // If Do or Dw is set, offset or width are taken from data registers
-    if (doBit) offset = reg.d[offset & 0b111];
-    if (dwBit) width = reg.d[width & 0b111];
+    // If do or dw is set, offset or width are taken from data registers
+    int rawOffset = doBit ? reg.d[of & 0b111] : of;
+    int rawWidth = dwBit ? reg.d[wi & 0b111] : wi;
 
     // Map width to 32, 1 ... 31
-    width = ((width - 1) & 0b11111) + 1;
+    int width = ((rawWidth - 1) & 0b11111) + 1;
 
-    u32 oldOffset = offset;
     u32 result, insert;
 
     // Compute the effective address
     u32 ea = computeEA<C, M, S>(dy);
 
-    ea += offset / 8;
-    offset %= 8;
-    if(offset < 0) {
+    // Split the offset into a byte displacement and a bit offset (0 ... 7)
+    ea += rawOffset / 8;
+    int offset = rawOffset % 8;
+    if (offset < 0) {
 
         offset += 8;
         ea--;
@@ -1407,7 +1351,7 @@ Moira::execBitFieldEa(u16 opcode)
             result = bitfield<I>(data, offset, width, mask);
             writeM<C, M, S>(ea, result);
 
-            if((width + offset) > 32) {
+            if ((width + offset) > 32) {
 
                 data = readM<C, M, Byte>(ea + 4);
 
@@ -1429,48 +1373,40 @@ Moira::execBitFieldEa(u16 opcode)
 
         case Instr::BFEXTS:
         case Instr::BFEXTU:
-
-            data = CLIP<Long>(data << offset);
-
-            if((offset + width) > 32) {
-                data |= (readM<C, M, Byte>(ea + 4) << offset) >> 8;
-            }
-
-            result = bitfield<I>(data, offset, width, mask);
-            writeD(dn, result);
-
-            //           00  10  20        00  10  20        00  10  20
-            //           .b  .b  .b        .w  .w  .w        .l  .l  .l
-            CYCLES_AI   ( 0,  0,  0,        0,  0,  0,        0,  0, 19)
-            CYCLES_DI   ( 0,  0,  0,        0,  0,  0,        0,  0, 20)
-            CYCLES_IX   ( 0,  0,  0,        0,  0,  0,        0,  0, 22)
-            CYCLES_AW   ( 0,  0,  0,        0,  0,  0,        0,  0, 19)
-            CYCLES_AL   ( 0,  0,  0,        0,  0,  0,        0,  0, 19)
-            CYCLES_DIPC ( 0,  0,  0,        0,  0,  0,        0,  0, 20)
-            CYCLES_IXPC ( 0,  0,  0,        0,  0,  0,        0,  0, 22)
-            break;
-
         case Instr::BFFFO:
 
+            // Align the field to bit 31 and pull in the spill byte
             data = CLIP<Long>(data << offset);
+            if ((offset + width) > 32) data |= (readM<C, M, Byte>(ea + 4) << offset) >> 8;
 
-            if((offset + width) > 32) {
-
-                data |= (readM<C, M, Byte>(ea + 4) << offset) >> 8;
-            }
-
-            result = bitfield<I>(data, oldOffset, width, mask);
+            // BFFFO reports the position relative to the unsplit offset
+            result = bitfield<I>(data, I == Instr::BFFFO ? rawOffset : offset, width, mask);
             writeD(dn, result);
 
-            //           00  10  20        00  10  20        00  10  20
-            //           .b  .b  .b        .w  .w  .w        .l  .l  .l
-            CYCLES_AI   ( 0,  0,  0,        0,  0,  0,        0,  0, 32)
-            CYCLES_DI   ( 0,  0,  0,        0,  0,  0,        0,  0, 33)
-            CYCLES_IX   ( 0,  0,  0,        0,  0,  0,        0,  0, 35)
-            CYCLES_AW   ( 0,  0,  0,        0,  0,  0,        0,  0, 32)
-            CYCLES_AL   ( 0,  0,  0,        0,  0,  0,        0,  0, 32)
-            CYCLES_DIPC ( 0,  0,  0,        0,  0,  0,        0,  0, 33)
-            CYCLES_IXPC ( 0,  0,  0,        0,  0,  0,        0,  0, 35)
+            if constexpr (I == Instr::BFFFO) {
+
+                //           00  10  20        00  10  20        00  10  20
+                //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+                CYCLES_AI   ( 0,  0,  0,        0,  0,  0,        0,  0, 32)
+                CYCLES_DI   ( 0,  0,  0,        0,  0,  0,        0,  0, 33)
+                CYCLES_IX   ( 0,  0,  0,        0,  0,  0,        0,  0, 35)
+                CYCLES_AW   ( 0,  0,  0,        0,  0,  0,        0,  0, 32)
+                CYCLES_AL   ( 0,  0,  0,        0,  0,  0,        0,  0, 32)
+                CYCLES_DIPC ( 0,  0,  0,        0,  0,  0,        0,  0, 33)
+                CYCLES_IXPC ( 0,  0,  0,        0,  0,  0,        0,  0, 35)
+
+            } else {
+
+                //           00  10  20        00  10  20        00  10  20
+                //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+                CYCLES_AI   ( 0,  0,  0,        0,  0,  0,        0,  0, 19)
+                CYCLES_DI   ( 0,  0,  0,        0,  0,  0,        0,  0, 20)
+                CYCLES_IX   ( 0,  0,  0,        0,  0,  0,        0,  0, 22)
+                CYCLES_AW   ( 0,  0,  0,        0,  0,  0,        0,  0, 19)
+                CYCLES_AL   ( 0,  0,  0,        0,  0,  0,        0,  0, 19)
+                CYCLES_DIPC ( 0,  0,  0,        0,  0,  0,        0,  0, 20)
+                CYCLES_IXPC ( 0,  0,  0,        0,  0,  0,        0,  0, 22)
+            }
             break;
 
         case Instr::BFINS:
@@ -1482,7 +1418,7 @@ Moira::execBitFieldEa(u16 opcode)
 
             writeM<C, M, S>(ea, (data & ~mask) | insert >> offset);
 
-            if((width + offset) > 32) {
+            if ((width + offset) > 32) {
 
                 data = readM<C, M, Byte>(ea + 4);
                 u8 insert8 = u8(readD(dn) << (8 - ((width + offset) - 32)));
@@ -1503,7 +1439,7 @@ Moira::execBitFieldEa(u16 opcode)
 
             (void)bitfield<I>(data, offset, width, mask);
 
-            if((width + offset) > 32) {
+            if ((width + offset) > 32) {
 
                 u8 data2 = u8(readM<C, M, Byte>(ea + 4));
                 reg.sr.z &= ZERO<Byte>(data2 & mask8);
@@ -1549,7 +1485,7 @@ Moira::execBkpt(u16 opcode)
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
-    CYCLES_IP   ( 0,  0,  0,        0,  0,  0,        0, 38, 20 );
+    CYCLES_IP   ( 0,  0,  0,        0,  0,  0,        0, 38, 20)
 
     FINALIZE
 }
@@ -1644,7 +1580,7 @@ Moira::execCallm(u16 opcode)
 {
     AVAILABILITY(Core::C68020)
 
-    int dst = ( _____________xxx(opcode) );
+    int dst = _____________xxx(opcode);
     u32 ea, data;
 
     readOp<C, M, Byte>(dst, &ea, &data);
@@ -1742,36 +1678,24 @@ Moira::execCas2(u16 opcode)
     auto compare1 = readD(dc1);
     auto compare2 = readD(dc2);
 
-    // Set flags
+    // Set flags (the second comparison is only performed if the first one matches)
     cmp<C, S>(compare1, data1);
+    if (reg.sr.z) cmp<C, S>(compare2, data2);
 
     if (reg.sr.z) {
 
-        // Set flags
-        cmp<C, S>(compare2, data2);
-        if (reg.sr.z) {
+        writeM<C, M, S>(ea1, reg.d[du1]);
+        writeM<C, M, S>(ea2, reg.d[du2]);
 
-            writeM<C, M, S>(ea1, reg.d[du1]);
-            writeM<C, M, S>(ea2, reg.d[du2]);
-
-            prefetch<C, POLL>();
-            CYCLES_68020 (15);
-            return;
-        }
+        prefetch<C, POLL>();
+        CYCLES_68020(15)
+        return;
     }
 
     if constexpr (compat == Compatibility::MUSASHI) {
 
-        if (rn1 & 0x8) {
-            writeD(dc1, SEXT<S>(data1));
-        } else {
-            writeD<S>(dc1, data1);
-        }
-        if (rn2 & 0x8) {
-            writeD(dc2, SEXT<S>(data2));
-        } else {
-            writeD<S>(dc2, data2);
-        }
+        if (rn1 & 0x8) writeD(dc1, SEXT<S>(data1)); else writeD<S>(dc1, data1);
+        if (rn2 & 0x8) writeD(dc2, SEXT<S>(data2)); else writeD<S>(dc2, data2);
 
     } else {
 
@@ -2071,8 +1995,7 @@ Moira::execCmp(u16 opcode)
 
     } else {
 
-        if constexpr (S == Long && isImmMode(M)) SYNC(2);
-        if constexpr (S == Long && isRegMode(M)) SYNC(2);
+        if constexpr (S == Long && (isRegMode(M) || isImmMode(M))) SYNC(2);
 
         cmp<C, S>(data, readD<S>(dst));
         POLL_IPL;
@@ -2596,10 +2519,11 @@ Moira::execExgDxDy(u16 opcode)
     prefetchLate<C, POLL>();
     SYNC(2);
 
-    CYCLES_IP ( 0,  0,  0,       0,  0,  0,      6,  6,  2)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP   ( 0,  0,  0,        0,  0,  0,        6,  6,  2)
 
     FINALIZE
-
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -2615,10 +2539,11 @@ Moira::execExgAxDy(u16 opcode)
     prefetchLate<C, POLL>();
     SYNC(2);
 
-    CYCLES_IP ( 0,  0,  0,       0,  0,  0,      6,  6,  2)
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_IP   ( 0,  0,  0,        0,  0,  0,        6,  6,  2)
 
     FINALIZE
-
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -2934,7 +2859,7 @@ Moira::execLink(u16 opcode)
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
-    CYCLES_IP   ( 0,  0,  0,       16, 16,  5,        0,  0,  6);
+    CYCLES_IP   ( 0,  0,  0,       16, 16,  5,        0,  0,  6)
 
     FINALIZE
 }
@@ -3609,7 +3534,7 @@ Moira::execMovea(u16 opcode)
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execMovecRcRx(u16 opcode)
 {
-    AVAILABILITY(Core::C68000)
+    AVAILABILITY(Core::C68010)
     SUPERVISOR_MODE_ONLY
 
     SYNC(4);
@@ -3617,23 +3542,10 @@ Moira::execMovecRcRx(u16 opcode)
     auto arg = readI<C, Word>();
     int dst = xxxx____________(arg);
 
-    if constexpr (C == Core::C68010) {
+    if (!isValidMovecReg(arg & 0xFFF)) {
 
-        auto rc = arg & 0xFFF;
-
-        if (rc != 0x000 && rc != 0x001 && rc != 0x800 && rc != 0x801) {
-
-            execIllegal<C, I, M, S>(opcode);
-            return;
-        }
-    }
-    if constexpr (C == Core::C68020) {
-
-        if (!isValidMovecReg(arg & 0xFFF)) {
-
-            execIllegal<C, I, M, S>(opcode);
-            return;
-        }
+        execIllegal<C, I, M, S>(opcode);
+        return;
     }
 
     switch (arg & 0x0FFF) {
@@ -3660,7 +3572,7 @@ Moira::execMovecRcRx(u16 opcode)
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
-    CYCLES_IP (   0,  0,  0,        0,  0,  0,        0, 12,  6);
+    CYCLES_IP   ( 0,  0,  0,        0,  0,  0,        0, 12,  6)
 
     FINALIZE
 }
@@ -3676,23 +3588,10 @@ Moira::execMovecRxRc(u16 opcode)
     auto arg = readI<C, Word>();
     int  src = xxxx____________(arg);
 
-    if constexpr (C == Core::C68010) {
+    if (!isValidMovecReg(arg & 0xFFF)) {
 
-        auto rc = arg & 0xFFF;
-
-        if (rc != 0x000 && rc != 0x001 && rc != 0x800 && rc != 0x801) {
-
-            execIllegal<C, I, M, S>(opcode);
-            return;
-        }
-    }
-    if constexpr (C == Core::C68020) {
-
-        if (!isValidMovecReg(arg & 0xFFF)) {
-
-            execIllegal<C, I, M, S>(opcode);
-            return;
-        }
+        execIllegal<C, I, M, S>(opcode);
+        return;
     }
 
     u32  val = readR(src);
@@ -3720,7 +3619,7 @@ Moira::execMovecRxRc(u16 opcode)
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
-    CYCLES_IP   ( 0,  0,  0,        0,  0,  0,        0, 10, 12);
+    CYCLES_IP   ( 0,  0,  0,        0,  0,  0,        0, 10, 12)
 
     FINALIZE
 }
@@ -4378,7 +4277,7 @@ Moira::execMuls(u16 opcode)
     CYCLES_IXPC ( 0,  0,  0,       64,  42,  34,      0,  0,  0)
     CYCLES_IM   ( 0,  0,  0,       58,  36,  29,      0,  0,  0)
 
-    FINALIZE;
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -4461,7 +4360,7 @@ Moira::execMulu(u16 opcode)
     CYCLES_IXPC ( 0,  0,  0,       64,  40,  34,      0,  0,  0)
     CYCLES_IM   ( 0,  0,  0,       58,  34,  29,      0,  0,  0)
 
-    FINALIZE;
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -4544,7 +4443,7 @@ Moira::execMull(u16 opcode)
     CYCLES_IXPC ( 0,  0,  0,        0,  0, 50,        0,  0, 50)
     CYCLES_IM   ( 0,  0,  0,        0,  0, 47,        0,  0, 47)
 
-    FINALIZE;
+    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -4657,9 +4556,9 @@ Moira::execDivs(u16 opcode)
 
     if (divByZero) {
 
-        CYCLES_68000(38);
-        CYCLES_68010(44);
-        CYCLES_68020(38);
+        CYCLES_68000(38)
+        CYCLES_68010(44)
+        CYCLES_68020(38)
 
     } else {
 
@@ -4790,9 +4689,9 @@ Moira::execDivu(u16 opcode)
 
     if (divByZero) {
 
-        CYCLES_68000(38);
-        CYCLES_68010(44);
-        CYCLES_68020(38);
+        CYCLES_68000(38)
+        CYCLES_68010(44)
+        CYCLES_68020(38)
 
     } else {
 
@@ -4943,9 +4842,9 @@ Moira::execDivl(u16 opcode)
 
     } else if (divByZero) {
 
-        CYCLES_68000(38);
-        CYCLES_68010(44);
-        CYCLES_68020(38);
+        CYCLES_68000(38)
+        CYCLES_68010(44)
+        CYCLES_68020(38)
     }
 
     FINALIZE
@@ -5196,7 +5095,7 @@ Moira::execNegRg(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    int dst = ( _____________xxx(opcode) );
+    int dst = _____________xxx(opcode);
     u32 ea, data;
 
     readOp<C, M, S>(dst, &ea, &data);
@@ -5221,12 +5120,10 @@ Moira::execNegEa(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    int dst = ( _____________xxx(opcode) );
+    int dst = _____________xxx(opcode);
     u32 ea, data;
 
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
-
-    constexpr Flags flags = REVERSE | COMMIT_IRD;
 
     [[maybe_unused]] u8 ccr = getCCR();
     u32 result = logic<C, I, S>(data);
@@ -5239,7 +5136,7 @@ Moira::execNegEa(u16 opcode)
         rethrow<C>(e);
     }
 
-    writeOp<C, M, S, flags>(dst, ea, result);
+    writeOp<C, M, S, REVERSE | COMMIT_IRD>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -5834,7 +5731,7 @@ Moira::execSccRg(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    int dst = ( _____________xxx(opcode) );
+    int dst = _____________xxx(opcode);
     u32 ea, data;
 
     readOp<C, M, S>(dst, &ea, &data);
@@ -5866,7 +5763,7 @@ Moira::execSccEa(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    int dst = ( _____________xxx(opcode) );
+    int dst = _____________xxx(opcode);
     u32 ea, data;
 
     if constexpr (C == Core::C68000) {
@@ -5945,7 +5842,7 @@ Moira::execSwap(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    int rg  = ( _____________xxx(opcode) );
+    int rg  = _____________xxx(opcode);
     u32 dat = readD(rg);
 
     dat = std::rotl(dat, 16);
@@ -5968,7 +5865,7 @@ Moira::execTasRg(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    int dst = ( _____________xxx(opcode) );
+    int dst = _____________xxx(opcode);
 
     u32 ea, data;
     readOp<C, M, Byte>(dst, &ea, &data);
@@ -5993,7 +5890,7 @@ Moira::execTasEa(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    int dst = ( _____________xxx(opcode) );
+    int dst = _____________xxx(opcode);
 
     u32 ea, data;
 

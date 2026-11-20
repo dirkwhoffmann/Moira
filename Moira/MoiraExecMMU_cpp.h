@@ -23,6 +23,11 @@ Moira::mmuFC(u16 ext) const
 bool
 Moira::isValidMovecReg(u16 rc) const
 {
+    // The 68010 supports SFC, DFC, USP, and VBR only
+    if (cpuModel == CPUModel::M68010) {
+        return rc == 0x000 || rc == 0x001 || rc == 0x800 || rc == 0x801;
+    }
+
     // The 68040 has no CAAR but a set of MMU registers
     if (cpuModel >= CPUModel::M68EC040) {
         return rc <= 0x007 || rc == 0x800 || rc == 0x801 || (rc >= 0x803 && rc <= 0x807);
