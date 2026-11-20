@@ -17,7 +17,7 @@ namespace {
 TEST_SUITE_BEGIN("StackFrame");
 
 /* Exception stack frames, compared with the frames recorded on real Amigas (68000 and 68010). The tests
- * are taken from the vAmigaTS test suite (CPU/Exceptions/StackFrame/addrerr1 ... addrerr31). Each of them
+ * are taken from the vAmigaTS test suite (CPU/Exceptions/StackFrame/addrerr1 ... addrerr36). Each of them
  * runs a short program that moves the stack to a fixed location, clears the stack, executes one instruction
  * that causes an exception, and records the 22 words shown on the screen: the stack pointer, the size of the
  * frame, the frame itself (7 words on the 68000, 13 words on the 68010) and the address registers A4 and A5.

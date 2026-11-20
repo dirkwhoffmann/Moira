@@ -3090,9 +3090,6 @@ Moira::execMove4(u16 opcode)
      */
     readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
 
-    // A misaligned byte or word write sets bit 3 in the code word if neither S nor the old C flag is set (not in MAME)
-    [[maybe_unused]] bool cb3 = !reg.sr.s && !reg.sr.c;
-
     setMoveFlags<S>(data);
 
     // MAME shows the flags of the low word if the prefetch fails
@@ -3120,7 +3117,6 @@ Moira::execMove4(u16 opcode)
         if constexpr (S == Long) throw earlyAddressError<C>(makeFrame<AE_WRITE|AE_DATA>(ea + 2, reg.pc, getSR(), ird));
 
         SYNC(2);
-        if (cb3) throw AddressError(makeFrame<AE_WRITE|AE_DATA|(C == Core::C68000 ? 0 : AE_SET_CB3)>(ea));
         throw AddressError(makeFrame<AE_WRITE|AE_DATA>(ea));
     }
 
