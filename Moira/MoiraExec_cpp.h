@@ -1470,18 +1470,11 @@ Moira::execBkpt(u16 opcode)
 {
     AVAILABILITY(Core::C68010)
 
-    if constexpr (compat == Compatibility::MUSASHI) {
+    // Acknowledges the breakpoint with a CPU space cycle
+    willExecute(CpuSpaceType::BREAKPOINT, opcode & 7);
+    didExecute(CpuSpaceType::BREAKPOINT, opcode & 7);
 
-        execException<C>(M68kException::ILLEGAL);
-
-    } else {
-
-        // Acknowledges the breakpoint with a CPU space cycle
-        willExecute(CpuSpaceType::BREAKPOINT, opcode & 7);
-        didExecute(CpuSpaceType::BREAKPOINT, opcode & 7);
-
-        execException<C>(M68kException::BKPT);
-    }
+    execException<C>(M68kException::BKPT);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -1692,16 +1685,8 @@ Moira::execCas2(u16 opcode)
         return;
     }
 
-    if constexpr (compat == Compatibility::MUSASHI) {
-
-        if (rn1 & 0x8) writeD(dc1, SEXT<S>(data1)); else writeD<S>(dc1, data1);
-        if (rn2 & 0x8) writeD(dc2, SEXT<S>(data2)); else writeD<S>(dc2, data2);
-
-    } else {
-
-        writeD<S>(dc1, data1);
-        writeD<S>(dc2, data2);
-    }
+    writeD<S>(dc1, data1);
+    writeD<S>(dc2, data2);
 
     prefetch<C, POLL>();
 
@@ -3698,8 +3683,8 @@ Moira::execMovemRgEa(u16 opcode)
 
     if constexpr (M == Mode::PD) {
 
-        // The 68020 updates the address register with each write (Musashi and UAE update it at the end)
-        constexpr bool updateEach = C == Core::C68020 && compat != Compatibility::MUSASHI && compat != Compatibility::UAE;
+        // The 68020 updates the address register with each write (UAE updates it at the end)
+        constexpr bool updateEach = C == Core::C68020 && compat != Compatibility::UAE;
 
         u32 ea = readA(dst);
         [[maybe_unused]] u32 initial = ea;
@@ -4806,35 +4791,18 @@ Moira::execPackPd(u16 opcode)
     int ax  = _____________xxx(opcode);
     int ay  = ____xxx_________(opcode);
 
-    if constexpr (compat == Compatibility::MUSASHI) {
+    reg.a[ax]--;
+    auto data1 = read<C, AddrSpace::DATA, Byte>(readA(ax));
 
-        u32 ea1, data1;
-        readOp<C, M, Byte>(ax, &ea1, &data1);
+    u16 adj = (u16)readI<C, Word>();
 
-        u16 adj = (u16)readI<C, Word>();
+    reg.a[ax]--;
+    auto data2 = read<C, AddrSpace::DATA, Byte>(readA(ax));
 
-        u32 ea2, data2;
-        readOp<C, M, Byte>(ax, &ea2, &data2);
+    u32 src = (data2 << 8 | data1) + adj;
+    u32 dst = (src >> 4 & 0xF0) | (src & 0x0F);
 
-        u32 src = (data1 << 8 | data2) + adj;
-
-        writeOp<C, M, Byte>(ay, (src >> 4 & 0xF0) | (src & 0x0F));
-
-    } else {
-
-        reg.a[ax]--;
-        auto data1 = read<C, AddrSpace::DATA, Byte>(readA(ax));
-
-        u16 adj = (u16)readI<C, Word>();
-
-        reg.a[ax]--;
-        auto data2 = read<C, AddrSpace::DATA, Byte>(readA(ax));
-
-        u32 src = (data2 << 8 | data1) + adj;
-        u32 dst = (src >> 4 & 0xF0) | (src & 0x0F);
-
-        writeOp<C, M, Byte>(ay, dst);
-    }
+    writeOp<C, M, Byte>(ay, dst);
 
     prefetch<C>();
 
@@ -5079,12 +5047,9 @@ Moira::execRte(u16 opcode)
             }
             default: // Format error
 
-                if constexpr (compat != Compatibility::MUSASHI) {
-
-                    reg.sr.n = (format >> 12) & 0b1000;
-                    reg.sr.z = 0;
-                    reg.sr.v = 0;
-                }
+                reg.sr.n = (format >> 12) & 0b1000;
+                reg.sr.z = 0;
+                reg.sr.v = 0;
 
                 SYNC(4);
                 (void)read<C, AddrSpace::DATA, Long>(reg.sp + 2);
@@ -5763,12 +5728,7 @@ Moira::execUnpkPd(u16 opcode)
     u16 adj = (u16)readI<C, Word>();
     u32 dst = ((data << 4 & 0x0F00) | (data & 0x000F)) + adj;
 
-    if constexpr (compat == Compatibility::MUSASHI) {
-
-        writeOp<C, M, Byte>(ay, READ<Byte, 1>(dst));
-        writeOp<C, M, Byte>(ay, dst);
-
-    } else if constexpr (compat == Compatibility::UAE) {
+    if constexpr (compat == Compatibility::UAE) {
 
         // UAE writes the result as a single (possibly misaligned) word
         reg.a[ay] -= 2;

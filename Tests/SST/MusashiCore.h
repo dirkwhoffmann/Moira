@@ -34,6 +34,7 @@ struct MusashiCore : RefCore {
         return m == CPUModel::M68000 || m == CPUModel::M68010 || m == CPUModel::M68EC020 || m == CPUModel::M68020;
     }
     void setModel(CPUModel m) override;
+    CPUModel model = CPUModel::M68000;
 
     const char *name() const override { return "Musashi"; }
     const char *shortName() const override { return "Musashi"; }
@@ -53,9 +54,20 @@ struct MusashiCore : RefCore {
         return linkA7 && field == "mem";
     }
 
-    // Musashi executes MOVE16 (F620-F627) on the 68000, which has no such instruction
-    bool unsupported(const sst::Test &t) const override { return (t.initial.prefetch[0] & 0xFFF8) == 0xF620; }
-    const char *unsupportedNote() const override { return "(Musashi executes MOVE16 on the 68000)"; }
+    // Cases where Musashi is known to be wrong:
+    // - Musashi executes MOVE16 (F620-F627) on the 68000, which has no such instruction.
+    // - Musashi computes different results for invalid BCD digits and for NBCD of $FF with X set.
+    // - MOVEM <list>,-(An) with An in the list stores the initial value of An on the 68020.
+    bool unsupported(const sst::Test &t) const override
+    {
+        u16 op = t.initial.prefetch[0];
+        if ((op & 0xFFF8) == 0xF620) return true;
+        if ((op & 0xF1F0) == 0xC100 || (op & 0xF1F0) == 0x8100) return true;                // ABCD, SBCD
+        if ((op & 0xFFC0) == 0x4800 && (op & 0x38) != 0x08) return true;                    // NBCD
+        if (model >= CPUModel::M68EC020 && (op & 0xFFB8) == 0x48A0 && (t.initial.prefetch[1] & (0x80 >> (op & 7)))) return true;
+        return false;
+    }
+    const char *unsupportedNote() const override { return "(known Musashi problems: MOVE16 on the 68000, BCD, MOVEM -(An) with An in the list)"; }
 };
 
 }

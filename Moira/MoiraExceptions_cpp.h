@@ -45,57 +45,40 @@ Moira::writeStackFrame0000(u16 sr, u32 pc, u16 nr)
 
         case Core::C68000:
 
-            if constexpr ((compat == Compatibility::MUSASHI)) {
+            U32_DEC(reg.sp, 6);
+            if constexpr (compat == Compatibility::MAME) {
 
-                push<C, Long>(pc);
-                push<C, Word>(sr);
+                // MAME has not adjusted the stack pointer yet if the first write fails
+                try { write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc)); }
+                catch (BusError &) { U32_INC(reg.sp, 6); throw; }
 
             } else {
 
-                U32_DEC(reg.sp, 6);
-                if constexpr (compat == Compatibility::MAME) {
-
-                    // MAME has not adjusted the stack pointer yet if the first write fails
-                    try { write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc)); }
-                    catch (BusError &) { U32_INC(reg.sp, 6); throw; }
-
-                } else {
-
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc));
-                }
-                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
-                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), READ<Word, 1>(pc));
+                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc));
             }
+            write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
+            write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), READ<Word, 1>(pc));
             break;
 
         case Core::C68010:
         case Core::C68020:
 
-            if constexpr ((compat == Compatibility::MUSASHI)) {
-
-                push<C, Word>(nr << 2);
-                push<C, Long>(pc);
-                push<C, Word>(sr);
-
+            U32_DEC(reg.sp, 8);
+            if constexpr ((compat == Compatibility::UAE) && C == Core::C68010) {
+                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc));
+                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
+                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), READ<Word, 1>(pc));
+                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & (C == Core::C68020 ? ~0u : ~1u), 4 * nr);
+            } else if constexpr ((compat == Compatibility::UAE) && C == Core::C68020) {
+                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & (C == Core::C68020 ? ~0u : ~1u), 4 * nr);
+                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), READ<Word, 1>(pc));
+                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc));
+                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
             } else {
-
-                U32_DEC(reg.sp, 8);
-                if constexpr ((compat == Compatibility::UAE) && C == Core::C68010) {
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc));
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), READ<Word, 1>(pc));
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & (C == Core::C68020 ? ~0u : ~1u), 4 * nr);
-                } else if constexpr ((compat == Compatibility::UAE) && C == Core::C68020) {
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & (C == Core::C68020 ? ~0u : ~1u), 4 * nr);
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), READ<Word, 1>(pc));
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc));
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
-                } else {
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & (C == Core::C68020 ? ~0u : ~1u), 4 * nr);
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc));
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
-                    write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), READ<Word, 1>(pc));
-                }
+                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & (C == Core::C68020 ? ~0u : ~1u), 4 * nr);
+                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc));
+                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
+                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), READ<Word, 1>(pc));
             }
             break;
     }
@@ -885,11 +868,7 @@ Moira::execException(M68kException exc, int nr)
             flags &= ~State::TRACE_EXC;
 
             // Write stack frame
-            if ((compat == Compatibility::MUSASHI)) {
-                writeStackFrame0000<C>(status, reg.pc, vector);
-            } else {
-                writeStackFrame0000<C>(status, reg.pc - 2, vector);
-            }
+            writeStackFrame0000<C>(status, reg.pc - 2, vector);
 
             // Branch to exception handler
             jumpToVector<C, AE_SET_CB3>(vector);

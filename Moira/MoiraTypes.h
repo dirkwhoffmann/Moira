@@ -141,7 +141,7 @@ enum class Core
 enum class Compatibility
 {
     DEFAULT,                ///< Moira's own behavior
-    MUSASHI,                ///< Mimic the Musashi emulator
+    MUSASHI,                ///< Adopt the timing of the Musashi emulator
     UAE,                    ///< Mimic the UAE Amiga emulator (WinUAE, Amiberry)
     MAME                    ///< Mimic the MAME 68000 core (used by the SingleStepTests)
 };

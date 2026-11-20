@@ -41,6 +41,7 @@ MusashiCore::MusashiCore(Memory &m) : mem(m)
 
 void MusashiCore::setModel(CPUModel m)
 {
+    model = m;
     m68k_set_cpu_type(m == CPUModel::M68010   ? M68K_CPU_TYPE_68010 :
                       m == CPUModel::M68EC020 ? M68K_CPU_TYPE_68EC020 :
                       m == CPUModel::M68020   ? M68K_CPU_TYPE_68020 : M68K_CPU_TYPE_68000);

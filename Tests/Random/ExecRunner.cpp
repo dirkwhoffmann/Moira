@@ -44,7 +44,7 @@ void ExecRunner::modelSelected()
 {
     sandbox.checkCycles = ref().checksCycles(cpuModel);
     sandbox.byteGranular = ref().byteGranular(cpuModel);
-    sandbox.swapLongWrites = ref().swapsLongWrites(cpuModel);
+    sandbox.anyOrder = ref().anyWriteOrder(cpuModel);
 }
 
 bool ExecRunner::replay()

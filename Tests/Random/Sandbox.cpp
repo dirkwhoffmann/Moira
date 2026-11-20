@@ -37,15 +37,6 @@ Sandbox::record(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
 }
 
 // Returns true if the records at i and i+1 are the two halves of a long word write (in either order)
-bool
-Sandbox::swappable(int i) const
-{
-    if (i + 1 >= recordCnt) return false;
-    const AccessRecord &a = access[i], &b = access[i + 1];
-
-    return a.type == POKE16 && b.type == POKE16 && a.fc == b.fc && (((a.addr + 2) ^ b.addr) & 0xFFFFFF) == 0 || (((b.addr + 2) ^ a.addr) & 0xFFFFFF) == 0;
-}
-
 void
 Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
 {
@@ -60,15 +51,15 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
     // Ignore some opcodes that are handled differently by Moira
     if (ignored) return;
 
-    // In strict mode, accesses must arrive in the recorded order. The only exception is a long word write, whose
-    // two word accesses may be swapped (the 68000 writes the low word first, some references the high word first).
+    // In strict mode, accesses must arrive in the recorded order
+    bool unordered = byteGranular || anyOrder;
     int first = 0;
     while (first < recordCnt && used[first]) first++;
 
     for (int i = 0; i < recordCnt; i++) {
 
-        if (byteGranular) { if (used[i]) continue; }
-        else if (i != first && !(swapLongWrites && i == first + 1 && swappable(first))) continue;
+        if (unordered) { if (used[i]) continue; }
+        else if (i != first) continue;
 
         // Check for a matching entry
         if (access[i].type != type) continue;
@@ -77,8 +68,7 @@ Sandbox::replayPoke(AccessType type, u32 addr, u64 cycle, u32 fc, u16 value)
         if (access[i].fc != fc) continue;
         if (checkCycles) {
 
-            // A swapped access takes the time slot of the access it replaces
-            if (access[byteGranular ? i : first].cycle != cycle) continue;
+            if (access[i].cycle != cycle) continue;
         }
 
         // Match found

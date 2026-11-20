@@ -149,8 +149,10 @@
  * available:
  *
  *   DEFAULT: Moira's own behavior.
- *   MUSASHI: Compatibility with the Musashi emulator. This mode is used by the
- *            test runner to compare Moira's behavior against Musashi.
+ *   MUSASHI: Adopts the instruction timing of the Musashi emulator. This mode
+ *            is used by the test runner to compare Moira against Musashi.
+ *            Musashi's functional flaws are not replicated (the test runner
+ *            excludes the affected cases instead).
  *   UAE:     Compatibility with the CPU core of the UAE Amiga emulator (as used
  *            in WinUAE and Amiberry). This mode is used by the test runner when
  *            UAE is selected as the reference implementation.

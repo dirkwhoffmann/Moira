@@ -26,7 +26,7 @@ public:
 
     // Musashi's FPU is not a reliable reference
     bool hasFpu() const override { return false; }
-    bool swapsLongWrites(CPUModel) const override { return true; }   // Musashi writes the high word first
+    bool anyWriteOrder(CPUModel) const override { return true; }     // Musashi doesn't reproduce the bus order
 
     bool skipSetup(const Setup &s) const override;
     bool skipAccessCheck(u16 op) const override;
