@@ -33,8 +33,9 @@ MusashiRef::skipResult(const Setup &s, const Result &rRef, const Result &rMoira)
     // Musashi leaves the flags alone on a division by zero (Moira sets them like the real CPU)
     if ((instr == Instr::DIVU || instr == Instr::DIVS || instr == Instr::DIVL) && !completed(rRef)) return true;
 
-    // N and Z are undefined if DIVL overflows (Moira sets them like UAE, Musashi leaves them alone)
-    if (instr == Instr::DIVL && (rRef.sr & 0x02)) return true;
+    // N and Z are undefined if DIVL overflows (Moira sets them like UAE, Musashi leaves them alone).
+    // Musashi misses the overflow of $80000000 / -1, so the V flag of both sides is checked.
+    if (instr == Instr::DIVL && ((rRef.sr | rMoira.sr) & 0x02)) return true;
 
     return false;
 }
@@ -57,6 +58,9 @@ MusashiRef::skipSetup(const Setup &s) const
 
     if (tr().cpuModel != CPUModel::M68000) result |= instr == Instr::RTE;
 
+    // CHK2: Musashi computes the C flag differently, which decides whether the instruction traps (see srMask)
+    if (instr == Instr::CHK2) result = true;
+
     // LINK A7: Musashi pushes the decremented stack pointer (UAE and Moira push the old value, except on the 68040)
     if (instr == Instr::LINK && (s.opcode & 7) == 7 && tr().cpuModel < CPUModel::M68EC040) result = true;
 
@@ -69,8 +73,8 @@ MusashiRef::skipSetup(const Setup &s) const
 u32
 MusashiRef::srMask(Instr instr) const
 {
-    // Musashi computes N, Z, V and C of CHK differently (Moira follows MAME and UAE)
-    if (instr == Instr::CHK) return ~0x0Fu;
+    // Musashi computes N, Z, V and C of CHK and CMP2 differently (Moira follows MAME and UAE)
+    if (instr == Instr::CHK || instr == Instr::CMP2) return ~0x0Fu;
 
     return 0xFFFFFFFF;
 }

@@ -1807,34 +1807,17 @@ Moira::execChkCmp2(u16 opcode)
     readOp<C, M, S>(src, &ea, &data1);
     data2 = readM<C, M, S>(ea + S);
 
-    if constexpr (compat == Compatibility::MUSASHI) {
+    i32 bound1 = SEXT<S>(data1);
+    i32 bound2 = SEXT<S>(data2);
+    i32 compare = dst < 8 ? SEXT<S>(readR(dst)) : readR(dst);
 
-        auto bound1 = ((M == Mode::DIPC || M == Mode::IXPC) && S == Byte) ? (i32)data1 : SEXT<S>(data1);
-        auto bound2 = ((M == Mode::DIPC || M == Mode::IXPC) && S == Byte) ? (i32)data2 : SEXT<S>(data2);
-        i32 compare = readR<S>(dst);
-        if (dst < 8) compare = SEXT<S>(compare);
-
-        if (bound1 < bound2) {
-            reg.sr.c = compare < bound1 || compare > bound2;
-        } else {
-            reg.sr.c = compare > bound2 || compare < bound1;
-        }
-        reg.sr.z = compare == bound1 || compare == bound2;
-
+    if (bound1 <= bound2) {
+        reg.sr.c = compare < bound1 || compare > bound2;
     } else {
-
-        i32 bound1 = SEXT<S>(data1);
-        i32 bound2 = SEXT<S>(data2);
-        i32 compare = dst < 8 ? SEXT<S>(readR(dst)) : readR(dst);
-
-        if (bound1 <= bound2) {
-            reg.sr.c = compare < bound1 || compare > bound2;
-        } else {
-            reg.sr.c = compare < bound1 && compare > bound2;
-        }
-        reg.sr.z = compare == bound1 || compare == bound2;
-        setUndefinedCHK2<C, S>(bound1, bound2, compare);
+        reg.sr.c = compare < bound1 && compare > bound2;
     }
+    reg.sr.z = compare == bound1 || compare == bound2;
+    setUndefinedCHK2<C, S>(bound1, bound2, compare);
 
     if ((ext & 0x800) && reg.sr.c) {
 
