@@ -4535,10 +4535,9 @@ Moira::execDivl(u16 opcode)
 {
     AVAILABILITY(Core::C68020)
 
-    bool divByZero = false;
-    bool success = execDivLong<C, I, M, S>(opcode, &divByZero);
+    bool divByZero = execDivLong<C, I, M, S>(opcode);
 
-    if (success) {
+    if (!divByZero) {
 
         //           00  10  20        00  10  20        00  10  20
         //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -4554,7 +4553,7 @@ Moira::execDivl(u16 opcode)
         CYCLES_IXPC ( 0,  0,  0,        0,  0,  0,        0,  0, 91)
         CYCLES_IM   ( 0,  0,  0,        0,  0,  0,        0,  0, 88)
 
-    } else if (divByZero) {
+    } else {
 
         CYCLES_68000(38)
         CYCLES_68010(44)
@@ -4565,7 +4564,7 @@ Moira::execDivl(u16 opcode)
 }
 
 template <Core C, Instr I, Mode M, Size S> bool
-Moira::execDivLong(u16 opcode, bool *divByZero)
+Moira::execDivLong(u16 opcode)
 {
     u64 dividend;
     u32 ea, divisor;
@@ -4575,7 +4574,7 @@ Moira::execDivLong(u16 opcode, bool *divByZero)
     int dh  = _____________xxx(ext);
     int dl  = _xxx____________(ext);
 
-    try { readOp<C, M, S>(src, &ea, &divisor); } catch(...) { return false; }
+    readOp<C, M, S>(src, &ea, &divisor);
 
     if (ext & 0x400) {
         dividend = (u64)readD(dh) << 32 | readD(dl);
@@ -4603,8 +4602,7 @@ Moira::execDivLong(u16 opcode, bool *divByZero)
         }
 
         execException<C>(M68kException::DIVIDE_BY_ZERO);
-        *divByZero = true;
-        return false;
+        return true;
     }
 
     prefetch<C, POLL>();
@@ -4666,7 +4664,7 @@ Moira::execDivLong(u16 opcode, bool *divByZero)
         }
     }
 
-    return true;
+    return false;
 }
 
 template <Core C, Instr I, Mode M, Size S> void
