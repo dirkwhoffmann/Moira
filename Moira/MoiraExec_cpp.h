@@ -3126,64 +3126,7 @@ Moira::execMove5(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    u32 ea, data;
-
-    int src = _____________xxx(opcode);
-    int dst = ____xxx_________(opcode);
-
-    readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
-
-    if constexpr (C == Core::C68000) {
-
-        // Execute the access sequence step by step (extension word, first word, second word).
-        // The flags are set up in front of each step, so every frame shows the right ones.
-        writeBuffer = READ<Word, S == Long ? 1 : 0>(data);
-
-        // A failed extension word fetch shows the flags of the source: untouched for register
-        // sources and for memory sources the flags of the (low word of the) operation
-        if constexpr (isMemMode(M)) {
-            setMoveFlags<S == Long ? Word : S>(data);
-        }
-        u32 ea2;
-        ea2 = computeEA<C, Mode::DI, S, NO_DEC_PC>(dst);
-
-        if constexpr (S == Long && !isMemMode(M)) {
-
-            // The first write shows the flags of the high word, the second one those of the low word
-            reg.sr.n = NBIT<Word>(READ<Word, 1>(data));
-            reg.sr.z = ZERO<Word>(READ<Word, 1>(data)) && reg.sr.z;
-            writeM<C, Mode::DI, Word>(ea2, READ<Word, 1>(data));
-
-            setMoveFlags<Word>(data);
-            writeM<C, Mode::DI, Word, POLL>(ea2 + 2, READ<Word>(data));
-
-            setMoveFlags<S>(data);
-            prefetch<C>();
-
-        } else {
-
-            // A failed write shows the final flags
-            setMoveFlags<S>(data);
-            writeM<C, Mode::DI, S>(ea2, data);
-
-            prefetch<C, POLL>();
-        }
-
-    } else {
-
-        if constexpr (S == Long && !isMemMode(M)) {
-
-            writeOp<C, Mode::DI, S, POLL>(dst, data);
-            setMoveFlags<S>(data);
-            prefetch<C>();
-
-        } else {
-
-            writeOp<C, Mode::DI, S>(dst, data);
-            setMoveFlags<S>(data);
-            prefetch<C, POLL>();
-        }
-    }
+    execMoveDisp<C, I, M, S, Mode::DI>(opcode);
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -3208,6 +3151,30 @@ Moira::execMove6(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
+    execMoveDisp<C, I, M, S, Mode::IX>(opcode);
+
+    //           00  10  20        00  10  20        00  10  20
+    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
+    CYCLES_DN   (14, 14,  7,       14, 14,  7,       18, 18,  7)
+    CYCLES_AN   (14, 14,  7,       14, 14,  7,       18, 18,  7)
+    CYCLES_AI   (18, 18, 11,       18, 18, 11,       26, 26, 11)
+    CYCLES_PI   (18, 18, 11,       18, 18, 11,       26, 26, 11)
+    CYCLES_PD   (20, 20, 12,       20, 20, 12,       28, 28, 12)
+    CYCLES_DI   (22, 22, 12,       22, 22, 12,       30, 30, 12)
+    CYCLES_IX   (24, 24, 14,       24, 24, 14,       32, 32, 14)
+    CYCLES_AW   (22, 22, 11,       22, 22, 11,       30, 30, 11)
+    CYCLES_AL   (26, 26, 11,       26, 26, 11,       34, 34, 11)
+    CYCLES_DIPC (22, 22, 12,       22, 22, 12,       30, 30, 12)
+    CYCLES_IXPC (24, 24, 14,       24, 24, 14,       32, 32, 14)
+    CYCLES_IM   (18, 18,  9,       18, 18,  9,       26, 26, 11)
+
+    FINALIZE
+}
+
+// MOVE to a destination with a displacement: (d16,An) or (d8,An,Xn)
+template <Core C, Instr I, Mode M, Size S, Mode DM> void
+Moira::execMoveDisp(u16 opcode)
+{
     u32 ea, data;
 
     int src = _____________xxx(opcode);
@@ -3226,18 +3193,17 @@ Moira::execMove6(u16 opcode)
         if constexpr (isMemMode(M)) {
             setMoveFlags<S == Long ? Word : S>(data);
         }
-        u32 ea2;
-        ea2 = computeEA<C, Mode::IX, S, NO_DEC_PC>(dst);
+        u32 ea2 = computeEA<C, DM, S, NO_DEC_PC>(dst);
 
         if constexpr (S == Long && !isMemMode(M)) {
 
             // The first write shows the flags of the high word, the second one those of the low word
             reg.sr.n = NBIT<Word>(READ<Word, 1>(data));
             reg.sr.z = ZERO<Word>(READ<Word, 1>(data)) && reg.sr.z;
-            writeM<C, Mode::IX, Word>(ea2, READ<Word, 1>(data));
+            writeM<C, DM, Word>(ea2, READ<Word, 1>(data));
 
             setMoveFlags<Word>(data);
-            writeM<C, Mode::IX, Word, POLL>(ea2 + 2, READ<Word>(data));
+            writeM<C, DM, Word, POLL>(ea2 + 2, READ<Word>(data));
 
             setMoveFlags<S>(data);
             prefetch<C>();
@@ -3246,7 +3212,7 @@ Moira::execMove6(u16 opcode)
 
             // A failed write shows the final flags
             setMoveFlags<S>(data);
-            writeM<C, Mode::IX, S>(ea2, data);
+            writeM<C, DM, S>(ea2, data);
 
             prefetch<C, POLL>();
         }
@@ -3255,34 +3221,17 @@ Moira::execMove6(u16 opcode)
 
         if constexpr (S == Long && !isMemMode(M)) {
 
-            writeOp<C, Mode::IX, S, POLL>(dst, data);
+            writeOp<C, DM, S, POLL>(dst, data);
             setMoveFlags<S>(data);
             prefetch<C>();
 
         } else {
 
-            writeOp<C, Mode::IX, S>(dst, data);
+            writeOp<C, DM, S>(dst, data);
             setMoveFlags<S>(data);
             prefetch<C, POLL>();
         }
     }
-
-    //           00  10  20        00  10  20        00  10  20
-    //           .b  .b  .b        .w  .w  .w        .l  .l  .l
-    CYCLES_DN   (14, 14,  7,       14, 14,  7,       18, 18,  7)
-    CYCLES_AN   (14, 14,  7,       14, 14,  7,       18, 18,  7)
-    CYCLES_AI   (18, 18, 11,       18, 18, 11,       26, 26, 11)
-    CYCLES_PI   (18, 18, 11,       18, 18, 11,       26, 26, 11)
-    CYCLES_PD   (20, 20, 12,       20, 20, 12,       28, 28, 12)
-    CYCLES_DI   (22, 22, 12,       22, 22, 12,       30, 30, 12)
-    CYCLES_IX   (24, 24, 14,       24, 24, 14,       32, 32, 14)
-    CYCLES_AW   (22, 22, 11,       22, 22, 11,       30, 30, 11)
-    CYCLES_AL   (26, 26, 11,       26, 26, 11,       34, 34, 11)
-    CYCLES_DIPC (22, 22, 12,       22, 22, 12,       30, 30, 12)
-    CYCLES_IXPC (24, 24, 14,       24, 24, 14,       32, 32, 14)
-    CYCLES_IM   (18, 18,  9,       18, 18,  9,       26, 26, 11)
-
-    FINALIZE
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -4565,60 +4514,29 @@ Moira::execDivLong(u16 opcode)
 
     prefetch<C, POLL>();
 
+    std::pair<u32, u32> result;
+
     switch (____xx__________(ext)) {
 
-        case 0b00:
-        {
-            auto result = divlu<Word>(dividend, divisor);
+        case 0b00: result = divlu<Word>(dividend, divisor); break;
+        case 0b01: result = divlu<Long>(dividend, divisor); break;
+        case 0b10: result = divls<Word>(dividend, divisor); break;
+        case 0b11: result = divls<Long>(dividend, divisor); break;
+    }
 
-            writeD(dh, result.second);
-            writeD(dl, result.first);
-            break;
-        }
-        case 0b01:
-        {
-            auto result = divlu<Long>(dividend, divisor);
+    if (!reg.sr.v) {
 
-            if(!reg.sr.v) {
+        writeD(dh, result.second);
+        writeD(dl, result.first);
 
-                writeD(dh, result.second);
-                writeD(dl, result.first);
+    } else {
 
-            } else {
+        // The 32-bit unsigned division (0b00) cannot overflow
+        switch (____xx__________(ext)) {
 
-                setUndefinedDIVUL<C, S>(dividend, divisor);
-            }
-            break;
-        }
-        case 0b10:
-        {
-            auto result = divls<Word>(dividend, divisor);
-
-            if(!reg.sr.v) {
-
-                writeD(dh, result.second);
-                writeD(dl, result.first);
-
-            } else {
-
-                setUndefinedDIVSL<C, Word>(i64(i32(dividend)), divisor);
-            }
-            break;
-        }
-        case 0b11:
-        {
-            auto result = divls<Long>(dividend, divisor);
-
-            if(!reg.sr.v) {
-
-                writeD(dh, result.second);
-                writeD(dl, result.first);
-
-            } else {
-
-                setUndefinedDIVSL<C, S>(dividend, divisor);
-            }
-            break;
+            case 0b01: setUndefinedDIVUL<C, S>(dividend, divisor); break;
+            case 0b10: setUndefinedDIVSL<C, Word>(i64(i32(dividend)), divisor); break;
+            case 0b11: setUndefinedDIVSL<C, S>(dividend, divisor); break;
         }
     }
 

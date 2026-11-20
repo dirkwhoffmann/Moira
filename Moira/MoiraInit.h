@@ -209,6 +209,7 @@ MOIRA_DECLARE(Move16AlAi)
 
 // Sub handlers
 template <Core C, Mode M> void execPMove(u16, MmuReg, bool);
+template <Core C, Instr I, Mode M, Size S, Mode DM> void execMoveDisp(u16);
 template <Core C, Instr I, Mode M, Size S> void execMulWord(u16);
 template <Core C, Instr I, Mode M, Size S> bool execDivWord(u16);
 template <Core C, Instr I, Mode M, Size S> bool execDivLong(u16);
