@@ -1328,10 +1328,7 @@ Moira::execBitFieldDn(u16 opcode)
             insert = readD(dn);
             insert = u32(insert << (32 - width));
 
-            reg.sr.n = NBIT<S>(insert);
-            reg.sr.z = ZERO<S>(insert);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<S>(insert);
 
             insert = std::rotr((u32)insert, offset);
             writeD(dy, (data & ~mask) | insert);
@@ -1481,10 +1478,7 @@ Moira::execBitFieldEa(u16 opcode)
             insert = readD(dn);
             insert = u32(insert << (32 - width));
 
-            reg.sr.n = NBIT<S>(insert);
-            reg.sr.z = ZERO<S>(insert);
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<S>(insert);
 
             writeM<C, M, S>(ea, (data & ~mask) | insert >> offset);
 
@@ -1964,10 +1958,7 @@ Moira::execClr(u16 opcode)
         readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
         // MAME sets the flags first
-        reg.sr.n = 0;
-        reg.sr.z = 1;
-        reg.sr.v = 0;
-        reg.sr.c = 0;
+        setMoveFlags<S>(0);
 
         try {
 
@@ -2006,10 +1997,7 @@ Moira::execClr(u16 opcode)
             case Mode::DI:
             case Mode::IX:
 
-                reg.sr.n = 0;
-                reg.sr.z = 1;
-                reg.sr.v = 0;
-                reg.sr.c = 0;
+                setMoveFlags<S>(0);
 
                 if constexpr (M == Mode::IX) SYNC(2);
                 fetchIrc<C, POLL>();
@@ -2020,10 +2008,7 @@ Moira::execClr(u16 opcode)
             case Mode::AL:
 
                 // Real hardware has updated the flags and reports the second word of a long write
-                reg.sr.n = 0;
-                reg.sr.z = 1;
-                reg.sr.v = 0;
-                reg.sr.c = 0;
+                setMoveFlags<S>(0);
 
                 fetchIrc<C, POLL>();
                 writeOp<C, M, S, REVERSE | incA>(dst, ea, 0);
@@ -2035,10 +2020,7 @@ Moira::execClr(u16 opcode)
                 prefetch<C, POLL>();
         }
 
-        reg.sr.n = 0;
-        reg.sr.z = 1;
-        reg.sr.v = 0;
-        reg.sr.c = 0;
+        setMoveFlags<S>(0);
 
     } else if constexpr (C == Core::C68020) {
 
@@ -2048,10 +2030,7 @@ Moira::execClr(u16 opcode)
         updateAnPI<M, S>(dst);
 
         // UAE sets the flags first
-        reg.sr.n = 0;
-        reg.sr.z = 1;
-        reg.sr.v = 0;
-        reg.sr.c = 0;
+        setMoveFlags<S>(0);
 
         fetchIrc<C, POLL>();
         if constexpr (S == Long && isRegMode(M)) SYNC(2);
@@ -2673,10 +2652,7 @@ Moira::execExt(u16 opcode)
     dn = (S == Long) ? SEXT<Word>(dn) : SEXT<Byte>(dn);
 
     writeD<S>(n, dn);
-    reg.sr.n = NBIT<S>(dn);
-    reg.sr.z = ZERO<S>(dn);
-    reg.sr.v = 0;
-    reg.sr.c = 0;
+    setMoveFlags<S>(dn);
 
     prefetch<C, POLL>();
 
@@ -2698,10 +2674,7 @@ Moira::execExtb(u16 opcode)
     dn = SEXT<Byte>(dn);
 
     writeD(n, dn);
-    reg.sr.n = NBIT<S>(dn);
-    reg.sr.z = ZERO<S>(dn);
-    reg.sr.v = 0;
-    reg.sr.c = 0;
+    setMoveFlags<S>(dn);
 
     prefetch<C, POLL>();
 
@@ -4030,10 +4003,7 @@ Moira::execMoveq(u16 opcode)
 
     writeD <Long> (dst, (i32)src);
 
-    reg.sr.n = NBIT<Byte>(src);
-    reg.sr.z = ZERO<Byte>(src);
-    reg.sr.v = 0;
-    reg.sr.c = 0;
+    setMoveFlags<Byte>(src);
 
     prefetch<C, POLL>();
 
@@ -4423,10 +4393,8 @@ Moira::execMoveAnUsp(u16 opcode)
 
     if constexpr (C >= Core::C68010) SYNC(2);
 
-    try { prefetch<C, POLL>(); } catch (BusError &e) {
-        setUSP(readA(an)); rethrow<C>(e);
-    }
     setUSP(readA(an));
+    prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -4482,7 +4450,7 @@ Moira::execMulsMoira(u16 opcode)
 
             // MAME shows N=0, Z=1, V=0, C=0 in the frame of a failed prefetch
             e.stackFrame.pc -= (M == Mode::PD) ? 0 : (M == Mode::DI || M == Mode::IX || M == Mode::DIPC || M == Mode::IXPC) ? 4 : 2;
-            reg.sr.n = 0; reg.sr.z = 1; reg.sr.v = 0; reg.sr.c = 0;
+            setMoveFlags<S>(0);
             rethrow<C>(e);
         }
         [[maybe_unused]] auto cycles = cyclesMul<C, I>(u16(data));
@@ -4565,7 +4533,7 @@ Moira::execMuluMoira(u16 opcode)
 
             // MAME shows N=0, Z=1, V=0, C=0 in the frame of a failed prefetch
             e.stackFrame.pc -= (M == Mode::PD) ? 0 : (M == Mode::DI || M == Mode::IX || M == Mode::DIPC || M == Mode::IXPC) ? 4 : 2;
-            reg.sr.n = 0; reg.sr.z = 1; reg.sr.v = 0; reg.sr.c = 0;
+            setMoveFlags<S>(0);
             rethrow<C>(e);
         }
         [[maybe_unused]] auto cycles = cyclesMul<C, I>(u16(data));
@@ -4796,10 +4764,7 @@ Moira::execDivsMoira(u16 opcode, bool *divByZero)
 
         } else {
 
-            reg.sr.n = 0;
-            reg.sr.z = 1;
-            reg.sr.v = 0;
-            reg.sr.c = 0;
+            setMoveFlags<S>(0);
             setDivZeroDIVS<C, S>(dividend);
         }
 
@@ -6068,22 +6033,11 @@ Moira::execSwap(u16 opcode)
 
     dat = std::rotl(dat, 16);
 
-    try { prefetch<C, POLL>(); } catch (BusError &e) {
-
-        // MAME writes the register and the flags before the prefetch
-        writeD(rg, dat);
-        reg.sr.n = NBIT<Long>(dat);
-        reg.sr.z = ZERO<Long>(dat);
-        reg.sr.v = 0;
-        reg.sr.c = 0;
-        rethrow<C>(e);
-    }
+    // MAME writes the register and the flags before the prefetch
     writeD(rg, dat);
+    setMoveFlags<Long>(dat);
 
-    reg.sr.n = NBIT<Long>(dat);
-    reg.sr.z = ZERO<Long>(dat);
-    reg.sr.v = 0;
-    reg.sr.c = 0;
+    prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
@@ -6102,10 +6056,7 @@ Moira::execTasRg(u16 opcode)
     u32 ea, data;
     readOp<C, M, Byte>(dst, &ea, &data);
 
-    reg.sr.n = NBIT<Byte>(data);
-    reg.sr.z = ZERO<Byte>(data);
-    reg.sr.v = 0;
-    reg.sr.c = 0;
+    setMoveFlags<Byte>(data);
 
     data |= 0x80;
     writeD<S>(dst, data);
@@ -6143,7 +6094,7 @@ Moira::execTasEa(u16 opcode)
                     // MAME completes a failed read like a failed write
                     e.stackFrame.code &= ~0x10;
                     e.stackFrame.sr = (e.stackFrame.sr & ~0x0F) | 0x04;    // N=0, Z=1, V=0, C=0
-                    reg.sr.n = 0; reg.sr.z = 1; reg.sr.v = 0; reg.sr.c = 0;
+                    setMoveFlags<S>(0);
                 }
                 if constexpr (compat == Compatibility::UAE && M != Mode::PD) {
 
@@ -6154,10 +6105,7 @@ Moira::execTasEa(u16 opcode)
             throw;
         }
 
-        reg.sr.n = NBIT<Byte>(data);
-        reg.sr.z = ZERO<Byte>(data);
-        reg.sr.v = 0;
-        reg.sr.c = 0;
+        setMoveFlags<Byte>(data);
         data |= 0x80;
 
         if (!isRegMode(M)) SYNC(2);
@@ -6173,10 +6121,7 @@ Moira::execTasEa(u16 opcode)
 
         readOp<C, M, Byte>(dst, &ea, &data);
 
-        reg.sr.n = NBIT<Byte>(data);
-        reg.sr.z = ZERO<Byte>(data);
-        reg.sr.v = 0;
-        reg.sr.c = 0;
+        setMoveFlags<Byte>(data);
         data |= 0x80;
 
         // if (!isRegMode(M)) SYNC(2);
@@ -6300,10 +6245,7 @@ Moira::execTst(u16 opcode)
     u32 ea, data;
     readOp<C, M, S, STD_AE_FRAME>(rg, &ea, &data);
 
-    reg.sr.n = NBIT<S>(data);
-    reg.sr.z = ZERO<S>(data);
-    reg.sr.v = 0;
-    reg.sr.c = 0;
+    setMoveFlags<S>(data);
 
     looping<I>() ? noPrefetch<C>(S == Long ? 4 : 2) : prefetch<C, POLL>();
     if (looping<I>() && S == Long) loopModeDelay = 0;
