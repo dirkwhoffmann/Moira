@@ -162,7 +162,7 @@ Moira::writeStackFrame1000(StackFrame &frame, u16 sr, u32 pc, u32 ia, u16 nr, u3
 {
     assert(C == Core::C68010);
 
-    // Internal information
+    // Internal information (the first word holds the version number, the rest is not emulated)
     push<C, Long>(0);
     push<C, Long>(0);
     push<C, Long>(0);
@@ -170,7 +170,7 @@ Moira::writeStackFrame1000(StackFrame &frame, u16 sr, u32 pc, u32 ia, u16 nr, u3
     push<C, Long>(0);
     push<C, Long>(0);
     push<C, Long>(0);
-    push<C, Long>(0);
+    push<C, Long>(u32(VERSION_68010 << 10) << 16);
 
     // Instruction input buffer
     push<C, Word>(queue.irc);

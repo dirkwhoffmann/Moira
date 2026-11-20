@@ -710,6 +710,10 @@ template <Flags F> constexpr Flags beFrameFlags() {
 }
 }
 
+/// Version number of the 68010. It is stored in bits 10 to 13 of the first internal information word of a
+/// format $8 frame (recorded on a real 68010: vAmigaTS, CPU/Exceptions/StackFrame/addrerr37 and addrerr38).
+static constexpr u16 VERSION_68010 = 2;
+
 //
 // Exceptions
 //

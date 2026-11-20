@@ -24,7 +24,6 @@ return; }
 
 #define CLRC ((!isRegMode(M) || S == Long) ? COMMIT_IRD : 0)   // CLR defers the IRD update only if the prefetch is not the last cycle
 
-
 #define STD_AE_FRAME (\
 (M == Mode::PD && S != Long) ? AE_INC_PC : \
 (M == Mode::DI)              ? AE_DEC_PC : \
@@ -291,14 +290,14 @@ Moira::execAddEaRg(u16 opcode)
         writeD<S>(dst, result);
 
     } else if constexpr (C == Core::C68000) {
-        
+
         result = addsub<C, I, S>(data, readD<S>(dst));
 
         try { prefetch<C, POLL>(); } catch (BusError &e) {
             rethrowD<C, S>(e, dst, result);
         }
         writeD<S>(dst, result);
-        
+
     } else {
 
         result = addsub<C, I, S>(data, readD<S>(dst));
@@ -461,7 +460,6 @@ Moira::execAddiRg(u16 opcode)
     FINALIZE
 }
 
-
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execAddiEa(u16 opcode)
 {
@@ -506,7 +504,7 @@ Moira::execAddqDn(u16 opcode)
 
     if (src == 0) src = 8;
     u32 result;
-    
+
     if constexpr (S == Long) {
 
         try { prefetchLate<C, POLL>(); } catch (BusError &e) {
@@ -541,7 +539,7 @@ Moira::execAddqAn(u16 opcode)
 
     if (src == 0) src = 8;
     u32 result = (I == Instr::ADDQ) ? U32_ADD(readA(dst), src) : U32_SUB(readA(dst), src);
-    
+
     try { prefetchLate<C, POLL>(); } catch (BusError &e) {
         rethrowA<C>(e, dst, result);
     }
@@ -563,7 +561,7 @@ Moira::execAddqEa(u16 opcode)
     i8  src = ____xxx_________(opcode);
     int dst = _____________xxx(opcode);
     if (src == 0) src = 8;
-    
+
     u32 ea, data, result;
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
@@ -600,20 +598,20 @@ Moira::execAddxRg(u16 opcode)
     u32 result;
 
     if constexpr (C == Core::C68000 && S == Long) {
-        
+
         try { prefetchLate<C, POLL>(); } catch (BusError &e) {
             rethrowD<C, Word>(e, dst, addsub<C, I, Word>(readD<Word>(src), readD<Word>(dst)));
         }
         result = addsub<C, I, S>(readD<S>(src), readD<S>(dst));
         SYNC(4);
-        
+
     } else if constexpr (C == Core::C68000) {
-    
+
         result = addsub<C, I, S>(readD<S>(src), readD<S>(dst));
         try { prefetch<C, POLL>(); } catch (BusError &e) {
             rethrowD<C, S>(e, dst, result);
         }
-        
+
     } else {
 
         result = addsub<C, I, S>(readD<S>(src), readD<S>(dst));
@@ -663,7 +661,7 @@ Moira::execAddxEa(u16 opcode)
             addsub<C, I, Word>(data1, data2);
             rethrow<C>(e);
         }
-        
+
         looping<I>() ? noPrefetch<C>() : fetchIrc<C>();
         writeM<C, M, Word, COMMIT_IRD>(ea2, READ<Word, 1>(result));
 
@@ -869,7 +867,7 @@ Moira::execAndiRg(u16 opcode)
     } else {
 
         result = logic<C, I, S>(src, readD<S>(dst));
-        
+
         try { prefetch<C, POLL>(); } catch (BusError &e) {
             rethrowD<C, S>(e, dst, result);
         }
@@ -931,7 +929,7 @@ Moira::execAndiccr(u16 opcode)
         u32 src = readI<C, S>();
         u8  dst = getCCR();
         setCCR(u8(logic<C, I, S>(src, dst)));
-        
+
         SYNC(8);
         (void)read<C, AddrSpace::PROG, Word>(reg.pc);
 
@@ -976,7 +974,7 @@ Moira::execAndisr(u16 opcode)
     } else {
         (void)read<C, AddrSpace::DATA, Word>(reg.pc + 2);
     }
-    
+
     prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -2632,14 +2630,14 @@ Moira::execJsr(u16 opcode)
             queue.irc = (u16)read<C, AddrSpace::PROG, Word>(ea);
             pushing = true;
             push<C, Long>(ret);
-        
+
         } catch (BusError &e) {
 
             // MAME stacks the return address. UAE stacks the target address if the push fails.
             u32 target = ea + 2 + (M == Mode::AW ? 2 : M == Mode::AL ? 4 : 0);
             e.stackFrame.pc = (compat == Compatibility::UAE && pushing) ? target : ret;
             throw;
-        
+
         } catch (AddressError &e) {
 
             // MAME stacks the return address of the subroutine call
@@ -2728,7 +2726,7 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execLea(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
-    
+
     int src = _____________xxx(opcode);
     int dst = ____xxx_________(opcode);
 
@@ -4946,11 +4944,16 @@ Moira::execRte(u16 opcode)
 
             /* The first word of the internal information holds the version number of the processor that
              * wrote the frame. The 68010 raises a format error if it differs from its own version number.
-             * Moira writes zeros into the internal information (see writeStackFrame1000), so it accepts
-             * version 0 only. The version number of a real 68010 has not been recorded yet.
+             * Recorded on a real 68010 (vAmigaTS, StackFrame/addrerr37 and addrerr38): The version number
+             * is 2, and the stacked status register shows N=0, Z=0, V=0, C=1.
              */
             u16 version = (read<C, AddrSpace::DATA, Word>(reg.sp + 26) >> 10) & 0xF;
-            if (version != 0) {
+            if (version != VERSION_68010) {
+
+                reg.sr.n = 0;
+                reg.sr.z = 0;
+                reg.sr.v = 0;
+                reg.sr.c = 1;
 
                 SYNC(4);
                 execException(M68kException::FORMAT_ERROR);
@@ -5372,7 +5375,6 @@ Moira::execTasRg(u16 opcode)
 
     prefetch<C, POLL>();
 
-
     //           00  10  20        00  10  20        00  10  20
     //           .b  .b  .b        .w  .w  .w        .l  .l  .l
     CYCLES_DN   ( 4,  4,  4,        0,  0,  0,        0,  0,  0)
@@ -5433,7 +5435,6 @@ Moira::execTasEa(u16 opcode)
         setMoveFlags<Byte>(data);
         data |= 0x80;
 
-        // if (!isRegMode(M)) SYNC(2);
         writeOp<C, M, S>(dst, ea, data);
 
         prefetch<C, POLL>();

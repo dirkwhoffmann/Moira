@@ -278,6 +278,55 @@ TEST_CASE("68010 exception frames match real hardware")
     }
 }
 
+/* The internal information of the 68010 long frame (format $8), compared with vAmigaTS StackFrame/addrerr37 and
+ * addrerr38 (recorded on an A500 with a 68010). Both tests trigger the address error of addrerr3.
+ *
+ * addrerr37 shows the known fields of the frame and the 16 internal words (SP+26 ... SP+56). Moira emulates
+ * the version number only (bits 10 to 13 of SP+26). The other internal words are internal latches of the CPU.
+ *
+ * addrerr38 flips bits 10 to 13 of SP+26 and executes RTE. The 68010 rejects the frame with a format error.
+ */
+TEST_CASE("68010 internal frame information matches real hardware")
+{
+    // The address error of addrerr3: move.l #$41424647,a2 / move.w #$68,(a2)+
+    const std::vector<u16> code = { 0x247C, 0x4142, 0x4647, 0x34FC, 0x0068 };
+
+    // addrerr37: format / vector, SSW, fault address, SR, instruction input buffer, SP+26 ... SP+56
+    const std::vector<u16> recorded = {
+        0x800C, 0x0005, 0x4142, 0x4647, 0x2010, 0x337C, 0x0912, 0x0068,
+        0x34FC, 0x0068, 0x4142, 0x4647, 0x4142, 0x4649, 0xFFE6, 0xFFFF,
+        0x0388, 0x337C, 0x4142, 0x0068, 0x34FC, 0xFFFF };
+
+    AmigaCPU cpu;
+    cpu.run(CPUModel::M68010, code);
+
+    u32 sp = cpu.getSP();
+    std::vector<u16> frame = { cpu.read16(sp + 6), cpu.read16(sp + 8), cpu.read16(sp + 10), cpu.read16(sp + 12),
+                               cpu.read16(sp + 0), cpu.read16(sp + 24) };
+    for (u32 i = 0; i < 16; i++) frame.push_back(cpu.read16(sp + 26 + 2 * i));
+
+    for (size_t i = 0; i < 6; i++) {
+        INFO("addrerr37, word ", i);
+        CHECK(frame[i] == recorded[i]);
+    }
+    CHECK((frame[6] & 0x3C00) == (recorded[6] & 0x3C00));
+
+    // addrerr38: Flip the version bits and return from the address error handler
+    const u32 fmtHandler = AmigaCPU::handler + 0x100;
+    cpu.write16(sp + 26, cpu.read16(sp + 26) ^ 0x3C00);
+    cpu.write32(0x38, fmtHandler);
+    cpu.poke(AmigaCPU::handler, { 0x4E73 });
+    cpu.poke(fmtHandler, { 0x4AFC });
+    cpu.setPrefetch(0x4E73, cpu.read16(AmigaCPU::handler + 2));
+
+    for (int i = 0; i < 10 && cpu.getPC() != fmtHandler; i++) cpu.execute();
+    REQUIRE(cpu.getPC() == fmtHandler);
+
+    // The format error is reported with a short frame. N, Z and V are cleared, C is set.
+    CHECK(cpu.read16(cpu.getSP() + 6) == 0x0038);
+    CHECK(cpu.read16(cpu.getSP() + 0) == 0x2011);
+}
+
 /* 68020 exception frames, compared with the frames recorded on a stock A1200 (vAmigaTS, CPU/68020/StackFrame/
  * frame020_1 ... frame020_11). Each test provokes one exception and records 25 words: the stack pointer, the
  * stack size, the stacked PC relative to the program (absolute in frame020_4), the first 32 bytes of the frame,
