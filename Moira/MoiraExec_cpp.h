@@ -5461,21 +5461,12 @@ Moira::execRtd(u16 opcode)
 {
     AVAILABILITY(Core::C68010)
 
-    // Check for address error
-    if (misaligned<C>(reg.sp)) {
-
-        setFC<M>();
-        readBuffer = u16(readM<C, M, Word>(reg.sp & ~1));
-        throw AddressError(makeFrame<0>(reg.sp));
-    }
+    checkEvenSP<C, M>();
 
     u32 newpc = readM<C, M, Long>(reg.sp);
     reg.sp += 4 + i16(queue.irc);
 
-    // Check for address error
-    if (misalignedPC<C>(newpc)) {
-        throw AddressError(makeFrame<AE_PROG>(newpc));
-    }
+    checkEvenPC<C, AE_PROG>(newpc);
 
     reg.pc = newpc;
     fullPrefetch<C, POLL>();
