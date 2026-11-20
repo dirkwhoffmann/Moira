@@ -92,6 +92,10 @@ UAERef::skipSetup(const Setup &s) const
     // The format word sits at offset 6 of the frame (the supervisor stack pointer is $2000).
     if (instr == Instr::RTE && tr().cpuModel == CPUModel::M68010 && (get16(mem, 0x2006) >> 12) == 8) return true;
 
+    // [UAE] A format error of the 68010 sets the carry flag (recorded on real hardware, vAmigaTS StackFrame/stackframe2).
+    // UAE leaves it alone, which shows up in the stacked status register.
+    if (instr == Instr::RTE && tr().cpuModel == CPUModel::M68010 && (get16(mem, 0x2006) >> 12) != 0) return true;
+
     // [UAE] UAE emulates FPU instructions that the 68040 traps (Moira follows real hardware)
     if ((op & 0xFFC0) == 0xF200 && tr().cpuModel == CPUModel::M68040) {
         u16 e = get16(mem, 0x1002);

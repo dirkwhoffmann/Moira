@@ -4915,66 +4915,67 @@ Moira::execRte(u16 opcode)
 
         u16 format = (u16)read<C, AddrSpace::DATA, Word>(reg.sp + 6);
 
-        // Check the frame format
-        switch (format >> 12) {
+        // The 68010 knows the short format (0000) and the long format (1000)
+        if (format >> 12 != 0b0000 && format >> 12 != 0b1000) {
 
-            case 0b0000: // Short format
+            // Recorded on a real 68010 (vAmigaTS, StackFrame/stackframe2): N=0, Z=0, V=0, C=1 for format 0010.
+            // UAE sets N from the format word and leaves C alone.
+            reg.sr.n = NBIT<Word>(format);
+            reg.sr.z = 0;
+            reg.sr.v = 0;
+            reg.sr.c = 1;
 
-                newsr = (u16)read<C, AddrSpace::DATA, Word>(reg.sp + 0);
-                newpc = read<C, AddrSpace::DATA, Long>(reg.sp + 2);
-                reg.sp += 8;
-                break;
+            SYNC(4);
+            (void)read<C, AddrSpace::DATA, Long>(reg.sp + 2);
 
-            case 0b1000: // Long format (keep on reading)
-            {
-                newsr = (u16)read<C, AddrSpace::DATA, Word>(reg.sp + 0);
-                newpc = read<C, AddrSpace::DATA, Long>(reg.sp + 2);
+            execException(M68kException::FORMAT_ERROR);
+            return;
+        }
 
-                (void)read<C, AddrSpace::DATA, Word>(reg.sp + 8); // special status word
-                (void)read<C, AddrSpace::DATA, Long>(reg.sp + 10); // fault address
+        newsr = (u16)read<C, AddrSpace::DATA, Word>(reg.sp + 0);
+        newpc = read<C, AddrSpace::DATA, Long>(reg.sp + 2);
 
-                u16 value = (u16)read<C, AddrSpace::DATA, Word>(reg.sp + 26); // internal information, 16 words
-                u16 version = (value >> 10) & 0xF;
+        if (format >> 12 == 0b0000) {
 
-                if (version != 0) { // TODO: PUT IN CPU VERSION NUMBER (GET FROM REAL CPU)
+            reg.sp += 8;
 
-                    SYNC(4);
-                    execException(M68kException::FORMAT_ERROR);
-                    return;
-                }
+        } else {
 
-                (void)read<C, AddrSpace::DATA, Word>(reg.sp + 28); // internal information, 16 words
+            (void)read<C, AddrSpace::DATA, Word>(reg.sp + 8);     // Special status word
+            (void)read<C, AddrSpace::DATA, Long>(reg.sp + 10);    // Fault address
 
-                (void)read<C, AddrSpace::DATA, Word>(reg.sp + 14); // unused/reserved
-                (void)read<C, AddrSpace::DATA, Word>(reg.sp + 16); // data output buffer
-                (void)read<C, AddrSpace::DATA, Word>(reg.sp + 18); // unused/reserved
-                (void)read<C, AddrSpace::DATA, Word>(reg.sp + 20); // data input buffer
-                (void)read<C, AddrSpace::DATA, Word>(reg.sp + 22); // unused/reserved
-                (void)read<C, AddrSpace::DATA, Word>(reg.sp + 24); // instruction input buffer
-
-                (void)read<C, AddrSpace::DATA, Long>(reg.sp + 34); // internal information, 16 words
-                (void)read<C, AddrSpace::DATA, Long>(reg.sp + 36); // internal information, 16 words
-                (void)read<C, AddrSpace::DATA, Long>(reg.sp + 38); // internal information, 16 words
-                (void)read<C, AddrSpace::DATA, Long>(reg.sp + 42); // internal information, 16 words
-                (void)read<C, AddrSpace::DATA, Long>(reg.sp + 46); // internal information, 16 words
-                (void)read<C, AddrSpace::DATA, Long>(reg.sp + 50); // internal information, 16 words
-                (void)read<C, AddrSpace::DATA, Long>(reg.sp + 54); // internal information, 16 words
-
-                reg.sp += 58;
-                break;
-            }
-            default: // Format error
-
-                reg.sr.n = (format >> 12) & 0b1000;
-                reg.sr.z = 0;
-                reg.sr.v = 0;
+            /* The first word of the internal information holds the version number of the processor that
+             * wrote the frame. The 68010 raises a format error if it differs from its own version number.
+             * Moira writes zeros into the internal information (see writeStackFrame1000), so it accepts
+             * version 0 only. The version number of a real 68010 has not been recorded yet.
+             */
+            u16 version = (read<C, AddrSpace::DATA, Word>(reg.sp + 26) >> 10) & 0xF;
+            if (version != 0) {
 
                 SYNC(4);
-                (void)read<C, AddrSpace::DATA, Long>(reg.sp + 2);
-
-                // reg.sr.c = 1; // Check test case Exceptions/StackFrame/stackframe2
                 execException(M68kException::FORMAT_ERROR);
                 return;
+            }
+
+            (void)read<C, AddrSpace::DATA, Word>(reg.sp + 28);    // Internal information
+
+            (void)read<C, AddrSpace::DATA, Word>(reg.sp + 14);    // Unused, reserved
+            (void)read<C, AddrSpace::DATA, Word>(reg.sp + 16);    // Data output buffer
+            (void)read<C, AddrSpace::DATA, Word>(reg.sp + 18);    // Unused, reserved
+            (void)read<C, AddrSpace::DATA, Word>(reg.sp + 20);    // Data input buffer
+            (void)read<C, AddrSpace::DATA, Word>(reg.sp + 22);    // Unused, reserved
+            (void)read<C, AddrSpace::DATA, Word>(reg.sp + 24);    // Instruction input buffer
+
+            // Internal information
+            (void)read<C, AddrSpace::DATA, Long>(reg.sp + 34);
+            (void)read<C, AddrSpace::DATA, Long>(reg.sp + 36);
+            (void)read<C, AddrSpace::DATA, Long>(reg.sp + 38);
+            (void)read<C, AddrSpace::DATA, Long>(reg.sp + 42);
+            (void)read<C, AddrSpace::DATA, Long>(reg.sp + 46);
+            (void)read<C, AddrSpace::DATA, Long>(reg.sp + 50);
+            (void)read<C, AddrSpace::DATA, Long>(reg.sp + 54);
+
+            reg.sp += 58;
         }
 
     } else if constexpr (C == Core::C68020) {
