@@ -5159,13 +5159,16 @@ Moira::execRtr(u16 opcode)
     u16 newccr;
     u32 newpc;
 
-    if constexpr (followsMame<C>()) {
+    // The 68010 and 68020 follow UAE in all modes
+    if constexpr (C == Core::C68000 && compat != Compatibility::UAE) {
 
-        // MAME adjusts the stack pointer right before the last word is read
+        // Adjust the stack pointer right before the last word is read
         u32 sp = reg.sp;
         newccr = (u16)readM<C, M, Word>(sp);
         u32 hi = read<C, AddrSpace::DATA, Word>(sp + 2);
-        setCCR((u8)newccr);     // MAME loads the condition codes before the last read
+        
+        // Load the condition codes before the last read
+        setCCR((u8)newccr);
         reg.sp = sp + 6;
         newpc = hi << 16 | read<C, AddrSpace::DATA, Word>(sp + 4);
 
