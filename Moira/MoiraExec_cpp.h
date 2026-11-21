@@ -3559,7 +3559,6 @@ Moira::execMovemEaRg(u16 opcode)
     // MAME does not read ahead, it reads one word too many at the end. UAE neither reads ahead nor too far.
     if constexpr (S == Long && compat != Compatibility::MAME && compat != Compatibility::UAE) (void)read<C, AddrSpace::DATA, Word>(ea);
 
-    int cnt = 0;
     for (int i = 0; i <= 15; i++) {
 
         // Only proceed if the mask bit is set
@@ -3577,7 +3576,6 @@ Moira::execMovemEaRg(u16 opcode)
             writeR(i, SEXT<S>(readM<C, M, S, AE_INC_PC>(ea)));
         }
         ea += S;
-        cnt++;
     }
 
     // MAME and UAE update the address register of a 68000 after the final (extra) read
@@ -3594,6 +3592,8 @@ Moira::execMovemEaRg(u16 opcode)
 
     prefetch<C, POLL>();
 
+    // Each register in the list causes one transfer
+    int cnt = std::popcount(mask);
     auto c = (C == Core::C68020 || S == Word) ? 4 * cnt : 8 * cnt;
 
     //           00  10  20        00    10    20        00    10    20
@@ -3621,17 +3621,18 @@ Moira::execMovemRgEa(u16 opcode)
     try { mask = (u16)readI<C, Word>(); } catch (BusError &e) {
 
         // MAME does not decrement the stacked PC if the mask refill fails
-        if constexpr (C == Core::C68000 && (M == Mode::AI || M == Mode::PI || M == Mode::PD)) e.stackFrame.pc += 2;
-        if constexpr (C == Core::C68000 && M == Mode::IX) e.stackFrame.pc -= 2;
+        if constexpr (C == Core::C68000) {
+            e.stackFrame.pc += M == Mode::IX ? -2 : (M == Mode::AI || M == Mode::PI || M == Mode::PD) ? 2 : 0;
+        }
         throw;
     }
 
-    int cnt = 0;
-
     if constexpr (M == Mode::PD) {
 
+        // Reverse the access order of long words on the 68000 (and in UAE mode)
+        constexpr Flags wflags = (C == Core::C68000 || compat == Compatibility::UAE ? REVERSE : 0) | AE_INC_PC;
+
         u32 ea = readA(dst);
-        [[maybe_unused]] u32 initial = ea;
 
         for (int i = 15; i >= 0; i--) {
 
@@ -3651,33 +3652,37 @@ Moira::execMovemRgEa(u16 opcode)
             ea -= S;
 
             // If the address register is part of the list, the 68000 and the 68010 store its initial value
-            // and the 68020 stores the initial value minus the operand size (vAmigaTS, CPU/Misc/Movem/movem1)
+            // and the 68020 stores the initial value minus the operand size (vAmigaTS, CPU/Misc/Movem/movem1).
+            // The address register is updated after the loop, so it still holds the initial value here.
             u32 value = reg.r[i];
             if constexpr (C == Core::C68020) {
-                if (i == 8 + dst) value = initial - S;
+                if (i == 8 + dst) value -= S;
             }
-            writeM<C, M, S, (C == Core::C68000 || compat == Compatibility::UAE ? REVERSE : 0) | AE_INC_PC>(ea, value);
-            cnt++;
+            writeM<C, M, S, wflags>(ea, value);
         }
         writeA(dst, ea);
 
     } else {
 
-        // MAME stacks the address behind the faulting fetch
         u32 ea;
-        if constexpr (C == Core::C68000 && M == Mode::AL) {
+        if constexpr (C == Core::C68000) {
 
-            ea = (u32)queue.irc << 16;
-            readExt<C>();
-            ea |= queue.irc;
-            try { readExtLast<C>(); } catch (BusError &e) { e.stackFrame.pc += 2; throw; }
+            // MAME stacks the address behind the faulting fetch
+            if constexpr (M == Mode::AL) {
+
+                ea = (u32)queue.irc << 16;
+                readExt<C>();
+                ea |= queue.irc;
+                try { readExtLast<C>(); } catch (BusError &e) { e.stackFrame.pc += 2; throw; }
+
+            } else {
+
+                try { ea = computeEA<C, M, S>(dst); } catch (BusError &e) { e.stackFrame.pc += (M == Mode::AW) ? 2 : 4; throw; }
+            }
 
         } else {
 
-            try { ea = computeEA<C, M, S>(dst); } catch (BusError &e) {
-                if constexpr (C == Core::C68000) e.stackFrame.pc += (M == Mode::AW) ? 2 : 4;
-                throw;
-            }
+            ea = computeEA<C, M, S>(dst);
         }
 
         for(int i = 0; i < 16; i++) {
@@ -3697,11 +3702,12 @@ Moira::execMovemRgEa(u16 opcode)
             // Write register contents into memory
             writeM<C, M, S, AE_INC_PC>(ea, reg.r[i]);
             ea += S;
-            cnt++;
         }
     }
     prefetch<C, POLL>();
 
+    // Each register in the list causes one transfer
+    int cnt = std::popcount(mask);
     auto c = (C == Core::C68020 || S == Word) ? 4 * cnt : 8 * cnt;
 
     //           00  10  20        00    10    20        00    10    20

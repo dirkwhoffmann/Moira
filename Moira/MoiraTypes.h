@@ -8,6 +8,7 @@
 #pragma once
 
 #include "MoiraConfig.h"
+#include <bit>
 #include <cstdint>
 #include <cstddef>
 #include <string>
