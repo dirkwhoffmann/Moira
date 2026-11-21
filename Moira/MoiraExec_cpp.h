@@ -4949,7 +4949,7 @@ Moira::readRteFrame68010(u16 &newsr, u32 &newpc)
     u16 format = (u16)read<C, AddrSpace::DATA, Word>(reg.sp + 6);
 
     // The 68010 knows the short format (0000) and the long format (1000)
-    if (format >> 12 != 0b0000 && format >> 12 != 0b1000) {
+    if (!supportsFrameFormat(cpuModel, format >> 12)) {
 
         // Recorded on a real 68010 (vAmigaTS, StackFrame/stackframe2): N=0, Z=0, V=0, C=1 for format 0010.
         // UAE sets N from the format word and leaves C alone.
@@ -5010,20 +5010,7 @@ Moira::readRteFrame68020(u16 &newsr, u32 &newpc)
             format = (u16)(read<C, AddrSpace::DATA, Word>(frameBase + 6) >> 12);
         }
 
-        // Check if the model supports the frame format
-        const bool is040 = cpuModel >= CPUModel::M68EC040;
-        bool supported =
-            format == 0b0000 ||                         // Standard frame
-            format == 0b0001 ||                         // Throwaway frame
-            format == 0b0010 ||                         // Trap frame
-            (format == 0b0011 && is040) ||              // Floating-point post-instruction frame (68040)
-            (format == 0b0100 && is040) ||              // Unimplemented floating-point instruction frame (68040)
-            (format == 0b0111 && is040) ||              // Access error frame (68040)
-            (format == 0b1001 && !is040) ||             // Coprocessor mid-instruction frame (68020, 68030)
-            (format == 0b1010 && !is040) ||             // Short bus fault frame (68020, 68030)
-            (format == 0b1011 && !is040);               // Long bus fault frame (68020, 68030)
-
-        if (!supported) {
+        if (!supportsFrameFormat(cpuModel, format)) {
 
             execException(M68kException::FORMAT_ERROR);
             CYCLES_68020(4)

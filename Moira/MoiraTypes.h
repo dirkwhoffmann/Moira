@@ -129,6 +129,47 @@ static inline constexpr bool hasFPU(CPUModel model)
     return model == CPUModel::M68040;
 }
 
+/// Checks if a CPU model supports a stack frame format
+/// @param format The upper four bits of the format word
+/// @details The 68000 doesn't write a format word. Its frames count as format 0000.
+static inline constexpr bool supportsFrameFormat(CPUModel model, u16 format)
+{
+    switch (model) {
+
+        case CPUModel::M68000:
+
+            return format == 0b0000;
+
+        case CPUModel::M68010:
+
+            return
+            format == 0b0000 ||     // Short frame
+            format == 0b1000;       // Long frame
+
+        case CPUModel::M68EC040:
+        case CPUModel::M68LC040:
+        case CPUModel::M68040:
+
+            return
+            format == 0b0000 ||     // Standard frame
+            format == 0b0001 ||     // Throwaway frame
+            format == 0b0010 ||     // Trap frame
+            format == 0b0011 ||     // Floating-point post-instruction frame
+            format == 0b0100 ||     // Unimplemented floating-point instruction frame
+            format == 0b0111;       // Access error frame
+
+        default:
+
+            return
+            format == 0b0000 ||     // Standard frame
+            format == 0b0001 ||     // Throwaway frame
+            format == 0b0010 ||     // Trap frame
+            format == 0b1001 ||     // Coprocessor mid-instruction frame
+            format == 0b1010 ||     // Short bus fault frame
+            format == 0b1011;       // Long bus fault frame
+    }
+}
+
 /// Execution cores
 enum class Core
 {
