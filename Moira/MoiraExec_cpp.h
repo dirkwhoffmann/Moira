@@ -3402,12 +3402,7 @@ Moira::execMovea(u16 opcode)
 
     u32 ea = 0, data;
 
-    try { readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data); } catch (AddressError &exc) {
-
-        // Rectify the stack frame
-        exc.stackFrame = makeFrame<STD_AE_FRAME>(ea);
-        throw exc;
-    }
+    readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
 
     try { prefetch<C, POLL>(); } catch (BusError &e) {
         rethrowA<C>(e, dst, SEXT<S>(data));
@@ -3579,8 +3574,7 @@ Moira::execMovemEaRg(u16 opcode)
     }
 
     // MAME and UAE update the address register of a 68000 after the final (extra) read
-    constexpr bool lateUpdate = compat == Compatibility::MAME || C == Core::C68000;
-    if constexpr (M == Mode::PI && !lateUpdate) writeA(src, ea);
+    if constexpr (M == Mode::PI && C != Core::C68000) writeA(src, ea);
 
     if constexpr (S == Word || C == Core::C68000) {
 
