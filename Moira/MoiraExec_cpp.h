@@ -5269,9 +5269,8 @@ Moira::execSccEa(u16 opcode)
         ea = computeEA<C, M, S>(dst);
         updateAn<M, S>(dst);
 
-        constexpr int delay = M == Mode::PI ? 4 : (M == Mode::AI || M == Mode::PD) ? 2 : 0;
+        constexpr int delay = M == Mode::PI ? 4 : (M == Mode::AI || M == Mode::PD || M == Mode::IX) ? 2 : 0;
         if constexpr (delay) SYNC(delay);
-        if constexpr (M == Mode::IX) SYNC(2);
 
         fetchIrc<C, POLL>();
         data = cond<I>() ? 0xFF : 0;
