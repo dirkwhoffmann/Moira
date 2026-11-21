@@ -5225,19 +5225,29 @@ Moira::execSccRg(u16 opcode)
     u32 ea, data;
 
     readOp<C, M, S>(dst, &ea, &data);
-
     data = cond<I>() ? 0xFF : 0;
-    try {
-        // If the condition is true, the register is written at the end and the IRD is kept
-        if constexpr (C == Core::C68000) { if (data) prefetchLate<C, POLL>(); else prefetch<C, POLL>(); }
-        else prefetch<C, POLL>();
+
+    if constexpr (C == Core::C68000) {
+
+        try {
+            // If the condition is true, the register is written at the end and the IRD is kept
+            if (data) prefetchLate<C, POLL>(); else prefetch<C, POLL>();
+        }
+        catch (BusError &e) {
+            // MAME clears the register before the prefetch
+            if (!data) writeD<S>(dst, 0);
+            rethrow<C>(e);
+        }
+        if (data) SYNC(2);
+
+    } else {
+
+        try { prefetch<C, POLL>(); } catch (BusError &e) {
+
+            if (!data) writeD<S>(dst, 0);
+            rethrow<C>(e);
+        }
     }
-    catch (BusError &e) {
-        // MAME clears the register before the prefetch
-        if (!data) writeD<S>(dst, 0);
-        rethrow<C>(e);
-    }
-    if constexpr (C == Core::C68000) { if (data) SYNC(2); }
 
     writeD<S>(dst, data);
 
@@ -5413,9 +5423,8 @@ Moira::execTasEa(u16 opcode)
 
     } else {
 
-        constexpr int delay = M == Mode::PI ? 4 : (M == Mode::AI || M == Mode::PD) ? 2 : 0;
+        constexpr int delay = M == Mode::PI ? 4 : (M == Mode::AI || M == Mode::PD || M == Mode::IX) ? 2 : 0;
         if constexpr (delay) SYNC(delay);
-        if constexpr (M == Mode::IX) SYNC(2);
 
         readOp<C, M, Byte>(dst, &ea, &data);
 
