@@ -50,6 +50,9 @@ public:
     // Returns true if MMU registers are compared for this CPU model
     virtual bool comparesMMU(CPUModel) const { return false; }
 
+    // Returns true if the 68040 instructions CINV, CPUSH and MOVE16 are compared
+    virtual bool comparesCacheOps() const { return false; }
+
     // Returns true if the core comes with a disassembler (used for error reports)
     virtual bool hasMusashiDasm() const { return false; }
     virtual bool hasUAEDasm() const { return false; }

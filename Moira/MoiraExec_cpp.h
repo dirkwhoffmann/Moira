@@ -5658,8 +5658,18 @@ Moira::execCinv(u16 opcode)
 {
     AVAILABILITY(Core::C68020)
 
-    execLineF<C, I, M, S>(opcode);
+    // Scope 0 is reserved
+    if (___________xx___(opcode) == 0) { execLineF<C, I, M, S>(opcode); return; }
 
+    SUPERVISOR_MODE_ONLY
+
+    // The caches of the 68040 are not emulated. Invalidating them has no effect.
+    // CINV triggers a trace on change of flow.
+    changeOfFlow<C>();
+
+    prefetch<C, POLL>();
+
+    CYCLES_68020(8);
     FINALIZE
 }
 
@@ -5668,9 +5678,31 @@ Moira::execCpush(u16 opcode)
 {
     AVAILABILITY(Core::C68020)
 
-    execLineF<C, I, M, S>(opcode);
+    // Scope 0 is reserved
+    if (___________xx___(opcode) == 0) { execLineF<C, I, M, S>(opcode); return; }
 
+    SUPERVISOR_MODE_ONLY
+
+    // The caches of the 68040 are not emulated. Pushing them has no effect.
+    // CPUSH triggers a trace on change of flow.
+    changeOfFlow<C>();
+
+    prefetch<C, POLL>();
+
+    CYCLES_68020(8);
     FINALIZE
+}
+
+template <Core C> void
+Moira::move16(u32 src, u32 dst)
+{
+    // MOVE16 transfers a complete line. The lower four address bits are ignored.
+    src &= ~15;
+    dst &= ~15;
+
+    u32 line[4];
+    for (int i = 0; i < 4; i++) line[i] = read<C, AddrSpace::DATA, Long>(src + 4 * i);
+    for (int i = 0; i < 4; i++) write<C, AddrSpace::DATA, Long>(dst + 4 * i, line[i]);
 }
 
 template <Core C, Instr I, Mode M, Size S> void
@@ -5678,8 +5710,20 @@ Moira::execMove16PiPi(u16 opcode)
 {
     AVAILABILITY(Core::C68020)
 
-    execLineF<C, I, M, S>(opcode);
+    // MOVE16 (Ax)+,(Ay)+
+    int ax = _____________xxx(opcode);
+    int ay = xxxx____________(queue.irc) & 7;
+    readExt<C>();
 
+    move16<C>(readA(ax), readA(ay));
+
+    // If Ax and Ay are the same register, it is incremented only once
+    if (ax != ay) writeA(ax, readA(ax) + 16);
+    writeA(ay, readA(ay) + 16);
+
+    prefetch<C, POLL>();
+
+    CYCLES_68020(18);
     FINALIZE
 }
 
@@ -5688,8 +5732,16 @@ Moira::execMove16PiAl(u16 opcode)
 {
     AVAILABILITY(Core::C68020)
 
-    execLineF<C, I, M, S>(opcode);
+    // MOVE16 (Ay)+,(xxx).L
+    int ay = _____________xxx(opcode);
+    u32 dst = readI<C, Long>();
 
+    move16<C>(readA(ay), dst);
+    writeA(ay, readA(ay) + 16);
+
+    prefetch<C, POLL>();
+
+    CYCLES_68020(18);
     FINALIZE
 }
 
@@ -5698,8 +5750,16 @@ Moira::execMove16AlPi(u16 opcode)
 {
     AVAILABILITY(Core::C68020)
 
-    execLineF<C, I, M, S>(opcode);
+    // MOVE16 (xxx).L,(Ay)+
+    int ay = _____________xxx(opcode);
+    u32 src = readI<C, Long>();
 
+    move16<C>(src, readA(ay));
+    writeA(ay, readA(ay) + 16);
+
+    prefetch<C, POLL>();
+
+    CYCLES_68020(18);
     FINALIZE
 }
 
@@ -5708,8 +5768,15 @@ Moira::execMove16AiAl(u16 opcode)
 {
     AVAILABILITY(Core::C68020)
 
-    execLineF<C, I, M, S>(opcode);
+    // MOVE16 (Ay),(xxx).L
+    int ay = _____________xxx(opcode);
+    u32 dst = readI<C, Long>();
 
+    move16<C>(readA(ay), dst);
+
+    prefetch<C, POLL>();
+
+    CYCLES_68020(18);
     FINALIZE
 }
 
@@ -5718,8 +5785,15 @@ Moira::execMove16AlAi(u16 opcode)
 {
     AVAILABILITY(Core::C68020)
 
-    execLineF<C, I, M, S>(opcode);
+    // MOVE16 (xxx).L,(Ay)
+    int ay = _____________xxx(opcode);
+    u32 src = readI<C, Long>();
 
+    move16<C>(src, readA(ay));
+
+    prefetch<C, POLL>();
+
+    CYCLES_68020(18);
     FINALIZE
 }
 

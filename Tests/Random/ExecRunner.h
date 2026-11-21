@@ -75,7 +75,7 @@ public:
     void runMoira(Setup &s, Result &r);
 
     // Limits the range of executed instructions
-    bool doExec(u16 op) { return op <= 0xEFFF || isFpuOpcode(op) || isMmuOpcode(op); }
+    bool doExec(u16 op) { return op <= 0xEFFF || isFpuOpcode(op) || isMmuOpcode(op) || (ref().comparesCacheOps() && isCacheOpcode(op)); }
 
     bool skip(const Setup &s);                                                  // Skips a test case based on its setup
     bool skipCompare(const Setup &s, const Result &rRef, const Result &rMoira); // Skips the comparison (includes skip)

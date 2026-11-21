@@ -30,6 +30,7 @@ public:
     bool hasUAEDasm() const override { return true; }
     bool comparesMMU(CPUModel model) const override { return model == CPUModel::M68030; }
     bool testsTranslation() const override { return true; }
+    bool comparesCacheOps() const override { return true; }
 
     bool checksCycles(CPUModel model) const override { return model == CPUModel::M68000; }
     bool byteGranular(CPUModel model) const override { return model != CPUModel::M68000 && model != CPUModel::M68010; }

@@ -145,6 +145,7 @@ public:
 
     bool isFpuOpcode(u16 op);
     bool isMmuOpcode(u16 op);
+    bool isCacheOpcode(u16 op);
     bool isIllegalOpcode(u16 op);
 
 

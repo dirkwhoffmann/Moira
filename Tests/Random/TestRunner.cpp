@@ -265,6 +265,14 @@ bool TestRunner::isMmuOpcode(u16 op)
 }
 
 
+// CINV, CPUSH (F400-F4FF) and MOVE16 (F600-F627) of the 68040 models
+bool TestRunner::isCacheOpcode(u16 op)
+{
+    if (cpuModel < CPUModel::M68EC040) return false;
+    return (op & 0xFF00) == 0xF400 || (op >= 0xF600 && op <= 0xF627);
+}
+
+
 bool TestRunner::isFpuOpcode(u16 op)
 {
     return (op & 0xFF00) == 0xF200 && moiracpu != nullptr && moiracpu->hasFPU();
