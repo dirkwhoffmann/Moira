@@ -5010,69 +5010,40 @@ Moira::readRteFrame68020(u16 &newsr, u32 &newpc)
             format = (u16)(read<C, AddrSpace::DATA, Word>(frameBase + 6) >> 12);
         }
 
-        // Determine the frame size and check if the model supports the frame format
+        // Check if the model supports the frame format
         const bool is040 = cpuModel >= CPUModel::M68EC040;
-        bool supported = true;
-        u32 size = 0;
-
-        switch (format) {
-
-            case 0b0000: // Standard frame
-            case 0b0001: // Throwaway frame
-
-                size = 8;
-                break;
-
-            case 0b0010: // Trap frame
-
-                size = 12;
-                break;
-
-            case 0b0011: // Floating-point post-instruction frame (68040)
-
-                size = 12;
-                supported = is040;
-                break;
-
-            case 0b0100: // Unimplemented floating-point instruction frame (68040)
-
-                size = 16;
-                supported = is040;
-                break;
-
-            case 0b0111: // Access error frame (68040)
-
-                size = 60;
-                supported = is040;
-                break;
-
-            case 0b1001: // Coprocessor mid-instruction frame (68020, 68030)
-
-                size = 20;
-                supported = !is040;
-                break;
-
-            case 0b1010: // Short bus fault frame (68020, 68030)
-
-                size = 32;
-                supported = !is040;
-                break;
-
-            case 0b1011: // Long bus fault frame (68020, 68030)
-
-                size = 92;
-                supported = !is040;
-                break;
-
-            default:
-                supported = false;
-        }
+        bool supported =
+            format == 0b0000 ||                         // Standard frame
+            format == 0b0001 ||                         // Throwaway frame
+            format == 0b0010 ||                         // Trap frame
+            (format == 0b0011 && is040) ||              // Floating-point post-instruction frame (68040)
+            (format == 0b0100 && is040) ||              // Unimplemented floating-point instruction frame (68040)
+            (format == 0b0111 && is040) ||              // Access error frame (68040)
+            (format == 0b1001 && !is040) ||             // Coprocessor mid-instruction frame (68020, 68030)
+            (format == 0b1010 && !is040) ||             // Short bus fault frame (68020, 68030)
+            (format == 0b1011 && !is040);               // Long bus fault frame (68020, 68030)
 
         if (!supported) {
 
             execException(M68kException::FORMAT_ERROR);
             CYCLES_68020(4)
             return false;
+        }
+
+        // Determine the frame size
+        u32 size = 0;
+
+        switch (format) {
+
+            case 0b0000: size = 8; break;   // Standard frame
+            case 0b0001: size = 8; break;   // Throwaway frame
+            case 0b0010: size = 12; break;  // Trap frame
+            case 0b0011: size = 12; break;  // Floating-point post-instruction frame
+            case 0b0100: size = 16; break;  // Unimplemented floating-point instruction frame
+            case 0b0111: size = 60; break;  // Access error frame
+            case 0b1001: size = 20; break;  // Coprocessor mid-instruction frame
+            case 0b1010: size = 32; break;  // Short bus fault frame
+            case 0b1011: size = 92; break;  // Long bus fault frame
         }
 
         // All frames start with the status register and the program counter
