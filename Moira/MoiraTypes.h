@@ -152,14 +152,6 @@ inline constexpr Compatibility compat = Compatibility::MOIRA_COMPATIBILITY;
 static_assert(compat != Compatibility::UAE || MOIRA_PRECISE_TIMING,
               "MOIRA_COMPATIBILITY=UAE requires MOIRA_PRECISE_TIMING=true");
 
-/// Returns true if the 68000 behaves like MAME's microcoded core. Moira follows MAME where real hardware
-/// cannot decide (bus errors, which the Amiga doesn't raise, and the order of bus cycles). Only UAE mode
-/// deviates. MAME emulates the 68000 only, so the 68010 and above are not affected (except in MAME mode).
-template <Core C> constexpr bool followsMame()
-{
-    return compat == Compatibility::MAME || (compat != Compatibility::UAE && C == Core::C68000);
-}
-
 /// Syntax styles for disassembly output
 enum class Syntax
 {

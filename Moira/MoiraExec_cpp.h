@@ -1077,7 +1077,7 @@ Moira::execBitDxDy(u16 opcode)
 
     try { prefetchLate<C, POLL>(); } catch (BusError &e) {
         // MAME updates the flags after the prefetch
-        if constexpr (!followsMame<C>()) bit<C, I>(data, b);
+        if constexpr (!(C == Core::C68000 && compat != Compatibility::UAE)) bit<C, I>(data, b);
         rethrow<C>(e);
     }
     data = bit<C, I>(data, b);
@@ -1108,7 +1108,7 @@ Moira::execBitDxEa(u16 opcode)
 
     try { fetchIrc<C, POLL, !(I == Instr::BTST && M != Mode::IM)>(); } catch (BusError &e) {
         // MAME updates the flags after the prefetch
-        if constexpr (!followsMame<C>() || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) bit<C, I>(data, b);
+        if constexpr (!(C == Core::C68000 && compat != Compatibility::UAE) || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) bit<C, I>(data, b);
         rethrow<C>(e);
     }
     data = bit<C, I>(data, b);
@@ -1149,7 +1149,7 @@ Moira::execBitImDy(u16 opcode)
 
     try { prefetchLate<C, POLL>(); } catch (BusError &e) {
         // MAME updates the flags after the prefetch
-        if constexpr (!followsMame<C>()) bit<C, I>(data, src);
+        if constexpr (!(C == Core::C68000 && compat != Compatibility::UAE)) bit<C, I>(data, src);
         rethrow<C>(e);
     }
     data = bit<C, I>(data, src);
@@ -1178,7 +1178,7 @@ Moira::execBitImEa(u16 opcode)
 
     try { fetchIrc<C, POLL, (I != Instr::BTST)>(); } catch (BusError &e) {
         // MAME updates the flags after the prefetch
-        if constexpr (!followsMame<C>() || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) bit<C, I>(data, src);
+        if constexpr (!(C == Core::C68000 && compat != Compatibility::UAE) || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) bit<C, I>(data, src);
         rethrow<C>(e);
     }
     data = bit<C, I>(data, src);
@@ -4884,7 +4884,7 @@ Moira::execRte(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        if constexpr (followsMame<C>()) {
+        if constexpr (C == Core::C68000 && compat != Compatibility::UAE) {
 
             // MAME adjusts the stack pointer after the last read
             newsr = (u16)read<C, AddrSpace::DATA, Word>(reg.sp);
@@ -5405,7 +5405,7 @@ Moira::execTasEa(u16 opcode)
             // Only a failing read cycle is special (not a failing extension word fetch)
             if ((e.stackFrame.fc & 3) != 2) {
 
-                if constexpr (followsMame<C>()) {
+                if constexpr (C == Core::C68000 && compat != Compatibility::UAE) {
 
                     // MAME completes a failed read like a failed write
                     e.stackFrame.code &= ~0x10;

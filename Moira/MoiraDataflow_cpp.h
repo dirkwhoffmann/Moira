@@ -327,7 +327,7 @@ Moira::readOp(int n, u32 *ea, u32 *result)
                 // A real 68000 leaves the register untouched on an address error (recorded on an A500).
                 try { *result = readM<C, M, S, F>(*ea); } catch (const BusError &) { updateAnPI<M, S>(n); throw; }
 
-            } else if constexpr (followsMame<C>() && C == Core::C68000 && M == Mode::PI) {
+            } else if constexpr (C == Core::C68000 && compat != Compatibility::UAE && M == Mode::PI) {
 
                 // MAME advances the register before a bus error is reported. A long operand
                 // is advanced between the two word accesses.
