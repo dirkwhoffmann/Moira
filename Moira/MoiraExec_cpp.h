@@ -5230,23 +5230,30 @@ Moira::execSccRg(u16 opcode)
     if constexpr (C == Core::C68000) {
 
         try {
-            // If the condition is true, the register is written at the end and the IRD is kept
+            // If the condition is met, write the register at the end and keep the IRD
             if (data) prefetchLate<C, POLL>(); else prefetch<C, POLL>();
         }
         catch (BusError &e) {
-            // MAME clears the register before the prefetch
+
+            // Clear the register before the prefetch
             if (!data) writeD<S>(dst, 0);
             rethrow<C>(e);
         }
         if (data) SYNC(2);
 
-    } else {
+    } else if constexpr (C == Core::C68010) {
 
         try { prefetch<C, POLL>(); } catch (BusError &e) {
 
+            // Clear the register before the prefetch
             if (!data) writeD<S>(dst, 0);
             rethrow<C>(e);
         }
+
+    } else {
+
+        // Write the register after the prefetch
+        prefetch<C, POLL>();
     }
 
     writeD<S>(dst, data);
