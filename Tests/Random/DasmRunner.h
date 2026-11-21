@@ -68,7 +68,7 @@ public:
     // Analysing a test result
     //
 
-    bool compareDasm(Result &rRef, Result &rMoira);
+    bool compareDasm(const Setup &s, Result &rRef, Result &rMoira);
 };
 
 }

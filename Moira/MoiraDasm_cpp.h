@@ -1982,11 +1982,6 @@ Moira::dasmCinv(StrWriter &str, u32 &addr, u16 op, Instr I, Mode M, Size S) cons
 
     switch (scope) {
 
-        case 0b00:
-
-            str << Ins{I} << str.tab << "(illegal scope)";
-            break;
-
         case 0b01:
 
             str << Ins{I} << "l" << str.tab << cname[cache] << Sep{} << Op(M, Long, reg, addr);
@@ -2015,17 +2010,10 @@ Moira::dasmCpush(StrWriter &str, u32 &addr, u16 op, Instr I, Mode M, Size S) con
 void
 Moira::dasmMove16PiPi(StrWriter &str, u32 &addr, u16 op, Instr I, Mode M, Size S) const
 {
-    auto old = addr;
+    // The CPU ignores the remaining bits of the extension word (like the execution handler)
     auto ext = dasmIncRead(addr, Word);
     auto ax  = _____________xxx(op);
     auto ay  = _xxx____________(ext);
-
-    if ((ext & 0x8FFF) != 0x8000) {
-
-        addr = old;
-        dasmIllegal(str, addr, op, I, M, S);
-        return;
-    }
 
     str << Ins{I} << str.tab << Op(Mode::PI, Word, ax, addr) << Sep{} << Op(Mode::PI, Word, ay, addr);
     str << Av{I, M, S};

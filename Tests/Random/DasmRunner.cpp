@@ -181,7 +181,7 @@ void DasmRunner::runDasmSingleTest(Setup &s, u16 op)
     moiraclk[1] += moiraResult.elapsed[1];
 
     // Compare
-    if (!compareDasm(refResult, moiraResult)) {
+    if (!compareDasm(s, refResult, moiraResult)) {
 
         printf("\nDISASSEMBLER MISMATCH FOUND\n");
         dumpDasm(s, refResult, moiraResult);
@@ -231,7 +231,7 @@ static bool noUAEDasmForCoprocessor(u16 opcode)
 }
 
 
-bool DasmRunner::compareDasm(Result &rRef, Result &rMoira)
+bool DasmRunner::compareDasm(const Setup &s, Result &rRef, Result &rMoira)
 {
     auto I = moiracpu->getInstrInfo(rRef.opcode).I;
 
@@ -256,6 +256,10 @@ bool DasmRunner::compareDasm(Result &rRef, Result &rMoira)
         default:
             break;
     }
+
+    // Binutils expects the extension word of MOVE16 (Ax)+,(Ay)+ to be 1yyy 0000 0000 0000. Moira disassembles
+    // the instruction for all extension words, because the CPU ignores the remaining bits.
+    skipBinutils |= (rRef.opcode & 0xFFF8) == 0xF620 && (s.ext1 & 0x8FFF) != 0x8000;
 
     // Binutils decodes FPU instructions only for the 68040 (ENABLE_M68881 is off)
     skipBinutils |= (rRef.opcode & 0xFE00) == 0xF200 && moiracpu->hasExternalFPU();
