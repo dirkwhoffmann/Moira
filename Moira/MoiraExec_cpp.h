@@ -5587,8 +5587,7 @@ Moira::execUnlk(u16 opcode)
     u32 ea, data;
     try { readOp<C, Mode::AI, Long, AE_DATA|AE_INC_PC|POLL>(7, &ea, &data); } catch (BusError &) {
 
-        // MAME and UAE leave the stack pointer alone if the read fails
-        if constexpr (C == Core::C68000 || (compat == Compatibility::UAE && C == Core::C68020)) reg.sp = oldsp;
+        reg.sp = oldsp;
         throw;
     }
     writeA(an, data);
