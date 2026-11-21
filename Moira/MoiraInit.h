@@ -214,3 +214,6 @@ template <Core C, Instr I, Mode M, Size S> void execMulWord(u16);
 template <Core C, Instr I, Mode M, Size S> bool execDivWord(u16);
 template <Core C, Instr I, Mode M, Size S> bool execDivLong(u16);
 template <Core C> void move16(u32 src, u32 dst);
+template <Core C> void readRteFrame68000(u16 &newsr, u32 &newpc);
+template <Core C> bool readRteFrame68010(u16 &newsr, u32 &newpc);
+template <Core C> bool readRteFrame68020(u16 &newsr, u32 &newpc);
