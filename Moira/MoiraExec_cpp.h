@@ -5302,7 +5302,6 @@ Moira::execStop(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        // MAME does not fetch the next instruction word. The CPU just idles for four cycles.
         src = queue.irc;
         reg.pc += 2;
         SYNC(4);
@@ -5314,8 +5313,6 @@ Moira::execStop(u16 opcode)
 
     setSR(src);
     flags |= State::STOPPED;
-
-    // Sample the IPL pins with the new mask, so a stale level is not taken
     POLL_IPL;
 
     reg.pc += 2;
@@ -5337,10 +5334,8 @@ Moira::execSwap(u16 opcode)
 
     dat = std::rotl(dat, 16);
 
-    // MAME writes the register and the flags before the prefetch
     writeD(rg, dat);
     setMoveFlags<Long>(dat);
-
     prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -5364,7 +5359,6 @@ Moira::execTasRg(u16 opcode)
 
     data |= 0x80;
     writeD<S>(dst, data);
-
     prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -5396,7 +5390,10 @@ Moira::execTasEa(u16 opcode)
 
                     // MAME completes a failed read like a failed write
                     e.stackFrame.code &= ~0x10;
-                    e.stackFrame.sr = (e.stackFrame.sr & ~0x0F) | 0x04;    // N=0, Z=1, V=0, C=0
+                    
+                    // Set N=0, Z=1, V=0, C=0
+                    e.stackFrame.sr = (e.stackFrame.sr & ~0x0F) | 0x04;
+                    
                     setMoveFlags<S>(0);
                 }
                 if constexpr (compat == Compatibility::UAE && M != Mode::PD) {
@@ -5413,7 +5410,6 @@ Moira::execTasEa(u16 opcode)
 
         if (!isRegMode(M)) SYNC(2);
         writeOp<C, M, S, tas>(dst, ea, data);
-
         prefetch<C, POLL>();
 
     } else {
@@ -5428,7 +5424,6 @@ Moira::execTasEa(u16 opcode)
         data |= 0x80;
 
         writeOp<C, M, S>(dst, ea, data);
-
         prefetch<C, POLL>();
         SYNC(2);
     }
@@ -5470,25 +5465,40 @@ Moira::execTrapv(u16 opcode)
 
     if (reg.sr.v) {
 
-        // In MAME, the word is read in supervisor mode (UAE reads in the current mode)
-        bool s = reg.sr.s;
-        if constexpr (C == Core::C68000 && followsMame<C>()) reg.sr.s = true;
+        if constexpr (C == Core::C68000 && compat == Compatibility::UAE) {
 
-        try { (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2); } catch (BusError &e) {
+            try { (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2); } catch (BusError &e) {
 
-            // On the 68000, a bus error at this point is raised after the exception has already been entered
-            if constexpr (C == Core::C68000) {
+                // A bus error at this point is raised after the exception has already been entered
+                setSupervisorMode(true);
+                clearTraceFlags();
+                e.stackFrame.sr = (e.stackFrame.sr | 0x2000) & ~0x8000; // Stacked with S set and T cleared
+                e.stackFrame.code = (e.stackFrame.code & ~7) | 6;       // Supervisor program space
+                throw;
+            }
 
+        } else if constexpr (C == Core::C68000) {
+
+            // Read the word in supervisor mode
+            bool s = reg.sr.s; reg.sr.s = true;
+
+            try { (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2); } catch (BusError &e) {
+
+                // A bus error at this point is raised after the exception has already been entered
                 reg.sr.s = s;
                 setSupervisorMode(true);
                 clearTraceFlags();
-                e.stackFrame.sr = (e.stackFrame.sr | 0x2000) & ~0x8000;   // Stacked with S set and T cleared
-                if constexpr (compat == Compatibility::UAE) e.stackFrame.code = (e.stackFrame.code & ~7) | 6;   // Supervisor program space
+                e.stackFrame.sr = (e.stackFrame.sr | 0x2000) & ~0x8000; // Stacked with S set and T cleared
+                throw;
             }
-            throw;
+            reg.sr.s = s;
+
+        } else {
+
+            (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
+            SYNC(2);
         }
-        reg.sr.s = s;
-        if constexpr (C != Core::C68000) SYNC(2);
+
         execException<C>(M68kException::TRAPV);
 
         //           00  10  20        00  10  20        00  10  20
