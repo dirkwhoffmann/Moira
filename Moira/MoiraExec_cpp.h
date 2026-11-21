@@ -4216,13 +4216,18 @@ Moira::execMulWord(u16 opcode)
         // The low word is cleared before the prefetch (which precedes the multiplication)
         result = I == Instr::MULS ? muls<C>(data, factor) : mulu<C>(data, factor);
         writeD<Word>(dst, 0);
+        
         try { prefetchLate<C, POLL>(); } catch (BusError &e) {
 
+            e.stackFrame.pc -=
+            (M == Mode::PD) ? 0 :
+            (M == Mode::DI || M == Mode::IX || M == Mode::DIPC || M == Mode::IXPC) ? 4 : 2;
+
             // MAME shows N=0, Z=1, V=0, C=0 in the frame of a failed prefetch
-            e.stackFrame.pc -= (M == Mode::PD) ? 0 : (M == Mode::DI || M == Mode::IX || M == Mode::DIPC || M == Mode::IXPC) ? 4 : 2;
             setMoveFlags<S>(0);
             rethrow<C>(e);
         }
+        
         SYNC(cycles);
 
     } else {
@@ -4422,12 +4427,20 @@ Moira::execDivWord(u16 opcode)
         return true;
     }
 
-    [[maybe_unused]] auto cycles = cyclesDiv<C, I>(dividend, (u16)divisor) - 4;
+    if constexpr (C == Core::C68000) {
 
-    if constexpr (C == Core::C68000) SYNC(cycles);
-    writeD(dst, sign ? divs<C>(dividend, divisor) : divu<C>(dividend, divisor));
-    prefetch<C, POLL>();
-    if constexpr (C != Core::C68000) SYNC(cycles);
+        // The 68000 spends the division cycles before it writes the result
+        SYNC((cyclesDiv<C, I>(dividend, (u16)divisor) - 4));
+        writeD(dst, sign ? divs<C>(dividend, divisor) : divu<C>(dividend, divisor));
+        prefetch<C, POLL>();
+
+    } else {
+
+        // The 68010 spends the division cycles after the prefetch
+        writeD(dst, sign ? divs<C>(dividend, divisor) : divu<C>(dividend, divisor));
+        prefetch<C, POLL>();
+        SYNC((cyclesDiv<C, I>(dividend, (u16)divisor) - 4));
+    }
 
     return false;
 }
@@ -4488,7 +4501,6 @@ Moira::execDivLong(u16 opcode)
 
         if (cpuModel >= CPUModel::M68EC040) {
 
-            // The 68040 only clears the carry flag
             reg.sr.c = 0;
 
         } else if (ext & 0x800) {
@@ -4546,8 +4558,6 @@ Moira::execNbcdRg(u16 opcode)
     int dst = _____________xxx(opcode);
 
     u32 data = readD<Byte>(dst);
-
-    // MAME computes the result (and the flags) before the prefetch
     u32 result = bcd<C, I, Byte>(data, 0);
 
     looping<I>() ? noPrefetch<C>() : prefetchLate<C, POLL>();
@@ -4572,15 +4582,17 @@ Moira::execNbcdEa(u16 opcode)
     u32 ea, data;
     readOp<C, M, Byte, STD_AE_FRAME>(dst, &ea, &data);
 
-    // MAME updates the flags before the prefetch
     u32 result = bcd<C, I, Byte>(data, 0);
 
     if (looping<I>()) {
+        
         if constexpr (M == Mode::AI) noPrefetch<C>(4);
         else if constexpr (M == Mode::PI) noPrefetch<C>(4);
         else if constexpr (M == Mode::PD) noPrefetch<C>(4);
         else noPrefetch<C>(2);
+    
     } else {
+        
         fetchIrc<C, POLL>();
     }
 
