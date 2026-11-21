@@ -4969,9 +4969,6 @@ Moira::readRteFrame68010(u16 &newsr, u32 &newpc)
         return true;
     }
 
-    (void)read<C, AddrSpace::DATA, Word>(reg.sp + 8); // Special status word
-    (void)read<C, AddrSpace::DATA, Long>(reg.sp + 10); // Fault address
-
     /* The first word of the internal information holds the version number of the processor that
      * wrote the frame. The 68010 raises a format error if it differs from its own version number.
      * Recorded on a real 68010 (vAmigaTS, StackFrame/addrerr37 and addrerr38): The version number
@@ -4986,20 +4983,7 @@ Moira::readRteFrame68010(u16 &newsr, u32 &newpc)
         return false;
     }
 
-    (void)read<C, AddrSpace::DATA, Word>(reg.sp + 28); // Internal information
-
-    /* Unused, reserved (14), data output buffer (16), unused, reserved (18),
-     * data input buffer (20), unused, reserved (22), instruction input buffer (24)
-     */
-    for (u32 offset : { 14, 16, 18, 20, 22, 24 }) {
-        (void)read<C, AddrSpace::DATA, Word>(reg.sp + offset);
-    }
-
-    // Internal information (note: the first three long word reads overlap)
-    for (u32 offset : { 34, 36, 38, 42, 46, 50, 54 }) {
-        (void)read<C, AddrSpace::DATA, Long>(reg.sp + offset);
-    }
-
+    // Like UAE, skip the rest of the frame without reading it
     reg.sp += 58;
     return true;
 }
@@ -5026,19 +5010,65 @@ Moira::readRteFrame68020(u16 &newsr, u32 &newpc)
             format = (u16)(read<C, AddrSpace::DATA, Word>(frameBase + 6) >> 12);
         }
 
-        // Determine the frame size (0 = unsupported format)
+        // Determine the frame size and check if the model supports the frame format
+        const bool is040 = cpuModel >= CPUModel::M68EC040;
+        bool supported = true;
         u32 size = 0;
+
         switch (format) {
 
-            case 0b0000: size = 8; break;   // Standard frame
-            case 0b0001: size = 8; break;   // Throwaway frame
-            case 0b0010: size = 12; break;  // Trap frame
-            case 0b0111: size = cpuModel >= CPUModel::M68EC040 ? 60 : 0; break; // Access error frame (68040)
-            case 0b1010: size = 32; break;  // Short bus fault frame
-            case 0b1011: size = 92; break;  // Long bus fault frame
+            case 0b0000: // Standard frame
+            case 0b0001: // Throwaway frame
+
+                size = 8;
+                break;
+
+            case 0b0010: // Trap frame
+
+                size = 12;
+                break;
+
+            case 0b0011: // Floating-point post-instruction frame (68040)
+
+                size = 12;
+                supported = is040;
+                break;
+
+            case 0b0100: // Unimplemented floating-point instruction frame (68040)
+
+                size = 16;
+                supported = is040;
+                break;
+
+            case 0b0111: // Access error frame (68040)
+
+                size = 60;
+                supported = is040;
+                break;
+
+            case 0b1001: // Coprocessor mid-instruction frame (68020, 68030)
+
+                size = 20;
+                supported = !is040;
+                break;
+
+            case 0b1010: // Short bus fault frame (68020, 68030)
+
+                size = 32;
+                supported = !is040;
+                break;
+
+            case 0b1011: // Long bus fault frame (68020, 68030)
+
+                size = 92;
+                supported = !is040;
+                break;
+
+            default:
+                supported = false;
         }
 
-        if (!size) {
+        if (!supported) {
 
             execException(M68kException::FORMAT_ERROR);
             CYCLES_68020(4)
