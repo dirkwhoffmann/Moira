@@ -2434,32 +2434,22 @@ Moira::execDbcc(u16 opcode)
 
                 // The 68020 has decremented the counter at this point
                 writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
-                if constexpr (compat != Compatibility::MAME) reg.pc = newpc;
+                reg.pc = newpc;
                 throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_FETCH>(newpc));
             }
 
-            // UAE decrements the counter later
-            if constexpr (compat != Compatibility::UAE) writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
-
             if (takeBranch) {
 
-                if constexpr (compat == Compatibility::UAE) {
-
-                    // UAE decrements the counter after the first fetch at the branch target
-                    fetchFirstAt<C>(newpc, reg.pc + 2);
-                    writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
-                    prefetch<C, POLL>();
-
-                } else {
-
-                    fullPrefetchAt<C, POLL>(newpc);
-                }
+                // Like UAE, decrement the counter after the first fetch at the branch target
+                fetchFirstAt<C>(newpc, reg.pc + 2);
+                writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+                prefetch<C, POLL>();
                 changeOfFlow<C>();
                 CYCLES_68020(6);
 
             } else {
 
-                if constexpr (compat == Compatibility::UAE) writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
+                writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
                 (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
                 CYCLES_68020(10);
                 fullPrefetchAt<C, POLL>(reg.pc + 2);
@@ -4217,7 +4207,6 @@ Moira::execMulWord(u16 opcode)
     readOp<C, M, Word, STD_AE_FRAME>(src, &ea, &data);
 
     u32 factor = readD<Word>(dst);
-    [[maybe_unused]] auto cycles = cyclesMul<C, I>(u16(data));
 
     if constexpr (C == Core::C68000) {
 
@@ -4235,13 +4224,13 @@ Moira::execMulWord(u16 opcode)
             setMoveFlags<S>(0);
             rethrow<C>(e);
         }
-        
-        SYNC(cycles);
+
+        SYNC((cyclesMul<C, I>(u16(data))));
 
     } else {
 
         result = I == Instr::MULS ? muls<C>(data, factor) : mulu<C>(data, factor);
-        SYNC(cycles);
+        SYNC((cyclesMul<C, I>(u16(data))));
         prefetch<C, POLL>();
     }
 
