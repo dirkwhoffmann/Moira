@@ -429,21 +429,20 @@ Moira::writeStatusEa(int n, u16 val)
 
     if (misaligned<C>(ea)) {
 
-        writeBuffer = READ<Word>(val);
+        writeBuffer = (u16)READ<Word>(val);
         updateAnPI<M, S>(n);
         setFC<M>();
         throw AddressError(makeFrame<F>(ea));
     }
 
-    // UAE (68020) advances the register before it writes
-    constexpr bool earlyUpdate = compat == Compatibility::UAE && C == Core::C68020;
-    if constexpr (earlyUpdate) updateAnPI<M, S>(n);
+    // Emulate (An)+ register modification (68020)
+    if constexpr (C == Core::C68020) updateAnPI<M, S>(n);
 
     // Write to effective address
     writeM<C, M, S, POLL>(ea, val);
 
-    // Emulate (An)+ register modification
-    if constexpr (!earlyUpdate) updateAnPI<M, S>(n);
+    // Emulate (An)+ register modification (68000, 68010)
+    if constexpr (C != Core::C68020) updateAnPI<M, S>(n);
 }
 
 template <Core C, Mode M, Flags F> void

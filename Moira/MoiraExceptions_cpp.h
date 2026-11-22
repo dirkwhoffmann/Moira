@@ -41,45 +41,46 @@ Moira::writeStackFrameAEBE(StackFrame &frame)
 template <Core C> void
 Moira::writeStackFrame0000(u16 sr, u32 pc, u16 nr)
 {
+    // The 68020 does not align the stack pointer
+    constexpr u32 mask = C == Core::C68020 ? ~0u : ~1u;
+
     switch (C) {
 
         case Core::C68000:
 
             U32_DEC(reg.sp, 6);
-            if constexpr (C == Core::C68000 && compat != Compatibility::UAE) {
+            if constexpr (compat != Compatibility::UAE) {
 
                 // MAME has not adjusted the stack pointer yet if the first write fails
-                try { write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc)); }
+                try { write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & mask, READ<Word>(pc)); }
                 catch (BusError &) { U32_INC(reg.sp, 6); throw; }
 
             } else {
 
-                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc));
+                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & mask, READ<Word>(pc));
             }
-            write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
-            write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), READ<Word, 1>(pc));
+            write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & mask, sr);
+            write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & mask, READ<Word, 1>(pc));
             break;
 
         case Core::C68010:
+
+            // The write order follows UAE (it only matters if a write fails)
+            U32_DEC(reg.sp, 8);
+            write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & mask, READ<Word>(pc));
+            write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & mask, sr);
+            write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & mask, READ<Word, 1>(pc));
+            write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & mask, 4 * nr);
+            break;
+
         case Core::C68020:
 
+            // The write order follows UAE (it only matters if a write fails)
             U32_DEC(reg.sp, 8);
-            if constexpr ((compat == Compatibility::UAE) && C == Core::C68010) {
-                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc));
-                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
-                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), READ<Word, 1>(pc));
-                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & (C == Core::C68020 ? ~0u : ~1u), 4 * nr);
-            } else if constexpr ((compat == Compatibility::UAE) && C == Core::C68020) {
-                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & (C == Core::C68020 ? ~0u : ~1u), 4 * nr);
-                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), READ<Word, 1>(pc));
-                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc));
-                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
-            } else {
-                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & (C == Core::C68020 ? ~0u : ~1u), 4 * nr);
-                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & (C == Core::C68020 ? ~0u : ~1u), READ<Word>(pc));
-                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & (C == Core::C68020 ? ~0u : ~1u), sr);
-                write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & (C == Core::C68020 ? ~0u : ~1u), READ<Word, 1>(pc));
-            }
+            write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 6) & mask, 4 * nr);
+            write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 2) & mask, READ<Word, 1>(pc));
+            write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 4) & mask, READ<Word>(pc));
+            write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 0) & mask, sr);
             break;
     }
 }
