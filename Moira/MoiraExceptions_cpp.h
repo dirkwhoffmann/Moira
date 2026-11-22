@@ -441,113 +441,109 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
     if (misaligned<C>(reg.sp)) throw DoubleFault();
 
     // Write stack frame
-    // MAME completes the faulting bus cycle and delays the frame instead of the vector fetch
-    if constexpr (C == Core::C68000) sync(4);
-
     if constexpr (C == Core::C68000) {
+
+        // MAME completes the faulting bus cycle and delays the frame instead of the vector fetch
+        sync(4);
         writeStackFrameAEBE<C>(frame);
-    } else if constexpr (C == Core::C68020) {
+
+    } else if constexpr (C == Core::C68010) {
+
+        writeStackFrame1000<C>(frame, status, frame.pc, reg.pc0, 2, frame.addr);
+        SYNC(2);
+
+    } else if (cpuModel >= CPUModel::M68EC040) {
+
+        // The write-back buffer 3 holds the data of a faulting write
+        bool write = !(frame.ssw & SSW040::RW);
+        writeStackFrame0111<C>(status, reg.pc0, 2, frame.ssw, frame.addr, write ? frame.data : 0);
+
+    } else if (cpuModel >= CPUModel::M68EC030) {
 
         /* The 68030 reports the cause of the fault in the special status word
          * and the logical fault address. A fault in a write cycle is reported
          * with the short format ($A), all others with the long format ($B).
          */
-        if (cpuModel >= CPUModel::M68EC040) {
 
-            // The write-back buffer 3 holds the data of a faulting write
-            bool write = !(frame.ssw & SSW040::RW);
-            writeStackFrame0111<C>(status, reg.pc0, 2, frame.ssw, frame.addr, write ? frame.data : 0);
+        // The pipe stages hold the two instruction words behind the opcode
+        bool supervisor = status & 0x2000;
+        auto peek = [&](u32 addr) -> u16 {
 
-        } else if (cpuModel >= CPUModel::M68EC030) {
-
-            // The pipe stages hold the two instruction words behind the opcode
-            bool supervisor = status & 0x2000;
-            auto peek = [&](u32 addr) -> u16 {
-
-                addr &= addrMask<C>();
-                if (mmu.isEnabled()) {
-                    auto phys = mmu.translate(addr, supervisor ? FC::SUPERVISOR_PROG : FC::USER_PROG, false);
-                    if (!phys) return 0;
-                    addr = *phys & addrMask<C>();
-                }
-                return read16Dasm(addr);
-            };
-            u16 stageC = peek(reg.pc0 + 2);
-            u16 stageB = peek(reg.pc0 + 4);
-
-            // The data output buffer holds the value of a faulting write
-            bool write = !(frame.ssw & SSW030::RW) && (frame.ssw & SSW030::DF);
-            u32 dataOut = write ? frame.data : 0;
-
-            if (write) {
-                writeStackFrame1010<C>(status, reg.pc0, 2, frame.ssw, frame.addr, dataOut, stageC, stageB);
-            } else {
-                writeStackFrame1011<C>(status, frame.pc, reg.pc0, 2, frame.ssw, frame.addr, dataOut, stageC, stageB);
+            addr &= addrMask<C>();
+            if (mmu.isEnabled()) {
+                auto phys = mmu.translate(addr, supervisor ? FC::SUPERVISOR_PROG : FC::USER_PROG, false);
+                if (!phys) return 0;
+                addr = *phys & addrMask<C>();
             }
-        } else if (compat == Compatibility::UAE) {
+            return read16Dasm(addr);
+        };
+        u16 stageC = peek(reg.pc0 + 2);
+        u16 stageB = peek(reg.pc0 + 4);
 
-            // UAE stacks the start of the instruction. Indexed operands move it behind the instruction words.
-            // The extension word of the destination of a MOVE is consumed after the source has been read
-            u16 op = read16Dasm(reg.pc0 & addrMask<C>());
-            bool ix = hasIndexedOperand(op);
-            if (ix && (op & 0xC000) == 0 && (op & 0x3000)) {
-                auto indexed = [](u16 m, u16 r) { return m == 6 || (m == 7 && r == 3); };
-                if (!indexed((op >> 3) & 7, op & 7) && !frame.write) ix = false;
-            }
+        // The data output buffer holds the value of a faulting write
+        bool write = !(frame.ssw & SSW030::RW) && (frame.ssw & SSW030::DF);
+        u32 dataOut = write ? frame.data : 0;
 
-            // Determine the address behind the instruction words that have been consumed when the fault occurred.
-            u32 end = reg.pc0 + 2;
-
-            if constexpr (MOIRA_ENABLE_DASM) {
-
-                // The length of the instruction is determined by the disassembler handlers of the CPU model.
-                // Without MOIRA_ENABLE_DASM, the length is unknown and we fall back to the first extension word.
-                end = reg.pc0 + u32(instrLength(reg.pc0));
-
-                // The destination extension words of a MOVE are consumed after the source has been accessed
-                if ((op & 0xC000) == 0 && (op & 0x3000)) {
-                    u16 dm = (op >> 6) & 7, dr = (op >> 9) & 7;
-                    u32 destBytes = (dm == 5 || dm == 6) ? 2 : (dm == 7 && dr == 0) ? 2 : (dm == 7 && dr == 1) ? 4 : 0;
-                    if (!frame.write) end -= destBytes;
-                    else if (dm == 7 && dr == 1) end -= 2;
-                }
-            }
-
-            u32 pc = ix ? end : reg.pc0;
-
-            // If the source of a MOVE is indexed, UAE stacks the address of the extension words of the destination
-            if (ix && (op & 0xC000) == 0 && (op & 0x3000) && frame.write) {
-                auto indexed = [](u16 m, u16 r) { return m == 6 || (m == 7 && r == 3); };
-                u16 dm = (op >> 6) & 7, dr = (op >> 9) & 7;
-                if (indexed((op >> 3) & 7, op & 7)) {
-                    if (dm == 5 || (dm == 7 && dr == 0)) pc -= 2;
-                    else if (dm == 7 && dr == 1) pc -= 2;
-                }
-            }
-            writeStackFrame1011UAE<C>(status, 2, pc, ssw, frame.addr, end, frame.write);
-
-            // Remember how to restart the instruction
-            restart.valid = saved != nullptr;
-            if (restart.valid) {
-
-                restart.pre = *saved;
-                restart.fault = faultReg;
-                auto sr = reg.sr; reg.sr = saved->sr; restart.preSr = getSR(); reg.sr = sr;
-                restart.pc = reg.pc0;
-                restart.frameSp = reg.sp;
-                restart.frameSr = status;
-                restart.framePC = pc;
-                restart.entrySsp = entrySsp;
-                restart.entryUsp = entryUsp;
-            }
-
+        if (write) {
+            writeStackFrame1010<C>(status, reg.pc0, 2, frame.ssw, frame.addr, dataOut, stageC, stageB);
         } else {
-            writeStackFrame1011<C>(status, frame.pc, reg.pc0, 2);
+            writeStackFrame1011<C>(status, frame.pc, reg.pc0, 2, frame.ssw, frame.addr, dataOut, stageC, stageB);
         }
+
     } else {
-        writeStackFrame1000<C>(frame, status, frame.pc, reg.pc0, 2, frame.addr);
+
+        // The 68020 follows UAE
+        u16 op = read16Dasm(reg.pc0 & addrMask<C>());
+        auto indexed = [](u16 m, u16 r) { return m == 6 || (m == 7 && r == 3); };
+        bool move = (op & 0xC000) == 0 && (op & 0x3000);
+        u16 srcMode = (op >> 3) & 7, srcReg = op & 7;
+        u16 dstMode = (op >> 6) & 7, dstReg = (op >> 9) & 7;
+
+        // UAE stacks the start of the instruction. Indexed operands move it behind the instruction words.
+        // The extension word of the destination of a MOVE is consumed after the source has been read.
+        bool ix = hasIndexedOperand(op);
+        if (ix && move && !indexed(srcMode, srcReg) && !frame.write) ix = false;
+
+        // Determine the address behind the instruction words that have been consumed when the fault occurred.
+        u32 end = reg.pc0 + 2;
+
+        if constexpr (MOIRA_ENABLE_DASM) {
+
+            // The length of the instruction is determined by the disassembler handlers of the CPU model.
+            // Without MOIRA_ENABLE_DASM, the length is unknown and we fall back to the first extension word.
+            end = reg.pc0 + u32(instrLength(reg.pc0));
+
+            // The destination extension words of a MOVE are consumed after the source has been accessed
+            if (move) {
+                u32 destBytes = (dstMode == 5 || dstMode == 6) ? 2 : (dstMode == 7 && dstReg == 0) ? 2 : (dstMode == 7 && dstReg == 1) ? 4 : 0;
+                if (!frame.write) end -= destBytes;
+                else if (dstMode == 7 && dstReg == 1) end -= 2;
+            }
+        }
+
+        u32 pc = ix ? end : reg.pc0;
+
+        // If the source of a MOVE is indexed, UAE stacks the address of the extension words of the destination
+        if (ix && move && frame.write && indexed(srcMode, srcReg)) {
+            if (dstMode == 5 || (dstMode == 7 && dstReg <= 1)) pc -= 2;
+        }
+        writeStackFrame1011UAE<C>(status, 2, pc, ssw, frame.addr, end, frame.write);
+
+        // Remember how to restart the instruction
+        restart.valid = saved != nullptr;
+        if (restart.valid) {
+
+            restart.pre = *saved;
+            restart.fault = faultReg;
+            auto sr = reg.sr; reg.sr = saved->sr; restart.preSr = getSR(); reg.sr = sr;
+            restart.pc = reg.pc0;
+            restart.frameSp = reg.sp;
+            restart.frameSr = status;
+            restart.framePC = pc;
+            restart.entrySsp = entrySsp;
+            restart.entryUsp = entryUsp;
+        }
     }
-    if constexpr (C != Core::C68000) SYNC(2);
 
     // Jump to exception vector
     jumpToVector<C>(2);
