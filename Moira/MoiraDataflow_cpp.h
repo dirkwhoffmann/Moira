@@ -308,33 +308,34 @@ Moira::readOp(int n, u32 *ea, u32 *result)
                     *result = readM<C, M, S, F>(*ea);
                 }
 
-            } else if constexpr ((F & DEC_LATE) && C == Core::C68000 && M == Mode::PD && S == Long) {
+            } else if constexpr (C == Core::C68000) {
 
-                // MAME decrements the register between the two word reads, UAE after both. Hence, a failing
-                // first access (the lower word) leaves the register untouched, and so does any failure in UAE.
-                try { *result = readM<C, M, S, F>(*ea); }
-                catch (const AddressError &) { undoAnPD<M, S>(n); throw; }
-                catch (const BusError &e) { if (compat == Compatibility::UAE || !e.upperWord) undoAnPD<M, S>(n); throw; }
+                if constexpr ((F & DEC_LATE) && M == Mode::PD && S == Long) {
 
-            } else if constexpr (compat == Compatibility::MAME && C == Core::C68000 && M == Mode::PI && S == Word) {
+                    // MAME decrements the register between the two word reads, UAE after both. Hence, a failing
+                    // first access (the lower word) leaves the register untouched, and so does any failure in UAE.
+                    try { *result = readM<C, M, S, F>(*ea); }
+                    catch (const AddressError &) { undoAnPD<M, S>(n); throw; }
+                    catch (const BusError &e) { if (compat == Compatibility::UAE || !e.upperWord) undoAnPD<M, S>(n); throw; }
 
-                // MAME advances the register before the bus or address error is reported
-                try { *result = readM<C, M, S, F>(*ea); } catch (const AddressError &) { updateAnPI<M, S>(n); throw; } catch (const BusError &) { updateAnPI<M, S>(n); throw; }
+                } else if constexpr (M == Mode::PI && S == Word) {
 
-            } else if constexpr (compat != Compatibility::MAME && C == Core::C68000 && M == Mode::PI && S == Word) {
+                    // The register is advanced before a word read. A bus error leaves it advanced (MAME, UAE).
+                    // An address error leaves it untouched on a real 68000 (recorded on an A500), but not in MAME.
+                    try { *result = readM<C, M, S, F>(*ea); }
+                    catch (const AddressError &) { if constexpr (compat == Compatibility::MAME) updateAnPI<M, S>(n); throw; }
+                    catch (const BusError &) { updateAnPI<M, S>(n); throw; }
 
-                // The register is advanced before a word read, but only a bus error leaves it advanced (MAME, UAE).
-                // A real 68000 leaves the register untouched on an address error (recorded on an A500).
-                try { *result = readM<C, M, S, F>(*ea); } catch (const BusError &) { updateAnPI<M, S>(n); throw; }
+                } else if constexpr (M == Mode::PI && compat != Compatibility::UAE) {
 
-            } else if constexpr (C == Core::C68000 && compat != Compatibility::UAE && M == Mode::PI) {
+                    // MAME advances the register before a bus error is reported. A long operand
+                    // is advanced between the two word accesses.
+                    try { *result = readM<C, M, S, F>(*ea); }
+                    catch (const BusError &e) { if (S != Long || !e.upperWord) updateAnPI<M, S>(n); throw; }
 
-                // MAME advances the register before a bus error is reported. A long operand
-                // is advanced between the two word accesses.
-                try { *result = readM<C, M, S, F>(*ea); }
-                catch (const BusError &e) {
-                    if (S != Long || !e.upperWord) updateAnPI<M, S>(n);
-                    throw;
+                } else {
+
+                    *result = readM<C, M, S, F>(*ea);
                 }
 
             } else {

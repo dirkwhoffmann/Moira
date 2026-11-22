@@ -1175,9 +1175,10 @@ Moira::setUndefinedDIVU(u32 dividend, u16 divisor)
             reg.sr.n = 1;
             reg.sr.z = 0;
 
-            // UAE mimics an unverified 68010 behavior: N is cleared if both operands are negative.
-            // Real hardware sets N in this case (vAmigaTS: addrerr30).
             if constexpr (compat == Compatibility::UAE) {
+
+                // UAE mimics an unverified 68010 behavior: N is cleared if both operands
+                // are negative. Real hardware sets N in this case (vAmigaTS: addrerr30).
                 if (C == Core::C68010 && iDividend < 0 && i16(divisor) < 0) reg.sr.n = 0;
             }
             break;
