@@ -3533,14 +3533,14 @@ Moira::execMovemEaRg(u16 opcode)
 
         try { mask = (u16)readI<C, Word>(); } catch (BusError &e) {
 
-            // MAME does not decrement the stacked PC if the mask refill fails
+            // The stacked PC is not decremented if the mask refill fails
             if constexpr (M == Mode::AI || M == Mode::PI || M == Mode::PD) e.stackFrame.pc -= 2;
             throw;
         }
 
         try { ea = computeEA<C, M, S>(src); } catch (BusError &e) {
 
-            // MAME stacks the address of the consumed word here
+            // The stacked PC is the address of the consumed word
             if constexpr (M == Mode::AW) e.stackFrame.pc -= 2;
             throw;
         }
@@ -3571,7 +3571,7 @@ Moira::execMovemEaRg(u16 opcode)
 
             if constexpr (S == Long) {
 
-                // MAME loads the upper word first
+                // The upper word is loaded first
                 u32 hi = readM<C, M, Word, AE_INC_PC>(ea);
                 writeR(i, WRITE<Word, 1>(reg.r[i], hi));
                 writeR(i, hi << 16 | readM<C, M, Word, AE_INC_PC>(ea + 2));
@@ -3583,10 +3583,9 @@ Moira::execMovemEaRg(u16 opcode)
             ea += S;
         }
 
-        // MAME reads one word too many (from program space if the operand is addressed relative to the PC).
-        // MAME and UAE update the address register after this read.
-        constexpr bool pcRel = M == Mode::DIPC || M == Mode::IXPC;
-        (void)read<C, pcRel ? AddrSpace::PROG : AddrSpace::DATA, Word, AE_INC_PC>(ea);
+        // The 68000 reads one word too many
+        (void)read<C, isPrgMode(M) ? AddrSpace::PROG : AddrSpace::DATA, Word, AE_INC_PC>(ea);
+        
         if constexpr (M == Mode::PI) writeA(src, ea);
 
     } else {
