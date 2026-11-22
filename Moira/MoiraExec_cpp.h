@@ -3076,27 +3076,28 @@ Moira::execMove4(u16 opcode)
         throw AddressError(makeFrame<AE_WRITE|AE_DATA>(ea));
     }
 
-    if constexpr (S == Long && C == Core::C68000) {
+    if constexpr (S == Long && C == Core::C68000 && compat == Compatibility::UAE) {
 
-        // The low word is written first
+        // The low word is written first. UAE decrements the register after both writes.
         try {
 
             writeM<C, Mode::PD, Word>(ea + 2, READ<Word>(data));
-
-            // MAME decrements the register before the second write (UAE after both writes)
-            if constexpr (compat != Compatibility::UAE) updateAn<Mode::PD, S>(dst);
             writeM<C, Mode::PD, Word, COMMIT_IRD>(ea, READ<Word, 1>(data));
 
         } catch (BusError &e) {
 
-            if constexpr (compat == Compatibility::UAE) {
-
-                // UAE stacks the unmasked address
-                e.stackFrame.addr = (e.stackFrame.addr & 0xFFFFFF) | (ea & 0xFF000000);
-            }
+            // UAE stacks the unmasked address
+            e.stackFrame.addr = (e.stackFrame.addr & 0xFFFFFF) | (ea & 0xFF000000);
             throw;
         }
-        if constexpr (compat == Compatibility::UAE) updateAn<Mode::PD, S>(dst);
+        updateAn<Mode::PD, S>(dst);
+
+    } else if constexpr (S == Long && C == Core::C68000) {
+
+        // The low word is written first. MAME decrements the register before the second write.
+        writeM<C, Mode::PD, Word>(ea + 2, READ<Word>(data));
+        updateAn<Mode::PD, S>(dst);
+        writeM<C, Mode::PD, Word, COMMIT_IRD>(ea, READ<Word, 1>(data));
 
     } else {
 
