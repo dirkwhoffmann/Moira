@@ -37,6 +37,7 @@ FPU::isSupported(Instr I) const
         case Instr::FLOGNP1:   case Instr::FMOD:      case Instr::FREM:      case Instr::FSCAL:
         case Instr::FSIN:      case Instr::FSINCOS:   case Instr::FSINH:     case Instr::FTAN:
         case Instr::FTANH:     case Instr::FTENTOX:   case Instr::FTWOTOX:   case Instr::FATAN:
+        case Instr::FINT:      case Instr::FINTRZ:    case Instr::FMOVECR:
             return model != FPUModel::M68040;
 
         // Instructions that are only available on the 68040
@@ -127,8 +128,11 @@ FPU::test(unsigned condition)
     bool z = fpsr & FPSR::CC_Z;
     bool nan = fpsr & FPSR::CC_NAN;
 
-    // The signaling variants raise BSUN if the operands were unordered
-    if ((condition & 0x10) && nan) setExcStatusBit(FPEXP::BSUN);
+    // The signaling variants raise BSUN if the operands were unordered. Only BSUN
+    // and the accrued IOP bit are set. No other bit is affected (MC68881/MC68882UM,
+    // FBcc, FDBcc, FScc, FTRAPcc). setExcStatusBit() would also turn stale exception
+    // bits into accrued bits.
+    if ((condition & 0x10) && nan) fpsr |= FPEXP::BSUN | (1 << 7);
 
     switch (condition & 0xF) {
 

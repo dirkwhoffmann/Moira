@@ -349,6 +349,92 @@ TEST_CASE("Traps")
     CHECK(cpu3.reg.pc0 == 0x9000);
 }
 
+TEST_CASE("68040 unimplemented instructions")
+{
+    /* The 68040 stacks a frame of format 2 with the address of the next instruction
+     * and the effective address (MC68040UM, 9.6.1). FPIAR holds the address of the
+     * instruction.
+     */
+    auto check = [](TestCPU &cpu, u32 next, u32 ea) {
+
+        u32 sp = cpu.reg.sp;
+        CHECK(cpu.reg.pc0 == 0x9000);
+        CHECK(sp == 0x8000 - 12);
+        CHECK(cpu.read32(sp + 2) == next);
+        CHECK(cpu.read16(sp + 6) == 0x202C);
+        CHECK(cpu.read32(sp + 8) == ea);
+        CHECK(cpu.fpu.getFPIAR() == TestCPU::codeStart);
+    };
+
+    // FMOD FP1,FP0 (register operand)
+    TestCPU cpu(CPModel::NONE, CPUModel::M68040);
+    cpu.write32(11 * 4, 0x9000);
+    cpu.fpu.fpr[0] = F(11);
+    cpu.run({ 0xF200, 0x0021 | (1 << 10) });
+    check(cpu, TestCPU::codeStart + 4, 0);
+    CHECK(same(cpu.fpu.fpr[0], F(11)));
+
+    // FSIN.X (A0)+,FP0 (the operand is read and A0 is advanced)
+    TestCPU cpu2(CPModel::NONE, CPUModel::M68040);
+    cpu2.write32(11 * 4, 0x9000);
+    cpu2.reg.a[0] = 0x2100;
+    cpu2.run({ 0xF218, 0x4800 | 0x0E });
+    check(cpu2, TestCPU::codeStart + 4, 0x2100);
+    CHECK(cpu2.reg.a[0] == 0x210C);
+
+    // FSIN.S d16(A0),FP0 (the PC points behind the displacement)
+    TestCPU cpu3(CPModel::NONE, CPUModel::M68040);
+    cpu3.write32(11 * 4, 0x9000);
+    cpu3.reg.a[0] = 0x2100;
+    cpu3.run({ 0xF228, 0x4400 | 0x0E, 0x0010 });
+    check(cpu3, TestCPU::codeStart + 6, 0x2110);
+
+    // FINT, FINTRZ and FMOVECR are left to the FPSP
+    for (u16 ext : { u16(0x0001), u16(0x0003), u16(0x5C00) }) {
+
+        TestCPU cpu4(CPModel::NONE, CPUModel::M68040);
+        cpu4.write32(11 * 4, 0x9000);
+        cpu4.fpu.fpr[0] = F(2.5);
+        cpu4.run({ 0xF200, ext });
+        check(cpu4, TestCPU::codeStart + 4, 0);
+        CHECK(same(cpu4.fpu.fpr[0], F(2.5)));
+    }
+
+    // The 68882 implements them
+    TestCPU cpu5;
+    cpu5.fpu.fpr[0] = F(2.5);
+    cpu5.run({ 0xF200, 0x0003 });                                           // FINTRZ FP0,FP0
+    CHECK(same(cpu5.fpu.fpr[0], F(2)));
+}
+
+TEST_CASE("BSUN only sets IOP")
+{
+    /* FBcc, FDBcc, FScc and FTRAPcc set BSUN and the accrued IOP bit if the NAN
+     * condition code is set. No other bit is affected (MC68881/MC68882UM, FBcc).
+     */
+    TestCPU cpu;
+    cpu.fpu.fpsr = 0x01000200;                                              // NAN, INEX2
+    cpu.run({ 0xF292, 0x0002 });                                            // FBGT.W *+4
+    CHECK(cpu.fpu.fpsr == 0x01008280);
+}
+
+TEST_CASE("68040 address error frame")
+{
+    // The 68040 reports an odd branch target with a frame of format 2 (MC68040UM, 8.4.3)
+    TestCPU cpu(CPModel::NONE, CPUModel::M68040);
+    cpu.write32(3 * 4, 0x9000);
+    cpu.reg.sp = 0x7000;
+    cpu.write32(0x7000, 0x2001);
+    cpu.run({ 0x4E75 });                                                    // RTS
+
+    u32 sp = cpu.reg.sp;
+    CHECK(cpu.reg.pc0 == 0x9000);
+    CHECK(sp == 0x7004 - 12);
+    CHECK(cpu.read32(sp + 2) == TestCPU::codeStart);
+    CHECK(cpu.read16(sp + 6) == 0x200C);
+    CHECK(cpu.read32(sp + 8) == 0x2000);
+}
+
 TEST_CASE("Transcendental")
 {
     auto near = [](const MFloat80 &a, double expected) {

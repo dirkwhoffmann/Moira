@@ -30,8 +30,12 @@ template <Core C> void writeStackFrame1011UAE(u16 sr, u16 nr, u32 pc, u16 ssw, u
 template <Core C> void writeStackFrame1011(u16 sr, u32 pc, u32 ia, u16 nr, u16 ssw = 0, u32 addr = 0, u32 dataOut = 0, u16 stageC = 0, u16 stageB = 0);
 
 // Emulates an exception other than address errors, bus errors, and interrupts
+// (nr is the trap number for TRAP and the effective address for FPU_UNIMPLEMENTED)
 void execException(M68kException exc, int nr = 0);
 template <Core C> void execException(M68kException exc, int nr = 0);
+
+// Raises the 68040's unimplemented floating-point instruction exception
+template <Core C, Mode M> void execFUnimplemented(int n, FpuFormat fmt, bool rm);
 
 // Emulates an address or bus error
 template <Core C> void execAddressError(StackFrame frame, int delay = 0);

@@ -386,6 +386,13 @@ Moira::execAddressError(StackFrame frame, int delay)
         writeStackFrame1000<C>(frame, status, frame.pc, reg.pc0, 3, frame.addr);
         SYNC(2);
 
+    } else if (cpuModel >= CPUModel::M68EC040) {
+
+        // The 68040 has no bus fault frames. It reports an address error with a frame of
+        // format 2 (MC68040UM, 8.4.3). Like UAE, the frame holds the address of the
+        // instruction and the fault address with bit 0 cleared.
+        writeStackFrame0010<C>(status, pc0Now, frame.addr & ~1, 3);
+
     } else {
 
         // The 68020 reports an odd instruction fetch with a frame of format B. According
@@ -719,7 +726,10 @@ Moira::execException(M68kException exc, int nr)
     u16 status = getSR();
 
     // Determine the exception vector number
-    u16 vector = (exc == M68kException::TRAP) ? u16(exc) + u16(nr) : (exc == M68kException::BKPT) ? 4 : u16(exc);
+    u16 vector =
+    exc == M68kException::TRAP ? u16(exc) + u16(nr) :
+    exc == M68kException::BKPT ? 4 :
+    exc == M68kException::FPU_UNIMPLEMENTED ? 11 : u16(exc);
 
     // Inform the delegate
     willExecute(exc, vector);
@@ -792,6 +802,19 @@ Moira::execException(M68kException exc, int nr)
 
             // Write stack frame
             writeStackFrame0000<C>(status, U32_SUB(reg.pc, 2), vector);
+
+            // Branch to exception handler
+            jumpToVector<C, AE_SET_CB3>(vector);
+            break;
+
+        case M68kException::FPU_UNIMPLEMENTED:
+
+            // Clear any pending trace event
+            flags &= ~State::TRACE_EXC;
+
+            // The 68040 stacks the address of the next instruction and the effective
+            // address of the operand, which is passed in nr (MC68040UM, 9.6.1)
+            writeStackFrame0010<C>(status, reg.pc, u32(nr), vector);
 
             // Branch to exception handler
             jumpToVector<C, AE_SET_CB3>(vector);

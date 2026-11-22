@@ -355,7 +355,8 @@ enum class M68kException
     IRQ_SPURIOUS      = 24,   ///< Spurious interrupt
     TRAP              = 32,   ///< TRAP instruction exception
     
-    BKPT                        ///< Breakpoint (maps to a native exception when triggered)
+    BKPT,                       ///< Breakpoint (maps to a native exception when triggered)
+    FPU_UNIMPLEMENTED           ///< Unimplemented floating-point instruction (68040, vector 11)
 };
 
 /// Answers to an interrupt acknowledge cycle

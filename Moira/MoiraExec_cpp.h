@@ -5018,6 +5018,10 @@ Moira::readRteFrame68010(u16 &newsr, u32 &newpc)
         return true;
     }
 
+    // The 68010 reads the rest of the frame (vAmigaTS: Timing2/RTE/RTE1). UAE skips it.
+    (void)read<C, AddrSpace::DATA, Word>(reg.sp + 8); // Special status word
+    (void)read<C, AddrSpace::DATA, Long>(reg.sp + 10); // Fault address
+
     /* The first word of the internal information holds the version number of the processor that
      * wrote the frame. The 68010 raises a format error if it differs from its own version number.
      * Recorded on a real 68010 (vAmigaTS, StackFrame/addrerr37 and addrerr38): The version number
@@ -5032,7 +5036,20 @@ Moira::readRteFrame68010(u16 &newsr, u32 &newpc)
         return false;
     }
 
-    // Like UAE, skip the rest of the frame without reading it
+    (void)read<C, AddrSpace::DATA, Word>(reg.sp + 28); // Internal information
+
+    /* Unused, reserved (14), data output buffer (16), unused, reserved (18),
+     * data input buffer (20), unused, reserved (22), instruction input buffer (24)
+     */
+    for (u32 offset : { 14, 16, 18, 20, 22, 24 }) {
+        (void)read<C, AddrSpace::DATA, Word>(reg.sp + offset);
+    }
+
+    // Internal information (note: the first three long word reads overlap)
+    for (u32 offset : { 34, 36, 38, 42, 46, 50, 54 }) {
+        (void)read<C, AddrSpace::DATA, Long>(reg.sp + offset);
+    }
+
     reg.sp += 58;
     return true;
 }

@@ -846,6 +846,14 @@ Moira::execFMovecr(u16 opcode)
     // Catch illegal extension words
     if (!isValidExtFPU(I, M, opcode, ext, cpuModel)) { execLineF<C, I, M, S>(opcode); return; }
 
+    // The 68040 leaves FMOVECR to the FPSP
+    if (hasInternalFPU()) {
+
+        execFUnimplemented<C, Mode::DN>(0, FpuFormat::EXTENDED, false);
+        FINALIZE
+        return;
+    }
+
     fpu.resetState = false;
     readI<C, Word>();
     fpu.clearExcStatusByte();
@@ -1007,6 +1015,35 @@ Moira::execFMovem(u16 opcode)
     FINALIZE
 }
 
+template <Core C, Mode M> void
+Moira::execFUnimplemented(int n, FpuFormat fmt, bool rm)
+{
+    /* The 68040 raises an unimplemented floating-point instruction exception
+     * (MC68040UM, 9.6.1). It reads the extension word and the source operand,
+     * sets FPIAR, and writes a frame of format 2 with the address of the next
+     * instruction and the effective address (0 for register operands, as in UAE).
+     */
+    u32 ea = 0;
+
+    readI<C, Word>();
+    fpu.setFPIAR(getPC0());
+
+    if (rm) {
+
+        if constexpr (isMemMode(M)) {
+
+            ea = computeFpuEA<C, M>(n, fmt);
+            (void)readFpuOpEa<C, M>(n, ea, fmt);
+
+        } else {
+
+            (void)readFpuOp<C, M>(n, fmt);
+        }
+    }
+
+    execException<C>(M68kException::FPU_UNIMPLEMENTED, int(ea));
+}
+
 template <Core C, Instr I, Mode M, Size S> void
 Moira::execFGeneric(u16 opcode)
 {
@@ -1018,7 +1055,8 @@ Moira::execFGeneric(u16 opcode)
     auto reg = _____________xxx (opcode);
 
     auto precision = fpu.getPrecision(I);
-    auto illegal = !fpu.isSupported(I);
+    auto supported = fpu.isSupported(I);
+    auto illegal = !supported && !hasInternalFPU();
 
     // Bit 14 of the extension byte indicated whether source is an <ea>
     auto rm  = (ext >> 14) & 1;
@@ -1033,6 +1071,14 @@ Moira::execFGeneric(u16 opcode)
     if (illegal) {
         
         execLineF<C, I, M, S>(opcode);
+        return;
+    }
+
+    if (!supported) {
+
+        // The 68040 reads the operand and leaves the instruction to the FPSP
+        execFUnimplemented<C, M>(reg, rm ? FpuFormat(src) : FpuFormat::EXTENDED, rm);
+        FINALIZE
         return;
     }
 
