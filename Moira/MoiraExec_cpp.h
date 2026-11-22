@@ -3527,19 +3527,28 @@ Moira::execMovemEaRg(u16 opcode)
     int src = _____________xxx(opcode);
 
     u16 mask;
-    try { mask = (u16)readI<C, Word>(); } catch (BusError &e) {
-
-        // MAME does not decrement the stacked PC if the mask refill fails
-        if constexpr (C == Core::C68000 && (M == Mode::AI || M == Mode::PI || M == Mode::PD)) e.stackFrame.pc -= 2;
-        throw;
-    }
-
     u32 ea;
-    try { ea = computeEA<C, M, S>(src); } catch (BusError &e) {
 
-        // MAME stacks the address of the consumed word here
-        if constexpr (C == Core::C68000 && M == Mode::AW) e.stackFrame.pc -= 2;
-        throw;
+    if constexpr (C == Core::C68000) {
+
+        try { mask = (u16)readI<C, Word>(); } catch (BusError &e) {
+
+            // MAME does not decrement the stacked PC if the mask refill fails
+            if constexpr (M == Mode::AI || M == Mode::PI || M == Mode::PD) e.stackFrame.pc -= 2;
+            throw;
+        }
+
+        try { ea = computeEA<C, M, S>(src); } catch (BusError &e) {
+
+            // MAME stacks the address of the consumed word here
+            if constexpr (M == Mode::AW) e.stackFrame.pc -= 2;
+            throw;
+        }
+
+    } else {
+
+        mask = (u16)readI<C, Word>();
+        ea = computeEA<C, M, S>(src);
     }
 
     // Check for address error
@@ -3553,35 +3562,48 @@ Moira::execMovemEaRg(u16 opcode)
     // MAME does not read ahead, it reads one word too many at the end. UAE neither reads ahead nor too far.
     if constexpr (S == Long && compat != Compatibility::MAME && compat != Compatibility::UAE) (void)read<C, AddrSpace::DATA, Word>(ea);
 
-    for (int i = 0; i <= 15; i++) {
+    if constexpr (C == Core::C68000) {
 
-        // Only proceed if the mask bit is set
-        if ((mask & (1 << i)) == 0) continue;
+        for (int i = 0; i <= 15; i++) {
 
-        if constexpr (C == Core::C68000 && S == Long) {
+            // Only proceed if the mask bit is set
+            if ((mask & (1 << i)) == 0) continue;
 
-            // MAME loads the upper word first
-            u32 hi = readM<C, M, Word, AE_INC_PC>(ea);
-            writeR(i, WRITE<Word, 1>(reg.r[i], hi));
-            writeR(i, hi << 16 | readM<C, M, Word, AE_INC_PC>(ea + 2));
+            if constexpr (S == Long) {
 
-        } else {
+                // MAME loads the upper word first
+                u32 hi = readM<C, M, Word, AE_INC_PC>(ea);
+                writeR(i, WRITE<Word, 1>(reg.r[i], hi));
+                writeR(i, hi << 16 | readM<C, M, Word, AE_INC_PC>(ea + 2));
+
+            } else {
+
+                writeR(i, SEXT<S>(readM<C, M, S, AE_INC_PC>(ea)));
+            }
+            ea += S;
+        }
+
+        // MAME reads one word too many (from program space if the operand is addressed relative to the PC).
+        // MAME and UAE update the address register after this read.
+        constexpr bool pcRel = M == Mode::DIPC || M == Mode::IXPC;
+        (void)read<C, pcRel ? AddrSpace::PROG : AddrSpace::DATA, Word, AE_INC_PC>(ea);
+        if constexpr (M == Mode::PI) writeA(src, ea);
+
+    } else {
+
+        for (int i = 0; i <= 15; i++) {
+
+            // Only proceed if the mask bit is set
+            if ((mask & (1 << i)) == 0) continue;
 
             writeR(i, SEXT<S>(readM<C, M, S, AE_INC_PC>(ea)));
+            ea += S;
         }
-        ea += S;
+
+        // The word operation reads one word too many after the address register has been updated
+        if constexpr (M == Mode::PI) writeA(src, ea);
+        if constexpr (S == Word) (void)read<C, AddrSpace::DATA, Word, AE_INC_PC>(ea);
     }
-
-    // MAME and UAE update the address register of a 68000 after the final (extra) read
-    if constexpr (M == Mode::PI && C != Core::C68000) writeA(src, ea);
-
-    if constexpr (S == Word || C == Core::C68000) {
-
-        // MAME reads from program space if the operand is addressed relative to the PC
-        constexpr bool pcRel = C == Core::C68000 && (M == Mode::DIPC || M == Mode::IXPC);
-        (void)read<C, pcRel ? AddrSpace::PROG : AddrSpace::DATA, Word, AE_INC_PC>(ea);
-    }
-    if constexpr (M == Mode::PI && C == Core::C68000) writeA(src, ea);
 
     prefetch<C, POLL>();
 
