@@ -1075,7 +1075,7 @@ Moira::execBitDxDy(u16 opcode)
     try { prefetchLate<C, POLL>(); } catch (BusError &e) {
         
         // MAME updates the flags after the prefetch
-        if constexpr (!(C == Core::C68000 && compat != Compatibility::UAE)) bit<C, I>(data, b);
+        if constexpr (C != Core::C68000 || compat == Compatibility::UAE) bit<C, I>(data, b);
         rethrow<C>(e);
     }
     data = bit<C, I>(data, b);
@@ -3643,8 +3643,8 @@ Moira::execMovemRgEa(u16 opcode)
 
     if constexpr (M == Mode::PD) {
 
-        // Reverse the access order of long words on the 68000 (and in UAE mode)
-        constexpr Flags wflags = (C == Core::C68000 || compat == Compatibility::UAE ? REVERSE : 0) | AE_INC_PC;
+        // The 68000 and the 68010 (like UAE) write the low word of a long word first
+        constexpr Flags wflags = (C != Core::C68020 ? REVERSE : 0) | AE_INC_PC;
 
         u32 ea = readA(dst);
 
@@ -5027,19 +5027,11 @@ Moira::readRteFrame68020(u16 &newsr, u32 &newpc)
     while (1) {
 
         u32 frameBase = reg.sp;
-        u16 format;
 
-        // UAE reads the status register, the program counter and the format word, in this order
-        if constexpr (compat == Compatibility::UAE) {
-
-            newsr = (u16)read<C, AddrSpace::DATA, Word>(frameBase);
-            newpc = read<C, AddrSpace::DATA, Long>(frameBase + 2);
-            format = (u16)(read<C, AddrSpace::DATA, Word>(frameBase + 6) >> 12);
-
-        } else {
-
-            format = (u16)(read<C, AddrSpace::DATA, Word>(frameBase + 6) >> 12);
-        }
+        // Like UAE, read the status register, the program counter and the format word, in this order
+        newsr = (u16)read<C, AddrSpace::DATA, Word>(frameBase);
+        newpc = read<C, AddrSpace::DATA, Long>(frameBase + 2);
+        u16 format = (u16)(read<C, AddrSpace::DATA, Word>(frameBase + 6) >> 12);
 
         if (!supportsFrameFormat(cpuModel, format)) {
 
@@ -5062,13 +5054,6 @@ Moira::readRteFrame68020(u16 &newsr, u32 &newpc)
             case 0b1001: size = 20; break;  // Coprocessor mid-instruction frame
             case 0b1010: size = 32; break;  // Short bus fault frame
             case 0b1011: size = 92; break;  // Long bus fault frame
-        }
-
-        // All frames start with the status register and the program counter
-        if constexpr (compat != Compatibility::UAE) {
-
-            newsr = (u16)pop<C, Word>();
-            newpc = pop<C, Long>();
         }
 
         // Like UAE, skip the rest of the frame without reading it
@@ -5378,7 +5363,7 @@ Moira::execTasEa(u16 opcode)
             // Only a failing read cycle is special (not a failing extension word fetch)
             if ((e.stackFrame.fc & 3) != 2) {
 
-                if constexpr (C == Core::C68000 && compat != Compatibility::UAE) {
+                if constexpr (compat != Compatibility::UAE) {
 
                     // MAME completes a failed read like a failed write
                     e.stackFrame.code &= ~0x10;

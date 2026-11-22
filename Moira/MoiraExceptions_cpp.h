@@ -568,9 +568,9 @@ Moira::processException(const std::exception &exc, const Registers *saved)
         if (auto be = dynamic_cast<const BusError *>(&exc); be) {
 
             // Abort the current instruction. It will be restarted by RTE.
-            // The 68020 in UAE mode keeps the registers as they are and rolls
+            // Like UAE, the 68020 keeps the registers as they are and rolls
             // them back when the handler returns (see Restart).
-            bool deferred = compat == Compatibility::UAE && cpuModel <= CPUModel::M68020;
+            bool deferred = cpuModel <= CPUModel::M68020;
             if (saved && !deferred) restoreRegisters(*saved);
 
             // UAE decrements an address register after the access has succeeded
