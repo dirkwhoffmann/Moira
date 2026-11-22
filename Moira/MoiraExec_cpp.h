@@ -1073,6 +1073,7 @@ Moira::execBitDxDy(u16 opcode)
     u32 data = readD(dst);
 
     try { prefetchLate<C, POLL>(); } catch (BusError &e) {
+        
         // MAME updates the flags after the prefetch
         if constexpr (!(C == Core::C68000 && compat != Compatibility::UAE)) bit<C, I>(data, b);
         rethrow<C>(e);

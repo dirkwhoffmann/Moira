@@ -10,7 +10,6 @@ Moira::writeStackFrameAEBE(StackFrame &frame)
 {
     if constexpr (C == Core::C68000) {
 
-        // MAME and UAE write the words in a different order
         U32_DEC(reg.sp, 14);
         write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 12), READ<Word>(frame.pc));
         write<C, AddrSpace::DATA, Word>(U32_ADD(reg.sp, 8), frame.sr);
@@ -122,24 +121,24 @@ template <Core C> void
 Moira::writeStackFrame0111(u16 sr, u32 pc, u16 nr, u16 ssw, u32 addr, u32 dataOut)
 {
     // Write-back 1 (unused)
-    for (int i = 0; i < 4; i++) push<C, Long>(0); // PD3 ... PD0
-    push<C, Long>(0);                             // WB1A
+    for (int i = 0; i < 4; i++) push<C, Long>(0);   // PD3 ... PD0
+    push<C, Long>(0);                               // WB1A
 
     // Write-back 2 (unused)
-    push<C, Long>(0);                             // WB2D
-    push<C, Long>(0);                             // WB2A
+    push<C, Long>(0);                               // WB2D
+    push<C, Long>(0);                               // WB2A
 
     // Write-back 3 (the faulting write)
     bool write = !(ssw & SSW040::RW);
-    push<C, Long>(dataOut);                       // WB3D
-    push<C, Long>(write ? addr : 0);              // WB3A
+    push<C, Long>(dataOut);                         // WB3D
+    push<C, Long>(write ? addr : 0);                // WB3A
 
     // Fault address
     push<C, Long>(addr);
 
     // Write-back status words
-    push<C, Word>(0);                             // WB1S
-    push<C, Word>(0);                             // WB2S
+    push<C, Word>(0);                               // WB1S
+    push<C, Word>(0);                               // WB2S
     push<C, Word>(write ? 0x80 | (ssw & 0x7F) : 0); // WB3S
 
     // Special status word
@@ -353,8 +352,7 @@ template <Core C> void
 Moira::execAddressError(StackFrame frame, int delay)
 {
     u16 status = getSR();
-    u32 pcNow = reg.pc, pc0Now = reg.pc0;
-    u16 ssw = 0x60 | (getFC() & 7);
+    u32 pc0Now = reg.pc0;
 
     // Inform the delegate
     willExecute(M68kException::ADDRESS_ERROR, 3);
@@ -377,18 +375,23 @@ Moira::execAddressError(StackFrame frame, int delay)
     if (misaligned<C>(reg.sp)) throw DoubleFault();
 
     // Write stack frame
-    // MAME delays the stack frame instead of the vector fetch
-    if constexpr (C == Core::C68000) SYNC(2);
-
     if constexpr (C == Core::C68000) {
+
+        // MAME delays the stack frame instead of the vector fetch
+        SYNC(2);
         writeStackFrameAEBE<C>(frame);
-    } else if constexpr (C == Core::C68020) {
+
+    } else if constexpr (C == Core::C68010) {
+
+        writeStackFrame1000<C>(frame, status, frame.pc, reg.pc0, 3, frame.addr);
+        SYNC(2);
+
+    } else {
 
         // The 68020 reports an odd instruction fetch with a frame of format B. According
         // to recordings made on a real A1200, the stacked PC is always the address of the
         // instruction (JMP, JSR, BSR, DBcc, RTS, RTR).
         u16 op = read16Dasm(pc0Now & addrMask<C>());
-        u32 pc = pc0Now;
 
         // Stage C and B are not emulated faithfully (UAE shows the next instruction word)
         bool ix = (op & 0xFFC0) == 0x4EC0 && hasIndexedOperand(op);
@@ -398,15 +401,11 @@ Moira::execAddressError(StackFrame frame, int delay)
         // stage B (except for JMP d16(An) and BSR), supervisor program space, and the data
         // direction / size bits of the stack read performed by RTS and RTR
         bool jmpD16 = (op & 0xFFF8) == 0x4EE8;
-        ssw = 0x2005 | ((jmpD16 || (op >> 8) == 0x61) ? 0 : 0x1000);
+        u16 ssw = 0x2005 | ((jmpD16 || (op >> 8) == 0x61) ? 0 : 0x1000);
         if (op == 0x4E75) ssw |= 0x40;
         if (op == 0x4E77) ssw |= 0x60;
-        writeStackFrame1011<C>(status, 0, pc, 3, ssw, frame.addr, 0, stageC, stageB);
-
-    } else {
-        writeStackFrame1000<C>(frame, status, frame.pc, reg.pc0, 3, frame.addr);
+        writeStackFrame1011<C>(status, 0, pc0Now, 3, ssw, frame.addr, 0, stageC, stageB);
     }
-    if constexpr (C != Core::C68000) SYNC(2);
 
     // Jump to exception vector
     jumpToVector<C>(3);
