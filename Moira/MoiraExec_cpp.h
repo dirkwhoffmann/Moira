@@ -1753,12 +1753,10 @@ Moira::execChk(u16 opcode)
     bool above = SEXT<S>(dy) > SEXT<S>(data);
     bool below = SEXT<S>(dy) < 0;
 
-    if constexpr (compat == Compatibility::MAME) {
-
-        // MAME additionally takes the branch if the difference of both operands has a
-        // negative sign, which includes the case where an arithmetic overflow occurs
-        above |= S == Word && (i16)(data - dy) < 0;
-    }
+    // The 68000 additionally takes the branch if the difference of both operands has a negative sign,
+    // which includes the case where an arithmetic overflow occurs (vAmigaTS: Timing2/CHK/CHK1). UAE doesn't.
+    constexpr bool overflowCheck = C == Core::C68000 ? compat != Compatibility::UAE : compat == Compatibility::MAME;
+    if constexpr (overflowCheck) above |= S == Word && (i16)(data - dy) < 0;
 
     if (above || below) {
 
@@ -2286,9 +2284,22 @@ Moira::execDbcc(u16 opcode)
 
             if (misalignedPC<C>(newpc)) {
 
-                // MAME stores the address of the prefetched word as program counter
-                if constexpr (compat != Compatibility::MAME) reg.pc = newpc;
-                throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_FETCH>(newpc));
+                if constexpr (compat == Compatibility::UAE) {
+
+                    // UAE stacks the target address plus 2
+                    reg.pc = newpc;
+                    throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_FETCH>(newpc));
+
+                } else if constexpr (compat == Compatibility::MAME) {
+
+                    // MAME stacks the address behind the extension word
+                    throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_FETCH>(newpc));
+
+                } else {
+
+                    // A real 68000 stacks the address of the extension word (vAmigaTS: addrerr40, addrerr41)
+                    throw earlyAddressError<C>(makeFrame<AE_FETCH>(newpc));
+                }
             }
 
             if (takeBranch) {
@@ -2377,8 +2388,10 @@ Moira::execDbcc(u16 opcode)
 
                 if (misalignedPC<C>(newpc)) {
 
-                    reg.pc = newpc;
-                    throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_FETCH>(newpc));
+                    // A real 68010 stacks the address of the extension word, and the instruction
+                    // input buffer of the frame holds $FFFF (vAmigaTS: addrerr40, addrerr41)
+                    queue.irc = 0xFFFF;
+                    throw earlyAddressError<C>(makeFrame<AE_FETCH>(newpc));
                 }
 
                 // Decrement loop counter
@@ -2688,7 +2701,8 @@ Moira::execJsr(u16 opcode)
             writeBuffer = (u16)READ<Word, 1>(reg.pc);
             throw earlyAddressError<C>(makeFrame<AE_DATA>(reg.sp));
         }
-        checkEvenPC<C, AE_FETCH>(ea);
+        // A real 68010 stacks the address of the extension word in (d16,An) mode (vAmigaTS: addrerr42)
+        checkEvenPC<C, isDspMode(M) ? AE_DEC_PC|AE_FETCH : AE_FETCH>(ea);
 
         // Save return address on stack
         push<C, Long, POLL>(reg.pc);
@@ -3554,7 +3568,11 @@ Moira::execMovemEaRg(u16 opcode)
     // Check for address error
     if (misaligned<C, S>(ea)) {
 
-        constexpr Flags flags = (M == Mode::IX || M == Mode::IXPC) && compat != Compatibility::MAME ? AE_DEC_PC : AE_INC_PC;
+        // In indexed modes, the 68000 decrements the stacked PC (MAME does not). The 68010 does not
+        // decrement it either, and the data input buffer holds the next prefetch (vAmigaTS: addrerr43).
+        constexpr bool dec = C == Core::C68000 && compat != Compatibility::MAME;
+        constexpr Flags flags = (M == Mode::IX || M == Mode::IXPC) && dec ? AE_DEC_PC : AE_INC_PC;
+        if constexpr (C == Core::C68010) readBuffer = queue.irc;
         setFC<M>();
         throw earlyAddressError<C>(makeFrame<flags>(ea));
     }
