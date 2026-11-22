@@ -173,8 +173,8 @@ MMU030::testTT(u32 addr, u8 fc, bool rw) const
 bool
 MMU030::testTT(u32 ttx, u32 addr, u8 fc, bool rw)
 {
-    auto addrBase = ________xxxxxxxx (ttx >> 24);
-    auto addrMask = ________xxxxxxxx (ttx >> 16);
+    u32 addrBase  = ________xxxxxxxx (ttx >> 24);
+    u32 addrMask  = ________xxxxxxxx (ttx >> 16);
     auto e        = x_______________ (ttx);
     auto rwb      = ______x_________ (ttx);
     auto rwm      = _______x________ (ttx);

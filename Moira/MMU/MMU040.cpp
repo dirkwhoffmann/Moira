@@ -83,8 +83,8 @@ MMU040::testTT(u32 addr, u8 fc, bool write) const
 MMU040::TTResult
 MMU040::testTT(u32 ttx, u32 addr, bool super, bool write)
 {
-    auto addrBase = ________xxxxxxxx (ttx >> 24);
-    auto addrMask = ________xxxxxxxx (ttx >> 16);
+    u32 addrBase  = ________xxxxxxxx (ttx >> 24);
+    u32 addrMask  = ________xxxxxxxx (ttx >> 16);
     auto e        = x_______________ (ttx);
     auto sIgnore  = ttx & (1 << 14);
     auto sSuper   = ttx & (1 << 13);
@@ -362,7 +362,7 @@ MMU040::walk(u32 addr, bool super, bool write, u32 &status)
     u32 descriptor = moira.read32(descrAddr);
     if (!(descriptor & 2)) return 0;
 
-    wp |= descriptor & MMUSR040_WRITE_PROTECTED;
+    wp |= (descriptor & MMUSR040_WRITE_PROTECTED) != 0;
     descriptor = update(descrAddr, descriptor, 0x8);
 
     // Pointer table
@@ -370,7 +370,7 @@ MMU040::walk(u32 addr, bool super, bool write, u32 &status)
     descriptor = moira.read32(descrAddr);
     if (!(descriptor & 2)) return 0;
 
-    wp |= descriptor & MMUSR040_WRITE_PROTECTED;
+    wp |= (descriptor & MMUSR040_WRITE_PROTECTED) != 0;
     descriptor = update(descrAddr, descriptor, 0x8);
 
     // Page table
@@ -388,7 +388,7 @@ MMU040::walk(u32 addr, bool super, bool write, u32 &status)
     // Page fault (also caused by a second indirection)
     if (!(descriptor & 1)) return 0;
 
-    wp |= descriptor & MMUSR040_WRITE_PROTECTED;
+    wp |= (descriptor & MMUSR040_WRITE_PROTECTED) != 0;
 
     // Update the U bit and the M bit (the latter only if the page is writable)
     bool protect = wp || ((descriptor & MMUSR040_SUPERVISOR_ONLY) && !super);

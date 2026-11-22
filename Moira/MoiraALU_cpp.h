@@ -95,7 +95,7 @@ template <Size S, int n = 0> u32 WRITE(u32 d1, u32 d2) {
     static_assert(S * (n + 1) <= Long, "Portion exceeds 32 bits");
 
     constexpr int shift = 8 * S * n;
-    constexpr u32 mask = (S == Long) ? 0xFFFFFFFF : (((1u << (8 * S)) - 1) << shift);
+    constexpr u32 mask = u32((1ull << (8 * S)) - 1) << shift;
 
     return (d1 & ~mask) | ((d2 << shift) & mask);
 }

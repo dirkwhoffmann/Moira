@@ -654,6 +654,20 @@ typedef int32_t uae_atomic;
 #undef STAT_STATVFS
 #endif /* _WIN32 */
 
+/* MSVC lacks the POSIX headers that MinGW provides (<strings.h> is shimmed in
+ * UAEGlue/msvc-shim). time.h is used instead of sys/time.h.
+ */
+#ifdef _MSC_VER
+#undef HAVE_UNISTD_H
+#undef HAVE_UTIME_H
+#undef HAVE_DIRENT_H
+#undef HAVE_GETOPT_H
+#undef HAVE_SYS_IOCTL_H
+#undef HAVE_SYS_PARAM_H
+#undef HAVE_SYS_TIME_H
+#undef TIME_WITH_SYS_TIME
+#endif /* _MSC_VER */
+
 #ifdef _WIN32
 #define FSDB_DIR_SEPARATOR '\\'
 #define FSDB_DIR_SEPARATOR_S "\\"

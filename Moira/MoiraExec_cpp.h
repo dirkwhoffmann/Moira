@@ -1872,7 +1872,7 @@ Moira::execClr(u16 opcode)
             if constexpr (S == Long && isRegMode(M)) SYNC(2);
             writeOp<C, M, S, REVERSE | CLRC>(dst, ea, 0);
 
-        } catch (BusError &e) {
+        } catch (BusError &) {
 
             if constexpr (isRegMode(M)) writeD<S == Long ? Word : S>(dst, 0);
             throw;
@@ -2592,7 +2592,7 @@ Moira::execJmp(u16 opcode)
     u32 ea  = computeEA<C, M, Long, SKIP_LAST_RD>(src);
 
     // Indexed modes take 4 extra cycles, the other modes with an extension word 2 (except absolute long)
-    constexpr int delay =
+    [[maybe_unused]] constexpr int delay =
     (M == Mode::IX || M == Mode::IXPC) ? 4 :
     (M == Mode::DI || M == Mode::AW || M == Mode::DIPC) ? 2 : 0;
     SYNC(delay);
@@ -2630,7 +2630,7 @@ Moira::execJsr(u16 opcode)
     u32 ea  = computeEA<C, M, Long, SKIP_LAST_RD>(src);
 
     // Indexed modes take 4 extra cycles, the other modes with an extension word 2 (except absolute long)
-    constexpr int delay =
+    [[maybe_unused]] constexpr int delay =
     (M == Mode::IX || M == Mode::IXPC) ? 4 :
     (M == Mode::DI || M == Mode::AW || M == Mode::DIPC) ? 2 : 0;
     
@@ -3859,7 +3859,7 @@ Moira::execMoves(u16 opcode)
     u16 arg = (u16)readI<C, Word>();
 
     // Both directions spend the same number of cycles before the access
-    constexpr int delay =
+    [[maybe_unused]] constexpr int delay =
     M == Mode::PI ? 8 :
     M == Mode::AI || M == Mode::PD || M == Mode::IX ? 6 :
     M == Mode::DI || M == Mode::AW || M == Mode::AL ? 4 : 0;
