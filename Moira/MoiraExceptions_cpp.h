@@ -479,7 +479,7 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
             if (mmu.isEnabled()) {
                 auto phys = mmu.translate(addr, supervisor ? FC::SUPERVISOR_PROG : FC::USER_PROG, false);
                 if (!phys) return 0;
-                addr = *phys & addrMask<C>();
+                addr = phys.value() & addrMask<C>();
             }
             return read16Dasm(addr);
         };

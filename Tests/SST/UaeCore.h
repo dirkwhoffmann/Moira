@@ -10,6 +10,8 @@
 #include "RefCore.h"
 #include "UAECpu.h"
 
+#include <cstring>
+
 namespace sstrunner {
 
 // The 68000 core of UAE (WinUAE, cycle exact). The core is a singleton.

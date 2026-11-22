@@ -495,8 +495,13 @@ DOCTEST_GCC_SUPPRESS_WARNING_POP
 // which case we don't want to forward declare stuff from std - for reference:
 // https://github.com/doctest/doctest/issues/126
 // https://github.com/doctest/doctest/issues/356
+// (C++17 and later: <version> defines _LIBCPP_VERSION as well, and <ciso646> is deprecated)
 #if DOCTEST_CLANG
+#if DOCTEST_CPLUSPLUS >= 201703L && __has_include(<version>)
+#include <version>
+#else
 #include <ciso646>
+#endif
 #endif // clang
 
 #ifdef _LIBCPP_VERSION

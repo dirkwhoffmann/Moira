@@ -166,7 +166,7 @@ Moira::translate(u32 addr, u8 fc, bool *ci)
         // Only proceed if the MMU is present and enabled
         if (!mmu.isEnabled()) return addr;
 
-        auto physical = mmu.translate(addr, fc, write, ci);
+        std::optional<u32> physical = mmu.translate(addr, fc, write, ci);
     
         if (!physical) {
 
@@ -194,7 +194,7 @@ Moira::translate(u32 addr, u8 fc, bool *ci)
             throw BusError(frame, false);
         }
 
-        return *physical;
+        return physical.value();
     }
 }
 
