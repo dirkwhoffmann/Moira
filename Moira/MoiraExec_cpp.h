@@ -827,10 +827,11 @@ Moira::execAndRgEa(u16 opcode)
     result = logic<C, I, S>(readD<S>(src), data);
 
     try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); } catch (BusError &e) {
+        
         if constexpr (S == Long) logic<C, I, Word>(readD<Word>(src), data);
         rethrow<C>(e);
     }
-
+    
     writeOp<C, M, S, REVERSE | COMMIT_IRD>(dst, ea, result);
 
     //           00  10  20        00  10  20        00  10  20
@@ -857,12 +858,12 @@ Moira::execAndiRg(u16 opcode)
     u32 result;
     if constexpr (S == Long) {
 
-        // MAME shows the flags of the low word operation if the prefetch fails
         try { prefetchLate<C, POLL>(); } catch (BusError &e) {
             rethrowD<C, Word>(e, dst, logic<C, I, Word>(src, readD<Word>(dst)));
         }
         result = logic<C, I, S>(src, readD<S>(dst));
-        SYNC_68000(4); SYNC_68010(2);
+        SYNC_68000(4);
+        SYNC_68010(2);
 
     } else {
 
@@ -895,7 +896,6 @@ Moira::execAndiEa(u16 opcode)
 
     result = logic<C, I, S>(src, data);
 
-    // MAME shows the flags of the low word operation if the prefetch of a long operation fails
     try { fetchIrc<C, POLL>(); } catch (BusError &e) {
         if constexpr (S == Long) logic<C, I, Word>(src, data);
         rethrow<C>(e);
@@ -921,7 +921,6 @@ Moira::execAndiccr(u16 opcode)
 {
     AVAILABILITY(Core::C68000)
 
-    // Trace on change of flow: T0 is sampled before the status register changes
     changeOfFlow<C>();
 
     if constexpr (C == Core::C68000) {
@@ -929,7 +928,6 @@ Moira::execAndiccr(u16 opcode)
         u32 src = readI<C, S>();
         u8  dst = getCCR();
         setCCR(u8(logic<C, I, S>(src, dst)));
-
         SYNC(8);
         (void)read<C, AddrSpace::PROG, Word>(reg.pc);
 
@@ -957,7 +955,6 @@ Moira::execAndisr(u16 opcode)
 
     SUPERVISOR_MODE_ONLY
 
-    // Trace on change of flow: T0 is sampled before the status register changes
     changeOfFlow<C>();
 
     u32 src = readI<C, S>();
@@ -1000,8 +997,8 @@ Moira::execBra(u16 opcode)
         disp = disp << 16 | queue.irc;
     }
 
+    // Compute new PC
     u32 newpc = U32_ADD(oldpc, SEXT<S>(disp));
-
     checkEvenPC<C, AE_FETCH>(newpc);
 
     fullPrefetchAt<C, POLL>(newpc);
@@ -1034,8 +1031,8 @@ Moira::execBcc(u16 opcode)
             disp = disp << 16 | queue.irc;
         }
 
+        // Compute new PC
         u32 newpc = U32_ADD(oldpc, SEXT<S>(disp));
-
         checkEvenPC<C, AE_FETCH>(newpc);
 
         // Take branch
@@ -1102,24 +1099,36 @@ Moira::execBitDxEa(u16 opcode)
     u8 b = readD(src) & 0b111;
 
     u32 ea, data;
-    readOp<C, M, Byte, C == Core::C68000 ? STD_AE_FRAME : 0>(dst, &ea, &data);
 
-    if constexpr (I == Instr::BCLR && C == Core::C68010) SYNC(2);
+    if constexpr (C == Core::C68000) {
 
-    try { fetchIrc<C, POLL, !(I == Instr::BTST && M != Mode::IM)>(); } catch (BusError &e) {
-        
-        // MAME updates the flags after the prefetch
-        if constexpr (C != Core::C68000 || compat == Compatibility::UAE) {
+        readOp<C, M, Byte, STD_AE_FRAME>(dst, &ea, &data);
+
+        try { fetchIrc<C, POLL, !(I == Instr::BTST && M != Mode::IM)>(); } catch (BusError &e) {
+
+            // MAME updates the flags after the prefetch, except for BTST with a memory operand. UAE updates them before.
+            constexpr bool before = compat == Compatibility::UAE || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M));
+            if constexpr (before) bit<C, I>(data, b);
+            rethrow<C>(e);
+        }
+        data = bit<C, I>(data, b);
+
+        // MAME and UAE idle after the prefetch
+        if constexpr (I == Instr::BTST && M == Mode::IM) SYNC(2);
+
+    } else {
+
+        readOp<C, M, Byte>(dst, &ea, &data);
+        if constexpr (I == Instr::BCLR && C == Core::C68010) SYNC(2);
+
+        // The flags are updated before the prefetch
+        try { fetchIrc<C, POLL, !(I == Instr::BTST && M != Mode::IM)>(); } catch (BusError &e) {
             bit<C, I>(data, b);
-        } else if constexpr (I == Instr::BTST && !isRegMode(M) && !isImmMode(M)) {
-            bit<C, I>(data, b);
-        }        
-        rethrow<C>(e);
+            rethrow<C>(e);
+        }
+        data = bit<C, I>(data, b);
     }
-    data = bit<C, I>(data, b);
 
-    // MAME and UAE idle after the prefetch
-    if constexpr (C == Core::C68000 && I == Instr::BTST && M == Mode::IM) SYNC(2);
     if constexpr (I != Instr::BTST) writeM<C, M, Byte, COMMIT_IRD>(ea, data);
     else if constexpr (M == Mode::IM) commitIrd<C>();
 
@@ -1183,11 +1192,16 @@ Moira::execBitImEa(u16 opcode)
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
     try { fetchIrc<C, POLL, (I != Instr::BTST)>(); } catch (BusError &e) {
-        
-        // MAME updates the flags after the prefetch
-        if constexpr (C != Core::C68000 || compat == Compatibility::UAE) {
-            bit<C, I>(data, src);
-        } else if constexpr (I == Instr::BTST && !isRegMode(M) && !isImmMode(M)) {
+
+        if constexpr (C == Core::C68000) {
+
+            // MAME updates the flags after the prefetch, except for BTST with a memory operand. UAE updates them before.
+            constexpr bool before = compat == Compatibility::UAE || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M));
+            if constexpr (before) bit<C, I>(data, src);
+
+        } else {
+
+            // The flags are updated before the prefetch
             bit<C, I>(data, src);
         }
         rethrow<C>(e);
