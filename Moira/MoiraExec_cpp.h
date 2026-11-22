@@ -1177,6 +1177,7 @@ Moira::execBitImEa(u16 opcode)
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
 
     try { fetchIrc<C, POLL, (I != Instr::BTST)>(); } catch (BusError &e) {
+        
         // MAME updates the flags after the prefetch
         if constexpr (!(C == Core::C68000 && compat != Compatibility::UAE) || (I == Instr::BTST && !isRegMode(M) && !isImmMode(M))) bit<C, I>(data, src);
         rethrow<C>(e);
@@ -1671,8 +1672,11 @@ Moira::execCas2(u16 opcode)
 
     // Set flags (the second comparison is only performed if the first one matches)
     cmp<C, S>(compare1, data1);
-    if (reg.sr.z) cmp<C, S>(compare2, data2);
-
+    
+    if (reg.sr.z) {
+        
+        cmp<C, S>(compare2, data2);
+    }
     if (reg.sr.z) {
 
         writeM<C, M, S>(ea1, reg.d[du1]);
@@ -1685,10 +1689,9 @@ Moira::execCas2(u16 opcode)
 
     writeD<S>(dc1, data1);
     writeD<S>(dc2, data2);
-
     prefetch<C, POLL>();
 
-    CYCLES_68020 (12)
+    CYCLES_68020(12)
 
     FINALIZE
 }
@@ -2057,13 +2060,10 @@ Moira::execCmpiEa(u16 opcode)
 
     u32 src = readIFrame<C, S>();
     int dst = _____________xxx(opcode);
-
     u32 ea, data;
+    
     readOp<C, M, S, STD_AE_FRAME>(dst, &ea, &data);
-
-    // MAME updates the flags before the prefetch
     cmp<C, S>(src, data);
-
     prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -2157,7 +2157,6 @@ Moira::execCpBcc(u16 opcode)
 
     // First cycle of the coprocessor protocol
     notifyCPCycle(opcode, CIR::CONDITION);
-
     execLineF<C, I, M, S>(opcode);
 
     FINALIZE
@@ -2170,7 +2169,6 @@ Moira::execCpDbcc(u16 opcode)
 
     // First cycle of the coprocessor protocol
     notifyCPCycle(opcode, CIR::CONDITION);
-
     execLineF<C, I, M, S>(opcode);
 
     FINALIZE
@@ -2183,7 +2181,6 @@ Moira::execCpGen(u16 opcode)
 
     // First cycle of the coprocessor protocol
     notifyCPCycle(opcode, CIR::COMMAND);
-
     execLineF<C, I, M, S>(opcode);
 
     FINALIZE
@@ -2197,7 +2194,6 @@ Moira::execCpRestore(u16 opcode)
 
     // First cycle of the coprocessor protocol
     notifyCPCycle(opcode, CIR::RESTORE);
-
     execLineF<C, I, M, S>(opcode);
 
     FINALIZE
@@ -2207,7 +2203,6 @@ template <Core C, Instr I, Mode M, Size S> void
 Moira::execCpRestoreInvalid(u16 opcode)
 {
     AVAILABILITY(Core::C68020)
-
     execLineF<C, I, M, S>(opcode);
 
     FINALIZE
@@ -2221,7 +2216,6 @@ Moira::execCpSave(u16 opcode)
 
     // First cycle of the coprocessor protocol
     notifyCPCycle(opcode, CIR::SAVE);
-
     execLineF<C, I, M, S>(opcode);
 
     FINALIZE
@@ -2234,7 +2228,6 @@ Moira::execCpScc(u16 opcode)
 
     // First cycle of the coprocessor protocol
     notifyCPCycle(opcode, CIR::CONDITION);
-
     execLineF<C, I, M, S>(opcode);
 
     FINALIZE
@@ -2247,7 +2240,6 @@ Moira::execCpTrapcc(u16 opcode)
 
     // First cycle of the coprocessor protocol
     notifyCPCycle(opcode, CIR::CONDITION);
-
     execLineF<C, I, M, S>(opcode);
 
     FINALIZE
@@ -2471,7 +2463,6 @@ Moira::execExgDxDy(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     std::swap(reg.d[src], reg.d[dst]);
-
     prefetchLate<C, POLL>();
     SYNC(2);
 
@@ -2491,7 +2482,6 @@ Moira::execExgAxDy(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     std::swap(reg.a[src], reg.d[dst]);
-
     prefetchLate<C, POLL>();
     SYNC(2);
 
@@ -2511,7 +2501,6 @@ Moira::execExgAxAy(u16 opcode)
     int dst = ____xxx_________(opcode);
 
     std::swap(reg.a[src], reg.a[dst]);
-
     prefetchLate<C, POLL>();
     SYNC(2);
 
@@ -2534,7 +2523,6 @@ Moira::execExt(u16 opcode)
 
     writeD<S>(n, dn);
     setMoveFlags<S>(dn);
-
     prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -2556,7 +2544,6 @@ Moira::execExtb(u16 opcode)
 
     writeD(n, dn);
     setMoveFlags<S>(dn);
-
     prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -2577,7 +2564,9 @@ Moira::execJmp(u16 opcode)
     u32 ea  = computeEA<C, M, Long, SKIP_LAST_RD>(src);
 
     // Indexed modes take 4 extra cycles, the other modes with an extension word 2 (except absolute long)
-    constexpr int delay = (M == Mode::IX || M == Mode::IXPC) ? 4 : (M == Mode::DI || M == Mode::AW || M == Mode::DIPC) ? 2 : 0;
+    constexpr int delay =
+    (M == Mode::IX || M == Mode::IXPC) ? 4 :
+    (M == Mode::DI || M == Mode::AW || M == Mode::DIPC) ? 2 : 0;
     SYNC(delay);
 
     // Check for address error
@@ -2613,7 +2602,10 @@ Moira::execJsr(u16 opcode)
     u32 ea  = computeEA<C, M, Long, SKIP_LAST_RD>(src);
 
     // Indexed modes take 4 extra cycles, the other modes with an extension word 2 (except absolute long)
-    constexpr int delay = (M == Mode::IX || M == Mode::IXPC) ? 4 : (M == Mode::DI || M == Mode::AW || M == Mode::DIPC) ? 2 : 0;
+    constexpr int delay =
+    (M == Mode::IX || M == Mode::IXPC) ? 4 :
+    (M == Mode::DI || M == Mode::AW || M == Mode::DIPC) ? 2 : 0;
+    
     SYNC(delay);
 
     if constexpr (C == Core::C68000) {
@@ -2678,7 +2670,7 @@ Moira::execJsr(u16 opcode)
             // Only the stack pointer is misaligned
             prefetch<C>();
             reg.sp -= 4;
-            writeBuffer = READ<Word, 1>(reg.pc);
+            writeBuffer = (u16)READ<Word, 1>(reg.pc);
             throw earlyAddressError<C>(makeFrame<AE_DATA>(reg.sp));
         }
         checkEvenPC<C, AE_FETCH>(ea);
@@ -2732,7 +2724,7 @@ Moira::execLea(u16 opcode)
 
     if constexpr (C == Core::C68000 && M == Mode::AL) {
 
-        // MAME loads the high word into the register first, then the complete address
+        // Load the high word into the register first, then the complete address
         reg.a[dst] = WRITE<Word, 1>(reg.a[dst], queue.irc);
         readExt<C>();
         reg.a[dst] = WRITE<Word, 0>(reg.a[dst], queue.irc);
@@ -2740,7 +2732,7 @@ Moira::execLea(u16 opcode)
 
     } else if constexpr (C == Core::C68000 && (M == Mode::AW || M == Mode::DI || M == Mode::DIPC)) {
 
-        // MAME loads the address register before the extension word is refilled
+        // Load the address register before the extension word is refilled
         i16 d = (i16)queue.irc;
         reg.a[dst] = M == Mode::AW ? (u32)d : U32_ADD(M == Mode::DI ? reg.a[src] : reg.pc, d);
         readExt<C>();
@@ -2749,8 +2741,8 @@ Moira::execLea(u16 opcode)
 
         reg.a[dst] = computeEA<C, M, S>(src);
     }
+    
     if (isIdxMode(M)) SYNC(2);
-
     prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -2780,16 +2772,15 @@ Moira::execLink(u16 opcode)
 
     i32 disp;
     try { disp = SEXT<S>(readI<C, S>()); } catch (BusError &e) {
-
-        // MAME stacks the address behind the faulting fetch
-        if constexpr (C == Core::C68000) e.stackFrame.pc += 2;
+        
+        if constexpr (C == Core::C68000) { e.stackFrame.pc += 2; }
         throw;
     }
 
     // Check for address error
     if (misaligned<C>(sp)) {
 
-        writeBuffer = READ<Word, 1>(readA(ax));
+        writeBuffer = (u16)READ<Word, 1>(readA(ax));
         writeA(ax, sp);
         throw earlyAddressError<C>(makeFrame<AE_DATA|AE_WRITE|AE_INC_PC>(sp));
     }
@@ -2802,7 +2793,6 @@ Moira::execLink(u16 opcode)
     // Write to stack
     try { push<C, Long, AE_INC_PC>(readA(ax) - (decremented ? 4 : 0)); } catch (BusError &) {
 
-        // MAME loads the address register first and leaves the stack pointer alone if the push fails
         if constexpr (C == Core::C68000) { reg.sp += 4; writeA(ax, sp); }
         throw;
     }
@@ -2833,9 +2823,7 @@ Moira::execMove0(u16 opcode)
     readOp<C, M, S, STD_AE_FRAME>(src, &ea, &data);
 
     setMoveFlags<S>(data);
-
     writeOp<C, Mode::DN, S>(dst, data);
-
     prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -2872,7 +2860,7 @@ Moira::execMove2(u16 opcode)
 
         // A failed write shows the flags set up in front of it
         constexpr Flags F = AE_INC_PC | ((S == Long && !isMemMode(M)) ? POLL : 0);
-        writeBuffer = READ<Word, S == Long ? 1 : 0>(data);
+        writeBuffer = (u16)READ<Word, S == Long ? 1 : 0>(data);
         u32 ea2 = readA(dst);
 
         if constexpr (S == Long) {
@@ -2958,7 +2946,7 @@ Moira::execMove3(u16 opcode)
 
         // A failed write shows the flags set up in front of it
         constexpr Flags F = AE_INC_PC | (true ? POLL : 0);
-        writeBuffer = READ<Word, S == Long ? 1 : 0>(data);
+        writeBuffer = (u16)READ<Word, S == Long ? 1 : 0>(data);
         u32 ea2 = readA(dst);
 
         if constexpr (S == Long) {
@@ -2979,9 +2967,7 @@ Moira::execMove3(u16 opcode)
             writeM<C, Mode::PI, S, F | UAE_DEC_PC>(ea2, data);
         }
         updateAnPI<Mode::PI, S>(dst);
-
         setMoveFlags<S>(data);
-
         looping<I>() ? noPrefetch<C>() : prefetch<C>();
 
     } else {
@@ -3050,17 +3036,18 @@ Moira::execMove4(u16 opcode)
 
     // MAME shows the flags of the low word if the prefetch fails
     try { looping<I>() ? noPrefetch<C>(2) : fetchIrc<C, POLL>(); } catch (BusError &e) {
-        if constexpr (S == Long) rethrow<C>(e, CCR::N | CCR::Z, (NBIT<Word>(data) ? CCR::N : 0) | (ZERO<Word>(data) ? CCR::Z : 0));
+        
+        if constexpr (S == Long) {
+            rethrow<C>(e, CCR::N | CCR::Z, (NBIT<Word>(data) ? CCR::N : 0) | (ZERO<Word>(data) ? CCR::Z : 0));
+        }
         throw;
     }
     if (looping<I>() && S == Long) loopModeDelay = 0;
 
     ea = computeEA<C, Mode::PD, S, IMPL_DEC>(dst);
-    writeBuffer = READ<Word>(data);
+    writeBuffer = (u16)READ<Word>(data);
 
-    // MAME and UAE decrement the register before the only write of a byte or word operation.
-    // UAE (68020) also does it before a long write (the register stays decremented if the write fails).
-    constexpr bool early = S != Long || (compat == Compatibility::UAE && C == Core::C68020);
+    constexpr bool early = S != Long || C == Core::C68020;
     if constexpr (early) updateAn<Mode::PD, S>(dst);
 
     // Check for address error
@@ -3078,9 +3065,9 @@ Moira::execMove4(u16 opcode)
 
     if constexpr (S == Long && C == Core::C68000 && compat == Compatibility::UAE) {
 
-        // The low word is written first. UAE decrements the register after both writes.
         try {
 
+            // The low word is written first. UAE decrements the register after both writes.
             writeM<C, Mode::PD, Word>(ea + 2, READ<Word>(data));
             writeM<C, Mode::PD, Word, COMMIT_IRD>(ea, READ<Word, 1>(data));
 
@@ -3186,7 +3173,7 @@ Moira::execMoveDisp(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        writeBuffer = READ<Word, S == Long ? 1 : 0>(data);
+        writeBuffer = (u16)READ<Word, S == Long ? 1 : 0>(data);
         if constexpr (isMemMode(M)) setMoveFlags<S == Long ? Word : S>(data);
         
         u32 ea2 = computeEA<C, DM, S, NO_DEC_PC>(dst);
@@ -3246,7 +3233,7 @@ Moira::execMove7(u16 opcode)
         // A failed extension word fetch shows the flags of the (low word of the) operation
         setMoveFlags<S == Long ? Word : S>(data);
 
-        writeBuffer = READ<Word, S == Long ? 1 : 0>(data);
+        writeBuffer = (u16)READ<Word, S == Long ? 1 : 0>(data);
         u32 ea2 = computeEA<C, Mode::AW, S>(dst);
 
         // A failed write shows the final flags
@@ -3348,7 +3335,7 @@ Moira::execMove8(u16 opcode)
         if constexpr (C == Core::C68000) {
 
             // The first extension word is fetched with the flags untouched
-            writeBuffer = READ<Word, S == Long ? 1 : 0>(data);
+            writeBuffer = (u16)READ<Word, S == Long ? 1 : 0>(data);
             u32 ea2 = queue.irc << 16;
             readExt<C>();
             ea2 |= queue.irc;
@@ -3635,7 +3622,7 @@ Moira::execMovemRgEa(u16 opcode)
 
                 setFC<M>();
                 readBuffer = mask;
-                writeBuffer = READ<Word>(reg.r[i]);
+                writeBuffer = (u16)READ<Word>(reg.r[i]);
                 throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_WRITE>(U32_SUB(ea, 2)));
             }
 
@@ -3686,7 +3673,7 @@ Moira::execMovemRgEa(u16 opcode)
 
                 setFC<M>();
                 readBuffer = mask;
-                writeBuffer = READ<Word, S == Long ? 1 : 0>(reg.r[i]);
+                writeBuffer = (u16)READ<Word, S == Long ? 1 : 0>(reg.r[i]);
                 throw earlyAddressError<C>(makeFrame<AE_INC_PC|AE_WRITE>(ea));
             }
 
@@ -3851,7 +3838,7 @@ Moira::execMoves(u16 opcode)
         // A failing access resets the FC pins after the stack frame has been created
         try { writeM<C, M, S, AE_INC_PC>(ea, value); } catch (const AddressError &) {
 
-            writeBuffer = READ<Word, S == Long ? 1 : 0>(value);
+            writeBuffer = (u16)READ<Word, S == Long ? 1 : 0>(value);
             fcSource = 0;
             queue.irc = arg;
             throw;
@@ -4785,7 +4772,7 @@ Moira::execPea(u16 opcode)
             // The 68010 completes the prefetch in all modes (even the absolute ones) and
             // stacks the address of the instruction plus two (recorded on real hardware)
             U32_DEC(reg.sp, S);
-            writeBuffer = READ<Word, 1>(ea);
+            writeBuffer = (u16)READ<Word, 1>(ea);
             prefetch<C>();
             throw AddressError(makeFrame<AE_WRITE|AE_DATA>(reg.sp, reg.pc0 + 2));
         }
