@@ -3089,8 +3089,11 @@ Moira::execMove4(u16 opcode)
 
         } catch (BusError &e) {
 
-            // UAE stacks the unmasked address
-            if constexpr (compat == Compatibility::UAE) e.stackFrame.addr = (e.stackFrame.addr & 0xFFFFFF) | (ea & 0xFF000000);
+            if constexpr (compat == Compatibility::UAE) {
+
+                // UAE stacks the unmasked address
+                e.stackFrame.addr = (e.stackFrame.addr & 0xFFFFFF) | (ea & 0xFF000000);
+            }
             throw;
         }
         if constexpr (compat == Compatibility::UAE) updateAn<Mode::PD, S>(dst);
@@ -3182,27 +3185,21 @@ Moira::execMoveDisp(u16 opcode)
 
     if constexpr (C == Core::C68000) {
 
-        // Execute the access sequence step by step (extension word, first word, second word).
-        // The flags are set up in front of each step, so every frame shows the right ones.
         writeBuffer = READ<Word, S == Long ? 1 : 0>(data);
-
-        // A failed extension word fetch shows the flags of the source: untouched for register
-        // sources and for memory sources the flags of the (low word of the) operation
-        if constexpr (isMemMode(M)) {
-            setMoveFlags<S == Long ? Word : S>(data);
-        }
+        if constexpr (isMemMode(M)) setMoveFlags<S == Long ? Word : S>(data);
+        
         u32 ea2 = computeEA<C, DM, S, NO_DEC_PC>(dst);
 
         if constexpr (S == Long && !isMemMode(M)) {
 
-            // The first write shows the flags of the high word, the second one those of the low word
+            // The first write shows the flags of the high word
             reg.sr.n = NBIT<Word>(READ<Word, 1>(data));
             reg.sr.z = ZERO<Word>(READ<Word, 1>(data)) && reg.sr.z;
             writeM<C, DM, Word>(ea2, READ<Word, 1>(data));
-
             setMoveFlags<Word>(data);
-            writeM<C, DM, Word, POLL>(ea2 + 2, READ<Word>(data));
 
+            // The second write shows the flags of the low word
+            writeM<C, DM, Word, POLL>(ea2 + 2, READ<Word>(data));
             setMoveFlags<S>(data);
             prefetch<C>();
 
@@ -3211,7 +3208,6 @@ Moira::execMoveDisp(u16 opcode)
             // A failed write shows the final flags
             setMoveFlags<S>(data);
             writeM<C, DM, S>(ea2, data);
-
             prefetch<C, POLL>();
         }
 
