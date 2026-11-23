@@ -26,10 +26,6 @@ features:
     title: API
     details: An overview of the API and all classes, structs and enumerations of the CPU core.
     link: /api/overview
-  - icon: 📦
-    title: Releases
-    details: Release notes and migration notes for updating from an older version.
-    link: /releases/Release60
 ---
 
 ![Code Size](https://img.shields.io/github/languages/code-size/dirkwhoffmann/Moira)

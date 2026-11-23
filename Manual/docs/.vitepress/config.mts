@@ -46,9 +46,6 @@ const guideGroups: [string, string, string[]][] = [
                               'HowToOverclockTheCpu']],
   ['Concepts', 'concepts', ['TimingModel', 'MainExecutionFunction', 'InstructionHandlers', 'CompatibilityModes']],
 ]
-const releaseGroups: [string, string, string[]][] = [
-  ['Releases', '', ['Release60', 'MigrationNotes']],
-]
 
 function title(path: string): string {
   const text = readFileSync(join(docs, `${path}.md`), 'utf8')
@@ -142,12 +139,10 @@ export default defineConfig({
       { text: 'Overview', link: '/overview/About', activeMatch: '^/overview/' },
       { text: 'Guides', link: '/guides/howto/HowToUseTheCpu', activeMatch: '^/guides/' },
       { text: 'API', link: '/api/overview', activeMatch: '^/api/' },
-      { text: 'Releases', link: '/releases/Release60', activeMatch: '^/releases/' },
     ],
     sidebar: {
       '/overview/': sectionSidebar('overview', overviewGroups),
       '/guides/': sectionSidebar('guides', guideGroups),
-      '/releases/': sectionSidebar('releases', releaseGroups),
       '/api/': [
         { text: 'API', collapsed: false, items: [
           { text: 'Overview', link: '/api/overview' },

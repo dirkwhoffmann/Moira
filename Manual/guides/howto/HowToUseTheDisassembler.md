@@ -1,8 +1,12 @@
 # Using the Disassembler
 
-## Running the Disassembler 
+Moira includes a built-in disassembler. It supports the instruction sets of all emulated models, from the 68000 to the 68040, including the FPU and MMU instructions. Its output is checked against the disassemblers of binutils, Musashi and UAE.
 
-Moira includes a built-in disassembler that converts instructions, the program counter, and the status register into human-readable text. The following API functions generate textual representations:
+The disassembler needs a jump table of about 1 MB, which is only created if `MOIRA_ENABLE_DASM` is enabled (the default). If you don't need it, disable the option to save memory. The functions described below then throw `std::runtime_error`.
+
+## Running the Disassembler
+
+The disassembler converts instructions, the program counter, and the status register into human-readable text. The following API functions generate textual representations:
 
 - `std::string disassemble(const std::string &fmt, u32 addr, int *len = nullptr) const`
 
@@ -19,13 +23,51 @@ Moira includes a built-in disassembler that converts instructions, the program c
 
     A number in front of `%p`, `%b`, `%i`, or `%f` pads the output with spaces to the given width. Other characters are copied to the output. If `len` is given, it receives the instruction length in bytes. An invalid format string throws `std::runtime_error`.
 
-- `std::string Debugger::disassembleRecorded(const std::string &fmt, int nr, int *len = nullptr) const`
+- `isize instrLength(u32 addr) const`
+
+    Returns the length of the instruction at the specified address in bytes, including all extension words.
+
+- `InstrInfo getInstrInfo(u16 op) const`
+
+    Returns the mnemonic, the addressing mode and the operand size of an opcode, e.g. to decide whether an instruction is a branch.
+
+- `std::string Debugger::disassembleRecorded(const std::string &fmt, isize nr, int *len = nullptr) const`
 
     Works like the function above, but disassembles an entry of the instruction log buffer and prints the register values recorded at that time.
 
 The debugger builds on these functions: `Debugger::dumpLogBuffer` prints the log buffer, and `Debugger::disassembleRange` disassembles a range of memory and marks the current instruction and breakpoints. Both accept an optional format string.
 
-    
+For example, the following loop prints ten instructions starting at the program counter:
+
+````c++
+u32 addr = cpu.getPC0();
+
+for (int i = 0; i < 10; i++) {
+
+    int len;
+    printf("%s\n", cpu.disassemble("%p: %16b %i", addr, &len).c_str());
+    addr += len;
+}
+````
+
+## Selecting the Instruction Set
+
+By default, the disassembler recognizes the instructions of the emulated CPU model. Instructions of higher models are shown as data. The disassembler model can be selected independently of the CPU model:
+
+````c++
+cpu.setModel(CPUModel::M68000);         // Selects the CPU and the disassembler model
+cpu.setDasmModel(CPUModel::M68040);     // Only changes the disassembler model
+````
+
+This is useful, for example, to inspect 68040 code while emulating a 68000. `setModel(cpuModel, dasmModel)` selects both models in one call. `instrLength()` always uses the CPU model, because it is meant to tell where the emulated CPU continues.
+
+## Reading Memory Without Side Effects
+
+The disassembler fetches the instruction words with `read16Dasm()`. By default, this function calls `read16()`. If reading memory has side effects in your application, e.g. because some addresses are mapped to I/O registers, override `read16Dasm()` and return the same values without triggering the side effects.
+
+The addresses passed to `read16Dasm()` are not translated by the MMU. If the emulated program runs with address translation enabled, translate them with `mmu.peek()` (see [Using the Memory Management Unit](/guides/howto/HowToUseTheMmu)).
+
+
 ## Customizing Output
 
 The disassembler output is controlled by a `DasmStyle`:
@@ -71,6 +113,10 @@ The fields have the following meaning:
         Mimics the output of `binutils` when run in MIT mode. 
     - `MUSASHI`
         Reproduces the exact output of the Musashi disassembler.
+    - `UAE`
+        Reproduces the output of the UAE disassembler.
+
+    The `GNU`, `GNU_MIT`, `MUSASHI` and `UAE` styles exist mainly for testing. They make it possible to compare Moira's output with the reference disassemblers character by character.
 
 - `numberFormat`
 

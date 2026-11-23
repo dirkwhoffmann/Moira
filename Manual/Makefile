@@ -18,7 +18,7 @@
 SCHEME ?= tokyo-night
 export SCHEME
 
-GENERATED = docs/*.md docs/overview docs/guides docs/releases docs/api
+GENERATED = docs/*.md docs/overview docs/guides docs/api
 
 markdown:
 	mkdir -p build
@@ -43,7 +43,7 @@ serve: markdown
 dev: markdown
 	@touch build/.stamp
 	@( while sleep 1; do \
-	     if [ -n "$$(find overview guides releases api home.md ../Moira Doxyfile prepare_xml.py fix_markdown.py \( -name '*.h' -o -name '*.md' -o -name Doxyfile -o -name '*.py' \) -newer build/.stamp 2>/dev/null | head -1)" ]; then \
+	     if [ -n "$$(find overview guides api home.md ../Moira Doxyfile prepare_xml.py fix_markdown.py \( -name '*.h' -o -name '*.md' -o -name Doxyfile -o -name '*.py' \) -newer build/.stamp 2>/dev/null | head -1)" ]; then \
 	       touch build/.stamp; echo "Sources changed, regenerating..."; \
 	       $(MAKE) --no-print-directory markdown 2>&1 | tail -3; \
 	     fi; \
