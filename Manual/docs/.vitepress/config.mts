@@ -45,7 +45,7 @@ const guideGroups: [string, string, string[]][] = [
   ['How-to guides', 'howto', ['HowToUseTheCpu', 'HowToUseTheDisassembler', 'HowToUseTheDebugger',
                               'HowToUseDelegates', 'HowToEmulateBusErrors', 'HowToUseTheFpu', 'HowToUseTheMmu',
                               'HowToOverclockTheCpu']],
-  ['Concepts', 'concepts', ['MainExecutionFunction', 'InstructionHandlers']],
+  ['Concepts', 'concepts', ['TimingModel', 'MainExecutionFunction', 'InstructionHandlers', 'CompatibilityModes']],
 ]
 const releaseGroups: [string, string, string[]][] = [
   ['Releases', '', ['Release60', 'MigrationNotes']],

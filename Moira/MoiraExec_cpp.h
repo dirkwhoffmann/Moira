@@ -1246,7 +1246,7 @@ Moira::execBitFieldDn(u16 opcode)
 
     // Crop offset and map width to 32, 1 ... 31
     int offset = rawOffset & 0b11111;
-    int width = ((rawWidth - 1) & 0b11111) + 1;
+    int width = int((u32(rawWidth) - 1) & 0b11111) + 1;
 
     // Create the bit mask
     u32 mask = std::rotr(u32(0xFFFFFFFF00000000 >> width), offset);
@@ -1343,7 +1343,7 @@ Moira::execBitFieldEa(u16 opcode)
     int rawWidth = dwBit ? reg.d[wi & 0b111] : wi;
 
     // Map width to 32, 1 ... 31
-    int width = ((rawWidth - 1) & 0b11111) + 1;
+    int width = int((u32(rawWidth) - 1) & 0b11111) + 1;
 
     u32 result, insert;
 
@@ -5504,6 +5504,11 @@ Moira::execTrapv(u16 opcode)
             }
             reg.sr.s = s;
 
+        } else if constexpr (C == Core::C68010 && compat == Compatibility::UAE) {
+
+            // UAE's 68010 doesn't read the next word. It spends two internal cycles instead.
+            SYNC(2);
+
         } else {
 
             (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
@@ -5512,9 +5517,15 @@ Moira::execTrapv(u16 opcode)
 
         execException<C>(M68kException::TRAPV);
 
+        // The 68010 takes 40 cycles, as in precise timing mode: It stacks an additional
+        // format word (4 cycles) and waits 2 more cycles after reading the next word.
+        // Musashi counts 34 cycles, UAE 36.
+        [[maybe_unused]] constexpr int c10 =
+        compat == Compatibility::MUSASHI ? 34 : compat == Compatibility::UAE ? 36 : 40;
+
         //           00  10  20        00  10  20        00  10  20
         //           .b  .b  .b        .w  .w  .w        .l  .l  .l
-        CYCLES_IP   ( 0,  0,  0,        0,  0,  0,       34, 34, 20)
+        CYCLES_IP   ( 0,  0,  0,        0,  0,  0,       34, c10, 20)
 
     } else {
 

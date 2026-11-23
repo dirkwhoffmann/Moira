@@ -325,8 +325,6 @@ bool ExecRunner::compareCycles(Result &rRef, Result &rMoira)
 {
     assert(rRef.opcode == rMoira.opcode);
     auto I = moiracpu->getInstrInfo(rRef.opcode).I;
-    auto S = moiracpu->getInstrInfo(rRef.opcode).S;
-    auto M = moiracpu->getInstrInfo(rRef.opcode).M;
 
     // Exclude some instructions
     if (I == Instr::TAS) return true;
@@ -348,14 +346,6 @@ bool ExecRunner::compareCycles(Result &rRef, Result &rMoira)
      */
     if constexpr (MOIRA_EMULATE_ICACHE) {
         if (cpuModel != CPUModel::M68000 && cpuModel != CPUModel::M68010) return true;
-    }
-
-    // WHY DO WE IGNORE THESE?
-    if (cpuModel == CPUModel::M68010) {
-
-        if (I == Instr::CLR && S == Byte && M == Mode::AL) return true;
-        if (I == Instr::CLR && S == Word && M == Mode::AL) return true;
-        if (I == Instr::TRAPV) return true;
     }
 
     return rRef.cycles == rMoira.cycles;
