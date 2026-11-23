@@ -62,10 +62,8 @@ add_executable(sstmusashi
     ${SST_SRC}
 )
 target_link_libraries(sstmusashi PRIVATE moiraMusashi mameref musashi)
-target_include_directories(sstmusashi PRIVATE
-    ${SST_INCLUDE_DIRS}
-    ../ThirdParty/Musashi
-)
+target_include_directories(sstmusashi PRIVATE ${SST_INCLUDE_DIRS})
+target_include_directories(sstmusashi SYSTEM PRIVATE ../ThirdParty/Musashi)
 
 add_test(NAME SSTMame COMMAND sstmame)
 add_test(NAME SSTUAE COMMAND sstuae)

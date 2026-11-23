@@ -18,7 +18,8 @@ add_executable(sequenceuae
 target_link_libraries(sequenceuae PRIVATE moiraUAEExc uaecpu)
 target_include_directories(sequenceuae PRIVATE
     ${CMAKE_SOURCE_DIR}/Moira
-    ${CMAKE_CURRENT_SOURCE_DIR}/../Common
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Common)
+target_include_directories(sequenceuae SYSTEM PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/UAEGlue)
 
 add_test(NAME SequenceUAE COMMAND sequenceuae --seed 1 --programs 1000 --min 99)

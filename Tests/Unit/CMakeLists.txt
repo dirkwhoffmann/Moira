@@ -33,7 +33,8 @@ add_executable(unit
 target_link_libraries(unit moiraMAME uaecpu)
 target_include_directories(unit PUBLIC
     ${CMAKE_SOURCE_DIR}/Moira
-    ${CMAKE_SOURCE_DIR}/Tests/Common
+    ${CMAKE_SOURCE_DIR}/Tests/Common)
+target_include_directories(unit SYSTEM PUBLIC
     ${CMAKE_SOURCE_DIR}/Tests/ThirdParty)
 
 add_test(NAME Unit COMMAND unit)
@@ -49,7 +50,8 @@ add_executable(unitfast
 target_link_libraries(unitfast moira)
 target_include_directories(unitfast PUBLIC
     ${CMAKE_SOURCE_DIR}/Moira
-    ${CMAKE_SOURCE_DIR}/Tests/Common
+    ${CMAKE_SOURCE_DIR}/Tests/Common)
+target_include_directories(unitfast SYSTEM PUBLIC
     ${CMAKE_SOURCE_DIR}/Tests/ThirdParty)
 
 add_test(NAME UnitFast COMMAND unitfast)

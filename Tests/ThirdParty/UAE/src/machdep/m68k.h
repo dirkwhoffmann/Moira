@@ -101,7 +101,12 @@ struct flag_struct {
 
 #define COPY_CARRY()	(regflags.x = regflags.cznv >> (FLAGBIT_C - FLAGBIT_X))
 
+#ifdef _MSC_VER
+/* MSVC has no asm labels. The label is only needed by assembly code. */
+extern struct flag_struct regflags;
+#else
 extern struct flag_struct regflags __asm__ ("regflags");
+#endif
 
 /*
  * Test CCR condition
@@ -238,7 +243,12 @@ struct flag_struct {
 	uae_u32 x;
 };
 
+#ifdef _MSC_VER
+/* MSVC has no asm labels. The label is only needed by assembly code. */
+extern struct flag_struct regflags;
+#else
 extern struct flag_struct regflags __asm__ ("regflags");
+#endif
 
 /*
  * The bits in the cznv field in the above structure are assigned to
@@ -498,7 +508,11 @@ struct flag_struct {
 
 #define COPY_CARRY()	(regflags.x = (regflags.nzcv >> FLAGBIT_C) & 1)
 
+#ifdef _MSC_VER
+extern struct flag_struct regflags;
+#else
 extern struct flag_struct regflags __asm__("regflags");
+#endif
 
 static inline int cctrue(int cc)
 {

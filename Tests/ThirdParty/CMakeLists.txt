@@ -7,6 +7,13 @@
 
 # Third-party code that is used by the tests
 
+# Warnings in third-party code are not ours to fix. Silence them all.
+if(MSVC)
+    add_compile_options(/w)
+else()
+    add_compile_options(-w)
+endif()
+
 # Sanitizer builds: the reference implementations contain undefined behavior (e.g. oversized
 # shifts in UAE's softfloat) that is not ours to fix. Keep ASan, drop UBSan for this code.
 if(MOIRA_SANITIZE MATCHES "undefined")
@@ -31,14 +38,6 @@ add_library(binutilsmit STATIC
     ${BINUTILS_DIR}/m68k-dis.c
     ${BINUTILS_DIR}/m68k-opc.c)
 
-foreach(T binutils binutilsmit)
-  if(MSVC)
-    target_compile_options(${T} PRIVATE /w)
-  else()
-    target_compile_options(${T} PRIVATE -w)
-  endif()
-endforeach()
-
 #
 # Musashi
 #
@@ -50,12 +49,6 @@ add_library(musashi STATIC
     ${MUSASHI_DIR}/m68kdasm.c
     ${MUSASHI_DIR}/m68kops.c
     ${MUSASHI_DIR}/musashi_softfloat/musashi_softfloat.c)
-
-if(MSVC)
-    target_compile_options(musashi PRIVATE /w)
-else()
-    target_compile_options(musashi PRIVATE -w)
-endif()
 
 #
 # UAE (CPU core and FPU reference)
@@ -94,10 +87,8 @@ target_compile_definitions(uaecpu PRIVATE
     AMIBERRY_NO_JIT
     AMIBERRY_NO_THREADED_CPU)
     
-if(MSVC)
-    target_compile_options(uaecpu PRIVATE /w)
-else()
-    target_compile_options(uaecpu PRIVATE -w -O1 -fwrapv -fno-strict-aliasing)
+if(NOT MSVC)
+    target_compile_options(uaecpu PRIVATE -O1 -fwrapv -fno-strict-aliasing)
 endif()
 
 target_include_directories(uaecpu PRIVATE
@@ -105,7 +96,7 @@ target_include_directories(uaecpu PRIVATE
     $<$<BOOL:${MSVC}>:${CMAKE_CURRENT_SOURCE_DIR}/UAEGlue/msvc-shim>
     ${UAE_SRC} ${UAE_SRC}/include ${UAE_SRC}/osdep ${UAE_SRC}/archivers ${UAE_SRC}/threaddep)
     
-target_include_directories(uaecpu PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/UAEGlue)
+target_include_directories(uaecpu SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/UAEGlue)
 
 
 #
@@ -127,11 +118,6 @@ target_include_directories(mameref PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/MAMEGlue/shim
     ${MAME_DIR})
 
-target_include_directories(mameref PUBLIC
+target_include_directories(mameref SYSTEM PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/MAMEGlue)
 
-if(MSVC)
-    target_compile_options(mameref PRIVATE /w)
-else()
-    target_compile_options(mameref PRIVATE -w)
-endif()

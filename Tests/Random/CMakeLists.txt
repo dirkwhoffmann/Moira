@@ -46,7 +46,10 @@ set(RUNNER_INCLUDE_DIRS
     ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/Moira
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../Common
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Common)
+
+# Third-party headers (SYSTEM: no warnings)
+set(RUNNER_SYSTEM_DIRS
     ${CMAKE_SOURCE_DIR}/Tests/ThirdParty
     ${CMAKE_SOURCE_DIR}/Tests/ThirdParty/Binutils
     ${CMAKE_SOURCE_DIR}/Tests/ThirdParty/Musashi)
@@ -76,16 +79,19 @@ endif()
 add_executable(randommusashi RandomMusashi.cpp ${RUNNER_SRC})
 target_link_libraries(randommusashi PRIVATE moiraMusashi binutils musashi uaecpu mameref)
 target_include_directories(randommusashi PRIVATE ${RUNNER_INCLUDE_DIRS})
+target_include_directories(randommusashi SYSTEM PRIVATE ${RUNNER_SYSTEM_DIRS})
 target_compile_options(randommusashi PRIVATE ${RUNNER_OPTIONS})
 
 add_executable(randomuae RandomUAE.cpp ${RUNNER_SRC})
 target_link_libraries(randomuae PRIVATE moiraUAE binutils musashi uaecpu mameref)
 target_include_directories(randomuae PRIVATE ${RUNNER_INCLUDE_DIRS})
+target_include_directories(randomuae SYSTEM PRIVATE ${RUNNER_SYSTEM_DIRS})
 target_compile_options(randomuae PRIVATE ${RUNNER_OPTIONS})
 
 add_executable(randommame RandomMAME.cpp ${RUNNER_SRC})
 target_link_libraries(randommame PRIVATE moiraMAMENoAE binutils musashi uaecpu mameref)
 target_include_directories(randommame PRIVATE ${RUNNER_INCLUDE_DIRS})
+target_include_directories(randommame SYSTEM PRIVATE ${RUNNER_SYSTEM_DIRS})
 target_compile_options(randommame PRIVATE ${RUNNER_OPTIONS})
 
 # A fixed seed keeps automated runs reproducible. Without --seed, the runners
@@ -118,11 +124,13 @@ set_tests_properties(
 add_executable(dasmmot DasmMot.cpp ${RUNNER_SRC})
 target_link_libraries(dasmmot PRIVATE moiraUAE binutils musashi uaecpu mameref)
 target_include_directories(dasmmot PRIVATE ${RUNNER_INCLUDE_DIRS})
+target_include_directories(dasmmot SYSTEM PRIVATE ${RUNNER_SYSTEM_DIRS})
 target_compile_options(dasmmot PRIVATE ${RUNNER_OPTIONS})
 
 add_executable(dasmmit DasmMit.cpp ${RUNNER_SRC})
 target_link_libraries(dasmmit PRIVATE moiraUAE binutilsmit musashi uaecpu mameref)
 target_include_directories(dasmmit PRIVATE ${RUNNER_INCLUDE_DIRS})
+target_include_directories(dasmmit SYSTEM PRIVATE ${RUNNER_SYSTEM_DIRS})
 target_compile_options(dasmmit PRIVATE ${RUNNER_OPTIONS})
 
 add_test(NAME DasmMot COMMAND dasmmot --seed 1)
