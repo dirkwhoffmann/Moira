@@ -1,4 +1,4 @@
-# Getting Started
+# Running the Examples
 
 This page runs the two example programs that come with Moira. It assumes that you have built Moira as described in [Installation](/overview/Installation).
 
@@ -51,4 +51,4 @@ The option `--trace` prints every executed instruction, and `--model` selects th
 
 ## Next Steps
 
-[Integrating the CPU Core](/guides/howto/HowToUseTheCpu) explains how to integrate the CPU core into an application of your own.
+[Running the Test Runners](/overview/getting-started/RandomTests) shows how to compare Moira with other emulators. [Integrating the CPU Core](/guides/howto/HowToUseTheCpu) explains how to integrate the CPU core into an application of your own.

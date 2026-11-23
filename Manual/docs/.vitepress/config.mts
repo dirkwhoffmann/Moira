@@ -38,11 +38,12 @@ if (!scheme) {
 // The hand-written sections. Each group is [group, folder, [pages]], where the
 // folder is relative to the section. The sidebar shows the first heading of a page.
 const overviewGroups: [string, string, string[]][] = [
-  ['Overview', '', ['About', 'Installation', 'GettingStarted']],
+  ['Overview', '', ['About', 'Installation']],
+  ['Getting Started', 'getting-started', ['Examples', 'RandomTests']],
 ]
 const guideGroups: [string, string, string[]][] = [
   ['How-to guides', 'howto', ['HowToUseTheCpu', 'HowToUseTheDisassembler', 'HowToUseTheDebugger',
-                              'HowToUseDelegates', 'HowToEmulateBusErrors', 'HowToUseTheFpu', 'HowToUseTheMmu',
+                              'HowToUseDelegates', 'HowToEmulateAddressErrors', 'HowToEmulateBusErrors', 'HowToUseTheFpu', 'HowToUseTheMmu',
                               'HowToOverclockTheCpu']],
   ['Concepts', 'concepts', ['TimingModel', 'MainExecutionFunction', 'InstructionHandlers', 'CompatibilityModes']],
 ]

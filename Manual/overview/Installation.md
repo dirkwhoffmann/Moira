@@ -35,7 +35,7 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j8
 ```
 
-This builds the CPU core as a static library, the example programs and the test tools. [Getting Started](/overview/GettingStarted) shows how to run the examples.
+This builds the CPU core as a static library, the example programs and the test tools. [Running the Examples](/overview/getting-started/Examples) shows how to run the examples.
 
 ## Running the Tests
 
