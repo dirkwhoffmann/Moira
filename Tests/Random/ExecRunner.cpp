@@ -201,8 +201,10 @@ void ExecRunner::setupFpuEnvironment(Setup &s)
         }
     }
 
-    // Control register: Random rounding mode and precision, no exception enables
+    // Control register: Random rounding mode and precision. Half of the setups enable
+    // random arithmetic exceptions.
     s.fpcr = randomizer.rand() & 0xF0;
+    if (randomizer.rand() & 1) s.fpcr |= randomizer.rand() & 0xFF00;
     s.fpsr = randomizer.rand() & 0x0F000000;
     s.fpiar = randomizer.rand();
 

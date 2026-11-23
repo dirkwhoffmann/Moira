@@ -356,7 +356,8 @@ enum class M68kException
     TRAP              = 32,   ///< TRAP instruction exception
     
     BKPT,                       ///< Breakpoint (maps to a native exception when triggered)
-    FPU_UNIMPLEMENTED           ///< Unimplemented floating-point instruction (68040, vector 11)
+    FPU_UNIMPLEMENTED,          ///< Unimplemented floating-point instruction (68040, vector 11)
+    FPU_ARITHMETIC              ///< Floating-point arithmetic exception (vectors 48 - 54)
 };
 
 /// Answers to an interrupt acknowledge cycle

@@ -10,6 +10,16 @@
 
 #ifdef MOIRA_MAIN_TU
 
+void
+Moira::finishFpuOp(int dst, const MFloat80 &old)
+{
+    // An enabled SNAN, OPERR or DZ exception leaves the destination register unchanged
+    if (fpu.suppressesResult()) fpu.fpr[dst] = old;
+
+    // Enabled exceptions are taken when the next FPU instruction starts
+    fpu.pendingTrap = fpu.trapVector();
+}
+
 bool
 Moira::isValidExtFPU(Instr I, Mode M, u16 op, u32 ext, CPUModel model) const
 {
@@ -376,6 +386,9 @@ Moira::execFGen(u16 opcode)
     // First cycle of the coprocessor protocol
     if (hasExternalFPU()) notifyCPCycle(opcode, CIR::COMMAND);
 
+    // A pending arithmetic exception is taken before the instruction starts
+    if (takePendingFpuTrap<C>()) { FINALIZE return; }
+
     auto ext = queue.irc;
     auto cod = xxx_____________(ext);
     auto cmd = _________xxxxxxx(ext);
@@ -495,12 +508,20 @@ Moira::execFBcc(u16 opcode)
     // First cycle of the coprocessor protocol
     if (hasExternalFPU()) notifyCPCycle(opcode, CIR::CONDITION);
 
+    // A pending arithmetic exception is taken before the instruction starts
+    if (takePendingFpuTrap<C>()) { FINALIZE return; }
+
     u32 oldpc = reg.pc;
 
     // Conditional instructions don't leave the reset state of the 68040
     if (hasExternalFPU()) fpu.resetState = false;
 
-    if (fpu.test(opcode & 0x1F)) {
+    bool taken = fpu.test(opcode & 0x1F);
+
+    // An enabled BSUN exception is taken before the branch
+    if (fpu.bsunTrap(opcode & 0x1F)) { execFpuTrap<C>(48); FINALIZE return; }
+
+    if (taken) {
 
         u32 disp = queue.irc;
 
@@ -541,6 +562,9 @@ Moira::execFDbcc(u16 opcode)
     // First cycle of the coprocessor protocol
     if (hasExternalFPU()) notifyCPCycle(opcode, CIR::CONDITION);
 
+    // A pending arithmetic exception is taken before the instruction starts
+    if (takePendingFpuTrap<C>()) { FINALIZE return; }
+
     auto ext = queue.irc;
     auto dn  = _____________xxx (opcode);
 
@@ -550,7 +574,12 @@ Moira::execFDbcc(u16 opcode)
     if (hasExternalFPU()) fpu.resetState = false;
     readI<C, Word>();
 
-    if (!fpu.test(ext & 0x3F)) {
+    bool cond = fpu.test(ext & 0x3F);
+
+    // An enabled BSUN exception is taken before the counter is decremented
+    if (fpu.bsunTrap(ext & 0x3F)) { execFpuTrap<C>(48); FINALIZE return; }
+
+    if (!cond) {
 
         u32 newpc = U32_ADD(reg.pc, (i16)queue.irc);
         bool takeBranch = readD<Word>(dn) != 0;
@@ -588,6 +617,9 @@ Moira::execFNop(u16 opcode)
     // First cycle of the coprocessor protocol
     if (hasExternalFPU()) notifyCPCycle(opcode, CIR::CONDITION);
 
+    // FNOP synchronizes the FPU. A pending arithmetic exception is taken here.
+    if (takePendingFpuTrap<C>()) { FINALIZE return; }
+
     // FNOP is encoded as FBcc.W with condition F and displacement 0
     readExt<C>();
     prefetch<C, POLL>();
@@ -621,9 +653,10 @@ Moira::execFRestore(u16 opcode)
 
     } else {
 
-        // The size of the frame is stored in the format word
+        // The size of the frame is stored in the format word. Idle frames carry no exception.
         u32 size = 4 + ((fmt >> 16) & 0xFF);
         fpu.resetState = false;
+        fpu.pendingTrap = 0;
         if constexpr (M == Mode::PI) writeA(n, U32_ADD(ea, size));
     }
 
@@ -642,6 +675,9 @@ Moira::execFSave(u16 opcode)
     if (hasExternalFPU()) notifyCPCycle(opcode, CIR::SAVE);
 
     auto n = _____________xxx (opcode);
+
+    // The frame carries no exception state. A pending arithmetic exception is discarded (as in UAE).
+    fpu.pendingTrap = 0;
 
     // Frame to be written: A NULL frame if the FPU is in reset state, an IDLE frame otherwise
     bool null = fpu.inResetState();
@@ -669,6 +705,9 @@ Moira::execFScc(u16 opcode)
     // First cycle of the coprocessor protocol
     if (hasExternalFPU()) notifyCPCycle(opcode, CIR::CONDITION);
 
+    // A pending arithmetic exception is taken before the instruction starts
+    if (takePendingFpuTrap<C>()) { FINALIZE return; }
+
     auto ext = queue.irc;
     auto dst = _____________xxx (opcode);
 
@@ -679,6 +718,9 @@ Moira::execFScc(u16 opcode)
     readI<C, Word>();
 
     u32 data = fpu.test(ext & 0x3F) ? 0xFF : 0;
+
+    // An enabled BSUN exception is taken before the destination is written
+    if (fpu.bsunTrap(ext & 0x3F)) { execFpuTrap<C>(48); FINALIZE return; }
 
     if constexpr (M == Mode::DN) {
 
@@ -704,6 +746,9 @@ Moira::execFTrapcc(u16 opcode)
     // First cycle of the coprocessor protocol
     if (hasExternalFPU()) notifyCPCycle(opcode, CIR::CONDITION);
 
+    // A pending arithmetic exception is taken before the instruction starts
+    if (takePendingFpuTrap<C>()) { FINALIZE return; }
+
     auto ext = queue.irc;
 
     // Catch illegal extension words
@@ -719,7 +764,12 @@ Moira::execFTrapcc(u16 opcode)
         case 0b011: (void)readI<C, Long>(); break;
     }
 
-    if (fpu.test(ext & 0x3F)) {
+    bool cond = fpu.test(ext & 0x3F);
+
+    // An enabled BSUN exception is taken before the trap
+    if (fpu.bsunTrap(ext & 0x3F)) { execFpuTrap<C>(48); FINALIZE return; }
+
+    if (cond) {
 
         execException<C>(M68kException::TRAPV);
         FINALIZE
@@ -761,6 +811,9 @@ Moira::execFMove(u16 opcode)
     // The 68040 FPU updates FPIAR on every data operation, older FPUs only if an
     // exception other than BSUN is enabled (only conditional instructions raise BSUN)
     if (cpuModel >= CPUModel::M68EC040 || (fpu.getFPCR() & 0x7F00)) fpu.setFPIAR(getPC0());
+
+    auto old = fpu.fpr[dst];
+    u32 ea = 0;
 
     {
         // FSMOVE and FDMOVE round to single or double precision
@@ -823,10 +876,36 @@ Moira::execFMove(u16 opcode)
                     value = fpu.moveOutExtended(value);
                 }
 
-                writeFpuOp<C, M>(reg, value, format, k);
+                if constexpr (isMemMode(M)) {
+
+                    ea = computeFpuEA<C, M>(reg, format);
+                    writeFpuOpEa<C, M>(reg, ea, value, format, k);
+
+                } else {
+
+                    writeFpuOp<C, M>(reg, value, format, k);
+                }
                 break;
             }
         }
+    }
+
+    if (cod == 0b011) {
+
+        // The 68040 takes an enabled exception right after a move to memory or to
+        // a data register (post-instruction exception). The 68881 and 68882 report
+        // it when the next FPU instruction starts, like all other exceptions.
+        if (auto vector = fpu.trapVector(); vector && hasInternalFPU()) {
+
+            execFpuTrap<C>(vector, true, ea);
+            FINALIZE
+            return;
+        }
+        fpu.pendingTrap = fpu.trapVector();
+
+    } else {
+
+        finishFpuOp(dst, old);
     }
 
     prefetch<C, POLL>();
@@ -868,6 +947,9 @@ Moira::execFMovecr(u16 opcode)
         fpu.fpr[dst] = fpu.round(fpu.readCR(ofs));
         fpu.setConditionCodes(fpu.fpr[dst]);
     }
+
+    // The constant is stored in any case. An enabled exception is taken later.
+    fpu.pendingTrap = fpu.trapVector();
 
     prefetch<C, POLL>();
 
@@ -1090,6 +1172,8 @@ Moira::execFGeneric(u16 opcode)
     // exception other than BSUN is enabled (only conditional instructions raise BSUN)
     if (cpuModel >= CPUModel::M68EC040 || (fpu.getFPCR() & 0x7F00)) fpu.setFPIAR(getPC0());
 
+    auto old = fpu.fpr[dst];
+
     {
         FPU::Scope scope(fpu, precision);
 
@@ -1182,6 +1266,10 @@ Moira::execFGeneric(u16 opcode)
                 auto &c = fpu.fpr[ext & 7];
                 c = fpu.round(cosine);
                 result = sine;
+
+                // The cosine is stored in any case. If an exception suppresses the sine
+                // and both go to the same register, the register keeps the cosine.
+                if ((ext & 7) == dst) old = c;
                 break;
             }
 
@@ -1192,6 +1280,8 @@ Moira::execFGeneric(u16 opcode)
         d = roundResult ? fpu.round(result) : result;
         if (setCodes) fpu.setConditionCodes(d);
     }
+
+    finishFpuOp(dst, old);
 
     prefetch<C, POLL>();
 

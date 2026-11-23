@@ -435,6 +435,183 @@ TEST_CASE("68040 address error frame")
     CHECK(cpu.read32(sp + 8) == 0x2000);
 }
 
+/* Arithmetic exceptions (vectors 48 - 54). An exception that is enabled in
+ * FPCR is not taken by the instruction that raises it. It is taken as a
+ * pre-instruction exception when the next FPU instruction starts. BSUN is taken
+ * before the conditional instruction completes. The 68040 takes an exception
+ * of FMOVE to memory right away (post-instruction exception, format 3).
+ */
+
+static void installFpuHandlers(TestCPU &cpu)
+{
+    for (u32 v = 48; v <= 54; v++) {
+        cpu.write32(4 * v, 0x9000 + 0x10 * (v - 48));
+        cpu.write16(0x9000 + 0x10 * (v - 48), 0x4E71);
+    }
+}
+
+static u32 fpuHandler(u32 vector) { return 0x9000 + 0x10 * (vector - 48); }
+
+TEST_CASE("Arithmetic exceptions are taken at the next FPU instruction")
+{
+    TestCPU cpu;
+    installFpuHandlers(cpu);
+    cpu.fpu.fpcr = FPEXP::DZ;
+    cpu.fpu.fpr[0] = F(0.0);
+    cpu.fpu.fpr[1] = F(1.0);
+
+    // FDIV FP0,FP1; FNOP
+    cpu.run({ 0xF200, 0x00A0, 0xF280, 0x0000 });
+
+    CHECK(cpu.pcOffset() == 4);                                 // Not taken yet
+    CHECK(cpu.fpu.pendingTrap == 50);
+    CHECK((cpu.fpu.fpsr & FPEXP::DZ) != 0);
+    CHECK(same(cpu.fpu.fpr[1], F(1.0)));                       // DZ suppresses the result
+
+    cpu.execute();                                              // FNOP takes the exception
+
+    u32 sp = cpu.reg.sp;
+    CHECK(cpu.reg.pc0 == fpuHandler(50));
+    CHECK(cpu.read16(sp + 6) == 50 * 4);                        // Format 0
+    CHECK(cpu.read32(sp + 2) == TestCPU::codeStart + 4);        // Address of FNOP
+    CHECK(cpu.fpu.pendingTrap == 0);
+}
+
+TEST_CASE("Disabled arithmetic exceptions are not taken")
+{
+    TestCPU cpu;
+    installFpuHandlers(cpu);
+    cpu.fpu.fpr[0] = F(0.0);
+    cpu.fpu.fpr[1] = F(1.0);
+
+    // FDIV FP0,FP1 without enabled exceptions
+    cpu.run({ 0xF200, 0x00A0, 0xF280, 0x0000 }, 2);
+
+    CHECK(cpu.fpu.pendingTrap == 0);
+    CHECK(cpu.pcOffset() == 8);
+    CHECK(cpu.fpu.fpr[1].isInfinite());
+}
+
+TEST_CASE("Arithmetic exception priorities and results")
+{
+    SUBCASE("OPERR comes before DZ and INEX") {
+
+        TestCPU cpu;
+        cpu.fpu.fpcr = 0x7F00;
+        cpu.fpu.fpr[0] = F(0.0);
+        cpu.fpu.fpr[1] = F(0.0);
+        cpu.run({ 0xF200, 0x00A0 });                            // FDIV FP0,FP1 (0/0)
+
+        CHECK(cpu.fpu.pendingTrap == 52);
+        CHECK(cpu.fpu.fpr[1].isZero());                         // OPERR suppresses the result
+    }
+
+    SUBCASE("INEX does not suppress the result") {
+
+        TestCPU cpu;
+        cpu.fpu.fpcr = FPEXP::INEX2;
+        cpu.fpu.fpr[0] = F(3.0);
+        cpu.fpu.fpr[1] = F(1.0);
+        cpu.run({ 0xF200, 0x00A0 });                            // FDIV FP0,FP1 (1/3)
+
+        CHECK(cpu.fpu.pendingTrap == 49);
+        CHECK(!same(cpu.fpu.fpr[1], F(1.0)));
+    }
+}
+
+TEST_CASE("BSUN is taken before the conditional instruction completes")
+{
+    SUBCASE("FBcc") {
+
+        TestCPU cpu;
+        installFpuHandlers(cpu);
+        cpu.fpu.fpcr = FPEXP::BSUN;
+        cpu.fpu.fpsr = FPSR::CC_NAN;
+        cpu.run({ 0xF292, 0x0002 });                            // FBGT (signaling)
+
+        u32 sp = cpu.reg.sp;
+        CHECK(cpu.reg.pc0 == fpuHandler(48));
+        CHECK(cpu.read16(sp + 6) == 48 * 4);
+        CHECK(cpu.read32(sp + 2) == TestCPU::codeStart);        // Address of FBcc
+        CHECK((cpu.fpu.fpsr & FPEXP::BSUN) != 0);
+    }
+
+    SUBCASE("FScc") {
+
+        TestCPU cpu;
+        installFpuHandlers(cpu);
+        cpu.fpu.fpcr = FPEXP::BSUN;
+        cpu.fpu.fpsr = FPSR::CC_NAN;
+        cpu.reg.d[0] = 0x12345678;
+        cpu.run({ 0xF240, 0x0019 });                            // FSNGL D0 (signaling, true for NaN)
+
+        CHECK(cpu.reg.pc0 == fpuHandler(48));
+        CHECK(cpu.reg.d[0] == 0x12345678);                      // The destination is not written
+    }
+
+    SUBCASE("Non-signaling conditions") {
+
+        TestCPU cpu;
+        installFpuHandlers(cpu);
+        cpu.fpu.fpcr = FPEXP::BSUN;
+        cpu.fpu.fpsr = FPSR::CC_NAN;
+        cpu.run({ 0xF282, 0x0002 });                            // FBOGT (non-signaling)
+
+        CHECK(cpu.pcOffset() == 4);
+        CHECK((cpu.fpu.fpsr & FPEXP::BSUN) == 0);
+    }
+}
+
+TEST_CASE("FMOVE to memory raises a post-instruction exception on the 68040")
+{
+    SUBCASE("68040") {
+
+        TestCPU cpu(CPModel::NONE, CPUModel::M68040);
+        installFpuHandlers(cpu);
+        cpu.fpu.fpcr = FPEXP::OPERR;
+        cpu.fpu.fpr[0] = MFloat80::quietNaN();
+        cpu.reg.a[0] = 0x2000;
+        cpu.run({ 0xF210, 0x6000 });                            // FMOVE.L FP0,(A0)
+
+        u32 sp = cpu.reg.sp;
+        CHECK(cpu.reg.pc0 == fpuHandler(52));
+        CHECK(cpu.read16(sp + 6) == (0x3000 | 52 * 4));         // Format 3
+        CHECK(cpu.read32(sp + 2) == TestCPU::codeStart + 4);    // Next instruction
+        CHECK(cpu.read32(sp + 8) == 0x2000);                    // Effective address
+        CHECK(cpu.fpu.pendingTrap == 0);
+    }
+
+    SUBCASE("68882") {
+
+        TestCPU cpu;
+        installFpuHandlers(cpu);
+        cpu.fpu.fpcr = FPEXP::OPERR;
+        cpu.fpu.fpr[0] = MFloat80::quietNaN();
+        cpu.reg.a[0] = 0x2000;
+        cpu.run({ 0xF210, 0x6000, 0xF280, 0x0000 }, 2);         // FMOVE.L FP0,(A0); FNOP
+
+        CHECK(cpu.reg.pc0 == fpuHandler(52));
+        CHECK(cpu.read16(cpu.reg.sp + 6) == 52 * 4);            // Format 0
+        CHECK(cpu.read32(cpu.reg.sp + 2) == TestCPU::codeStart + 4);
+    }
+}
+
+TEST_CASE("FSAVE discards a pending arithmetic exception")
+{
+    TestCPU cpu;
+    installFpuHandlers(cpu);
+    cpu.fpu.fpcr = FPEXP::DZ;
+    cpu.fpu.fpr[0] = F(0.0);
+    cpu.fpu.fpr[1] = F(1.0);
+    cpu.reg.a[0] = 0x3000;
+
+    // FDIV FP0,FP1; FSAVE -(A0); FNOP
+    cpu.run({ 0xF200, 0x00A0, 0xF320, 0xF280, 0x0000 }, 3);
+
+    CHECK(cpu.fpu.pendingTrap == 0);
+    CHECK(cpu.pcOffset() == 10);
+}
+
 TEST_CASE("Transcendental")
 {
     auto near = [](const MFloat80 &a, double expected) {

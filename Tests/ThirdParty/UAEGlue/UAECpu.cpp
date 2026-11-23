@@ -351,6 +351,11 @@ void setState(const State &s)
     regs.fpsr = s.fpsr;
     regs.fpiar = s.fpiar;
 
+    // No exception is pending from a previous test (the 68882 keeps a taken exception pending)
+    regs.fp_exp_pend = 0;
+    regs.fp_unimp_pend = 0;
+    regs.fpu_exp_state = 0;
+
     if (mmuExec) {
         mmu030_reset(1);
         crp_030 = s.crp;

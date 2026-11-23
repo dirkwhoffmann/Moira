@@ -131,6 +131,9 @@ public:
     /// Indicates whether the FPU is in reset state (affects FSAVE)
     bool resetState = true;
 
+    /// Vector of an arithmetic exception that is taken when the next FPU instruction starts (0 = none)
+    u16 pendingTrap = 0;
+
 
     //
     // Constructing
@@ -230,6 +233,17 @@ public:
 
     /// Checks if an exception is enabled in FPCR
     bool isEnabled(u32 exceptionBit) const { return fpcr & exceptionBit; }
+
+    /// Returns the vector of the exception with the highest priority that is
+    /// set in the exception status byte and enabled in FPCR (0 = none)
+    u16 trapVector() const;
+
+    /// Checks if an exception that is set and enabled prevents the result from
+    /// being stored (SNAN, OPERR and DZ, MC68881/MC68882UM, 6.1)
+    bool suppressesResult() const { return fpsr & fpcr & (FPEXP::SIG_NAN | FPEXP::OPERR | FPEXP::DZ); }
+
+    /// Checks if a conditional instruction raises an enabled BSUN exception
+    bool bsunTrap(unsigned condition) const { return (condition & 0x10) && (fpsr & FPSR::CC_NAN) && (fpcr & FPEXP::BSUN); }
 
 
     //

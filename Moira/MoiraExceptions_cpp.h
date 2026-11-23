@@ -118,6 +118,24 @@ Moira::writeStackFrame0010(u16 sr, u32 pc, u32 ia, u16 nr)
 }
 
 template <Core C> void
+Moira::writeStackFrame0011(u16 sr, u32 pc, u32 ea, u16 nr)
+{
+    assert(C == Core::C68020);
+
+    // Effective address
+    push<C, Long>(ea);
+
+    // 0011 | Vector offset
+    push<C, Word>(0x3000 | nr << 2);
+
+    // Program counter
+    push<C, Long>(pc);
+
+    // Status register
+    push<C, Word>(sr);
+}
+
+template <Core C> void
 Moira::writeStackFrame0111(u16 sr, u32 pc, u16 nr, u16 ssw, u32 addr, u32 dataOut)
 {
     // Write-back 1 (unused)
@@ -719,6 +737,48 @@ Moira::processException(const std::exception &exc, const Registers *saved)
 }
 
 #endif
+
+template <Core C> void
+Moira::execFpuTrap(u16 vector, bool post, u32 ea)
+{
+    u16 status = getSR();
+
+    // Inform the delegate
+    willExecute(M68kException::FPU_ARITHMETIC, vector);
+
+    // Exceptions terminate loop mode and clear any pending trace event
+    flags &= ~(State::LOOPING | State::TRACE_EXC);
+
+    // Enter supervisor mode and leave trace mode
+    setSupervisorMode(true);
+    clearTraceFlags();
+
+    // Write stack frame
+    if (post) {
+        writeStackFrame0011<C>(status, reg.pc, ea, vector);
+    } else {
+        writeStackFrame0000<C>(status, reg.pc0, vector);
+    }
+
+    // Branch to exception handler
+    jumpToVector<C, AE_SET_CB3>(vector);
+
+    // Inform the delegate
+    didExecute(M68kException::FPU_ARITHMETIC, vector);
+}
+
+template <Core C> bool
+Moira::takePendingFpuTrap()
+{
+    if (!fpu.pendingTrap) return false;
+
+    // The exception is taken once. A handler that returns continues with the instruction.
+    u16 vector = fpu.pendingTrap;
+    fpu.pendingTrap = 0;
+    execFpuTrap<C>(vector);
+
+    return true;
+}
 
 template <Core C> void
 Moira::execException(M68kException exc, int nr)

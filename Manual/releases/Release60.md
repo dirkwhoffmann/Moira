@@ -80,8 +80,13 @@ These are now declared through `MoiraInterface.h` (`MOIRA_REQUIRED`, `MOIRA_DEFA
   - RTE accepts the same frame formats as UAE.
   - An address error now writes a frame of format 2, as on the real 68040, instead of the 68030's format B frame.
   - FPU instructions the 68040 doesn't implement (the transcendentals, FMOD, FREM, FSCALE, FINT, FINTRZ and FMOVECR) now raise the unimplemented floating-point instruction exception. The frame has format 2 and holds the address of the next instruction and the effective address, so an FPSP can emulate the instruction.
+- 68020 and later:
+  - A bus error in a prefetch no longer halts the CPU. Before, reading the instruction words for the stack frame faulted a second time, which was treated as a double bus fault.
+- 68030 and 68040:
+  - A bus error that the application signals with `BusError(addr)` now gets a complete special status word (read or write, size, function code). Before, only faults detected by the MMU had one, and a failed write on the 68030 got the wrong frame format.
 - FPU (all models):
   - FBcc, FDBcc, FScc and FTRAPcc no longer set accrued exception bits other than IOP when they raise BSUN.
+  - Arithmetic exceptions that are enabled in FPCR now raise their exceptions (vectors 48 to 54). As on the real FPU, they are taken when the next FPU instruction starts. BSUN is taken by the conditional instruction, and the 68040 takes the exception of an FMOVE to memory right away (format 3 frame). An enabled SNAN, OPERR or DZ exception leaves the destination register unchanged.
 
 Thanks to Arnaud (habib256) for reporting the 68040 and FPU issues ([discussion #36](https://github.com/dirkwhoffmann/Moira/discussions/36)).
 

@@ -23,6 +23,20 @@ FPU::reset()
     fpcr = 0;
 
     resetState = true;
+    pendingTrap = 0;
+}
+
+u16
+FPU::trapVector() const
+{
+    /* The exceptions are prioritized as follows (MC68881/MC68882UM, 6.1):
+     * BSUN (48), SNAN (54), OPERR (52), OVFL (53), UNFL (51), DZ (50), INEX1 and INEX2 (49)
+     */
+    static constexpr u16 vectors[8] = { 49, 49, 50, 51, 53, 52, 54, 48 };
+
+    u32 bits = (fpsr & fpcr & FPSR::EXC_MASK) >> 8;
+    for (int i = 7; i >= 0; i--) if (bits & (1 << i)) return vectors[i];
+    return 0;
 }
 
 bool

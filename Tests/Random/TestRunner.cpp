@@ -245,6 +245,7 @@ void TestRunner::resetMoira(Setup &s)
     moiracpu->fpu.setFPCR(s.fpcr);
     moiracpu->fpu.setFPSR(s.fpsr);
     moiracpu->fpu.setFPIAR(s.fpiar);
+    moiracpu->fpu.pendingTrap = 0;
 
     moiracpu->mmu.mmu030.crp = s.crp;
     moiracpu->mmu.mmu030.srp = s.srp;

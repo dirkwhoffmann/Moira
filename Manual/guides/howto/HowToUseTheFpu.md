@@ -64,12 +64,40 @@ Moira emulates this behavior. An unimplemented instruction raises the unimplemen
 
 The exception is reported to the exception delegates as `M68kException::FPU_UNIMPLEMENTED` (see [Using the Delegation System](/guides/howto/HowToUseDelegates)).
 
+## Arithmetic Exceptions
+
+The FPU reports exceptional conditions, such as a division by zero or an overflow, in the exception status byte of FPSR. If the corresponding bit in FPCR is set, the condition also raises an exception:
+
+| Vector | Exception |
+|:-------|:----------|
+| 48 | Branch or set on unordered (BSUN) |
+| 49 | Inexact result (INEX1, INEX2) |
+| 50 | Divide by zero (DZ) |
+| 51 | Underflow (UNFL) |
+| 52 | Operand error (OPERR) |
+| 53 | Overflow (OVFL) |
+| 54 | Signaling NaN (SNAN) |
+
+If several exceptions occur at once, the one with the highest priority is taken: BSUN, SNAN, OPERR, OVFL, UNFL, DZ, INEX.
+
+As on the real FPU, an exception is not taken by the instruction that causes it. The instruction completes, and the exception is taken when the next FPU instruction starts. The stack frame (format 0) holds the address of that instruction, so a handler that returns with `RTE` executes it. If an enabled SNAN, OPERR or DZ exception occurs, the destination register is left unchanged.
+
+There are two cases in which the exception is taken right away:
+
+- **BSUN** is taken by the conditional instruction (`FBcc`, `FDBcc`, `FScc`, `FTRAPcc`) before it has any effect. The stack frame holds the address of the conditional instruction.
+- On the **68040**, an exception of `FMOVE` to memory or to a data register is taken after the instruction. The stack frame (format 3) holds the address of the next instruction and the effective address of the destination.
+
+The exceptions are reported to the exception delegates as `M68kException::FPU_ARITHMETIC` together with the vector number.
+
 ## Saving and Restoring the FPU State
 
 Operating systems save the internal state of the FPU with `FSAVE` and restore it with `FRESTORE`, e.g. when switching tasks. Moira writes a null frame if the FPU is in its reset state and an idle frame otherwise. The size of the idle frame depends on the model, as on the real hardware (68881: 28 bytes, 68882: 60 bytes, 68040: 4 bytes), so software that inspects the frame sees the values it expects. `FRESTORE` accepts the frames that `FSAVE` writes.
 
+The frames don't carry the exception state of the FPU. An arithmetic exception that is pending when `FSAVE` or `FRESTORE` executes is discarded.
+
 ## Limitations
 
-- **Arithmetic exceptions.** The exception bits in FPSR are set as on the real FPU, but enabling an exception in FPCR doesn't raise the corresponding trap (vectors 48 to 54). Software that relies on these traps doesn't work as expected.
+- **Exception state frames.** `FSAVE` always writes a null or an idle frame. The busy and exception frames, which hold the operand that caused an exception, are not emulated. A handler that inspects them to fix up the result doesn't work as expected. On the real 68882, an exception also stays pending until the handler has saved and restored the FPU state. Moira takes it once.
+- **FMOVE to memory on the 68881 and 68882.** An exception of `FMOVE` to memory or to a data register is taken when the next FPU instruction starts, like all other exceptions. UAE takes it right away with a format 3 frame, which only the 68040 supports.
 - **Packed decimal on the 68040.** The 68040 doesn't support the packed decimal format in hardware. `FMOVE.P` should raise the unimplemented data type exception, but Moira executes it like a 68881 or 68882.
 - **Timing.** FPU instructions are not cycle-exact.
