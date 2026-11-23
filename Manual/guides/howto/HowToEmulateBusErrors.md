@@ -54,7 +54,7 @@ Whether bus errors need to be enabled depends on the CPU model:
 
   If the option is disabled, a `BusError` that is thrown anyway is still processed, but the instruction cannot be restarted. While the MMU is enabled, the option has no effect: An address translation fault is a bus error that must be restartable, so Moira always saves the registers in this case.
 
-Bus errors are independent of address errors, which are enabled with `MOIRA_EMULATE_ADDRESS_ERROR` (see [Configuration Options](/api/ConfigOptions)).
+Bus errors are independent of address errors, which are enabled with `MOIRA_EMULATE_ADDRESS_ERROR` (see [Emulating Address Errors](/guides/howto/HowToEmulateAddressErrors)).
 
 ## The Stack Frame
 

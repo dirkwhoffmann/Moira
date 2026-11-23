@@ -23,11 +23,11 @@ All symbols live in the namespace `moira`. The name can be changed at compile ti
 
 ## Delegates
 
-The functions the CPU calls to communicate with your application are protected virtual functions of [moira::Moira](/api/moira-Moira):
+The functions the CPU calls to communicate with your application are protected member functions of [moira::Moira](/api/moira-Moira). They are virtual unless `MOIRA_VIRTUAL_API` is disabled:
 
 - **Memory access.** `read8`, `read16`, `read32`, `write8`, `write16`, `write32` are required. The functions `read16OnReset`, `read16Dasm`, `dsack` and `readIrqVector` are optional refinements.
-- **Notifications.** `didResetCPU`, `didHaltCPU`, `willExecute`, `didExecute`, `willInterrupt`, `didJumpToVector`, `didChangeCACR` and others inform you about what the CPU is doing. They do nothing by default.
-- **Debugger events.** `didReachBreakpoint`, `didReachWatchpoint`, `didReachCatchpoint`, `didReachSoftstop` and `didReachSoftwareTrap` are called when the debugger stops the CPU. See [How to use the debugger](/guides/howto/HowToUseTheDebugger).
+- **Notifications.** `didResetCPU`, `didHaltCPU`, `willExecute`, `didExecute`, `willInterrupt`, `didJumpToVector`, `didChangeCACR` and others inform you about what the CPU is doing. They do nothing by default. See [Using the Delegation System](/guides/howto/HowToUseDelegates).
+- **Debugger events.** `didReachBreakpoint`, `didReachWatchpoint`, `didReachCatchpoint`, `didReachSoftstop`, `didReachSoftwareTrap` and `didLogInstruction` report debugger events. The CPU doesn't stop on its own. See [Using the Debugger](/guides/howto/HowToUseTheDebugger).
 
 ## Types
 

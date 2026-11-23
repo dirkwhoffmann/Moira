@@ -50,7 +50,8 @@
 /* Set to true to enable address error checking.
  *
  * The 68000 and 68010 trigger an address error violation if a word or longword
- * is accessed at an odd memory address.
+ * is accessed at an odd memory address. On all models, an odd program counter
+ * triggers an address error.
  *
  * Enable to improve accuracy, disable to gain speed.
  */
