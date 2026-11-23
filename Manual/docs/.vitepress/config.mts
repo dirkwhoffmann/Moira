@@ -41,7 +41,7 @@ const guideGroups: [string, string, string[]][] = [
   ['Overview', 'overview', ['About']],
   ['Tutorials', 'tutorials', ['GettingStarted', 'UsingMoiraInYourOwnApp']],
   ['How-to guides', 'howto', ['HowToUseTheCpu', 'HowToUseTheDisassembler', 'HowToUseTheDebugger',
-                              'HowToUseDelegates', 'HowToEmulateBusErrors', 'HowToUseTheFpu',
+                              'HowToUseDelegates', 'HowToEmulateBusErrors', 'HowToUseTheFpu', 'HowToUseTheMmu',
                               'HowToOverclockTheCpu']],
 ]
 const conceptGroups: [string, string, string[]][] = [
