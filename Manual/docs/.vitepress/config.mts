@@ -128,7 +128,7 @@ export default defineConfig({
   markdown: { theme: scheme.code },
   vite: { resolve: { alias: { '@scheme': scheme.css } } },
   themeConfig: {
-    logo: '/icon.png',
+    logo: { light: '/icon.png', dark: '/icon-dark.png' },
     search: { provider: 'local' },
     nav: [
       { text: 'Guides', link: '/guides/overview/About', activeMatch: '^/guides/' },

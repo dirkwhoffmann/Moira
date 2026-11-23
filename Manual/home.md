@@ -2,11 +2,12 @@
 layout: home
 title: Moira
 hero:
-  name: Moira
-  text: Manual
-  tagline: A Motorola 68k CPU emulator
+  name: Moira 68k
+  text: CPU emulator
+  tagline: v6.0
   image:
-    src: /icon.png
+    light: /icon.png
+    dark: /icon-dark.png
     alt: Moira
   actions:
     - theme: brand
