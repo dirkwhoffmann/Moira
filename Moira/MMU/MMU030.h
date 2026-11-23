@@ -67,6 +67,10 @@ class MMU030 {
     // The CPU this MMU belongs to
     class Moira &moira;
 
+    // Set while peek() walks the tables. Descriptors are read with read16Dasm()
+    // instead of the bus, and the U and M bits are not written back.
+    mutable bool peeking = false;
+
 public:
 
     /// CPU root pointer
@@ -137,6 +141,11 @@ public:
     /// it is set if the access must bypass the on-chip caches.
     std::optional<u32> translate(u32 addr, u8 fc, bool write, bool *ci = nullptr);
 
+    /// Translates an address like translate(), but without side effects: The ATC
+    /// is not changed, the U and M bits are not set, and the descriptors are read
+    /// with read16Dasm(). Returns std::nullopt if the access would cause a bus error.
+    std::optional<u32> peek(u32 addr, u8 fc, bool write = false) const;
+
     /// Creates an ATC entry for a logical address (PLOAD)
     void load(u32 addr, u8 fc, bool write);
 
@@ -184,6 +193,9 @@ private:
 
     // Walks the translation tables without side effects (PTEST mode)
     u32 walk(u32 addr, u8 fc, bool write, MmuContext &c, bool ptest, u32 level);
+
+    // Reads a descriptor (with read16Dasm() while peeking)
+    u32 readDescriptor(u32 addr) const;
 
     // Helpers called inside the walk function
     u32 lookupShort(char table, u32 taddr, u32 offset, bool write, MmuContext &c);

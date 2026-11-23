@@ -232,6 +232,58 @@ MMU030::translate(u32 addr, u8 fc, bool write, bool *ci)
     return e.physical | (addr & pageMask());
 }
 
+std::optional<u32>
+MMU030::peek(u32 addr, u8 fc, bool write) const
+{
+    // Without translation, logical and physical addresses are the same
+    if (!isEnabled() || fc == 7) return addr;
+
+    // Check if transparent translation applies
+    for (u32 ttx : { tt0, tt1 }) {
+        if (testTT(ttx, addr, fc, !write)) return addr;
+    }
+
+    // Check the cache (without touching the history bits)
+    u32 page = addr & ~pageMask();
+
+    for (auto &e : atc) {
+
+        if (!e.valid || e.logical != page || e.fc != fc) continue;
+
+        if (e.busError || (write && e.wp)) return std::nullopt;
+
+        // A write to an unmodified page would walk the tables to set the M bit
+        if (!write || e.modified) return e.physical | (addr & pageMask());
+        break;
+    }
+
+    // Walk the tables in PTEST mode, which doesn't update the descriptors
+    MmuContext context;
+    u32 physAddr;
+
+    peeking = true;
+    try {
+        physAddr = const_cast<MMU030 *>(this)->walk(addr, fc, write, context, true, 0);
+    } catch (const BusError &) {
+        peeking = false;
+        return std::nullopt;
+    }
+    peeking = false;
+
+    u32 status = context.status();
+    if (status & (MMUSR_INVALID | MMUSR_SUPERVISOR_ONLY)) return std::nullopt;
+    if (write && (status & MMUSR_WRITE_PROTECTED)) return std::nullopt;
+
+    return (physAddr & ~pageMask()) | (addr & pageMask());
+}
+
+u32
+MMU030::readDescriptor(u32 addr) const
+{
+    if (peeking) return u32(moira.read16Dasm(addr)) << 16 | moira.read16Dasm(addr + 2);
+    return moira.read32(addr);
+}
+
 void
 MMU030::load(u32 addr, u8 fc, bool write)
 {
@@ -514,7 +566,7 @@ MMU030::lookupShort(char table, u32 taddr, u32 offset, bool write, MmuContext &c
     
     // Read table entry
     u32 descrAddr = taddr + 4 * offset;
-    u32 descriptor = moira.read32(descrAddr);
+    u32 descriptor = readDescriptor(descrAddr);
     c.depth++;
     c.descrAddr = descrAddr;
 
@@ -641,7 +693,7 @@ MMU030::lookupLong(char table, u32 taddr, u32 offset, bool write, MmuContext &c)
 
     // Read table entry
     u32 descrAddr = taddr + 8 * offset;
-    u64 descriptor = u64(moira.read32(descrAddr)) << 32 | moira.read32(descrAddr + 4);
+    u64 descriptor = u64(readDescriptor(descrAddr)) << 32 | readDescriptor(descrAddr + 4);
     c.depth++;
     c.descrAddr = descrAddr;
 

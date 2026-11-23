@@ -150,6 +150,74 @@ MMU040::translate(u32 addr, u8 fc, bool write, bool *ci)
     return e.physical | (addr & pageMask());
 }
 
+std::optional<u32>
+MMU040::peek(u32 addr, u8 fc, bool write) const
+{
+    // Without translation, logical and physical addresses are the same
+    if (!isEnabled() || fc == 7) return addr;
+
+    bool super = fc & 4;
+    bool data  = (fc & 3) != 2;
+
+    // Check if transparent translation applies
+    for (u32 ttx : { data ? dtt0 : itt0, data ? dtt1 : itt1 }) {
+
+        switch (testTT(ttx, addr, super, write)) {
+
+            case TTResult::MATCH:    return addr;
+            case TTResult::NO_WRITE: return std::nullopt;
+            default:                 break;
+        }
+    }
+
+    // Checks whether an access to a page with the given status bits succeeds
+    auto allowed = [&](u32 status) {
+
+        if (!(status & MMUSR040_RESIDENT)) return false;
+        if (write && (status & MMUSR040_WRITE_PROTECTED)) return false;
+        if (!super && (status & MMUSR040_SUPERVISOR_ONLY)) return false;
+        return true;
+    };
+
+    // Check the cache (without touching the history bits)
+    u32 page = addr & ~pageMask();
+    const Atc040Entry *cache = data ? datc : iatc;
+
+    for (int i = 0; i < ATC040_ENTRIES; i++) {
+
+        auto &e = cache[i];
+        if (!e.valid || e.logical != page || e.super != super) continue;
+
+        if (!allowed(e.status)) return std::nullopt;
+
+        // A write to an unmodified page would walk the tables to set the M bit
+        if (!write || (e.status & MMUSR040_MODIFIED)) return e.physical | (addr & pageMask());
+        break;
+    }
+
+    // Walk the tables without updating the descriptors
+    u32 status, physAddr;
+
+    peeking = true;
+    try {
+        physAddr = const_cast<MMU040 *>(this)->walk(addr, super, write, status);
+    } catch (const BusError &) {
+        peeking = false;
+        return std::nullopt;
+    }
+    peeking = false;
+
+    if (!allowed(status)) return std::nullopt;
+    return physAddr | (addr & pageMask());
+}
+
+u32
+MMU040::readDescriptor(u32 addr) const
+{
+    if (peeking) return u32(moira.read16Dasm(addr)) << 16 | moira.read16Dasm(addr + 2);
+    return moira.read32(addr);
+}
+
 u32
 MMU040::test(u32 addr, u8 fc, bool write)
 {
@@ -352,14 +420,14 @@ MMU040::walk(u32 addr, bool super, bool write, u32 &status)
 
         if ((descriptor & bits) == bits) return descriptor;
         descriptor |= bits;
-        moira.write16(descrAddr + 2, u16(descriptor));
+        if (!peeking) moira.write16(descrAddr + 2, u16(descriptor));
         return descriptor;
     };
 
     // Root table
     u32 rp = super ? srp : urp;
     u32 descrAddr = (rp & 0xFFFFFE00) | (addr >> 23 & 0x1FC);
-    u32 descriptor = moira.read32(descrAddr);
+    u32 descriptor = readDescriptor(descrAddr);
     if (!(descriptor & 2)) return 0;
 
     wp |= (descriptor & MMUSR040_WRITE_PROTECTED) != 0;
@@ -367,7 +435,7 @@ MMU040::walk(u32 addr, bool super, bool write, u32 &status)
 
     // Pointer table
     descrAddr = (descriptor & 0xFFFFFE00) | (addr >> 16 & 0x1FC);
-    descriptor = moira.read32(descrAddr);
+    descriptor = readDescriptor(descrAddr);
     if (!(descriptor & 2)) return 0;
 
     wp |= (descriptor & MMUSR040_WRITE_PROTECTED) != 0;
@@ -376,13 +444,13 @@ MMU040::walk(u32 addr, bool super, bool write, u32 &status)
     // Page table
     descrAddr = page8k ? (descriptor & 0xFFFFFF80) + (addr >> 11 & 0x7C)
                        : (descriptor & 0xFFFFFF00) + (addr >> 10 & 0xFC);
-    descriptor = moira.read32(descrAddr);
+    descriptor = readDescriptor(descrAddr);
 
     // Indirect descriptor. The pointer is followed once.
     if ((descriptor & 3) == 2) {
 
         descrAddr = descriptor & ~3u;
-        descriptor = moira.read32(descrAddr);
+        descriptor = readDescriptor(descrAddr);
     }
 
     // Page fault (also caused by a second indirection)

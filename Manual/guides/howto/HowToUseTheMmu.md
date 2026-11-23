@@ -47,10 +47,10 @@ The 68040 MMU has the registers `tc`, `urp`, `srp`, `itt0`, `itt1`, `dtt0`, `dtt
 
 ## Translating Addresses
 
-A debugger often needs to know the physical address that belongs to a logical one. `mmu.translate()` translates an address the same way the CPU does:
+A debugger often needs to know the physical address that belongs to a logical one. `mmu.peek()` returns the address the CPU would access:
 
 ```c++
-auto phys = cpu.mmu.translate(addr, cpu.getFC(), false);
+auto phys = cpu.mmu.peek(addr, FC::USER_DATA);
 
 if (phys) {
     printf("%08x -> %08x\n", addr, *phys);
@@ -59,13 +59,17 @@ if (phys) {
 }
 ```
 
-The function code selects the address space (e.g. `FC::USER_DATA` or `FC::SUPERVISOR_PROG`). Note that the translation has the same side effects as a translation performed by the CPU: It loads the ATC and may set the used bit in the page descriptors, which changes memory. Call it only if these side effects are acceptable.
+The function code selects the address space (e.g. `FC::USER_DATA` or `FC::SUPERVISOR_PROG`). An optional third argument checks a write access instead of a read access, which also takes the write protection into account. If translation is disabled, the address is returned unchanged.
+
+`peek()` has no side effects. It uses an entry of the ATC if there is one, as the CPU does, but doesn't change the ATC. If it has to walk the translation tables, it reads the descriptors with `read16Dasm()` and doesn't set the used and modified bits. This makes it safe to call at any time, e.g. while the emulation is paused.
+
+`mmu.translate()`, which the CPU uses internally, is public, too. It has the side effects of a real translation: It loads the ATC, and it sets the used and modified bits in the page descriptors, which changes memory.
 
 ## Interaction with the Debugger and the Disassembler
 
 - **Breakpoints** compare the program counter, which is a logical address.
 - **Watchpoints** compare the address of the bus access, which is a physical address.
-- **The disassembler** reads the instruction words with `read16Dasm()`, passing the address as it is. With the MMU enabled, this is a logical address. If you disassemble code of a program that runs with translation enabled, translate the address in your implementation of `read16Dasm()`.
+- **The disassembler** reads the instruction words with `read16Dasm()`, passing the address as it is. With the MMU enabled, this is a logical address. If you disassemble code of a program that runs with translation enabled, translate the address with `mmu.peek()` before you look it up.
 
 ## Limitations
 

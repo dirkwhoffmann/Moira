@@ -80,6 +80,11 @@ public:
     /// Translates a logical address to a physical address. If 'ci' is provided,
     /// it is set if the access must bypass the on-chip caches.
     std::optional<u32> translate(u32 addr, u8 fc, bool write, bool *ci = nullptr);
+
+    /// Translates an address without side effects (for debuggers). Returns the
+    /// address unchanged if translation is disabled and std::nullopt if the
+    /// access would cause a bus error.
+    std::optional<u32> peek(u32 addr, u8 fc, bool write = false) const;
 };
 
 inline bool
@@ -90,6 +95,17 @@ MMU::isEnabled() const
         case MMUModel::M68030: return mmu030.isEnabled();
         case MMUModel::M68040: return mmu040.isEnabled();
         default:               return false;
+    }
+}
+
+inline std::optional<u32>
+MMU::peek(u32 addr, u8 fc, bool write) const
+{
+    switch (model) {
+
+        case MMUModel::M68030: return mmu030.peek(addr, fc, write);
+        case MMUModel::M68040: return mmu040.peek(addr, fc, write);
+        default:               return addr;
     }
 }
 

@@ -1275,6 +1275,96 @@ TEST_CASE("MMU040")
     }
 }
 
+/* peek() translates an address like the CPU, but without side effects. It is
+ * meant for debuggers, which must not change the state of the emulated machine.
+ */
+
+static bool atcEmpty030(TestCPU &cpu)
+{
+    for (auto &e : cpu.mmu.mmu030.atc) if (e.valid) return false;
+    return true;
+}
+
+TEST_CASE("Peek (68030)")
+{
+    SUBCASE("Translation") {
+
+        TestCPU cpu;
+        setupShortTables(cpu);
+
+        CHECK(cpu.mmu.peek(0x2004, FC::SUPERVISOR_DATA) == 0x5004);
+        CHECK(cpu.mmu.peek(0x5FFC, FC::USER_DATA) == 0x7FFC);
+        CHECK(!cpu.mmu.peek(0x3000, FC::SUPERVISOR_DATA));               // Invalid
+        CHECK(cpu.mmu.peek(0x4000, FC::SUPERVISOR_DATA) == 0x6000);      // Write protected, read
+        CHECK(!cpu.mmu.peek(0x4000, FC::SUPERVISOR_DATA, true));         // Write protected, write
+        CHECK(cpu.mmu.peek(0x2004, 7) == 0x2004);                        // CPU space
+    }
+
+    SUBCASE("No side effects") {
+
+        TestCPU cpu;
+        setupShortTables(cpu);
+
+        CHECK(cpu.mmu.peek(0x2004, FC::SUPERVISOR_DATA, true) == 0x5004);
+
+        CHECK((cpu.read32(tableA) & 0x08) == 0);                         // U bit not set
+        CHECK((cpu.read32(tableB + 4 * 2) & 0x18) == 0);                 // U and M bits not set
+        CHECK(atcEmpty030(cpu));
+    }
+
+    SUBCASE("ATC") {
+
+        TestCPU cpu;
+        setupShortTables(cpu);
+
+        // A read loads the page into the ATC
+        cpu.reg.a[0] = 0x2004;
+        cpu.run({ 0x2010 });                                             // MOVE.L (A0),D0
+
+        // The descriptor is changed without flushing the ATC. The CPU still uses the old mapping.
+        cpu.write32(tableB + 4 * 2, 0x7000 | 1);
+        CHECK(cpu.mmu.peek(0x2004, FC::SUPERVISOR_DATA) == 0x5004);
+    }
+
+    SUBCASE("Disabled") {
+
+        TestCPU cpu;
+        setupShortTables(cpu);
+        cpu.mmu.mmu030.setTC(TC_4K_2L);
+
+        CHECK(cpu.mmu.peek(0x2004, FC::SUPERVISOR_DATA) == 0x2004);
+    }
+}
+
+TEST_CASE("Peek (68040)")
+{
+    SUBCASE("Translation") {
+
+        TestCPU cpu(CPUModel::M68040);
+        setupTables040(cpu);
+
+        CHECK(cpu.mmu.peek(0x2004, FC::SUPERVISOR_DATA) == 0x5004);
+        CHECK(cpu.mmu.peek(0x2004, FC::SUPERVISOR_PROG) == 0x5004);
+        CHECK(!cpu.mmu.peek(0x3000, FC::SUPERVISOR_DATA));               // Invalid
+        CHECK(cpu.mmu.peek(0x4000, FC::SUPERVISOR_DATA) == 0x6000);
+        CHECK(!cpu.mmu.peek(0x4000, FC::SUPERVISOR_DATA, true));         // Write protected
+    }
+
+    SUBCASE("No side effects") {
+
+        TestCPU cpu(CPUModel::M68040);
+        setupTables040(cpu);
+
+        CHECK(cpu.mmu.peek(0x2004, FC::SUPERVISOR_DATA, true) == 0x5004);
+
+        CHECK((cpu.read32(rootTable) & 8) == 0);
+        CHECK((cpu.read32(pointerTable) & 8) == 0);
+        CHECK((cpu.read32(pageTable + 4 * 2) & 0x18) == 0);
+        for (auto &e : cpu.mmu.mmu040.datc) CHECK(!e.valid);
+        for (auto &e : cpu.mmu.mmu040.iatc) CHECK(!e.valid);
+    }
+}
+
 TEST_SUITE_END();
 
 }
