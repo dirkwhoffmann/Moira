@@ -169,6 +169,9 @@ template <Flags F = 0> StackFrame makeFrame(u32 addr, u32 pc, u16 sr, u16 ird);
 template <Flags F = 0> StackFrame makeFrame(u32 addr, u32 pc);
 template <Flags F = 0> StackFrame makeFrame(u32 addr);
 
+// Adds the special status word to a bus error signaled by the host (68030 and 68040)
+template <Size S, bool W> void completeBusError(BusError &e);
+
 // Creates an address error that is raised before the bus cycle has started
 template <Core C> AddressError earlyAddressError(const StackFrame &frame);
 

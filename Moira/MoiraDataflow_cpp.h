@@ -836,7 +836,7 @@ try
 catch (BusError &e)
 {
     // Tell the fault handler whether the access was a read or a write (68030 and UAE bus error frames)
-    if constexpr (C == Core::C68020) { e.stackFrame.write = false; }
+    if constexpr (C == Core::C68020) { e.stackFrame.write = false; completeBusError<S, false>(e); }
     throw;
 }
 
@@ -865,15 +865,24 @@ Moira::readInstr(u32 addr)
         u32 phys;
         u16 result;
 
-        if (iCache.emulated) {
+        try {
 
-            result = iCache.fetch(addr & addrMask<C>(), busAccess, phys);
+            if (iCache.emulated) {
 
-        } else {
+                result = iCache.fetch(addr & addrMask<C>(), busAccess, phys);
 
-            // Without a cache, every fetch is a bus access
-            phys = translate<C, false, Word>(addr & addrMask<C>(), getFC()) & addrMask<C>();
-            result = read16(phys);
+            } else {
+
+                // Without a cache, every fetch is a bus access
+                phys = translate<C, false, Word>(addr & addrMask<C>(), getFC()) & addrMask<C>();
+                result = read16(phys);
+            }
+
+        } catch (BusError &e) {
+
+            e.stackFrame.write = false;
+            completeBusError<Word, false>(e);
+            throw;
         }
         budget.penalty += busAccess ? (portSize(dsack(phys)) == 4 ? 0 : 4) : -2;
 
@@ -1015,7 +1024,7 @@ try
 catch (BusError &e)
 {
     // Tell the fault handler whether the access was a read or a write and what data it carried
-    if constexpr (C == Core::C68020) { e.stackFrame.write = true; e.stackFrame.data = val; }
+    if constexpr (C == Core::C68020) { e.stackFrame.write = true; e.stackFrame.data = val; completeBusError<S, true>(e); }
     throw;
 }
 
@@ -1034,11 +1043,18 @@ Moira::readDataCache(u32 addr)
     u32 v1, v2 = 0;
 
     // Read the longword (or the two longwords if the access crosses a boundary)
-    if (!dCache.read(addr & ~3, fc, v1) || (spans && !dCache.read((addr & ~3) + 4, fc, v2))) {
-
-        // The page is cache-inhibited
-        return readBus<C, S, F>(addr);
+    bool cached;
+    try {
+        cached = dCache.read(addr & ~3, fc, v1) && (!spans || dCache.read((addr & ~3) + 4, fc, v2));
+    } catch (BusError &e) {
+        // The line fill has failed
+        e.stackFrame.write = false;
+        completeBusError<S, false>(e);
+        throw;
     }
+
+    // The page is cache-inhibited
+    if (!cached) return readBus<C, S, F>(addr);
 
     // Check if a watchpoint has been reached
     if ((flags & State::CHECK_WP) && debugger.watchpointMatches(addr, S)) {
@@ -1151,6 +1167,40 @@ Moira::misaligned(u32 addr)
     } else {
         return false;
     }
+}
+
+template <Size S, bool W> void
+Moira::completeBusError(BusError &e)
+{
+    /* A host that throws BusError(addr) only provides the fault address. The
+     * 68030 and 68040 also report the cause of the fault in the special status
+     * word, which is built here like for a fault detected by the MMU. Faults
+     * detected by the MMU and frames supplied by the host are left untouched.
+     */
+    if (e.complete || cpuModel < CPUModel::M68EC030) return;
+
+    u8 fc = getFC();
+
+    if (cpuModel >= CPUModel::M68EC040) {
+
+        // The 68040 reports the transfer type and the size
+        u16 size = S == Byte ? SSW040::SIZ_B : S == Word ? SSW040::SIZ_W : SSW040::SIZ_L;
+
+        e.stackFrame.ssw = size | (fc & 7);
+        if (!W) e.stackFrame.ssw |= SSW040::RW;
+
+    } else {
+
+        // On the 68030, a fault in program space belongs to the instruction pipe
+        u16 size = S == Byte ? SSW030::SIZ_B : S == Word ? SSW030::SIZ_W : SSW030::SIZ_L;
+        bool prog = (fc & 3) == 2;
+
+        e.stackFrame.ssw = (prog ? SSW030::FB | SSW030::RB : SSW030::DF) | size | (fc & 7);
+        if (!W) e.stackFrame.ssw |= SSW030::RW;
+    }
+
+    e.stackFrame.fc = fc;
+    e.complete = true;
 }
 
 template <Flags F> StackFrame

@@ -777,8 +777,8 @@ struct AddressError : public std::exception {
  * completes the stack frame itself. This is the preferred way, because the
  * frame content (stacked PC, instruction register, status register and access
  * information) depends on the executed instruction and its addressing mode.
- * Currently, this feature is available for the 68000. Alternatively, the host
- * can create the complete stack frame and pass it to the second constructor.
+ * Alternatively, the host can create the complete stack frame and pass it to
+ * the constructor that takes a StackFrame.
  */
 struct BusError : public std::exception {
     

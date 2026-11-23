@@ -286,6 +286,110 @@ TEST_CASE("Trace exceptions terminate loop mode")
     CHECK(cpu.getPC0() == TestCPU::traceHandler + 2);
 }
 
+/* The 68030 and 68040 report the cause of a fault in the special status word.
+ * Moira builds it if the host only provides the fault address.
+ */
+
+static u32 peek32(TestCPU &cpu, u32 addr) { return u32(cpu.peek16(addr)) << 16 | cpu.peek16(addr + 2); }
+
+TEST_CASE("68030 bus error frames of host-signaled faults")
+{
+    SUBCASE("Data read") {
+
+        TestCPU cpu(CPUModel::M68030);
+        cpu.faultAddr = 0x2000;
+        cpu.setA(0, 0x2000);
+        cpu.run({ 0x3010 });                            // MOVE.W (A0),D0
+
+        u32 sp = cpu.getSP();
+        CHECK((cpu.peek16(sp + 6) >> 12) == 0xB);          // Long bus fault frame
+        CHECK(cpu.peek16(sp + 10) == (SSW030::DF | SSW030::RW | SSW030::SIZ_W | 1));
+        CHECK(peek32(cpu, sp + 16) == 0x2000);
+    }
+
+    SUBCASE("Long word read") {
+
+        TestCPU cpu(CPUModel::M68030);
+        cpu.faultAddr = 0x2000;
+        cpu.setA(0, 0x2000);
+        cpu.run({ 0x2010 });                            // MOVE.L (A0),D0
+
+        u32 sp = cpu.getSP();
+        CHECK(cpu.peek16(sp + 10) == (SSW030::DF | SSW030::RW | SSW030::SIZ_L | 1));
+    }
+
+    SUBCASE("Data write") {
+
+        TestCPU cpu(CPUModel::M68030);
+        cpu.faultAddr = 0x2000;
+        cpu.faultOnRead = false;
+        cpu.setA(0, 0x2000);
+        cpu.setD(0, 0x1234);
+        cpu.run({ 0x3080 });                            // MOVE.W D0,(A0)
+
+        u32 sp = cpu.getSP();
+        CHECK((cpu.peek16(sp + 6) >> 12) == 0xA);          // Short bus fault frame
+        CHECK(cpu.peek16(sp + 10) == (SSW030::DF | SSW030::SIZ_W | 1));
+        CHECK(peek32(cpu, sp + 16) == 0x2000);
+        CHECK(peek32(cpu, sp + 24) == 0x1234);          // Data output buffer
+    }
+
+    SUBCASE("Instruction fetch") {
+
+        TestCPU cpu(CPUModel::M68030);
+        cpu.faultAddr = 0x2000;
+        cpu.setA(0, 0x2000);
+        cpu.run({ 0x4ED0 });                            // JMP (A0), the fetch at the target fails
+
+        u32 sp = cpu.getSP();
+        CHECK((cpu.peek16(sp + 6) >> 12) == 0xB);
+        CHECK(cpu.peek16(sp + 10) == (SSW030::FB | SSW030::RB | SSW030::RW | SSW030::SIZ_W | 2));
+    }
+}
+
+TEST_CASE("68040 access error frames of host-signaled faults")
+{
+    SUBCASE("Data read") {
+
+        TestCPU cpu(CPUModel::M68040);
+        cpu.faultAddr = 0x2000;
+        cpu.setA(0, 0x2000);
+        cpu.run({ 0x3010 });                            // MOVE.W (A0),D0
+
+        u32 sp = cpu.getSP();
+        CHECK((cpu.peek16(sp + 6) >> 12) == 0x7);          // Access error frame
+        CHECK(cpu.peek16(sp + 12) == (SSW040::RW | SSW040::SIZ_W | 1));
+        CHECK(peek32(cpu, sp + 20) == 0x2000);
+    }
+
+    SUBCASE("Data write") {
+
+        TestCPU cpu(CPUModel::M68040);
+        cpu.faultAddr = 0x2000;
+        cpu.faultOnRead = false;
+        cpu.setA(0, 0x2000);
+        cpu.setD(0, 0x1234);
+        cpu.run({ 0x3080 });                            // MOVE.W D0,(A0)
+
+        u32 sp = cpu.getSP();
+        CHECK(cpu.peek16(sp + 12) == (SSW040::SIZ_W | 1));
+        CHECK(peek32(cpu, sp + 20) == 0x2000);
+        CHECK(peek32(cpu, sp + 28) == 0x1234);          // Write-back 3 data
+    }
+}
+
+TEST_CASE("A frame supplied by the host keeps its special status word (68030)")
+{
+    TestCPU cpu(CPUModel::M68030);
+    cpu.faultAddr = 0x2000;
+    cpu.customFrame = true;
+    cpu.setA(0, 0x2000);
+    cpu.run({ 0x3010 });                                // MOVE.W (A0),D0
+
+    // The host frame carries no special status word
+    CHECK(cpu.peek16(cpu.getSP() + 10) == 0);
+}
+
 TEST_SUITE_END();
 
 }
