@@ -951,6 +951,12 @@ private:
     // Puts the CPU into a HALT state, stopping execution
     void halt();
 
+    // Reads an instruction word for an exception frame (0 if the read fails)
+    u16 peekInstr(u32 addr) const;
+
+    // Returns the length of an instruction for an exception frame (2 if it cannot be read)
+    u32 peekInstrLength(u32 addr) const;
+
 
     //
     // Clock (internal)

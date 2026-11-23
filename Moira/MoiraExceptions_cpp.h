@@ -342,8 +342,8 @@ Moira::writeStackFrame1011UAE(u16 sr, u16 nr, u32 pc, u16 ssw, u32 addr, u32 end
 {
     u16 stageC = 0, stageB = 0;
     if (nr == 2 && !write) {
-        stageC = read16Dasm((end + 2) & addrMask<C>());
-        stageB = read16Dasm((end + 4) & addrMask<C>());
+        stageC = peekInstr((end + 2) & addrMask<C>());
+        stageB = peekInstr((end + 4) & addrMask<C>());
     }
     writeStackFrame1011<C>(sr, 0, pc, nr, ssw, addr, 0, stageC, stageB);
 }
@@ -398,7 +398,7 @@ Moira::execAddressError(StackFrame frame, int delay)
         // The 68020 reports an odd instruction fetch with a frame of format B. According
         // to recordings made on a real A1200, the stacked PC is always the address of the
         // instruction (JMP, JSR, BSR, DBcc, RTS, RTR).
-        u16 op = read16Dasm(pc0Now & addrMask<C>());
+        u16 op = peekInstr(pc0Now & addrMask<C>());
 
         // Stage C and B are not emulated faithfully (UAE shows the next instruction word)
         bool ix = (op & 0xFFC0) == 0x4EC0 && hasIndexedOperand(op);
@@ -481,7 +481,7 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
                 if (!phys) return 0;
                 addr = phys.value() & addrMask<C>();
             }
-            return read16Dasm(addr);
+            return peekInstr(addr);
         };
         u16 stageC = peek(reg.pc0 + 2);
         u16 stageB = peek(reg.pc0 + 4);
@@ -499,7 +499,7 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
     } else {
 
         // The 68020 follows UAE
-        u16 op = read16Dasm(reg.pc0 & addrMask<C>());
+        u16 op = peekInstr(reg.pc0 & addrMask<C>());
         auto indexed = [](u16 m, u16 r) { return m == 6 || (m == 7 && r == 3); };
         bool move = (op & 0xC000) == 0 && (op & 0x3000);
         u16 srcMode = (op >> 3) & 7, srcReg = op & 7;
@@ -517,7 +517,7 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
 
             // The length of the instruction is determined by the disassembler handlers of the CPU model.
             // Without MOIRA_ENABLE_DASM, the length is unknown and we fall back to the first extension word.
-            end = reg.pc0 + u32(instrLength(reg.pc0));
+            end = reg.pc0 + peekInstrLength(reg.pc0);
 
             // The destination extension words of a MOVE are consumed after the source has been accessed
             if (move) {
@@ -581,7 +581,7 @@ Moira::processException(const std::exception &exc, const Registers *saved)
             if (saved && !deferred) restoreRegisters(*saved);
 
             // UAE decrements an address register after the access has succeeded
-            u16 op = (saved && deferred) ? read16Dasm(reg.pc0 & addrMask<C>()) : 0;
+            u16 op = (saved && deferred) ? peekInstr(reg.pc0 & addrMask<C>()) : 0;
             if (saved && deferred) undoPredecrement(be->stackFrame, *saved, op);
 
             // UAE sets the condition codes of a MOVE before it writes the result

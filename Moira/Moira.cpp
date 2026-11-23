@@ -370,6 +370,24 @@ Moira::instrLength(u32 addr) const
     return disassembleInstr(tmp, addr, cpuView);
 }
 
+/* The exception handlers read instruction words to fill in the stack frame
+ * (e.g., the pipe stages of a bus fault frame). These reads are not part of
+ * the emulated bus traffic. If one of them hits the address that has just
+ * faulted, the host throws again. This must not be treated as a double bus
+ * fault, because the real CPU performs no bus cycle at this point.
+ */
+u16
+Moira::peekInstr(u32 addr) const
+{
+    try { return read16Dasm(addr); } catch (const BusError &) { return 0; }
+}
+
+u32
+Moira::peekInstrLength(u32 addr) const
+{
+    try { return u32(instrLength(addr)); } catch (const BusError &) { return 2; }
+}
+
 void
 Moira::configureUnits()
 {

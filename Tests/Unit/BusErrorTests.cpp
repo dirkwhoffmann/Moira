@@ -390,6 +390,49 @@ TEST_CASE("A frame supplied by the host keeps its special status word (68030)")
     CHECK(cpu.peek16(cpu.getSP() + 10) == 0);
 }
 
+/* The exception handler reads instruction words to fill in the stack frame.
+ * If such a word lies at the faulting address, the host throws again. This
+ * read is not a bus cycle of the CPU and must not cause a double bus fault.
+ */
+TEST_CASE("A failing prefetch is processed like any other bus error")
+{
+    for (auto model : { CPUModel::M68000, CPUModel::M68010, CPUModel::M68020,
+                        CPUModel::M68030, CPUModel::M68040 }) {
+
+        CAPTURE(int(model));
+
+        TestCPU cpu(model);
+        cpu.faultAddr = 0x1004;
+        cpu.run({ 0x4E71 });                            // NOP, fetching the next word fails
+
+        CHECK(!cpu.isHalted());
+    }
+}
+
+TEST_CASE("An instruction is restarted after a failing prefetch")
+{
+    for (auto model : { CPUModel::M68020, CPUModel::M68030, CPUModel::M68040 }) {
+
+        CAPTURE(int(model));
+
+        TestCPU cpu(model);
+        cpu.poke16(TestCPU::handler, 0x4E73);           // RTE
+        cpu.faultAddr = 0x1004;
+        cpu.run({ 0x5280, 0x5281 });                    // ADDQ.L #1,D0; ADDQ.L #1,D1
+
+        // The handler removes the cause of the fault and returns
+        cpu.faultAddr = 0xFFFFFFFF;
+        cpu.execute();                                  // RTE
+        while (cpu.getPC0() < 0x1004) cpu.execute();
+
+        CHECK(!cpu.isHalted());
+        CHECK(cpu.getD(0) == 1);                        // Executed once
+        CHECK(cpu.getPC0() == 0x1004);
+        cpu.execute();
+        CHECK(cpu.getD(1) == 1);
+    }
+}
+
 TEST_SUITE_END();
 
 }
