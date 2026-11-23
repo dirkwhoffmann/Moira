@@ -16,12 +16,20 @@ hero:
 features:
   - icon: 🧭
     title: Guides
-    details: Tutorials, how-to guides and background articles that explain how to integrate Moira into your application.
+    details: Tutorials and how-to guides that explain how to integrate Moira into your application.
     link: /guides/overview/About
+  - icon: 💡
+    title: Concepts
+    details: Background articles about the inner workings of the CPU core.
+    link: /concepts/MainExecutionFunction
   - icon: 🛠️
     title: API
     details: An overview of the API and all classes, structs and enumerations of the CPU core.
     link: /api/overview
+  - icon: 📦
+    title: Releases
+    details: Release notes and migration notes for updating from an older version.
+    link: /releases/Release60
 ---
 
 ![Code Size](https://img.shields.io/github/languages/code-size/dirkwhoffmann/Moira)

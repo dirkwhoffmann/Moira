@@ -11,9 +11,9 @@
   - Moxygen documents all enumerations on the namespace page. Each one is moved
     to a page of its own (enum-<Name>.md), and all links to it are redirected.
   - The pages are moved to api/ and all links between them are made absolute.
-  - The guides (guides/, written as plain Markdown) are copied to guides/, the
-    API overview (api/overview.md) to api/, and the landing page (home.md)
-    becomes index.md.
+  - The hand-written pages (guides/, concepts/ and releases/) are copied
+    as they are, the hand-written API pages (api/*.md) are added to api/, and
+    the landing page (home.md) becomes index.md.
 
 Usage: fix_markdown.py <docs-dir>
 """
@@ -115,8 +115,10 @@ def main(docs):
     redirect(docs, split_enums(docs))
     (docs / "api.md").unlink(missing_ok=True)
     organize(docs)
-    shutil.copy(manual / "api" / "overview.md", docs / "api" / "overview.md")
-    shutil.copytree(manual / "guides", docs / "guides")
+    for page in (manual / "api").glob("*.md"):
+        shutil.copy(page, docs / "api" / page.name)
+    for section in ("guides", "concepts", "releases"):
+        shutil.copytree(manual / section, docs / section)
     shutil.copy(manual / "home.md", docs / "index.md")
 
 if __name__ == "__main__":

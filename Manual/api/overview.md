@@ -5,7 +5,7 @@ title: "Overview"
 
 The whole public API hangs off a single object of class [moira::Moira](/api/moira-Moira). The class is abstract: to use it, derive your own CPU class and connect it to your memory by implementing the memory access functions. See the [guides](/guides/tutorials/UsingMoiraInYourOwnApp) for a walk-through.
 
-All symbols live in the namespace `moira`. The name can be changed at compile time with the option `MOIRA_NAMESPACE`, which makes it possible to link several differently configured CPU cores into one program (see the [configuration options](/guides/reference/ConfigOptions)).
+All symbols live in the namespace `moira`. The name can be changed at compile time with the option `MOIRA_NAMESPACE`, which makes it possible to link several differently configured CPU cores into one program (see the [configuration options](/api/ConfigOptions)).
 
 ## Classes
 

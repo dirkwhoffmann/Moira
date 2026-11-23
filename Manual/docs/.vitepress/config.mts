@@ -35,26 +35,34 @@ if (!scheme) {
   throw new Error(`Unknown SCHEME '${schemeName}'. Choose one of: ${Object.keys(schemes).join(', ')}`)
 }
 
-// The guides, grouped like the manual: [group, [folder, [pages]]]
+// The hand-written sections. Each group is [group, folder, [pages]], where the
+// folder is relative to the section. The sidebar shows the first heading of a page.
 const guideGroups: [string, string, string[]][] = [
   ['Overview', 'overview', ['About']],
   ['Tutorials', 'tutorials', ['GettingStarted', 'UsingMoiraInYourOwnApp']],
   ['How-to guides', 'howto', ['HowToUseTheCpu', 'HowToUseTheDisassembler', 'HowToUseTheDebugger',
                               'HowToUseDelegates', 'HowToOverclockTheCpu']],
-  ['Expert notes', 'notes', ['MainExecutionFunction', 'InstructionHandlers']],
-  ['References', 'reference', ['ConfigOptions']],
+]
+const conceptGroups: [string, string, string[]][] = [
+  ['Concepts', '', ['MainExecutionFunction', 'InstructionHandlers']],
+]
+const releaseGroups: [string, string, string[]][] = [
+  ['Releases', '', ['Release60', 'MigrationNotes']],
 ]
 
-function title(folder: string, page: string): string {
-  const text = readFileSync(join(docs, 'guides', folder, `${page}.md`), 'utf8')
-  return /^# (.+?)\s*$/m.exec(text)?.[1] ?? page
+function title(path: string): string {
+  const text = readFileSync(join(docs, `${path}.md`), 'utf8')
+  return /^# (.+?)\s*$/m.exec(text)?.[1] ?? path
 }
 
-function guideSidebar() {
-  return guideGroups.map(([text, folder, pages]) => ({
+function sectionSidebar(section: string, groups: [string, string, string[]][]) {
+  return groups.map(([text, folder, pages]) => ({
     text,
     collapsed: false,
-    items: pages.map(p => ({ text: title(folder, p), link: `/guides/${folder}/${p}` })),
+    items: pages.map(p => {
+      const path = [section, folder, p].filter(Boolean).join('/')
+      return { text: title(path), link: `/${path}` }
+    }),
   }))
 }
 
@@ -132,12 +140,20 @@ export default defineConfig({
     search: { provider: 'local' },
     nav: [
       { text: 'Guides', link: '/guides/overview/About', activeMatch: '^/guides/' },
+      { text: 'Concepts', link: '/concepts/MainExecutionFunction', activeMatch: '^/concepts/' },
       { text: 'API', link: '/api/overview', activeMatch: '^/api/' },
+      { text: 'Releases', link: '/releases/Release60', activeMatch: '^/releases/' },
     ],
     sidebar: {
-      '/guides/': guideSidebar(),
+      '/guides/': sectionSidebar('guides', guideGroups),
+      '/concepts/': sectionSidebar('concepts', conceptGroups),
+      '/releases/': sectionSidebar('releases', releaseGroups),
       '/api/': [
-        { text: 'API', collapsed: false, items: [{ text: 'Overview', link: '/api/overview' }, ...apiClasses(classes)] },
+        { text: 'API', collapsed: false, items: [
+          { text: 'Overview', link: '/api/overview' },
+          { text: 'Configuration', link: '/api/ConfigOptions' },
+          ...apiClasses(classes),
+        ] },
         { text: 'FPU', collapsed: false, items: apiClasses(fpuClasses) },
         { text: 'MMU', collapsed: false, items: apiClasses(mmuClasses) },
         { text: 'Structs', collapsed: true, items: structGroups() },

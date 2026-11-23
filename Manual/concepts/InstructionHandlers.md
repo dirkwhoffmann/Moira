@@ -3,7 +3,7 @@
 This article explains the inner workings of a typical instruction handler in Moira. All instruction handlers are stored in a large lookup table. As explained in the previous article, Moira retrieves the appropriate handler from this table and executes it via a function pointer.
 To understand how a typical instruction handler is structured, let's examine the implementation of the ABCD instruction:
 
-![ABCD instruction details](../images/abcd.png)
+![ABCD instruction details](../guides/images/abcd.png)
 
 Below is the handler implementing the register addressing variant of the ABCD instruction:
 
