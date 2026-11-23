@@ -1,5 +1,13 @@
 #pragma once
 
+#ifdef _MSC_VER
+/* Keep <windows.h> from defining the min and max macros. They break the
+ * max() function in target.h. */
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#endif
+
 #ifdef _WIN32
 /* Include Winsock2 early, before any C++ std headers that bring in
  * std::byte (via 'using namespace std' in sysdeps.h).  This avoids
@@ -13,6 +21,10 @@
 #define SUPPORT_THREADS
 
 #include <climits>
+/* MSVC has no PATH_MAX (MinGW's <limits.h> provides it) */
+#if defined(_MSC_VER) && !defined(PATH_MAX)
+#define PATH_MAX 4096
+#endif
 #ifdef PATH_MAX
 #define MAX_DPATH PATH_MAX
 #else

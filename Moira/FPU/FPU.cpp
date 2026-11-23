@@ -264,7 +264,7 @@ divide(const MFloat80 &a, const MFloat80 &b)
         rem = rem << 1 | (i >= 0 ? (ma >> i) & 1 : 0);
         bool bit = rem >= mb;
         if (bit) rem -= mb;
-        q = q << 1 | bit;
+        q = q << 1 | u64(bit);
     }
     d.quotient = q;
     d.rem = rem;

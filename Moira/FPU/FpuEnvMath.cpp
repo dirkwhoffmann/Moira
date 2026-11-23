@@ -375,9 +375,9 @@ void reduce(const W &x, int &quadrant, W &r)
     }
     int s = a + 32 * L - x.e + 127;
 
-    auto bit = [&](int i) { return i >= 0 && i / 32 <= N && (p[i / 32] >> (i % 32) & 1); };
+    auto bit = [&](int i) { return int(i >= 0 && i / 32 <= N && (p[i / 32] >> (i % 32) & 1)); };
     int n = bit(s) | bit(s + 1) << 1;
-
+    
     // Isolate the fractional part (the lowest s bits)
     for (int i = 0; i <= N; i++) {
         int lo = i * 32;

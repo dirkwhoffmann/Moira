@@ -34,7 +34,7 @@ if (NOT MSVC)
 endif()
 
 if(MSVC)
-    target_compile_options(moira PUBLIC /W4)     # /bigobj /WX disabled for now
+    target_compile_options(moira PUBLIC /W3)
     target_compile_options(moira PUBLIC /wd4100) # unreferenced formal parameter
     target_compile_options(moira PUBLIC /wd4201) # nameless struct/union
     target_compile_options(moira PUBLIC /wd4324) # structure was padded due to alignment specifier

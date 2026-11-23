@@ -190,7 +190,7 @@ MMU030::testTT(u32 ttx, u32 addr, u8 fc, bool rw)
     if ((fc | fcMask) != (fcBase | fcMask)) {
         return false;
     }
-    if ((rw | rwm) != (rwb | rwm)) {
+    if ((rw || rwm) != (rwb || rwm)) {
         return false;
     }
     return true;
@@ -355,7 +355,7 @@ MMU030::atcInsert(u32 addr, u8 fc, u32 physical, u32 status, bool ci)
     e.fc        = fc;
     e.valid     = true;
     e.busError  = status & (MMUSR_INVALID | MMUSR_SUPERVISOR_ONLY);
-    e.wp        = status & MMUSR_WRITE_PROTECTED;
+    e.wp        = !!(status & MMUSR_WRITE_PROTECTED);
     e.modified  = status & MMUSR_MODIFIED;
     e.ci        = ci;
 
@@ -552,8 +552,8 @@ MMU030::lookupShort(char table, u32 taddr, u32 offset, bool write, MmuContext &c
             // +-----+--------+---------------------------------+
 
             // Record WP and CI
-            c.wp |= descriptor & 0x4;
-            c.ci = descriptor & 0x40;
+            c.wp |= !!(descriptor & 0x4);
+            c.ci = !!(descriptor & 0x40);
 
             // Update the U bit and the M bit (the latter only if the page is writable)
             if (!c.ptest && !c.violation()) {
@@ -604,7 +604,7 @@ MMU030::lookupShort(char table, u32 taddr, u32 offset, bool write, MmuContext &c
             } else {
 
                 // Record WP
-                c.wp |= descriptor & 0x4;
+                c.wp |= !!(descriptor & 0x4);
 
                 // Update the U bit
                 if (!c.ptest && !c.violation() && !(descriptor & 0x8)) moira.write16(descrAddr + 2, (u16)(descriptor | 0x8));
@@ -692,13 +692,13 @@ MMU030::lookupLong(char table, u32 taddr, u32 offset, bool write, MmuContext &c)
     } else {
 
         // Record WP and S bit
-        c.wp |= flags & 0x4;
-        c.su |= flags & 0x100;
+        c.wp |= !!(flags & 0x4);
+        c.su |= !!(flags & 0x100);
 
         if (dt == 1) {
 
             // Page descriptor (or early termination)
-            c.ci = flags & 0x40;
+            c.ci = !!(flags & 0x40);
 
             if (!c.ptest && !c.violation()) {
 

@@ -402,7 +402,7 @@ FpuEnv::div(const MFloat80 &a, const MFloat80 &b)
         exp = x.exp - y.exp + bias - 1;
         u128 m = u128(r) << 64;
         extra = u64(m / y.sig);
-        extra |= (m % y.sig) != 0;
+        extra |= u64((m % y.sig) != 0);
     }
     return roundPack(sign, exp, u64(q), extra);
 }
@@ -427,7 +427,7 @@ FpuEnv::sqrt(const MFloat80 &a)
     u64 root = isqrt(n, remainder);
 
     // The remainder tells if the exact root is above the round bit or inexact
-    u64 extra = (remainder > root ? 1ULL << 63 : 0) | (remainder != 0);
+    u64 extra = (remainder > root ? 1ULL << 63 : 0) | u64(remainder != 0);
 
     return roundPack(false, exp, root, extra);
 }
