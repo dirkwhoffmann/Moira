@@ -1,148 +1,215 @@
 # Using Moira in Your Own App
 
-This tutorial guides you through integrating Moira into your application. It covers the essential steps using vAmiga, the Amiga emulator Moira was originally developed for.
+This tutorial shows how to integrate Moira into an application. It builds a small computer step by step: a 68000 with RAM and a timer that raises an interrupt at a fixed rate. The same steps apply to any emulator, from a simple trainer board to a full Amiga.
 
-## Configuring Moira
+## Adding Moira to Your Project
 
-We begin by examining the compile-time options configured in vAmiga. The following options are selected in `MoiraConfig.h`:
+Moira is self-contained. Everything you need is in the `Moira/` folder. If your project uses CMake, add the folder as a subdirectory and link against the `moira` library:
 
-- `#define MOIRA_PRECISE_TIMING true`
+```cmake
+add_subdirectory(Moira)
 
-With this option enabled, Moira operates in precise timing mode, meaning a `sync` call is triggered before each memory access. This allows vAmiga to emulate the surrounding logic up to the exact moment the memory access occurs. This is an essential feature for Amiga emulation, as many applications depend on accurate bus timing.
-In fact, the absence of this feature in Musashi was the primary reason for developing Moira. However, note that precise timing mode is only available for the M68000 and M68010. M68020 emulation always runs in simple cycle mode, regardless of this preprocessor setting.
-
-- `#define MOIRA_VIRTUAL_API false`
-
-In vAmiga, all Moira class functions that must be implemented by the client are declared as non-virtual. This ensures they are statically linked, providing a slight performance advantage over virtual functions.
-
-- `#define MOIRA_EMULATE_ADDRESS_ERROR true`
-
-The M68000 and M68010 generate an address error when a word or longword access is attempted at an odd address. Since some Amiga titles depend on this behavior, vAmiga enables address error emulation to ensure accurate compatibility.
-
-- `#define MOIRA_EMULATE_FC true`
-
-All M680x0 CPUs have three function code (FC) pins that indicate the type of memory access being performed. While the Amiga itself does not use these pins, vAmiga enables their emulation to accurately replicate M68010 behavior. Unlike the M68000, the M68010 includes the FC pin values in certain stack frames, making this feature essential for precise emulation.
-
-- `#define MOIRA_ENABLE_DASM true`
-
-Enabling this option instructs Moira to generate a lookup table for all disassembler handlers. This table is required for using the disassembler. However, if disassembly is not needed, it is recommended to set this option to `false`, as the table consumes a significant amount of memory.
-
-- `#define MOIRA_BUILD_INSTR_INFO_TABLE false`
-
-During initialization, Moira can generate an optional info table containing details about the instruction, addressing mode, and size attribute for each of the 65536 opcode words. In vAmiga, this table is omitted since the information is not required, reducing memory usage.
-
-- `#define MOIRA_MIMIC_MUSASHI false`
-
-This option disables Musashi compatibility mode, allowing Moira to prioritize higher accuracy over Musashi-like behavior.
-
-## Subclassing Moira
-
-Having explored Moira's compile-time options, let's dive deeper into its integration within vAmiga. The core class in vAmiga is the `Amiga` class, which has the following structure:
-
-```c++
-class Amiga : public Thread {
-
-    ...
-    // Core components
-    CPU cpu = CPU(*this);
-    CIAA ciaA = CIAA(*this);
-    CIAB ciaB = CIAB(*this);
-    Memory mem = Memory(*this);
-    Agnus agnus = Agnus(*this);
-    Denise denise = Denise(*this);
-    Paula paula = Paula(*this);
-    ...
-};
+add_executable(myapp main.cpp)
+target_link_libraries(myapp PRIVATE moira)
 ```
 
-The `CPU` class in vAmiga is a subclass of the Moira class, designed to extend Moira's functionality. For example, it provides features for serializing and deserializing the CPU state, which is crucial for saving and loading emulator snapshots. Additionally, the CPU class adds overclocking support to Moira. If you're interested in how overclocking is implemented in vAmiga, please refer to the How-to section.
+Linking against `moira` also adds the folder to the include path.
 
-In `CPU.cpp`, you'll find the implementations of all Moira functions that interact with the environment. Since the API is declared as non-virtual, none of these functions have a default implementation. As a result, each function must be explicitly implemented, even if there's no specific action required. This leads to many functions being defined with empty bodies, such as:
+With other build systems, compile the source files that are listed in `Moira/CMakeLists.txt` and add the folder to the include path. The application only includes a single header:
 
 ```c++
-void
-Moira::didResetCPU()
-{
+#include "Moira.h"
 
-}
+using namespace moira;
 ```
 
-This function is one of the delegation methods provided by Moira. It is called at the end of the reset handler, allowing the client to perform any special actions required.
+## Choosing the Compile-Time Options
 
-Other functions, however, have non-empty implementations, such as those for memory access. For example, here’s how `read8` and `read16` are implemented in vAmiga:
+Moira is configured at compile time in `MoiraConfig.h`. The defaults are a good choice for most applications. The options you are most likely to change are:
 
-```c++
-u8
-Moira::read8(u32 addr) const
-{
-    return mem.peek8<ACCESSOR_CPU>(addr);
-}
+| Option | Default | Change it if... |
+|:-------|:--------|:----------------|
+| `MOIRA_PRECISE_TIMING` | `false` | ...other hardware has to see the CPU's memory accesses at the right cycle (68000 and 68010). |
+| `MOIRA_EMULATE_ADDRESS_ERROR` | `false` | ...software relies on the address error exception for odd word accesses (68000 and 68010). |
+| `MOIRA_EMULATE_BUS_ERROR` | `false` | ...instructions on the 68020 and later have to be restarted after a bus error. |
+| `MOIRA_VIRTUAL_API` | `true` | ...you want to avoid the cost of virtual function calls (see below). |
+| `MOIRA_ENABLE_DASM` | `true` | ...you don't need the disassembler and want to save memory. |
+| `MOIRA_COMPATIBILITY` | `DEFAULT` | ...you need the behavior of another emulator (Musashi, UAE or MAME), e.g. to compare results. |
 
-u16
-Moira::read16(u32 addr) const
-{
-    return mem.peek16<ACCESSOR_CPU>(addr);
-}
+Every option is guarded by `#ifndef`, so it can also be set from the build system instead of editing the file:
+
+```cmake
+target_compile_definitions(moira PUBLIC MOIRA_PRECISE_TIMING=true)
 ```
 
-At first glance, the code seems self-explanatory. Moira’s memory request is passed to the `mem` object, which is an instance of vAmiga’s Memory class. However, upon closer inspection, a question arises: How does Moira know about the various Amiga components, such as memory? These objects aren’t part of the Moira class itself. The answer is that vAmiga utilizes a slightly modified version of the Moira class. In fact, the class is declared as follows:
+[Configuration Options](/api/ConfigOptions) describes all options. In our example, we keep the defaults.
+
+## Connecting the CPU to Memory
+
+Moira doesn't own any memory. Whenever the CPU needs the bus, it calls a function that your application provides. To connect the CPU to the rest of the computer, derive a class from `Moira` and implement the six memory access functions:
 
 ```c++
-class Moira : public SubComponent {
-    ...
-}
-```
+class Computer;
 
-As you can see, Moira inherits from the `SubComponent` class, which serves as the base class for most Amiga components. One key role of the SubComponent class is to provide convenient access to the other components of the virtual Amiga. This is achieved by declaring several references that are initialized in the constructor:
+class CPU : public Moira {
 
-```c++
-class SubComponent : public AmigaComponent {
+    Computer &computer;
+
+public:
+
+    CPU(Computer &computer) : computer(computer) { }
 
 protected:
 
-    Agnus &agnus;
-    Amiga &amiga;
-    Blitter &blitter;
-    ...
-    Memory &mem;
-    ...
+    u8 read8(u32 addr) const override;
+    u16 read16(u32 addr) const override;
+    u32 read32(u32 addr) const override;
+    void write8(u32 addr, u8 val) const override;
+    void write16(u32 addr, u16 val) const override;
+    void write32(u32 addr, u32 val) const override;
+
+    void sync(int cycles) override;
 };
-``` 
+```
 
-As you can see, the `mem` object is inherited from the `SubComponent` class, enabling any Moira function to access Amiga memory.
-Side note: If you notice a potential violation of the loose coupling principle here, keep in mind that we are dealing with an emulator, a unique type of software. The Amiga itself is a tightly coupled system, and attempting to emulate it using a loosely coupled software architecture wouldn’t serve us well.
-
-## Creating a Run Loop
-
-Lastly, let's take a closer look at where vAmiga calls Moira's execution function. This happens inside function `computeFrame`, which, as the name already suggests, emulates the Amiga for a single video frame. 
-
-This function is one of the most prominent, since it contains the emulator's run loop. It is structured as follows:
+The functions forward the requests to the computer, which owns the memory. Keep in mind that the 68k is a big-endian CPU: The high byte of a word is stored first.
 
 ```c++
-void
-Amiga::computeFrame()
+u8 CPU::read8(u32 addr) const { return computer.peek8(addr); }
+u16 CPU::read16(u32 addr) const { return u16(read8(addr) << 8 | read8(addr + 1)); }
+u32 CPU::read32(u32 addr) const { return u32(read16(addr) << 16 | read16(addr + 2)); }
+
+void CPU::write8(u32 addr, u8 val) const { computer.poke8(addr, val); }
+void CPU::write16(u32 addr, u16 val) const { computer.poke16(addr, val); }
+void CPU::write32(u32 addr, u32 val) const { computer.poke32(addr, val); }
+```
+
+Moira decides how a long word access is performed. On the 68000 and 68010, it is always split into two word accesses. The 68020 and later adapt their bus cycles to the port size of the addressed device, which the application reports with `dsack()`. By default, every device has a 16-bit port, and long words are also split into word accesses. `read32()` and `write32()` are called for aligned long word accesses to a device with a 32-bit port.
+
+Besides the memory functions, the `Moira` class declares a number of optional functions. All of them have default implementations, so you only override what you need. Most of them are delegates that inform the application about events, e.g. `didHaltCPU()` or `didReachBreakpoint()` (see [Using the Delegation System](/guides/howto/HowToUseDelegates)).
+
+## Selecting the CPU Model
+
+The CPU model is selected with `setModel()`. Our computer uses a 68000:
+
+```c++
+cpu.setModel(CPUModel::M68000);
+```
+
+Moira supports the 68000, 68010, 68EC020, 68020, 68EC030, 68030, 68EC040, 68LC040 and 68040. On the 68020 and 68030, a floating-point coprocessor can be added with `setCPModel(CPModel::M68881)` or `setCPModel(CPModel::M68882)`. The 68040 has a built-in FPU.
+
+## Keeping the Hardware in Sync
+
+The CPU is only one component of a computer. Other components, such as timers or video hardware, have to advance in step with the CPU. For this purpose, Moira calls `sync()` whenever time passes. The default implementation advances the CPU's clock. An overriding implementation has to call it, too:
+
+```c++
+void CPU::sync(int cycles)
 {
-    while (1) {
+    // Advance the CPU's clock
+    Moira::sync(cycles);
 
-        // Emulate the next CPU instruction
-        cpu.execute();
-
-        // Check if special action needs to be taken
-        if (flags) {
-
-            ...
-            // Did we reach a breakpoint?
-            if (flags & RL::BREAKPOINT_REACHED) {
-
-                auto addr = cpu.debugger.breakpoints.hit->addr;
-                msgQueue.put(Msg::BREAKPOINT_REACHED, CpuMsg { addr, 0 });
-                action = pause;
-            }
-            ...
-        }
-    }
+    // Let the timer catch up and connect its interrupt line to the CPU
+    computer.timer.update(getClock());
+    setIPL(computer.timer.pending ? 6 : 0);
 }
 ```
 
-We’ve reached the critical code section. At the beginning of the while loop’s body, Moira’s execution function is called. The flags variable is used to trigger special actions within the run loop. For example, when Moira reaches a breakpoint, a specific bit in the flags variable is set. These bits are checked inside the run loop, and if a bit is set, it triggers the corresponding action.
-In the case of the breakpoint flag, vAmiga first performs some necessary actions (which are not relevant here). Then, it notifies the GUI by sending a `BREAKPOINT_REACHED` message. Finally, it requests the subsequent code to pause the thread and exit the run loop.
+By default, `sync()` is called once at the end of each instruction. If `MOIRA_PRECISE_TIMING` is enabled, the 68000 and 68010 call it before each memory access, so that other components see the access at the right cycle.
+
+Our timer requests an interrupt every 1000 cycles. The interrupt is acknowledged by a write to address `$F00000`:
+
+```c++
+class Timer {
+
+public:
+
+    i64 interval = 1000;    // Cycles between two interrupts
+    i64 next = 1000;        // Cycle of the next interrupt
+    bool pending = false;   // State of the interrupt line
+
+    void update(i64 clock) { if (clock >= next) { pending = true; next += interval; } }
+};
+```
+
+## Handling Interrupts
+
+Interrupts are requested by setting the interrupt priority level pins with `setIPL()`, as shown above. The CPU checks the pins at the next instruction boundary and takes the interrupt if its level is above the interrupt mask in the status register. Level 7 is non-maskable.
+
+By default, an interrupt is answered with an autovector (vector 24 + level). Devices that supply their own vector number are emulated by overriding `readIrqVector()` (declared in the class like the memory functions):
+
+```c++
+IrqMode CPU::readIrqVector(u8 level, u8 *vector) const
+{
+    if (level == 6) { *vector = 64; return IrqMode::USER; }
+    return IrqMode::AUTO;
+}
+```
+
+## Putting It All Together
+
+The computer owns the memory, the timer and the CPU:
+
+```c++
+class Computer {
+
+public:
+
+    std::vector<u8> ram = std::vector<u8>(1 << 20);
+    Timer timer;
+    CPU cpu = CPU(*this);
+
+    Computer() { cpu.setModel(CPUModel::M68000); }
+
+    u8 peek8(u32 addr) const { return ram[addr & 0xFFFFF]; }
+
+    void poke8(u32 addr, u8 val)
+    {
+        // A write to $F00000 acknowledges the timer interrupt
+        if (addr == 0xF00000) { timer.pending = false; return; }
+        ram[addr & 0xFFFFF] = val;
+    }
+    void poke16(u32 addr, u16 val) { poke8(addr, u8(val >> 8)); poke8(addr + 1, u8(val)); }
+    void poke32(u32 addr, u32 val) { poke16(addr, u16(val >> 16)); poke16(addr + 2, u16(val)); }
+};
+```
+
+After the program and the vector table have been loaded into memory, the CPU is reset. The reset reads the initial stack pointer and the initial program counter from addresses 0 and 4:
+
+```c++
+computer.cpu.reset();
+```
+
+## Creating a Run Loop
+
+The emulator's run loop calls `execute()`, which runs a single instruction (or processes a pending exception) and returns the number of elapsed cycles. Emulators typically run the CPU for one video frame at a time:
+
+```c++
+void Computer::runFrame(i64 cycles)
+{
+    auto end = cpu.getClock() + cycles;
+    while (cpu.getClock() < end) cpu.execute();
+}
+```
+
+If no other action is needed between two instructions, `execute(cycles)` and `executeUntil(cycle)` do the same in a single call. Like the loop above, they may overshoot by the duration of the last instruction, because an instruction cannot be interrupted.
+
+The run loop is also the place to react to events. A debugger front end, for example, sets a flag in `didReachBreakpoint()` and checks it after each instruction to pause the emulation (see [Using the Debugger](/guides/howto/HowToUseTheDebugger)).
+
+## Avoiding Virtual Function Calls
+
+By default, the functions your application provides are virtual. Since the CPU calls them for every memory access, the cost of a virtual call can matter for a cycle-exact emulator. If `MOIRA_VIRTUAL_API` is set to `false`, they are declared as ordinary member functions instead. The application then doesn't derive a class, but defines the functions of the `Moira` class directly:
+
+```c++
+u8 Moira::read8(u32 addr) const
+{
+    return mem.peek8(addr);
+}
+```
+
+In this mode, the application has to define all functions, including the optional delegates, because there are no default implementations. The functions also need a way to reach the rest of the emulator. vAmiga, the Amiga emulator Moira was written for, uses this mode: Its copy of Moira derives from the base class of all Amiga components, which gives every Moira function access to the memory and the other chips.
+
+## Next Steps
+
+- [Integrating the CPU Core](/guides/howto/HowToUseTheCpu) explains the CPU's API in more detail.
+- [Using the Disassembler](/guides/howto/HowToUseTheDisassembler) and [Using the Debugger](/guides/howto/HowToUseTheDebugger) show how to inspect a running program.
+- The API reference describes all classes and functions, starting with [moira::Moira](/api/moira-Moira).

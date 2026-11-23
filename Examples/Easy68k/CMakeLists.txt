@@ -12,7 +12,6 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 # Executable
 add_executable(easy68k main.cpp)
 target_link_libraries(easy68k PRIVATE moira)
-target_include_directories(easy68k PRIVATE ${CMAKE_SOURCE_DIR}/Moira)
 
 # Tests: The built-in Hello World program, and the same program from a file.
 # The program prints the text followed by a line break. The pattern requires the

@@ -102,14 +102,14 @@
 #define MOIRA_EMULATE_FC true
 #endif
 
-/* Set to true to emulate the 68020 instruction cache.
+/* Set to true to emulate the instruction cache of the 68020 and 68030.
  *
- * The 68020 caches instruction fetches in a small on-chip cache (see
- * Cache.h). When this option is disabled, every instruction fetch is
+ * The 68020 and 68030 cache instruction fetches in a small on-chip cache (see
+ * Cache/Cache.h). When this option is disabled, every instruction fetch is
  * treated as a cache miss and goes straight to the bus, which is faster to
  * emulate but does not reproduce the cycle savings a real cache provides.
- * This setting has no effect for other supported models, which have no
- * instruction cache.
+ * The 68000 and 68010 have no instruction cache. The caches of the 68040
+ * models are not emulated, so the setting has no effect for them.
  *
  * Enable to improve accuracy, disable to gain speed.
  */
@@ -120,8 +120,9 @@
 /* Set to true to emulate the 68030 data cache.
  *
  * The 68030 caches data accesses in a small on-chip cache (see Cache/Cache.h). When
- * this option is disabled, every data access goes straight to the bus. This
- * setting has no effect for other supported models, which have no data cache.
+ * this option is disabled, every data access goes straight to the bus. The
+ * other models have no data cache, except for the 68040 models, whose caches
+ * are not emulated. The setting has no effect for them.
  *
  * Enable to improve accuracy, disable to gain speed.
  */

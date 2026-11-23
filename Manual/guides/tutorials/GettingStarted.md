@@ -84,7 +84,7 @@ An assembled program (Motorola S-record format) is passed with `--file`:
 ./build/Examples/Easy68k/easy68k --file Examples/Easy68k/hello.s68
 ```
 
-The option `--trace` prints every executed instruction, and `--model` selects the CPU (68000, 68010 or 68020). Run `easy68k --help` for all options.
+The option `--trace` prints every executed instruction, and `--model` selects the CPU model (e.g. `--model 68030`). Run `easy68k --help` for all options.
 
 ## Running the Tests
 

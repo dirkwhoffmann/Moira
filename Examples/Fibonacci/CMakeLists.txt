@@ -12,7 +12,6 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 # Executable
 add_executable(fibonacci main.cpp)
 target_link_libraries(fibonacci PRIVATE moira)
-target_include_directories(fibonacci PRIVATE ${CMAKE_SOURCE_DIR}/Moira)
 
 # Test
 add_test(NAME Fibonacci COMMAND fibonacci)

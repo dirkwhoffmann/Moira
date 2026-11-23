@@ -31,6 +31,8 @@
 
 #include "Moira.h"
 
+#include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <cstdint>
 #include <cstdio>
@@ -42,6 +44,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #ifdef _WIN32
@@ -678,7 +681,8 @@ static void usage()
             "Options:\n"
             "  -f, --file <name>     Run the program in a file of S-records\n"
             "  -t, --trace           Show every executed instruction\n"
-            "  -m, --model <model>   CPU model: 68000 (default), 68010, or 68020\n"
+            "  -m, --model <model>   CPU model: 68000 (default), 68010, 68EC020, 68020,\n"
+            "                        68EC030, 68030, 68EC040, 68LC040, or 68040\n"
             "  -s, --start <addr>    Start address in hex (default: S9 record)\n"
             "  -c, --max-cycles <n>  Stop after n CPU cycles\n"
             "  -h, --help            Show this help\n");
@@ -692,9 +696,10 @@ int main(int argc, const char *argv[])
     // Do not synchronize with stdio, so that in_avail() reports buffered input
     std::ios::sync_with_stdio(false);
 
-    printf("Moira - A Motorola 68k CPU emulator\n\n");
-    printf("Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de\n");
-    printf("Published under the terms of the MIT License\n\n");
+    // The banner goes to stderr like all other messages (stdout belongs to the program)
+    fprintf(stderr, "Moira - A Motorola 68k CPU emulator\n\n");
+    fprintf(stderr, "Copyright (C) Dirk W. Hoffmann. www.dirkwhoffmann.de\n");
+    fprintf(stderr, "Published under the terms of the MIT License\n\n");
     
     for (int i = 1; i < argc; i++) {
 
@@ -708,11 +713,18 @@ int main(int argc, const char *argv[])
         else if (arg == "-f" || arg == "--file") path = value();
         else if (arg == "-t" || arg == "--trace") opt.trace = true;
         else if (arg == "-m" || arg == "--model") {
+            static const std::pair<const char *, CPUModel> models[] = {
+                { "68000", CPUModel::M68000 }, { "68010", CPUModel::M68010 },
+                { "68EC020", CPUModel::M68EC020 }, { "68020", CPUModel::M68020 },
+                { "68EC030", CPUModel::M68EC030 }, { "68030", CPUModel::M68030 },
+                { "68EC040", CPUModel::M68EC040 }, { "68LC040", CPUModel::M68LC040 },
+                { "68040", CPUModel::M68040 } };
             std::string m = value();
-            if (m == "68000") opt.model = CPUModel::M68000;
-            else if (m == "68010") opt.model = CPUModel::M68010;
-            else if (m == "68020") opt.model = CPUModel::M68020;
-            else { fprintf(stderr, "Unknown model %s\n", m.c_str()); return 2; }
+            std::transform(m.begin(), m.end(), m.begin(), [](unsigned char c) { return char(std::toupper(c)); });
+            auto it = std::find_if(std::begin(models), std::end(models),
+                                   [&](const auto &e) { return m == e.first; });
+            if (it == std::end(models)) { fprintf(stderr, "Unknown model %s\n", m.c_str()); return 2; }
+            opt.model = it->second;
         }
         else if (arg == "-s" || arg == "--start") { opt.hasStart = true; opt.start = u32(strtoul(value().c_str(), nullptr, 16)); }
         else if (arg == "-c" || arg == "--max-cycles") opt.maxCycles = strtoull(value().c_str(), nullptr, 10);

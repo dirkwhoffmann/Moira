@@ -26,6 +26,9 @@ MMU/MMU040.cpp
 
 add_library(moira STATIC ${MOIRA_SRC})
 
+# Clients that link against the library find Moira.h without further setup
+target_include_directories(moira PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
 if (NOT MSVC)
     target_compile_options(moira PUBLIC -Wno-unused-parameter)
     target_compile_options(moira PUBLIC -Wno-unused-but-set-parameter)
