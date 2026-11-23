@@ -32,12 +32,18 @@ This mode reproduces UAE's behavior in the cases in which it deviates from MAME 
 - The state of the address registers after a fault in the `(An)+` and `-(An)` modes, and the condition codes that `MOVE`, `CLR` and some other instructions have already set when a bus error occurs.
 - The order of the accesses when `RTE` reads the stack frame.
 - Whether `CHK` traps if the comparison overflows (the real 68000 does, UAE doesn't), and the condition codes that `DIVS` leaves on the 68010 in one case.
+- The timing of `TRAPV` on the 68010 if the trap is taken: UAE doesn't read the next instruction word and takes 36 cycles instead of 40.
 
 The automated tests use this mode to compare Moira with UAE, including the exception frames, cycle counts and bus accesses of the 68000.
 
+The mode doesn't cover everything in which UAE differs from Moira:
+
+- **Timing of the 68010 and later.** UAE's cycle counts for these models deviate in many places from Motorola's timing tables. Moira doesn't adopt them, and the tests don't compare them.
+- **The FPU.** Known deviations of UAE's FPU, e.g. in the sign of some results with infinite operands, or the format 3 frame that UAE uses for an exception after `FMOVE` to memory on the 68881 and 68882, are not reproduced. The tests skip the affected cases instead.
+
 ### MAME
 
-This mode reproduces the behavior of MAME's 68000 core in the few cases in which it differs from the real hardware, as recorded on an Amiga 500. Examples:
+This mode reproduces the behavior of MAME's 68000 core in the few cases in which it differs from the real hardware, as recorded on an Amiga 500. MAME's core only emulates the 68000, so the mode is meant for this model. Some of its rules, e.g. for `CHK`, also apply to the other models, so don't use it to emulate them. Examples:
 
 - After an address error in the `(An)+` mode, MAME has already incremented the address register. The real CPU leaves it unchanged.
 - When `DBcc` branches to an odd address, MAME stacks the address behind the extension word. The real CPU stacks the address of the extension word.
@@ -47,7 +53,7 @@ The SingleStepTests were recorded with MAME. The `smoke` test and the SingleStep
 
 ### MUSASHI
 
-This mode adopts Musashi's timing for a few instructions (e.g., `BCLR`, `BCHG` and `DBcc`) and for the stopped state. It is used to compare Moira with Musashi cycle by cycle. Musashi's functional flaws are not replicated. The test runner excludes the affected cases instead.
+This mode adopts Musashi's timing for a few instructions (e.g., `BCLR`, `BCHG`, `DBcc` and `TRAPV` on the 68010) and for the stopped state. It is used to compare Moira with Musashi cycle by cycle. Musashi's functional flaws are not replicated. The test runner excludes the affected cases instead.
 
 ## Which Mode to Use
 
