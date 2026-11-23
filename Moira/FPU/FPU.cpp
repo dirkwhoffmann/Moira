@@ -903,12 +903,14 @@ FPU::stateFrameSize(FpuFrameType type) const
 
         case FpuFrameType::UNIMP:
 
-            return model == FPUModel::M68040 ? 44 : 0;
+            // $30 bytes after the format longword, 26 words in all (MC68040UM Figure 9-10 d)
+            return model == FPUModel::M68040 ? 48 : 0;
 
         case FpuFrameType::BUSY:
 
             switch (model) {
-                case FPUModel::M68040:     return 92;
+                // $60 bytes after the format longword, 50 words in all (MC68040UM Figure 9-10 a)
+                case FPUModel::M68040:     return 96;
                 case FPUModel::M68881:     return 180;
                 case FPUModel::M68882:     return 212;
             }

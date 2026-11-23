@@ -645,6 +645,27 @@ Moira::execFRestore(u16 opcode)
     u32 fmt = readM<C, M, Long>(ea);
     u32 version = fmt >> 24;
 
+    /* A format word the FPU does not recognize is refused: the processor
+     * takes a format error (MC68881UM 4-88, FRESTORE; MC68040UM 8.2.7).
+     * Besides the null frame, the FPU accepts the frames of its own revision:
+     * version $41 on the 68040, $1F on the 6888x, with the size of an idle,
+     * busy or (68040 only) unimplemented instruction frame.
+     */
+    if (version != 0) {
+
+        u32 own = hasInternalFPU() ? 0x41 : 0x1F;
+        u32 size = (fmt >> 16) & 0xFF;
+        bool known = size == u32(fpu.stateFrameSize(FpuFrameType::IDLE)) ||
+                     size == u32(fpu.stateFrameSize(FpuFrameType::BUSY)) ||
+                     (hasInternalFPU() && size == u32(fpu.stateFrameSize(FpuFrameType::UNIMP)));
+
+        if (version != own || !known) {
+
+            execException(M68kException::FORMAT_ERROR);
+            return;
+        }
+    }
+
     if (version == 0) {
 
         // A NULL frame resets the FPU

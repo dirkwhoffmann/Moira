@@ -596,6 +596,64 @@ TEST_CASE("FMOVE to memory raises a post-instruction exception on the 68040")
     }
 }
 
+TEST_CASE("FRESTORE takes a format error on a frame the FPU does not recognize")
+{
+    // MC68881UM 6.2.8; the 68040 frame sizes follow MC68040UM Figure 9-10
+    for (auto model : { CPUModel::M68030, CPUModel::M68040 }) {
+
+        auto cp = model == CPUModel::M68040 ? CPModel::NONE : CPModel::M68882;
+        u32 own = model == CPUModel::M68040 ? 0x41 : 0x1F;
+
+        // A foreign version and an unknown size are refused. The FRESTORE is stacked (format $0, vector 14).
+        for (u32 fmt : { 0x12000000u, (own << 24) | 0x00100000u }) {
+
+            TestCPU cpu(cp, model);
+            cpu.write32(14 * 4, 0x9000);
+            cpu.reg.a[0] = 0x2000;
+            cpu.write32(0x2004, fmt);
+            cpu.run({ 0xF368, 0x0004 });                        // FRESTORE (4,A0)
+            CHECK(cpu.reg.pc0 == 0x9000);
+            CHECK(cpu.read32(cpu.reg.sp + 2) == TestCPU::codeStart);
+            CHECK(cpu.read16(cpu.reg.sp + 6) == 0x0038);
+        }
+
+        // Size $00 is the 68040 idle frame; the 6888x refuses it and leaves A0 untouched
+        {
+            bool refused = model != CPUModel::M68040;
+            TestCPU cpu(cp, model);
+            cpu.write32(14 * 4, 0x9000);
+            cpu.reg.a[0] = 0x2000;
+            cpu.write32(0x2000, own << 24);
+            cpu.run({ 0xF358 });                                // FRESTORE (A0)+
+            CHECK((cpu.reg.pc0 == 0x9000) == refused);
+            CHECK(cpu.reg.a[0] == (refused ? 0x2000 : 0x2004));
+        }
+
+        // The frame FSAVE writes is accepted
+        {
+            TestCPU cpu(cp, model);
+            cpu.write32(14 * 4, 0x9000);
+            cpu.reg.a[0] = 0x2000;
+            cpu.reg.a[1] = 0x2000;
+            cpu.run({ 0xF200, 0x4000, 0xF310, 0xF351 }, 3);       // FMOVE.L D0,FP0; FSAVE (A0); FRESTORE (A1)
+            CHECK(cpu.reg.pc0 != 0x9000);
+            CHECK(cpu.pcOffset() == 8);
+        }
+    }
+
+    // 68040 unimplemented instruction ($30) and busy ($60) frames are accepted (MC68040UM Figure 9-10)
+    for (u32 fmt : { 0x41300000u, 0x41600000u }) {
+
+        TestCPU cpu(CPModel::NONE, CPUModel::M68040);
+        cpu.write32(14 * 4, 0x9000);
+        cpu.reg.a[0] = 0x2000;
+        cpu.write32(0x2000, fmt);
+        cpu.run({ 0xF358 });                                    // FRESTORE (A0)+
+        CHECK(cpu.reg.pc0 != 0x9000);
+        CHECK(cpu.reg.a[0] == 0x2004 + ((fmt >> 16) & 0xFF));
+    }
+}
+
 TEST_CASE("FSAVE discards a pending arithmetic exception")
 {
     TestCPU cpu;
