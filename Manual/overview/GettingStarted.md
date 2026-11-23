@@ -1,6 +1,6 @@
 # Getting Started
 
-This tutorial runs the two example programs that come with Moira. It assumes that you have built Moira as described in [Installation](/overview/Installation).
+This page runs the two example programs that come with Moira. It assumes that you have built Moira as described in [Installation](/overview/Installation).
 
 ## Fibonacci
 
@@ -51,4 +51,4 @@ The option `--trace` prints every executed instruction, and `--model` selects th
 
 ## Next Steps
 
-[Using Moira in Your Own App](/guides/tutorials/UsingMoiraInYourOwnApp) explains how to integrate the CPU core into an application of your own.
+[Integrating the CPU Core](/guides/howto/HowToUseTheCpu) explains how to integrate the CPU core into an application of your own.

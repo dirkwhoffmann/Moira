@@ -16,12 +16,12 @@ hero:
 features:
   - icon: 📖
     title: Overview
-    details: What Moira is, where it comes from, and how to download and build it.
+    details: What Moira is, where it comes from, and how to download, build and try it.
     link: /overview/About
   - icon: 🧭
     title: Guides
-    details: Tutorials, how-to guides and background articles that explain how to integrate Moira into your application.
-    link: /guides/tutorials/GettingStarted
+    details: How-to guides and background articles that explain how to integrate Moira into your application.
+    link: /guides/howto/HowToUseTheCpu
   - icon: 🛠️
     title: API
     details: An overview of the API and all classes, structs and enumerations of the CPU core.

@@ -38,10 +38,9 @@ if (!scheme) {
 // The hand-written sections. Each group is [group, folder, [pages]], where the
 // folder is relative to the section. The sidebar shows the first heading of a page.
 const overviewGroups: [string, string, string[]][] = [
-  ['Overview', '', ['About', 'Installation']],
+  ['Overview', '', ['About', 'Installation', 'GettingStarted']],
 ]
 const guideGroups: [string, string, string[]][] = [
-  ['Tutorials', 'tutorials', ['GettingStarted', 'UsingMoiraInYourOwnApp']],
   ['How-to guides', 'howto', ['HowToUseTheCpu', 'HowToUseTheDisassembler', 'HowToUseTheDebugger',
                               'HowToUseDelegates', 'HowToEmulateBusErrors', 'HowToUseTheFpu', 'HowToUseTheMmu',
                               'HowToOverclockTheCpu']],
@@ -141,7 +140,7 @@ export default defineConfig({
     search: { provider: 'local' },
     nav: [
       { text: 'Overview', link: '/overview/About', activeMatch: '^/overview/' },
-      { text: 'Guides', link: '/guides/tutorials/GettingStarted', activeMatch: '^/guides/' },
+      { text: 'Guides', link: '/guides/howto/HowToUseTheCpu', activeMatch: '^/guides/' },
       { text: 'API', link: '/api/overview', activeMatch: '^/api/' },
       { text: 'Releases', link: '/releases/Release60', activeMatch: '^/releases/' },
     ],

@@ -6,7 +6,7 @@ A CPU emulator for a single-chip computer only needs to know how long each instr
 
 Moira counts time in CPU cycles. The current value is returned by `getClock()` and can be changed with `setClock()`. The clock is not reset by `reset()`.
 
-Whenever time passes, the CPU calls `sync(cycles)`. The default implementation advances the clock. Applications override it to let other components catch up with the CPU (see [Using Moira in Your Own App](/guides/tutorials/UsingMoiraInYourOwnApp)):
+Whenever time passes, the CPU calls `sync(cycles)`. The default implementation advances the clock. Applications override it to let other components catch up with the CPU (see [Integrating the CPU Core](/guides/howto/HowToUseTheCpu)):
 
 ```c++
 void MyCPU::sync(int cycles)
