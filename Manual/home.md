@@ -14,14 +14,14 @@ hero:
       text: Project Home
       link: https://dirkwhoffmann.github.io/Moira/
 features:
+  - icon: 📖
+    title: Overview
+    details: What Moira is, where it comes from, and how to download and build it.
+    link: /overview/About
   - icon: 🧭
     title: Guides
-    details: Tutorials and how-to guides that explain how to integrate Moira into your application.
-    link: /guides/overview/About
-  - icon: 💡
-    title: Concepts
-    details: Background articles about the inner workings of the CPU core.
-    link: /concepts/MainExecutionFunction
+    details: Tutorials, how-to guides and background articles that explain how to integrate Moira into your application.
+    link: /guides/tutorials/GettingStarted
   - icon: 🛠️
     title: API
     details: An overview of the API and all classes, structs and enumerations of the CPU core.

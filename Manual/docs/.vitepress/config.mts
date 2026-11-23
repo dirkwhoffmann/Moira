@@ -37,15 +37,15 @@ if (!scheme) {
 
 // The hand-written sections. Each group is [group, folder, [pages]], where the
 // folder is relative to the section. The sidebar shows the first heading of a page.
+const overviewGroups: [string, string, string[]][] = [
+  ['Overview', '', ['About', 'Installation']],
+]
 const guideGroups: [string, string, string[]][] = [
-  ['Overview', 'overview', ['About']],
   ['Tutorials', 'tutorials', ['GettingStarted', 'UsingMoiraInYourOwnApp']],
   ['How-to guides', 'howto', ['HowToUseTheCpu', 'HowToUseTheDisassembler', 'HowToUseTheDebugger',
                               'HowToUseDelegates', 'HowToEmulateBusErrors', 'HowToUseTheFpu', 'HowToUseTheMmu',
                               'HowToOverclockTheCpu']],
-]
-const conceptGroups: [string, string, string[]][] = [
-  ['Concepts', '', ['MainExecutionFunction', 'InstructionHandlers']],
+  ['Concepts', 'concepts', ['MainExecutionFunction', 'InstructionHandlers']],
 ]
 const releaseGroups: [string, string, string[]][] = [
   ['Releases', '', ['Release60', 'MigrationNotes']],
@@ -140,14 +140,14 @@ export default defineConfig({
     logo: { light: '/icon.png', dark: '/icon-dark.png' },
     search: { provider: 'local' },
     nav: [
-      { text: 'Guides', link: '/guides/overview/About', activeMatch: '^/guides/' },
-      { text: 'Concepts', link: '/concepts/MainExecutionFunction', activeMatch: '^/concepts/' },
+      { text: 'Overview', link: '/overview/About', activeMatch: '^/overview/' },
+      { text: 'Guides', link: '/guides/tutorials/GettingStarted', activeMatch: '^/guides/' },
       { text: 'API', link: '/api/overview', activeMatch: '^/api/' },
       { text: 'Releases', link: '/releases/Release60', activeMatch: '^/releases/' },
     ],
     sidebar: {
+      '/overview/': sectionSidebar('overview', overviewGroups),
       '/guides/': sectionSidebar('guides', guideGroups),
-      '/concepts/': sectionSidebar('concepts', conceptGroups),
       '/releases/': sectionSidebar('releases', releaseGroups),
       '/api/': [
         { text: 'API', collapsed: false, items: [

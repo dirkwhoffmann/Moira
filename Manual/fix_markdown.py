@@ -11,7 +11,7 @@
   - Moxygen documents all enumerations on the namespace page. Each one is moved
     to a page of its own (enum-<Name>.md), and all links to it are redirected.
   - The pages are moved to api/ and all links between them are made absolute.
-  - The hand-written pages (guides/, concepts/ and releases/) are copied
+  - The hand-written pages (overview/, guides/ and releases/) are copied
     as they are, the hand-written API pages (api/*.md) are added to api/, and
     the landing page (home.md) becomes index.md.
 
@@ -117,7 +117,7 @@ def main(docs):
     organize(docs)
     for page in (manual / "api").glob("*.md"):
         shutil.copy(page, docs / "api" / page.name)
-    for section in ("guides", "concepts", "releases"):
+    for section in ("overview", "guides", "releases"):
         shutil.copytree(manual / section, docs / section)
     shutil.copy(manual / "home.md", docs / "index.md")
 

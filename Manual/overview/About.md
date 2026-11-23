@@ -2,7 +2,7 @@
 
 Moira is an emulator of the Motorola 68000, 68010, 68EC020, 68020, 68030 and 68040, including the 68881 and 68882 floating-point coprocessors. It is compatible with macOS, Linux, and Windows. The core emulator's source code is written in C++ and published under the MIT license. Moira serves as the heart of [vAmiga](https://dirkwhoffmann.github.io/vAmiga), a high-precision emulator for the Commodore Amiga.
 
-![Screenshot](../images/disassembler.png "Moira screenshot")
+![Screenshot](../guides/images/disassembler.png "Moira screenshot")
 
 ## Design Goals 
 
