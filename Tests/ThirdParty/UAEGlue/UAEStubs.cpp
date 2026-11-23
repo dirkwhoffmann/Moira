@@ -100,7 +100,7 @@ void custom_reset(bool, bool) { }
 void custom_prepare() { }
 void custom_cpuchange() { }
 void custom_end_drawing() { }
-void blitnasty() { }
+int blitnasty() { return 0; }
 void clear_events() { }
 void events_schedule() { }
 void send_internalevent(int) { }

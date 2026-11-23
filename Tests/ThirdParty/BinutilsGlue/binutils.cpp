@@ -17,7 +17,7 @@ static int binutilsFprintf(FILE* f, const char* format, ...)
     std::va_list ap;
     va_start(ap, format);
     char* buf = (char*)f;
-    const int l = strlen(buf);
+    const int l = int(strlen(buf));
     const int n = vsnprintf(buf + l, BINUTILS_BUFFER_SIZE - l, format, ap);
     va_end(ap);
     return n;

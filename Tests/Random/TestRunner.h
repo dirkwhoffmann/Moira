@@ -153,7 +153,7 @@ public:
     // Running the tests
     //
 
-    void run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const std::vector<FPUType> &fpus);
+    void run(unsigned seed, long long rounds, const std::vector<CPUModel> &cpus, const std::vector<FPUType> &fpus);
 
 
     //

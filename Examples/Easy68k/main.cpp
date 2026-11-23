@@ -526,7 +526,12 @@ public:
                 auto now = std::chrono::system_clock::now();
                 auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() % 1000;
                 std::time_t t = std::chrono::system_clock::to_time_t(now);
-                std::tm tm = *std::localtime(&t);
+                std::tm tm;
+#ifdef _WIN32
+                localtime_s(&tm, &t);
+#else
+                localtime_r(&t, &tm);
+#endif
                 setD(1, u32(((tm.tm_hour * 60 + tm.tm_min) * 60 + tm.tm_sec) * 100 + ms / 10));
                 break;
             }

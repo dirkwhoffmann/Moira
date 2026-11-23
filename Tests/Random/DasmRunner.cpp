@@ -11,6 +11,12 @@
 #include "DasmRunner.h"
 #include <cstdio>
 #include <cstring>
+#ifdef _MSC_VER
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
+#else
+#include <strings.h>
+#endif
 #include <algorithm>
 #include <ctime>
 #include <string>

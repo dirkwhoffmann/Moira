@@ -80,15 +80,15 @@ void TestRunner::selectFpu(FPUType fpu)
     setupMoira();
 }
 
-void TestRunner::run(unsigned seed, long rounds, const std::vector<CPUModel> &cpus, const std::vector<FPUType> &fpus)
+void TestRunner::run(unsigned seed, long long rounds, const std::vector<CPUModel> &cpus, const std::vector<FPUType> &fpus)
 {
     portableSrand(seed);
 
     if (replay()) return;
 
-    for (long i = 1; i <= rounds; i++) {
+    for (long long i = 1; i <= rounds; i++) {
 
-        printf("\nRound %ld:\n\n", i);
+        printf("\nRound %lld:\n\n", i);
 
         for (CPUModel cpu : cpus) {
 
