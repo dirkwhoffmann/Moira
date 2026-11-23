@@ -121,6 +121,12 @@ export default defineConfig({
   title: 'Moira',
   description: 'A Motorola 68k CPU emulator',
   lang: 'en-US',
+  // Wallpoet (Google Fonts) for the project name on the landing page
+  head: [
+    ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
+    ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
+    ['link', { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Wallpoet&display=swap' }],
+  ],
   // The published site lives in a subfolder (see "make publish")
   base: process.env.BASE || '/',
   cleanUrls: true,
