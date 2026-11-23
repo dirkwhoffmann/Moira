@@ -13,6 +13,10 @@
 #   unit -tce="*UAE*"       Exclude the (slower) comparison against UAE
 #   unit -ltc               List all test cases
 
+# Include the standard headers instead of forward declaring std types, which
+# newer MSVC versions reject (C5285)
+add_compile_definitions(DOCTEST_CONFIG_USE_STD_HEADERS)
+
 add_executable(unit
     main.cpp
     FpuTests.cpp

@@ -30,7 +30,11 @@ namespace common {
 void printBanner(const char *description);
 
 // Prints a line of the settings block (the key is right-aligned)
+#if defined(__GNUC__) || defined(__clang__)
 void printSetting(const char *key, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+#else
+void printSetting(const char *key, const char *fmt, ...);
+#endif
 
 // Prints the message that asks the user to report a bug
 void printBugReport();

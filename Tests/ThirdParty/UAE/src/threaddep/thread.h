@@ -38,7 +38,7 @@ SDL_ThreadID uae_thread_get_id(SDL_Thread* thread);
 /* Do nothing; thread exits if thread function returns.  */
 #define UAE_THREAD_EXIT do {} while (0)
 
-#ifdef AMIBERRY
+#if defined(AMIBERRY) && !defined(_MSC_VER)
 static uae_atomic atomic_and(volatile uae_atomic * p, uae_u32 v)
 {
     return __atomic_and_fetch(p, v, __ATOMIC_SEQ_CST);
@@ -86,4 +86,57 @@ static int atomic_cas(volatile uae_atomic* p, uae_u32 expected, uae_u32 desired)
     uae_u32 exp = expected;
     return __atomic_compare_exchange_n((uae_u32*)p, &exp, desired, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
 }
+#elif defined(AMIBERRY) && defined(_MSC_VER)
+/* MSVC: the same functions on top of the Interlocked intrinsics. These return
+ * the old value, the GCC *_fetch builtins above return the new one. */
+#include <intrin.h>
+#define UAE_ATOMIC_PTR(p) ((volatile long *)(p))
+
+static uae_atomic atomic_and(volatile uae_atomic * p, uae_u32 v)
+{
+    return (uae_atomic)(_InterlockedAnd(UAE_ATOMIC_PTR(p), (long)v) & (long)v);
+}
+
+static uae_atomic atomic_or(volatile uae_atomic * p, uae_u32 v)
+{
+    return (uae_atomic)(_InterlockedOr(UAE_ATOMIC_PTR(p), (long)v) | (long)v);
+}
+
+static uae_atomic atomic_inc(volatile uae_atomic * p)
+{
+    return (uae_atomic)_InterlockedIncrement(UAE_ATOMIC_PTR(p));
+}
+
+static uae_atomic atomic_dec(volatile uae_atomic * p)
+{
+    return (uae_atomic)_InterlockedDecrement(UAE_ATOMIC_PTR(p));
+}
+
+static uae_u32 atomic_bit_test_and_reset(volatile uae_atomic * p, uae_u32 v)
+{
+    uae_u32 mask = (1 << v);
+    uae_u32 res = (uae_u32)_InterlockedAnd(UAE_ATOMIC_PTR(p), (long)~mask);
+    return (res & mask);
+}
+
+static void atomic_set(volatile uae_atomic* p, uae_u32 v)
+{
+    _InterlockedExchange(UAE_ATOMIC_PTR(p), (long)v);
+}
+
+static uae_u32 atomic_read(volatile uae_atomic* p)
+{
+    return (uae_u32)_InterlockedCompareExchange(UAE_ATOMIC_PTR(p), 0, 0);
+}
+
+static uae_u32 atomic_add(volatile uae_atomic* p, uae_u32 v)
+{
+    return (uae_u32)(_InterlockedExchangeAdd(UAE_ATOMIC_PTR(p), (long)v) + (long)v);
+}
+
+static int atomic_cas(volatile uae_atomic* p, uae_u32 expected, uae_u32 desired)
+{
+    return _InterlockedCompareExchange(UAE_ATOMIC_PTR(p), (long)desired, (long)expected) == (long)expected;
+}
+#undef UAE_ATOMIC_PTR
 #endif

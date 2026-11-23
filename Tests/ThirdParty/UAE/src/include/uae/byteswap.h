@@ -17,8 +17,8 @@
 
 #if defined(_WIN32) && !defined(__GNUC__)
 #include <stdlib.h>
-#define uae_bswap_16 _byteswap_uint16
-#define uae_bswap_32 _byteswap_uint32
+#define uae_bswap_16 _byteswap_ushort
+#define uae_bswap_32 _byteswap_ulong
 #define uae_bswap_64 _byteswap_uint64
 #elif defined(__GNUC__)
 /* GCC/MinGW: use compiler builtins */

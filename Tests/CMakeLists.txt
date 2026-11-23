@@ -105,6 +105,11 @@ target_compile_definitions(moiraUAEExc PUBLIC
 #    endforeach()
 #endif()
 
+# The test tools use getenv, fopen and friends deliberately
+if(MSVC)
+    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+endif()
+
 add_subdirectory(ThirdParty)
 add_subdirectory(Unit)
 add_subdirectory(Smoke)

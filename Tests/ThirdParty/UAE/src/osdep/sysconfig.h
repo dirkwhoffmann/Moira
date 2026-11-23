@@ -779,7 +779,7 @@ typedef char TCHAR;
 #ifndef _WIN32
 #define _tzset()            tzset()
 #endif
-#ifndef __MINGW32__
+#if !defined(__MINGW32__) && !defined(_MSC_VER)
 #define _timezone           timezone
 #define _daylight           daylight
 // Ftello and fseeko on OSX are already 64bit
@@ -791,7 +791,7 @@ typedef char TCHAR;
 #define _fseeki64(x,y,z)    fseeko64(x,y,z)
 #endif
 #endif
-#ifndef __MINGW32__
+#if !defined(__MINGW32__) && !defined(_MSC_VER)
 #define _wunlink(x)         unlink(x)
 #define _istalnum(x)        isalnum(x)
 #elif defined(AMIBERRY)
