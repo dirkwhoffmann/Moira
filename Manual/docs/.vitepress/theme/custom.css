@@ -10,8 +10,17 @@
   margin: 0 2px;
 }
 
-/* Landing page: name, text and tagline in Wallpoet (loaded in config.mts). The
-   font has a single weight, so the default bold would be synthesized. */
+/* Wallpoet by Lars Berggren (SIL Open Font License 1.1), hosted with the site */
+@font-face {
+  font-family: 'Wallpoet';
+  src: url('./fonts/Wallpoet-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Landing page: name, text and tagline in Wallpoet. The font has a single
+   weight, so the default bold would be synthesized. */
 .VPHero .name,
 .VPHero .text,
 .VPHero .tagline {
