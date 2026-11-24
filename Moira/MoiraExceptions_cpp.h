@@ -443,7 +443,6 @@ template <Core C> void
 Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
 {
     u16 status = getSR();
-    u16 ssw = 0x60 | (getFC() & 7);
 
     // Inform the delegate
     willExecute(M68kException::BUS_ERROR, 2);
@@ -551,7 +550,7 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
         if (ix && move && frame.write && indexed(srcMode, srcReg)) {
             if (dstMode == 5 || (dstMode == 7 && dstReg <= 1)) pc -= 2;
         }
-        writeStackFrame1011UAE<C>(status, 2, pc, ssw, frame.addr, end, frame.write);
+        writeStackFrame1011UAE<C>(status, 2, pc, frame.ssw, frame.addr, end, frame.write);
 
         // Remember how to restart the instruction
         restart.valid = saved != nullptr;

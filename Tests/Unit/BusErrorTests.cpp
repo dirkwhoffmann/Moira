@@ -286,11 +286,63 @@ TEST_CASE("Trace exceptions terminate loop mode")
     CHECK(cpu.getPC0() == TestCPU::traceHandler + 2);
 }
 
-/* The 68030 and 68040 report the cause of a fault in the special status word.
+/* The 68020, 68030 and 68040 report the cause of a fault in the special status word.
  * Moira builds it if the host only provides the fault address.
  */
 
 static u32 peek32(TestCPU &cpu, u32 addr) { return u32(cpu.peek16(addr)) << 16 | cpu.peek16(addr + 2); }
+
+TEST_CASE("68020 bus error frames of host-signaled faults")
+{
+    TestCPU cpu(CPUModel::M68020);
+    cpu.faultAddr = 0x2000;
+    cpu.setA(0, 0x2000);
+
+    // MC68020 User's Manual, section 6.2.1: DF, R/W, SIZE and FC.
+    SUBCASE("Byte read") {
+
+        cpu.run({ 0x1010 });                            // MOVE.B (A0),D0
+
+        u32 sp = cpu.getSP();
+        CHECK(cpu.peek16(sp + 6) == 0xB008);            // Long bus fault frame, vector 2
+        CHECK(cpu.peek16(sp + 10) == 0x0151);           // DF, read, byte, user data
+        CHECK(peek32(cpu, sp + 16) == 0x2000);
+    }
+
+    SUBCASE("PC-relative operand") {
+
+        cpu.run({ 0x103A, 0x0FFE });                    // MOVE.B ($0FFE,PC),D0
+        CHECK(cpu.peek16(cpu.getSP() + 10) == 0x0152);  // DF, read, byte, user program
+    }
+
+    SUBCASE("Instruction fetch") {
+
+        cpu.run({ 0x4ED0 });                            // JMP (A0)
+        u16 ssw = cpu.peek16(cpu.getSP() + 10);
+        CHECK((ssw & (SSW030::FB | SSW030::RB | SSW030::DF)) == (SSW030::FB | SSW030::RB));
+    }
+
+    SUBCASE("Byte write") {
+
+        cpu.faultOnRead = false;
+        cpu.run({ 0x1080 });                            // MOVE.B D0,(A0)
+
+        u32 sp = cpu.getSP();
+        CHECK((cpu.peek16(sp + 6) & 0xFFF) == 8);       // Bus error vector
+        CHECK(cpu.peek16(sp + 10) == 0x0111);           // DF, write, byte, user data
+        CHECK(peek32(cpu, sp + 16) == 0x2000);
+    }
+}
+
+TEST_CASE("A host-supplied 68020 frame keeps a zero special status word")
+{
+    TestCPU cpu(CPUModel::M68020);
+    cpu.faultAddr = 0x2000;
+    cpu.customFrame = true;
+    cpu.setA(0, 0x2000);
+    cpu.run({ 0x3010 });
+    CHECK(cpu.peek16(cpu.getSP() + 10) == 0);
+}
 
 TEST_CASE("68030 bus error frames of host-signaled faults")
 {
