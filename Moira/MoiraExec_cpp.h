@@ -4126,6 +4126,9 @@ Moira::execMoveToSr(u16 opcode)
     SYNC(4);
     setSR((u16)data);
 
+    // The program space may have changed: the refill does not come from the latch
+    if constexpr (C == Core::C68020) iCache.flushLatch();
+
     readStatusRefill<C>();
     prefetch<C, POLL>();
 

@@ -792,6 +792,27 @@ TEST_CASE("MOVE to SR and CCR can refill from the instruction cache")
     }
 }
 
+TEST_CASE("MOVE to SR at 4n+2 refills from the new program space")
+{
+    for (auto model : { CPUModel::M68020, CPUModel::M68030 }) {
+        for (bool enable : { false, true }) {
+            IrqCPU cpu(model);
+            cpu.setCACR(enable ? 1 : 0);
+            cpu.setD(0, 10);
+            cpu.setD(1, 0x2700);
+            cpu.load({ 0x4E71, 0x46C1, 0x51C8, 0xFFFC }); // NOP, then DBF D0 back to MOVE D1,SR
+            cpu.step(3);
+            REQUIRE(cpu.getPC0() == IrqCPU::codeStart + 2);
+            cpu.setD(1, 0x0700);
+            cpu.logging = true;
+            cpu.step(); // Leaves supervisor mode: the prefetched longword belongs to the old space
+            REQUIRE(!cpu.log.empty());
+            CHECK(cpu.log[0].addr == IrqCPU::codeStart + 4);
+            CHECK(cpu.log[0].fc == FCv::UP);
+        }
+    }
+}
+
 TEST_SUITE_END();
 
 }
