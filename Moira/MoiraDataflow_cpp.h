@@ -884,7 +884,12 @@ Moira::readInstr(u32 addr)
             completeBusError<Word, false>(e);
             throw;
         }
-        budget.penalty += busAccess ? (portSize(dsack(phys)) == 4 ? 0 : 4) : -2;
+        // The 020/030 instruction timings already include a cached fetch.
+        // Charge the cache fill on a miss, plus the existing narrow-port penalty.
+        if (busAccess) {
+            if (iCache.emulated) budget.penalty += 2;
+            if (portSize(dsack(phys)) != 4) budget.penalty += 4;
+        }
 
         return result;
 

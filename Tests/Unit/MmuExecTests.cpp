@@ -1365,6 +1365,38 @@ TEST_CASE("Peek (68040)")
     }
 }
 
+TEST_CASE("Instruction cache hits keep the 68020 table timing")
+{
+    for (auto model : { CPUModel::M68020, CPUModel::M68030 }) {
+        for (bool cached : { false, true }) {
+            CAPTURE(int(model));
+            CAPTURE(cached);
+            TestCPU cpu(model);
+            cpu.portDsack = DSACK_32;
+            cpu.setCACR(cached ? CACR::E : 0);
+            cpu.setD(0, 200);
+
+            // Put the loop in the region where TestCPU counts host bus reads.
+            for (int i = 0; i < 8; i++) cpu.write16(dataBase + 2 * i, 0x4E71);
+            cpu.write16(dataBase + 16, 0x51C8);  // DBF D0,loop
+            cpu.write16(dataBase + 18, 0xFFEE);
+            cpu.jump(dataBase);
+            for (int i = 0; i < 9; i++) cpu.execute();
+            REQUIRE(cpu.getPC0() == dataBase);
+
+            cpu.longReads.clear();
+            auto start = cpu.getClock();
+            for (int i = 0; i < 100 * 9; i++) cpu.execute();
+            REQUIRE(cpu.getPC0() == dataBase);
+            CHECK(cpu.getD(0) == 99);
+            // MC68020UM 8.2.15-16: eight NOPs at 2 clocks, taken DBF at 6.
+            // With the cache disabled this aligned loop fills five longwords.
+            CHECK(cpu.longReads.size() == (cached ? 0 : 100 * 5));
+            CHECK(cpu.getClock() - start == 100 * (8 * 2 + 6 + (cached ? 0 : 5 * 2)));
+        }
+    }
+}
+
 TEST_SUITE_END();
 
 }
