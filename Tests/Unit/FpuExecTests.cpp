@@ -935,6 +935,22 @@ TEST_CASE("Tiny Sinh")
     CHECK((cpu.fpu.fpsr & 0xFF00) == 0x0A00);
 }
 
+TEST_CASE("Packed zero obeys the k-factor limit")
+{
+    for (bool negative : {false, true}) {
+        for (u16 k : {17, 18}) {
+            TestCPU cpu;
+            cpu.fpu.fpr[0] = MFloat80::zero(negative);
+            cpu.reg.a[0] = 0x2000;
+            cpu.run({ 0xF210, u16(0x6C00 | k) }); // FMOVE.P FP0,(A0){k}
+            CHECK(bool(cpu.fpu.fpsr & FPEXP::OPERR) == (k > 17));
+            CHECK(cpu.read32(0x2000) == (negative ? 0x80000000u : 0u));
+            CHECK(cpu.read32(0x2004) == 0);
+            CHECK(cpu.read32(0x2008) == 0);
+        }
+    }
+}
+
 TEST_SUITE_END();
 
 }

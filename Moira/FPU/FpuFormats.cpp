@@ -377,8 +377,13 @@ FpuFormats::toPacked(FpuEnv &env, const MFloat80 &value, int k, u32 (&w)[3])
         return;
     }
 
-    // Zero
-    if (value.isZero()) { w[0] = sign; return; }
+    // Zero. A k-factor above +17 is an operand error for a zero too
+    // (MC68881UM, Table 6-2: "k-Factor > +17" for FMOVE to P).
+    if (value.isZero()) {
+        if (k > 17) env.raiseFlags(FloatFlags::INVALID);
+        w[0] = sign;
+        return;
+    }
 
     u64 sig = value.mantissa();
     i32 exp = (i32)value.biasedExponent();
