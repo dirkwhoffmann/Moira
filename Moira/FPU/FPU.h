@@ -134,6 +134,17 @@ public:
     /// Vector of an arithmetic exception that is taken when the next FPU instruction starts (0 = none)
     u16 pendingTrap = 0;
 
+    /// Instruction the 68040 left to the FPSP. FSAVE stores it in an unimplemented
+    /// instruction state frame, FRESTORE loads it back (MC68040UM 9.6.1, Figure 9-10).
+    /// The frame is saved if the last instruction was unimplemented (MC68040UM 9.8):
+    /// FSAVE and the nonconditional instructions discard it.
+    struct {
+
+        bool valid = false;     ///< Indicates whether FSAVE writes an UNIMP frame
+        u32 frame[12] = { };    ///< The frame without its format word
+
+    } unimp;
+
 
     //
     // Constructing
@@ -433,6 +444,9 @@ public:
 
     /// Computes a format word for a given frame type
     u32 computeFormatWord(FpuFrameType type) const;
+
+    /// Computes the tag of an operand in a 68040 state frame (STAG, DTAG)
+    static u32 frameTag(const MFloat80 &value);
 };
 
 }

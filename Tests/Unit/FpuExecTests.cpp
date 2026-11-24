@@ -670,6 +670,158 @@ TEST_CASE("FSAVE discards a pending arithmetic exception")
     CHECK(cpu.pcOffset() == 10);
 }
 
+TEST_CASE("FSAVE stores the unimplemented instruction frame of the 68040")
+{
+    /* After an unimplemented instruction, FSAVE stores the instruction and its
+     * operands for the FPSP (MC68040UM 9.6.1, Table 9-16, Figure 9-10 d). The
+     * handler of vector 11 starts at $9000.
+     */
+    auto setup = [](TestCPU &cpu, std::initializer_list<u16> handler) {
+
+        u32 addr = 0x9000;
+        for (auto w : handler) { cpu.write16(addr, w); addr += 2; }
+        cpu.write32(11 * 4, 0x9000);
+        cpu.reg.a[0] = 0x3000;
+        cpu.reg.a[1] = 0x2000;
+        cpu.reg.a[2] = 0x3100;
+    };
+    auto extended = [](TestCPU &cpu, u32 addr, const MFloat80 &value) {
+
+        return cpu.read32(addr) == u32(value.signExp()) << 16 &&
+               cpu.read32(addr + 4) == u32(value.mantissa() >> 32) &&
+               cpu.read32(addr + 8) == u32(value.mantissa());
+    };
+
+    // FMOD FP1,FP0 (dyadic, register operands)
+    {
+        TestCPU cpu(CPModel::NONE, CPUModel::M68040);
+        setup(cpu, { 0xF310, 0xF312 });                         // FSAVE (A0); FSAVE (A2)
+        cpu.fpu.fpr[0] = F(7.5);
+        cpu.fpu.fpr[1] = F(2.0);
+        cpu.run({ 0xF200, 0x0421 }, 3);
+        CHECK(cpu.read32(0x3000) == 0x41300000);                // Version $41, size $30
+        CHECK(cpu.read32(0x3004) == 0);                         // CMDREG3B
+        CHECK(cpu.read32(0x300C) == 0);                         // STAG = normalized
+        CHECK(cpu.read32(0x3010) == 0x04210000);                // CMDREG1B
+        CHECK(cpu.read32(0x3014) == 0);                         // DTAG = normalized
+        CHECK(cpu.read32(0x3018) == 0);                         // E1 = 0, T = 0
+        CHECK(extended(cpu, 0x301C, F(7.5)));                   // FPTEMP
+        CHECK(extended(cpu, 0x3028, F(2.0)));                   // ETEMP
+
+        // The FPU is idle after the save
+        CHECK(cpu.read32(0x3100) == 0x41000000);
+        CHECK(cpu.reg.pc0 == 0x9004);
+    }
+
+    // FSIN.S (A1)+,FP2 (monadic, the operand is converted to extended precision)
+    {
+        TestCPU cpu(CPModel::NONE, CPUModel::M68040);
+        setup(cpu, { 0xF310 });                                 // FSAVE (A0)
+        cpu.fpu.fpr[2] = MFloat80::infinity();
+        cpu.write32(0x2000, 0x80000000);                        // -0.0
+        cpu.run({ 0xF219, 0x450E }, 2);
+        CHECK(cpu.reg.a[1] == 0x2004);
+        CHECK(cpu.read32(0x300C) == 0x20000000);                // STAG = zero
+        CHECK(cpu.read32(0x3010) == 0x450E0000);
+        CHECK(cpu.read32(0x3014) == 0x40000000);                // DTAG = infinity
+        CHECK(cpu.read32(0x3018) == 0);
+        CHECK(extended(cpu, 0x301C, MFloat80::infinity()));
+        CHECK(extended(cpu, 0x3028, MFloat80::zero(true)));
+    }
+
+    // FSIN.P (A1),FP0 and FSIN.P #<data>,FP0 (a packed operand is not converted, E1 is set)
+    for (int imm = 0; imm < 2; imm++) {
+
+        TestCPU cpu(CPModel::NONE, CPUModel::M68040);
+        setup(cpu, { 0xF310 });                                 // FSAVE (A0)
+        cpu.write32(0x2000, 0x40010005);
+        cpu.write32(0x2004, 0x12345678);
+        cpu.write32(0x2008, 0x9ABCDEF0);
+        if (imm) {
+            cpu.run({ 0xF23C, 0x4C0E, 0x4001, 0x0005, 0x1234, 0x5678, 0x9ABC, 0xDEF0 }, 2);
+        } else {
+            cpu.run({ 0xF211, 0x4C0E }, 2);
+        }
+        CHECK(cpu.read32(0x3010) == 0x4C0E0000);
+        CHECK(cpu.read32(0x3014) == 0x60000000);                // DTAG = NaN (FP0 after reset)
+        CHECK(cpu.read32(0x3018) == 0x04000000);                // E1 = 1, T = 0
+        CHECK(cpu.read32(0x3024) == 0x40010005);                // FPTEMP [31-0] = bits 95-64
+        CHECK(cpu.read32(0x302C) == 0x12345678);                // ETEMP [63-0] = bits 63-0
+        CHECK(cpu.read32(0x3030) == 0x9ABCDEF0);
+    }
+
+    // FSAVE -(A7), as in the FPSP, and FMOVECR (the command word identifies it)
+    {
+        TestCPU cpu(CPModel::NONE, CPUModel::M68040);
+        setup(cpu, { 0xF327 });                                 // FSAVE -(A7)
+        cpu.run({ 0xF200, 0x5C32 }, 2);
+        u32 sp = cpu.reg.sp;
+        CHECK(sp == 0x8000 - 12 - 52);
+        CHECK(cpu.read32(sp) == 0x41300000);
+        CHECK(cpu.read32(sp + 0x10) == 0x5C320000);
+        CHECK(cpu.read32(sp + 0x18) == 0);
+    }
+
+    // The frame survives FRESTORE: FSAVE (A0); FRESTORE (A0); FSAVE (A2)
+    {
+        TestCPU cpu(CPModel::NONE, CPUModel::M68040);
+        setup(cpu, { 0xF310, 0xF350, 0xF312 });
+        cpu.fpu.fpr[0] = F(7.5);
+        cpu.fpu.fpr[1] = F(2.0);
+        cpu.run({ 0xF200, 0x0421 }, 4);
+        for (u32 i = 0; i < 52; i += 4) CHECK(cpu.read32(0x3100 + i) == cpu.read32(0x3000 + i));
+    }
+
+    // FRESTORE of an idle or a null frame discards it
+    for (u32 frame : { 0x41000000u, 0u }) {
+
+        TestCPU cpu(CPModel::NONE, CPUModel::M68040);
+        setup(cpu, { 0xF352, 0xF310 });                         // FRESTORE (A2); FSAVE (A0)
+        cpu.write32(0x3100, frame);
+        cpu.run({ 0xF200, 0x0421 }, 3);
+        CHECK(cpu.read32(0x3000) == frame);
+    }
+
+    // A nonconditional instruction discards it
+    {
+        TestCPU cpu(CPModel::NONE, CPUModel::M68040);
+        setup(cpu, { 0xF200, 0x4180, 0xF310 });                 // FMOVE.L D0,FP3; FSAVE (A0)
+        cpu.run({ 0xF200, 0x0421 }, 3);
+        CHECK(cpu.read32(0x3000) == 0x41000000);
+    }
+
+    // A reset discards it
+    {
+        TestCPU cpu(CPModel::NONE, CPUModel::M68040);
+        setup(cpu, { 0x4E71 });
+        cpu.run({ 0xF200, 0x0421 }, 1);
+        CHECK(cpu.fpu.unimp.valid);
+        cpu.reset();
+        cpu.reg.a[0] = 0x3000;
+        cpu.write32(0x3000, 0xFFFFFFFF);
+        cpu.run({ 0xF310 });                                    // FSAVE (A0)
+        CHECK(cpu.read32(0x3000) == 0);
+    }
+
+    // The 6888x implements FMOD and saves an idle frame
+    TestCPU cpu;
+    cpu.reg.a[0] = 0x3000;
+    cpu.run({ 0xF200, 0x0421, 0xF310 }, 2);
+    CHECK(cpu.read32(0x3000) == 0x1F380000);
+}
+
+TEST_CASE("Tags of the 68040 state frames")
+{
+    // MC68040UM 9.8 (STAG, DTAG)
+    CHECK(FPU::frameTag(F(1.5)) == 0);
+    CHECK(FPU::frameTag(MFloat80::zero(true)) == 1);
+    CHECK(FPU::frameTag(MFloat80::infinity()) == 2);
+    CHECK(FPU::frameTag(MFloat80::quietNaN()) == 3);
+    CHECK(FPU::frameTag(MFloat80::signalingNaN()) == 3);
+    CHECK(FPU::frameTag(MFloat80(0x0000, 1)) == 4);             // Denormalized
+    CHECK(FPU::frameTag(MFloat80(0x3FFF, 1ULL << 62)) == 4);    // Unnormalized
+}
+
 TEST_CASE("Transcendental")
 {
     auto near = [](const MFloat80 &a, double expected) {
