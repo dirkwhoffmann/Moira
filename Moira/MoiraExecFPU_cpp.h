@@ -534,9 +534,7 @@ Moira::execFBcc(u16 opcode)
         u32 newpc = U32_ADD(oldpc, SEXT<S>(disp));
 
         // Check for address error
-        if (misaligned<C>(newpc)) {
-            throw AddressError(makeFrame(newpc));
-        }
+        checkEvenPC<C, AE_FETCH>(newpc);
 
         // Take branch
         reg.pc = newpc;
@@ -584,15 +582,13 @@ Moira::execFDbcc(u16 opcode)
         u32 newpc = U32_ADD(reg.pc, (i16)queue.irc);
         bool takeBranch = readD<Word>(dn) != 0;
 
-        // Check for address error
-        if (takeBranch && misaligned<C>(newpc)) {
-            throw AddressError(makeFrame(newpc));
-        }
-
         // Decrement loop counter
         writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
 
         if (takeBranch) {
+
+            // The counter has been decremented when the target is fetched (MC68020UM 7.2.2.3.2)
+            checkEvenPC<C, AE_FETCH>(newpc);
 
             reg.pc = newpc;
             fullPrefetch<C, POLL>();
