@@ -580,6 +580,10 @@ void testConversions(int model, long iterations)
             bool carry = k > 0 && vm != 0 && vr != 0 && (w[0] & 0xFFFFF000) != (refw[0] & 0xFFFFF000) && fabsl(vm - vr) <= 11 * powl(10.0L, floorl(log10l(fabsl(vm) + 1e-300L)) - (k - 1)) && (fpu.fpsr & 0xFF00) == ref.exc;
             lastDigit = lastDigit || carry;
             bool mismatch = !sameWords || (fpu.fpsr & 0xFF00) != ref.exc;
+            // MC68881UM Table 6-2 requires OPERR for k > 17. UAE returns
+            // the same signed zero but omits that single status bit.
+            if (x.isZero() && k > 17 && sameWords && ref.exc == 0 &&
+                (fpu.fpsr & 0xFF00) == FPEXP::OPERR) rep.known(); else
             if (mismatch && ((k == 1 || k == 2 || k == 3) || lastDigit ||      // The reference is off by one in directed rounding modes                                           // Reference rounds to k-1 digits
                              (sameWords && ref.exc == ((fpu.fpsr & 0xFF00) | uaeref::INEX2)))) rep.known(); else
             if (w[0] != ref.raw[0] || w[1] != ref.raw[1] || w[2] != ref.raw[2] || (fpu.fpsr & 0xFF00) != ref.exc)
