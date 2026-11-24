@@ -841,6 +841,19 @@ catch (BusError &e)
 }
 
 
+template <Core C> void
+Moira::readStatusRefill()
+{
+    u32 addr = C == Core::C68000 ? reg.pc : reg.pc + 2;
+    if constexpr (C == Core::C68020) {
+        if (iCache.emulated) {
+            (void)readInstr<C>(addr);
+            return;
+        }
+    }
+    (void)read<C, AddrSpace::PROG, Word>(addr);
+}
+
 template <Core C, Flags F> u16
 Moira::readInstr(u32 addr)
 {
