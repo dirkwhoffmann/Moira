@@ -771,6 +771,27 @@ TEST_CASE("FC: the pins follow the privilege level")
     END_MODELS
 }
 
+TEST_CASE("MOVE to SR and CCR can refill from the instruction cache")
+{
+    for (auto model : { CPUModel::M68020, CPUModel::M68030 }) {
+        for (u16 opcode : { 0x46C1, 0x44C1 }) { // MOVE D1,SR or MOVE D1,CCR
+            for (bool enable : { false, true }) {
+                IrqCPU cpu(model);
+                cpu.setCACR(enable ? 1 : 0);
+                cpu.setD(0, 10);
+                cpu.setD(1, 0x2700);
+                cpu.load({ opcode, 0x51C8, 0xFFFC }); // DBF D0 back to MOVE
+                cpu.step(2);
+                REQUIRE(cpu.getPC0() == IrqCPU::codeStart);
+                cpu.logging = true;
+                cpu.step(); // Count only the MOVE, with the loop already warm
+                CHECK(cpu.getPC0() == IrqCPU::codeStart + 2);
+                CHECK(cpu.log.empty() == enable);
+            }
+        }
+    }
+}
+
 TEST_SUITE_END();
 
 }

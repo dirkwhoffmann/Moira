@@ -4026,7 +4026,7 @@ Moira::execMoveToCcr(u16 opcode)
     SYNC(4);
     setCCR((u8)data);
 
-    (void)read<C, AddrSpace::PROG, Word>(C == Core::C68000 ? reg.pc : reg.pc + 2);
+    readStatusRefill<C>();
     prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
@@ -4126,7 +4126,7 @@ Moira::execMoveToSr(u16 opcode)
     SYNC(4);
     setSR((u16)data);
 
-    (void)read<C, AddrSpace::PROG, Word>(C == Core::C68000 ? reg.pc : reg.pc + 2);
+    readStatusRefill<C>();
     prefetch<C, POLL>();
 
     //           00  10  20        00  10  20        00  10  20
