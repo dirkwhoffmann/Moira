@@ -881,7 +881,7 @@ Moira::readInstr(u32 addr)
         } catch (BusError &e) {
 
             e.stackFrame.write = false;
-            completeBusError<Word, false>(e);
+            completeBusError<Word, false>(e, true);
             throw;
         }
         budget.penalty += busAccess ? (portSize(dsack(phys)) == 4 ? 0 : 4) : -2;
@@ -1170,14 +1170,14 @@ Moira::misaligned(u32 addr)
 }
 
 template <Size S, bool W> void
-Moira::completeBusError(BusError &e)
+Moira::completeBusError(BusError &e, bool instructionFetch)
 {
     /* A host that throws BusError(addr) only provides the fault address. The
-     * 68030 and 68040 also report the cause of the fault in the special status
+     * 68020 and later processors report the cause of the fault in the special status
      * word, which is built here like for a fault detected by the MMU. Faults
      * detected by the MMU and frames supplied by the host are left untouched.
      */
-    if (e.complete || cpuModel < CPUModel::M68EC030) return;
+    if (e.complete || cpuModel < CPUModel::M68EC020) return;
 
     u8 fc = getFC();
 
@@ -1191,9 +1191,10 @@ Moira::completeBusError(BusError &e)
 
     } else {
 
-        // On the 68030, a fault in program space belongs to the instruction pipe
+        // A 68020 PC-relative operand uses program space but is a data cycle
+        // (MC68020UM 6.2.1). Only an instruction fetch marks the pipe.
         u16 size = S == Byte ? SSW030::SIZ_B : S == Word ? SSW030::SIZ_W : SSW030::SIZ_L;
-        bool prog = (fc & 3) == 2;
+        bool prog = cpuModel < CPUModel::M68EC030 ? instructionFetch : (fc & 3) == 2;
 
         e.stackFrame.ssw = (prog ? SSW030::FB | SSW030::RB : SSW030::DF) | size | (fc & 7);
         if (!W) e.stackFrame.ssw |= SSW030::RW;
