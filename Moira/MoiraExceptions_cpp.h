@@ -945,8 +945,8 @@ Moira::execException(M68kException exc, int nr)
             // Clear any pending trace event
             flags &= ~State::TRACE_EXC;
 
-            // Write stack frame
-            writeStackFrame0000<C>(status, reg.pc - 2, vector);
+            // Write stack frame (the PC of the instruction that detected the error, MC68040UM 8.2.7)
+            writeStackFrame0000<C>(status, reg.pc0, vector);
 
             // Branch to exception handler
             jumpToVector<C, AE_SET_CB3>(vector);
