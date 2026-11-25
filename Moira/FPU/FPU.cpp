@@ -24,6 +24,7 @@ FPU::reset()
 
     resetState = true;
     pendingTrap = 0;
+    unimp.valid = false;
 }
 
 u16
@@ -956,12 +957,27 @@ FPU::computeFormatWord(FpuFrameType type) const
         case FpuFrameType::UNIMP:
         case FpuFrameType::BUSY:
 
+            // The 68040 frames carry the version number of the idle frame (MC68040UM Figure 9-10)
+            if (model == FPUModel::M68040) return 0x41000000 | u32(stateFrameSize(type)) << 16;
             return 0x1F000000 | u32(stateFrameSize(type)) << 16;
 
         default:
 
             return 0;
     }
+}
+
+u32
+FPU::frameTag(const MFloat80 &value)
+{
+    /* 0 = normalized, 1 = zero, 2 = infinity, 3 = NaN,
+     * 4 = extended-precision denormalized or unnormalized (MC68040UM 9.8, STAG, DTAG)
+     */
+    if (value.isZero()) return 1;
+    if (value.isNaN()) return 3;
+    if (value.isInfinite()) return 2;
+    if (!value.integerBit()) return 4;
+    return 0;
 }
 
 }
