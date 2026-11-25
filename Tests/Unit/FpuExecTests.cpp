@@ -435,6 +435,42 @@ TEST_CASE("68040 address error frame")
     CHECK(cpu.read32(sp + 8) == 0x2000);
 }
 
+TEST_CASE("FBcc and FDBcc to an odd target take an address error")
+{
+    // An odd cpBcc or cpDBcc target raises an address error (MC68020UM 7.5.2.8, MC68030UM 10.5.2.8, MC68040UM 8.2.2)
+    for (auto model : { CPUModel::M68020, CPUModel::M68030, CPUModel::M68040 }) {
+
+        auto cp = model == CPUModel::M68040 ? CPModel::NONE : CPModel::M68882;
+
+        // FBEQ.W taken to codeStart + 2 + $11
+        {
+            TestCPU cpu(cp, model);
+            cpu.write32(3 * 4, 0x9000);
+            cpu.fpu.setFPSR(FPSR::CC_Z);
+            cpu.run({ 0xF281, 0x0011 });
+            CHECK(cpu.reg.pc0 == 0x9000);
+        }
+
+        // FDBF D0, taken to codeStart + 4 + $11
+        {
+            TestCPU cpu(cp, model);
+            cpu.write32(3 * 4, 0x9000);
+            cpu.reg.d[0] = 5;
+            cpu.run({ 0xF248, 0x0000, 0x0011 });
+            CHECK(cpu.reg.pc0 == 0x9000);
+            CHECK(cpu.reg.d[0] == 4);
+        }
+
+        // Even targets still branch
+        {
+            TestCPU cpu(cp, model);
+            cpu.fpu.setFPSR(FPSR::CC_Z);
+            cpu.run({ 0xF281, 0x0010 });
+            CHECK(cpu.pcOffset() == 0x12);
+        }
+    }
+}
+
 /* Arithmetic exceptions (vectors 48 - 54). An exception that is enabled in
  * FPCR is not taken by the instruction that raises it. It is taken as a
  * pre-instruction exception when the next FPU instruction starts. BSUN is taken
