@@ -2464,8 +2464,14 @@ Moira::execDbcc(u16 opcode)
             } else {
 
                 writeD<Word>(dn, U32_SUB(readD<Word>(dn), 1));
-                (void)read<C, AddrSpace::PROG, Word>(reg.pc + 2);
+
+                // The table timing includes the prefetches (MC68020UM 8.2.15:
+                // 10 clocks in the worst case). The discarded word is therefore
+                // read after the cycles have been counted, like the refetch, so
+                // that a cache fill adds nothing. The 13 clocks of the 68030
+                // without a cache hit (MC68030UM 11.6.15) are not modelled.
                 CYCLES_68020(10);
+                readStatusRefill<C>();
                 fullPrefetchAt<C, POLL>(reg.pc + 2);
             }
 

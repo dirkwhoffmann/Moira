@@ -1397,6 +1397,74 @@ TEST_CASE("Instruction cache hits keep the 68020 table timing")
     }
 }
 
+TEST_CASE("An expired DBcc refills from the instruction cache")
+{
+    enum { Warm, Cold, Disabled };
+
+    for (auto model : { CPUModel::M68020, CPUModel::M68EC020, CPUModel::M68030, CPUModel::M68EC030 }) {
+        for (u8 port : { DSACK_32, DSACK_16 }) {
+            for (u32 dbf : { dataBase + 2, dataBase + 4 }) {
+                for (int cache : { Warm, Cold, Disabled }) {
+                    CAPTURE(int(model));
+                    CAPTURE(int(port));
+                    CAPTURE(dbf);
+                    CAPTURE(cache);
+                    TestCPU cpu(model);
+                    cpu.portDsack = port;
+                    cpu.setCACR(cache == Disabled ? 0 : CACR::E);
+
+                    // (NOP;) MOVEQ #count,D0; DBF D0,*; NOP; BRA.S back
+                    for (u32 a = dataBase; a < dbf - 2; a += 2) cpu.write16(a, 0x4E71);
+                    cpu.write16(dbf - 2, cache == Cold ? 0x7000 : 0x7001);
+                    cpu.write16(dbf, 0x51C8);
+                    cpu.write16(dbf + 2, 0xFFFE);
+                    cpu.write16(dbf + 4, 0x4E71);
+                    cpu.write16(dbf + 6, u16(0x6000 | u8(dataBase - (dbf + 8))));
+                    cpu.jump(dataBase);
+
+                    // Run up to the expired DBF: in the first pass if the cache
+                    // shall be cold, after one pass through the program otherwise
+                    int nops = (dbf - 2 - dataBase) / 2;
+                    int steps = cache == Cold ? nops + 1 : 2 * nops + 7;
+                    for (int i = 0; i < steps; i++) cpu.execute();
+                    REQUIRE(cpu.getPC0() == dbf);
+                    REQUIRE(cpu.getD(0) == 0);
+
+                    cpu.longReads.clear();
+                    cpu.smallReads = 0;
+                    auto clock = cpu.getClock();
+                    cpu.execute();
+                    REQUIRE(cpu.getPC0() == dbf + 4);
+
+                    // The extra access is a pipeline refill (MC68030UM 12.7.1), which
+                    // the tables count as an instruction access: (0/3/0), and none in
+                    // the cache case (MC68020UM 8.2.15, MC68030UM 11.6.15). Without a
+                    // cache hit, the word comes from the latch at 4n+2 (MC68020UM 1.6,
+                    // MC68030UM 11.2.2) and from the bus at 4n. The refetch reads that
+                    // longword again if the cache is disabled.
+                    size_t fetches = cache == Warm ? 0 : cache == Cold ? 1 : 2;
+
+                    if (port == DSACK_32) {
+                        CHECK(cpu.longReads.size() == fetches);
+                        CHECK(cpu.smallReads == 0);
+                        if (cache == Disabled && (dbf & 3) == 0 && cpu.longReads.size() == 2) {
+                            CHECK(cpu.longReads[0] == dbf + 4);
+                            CHECK(cpu.longReads[1] == dbf + 4);
+                        }
+                    } else {
+                        CHECK(cpu.longReads.empty());
+                        CHECK(cpu.smallReads == 4 * int(fetches));
+                    }
+
+                    // MC68020UM 8.2.15: 10 clocks, in the worst case too. The 68030
+                    // figure without a cache hit (13, MC68030UM 11.6.15) is not modelled.
+                    CHECK(cpu.getClock() - clock == 10);
+                }
+            }
+        }
+    }
+}
+
 TEST_SUITE_END();
 
 }
