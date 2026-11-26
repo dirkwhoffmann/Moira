@@ -42,6 +42,7 @@ public:
     // If set, the host supplies the complete stack frame itself
     bool customFrame = false;
     u16 customSR = 0;
+    u32 customData = 0;
 
     void check(u32 addr, bool write) const
     {
@@ -51,6 +52,7 @@ public:
             StackFrame frame = {};
             frame.addr = addr;
             frame.sr = customSR;
+            frame.data = customData;
             throw BusError(frame);
         }
         throw BusError(addr);
@@ -307,6 +309,7 @@ TEST_CASE("68020 bus error frames of host-signaled faults")
         CHECK(cpu.peek16(sp + 6) == 0xB008);            // Long bus fault frame, vector 2
         CHECK(cpu.peek16(sp + 10) == 0x0151);           // DF, read, byte, user data
         CHECK(peek32(cpu, sp + 16) == 0x2000);
+        CHECK(peek32(cpu, sp + 24) == 0);               // The data output buffer stays 0 for a read
     }
 
     SUBCASE("PC-relative operand") {
@@ -322,15 +325,52 @@ TEST_CASE("68020 bus error frames of host-signaled faults")
         CHECK((ssw & (SSW030::FB | SSW030::RB | SSW030::DF)) == (SSW030::FB | SSW030::RB));
     }
 
+    // MC68020 User's Manual, section 6.2.2: the data output buffer at SP + $18 holds
+    // the data of a faulted write. Byte and word operands are right justified.
     SUBCASE("Byte write") {
 
         cpu.faultOnRead = false;
+        cpu.setD(0, 0x12345678);
         cpu.run({ 0x1080 });                            // MOVE.B D0,(A0)
 
         u32 sp = cpu.getSP();
         CHECK((cpu.peek16(sp + 6) & 0xFFF) == 8);       // Bus error vector
         CHECK(cpu.peek16(sp + 10) == 0x0111);           // DF, write, byte, user data
         CHECK(peek32(cpu, sp + 16) == 0x2000);
+        CHECK(peek32(cpu, sp + 24) == 0x78);            // Data output buffer
+    }
+
+    SUBCASE("Word write") {
+
+        cpu.faultOnRead = false;
+        cpu.setD(0, 0x12345678);
+        cpu.run({ 0x3080 });                            // MOVE.W D0,(A0)
+
+        u32 sp = cpu.getSP();
+        CHECK(cpu.peek16(sp + 10) == 0x0121);           // DF, write, word, user data
+        CHECK(peek32(cpu, sp + 24) == 0x5678);
+    }
+
+    SUBCASE("Long word write") {
+
+        cpu.faultOnRead = false;
+        cpu.setD(0, 0x12345678);
+        cpu.run({ 0x2080 });                            // MOVE.L D0,(A0)
+
+        u32 sp = cpu.getSP();
+        CHECK(cpu.peek16(sp + 10) == 0x0101);           // DF, write, long, user data
+        CHECK(peek32(cpu, sp + 24) == 0x12345678);
+    }
+
+    // Only the operand byte is checked. The manual does not say what the upper bytes hold.
+    SUBCASE("Byte write of a computed value") {
+
+        cpu.faultOnRead = false;
+        cpu.run({ 0x4610 });                            // NOT.B (A0), (A0) holds 0
+
+        u32 sp = cpu.getSP();
+        CHECK(cpu.peek16(sp + 10) == 0x0111);           // DF, write, byte, user data
+        CHECK((peek32(cpu, sp + 24) & 0xFF) == 0xFF);
     }
 }
 
@@ -342,6 +382,17 @@ TEST_CASE("A host-supplied 68020 frame keeps a zero special status word")
     cpu.setA(0, 0x2000);
     cpu.run({ 0x3010 });
     CHECK(cpu.peek16(cpu.getSP() + 10) == 0);
+}
+
+TEST_CASE("A host-supplied 68020 frame of a read fault stacks no data output buffer")
+{
+    TestCPU cpu(CPUModel::M68020);
+    cpu.faultAddr = 0x2000;
+    cpu.customFrame = true;
+    cpu.customData = 0xCAFEBABE;
+    cpu.setA(0, 0x2000);
+    cpu.run({ 0x2010 });                                // MOVE.L (A0),D0
+    CHECK(peek32(cpu, cpu.getSP() + 24) == 0);
 }
 
 TEST_CASE("68030 bus error frames of host-signaled faults")

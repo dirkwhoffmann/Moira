@@ -143,6 +143,7 @@ struct UaeCore : RefCore {
      * - The pipe stages (stage C and B) hold the next instruction word. Neither is modeled.
      * - Address error frames (ae-fetch) stack a PC that differs from the A1200 recordings.
      * - A fault while JSR pushes the return address stacks a stale value as PC.
+     * - A write fault stacks an empty data output buffer. UAE fills it only if an MMU is emulated.
      */
     bool knownDifference(const char *kind, u16 opcode, const std::string &field) const override
     {
@@ -158,6 +159,7 @@ struct UaeCore : RefCore {
         if (field == "frame.stagec" || field == "frame.stageb") return true;
         if (!strcmp(kind, "ae-fetch") && field == "frame.pc") return true;
         if (!strcmp(kind, "write") && field == "frame.pc" && (opcode & 0xFFC0) == 0x4E80) return true;
+        if (!strcmp(kind, "write") && field == "frame.dob") return true;
         return false;
     }
 
