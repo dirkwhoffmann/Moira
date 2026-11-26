@@ -216,8 +216,19 @@ MMU030::translate(u32 addr, u8 fc, bool write, bool *ci)
     if (!line) {
 
         MmuContext context;
-        u32 physAddr = walk(addr, fc, write, context);
-        line = atcInsert(addr, fc, physAddr, context.status(), context.ci);
+        u32 physAddr = 0, status = 0;
+
+        // A bus error during the table search sets the B bit of the entry, and
+        // the access takes the bus error when it is retried (MC68030UM 9.2.1,
+        // 9.4). A frame supplied by the host is passed on.
+        try {
+            physAddr = walk(addr, fc, write, context);
+            status = context.status();
+        } catch (const BusError &e) {
+            if (e.custom) throw;
+            status = MMUSR_BUS_ERROR | MMUSR_INVALID;
+        }
+        line = atcInsert(addr, fc, physAddr, status, context.ci);
     }
     
     auto &e = atc[*line];
