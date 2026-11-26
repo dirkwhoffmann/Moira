@@ -105,7 +105,7 @@ template <Core C, Mode M, Size S, Flags F = 0> u32 readM(u32 addr);
 template <Core C, AddrSpace AS, Size S, Flags F = 0> u32 read(u32 addr);
 
 // Reads from memory without consulting the data cache
-template <Core C, Size S, Flags F = 0> u32 readBus(u32 addr);
+template <Core C, Size S, Flags F = 0> u32 readBus(u32 logical);
 
 // Reads data via the data cache (68030)
 template <Core C, Size S, Flags F = 0> u32 readDataCache(u32 addr);
@@ -124,7 +124,7 @@ template <Core C, Mode M, Size S, Flags F = 0> void writeM(u32 addr, u32 val);
 template <Core C, AddrSpace AS, Size S, Flags F = 0> void write(u32 addr, u32 val);
 
 // Writes to memory without updating the data cache
-template <Core C, Size S, Flags F = 0> void writeBus(u32 addr, u32 val, bool *ci = nullptr);
+template <Core C, Size S, Flags F = 0> void writeBus(u32 logical, u32 val, bool *ci = nullptr);
 
 // Writes data via the data cache (68030)
 template <Core C, Size S, Flags F = 0> void writeDataCache(u32 addr, u32 val);
@@ -172,8 +172,9 @@ template <Flags F = 0> StackFrame makeFrame(u32 addr, u32 pc, u16 sr, u16 ird);
 template <Flags F = 0> StackFrame makeFrame(u32 addr, u32 pc);
 template <Flags F = 0> StackFrame makeFrame(u32 addr);
 
-// Adds the special status word to a bus error signaled by the host (68020 and later)
-template <Size S, bool W> void completeBusError(BusError &e, bool instructionFetch = false);
+// Adds the special status word to a bus error signaled by the host (68020 and later).
+// addr is the logical address of the access, the fault address of a 68040.
+template <Size S, bool W> void completeBusError(BusError &e, u32 addr, bool instructionFetch = false);
 
 // Creates an address error that is raised before the bus cycle has started
 template <Core C> AddressError earlyAddressError(const StackFrame &frame);
