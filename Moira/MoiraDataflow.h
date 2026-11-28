@@ -114,7 +114,7 @@ template <Core C, Size S, Flags F = 0> u32 readDataCache(u32 addr);
 template <Core C, Flags F = 0> u16 readInstr(u32 addr);
 
 
-// Reads the instruction word discarded by MOVE to SR or CCR.
+// Reads the instruction word discarded by MOVE to SR or CCR, or by an expired DBcc.
 template <Core C> void readStatusRefill();
 
 // Writes an operand to memory (without or with address error checking)
