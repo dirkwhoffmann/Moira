@@ -776,15 +776,15 @@ Moira::read(u32 addr)
 }
 
 template <Core C, Size S, Flags F> u32
-Moira::readBus(u32 addr)
+Moira::readBus(u32 logical)
 try
 {
-    if constexpr (MOIRA_REPORT_BUS_ACCESS) willAccessBus(addr, S, false);
+    if constexpr (MOIRA_REPORT_BUS_ACCESS) willAccessBus(logical, S, false);
 
     u32 result;
 
     // Derive the physical address
-    addr = translate<C, false, S>(addr, getFC());
+    u32 addr = translate<C, false, S>(logical, getFC());
 
     // Check if a watchpoint has been reached
     if ((flags & State::CHECK_WP) && debugger.watchpointMatches(addr, S)) {
@@ -836,7 +836,7 @@ try
 catch (BusError &e)
 {
     // Tell the fault handler whether the access was a read or a write (68030 and UAE bus error frames)
-    if constexpr (C == Core::C68020) { e.stackFrame.write = false; completeBusError<S, false>(e); }
+    if constexpr (C == Core::C68020) { e.stackFrame.write = false; completeBusError<S, false>(e, logical); }
     throw;
 }
 
@@ -894,7 +894,7 @@ Moira::readInstr(u32 addr)
         } catch (BusError &e) {
 
             e.stackFrame.write = false;
-            completeBusError<Word, false>(e, true);
+            completeBusError<Word, false>(e, addr, true);
             throw;
         }
         // The 020/030 instruction timings already include a cached fetch.
@@ -981,13 +981,13 @@ Moira::write(u32 addr, u32 val)
 }
 
 template <Core C, Size S, Flags F> void
-Moira::writeBus(u32 addr, u32 val, bool *ci)
+Moira::writeBus(u32 logical, u32 val, bool *ci)
 try
 {
-    if constexpr (MOIRA_REPORT_BUS_ACCESS) willAccessBus(addr, S, true);
+    if constexpr (MOIRA_REPORT_BUS_ACCESS) willAccessBus(logical, S, true);
 
     // Derive the physical address
-    addr = translate<C, true, S>(addr, getFC(), ci);
+    u32 addr = translate<C, true, S>(logical, getFC(), ci);
 
     // Check if a watchpoint has been reached
     if ((flags & State::CHECK_WP) && debugger.watchpointMatches(addr, S)) {
@@ -1042,7 +1042,7 @@ try
 catch (BusError &e)
 {
     // Tell the fault handler whether the access was a read or a write and what data it carried
-    if constexpr (C == Core::C68020) { e.stackFrame.write = true; e.stackFrame.data = val; completeBusError<S, true>(e); }
+    if constexpr (C == Core::C68020) { e.stackFrame.write = true; e.stackFrame.data = val; completeBusError<S, true>(e, logical); }
     throw;
 }
 
@@ -1067,7 +1067,7 @@ Moira::readDataCache(u32 addr)
     } catch (BusError &e) {
         // The line fill has failed
         e.stackFrame.write = false;
-        completeBusError<S, false>(e);
+        completeBusError<S, false>(e, addr);
         throw;
     }
 
@@ -1188,12 +1188,14 @@ Moira::misaligned(u32 addr)
 }
 
 template <Size S, bool W> void
-Moira::completeBusError(BusError &e, bool instructionFetch)
+Moira::completeBusError(BusError &e, u32 addr, bool instructionFetch)
 {
-    /* A host that throws BusError(addr) only provides the fault address. The
-     * 68020 and later processors report the cause of the fault in the special status
-     * word, which is built here like for a fault detected by the MMU. Faults
-     * detected by the MMU and frames supplied by the host are left untouched.
+    /* A host that throws BusError(addr) only provides the address of the failed
+     * bus cycle. The 68020 and later processors report the cause of the fault in
+     * the special status word, which is built here like for a fault detected by
+     * the MMU. The 68040 stacks the logical address of the access as the fault
+     * address. Faults detected by the MMU and frames supplied by the host are
+     * left untouched.
      */
     if (e.complete || cpuModel < CPUModel::M68EC020) return;
 
@@ -1206,6 +1208,11 @@ Moira::completeBusError(BusError &e, bool instructionFetch)
 
         e.stackFrame.ssw = size | (fc & 7);
         if (!W) e.stackFrame.ssw |= SSW040::RW;
+
+        // "The fault address (FA) is the initial address for the access that
+        // faulted." It is a logical address, and the address of the first byte
+        // whichever of the bus cycles has failed (MC68040UM 8.4.6.4)
+        e.stackFrame.addr = addr;
 
     } else {
 

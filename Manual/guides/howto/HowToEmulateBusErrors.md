@@ -68,7 +68,7 @@ Moira writes the frame of the emulated model:
 | 68030 | Format $A (16 words) for a fault in a data write, format $B (46 words) otherwise | Special status word, fault address, data output buffer and pipe stages B and C |
 | 68040 | Format $7 (30 words, access error frame) | Special status word, fault address and the write-back data of a faulting write |
 
-The fault address is the logical address of the failed access. A handler reads the frame like the handler of a real system, so existing system software works without modifications.
+The fault address is the logical address of the failed access. On the 68040, Moira takes it from the access itself, not from the exception. A handler reads the frame like the handler of a real system, so existing system software works without modifications.
 
 ## Continuing After the Handler
 

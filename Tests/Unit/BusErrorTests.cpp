@@ -479,6 +479,36 @@ TEST_CASE("68040 access error frames of host-signaled faults")
         CHECK(peek32(cpu, sp + 20) == 0x2000);
         CHECK(peek32(cpu, sp + 28) == 0x1234);          // Write-back 3 data
     }
+
+    // The fault address of a misaligned access is the address of its first byte,
+    // whichever of its bus cycles has failed (MC68040UM 8.4.6.4)
+    SUBCASE("Misaligned data read") {
+
+        TestCPU cpu(CPUModel::M68040);
+        cpu.faultAddr = 0x2004;
+        cpu.setA(0, 0x2002);
+        cpu.run({ 0x2010 });                            // MOVE.L (A0),D0, the second word fails
+
+        u32 sp = cpu.getSP();
+        CHECK(cpu.peek16(sp + 12) == (SSW040::RW | SSW040::SIZ_L | 1));
+        CHECK(peek32(cpu, sp + 20) == 0x2002);
+    }
+
+    SUBCASE("Misaligned data write") {
+
+        TestCPU cpu(CPUModel::M68040);
+        cpu.faultAddr = 0x2004;
+        cpu.faultOnRead = false;
+        cpu.setA(0, 0x2002);
+        cpu.setD(0, 0x12345678);
+        cpu.run({ 0x2080 });                            // MOVE.L D0,(A0), the second word fails
+
+        u32 sp = cpu.getSP();
+        CHECK(cpu.peek16(sp + 12) == (SSW040::SIZ_L | 1));
+        CHECK(peek32(cpu, sp + 20) == 0x2002);
+        CHECK(peek32(cpu, sp + 24) == 0x2002);          // Write-back 3 address
+        CHECK(peek32(cpu, sp + 28) == 0x12345678);      // Write-back 3 data
+    }
 }
 
 TEST_CASE("A frame supplied by the host keeps its special status word (68030)")

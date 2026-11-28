@@ -44,8 +44,11 @@ public:
     bool berrCustom = false;
     StackFrame berrFrame = {};
 
+    // Physical address that signals a bus error on any read or write
+    u32 faultAddr = 0xFFFFFFFF;
+
     u8 dsack(u32 addr) const override { return portDsack; }
-    u8 read8(u32 addr) const override { if ((addr & 0xFFFFF) >= 0x20000) smallReads++; return ram[addr & 0xFFFFF]; }
+    u8 read8(u32 addr) const override { if (addr == faultAddr) throw BusError(addr); if ((addr & 0xFFFFF) >= 0x20000) smallReads++; return ram[addr & 0xFFFFF]; }
     u16 read16(u32 addr) const override { return read8(addr) << 8 | read8(addr + 1); }
     u32 read32(u32 addr) const override
     {
@@ -53,10 +56,11 @@ public:
             if (berrCustom) throw BusError(berrFrame);
             throw BusError(addr);
         }
+        if (addr == faultAddr) throw BusError(addr);
         if ((addr & 0xFFFFF) >= 0x20000) longReads.push_back(addr & 0xFFFFF);
         return ram[addr & 0xFFFFF] << 24 | ram[(addr + 1) & 0xFFFFF] << 16 | ram[(addr + 2) & 0xFFFFF] << 8 | ram[(addr + 3) & 0xFFFFF];
     }
-    void write8(u32 addr, u8 val) const override { ram[addr & 0xFFFFF] = val; }
+    void write8(u32 addr, u8 val) const override { if (addr == faultAddr) throw BusError(addr); ram[addr & 0xFFFFF] = val; }
     void write16(u32 addr, u16 val) const override
     {
         if ((addr & 0xFFFFF) == berrAddr && berrWrite) throw BusError(addr);
@@ -1578,6 +1582,137 @@ TEST_CASE("Bus errors during a table search")
         sp = cpu040.reg.sp;
         CHECK(cpu040.read16(sp + 0x0C) == (SSW040::RW | SSW040::SIZ_B | FC::USER_DATA));
         CHECK(cpu040.read32(sp + 0x14) == 0xABCDE);
+    }
+}
+
+/* The host signals a bus error at a physical address. The 68040 stacks the
+ * logical address of the access in the fault address field. It is a physical
+ * address only for cache pushes (MC68040UM 8.4.6.4).
+ */
+TEST_CASE("Host bus errors stack the logical address (68040)")
+{
+    SUBCASE("Data read") {
+
+        TestCPU cpu(CPUModel::M68040);
+        setupTables040(cpu);
+        cpu.faultAddr = 0x5100;                     // Logical 0x2100
+        cpu.reg.a[0] = 0x2100;
+        cpu.run({ 0x3010 });                        // MOVE.W (A0),D0
+
+        u32 sp = cpu.reg.sp;
+        CHECK(cpu.read16(sp + 6) == (0x7000 | 2 * 4));
+        CHECK(cpu.read16(sp + 0x0C) == (SSW040::RW | SSW040::SIZ_W | FC::SUPERVISOR_DATA));
+        CHECK(cpu.read32(sp + 0x08) == 0x2100);     // Effective address
+        CHECK(cpu.read32(sp + 0x14) == 0x2100);     // Fault address
+    }
+
+    SUBCASE("Byte read") {
+
+        TestCPU cpu(CPUModel::M68040);
+        setupTables040(cpu);
+        cpu.faultAddr = 0x5100;
+        cpu.reg.a[0] = 0x2100;
+        cpu.run({ 0x1010 });                        // MOVE.B (A0),D0
+
+        u32 sp = cpu.reg.sp;
+        CHECK(cpu.read16(sp + 0x0C) == (SSW040::RW | SSW040::SIZ_B | FC::SUPERVISOR_DATA));
+        CHECK(cpu.read32(sp + 0x14) == 0x2100);     // Fault address
+    }
+
+    SUBCASE("Data read (68LC040)") {
+
+        TestCPU cpu(CPUModel::M68LC040);
+        setupTables040(cpu);
+        cpu.faultAddr = 0x5100;
+        cpu.reg.a[0] = 0x2100;
+        cpu.run({ 0x3010 });                        // MOVE.W (A0),D0
+
+        u32 sp = cpu.reg.sp;
+        CHECK(cpu.read16(sp + 0x0C) == (SSW040::RW | SSW040::SIZ_W | FC::SUPERVISOR_DATA));
+        CHECK(cpu.read32(sp + 0x14) == 0x2100);     // Fault address
+    }
+
+    SUBCASE("Data write") {
+
+        TestCPU cpu(CPUModel::M68040);
+        setupTables040(cpu);
+        cpu.faultAddr = 0x5100;
+        cpu.reg.a[0] = 0x2100;
+        cpu.reg.d[1] = 0x1234;
+        cpu.run({ 0x3081 });                        // MOVE.W D1,(A0)
+
+        u32 sp = cpu.reg.sp;
+        CHECK(cpu.read16(sp + 0x0C) == (SSW040::SIZ_W | FC::SUPERVISOR_DATA));
+        CHECK(cpu.read32(sp + 0x14) == 0x2100);     // Fault address
+        CHECK(cpu.read32(sp + 0x18) == 0x2100);     // WB3A
+        CHECK(cpu.read32(sp + 0x1C) == 0x1234);     // WB3D
+    }
+
+    SUBCASE("Instruction fetch") {
+
+        // The FA field contains the logical address of the prefetch (MC68040UM 8.4.6.7)
+        TestCPU cpu(CPUModel::M68040);
+        setupTables040(cpu);
+        cpu.faultAddr = 0x5100;
+        cpu.reg.a[0] = 0x2100;
+        cpu.run({ 0x4ED0 });                        // JMP (A0), the fetch at the target fails
+
+        u32 sp = cpu.reg.sp;
+        CHECK(cpu.read16(sp + 0x0C) == (SSW040::RW | SSW040::SIZ_W | FC::SUPERVISOR_PROG));
+        CHECK(cpu.read32(sp + 0x14) == 0x2100);     // Fault address
+    }
+
+    SUBCASE("Table search") {
+
+        // The bus error hits the page descriptor of logical page 0x2000
+        TestCPU cpu(CPUModel::M68040);
+        setupTables040(cpu);
+        cpu.faultAddr = pageTable + 4 * 2;
+        cpu.reg.a[0] = 0x2100;
+        cpu.run({ 0x3010 });                        // MOVE.W (A0),D0
+
+        CHECK(cpu.read32(cpu.reg.sp + 0x14) == 0x2100);
+    }
+
+    // Moira splits an access to a narrow port into several bus cycles (the 68040
+    // itself has no dynamic bus sizing, MC68040UM 7.2). The fault address stays
+    // the initial address of the access (MC68040UM 8.4.6.4).
+    SUBCASE("8-bit port") {
+
+        TestCPU cpu(CPUModel::M68040);
+        cpu.write32(2 * 4, 0x1800);
+        cpu.portDsack = DSACK_8;
+        cpu.faultAddr = 0x2101;
+        cpu.reg.a[0] = 0x2100;
+        cpu.run({ 0x3010 });                        // MOVE.W (A0),D0, the second byte fails
+
+        CHECK(cpu.read32(cpu.reg.sp + 0x14) == 0x2100);
+    }
+
+    SUBCASE("16-bit port") {
+
+        TestCPU cpu(CPUModel::M68040);
+        cpu.write32(2 * 4, 0x1800);
+        cpu.faultAddr = 0x2102;
+        cpu.reg.a[0] = 0x2100;
+        cpu.run({ 0x2010 });                        // MOVE.L (A0),D0, the second word fails
+
+        CHECK(cpu.read32(cpu.reg.sp + 0x14) == 0x2100);
+    }
+
+    // The 68030 frame keeps the address the host has signaled
+    SUBCASE("68030") {
+
+        TestCPU cpu(CPUModel::M68030);
+        setupShortTables(cpu);
+        cpu.faultAddr = 0x5100;                     // Logical 0x2100
+        cpu.reg.a[0] = 0x2100;
+        cpu.run({ 0x3010 });                        // MOVE.W (A0),D0
+
+        u32 sp = cpu.reg.sp;
+        CHECK(cpu.read16(sp + 6) == (0xB000 | 2 * 4));
+        CHECK(cpu.read16(sp + 0x0A) == (SSW030::DF | SSW030::RW | SSW030::SIZ_W | FC::SUPERVISOR_DATA));
+        CHECK(cpu.read32(sp + 0x10) == 0x5100);     // Fault address
     }
 }
 
