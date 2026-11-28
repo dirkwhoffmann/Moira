@@ -130,8 +130,17 @@ MMU040::translate(u32 addr, u8 fc, bool write, bool *ci)
     // On a cache miss, walk the tables and update the cache
     if (!line) {
 
-        u32 status;
-        u32 physAddr = walk(addr, super, write, status);
+        u32 status = 0, physAddr = 0;
+
+        // A bus error during the table search ends it like an invalid
+        // descriptor. The status stays zero, so the entry is not resident, and
+        // the access takes an ATC fault when it is retried (MC68040UM 3.3, 3.5,
+        // 8.2.1, 8.4.6.2). A frame supplied by the host is passed on.
+        try {
+            physAddr = walk(addr, super, write, status);
+        } catch (const BusError &e) {
+            if (e.custom) throw;
+        }
         line = atcInsert(addr, fc, physAddr, status);
     }
 

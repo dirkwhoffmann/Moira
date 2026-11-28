@@ -35,16 +35,33 @@ public:
     mutable int smallReads = 0;
     u8 portDsack = DSACK_16;
 
+    // The host signals a bus error when a long word is read from this address
+    // (the MMU reads its descriptors with read32), optionally with its own frame
+    // or, with berrWrite, when a word is written to it (the MMU updates the
+    // U and M bits of a descriptor with write16)
+    u32 berrAddr = 0xFFFFFFFF;
+    bool berrWrite = false;
+    bool berrCustom = false;
+    StackFrame berrFrame = {};
+
     u8 dsack(u32 addr) const override { return portDsack; }
     u8 read8(u32 addr) const override { if ((addr & 0xFFFFF) >= 0x20000) smallReads++; return ram[addr & 0xFFFFF]; }
     u16 read16(u32 addr) const override { return read8(addr) << 8 | read8(addr + 1); }
     u32 read32(u32 addr) const override
     {
+        if ((addr & 0xFFFFF) == berrAddr && !berrWrite) {
+            if (berrCustom) throw BusError(berrFrame);
+            throw BusError(addr);
+        }
         if ((addr & 0xFFFFF) >= 0x20000) longReads.push_back(addr & 0xFFFFF);
         return ram[addr & 0xFFFFF] << 24 | ram[(addr + 1) & 0xFFFFF] << 16 | ram[(addr + 2) & 0xFFFFF] << 8 | ram[(addr + 3) & 0xFFFFF];
     }
     void write8(u32 addr, u8 val) const override { ram[addr & 0xFFFFF] = val; }
-    void write16(u32 addr, u16 val) const override { write8(addr, val >> 8); write8(addr + 1, val & 0xFF); }
+    void write16(u32 addr, u16 val) const override
+    {
+        if ((addr & 0xFFFFF) == berrAddr && berrWrite) throw BusError(addr);
+        write8(addr, val >> 8); write8(addr + 1, val & 0xFF);
+    }
     void write32(u32 addr, u32 val) const override { write16(addr, val >> 16); write16(addr + 2, val & 0xFFFF); }
 
     void didEnableMMU() override { enabled++; }
@@ -1272,6 +1289,295 @@ TEST_CASE("MMU040")
         CHECK(cpu.mmu.mmu040.tc == 0);
         cpu.run({ 0x4E7B, 0x0006 });
         CHECK(cpu.mmu.mmu040.dtt0 == 0xFFFFE364);
+    }
+}
+
+/* A bus error during a table search ends the search like an invalid
+ * descriptor. The ATC entry records it (B bit on the 68030, not resident on
+ * the 68040), and the access takes a bus error with its logical address
+ * (MC68030UM 9.4, MC68040UM 8.2.1 and 8.4.6.2).
+ */
+TEST_CASE("Bus errors during a table search")
+{
+    SUBCASE("68030 read") {
+
+        TestCPU cpu;
+        setupShortTables(cpu);
+        cpu.berrAddr = tableB + 4 * 2;              // Page descriptor of logical 0x2000
+        cpu.reg.a[0] = 0x2004;
+        cpu.run({ 0x2010 });                        // MOVE.L (A0),D0
+
+        u32 sp = cpu.reg.sp;
+        CHECK(cpu.reg.pc0 == 0x1800);
+        CHECK(cpu.read16(sp + 6) == (0xB000 | 2 * 4));
+        CHECK(cpu.read16(sp + 0x0A) == (SSW030::DF | SSW030::RW | SSW030::SIZ_L | FC::SUPERVISOR_DATA));
+        CHECK(cpu.read32(sp + 0x10) == 0x2004);    // Logical fault address
+
+        // PTESTR #5,(A0),#0 finds the ATC entry with the B bit set
+        cpu.run({ 0xF010, 0x8215 });
+        CHECK(cpu.mmu.mmu030.mmusr == 0x8400);
+    }
+
+    SUBCASE("68030 write") {
+
+        TestCPU cpu;
+        setupShortTables(cpu);
+        cpu.berrAddr = tableB + 4 * 2;
+        cpu.reg.a[0] = 0x2008;
+        cpu.reg.d[1] = 0x22222222;
+        cpu.run({ 0x2081 });                        // MOVE.L D1,(A0)
+
+        u32 sp = cpu.reg.sp;
+        CHECK(cpu.read16(sp + 6) == (0xA000 | 2 * 4));
+        CHECK(cpu.read16(sp + 0x0A) == (SSW030::DF | SSW030::SIZ_L | FC::SUPERVISOR_DATA));
+        CHECK(cpu.read32(sp + 0x10) == 0x2008);
+        CHECK(cpu.read32(0x5008) == 0);
+    }
+
+    SUBCASE("68040 read") {
+
+        TestCPU cpu(CPUModel::M68040);
+        setupTables040(cpu);
+        cpu.berrAddr = pageTable + 4 * 2;
+        cpu.reg.a[0] = 0x2004;
+        cpu.run({ 0x2010 });                        // MOVE.L (A0),D0
+
+        u32 sp = cpu.reg.sp;
+        CHECK(cpu.reg.pc0 == 0x1800);
+        CHECK(cpu.read16(sp + 6) == (0x7000 | 2 * 4));
+        CHECK(cpu.read16(sp + 0x0C) == (SSW040::ATC | SSW040::RW | SSW040::SIZ_L | FC::SUPERVISOR_DATA));
+        CHECK(cpu.read32(sp + 0x14) == 0x2004);
+    }
+
+    SUBCASE("68040 write") {
+
+        TestCPU cpu(CPUModel::M68040);
+        setupTables040(cpu);
+        cpu.berrAddr = pageTable + 4 * 2;
+        cpu.reg.a[0] = 0x2008;
+        cpu.reg.d[1] = 0x22222222;
+        cpu.run({ 0x2081 });                        // MOVE.L D1,(A0)
+
+        u32 sp = cpu.reg.sp;
+        CHECK(cpu.read16(sp + 0x0C) == (SSW040::ATC | SSW040::SIZ_L | FC::SUPERVISOR_DATA));
+        CHECK(cpu.read32(sp + 0x14) == 0x2008);
+        CHECK(cpu.read32(0x5008) == 0);
+    }
+
+    SUBCASE("The update of the U and M bits") {
+
+        // The U bit of the page descriptor is written during the search
+        TestCPU cpu030;
+        setupShortTables(cpu030);
+        cpu030.berrAddr = tableB + 4 * 2 + 2;
+        cpu030.berrWrite = true;
+        cpu030.reg.a[0] = 0x2004;
+        cpu030.run({ 0x2010 });                     // MOVE.L (A0),D0
+
+        u32 sp = cpu030.reg.sp;
+        CHECK(cpu030.reg.pc0 == 0x1800);
+        CHECK(cpu030.read32(sp + 0x10) == 0x2004);
+        CHECK(cpu030.read32(tableB + 4 * 2) == (0x5000 | 1));
+        cpu030.run({ 0xF010, 0x8215 });             // PTESTR #5,(A0),#0
+        CHECK(cpu030.mmu.mmu030.mmusr == 0x8400);
+
+        // A write access sets U and M
+        TestCPU cpu030w;
+        setupShortTables(cpu030w);
+        cpu030w.berrAddr = tableB + 4 * 2 + 2;
+        cpu030w.berrWrite = true;
+        cpu030w.reg.a[0] = 0x2008;
+        cpu030w.run({ 0x2081 });                    // MOVE.L D1,(A0)
+
+        sp = cpu030w.reg.sp;
+        CHECK(cpu030w.reg.pc0 == 0x1800);
+        CHECK(cpu030w.read32(sp + 0x10) == 0x2008);
+
+        TestCPU cpu040(CPUModel::M68040);
+        setupTables040(cpu040);
+        cpu040.berrAddr = pageTable + 4 * 2 + 2;
+        cpu040.berrWrite = true;
+        cpu040.reg.a[0] = 0x2004;
+        cpu040.run({ 0x2010 });                     // MOVE.L (A0),D0
+
+        sp = cpu040.reg.sp;
+        CHECK(cpu040.reg.pc0 == 0x1800);
+        CHECK(cpu040.read16(sp + 0x0C) == (SSW040::ATC | SSW040::RW | SSW040::SIZ_L | FC::SUPERVISOR_DATA));
+        CHECK(cpu040.read32(sp + 0x14) == 0x2004);
+
+        TestCPU cpu040w(CPUModel::M68040);
+        setupTables040(cpu040w);
+        cpu040w.berrAddr = pageTable + 4 * 2 + 2;
+        cpu040w.berrWrite = true;
+        cpu040w.reg.a[0] = 0x2008;
+        cpu040w.reg.d[1] = 0x22222222;
+        cpu040w.run({ 0x2081 });                    // MOVE.L D1,(A0)
+
+        sp = cpu040w.reg.sp;
+        CHECK(cpu040w.reg.pc0 == 0x1800);
+        CHECK(cpu040w.read16(sp + 0x0C) == (SSW040::ATC | SSW040::SIZ_L | FC::SUPERVISOR_DATA));
+        CHECK(cpu040w.read32(sp + 0x14) == 0x2008);
+        CHECK(cpu040w.read32(0x5008) == 0);
+    }
+
+    SUBCASE("The upper table levels") {
+
+        // The descriptor is read (first pass), or its U bit is written (second pass)
+        for (bool write : { false, true }) {
+
+            // Table descriptor of logical 0x400000
+            TestCPU cpu030;
+            setupShortTables(cpu030);
+            cpu030.write32(tableA + 4, tableB | 2);
+            cpu030.berrAddr = tableA + 4 + (write ? 2 : 0);
+            cpu030.berrWrite = write;
+            cpu030.reg.a[0] = 0x402004;
+            cpu030.run({ 0x2010 });                 // MOVE.L (A0),D0
+
+            CHECK(cpu030.reg.pc0 == 0x1800);
+            CHECK(cpu030.read32(cpu030.reg.sp + 0x10) == 0x402004);
+            cpu030.run({ 0xF010, 0x8215 });         // PTESTR #5,(A0),#0
+            CHECK(cpu030.mmu.mmu030.mmusr == 0x8400);
+
+            // Root descriptor of logical 0x2000000
+            TestCPU root040(CPUModel::M68040);
+            setupTables040(root040);
+            root040.write32(rootTable + 4, pointerTable | 2);
+            root040.berrAddr = rootTable + 4 + (write ? 2 : 0);
+            root040.berrWrite = write;
+            root040.reg.a[0] = 0x2002004;
+            root040.run({ 0x2010 });
+
+            u32 sp = root040.reg.sp;
+            CHECK(root040.reg.pc0 == 0x1800);
+            CHECK(root040.read16(sp + 0x0C) == (SSW040::ATC | SSW040::RW | SSW040::SIZ_L | FC::SUPERVISOR_DATA));
+            CHECK(root040.read32(sp + 0x14) == 0x2002004);
+
+            // Pointer descriptor of logical 0x40000
+            TestCPU pointer040(CPUModel::M68040);
+            setupTables040(pointer040);
+            pointer040.write32(pointerTable + 4, pageTable | 2);
+            pointer040.berrAddr = pointerTable + 4 + (write ? 2 : 0);
+            pointer040.berrWrite = write;
+            pointer040.reg.a[0] = 0x42004;
+            pointer040.run({ 0x2010 });
+
+            sp = pointer040.reg.sp;
+            CHECK(pointer040.reg.pc0 == 0x1800);
+            CHECK(pointer040.read16(sp + 0x0C) == (SSW040::ATC | SSW040::RW | SSW040::SIZ_L | FC::SUPERVISOR_DATA));
+            CHECK(pointer040.read32(sp + 0x14) == 0x42004);
+        }
+    }
+
+    SUBCASE("The entry stays in the ATC") {
+
+        TestCPU cpu030;
+        setupShortTables(cpu030);
+        cpu030.write32(0x5004, 0xCAFEBABE);
+        cpu030.berrAddr = tableB + 4 * 2;
+        cpu030.reg.a[0] = 0x2004;
+        cpu030.run({ 0x2010 });                     // MOVE.L (A0),D0
+        CHECK(cpu030.reg.pc0 == 0x1800);
+
+        // The next access faults on the entry, without a new search
+        cpu030.berrAddr = 0xFFFFFFFF;
+        cpu030.run({ 0x2010 });
+        CHECK(cpu030.reg.pc0 == 0x1800);
+        CHECK(cpu030.read32(cpu030.reg.sp + 0x10) == 0x2004);
+
+        // After PFLUSHA, the tables are searched again
+        cpu030.run({ 0xF000, 0x2400 });
+        cpu030.run({ 0x2010 });
+        CHECK(cpu030.reg.d[0] == 0xCAFEBABE);
+
+        TestCPU cpu040(CPUModel::M68040);
+        setupTables040(cpu040);
+        cpu040.write32(0x5004, 0xCAFEBABE);
+        cpu040.berrAddr = pageTable + 4 * 2;
+        cpu040.reg.a[0] = 0x2004;
+        cpu040.run({ 0x2010 });
+        CHECK(cpu040.reg.pc0 == 0x1800);
+
+        cpu040.berrAddr = 0xFFFFFFFF;
+        cpu040.run({ 0x2010 });
+        CHECK(cpu040.reg.pc0 == 0x1800);
+        CHECK(cpu040.read32(cpu040.reg.sp + 0x14) == 0x2004);
+
+        cpu040.run({ 0xF518 });                     // PFLUSHA
+        cpu040.run({ 0x2010 });
+        CHECK(cpu040.reg.d[0] == 0xCAFEBABE);
+    }
+
+    SUBCASE("68030 pipe stages") {
+
+        /* The bus fault frame of the 68030 carries the pipe stages C and B.
+         * The access to the invalid page 0x3000 faults while stage B (0x2000)
+         * lies on the page whose descriptor takes the bus error.
+         */
+        TestCPU cpu;
+        setupShortTables(cpu);
+        cpu.write16(0x1FFC, 0x2010);                // MOVE.L (A0),D0
+        cpu.write16(0x1FFE, 0x4E71);
+        cpu.write16(0x5000, 0x4E71);
+        cpu.berrAddr = tableB + 4 * 2;
+        cpu.reg.a[0] = 0x3004;
+        cpu.jump(0x1FFC);
+        cpu.execute();
+
+        u32 sp = cpu.reg.sp;
+        CHECK(!cpu.isHalted());
+        CHECK(cpu.reg.pc0 == 0x1800);
+        CHECK(cpu.read16(sp + 6) == (0xB000 | 2 * 4));
+        CHECK(cpu.read32(sp + 0x10) == 0x3004);
+        CHECK(cpu.read16(sp + 0x0C) == 0x4E71);     // Stage C
+        CHECK(cpu.read16(sp + 0x0E) == 0);          // Stage B
+
+        // PTESTR #6,(A0),#0 finds the entry of the stage's page
+        cpu.reg.a[0] = 0x2000;
+        cpu.run({ 0xF010, 0x8216 });
+        CHECK(cpu.mmu.mmu030.mmusr == 0x8400);
+    }
+
+    SUBCASE("MMU::translate") {
+
+        TestCPU cpu030;
+        setupShortTables(cpu030);
+        cpu030.berrAddr = tableB + 4 * 2;
+        CHECK(!cpu030.mmu.translate(0x2004, FC::SUPERVISOR_DATA, false).has_value());
+
+        TestCPU cpu040(CPUModel::M68040);
+        setupTables040(cpu040);
+        cpu040.berrAddr = pageTable + 4 * 2;
+        CHECK(!cpu040.mmu.translate(0x2004, FC::SUPERVISOR_DATA, false).has_value());
+    }
+
+    SUBCASE("A frame supplied by the host is passed on") {
+
+        TestCPU cpu030;
+        setupShortTables(cpu030);
+        cpu030.berrAddr = tableB + 4 * 2;
+        cpu030.berrCustom = true;
+        cpu030.berrFrame.addr = 0xABCDE;
+        cpu030.berrFrame.ssw = SSW030::DF | SSW030::RW | SSW030::SIZ_B | FC::USER_DATA;
+        cpu030.reg.a[0] = 0x2004;
+        cpu030.run({ 0x2010 });                     // MOVE.L (A0),D0
+
+        u32 sp = cpu030.reg.sp;
+        CHECK(cpu030.read16(sp + 0x0A) == (SSW030::DF | SSW030::RW | SSW030::SIZ_B | FC::USER_DATA));
+        CHECK(cpu030.read32(sp + 0x10) == 0xABCDE);
+
+        TestCPU cpu040(CPUModel::M68040);
+        setupTables040(cpu040);
+        cpu040.berrAddr = pageTable + 4 * 2;
+        cpu040.berrCustom = true;
+        cpu040.berrFrame.addr = 0xABCDE;
+        cpu040.berrFrame.ssw = SSW040::RW | SSW040::SIZ_B | FC::USER_DATA;
+        cpu040.reg.a[0] = 0x2004;
+        cpu040.run({ 0x2010 });                     // MOVE.L (A0),D0
+
+        sp = cpu040.reg.sp;
+        CHECK(cpu040.read16(sp + 0x0C) == (SSW040::RW | SSW040::SIZ_B | FC::USER_DATA));
+        CHECK(cpu040.read32(sp + 0x14) == 0xABCDE);
     }
 }
 
