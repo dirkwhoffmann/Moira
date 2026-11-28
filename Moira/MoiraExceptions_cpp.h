@@ -356,14 +356,15 @@ static bool hasIndexedOperand(u16 ird)
 }
 
 template <Core C> void
-Moira::writeStackFrame1011UAE(u16 sr, u16 nr, u32 pc, u16 ssw, u32 addr, u32 end, bool write)
+Moira::writeStackFrame1011UAE(u16 sr, u16 nr, u32 pc, u16 ssw, u32 addr, u32 end, bool write, u32 dataOut)
 {
     u16 stageC = 0, stageB = 0;
     if (nr == 2 && !write) {
         stageC = peekInstr((end + 2) & addrMask<C>());
         stageB = peekInstr((end + 4) & addrMask<C>());
     }
-    writeStackFrame1011<C>(sr, 0, pc, nr, ssw, addr, 0, stageC, stageB);
+    // The data output buffer holds the value of a faulting write (MC68020UM 6.2.2)
+    writeStackFrame1011<C>(sr, 0, pc, nr, ssw, addr, write ? dataOut : 0, stageC, stageB);
 }
 
 template <Core C> void
@@ -550,7 +551,7 @@ Moira::execBusError(StackFrame frame, int delay, const Registers *saved)
         if (ix && move && frame.write && indexed(srcMode, srcReg)) {
             if (dstMode == 5 || (dstMode == 7 && dstReg <= 1)) pc -= 2;
         }
-        writeStackFrame1011UAE<C>(status, 2, pc, frame.ssw, frame.addr, end, frame.write);
+        writeStackFrame1011UAE<C>(status, 2, pc, frame.ssw, frame.addr, end, frame.write, frame.data);
 
         // Remember how to restart the instruction
         restart.valid = saved != nullptr;
